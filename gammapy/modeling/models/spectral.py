@@ -58,10 +58,16 @@ def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
 class SpectralModel(Model):
     """Spectral model base class."""
 
+    _type = "spectral"
+
     def __call__(self, energy):
         kwargs = {par.name: par.quantity for par in self.parameters}
         kwargs = self._convert_evaluate_unit(kwargs, energy)
         return self.evaluate(energy, **kwargs)
+
+    @property
+    def type(self):
+        return self._type
 
     @staticmethod
     def _convert_evaluate_unit(kwargs_ref, energy):
@@ -76,6 +82,12 @@ class SpectralModel(Model):
         if not isinstance(model, SpectralModel):
             model = ConstantSpectralModel(const=model)
         return CompoundSpectralModel(self, model, operator.add)
+
+    def __mul__(self, other):
+        if isinstance(other, SpectralModel):
+            return CompoundSpectralModel(self, other, operator.mul)
+        else:
+            raise TypeError(f"Multiplication invalid for type {other!r}")
 
     def __radd__(self, model):
         return self.__add__(model)
@@ -156,6 +168,26 @@ class SpectralModel(Model):
             return self.evaluate_integral(emin, emax, **kwargs)
         else:
             return integrate_spectrum(self, emin, emax, **kwargs)
+
+    def integral_error(self, emin, emax):
+        """Evaluate the error of the integral flux of a given spectrum in
+        a given energy range.
+
+        Parameters
+        ----------
+        emin, emax :  `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+
+        Returns
+        -------
+        flux, flux_err : tuple of `~astropy.units.Quantity`
+            Integral flux and flux error betwen emin and emax.
+        """
+        energy = np.sqrt(emin * emax)
+        flux = self.integral(emin, emax, intervals=True)
+        dnde, dnde_err = self.evaluate_error(energy, epsilon=1e-4)
+        flux_err = flux * dnde_err / dnde
+        return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
 
     def energy_flux(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range.
@@ -440,11 +472,11 @@ class CompoundSpectralModel(SpectralModel):
         val2 = self.model2(energy)
         return self.operator(val1, val2)
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         return {
             "type": self.tag[0],
-            "model1": self.model1.to_dict(),
-            "model2": self.model2.to_dict(),
+            "model1": self.model1.to_dict(full_output),
+            "model2": self.model2.to_dict(full_output),
             "operator": self.operator.__name__,
         }
 
@@ -455,9 +487,9 @@ class CompoundSpectralModel(SpectralModel):
         model1_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model1"]["type"])
         model1 = model1_cls.from_dict(data["model1"])
         model2_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model2"]["type"])
-        model2 = model2_cls.from_dict(data["model1"])
-        operator = getattr(np, data["operator"])
-        return cls(model1, model2, operator)
+        model2 = model2_cls.from_dict(data["model2"])
+        op = getattr(operator, data["operator"])
+        return cls(model1, model2, op)
 
 
 class PowerLawSpectralModel(SpectralModel):
@@ -593,8 +625,8 @@ class PowerLawNormSpectralModel(SpectralModel):
     """
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
-    tilt = Parameter("tilt", 2.0)
     norm = Parameter("norm", 1, unit="")
+    tilt = Parameter("tilt", 0)
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
@@ -1136,8 +1168,6 @@ class TemplateSpectralModel(SpectralModel):
         Array of energies at which the model values are given
     values : array
         Array with the values of the model at energies ``energy``.
-    norm : float
-        Model scale that is multiplied to the supplied arrays. Defaults to 1.
     interp_kwargs : dict
         Interpolation keyword arguments pass to `scipy.interpolate.interp1d`.
         By default all values outside the interpolation range are set to zero.
@@ -1149,19 +1179,9 @@ class TemplateSpectralModel(SpectralModel):
     """
 
     tag = ["TemplateSpectralModel", "template"]
-    norm = Parameter("norm", 1, unit="")
-    tilt = Parameter("tilt", 0, unit="", frozen=True)
-    reference = Parameter("reference", "1 TeV", frozen=True)
 
     def __init__(
-        self,
-        energy,
-        values,
-        norm=norm.quantity,
-        tilt=tilt.quantity,
-        reference=reference.quantity,
-        interp_kwargs=None,
-        meta=None,
+        self, energy, values, interp_kwargs=None, meta=None,
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
@@ -1174,7 +1194,7 @@ class TemplateSpectralModel(SpectralModel):
             points=(energy,), values=values, **interp_kwargs
         )
 
-        super().__init__(norm=norm, tilt=tilt, reference=reference)
+        super().__init__()
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1226,16 +1246,13 @@ class TemplateSpectralModel(SpectralModel):
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
 
-    def evaluate(self, energy, norm, tilt, reference):
+    def evaluate(self, energy):
         """Evaluate the model (static function)."""
-        values = self._evaluate((energy,), clip=True)
-        tilt_factor = np.power(energy / reference, -tilt)
-        return norm * values * tilt_factor
+        return self._evaluate((energy,), clip=True)
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         return {
             "type": self.tag[0],
-            "parameters": self.parameters.to_dict(),
             "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
@@ -1248,10 +1265,9 @@ class TemplateSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        parameters = Parameters.from_dict(data["parameters"])
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        return cls.from_parameters(parameters, energy=energy, values=values)
+        return cls(energy=energy, values=values)
 
 
 class ScaleSpectralModel(SpectralModel):
@@ -1304,21 +1320,22 @@ class Absorption:
     tag = "Absorption"
 
     def __init__(self, energy, param, data, filename=None, interp_kwargs=None):
-        self.data = data
         self.filename = filename
         # set values log centers
         self.param = param
         self.energy = energy
+        self.energy = energy
+        self.data = u.Quantity(data, copy=False)
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
         interp_kwargs.setdefault("extrapolate", True)
 
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(self.param, self.energy), values=data, **interp_kwargs
+            points=(self.param, self.energy), values=self.data, **interp_kwargs
         )
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         if self.filename is None:
             return {
                 "type": self.tag,
@@ -1523,11 +1540,11 @@ class AbsorbedSpectralModel(SpectralModel):
         absorption = np.power(absorption, alpha_norm)
         return dnde * absorption
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         return {
             "type": self.tag,
-            "base_model": self.spectral_model.to_dict(),
-            "absorption": self.absorption.to_dict(),
+            "base_model": self.spectral_model.to_dict(full_output),
+            "absorption": self.absorption.to_dict(full_output),
             "absorption_parameter": {"name": "redshift", "value": self.redshift.value,},
             "parameters": Parameters([self.redshift, self.alpha_norm]).to_dict(),
         }
@@ -1683,6 +1700,10 @@ class NaimaSpectralModel(SpectralModel):
         dnde = dnde.reshape(energy.shape)
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
+
+    def to_dict(self, full_output=True):
+        # for full_output to True otherwise broken
+        return super().to_dict(full_output=True)
 
     @classmethod
     def from_dict(cls, data):

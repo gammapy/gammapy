@@ -85,6 +85,7 @@ class Parameter:
         self.max = max
         self.frozen = frozen
         self._error = error
+        self._type = None
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -99,17 +100,20 @@ class Parameter:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return instance.__dict__[self.name]
+        par = instance.__dict__[self.name]
+        par._type = getattr(instance, "type", None)
+        return par
 
     def __set__(self, instance, value):
         if isinstance(value, Parameter):
             instance.__dict__[self.name] = value
-            # TODO: create the link in the parameters list
-            # par = instance.__dict__[self.name]
-            # instance.__dict__["_parameters"].link(par, value)
         else:
             par = instance.__dict__[self.name]
             raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
+
+    @property
+    def type(self):
+        return self._type
 
     @property
     def error(self):
@@ -317,6 +321,11 @@ class Parameters(collections.abc.Sequence):
             par.check_limits()
 
     @property
+    def types(self):
+        """Parameter types"""
+        return [par.type for par in self]
+
+    @property
     def values(self):
         """Parameter values (`numpy.ndarray`)."""
         return np.array([_.value for _ in self._parameters], dtype=np.float64)
@@ -331,8 +340,7 @@ class Parameters(collections.abc.Sequence):
             List of `Parameters` objects
         """
         pars = itertools.chain(*parameters_list)
-        parameters = cls(pars)
-        return parameters
+        return cls(pars)
 
     def copy(self):
         """A deep copy"""

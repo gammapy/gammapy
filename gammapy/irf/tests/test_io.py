@@ -25,7 +25,7 @@ def test_cta_irf():
 
     psf = irf["psf"].psf_at_energy_and_theta(energy=energy, theta=offset)
     val = psf(Quantity(0.1, "deg"))
-    assert_allclose(val, 4.868832183, rtol=1e-5)
+    assert_allclose(val, 3.56989, rtol=1e-5)
 
     val = irf["bkg"].data.evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 9.400071e-05, rtol=1e-5)

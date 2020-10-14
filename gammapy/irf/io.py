@@ -7,6 +7,17 @@ from .psf_gauss import EnergyDependentMultiGaussPSF
 __all__ = ["load_cta_irfs"]
 
 
+IRF_DL3_AXES_SPECIFICATION = {
+    "THETA": {"name": "offset", "interp": "lin"},
+    "ENERG": {"name": "energy_true", "interp": "log"},
+    "ETRUE": {"name": "energy_true", "interp": "log"},
+    "RAD": {"name": "rad", "interp": "lin"},
+    "DETX": {"name": "fov_lon", "interp": "lin"},
+    "DETY": {"name": "fov_lat", "interp": "lin"},
+    "MIGRA": {"name": "migra", "interp": "lin"},
+}
+
+
 def load_cta_irfs(filename):
     """load CTA instrument response function and return a dictionary container.
 

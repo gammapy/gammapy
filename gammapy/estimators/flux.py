@@ -147,7 +147,7 @@ class FluxEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.spectrum.SpectrumDataset`
+        datasets : list of `~gammapy.datasets.SpectrumDataset`
             Spectrum datasets.
 
         Returns

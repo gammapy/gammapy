@@ -97,7 +97,7 @@ def test_wcsndmap_read_write_fgst(tmp_path):
 
     # Test Counts Cube
     m = WcsNDMap(geom)
-    m.write(path, conv="fgst-ccube", overwrite=True)
+    m.write(path, format="fgst-ccube", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "EBOUNDS" in hdulist
 
@@ -105,7 +105,7 @@ def test_wcsndmap_read_write_fgst(tmp_path):
     assert m2.geom.axes[0].name == "energy"
 
     # Test Model Cube
-    m.write(path, conv="fgst-template", overwrite=True)
+    m.write(path, format="fgst-template", overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         assert "ENERGIES" in hdulist
 
@@ -113,9 +113,17 @@ def test_wcsndmap_read_write_fgst(tmp_path):
 @requires_data()
 def test_wcsndmap_read_ccube():
     counts = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
-    energy_axis = counts.geom.get_axis_by_name("energy")
+    energy_axis = counts.geom.axes["energy"]
     # for the 3FGL data the lower energy threshold should be at 10 GeV
     assert_allclose(energy_axis.edges.min().to_value("GeV"), 10, rtol=1e-3)
+
+
+@requires_data()
+def test_wcsndmap_read_exposure():
+    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz")
+    energy_axis = exposure.geom.axes["energy_true"]
+    assert energy_axis.node_type == "center"
+    assert exposure.unit == "cm2 s"
 
 
 def test_wcs_nd_map_data_transpose_issue(tmp_path):
@@ -394,23 +402,23 @@ def test_wcsndmap_upsample(npix, binsz, frame, proj, skydir, axes):
 
 
 def test_wcsndmap_upsample_axis():
-    axis = MapAxis.from_nodes([1, 2, 3, 4], name="test")
+    axis = MapAxis.from_edges([1, 2, 3, 4], name="test")
     geom = WcsGeom.create(npix=(4, 4), axes=[axis])
     m = WcsNDMap(geom, unit="m2")
     m.data += 1
 
-    m2 = m.upsample(2, preserve_counts=True, axis="test")
-    assert m2.data.shape == (8, 4, 4)
+    m2 = m.upsample(2, preserve_counts=True, axis_name="test")
+    assert m2.data.shape == (6, 4, 4)
     assert_allclose(m.data.sum(), m2.data.sum())
 
 
 def test_wcsndmap_downsample_axis():
-    axis = MapAxis.from_nodes([1, 2, 3, 4], name="test")
+    axis = MapAxis.from_edges([1, 2, 3, 4, 5], name="test")
     geom = WcsGeom.create(npix=(4, 4), axes=[axis])
     m = WcsNDMap(geom, unit="m2")
     m.data += 1
 
-    m2 = m.downsample(2, preserve_counts=True, axis="test")
+    m2 = m.downsample(2, preserve_counts=True, axis_name="test")
     assert m2.data.shape == (2, 4, 4)
 
 
@@ -426,6 +434,20 @@ def test_wcsndmap_resample_axis():
     m2 = m.resample_axis(axis=new_axis)
     assert m2.data.shape == (3, 2, 6, 7)
     assert_allclose(m2.data, 2)
+
+
+def test_wcsndmap_resample_axis_logical_and():
+    axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
+
+    geom = WcsGeom.create(npix=(2, 2), axes=[axis_1])
+    m = WcsNDMap(geom, dtype=bool)
+    m.data[:, :, :] = True
+    m.data[0, 0, 0] = False
+
+    new_axis = MapAxis.from_edges([1, 3, 5], name="test-1")
+    m2 = m.resample_axis(axis=new_axis, ufunc=np.logical_and)
+    assert_allclose(m2.data[0,0,0], False)
+    assert_allclose(m2.data[1,0,0], True)
 
 
 def test_coadd_unit():
@@ -580,6 +602,54 @@ def test_get_spectrum():
     spec = m.get_spectrum(region=region)
     assert_allclose(spec.data.squeeze(), [1.0, 1.0, 1.0])
 
+def test_get_spectrum_type():
+    axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
+    )
+
+    m_int = Map.from_geom(geom, dtype='int')
+    m_int.data += 1
+
+    m_bool = Map.from_geom(geom, dtype='bool')
+    m_bool.data += True
+
+    center = SkyCoord(0, 0, frame="galactic", unit="deg")
+    region = CircleSkyRegion(center=center, radius=1 * u.deg)
+
+    spec_int = m_int.get_spectrum(region=region)
+    assert spec_int.data.dtype == np.dtype('int')
+    assert_allclose(spec_int.data.squeeze(), [13, 13, 13])
+
+    spec_bool = m_bool.get_spectrum(region=region, func=np.any)
+    assert spec_bool.data.dtype == np.dtype('bool')
+    assert_allclose(spec_bool.data.squeeze(), [1, 1, 1])
+
+def test_get_spectrum_weights():
+    axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
+    )
+
+    m_int = Map.from_geom(geom,dtype='int')
+    m_int.data += 1
+
+    weights = Map.from_geom(geom, dtype='bool')
+    weights.data[:,2,2]=True
+
+    bad_weights = Map.from_geom(geom.to_image(), dtype='bool')
+
+    center = SkyCoord(0, 0, frame="galactic", unit="deg")
+    region = CircleSkyRegion(center=center, radius=1 * u.deg)
+
+    spec_int = m_int.get_spectrum(region=region, weights=weights)
+    assert spec_int.data.dtype == np.dtype('int')
+    assert_allclose(spec_int.data.squeeze(), [1, 1, 1])
+
+    with pytest.raises(ValueError):
+        m_int.get_spectrum(region=region, weights=bad_weights)
 
 def get_npred_map():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
@@ -651,12 +721,12 @@ def test_sum_over_axes():
     geom = WcsGeom.create(npix=(5, 5), axes=[ax1, ax2, ax3])
     m1 = Map.from_geom(geom=geom)
     m1.data = np.ones(m1.data.shape)
-    m2 = m1.sum_over_axes(axes=["ax1", "ax3"], keepdims=True)
+    m2 = m1.sum_over_axes(axes_names=["ax1", "ax3"], keepdims=True)
 
     assert_allclose(m2.geom.data_shape, (1, 3, 1, 5, 5))
     assert_allclose(m2.data[0][0][0][0][0], 8.0)
 
-    m3 = m1.sum_over_axes(axes=["ax3", "ax2"], keepdims=False)
+    m3 = m1.sum_over_axes(axes_names=["ax3", "ax2"], keepdims=False)
     assert_allclose(m3.geom.data_shape, (4, 5, 5))
     assert_allclose(m3.data[0][0][0], 6.0)
 
@@ -669,12 +739,12 @@ def test_reduce():
     geom = WcsGeom.create(npix=(5, 5), axes=[ax1, ax2, ax3])
     m1 = Map.from_geom(geom=geom)
     m1.data = np.ones(m1.data.shape)
-    m2 = m1.reduce(axis="ax1", keepdims=True)
+    m2 = m1.reduce(axis_name="ax1", keepdims=True)
 
     assert_allclose(m2.geom.data_shape, (2, 3, 1, 5, 5))
     assert_allclose(m2.data[0][0][0][0][0], 4.0)
 
-    m3 = m1.reduce(axis="ax1", keepdims=False)
+    m3 = m1.reduce(axis_name="ax1", keepdims=False)
     assert_allclose(m3.geom.data_shape, (2, 3, 5, 5))
     assert_allclose(m3.data[0][0][0][0], 4.0)
 

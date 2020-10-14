@@ -254,7 +254,7 @@ def test_models_management(tmp_path):
     npred1b = datasets[0].npred().data.sum()
     assert npred1b != npred1
     assert npred1b != npred0
-    assert_allclose(npred1b, 5199.102662, rtol=1e-5)
+    assert_allclose(npred1b, 5157.137554, rtol=1e-5)
 
     datasets.models.remove(model1b)
     _ = datasets.models  # auto-update models

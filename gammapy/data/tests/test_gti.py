@@ -95,13 +95,15 @@ def make_gti(times, time_ref="2010-01-01"):
 def test_gti_stack():
     time_ref = Time("2010-01-01")
     gti1 = make_gti({"START": [0, 2], "STOP": [1, 3]}, time_ref=time_ref)
+    gt1_pre_stack = gti1.copy()
     gti2 = make_gti({"START": [4], "STOP": [5]}, time_ref=time_ref + 10 * u.s)
 
-    gti = gti1.stack(gti2)
+    gti1.stack(gti2)
 
-    assert_time_allclose(gti.time_ref, gti1.time_ref)
-    assert_allclose(gti.table["START"], [0, 2, 14])
-    assert_allclose(gti.table["STOP"], [1, 3, 15])
+    assert len(gti1.table) == 3
+    assert_time_allclose(gt1_pre_stack.time_ref, gti1.time_ref)
+    assert_allclose(gti1.table["START"], [0, 2, 14])
+    assert_allclose(gti1.table["STOP"], [1, 3, 15])
 
 
 def test_gti_union():

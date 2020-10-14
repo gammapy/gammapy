@@ -369,12 +369,12 @@ class LightCurveEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
+        datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
 
         Returns
         -------
-        lightcurve : `~gammapy.time.LightCurve`
+        lightcurve : `~gammapy.estimators.LightCurve`
             the Light Curve object
         """
         datasets = Datasets(datasets)

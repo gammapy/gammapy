@@ -15,6 +15,7 @@ SPATIAL_MODEL_REGISTRY = Registry(
         TemplateSpatialModel,
         DiskSpatialModel,
         GaussianSpatialModel,
+        GeneralizedGaussianSpatialModel,
         PointSpatialModel,
         ShellSpatialModel,
     ]
@@ -56,7 +57,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
 )
 """Registry of temporal models classes."""
 
-MODEL_REGISTRY = Registry([SkyModel, SkyDiffuseCube, BackgroundModel])
+MODEL_REGISTRY = Registry([SkyModel, BackgroundModel])
 """Registry of model classes"""
 
 
@@ -68,7 +69,6 @@ __all__ = [
     "SkyModelBase",
     "Models",
     "SkyModel",
-    "SkyDiffuseCube",
     "BackgroundModel",
     "create_crab_spectral_model",
     "create_cosmic_ray_spectral_model",

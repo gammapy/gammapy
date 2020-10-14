@@ -37,7 +37,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
-        background = dataset.background * mask
+        background = dataset.counts_off_normalised * mask
         background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
 
@@ -47,11 +47,18 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
         background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
 
+        npred_sig = dataset.npred_sig() * mask
+        npred_sig = npred_sig.sum_over_axes(keepdims=True)
+        mu_sig = npred_sig.convolve(kernel.array)
+
         with np.errstate(invalid="ignore", divide="ignore"):
             alpha_conv = background_conv / n_off_conv
 
-        return WStatCountsStatistic(n_on_conv.data, n_off_conv.data, alpha_conv.data)
+        return WStatCountsStatistic(
+            n_on_conv.data, n_off_conv.data, alpha_conv.data, mu_sig.data
+        )
     else:
+
         npred = dataset.npred() * mask
         npred = npred.sum_over_axes(keepdims=True)
         background_conv = npred.convolve(kernel.array)
@@ -148,7 +155,7 @@ class ExcessMapEstimator(Estimator):
         datasets = Datasets(dataset)
 
         if self.e_edges is None:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            energy_axis = dataset.counts.geom.axes["energy"]
             e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
             e_edges = self.e_edges
@@ -185,7 +192,8 @@ class ExcessMapEstimator(Estimator):
         kernel = Tophat2DKernel(size)
 
         counts_stat = convolved_map_dataset_counts_statistics(
-            dataset, kernel, self.apply_mask_fit)
+            dataset, kernel, self.apply_mask_fit
+        )
 
         geom = dataset.counts.geom.squash("energy")
 

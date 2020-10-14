@@ -3,7 +3,7 @@ import abc
 import numpy as np
 from scipy.optimize import brentq, newton
 from scipy.stats import chi2
-from .fit_statistics import cash, wstat
+from .fit_statistics import cash, wstat, get_wstat_mu_bkg
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
@@ -202,16 +202,33 @@ class WStatCountsStatistic(CountsStatistic):
         Measured counts in background only (OFF) region
     alpha : float
         Acceptance ratio of ON and OFF measurements
+    mu_sig : float
+        Expected counts in signal region
     """
 
-    def __init__(self, n_on, n_off, alpha):
+    def __init__(self, n_on, n_off, alpha, mu_sig=None):
         self.n_on = np.asanyarray(n_on)
         self.n_off = np.asanyarray(n_off)
         self.alpha = np.asanyarray(alpha)
+        if mu_sig is None:
+            self.mu_sig = np.zeros_like(self.n_on)
+        else:
+            self.mu_sig = np.asanyarray(mu_sig)
 
     @property
     def background(self):
+        mu_bkg = self.alpha * get_wstat_mu_bkg(
+            n_on=self.n_on, n_off=self.n_off, alpha=self.alpha, mu_sig=self.mu_sig,
+        )
+        return np.nan_to_num(mu_bkg)
+
+    @property
+    def counts_off_normalised(self):
         return self.alpha * self.n_off
+
+    @property
+    def excess(self):
+        return self.n_on - self.counts_off_normalised - self.mu_sig
 
     @property
     def error(self):
@@ -220,16 +237,24 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def TS_null(self):
-        """Stat value for null hypothesis, i.e. 0 expected signal counts"""
-        return wstat(self.n_on, self.n_off, self.alpha, 0)
+        """Stat value for null hypothesis, i.e. mu_sig expected signal counts"""
+        return wstat(self.n_on, self.n_off, self.alpha, self.mu_sig)
 
     @property
     def TS_max(self):
-        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - alpha * n_off"""
-        return wstat(self.n_on, self.n_off, self.alpha, self.excess)
+        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - alpha * n_off - mu_sig"""
+        return wstat(self.n_on, self.n_off, self.alpha, self.excess + self.mu_sig)
 
     def _stat_fcn(self, mu, delta=0, index=None):
-        return wstat(self.n_on[index], self.n_off[index], self.alpha[index], mu) - delta
+        return (
+            wstat(
+                self.n_on[index],
+                self.n_off[index],
+                self.alpha[index],
+                (mu + self.mu_sig[index]),
+            )
+            - delta
+        )
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
         TS0 = wstat(

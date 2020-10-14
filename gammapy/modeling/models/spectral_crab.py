@@ -49,8 +49,7 @@ def create_crab_spectral_model(reference="meyer"):
     Let's first import what we need::
 
         import astropy.units as u
-        from gammapy.spectrum import create_crab_spectral_model
-        from gammapy.modeling.models import PowerLaw
+        from gammapy.modeling.models import PowerLaw, create_crab_spectral_model
 
     Plot the 'hess_ecpl' reference Crab spectrum between 1 TeV and 100 TeV::
 

@@ -12,7 +12,7 @@ from gammapy.utils.regions import (
     make_region,
 )
 from .core import MapCoord
-from .geom import Geom, MapAxis, make_axes, pix_tuple_to_idx
+from .geom import Geom, MapAxis, MapAxes, pix_tuple_to_idx
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -42,7 +42,7 @@ class RegionGeom(Geom):
 
     def __init__(self, region, axes=None, wcs=None):
         self._region = region
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
 
         if wcs is None and region is not None:
             wcs = WcsGeom.create(
@@ -118,7 +118,7 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        coords = MapCoord.create(coords)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
         return self.region.contains(coords.skycoord, self.wcs)
 
     def separation(self, position):
@@ -131,9 +131,7 @@ class RegionGeom(Geom):
 
     @property
     def _shape(self):
-        npix_shape = [1, 1]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        return tuple((1, 1) + self.axes.shape)
 
     def get_coord(self, frame=None):
         """Get map coordinates from the geometry.
@@ -192,16 +190,12 @@ class RegionGeom(Geom):
     def to_image(self):
         return self._init_copy(axes=None)
 
-    def upsample(self, factor, axis):
-        axes = copy.deepcopy(self.axes)
-        idx = self.get_axis_index_by_name(axis)
-        axes[idx] = axes[idx].upsample(factor)
+    def upsample(self, factor, axis_name):
+        axes = self.axes.upsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
-    def downsample(self, factor, axis):
-        axes = copy.deepcopy(self.axes)
-        idx = self.get_axis_index_by_name(axis)
-        axes[idx] = axes[idx].downsample(factor)
+    def downsample(self, factor, axis_name):
+        axes = self.axes.downsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
     def pix_to_coord(self, pix):
@@ -234,10 +228,13 @@ class RegionGeom(Geom):
         return tuple(idxs)
 
     def coord_to_pix(self, coords):
+        coords = MapCoord.create(
+            coords, frame=self.frame, axis_names=self.axes.names
+        )
+
         if self.region is None:
             pix = (0, 0)
         else:
-            coords = MapCoord.create(coords, frame=self.frame)
             in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
             x = np.zeros(coords.shape)
@@ -248,10 +245,7 @@ class RegionGeom(Geom):
 
             pix = (x, y)
 
-        c = self.coord_to_tuple(coords)
-        for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
-            pix += (ax.coord_to_pix(coord),)
-
+        pix += self.axes.coord_to_pix(coords)
         return pix
 
     def get_idx(self):
@@ -370,37 +364,9 @@ class RegionGeom(Geom):
     def union(self, other):
         """Stack a RegionGeom by making the union"""
         if not self == other:
-            print(self, other)
             raise ValueError("Can only make union if extra axes are equivalent.")
         if other.region:
             if self.region:
                 self._region = self.region.union(other.region)
             else:
                 self._region = other.region
-
-    def squash(self, axis):
-        """Squash geom axis.
-
-        Parameters
-        ----------
-        axis : str
-            Axis to squash.
-
-        Returns
-        -------
-        geom : `Geom`
-            Geom with squashed axis.
-        """
-        _ = self.get_axis_by_name(axis)
-
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                ax = ax.squash()
-            axes.append(ax)
-
-        return self.__class__(
-            self.region,
-            axes=axes,
-            wcs=self.wcs,
-        )

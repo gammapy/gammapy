@@ -106,14 +106,14 @@ class IRFMap:
             slices = cutout_info["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
         else:
-            parent_slices = None
+            parent_slices = slice(None)
 
         self._irf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
         self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights)
 
         # stack exposure map
-        if weights and "energy" in weights.geom.axes_names:
-            weights = weights.reduce_over_axes(func=np.logical_or, axes=["energy"], keepdims=True)
+        if weights and "energy" in weights.geom.axes.names:
+            weights = weights.reduce(axis_name="energy", func=np.logical_or, keepdims=True)
         self.exposure_map.stack(other.exposure_map, weights=weights)
 
         with np.errstate(invalid="ignore"):

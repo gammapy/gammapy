@@ -199,7 +199,7 @@ def test_geom_analysis_1d():
 
     assert len(analysis.datasets) == 1
 
-    axis = analysis.datasets[0].aeff.geom.axes[0]
+    axis = analysis.datasets[0].exposure.geom.axes["energy_true"]
     assert axis.nbin == 50
     assert_allclose(axis.edges[0].to_value("TeV"), 0.03)
     assert_allclose(axis.edges[-1].to_value("TeV"), 100)
@@ -275,7 +275,7 @@ def test_analysis_ring_background():
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
-        analysis.datasets[0].background_model.map.data[0, 10, 10], 0.091552, rtol=1e-5
+        analysis.datasets[0].background_model.map.data[0, 10, 10], 0.091799, rtol=1e-5
     )
 
 
@@ -314,7 +314,7 @@ def test_analysis_3d():
     analysis.get_observations()
     analysis.get_datasets()
     analysis.read_models(MODEL_FILE)
-    analysis.datasets["stacked"].background_model.tilt.frozen = False
+    analysis.datasets["stacked"].background_model.spectral_model.tilt.frozen = False
     analysis.run_fit()
     analysis.get_flux_points()
 
@@ -339,10 +339,16 @@ def test_analysis_3d_joint_datasets():
     analysis.get_observations()
     analysis.get_datasets()
     assert len(analysis.datasets) == 2
-    assert_allclose(analysis.datasets[0].background_model.norm.value, 1.031743694988066)
-    assert_allclose(analysis.datasets[0].background_model.tilt.value, 0.0)
     assert_allclose(
-        analysis.datasets[1].background_model.norm.value, 0.9776349021876344
+        analysis.datasets[0].background_model.spectral_model.norm.value,
+        1.031743694988066,
+    )
+    assert_allclose(
+        analysis.datasets[0].background_model.spectral_model.tilt.value, 0.0
+    )
+    assert_allclose(
+        analysis.datasets[1].background_model.spectral_model.norm.value,
+        0.9776349021876344,
     )
 
 

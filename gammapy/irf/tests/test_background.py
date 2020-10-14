@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import Background2D, Background3D
+from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -11,20 +12,22 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def bkg_3d():
     """Example with simple values to test evaluate"""
     energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
     fov_lon = [0, 1, 2, 3] * u.deg
+    fov_lon_axis = MapAxis.from_edges(fov_lon, name="fov_lon")
+
     fov_lat = [0, 1, 2, 3] * u.deg
+    fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
 
     data = np.ones((2, 3, 3)) * u.Unit("s-1 GeV-1 sr-1")
     # Axis order is (energy, fov_lon, fov_lat)
     # data.value[1, 0, 0] = 1
     data.value[1, 1, 1] = 100
     return Background3D(
-        energy_lo=energy[:-1],
-        energy_hi=energy[1:],
-        fov_lon_lo=fov_lon[:-1],
-        fov_lon_hi=fov_lon[1:],
-        fov_lat_lo=fov_lat[:-1],
-        fov_lat_hi=fov_lat[1:],
+        energy_axis=energy_axis,
+        fov_lon_axis=fov_lon_axis,
+        fov_lat_axis=fov_lat_axis,
         data=data,
     )
 
@@ -33,15 +36,15 @@ def bkg_3d():
 def test_background_3d_basics(bkg_3d):
     assert "NDDataArray summary info" in str(bkg_3d.data)
 
-    axis = bkg_3d.data.axis("energy")
+    axis = bkg_3d.data.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_3d.data.axis("fov_lon")
+    axis = bkg_3d.data.axes["fov_lon"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    axis = bkg_3d.data.axis("fov_lat")
+    axis = bkg_3d.data.axes["fov_lat"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
@@ -54,18 +57,18 @@ def test_background_3d_basics(bkg_3d):
 
 
 def test_background_3d_read_write(tmp_path, bkg_3d):
-    bkg_3d.to_fits().writeto(tmp_path / "bkg3d.fits")
+    bkg_3d.to_table_hdu().writeto(tmp_path / "bkg3d.fits")
     bkg_3d_2 = Background3D.read(tmp_path / "bkg3d.fits")
 
-    axis = bkg_3d_2.data.axis("energy")
+    axis = bkg_3d_2.data.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_3d_2.data.axis("fov_lon")
+    axis = bkg_3d_2.data.axes["fov_lon"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    axis = bkg_3d_2.data.axis("fov_lat")
+    axis = bkg_3d_2.data.axes["fov_lat"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
@@ -151,15 +154,16 @@ def test_plot(bkg_2d):
 def bkg_2d():
     """A simple Background2D test case"""
     energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
     offset = [0, 1, 2, 3] * u.deg
+    offset_axis = MapAxis.from_edges(offset, name="offset")
     data = np.zeros((2, 3)) * u.Unit("s-1 MeV-1 sr-1")
     data.value[1, 0] = 2
     data.value[1, 1] = 4
     return Background2D(
-        energy_lo=energy[:-1],
-        energy_hi=energy[1:],
-        offset_lo=offset[:-1],
-        offset_hi=offset[1:],
+        energy_axis=energy_axis,
+        offset_axis=offset_axis,
         data=data,
     )
 
@@ -197,14 +201,14 @@ def test_background_2d_evaluate(bkg_2d):
 
 
 def test_background_2d_read_write(tmp_path, bkg_2d):
-    bkg_2d.to_fits().writeto(tmp_path / "tmp.fits")
+    bkg_2d.to_table_hdu().writeto(tmp_path / "tmp.fits")
     bkg_2d_2 = Background2D.read(tmp_path / "tmp.fits")
 
-    axis = bkg_2d_2.data.axis("energy")
+    axis = bkg_2d_2.data.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_2d_2.data.axis("offset")
+    axis = bkg_2d_2.data.axes["offset"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 

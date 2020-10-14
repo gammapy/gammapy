@@ -111,10 +111,9 @@ Cython
 ------
 
 We also have some Cython code in Gammapy, at the time of this writing less than
-1% in these two files:
+1% in this file:
 
-* ``gammapy/detect/_test_statistics_cython.pyx``
-* ``gammapy/maps/_sparse.pyx``
+* ``gammapy/stats/fit_statistics_cython.pyx``
 
 and again as part of the Astropy package template there is the
 ``gammapy/_compiler.c`` file to help ``setup.py`` figure out information about

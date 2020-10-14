@@ -5,6 +5,7 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 import astropy.units as u
+from astropy.utils import lazyproperty
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from regions import (
@@ -14,7 +15,7 @@ from regions import (
     PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import Model
@@ -38,6 +39,8 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
 class SpatialModel(Model):
     """Spatial model base class."""
 
+    _type = "spatial"
+
     def __init__(self, **kwargs):
         frame = kwargs.pop("frame", "icrs")
         super().__init__(**kwargs)
@@ -47,10 +50,24 @@ class SpatialModel(Model):
     def __call__(self, lon, lat, energy=None):
         """Call evaluate method"""
         kwargs = {par.name: par.quantity for par in self.parameters}
-        if energy:
-            return self.evaluate(lon, lat, energy, **kwargs)
-        else:
-            return self.evaluate(lon, lat, **kwargs)
+
+        if energy is None and self.is_energy_dependent:
+            raise ValueError("Missing energy value for evaluation")
+
+        if energy is not None:
+            kwargs["energy"] = energy
+
+        return self.evaluate(lon, lat, **kwargs)
+
+    @property
+    def type(self):
+        return self._type
+
+    # TODO: make this a hard-coded class attribute?
+    @lazyproperty
+    def is_energy_dependent(self):
+        varnames = self.evaluate.__code__.co_varnames
+        return "energy" in varnames
 
     @property
     def position(self):
@@ -112,14 +129,12 @@ class SpatialModel(Model):
         )
 
     def evaluate_geom(self, geom):
-        if "energy_true" in [axe.name for axe in geom.axes]:
-            energy = geom.get_axis_by_name("energy_true").center[
-                :, np.newaxis, np.newaxis
-            ]
-            coords = geom.to_image().get_coord(frame=self.frame)
-            return self(coords.lon, coords.lat, energy)
+        coords = geom.to_image().get_coord(frame=self.frame)
+
+        if self.is_energy_dependent:
+            energy = geom.axes["energy_true"].center
+            return self(coords.lon, coords.lat, energy[:, np.newaxis, np.newaxis])
         else:
-            coords = geom.get_coord(frame=self.frame)
             return self(coords.lon, coords.lat)
 
     def integrate_geom(self, geom):
@@ -128,9 +143,9 @@ class SpatialModel(Model):
         data = values * geom.solid_angle()
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data["frame"] = self.frame
         data["parameters"] = data.pop("parameters")
         return data
@@ -362,6 +377,66 @@ class GaussianSpatialModel(SpatialModel):
         )
 
 
+class GeneralizedGaussianSpatialModel(SpatialModel):
+    r"""Two-dimensional Generealized Gaussian model.
+
+    For more information see :ref:`generalized-gaussian-spatial-model`.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    r_0 : `~astropy.coordinates.Angle`
+        Length of the major semiaxis, in angular units.
+    eta : `float`
+        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplacian:1
+    e : `float`
+        Eccentricity (:math:`0< e< 1`).
+    phi : `~astropy.coordinates.Angle`
+        Rotation angle :math:`\phi`: of the major semiaxis.
+        Increases counter-clockwise from the North direction.
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
+    """
+
+    tag = ["GeneralizedGaussianSpatialModel", "gauss-general"]
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    r_0 = Parameter("r_0", "1 deg")
+    eta = Parameter("eta", 0.5, min=0.01, max=1.0)
+    e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True)
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, eta, e, phi):
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+        if isinstance(eta, u.Quantity):
+            eta = eta.value  # gamma function does not allow quantities
+        minor_axis, r_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)
+        z = sep / r_eff
+        norm = 1 / (2 * np.pi * minor_axis * r_0 * eta * scipy.special.gamma(2 * eta))
+        return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
+
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set as :math:`5 r_{\rm eff}`.
+        """
+        return 5 * self.parameters["r_0"].quantity
+
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.EllipseSkyRegion`)."""
+        minor_axis = Angle(self.r_0.quantity * (1 - self.e.quantity))
+        return EllipseSkyRegion(
+            center=self.position,
+            height=2 * self.r_0.quantity,
+            width=2 * minor_axis,
+            angle=self.phi.quantity,
+            **kwargs,
+        )
+
+
 class DiskSpatialModel(SpatialModel):
     r"""Constant disk model.
 
@@ -531,10 +606,10 @@ class ConstantSpatialModel(SpatialModel):
     evaluation_radius = None
     position = None
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data.pop("frame")
         data["parameters"] = data.pop("parameters")
         return data
@@ -569,10 +644,10 @@ class ConstantFluxSpatialModel(SpatialModel):
     evaluation_radius = None
     position = None
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data.pop("frame")
         return data
 
@@ -607,8 +682,6 @@ class TemplateSpatialModel(SpatialModel):
     ----------
     map : `~gammapy.maps.Map`
         Map template.
-    norm : float
-        Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     normalize : bool
@@ -629,22 +702,25 @@ class TemplateSpatialModel(SpatialModel):
         if filename is not None:
             filename = str(make_path(filename))
 
-        self.map = map
         self.normalize = normalize
+
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity
-            if len(self.map.data.shape) > 2:
-                # Normalize in each energy bin
-                data_sum = self.map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
+            if map.geom.is_image:
+                data_sum = map.data.sum()
             else:
-                data_sum = self.map.data.sum()
-            data = self.map.data / data_sum
-            data /= self.map.geom.solid_angle().to_value("sr")
-            self.map = self.map.copy(data=data, unit="sr-1")
-        else:
-            if self.map.unit.is_equivalent(""):
-                self.map.unit = "sr-1"
-                log.warning("Missing spatial template unit, assuming sr^-1")
+                # Normalize in each energy bin
+                data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
+
+            data = map.data / data_sum
+            data /= map.geom.solid_angle().to_value("sr")
+            map = map.copy(data=data, unit="sr-1")
+
+        if map.unit.is_equivalent(""):
+            map = map.copy(unit="sr-1")
+            log.warning("Missing spatial template unit, assuming sr^-1")
+
+        self.map = map
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
@@ -653,6 +729,10 @@ class TemplateSpatialModel(SpatialModel):
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         super().__init__()
+
+    @property
+    def is_energy_dependent(self):
+        return "energy_true" in self.map.geom.axes.names
 
     @property
     def evaluation_radius(self):
@@ -665,8 +745,7 @@ class TemplateSpatialModel(SpatialModel):
     @classmethod
     def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
-
-        The unit of the map has to be equivalent to ``sr-1``. If no unit the default is ``sr-1``.
+        If unit is not given in the FITS header the default is ``sr-1``.
 
         Parameters
         ----------
@@ -678,7 +757,6 @@ class TemplateSpatialModel(SpatialModel):
             Keyword arguments passed to `Map.read()`.
         """
         m = Map.read(filename, **kwargs)
-
         return cls(m, normalize=normalize, filename=filename)
 
     def evaluate(self, lon, lat, energy=None):
@@ -688,8 +766,6 @@ class TemplateSpatialModel(SpatialModel):
         }
         if energy is not None:
             coord["energy_true"] = energy
-        if energy is None and len(self.map.data.shape) > 2:
-            raise ValueError("Missing energy value for evaluation")
 
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=False)
@@ -705,21 +781,17 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
-        m = Map.read(data["filename"])
+        filename = data["filename"]
+        normalize = data.get("normalize", True)
+        m = Map.read(filename)
+        return cls(m, normalize=normalize, filename=filename)
 
-        parameters = Parameters.from_dict(data["parameters"])
-        return cls.from_parameters(
-            parameters=parameters,
-            map=m,
-            filename=data["filename"],
-            normalize=data.get("normalize", True),
-        )
-
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
-        data = super().to_dict()
+        data = super().to_dict(full_output)
         data["filename"] = self.filename
         data["normalize"] = self.normalize
+        data["unit"] = str(self.map.unit)
         return data
 
     def to_region(self, **kwargs):

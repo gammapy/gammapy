@@ -104,7 +104,7 @@ def test_dnde_from_flux():
 @pytest.mark.parametrize("method", ["table", "lafferty", "log_center"])
 def test_compute_flux_points_dnde_exp(method):
     """
-    Tests against analytical result or result from gammapy.spectrum.powerlaw.
+    Tests against analytical result or result from a powerlaw.
     """
     model = ExpTestModel()
 
@@ -279,6 +279,13 @@ def test_e2dnde_to_dnde(flux_points_e2dnde, flux_points_dnde):
 
 def test_flux_to_dnde(flux_points_flux, flux_points_dnde):
     actual = flux_points_flux.to_sed_type("dnde", method="log_center").table
+    desired = flux_points_dnde.table
+    assert_allclose(actual["e_ref"], desired["e_ref"])
+    assert_allclose(actual["dnde"], desired["dnde"])
+
+
+def test_dnde_to_dnde(flux_points_dnde):
+    actual = flux_points_dnde.to_sed_type("dnde").table
     desired = flux_points_dnde.table
     assert_allclose(actual["e_ref"], desired["e_ref"])
     assert_allclose(actual["dnde"], desired["dnde"])

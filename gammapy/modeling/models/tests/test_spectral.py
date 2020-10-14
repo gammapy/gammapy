@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+import operator
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
@@ -41,7 +42,7 @@ def table_model():
     )
     dnde = model(energy)
 
-    return TemplateSpectralModel(energy, dnde, 1)
+    return TemplateSpectralModel(energy, dnde)
 
 
 TEST_MODELS = [
@@ -70,7 +71,7 @@ TEST_MODELS = [
     dict(
         name="norm-powerlaw",
         model=PowerLawNormSpectralModel(
-            index=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
+            tilt=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, ""),
         integral_1_10TeV=u.Quantity(3.6, "TeV"),
@@ -499,7 +500,7 @@ def test_TemplateSpectralModel_evaluate_tiny():
     model = TemplateSpectralModel(
         energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1")
     )
-    result = model.evaluate(energy, norm=1.0, tilt=0.0, reference=1 * u.TeV)
+    result = model.evaluate(energy)
     tiny = np.finfo(np.float32).tiny
     mask = abs(values) - tiny > tiny
     np.testing.assert_allclose(
@@ -507,6 +508,27 @@ def test_TemplateSpectralModel_evaluate_tiny():
     )
     mask = abs(result.value) - tiny <= tiny
     assert np.all(result[mask] == 0.0)
+
+
+def test_TemplateSpectralModel_compound():
+    energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
+    values = [4.39e-7, 1.96e-7, 8.80e-7, 3.94e-7] * u.Unit("MeV-1 s-1 sr-1")
+
+    template = TemplateSpectralModel(energy=energy, values=values)
+    correction = PowerLawNormSpectralModel(norm=2)
+    model = CompoundSpectralModel(template, correction, operator=operator.mul)
+    assert np.allclose(model(energy), 2 * values)
+
+    model_mul = template * correction
+    assert isinstance(model_mul, CompoundSpectralModel)
+    assert np.allclose(model_mul(energy), 2 * values)
+
+    model_dict = model.to_dict()
+    assert model_dict["operator"] == "mul"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    new_model = model_class.from_dict(model_dict)
+    assert isinstance(new_model, CompoundSpectralModel)
+    assert np.allclose(new_model(energy), 2 * values)
 
 
 @requires_dependency("naima")
@@ -746,3 +768,34 @@ class TestSpectralModelErrorPropagation:
 
         out = model.evaluate_error(0.1 * u.TeV)
         assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
+
+
+def test_integral_error_PowerLaw():
+    energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
+    emin = energy[:-1]
+    emax = energy[1:]
+
+    powerlaw = PowerLawSpectralModel()
+    powerlaw.parameters["index"].error = 0.4
+    powerlaw.parameters["amplitude"].error = 1e-13
+
+    flux, flux_error = powerlaw.integral_error(emin, emax)
+
+    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=0.1)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.546615432273905, rtol=0.01)
+
+
+def test_integral_error_ExpCutOffPowerLaw():
+    energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
+    emin = energy[:-1]
+    emax = energy[1:]
+
+    exppowerlaw = ExpCutoffPowerLawSpectralModel()
+    exppowerlaw.parameters["index"].error = 0.4
+    exppowerlaw.parameters["amplitude"].error = 1e-13
+    exppowerlaw.parameters["lambda_"].error = 0.03
+
+    flux, flux_error = exppowerlaw.integral_error(emin, emax)
+
+    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.90907063, rtol=0.01)

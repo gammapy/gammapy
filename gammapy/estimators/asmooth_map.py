@@ -142,7 +142,7 @@ class ASmoothMapEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset` or `~gammapy.cube.MapDatasetOnOff`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the input dataset (with one bin in energy at most)
 
         Returns
@@ -158,7 +158,7 @@ class ASmoothMapEstimator(Estimator):
         datasets = Datasets([dataset])
 
         if self.e_edges is None:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+            energy_axis = dataset.counts.geom.axes["energy"]
             e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
             e_edges = self.e_edges
@@ -201,11 +201,10 @@ class ASmoothMapEstimator(Estimator):
 
         # extract 2d arrays
         counts = dataset.counts.data[0].astype(float)
-        background = dataset.npred().data[0]
+        background = dataset.background_model.evaluate().data[0]
 
-        # TODO: remove once MapDatasetOnOff.npred() returns the correct thing
         if isinstance(dataset, MapDatasetOnOff):
-            background += dataset.background
+            background = dataset.counts_off_normalised.data[0]
 
         if dataset.exposure is not None:
             exposure = estimate_exposure_reco_energy(dataset, self.spectrum)

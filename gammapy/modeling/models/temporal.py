@@ -18,6 +18,8 @@ class TemporalModel(Model):
     """Temporal model base class.
     evaluates on  astropy.time.Time objects"""
 
+    _type = "temporal"
+
     def __call__(self, time):
         """Evaluate model
 
@@ -29,6 +31,10 @@ class TemporalModel(Model):
         kwargs = {par.name: par.quantity for par in self.parameters}
         time = u.Quantity(time.mjd, "day")
         return self.evaluate(time, **kwargs)
+
+    @property
+    def type(self):
+        return self._type
 
     @staticmethod
     def time_sum(t_min, t_max):
@@ -49,6 +55,34 @@ class TemporalModel(Model):
         diff = t_max - t_min
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
+
+    def plot(self, time_range, ax=None):
+        """
+        Plot Temporal Model.
+
+        Parameters
+        ----------
+        time_range : `~astropy.time.Time`
+            times to plot the model
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+        """
+
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+        t_min, t_max = time_range
+        n_value = 100
+        delta = t_max - t_min
+        times = t_min + delta * np.linspace(0, 1, n_value)
+        val = self(times)
+        ax.plot(times.mjd, val)
+        return ax
 
 
 class ConstantTemporalModel(TemporalModel):
@@ -112,10 +146,10 @@ class ConstantTemporalModel(TemporalModel):
 
 
 class ExpDecayTemporalModel(TemporalModel):
-    """Temporal model with an exponential decay.
+    r"""Temporal model with an exponential decay.
 
-        ..math::
-                F(t) = exp(t - t_ref)/t0
+    .. math::
+            F(t) = exp(t - t_ref)/t0
 
     Parameters
     ----------
@@ -159,7 +193,10 @@ class ExpDecayTemporalModel(TemporalModel):
 
 
 class GaussianTemporalModel(TemporalModel):
-    """A Gaussian temporal profile
+    r"""A Gaussian temporal profile
+
+    ..math::
+            F(t) = exp( -0.5 * \frac{ (t - t_{ref})^2 } { \sigma^2 })
 
     Parameters
     ----------
@@ -216,7 +253,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     The model does linear interpolation for times between the given ``(time, norm)`` values.
 
-    The implementation currently uses `scipy.interpolate.InterpolatedUnivariateSpline`,
+    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
     using degree ``k=1`` to get linear interpolation.
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.
@@ -396,6 +433,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     def from_dict(cls, data):
         return cls.read(data["filename"])
 
-    def to_dict(self, overwrite=False):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         return {"type": self.tag[0], "filename": self.filename}

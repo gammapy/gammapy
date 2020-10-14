@@ -14,21 +14,20 @@ def psf_3d():
 
 @requires_data()
 def test_psf_3d_basics(psf_3d):
-    assert_allclose(psf_3d.rad_lo[-1].value, 0.659048, rtol=1e-5)
-    assert psf_3d.rad_lo.shape == (144,)
-    assert psf_3d.rad_lo.unit == "deg"
+    assert_allclose(psf_3d.rad_axis.edges[-2].value, 0.659048, rtol=1e-5)
+    assert psf_3d.rad_axis.nbin == 144
+    assert psf_3d.rad_axis.unit == "deg"
 
-    assert_allclose(psf_3d.energy_lo[0].value, 0.01)
-    assert psf_3d.energy_lo.shape == (32,)
-    assert psf_3d.energy_lo.unit == "TeV"
+    assert_allclose(psf_3d.energy_axis_true.edges[0].value, 0.01)
+    assert psf_3d.energy_axis_true.nbin == 32
+    assert psf_3d.energy_axis_true.unit == "TeV"
 
     assert psf_3d.psf_value.shape == (144, 6, 32)
     assert psf_3d.psf_value.unit == "sr-1"
 
     assert_allclose(psf_3d.energy_thresh_lo.value, 0.01)
-    assert psf_3d.energy_lo.unit == "TeV"
 
-    assert "PSF3D" in psf_3d.info()
+    assert "PSF3D" in str(psf_3d)
 
 
 @requires_data()
@@ -65,7 +64,7 @@ def test_psf_3d_write(psf_3d, tmp_path):
     psf_3d.write(tmp_path / "tmp.fits")
     psf_3d = PSF3D.read(tmp_path / "tmp.fits", hdu=1)
 
-    assert_allclose(psf_3d.energy_lo[0].value, 0.01)
+    assert_allclose(psf_3d.energy_axis_true.edges[0].value, 0.01)
 
 
 @requires_data()
@@ -79,7 +78,7 @@ def test_psf_3d_plot_vs_rad(psf_3d):
 @requires_dependency("matplotlib")
 def test_psf_3d_plot_containment(psf_3d):
     with mpl_plot_check():
-        psf_3d.plot_containment(show_safe_energy=True)
+        psf_3d.plot_containment()
 
 
 @requires_data()

@@ -173,7 +173,7 @@ may declare the parameters needed in the ``flux_points`` section.
 .. gp-howto-hli:: flux_points
 
 You may use the `get_flux_points()` method to calculate the flux points. The result
-is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` object.
+is stored in the ``flux_points`` property as a `~gammapy.estimators.FluxPoints` object.
 
 .. code-block:: python
 
@@ -189,7 +189,7 @@ is stored in the ``flux_points`` property as a `~gammapy.spectrum.FluxPoints` ob
       7.07945784384138 1.4907957189689605e-12 ...   4.74857915062012e-14 False
     >>> analysis.flux_points.peek()
 
-You may set fine-grained optional parameters for the `~gammapy.spectrum.FluxPointsEstimator` in the
+You may set fine-grained optional parameters for the `~gammapy.estimators.FluxPointsEstimator` in the
 ``flux_points.params`` settings.
 
 .. code-block:: python

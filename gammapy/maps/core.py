@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
 from .geom import MapCoord, pix_tuple_to_idx, MapAxis
-from .utils import INVALID_VALUE, edges_from_lo_hi
+from .utils import INVALID_VALUE
 
 __all__ = ["Map"]
 
@@ -160,7 +160,7 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto"):
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Read a map from a FITS file.
 
         Parameters
@@ -186,11 +186,11 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format)
 
     @staticmethod
     def from_geom(
-        geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"
+        geom, meta=None, data=None, unit="", dtype="float32"
     ):
         """Generate an empty map from a `Geom` instance.
 
@@ -202,11 +202,6 @@ class Map(abc.ABC):
             data array
         meta : `dict`
             Dictionary to store meta data.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
-            Map type.  Selects the class that will be used to
-            instantiate the map. The map type should be consistent
-            with the geometry. If map_type is 'auto' then an
-            appropriate map type will be inferred from type of ``geom``.
         unit : str or `~astropy.units.Unit`
             Data unit.
 
@@ -216,31 +211,29 @@ class Map(abc.ABC):
             Map object
 
         """
-        if map_type == "auto":
+        from .hpx import HpxGeom
+        from .wcs import WcsGeom
+        from .region import RegionGeom
 
-            from .hpx import HpxGeom
-            from .wcs import WcsGeom
-            from .region import RegionGeom
-
-            if isinstance(geom, HpxGeom):
-                map_type = "hpx"
-            elif isinstance(geom, WcsGeom):
-                map_type = "wcs"
-            elif isinstance(geom, RegionGeom):
-                map_type = "region"
-            else:
-                raise ValueError("Unrecognized geom type.")
+        if isinstance(geom, HpxGeom):
+            map_type = "hpx"
+        elif isinstance(geom, WcsGeom):
+            map_type = "wcs"
+        elif isinstance(geom, RegionGeom):
+            map_type = "region"
+        else:
+            raise ValueError("Unrecognized geom type.")
 
         cls_out = Map._get_map_cls(map_type)
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto"):
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Create from `astropy.io.fits.HDUList`."""
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
 
     @staticmethod
     def _get_meta_from_header(header):
@@ -313,15 +306,14 @@ class Map(abc.ABC):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        conv : str
+        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
+                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
+                  'galprop', 'galprop2'}
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
-            Fermi Science Tools).  Supported conventions are 'gadf',
-            'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-            'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-            'galprop', and 'galprop2'.
+            Fermi Science Tools).
         sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
@@ -341,11 +333,6 @@ class Map(abc.ABC):
         """
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
-
-    @abc.abstractmethod
-    def sum_over_axes(self, axes=None, keepdims=False):
-        """Reduce to a 2D image by summing over non-spatial dimensions."""
-        pass
 
     def coadd(self, map_in, weights=None):
         """Add the contents of ``map_in`` to this map.
@@ -462,8 +449,11 @@ class Map(abc.ABC):
         """
         pass
 
-    def resample_axis(self, axis, weights=None):
-        """Resample map to a new axis binning by grouping and summing smaller bins.
+    def resample_axis(self, axis, weights=None, ufunc=np.add):
+        """Resample map to a new axis binning by grouping over smaller bins and apply ufunc to the bin contents.
+
+        By default, the map content are summed over the smaller bins. Other numpy ufunc can be used,
+        e.g. np.logical_and, np.logical_or
 
         Parameters
         ----------
@@ -472,6 +462,9 @@ class Map(abc.ABC):
         weights : `Map`
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
+        ufunc : `~numpy.ufunc`
+            ufunc to use to resample the axis. Default is numpy.add.
+
 
         Returns
         -------
@@ -480,20 +473,15 @@ class Map(abc.ABC):
         """
         geom = self.geom.resample_axis(axis)
 
-        axis_self = self.geom.get_axis_by_name(axis.name)
-        axis_resampled = geom.get_axis_by_name(axis.name)
+        axis_self = self.geom.axes[axis.name]
+        axis_resampled = geom.axes[axis.name]
 
         indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
-
-        idx = self.geom.get_axis_index_by_name(axis.name)
-
-        # transform to data idx
-        idx = len(geom.axes) - idx - 1
+        idx = self.geom.axes.index_data(axis.name)
 
         weights = 1 if weights is None else weights.data
 
-        data = np.add.reduceat(self.data * weights, indices=indices, axis=idx)
-
+        data = ufunc.reduceat(self.data * weights, indices=indices, axis=idx)
         return self._init_copy(data=data, geom=geom)
 
     def slice_by_idx(self, slices, ):
@@ -578,14 +566,9 @@ class Map(abc.ABC):
             image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
         """
         if isinstance(coords, tuple):
-            axes_names = [_.name for _ in self.geom.axes]
-            coords = dict(zip(axes_names, coords))
+            coords = dict(zip(self.geom.axes.names, coords))
 
-        idx = []
-        for ax in self.geom.axes:
-            value = coords[ax.name]
-            idx.append(ax.coord_to_idx(value))
-
+        idx = self.geom.axes.coord_to_idx(coords)
         return self.get_image_by_idx(idx)
 
     def get_image_by_pix(self, pix):
@@ -654,7 +637,7 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(coords, frame=self.geom.frame)
+        coords = MapCoord.create(coords, frame=self.geom.frame, axis_names=self.geom.axes.names)
         pix = self.geom.coord_to_pix(coords)
         vals = self.get_by_pix(pix)
         return vals
@@ -771,6 +754,34 @@ class Map(abc.ABC):
             Interpolated pixel values.
         """
         pass
+
+    def interp_to_geom(self, geom, **kwargs):
+        """Interpolate map to input geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
+        **kwargs : dict
+            Keyword arguments passed to `Map.interp_by_coord`
+
+        Returns
+        -------
+        interp_map : `Map`
+            Interpolated Map
+        """
+        coords = geom.get_coord()
+
+        # set nearest neighbour interpolation for mask as default
+        if self.data.dtype == bool:
+            kwargs.setdefault("interp", 0)
+
+        data = self.interp_by_coord(coords, **kwargs)
+
+        if self.data.dtype == bool:
+            data = data.astype(bool)
+
+        return Map.from_geom(geom, data=data, unit=self.unit)
 
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
@@ -981,19 +992,41 @@ class Map(abc.ABC):
         """
         # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
         if edisp is not None:
-            loc = self.geom.get_axis_index_by_name("energy_true")
+            loc = self.geom.axes.index("energy_true")
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
             e_reco_axis = edisp.e_reco.copy(name="energy")
         else:
             data = self.data
-            e_reco_axis = self.geom.get_axis_by_name("energy_true").copy(name="energy")
+            e_reco_axis = self.geom.axes["energy_true"].copy(name="energy")
 
         geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
         return self._init_copy(geom=geom_reco, data=data)
 
-    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None, weights=None):
+    def sum_over_axes(self, axes_names=None, keepdims=True, weights=None):
+        """To sum map values over all non-spatial axes.
+
+        Parameters
+        ----------
+        keepdims : bool, optional
+            If this is set to true, the axes which are summed over are left in
+            the map with a single bin
+        axes_names: list of str
+            Names of MapAxis to reduce over. If None, all will summed over
+        weights : `Map`
+            Weights to be applied. The Map should have the same geometry.
+
+        Returns
+        -------
+        map_out : `~Map`
+            Map with non-spatial axes summed over
+        """
+        return self.reduce_over_axes(
+            func=np.add, axes_names=axes_names, keepdims=keepdims, weights=weights
+        )
+
+    def reduce_over_axes(self, func=np.add, keepdims=False, axes_names=None, weights=None):
         """Reduce map over non-spatial axes
 
         Parameters
@@ -1003,7 +1036,7 @@ class Map(abc.ABC):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
-        axes: list
+        axes_names: list
             Names of MapAxis to reduce over
             If None, all will reduced
         weights : `Map`
@@ -1014,20 +1047,21 @@ class Map(abc.ABC):
         map_out : `~Map`
             Map with non-spatial axes reduced
         """
-        if axes is None:
-            axes = [ax.name for ax in self.geom.axes]
+        if axes_names is None:
+            axes_names = self.geom.axes.names
 
         map_out = self.copy()
-        for ax in axes:
-            map_out = map_out.reduce(ax, func=func, keepdims=keepdims, weights=weights)
+        for axis_name in axes_names:
+            map_out = map_out.reduce(axis_name, func=func, keepdims=keepdims, weights=weights)
+
         return map_out
 
-    def reduce(self, axis, func=np.add, keepdims=False, weights=None):
+    def reduce(self, axis_name, func=np.add, keepdims=False, weights=None):
         """Reduce map over a single non-spatial axis
 
         Parameters
         ----------
-        axis: str
+        axis_name: str
             The name of the axis to reduce over
         func : `~numpy.ufunc`
             Function to use for reducing the data.
@@ -1043,12 +1077,11 @@ class Map(abc.ABC):
             Map with the given non-spatial axes reduced
         """
         if keepdims:
-            geom = self.geom.squash(axis=axis)
+            geom = self.geom.squash(axis_name=axis_name)
         else:
-            geom = self.geom.drop(axis=axis)
+            geom = self.geom.drop(axis_name=axis_name)
 
-        names = [ax.name for ax in reversed(self.geom.axes)]
-        idx = names.index(axis)
+        idx = self.geom.axes.index_data(axis_name)
 
         data = self.data
 
@@ -1103,6 +1136,32 @@ class Map(abc.ABC):
             geom=geom_ref.to_cube(axes=[axis]),
             unit=images[0].unit
         )
+
+    def to_cube(self, axes):
+        """Append non-spatial axes to create a higher-dimensional Map.
+
+        This will result in a Map with a new geometry with
+        N+M dimensions where N is the number of current dimensions and
+        M is the number of axes in the list. The data is reshaped onto the
+        new geometry
+
+        Parameters
+        ----------
+        axes : list
+            Axes that will be appended to this Map.
+            The axes should have only one bin
+
+        Returns
+        -------
+        map : `~gammapy.maps.WcsNDMap`
+            new map
+        """
+        for ax in axes:
+            if ax.nbin > 1:
+                raise ValueError(ax.name, "should have only one bin")
+        geom = self.geom.to_cube(axes)
+        data = self.data.reshape((1,) * len(axes) + self.data.shape)
+        return self.from_geom(data=data, geom=geom, unit=self.unit)
 
     def __repr__(self):
         geom = self.geom.__class__.__name__

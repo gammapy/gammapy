@@ -105,10 +105,20 @@ class Model:
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         """Create dict for YAML serialisation"""
         tag = self.tag[0] if isinstance(self.tag, list) else self.tag
-        return {"type": tag, "parameters": self.parameters.to_dict()}
+        params = self.parameters.to_dict()
+
+        if not full_output:
+            base = self.__class__
+            names = self.parameters.names
+            for k, name in enumerate(names):
+                init = base.__dict__[name].to_dict()
+                for item in ["min", "max", "frozen", "error"]:
+                    if params[k][item] == init[item] or np.isnan(init[item]):
+                        del params[k][item]
+        return {"type": tag, "parameters": params}
 
     @classmethod
     def from_dict(cls, data):
@@ -151,7 +161,10 @@ class Model:
         return cls(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.__class__.__name__}\n\n{self.parameters.to_table()}"
+        string = f"{self.__class__.__name__}\n"
+        if len(self.parameters) > 0:
+            string += f"\n{self.parameters.to_table()}"
+        return string
 
 
 class Models(collections.abc.MutableSequence):
@@ -214,31 +227,15 @@ class Models(collections.abc.MutableSequence):
 
     @property
     def parameters_unique_names(self):
-        from gammapy.modeling.models import SkyModel
+        """List of unique parameter names as model_name.par_type.par_name"""
+        names = []
+        for model in self:
+            for par in model.parameters:
+                components = [model.name, par.type, par.name]
+                name = ".".join(components)
+                names.append(name)
 
-        param_names = []
-        for m in self._models:
-            if isinstance(m, SkyModel):
-                for p in m.parameters:
-                    if (
-                        m.spectral_model is not None
-                        and p in m.spectral_model.parameters
-                    ):
-                        tag = ".spectral."
-                    elif (
-                        m.spatial_model is not None and p in m.spatial_model.parameters
-                    ):
-                        tag = ".spatial."
-                    elif (
-                        m.temporal_model is not None
-                        and p in m.temporal_model.parameters
-                    ):
-                        tag = ".temporal."
-                    param_names.append(m.name + tag + p.name)
-            else:
-                for p in m.parameters:
-                    param_names.append(m.name + "." + p.name)
-        return param_names
+        return names
 
     @property
     def names(self):
@@ -294,7 +291,7 @@ class Models(collections.abc.MutableSequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False, write_covariance=True):
+    def write(self, path, overwrite=False, full_output=False, write_covariance=True):
         """Write to YAML file.
 
         Parameters
@@ -326,16 +323,16 @@ class Models(collections.abc.MutableSequence):
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
 
-        path.write_text(self.to_yaml())
+        path.write_text(self.to_yaml(full_output))
 
-    def to_yaml(self):
+    def to_yaml(self, full_output=False):
         """Convert to YAML string."""
-        data = self.to_dict()
+        data = self.to_dict(full_output)
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         """Convert to dict."""
         # update linked parameters labels
         params_list = []
@@ -351,7 +348,7 @@ class Models(collections.abc.MutableSequence):
 
         models_data = []
         for model in self._models:
-            model_data = model.to_dict()
+            model_data = model.to_dict(full_output)
             models_data.append(model_data)
         if self._covar_file is not None:
             return {
@@ -428,9 +425,9 @@ class Models(collections.abc.MutableSequence):
         del self._models[self.index(key)]
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+        from gammapy.modeling.models import SkyModel, BackgroundModel
 
-        if isinstance(model, (SkyModel, SkyDiffuseCube)):
+        if isinstance(model, (SkyModel, BackgroundModel)):
             self._models[self.index(key)] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
@@ -536,11 +533,11 @@ class ProperModels(Models):
                     d._models.remove(key)
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+        from gammapy.modeling.models import SkyModel, BackgroundModel
 
         for d in self._datasets:
             if model not in d._models:
-                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                if isinstance(model, (SkyModel, BackgroundModel)):
                     d._models[key] = model
 
                 else:
@@ -553,11 +550,11 @@ class ProperModels(Models):
                 model.datasets_names.append(d.name)
 
     def insert(self, idx, model):
-        from gammapy.modeling.models import SkyModel, SkyDiffuseCube
+        from gammapy.modeling.models import SkyModel, BackgroundModel
 
         for d in self._datasets:
             if model not in d._models:
-                if isinstance(model, (SkyModel, SkyDiffuseCube)):
+                if isinstance(model, (SkyModel, BackgroundModel)):
                     if idx == len(self):
                         index = len(d._models)
                     else:

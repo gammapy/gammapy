@@ -182,7 +182,7 @@ def test_separation(region):
 def test_upsample(region):
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy", interp="log")
     geom = RegionGeom.create(region, axes=[axis])
-    geom_up = geom.upsample(factor=2, axis="energy")
+    geom_up = geom.upsample(factor=2, axis_name="energy")
 
     assert_allclose(geom_up.axes[0].edges.value, [1.0, 3.162278, 10.0], rtol=1e-5)
 
@@ -190,7 +190,7 @@ def test_upsample(region):
 def test_downsample(region):
     axis = MapAxis.from_edges([1, 3.162278, 10] * u.TeV, name="energy", interp="log")
     geom = RegionGeom.create(region, axes=[axis])
-    geom_down = geom.downsample(factor=2, axis="energy")
+    geom_down = geom.downsample(factor=2, axis_name="energy")
 
     assert_allclose(geom_down.axes[0].edges.value, [1.0, 10.0], rtol=1e-5)
 

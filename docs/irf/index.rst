@@ -26,6 +26,23 @@ EDISP and PSF for a given dataset.
 Most (at some point maybe all) classes in `gammapy.irf` have an
 `gammapy.utils.nddata.NDDataArray` as data attribute to support interpolation.
 
+
+IRF Axis naming
+---------------
+In the IRF classes we use the following axis naming convention:
+
+================= ===================================
+Variable          Definition
+================= ===================================
+``energy``        Reconstructed energy axis
+``energy_true``   True energy axis
+``offset``        Field of view offset from center
+``fov_lon``       Field of view	longitude
+``fov_lat``       Field of view latitude
+``migra``         Energy migration
+``rad``        	  Offset angle from source position
+================= ===================================
+
 Getting Started
 ===============
 
@@ -39,7 +56,7 @@ See `~gammapy.irf.EffectiveAreaTable` and `~gammapy.irf.EffectiveAreaTable2D`.
 Background
 ==========
 
-See `~gammapy.irf.Background2D` and `~gammapy.irf.Background2D`.
+See `~gammapy.irf.Background2D` and `~gammapy.irf.Background3D`.
 
 PSF
 ===
@@ -47,7 +64,7 @@ PSF
 The `~gammapy.irf.TablePSF` and `~gammapy.irf.EnergyDependentTablePSF` classes
 represent radially-symmetric PSFs where the PSF is given at a number of offsets.
 
-The `~gammapy.cube.PSFKernel` represents a PSF kernel.
+The `~gammapy.irf.PSFKernel` represents a PSF kernel.
 
 .. plot:: irf/plot_fermi_psf.py
 

@@ -10,11 +10,13 @@ from gammapy.maps import MapAxis, WcsGeom
 def test_table_psf_to_kernel_map():
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
+
     geom = WcsGeom.create(binsz=binsz, npix=150)
 
     rad = Angle(np.linspace(0.0, 3 * sigma.to("deg").value, 100), "deg")
     table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
     kernel = PSFKernel.from_table_psf(table_psf, geom)
+
     kernel_array = kernel.psf_kernel_map.data
 
     # Is normalization OK?

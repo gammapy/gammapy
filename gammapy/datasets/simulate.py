@@ -58,7 +58,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
 
         Returns
@@ -72,19 +72,13 @@ class MapDatasetEventSampler:
                 continue
 
             evaluator = dataset.evaluators.get(model)
+            flux = evaluator.compute_flux()
+            npred = evaluator.apply_exposure(flux)
 
-            evaluator = copy.deepcopy(evaluator)
-            evaluator.model.apply_irf["psf"] = False
-            evaluator.model.apply_irf["edisp"] = False
-            npred = evaluator.compute_npred()
-
-            if hasattr(model, "temporal_model"):
-                if getattr(model, "temporal_model") is None:
-                    temporal_model = ConstantTemporalModel()
-                else:
-                    temporal_model = model.temporal_model
-            else:
+            if model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
+            else:
+                temporal_model = model.temporal_model
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             if len(table) > 0:
@@ -94,14 +88,14 @@ class MapDatasetEventSampler:
                 table.add_column(mcid)
             events_all.append(EventList(table))
 
-        return EventList.stack(events_all)
+        return EventList.from_stack(events_all)
 
     def sample_background(self, dataset):
         """Sample background
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset
 
         Returns
@@ -127,7 +121,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        edisp_map : `~gammapy.cube.EDispMap`
+        edisp_map : `~gammapy.irf.EDispMap`
             Energy dispersion map
         events : `~gammapy.data.EventList`
             Event list with the true energies
@@ -155,7 +149,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        psf_map : `~gammapy.cube.PSFMap`
+        psf_map : `~gammapy.irf.PSFMap`
             PSF map.
         events : `~gammapy.data.EventList`
             Event list.
@@ -209,7 +203,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         observation : `~gammapy.data.Observation`
             In memory observation.
@@ -261,7 +255,7 @@ class MapDatasetEventSampler:
         meta["DSUNI2"] = "TeV"
         meta[
             "DSVAL2"
-        ] = f'{dataset._geom.get_axis_by_name("energy").edges.min().value}:{dataset._geom.get_axis_by_name("energy").edges.max().value}'
+        ] = f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'
         meta["DSTYP3"] = "POS(RA,DEC)     "
         meta[
             "DSVAL3"
@@ -330,7 +324,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset
         observation : `~gammapy.data.Observation`
             In memory observation.
@@ -359,13 +353,13 @@ class MapDatasetEventSampler:
 
             if dataset.background_model:
                 events_bkg = self.sample_background(dataset)
-                events = EventList.stack([events_bkg, events_src])
+                events = EventList.from_stack([events_bkg, events_src])
             else:
                 events = events_src
 
         if len(dataset.models) == 1 and dataset.background_model is not None:
             events_bkg = self.sample_background(dataset)
-            events = EventList.stack([events_bkg])
+            events = EventList.from_stack([events_bkg])
 
         events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))

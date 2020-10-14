@@ -22,12 +22,12 @@ class EnergyDispersion2D:
 
     Parameters
     ----------
-    e_true_lo, e_true_hi : `~astropy.units.Quantity`
-        True energy axis binning
-    migra_lo, migra_hi : `~numpy.ndarray`
-        Energy migration axis binning
-    offset_lo, offset_hi : `~astropy.coordinates.Angle`
-        Field of view offset axis binning
+    energy_axis_true : `MapAxis`
+        True energy axis
+    migra_axis : `MapAxis`
+        Energy migration axis
+    offset_axis : `MapAxis`
+        Field of view offset axis
     data : `~numpy.ndarray`
         Energy dispersion probability density
 
@@ -56,12 +56,9 @@ class EnergyDispersion2D:
 
     def __init__(
         self,
-        e_true_lo,
-        e_true_hi,
-        migra_lo,
-        migra_hi,
-        offset_lo,
-        offset_hi,
+        energy_axis_true,
+        migra_axis,
+        offset_axis,
         data,
         interp_kwargs=None,
         meta=None,
@@ -69,22 +66,8 @@ class EnergyDispersion2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
 
-        migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
-        migra_axis = MapAxis.from_edges(
-            migra_edges, interp="lin", name="migra", unit=""
-        )
-
-        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
-        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
-            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
-        else:
-            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
-            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
-
-        axes = [e_true_axis, migra_axis, offset_axis]
+        axes = [energy_axis_true, migra_axis, offset_axis]
 
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
         self.meta = meta or {}
@@ -123,9 +106,11 @@ class EnergyDispersion2D:
         """
         e_true = Quantity(e_true)
         # erf does not work with Quantities
-        true = MapAxis.from_edges(e_true, interp="log").center.to_value("TeV")
+        energy_axis_true = MapAxis.from_energy_edges(
+            e_true, interp="log", name="energy_true"
+        )
 
-        true2d, migra2d = np.meshgrid(true, migra)
+        true2d, migra2d = np.meshgrid(energy_axis_true.center, migra)
 
         migra2d_lo = migra2d[:-1, :]
         migra2d_hi = migra2d[1:, :]
@@ -136,48 +121,43 @@ class EnergyDispersion2D:
         t2 = (migra2d_lo - 1 - bias) / s
         pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
 
-        pdf_array = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
+        data = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
 
-        pdf_array[pdf_array < pdf_threshold] = 0
+        data[data < pdf_threshold] = 0
 
+        offset_axis = MapAxis.from_edges(offset, name="offset")
+        migra_axis = MapAxis.from_edges(migra, name="migra")
         return cls(
-            e_true[:-1],
-            e_true[1:],
-            migra[:-1],
-            migra[1:],
-            offset[:-1],
-            offset[1:],
-            pdf_array,
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            offset_axis=offset_axis,
+            data=data
         )
 
     @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table`."""
+        # TODO: move this to MapAxis.from_table()
+
         if "ENERG_LO" in table.colnames:
-            e_lo = table["ENERG_LO"].quantity[0]
-            e_hi = table["ENERG_HI"].quantity[0]
+            energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
         elif "ETRUE_LO" in table.colnames:
-            e_lo = table["ETRUE_LO"].quantity[0]
-            e_hi = table["ETRUE_HI"].quantity[0]
+            energy_axis_true = MapAxis.from_table(table, column_prefix="ETRUE", format="gadf-dl3")
         else:
             raise ValueError(
                 'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
             )
-        o_lo = table["THETA_LO"].quantity[0]
-        o_hi = table["THETA_HI"].quantity[0]
-        m_lo = table["MIGRA_LO"].quantity[0]
-        m_hi = table["MIGRA_HI"].quantity[0]
+
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        migra_axis = MapAxis.from_table(table, column_prefix="MIGRA", format="gadf-dl3")
 
         # TODO Why does this need to be transposed?
         matrix = table["MATRIX"].quantity[0].transpose()
 
         return cls(
-            e_true_lo=e_lo,
-            e_true_hi=e_hi,
-            offset_lo=o_lo,
-            offset_hi=o_hi,
-            migra_lo=m_lo,
-            migra_hi=m_hi,
+            energy_axis_true=energy_axis_true,
+            offset_axis=offset_axis,
+            migra_axis=migra_axis,
             data=matrix,
         )
 
@@ -219,8 +199,8 @@ class EnergyDispersion2D:
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.data.axis("energy_true").edges if e_true is None else e_true
-        e_reco = self.data.axis("energy_true").edges if e_reco is None else e_reco
+        e_true = self.data.axes["energy_true"].edges if e_true is None else e_true
+        e_reco = self.data.axes["energy_true"].edges if e_reco is None else e_reco
 
         data = []
         for energy in MapAxis.from_edges(e_true, interp="log").center:
@@ -262,7 +242,7 @@ class EnergyDispersion2D:
         """
         e_true = Quantity(e_true)
 
-        migra_axis = self.data.axis("migra")
+        migra_axis = self.data.axes["migra"]
 
         if e_reco is None:
             # Default: e_reco nodes = migra nodes * e_true nodes
@@ -330,7 +310,7 @@ class EnergyDispersion2D:
         else:
             e_true = np.atleast_1d(Quantity(e_true))
 
-        migra = self.data.axis("migra").center if migra is None else migra
+        migra = self.data.axes["migra"].center if migra is None else migra
 
         for ener in e_true:
             for off in offset:
@@ -374,8 +354,8 @@ class EnergyDispersion2D:
         if offset is None:
             offset = Angle(1, "deg")
 
-        e_true = self.data.axis("energy_true")
-        migra = self.data.axis("migra")
+        e_true = self.data.axes["energy_true"]
+        migra = self.data.axes["migra"]
 
         x = e_true.edges.value
         y = migra.edges.value
@@ -419,22 +399,11 @@ class EnergyDispersion2D:
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        meta = self.meta.copy()
-
-        energy = self.data.axis("energy_true").edges
-        migra = self.data.axis("migra").edges
-        theta = self.data.axis("offset").edges
-
-        table = Table(meta=meta)
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
-        table["MIGRA_LO"] = migra[:-1][np.newaxis]
-        table["MIGRA_HI"] = migra[1:][np.newaxis]
-        table["THETA_LO"] = theta[:-1][np.newaxis]
-        table["THETA_HI"] = theta[1:][np.newaxis]
+        table = self.data.axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
         table["MATRIX"] = self.data.data.T[np.newaxis]
         return table
 
-    def to_fits(self, name="ENERGY DISPERSION"):
+    def to_table_hdu(self, name="ENERGY DISPERSION"):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)

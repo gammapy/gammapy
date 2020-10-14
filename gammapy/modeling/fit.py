@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import itertools
 from astropy.utils import lazyproperty
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
@@ -100,7 +101,6 @@ class Fit:
         fit_result : `FitResult`
             Results
         """
-
 
         if optimize_opts is None:
             optimize_opts = {}
@@ -326,7 +326,8 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "values" and "stat".
+            Dictionary with keys "values", "stat" and "fit_results". The latter contains an
+            empty list, if `reoptimize` is set to False
         """
         parameters = self._parameters
         parameter = parameters[parameter]
@@ -346,6 +347,7 @@ class Fit:
             values = np.linspace(parmin, parmax, nvalues)
 
         stats = []
+        fit_results = []
         with parameters.restore_values:
             for value in values:
                 parameter.value = value
@@ -353,29 +355,78 @@ class Fit:
                     parameter.frozen = True
                     result = self.optimize(**optimize_opts)
                     stat = result.total_stat
+                    fit_results.append(result)
                 else:
                     stat = self.datasets.stat_sum()
                 stats.append(stat)
 
-        return {"values": values, "stat": np.array(stats)}
+        return {"values": values, "stat": np.array(stats), "fit_results": fit_results}
 
-    def stat_contour(self):
-        """Compute fit statistic contour.
+    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
+        """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
+
+        Caveat: This method can be very computationally intensive and slow
 
         See also: `Fit.minos_contour`
 
         Parameters
         ----------
-        TODO
+        x, y : `~gammapy.modeling.Parameter`
+            Parameters of interest
+        x_values, y_values : list or `numpy.ndarray`
+            Parameter values to evaluate the fit statistic for.
+        reoptimize : bool
+            Re-optimize other parameters, when computing the fit statistic profile.
+        **optimize_opts : dict
+            Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
 
         Returns
         -------
-        TODO
+        results : dict
+        Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
+        empty list, if `reoptimize` is set to False
+
+
         """
-        raise NotImplementedError
+        parameters = self._parameters
+        x = parameters[x]
+        y = parameters[y]
+
+        stats = []
+        fit_results = []
+        with parameters.restore_values:
+            for x_value, y_value in itertools.product(x_values, y_values):
+                # TODO: Remove log.info() and provide a nice progress bar
+                log.info(f"Processing: x={x_value}, y={y_value}")
+                x.value = x_value
+                y.value = y_value
+                if reoptimize:
+                    x.frozen = True
+                    y.frozen = True
+                    result = self.optimize(**optimize_opts)
+                    stat = result.total_stat
+                    fit_results.append(result)
+                else:
+                    stat = self.datasets.stat_sum()
+
+                stats.append(stat)
+
+        shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
+        stats = np.array(stats)
+        stats = stats.reshape(shape)
+        if reoptimize:
+            fit_results = np.array(fit_results)
+            fit_results = fit_results.reshape(shape)
+
+        return {
+            "x_values": x_values,
+            "y_values": y_values,
+            "stat": stats,
+            "fit_results": fit_results,
+        }
 
     def minos_contour(self, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.

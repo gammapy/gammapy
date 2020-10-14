@@ -549,7 +549,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "dnde"
         mask = ~np.isnan(self.data["Flux_Points_Energy"])

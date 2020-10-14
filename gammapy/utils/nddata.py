@@ -30,9 +30,12 @@ class NDDataArray:
     initialization."""
 
     def __init__(self, axes, data=None, meta=None, interp_kwargs=None):
-        self._axes = axes
+        from gammapy.maps.geom import MapAxes
+        self._axes = MapAxes(axes)
+
         if data is not None:
             self.data = data
+
         self.meta = meta or {}
         self.interp_kwargs = interp_kwargs or self.default_interp_kwargs
 
@@ -49,14 +52,6 @@ class NDDataArray:
     def axes(self):
         """Array holding the axes in correct order"""
         return self._axes
-
-    def axis(self, name):
-        """Return axis by name"""
-        try:
-            idx = [_.name for _ in self.axes].index(name)
-        except ValueError:
-            raise ValueError(f"Axis {name} not found")
-        return self.axes[idx]
 
     @property
     def data(self):
@@ -76,28 +71,8 @@ class NDDataArray:
             Data array
         """
         data = Quantity(data)
-        dimension = len(data.shape)
-        if dimension != self.dim:
-            raise ValueError(
-                "Overall dimensions to not match. "
-                "Data: {}, Hist: {}".format(dimension, self.dim)
-            )
-
-        for dim in np.arange(self.dim):
-            axis = self.axes[dim]
-            if axis.nbin != data.shape[dim]:
-                msg = "Data shape does not match in dimension {d}\n"
-                msg += "Axis {n} : {sa}, Data {sd}"
-                raise ValueError(
-                    msg.format(d=dim, n=axis.name, sa=axis.nbin, sd=data.shape[dim])
-                )
         self._regular_grid_interp = None
-        self._data = data
-
-    @property
-    def dim(self):
-        """Dimension (number of axes)"""
-        return len(self.axes)
+        self._data = data.reshape(self.axes.shape)
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array

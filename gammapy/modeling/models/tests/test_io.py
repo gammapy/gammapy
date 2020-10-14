@@ -8,6 +8,7 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
+    PowerLawSpectralModel,
     AbsorbedSpectralModel,
     Absorption,
     BackgroundModel,
@@ -88,10 +89,6 @@ def test_dict_to_skymodels():
     assert "TemplateSpatialModel" in model2.spatial_model.tag
 
     assert not model2.spatial_model.normalize
-    assert model2.spectral_model.parameters["norm"].value == 2.1
-
-    # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
-    # assert model2.parameters["norm"].value == 2.1 # fail
 
 
 @requires_data()
@@ -100,7 +97,7 @@ def test_sky_models_io(tmp_path):
     filename = get_pkg_data_filename("data/examples.yaml")
     models = Models.read(filename)
     models.covariance = np.eye(len(models.parameters))
-    models.write(tmp_path / "tmp.yaml")
+    models.write(tmp_path / "tmp.yaml", full_output=True)
     models = Models.read(tmp_path / "tmp.yaml")
     assert models._covar_file == "tmp_covariance.dat"
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
@@ -208,7 +205,7 @@ def make_all_models():
     m1 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_nodes([1, 2] * u.TeV, name="energy")]
     )
-    yield Model.create("SkyDiffuseCube", map=m1)
+    yield Model.create("TemplateSpatialModel", "spatial", map=m1)
     m2 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")]
     )
@@ -235,6 +232,16 @@ def test_missing_parameters():
     models = Models.read(filename)
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6
+
+
+def test_simplified_output():
+    model = PowerLawSpectralModel()
+    full = model.to_dict(full_output=True)
+    simplified = model.to_dict()
+    for k, _ in enumerate(model.parameters.names):
+        for item in ["min", "max", "frozen", "error"]:
+            assert item in full["parameters"][k]
+            assert item not in simplified["parameters"][k]
 
 
 def test_registries_print():

@@ -16,7 +16,9 @@ from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
-    SkyDiffuseCube,
+    PowerLawNormSpectralModel,
+    TemplateSpatialModel,
+    CompoundSpectralModel,
     SkyModel,
     create_fermi_isotropic_diffuse_model,
 )
@@ -56,7 +58,8 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    return SkyDiffuseCube(m)
+    spatial_model = TemplateSpatialModel(m, normalize=False)
+    return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
 @pytest.fixture(scope="session")
@@ -88,8 +91,8 @@ def background(geom):
 
 @pytest.fixture(scope="session")
 def edisp(geom, geom_true):
-    e_reco = geom.get_axis_by_name("energy").edges
-    e_true = geom_true.get_axis_by_name("energy_true").edges
+    e_reco = geom.axes["energy"].edges
+    e_true = geom_true.axes["energy_true"].edges
     return EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
@@ -182,20 +185,26 @@ def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
 
 
 def test_background_model(background):
-    bkg1 = BackgroundModel(background, norm=2.0).evaluate()
-    assert_allclose(bkg1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
-    assert_allclose(bkg1.data.sum(), background.data.sum() * 2.0, rtol=1e-3)
+    bkg1 = BackgroundModel(background)
+    bkg1.spectral_model.norm.value = 2.0
+    npred1 = bkg1.evaluate()
+    assert_allclose(npred1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
+    assert_allclose(npred1.data.sum(), background.data.sum() * 2.0, rtol=1e-3)
 
-    bkg2 = BackgroundModel(
-        background, norm=2.0, tilt=0.2, reference="1000 GeV"
-    ).evaluate()
-    assert_allclose(bkg2.data[0][0][0], 2.254e-07, rtol=1e-3)
-    assert_allclose(bkg2.data.sum(), 7.352e-06, rtol=1e-3)
+    bkg2 = BackgroundModel(background)
+    bkg2.spectral_model.norm.value = 2.0
+    bkg2.spectral_model.tilt.value = 0.2
+    bkg2.spectral_model.reference.quantity = "1000 GeV"
+
+    npred2 = bkg2.evaluate()
+    assert_allclose(npred2.data[0][0][0], 2.254e-07, rtol=1e-3)
+    assert_allclose(npred2.data.sum(), 7.352e-06, rtol=1e-3)
 
 
 def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
-    bkg = BackgroundModel(background, norm=2.0, filename=filename)
+    bkg = BackgroundModel(background, filename=filename)
+    bkg.spectral_model.norm.value = 2.0
     bkg.map.write(filename, overwrite=True)
     bkg_dict = bkg.to_dict()
     bkg_read = bkg.from_dict(bkg_dict)
@@ -330,7 +339,7 @@ class TestSkyModel:
         sky_model.apply_irf["edisp"] = True
 
 
-class TestSkyDiffuseCube:
+class Test_Template_with_cube:
     @staticmethod
     def test_evaluate_scalar(diffuse_model):
         # Check pixel inside map
@@ -361,8 +370,9 @@ class TestSkyDiffuseCube:
     @staticmethod
     @requires_data()
     def test_read():
-        model = SkyDiffuseCube.read(
-            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"
+        model = TemplateSpatialModel.read(
+            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits",
+            normalize=False,
         )
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 
@@ -406,7 +416,7 @@ class TestSkyDiffuseCube:
         assert "datasets_names" not in out
 
 
-class TestSkyDiffuseCubeMapEvaluator:
+class Test_template_cube_MapEvaluator:
     @staticmethod
     def test_compute_dnde(diffuse_evaluator):
         out = diffuse_evaluator.compute_dnde()
@@ -547,3 +557,4 @@ def test_fermi_isotropic():
 
     assert_allclose(flux.value, 1.463e-13, rtol=1e-3)
     assert flux.unit == "MeV-1 cm-2 s-1 sr-1"
+    assert isinstance(model.spectral_model, CompoundSpectralModel)

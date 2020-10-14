@@ -3,7 +3,7 @@ import logging
 from astropy.table import Table
 import astropy.units as u
 from gammapy.datasets import MapDataset
-from gammapy.irf import EnergyDependentMultiGaussPSF
+from gammapy.irf import EnergyDependentMultiGaussPSF,EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from gammapy.modeling.models import BackgroundModel
 from .core import Maker
@@ -25,17 +25,17 @@ class MapDatasetMaker(Maker):
 
     Parameters
     ----------
-    background_oversampling : int
-        Background evaluation oversampling factor in energy.
     selection : list
         List of str, selecting which maps to make.
         Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
         By default, all maps are made.
+    background_oversampling : int
+        Background evaluation oversampling factor in energy.
     """
     tag = "MapDatasetMaker"
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
-    def __init__(self, background_oversampling=None, selection=None):
+    def __init__(self, selection=None, background_oversampling=None):
         self.background_oversampling = background_oversampling
 
         if selection is None:
@@ -85,6 +85,10 @@ class MapDatasetMaker(Maker):
         exposure : `~gammapy.maps.Map`
             Exposure map.
         """
+        if isinstance(observation.aeff, Map):
+            return observation.aeff.interp_to_geom(
+                geom=geom,
+            )
         return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -130,6 +134,10 @@ class MapDatasetMaker(Maker):
         background : `~gammapy.maps.Map`
             Background map.
         """
+        if isinstance(observation.bkg, Map):
+            return observation.bkg.interp_to_geom(
+                geom=geom,
+            )
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
 
         if bkg_coordsys == "ALTAZ":
@@ -162,10 +170,10 @@ class MapDatasetMaker(Maker):
 
         Returns
         -------
-        edisp : `~gammapy.cube.EDispMap`
+        edisp : `~gammapy.irf.EDispMap`
             Edisp map.
         """
-        exposure = self.make_exposure_irf(geom.squash(axis="migra"), observation)
+        exposure = self.make_exposure_irf(geom.squash(axis_name="migra"), observation)
 
         return make_edisp_map(
             edisp=observation.edisp,
@@ -186,10 +194,17 @@ class MapDatasetMaker(Maker):
 
         Returns
         -------
-        edisp : `~gammapy.cube.EDispKernelMap`
+        edisp : `~gammapy.irf.EDispKernelMap`
             EdispKernel map.
         """
-        exposure = self.make_exposure_irf(geom.squash(axis="energy"), observation)
+        if isinstance(observation.edisp, EDispKernelMap):
+            exposure = None
+            interp_map = observation.edisp.edisp_map.interp_to_geom(geom)
+            return EDispKernelMap(
+                edisp_kernel_map = interp_map,
+                exposure_map = exposure
+                )
+        exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
 
         return make_edisp_kernel_map(
             edisp=observation.edisp,
@@ -210,15 +225,20 @@ class MapDatasetMaker(Maker):
 
         Returns
         -------
-        psf : `~gammapy.cube.PSFMap`
+        psf : `~gammapy.irf.PSFMap`
             Psf map.
         """
         psf = observation.psf
+        if isinstance(psf, PSFMap):
+            return PSFMap(
+                psf.psf_map.interp_to_geom(geom)
+                )
+
         if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad_axis = geom.get_axis_by_name("theta")
+            rad_axis = geom.axes["rad"]
             psf = psf.to_psf3d(rad=rad_axis.center)
 
-        exposure = self.make_exposure_irf(geom.squash(axis="theta"), observation)
+        exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 
         return make_psf_map(
             psf=psf,
@@ -253,14 +273,14 @@ class MapDatasetMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Reference dataset.
         observation : `~gammapy.data.Observation`
             Observation
 
         Returns
         -------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
         kwargs = {"gti": observation.gti}

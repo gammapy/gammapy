@@ -4,8 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
@@ -22,12 +21,12 @@ class Background3D:
 
     Parameters
     ----------
-    energy_lo, energy_hi : `~astropy.units.Quantity`
-        Energy binning
-    fov_lon_lo, fov_lon_hi : `~astropy.units.Quantity`
-        FOV coordinate X-axis binning.
-    fov_lat_lo, fov_lat_hi : `~astropy.units.Quantity`
-        FOV coordinate Y-axis binning.
+    energy_axis : `MapAxis`
+        Energy axis
+    fov_lon_axis: `MapAxis`
+        FOV coordinate X-axis
+    fov_lat_axis : `MapAxis`
+        FOV coordinate Y-axis.
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
 
@@ -54,27 +53,15 @@ class Background3D:
 
     def __init__(
         self,
-        energy_lo,
-        energy_hi,
-        fov_lon_lo,
-        fov_lon_hi,
-        fov_lat_lo,
-        fov_lat_hi,
+        energy_axis,
+        fov_lon_axis,
+        fov_lat_axis,
         data,
         meta=None,
         interp_kwargs=None,
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
-
-        fov_lon_edges = edges_from_lo_hi(fov_lon_lo, fov_lon_hi)
-        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
-
-        fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
-        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
 
         self.data = NDDataArray(
             axes=[energy_axis, fov_lon_axis, fov_lat_axis],
@@ -107,13 +94,14 @@ class Background3D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
+        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        fov_lon_axis = MapAxis.from_table(table, column_prefix="DETX", format="gadf-dl3")
+        fov_lat_axis = MapAxis.from_table(table, column_prefix="DETY", format="gadf-dl3")
+
         return cls(
-            energy_lo=table["ENERG_LO"].quantity[0],
-            energy_hi=table["ENERG_HI"].quantity[0],
-            fov_lon_lo=table["DETX_LO"].quantity[0],
-            fov_lon_hi=table["DETX_HI"].quantity[0],
-            fov_lat_lo=table["DETY_LO"].quantity[0],
-            fov_lat_hi=table["DETY_HI"].quantity[0],
+            energy_axis=energy_axis,
+            fov_lon_axis=fov_lon_axis,
+            fov_lat_axis=fov_lat_axis,
             data=table[bkg_name].data[0] * data_unit,
             meta=table.meta,
         )
@@ -131,23 +119,14 @@ class Background3D:
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        meta = self.meta.copy()
-
-        detx = self.data.axis("fov_lon").edges
-        dety = self.data.axis("fov_lat").edges
-        energy = self.data.axis("energy").edges
-
-        table = Table(meta=meta)
-        table["DETX_LO"] = detx[:-1][np.newaxis]
-        table["DETX_HI"] = detx[1:][np.newaxis]
-        table["DETY_LO"] = dety[:-1][np.newaxis]
-        table["DETY_HI"] = dety[1:][np.newaxis]
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
+        # TODO: fix axis order
+        axes = MapAxes(self.data.axes[::-1])
+        table = axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
-    def to_fits(self, name="BACKGROUND"):
+    def to_table_hdu(self, name="BACKGROUND"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
@@ -206,18 +185,17 @@ class Background3D:
 
         This takes the values at Y = 0 and X >= 0.
         """
-        idx_lon = self.data.axis("fov_lon").coord_to_idx(0 * u.deg)[0]
-        idx_lat = self.data.axis("fov_lat").coord_to_idx(0 * u.deg)[0]
+        # TODO: this is incorrect as it misses the Jacobian?
+        idx_lon = self.data.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
+        idx_lat = self.data.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
         data = self.data.data[:, idx_lon:, idx_lat].copy()
 
-        energy = self.data.axis("energy").edges
-        offset = self.data.axis("fov_lon").edges[idx_lon:]
+        offset = self.data.axes["fov_lon"].edges[idx_lon:]
 
+        offset_axis = MapAxis.from_edges(offset, name="offset")
         return Background2D(
-            energy_lo=energy[:-1],
-            energy_hi=energy[1:],
-            offset_lo=offset[:-1],
-            offset_hi=offset[1:],
+            energy_axis=self.data.axes["energy"],
+            offset_axis=offset_axis,
             data=data,
         )
 
@@ -232,10 +210,10 @@ class Background2D:
 
     Parameters
     ----------
-    energy_lo, energy_hi : `~astropy.units.Quantity`
-        Energy binning
-    offset_lo, offset_hi : `~astropy.units.Quantity`
-        FOV coordinate offset-axis binning
+    energy_axis : `MapAxis`
+        Energy axis
+    offset_axis : `MapAxis`
+        FOV coordinate offset-axis
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
     """
@@ -245,10 +223,8 @@ class Background2D:
 
     def __init__(
         self,
-        energy_lo,
-        energy_hi,
-        offset_lo,
-        offset_hi,
+        energy_axis,
+        offset_axis,
         data,
         meta=None,
         interp_kwargs=None,
@@ -256,11 +232,7 @@ class Background2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
-
-        offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
-        offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
+        assert offset_axis.name == "offset"
 
         self.data = NDDataArray(
             axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
@@ -277,6 +249,7 @@ class Background2D:
         """Read from `~astropy.table.Table`."""
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
+
         if "BKG" in table.colnames:
             bkg_name = "BKG"
         elif "BGD" in table.colnames:
@@ -290,11 +263,13 @@ class Background2D:
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
+
+        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+
         return cls(
-            energy_lo=table["ENERG_LO"].quantity[0],
-            energy_hi=table["ENERG_HI"].quantity[0],
-            offset_lo=table["THETA_LO"].quantity[0],
-            offset_hi=table["THETA_HI"].quantity[0],
+            energy_axis=energy_axis,
+            offset_axis=offset_axis,
             data=table[bkg_name].data[0] * data_unit,
             meta=table.meta,
         )
@@ -312,20 +287,12 @@ class Background2D:
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        meta = self.meta.copy()
-        table = Table(meta=meta)
-
-        theta = self.data.axis("offset").edges
-        energy = self.data.axis("energy").edges
-
-        table["THETA_LO"] = theta[:-1][np.newaxis]
-        table["THETA_HI"] = theta[1:][np.newaxis]
-        table["ENERG_LO"] = energy[:-1][np.newaxis]
-        table["ENERG_HI"] = energy[1:][np.newaxis]
+        table = self.data.axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
-    def to_fits(self, name="BACKGROUND"):
+    def to_table_hdu(self, name="BACKGROUND"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
@@ -394,8 +361,8 @@ class Background2D:
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.data.axis("energy").edges.to_value("TeV")
-        y = self.data.axis("offset").edges.to_value("deg")
+        x = self.data.axes["energy"].edges.to_value("TeV")
+        y = self.data.axes["offset"].edges.to_value("deg")
         z = self.data.data.T.value
 
         kwargs.setdefault("cmap", "GnBu")
@@ -435,11 +402,12 @@ class Background2D:
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.data.axis("energy").center.value[[0, -1]])
-            energy = np.logspace(e_min, e_max, 4) * self.data.axis("energy").unit
+            energy_axis = self.data.axes["energy"]
+            e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
+            energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
 
         if offset is None:
-            offset = self.data.axis("offset").center
+            offset = self.data.axes["offset"].center
 
         for ee in energy:
             bkg = self.data.evaluate(offset=offset, energy=ee)
@@ -448,7 +416,7 @@ class Background2D:
             label = f"energy = {ee:.1f}"
             ax.plot(offset, bkg.value, label=label, **kwargs)
 
-        ax.set_xlabel(f"Offset ({self.data.axis('offset').unit})")
+        ax.set_xlabel(f"Offset ({self.data.axes['offset'].unit})")
         ax.set_ylabel(f"Background rate ({self.data.data.unit})")
         ax.set_yscale("log")
         ax.legend(loc="upper right")
@@ -478,11 +446,12 @@ class Background2D:
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.data.axis("offset").center.value[[0, -1]]
-            offset = np.linspace(off_min, off_max, 4) * self.data.axis("offset").unit
+            offset_axis = self.data.axes["offset"]
+            off_min, off_max = offset_axis.center.value[[0, -1]]
+            offset = np.linspace(off_min, off_max, 4) * offset_axis.unit
 
         if energy is None:
-            energy = self.data.axis("energy").center
+            energy = self.data.axes["energy"].center
 
         for off in offset:
             bkg = self.data.evaluate(offset=off, energy=energy)
@@ -516,8 +485,8 @@ class Background2D:
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-        offset = self.data.axis("offset").edges
-        energy = self.data.axis("energy").center
+        offset = self.data.axes["offset"].edges
+        energy = self.data.axes["energy"].center
 
         bkg = []
         for ee in energy:

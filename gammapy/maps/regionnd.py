@@ -36,6 +36,9 @@ class RegionNDMap(Map):
         if data is None:
             data = np.zeros(geom.data_shape, dtype=dtype)
 
+        if meta is None:
+            meta = {}
+
         self._geom = geom
         self.data = data
         self.meta = meta
@@ -66,9 +69,9 @@ class RegionNDMap(Map):
             )
 
         try:
-            axis = self.geom.get_axis_by_name("energy")
+            axis = self.geom.axes["energy"]
         except KeyError:
-            axis = self.geom.get_axis_by_name("energy_true")
+            axis = self.geom.axes["energy_true"]
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
@@ -185,19 +188,20 @@ class RegionNDMap(Map):
         geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
-    def downsample(self, factor, preserve_counts=True, axis="energy"):
-        geom = self.geom.downsample(factor=factor, axis=axis)
+    def downsample(self, factor, preserve_counts=True, axis_name="energy"):
+        geom = self.geom.downsample(factor=factor, axis_name=axis_name)
+
         block_size = [1] * self.data.ndim
-        idx = self.geom.get_axis_index_by_name(axis)
-        block_size[-(idx + 1)] = factor
+        idx = self.geom.axes.index_data(axis_name)
+        block_size[idx] = factor
 
         func = np.nansum if preserve_counts else np.nanmean
-        data = block_reduce(self.data, tuple(block_size[::-1]), func=func)
+        data = block_reduce(self.data, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)
 
-    def upsample(self, factor, preserve_counts=True, axis="energy"):
-        geom = self.geom.upsample(factor=factor, axis=axis)
+    def upsample(self, factor, preserve_counts=True, axis_name="energy"):
+        geom = self.geom.upsample(factor=factor, axis_name=axis_name)
         data = self.interp_by_coord(geom.get_coord())
 
         if preserve_counts:
@@ -315,16 +319,6 @@ class RegionNDMap(Map):
 
     def pad(self):
         raise NotImplementedError("Pad is not supported by RegionNDMap")
-
-    def sum_over_axes(self, keepdims=True):
-        axis = tuple(range(self.data.ndim - 2))
-        geom = self.geom.to_image()
-        if keepdims:
-            for ax in self.geom.axes:
-                geom = geom.to_cube([ax.squash()])
-        data = np.nansum(self.data, axis=axis, keepdims=keepdims)
-        # TODO: summing over the axis can change the unit, handle this correctly
-        return self._init_copy(geom=geom, data=data)
 
     def stack(self, other, weights=None):
         """Stack other region map into map.

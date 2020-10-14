@@ -70,7 +70,7 @@ def get_exposure(geom_etrue):
 
     exposure_map = make_map_exposure_true_energy(
         pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
-        livetime="1 hour",
+        livetime=1 * u.hr,
         aeff=aeff,
         geom=geom_etrue,
     )
@@ -111,8 +111,8 @@ def get_map_dataset(
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
 
-    e_reco = geom.get_axis_by_name("energy")
-    e_true = geom_etrue.get_axis_by_name("energy_true")
+    e_reco = geom.axes["energy"]
+    e_true = geom_etrue.axes["energy_true"]
 
     if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
@@ -172,26 +172,17 @@ def test_fake(sky_model, geom, geom_etrue):
     assert_allclose(dataset.counts.data.sum(), 9723)
 
 
-@pytest.mark.xfail
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
-    dataset_ref = get_map_dataset(sky_model, geom, geom, edisp="None")
-    npred_ref = dataset_ref.npred()
-
     ebounds_true = np.logspace(2, 4, 3)
-    axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV", interp="log")
-    geom_gev = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
-        binsz=0.02,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
+    axis = MapAxis.from_edges(
+        ebounds_true, name="energy_true", unit="GeV", interp="log"
     )
-
+    geom_gev = geom.to_image().to_cube([axis])
     dataset = get_map_dataset(sky_model, geom, geom_gev, edisp="None")
     npred = dataset.npred()
 
-    assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
+    assert_allclose(npred.data[0, 50, 50], 6.086019)
 
 
 @pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"])
@@ -210,17 +201,23 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     spectrum_dataset_corrected = dataset_ref.to_spectrum_dataset(
         on_region, containment_correction=True
     )
+    mask = np.ones_like(dataset_ref.counts, dtype='bool')
+    mask[1, 40:60, 40:60] = 0
+    dataset_ref.mask_safe = Map.from_geom(dataset_ref.counts.geom, data=mask)
+    spectrum_dataset_mask = dataset_ref.to_spectrum_dataset(on_region)
 
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2, 1, 1)
     assert spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
-    assert spectrum_dataset.aeff.geom.axes[0].nbin == 3
-    assert spectrum_dataset.aeff.unit == "m2"
+    assert spectrum_dataset.exposure.geom.axes[0].nbin == 3
+    assert spectrum_dataset.exposure.unit == "m2s"
     assert spectrum_dataset.edisp.get_edisp_kernel().e_reco.nbin == 2
     assert spectrum_dataset.edisp.get_edisp_kernel().e_true.nbin == 3
-    assert spectrum_dataset_corrected.aeff.unit == "m2"
-    assert_allclose(spectrum_dataset.aeff.data[1], 853023.423047, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.aeff.data[1], 559476.3357, rtol=1e-5)
+    assert np.sum(spectrum_dataset_mask.counts.data) == 0
+    assert spectrum_dataset_mask.data_shape == (2, 1, 1)
+    assert spectrum_dataset_corrected.exposure.unit == "m2s"
+    assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e+09, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.035899e+09, rtol=1e-5)
 
 
 @requires_data()
@@ -232,19 +229,19 @@ def test_info_dict(sky_model, geom, geom_etrue):
     assert_allclose(info_dict["counts"], 9526, rtol=1e-3)
     assert_allclose(info_dict["background"], 4000.0)
     assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
-    assert_allclose(info_dict["aeff_min"].value, 8.32e8, rtol=1e-3)
-    assert_allclose(info_dict["aeff_max"].value, 1.105e10, rtol=1e-3)
-    assert info_dict["aeff_max"].unit == "m2 s"
+    assert_allclose(info_dict["exposure_min"].value, 8.32e8, rtol=1e-3)
+    assert_allclose(info_dict["exposure_max"].value, 1.105e10, rtol=1e-3)
+    assert info_dict["exposure_max"].unit == "m2 s"
     assert info_dict["name"] == "test"
 
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
     info_dict = dataset.info_dict()
-    assert_allclose(info_dict["n_on"], 9526, rtol=1e-3)
+    assert_allclose(info_dict["counts"], 9526, rtol=1e-3)
     assert_allclose(info_dict["background"], 4000.0, rtol=1e-3)
-    assert_allclose(info_dict["significance"], 74.024180, rtol=1e-3)
+    assert_allclose(info_dict["sqrt_ts"], 74.024180, rtol=1e-3)
     assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
-    assert_allclose(info_dict["livetime"].value, 3600)
+    assert_allclose(info_dict["ontime"].value, 3600)
 
     assert info_dict["name"] == "test"
 
@@ -265,11 +262,33 @@ def get_fermi_3fhl_gc_dataset():
 
 
 @requires_data()
-def test_to_image_3fhl(geom):
+def test_resample_energy_3fhl():
+    dataset = get_fermi_3fhl_gc_dataset()
+
+    new_axis = MapAxis.from_edges([10, 35, 100] * u.GeV, interp="log", name="energy")
+    grouped = dataset.resample_energy_axis(energy_axis=new_axis)
+
+    assert grouped.counts.data.shape == (2, 200, 400)
+    assert grouped.counts.data[0].sum() == 28581
+    assert_allclose(
+        grouped.background_model.map.data.sum(axis=(1, 2)),
+        [25074.366386, 3474.265917],
+        rtol=1e-5,
+    )
+    assert_allclose(grouped.exposure.data, dataset.exposure.data, rtol=1e-5)
+
+    axis = grouped.counts.geom.axes[0]
+    npred = dataset.npred()
+    npred_grouped = grouped.npred()
+    assert_allclose(npred.resample_axis(axis=axis).data.sum(), npred_grouped.data.sum())
+
+
+@requires_data()
+def test_to_image_3fhl():
     dataset = get_fermi_3fhl_gc_dataset()
 
     dataset_im = dataset.to_image()
-    print(dataset)
+
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
     assert_allclose(dataset_im.background_model.map.data.sum(), 28548.625, rtol=1e-5)
     assert_allclose(dataset_im.exposure.data, dataset.exposure.data, rtol=1e-5)
@@ -306,6 +325,25 @@ def test_to_image_mask_safe():
     dataset_copy.counts = None
     dataset_im = dataset_copy.to_image()
     assert dataset_im.counts is None
+
+
+@requires_data()
+def test_downsample():
+    dataset = get_fermi_3fhl_gc_dataset()
+
+    downsampled = dataset.downsample(2)
+
+    assert downsampled.counts.data.shape == (11, 100, 200)
+    assert downsampled.counts.data.sum() == dataset.counts.data.sum()
+    assert_allclose(
+        downsampled.background_model.map.data.sum(axis=(1, 2)),
+        dataset.background_model.map.data.sum(axis=(1, 2)),
+        rtol=1e-5,
+    )
+    assert_allclose(downsampled.exposure.data[5, 50, 100], 3.318082e11, rtol=1e-5)
+
+    with pytest.raises(ValueError):
+        dataset.downsample(2, axis_name="energy")
 
 
 @requires_data()
@@ -371,8 +409,8 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     # To test io of psf and edisp map
     stacked = MapDataset.create(geom)
-    stacked.write("test.fits", overwrite=True)
-    stacked1 = MapDataset.read("test.fits")
+    stacked.write(tmp_path / "test-2.fits", overwrite=True)
+    stacked1 = MapDataset.read(tmp_path / "test-2.fits")
     assert stacked1.psf.psf_map is not None
     assert stacked1.psf.exposure_map is not None
     assert stacked1.edisp.edisp_map is not None
@@ -388,7 +426,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, name="test-1")
-    dataset_1.background_model.norm.value = 0.5
+    dataset_1.background_model.spectral_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
     dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, name="test-2")
@@ -397,8 +435,8 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     sky_model.parameters["sigma"].frozen = True
 
-    dataset_1.background_model.norm.value = 0.49
-    dataset_2.background_model.norm.value = 0.99
+    dataset_1.background_model.spectral_model.norm.value = 0.49
+    dataset_2.background_model.spectral_model.norm.value = 0.99
 
     fit = Fit([dataset_1, dataset_2])
     result = fit.run()
@@ -408,7 +446,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 7525.790688, rtol=1e-3)
-    assert_allclose(result.total_stat, 21700.253246, rtol=1e-3)
+    assert_allclose(result.total_stat, 21659.2139, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
@@ -434,7 +472,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 14824.173099, rtol=1e-5)
+    assert_allclose(stat, 14823.579908, rtol=1e-5)
 
     region = sky_model.spatial_model.to_region()
 
@@ -450,13 +488,13 @@ def test_map_fit(sky_model, geom, geom_etrue):
 @requires_dependency("iminuit")
 @requires_data()
 def test_map_fit_one_energy_bin(sky_model, geom_image):
-    energy_axis = geom_image.get_axis_by_name("energy")
+    energy_axis = geom_image.axes["energy"]
     geom_etrue = geom_image.to_image().to_cube([energy_axis.copy(name="energy_true")])
 
     dataset = get_map_dataset(sky_model, geom_image, geom_etrue)
     sky_model.spectral_model.index.value = 3.0
     sky_model.spectral_model.index.frozen = True
-    dataset.background_model.norm.value = 0.5
+    dataset.background_model.spectral_model.norm.value = 0.5
 
     dataset.counts = dataset.npred()
 
@@ -487,7 +525,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
 
 def test_create():
     # tests empty datasets created
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     e_reco = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
     )
@@ -517,7 +555,7 @@ def test_create():
 def test_create_with_migra(tmp_path):
     # tests empty datasets created
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     e_reco = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
     )
@@ -630,13 +668,28 @@ def test_stack(sky_model):
     dataset1.models.append(sky_model)
     npred_b = dataset1.npred()
 
-    assert_allclose(npred_b.data.sum(), 1459.96, 1e-5)
+    assert_allclose(npred_b.data.sum(), 1459.985035, 1e-5)
     assert_allclose(dataset1.background_model.map.data.sum(), 1360.00, 1e-5)
     assert_allclose(dataset1.counts.data.sum(), 9000, 1e-5)
     assert_allclose(dataset1.mask_safe.data.sum(), 4600)
-    assert_allclose(dataset1.exposure.data.sum(), 150000000000.0)
+    assert_allclose(dataset1.exposure.data.sum(), 1.6e+11)
 
     assert_allclose(dataset1.meta_table["OBS_ID"][0], [0, 1])
+
+
+@requires_data()
+def test_npred_sig(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    pwl = PowerLawSpectralModel()
+    gauss = GaussianSpatialModel(
+        lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
+    )
+    model1 = SkyModel(pwl, gauss)
+    dataset.models.append(model1)
+
+    assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
+    assert_allclose(dataset.npred_sig().data.sum(), 5676.04790, rtol=1e-3)
+    assert_allclose(dataset.npred_sig(model=model1).data.sum(), 150.7487, rtol=1e-3)
 
 
 def test_stack_npred():
@@ -695,15 +748,6 @@ def test_stack_npred():
     assert_allclose(npred_stacked.data, stacked_npred.data)
 
 
-@requires_data()
-def test_stack_simple_edisp(sky_model, geom, geom_etrue):
-    dataset1 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
-    dataset2 = get_map_dataset(sky_model, geom, geom_etrue, edisp="edispkernel")
-
-    with pytest.raises(ValueError):
-        dataset1.stack(dataset2)
-
-
 def to_cube(image):
     # introduce a fake enery axis for now
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
@@ -715,7 +759,6 @@ def to_cube(image):
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
-    on = WcsNDMap.read(filename, hdu="ON")
     return {
         "counts": to_cube(WcsNDMap.read(filename, hdu="ON")),
         "counts_off": to_cube(WcsNDMap.read(filename, hdu="OFF")),
@@ -731,6 +774,7 @@ def get_map_dataset_onoff(images, **kwargs):
     mask_geom = images["counts"].geom
     mask_data = np.ones(images["counts"].data.shape, dtype=bool)
     mask_safe = Map.from_geom(mask_geom, data=mask_data)
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
 
     return MapDatasetOnOff(
         counts=images["counts"],
@@ -739,6 +783,7 @@ def get_map_dataset_onoff(images, **kwargs):
         acceptance_off=images["acceptance_off"],
         exposure=images["exposure"],
         mask_safe=mask_safe,
+        gti=gti,
         **kwargs
     )
 
@@ -798,8 +843,8 @@ def test_create_onoff(geom):
     # tests empty datasets created
 
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-    energy_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
+    energy_axis = geom.axes["energy"].copy(name="energy_true")
 
     empty_dataset = MapDatasetOnOff.create(geom, energy_axis, migra_axis, rad_axis)
 
@@ -884,7 +929,6 @@ def test_datasets_io_no_model(tmpdir):
 
 @requires_data()
 def test_map_dataset_on_off_to_spectrum_dataset(images):
-    e_reco = MapAxis.from_bounds(0.1, 10.0, 1, name="energy", unit=u.TeV, interp="log")
     dataset = get_map_dataset_onoff(images)
 
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
@@ -905,9 +949,52 @@ def test_map_dataset_on_off_to_spectrum_dataset(images):
     excess_true = excess_map.get_spectrum(on_region, np.sum).data[0]
 
     excess = spectrum_dataset.excess.data[0]
-    assert_allclose(excess, excess_true, atol=1e-6)
+    assert_allclose(excess, excess_true, rtol=1e-3)
 
     assert spectrum_dataset.name != dataset.name
+
+@requires_data()
+def test_map_dataset_on_off_to_spectrum_dataset_weights():
+    e_reco = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[e_reco], frame="galactic"
+    )
+    counts = Map.from_geom(geom)
+    counts.data += 1
+    counts_off = Map.from_geom(geom)
+    counts_off.data += 2
+    acceptance = Map.from_geom(geom)
+    acceptance.data += 1
+    acceptance_off = Map.from_geom(geom)
+    acceptance_off.data += 4
+
+    weights = Map.from_geom(geom, dtype='bool')
+    weights.data[1:, 2:4, 2] = True
+
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance = acceptance,
+        acceptance_off=acceptance_off,
+        mask_safe=weights,
+        gti=gti,
+    )
+
+    on_region = CircleSkyRegion(
+        center=dataset.counts.geom.center_skydir, radius=1.5 * u.deg
+    )
+
+    spectrum_dataset = dataset.to_spectrum_dataset(on_region)
+
+    assert_allclose(spectrum_dataset.counts.data[:,0,0], [0, 2, 2])
+    assert_allclose(spectrum_dataset.counts_off.data[:,0,0], [0, 4, 4])
+    assert_allclose(spectrum_dataset.acceptance.data[:,0,0], [0, 0.08, 0.08])
+    assert_allclose(spectrum_dataset.acceptance_off.data[:,0,0], [0, 0.32, 0.32])
+    assert_allclose(spectrum_dataset.alpha.data[:,0,0], [0, 0.25, 0.25])
+
 
 
 @requires_data()
@@ -929,8 +1016,8 @@ def test_map_dataset_on_off_cutout(images):
 
 
 def test_map_dataset_on_off_fake(geom):
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
-    energy_true_axis = geom.get_axis_by_name("energy").copy(name="energy_true")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
+    energy_true_axis = geom.axes["energy"].copy(name="energy_true")
 
     empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
     empty_dataset = MapDatasetOnOff.from_map_dataset(
@@ -1052,7 +1139,7 @@ def test_stack_dataset_dataset_on_off():
     dataset_on_off.counts_off += 1
     dataset.stack(dataset_on_off)
 
-    assert_allclose(dataset.background_model.map.data, 0.2)
+    assert_allclose(dataset.background_model.map.data, 0.166667, rtol=1e-3)
 
 
 @requires_data()
@@ -1060,24 +1147,15 @@ def test_info_dict_on_off(images):
     dataset = get_map_dataset_onoff(images)
     info_dict = dataset.info_dict()
     assert_allclose(info_dict["counts"], 4299, rtol=1e-3)
-    assert_allclose(info_dict["excess"], -22.52, rtol=1e-3)
-    assert_allclose(info_dict["aeff_min"].value, 0.0, rtol=1e-3)
-    assert_allclose(info_dict["aeff_max"].value, 3.4298378e09, rtol=1e-3)
-    assert_allclose(info_dict["npred"], 0.0, rtol=1e-3)
+    assert_allclose(info_dict["excess"], -22.52295, rtol=1e-3)
+    assert_allclose(info_dict["exposure_min"].value, 1.739467e+08, rtol=1e-3)
+    assert_allclose(info_dict["exposure_max"].value, 3.4298378e09, rtol=1e-3)
+    assert_allclose(info_dict["npred"], 4321.518, rtol=1e-3)
     assert_allclose(info_dict["counts_off"], 20407510.0, rtol=1e-3)
     assert_allclose(info_dict["acceptance"], 4272.7075, rtol=1e-3)
     assert_allclose(info_dict["acceptance_off"], 20175596.0, rtol=1e-3)
-
-    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
-    dataset.gti = gti
-    info_dict = dataset.info_dict()
-    assert_allclose(info_dict["n_on"], 4299)
-    assert_allclose(info_dict["n_off"], 20407510.0)
-    assert_allclose(info_dict["a_on"], 0.068363324, rtol=1e-4)
-    assert_allclose(info_dict["a_off"], 322.83185, rtol=1e-4)
-    assert_allclose(info_dict["alpha"], 0.0002117614, rtol=1e-4)
-    assert_allclose(info_dict["excess"], -22.52295, rtol=1e-4)
-    assert_allclose(info_dict["livetime"].value, 3600)
+    assert_allclose(info_dict["alpha"], 0.000169, rtol=1e-3)
+    assert_allclose(info_dict["ontime"].value, 3600)
 
 
 def test_slice_by_idx():
@@ -1101,7 +1179,7 @@ def test_slice_by_idx():
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (31, 5, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (31, 66, 4, 4)
 
-    axis = sub_dataset.counts.geom.get_axis_by_name("energy")
+    axis = sub_dataset.counts.geom.axes["energy"]
     assert_allclose(axis.edges[0].value, 0.387468, rtol=1e-5)
 
     slices = {"energy_true": slice(5, 10)}
@@ -1114,8 +1192,79 @@ def test_slice_by_idx():
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (5, 17, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (5, 66, 4, 4)
 
-    axis = sub_dataset.counts.geom.get_axis_by_name("energy")
+    axis = sub_dataset.counts.geom.axes["energy"]
     assert_allclose(axis.edges[0].value, 0.1, rtol=1e-5)
 
-    axis = sub_dataset.exposure.geom.get_axis_by_name("energy_true")
+    axis = sub_dataset.exposure.geom.axes["energy_true"]
     assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
+
+
+@requires_dependency("matplotlib")
+def test_plot_residual_onoff():
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    counts = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    counts_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off *= 2
+
+    dataset = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off,
+    )
+    with mpl_plot_check():
+        dataset.plot_residuals()
+
+
+def test_to_map_dataset():
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    counts = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    counts_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    acceptance_off *= 2
+
+    dataset_onoff = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off,
+    )
+
+    dataset = dataset_onoff.to_map_dataset(name="ds")
+
+    assert dataset.name == "ds"
+    assert_allclose(dataset.background_model.map.data.sum(), 100)
+    assert isinstance(dataset, MapDataset)
+    assert dataset.counts == dataset_onoff.counts
+
+
+def test_downsample_onoff():
+    axis = MapAxis.from_energy_bounds(1, 10, 4, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+
+    counts = Map.from_geom(geom, data=np.ones((4, 10, 10)))
+    counts_off = Map.from_geom(geom, data=np.ones((4, 10, 10)))
+    acceptance = Map.from_geom(geom, data=np.ones((4, 10, 10)))
+    acceptance_off = Map.from_geom(geom, data=np.ones((4, 10, 10)))
+    acceptance_off *= 2
+
+    dataset_onoff = MapDatasetOnOff(
+        counts=counts,
+        counts_off=counts_off,
+        acceptance=acceptance,
+        acceptance_off=acceptance_off,
+    )
+
+    downsampled = dataset_onoff.downsample(2, axis_name="energy")
+
+    assert downsampled.counts.data.shape == (2, 10, 10)
+    assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
+    assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
+    assert_allclose(downsampled.alpha.data, 0.5)

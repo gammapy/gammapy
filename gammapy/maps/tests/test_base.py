@@ -82,10 +82,12 @@ def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
     m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
 
     coords = (3.456, 0.1234)[: len(m.geom.axes)]
+
     m_image = m.get_image_by_coord(coords)
 
     im_geom = m.geom.to_image()
     skycoord = im_geom.get_coord().skycoord
+
     m_vals = m.get_by_coord((skycoord,) + coords)
     assert_equal(m_image.data, m_vals)
 
@@ -371,3 +373,46 @@ def test_set_scalar():
     m.data = 1
     assert m.data.shape == (10, 10)
     assert_allclose(m.data, 1)
+
+def test_interp_to_geom():
+    energy = MapAxis.from_energy_bounds("1 TeV", "300 TeV", nbin=5, name="energy")
+    energy_target = MapAxis.from_energy_bounds("1 TeV", "300 TeV", nbin=7, name="energy")
+    value = 30
+    coords = {
+        'skycoord': SkyCoord("0 deg", "0 deg"),
+        'energy': energy_target.center[3]
+    }
+
+    #WcsNDMap
+    geom_wcs = WcsGeom.create(npix=(5, 3), proj="CAR", binsz=60, axes=[energy], skydir=(0, 0))
+    wcs_map = Map.from_geom(geom_wcs, unit="")
+    wcs_map.data = value*np.ones(wcs_map.data.shape)
+
+    wcs_geom_target = WcsGeom.create(
+        skydir=(0, 0),
+        width=(10, 10),
+        binsz=0.1*u.deg,
+        axes=[energy_target]
+    )
+    interp_wcs_map = wcs_map.interp_to_geom(wcs_geom_target, interp=1)
+
+    assert_allclose(interp_wcs_map.get_by_coord(coords)[0], value, atol=1e-7)
+    assert isinstance(interp_wcs_map, WcsNDMap)
+    assert interp_wcs_map.geom  == wcs_geom_target
+
+    #HpxNDMap
+    geom_hpx = HpxGeom.create(binsz=60,axes=[energy], skydir=(0, 0))
+    hpx_map = Map.from_geom(geom_hpx, unit="")
+    hpx_map.data = value*np.ones(hpx_map.data.shape)
+
+    hpx_geom_target = HpxGeom.create(
+        skydir=(0, 0),
+        width=10,
+        binsz=0.1*u.deg,
+        axes=[energy_target]
+    )
+    interp_hpx_map = hpx_map.interp_to_geom(hpx_geom_target)
+
+    assert_allclose(interp_hpx_map.get_by_coord(coords)[0], value, atol=1e-7)
+    assert isinstance(interp_hpx_map, HpxNDMap)
+    assert interp_hpx_map.geom  == hpx_geom_target

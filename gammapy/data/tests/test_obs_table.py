@@ -305,27 +305,6 @@ def test_select_sky_regions():
     assert len(obs_table) == 30
 
 
-def test_create_gti():
-    date_start = Time("2012-01-01T00:30:00")
-    date_end = Time("2012-01-01T02:30:00")
-    random_state = np.random.RandomState(seed=0)
-    obs_table = make_test_observation_table(
-        n_obs=1, date_range=(date_start, date_end), random_state=random_state
-    )
-
-    gti = obs_table.create_gti(obs_id=1)
-
-    met_ref = time_ref_from_dict(obs_table.meta)
-    time_start = met_ref + Quantity(obs_table[0]["TSTART"].astype("float64"), "second")
-    time_stop = met_ref + Quantity(obs_table[0]["TSTOP"].astype("float64"), "second")
-
-    assert isinstance(gti, GTI)
-    assert_time_allclose(gti.time_start, time_start)
-    assert_time_allclose(gti.time_stop, time_stop)
-    assert_quantity_allclose(
-        gti.time_sum, Quantity(obs_table[0]["ONTIME"].astype("float64"), "second")
-    )
-
 
 @requires_data()
 def test_observation_table_checker():

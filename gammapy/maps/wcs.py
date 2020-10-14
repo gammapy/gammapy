@@ -16,9 +16,8 @@ from regions import SkyRegion
 from .geom import (
     Geom,
     MapCoord,
-    find_and_read_bands,
+    MapAxes,
     get_shape,
-    make_axes,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
@@ -113,7 +112,7 @@ class WcsGeom(Geom):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
@@ -161,15 +160,13 @@ class WcsGeom(Geom):
 
     @property
     def _shape(self):
-        npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        npix_shape = tuple([np.max(self.npix[0]), np.max(self.npix[1])])
+        return npix_shape + self.axes.shape
 
     @property
     def _shape_edges(self):
-        npix_shape = [np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)
+        npix_shape = tuple([np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1])
+        return npix_shape + self.axes.shape
 
     @property
     def shape_axes(self):
@@ -407,7 +404,7 @@ class WcsGeom(Geom):
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
     @classmethod
-    def from_header(cls, header, hdu_bands=None):
+    def from_header(cls, header, hdu_bands=None, format=None):
         """Create a WCS geometry object from a FITS header.
 
         Parameters
@@ -416,6 +413,8 @@ class WcsGeom(Geom):
             The FITS header
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
+        format : {'gadf', 'fgst-ccube','fgst-template'}
+            FITS format convention.
 
         Returns
         -------
@@ -426,8 +425,8 @@ class WcsGeom(Geom):
         # TODO: see https://github.com/astropy/astropy/issues/9259
         wcs._naxis = wcs._naxis[:2]
 
-        axes = find_and_read_bands(hdu_bands)
-        shape = tuple([ax.nbin for ax in axes])
+        axes = MapAxes.from_table_hdu(hdu_bands, format=format)
+        shape = axes.shape
 
         if hdu_bands is not None and "NPIX" in hdu_bands.columns.names:
             npix = hdu_bands.data.field("NPIX").reshape(shape + (2,))
@@ -457,7 +456,7 @@ class WcsGeom(Geom):
 
         return cls(wcs, npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
 
-    def _make_bands_cols(self, hdu=None, conv=None):
+    def _make_bands_cols(self):
 
         cols = []
         if not self.is_regular:
@@ -491,9 +490,9 @@ class WcsGeom(Geom):
             ]
         return cols
 
-    def make_header(self):
+    def to_header(self):
         header = self.wcs.to_header()
-        self._fill_header_from_axes(header)
+        header = self.axes.to_header(header)
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))
         for ax in self.axes:
             shape += f",{ax.nbin}"
@@ -583,7 +582,7 @@ class WcsGeom(Geom):
             is_finite = np.isfinite(coords[0])
             coords = tuple([c[is_finite] for c in coords])
 
-        axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
+        axes_names = ["lon", "lat"] + self.axes.names
         cdict = dict(zip(axes_names, coords))
 
         if frame is None:
@@ -592,20 +591,14 @@ class WcsGeom(Geom):
         return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
     def coord_to_pix(self, coords):
-        coords = MapCoord.create(coords, frame=self.frame)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
         if coords.size == 0:
             return tuple([np.array([]) for i in range(coords.ndim)])
 
-        c = self.coord_to_tuple(coords)
         # Variable Bin Size
         if not self.is_regular:
-            idxs = tuple(
-                [
-                    np.clip(ax.coord_to_idx(c[i + 2]), 0, ax.nbin - 1)
-                    for i, ax in enumerate(self.axes)
-                ]
-            )
+            idxs = self.axes.coord_to_idx(coords, clip=True)
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
@@ -613,9 +606,7 @@ class WcsGeom(Geom):
         else:
             pix = self._wcs.wcs_world2pix(coords.lon, coords.lat, 0)
 
-        for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
-            pix += [ax.coord_to_pix(coord)]
-
+        pix += self.axes.coord_to_pix(coords)
         return tuple(pix)
 
     def pix_to_coord(self, pix):
@@ -628,15 +619,14 @@ class WcsGeom(Geom):
         else:
             coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
 
-        coords = [
+        coords = (
             u.Quantity(coords[0], unit="deg", copy=False),
             u.Quantity(coords[1], unit="deg", copy=False),
-        ]
+        )
 
-        for ax, t in zip(self.axes, pix[self._slice_non_spatial_axes]):
-            coords += [ax.pix_to_coord(t)]
+        coords += self.axes.pix_to_coord(pix[self._slice_non_spatial_axes])
 
-        return tuple(coords)
+        return coords
 
     def pix_to_idx(self, pix, clip=False):
         # TODO: copy idx to avoid modifying input pix?
@@ -688,68 +678,6 @@ class WcsGeom(Geom):
             cutout_info=self.cutout_info,
         )
 
-    def squash(self, axis):
-        """Squash geom axis.
-
-        Parameters
-        ----------
-        axis : str
-            Axis to squash.
-
-        Returns
-        -------
-        geom : `Geom`
-            Geom with squashed axis.
-        """
-        _ = self.get_axis_by_name(axis)
-        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
-        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                ax = ax.squash()
-            axes.append(ax)
-
-        return self.__class__(
-            self._wcs.deepcopy(),
-            npix,
-            cdelt=cdelt,
-            axes=axes,
-            cutout_info=self.cutout_info,
-        )
-
-    def drop(self, axis):
-        """Drop an axis from the geom.
-
-        Parameters
-        ----------
-        axis : str
-            Name of the axis to remove.
-
-        Returns
-            -------
-        geom : `Geom`
-            New geom with the axis removed.
-        """
-        _ = self.get_axis_by_name(axis)
-        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
-        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                continue
-            axes.append(ax)
-
-        return self.__class__(
-            self._wcs.deepcopy(),
-            npix,
-            cdelt=cdelt,
-            axes=axes,
-            cutout_info=self.cutout_info,
-        )
-
     def pad(self, pad_width):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
@@ -770,8 +698,8 @@ class WcsGeom(Geom):
         cdelt = copy.deepcopy(self._cdelt)
         return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
 
-    def downsample(self, factor, axis=None):
-        if axis is None:
+    def downsample(self, factor, axis_name=None):
+        if axis_name is None:
             if np.any(np.mod(self.npix, factor) > 0):
                 raise ValueError(
                     f"Spatial shape not divisible by factor {factor!r} in all axes."
@@ -787,14 +715,11 @@ class WcsGeom(Geom):
                 raise NotImplementedError(
                     "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
-
-            axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis)
-            axes[idx] = axes[idx].downsample(factor)
+            axes = self.axes.downsample(factor=factor, axis_name=axis_name)
             return self._init_copy(axes=axes)
 
-    def upsample(self, factor, axis=None):
-        if axis is None:
+    def upsample(self, factor, axis_name=None):
+        if axis_name is None:
             npix = (self.npix[0] * factor, self.npix[1] * factor)
             cdelt = (self._cdelt[0] / factor, self._cdelt[1] / factor)
             wcs = get_resampled_wcs(self.wcs, factor, False)
@@ -804,9 +729,7 @@ class WcsGeom(Geom):
                 raise NotImplementedError(
                     "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
-            axes = copy.deepcopy(self.axes)
-            idx = self.get_axis_index_by_name(axis)
-            axes[idx] = axes[idx].upsample(factor)
+            axes = self.axes.upsample(factor=factor, axis_name=axis_name)
             return self._init_copy(axes=axes)
 
     def to_binsz(self, binsz):

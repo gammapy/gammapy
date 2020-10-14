@@ -68,12 +68,12 @@ class EDispKernel:
     @property
     def e_reco(self):
         """Reconstructed energy axis (`~gammapy.maps.MapAxis`)"""
-        return self.data.axis("energy")
+        return self.data.axes["energy"]
 
     @property
     def e_true(self):
         """True energy axis (`~gammapy.maps.MapAxis`)"""
-        return self.data.axis("energy_true")
+        return self.data.axes["energy_true"]
 
     @property
     def pdf_matrix(self):
