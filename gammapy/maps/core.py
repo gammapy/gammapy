@@ -780,10 +780,6 @@ class Map(abc.ABC):
         if self.data.dtype == bool:
             kwargs.setdefault("interp", 0)
 
-        data = self.interp_by_coord(coords, **kwargs)
-
-        if self.data.dtype == bool:
-            data = data.astype(bool)
         if preserve_counts:
             old_map_copy = self.copy()
             old_map_copy.data /= self.geom.solid_angle().to_value("deg2")
@@ -792,6 +788,8 @@ class Map(abc.ABC):
         else:
             data = self.interp_by_coord(coords, **kwargs)
 
+        if self.data.dtype == bool:
+            data = data.astype(bool)
         return Map.from_geom(geom, data=data, unit=self.unit)
 
     def fill_events(self, events):
