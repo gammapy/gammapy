@@ -8,6 +8,7 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
+    PowerLawSpectralModel,
     AbsorbedSpectralModel,
     Absorption,
     BackgroundModel,
@@ -96,7 +97,7 @@ def test_sky_models_io(tmp_path):
     filename = get_pkg_data_filename("data/examples.yaml")
     models = Models.read(filename)
     models.covariance = np.eye(len(models.parameters))
-    models.write(tmp_path / "tmp.yaml")
+    models.write(tmp_path / "tmp.yaml", full_output=True)
     models = Models.read(tmp_path / "tmp.yaml")
     assert models._covar_file == "tmp_covariance.dat"
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
@@ -231,6 +232,16 @@ def test_missing_parameters():
     models = Models.read(filename)
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6
+
+
+def test_simplified_output():
+    model = PowerLawSpectralModel()
+    full = model.to_dict(full_output=True)
+    simplified = model.to_dict()
+    for k, _ in enumerate(model.parameters.names):
+        for item in ["min", "max", "frozen", "error"]:
+            assert item in full["parameters"][k]
+            assert item not in simplified["parameters"][k]
 
 
 def test_registries_print():
