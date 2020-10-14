@@ -192,12 +192,13 @@ class SpectralModel(Model):
         flux_err = flux * dnde_err / dnde
         return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
 
-    def _propagate_error(self, fct, emin, emax, epsilon=0.01):
+    def _propagate_error(self, fct, emin, emax, eps):
         """Evaluate error of a given function with uncertainty propagation.
 
         Parameters
         ----------
-        fct : function to estimate the error.
+        fct : `~astropy.units.Quantity`
+            Function to estimate the error.
         emin, emax : `~astropy.units.Quantity`
             Array of lower and upper bound of integration range.
         epsilon : float
@@ -216,16 +217,16 @@ class SpectralModel(Model):
         df_dp = np.zeros(shape)
 
         for idx, parameter in enumerate(self.parameters):
-            if parameter.frozen or epsilon == 0:
+            if parameter.frozen or eps[idx] == 0:
                 continue
 
-            dp = epsilon * parameter.error
-            parameter.value += dp
+#            dp = epsilon * parameter.error
+            parameter.value += eps[idx]
             df = self.energy_flux(emin,emax) - f
-            df_dp[idx] = df.value / dp
+            df_dp[idx] = df.value / eps[idx]
 
             # Reset model to original parameter
-        parameter.value -= dp
+        parameter.value -= eps[idx]
 
         f_cov = df_dp.T @ C @ df_dp
         return np.sqrt(np.diagonal(f_cov))
@@ -254,7 +255,7 @@ class SpectralModel(Model):
         else:
             return integrate_spectrum(f, emin, emax, **kwargs)
 
-    def energy_flux_error(self, emin, emax):
+    def energy_flux_error(self, emin, emax, epsilon=1e-4, **kwargs):
         """Evaluate the error of the energy flux of a given spectrum in
             a given energy range.
 
@@ -268,8 +269,10 @@ class SpectralModel(Model):
         energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
             Energy flux and energy flux error betwen emin and emax.
         """
-        enrg_flux = self.energy_flux(emin, emax, intervals=True)
-        enrg_flux_err = self._propagate_error(enrg_flux, emin, emax, epsilon=1e-4)
+        p_cov = self.covariance
+        eps = np.sqrt(np.diag(p_cov)) * epsilon
+        enrg_flux = self.energy_flux(emin, emax, **kwargs)
+        enrg_flux_err = self._propagate_error(enrg_flux, emin, emax, eps)
         return u.Quantity([enrg_flux.value, enrg_flux_err], unit=enrg_flux.unit)
 
     def plot(
