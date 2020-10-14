@@ -10,7 +10,7 @@ of detector coordinates and true energy.
 
 Its format specifications are available in :ref:`gadf:bkg_3d`.
 
-This is the format in which IACT DL3 energy dispersions are usually provided, as an example:
+This is the format in which IACT DL3 background rates are usually provided, as an example:
 
 .. plot:: irf/plot_bkg_3d.py
     :include-source:
