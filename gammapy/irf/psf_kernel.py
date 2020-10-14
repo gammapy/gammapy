@@ -116,7 +116,7 @@ class PSFKernel:
             Input table PSF
         geom : `~gammapy.maps.WcsGeom`
             Target geometry. The PSF kernel will be centered on the central pixel.
-            The geometry axes can optionally contain an axis with name "energy_true".
+            The geometry axes should contain an axis with name "energy"
         max_radius : `~astropy.coordinates.Angle`
             Maximum radius of the PSF kernel.
         factor : int
