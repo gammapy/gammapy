@@ -785,8 +785,9 @@ class Map(abc.ABC):
         if self.data.dtype == bool:
             data = data.astype(bool)
         if preserve_counts:
-            self.data /= self.geom.solid_angle().to_value("deg2")
-            data = self.interp_by_coord(coords, **kwargs)
+            old_map_copy = self.copy()
+            old_map_copy.data /= self.geom.solid_angle().to_value("deg2")
+            data = old_map_copy.interp_by_coord(coords, **kwargs)
             data *= geom.solid_angle().to_value("deg2")
         else:
             data = self.interp_by_coord(coords, **kwargs)

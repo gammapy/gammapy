@@ -416,3 +416,20 @@ def test_interp_to_geom():
     assert_allclose(interp_hpx_map.get_by_coord(coords)[0], value, atol=1e-7)
     assert isinstance(interp_hpx_map, HpxNDMap)
     assert interp_hpx_map.geom  == hpx_geom_target
+
+    # Preserving the counts
+    geom_initial = WcsGeom.create(
+        skydir=(20, 20),
+        width=(5, 5),
+        binsz=0.2*u.deg,
+    )
+
+    test_map = Map.from_geom(geom_initial, unit="")
+    test_map.data = value*np.ones(test_map.data.shape)
+    geom_target = WcsGeom.create(
+        skydir=(20, 20),
+        width=(5, 5),
+        binsz=0.1*u.deg,
+    )
+    new_map = test_map.interp_to_geom(geom_target, preserve_counts=True)
+    assert round(np.sum(new_map.data)) == np.sum(test_map.data)
