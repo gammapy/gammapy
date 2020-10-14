@@ -84,7 +84,10 @@ class PSFKernel:
             axis = (0, 1)
         else:
             axis = (1, 2)
-        data /= data.sum(axis=axis, keepdims=True)
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            data = np.nan_to_num(data / data.sum(axis=axis, keepdims=True))
+            self.psf_kernel_map.data = data
 
     @property
     def data(self):
