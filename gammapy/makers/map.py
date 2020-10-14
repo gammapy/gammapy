@@ -137,6 +137,7 @@ class MapDatasetMaker(Maker):
         if isinstance(observation.bkg, Map):
             return observation.bkg.interp_to_geom(
                 geom=geom,
+                preserve_counts=True
             )
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
 

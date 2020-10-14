@@ -755,13 +755,17 @@ class Map(abc.ABC):
         """
         pass
 
-    def interp_to_geom(self, geom, **kwargs):
+    def interp_to_geom(self, geom, preserve_counts=False, **kwargs):
         """Interpolate map to input geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
             Target Map geometry
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
         **kwargs : dict
             Keyword arguments passed to `Map.interp_by_coord`
 
@@ -780,6 +784,12 @@ class Map(abc.ABC):
 
         if self.data.dtype == bool:
             data = data.astype(bool)
+        if preserve_counts:
+            self.data /= self.geom.solid_angle().to_value("deg2")
+            data = self.interp_by_coord(coords, **kwargs)
+            data *= geom.solid_angle().to_value("deg2")
+        else:
+            data = self.interp_by_coord(coords, **kwargs)
 
         return Map.from_geom(geom, data=data, unit=self.unit)
 
