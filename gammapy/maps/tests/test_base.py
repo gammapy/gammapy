@@ -432,4 +432,5 @@ def test_interp_to_geom():
         binsz=0.1*u.deg,
     )
     new_map = test_map.interp_to_geom(geom_target, preserve_counts=True)
-    assert round(np.sum(new_map.data)) == np.sum(test_map.data)
+    assert np.floor(np.sum(new_map.data)) == np.sum(test_map.data)
+    
