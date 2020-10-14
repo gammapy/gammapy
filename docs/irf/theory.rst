@@ -53,6 +53,9 @@ These functions are obtained through Monte-Carlo simulations of gamma-ray shower
 e.g.  detector configuration, zenith angle of the pointing position, detector state and different event reconstruction
 and selection schemes. In the DL3 format, the IRF are distributed for each observing run.
 
+The IRF components in the DL3 format are radially symmetric in the field of view, so :math:`p` always represents an offset
+angle from the field of view center.
+
 Further details on individuals responses and how they are implemented in gammapy are given in :ref:`irf-aeff`,
 :ref:`irf-edisp` and :ref:`irf-psf`.
 
