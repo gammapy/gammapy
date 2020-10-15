@@ -135,6 +135,13 @@ class SpectrumDataset(MapDataset):
     def from_hdulist(self):
         raise NotImplementedError
 
+    def from_dict(self):
+        raise NotImplementedError
+
+    def to_spectrum_dataset(self):
+        """"""
+        return self
+
     @property
     # TODO: make this a method to support different methods?
     def energy_range(self):

@@ -358,8 +358,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        empty_maps : `MapDataset`
-            A MapDataset containing zero filled maps
+        dataset : `MapDataset`
+            A dataset containing zero filled maps
         """
         name = make_name(name)
         kwargs = kwargs.copy()
@@ -1033,6 +1033,8 @@ class MapDataset(Dataset):
             if self.mask_safe is not None:
                 mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
                 mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
+                if not mask_exposure.any():
+                    mask_exposure = slice(None)
 
             exposure_min = np.min(self.exposure.quantity[mask_exposure])
             exposure_max = np.max(self.exposure.quantity[mask_exposure])
