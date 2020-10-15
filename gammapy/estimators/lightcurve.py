@@ -118,7 +118,7 @@ class LightCurve:
         """
         self.table.write(make_path(filename), **kwargs)
 
-    def plot(self, ax=None, energy_index=0, time_format="mjd", flux_unit="cm-2 s-1", **kwargs):
+    def plot(self, ax=None, energy_index=None, time_format="mjd", flux_unit="cm-2 s-1", **kwargs):
         """Plot flux points.
 
         Parameters
@@ -146,8 +146,14 @@ class LightCurve:
             ax = plt.gca()
 
         x, xerr = self._get_times_and_errors(time_format=time_format)
-        y, yerr = self._get_fluxes_and_errors(energy_index=energy_index, unit=flux_unit)
-        is_ul, yul = self._get_flux_uls(energy_index=energy_index, unit=flux_unit)
+        y, yerr = self._get_fluxes_and_errors(unit=flux_unit)
+        is_ul, yul = self._get_flux_uls(unit=flux_unit)
+
+        if energy_index is not None:  #len(y.shape)>1:
+            y = y[:,energy_index]
+            yerr = yerr[:,energy_index]
+            is_ul = is_ul[:,energy_index]
+            yul = yul[:, energy_index]
 
         # length of the ul arrow
         ul_arr = (
@@ -163,10 +169,10 @@ class LightCurve:
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
 
-        e_min = self.table["e_min"].quantity[0,energy_index]
-        e_max = self.table["e_max"].quantity[0,energy_index]
-        energy_label = f"{e_min:1.3} - {e_max:1.3} "
-        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, label=energy_label, **kwargs)
+#        e_min = self.table["e_min"].quantity[0,energy_index]
+#        e_max = self.table["e_max"].quantity[0,energy_index]
+#        energy_label = f"{e_min:1.3} - {e_max:1.3} "
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, **kwargs)
         ax.set_xlabel("Time ({})".format(time_format.upper()))
         ax.set_ylabel("Flux ({:FITS})".format(u.Unit(flux_unit)))
         ax.legend()
@@ -181,7 +187,7 @@ class LightCurve:
 
         return ax
 
-    def _get_fluxes_and_errors(self, energy_index=0, unit="cm-2 s-1"):
+    def _get_fluxes_and_errors(self, unit="cm-2 s-1"):
         """Extract fluxes and corresponding errors
 
         Helper function for the plot method.
@@ -198,20 +204,20 @@ class LightCurve:
         (yn, yp) : tuple of `numpy.ndarray`
             Flux error values
         """
-        y = self.table["flux"].quantity.to(unit)[:,energy_index]
+        y = self.table["flux"].quantity.to(unit)
 
         if all(k in self.table.colnames for k in ["flux_errp", "flux_errn"]):
-            yp = self.table["flux_errp"].quantity.to(unit)[:,energy_index]
-            yn = self.table["flux_errn"].quantity.to(unit)[:,energy_index]
+            yp = self.table["flux_errp"].quantity.to(unit)
+            yn = self.table["flux_errn"].quantity.to(unit)
         elif "flux_err" in self.table.colnames:
-            yp = self.table["flux_err"].quantity.to(unit)[:,energy_index]
-            yn = self.table["flux_err"].quantity.to(unit)[:,energy_index]
+            yp = self.table["flux_err"].quantity.to(unit)
+            yn = self.table["flux_err"].quantity.to(unit)
         else:
             yp, yn = np.zeros_like(y), np.zeros_like(y)
 
         return y.value, (yn.value, yp.value)
 
-    def _get_flux_uls(self, energy_index=0, unit="cm-2 s-1"):
+    def _get_flux_uls(self, unit="cm-2 s-1"):
         """Extract flux upper limits
 
         Helper function for the plot method.
@@ -229,14 +235,14 @@ class LightCurve:
             Flux upper limit values
         """
         try:
-            is_ul = self.table["is_ul"].data[:,energy_index].astype("bool")
+            is_ul = self.table["is_ul"].data.astype("bool")
         except KeyError:
-            is_ul = np.zeros_like(self.table["flux"]).data[:,energy_index].astype("bool")
+            is_ul = np.zeros_like(self.table["flux"]).data.astype("bool")
 
         if is_ul.any():
-            yul = self.table["flux_ul"].quantity.to(unit)[:,energy_index]
+            yul = self.table["flux_ul"].quantity.to(unit)
         else:
-            yul = np.zeros_like(self.table["flux"]).quantity[:,energy_index]
+            yul = np.zeros_like(self.table["flux"]).quantity
             yul[:] = np.nan
 
         return is_ul, yul.value
@@ -448,7 +454,7 @@ class LightCurveEstimator(Estimator):
             if colname is not "counts":
                 result[colname] = fp.table[colname].quantity
             else:
-                result[colname] = fp.table[colname].quantity.sum()
+                result[colname] = np.atleast_1d(fp.table[colname].quantity.sum())
 
         #return fp.to_sed_type("flux")#
         return result
