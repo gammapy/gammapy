@@ -1866,6 +1866,7 @@ class MapDatasetOnOff(MapDataset):
         """
         kwargs = {}
         kwargs["name"] = name
+
         if "COUNTS" in hdulist:
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
 

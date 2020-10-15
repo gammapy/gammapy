@@ -6,12 +6,10 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.datasets import Dataset
-from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
-from gammapy.maps import RegionGeom, RegionNDMap, MapAxis
-from gammapy.modeling.models import Models, ProperModels
+from gammapy.irf import EDispKernel, EDispKernelMap
+from gammapy.maps import RegionNDMap
+from gammapy.modeling.models import Models
 from gammapy.stats import (
-    CashCountsStatistic,
     WStatCountsStatistic,
     cash,
     wstat,
@@ -19,9 +17,8 @@ from gammapy.stats import (
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.utils.table import hstack_columns
 from gammapy.modeling.models import BackgroundModel
-from .map import MapEvaluator, MapDataset
+from .map import MapDataset
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
