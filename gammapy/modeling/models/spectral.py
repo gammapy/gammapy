@@ -925,15 +925,13 @@ class PiecewiseNormSpectralModel(SpectralModel):
         log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
         return log_interp
 
-    def to_dict(self):
-        return {
-            "type": self.tag[0],
-            "energy": {
+    def to_dict(self, full_output=False):
+        data = super().to_dict(full_output=full_output)
+        data["energy"] = {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
-            },
-            "parameters": self.parameters.to_dict(),
-        }
+            }
+        return data
 
     @classmethod
     def from_dict(cls, data):
