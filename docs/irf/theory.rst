@@ -42,9 +42,13 @@ where:
 * :math:`A_{\rm eff}(p, E)` is the effective collection area of the detector  (unit: :math:`{\rm m}^2`). It is the product
   of the detector collection area times its detection efficiency at true energy :math:`E` and position :math:`p`.
 * :math:`PSF(p_{\rm reco}|p, E)` is the point spread function (unit: :math:`{\rm sr}^{-1}`). It gives the probability of
-  measuring a position :math:`p_{\rm reco}` when the true position is :math:`p` and the true energy is :math:`E`.
+  measuring a direction :math:`p_{\rm reco}` when the true direction is :math:`p` and the true energy is :math:`E`.
+  Gamma-ray instruments consider the probability density of the angular separation between true and reconstructed directions 
+  :math:`\delta p = p_{\rm true} - p_{\rm reco}`, i.e. :math:`PSF(\delta p|p, E)`.
 * :math:`E_{\rm disp}(E_{\rm reco}|p, E)` is the energy dispersion (unit: :math:`{\rm TeV}^{-1}`). It gives the probability to
   reconstruct the photon at energy :math:`E_{\rm reco}` when the true energy is :math:`E` and the true position :math:`p`.
+  Gamma-ray instruments consider the probability density of the migration :math:`\mu=\frac{E_{\rm reco}}{E_{\rm true}}`, 
+  i.e. :math:`E_{\rm disp}(\mu|p, E)`.
 
 The implicit assumption here is that energy dispersion and PSF are completely independent. This is not totally
 valid in some situations.
@@ -52,9 +56,6 @@ valid in some situations.
 These functions are obtained through Monte-Carlo simulations of gamma-ray showers for different observing conditions,
 e.g.  detector configuration, zenith angle of the pointing position, detector state and different event reconstruction
 and selection schemes. In the DL3 format, the IRF are distributed for each observing run.
-
-The IRF components in the DL3 format are radially symmetric in the field of view, so :math:`p` always represents an offset
-angle from the field of view center.
 
 Further details on individuals responses and how they are implemented in gammapy are given in :ref:`irf-aeff`,
 :ref:`irf-edisp` and :ref:`irf-psf`.

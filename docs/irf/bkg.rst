@@ -3,10 +3,10 @@
 Background
 ==========
 
-as a function of of true energy and detector coordinates (:ref:`gadf:bkg_3d`) 
------------------------------------------------------------------------------
-The `~gammapy.irf.Background3D` class represents a background rate as a function
-of detector coordinates and true energy. 
+as a function of reconstructed energy and detector coordinates (:ref:`gadf:bkg_3d`) 
+--------------------------------------------------------------------------------------
+The `~gammapy.irf.Background3D` class represents a background rate per solid 
+angle as a function of detector coordinates and reconstructed energy. 
 
 Its format specifications are available in :ref:`gadf:bkg_3d`.
 
@@ -16,10 +16,10 @@ This is the format in which IACT DL3 background rates are usually provided, as a
     :include-source:
 
 
-as a function of of true energy and offset angle, radially symmetric (:ref:`gadf:bkg_2d`)
------------------------------------------------------------------------------------------
-The `~gammapy.irf.Background2D` class represents a background rate as a function 
-of offset angle from the field of view center and true energy.
+as a function of reconstructed energy and offset angle, radially symmetric (:ref:`gadf:bkg_2d`)
+-----------------------------------------------------------------------------------------------
+The `~gammapy.irf.Background2D` class represents a background rate per solid angle 
+as a function of offset angle from the field of view center and reconstructed energy.
 
 Its format specifications are available in :ref:`gadf:bkg_2d`.
 

@@ -7,7 +7,7 @@ as a function of of true energy and offset angle (:ref:`gadf:edisp_2d`)
 -----------------------------------------------------------------------
 The `~gammapy.irf.EnergyDispersion2D` class represents the probability density of the energy migration 
 :math:`\mu=\frac{E_{\rm reco}}{E_{\rm true}}` as a function of true energy and offset angle from the field of view center
-(:math:`E_{\rm disp}(E_{\rm reco}|p, E)` in :ref:`irf-theory`).
+(:math:`E_{\rm disp}(\mu|p, E)` in :ref:`irf-theory`).
 
 Its format specifications are available in :ref:`gadf:edisp_2d`
 
@@ -20,6 +20,10 @@ as a function of true energy (:ref:`gadf:ogip-rmf`)
 ---------------------------------------------------
 `~gammapy.irf.EDispKernel` instead represents an energy dispersion as a function of true energy only 
 (:math:`E_{\rm disp}(E_{\rm reco}| E)` following the notation in :ref:`irf-theory`).
+`~gammapy.irf.EDispKernel` contains the energy redistribution matrix (or redistribution matrix function, RMF, 
+in the OGIP standard). The energy redistribution provides the integral of the energy dispersion probability function over 
+bins of reconstructed energy. It is used to convert vectors of predicted counts in true energy in vectors of predicted 
+counts in reconstructed energy.
 
 Its format specifications are available in :ref:`gadf:ogip-rmf`.
 
