@@ -6,7 +6,7 @@ Energy Dispersion
 as a function of of true energy and offset angle (:ref:`gadf:edisp_2d`)
 -----------------------------------------------------------------------
 The `~gammapy.irf.EnergyDispersion2D` class represents the probability density of the energy migration 
-:math:`\mu=\frac{E_{\rm reco}}{E_{\rm true}}` as a function of true energy and offset angle from the field of view center
+:math:`\mu=\frac{E_{\rm reco}}{E}` as a function of true energy and offset angle from the field of view center
 (:math:`E_{\rm disp}(\mu|p, E)` in :ref:`irf-theory`).
 
 Its format specifications are available in :ref:`gadf:edisp_2d`

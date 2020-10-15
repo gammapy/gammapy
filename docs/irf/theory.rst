@@ -44,10 +44,10 @@ where:
 * :math:`PSF(p_{\rm reco}|p, E)` is the point spread function (unit: :math:`{\rm sr}^{-1}`). It gives the probability of
   measuring a direction :math:`p_{\rm reco}` when the true direction is :math:`p` and the true energy is :math:`E`.
   Gamma-ray instruments consider the probability density of the angular separation between true and reconstructed directions 
-  :math:`\delta p = p_{\rm true} - p_{\rm reco}`, i.e. :math:`PSF(\delta p|p, E)`.
+  :math:`\delta p = p - p_{\rm reco}`, i.e. :math:`PSF(\delta p|p, E)`.
 * :math:`E_{\rm disp}(E_{\rm reco}|p, E)` is the energy dispersion (unit: :math:`{\rm TeV}^{-1}`). It gives the probability to
   reconstruct the photon at energy :math:`E_{\rm reco}` when the true energy is :math:`E` and the true position :math:`p`.
-  Gamma-ray instruments consider the probability density of the migration :math:`\mu=\frac{E_{\rm reco}}{E_{\rm true}}`, 
+  Gamma-ray instruments consider the probability density of the migration :math:`\mu=\frac{E_{\rm reco}}{E}`, 
   i.e. :math:`E_{\rm disp}(\mu|p, E)`.
 
 The implicit assumption here is that energy dispersion and PSF are completely independent. This is not totally

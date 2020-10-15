@@ -7,7 +7,7 @@ as a function of of true energy and offset angle (:ref:`gadf:psf_table`)
 ------------------------------------------------------------------------
 The `~gammapy.irf.PSF3D` class represents the radially symmetric probability 
 density of the angular separation between true and reconstructed directions 
-:math:`\delta p = p_{\rm true} - p_{\rm reco}` (or `rad`), as a function of 
+:math:`\delta p = p - p_{\rm reco}` (or `rad`), as a function of 
 true energy and offset angle from the field of view center 
 (:math:`PSF(\delta p|p, E)` in :ref:`irf-theory`).
 
@@ -23,7 +23,7 @@ as a function of true energy (:ref:`gadf:psf_gtpsf`)
 ----------------------------------------------------
 `~gammapy.irf.EnergyDependentTablePSF` instead represents the probability density 
 of the angular separation between true direction and reconstructed directions 
-:math:`\delta p = p_{\rm true} - p_{\rm reco}` (or `rad`) as a function of true 
+:math:`\delta p = p - p_{\rm reco}` (or `rad`) as a function of true 
 energy only (:math:`PSF(\delta p| E)` following the notation in :ref:`irf-theory`). 
 
 Its format specifications are available in :ref:`gadf:psf_gtpsf`.
