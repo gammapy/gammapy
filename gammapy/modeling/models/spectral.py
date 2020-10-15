@@ -909,10 +909,12 @@ class PiecewiseNormSpectralModel(SpectralModel):
 
     @property
     def energy(self):
+        """Energy nodes"""
         return self._energy
 
     @property
     def norms(self):
+        """Norm values"""
         return u.Quantity(self.parameters.values)
 
     def evaluate(self, energy, **norms):
@@ -935,9 +937,15 @@ class PiecewiseNormSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
+        """Create model from dict"""
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(parameters, energy=energy)
+
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        """Create model from parameters"""
+        return cls(norms=parameters, **kwargs)
 
 
 class ExpCutoffPowerLawSpectralModel(SpectralModel):

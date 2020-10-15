@@ -108,22 +108,29 @@ def test_sky_models_io(tmp_path):
     # or check serialised dict content
 
 
-def test_PiecewiseNormSpectralModel_io(tmp_path):
+def test_piecewise_norm_spectral_model_init():
+    with pytest.raises(ValueError):
+        PiecewiseNormSpectralModel(energy=[1, ] * u.TeV, norms=[1, 5])
 
+    with pytest.raises(ValueError):
+        PiecewiseNormSpectralModel(energy=[1, ] * u.TeV, norms=[1, ])
+
+
+def test_piecewise_norm_spectral_model_io():
     energy = [1, 3, 7, 10] * u.TeV
     norms = [1, 5, 3, 0.5] * u.Unit("")
-    with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1, 5])
-    with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1,])
+
     model = PiecewiseNormSpectralModel(energy=energy, norms=norms)
     model.parameters[0].value = 2
+
     model_dict = model.to_dict()
+
     parnames = [_["name"] for _ in model_dict["parameters"]]
     for k, parname in enumerate(parnames):
         assert parname == f"norm_{k}"
 
     new_model = PiecewiseNormSpectralModel.from_dict(model_dict)
+
     assert_allclose(new_model.parameters[0].value, 2)
     assert_allclose(new_model.energy, energy)
     assert_allclose(new_model.norms, [2, 5, 3, 0.5])
