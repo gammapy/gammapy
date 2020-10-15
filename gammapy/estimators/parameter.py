@@ -199,8 +199,8 @@ class ParameterEstimator(Estimator):
         )
 
         return {
-            f"{parameter.name}_scan": profile["values"],
-            "stat_scan": profile["stat"]
+            f"{parameter.name}_scan": profile[f"{parameter.name}_scan"],
+            "stat_scan": profile["stat_scan"]
         }
 
     def estimate_ul(self, datasets, parameter):

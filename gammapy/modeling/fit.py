@@ -360,7 +360,7 @@ class Fit:
                     stat = self.datasets.stat_sum()
                 stats.append(stat)
 
-        return {"values": values, "stat": np.array(stats), "fit_results": fit_results}
+        return {f"{parameter.name}_scan": values, "stat_scan": np.array(stats), "fit_results": fit_results}
 
     def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
@@ -386,10 +386,8 @@ class Fit:
         Returns
         -------
         results : dict
-        Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
-        empty list, if `reoptimize` is set to False
-
-
+            Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
+            empty list, if `reoptimize` is set to False
         """
         parameters = self._parameters
         x = parameters[x]
@@ -422,9 +420,9 @@ class Fit:
             fit_results = fit_results.reshape(shape)
 
         return {
-            "x_values": x_values,
-            "y_values": y_values,
-            "stat": stats,
+            f"{x.name}_scan": x_values,
+            f"{y.name}_scan": y_values,
+            "stat_scan": stats,
             "fit_results": fit_results,
         }
 
@@ -453,10 +451,8 @@ class Fit:
         Returns
         -------
         result : dict
-            Dictionary with keys "x", "y" (Numpy arrays with contour points)
-            and a boolean flag "success".
-            The result objects from ``mncontour`` are in the additional
-            keys "x_info" and "y_info".
+            Dictionary containing the parameter values defining the contour, with the
+            boolean flag "success" and the info objects from ``mncontour``.
         """
         parameters = self._parameters
         x = parameters[x]
@@ -465,15 +461,17 @@ class Fit:
         with parameters.restore_values:
             result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
 
+        x_name = x.name
+        y_name = y.name
         x = result["x"] * x.scale
         y = result["y"] * y.scale
 
         return {
-            "x": x,
-            "y": y,
+            x_name: x,
+            y_name: y,
             "success": result["success"],
-            "x_info": result["x_info"],
-            "y_info": result["y_info"],
+            f"{x_name}_info": result["x_info"],
+            f"{y_name}_info": result["y_info"],
         }
 
 
