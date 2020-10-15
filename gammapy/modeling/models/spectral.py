@@ -11,7 +11,10 @@ from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.interpolation import (
+    ScaledRegularGridInterpolator,
+    interpolation_scale,
+)
 from gammapy.utils.scripts import make_path
 from .core import Model
 
@@ -344,8 +347,7 @@ class SpectralModel(Model):
         self._plot_format_ax(ax, energy, y_lo, energy_power)
         return ax
 
-    @staticmethod
-    def _plot_format_ax(ax, energy, y, energy_power):
+    def _plot_format_ax(self, ax, energy, y, energy_power):
         ax.set_xlabel(f"Energy [{energy.unit}]")
         if energy_power > 0:
             ax.set_ylabel(f"E{energy_power} * Flux [{y.unit}]")
@@ -354,6 +356,10 @@ class SpectralModel(Model):
 
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
+
+        if "norm" in self.__class__.__name__.lower():
+            ax.set_ylabel(f"Norm [A.U.]")
+
 
     @staticmethod
     def _plot_scale_flux(energy, flux, energy_power):
@@ -856,6 +862,90 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index1)
         brk = (1 + (energy / ebreak) ** ((index2 - index1) / beta)) ** (-beta)
         return pwl * brk
+
+
+class PiecewiseNormSpectralModel(SpectralModel):
+    """ Piecewise spectral correction
+       with a free normalization at each fixed energy nodes.
+       
+       For more information see :ref:`piecewise-norm-spectral`.
+
+    Parameters
+    ----------
+    energy : `~astropy.units.Quantity`
+        Array of energies at which the model values are given (nodes).
+    norms : `~numpy.ndarray` or list of `Parameter`
+        Array with the initial norms of the model at energies ``energy``.
+        A normalisation parameters is created for each value.
+        Default is one at each node.
+    interp : str
+        Interpolation scaling in {"log", "lin"}. Default is "log"
+    """
+
+    tag = ["PiecewiseNormSpectralModel", "piecewise-norm"]
+
+    def __init__(self, energy, norms=None, interp="log"):
+        self._energy = energy
+        self._interp = interp
+
+        if norms is None:
+            norms = np.ones(len(energy))
+
+        if len(norms) != len(energy):
+            raise ValueError("dimension mismatch")
+
+        if len(norms) < 2:
+            raise ValueError("Input arrays must contain at least 2 elements")
+
+        if not isinstance(norms[0], Parameter):
+            parameters = Parameters(
+                [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
+            )
+        else:
+            parameters = Parameters(norms)
+
+        self.default_parameters = parameters
+        super().__init__()
+
+    @property
+    def energy(self):
+        """Energy nodes"""
+        return self._energy
+
+    @property
+    def norms(self):
+        """Norm values"""
+        return u.Quantity(self.parameters.values)
+
+    def evaluate(self, energy, **norms):
+        scale = interpolation_scale(scale=self._interp)
+        e_eval = scale(np.atleast_1d(energy.value))
+        e_nodes = scale(self.energy.to(energy.unit).value)
+        v_nodes = scale(self.norms)
+        log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
+        return log_interp
+
+    def to_dict(self):
+        return {
+            "type": self.tag[0],
+            "energy": {
+                "data": self.energy.data.tolist(),
+                "unit": str(self.energy.unit),
+            },
+            "parameters": self.parameters.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create model from dict"""
+        energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
+        parameters = Parameters.from_dict(data["parameters"])
+        return cls.from_parameters(parameters, energy=energy)
+
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        """Create model from parameters"""
+        return cls(norms=parameters, **kwargs)
 
 
 class ExpCutoffPowerLawSpectralModel(SpectralModel):
