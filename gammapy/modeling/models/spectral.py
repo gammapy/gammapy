@@ -347,8 +347,7 @@ class SpectralModel(Model):
         self._plot_format_ax(ax, energy, y_lo, energy_power)
         return ax
 
-    @staticmethod
-    def _plot_format_ax(ax, energy, y, energy_power):
+    def _plot_format_ax(self, ax, energy, y, energy_power):
         ax.set_xlabel(f"Energy [{energy.unit}]")
         if energy_power > 0:
             ax.set_ylabel(f"E{energy_power} * Flux [{y.unit}]")
@@ -357,6 +356,10 @@ class SpectralModel(Model):
 
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
+
+        if "norm" in self.__class__.__name__.lower():
+            ax.set_ylabel(f"Norm [A.U.]")
+
 
     @staticmethod
     def _plot_scale_flux(energy, flux, energy_power):
@@ -871,44 +874,38 @@ class PiecewiseNormSpectralModel(SpectralModel):
     ----------
     energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    norms : array
+    norms : `~numpy.ndarray` or list of `Parameter`
         Array with the initial norms of the model at energies ``energy``.
         A normalisation parameters is created for each value.
         Default is one at each node.
-    paremters : list
-        List of of `gammapy.modeling.Parameter`. Optional.
-        norms argument is ignored if parameters argument is defined.
     interp : str
         Interpolation scaling in {"log", "lin"}. Default is "log"
     """
 
-    tag = ["PiecewiseNormSpectralModel", "pbpl-norm"]
+    tag = ["PiecewiseNormSpectralModel", "piecewise-norm"]
 
-    def __init__(self, energy, norms=None, parameters=None, interp="log"):
+    def __init__(self, energy, norms=None, interp="log"):
         self._energy = energy
         self._interp = interp
+
         if norms is None:
             norms = np.ones(len(energy))
-        else:
-            if len(norms) != len(energy):
-                raise ValueError("dimension mismatch")
-            if len(norms) < 2:
-                raise ValueError("Input arrays must contain at least 2 elements")
 
-        if parameters is None:
+        if len(norms) != len(energy):
+            raise ValueError("dimension mismatch")
+
+        if len(norms) < 2:
+            raise ValueError("Input arrays must contain at least 2 elements")
+
+        if not isinstance(norms[0], Parameter):
             parameters = Parameters(
                 [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
             )
         else:
-            norms = np.array([p.value for p in parameters])
+            parameters = Parameters(norms)
 
-        for parameter in parameters:
-            setattr(self, parameter.name, parameter)
         self.default_parameters = parameters
-
-    @classmethod
-    def from_parameters(cls, parameters, **kwargs):
-        return cls(kwargs["energy"], parameters=parameters)
+        super().__init__()
 
     @property
     def energy(self):
@@ -916,12 +913,9 @@ class PiecewiseNormSpectralModel(SpectralModel):
 
     @property
     def norms(self):
-        return [p.value for p in self.parameters] * u.Unit("")
+        return u.Quantity(self.parameters.values)
 
-    def __call__(self, energy):
-        return self.evaluate(energy)
-
-    def evaluate(self, energy):
+    def evaluate(self, energy, **norms):
         scale = interpolation_scale(scale=self._interp)
         e_eval = scale(np.atleast_1d(energy.value))
         e_nodes = scale(self.energy.to(energy.unit).value)
@@ -932,11 +926,11 @@ class PiecewiseNormSpectralModel(SpectralModel):
     def to_dict(self):
         return {
             "type": self.tag[0],
-            "parameters": self.parameters.to_dict(),
             "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             },
+            "parameters": self.parameters.to_dict(),
         }
 
     @classmethod
