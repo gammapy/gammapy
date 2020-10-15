@@ -195,9 +195,15 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(lightcurve.table["e_ref"], [[5.623413], [5.623413]])
     assert_allclose(lightcurve.table["e_min"], [[1], [1]])
     assert_allclose(lightcurve.table["e_max"], [[31.622777], [31.622777]])
-    assert_allclose(lightcurve.table["ref_dnde"], [[3.162278e-14], [3.162278e-14]], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_flux"], [[9.683772e-13], [9.683772e-13]], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_eflux"], [[3.453878e-12], [3.453878e-12]], rtol=1e-5)
+    assert_allclose(
+        lightcurve.table["ref_dnde"], [[3.162278e-14], [3.162278e-14]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_flux"], [[9.683772e-13], [9.683772e-13]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_eflux"], [[3.453878e-12], [3.453878e-12]], rtol=1e-5
+    )
     assert_allclose(lightcurve.table["ref_e2dnde"], [[1e-12], [1e-12]], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"], [[16.824042], [17.391981]], rtol=1e-5)
     assert_allclose(lightcurve.table["norm"], [[0.911963], [0.9069318]], rtol=1e-2)
@@ -390,9 +396,15 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve.table["e_ref"], [[10.857111], [10.857111]])
     assert_allclose(lightcurve.table["e_min"], [[1.178769], [1.178769]], rtol=1e-5)
     assert_allclose(lightcurve.table["e_max"], [[100], [100]])
-    assert_allclose(lightcurve.table["ref_dnde"], [[8.483429e-14], [8.483429e-14]], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_flux"], [[8.383429e-12], [8.383429e-12]], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_eflux"], [[4.4407e-11], [4.4407e-11]], rtol=1e-5)
+    assert_allclose(
+        lightcurve.table["ref_dnde"], [[8.483429e-14], [8.483429e-14]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_flux"], [[8.383429e-12], [8.383429e-12]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_eflux"], [[4.4407e-11], [4.4407e-11]], rtol=1e-5
+    )
     assert_allclose(lightcurve.table["ref_e2dnde"], [[1e-11], [1e-11]], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"], [[9402.778975], [9517.750207]], rtol=1e-2)
     assert_allclose(lightcurve.table["norm"], [[0.971592], [0.963286]], rtol=1e-2)

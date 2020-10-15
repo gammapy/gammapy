@@ -11,7 +11,6 @@ from gammapy.utils.table import table_from_row_data, table_row_to_dict
 from .core import Estimator
 from .flux_point import FluxPoints, FluxPointsEstimator
 
-
 __all__ = ["LightCurve", "LightCurveEstimator"]
 
 log = logging.getLogger(__name__)
@@ -118,7 +117,14 @@ class LightCurve:
         """
         self.table.write(make_path(filename), **kwargs)
 
-    def plot(self, ax=None, energy_index=None, time_format="mjd", flux_unit="cm-2 s-1", **kwargs):
+    def plot(
+        self,
+        ax=None,
+        energy_index=None,
+        time_format="mjd",
+        flux_unit="cm-2 s-1",
+        **kwargs,
+    ):
         """Plot flux points.
 
         Parameters
@@ -126,6 +132,9 @@ class LightCurve:
         ax : `~matplotlib.axes.Axes`, optional.
             The `~matplotlib.axes.Axes` object to be drawn on.
             If None, uses the current `~matplotlib.axes.Axes`.
+        energy_index : int
+            The index of the energy band to use. If set to None, use the first energy index.
+            Default is None.
         time_format : {'mjd', 'iso'}, optional
             If 'iso', the x axis will contain Matplotlib dates.
             For formatting these dates see: https://matplotlib.org/gallery/ticks_and_spines/date_demo_rrule.html
@@ -149,10 +158,16 @@ class LightCurve:
         y, yerr = self._get_fluxes_and_errors(unit=flux_unit)
         is_ul, yul = self._get_flux_uls(unit=flux_unit)
 
-        if energy_index is not None:  #len(y.shape)>1:
-            y = y[:,energy_index]
-            yerr = yerr[:,energy_index]
-            is_ul = is_ul[:,energy_index]
+        if len(y.shape) > 1:
+            if energy_index is None:
+                energy_index = 0
+
+            y = y[:, energy_index]
+            if len(yerr) > 1:
+                yerr = [_[:, energy_index] for _ in yerr]
+            else:
+                yerr = yerr[:, energy_index]
+            is_ul = is_ul[:, energy_index]
             yul = yul[:, energy_index]
 
         # length of the ul arrow
@@ -169,9 +184,6 @@ class LightCurve:
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
 
-#        e_min = self.table["e_min"].quantity[0,energy_index]
-#        e_max = self.table["e_max"].quantity[0,energy_index]
-#        energy_label = f"{e_min:1.3} - {e_max:1.3} "
         ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, **kwargs)
         ax.set_xlabel("Time ({})".format(time_format.upper()))
         ax.set_ylabel("Flux ({:FITS})".format(u.Unit(flux_unit)))
@@ -444,11 +456,10 @@ class LightCurveEstimator(Estimator):
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
-
         )
         fp = fe.run(datasets)
 
-        #TODO: remove once FluxPointsEstimator returns object with all energies in one row
+        # TODO: remove once FluxPointsEstimator returns object with all energies in one row
         result = {}
         for colname in fp.table.colnames:
             if colname is not "counts":
@@ -456,5 +467,5 @@ class LightCurveEstimator(Estimator):
             else:
                 result[colname] = np.atleast_1d(fp.table[colname].quantity.sum())
 
-        #return fp.to_sed_type("flux")#
+        # return fp.to_sed_type("flux")#
         return result
