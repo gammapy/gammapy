@@ -465,7 +465,7 @@ class LightCurveEstimator(Estimator):
             if colname is not "counts":
                 result[colname] = fp.table[colname].quantity
             else:
-                result[colname] = np.atleast_1d(fp.table[colname].quantity.sum())
+                result[colname] = np.atleast_1d(fp.table[colname].quantity.sum(axis=1))
 
         # return fp.to_sed_type("flux")#
         return result
