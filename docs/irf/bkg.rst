@@ -25,4 +25,4 @@ Its format specifications are available in :ref:`gadf:bkg_2d`.
 
 You can produce a radially-symmetric background from a list of DL3 observations 
 devoid of gamma-ray signal using the tutorial in 
-`background_model.html <../tutorials/backgorund_model.html>`__ 
+`background_model.html <../tutorials/background_model.html>`__ 
