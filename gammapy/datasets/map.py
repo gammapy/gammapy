@@ -1238,7 +1238,7 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             if axis_name is None:
                 kwargs["exposure"] = self.exposure.downsample(
-                    factor=factor, preserve_counts=False
+                    factor=factor, preserve_counts=False, axis_name=None
                 )
             else:
                 kwargs["exposure"] = self.exposure.copy()

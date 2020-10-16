@@ -138,8 +138,10 @@ class SpectrumDataset(MapDataset):
     def from_dict(self):
         raise NotImplementedError
 
-    def to_spectrum_dataset(self):
-        """"""
+    def to_spectrum_dataset(self, *args, **kwargs):
+        return self
+
+    def cutout(self, *args, **kwargs):
         return self
 
     @property

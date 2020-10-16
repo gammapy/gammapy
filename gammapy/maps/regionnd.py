@@ -188,15 +188,23 @@ class RegionNDMap(Map):
         geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
-    def downsample(self, factor, preserve_counts=True, axis_name="energy"):
+    def downsample(self, factor, preserve_counts=True, axis_name="energy", weights=None):
+        if axis_name is None:
+            return self.copy()
+
         geom = self.geom.downsample(factor=factor, axis_name=axis_name)
 
         block_size = [1] * self.data.ndim
         idx = self.geom.axes.index_data(axis_name)
         block_size[idx] = factor
 
+        if weights is None:
+            weights = 1
+        else:
+            weights = weights.data
+
         func = np.nansum if preserve_counts else np.nanmean
-        data = block_reduce(self.data, tuple(block_size), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)
 
