@@ -36,6 +36,27 @@ def lc():
     return LightCurve(table=table)
 
 
+@pytest.fixture(scope="session")
+def lc_2d():
+    meta = dict(TIMESYS="utc")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 4.0], [2.0, 4.0]], "e_max", unit="TeV"),
+            Column([[1e-11, 1e-12], [3e-11, 3e-12]], "flux", unit="cm-2 s-1"),
+            Column([[0.1e-11, 1e-13], [0.3e-11, 3e-13]], "flux_err", unit="cm-2 s-1"),
+            Column([[np.nan, np.nan], [3.6e-11, 3.6e-12]], "flux_ul", unit="cm-2 s-1"),
+            Column([[False, False], [True, True]], "is_ul"),
+        ],
+    )
+
+    return LightCurve(table=table)
+
+
 def test_lightcurve_repr(lc):
     assert repr(lc) == "LightCurve(len=2)"
 
@@ -84,9 +105,11 @@ def test_lightcurve_read_write(tmp_path, lc, format):
 
 
 @requires_dependency("matplotlib")
-def test_lightcurve_plot(lc):
+def test_lightcurve_plot(lc, lc_2d):
     with mpl_plot_check():
         lc.plot()
+    with mpl_plot_check():
+        lc_2d.plot(energy_index=1)
 
 
 @pytest.mark.parametrize("flux_unit", ["cm-2 s-1"])
@@ -192,26 +215,106 @@ def test_lightcurve_estimator_spectrum_datasets():
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
     assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
-    assert_allclose(lightcurve.table["e_ref"], [5.623413, 5.623413])
-    assert_allclose(lightcurve.table["e_min"], [1, 1])
-    assert_allclose(lightcurve.table["e_max"], [31.622777, 31.622777])
-    assert_allclose(lightcurve.table["ref_dnde"], [3.162278e-14, 3.162278e-14], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_flux"], [9.683772e-13, 9.683772e-13], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_eflux"], [3.453878e-12, 3.453878e-12], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_e2dnde"], [1e-12, 1e-12], rtol=1e-5)
-    assert_allclose(lightcurve.table["stat"], [16.824042, 17.391981], rtol=1e-5)
-    assert_allclose(lightcurve.table["norm"], [0.911963, 0.9069318], rtol=1e-2)
-    assert_allclose(lightcurve.table["norm_err"], [0.059338, 0.056097], rtol=1e-2)
+    assert_allclose(lightcurve.table["e_ref"], [[5.623413], [5.623413]])
+    assert_allclose(lightcurve.table["e_min"], [[1], [1]])
+    assert_allclose(lightcurve.table["e_max"], [[31.622777], [31.622777]])
+    assert_allclose(
+        lightcurve.table["ref_dnde"], [[3.162278e-14], [3.162278e-14]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_flux"], [[9.683772e-13], [9.683772e-13]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_eflux"], [[3.453878e-12], [3.453878e-12]], rtol=1e-5
+    )
+    assert_allclose(lightcurve.table["ref_e2dnde"], [[1e-12], [1e-12]], rtol=1e-5)
+    assert_allclose(lightcurve.table["stat"], [[16.824042], [17.391981]], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm"], [[0.911963], [0.9069318]], rtol=1e-2)
+    assert_allclose(lightcurve.table["norm_err"], [[0.059338], [0.056097]], rtol=1e-2)
     assert_allclose(lightcurve.table["counts"], [[791], [784]])
-    assert_allclose(lightcurve.table["norm_errp"], [0.058398, 0.058416], rtol=1e-2)
-    assert_allclose(lightcurve.table["norm_errn"], [0.057144, 0.057259], rtol=1e-2)
-    assert_allclose(lightcurve.table["norm_ul"], [1.029989, 1.025061], rtol=1e-2)
-    assert_allclose(lightcurve.table["sqrt_ts"], [19.384781, 19.161769], rtol=1e-2)
-    assert_allclose(lightcurve.table["ts"], [375.769735, 367.173374], rtol=1e-2)
-    assert_allclose(lightcurve.table[0]["norm_scan"], [0.2, 1.0, 5.0])
+    assert_allclose(lightcurve.table["norm_errp"], [[0.058398], [0.058416]], rtol=1e-2)
+    assert_allclose(lightcurve.table["norm_errn"], [[0.057144], [0.057259]], rtol=1e-2)
+    assert_allclose(lightcurve.table["norm_ul"], [[1.029989], [1.025061]], rtol=1e-2)
+    assert_allclose(lightcurve.table["sqrt_ts"], [[19.384781], [19.161769]], rtol=1e-2)
+    assert_allclose(lightcurve.table["ts"], [[375.769735], [367.173374]], rtol=1e-2)
+    assert_allclose(lightcurve.table[0]["norm_scan"], [[0.2, 1.0, 5.0]])
     assert_allclose(
         lightcurve.table[0]["stat_scan"],
-        [224.058304, 19.074405, 2063.75636],
+        [[224.058304, 19.074405, 2063.75636]],
+        rtol=1e-5,
+    )
+
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
+    # Doing a LC on one hour bin
+    datasets = get_spectrum_datasets()
+    time_intervals = [
+        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+    ]
+
+    estimator = LightCurveEstimator(
+        e_edges=[1, 5, 30] * u.TeV, norm_n_values=3, time_intervals=time_intervals
+    )
+    lightcurve = estimator.run(datasets)
+    assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
+    assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
+    assert_allclose(
+        lightcurve.table["e_ref"], [[2.238721, 12.589254], [2.238721, 12.589254]]
+    )
+    assert_allclose(lightcurve.table["e_min"], [[1, 5.011872], [1, 5.011872]])
+    assert_allclose(
+        lightcurve.table["e_max"], [[5.011872, 31.622777], [5.011872, 31.622777]]
+    )
+    assert_allclose(
+        lightcurve.table["ref_dnde"],
+        [[1.995262e-13, 6.309573e-15], [1.995262e-13, 6.309573e-15]],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        lightcurve.table["stat"],
+        [[8.234951, 8.30321], [2.037205, 15.300507]],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        lightcurve.table["norm"],
+        [[0.894723, 0.967419], [0.914283, 0.882351]],
+        rtol=1e-2,
+    )
+    assert_allclose(
+        lightcurve.table["norm_err"],
+        [[0.07008, 0.125943], [0.067686, 0.121694]],
+        rtol=1e-2,
+    )
+    assert_allclose(lightcurve.table["counts"], [[669.0, 122.0], [667.0, 117.0]])
+    assert_allclose(
+        lightcurve.table["norm_errp"],
+        [[0.06664, 0.124741], [0.066815, 0.122832]],
+        rtol=1e-2,
+    )
+    assert_allclose(
+        lightcurve.table["norm_errn"],
+        [[0.065176, 0.117904], [0.065212, 0.116169]],
+        rtol=1e-2,
+    )
+    assert_allclose(
+        lightcurve.table["norm_ul"],
+        [[1.029476, 1.224117], [1.049283, 1.134874]],
+        rtol=1e-2,
+    )
+    assert_allclose(
+        lightcurve.table["sqrt_ts"],
+        [[16.233236, 10.608376], [16.609784, 9.557339]],
+        rtol=1e-2,
+    )
+    assert_allclose(
+        lightcurve.table[0]["norm_scan"], [[0.2, 1.0, 5.0], [0.2, 1.0, 5.0]]
+    )
+    assert_allclose(
+        lightcurve.table[0]["stat_scan"],
+        [[153.880281, 10.701492, 1649.609684], [70.178023, 8.372913, 414.146676]],
         rtol=1e-5,
     )
 
@@ -243,8 +346,8 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
     assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
-    assert_allclose(lightcurve.table["stat"], [6.603043, 0.421051], rtol=1e-3)
-    assert_allclose(lightcurve.table["norm"], [0.885124, 0.967054], rtol=1e-3)
+    assert_allclose(lightcurve.table["stat"], [[6.603043], [0.421051]], rtol=1e-3)
+    assert_allclose(lightcurve.table["norm"], [[0.885124], [0.967054]], rtol=1e-3)
 
 
 @requires_data()
@@ -259,7 +362,7 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
     assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
-    assert_allclose(lightcurve.table["norm"], [0.911963, 0.906931], rtol=1e-3)
+    assert_allclose(lightcurve.table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
 
 
 @requires_data()
@@ -281,7 +384,7 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
     assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
-    assert_allclose(lightcurve.table["norm"], [0.911963, 0.906931], rtol=1e-3)
+    assert_allclose(lightcurve.table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
 
 
 @requires_data()
@@ -300,17 +403,17 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
 
     assert_allclose(lightcurve.table["time_min"], [55197.0])
     assert_allclose(lightcurve.table["time_max"], [55197.083333])
-    assert_allclose(lightcurve.table["e_ref"], [5.623413])
-    assert_allclose(lightcurve.table["e_min"], [1])
-    assert_allclose(lightcurve.table["e_max"], [31.622777])
-    assert_allclose(lightcurve.table["ref_dnde"], [3.162278e-14], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_flux"], [9.683772e-13], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_eflux"], [3.453878e-12], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_e2dnde"], [1e-12], rtol=1e-5)
-    assert_allclose(lightcurve.table["stat"], [34.219808], rtol=1e-5)
-    assert_allclose(lightcurve.table["norm"], [0.909454], rtol=1e-5)
-    assert_allclose(lightcurve.table["norm_err"], [0.040874], rtol=1e-3)
-    assert_allclose(lightcurve.table["ts"], [742.939324], rtol=1e-4)
+    assert_allclose(lightcurve.table["e_ref"][0], [5.623413])
+    assert_allclose(lightcurve.table["e_min"][0], [1])
+    assert_allclose(lightcurve.table["e_max"][0], [31.622777])
+    assert_allclose(lightcurve.table["ref_dnde"][0], [3.162278e-14], rtol=1e-5)
+    assert_allclose(lightcurve.table["ref_flux"][0], [9.683772e-13], rtol=1e-5)
+    assert_allclose(lightcurve.table["ref_eflux"][0], [3.453878e-12], rtol=1e-5)
+    assert_allclose(lightcurve.table["ref_e2dnde"][0], [1e-12], rtol=1e-5)
+    assert_allclose(lightcurve.table["stat"][0], [34.219808], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm"][0], [0.909454], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm_err"][0], [0.040874], rtol=1e-3)
+    assert_allclose(lightcurve.table["ts"][0], [742.939324], rtol=1e-4)
 
 
 @requires_data()
@@ -387,18 +490,24 @@ def test_lightcurve_estimator_map_datasets():
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
     assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
-    assert_allclose(lightcurve.table["e_ref"], [10.857111, 10.857111])
-    assert_allclose(lightcurve.table["e_min"], [1.178769, 1.178769], rtol=1e-5)
-    assert_allclose(lightcurve.table["e_max"], [100, 100])
-    assert_allclose(lightcurve.table["ref_dnde"], [8.483429e-14, 8.483429e-14], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_flux"], [8.383429e-12, 8.383429e-12], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_eflux"], [4.4407e-11, 4.4407e-11], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_e2dnde"], [1e-11, 1e-11], rtol=1e-5)
-    assert_allclose(lightcurve.table["stat"], [9402.778975, 9517.750207], rtol=1e-2)
-    assert_allclose(lightcurve.table["norm"], [0.971592, 0.963286], rtol=1e-2)
-    assert_allclose(lightcurve.table["norm_err"], [0.044643, 0.044475], rtol=1e-2)
-    assert_allclose(lightcurve.table["sqrt_ts"], [35.880361, 35.636547], rtol=1e-2)
-    assert_allclose(lightcurve.table["ts"], [1287.4003, 1269.963491], rtol=1e-2)
+    assert_allclose(lightcurve.table["e_ref"], [[10.857111], [10.857111]])
+    assert_allclose(lightcurve.table["e_min"], [[1.178769], [1.178769]], rtol=1e-5)
+    assert_allclose(lightcurve.table["e_max"], [[100], [100]])
+    assert_allclose(
+        lightcurve.table["ref_dnde"], [[8.483429e-14], [8.483429e-14]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_flux"], [[8.383429e-12], [8.383429e-12]], rtol=1e-5
+    )
+    assert_allclose(
+        lightcurve.table["ref_eflux"], [[4.4407e-11], [4.4407e-11]], rtol=1e-5
+    )
+    assert_allclose(lightcurve.table["ref_e2dnde"], [[1e-11], [1e-11]], rtol=1e-5)
+    assert_allclose(lightcurve.table["stat"], [[9402.778975], [9517.750207]], rtol=1e-2)
+    assert_allclose(lightcurve.table["norm"], [[0.971592], [0.963286]], rtol=1e-2)
+    assert_allclose(lightcurve.table["norm_err"], [[0.044643], [0.044475]], rtol=1e-2)
+    assert_allclose(lightcurve.table["sqrt_ts"], [[35.880361], [35.636547]], rtol=1e-2)
+    assert_allclose(lightcurve.table["ts"], [[1287.4003], [1269.963491]], rtol=1e-2)
 
     datasets = get_map_datasets()
 
@@ -411,17 +520,17 @@ def test_lightcurve_estimator_map_datasets():
     )
     lightcurve2 = estimator2.run(datasets)
 
-    assert_allclose(lightcurve2.table["time_min"], [55197.0])
-    assert_allclose(lightcurve2.table["time_max"], [55197.083333])
-    assert_allclose(lightcurve2.table["e_ref"], [10.857111], rtol=1e-5)
-    assert_allclose(lightcurve2.table["e_min"], [1.178769], rtol=1e-5)
-    assert_allclose(lightcurve2.table["e_max"], [100])
-    assert_allclose(lightcurve2.table["ref_dnde"], [8.483429e-14], rtol=1e-5)
-    assert_allclose(lightcurve2.table["ref_flux"], [8.383429e-12], rtol=1e-5)
-    assert_allclose(lightcurve2.table["ref_eflux"], [4.4407e-11], rtol=1e-5)
-    assert_allclose(lightcurve2.table["ref_e2dnde"], [1e-11], rtol=1e-5)
-    assert_allclose(lightcurve2.table["stat"], [18920.54651], rtol=1e-2)
-    assert_allclose(lightcurve2.table["norm"], [0.967438], rtol=1e-2)
-    assert_allclose(lightcurve2.table["norm_err"], [0.031508], rtol=1e-2)
-    assert_allclose(lightcurve.table["counts"], [[2205], [2220]])
-    assert_allclose(lightcurve2.table["ts"], [2557.346464], rtol=1e-2)
+    assert_allclose(lightcurve2.table["time_min"][0], [55197.0])
+    assert_allclose(lightcurve2.table["time_max"][0], [55197.083333])
+    assert_allclose(lightcurve2.table["e_ref"][0], [10.857111], rtol=1e-5)
+    assert_allclose(lightcurve2.table["e_min"][0], [1.178769], rtol=1e-5)
+    assert_allclose(lightcurve2.table["e_max"][0], [100])
+    assert_allclose(lightcurve2.table["ref_dnde"][0], [8.483429e-14], rtol=1e-5)
+    assert_allclose(lightcurve2.table["ref_flux"][0], [8.383429e-12], rtol=1e-5)
+    assert_allclose(lightcurve2.table["ref_eflux"][0], [4.4407e-11], rtol=1e-5)
+    assert_allclose(lightcurve2.table["ref_e2dnde"][0], [1e-11], rtol=1e-5)
+    assert_allclose(lightcurve2.table["stat"][0], [18920.54651], rtol=1e-2)
+    assert_allclose(lightcurve2.table["norm"][0], [0.967438], rtol=1e-2)
+    assert_allclose(lightcurve2.table["norm_err"][0], [0.031508], rtol=1e-2)
+    assert_allclose(lightcurve.table["counts"][0], [2205])
+    assert_allclose(lightcurve2.table["ts"][0], [2557.346464], rtol=1e-2)
