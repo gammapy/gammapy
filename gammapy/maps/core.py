@@ -774,6 +774,7 @@ class Map(abc.ABC):
         interp_map : `Map`
             Interpolated Map
         """
+
         coords = geom.get_coord()
 
         # set nearest neighbour interpolation for mask as default
@@ -781,6 +782,8 @@ class Map(abc.ABC):
             kwargs.setdefault("interp", 0)
 
         if preserve_counts:
+            if geom.ndim > 2:
+                assert self.geom.axes[0] == geom.axes[0] # Energy axis has to match
             old_map_copy = self.copy()
             old_map_copy.data /= self.geom.solid_angle().to_value("deg2")
             data = old_map_copy.interp_by_coord(coords, **kwargs)
