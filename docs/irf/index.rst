@@ -33,17 +33,17 @@ IRF Axis naming
 ---------------
 In the IRF classes we use the following axis naming convention:
 
-================= ===================================
+================= ============================================================================
 Variable          Definition
-================= ===================================
-``energy``        Reconstructed energy axis
-``energy_true``   True energy axis
-``offset``        Field of view offset from center
+================= ============================================================================
+``energy``        Reconstructed energy axis (:math:`E` in :ref:`irf-theory`)
+``energy_true``   True energy axis (:math:`E_{\rm true}` in :ref:`irf-theory`)
+``offset``        Field of view offset from center (:math:`p_{\rm true}` in :ref:`irf-theory`)
 ``fov_lon``       Field of view	longitude
 ``fov_lat``       Field of view latitude
-``migra``         Energy migration
-``rad``        	  Offset angle from source position
-================= ===================================
+``migra``         Energy migration (:math:`\mu` in :ref:`irf-theory`)
+``rad``        	  Offset angle from source position (:math:`\delta p` in :ref:`irf-theory`)
+================= ============================================================================
 
 Getting Started
 ===============
