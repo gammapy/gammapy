@@ -285,7 +285,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     )
     assert_allclose(
         lightcurve.table["norm_err"],
-        [[0.07008, 0.125943], [0.067686, 0.121694]],
+        [[0.065905, 0.121288], [0.06601 , 0.119457]],
         rtol=1e-2,
     )
     assert_allclose(lightcurve.table["counts"], [[669.0, 122.0], [667.0, 117.0]])
