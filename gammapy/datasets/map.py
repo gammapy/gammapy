@@ -2006,10 +2006,7 @@ class MapDatasetActor(MapDataset):
     def __init__(self, dataset):
         self.__dict__.update(dataset.__dict__)
 
-    #        TODO: how to keep the acces to property ?
-
     def set_parameter_values(self, values):
-        #        TODO: remove this if acces to properties is working
         idx = 0
         for parameter in self.models.parameters:
             if not parameter.frozen:
@@ -2022,8 +2019,8 @@ class MapDatasetActor(MapDataset):
     def set_models(self, models):
         self.models = models
 
-    def get_name(self):
-        return self.name
+    def get_attr(self, attr):
+        return getattr(self, attr)
 
 
 class MapDatasetOnOff(MapDataset):

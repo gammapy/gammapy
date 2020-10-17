@@ -626,15 +626,27 @@ class DatasetsActor(Datasets):
 
         da = cls()
         da._actors = actors
-        names = ray.get([a.get_name.remote() for a in actors])
+        names = ray.get([a.get_attr.remote("name") for a in actors])
         # create ghost datasets linked to actors by name
         da._datasets = [MapDataset(name=name) for name in names]
         # copy model to create global model
         a_models = ray.get([a.get_models.remote() for a in actors])
         for d, models in zip(da._datasets, a_models):
             d.models = Models(models)
-        da._copy_cavariance_data()
+        da._copy_cavariance_data() 
         return da
+
+
+    def __getattr__(self, attr):
+        def wrapper(update_remote=False, **kwargs):
+            if update_remote:
+                self._update_remote_models()
+            results = ray.get([a.get_attr.remote(attr) for a in self._actors])
+            for res in results:
+                if inspect.ismethod(res):
+                    res = res(**kwargs) #no longer parallel but works with plots
+            return results
+        return wrapper
 
     def _copy_cavariance_data(self):
         # TODO: this avoid  ValueError: assignment destination is read-only in set_subcovariance
@@ -656,3 +668,4 @@ class DatasetsActor(Datasets):
         # blocked until set_parameters_factors on actors complete
         res = ray.get([a.stat_sum.remote() for a in self._actors])
         return np.sum(res)
+

@@ -203,3 +203,7 @@ result = fit.run(optimize_opts={"print_level": 1})
 exec_time = time.time() - start_time
 print("\n ray Fit time in seconds: ", exec_time)
 print("ray fit parameters:", da.parameters.get_parameter_values())
+
+da.plot_residuals()
+da.models[0].spectral_model.norm.value = 1
+da.plot_residuals(update_remote=True)
