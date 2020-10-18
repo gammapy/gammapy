@@ -225,8 +225,14 @@ def test_interpolate_map_dataset():
     geom_allsky_true = geom_allsky.drop('energy').to_cube([energy_true])
 
     #background
+    geom_background = WcsGeom.create(
+        skydir=(0, 0),
+        width=(5, 5),
+        binsz=0.2*u.deg,
+        axes=[energy]
+    )
     value = 30
-    bkg_map = Map.from_geom(geom_allsky, unit="")
+    bkg_map = Map.from_geom(geom_background, unit="")
     bkg_map.data = value*np.ones(bkg_map.data.shape)
 
     #effective area - with a gradient that also depends on energy
@@ -278,7 +284,7 @@ def test_interpolate_map_dataset():
     #define analysis geometry
     geom_target = WcsGeom.create(
         skydir=(0, 0),
-        width=(10, 10),
+        width=(5, 5),
         binsz=0.1*u.deg,
         axes=[energy]
     )
@@ -291,14 +297,7 @@ def test_interpolate_map_dataset():
     assert dataset.counts.data.sum() == nr_ev
 
     #test background
-    coords_bg = {
-        'skycoord' : SkyCoord("0 deg", "0 deg"),
-        'energy' : energy.center[0]
-    }
-    assert_allclose(
-        dataset.background_model.evaluate().get_by_coord(coords_bg)[0],
-        value,
-        atol=1e-7)
+    assert np.floor(np.sum(dataset.background_model.map.data)) == np.sum(bkg_map.data)
 
     #test effective area
     coords_aeff = {

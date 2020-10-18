@@ -718,9 +718,10 @@ class MapDataset(Dataset):
                 hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
             else:
                 hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-                hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
-                    exclude_primary
-                ]
+                if self.edisp.exposure_map is not None:
+                    hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
+                        exclude_primary
+                    ]
 
         if self.psf is not None:
             if isinstance(self.psf, PSFKernel):
@@ -729,9 +730,10 @@ class MapDataset(Dataset):
                 ]
             else:
                 hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-                hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
-                    exclude_primary
-                ]
+                if self.psf.exposure_map is not None:
+                    hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
+                        exclude_primary
+                    ]
 
         if self.mask_safe is not None:
             mask_safe_int = self.mask_safe.copy()
