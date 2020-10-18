@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from regions import CircleSkyRegion, RectangleSkyRegion
+from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel
 from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
@@ -316,7 +316,7 @@ class MapDataset(Dataset):
 
         Returns
         ----------
-        npred_sig: `gammapy.maps.WcsNDMap`
+        npred_sig: `gammapy.maps.Map`
             Map of the predicted signal counts
         """
         if model is None:
@@ -358,7 +358,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `MapDataset` or `SpectrumDataset`
             A dataset containing zero filled maps
         """
         name = make_name(name)
@@ -592,7 +592,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        residuals : `gammapy.maps.WcsNDMap`
+        residuals : `gammapy.maps.Map`
             Residual map.
         """
         return self._compute_residuals(self.counts, self.npred(), method=method)
@@ -1220,7 +1220,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `MapDataset` or `SpectrumDataset`
             Downsampled map dataset.
         """
         name = make_name(name)
@@ -1288,8 +1288,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        map : `Map`
-            Padded map.
+        dataset : `MapDataset`
+            Padded map dataset.
 
         """
         name = make_name(name)
@@ -1336,8 +1336,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        map_out : `Map`
-            Sliced map object.
+        dataset : `MapDataset` or `SpectrumDataset`
+            Sliced dataset
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name}
@@ -1386,7 +1386,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset: `MapDataset`
+        dataset: `MapDataset` or `SpectrumDataset`
             Resampled dataset .
         """
         name = make_name(name)
@@ -1443,8 +1443,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
-            Map dataset containing images.
+        dataset : `MapDataset` or `SpectrumDataset`
+            Dataset integrated over non-spatial axes.
         """
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)

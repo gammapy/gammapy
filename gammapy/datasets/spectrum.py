@@ -138,10 +138,17 @@ class SpectrumDataset(MapDataset):
     def from_dict(self):
         raise NotImplementedError
 
+    # TODO: decide what to about these "useless" methods
     def to_spectrum_dataset(self, *args, **kwargs):
+        """Returns self"""
         return self
 
     def cutout(self, *args, **kwargs):
+        """Returns self"""
+        return self
+
+    def pad(self, *args, **kwargs):
+        """Returns self"""
         return self
 
     @property
