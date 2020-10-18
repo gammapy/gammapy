@@ -191,7 +191,7 @@ class SkyModel(SkyModelBase):
     @property
     def position(self):
         """`~astropy.coordinates.SkyCoord`"""
-        return self.spatial_model.position
+        return getattr(self.spatial_model, "position", None)
 
     @property
     def evaluation_radius(self):

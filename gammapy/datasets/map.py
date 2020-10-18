@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from regions import CircleSkyRegion, RectangleSkyRegion
+from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel
 from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
     Models,
     ProperModels,
 )
-from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic
+from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic, CashCountsStatistic
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData, HDULocation
@@ -218,6 +218,10 @@ class MapDataset(Dataset):
     def background_model(self):
         return self._background_model
 
+    @property
+    def excess(self):
+        return self.counts - self.background_model.evaluate()
+
     @models.setter
     def models(self, models):
         if models is None:
@@ -312,7 +316,7 @@ class MapDataset(Dataset):
 
         Returns
         ----------
-        npred_sig: `gammapy.maps.WcsNDMap`
+        npred_sig: `gammapy.maps.Map`
             Map of the predicted signal counts
         """
         if model is None:
@@ -354,8 +358,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        empty_maps : `MapDataset`
-            A MapDataset containing zero filled maps
+        dataset : `MapDataset` or `SpectrumDataset`
+            A dataset containing zero filled maps
         """
         name = make_name(name)
         kwargs = kwargs.copy()
@@ -492,6 +496,34 @@ class MapDataset(Dataset):
     def stack(self, other):
         """Stack another dataset in place.
 
+        Safe mask is applied to compute the stacked counts data. Counts outside
+        each dataset safe mask are lost.
+
+        The stacking of 2 datasets is implemented as follows. Here, :math:`k`
+        denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number
+
+        The ``mask_safe`` of each dataset is defined as:
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
+            \mbox{if bin k is inside the thresholds}\\ 0, &
+            \mbox{otherwise} \end{array}\right.
+
+        Then the total ``counts`` and model background ``bkg`` are computed according to:
+
+        .. math::
+            \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+
+            \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
+             bkg_{2k} \cdot \epsilon_{2k}
+
+        The stacked ``safe_mask`` is then:
+
+        .. math::
+            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
+
+
         Parameters
         ----------
         other: `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
@@ -505,6 +537,13 @@ class MapDataset(Dataset):
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
+
+            # TODO: check whether this can be improved e.g. handling this in GTI
+            if "livetime" in other.exposure.meta:
+                if "livetime" in self.exposure.meta:
+                    self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
+                else:
+                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
 
         # TODO: unify background model handling
         if other.stat_type == "wstat":
@@ -553,7 +592,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        residuals : `gammapy.maps.WcsNDMap`
+        residuals : `gammapy.maps.Map`
             Residual map.
         """
         return self._compute_residuals(self.counts, self.npred(), method=method)
@@ -943,10 +982,7 @@ class MapDataset(Dataset):
         return {"name": self.name, "type": self.tag, "filename": str(filename)}
 
     def info_dict(self, in_safe_data_range=True):
-        """Basic info dict with summary statistics
-
-        If a region is passed, then a spectrum dataset is
-        extracted, and the corresponding info returned.
+        """Info dict with summary statistics, summed over energy
 
         Parameters
         ----------
@@ -958,8 +994,86 @@ class MapDataset(Dataset):
         info_dict : dict
             Dictionary with summary info.
         """
-        from .spectrum import SpectrumDataset
-        return SpectrumDataset.info_dict(self, in_safe_data_range)
+        info = {}
+        info["name"] = self.name
+
+        if self.mask_safe and in_safe_data_range:
+            mask = self.mask_safe.data.astype(bool)
+        else:
+            mask = slice(None)
+
+        counts = np.nan
+        if self.counts:
+            counts = self.counts.data[mask].sum()
+
+        info["counts"] = counts
+
+        background = np.nan
+        if self.background_model:
+            background = self.background_model.evaluate().data[mask].sum()
+        elif self.background:
+            background = self.background.data[mask].sum()
+
+        info["background"] = background
+
+        info["excess"] = counts - background
+        info["sqrt_ts"] = CashCountsStatistic(counts, background).significance
+
+        npred = np.nan
+        if self.models or not np.isnan(background):
+            npred = self.npred().data[mask].sum()
+
+        info["npred"] = npred
+
+        exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
+
+        if self.exposure is not None:
+            mask_exposure = (self.exposure.data > 0)
+
+            if self.mask_safe is not None:
+                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
+                mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
+                if not mask_exposure.any():
+                    mask_exposure = slice(None)
+
+            exposure_min = np.min(self.exposure.quantity[mask_exposure])
+            exposure_max = np.max(self.exposure.quantity[mask_exposure])
+            livetime = self.exposure.meta.get("livetime", np.nan)
+
+        info["exposure_min"] = exposure_min
+        info["exposure_max"] = exposure_max
+        info["livetime"] = livetime
+
+        ontime = u.Quantity(np.nan, "s")
+        if self.gti:
+            ontime = self.gti.time_sum
+
+        info["ontime"] = ontime
+
+        info["counts_rate"] = info["counts"] / info["livetime"]
+        info["background_rate"] = info["background"] / info["livetime"]
+        info["excess_rate"] = info["excess"] / info["livetime"]
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        info["n_bins"] = n_bins
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask.data)
+
+        info["n_fit_bins"] = n_fit_bins
+        info["stat_type"] = self.stat_type
+
+        stat_sum = np.nan
+        if self.counts is not None and self.models is not None:
+            stat_sum = self.stat_sum()
+
+        info["stat_sum"] = stat_sum
+
+        return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.datasets.SpectrumDataset from on_region.
@@ -1106,7 +1220,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `MapDataset` or `SpectrumDataset`
             Downsampled map dataset.
         """
         name = make_name(name)
@@ -1124,7 +1238,7 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             if axis_name is None:
                 kwargs["exposure"] = self.exposure.downsample(
-                    factor=factor, preserve_counts=False
+                    factor=factor, preserve_counts=False, axis_name=None
                 )
             else:
                 kwargs["exposure"] = self.exposure.copy()
@@ -1174,8 +1288,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        map : `Map`
-            Padded map.
+        dataset : `MapDataset`
+            Padded map dataset.
 
         """
         name = make_name(name)
@@ -1222,8 +1336,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        map_out : `Map`
-            Sliced map object.
+        dataset : `MapDataset` or `SpectrumDataset`
+            Sliced dataset
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name}
@@ -1272,16 +1386,22 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset: `MapDataset`
+        dataset: `MapDataset` or `SpectrumDataset`
             Resampled dataset .
         """
         name = make_name(name)
 
         kwargs = {}
         kwargs["name"] = name
-        kwargs["gti"] = self.gti
-        kwargs["exposure"] = self.exposure
-        kwargs["psf"] = self.psf
+
+        if self.gti:
+            kwargs["gti"] = self.gti
+
+        if self.exposure:
+            kwargs["exposure"] = self.exposure
+
+        if self.psf:
+            kwargs["psf"] = self.psf
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.resample_axis(
@@ -1323,8 +1443,8 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
-            Map dataset containing images.
+        dataset : `MapDataset` or `SpectrumDataset`
+            Dataset integrated over non-spatial axes.
         """
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
@@ -1748,6 +1868,7 @@ class MapDatasetOnOff(MapDataset):
         """
         kwargs = {}
         kwargs["name"] = name
+
         if "COUNTS" in hdulist:
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
 
@@ -2127,7 +2248,7 @@ class MapEvaluator:
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, BackgroundModel):
+        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None:
             self.evaluation_mode = "global"
 
         # define cached computations

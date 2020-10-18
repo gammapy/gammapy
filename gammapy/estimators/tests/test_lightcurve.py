@@ -230,7 +230,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(lightcurve.table["ref_e2dnde"], [[1e-12], [1e-12]], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"], [[16.824042], [17.391981]], rtol=1e-5)
     assert_allclose(lightcurve.table["norm"], [[0.911963], [0.9069318]], rtol=1e-2)
-    assert_allclose(lightcurve.table["norm_err"], [[0.059338], [0.056097]], rtol=1e-2)
+    assert_allclose(lightcurve.table["norm_err"], [[0.057769], [0.057835]], rtol=1e-2)
     assert_allclose(lightcurve.table["counts"], [[791], [784]])
     assert_allclose(lightcurve.table["norm_errp"], [[0.058398], [0.058416]], rtol=1e-2)
     assert_allclose(lightcurve.table["norm_errn"], [[0.057144], [0.057259]], rtol=1e-2)
@@ -285,7 +285,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     )
     assert_allclose(
         lightcurve.table["norm_err"],
-        [[0.07008, 0.125943], [0.067686, 0.121694]],
+        [[0.065905, 0.121288], [0.06601 , 0.119457]],
         rtol=1e-2,
     )
     assert_allclose(lightcurve.table["counts"], [[669.0, 122.0], [667.0, 117.0]])

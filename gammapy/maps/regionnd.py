@@ -188,15 +188,23 @@ class RegionNDMap(Map):
         geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
-    def downsample(self, factor, preserve_counts=True, axis_name="energy"):
+    def downsample(self, factor, preserve_counts=True, axis_name="energy", weights=None):
+        if axis_name is None:
+            return self.copy()
+
         geom = self.geom.downsample(factor=factor, axis_name=axis_name)
 
         block_size = [1] * self.data.ndim
         idx = self.geom.axes.index_data(axis_name)
         block_size[idx] = factor
 
+        if weights is None:
+            weights = 1
+        else:
+            weights = weights.data
+
         func = np.nansum if preserve_counts else np.nanmean
-        data = block_reduce(self.data, tuple(block_size), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)
 
@@ -228,9 +236,15 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords):
+    def interp_by_coord(self, coords, interp=1):
         pix = self.geom.coord_to_pix(coords)
-        return self.interp_by_pix(pix)
+        if interp == 1:
+            method = "linear"
+        elif interp == 0:
+            method = "nearest"
+        else:
+            raise ValueError(f"Not a valid interp order {interp}")
+        return self.interp_by_pix(pix, method=method)
 
     def interp_by_pix(self, pix, method="linear", fill_value=None):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
@@ -389,3 +403,12 @@ class RegionNDMap(Map):
             raise ValueError(f"Unsupported ogip column: '{ogip_column}'")
 
         return table
+
+    def get_spectrum(self, *args, **kwargs):
+        """Return self"""
+        return self
+
+    def cutout(self, *args, **kwargs):
+        """Return self"""
+        return self
+
