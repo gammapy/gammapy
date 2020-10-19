@@ -598,6 +598,7 @@ class Datasets(collections.abc.MutableSequence):
         return len(self._datasets)
 
 
+
 class DatasetsActor(Datasets):
     """A modified Dataset collection for parallel evaluation using ray actors.
     Fore now only available if composed only of MapDataset.
@@ -609,35 +610,34 @@ class DatasetsActor(Datasets):
     """
 
     def __init__(self, datasets=None):
-        from .map import MapDatasetActor
+        from .map import MapDatasetActor, MapDataset
 
         if datasets is not None:
-            self._datasets = datasets._datasets
-            self._actors = [MapDatasetActor.remote(d) for d in self._datasets]
+            actors = []
+            datasets_list = []
+            while datasets:
+                d0 = datasets[0]
+                actors.append(MapDatasetActor.remote(d0))
+                datasets_list.append(MapDataset(name=d0.name, models=d0.models))
+                datasets.remove(d0)
+            self._datasets = datasets_list
+            self._actors = actors
             self._copy_cavariance_data()
 
-    @classmethod
-    def from_actors(cls, actors):
-        """create from previously defined actors
-        This will work only if models are unique to their datasets,
-        for example using actors obtain after data reduction with only background
-        """
-        from .map import MapDataset
 
-        da = cls()
-        da._actors = actors
-        names = ray.get([a.get_attr.remote("name") for a in actors])
-        # create ghost datasets linked to actors by name
-        da._datasets = [MapDataset(name=name) for name in names]
-        # copy model to create global model
-        a_models = ray.get([a.get_models.remote() for a in actors])
-        for d, models in zip(da._datasets, a_models):
-            d.models = Models(models)
-        da._copy_cavariance_data() 
-        return da
-
+    def insert(self, idx, dataset):
+        from .map import MapDatasetActor, MapDataset
+        if isinstance(dataset, Dataset):
+            if dataset.name in self.names:
+                raise (ValueError("Dataset names must be unique"))
+            self._datasets.insert(idx, MapDataset(name=dataset.name, models=dataset.models))
+            self.models #update global model
+            self._actors.insert(idx, MapDatasetActor.remote(dataset))
+        else:
+            raise TypeError(f"Invalid type: {type(dataset)!r}")
 
     def __getattr__(self, attr):
+        """get attribute from remote each dataset"""
         def wrapper(update_remote=False, **kwargs):
             if update_remote:
                 self._update_remote_models()
@@ -649,7 +649,8 @@ class DatasetsActor(Datasets):
         return wrapper
 
     def _copy_cavariance_data(self):
-        # TODO: this avoid  ValueError: assignment destination is read-only in set_subcovariance
+        # TODO: this avoid  ValueError in remote:
+        # assignment destination is read-only in set_subcovariance
         # self._data[np.ix_(idx, idx)] = covar.data.copy()
         # better way/place to do that ?
         for m in self.models:
