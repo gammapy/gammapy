@@ -220,7 +220,6 @@ class SpectralModel(Model):
             if parameter.frozen or eps[idx] == 0:
                 continue
 
-#            dp = epsilon * parameter.error
             parameter.value += eps[idx]
             df = self.energy_flux(emin,emax) - f
             df_dp[idx] = df.value / eps[idx]
