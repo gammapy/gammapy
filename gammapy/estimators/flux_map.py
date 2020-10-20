@@ -14,16 +14,19 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     PointSpatialModel,
 )
-from gammapy.utils.scripts import make_name, make_path
-from gammapy.utils.fits import LazyFitsData, HDULocation
+from gammapy.utils.scripts import make_path
 
+__all__ = ["FluxMap"]
+
+
+#TODO replace by ref_dnde in all code
 REQUIRED_MAPS = {
     "dnde": ["dnde"],
     "e2dnde": ["e2dnde"],
     "flux": ["flux"],
     "eflux": ["eflux"],
     "likelihood": [
-        "ref_dnde",
+        "dnde_ref",
         "norm",
     ],
 }
@@ -306,8 +309,11 @@ class FluxMap:
             result[entry] = self.__getattribute__(entry)
 
         for entry in OPTIONAL_MAPS[sed_type]:
-            try:
-                result[entry] = self.__getattribute__(entry)
+            res = self.__getattribute__(entry)
+            if res is not None:
+                result[entry] = res
+
+        return result
 
     def write(self, filename, overwrite=False, sed_type="likelihood"):
         """Write flux map to file.
@@ -343,10 +349,10 @@ class FluxMap:
         hdu_primary = fits.PrimaryHDU()
         hdulist = fits.HDUList([hdu_primary])
 
-        map_dict = self.get_map_dict()
+        map_dict = self.get_map_dict(sed_type)
 
-        for key in map_dict.keys():
+        for key in map_dict:
             hdulist += map_dict[key].to_hdulist(hdu=key)[exclude_primary]
- 
+
         return hdulist
 
