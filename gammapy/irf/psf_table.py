@@ -539,7 +539,7 @@ class EnergyDependentTablePSF:
         for fraction in fractions:
             rad = self.containment_radius(self.energy_axis_true.center, fraction)
             label = f"{100 * fraction:.1f}% Containment"
-            ax.plot(self.energy_axis_true.center.value, rad.value, label=label, **kwargs)
+            ax.plot(self.energy_axis_true.center.to("GeV").value, rad.to("deg").value, label=label, **kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")

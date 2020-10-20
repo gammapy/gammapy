@@ -1,17 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Cube models (axes: lon, lat, energy)."""
 import copy
-from pathlib import Path
 import numpy as np
 import astropy.units as u
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
-from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.utils.fits import LazyFitsData, HDULocation
+from gammapy.utils.fits import LazyFitsData
 from .core import Model, Models
-from .spatial import SpatialModel
-from .spectral import SpectralModel, PowerLawNormSpectralModel
+from .spatial import SpatialModel, ConstantSpatialModel
+from .spectral import SpectralModel, PowerLawNormSpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
 
 
@@ -626,9 +625,6 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     diffuse_model : `SkyModel`
         Fermi isotropic diffuse sky model.
     """
-    from .spectral import TemplateSpectralModel
-    from .spatial import ConstantSpatialModel
-
     vals = np.loadtxt(make_path(filename))
     energy = u.Quantity(vals[:, 0], "MeV", copy=False)
     values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=False)
@@ -644,4 +640,5 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         name="fermi-diffuse-iso",
+        apply_irf={"psf": False, "exposure": True, "edisp": True}
     )
