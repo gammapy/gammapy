@@ -78,7 +78,11 @@ def test_flux_map_properties(wcs_flux_map):
 def test_flux_map_read_write(tmp_path, wcs_flux_map):
     fluxmap = FluxMap(**wcs_flux_map)
 
-    fluxmap.write(tmp_path / "tmp.fits", sed_type="flux")
+    fluxmap.write(tmp_path / "tmp.fits", sed_type="eflux")
+    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
 
-
+    assert_allclose(new_fluxmap.norm.data[:,0,0], [1, 1])
+    assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
+    assert_allclose(new_fluxmap.norm_errn.data[:,0,0], [0.2, 0.2])
+    assert_allclose(new_fluxmap.norm_ul.data[:,0,0], [2, 2])
 

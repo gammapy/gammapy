@@ -360,6 +360,24 @@ class FluxMap:
         return hdulist
 
     @classmethod
+    def read(cls, filename):
+        """Read map dataset from file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to read from.
+
+        Returns
+        -------
+        flux_map : `~gammapy.estimators.FluxMap`
+            Flux map.
+        """
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist)
+
+
+    @classmethod
     def from_hdulist(cls, hdulist):
         """Create flux map dataset from list of HDUs.
 
@@ -444,9 +462,67 @@ class FluxMap:
         ref_dnde = ref_model.spectral_model(e_ref)
 
         kwargs = {}
+        kwargs["ref_model"] = ref_model
         kwargs["norm"] = maps["dnde"]/ref_dnde[:,np.newaxis, np.newaxis]
 
         for map_type in OPTIONAL_MAPS["dnde"]:
-            norm_type = "norm"
             if map_type in maps:
-                maps[map_type]/ref_dnde[:,np.newaxis, np.newaxis]
+                norm_type = map_type.replace("dnde", "norm")
+                kwargs[norm_type] = maps[map_type]/ref_dnde[:,np.newaxis, np.newaxis]
+
+        return cls(**kwargs)
+
+    @classmethod
+    def _from_e2dnde_dict(cls, maps, ref_model):
+        e_ref = maps["e2dnde"].geom.axes["energy"].center
+        ref_dnde = ref_model.spectral_model(e_ref)
+        factor =  e_ref**2 * ref_dnde[:,np.newaxis, np.newaxis]
+
+        kwargs = {}
+        kwargs["ref_model"] = ref_model
+        kwargs["norm"] = maps["e2dnde"]/factor
+
+        for map_type in OPTIONAL_MAPS["e2dnde"]:
+            if map_type in maps:
+                norm_type = map_type.replace("e2dnde", "norm")
+                kwargs[norm_type] = maps[map_type]/factor
+
+        return cls(**kwargs)
+
+    @classmethod
+    def _from_flux_dict(cls, maps, ref_model):
+        e_edges = maps["flux"].geom.axes["energy"].edges
+        e_ref = maps["flux"].geom.axes["energy"].center
+
+        ref_dnde = ref_model.spectral_model(e_ref)
+        factor = ref_model.spectral_model.integral(e_edges[:-1], e_edges[1:])
+
+        kwargs = {}
+        kwargs["ref_model"] = ref_model
+        kwargs["norm"] = maps["flux"]/factor[:,np.newaxis, np.newaxis]
+
+        for map_type in OPTIONAL_MAPS["flux"]:
+            if map_type in maps:
+                norm_type = map_type.replace("flux", "norm")
+                kwargs[norm_type] = maps[map_type]/factor[:,np.newaxis, np.newaxis]
+
+        return cls(**kwargs)
+
+    @classmethod
+    def _from_eflux_dict(cls, maps, ref_model):
+        e_edges = maps["eflux"].geom.axes["energy"].edges
+        e_ref = maps["eflux"].geom.axes["energy"].center
+
+        ref_dnde = ref_model.spectral_model(e_ref)
+        factor = ref_model.spectral_model.energy_flux(e_edges[:-1], e_edges[1:])
+
+        kwargs = {}
+        kwargs["ref_model"] = ref_model
+        kwargs["norm"] = maps["eflux"]/factor[:,np.newaxis, np.newaxis]
+
+        for map_type in OPTIONAL_MAPS["eflux"]:
+            if map_type in maps:
+                norm_type = map_type.replace("eflux", "norm")
+                kwargs[norm_type] = maps[map_type]/factor[:,np.newaxis, np.newaxis]
+
+        return cls(**kwargs)
