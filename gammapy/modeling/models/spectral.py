@@ -19,7 +19,7 @@ from gammapy.utils.scripts import make_path
 from .core import Model
 
 
-def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
+def integrate_spectrum(func, emin, emax, ndecade=100):
     """Integrate 1d function using the log-log trapezoidal rule.
 
     If scalar values for xmin and xmax are passed an oversampled grid is generated using the
@@ -38,24 +38,18 @@ def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
     ndecade : int, optional
         Number of grid points per decade used for the integration.
         Default : 100.
-    intervals : bool, optional
-        Return integrals in the grid not the sum, default: False
     """
-    if emin.isscalar and emax.isscalar:
-        energies = MapAxis.from_energy_bounds(
-            emin=emin, emax=emax, nbin=ndecade, per_decade=True
-        ).edges
-    else:
-        energies = edges_from_lo_hi(emin, emax)
+    edges = edges_from_lo_hi(emin, emax)
+    energy_axis = MapAxis.from_energy_edges(edges=edges)
 
-    values = func(energies)
+    factor = np.ceil(ndecade / energy_axis.nbin_per_decade)
+    energy_axis_upsampled = energy_axis.upsample(factor=factor)
 
-    integral = trapz_loglog(values, energies)
+    values = func(energy_axis_upsampled.edges)
+    integral = trapz_loglog(values, energy_axis_upsampled.edges)
 
-    if intervals:
-        return integral
-
-    return integral.sum()
+    indices = energy_axis_upsampled.coord_to_idx(energy_axis.edges[:-1])
+    return np.add.reduceat(integral, indices)
 
 
 class SpectralModel(Model):
@@ -154,9 +148,6 @@ class SpectralModel(Model):
         .. math::
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} \phi(E) dE
 
-        If array input for ``emin`` and ``emax`` is given you have to set
-        ``intervals=True`` if you want the integral in each energy bin.
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -187,7 +178,7 @@ class SpectralModel(Model):
             Integral flux and flux error betwen emin and emax.
         """
         energy = np.sqrt(emin * emax)
-        flux = self.integral(emin, emax, intervals=True)
+        flux = self.integral(emin, emax)
         dnde, dnde_err = self.evaluate_error(energy, epsilon=1e-4)
         flux_err = flux * dnde_err / dnde
         return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
