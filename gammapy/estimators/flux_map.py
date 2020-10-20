@@ -6,7 +6,7 @@ from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 
-from gammapy.maps import MapCoord
+from gammapy.maps import MapCoord, Map
 from gammapy.estimators import FluxPoints
 from gammapy.utils.table import table_from_row_data
 from gammapy.modeling.models import (
@@ -108,11 +108,12 @@ class FluxMap:
         self.counts = counts
 
         if ref_model is None:
-            ref_model = SkyModel(
-                spatial_model=PointSpatialModel(),
-                spectral_model=PowerLawSpectralModel(index=2),
-            )
+            ref_model = self._default_model()
         self.ref_model = ref_model
+
+    @staticmethod
+    def _default_model():
+        return SkyModel(spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2))
 
     @property
     def e_ref(self):
@@ -349,6 +350,8 @@ class FluxMap:
         hdu_primary = fits.PrimaryHDU()
         hdulist = fits.HDUList([hdu_primary])
 
+        hdu_primary.header["SED_TYPE"] = sed_type
+
         map_dict = self.get_map_dict(sed_type)
 
         for key in map_dict:
@@ -356,3 +359,94 @@ class FluxMap:
 
         return hdulist
 
+    @classmethod
+    def from_hdulist(cls, hdulist):
+        """Create flux map dataset from list of HDUs.
+
+        Parameters
+        ----------
+        hdulist : `~astropy.io.fits.HDUList`
+            List of HDUs.
+
+        Returns
+        -------
+        fluxmap : `~gammapy.estimators.FluxMap`
+            the flux map.
+        """
+        try:
+            sed_type = hdulist[0].header["SED_TYPE"]
+        except KeyError:
+            raise ValueError(f"Cannot determine SED type of flux map from primary header.")
+
+        result = {}
+        for map_type in REQUIRED_MAPS[sed_type]:
+            if map_type.upper() in hdulist:
+                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type)
+            else:
+                raise ValueError(f"Cannot find required map {map_type} for SED type {sed_type}.")
+
+        for map_type in OPTIONAL_MAPS[sed_type]:
+            if map_type.upper() in hdulist:
+                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type)
+
+        return cls.from_dict(result, sed_type)
+
+    @staticmethod
+    def _validate_type(maps, sed_type):
+        """Check that map input is valid and correspond to one of the SED type."""
+        try:
+            required = set(REQUIRED_MAPS[sed_type])
+        except:
+            raise ValueError(f"Unknown SED type.")
+
+        if not required.issubset(maps.keys()):
+            missing = required.difference(maps.keys())
+            raise ValueError(
+                "Missing maps for sed type '{}':" " {}".format(sed_type, missing)
+            )
+
+
+    @classmethod
+    def from_dict(cls, maps, sed_type='likelihood', ref_model=None):
+        """Create FluxMap from a dictionary of maps.
+
+        Parameters
+        ----------
+        maps : dict
+            dictionary containing the requested maps.
+        sed_type : str
+            sed type to convert to. Default is `Likelihood`
+        ref_model : `~gammapy.modeling.models.SkyModel`, optional
+            the reference model to use for conversions. Default in None.
+            If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
+
+        Returns
+        -------
+        fluxmap : `~gammapy.estimators.FluxMap`
+            the flux map.
+        """
+        cls._validate_type(maps, sed_type)
+
+        if sed_type == 'likelihood':
+            return cls(**maps)
+        elif sed_type == 'dnde':
+            return cls._from_dnde_dict(maps, ref_model)
+        elif sed_type == 'flux':
+            return cls._from_flux_dict(maps, ref_model)
+        elif sed_type == 'eflux':
+            return cls._from_eflux_dict(maps, ref_model)
+        elif sed_type == 'e2dnde':
+            return cls._from_e2dnde_dict(maps, ref_model)
+
+    @classmethod
+    def _from_dnde_dict(cls, maps, ref_model):
+        e_ref = maps["dnde"].geom.axes["energy"].center
+        ref_dnde = ref_model.spectral_model(e_ref)
+
+        kwargs = {}
+        kwargs["norm"] = maps["dnde"]/ref_dnde[:,np.newaxis, np.newaxis]
+
+        for map_type in OPTIONAL_MAPS["dnde"]:
+            norm_type = "norm"
+            if map_type in maps:
+                maps[map_type]/ref_dnde[:,np.newaxis, np.newaxis]
