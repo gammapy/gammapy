@@ -802,11 +802,39 @@ def test_integral_error_ExpCutOffPowerLaw():
     emax = energy[1:]
 
     exppowerlaw = ExpCutoffPowerLawSpectralModel()
-    exppowerlaw.parameters["index"].error = 0.4
-    exppowerlaw.parameters["amplitude"].error = 1e-13
-    exppowerlaw.parameters["lambda_"].error = 0.03
+    exppowerlaw.parameters['index'].error = 0.4
+    exppowerlaw.parameters['amplitude'].error = 1e-13
+    exppowerlaw.parameters['lambda_'].error = 0.03
 
     flux, flux_error = exppowerlaw.integral_error(emin, emax)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.90907063, rtol=0.01)
+    assert_allclose(flux.value[0]/1e-13, 5.05855622, rtol=0.01)
+    assert_allclose(flux_error.value[0]/1e-14, 8.90907063, rtol=0.01)
+
+
+def test_energy_flux_error_PowerLaw():
+    emin = 1 * u.TeV
+    emax = 10 * u.TeV
+
+    powerlaw = PowerLawSpectralModel()
+    powerlaw.parameters['index'].error = 0.4
+    powerlaw.parameters['amplitude'].error = 1e-13
+
+    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(emin,emax)
+
+    assert_allclose(enrg_flux.value/1e-12, 2.303, rtol=0.001)
+    assert_allclose(enrg_flux_error.value/1e-12, 1.347, rtol=0.001)
+
+def test_energy_flux_error_ExpCutOffPowerLaw():
+    emin = 1 * u.TeV
+    emax = 10 * u.TeV
+
+    exppowerlaw = ExpCutoffPowerLawSpectralModel()
+    exppowerlaw.parameters['index'].error = 0.4
+    exppowerlaw.parameters['amplitude'].error = 1e-13
+    exppowerlaw.parameters['lambda_'].error = 0.03
+
+    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(emin,emax, intervals=False)
+
+    assert_allclose(enrg_flux.value/1e-12, 2.788, rtol=0.001)
+    assert_allclose(enrg_flux_error.value/1e-12, 2.226, rtol=0.001)
