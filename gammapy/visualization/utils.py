@@ -156,7 +156,7 @@ def plot_theta_squared_table(table):
     """
     import matplotlib.pyplot as plt
 
-    theta2_edges = edges_from_lo_hi(table["theta2_min"], table["theta2_max"])
+    theta2_edges = edges_from_lo_hi(table["theta2_min"].quantity, table["theta2_max"].quantity)
     theta2_axis = MapAxis.from_edges(
         theta2_edges, interp="lin", name="theta_squared"
     )

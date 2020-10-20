@@ -2392,7 +2392,7 @@ class MapEvaluator:
         """Compute spectral flux"""
         energy = self.geom.axes["energy_true"].edges
         value = self.model.spectral_model.integral(
-            energy[:-1], energy[1:], intervals=True
+            energy[:-1], energy[1:],
         )
         return value.reshape((-1, 1, 1))
 

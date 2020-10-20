@@ -87,9 +87,7 @@ def _map_spectrum_weight(map, spectrum=None):
 
     # Compute weights vector
     energy_edges = map.geom.axes["energy_true"].edges
-    weights = spectrum.integral(
-        emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
-    )
+    weights = spectrum.integral(emin=energy_edges[:-1], emax=energy_edges[1:])
     weights /= weights.sum()
     shape = np.ones(len(map.geom.data_shape))
     shape[0] = -1
