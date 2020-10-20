@@ -4,16 +4,37 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 
-from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, MapCoord
+from gammapy.maps import MapCoord
 from gammapy.estimators import FluxPoints
-from gammapy.utils.regions import make_region
 from gammapy.utils.table import table_from_row_data
 from gammapy.modeling.models import (
     SkyModel,
     PowerLawSpectralModel,
     PointSpatialModel,
 )
+from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.fits import LazyFitsData, HDULocation
+
+REQUIRED_MAPS = {
+    "dnde": ["dnde"],
+    "e2dnde": ["e2dnde"],
+    "flux": ["flux"],
+    "eflux": ["eflux"],
+    "likelihood": [
+        "ref_dnde",
+        "norm",
+    ],
+}
+
+OPTIONAL_MAPS = {
+    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul", "is_ul"],
+    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"],
+    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
+    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
+    "likelihood": ["norm_err", "norm_errn", "norm_errp","norm_ul", "norm_scan", "stat_scan"],
+}
 
 class FluxMap:
     """A flux map container.
@@ -44,6 +65,10 @@ class FluxMap:
         the positive error on the norm factor. Default is None.
     norm_ul : `~gammapy.maps.Map`, optional
         the upper limit on the norm factor. Default is None.
+    norm_scan : `~gammapy.maps.Map`, optional
+        the norm values of the test statistic scan. Default is None.
+    stat_scan : `~gammapy.maps.Map`, optional
+        the test statistic scan values. Default is None.
     ts : `~gammapy.maps.Map`, optional
         the delta TS associated with the flux value. Default is None.
     counts : `~gammapy.maps.Map`, optional
@@ -61,6 +86,8 @@ class FluxMap:
         norm_errn=None,
         norm_errp=None,
         norm_ul=None,
+        norm_scan=None,
+        stat_scan=None,
         ts=None,
         counts=None,
         ref_model=None,
@@ -72,6 +99,8 @@ class FluxMap:
         self.norm_errn = norm_errn
         self.norm_errp = norm_errp
         self.norm_ul = norm_ul
+        self.norm_scan = norm_scan
+        self.stat_scan = stat_scan
         self.ts = ts
         self.counts = counts
 
@@ -204,10 +233,10 @@ class FluxMap:
         """Extract flux point at a given position.
 
         The flux points are returned in the the form of a `~gammapy.estimators.FluxPoints` object
-        (i.e. an `~astropy.table.Table`)
+        (which stores the flux points in an `~astropy.table.Table`)
 
         Parameters
-        ----------
+        ---------
         coord : `~astropy.coordinates.SkyCoord`
             the coordinate where the flux points are extracted.
 
@@ -258,3 +287,66 @@ class FluxMap:
             rows.append(result)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table)
+
+    def get_map_dict(self, sed_type="likelihood"):
+        """Return maps in a given SED type in the form of a dictionary.
+
+        Parameters
+        ----------
+        sed_type : str
+            sed type to convert to. Default is `Likelihood`
+
+        Returns
+        -------
+        map_dict : dict
+            dictionary containing the requested maps.
+        """
+        result = {}
+        for entry in REQUIRED_MAPS[sed_type]:
+            result[entry] = self.__getattribute__(entry)
+
+        for entry in OPTIONAL_MAPS[sed_type]:
+            try:
+                result[entry] = self.__getattribute__(entry)
+
+    def write(self, filename, overwrite=False, sed_type="likelihood"):
+        """Write flux map to file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to write to.
+        overwrite : bool
+            Overwrite file if it exists.
+        sed_type : str
+            sed type to convert to. Default is `Lielihood`
+        """
+        self.to_hdulist().writeto(str(make_path(filename)), overwrite=overwrite)
+
+    def to_hdulist(self, sed_type="likelihood"):
+        """Convert flux map to list of HDUs.
+
+        For now, one cannot export the reference model.
+
+        Parameters
+        ----------
+        sed_type : str
+            sed type to convert to. Default is `Likelihood`
+
+        Returns
+        -------
+        hdulist : `~astropy.io.fits.HDUList`
+            Map dataset list of HDUs.
+        """
+        exclude_primary = slice(1, None)
+
+        hdu_primary = fits.PrimaryHDU()
+        hdulist = fits.HDUList([hdu_primary])
+
+        map_dict = self.get_map_dict()
+
+        for key in map_dict.keys():
+            hdulist += map_dict[key].to_hdulist(hdu=key)[exclude_primary]
+ 
+        return hdulist
+
