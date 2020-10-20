@@ -72,6 +72,11 @@ class SpectralModel(Model):
     def type(self):
         return self._type
 
+    @property
+    def is_norm_spectral_model(self):
+        """Whether model is a norm spectral model"""
+        return "Norm" in self.__class__.__name__
+
     @staticmethod
     def _convert_evaluate_unit(kwargs_ref, energy):
         kwargs = {}
