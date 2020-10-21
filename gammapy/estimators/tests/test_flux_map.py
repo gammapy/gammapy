@@ -74,11 +74,11 @@ def test_flux_map_properties(wcs_flux_map):
     assert_allclose(fluxmap.e2dnde_errp.data[:, 0, 0], [2e-13, 2e-13])
     assert_allclose(fluxmap.e2dnde_ul.data[:, 0, 0], [2e-12, 2e-12])
 
-
-def test_flux_map_read_write(tmp_path, wcs_flux_map):
+@pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
+def test_flux_map_read_write(tmp_path, wcs_flux_map, sed_type):
     fluxmap = FluxMap(**wcs_flux_map)
 
-    fluxmap.write(tmp_path / "tmp.fits", sed_type="eflux")
+    fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
     new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
 
     assert_allclose(new_fluxmap.norm.data[:,0,0], [1, 1])
