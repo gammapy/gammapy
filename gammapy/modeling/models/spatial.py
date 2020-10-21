@@ -263,6 +263,7 @@ class PointSpatialModel(SpatialModel):
     tag = ["PointSpatialModel", "point"]
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    is_energy_dependent = False
 
     @property
     def evaluation_radius(self):
@@ -301,10 +302,11 @@ class PointSpatialModel(SpatialModel):
         flux : `Map`
             Predicted flux map
         """
-        x, y = geom.get_pix()[0:2]
+        geom_image = geom.to_image()
+        x, y = geom_image.get_pix()
         x0, y0 = self.position.to_pixel(geom.wcs)
         data = self._grid_weights(x, y, x0, y0)
-        return Map.from_geom(geom=geom, data=data, unit="")
+        return Map.from_geom(geom=geom_image, data=data, unit="")
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.PointSkyRegion`)."""
@@ -423,7 +425,11 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
         Set as :math:`5 r_{\rm eff}`.
         """
-        return 5 * self.parameters["r_0"].quantity
+        # TODO: the evaluation radius is defined empirically and tested
+        #  maybe one can find a better semi-analytical definition
+        #  for eta -> 0 it has to approach r_0 for eta -> inf it has to
+        #  approach inf as well, for eta=0.5 it approaches 5 * sigma
+        return self.r_0.quantity + 8 * u.deg * self.eta.value
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
