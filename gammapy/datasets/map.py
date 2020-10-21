@@ -579,7 +579,7 @@ class MapDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
-    def residuals(self, method="diff"):
+    def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
 
         Parameters
@@ -589,13 +589,32 @@ class MapDataset(Dataset):
                 - "diff" (default): data - model
                 - "diff/model": (data - model) / model
                 - "diff/sqrt(model)": (data - model) / sqrt(model)
+        **kwargs : dict
+            Keyword arguments forwarded to `Map.smooth()`
 
         Returns
         -------
         residuals : `gammapy.maps.Map`
             Residual map.
         """
-        return self._compute_residuals(self.counts, self.npred(), method=method)
+        npred, counts = self.npred(), self.counts.copy()
+
+        if kwargs:
+            kwargs.setdefault("mode", "constant")
+            kwargs.setdefault("width", "0.1 deg")
+            kwargs.setdefault("kernel", "gauss")
+            mask = self.mask_safe.smooth(**kwargs)
+
+            npred.data[mask < 0.5] = 0
+            counts.data[mask < 0.5] = 0
+
+            with np.errstate(invalid="ignore", divide="ignore"):
+                npred = npred.smooth(**kwargs)
+                counts = counts.smooth(**kwargs)
+                residuals = self._compute_residuals(counts, npred, method=method)
+
+        residuals.data[mask.data < 0.5] = np.nan
+        return residuals
 
     def plot_residuals(
         self,
