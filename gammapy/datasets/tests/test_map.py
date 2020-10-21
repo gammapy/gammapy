@@ -25,6 +25,7 @@ from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
     SkyModel,
+    PointSpatialModel
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -767,6 +768,35 @@ def images():
         "exposure": to_cube(WcsNDMap.read(filename, hdu="EXPGAMMAMAP")),
         "background": to_cube(WcsNDMap.read(filename, hdu="BACKGROUND")),
     }
+
+
+def test_npred_psf_after_edisp():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    energy_axis_true = MapAxis.from_energy_bounds("0.8 TeV", "15 TeV", nbin=6, name="energy_true")
+
+    geom = WcsGeom.create(width=4 * u.deg, binsz=0.02, axes=[energy_axis])
+    dataset = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true)
+    dataset.background_model.map.data += 1
+    dataset.exposure.data += 1e12
+    dataset.mask_safe.data += True
+    dataset.psf = PSFMap.from_gauss(
+        energy_axis_true=energy_axis_true,
+        sigma=0.2 * u.deg
+    )
+
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(),
+        spatial_model=PointSpatialModel(),
+        name="test-model"
+
+    )
+
+    model.apply_irf["psf_after_edisp"] = True
+
+    dataset.models.append(model)
+    npred = dataset.npred()
+
+    assert_allclose(npred.data.sum(), 129553.858658)
 
 
 def get_map_dataset_onoff(images, **kwargs):

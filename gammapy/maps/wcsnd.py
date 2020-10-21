@@ -399,8 +399,9 @@ class WcsNDMap(WcsMap):
         norm = simple_norm(data[np.isfinite(data)], stretch)
         kwargs.setdefault("norm", norm)
 
-        caxes = ax.imshow(data, **kwargs)
-        cbar = fig.colorbar(caxes, ax=ax, label=str(self.unit)) if add_cbar else None
+        im = ax.imshow(data, **kwargs)
+
+        cbar = fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)

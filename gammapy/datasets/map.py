@@ -579,7 +579,7 @@ class MapDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
-    def residuals(self, method="diff"):
+    def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
 
         Parameters
@@ -589,13 +589,38 @@ class MapDataset(Dataset):
                 - "diff" (default): data - model
                 - "diff/model": (data - model) / model
                 - "diff/sqrt(model)": (data - model) / sqrt(model)
+        **kwargs : dict
+            Keyword arguments forwarded to `Map.smooth()`
 
         Returns
         -------
         residuals : `gammapy.maps.Map`
             Residual map.
         """
-        return self._compute_residuals(self.counts, self.npred(), method=method)
+        npred, counts = self.npred(), self.counts
+
+        if self.mask:
+            npred = npred * self.mask
+            counts = counts * self.mask
+
+        if kwargs:
+            kwargs.setdefault("mode", "constant")
+            kwargs.setdefault("width", "0.1 deg")
+            kwargs.setdefault("kernel", "gauss")
+            with np.errstate(invalid="ignore", divide="ignore"):
+                npred = npred.smooth(**kwargs)
+                counts = counts.smooth(**kwargs)
+                if self.mask:
+                    mask = self.mask.smooth(**kwargs)
+                    npred /= mask
+                    counts /= mask
+
+        residuals = self._compute_residuals(counts, npred, method=method)
+
+        if self.mask:
+            residuals.data[~self.mask.data] = np.nan
+
+        return residuals
 
     def plot_residuals(
         self,
@@ -2253,6 +2278,7 @@ class MapEvaluator:
 
         # define cached computations
         self._compute_npred = lru_cache()(self._compute_npred)
+        self._compute_npred_psf_after_edisp = lru_cache()(self._compute_npred_psf_after_edisp)
         self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_spatial = None
@@ -2294,6 +2320,7 @@ class MapEvaluator:
             position = self.model.position
             separation = self._init_position.separation(position)
             update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
+
         return update
 
     def update(self, exposure, psf, edisp, geom):
@@ -2322,8 +2349,13 @@ class MapEvaluator:
             )
 
         if isinstance(psf, PSFMap):
+            if self.apply_psf_after_edisp:
+                geom = geom.as_energy_true
+            else:
+                geom = exposure.geom
+
             # lookup psf
-            self.psf = psf.get_psf_kernel(self.model.position, geom=exposure.geom)
+            self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
         else:
             self.psf = psf
 
@@ -2347,6 +2379,7 @@ class MapEvaluator:
 
         self._compute_npred.cache_clear()
         self._compute_flux_spatial.cache_clear()
+        self._compute_npred_psf_after_edisp.cache_clear()
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -2447,6 +2480,29 @@ class MapEvaluator:
 
         return npred
 
+    @property
+    def apply_psf_after_edisp(self):
+        """"""
+        if not isinstance(self.model, BackgroundModel):
+            return self.model.apply_irf.get("psf_after_edisp")
+
+    # TODO: remove again if possible...
+    def _compute_npred_psf_after_edisp(self):
+        if isinstance(self.model, BackgroundModel):
+            return self.model.evaluate()
+
+        flux = self.compute_flux()
+
+        npred = self.apply_exposure(flux)
+
+        if self.model.apply_irf["edisp"]:
+            npred = self.apply_edisp(npred)
+
+        if self.model.apply_irf["psf"]:
+            npred = self.apply_psf(npred)
+
+        return npred
+
     def compute_npred(self):
         """Evaluate model predicted counts.
 
@@ -2455,6 +2511,12 @@ class MapEvaluator:
         npred : `~gammapy.maps.Map`
             Predicted counts on the map (in reco energy bins)
         """
+        if self.apply_psf_after_edisp:
+            if self.parameters_changed or not self.use_cache:
+                self._compute_npred_psf_after_edisp.cache_clear()
+
+            return self._compute_npred_psf_after_edisp()
+
         if self.parameters_changed or not self.use_cache:
             self._compute_npred.cache_clear()
 
