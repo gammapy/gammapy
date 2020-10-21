@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import itertools
 from astropy.utils import lazyproperty
+from gammapy.utils.table import table_from_row_data
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
@@ -70,9 +71,10 @@ class Fit:
         Datasets
     """
 
-    def __init__(self, datasets):
+    def __init__(self, datasets, store_trace=False):
         from gammapy.datasets import Datasets
 
+        self.store_trace = store_trace
         self.datasets = Datasets(datasets)
 
     @lazyproperty
@@ -164,7 +166,10 @@ class Fit:
         # probably should pass a fit statistic, which has a model, which has parameters
         # and return something simpler, not a tuple of three things
         factors, info, optimizer = compute(
-            parameters=parameters, function=self.datasets.stat_sum, **kwargs
+            parameters=parameters,
+            function=self.datasets.stat_sum,
+            store_trace=self.store_trace,
+            **kwargs
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
@@ -174,6 +179,14 @@ class Fit:
         if backend == "minuit":
             self.minuit = optimizer
 
+        trace = table_from_row_data(info.pop("trace"))
+
+        if self.store_trace:
+            pars = self._models.parameters
+            idx = [pars.index(par) for par in pars.unique_parameters.free_parameters]
+            unique_names = np.array(self._models.parameters_unique_names)[idx]
+            trace.rename_columns(trace.colnames[1:], list(unique_names))
+
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
         parameters.check_limits()
@@ -182,6 +195,7 @@ class Fit:
             total_stat=self.datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),
+            trace=trace,
             **info,
         )
 
@@ -529,10 +543,16 @@ class CovarianceResult(FitResult):
 class OptimizeResult(FitResult):
     """Optimize result object."""
 
-    def __init__(self, nfev, total_stat, **kwargs):
+    def __init__(self, nfev, total_stat, trace, **kwargs):
         self._nfev = nfev
         self._total_stat = total_stat
+        self._trace = trace
         super().__init__(**kwargs)
+
+    @property
+    def trace(self):
+        """Optimizer backend used for the fit."""
+        return self._trace
 
     @property
     def nfev(self):

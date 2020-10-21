@@ -17,6 +17,7 @@ class MyModel(Model):
     z = Parameter("z", 4e-2)
     name = "test"
     datasets_names = ["test"]
+    type = "model"
 
 
 class MyDataset(Dataset):
@@ -24,7 +25,7 @@ class MyDataset(Dataset):
 
     def __init__(self, name="test"):
         self.name = name
-        self._models = Models([MyModel()])
+        self._models = Models([MyModel(x=1.99, y=2.99e3, z=3.99e-2)])
         self.data_shape = (1,)
         self.meta_table = Table()
 
@@ -79,17 +80,24 @@ def test_run(backend):
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     dataset = MyDataset()
-    fit = Fit([dataset])
-    result = fit.optimize(backend=backend)
+    fit = Fit([dataset], store_trace=True)
+
+    if backend == "scipy":
+        kwargs = {"method": "L-BFGS-B"}
+    else:
+        kwargs = {}
+
+    result = fit.optimize(backend=backend, **kwargs)
     pars = dataset.models.parameters
 
     assert result.success is True
-    assert_allclose(result.total_stat, 0)
+    assert_allclose(result.total_stat, 0, atol=1)
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
-    assert_allclose(pars["z"].value, 4e-2, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
 
+    assert len(result.trace) == result.nfev
 
 # TODO: add some extra covariance tests, in addition to run
 # Probably mainly if error message is OK if optimize didn't run first.
