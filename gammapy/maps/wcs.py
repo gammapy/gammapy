@@ -131,6 +131,7 @@ class WcsGeom(Geom):
 
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
+        self.get_pix = lru_cache()(self.get_pix)
         self.solid_angle = lru_cache()(self.solid_angle)
         self.bin_volume = lru_cache()(self.bin_volume)
         self.to_image = lru_cache()(self.to_image)
@@ -148,7 +149,7 @@ class WcsGeom(Geom):
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["get_coord", "solid_angle", "bin_volume", "to_image"]:
+            if key in ["get_coord", "solid_angle", "bin_volume", "to_image", "get_pix"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
