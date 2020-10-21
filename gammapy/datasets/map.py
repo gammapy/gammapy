@@ -2253,6 +2253,7 @@ class MapEvaluator:
 
         # define cached computations
         self._compute_npred = lru_cache()(self._compute_npred)
+        self._compute_npred_psf_after_edisp = lru_cache()(self._compute_npred_psf_after_edisp)
         self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_spatial = None
@@ -2353,6 +2354,7 @@ class MapEvaluator:
 
         self._compute_npred.cache_clear()
         self._compute_flux_spatial.cache_clear()
+        self._compute_npred_psf_after_edisp.cache_clear()
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -2485,6 +2487,9 @@ class MapEvaluator:
             Predicted counts on the map (in reco energy bins)
         """
         if self.apply_psf_after_edisp:
+            if self.parameters_changed or not self.use_cache:
+                self._compute_npred_psf_after_edisp.cache_clear()
+
             return self._compute_npred_psf_after_edisp()
 
         if self.parameters_changed or not self.use_cache:
