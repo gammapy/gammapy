@@ -2,17 +2,11 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import astropy.units as u
-from astropy.table import Table
+from astropy.coordinates import SkyCoord
 from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel
 from gammapy.estimators import FluxMap
-from gammapy.utils.testing import (
-    assert_quantity_allclose,
-    mpl_plot_check,
-    requires_data,
-    requires_dependency,
-)
+
 
 @pytest.fixture(scope="session")
 def reference_model():
@@ -86,3 +80,15 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, sed_type):
     assert_allclose(new_fluxmap.norm_errn.data[:,0,0], [0.2, 0.2])
     assert_allclose(new_fluxmap.norm_ul.data[:,0,0], [2, 2])
 
+def test_get_flux_point(wcs_flux_map):
+    fluxmap = FluxMap(**wcs_flux_map)
+
+    coord = SkyCoord(0., 0., unit="deg", frame="galactic")
+    fp = fluxmap.get_flux_points(coord)
+
+    assert_allclose(fp.table["e_min"], [0.1, 1.0])
+    assert_allclose(fp.table["norm"], [1, 1] )
+    assert_allclose(fp.table["norm_err"], [0.1, 0.1] )
+    assert_allclose(fp.table["norm_errn"], [0.2, 0.2] )
+    assert_allclose(fp.table["norm_errp"], [0.2, 0.2])
+    assert_allclose(fp.table["norm_ul"], [2, 2])

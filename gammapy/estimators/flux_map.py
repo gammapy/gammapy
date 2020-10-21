@@ -261,13 +261,18 @@ class FluxMap:
         if self.norm_err is not None:
             norm_err = self.norm_err.get_by_coord(coords) * self.norm_err.unit
         if self.norm_errn is not None:
-            norm_err = (
+            norm_errn = (
                 self.norm_errn.get_by_coord(coords) * self.norm_errn.unit
             )
         if self.norm_errp is not None:
-            norm_err = (
+            norm_errp = (
                 self.norm_errp.get_by_coord(coords) * self.norm_errp.unit
             )
+        if self.norm_ul is not None:
+            norm_ul = (
+                self.norm_ul.get_by_coord(coords) * self.norm_ul.unit
+            )
+        # TODO: add support of norm and stat scan
 
         rows = []
         for idx, energy in enumerate(self.e_ref):
@@ -292,7 +297,7 @@ class FluxMap:
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table)
 
-    def get_map_dict(self, sed_type="likelihood"):
+    def to_dict(self, sed_type="likelihood"):
         """Return maps in a given SED type in the form of a dictionary.
 
         Parameters
@@ -352,7 +357,7 @@ class FluxMap:
 
         hdu_primary.header["SED_TYPE"] = sed_type
 
-        map_dict = self.get_map_dict(sed_type)
+        map_dict = self.to_dict(sed_type)
 
         for key in map_dict:
             hdulist += map_dict[key].to_hdulist(hdu=key)[exclude_primary]
