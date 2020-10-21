@@ -893,6 +893,92 @@ class Map(abc.ABC):
         """
         pass
 
+    def plot_grid(self, figsize=None, ncols=3, **kwargs):
+        """Plot map as a grid of subplots for non-spatial axes
+
+        Parameters
+        ----------
+        figsize : tuple of int
+            Figsize to plot on
+        ncols : int
+            Number of columns to plot
+        **kwargs : dict
+            Keyword arguments passed to `Map.plot`.
+
+        Returns
+        -------
+        axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+            Axes grid
+        """
+        import matplotlib.pyplot as plt
+
+        if len(self.geom.axes) > 1:
+            raise ValueError("Grid plotting is only supported for one non spatial axis")
+
+        axis = self.geom.axes[0]
+
+        cols = min(ncols, axis.nbin)
+        rows = 1 + (axis.nbin - 1) // cols
+
+        if figsize is None:
+            width = 12
+            figsize=(width, width * rows / cols)
+
+        if self.geom.is_hpx:
+            wcs = self.geom.to_wcs_geom().wcs
+        else:
+            wcs = self.geom.wcs
+
+        fig, axes = plt.subplots(
+            ncols=cols,
+            nrows=rows,
+            subplot_kw={"projection": wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.1, "wspace": 0.1}
+        )
+
+        for idx in range(cols * rows):
+            ax = axes.flat[idx]
+
+            try:
+                image = self.get_image_by_idx((idx,))
+            except IndexError:
+                ax.set_visible(False)
+                continue
+
+            if image.geom.is_hpx:
+                image_wcs = image.to_wcs(
+                    normalize=False,
+                    proj="AIT",
+                    oversample=2,
+                ),
+            else:
+                image_wcs = image
+
+            image_wcs.plot(ax=ax, **kwargs)
+
+            if axis.node_type == "center":
+                info = f"{axis.center[idx]:.1f}"
+            else:
+                info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
+
+            ax.set_title(f"{axis.name.capitalize()} " + info)
+            lon, lat = ax.coords[0], ax.coords[1]
+            lon.set_ticks_position("b")
+            lat.set_ticks_position("l")
+
+            row, col = np.unravel_index(idx, shape=(rows, cols))
+
+            if col > 0:
+                lat.set_ticklabel_visible(False)
+                lat.set_axislabel("")
+
+            if row < (rows - 1):
+                lon.set_ticklabel_visible(False)
+                lon.set_axislabel("")
+
+        return axes
+
     def plot_interactive(self, rc_params=None, **kwargs):
         """
         Plot map with interactive widgets to explore the non spatial axes.

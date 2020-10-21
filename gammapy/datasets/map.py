@@ -597,23 +597,29 @@ class MapDataset(Dataset):
         residuals : `gammapy.maps.Map`
             Residual map.
         """
-        npred, counts = self.npred(), self.counts.copy()
+        npred, counts = self.npred(), self.counts
+
+        if self.mask:
+            npred = npred * self.mask
+            counts = counts * self.mask
 
         if kwargs:
             kwargs.setdefault("mode", "constant")
             kwargs.setdefault("width", "0.1 deg")
             kwargs.setdefault("kernel", "gauss")
-            mask = self.mask_safe.smooth(**kwargs)
-
-            npred.data[mask < 0.5] = 0
-            counts.data[mask < 0.5] = 0
-
             with np.errstate(invalid="ignore", divide="ignore"):
                 npred = npred.smooth(**kwargs)
                 counts = counts.smooth(**kwargs)
-                residuals = self._compute_residuals(counts, npred, method=method)
+                if self.mask:
+                    mask = self.mask.smooth(**kwargs)
+                    npred /= mask
+                    counts /= mask
 
-        residuals.data[mask.data < 0.5] = np.nan
+        residuals = self._compute_residuals(counts, npred, method=method)
+
+        if self.mask:
+            residuals.data[~self.mask.data] = np.nan
+
         return residuals
 
     def plot_residuals(

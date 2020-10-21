@@ -299,7 +299,7 @@ class PSFMap(IRFMap):
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     @classmethod
-    def from_gauss(cls, energy_axis_true, rad_axis, sigma):
+    def from_gauss(cls, energy_axis_true, rad_axis=None, sigma=0.1 * u.deg):
         """Create all -sky PSF map from Gaussian width.
 
         This is used for testing and examples.
@@ -322,6 +322,11 @@ class PSFMap(IRFMap):
         psf_map : `PSFMap`
             Point spread function map.
         """
+        from gammapy.datasets.map import RAD_AXIS_DEFAULT
+
+        if rad_axis is None:
+            rad_axis = RAD_AXIS_DEFAULT.copy()
+
         # note: it would be straightforward to also have disk shape instead
         # of gauss
         energy = energy_axis_true.center
