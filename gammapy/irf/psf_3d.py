@@ -370,7 +370,7 @@ class PSF3D:
         esafe = self.energy_thresh_lo
         omin = self.offset_axis.center.value.min()
         omax = self.offset_axis.center.value.max()
-        ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
+        ax.vlines(x=esafe.value, ymin=omin, ymax=omax)
         label = f"Safe energy threshold: {esafe:3.2f}"
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 

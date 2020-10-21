@@ -678,6 +678,20 @@ class MapAxis:
         return self._nbin
 
     @property
+    def nbin_per_decade(self):
+        """Return number of bins."""
+        if self.interp != "log":
+            raise ValueError("Bins per decade can only be computed for log-spaced axes")
+
+        if self.node_type == "edges":
+            values = self.edges
+        else:
+            values = self.center
+
+        ndecades = np.log10(values.max() / values.min())
+        return (self._nbin / ndecades).value
+
+    @property
     def node_type(self):
         """Return node type ('center' or 'edge')."""
         return self._node_type

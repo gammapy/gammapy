@@ -49,7 +49,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 
     result = estimator.run(fermi_datasets)
 
-    assert_allclose(result["norm"], 1.010983, atol=1e-3)
+    assert_allclose(result["norm"], 1.003784, atol=1e-3)
     assert_allclose(result["ts"], 28086.565, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
     assert_allclose(result["norm_errn"], 0.0199, atol=1e-3)
@@ -71,7 +71,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     )
     result = estimator.run(fermi_datasets)
 
-    assert_allclose(result["norm"], 1.010983, atol=1e-3)
+    assert_allclose(result["norm"], 1.003784, atol=1e-3)
     assert_allclose(result["ts"], 20896.1864, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
 
@@ -114,8 +114,8 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     )
     result = estimator.run(datasets)
 
-    assert_allclose(result["norm"], 1.022802, atol=1e-3)
-    assert_allclose(result["ts"], 21584.515969, atol=1e-3)
+    assert_allclose(result["norm"], 1.015983, atol=1e-3)
+    assert_allclose(result["ts"], 21584.092045, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01966, atol=1e-3)
 
 

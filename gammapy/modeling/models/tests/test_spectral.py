@@ -834,7 +834,7 @@ def test_energy_flux_error_ExpCutOffPowerLaw():
     exppowerlaw.parameters['amplitude'].error = 1e-13
     exppowerlaw.parameters['lambda_'].error = 0.03
 
-    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(emin,emax, intervals=False)
+    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(emin, emax)
 
     assert_allclose(enrg_flux.value/1e-12, 2.788, rtol=0.001)
     assert_allclose(enrg_flux_error.value/1e-12, 2.226, rtol=0.001)

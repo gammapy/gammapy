@@ -278,7 +278,7 @@ class SkyModel(SkyModelBase):
         """
         energy = geom.axes["energy_true"].edges
         value = self.spectral_model.integral(
-            energy[:-1], energy[1:], intervals=True
+            energy[:-1], energy[1:],
         ).reshape((-1, 1, 1))
 
         if self.spatial_model and not isinstance(geom, RegionGeom):
