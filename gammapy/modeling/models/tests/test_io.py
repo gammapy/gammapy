@@ -280,4 +280,4 @@ def test_simplified_output():
 
 
 def test_registries_print():
-    print(MODEL_REGISTRY)
+    assert "Registry" in str(MODEL_REGISTRY)

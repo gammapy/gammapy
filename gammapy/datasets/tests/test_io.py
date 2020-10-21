@@ -16,7 +16,6 @@ def test_datasets_to_io(tmp_path):
     datasets = Datasets.read(path, filedata, filemodel)
 
     assert len(datasets) == 2
-    print(list(datasets.models))
     assert len(datasets.models) == 5
     dataset0 = datasets[0]
     assert dataset0.name == "gc"
