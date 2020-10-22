@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 
-def optimize_scipy(parameters, function, **kwargs):
+def optimize_scipy(parameters, function, store_trace=False, **kwargs):
     method = kwargs.pop("method", "Nelder-Mead")
     pars = [par.factor for par in parameters.free_parameters]
 
@@ -22,13 +22,18 @@ def optimize_scipy(parameters, function, **kwargs):
         parmax = par.factor_max if not np.isnan(par.factor_max) else None
         bounds.append((parmin, parmax))
 
-    likelihood = Likelihood(function, parameters)
+    likelihood = Likelihood(function, parameters, store_trace)
     result = scipy.optimize.minimize(
         likelihood.fcn, pars, bounds=bounds, method=method, **kwargs
     )
 
     factors = result.x
-    info = {"success": result.success, "message": result.message, "nfev": result.nfev}
+    info = {
+        "success": result.success,
+        "message": result.message,
+        "nfev": result.nfev,
+        "trace": likelihood.trace
+    }
     optimizer = None
 
     return factors, info, optimizer
