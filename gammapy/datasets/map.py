@@ -210,6 +210,48 @@ class MapDataset(Dataset):
         return str_.expandtabs(tabsize=2)
 
     @property
+    def _geom(self):
+        """Main analysis geometry"""
+        if self.counts is not None:
+            return self.counts.geom
+        elif self.background_model is not None:
+            return self.background_model.map.geom
+        elif self.mask_safe is not None:
+            return self.mask_safe.geom
+        elif self.mask_fit is not None:
+            return self.mask_fit.geom
+        else:
+            raise ValueError(
+                "Either 'counts', 'background_model', 'mask_fit'"
+                " or 'mask_safe' must be defined."
+            )
+
+    @property
+    def geoms(self):
+        """Map geometries
+
+        Returns
+        -------
+        geoms : dict
+            Dict of map geometries involved in the dataset.
+        """
+        geoms = {}
+
+        geoms["geom"] = self._geom
+
+        if self.exposure:
+            geoms["geom_exposure"] = self.exposure.geom
+
+        if self.psf:
+            geoms["geom_psf"] = self.psf.psf_map.geom
+
+        if self.edisp:
+            geoms["geom_edisp"] = self.edisp.edisp_map.geom
+
+        return geoms
+
+
+    @property
     def models(self):
         """Models (`~gammapy.modeling.models.Models`)."""
         return ProperModels(self)
@@ -270,23 +312,6 @@ class MapDataset(Dataset):
                     evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
         return self._evaluators
-
-    @property
-    def _geom(self):
-        """Main analysis geometry"""
-        if self.counts is not None:
-            return self.counts.geom
-        elif self.background_model is not None:
-            return self.background_model.map.geom
-        elif self.mask_safe is not None:
-            return self.mask_safe.geom
-        elif self.mask_fit is not None:
-            return self.mask_fit.geom
-        else:
-            raise ValueError(
-                "Either 'counts', 'background_model', 'mask_fit'"
-                " or 'mask_safe' must be defined."
-            )
 
     @property
     def data_shape(self):
@@ -1687,6 +1712,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs[key] = Map.from_geom(geom, unit="")
 
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
+
         if geom_edisp.axes[0].name.lower() == "energy":
             kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
         else:
