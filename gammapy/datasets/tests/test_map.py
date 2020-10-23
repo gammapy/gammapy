@@ -56,8 +56,8 @@ def geom_etrue():
 
 @pytest.fixture
 def geom_image():
-    ebounds_true = np.logspace(-1.0, 1.0, 2)
-    axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV, interp="log")
+    energy = np.logspace(-1.0, 1.0, 2)
+    axis = MapAxis.from_edges(energy, name="energy", unit=u.TeV, interp="log")
     return WcsGeom.create(
         skydir=(0, 0), binsz=0.02, width=(2, 2), frame="galactic", axes=[axis]
     )
@@ -921,23 +921,46 @@ def test_stack_onoff(images):
     assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
 
 
-@pytest.mark.xfail
+def test_dataset_cutout_aligned(geom):
+    dataset = MapDataset.create(geom)
+
+    kwargs = {"position": geom.center_skydir, "width": 1 * u.deg}
+    geoms = {name: geom.cutout(**kwargs) for name, geom in dataset.geoms.items()}
+
+    cutout = MapDataset.from_geoms(**geoms, name="cutout")
+
+    assert dataset.counts.geom.is_aligned(cutout.counts.geom)
+    assert dataset.exposure.geom.is_aligned(cutout.exposure.geom)
+    assert dataset.edisp.edisp_map.geom.is_aligned(cutout.edisp.edisp_map.geom)
+    assert dataset.psf.psf_map.geom.is_aligned(cutout.psf.psf_map.geom)
+
+
 def test_stack_onoff_cutout(geom_image):
     # Test stacking of cutouts
-    dataset = MapDatasetOnOff.create(geom_image)
-    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
-    dataset.gti = gti
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
 
-    geom_cutout = geom_image.cutout(position=geom_image.center_skydir, width=1 * u.deg)
-    dataset_cutout = dataset.create(geom_cutout)
+    dataset = MapDatasetOnOff.create(geom_image, energy_axis_true=energy_axis_true)
+    dataset.gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+
+    kwargs = {"position": geom_image.center_skydir, "width": 1 * u.deg}
+    geoms = {name: geom.cutout(**kwargs) for name, geom in dataset.geoms.items()}
+
+    dataset_cutout = MapDatasetOnOff.from_geoms(**geoms, name="cutout-dataset")
+    dataset_cutout.gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset_cutout.mask_safe.data += True
+    dataset_cutout.counts.data += 1
+    dataset_cutout.counts_off.data += 1
+    dataset_cutout.exposure.data += 1
 
     dataset.stack(dataset_cutout)
 
-    assert_allclose(dataset.counts.data.sum(), dataset_cutout.counts.data.sum())
-    assert_allclose(dataset.counts_off.data.sum(), dataset_cutout.counts_off.data.sum())
-    assert_allclose(dataset.alpha.data.sum(), dataset_cutout.alpha.data.sum())
-    assert_allclose(dataset.exposure.data.sum(), dataset_cutout.exposure.data.sum())
-    assert dataset_cutout.name != dataset.name
+    assert_allclose(dataset.counts.data.sum(), 2500)
+    assert_allclose(dataset.counts_off.data.sum(), 2500)
+    assert_allclose(dataset.alpha.data.sum(), 0)
+    assert_allclose(dataset.exposure.data.sum(), 7500)
+    assert dataset_cutout.name == "cutout-dataset"
 
 
 def test_datasets_io_no_model(tmpdir):
