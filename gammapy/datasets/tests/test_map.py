@@ -947,19 +947,20 @@ def test_stack_onoff_cutout(geom_image):
     kwargs = {"position": geom_image.center_skydir, "width": 1 * u.deg}
     geoms = {name: geom.cutout(**kwargs) for name, geom in dataset.geoms.items()}
 
-    dataset_cutout = MapDatasetOnOff.from_geoms(**geoms)
+    dataset_cutout = MapDatasetOnOff.from_geoms(**geoms, name="cutout-dataset")
     dataset_cutout.gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
-    dataset_cutout.counts += 1
-    dataset_cutout.counts_off += 1
+    dataset_cutout.mask_safe.data += True
+    dataset_cutout.counts.data += 1
+    dataset_cutout.counts_off.data += 1
     dataset_cutout.exposure.data += 1
 
     dataset.stack(dataset_cutout)
 
-    assert_allclose(dataset.counts.data.sum(), dataset_cutout.counts.data.sum())
-    assert_allclose(dataset.counts_off.data.sum(), dataset_cutout.counts_off.data.sum())
-    assert_allclose(dataset.alpha.data.sum(), dataset_cutout.alpha.data.sum())
-    assert_allclose(dataset.exposure.data.sum(), dataset_cutout.exposure.data.sum())
-    assert dataset_cutout.name != dataset.name
+    assert_allclose(dataset.counts.data.sum(), 2500)
+    assert_allclose(dataset.counts_off.data.sum(), 2500)
+    assert_allclose(dataset.alpha.data.sum(), 0)
+    assert_allclose(dataset.exposure.data.sum(), 7500)
+    assert dataset_cutout.name == "cutout-dataset"
 
 
 def test_datasets_io_no_model(tmpdir):
