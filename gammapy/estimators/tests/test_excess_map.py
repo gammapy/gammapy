@@ -123,10 +123,6 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
     assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
 
-    estimator_image = ExcessMapEstimator(0.1 * u.deg, return_image=True)
-    result_image = estimator_image.run(simple_dataset)
-    assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):

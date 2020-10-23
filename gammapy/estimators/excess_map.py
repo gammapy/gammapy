@@ -201,9 +201,9 @@ class ExcessMapEstimator(Estimator):
 
         result = {"counts": n_on, "background": bkg, "excess": excess}
 
-        tsmap = Map.from_geom(geom, data=counts_stat.delta_ts)
-        significance = Map.from_geom(geom, data=counts_stat.significance)
-        result.update({"ts": tsmap, "sqrt_ts": significance})
+        tsmap = Map.from_geom(geom, data=counts_stat.ts)
+        sqrt_ts = Map.from_geom(geom, data=counts_stat.sqrt_ts)
+        result.update({"ts": tsmap, "sqrt_ts": sqrt_ts})
 
         err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})

@@ -14,21 +14,21 @@ class CountsStatistic(abc.ABC):
         return self.n_on - self.background
 
     @property
-    def delta_ts(self):
-        """Return TS difference of measured excess versus no excess."""
-        # Remove (small) negative delta TS due to error in root finding
-        delta_ts = np.clip(self.TS_null - self.TS_max, 0, None)
-        return delta_ts
+    def ts(self):
+        """Return stat difference (TS) of measured excess versus no excess."""
+        # Remove (small) negative TS due to error in root finding
+        ts = np.clip(self.stat_null - self.stat_max, 0, None)
+        return ts
 
     @property
-    def significance(self):
+    def sqrt_ts(self):
         """Return statistical significance of measured excess."""
-        return np.sign(self.excess) * np.sqrt(self.delta_ts)
+        return np.sign(self.excess) * np.sqrt(self.ts)
 
     @property
     def p_value(self):
         """Return p_value of measured excess."""
-        return chi2.sf(self.delta_ts, 1)
+        return chi2.sf(self.ts, 1)
 
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
@@ -50,7 +50,7 @@ class CountsStatistic(abc.ABC):
                     self._stat_fcn,
                     min_range[it.multi_index],
                     self.excess[it.multi_index],
-                    args=(self.TS_max[it.multi_index] + n_sigma ** 2, it.multi_index),
+                    args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
                 )
                 errn[it.multi_index] = res - self.excess[it.multi_index]
             except ValueError:
@@ -78,7 +78,7 @@ class CountsStatistic(abc.ABC):
                 self._stat_fcn,
                 self.excess[it.multi_index],
                 max_range[it.multi_index],
-                args=(self.TS_max[it.multi_index] + n_sigma ** 2, it.multi_index),
+                args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
             )
             it.iternext()
 
@@ -172,12 +172,12 @@ class CashCountsStatistic(CountsStatistic):
         return np.sqrt(self.n_on)
 
     @property
-    def TS_null(self):
+    def stat_null(self):
         """Stat value for null hypothesis, i.e. 0 expected signal counts"""
         return cash(self.n_on, self.mu_bkg + 0)
 
     @property
-    def TS_max(self):
+    def stat_max(self):
         """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg"""
         return cash(self.n_on, self.n_on)
 
@@ -236,12 +236,12 @@ class WStatCountsStatistic(CountsStatistic):
         return np.sqrt(self.n_on + self.alpha ** 2 * self.n_off)
 
     @property
-    def TS_null(self):
+    def stat_null(self):
         """Stat value for null hypothesis, i.e. mu_sig expected signal counts"""
         return wstat(self.n_on, self.n_off, self.alpha, self.mu_sig)
 
     @property
-    def TS_max(self):
+    def stat_max(self):
         """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - alpha * n_off - mu_sig"""
         return wstat(self.n_on, self.n_off, self.alpha, self.excess + self.mu_sig)
 
@@ -257,13 +257,13 @@ class WStatCountsStatistic(CountsStatistic):
         )
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
-        TS0 = wstat(
+        stat0 = wstat(
             excess + self.background[index], self.n_off[index], self.alpha[index], 0
         )
-        TS1 = wstat(
+        stat1 = wstat(
             excess + self.background[index],
             self.n_off[index],
             self.alpha[index],
             excess,
         )
-        return np.sign(excess) * np.sqrt(np.clip(TS0 - TS1, 0, None)) - significance
+        return np.sign(excess) * np.sqrt(np.clip(stat0 - stat1, 0, None)) - significance

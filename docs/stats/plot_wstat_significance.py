@@ -22,24 +22,24 @@ plt.ylabel(r"WStat value, TS ")
 plt.vlines(
     excess,
     ymin=ymin,
-    ymax=count_statistic.TS_max,
+    ymax=count_statistic.stat_max,
     linestyle="dashed",
     color="k",
     label="Best fit",
 )
 plt.hlines(
-    count_statistic.TS_max, xmin=xmin, xmax=excess, linestyle="dashed", color="k"
+    count_statistic.stat_max, xmin=xmin, xmax=excess, linestyle="dashed", color="k"
 )
 plt.hlines(
-    count_statistic.TS_null,
+    count_statistic.stat_null,
     xmin=xmin,
     xmax=0,
     linestyle="dotted",
     color="k",
     label="Null hypothesis",
 )
-plt.vlines(0, ymin=ymin, ymax=count_statistic.TS_null, linestyle="dotted", color="k")
+plt.vlines(0, ymin=ymin, ymax=count_statistic.stat_null, linestyle="dotted", color="k")
 
-plt.vlines(excess, ymin=count_statistic.TS_max, ymax=count_statistic.TS_null, color="r")
-plt.hlines(count_statistic.TS_null, xmin=0, xmax=excess, linestyle="dotted", color="r")
+plt.vlines(excess, ymin=count_statistic.stat_max, ymax=count_statistic.stat_null, color="r")
+plt.hlines(count_statistic.stat_null, xmin=0, xmax=excess, linestyle="dotted", color="r")
 plt.legend()

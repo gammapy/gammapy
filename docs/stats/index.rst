@@ -44,8 +44,8 @@ They are used also to estimate the excess counts significance, i.e. the probabil
 a given number of measured events ``n_on`` actually contains some signal events :math:`n_{excess}`,
 as well as the errors associated to this estimated number of signal counts.
 
-Estimating Delta TS
--------------------
+Estimating TS
+-------------
 
 A classical approach to modeling and fitting relies on hypothesis testing. One wants to estimate whether
 an hypothesis :math:`H_1` is statistically preferred over the reference, or null-hypothesis, :math:`H_0`.
@@ -54,15 +54,15 @@ The maximum log-likelihood ratio test provides a way to estimate the p-value of 
 rather than :math:`H_0`, when the two hypotheses are nested.
 We note this ratio :math:`\lambda = \frac{max L(X|{H_1})}{max L(X|H_0)}`
 
-The Wilks theorem shows that under some hypothesis, :math:`-2 \log \lambda` assymptotically follows a :math:`\chi^2`
+The Wilks theorem shows that under some hypothesis, :math:`2 \log \lambda` assymptotically follows a :math:`\chi^2`
 distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is the difference of free parameters
 between :math:`H_1` and :math:`H_0`.
 
 With the definition the fit statistics :math:`-2 \log \lambda` is simply the difference of the fit statistic values for
-the two hypotheses, the delta TS (for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
+the two hypotheses, the TS (for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
 distribution with :math:`n_{dof}` degrees of freedom. In particular, with only one degree of freedom (e.g. intensity
-of a signal), on can estimate the statistical significance in terms of number of :math:`\sigma`
-as :math:`\sqrt{\Delta TS}`.
+of a signal), on can estimate the (2-sided) statistical significance in terms of number of :math:`\sigma`
+as :math:`\sqrt{TS}`.
 
 
 
@@ -82,8 +82,8 @@ Excess and Significance
 
 Assume one measured :math:`n_{on} = 13` counts in a region where one suspects a source might be present.
 if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=9.5`), one can use
-the Cash statistic to estimate the signal or excess number, its statistical significance as well as
-the confidence interval on the true signal value.
+the Cash statistic to estimate the signal or excess number, its statistical significance
+as well as the confidence interval on the true signal counts number value.
 
 .. code-block:: python
 
@@ -93,18 +93,18 @@ the confidence interval on the true signal value.
     7.5
     >>> stat.error
     3.605551275463989
-    >>> stat.delta_ts
+    >>> stat.ts
     7.365232895800901
-    >>> stat.significance
+    >>> stat.sqrt_ts
     2.7138962573762653
     >>> stat.p_value
     0.006649698694909719
 
 The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{on}}`.
-The significance is the square root of the :math:`\Delta TS`, multiplied by the sign of the excess,
+The significance is the square root of the :math:`TS`, multiplied by the sign of the excess,
 which is equivalent to the Li & Ma significance for known background.
 
-To see how the :math:`\Delta TS`, relates to the statistic function, we plot below the profile of the Cash
+To see how the :math:`TS`, relates to the statistic function, we plot below the profile of the Cash
 statistic as a function of the expected signal events number.
 
 .. plot:: stats/plot_cash_significance.py
@@ -143,7 +143,7 @@ WStat counts statistic
 Excess and Significance
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-To measure the significance of an excess, one can directly use the delta TS of the measurement with and
+To measure the significance of an excess, one can directly use the TS of the measurement with and
 without the excess. Taking the square root of the result yields the so-called Li & Ma significance
 [LiMa1983]_ (see equation 17).
 
@@ -159,19 +159,19 @@ Here's how you compute the statistical significance of your detection:
     >>> from gammapy.stats import WStatCountsStatistic
     >>> stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
     >>> stat.excess
-    >>> stat.significance
+    >>> stat.sqrt_ts
 
 .. plot:: stats/plot_wstat_significance.py
 
 Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=9.5`, you can use
-the Cash statistic and obtain the Li & Ma significance for known background:
+the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for known background:
 
 .. code-block:: python
 
     >>> from gammapy.stats import CashCountsStatistic
     >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
     >>> stat.excess
-    >>> stat.significance
+    >>> stat.sqrt_ts
 
 .. plot:: stats/plot_cash_significance.py
 

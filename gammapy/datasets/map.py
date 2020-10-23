@@ -1067,7 +1067,7 @@ class MapDataset(Dataset):
         info["background"] = background
 
         info["excess"] = counts - background
-        info["sqrt_ts"] = CashCountsStatistic(counts, background).significance
+        info["sqrt_ts"] = CashCountsStatistic(counts, background).sqrt_ts
 
         npred = np.nan
         if self.models or not np.isnan(background):
@@ -2010,7 +2010,7 @@ class MapDatasetOnOff(MapDataset):
             info["counts"],
             info["counts_off"],
             acceptance / acceptance_off,
-        ).significance
+        ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
 

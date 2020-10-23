@@ -1036,7 +1036,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             info["counts"],
             info["counts_off"],
             acceptance / acceptance_off,
-        ).significance
+        ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
 
