@@ -92,7 +92,7 @@ class TSMapEstimator(Estimator):
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit.
     selection_optional : list of str or 'all'
-        Which maps to compute besides delta TS, significance, flux and symmetric error on flux.
+        Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
 
             * "errn-errp": estimate assymmetric error on flux.

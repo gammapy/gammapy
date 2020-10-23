@@ -66,7 +66,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
 
 
 class ExcessMapEstimator(Estimator):
-    """Computes correlated excess, significance and errors for MapDatasets.
+    """Computes correlated excess, sqrt TS (i.e. Li-Ma significance) and errors for MapDatasets.
 
     Parameters
     ----------
@@ -82,7 +82,6 @@ class ExcessMapEstimator(Estimator):
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
-            * "flux": estimate flux map
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
@@ -105,7 +104,6 @@ class ExcessMapEstimator(Estimator):
         selection_optional="all",
         e_edges=None,
         apply_mask_fit=False,
-        return_image=False,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -139,8 +137,8 @@ class ExcessMapEstimator(Estimator):
                 * counts : correlated counts map
                 * background : correlated background map
                 * excess : correlated excess map
-                * ts : delta TS map
-                * significance : sqrt(delta TS), or Li-Ma significance map
+                * ts : TS map
+                * sqrt_ts : sqrt(delta TS), or Li-Ma significance map
                 * err : symmetric error map (from covariance)
                 * flux : flux map. An exposure map must be present in the dataset to compute flux map
                 * errn : negative error map
@@ -205,7 +203,7 @@ class ExcessMapEstimator(Estimator):
 
         tsmap = Map.from_geom(geom, data=counts_stat.delta_ts)
         significance = Map.from_geom(geom, data=counts_stat.significance)
-        result.update({"ts": tsmap, "significance": significance})
+        result.update({"ts": tsmap, "sqrt_ts": significance})
 
         err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
         result.update({"err": err})

@@ -65,8 +65,8 @@ def test_compute_lima_image():
     estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
     result_lima = estimator.run(dataset)
 
-    assert_allclose(result_lima["significance"].data[:, 100, 100], 30.814916, atol=1e-3)
-    assert_allclose(result_lima["significance"].data[:, 1, 1], 0.164, atol=1e-3)
+    assert_allclose(result_lima["sqrt_ts"].data[:, 100, 100], 30.814916, atol=1e-3)
+    assert_allclose(result_lima["sqrt_ts"].data[:, 1, 1], 0.164, atol=1e-3)
 
 
 @requires_data()
@@ -96,12 +96,12 @@ def test_compute_lima_on_off_image():
     results = estimator.run(dataset)
 
     # Reproduce safe significance threshold from HESS software
-    results["significance"].data[results["counts"].data < 5] = 0
+    results["sqrt_ts"].data[results["counts"].data < 5] = 0
 
     # crop the image at the boundaries, because the reference image
     # is cut out from a large map, there is no way to reproduce the
     # result with regular boundary handling
-    actual = results["significance"].crop((11, 11)).data
+    actual = results["sqrt_ts"].crop((11, 11)).data
     desired = significance.crop((11, 11)).data
 
     # Set boundary to NaN in reference image
@@ -117,7 +117,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["counts"].data[0, 10, 10], 162)
     assert_allclose(result["excess"].data[0, 10, 10], 81)
     assert_allclose(result["background"].data[0, 10, 10], 81)
-    assert_allclose(result["significance"].data[0, 10, 10], 7.910732, atol=1e-5)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
     assert_allclose(result["err"].data[0, 10, 10], 12.727922, atol=1e-3)
     assert_allclose(result["errp"].data[0, 10, 10], 13.063328, atol=1e-3)
     assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
@@ -126,7 +126,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator_image = ExcessMapEstimator(0.1 * u.deg, return_image=True)
     result_image = estimator_image.run(simple_dataset)
     assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["significance"].data[0, 10, 10], 7.910732, atol=1e-5)
+    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
 
 
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
@@ -141,13 +141,13 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     assert_allclose(result["counts"].data[:, 10, 10], 194)
     assert_allclose(result["excess"].data[:, 10, 10], 97)
     assert_allclose(result["background"].data[:, 10, 10], 97)
-    assert_allclose(result["significance"].data[:, 10, 10], 5.741116, atol=1e-5)
+    assert_allclose(result["sqrt_ts"].data[:, 10, 10], 5.741116, atol=1e-5)
 
     estimator_image = ExcessMapEstimator(0.11 * u.deg, e_edges=[0.1 * u.TeV, 1 * u.TeV])
 
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["significance"].data[0, 10, 10], 5.741116, atol=1e-3)
+    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 5.741116, atol=1e-3)
 
     mask_fit = Map.from_geom(
         simple_dataset_on_off._geom,
@@ -165,7 +165,7 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_image["significance"].data[0, 10, 10], 7.186745, atol=1e-3)
+    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 7.186745, atol=1e-3)
 
     assert_allclose(result_image["counts"].data[0, 10, 10], 304)
     assert_allclose(result_image["excess"].data[0, 10, 10], 152)
@@ -192,7 +192,7 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     result_mod = estimator_mod.run(simple_dataset_on_off)
     assert result_mod["counts"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_mod["significance"].data[0, 10, 10], 8.119164, atol=1e-3)
+    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 8.119164, atol=1e-3)
 
     assert_allclose(result_mod["counts"].data[0, 10, 10], 388)
     assert_allclose(result_mod["excess"].data[0, 10, 10], 194)
