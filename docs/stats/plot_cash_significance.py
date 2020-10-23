@@ -22,7 +22,7 @@ plt.ylabel(r"Cash statistic value, TS ")
 plt.vlines(
     excess,
     ymin=ymin,
-    ymax=count_statistic.TS_max,
+    ymax=count_statistic.stat_max,
     linestyle="dashed",
     color="k",
     label="Best fit",
