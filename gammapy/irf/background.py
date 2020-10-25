@@ -45,6 +45,7 @@ class Background3D:
     fov_lat           : size =    36, min = -5.833 deg, max =  5.833 deg
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
+
     tag = "bkg_3d"
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None, values_scale="log"
@@ -94,9 +95,15 @@ class Background3D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        fov_lon_axis = MapAxis.from_table(table, column_prefix="DETX", format="gadf-dl3")
-        fov_lat_axis = MapAxis.from_table(table, column_prefix="DETY", format="gadf-dl3")
+        energy_axis = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        fov_lon_axis = MapAxis.from_table(
+            table, column_prefix="DETX", format="gadf-dl3"
+        )
+        fov_lat_axis = MapAxis.from_table(
+            table, column_prefix="DETY", format="gadf-dl3"
+        )
 
         return cls(
             energy_axis=energy_axis,
@@ -194,9 +201,7 @@ class Background3D:
 
         offset_axis = MapAxis.from_edges(offset, name="offset")
         return Background2D(
-            energy_axis=self.data.axes["energy"],
-            offset_axis=offset_axis,
-            data=data,
+            energy_axis=self.data.axes["energy"], offset_axis=offset_axis, data=data,
         )
 
     def peek(self, figsize=(10, 8)):
@@ -217,17 +222,13 @@ class Background2D:
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
     """
+
     tag = "bkg_2d"
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(
-        self,
-        energy_axis,
-        offset_axis,
-        data,
-        meta=None,
-        interp_kwargs=None,
+        self, energy_axis, offset_axis, data, meta=None, interp_kwargs=None,
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
@@ -264,8 +265,12 @@ class Background2D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        energy_axis = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        offset_axis = MapAxis.from_table(
+            table, column_prefix="THETA", format="gadf-dl3"
+        )
 
         return cls(
             energy_axis=energy_axis,
