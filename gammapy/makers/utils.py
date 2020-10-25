@@ -204,9 +204,9 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     # TODO: allow broadcasting in PSF3D.evaluate()
     psf_values = psf._interpolate(
         (
-            rad[:, np.newaxis, np.newaxis],
-            offset,
             energy[:, np.newaxis, np.newaxis, np.newaxis],
+            offset,
+            rad[:, np.newaxis, np.newaxis],
         )
     )
 
@@ -292,9 +292,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     migra_axis = edisp.data.axes["migra"]
 
     # Create temporary EDispMap Geom
-    new_geom = geom.to_image().to_cube(
-        [migra_axis, geom.axes["energy_true"]]
-    )
+    new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
     edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 

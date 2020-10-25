@@ -59,8 +59,9 @@ class EnergyDependentMultiGaussPSF:
         psf.plot_containment(0.68)
         plt.show()
     """
+
     tag = "psf_3gauss"
-    
+
     def __init__(
         self,
         energy_axis_true,
@@ -100,7 +101,8 @@ class EnergyDependentMultiGaussPSF:
         interps = []
         for values in values_list:
             interp = ScaledRegularGridInterpolator(
-                points=(self.offset_axis.center, self.energy_axis_true.center), values=values
+                points=(self.offset_axis.center, self.energy_axis_true.center),
+                values=values,
             )
             interps.append(interp)
         return interps
@@ -128,8 +130,12 @@ class EnergyDependentMultiGaussPSF:
         """
         table = Table.read(hdu)
 
-        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        energy_axis_true = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        offset_axis = MapAxis.from_table(
+            table, column_prefix="THETA", format="gadf-dl3"
+        )
 
         # Get sigmas
         shape = (offset_axis.nbin, energy_axis_true.nbin)
@@ -156,7 +162,7 @@ class EnergyDependentMultiGaussPSF:
             offset_axis=offset_axis,
             sigmas=sigmas,
             norms=norms,
-            **opts
+            **opts,
         )
 
     def to_hdulist(self):
@@ -264,9 +270,7 @@ class EnergyDependentMultiGaussPSF:
                     radius[jdx, idx] = np.nan
         return Angle(radius, "deg")
 
-    def plot_containment(
-        self, fraction=0.68, ax=None, add_cbar=True, **kwargs
-    ):
+    def plot_containment(self, fraction=0.68, ax=None, add_cbar=True, **kwargs):
         """
         Plot containment image with energy and theta axes.
 
@@ -336,7 +340,7 @@ class EnergyDependentMultiGaussPSF:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction).squeeze()
-                kwargs.setdefault("label", f"{theta.deg} deg, {100 * fraction:.1f}%" )
+                kwargs.setdefault("label", f"{theta.deg} deg, {100 * fraction:.1f}%")
                 ax.plot(energy.value, radius.value, **kwargs)
 
         ax.semilogx()
@@ -448,7 +452,7 @@ class EnergyDependentMultiGaussPSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
-            psf_value=psf_value
+            psf_value=psf_value,
         )
 
     def to_psf3d(self, rad=None):
@@ -472,12 +476,12 @@ class EnergyDependentMultiGaussPSF:
 
         rad_axis = MapAxis.from_edges(rad, name="rad")
 
-        shape = (rad_axis.nbin, self.offset_axis.nbin, self.energy_axis_true.nbin)
+        shape = (self.energy_axis_true.nbin, self.offset_axis.nbin, rad_axis.nbin)
         psf_value = np.zeros(shape) * u.Unit("sr-1")
 
         for idx, offset in enumerate(offsets):
             table_psf = self.to_energy_dependent_table_psf(offset)
-            psf_value[:, idx, :] = table_psf.evaluate(energy, rad_axis.center).T
+            psf_value[:, idx, :] = table_psf.evaluate(energy, rad_axis.center)
 
         return PSF3D(
             energy_axis_true=self.energy_axis_true,
