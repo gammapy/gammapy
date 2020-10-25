@@ -152,13 +152,13 @@ Write your own CLI
 This section explains how to write your own command line interface (CLI).
 
 We will focus on the command line aspect, and use a very simple example where we
-just call `gammapy.stats.CashCountsStatistics.significance`.
+just call `gammapy.stats.CashCountsStatistics.sqrt_ts`.
 
 From the interactive Python or IPython prompt or from a Jupyter notebook you
 just import the functionality you need and call it, like this:
 
    >>> from gammapy.stats import CashCountsStatistic
-   >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).significance
+   >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
    2.3979181291475453
 
 If you imagine that the actual computation involves many lines of code (and not
@@ -174,7 +174,7 @@ this:
     n_observed = 10
     mu_background = 4.2
 
-    s = CashCountsStatistic(n_observed, mu_background).significance
+    s = CashCountsStatistic(n_observed, mu_background).sqrt_ts
     print(s)
 
 We have introduced variables that hold the parameters for the analysis and put

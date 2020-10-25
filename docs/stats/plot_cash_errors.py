@@ -26,7 +26,7 @@ plt.xlabel(r"Number of expected signal event, $\mu_{sig}$")
 plt.ylabel(r"Cash statistic value, TS ")
 
 plt.hlines(
-    count_statistic.TS_max + 1,
+    count_statistic.stat_max + 1,
     xmin=excess + errn,
     xmax=excess + errp,
     linestyle="dotted",
@@ -36,20 +36,20 @@ plt.hlines(
 plt.vlines(
     excess + errn,
     ymin=ymin,
-    ymax=count_statistic.TS_max + 1,
+    ymax=count_statistic.stat_max + 1,
     linestyle="dotted",
     color="r",
 )
 plt.vlines(
     excess + errp,
     ymin=ymin,
-    ymax=count_statistic.TS_max + 1,
+    ymax=count_statistic.stat_max + 1,
     linestyle="dotted",
     color="r",
 )
 
 plt.hlines(
-    count_statistic.TS_max + 4,
+    count_statistic.stat_max + 4,
     xmin=excess + errn_2sigma,
     xmax=excess + errp_2sigma,
     linestyle="dashed",
@@ -59,14 +59,14 @@ plt.hlines(
 plt.vlines(
     excess + errn_2sigma,
     ymin=ymin,
-    ymax=count_statistic.TS_max + 4,
+    ymax=count_statistic.stat_max + 4,
     linestyle="dashed",
     color="b",
 )
 plt.vlines(
     excess + errp_2sigma,
     ymin=ymin,
-    ymax=count_statistic.TS_max + 4,
+    ymax=count_statistic.stat_max + 4,
     linestyle="dashed",
     color="b",
 )

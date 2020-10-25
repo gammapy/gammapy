@@ -21,7 +21,7 @@ def cli(n_observed, mu_background, value):
     or more, given a known background level MU_BACKGROUND."""
     stat = CashCountsStatistic(n_observed, mu_background)
     if value == "sqrt_ts":
-        s = stat.significance
+        s = stat.sqrt_ts
     else:
         s = stat.p_value
 

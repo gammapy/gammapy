@@ -197,8 +197,8 @@ class ExcessProfileEstimator(Estimator):
                 }
             )
 
-            result["ts"] = stats.delta_ts
-            result["sqrt_ts"] = stats.significance
+            result["ts"] = stats.ts
+            result["sqrt_ts"] = stats.sqrt_ts
 
             result["err"] = stats.error * self.n_sigma
 

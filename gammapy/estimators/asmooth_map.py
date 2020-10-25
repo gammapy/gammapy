@@ -125,7 +125,7 @@ class ASmoothMapEstimator(Estimator):
         if method in {"lima"}:
             scube = CashCountsStatistic(
                 cubes["counts"], cubes["background"]
-            ).significance
+            ).sqrt_ts
         elif method == "asmooth":
             scube = _sqrt_ts_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":

@@ -382,7 +382,7 @@ def make_theta_squared_table(
 
     stat = WStatCountsStatistic(table["counts"], table["counts_off"], table["alpha"])
     table["excess"] = stat.excess
-    table["sqrt_ts"] = stat.significance
+    table["sqrt_ts"] = stat.sqrt_ts
     table["excess_errn"] = stat.compute_errn()
     table["excess_errp"] = stat.compute_errp()
 
