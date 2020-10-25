@@ -29,6 +29,14 @@ def test_psf_3d_basics(psf_3d):
 
     assert "PSF3D" in str(psf_3d)
 
+    with pytest.raises(AssertionError):
+        PSF3D(
+            energy_axis_true=psf_3d.energy_axis_true,
+            offset_axis=psf_3d.offset_axis,
+            rad_axis=psf_3d.rad_axis,
+            psf_value=psf_3d.psf_value.T,
+        )
+
 
 @requires_data()
 def test_psf_3d_evaluate(psf_3d):

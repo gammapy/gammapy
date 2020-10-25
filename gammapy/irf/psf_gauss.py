@@ -285,8 +285,7 @@ class EnergyDependentMultiGaussPSF:
 
         ax = plt.gca() if ax is None else ax
 
-        # TODO: whu upper bound here?
-        energy = self.energy_axis_true.edges[1:]
+        energy = self.energy_axis_true.center
         offset = self.offset_axis.center
 
         # Set up and compute data
