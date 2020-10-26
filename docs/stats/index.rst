@@ -42,6 +42,7 @@ Variable          Dataset attribute name Definition
 ``n_bkg``         ``background``         Background estimate in the on region
 ================= ====================== ====================================================
 
+
 The ON measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
 a Poisson random variable with expected value
 :math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
@@ -92,11 +93,27 @@ distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is t
 between :math:`H_1` and :math:`H_0`.
 
 With the definition the fit statistics :math:`-2 \log \lambda` is simply the difference of the fit statistic values for
-the two hypotheses, the TS (for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
-distribution with :math:`n_{dof}` degrees of freedom. In particular, with only one degree of freedom (e.g. intensity
-of a signal), on can estimate the (2-sided) statistical significance in terms of number of :math:`\sigma`
-as :math:`\sqrt{TS}`.
+the two hypotheses, the delta TS (short for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
+distribution with :math:`n_{dof}` degrees of freedom. This can be used to convert :math:`\Delta TS` into a "classical
+significance" using the following recipe:
 
+.. code::
+
+	from scipy.stats import chi2, norm
+
+	def sigma_to_ts(sigma, df=1):
+		"""Convert sigma to delta ts"""
+		p_value = 2 * norm.sf(sigma)
+		return chi2.isf(p_value, df=df)
+
+	def ts_to_sigma(ts, df=1):
+		"""Convert delta ts to sigma"""
+		p_value = chi2.sf(ts, df=df)
+		return norm.isf(0.5 * p_value)
+
+In particular, with only one degree of freedom (e.g. flux amplitude), one can
+estimate the (2-sided) statistical significance in terms of number of :math:`\sigma`
+as :math:`\sqrt{TS}`.
 
 
 Counts statistics classes

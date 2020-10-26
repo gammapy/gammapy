@@ -13,18 +13,34 @@ Introduction
 The `gammapy.estimators` submodule contains algorithms and classes
 for high level flux and significance estimation such as flux maps,
 flux points, flux profiles and flux light curves. All estimators
-feature a common API and allow to estimate fluxes in energy bands.
+feature a common API and allow to estimate fluxes in bands of reconstructed
+energy.
 
 The core of any estimator algorithm is hypothesis testing: a reference
 model or counts excess is tested against a null hypothesis. From the
-best fit reference model a flux is derived and a corresponding significance
-from the difference in fit statistics to the null hypothesis, assuming
-one degree of freedom (TODO: link to stats)
+best fit reference model a flux is derived and a corresponding :math:`\sqrt{\Delta TS}`
+value from the difference in fit statistics to the null hypothesis,
+assuming one degree of freedom (:ref:`Estimating Delta TS`). In this case
+:math:`\sqrt{\Delta TS}` represents an approximation of the
+"classical significance".
+
+In general the flux can be estimated using methods:
+
+#. Based on model fitting: given a (global) best fit model with multiple model components,
+the flux of the component of interest is re-fitted in the chosen energy, time or spatial
+region. The new flux is given as a ``norm`` with respect to the global reference model.
+Optionally other component parameters in the global model can be re-optimised.
+
+#. Based on excess: in the case of having one energy bin, neglecting the PSF and not re-optimising
+other parameters, once can estimate the flux based on excess and derive the significance
+analytically from the classical Li & Ma solution. 
+
 
 The technical implementation follows the concept of a reference
-best fit model, which is then scaled in amplitude by fitting a `norm`
-parameter. The fitting is done by grouping the data in spatial, time
-and energy bins.
+best fit model. Given a global best fit model, the source of interest
+(for which flux points are computed) is scaled in amplitude by fitting a ``norm``
+parameter. The fitting is done by grouping the data in time
+and reconstructed energy bins (reference?).
 
 Based on this algorithm most estimators compute the same basic quantities:
 
@@ -51,13 +67,17 @@ norm_ul			  Upper limit of the norm
 norm_scan		  Norm scan
 stat_scan		  Fit statistics scan
 stat			  Fit statistics value of the best fit model
-null_value		  Fit statistics value of the null hypothesis. Rename?
+null_value		  Fit statistics value of the null hypothesis
 ================= ==================================================
 
 
-In addition a reference spectral model is given. Using this reference
-spectral model the norm values can be converted to the following different
-SED types:
+To compute the assymetric errors as well as upper limits one can
+specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
+arguments are translated into a TS value assuming ``ts = sigma ** 2``.
+
+In addition to the norm values a reference spectral model is given.
+Using this reference spectral model the norm values can be converted
+to the following different SED types:
 
 ================= =================================================
 Quantity          Definition
