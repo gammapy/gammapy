@@ -144,6 +144,15 @@ def test_background_3D_read():
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
+@requires_data()
+def test_background_3D_read_gadf():
+    filename = "$GAMMAPY_DATA/tests/bkg_3d_full_example.fits"
+    bkg = Background3D.read(filename)
+    data = bkg.data.data
+    assert data.shape == (20, 15, 15)
+    assert data.unit == "s-1 MeV-1 sr-1"
+
+
 @requires_dependency("matplotlib")
 def test_plot(bkg_2d):
     with mpl_plot_check():
@@ -161,11 +170,7 @@ def bkg_2d():
     data = np.zeros((2, 3)) * u.Unit("s-1 MeV-1 sr-1")
     data.value[1, 0] = 2
     data.value[1, 1] = 4
-    return Background2D(
-        energy_axis=energy_axis,
-        offset_axis=offset_axis,
-        data=data,
-    )
+    return Background2D(energy_axis=energy_axis, offset_axis=offset_axis, data=data,)
 
 
 def test_background_2d_evaluate(bkg_2d):
@@ -214,6 +219,15 @@ def test_background_2d_read_write(tmp_path, bkg_2d):
 
     data = bkg_2d_2.data.data
     assert data.shape == (2, 3)
+    assert data.unit == "s-1 MeV-1 sr-1"
+
+
+@requires_data()
+def test_background_2D_read_gadf():
+    filename = "$GAMMAPY_DATA/tests/bkg_2d_full_example.fits"
+    bkg = Background2D.read(filename)
+    data = bkg.data.data
+    assert data.shape == (20, 5)
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
