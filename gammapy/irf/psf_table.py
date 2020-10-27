@@ -172,7 +172,10 @@ class TablePSF:
             Containment radius angle
         """
         # TODO: check whether starting
-        rad_max = Angle(np.linspace(0 * u.deg, self.rad_axis.center[-1], 10 * self.rad_axis.nbin), "rad")
+        rad_max = Angle(
+            np.linspace(0 * u.deg, self.rad_axis.center[-1], 10 * self.rad_axis.nbin),
+            "rad",
+        )
 
         containment = self.containment(rad_max=rad_max)
 
@@ -204,7 +207,11 @@ class TablePSF:
 
         ax = plt.gca() if ax is None else ax
 
-        ax.plot(self.rad_axis.center.to_value("deg"), self.psf_value.to_value("sr-1"), **kwargs)
+        ax.plot(
+            self.rad_axis.center.to_value("deg"),
+            self.psf_value.to_value("sr-1"),
+            **kwargs,
+        )
         ax.set_yscale("log")
         ax.set_xlabel("Radius (deg)")
         ax.set_ylabel("PSF (sr-1)")
@@ -229,7 +236,14 @@ class EnergyDependentTablePSF:
         Interpolation keyword arguments pass to `ScaledRegularGridInterpolator`.
     """
 
-    def __init__(self, energy_axis_true, rad_axis, exposure=None, psf_value=None, interp_kwargs=None):
+    def __init__(
+        self,
+        energy_axis_true,
+        rad_axis,
+        exposure=None,
+        psf_value=None,
+        interp_kwargs=None,
+    ):
         self._rad_axis = rad_axis
         self._energy_axis_true = energy_axis_true
 
@@ -241,10 +255,11 @@ class EnergyDependentTablePSF:
         else:
             self.exposure = u.Quantity(exposure).to("cm^2 s")
 
+        shape = (energy_axis_true.nbin, rad_axis.nbin)
         if psf_value is None:
-            shape = (energy_axis_true.nbin, rad_axis.nbin)
             self.psf_value = np.zeros(shape) * u.Unit("sr^-1")
         else:
+            assert np.shape(psf_value) == shape
             self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
         self._interp_kwargs = interp_kwargs or {}
@@ -271,7 +286,12 @@ class EnergyDependentTablePSF:
         if rad[0] > 0:
             rad = rad.insert(0, 0)
 
-        rad_drad = 2 * np.pi * rad * self.evaluate(energy=self.energy_axis_true.center, rad=rad)
+        rad_drad = (
+            2
+            * np.pi
+            * rad
+            * self.evaluate(energy=self.energy_axis_true.center, rad=rad)
+        )
         values = scipy.integrate.cumtrapz(
             rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0, axis=1
         )
@@ -539,7 +559,12 @@ class EnergyDependentTablePSF:
         for fraction in fractions:
             rad = self.containment_radius(self.energy_axis_true.center, fraction)
             label = f"{100 * fraction:.1f}% Containment"
-            ax.plot(self.energy_axis_true.center.to("GeV").value, rad.to("deg").value, label=label, **kwargs)
+            ax.plot(
+                self.energy_axis_true.center.to("GeV").value,
+                rad.to("deg").value,
+                label=label,
+                **kwargs,
+            )
 
         ax.semilogx()
         ax.legend(loc="best")
@@ -584,5 +609,5 @@ class EnergyDependentTablePSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=self.rad_axis,
             psf_value=psf_value.T,
-            exposure=exposure
+            exposure=exposure,
         )

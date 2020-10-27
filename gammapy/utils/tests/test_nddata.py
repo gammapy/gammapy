@@ -44,7 +44,7 @@ def nddata_2d(axis_energy, axis_offset):
 
 class TestNDDataArray:
     def test_init_error(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(AssertionError):
             NDDataArray(
                 axes=[MapAxis.from_nodes([1, 3, 6], name="x")],
                 data=np.arange(8).reshape(4, 2),
