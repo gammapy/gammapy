@@ -26,12 +26,12 @@ assuming one degree of freedom (:ref:`Estimating Delta TS`). In this case
 
 In general the flux can be estimated using methods:
 
-#. Based on model fitting: given a (global) best fit model with multiple model components,
+1. Based on model fitting: given a (global) best fit model with multiple model components,
 the flux of the component of interest is re-fitted in the chosen energy, time or spatial
 region. The new flux is given as a ``norm`` with respect to the global reference model.
 Optionally other component parameters in the global model can be re-optimised.
 
-#. Based on excess: in the case of having one energy bin, neglecting the PSF and not re-optimising
+2. Based on excess: in the case of having one energy bin, neglecting the PSF and not re-optimising
 other parameters, once can estimate the flux based on excess and derive the significance
 analytically from the classical Li & Ma solution.
 
@@ -54,7 +54,7 @@ norm			  Norm with respect to the reference spectral model
 norm_err		  Symmetric rrror on the norm derived from the Hessian matrix
 ts				  Difference in fit statistics (`stat_sum - null_value` )
 sqrt_ts			  Square root of TS, corresponds to significance (Wilk's theorem)
-================= ==================================================
+================= =================================================
 
 In addition the following optional quantities can be computed:
 
@@ -68,7 +68,7 @@ norm_scan		  Norm scan
 stat_scan		  Fit statistics scan
 stat			  Fit statistics value of the best fit model
 null_value		  Fit statistics value of the null hypothesis
-================= ==================================================
+================= =================================================
 
 
 To compute the assymetric errors as well as upper limits one can
@@ -85,7 +85,7 @@ Quantity          Definition
 dnde 		      Differential flux at ``e_ref``
 flux 			  Integrated flux between ``e_min`` and ``e_max``
 eflux			  Integrated energy flux between ``e_min`` and ``e_max``
-================= ==================================================
+================= =================================================
 
 The same can be applied for the error and upper limit information.
 More information can be found on the `likelihood SED type page`_.
