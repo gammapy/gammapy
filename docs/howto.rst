@@ -32,6 +32,17 @@ contained in an observation. This is usually done thanks to their ``peek()``
 methods. See example for CTA `here <tutorials/cta.html#IRFs>`__ and for H.E.S.S.
 `here <tutorials/hess.html#DL3-DR1>`__.
 
+Use gammapy for modeling 2D images
++++++++++++++++++++++++++++++++++++
+
+Gammapy treats 2D maps as 3D cubes with one bin in energy. To see an example of the relevant data reduction, see
+`2-dim sky image analysis <tutorials#core-tutorials>`
+
+Sometimes, you might want to use previously obtained images lacking an energy axis
+(eg: reduced using traditional IACT tools) for modeling and fitting inside gammapy.
+In this case, it is necessary to attach an `energy` axis on  
+
+
 Extract 1D spectra
 ++++++++++++++++++
 
@@ -100,3 +111,16 @@ e.g. `~gammapy.modeling.models.NaimaSpectralModel` is an example of a Gammapy
 wrapper class around the Naima spectral model and radiation classes, which then
 allows modeling and fitting of Naima models within Gammapy (e.g. using CTA,
 H.E.S.S. or Fermi-LAT data).
+
+Implement a custom model
+++++++++++++++++++++++++
+Gammapy allows the flexibility of using user-defined models for analysis.
+For an example, see ` Implementing a Custom Model
+<tutorials/models.html#Implementing-a-Custom-Model>`__.
+
+Energy Dependent Morphological Models
+++++++++++++++++++++++++
+While Gammapy does not ship energy dependent spatial models, it is possible to define
+such models within the modeling framework.
+For an example, see ` here
+<tutorials/models.html#Models-with-Energy-dependent-morphologyl>`__.
