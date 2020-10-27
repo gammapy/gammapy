@@ -448,7 +448,6 @@ class TSMapEstimator(Estimator):
 
             result_all[name] = map_all
 
-        result_all["sqrt_ts"] = self.estimate_sqrt_ts(result_all["ts"])
         return result_all
 
 
@@ -570,7 +569,8 @@ class BrentqFluxEstimator(Estimator):
 
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        result["ts"] = (stat_null - stat) * np.sign(norm)
+        result["ts"] = (stat_null - stat)
+        result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], norm)
         result["norm"] = norm
         result["niter"] = niter
 
@@ -636,12 +636,14 @@ class BrentqFluxEstimator(Estimator):
         norm = dataset.norm_guess
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        ts = (stat_null - stat) * np.sign(norm)
+        ts = (stat_null - stat)
+        sqrt_ts = self.get_sqrt_ts(ts, norm)
+        
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = (
                     np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
             )
-        return {"norm": norm, "ts": ts, "norm_err": norm_err, "stat": stat, "niter": 0}
+        return {"norm": norm, "ts": ts, "sqrt_ts": sqrt_ts, "norm_err": norm_err, "stat": stat, "niter": 0}
 
     def run(self, dataset):
         """"""
