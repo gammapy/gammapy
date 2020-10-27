@@ -19,8 +19,42 @@ count events in a given region and time window, i.e. with Poisson-distributed
 counts measurements.
 
 
-General notions
-===============
+.. _stats_notation:
+
+Notations
+---------
+
+For on-off methods we use the following variable names following the
+notation in [Cousins2007]_:
+
+================= ====================== ====================================================
+Variable          Dataset attribute name Definition
+================= ====================== ====================================================
+``n_on``          ``counts``             Total observed counts in the on region
+``n_off``         ``counts_off``         Total observed counts in the off region
+``mu_on``         ``npred``              Total expected counts in the on region
+``mu_off``        ``npred_off``          Total expected counts in the off region
+``mu_sig``        ``npred_sig``          Signal expected counts in the on region
+``mu_bkg``        ``npred_bkg``          Background expected counts in the on region
+``a_on``          ``acceptance``         Relative background exposure in the on region
+``a_off``         ``acceptance_off``     Relative background exposure in the off region
+``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
+``n_bkg``         ``background``         Background estimate in the on region
+================= ====================== ====================================================
+
+
+The ON measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
+a Poisson random variable with expected value
+:math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
+
+The OFF measurement is assumed to contain only background counts, with an acceptance to background
+:math:`a_{off}`. This OFF measurement can be used to etimate the number of background counts in the
+ON measurement: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
+ON and OFF acceptances.
+
+Therefore :math:`n_{off}` follows a Poisson distribution  with expected value
+:math:\mu_{off} = \mu_{bkg) / \alpha
+
 
 Counts and fit statistics
 -------------------------
@@ -59,12 +93,40 @@ distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is t
 between :math:`H_1` and :math:`H_0`.
 
 With the definition the fit statistics :math:`-2 \log \lambda` is simply the difference of the fit statistic values for
-the two hypotheses, the TS (for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
-distribution with :math:`n_{dof}` degrees of freedom. In particular, with only one degree of freedom (e.g. intensity
-of a signal), on can estimate the (2-sided) statistical significance in terms of number of :math:`\sigma`
-as :math:`\sqrt{TS}`.
+the two hypotheses, the delta TS (short for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
+distribution with :math:`n_{dof}` degrees of freedom. This can be used to convert :math:`\Delta TS` into a "classical
+significance" using the following recipe:
+
+.. code::
+
+	from scipy.stats import chi2, norm
+
+	def sigma_to_ts(sigma, df=1):
+		"""Convert sigma to delta ts"""
+		p_value = 2 * norm.sf(sigma)
+		return chi2.isf(p_value, df=df)
+
+	def ts_to_sigma(ts, df=1):
+		"""Convert delta ts to sigma"""
+		p_value = chi2.sf(ts, df=df)
+		return norm.isf(0.5 * p_value)
+
+In particular, with only one degree of freedom (e.g. flux amplitude), one
+can estimate the statistical significance in terms of number of :math:`\sigma`
+as :math:`\sqrt{\Delta TS}`.
 
 
+In case the excess is negative, which can happen if the background is overestimated
+the following convention is used:
+
+.. math::
+
+	\sqrt{\Delta TS} = \left \{
+	\begin{array}{ll}
+	  -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
+	  \sqrt{\Delta TS} & : \text{else}
+	\end{array}
+	\right.
 
 Counts statistics classes
 =========================
@@ -207,41 +269,6 @@ relate to the fit statistic profile.
 Note that confidence intervals can be computed in a more robust manner following [Feldman1998]_.
 See :ref:`feldman_cousins`.
 
-
-.. _stats_notation:
-
-Notations
----------
-
-For on-off methods we use the following variable names following the
-notation in [Cousins2007]_:
-
-================= ====================== ====================================================
-Variable          Dataset attribute name Definition
-================= ====================== ====================================================
-``n_on``          ``counts``             Total observed counts in the on region
-``n_off``         ``counts_off``         Total observed counts in the off region
-``mu_on``         ``npred``              Total expected counts in the on region
-``mu_off``        ``npred_off``          Total expected counts in the off region
-``mu_sig``        ``npred_sig``          Signal expected counts in the on region
-``mu_bkg``        ``npred_bkg``          Background expected counts in the on region
-``a_on``          ``acceptance``         Relative background exposure in the on region
-``a_off``         ``acceptance_off``     Relative background exposure in the off region
-``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
-``n_bkg``         ``background``         Background estimate in the on region
-================= ====================== ====================================================
-
-The ON measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
-a Poisson random variable with expected value
-:math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
-
-The OFF measurement is assumed to contain only background counts, with an acceptance to background
-:math:`a_{off}`. This OFF measurement can be used to etimate the number of background counts in the
-ON measurement: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
-ON and OFF acceptances.
-
-Therefore :math:`n_{off}` follows a Poisson distribution  with expected value
-:math:\mu_{off} = \mu_{bkg) / \alpha
 
 These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
 [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
