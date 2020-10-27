@@ -33,7 +33,7 @@ Optionally other component parameters in the global model can be re-optimised.
 
 #. Based on excess: in the case of having one energy bin, neglecting the PSF and not re-optimising
 other parameters, once can estimate the flux based on excess and derive the significance
-analytically from the classical Li & Ma solution. 
+analytically from the classical Li & Ma solution.
 
 
 The technical implementation follows the concept of a reference

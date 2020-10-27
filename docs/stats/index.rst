@@ -111,10 +111,22 @@ significance" using the following recipe:
 		p_value = chi2.sf(ts, df=df)
 		return norm.isf(0.5 * p_value)
 
-In particular, with only one degree of freedom (e.g. flux amplitude), one can
-estimate the (2-sided) statistical significance in terms of number of :math:`\sigma`
-as :math:`\sqrt{TS}`.
+In particular, with only one degree of freedom (e.g. flux amplitude), one
+can estimate the statistical significance in terms of number of :math:`\sigma`
+as :math:`\sqrt{\Delta TS}`.
 
+
+In case the excess is negative, which can happen if the background is overestimated
+the following convention is used:
+
+.. math::
+
+	\sqrt{\Delta TS} = \left \{
+	\begin{array}{ll}
+	  -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
+	  \sqrt{\Delta TS} & : \text{else}
+	\end{array}
+	\right.
 
 Counts statistics classes
 =========================
