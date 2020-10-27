@@ -67,6 +67,7 @@ class SpectrumDataset(MapDataset):
         models=None,
         counts=None,
         exposure=None,
+        background=None,
         edisp=None,
         mask_safe=None,
         mask_fit=None,
@@ -83,7 +84,7 @@ class SpectrumDataset(MapDataset):
         self.mask_fit = mask_fit
         self.exposure = exposure
         self.edisp = edisp
-        self._background_model = None
+        self.background = background
         self.mask_safe = mask_safe
         self.gti = gti
         self.meta_table = meta_table
@@ -305,9 +306,6 @@ class SpectrumDataset(MapDataset):
         name = make_name(name)
         counts = RegionNDMap.create(region=region, axes=[e_reco])
         background = RegionNDMap.create(region=region, axes=[e_reco])
-        models = Models(
-            [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
-        )
         exposure = RegionNDMap.create(region=region, axes=[e_true], unit="cm2 s")
         edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, geom=counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
@@ -316,10 +314,10 @@ class SpectrumDataset(MapDataset):
         return SpectrumDataset(
             counts=counts,
             exposure=exposure,
+            background=background,
             edisp=edisp,
             mask_safe=mask_safe,
             gti=gti,
-            models=models,
             name=name,
         )
 
@@ -335,8 +333,8 @@ class SpectrumDataset(MapDataset):
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
             self.counts_off_normalised.plot_hist(ax=ax1, label="alpha * N_off")
-        elif self.background_model is not None:
-            self.background_model.evaluate().plot_hist(ax=ax1, label="background")
+        elif self.background is not None:
+            self.background.plot_hist(ax=ax1, label="background")
 
         self.counts.plot_hist(ax=ax1, label="n_on")
 
@@ -501,29 +499,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         alpha = self.acceptance / self.acceptance_off
         np.nan_to_num(alpha.data, copy=False)
         return alpha
-
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
-        Else, the total signal counts are returned.
-
-        Parameters
-        -------------
-        model: `~gammapy.modeling.models.Models`, optional
-           The model to computed the npred for.
-
-        Returns
-        ----------
-        npred_sig: `gammapy.maps.RegionNDMap`
-            Predicted signal counts
-        """
-        if model is None:
-            return super().npred()
-        else:
-            return super().npred_sig(model=model)
-
-    def npred(self):
-        """Predicted counts from source + background(`RegionNDMap`)."""
-        return self.npred_sig() + self.background
 
     @property
     def _geom(self):
@@ -1108,9 +1083,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        if counts_off is None and dataset.background_model is not None:
+        if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.background_model.evaluate() / alpha
+            counts_off = dataset.background / alpha
 
         return cls(
             models=dataset.models,
@@ -1143,9 +1118,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
 
         name = make_name(name)
-
-        background_model = BackgroundModel(self.counts_off * self.alpha)
-        background_model.datasets_names = [name]
         return SpectrumDataset(
             counts=self.counts,
             exposure=self.exposure,
@@ -1154,8 +1126,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=self.gti,
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
-            models=background_model,
             meta_table=self.meta_table,
+            background=self.counts_off_normalised
         )
 
     def slice_by_idx(self, slices, name=None):

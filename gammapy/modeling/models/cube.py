@@ -468,10 +468,10 @@ class BackgroundIRFModel(Model):
         """Evaluate model"""
         return self.spectral_model(energy)
 
-    def to_dict(self):
+    def to_dict(self, full_output=False):
         data = {}
         data["type"] = self.tag
-        data["spectral"] = self.spectral_model.to_dict()
+        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)
         data["datasets_names"] = self.datasets_names
         return data
 

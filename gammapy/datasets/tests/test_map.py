@@ -773,7 +773,7 @@ def test_npred_psf_after_edisp():
 
     geom = WcsGeom.create(width=4 * u.deg, binsz=0.02, axes=[energy_axis])
     dataset = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true)
-    dataset.background_model.map.data += 1
+    dataset._background.data += 1
     dataset.exposure.data += 1e12
     dataset.mask_safe.data += True
     dataset.psf = PSFMap.from_gauss(

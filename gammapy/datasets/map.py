@@ -108,6 +108,8 @@ class MapDataset(Dataset):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
+    background : `~gammapy.maps.WcsNDMap`
+        Background cube
     mask_fit : `~gammapy.maps.WcsNDMap`
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
@@ -178,14 +180,15 @@ class MapDataset(Dataset):
     @property
     def background(self):
         """Background """
-        if self._background:
-            try:
-                values = self.background_model.evaluate_geom(
-                    geom=self._background.geom
-                )
-                return self._background * values
-            except ValueError:
-                return self._background
+        background = self._background
+
+        if self.background_model and background:
+            values = self.background_model.evaluate_geom(
+                geom=self._background.geom
+            )
+            background = background * values
+
+        return background
 
     @background.setter
     def background(self, value):
@@ -196,7 +199,10 @@ class MapDataset(Dataset):
     # TODO: keep or remove?
     @property
     def background_model(self):
-        return self.models[f"{self.name}-bkg"]
+        try:
+            return self.models[f"{self.name}-bkg"]
+        except ValueError:
+            pass
 
     @property
     def name(self):
@@ -281,19 +287,14 @@ class MapDataset(Dataset):
 
         return geoms
 
-
     @property
     def models(self):
         """Models (`~gammapy.modeling.models.Models`)."""
         return ProperModels(self)
 
     @property
-    def background_model(self):
-        return self._background_model
-
-    @property
     def excess(self):
-        return self.counts - self.background_model.evaluate()
+        return self.counts - self.background
 
     @models.setter
     def models(self, models):
@@ -1077,9 +1078,7 @@ class MapDataset(Dataset):
         info["counts"] = counts
 
         background = np.nan
-        if self.background_model:
-            background = self.background_model.evaluate().data[mask].sum()
-        elif self.background:
+        if self.background:
             background = self.background.data[mask].sum()
 
         info["background"] = background
@@ -1185,7 +1184,7 @@ class MapDataset(Dataset):
         if self.background is not None:
             kwargs["models"] = BackgroundModel(
                 self.background.get_spectrum(on_region, func=np.sum, weights=self.mask_safe),
-                datasets_names=[name]
+                datasets_names=[name], name=f"{name}-bkg"
             )
 
         if self.exposure is not None:

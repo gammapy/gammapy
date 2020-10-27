@@ -228,12 +228,12 @@ def test_interpolate_map_dataset():
     geom_background = WcsGeom.create(
         skydir=(0, 0),
         width=(5, 5),
-        binsz=0.2*u.deg,
+        binsz=0.2 * u.deg,
         axes=[energy]
     )
     value = 30
     bkg_map = Map.from_geom(geom_background, unit="")
-    bkg_map.data = value*np.ones(bkg_map.data.shape)
+    bkg_map.data = value * np.ones(bkg_map.data.shape)
 
     #effective area - with a gradient that also depends on energy
     aeff_map = Map.from_geom(geom_allsky_true, unit="cm2 s")
@@ -285,7 +285,7 @@ def test_interpolate_map_dataset():
     geom_target = WcsGeom.create(
         skydir=(0, 0),
         width=(5, 5),
-        binsz=0.1*u.deg,
+        binsz=0.1 * u.deg,
         axes=[energy]
     )
 
@@ -297,25 +297,27 @@ def test_interpolate_map_dataset():
     assert dataset.counts.data.sum() == nr_ev
 
     #test background
-    assert np.floor(np.sum(dataset.background_model.map.data)) == np.sum(bkg_map.data)
+    assert np.floor(np.sum(dataset.background.data)) == np.sum(bkg_map.data)
     coords_bg = {
-        'skycoord' : SkyCoord("0 deg", "0 deg"),
-        'energy' : energy.center[0]
+        "skycoord": SkyCoord("0 deg", "0 deg"),
+        "energy": energy.center[0]
     }
     assert_allclose(
         dataset.background.get_by_coord(coords_bg)[0],
-        value,
-        atol=1e-7)
+        7.5,
+        atol=1e-4
+    )
 
     #test effective area
     coords_aeff = {
-        'skycoord' : SkyCoord("0 deg", "0 deg"),
-        'energy_true' : energy_true.center[0]
+        "skycoord": SkyCoord("0 deg", "0 deg"),
+        "energy_true": energy_true.center[0]
     }
     assert_allclose(
-        aeff_map.get_by_coord(coords_aeff)[0]/dataset.exposure.get_by_coord(coords_aeff)[0],
-        1,
-        atol=1e-3)
+        aeff_map.get_by_coord(coords_aeff)[0],
+        dataset.exposure.interp_by_coord(coords_aeff)[0],
+        atol=1e-3
+    )
 
     #test edispmap
     pdfmatrix_preinterp = edispmap.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix
