@@ -32,11 +32,11 @@ Variable          Dataset attribute name Definition
 ================= ====================== ====================================================
 ``n_on``          ``counts``             Total observed counts in the on region
 ``n_off``         ``counts_off``         Total observed counts in the off region
-``n_bkg``         ``background``         Background estimate in the on region
+``n_bkg``         ``background``         Background estimate in the on region, independent of ``mu_sig``
 ``mu_on``         ``npred``              Predicted counts in the on region
 ``mu_off``        ``npred_off``          Predicted counts in the off region
 ``mu_sig``        ``npred_signal``       Predicted signal counts in the on region
-``mu_bkg``        ``npred_background``   Predicted background counts in the on region
+``mu_bkg``        ``npred_background``   Predicted background counts in the on region, depends on ``mu_sig``
 ``a_on``          ``acceptance``         Relative background exposure in the on region
 ``a_off``         ``acceptance_off``     Relative background exposure in the off region
 ``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
@@ -52,8 +52,8 @@ The OFF measurement is assumed to contain only background counts, with an accept
 ON measurement: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
 ON and OFF acceptances.
 
-Therefore :math:`n_{off}` follows a Poisson distribution  with expected value
-:math:\mu_{off} = \mu_{bkg) / \alpha
+Therefore :math:`n_{off}` follows a Poisson distribution with expected value
+:math:`\mu_{off} = \mu_{bkg) / \alpha`
 
 
 Counts and fit statistics
