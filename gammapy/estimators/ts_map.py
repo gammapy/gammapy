@@ -638,7 +638,7 @@ class BrentqFluxEstimator(Estimator):
         stat_null = dataset.stat_sum(norm=0)
         ts = (stat_null - stat)
         sqrt_ts = self.get_sqrt_ts(ts, norm)
-        
+
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = (
                     np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
