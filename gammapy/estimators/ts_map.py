@@ -291,8 +291,7 @@ class TSMapEstimator(Estimator):
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
 
-    @staticmethod
-    def estimate_sqrt_ts(map_ts):
+    def estimate_sqrt_ts(self, map_ts, norm):
         r"""Compute sqrt(TS) map.
 
         Compute sqrt(TS) as defined by:
@@ -315,9 +314,7 @@ class TSMapEstimator(Estimator):
         sqrt_ts : `gammapy.maps.WcsNDMap`
             Sqrt(TS) map.
         """
-        with np.errstate(invalid="ignore", divide="ignore"):
-            ts = map_ts.data
-            sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
+        sqrt_ts = self.get_sqrt_ts(map_ts.data, norm.data)
         return map_ts.copy(data=sqrt_ts)
 
     def estimate_flux_map(self, dataset):
@@ -448,6 +445,7 @@ class TSMapEstimator(Estimator):
 
             result_all[name] = map_all
 
+        result_all["sqrt_ts"] = self.estimate_sqrt_ts(result_all["ts"], result_all["flux"])
         return result_all
 
 
