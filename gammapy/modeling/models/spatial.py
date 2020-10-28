@@ -246,6 +246,27 @@ class SpatialModel(Model):
 
         return ax
 
+    def plot_grid(self, geom=None, **kwargs):
+        """Plot spatial model energy slices in a grid.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+
+        if (geom is None) or geom.is_image:
+            raise TypeError("Use .plot() for 2D Maps")
+        m = self._get_plot_map(geom)
+        m.plot_grid(**kwargs)
+
 
 class PointSpatialModel(SpatialModel):
     r"""Point Source.

@@ -254,6 +254,8 @@ def test_sky_diffuse_map():
     assert isinstance(model.to_region(), PolygonSkyRegion)
     with pytest.raises(TypeError):
         model.plot_interative()
+    with pytest.raises(TypeError):
+        model.plot_grid()
 
 
 @requires_data()

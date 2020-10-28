@@ -23,7 +23,7 @@ from gammapy.modeling.models import (
     SkyModel,
     create_fermi_isotropic_diffuse_model,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, mpl_plot_check
 from gammapy.modeling import Parameter
 from astropy.coordinates.angle_utilities import angular_separation
 
@@ -610,3 +610,9 @@ def test_energy_dependent_model(geom_true):
     model = sky_model.integrate_geom(geom_true)
 
     assert_allclose(model.data.sum(), 1.678314e-14, rtol=1e-3)
+
+
+def test_plot_grid(geom_true):
+    spatial_model = MyCustomGaussianModel(frame="galactic")
+    with mpl_plot_check():
+        spatial_model.plot_grid(geom=geom_true)
