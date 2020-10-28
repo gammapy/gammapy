@@ -521,15 +521,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
         return np.nan_to_num(on_stat_)
 
-    def fake(self, background, random_state="random-seed"):
+    def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
 
         This method overwrites the counts and off counts defined on the dataset object.
 
         Parameters
         ----------
-        background : `~gammapy.maps.RegionNDMap`
-            Background to be used in the on region.
+        npred_background : `~gammapy.maps.RegionNDMap`
+            Predicted background to be used in the on region.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
@@ -538,10 +538,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         npred = self.npred_sig()
         npred.data = random_state.poisson(npred.data)
-        npred_bkg = random_state.poisson(background.data)
+        npred_bkg = random_state.poisson(npred_background.data)
         self.counts = npred + npred_bkg
 
-        npred_off = background / self.alpha
+        npred_off = npred_background / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
         self.counts_off = npred_off
 
@@ -1074,7 +1074,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        if counts_off is None and dataset.npred_background is not None:
+        if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
             counts_off = dataset.npred_background / alpha
 

@@ -552,10 +552,7 @@ class TestSpectrumOnOff:
 
         background = RegionNDMap.from_geom(dataset.counts.geom)
         background.data += 1
-        background_model = BackgroundModel(
-            background, name="test-bkg", datasets_names="test"
-        )
-        dataset.fake(background_model=background_model, random_state=314)
+        dataset.fake(npred_background=background, random_state=314)
 
         assert real_dataset.counts.data.shape == dataset.counts.data.shape
         assert real_dataset.counts_off.data.shape == dataset.counts_off.data.shape

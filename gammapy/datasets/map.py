@@ -1823,7 +1823,12 @@ class MapDatasetOnOff(MapDataset):
         """Total likelihood given the current model parameters."""
         return Dataset.stat_sum(self)
 
-    def fake(self, background_model, random_state="random-seed"):
+    @property
+    def npred_off(self):
+        """Predicted counts in the off region"""
+        return self.background / self.alpha
+
+    def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -1838,12 +1843,11 @@ class MapDatasetOnOff(MapDataset):
         npred = self.npred_sig()
         npred.data = random_state.poisson(npred.data)
 
-        npred_bkg = background_model.copy()
-        npred_bkg.data = random_state.poisson(npred_bkg.data)
+        npred_bkg = random_state.poisson(npred_background.data)
 
         self.counts = npred + npred_bkg
 
-        npred_off = background_model / self.alpha
+        npred_off = npred_background / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
         self.counts_off = npred_off
 
