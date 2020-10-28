@@ -411,7 +411,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(lightcurve.table["ref_eflux"][0], [3.453878e-12], rtol=1e-5)
     assert_allclose(lightcurve.table["ref_e2dnde"][0], [1e-12], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"][0], [34.219808], rtol=1e-5)
-    assert_allclose(lightcurve.table["norm"][0], [0.909454], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm"][0], [0.909646], rtol=1e-5)
     assert_allclose(lightcurve.table["norm_err"][0], [0.040874], rtol=1e-3)
     assert_allclose(lightcurve.table["ts"][0], [742.939324], rtol=1e-4)
 
