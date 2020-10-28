@@ -333,8 +333,8 @@ class SpectrumDataset(MapDataset):
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
             self.background.plot_hist(ax=ax1, label="alpha * N_off")
-        elif self.npred_background is not None:
-            self.npred_background.plot_hist(ax=ax1, label="background")
+        elif self.background is not None:
+            self.npred_background().plot_hist(ax=ax1, label="background")
 
         self.counts.plot_hist(ax=ax1, label="n_on")
 
@@ -469,7 +469,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         return str_.expandtabs(tabsize=2)
 
-    @property
     def npred_background(self):
         """Background counts estimated from the marginalized likelihood estimate.
          See :ref:`wstat`
@@ -1076,7 +1075,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
         if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.npred_background / alpha
+            counts_off = dataset.npred_background() / alpha
 
         return cls(
             models=dataset.models,

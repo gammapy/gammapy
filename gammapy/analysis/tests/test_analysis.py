@@ -275,7 +275,7 @@ def test_analysis_ring_background():
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
-        analysis.datasets[0].npred_background.data[0, 10, 10], 0.091799, rtol=1e-2
+        analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
     )
 
 

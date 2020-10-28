@@ -102,7 +102,7 @@ class MapDatasetEventSampler:
         events : `gammapy.data.EventList`
             Background events
         """
-        background = dataset.npred_background
+        background = dataset.npred_background()
 
         temporal_model = ConstantTemporalModel()
 
@@ -350,7 +350,7 @@ class MapDatasetEventSampler:
                 else:
                     events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
 
-            if dataset.npred_background:
+            if dataset.background:
                 events_bkg = self.sample_background(dataset)
                 events = EventList.from_stack([events_bkg, events_src])
             else:

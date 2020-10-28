@@ -325,8 +325,8 @@ class MapDataset(Dataset):
         """Main analysis geometry"""
         if self.counts is not None:
             return self.counts.geom
-        elif self.npred_background is not None:
-            return self.npred_background.geom
+        elif self.background is not None:
+            return self.background.geom
         elif self.mask_safe is not None:
             return self.mask_safe.geom
         elif self.mask_fit is not None:
@@ -347,11 +347,10 @@ class MapDataset(Dataset):
         npred_total = self.npred_sig()
 
         if self.background:
-            npred_total += self.npred_background
+            npred_total += self.npred_background()
 
         return npred_total
 
-    @property
     def npred_background(self):
         """Background """
         background = self.background
@@ -608,8 +607,8 @@ class MapDataset(Dataset):
 
         if self.stat_type == "cash":
             if self.background and other.background:
-                background = self.npred_background * self.mask_safe
-                background.stack(other.npred_background, other.mask_safe)
+                background = self.npred_background() * self.mask_safe
+                background.stack(other.npred_background(), other.mask_safe)
                 self.background = background
 
         if self.psf and other.psf:
@@ -826,8 +825,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
 
-        if self.npred_background is not None:
-            hdulist += self.npred_background.to_hdulist(hdu="background")[
+        if self.background is not None:
+            hdulist += self.background.to_hdulist(hdu="background")[
                 exclude_primary
             ]
 
@@ -1063,7 +1062,7 @@ class MapDataset(Dataset):
 
         background = np.nan
         if self.background:
-            background = self.npred_background.data[mask].sum()
+            background = self.npred_background().data[mask].sum()
 
         info["background"] = background
 
@@ -1166,7 +1165,7 @@ class MapDataset(Dataset):
             kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum, weights=self.mask_safe)
 
         if self.stat_type == "cash" and self.background is not None:
-            kwargs["background"] = self.npred_background.get_spectrum(
+            kwargs["background"] = self.npred_background().get_spectrum(
                 on_region, func=np.sum, weights=self.mask_safe
             )
 
@@ -1234,8 +1233,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
-        if self.npred_background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background.cutout(**cutout_kwargs)
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().cutout(**cutout_kwargs)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1291,8 +1290,8 @@ class MapDataset(Dataset):
             else:
                 kwargs["exposure"] = self.exposure.copy()
 
-        if self.npred_background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background.downsample(
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
         if self.edisp is not None:
@@ -1347,8 +1346,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
-        if self.npred_background is not None:
-            kwargs["background"] = self.npred_background.pad(pad_width=pad_width, mode=mode)
+        if self.background is not None:
+            kwargs["background"] = self.npred_background().pad(pad_width=pad_width, mode=mode)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.copy()
@@ -1393,8 +1392,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
-        if self.npred_background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background.slice_by_idx(slices=slices)
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().slice_by_idx(slices=slices)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
@@ -1457,8 +1456,8 @@ class MapDataset(Dataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-        if self.npred_background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background.resample_axis(
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )
 
@@ -1606,7 +1605,6 @@ class MapDatasetOnOff(MapDataset):
         alpha.data = np.nan_to_num(alpha.data)
         return alpha
 
-    @property
     def npred_background(self):
         """Prediced background counts estimated from the marginalized likelihood estimate.
 
@@ -1724,9 +1722,9 @@ class MapDatasetOnOff(MapDataset):
 
         """
 
-        if counts_off is None and dataset.npred_background is not None:
+        if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.npred_background / alpha
+            counts_off = dataset.npred_background() / alpha
 
         return cls(
             counts=dataset.counts,
@@ -1822,11 +1820,6 @@ class MapDatasetOnOff(MapDataset):
     def stat_sum(self):
         """Total likelihood given the current model parameters."""
         return Dataset.stat_sum(self)
-
-    @property
-    def npred_off(self):
-        """Predicted counts in the off region"""
-        return self.background / self.alpha
 
     def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
