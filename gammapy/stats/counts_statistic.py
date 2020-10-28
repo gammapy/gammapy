@@ -9,9 +9,6 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
 class CountsStatistic(abc.ABC):
-    @property
-    def excess(self):
-        return self.n_on - self.background
 
     @property
     def ts(self):
@@ -129,14 +126,14 @@ class CountsStatistic(abc.ABC):
         excess : `numpy.ndarray`
             Excess
         """
-        excess = np.zeros_like(self.background, dtype="float")
+        excess = np.zeros_like(self.n_bkg, dtype="float")
         it = np.nditer(excess, flags=["multi_index"])
 
         while not it.finished:
             try:
                 excess[it.multi_index] = newton(
                     self._excess_matching_significance_fcn,
-                    np.sqrt(self.background[it.multi_index]) * significance,
+                    np.sqrt(self.n_bkg[it.multi_index]) * significance,
                     args=(significance, it.multi_index),
                 )
             except:
@@ -154,17 +151,28 @@ class CashCountsStatistic(CountsStatistic):
     ----------
     n_on : int
         Measured counts
-    mu_bkg : float
-        Expected level of background
+    n_bkg : float
+        Known level of background
     """
 
-    def __init__(self, n_on, mu_bkg):
+    def __init__(self, n_on, n_bkg):
         self.n_on = np.asanyarray(n_on)
-        self.mu_bkg = np.asanyarray(mu_bkg)
+        self.n_bkg = np.asanyarray(n_bkg)
 
     @property
-    def background(self):
-        return self.mu_bkg
+    def mu_sig(self):
+        """Expected signal counts"""
+        return self.n_on - self.n_bkg
+
+    @property
+    def mu_bkg(self):
+        """Expected background counts"""
+        return self.n_on - self.mu_sig
+
+    @property
+    def excess(self):
+        """Excess"""
+        return self.n_on - self.n_bkg
 
     @property
     def error(self):
@@ -185,8 +193,8 @@ class CashCountsStatistic(CountsStatistic):
         return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
-        TS0 = cash(excess + self.background[index], self.mu_bkg[index])
-        TS1 = cash(excess + self.background[index], self.mu_bkg[index] + excess)
+        TS0 = cash(excess + self.mu_bkg[index], self.mu_bkg[index])
+        TS1 = cash(excess + self.mu_bkg[index], self.mu_bkg[index] + excess)
         return np.sign(excess) * np.sqrt(np.clip(TS0 - TS1, 0, None)) - significance
 
 
@@ -197,13 +205,13 @@ class WStatCountsStatistic(CountsStatistic):
     Parameters
     ----------
     n_on : int
-        Measured counts in signal (ON) region
+        Measured counts in on region
     n_off : int
-        Measured counts in background only (OFF) region
+        Measured counts in off region
     alpha : float
-        Acceptance ratio of ON and OFF measurements
+        Acceptance ratio of on and off measurements
     mu_sig : float
-        Expected counts in signal region
+        Expected signal counts in on region
     """
 
     def __init__(self, n_on, n_off, alpha, mu_sig=None):
@@ -216,19 +224,22 @@ class WStatCountsStatistic(CountsStatistic):
             self.mu_sig = np.asanyarray(mu_sig)
 
     @property
-    def background(self):
+    def mu_bkg(self):
+        """Expected background"""
         mu_bkg = self.alpha * get_wstat_mu_bkg(
             n_on=self.n_on, n_off=self.n_off, alpha=self.alpha, mu_sig=self.mu_sig,
         )
         return np.nan_to_num(mu_bkg)
 
     @property
-    def counts_off_normalised(self):
+    def n_bkg(self):
+        """Known background computed alpha * n_off"""
         return self.alpha * self.n_off
 
     @property
     def excess(self):
-        return self.n_on - self.counts_off_normalised - self.mu_sig
+        """Excess """
+        return self.n_on - self.n_bkg - self.mu_sig
 
     @property
     def error(self):
@@ -258,10 +269,10 @@ class WStatCountsStatistic(CountsStatistic):
 
     def _excess_matching_significance_fcn(self, excess, significance, index):
         stat0 = wstat(
-            excess + self.background[index], self.n_off[index], self.alpha[index], 0
+            excess + self.mu_bkg[index], self.n_off[index], self.alpha[index], 0
         )
         stat1 = wstat(
-            excess + self.background[index],
+            excess + self.mu_bkg[index],
             self.n_off[index],
             self.alpha[index],
             excess,
