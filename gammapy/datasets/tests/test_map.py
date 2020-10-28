@@ -21,7 +21,7 @@ from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     BackgroundModel,
-    BackgroundIRFModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     Models,
     PowerLawSpectralModel,
@@ -109,7 +109,7 @@ def get_map_dataset(
     background = Map.from_geom(geom)
     background.data += 0.2
 
-    background_model = BackgroundIRFModel(dataset_name=name)
+    background_model = FoVBackgroundModel(dataset_name=name)
 
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
@@ -255,7 +255,7 @@ def get_fermi_3fhl_gc_dataset():
     background = Map.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background-cube.fits.gz"
     )
-    bkg_model = BackgroundIRFModel(dataset_name="fermi-3fhl-gc")
+    bkg_model = FoVBackgroundModel(dataset_name="fermi-3fhl-gc")
 
     exposure = Map.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
@@ -611,7 +611,7 @@ def test_stack(sky_model):
 
     bkg1 = Map.from_geom(geom)
     bkg1.data += 0.2
-    background_model1 = BackgroundIRFModel(dataset_name="dataset-1")
+    background_model1 = FoVBackgroundModel(dataset_name="dataset-1")
 
     cnt1 = Map.from_geom(geom)
     cnt1.data = 1.0 * np.ones(cnt1.data.shape)
@@ -635,7 +635,7 @@ def test_stack(sky_model):
 
     bkg2 = Map.from_geom(geom)
     bkg2.data = 0.1 * np.ones(bkg2.data.shape)
-    background_model2 = BackgroundIRFModel(dataset_name="dataset-2")
+    background_model2 = FoVBackgroundModel(dataset_name="dataset-2")
 
     cnt2 = Map.from_geom(geom)
     cnt2.data = 1.0 * np.ones(cnt2.data.shape)
@@ -1140,7 +1140,7 @@ def test_map_dataset_geom(geom, sky_model):
 def test_names(geom, geom_etrue, sky_model):
     m = Map.from_geom(geom)
     m.quantity = 0.2 * np.ones(m.data.shape)
-    background_model1 = BackgroundIRFModel(dataset_name="test")
+    background_model1 = FoVBackgroundModel(dataset_name="test")
     assert background_model1.name == "test-bkg"
 
     c_map1 = Map.from_geom(geom)

@@ -149,7 +149,7 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
     test_dataset = obs_dataset.copy(name="test-fov")
 
     # Putting negative background model to prevent convergence
-    test_dataset._background.data *= -1
+    test_dataset.background.data *= -1
     dataset = fov_bkg_maker.run(test_dataset)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
@@ -162,7 +162,7 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
 
     test_dataset = obs_dataset.copy()
     # Putting negative background model to prevent correct scaling
-    test_dataset._background.data *= -1
+    test_dataset.background.data *= -1
     dataset = fov_bkg_maker.run(test_dataset)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model

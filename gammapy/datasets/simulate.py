@@ -7,7 +7,7 @@ from astropy.table import Table
 import gammapy
 from gammapy.data import EventList
 from gammapy.maps import MapCoord
-from gammapy.modeling.models import BackgroundIRFModel, ConstantTemporalModel
+from gammapy.modeling.models import FoVBackgroundModel, ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
 
@@ -67,7 +67,7 @@ class MapDatasetEventSampler:
         """
         events_all = []
         for idx, model in enumerate(dataset.models):
-            if isinstance(model, BackgroundIRFModel):
+            if isinstance(model, FoVBackgroundModel):
                 continue
 
             evaluator = dataset.evaluators.get(model)

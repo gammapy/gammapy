@@ -6,7 +6,7 @@ import numpy as np
 import logging
 from astropy.table import vstack, Table
 from astropy import units as u
-from gammapy.modeling.models import Models, ProperModels, BackgroundIRFModel
+from gammapy.modeling.models import Models, ProperModels, FoVBackgroundModel
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from gammapy.data import GTI
@@ -243,7 +243,7 @@ class Datasets(collections.abc.MutableSequence):
             models = []
 
             for model in dataset.models:
-                if isinstance(model, BackgroundIRFModel):
+                if isinstance(model, FoVBackgroundModel):
                     models.append(dataset_sliced.background_model)
                 else:
                     models.append(model)

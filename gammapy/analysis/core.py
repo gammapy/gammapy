@@ -18,7 +18,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import BackgroundIRFModel, Models
+from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]

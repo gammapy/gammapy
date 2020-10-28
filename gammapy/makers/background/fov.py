@@ -2,7 +2,7 @@
 """FoV background estimation."""
 import logging
 from gammapy.maps import Map
-from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY, BackgroundIRFModel
+from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY, FoVBackgroundModel
 from ..core import Maker
 
 __all__ = ["FoVBackgroundMaker"]

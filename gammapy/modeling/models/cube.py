@@ -402,8 +402,8 @@ class SkyModel(SkyModelBase):
         return str_.expandtabs(tabsize=2)
 
 
-class BackgroundIRFModel(Model):
-    """Background IRF model
+class FoVBackgroundModel(Model):
+    """Field of view background model
 
     Parameters
     ----------
@@ -413,7 +413,7 @@ class BackgroundIRFModel(Model):
         Dataset name
 
     """
-    tag = "BackgroundIRFModel"
+    tag = "FoVBackgroundModel"
 
     def __init__(self, spectral_model=None, dataset_name=None):
         if dataset_name is None:
@@ -496,10 +496,10 @@ class BackgroundIRFModel(Model):
         datasets_names = data.get("datasets_names")
 
         if datasets_names is None:
-            raise ValueError("BackgroundIRFModel must define a dataset name")
+            raise ValueError("FoVBackgroundModel must define a dataset name")
 
         if len(datasets_names) > 1:
-            raise ValueError("BackgroundIRFModel can only be assigned to one dataset")
+            raise ValueError("FoVBackgroundModel can only be assigned to one dataset")
 
         return cls(
             spectral_model=spectral_model,

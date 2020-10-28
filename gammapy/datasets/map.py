@@ -16,7 +16,7 @@ from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import (
     BackgroundModel,
-    BackgroundIRFModel,
+    FoVBackgroundModel,
     Models,
     ProperModels,
 )
@@ -171,7 +171,7 @@ class MapDataset(Dataset):
 
         # TODO: should we rely on pre-defined background models?
         if models is None and background:
-            models = [BackgroundIRFModel(dataset_name=self.name)]
+            models = [FoVBackgroundModel(dataset_name=self.name)]
 
         self.models = models
         self.gti = gti
@@ -299,7 +299,7 @@ class MapDataset(Dataset):
                     del self._evaluators[key]
 
             for model in models:
-                if isinstance(model, BackgroundIRFModel):
+                if isinstance(model, FoVBackgroundModel):
                     continue
 
                 evaluator = self._evaluators.get(model)
