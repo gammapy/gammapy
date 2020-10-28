@@ -321,16 +321,6 @@ class MapDataset(Dataset):
         return self._evaluators
 
     @property
-    def geoms(self):
-        """Map geoms contained in the dataset"""
-        return {
-            "geom": self.counts.geom,
-            "geom_exposure": self.exposure.geom,
-            "geom_edisp": self.edisp.edisp_map.geom,
-            "geom_psf": self.psf.psf_map.geom,
-        }
-
-    @property
     def _geom(self):
         """Main analysis geometry"""
         if self.counts is not None:
