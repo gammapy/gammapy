@@ -266,10 +266,6 @@ relate to the fit statistic profile.
 .. plot:: stats/plot_cash_errors.py
 
 
-Note that confidence intervals can be computed in a more robust manner following [Feldman1998]_.
-See :ref:`feldman_cousins`.
-
-
 These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
 [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
 
@@ -281,7 +277,6 @@ Using `gammapy.stats`
 
     fit_statistics
     wstat_derivation
-    feldman_cousins
 
 Reference/API
 =============
