@@ -405,6 +405,10 @@ class SkyModel(SkyModelBase):
 class FoVBackgroundModel(Model):
     """Field of view background model
 
+    The background model holds the correction parameters applied to
+    the instrumental background attached to a `MapDataset` or
+    `SpectrumDataset`.
+
     Parameters
     ----------
     spectral_model : `~gammapy.modeling.models.SpectralModel`
@@ -423,6 +427,9 @@ class FoVBackgroundModel(Model):
 
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
+
+        if not spectral_model.is_norm_spectral_model:
+            raise ValueError("A norm spectral model is required.")
 
         self._spectral_model = spectral_model
         super().__init__()
