@@ -48,10 +48,7 @@ def spectrum_dataset():
 
     background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis])
 
-    bkg_model = BackgroundModel(background, name=name + "-bkg", datasets_names=[name])
-    bkg_model.spectral_model.norm.frozen = True
-
-    models = Models([bkg_model, model])
+    models = Models([model])
     exposure = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])
     exposure.quantity = u.Quantity("1 cm2") * livetime
     bkg_rate = np.ones(30) / u.s
@@ -63,7 +60,7 @@ def spectrum_dataset():
     gti = GTI.create(start, stop, reference_time=t_ref)
 
     dataset = SpectrumDataset(
-        models=models, exposure=exposure, name=name, gti=gti,
+        models=models, exposure=exposure, background=background, name=name, gti=gti,
     )
     dataset.fake(random_state=23)
     return dataset
@@ -169,8 +166,8 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0
     assert empty_spectrum_dataset.data_shape[0] == 2
-    assert empty_spectrum_dataset.background_model.map.data.sum() == 0
-    assert empty_spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
+    assert empty_spectrum_dataset.npred_background().data.sum() == 0
+    assert empty_spectrum_dataset.npred_background().geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert (
         empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
@@ -203,14 +200,14 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     )
     edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
 
-    background = spectrum_dataset.background_model.map.copy()
+    background = spectrum_dataset.npred_background().copy()
 
     spectrum_dataset1 = SpectrumDataset(
         name="ds1",
         counts=spectrum_dataset.counts.copy(),
         exposure=exposure.copy(),
         edisp=edisp.copy(),
-        models=BackgroundModel(background, name="ds1-bkg", datasets_names=["ds1"]),
+        background=background,
         gti=gti.copy()
     )
 
@@ -232,7 +229,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         counts=spectrum_dataset.counts.copy(),
         exposure=exposure2,
         edisp=edisp,
-        models=BackgroundModel(bkg2, name="ds2-bkg", datasets_names=["ds2"]),
+        background=bkg2,
         mask_safe=safe_mask2,
         gti=gti2
     )
@@ -244,9 +241,9 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     assert_allclose(spectrum_dataset1.counts.data[0], 141363)
     assert_allclose(spectrum_dataset1.exposure.data[0], 4.755644e+09)
     assert_allclose(
-        spectrum_dataset1.background_model.map.data[1:], 3 * background.data[1:]
+        spectrum_dataset1.npred_background().data[1:], 3 * background.data[1:]
     )
-    assert_allclose(spectrum_dataset1.background_model.map.data[0], background.data[0])
+    assert_allclose(spectrum_dataset1.npred_background().data[0], background.data[0])
 
     assert_allclose(
         spectrum_dataset1.exposure.quantity.to_value("m2s"),
@@ -446,7 +443,7 @@ class TestSpectrumOnOff:
         ds = self.dataset.to_spectrum_dataset()
 
         assert isinstance(ds, SpectrumDataset)
-        assert_allclose(ds.background_model.map.data.sum(), 4)
+        assert_allclose(ds.npred_background().data.sum(), 4)
 
     @requires_dependency("matplotlib")
     def test_peek(self):
@@ -555,10 +552,7 @@ class TestSpectrumOnOff:
 
         background = RegionNDMap.from_geom(dataset.counts.geom)
         background.data += 1
-        background_model = BackgroundModel(
-            background, name="test-bkg", datasets_names="test"
-        )
-        dataset.fake(background_model=background_model, random_state=314)
+        dataset.fake(npred_background=background, random_state=314)
 
         assert real_dataset.counts.data.shape == dataset.counts.data.shape
         assert real_dataset.counts_off.data.shape == dataset.counts_off.data.shape

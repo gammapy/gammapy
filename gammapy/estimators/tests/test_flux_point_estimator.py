@@ -59,7 +59,7 @@ def simulate_spectrum_dataset(model, random_state=0):
     dataset.models = model
     dataset.fake(
         random_state=random_state,
-        background_model=BackgroundModel(bkg_npred, datasets_names="test_onoff"),
+        npred_background=bkg_npred,
     )
     return dataset
 

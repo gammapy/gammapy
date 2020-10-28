@@ -7,7 +7,6 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
-    BackgroundModel,
     PowerLawSpectralModel,
     GaussianSpatialModel,
     SkyModel,
@@ -30,7 +29,7 @@ def simple_dataset():
     dataset = MapDataset.create(geom)
     dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.counts += 2
-    dataset.background_model.map += 1
+    dataset.background += 1
     return dataset
 
 
@@ -57,10 +56,7 @@ def test_compute_lima_image():
     counts = image_to_cube(counts, "1 GeV", "100 GeV")
     background = Map.read(filename, hdu="background")
     background = image_to_cube(background, "1 GeV", "100 GeV")
-    background_model = BackgroundModel(background)
-    dataset = MapDataset(counts=counts)
-    background_model.datasets_names = [dataset.name]
-    dataset.models = background_model
+    dataset = MapDataset(counts=counts, background=background)
 
     estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
     result_lima = estimator.run(dataset)

@@ -2,6 +2,7 @@
 """FoV background estimation."""
 import logging
 from gammapy.maps import Map
+from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY, FoVBackgroundModel
 from ..core import Maker
 
 __all__ = ["FoVBackgroundMaker"]
@@ -34,7 +35,8 @@ class FoVBackgroundMaker(Maker):
         if method in ["fit", "scale"]:
             self.method = method
         else:
-            raise ValueError(f"Incorrect method for FoVBackgroundMaker: {method}.")
+            raise ValueError(f"Not a valid method for FoVBackgroundMaker: {method}.")
+
         self.exclusion_mask = exclusion_mask
 
     def run(self, dataset, observation=None):
@@ -51,9 +53,10 @@ class FoVBackgroundMaker(Maker):
         mask_fit = dataset.mask_fit
         dataset.mask_fit = self._reproject_exclusion_mask(dataset)
 
-        if self.method is "fit":
+        if self.method == "fit":
             self._fit_bkg(dataset)
         else:
+            # always scale the background first
             self._scale_bkg(dataset)
 
         dataset.mask_fit = mask_fit
@@ -87,10 +90,8 @@ class FoVBackgroundMaker(Maker):
 
         fit = Fit(datasets)
         fit_result = fit.run()
-        if fit_result.success is False:
-            log.info(
-                f"FoVBackgroundMaker failed. No fit convergence for {dataset.name}."
-            )
+        if not fit_result.success:
+            log.info(f"Fit did not converge for {dataset.name}.")
 
         # Unfreeze parameters
         for idx, par in enumerate(datasets.parameters):
@@ -100,7 +101,7 @@ class FoVBackgroundMaker(Maker):
         """Fit the FoV background model on the dataset counts data"""
         mask = dataset.mask
         count_tot = dataset.counts.data[mask].sum()
-        bkg_tot = dataset.background_model.map.data[mask].sum()
+        bkg_tot = dataset.npred_background().data[mask].sum()
 
         if count_tot <= 0.0:
             log.info(
@@ -111,5 +112,5 @@ class FoVBackgroundMaker(Maker):
                 f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}."
             )
         else:
-            scale = count_tot / bkg_tot
-            dataset.background_model.spectral_model.norm.value = scale
+            value = count_tot / bkg_tot
+            dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = value

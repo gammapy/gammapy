@@ -72,7 +72,6 @@ class TemporalModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             axis
         """
-
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax

@@ -203,12 +203,7 @@ class SpectrumDatasetMaker(Maker):
             kwargs["counts"] = self.make_counts(dataset.counts.geom, observation)
 
         if "background" in self.selection:
-            bkg = self.make_background(dataset.counts.geom, observation)
-            bkg_model = BackgroundModel(
-                bkg, name=dataset.name + "-bkg", datasets_names=[dataset.name],
-            )
-            bkg_model.spectral_model.norm.frozen = True
-            kwargs["models"] = bkg_model
+            kwargs["background"] = self.make_background(dataset.counts.geom, observation)
 
         if "exposure" in self.selection:
             kwargs["exposure"] = self.make_exposure(dataset.exposure.geom, observation)

@@ -402,6 +402,118 @@ class SkyModel(SkyModelBase):
         return str_.expandtabs(tabsize=2)
 
 
+class FoVBackgroundModel(Model):
+    """Field of view background model
+
+    The background model holds the correction parameters applied to
+    the instrumental background attached to a `MapDataset` or
+    `SpectrumDataset`.
+
+    Parameters
+    ----------
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
+        Normalized spectral model.
+    dataset_name : str
+        Dataset name
+
+    """
+    tag = "FoVBackgroundModel"
+
+    def __init__(self, spectral_model=None, dataset_name=None):
+        if dataset_name is None:
+            raise ValueError("Dataset name a is required argument")
+
+        self.datasets_names = [dataset_name]
+
+        if spectral_model is None:
+            spectral_model = PowerLawNormSpectralModel()
+
+        if not spectral_model.is_norm_spectral_model:
+            raise ValueError("A norm spectral model is required.")
+
+        self._spectral_model = spectral_model
+        super().__init__()
+
+    @property
+    def spectral_model(self):
+        """Spectral norm model"""
+        return self._spectral_model
+
+    @property
+    def name(self):
+        """Model name"""
+        return self.datasets_names[0] + "-bkg"
+
+    @property
+    def parameters(self):
+        """Model parameters"""
+        parameters = []
+        parameters.append(self.spectral_model.parameters)
+        return Parameters.from_stack(parameters)
+
+    def __str__(self):
+        str_ = self.__class__.__name__ + "\n\n"
+        str_ += "\t{:26}: {}\n".format("Name", self.name)
+        str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
+        str_ += "\t{:26}: {}\n".format(
+            "Spectral model type", self.spectral_model.__class__.__name__
+        )
+        str_ += "\tParameters:\n"
+        info = _get_parameters_str(self.parameters)
+        lines = info.split("\n")
+        str_ += "\t" + "\n\t".join(lines[:-1])
+
+        str_ += "\n\n"
+        return str_.expandtabs(tabsize=2)
+
+    def evaluate_geom(self, geom):
+        """Evaluate map"""
+        energy = geom.axes["energy"].center[:, np.newaxis, np.newaxis]
+        return self.evaluate(energy=energy)
+
+    def evaluate(self, energy):
+        """Evaluate model"""
+        return self.spectral_model(energy)
+
+    def to_dict(self, full_output=False):
+        data = {}
+        data["type"] = self.tag
+        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)
+        data["datasets_names"] = self.datasets_names
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create model from dict
+
+        Parameters
+        ----------
+        data : dict
+            Data dictionary
+        """
+        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+
+        spectral_data = data.get("spectral")
+        if spectral_data is not None:
+            model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
+            spectral_model = model_class.from_dict(spectral_data)
+        else:
+            spectral_model = None
+
+        datasets_names = data.get("datasets_names")
+
+        if datasets_names is None:
+            raise ValueError("FoVBackgroundModel must define a dataset name")
+
+        if len(datasets_names) > 1:
+            raise ValueError("FoVBackgroundModel can only be assigned to one dataset")
+
+        return cls(
+            spectral_model=spectral_model,
+            dataset_name=datasets_names[0],
+        )
+
+
 class BackgroundModel(Model):
     """Background model.
 

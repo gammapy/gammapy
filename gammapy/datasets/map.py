@@ -16,6 +16,7 @@ from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import (
     BackgroundModel,
+    FoVBackgroundModel,
     Models,
     ProperModels,
 )
@@ -107,6 +108,8 @@ class MapDataset(Dataset):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
+    background : `~gammapy.maps.WcsNDMap`
+        Background cube
     mask_fit : `~gammapy.maps.WcsNDMap`
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
@@ -132,29 +135,31 @@ class MapDataset(Dataset):
     counts = LazyFitsData(cache=True)
     exposure = LazyFitsData(cache=True)
     edisp = LazyFitsData(cache=True)
+    background = LazyFitsData(cache=True)
     psf = LazyFitsData(cache=True)
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
-    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe"]
+    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe", "background"]
 
     def __init__(
         self,
         models=None,
         counts=None,
         exposure=None,
-        mask_fit=None,
+        background=None,
         psf=None,
         edisp=None,
-        name=None,
         mask_safe=None,
+        mask_fit=None,
         gti=None,
         meta_table=None,
+        name=None,
     ):
         self._name = make_name(name)
-        self._background_model = None
         self.counts = counts
         self.exposure = exposure
+        self.background = background
         self.mask_fit = mask_fit
         self.psf = psf
 
@@ -163,9 +168,22 @@ class MapDataset(Dataset):
 
         self.edisp = edisp
         self.mask_safe = mask_safe
+
+        # TODO: should we rely on pre-defined background models?
+        if models is None and background:
+            models = [FoVBackgroundModel(dataset_name=self.name)]
+
         self.models = models
         self.gti = gti
         self.meta_table = meta_table
+
+    # TODO: keep or remove?
+    @property
+    def background_model(self):
+        try:
+            return self.models[f"{self.name}-bkg"]
+        except ValueError:
+            pass
 
     @property
     def name(self):
@@ -250,19 +268,15 @@ class MapDataset(Dataset):
 
         return geoms
 
-
     @property
     def models(self):
         """Models (`~gammapy.modeling.models.Models`)."""
         return ProperModels(self)
 
     @property
-    def background_model(self):
-        return self._background_model
-
-    @property
     def excess(self):
-        return self.counts - self.background_model.evaluate()
+        """Excess"""
+        return self.counts - self.background
 
     @models.setter
     def models(self, models):
@@ -271,23 +285,13 @@ class MapDataset(Dataset):
         else:
             self._models = Models(models)
 
-        # TODO: clean this up (probably by removing)
-        for model in self.models:
-            if isinstance(model, BackgroundModel):
-                if model.datasets_names is not None:
-                    if self.name in model.datasets_names:
-                        self._background_model = model
-                        break
-        else:
-            if not isinstance(self, MapDatasetOnOff):
-                log.warning(f"No background model defined for dataset {self.name}")
         self._evaluators = {}
 
     @property
     def evaluators(self):
         """Model evaluators"""
-
         models = self.models
+
         if models:
             keys = list(self._evaluators.keys())
             for key in keys:
@@ -295,6 +299,9 @@ class MapDataset(Dataset):
                     del self._evaluators[key]
 
             for model in models:
+                if isinstance(model, FoVBackgroundModel):
+                    continue
+
                 evaluator = self._evaluators.get(model)
 
                 if evaluator is None:
@@ -314,19 +321,47 @@ class MapDataset(Dataset):
         return self._evaluators
 
     @property
+    def _geom(self):
+        """Main analysis geometry"""
+        if self.counts is not None:
+            return self.counts.geom
+        elif self.background is not None:
+            return self.background.geom
+        elif self.mask_safe is not None:
+            return self.mask_safe.geom
+        elif self.mask_fit is not None:
+            return self.mask_fit.geom
+        else:
+            raise ValueError(
+                "Either 'counts', 'background', 'mask_fit'"
+                " or 'mask_safe' must be defined."
+            )
+
+    @property
     def data_shape(self):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
 
     def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
-        npred_total = Map.from_geom(self._geom, dtype=float)
+        npred_total = self.npred_sig()
 
-        for evaluator in self.evaluators.values():
-            if evaluator.contributes:
-                npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+        if self.background:
+            npred_total += self.npred_background()
+
         return npred_total
+
+    def npred_background(self):
+        """Background """
+        background = self.background
+
+        if self.background_model and background:
+            values = self.background_model.evaluate_geom(
+                geom=self.background.geom
+            )
+            background = background * values
+
+        return background
 
     def npred_sig(self, model=None):
         """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
@@ -344,12 +379,17 @@ class MapDataset(Dataset):
         npred_sig: `gammapy.maps.Map`
             Map of the predicted signal counts
         """
-        if model is None:
-            if self.background_model is None:
-                return self.npred()
-            return self.npred() - self.background_model.evaluate()
-        else:
-            return self.evaluators.get(model).compute_npred()
+        npred_total = Map.from_geom(self._geom, dtype=float)
+
+        for evaluator in self.evaluators.values():
+            if model is evaluator.model:
+                return evaluator.compute_npred()
+
+            if evaluator.contributes:
+                npred = evaluator.compute_npred()
+                npred_total.stack(npred)
+
+        return npred_total
 
     @classmethod
     def from_geoms(
@@ -390,11 +430,7 @@ class MapDataset(Dataset):
         kwargs = kwargs.copy()
         kwargs["name"] = name
         kwargs["counts"] = Map.from_geom(geom, unit="")
-
-        background = Map.from_geom(geom, unit="")
-        kwargs["models"] = Models(
-            [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
-        )
+        kwargs["background"] = Map.from_geom(geom, unit="")
         kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
 
         if geom_edisp.axes[0].name.lower() == "energy":
@@ -507,8 +543,8 @@ class MapDataset(Dataset):
         if self.exposure:
             self.exposure *= self.mask_safe_image.data
 
-        if self.background_model:
-            self.background_model.map *= self.mask_safe
+        if self.stat_type == "cash" and self.background:
+            self.background *= self.mask_safe
 
         if self.psf:
             self.psf.psf_map *= self.mask_safe_psf.data
@@ -562,22 +598,18 @@ class MapDataset(Dataset):
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
-
-            # TODO: check whether this can be improved e.g. handling this in GTI
+             # TODO: check whether this can be improved e.g. handling this in GTI
             if "livetime" in other.exposure.meta:
                 if "livetime" in self.exposure.meta:
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
                 else:
                     self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
 
-        # TODO: unify background model handling
-        if other.stat_type == "wstat":
-            background_model = BackgroundModel(other.background)
-        else:
-            background_model = other.background_model
-
-        if self.background_model and background_model:
-            self.background_model.stack(background_model, weights=other.mask_safe)
+        if self.stat_type == "cash":
+            if self.background and other.background:
+                background = self.npred_background() * self.mask_safe
+                background.stack(other.npred_background(), other.mask_safe)
+                self.background = background
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
@@ -730,7 +762,7 @@ class MapDataset(Dataset):
                 yerr = np.sqrt((counts_spec.data + npred_spec.data).flatten())
             else:
                 yerr = np.ones_like(residuals.data.flatten())
-            ax = residuals.plot(color="black", yerr=yerr, fmt=".", capsize=2, lw=1)
+            ax = residuals.plot(yerr=yerr, fmt=".", capsize=2, lw=1)
             ax.set_yscale("linear")
             ax.axhline(0, color="black", lw=0.5)
             ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
@@ -793,8 +825,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
 
-        if self.background_model is not None:
-            hdulist += self.background_model.map.to_hdulist(hdu="background")[
+        if self.background is not None:
+            hdulist += self.background.to_hdulist(hdu="background")[
                 exclude_primary
             ]
 
@@ -868,19 +900,13 @@ class MapDataset(Dataset):
             kwargs["exposure"] = exposure
 
         if "BACKGROUND" in hdulist:
-            background_map = Map.from_hdulist(hdulist, hdu="background")
-            kwargs["models"] = Models(
-                [
-                    BackgroundModel(
-                        background_map, datasets_names=[name], name=name + "-bkg"
-                    )
-                ]
-            )
+            kwargs["background"] = Map.from_hdulist(hdulist, hdu="background")
 
         if "EDISP_MATRIX" in hdulist:
             kwargs["edisp"] = EDispKernel.from_hdulist(
                 hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
             )
+
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp")
             try:
@@ -941,7 +967,7 @@ class MapDataset(Dataset):
             pass
 
         path = make_path(filename)
-        for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe"]:
+        for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe", "background"]:
             kwargs[hdu_name] = HDULocation(
                 hdu_class="map",
                 file_dir=path.parent,
@@ -965,18 +991,6 @@ class MapDataset(Dataset):
             hdu_name="PSF",
             cache=cache,
         )
-
-        hduloc = HDULocation(
-            hdu_class="map",
-            file_dir=path.parent,
-            file_name=path.name,
-            hdu_name="BACKGROUND",
-            cache=cache,
-        )
-
-        kwargs["models"] = [
-            BackgroundModel(hduloc, datasets_names=[name], name=name + "-bkg")
-        ]
 
         return cls(**kwargs)
 
@@ -1009,22 +1023,10 @@ class MapDataset(Dataset):
                 return cls.from_hdulist(hdulist, name=name)
 
     @classmethod
-    def from_dict(cls, data, models, lazy=False, cache=True):
+    def from_dict(cls, data, lazy=False, cache=True):
         """Create from dicts and models list generated from YAML serialization."""
-
-        # TODO: remove handling models here
         filename = make_path(data["filename"])
         dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
-
-        for model in models:
-            if (
-                isinstance(model, BackgroundModel)
-                and model.filename is None
-                and dataset.name == model.datasets_names[0]
-            ):
-                model.map = dataset.background_model.map
-
-        dataset.models = models
         return dataset
 
     def to_dict(self, filename=""):
@@ -1059,10 +1061,8 @@ class MapDataset(Dataset):
         info["counts"] = counts
 
         background = np.nan
-        if self.background_model:
-            background = self.background_model.evaluate().data[mask].sum()
-        elif self.background:
-            background = self.background.data[mask].sum()
+        if self.background:
+            background = self.npred_background().data[mask].sum()
 
         info["background"] = background
 
@@ -1164,11 +1164,10 @@ class MapDataset(Dataset):
         if self.counts is not None:
             kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum, weights=self.mask_safe)
 
-        if self.background_model is not None:
-            bkg = self.background_model.evaluate().get_spectrum(on_region, np.sum, weights=self.mask_safe)
-            bkg_model = BackgroundModel(bkg, name=name + "-bkg", datasets_names=[name])
-            bkg_model.spectral_model.norm.frozen = True
-            kwargs["models"] = Models([bkg_model])
+        if self.stat_type == "cash" and self.background is not None:
+            kwargs["background"] = self.npred_background().get_spectrum(
+                on_region, func=np.sum, weights=self.mask_safe
+            )
 
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.get_spectrum(on_region, np.mean)
@@ -1234,10 +1233,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
-        if self.background_model is not None:
-            model = self.background_model.cutout(**cutout_kwargs, name=name + "-bkg")
-            model.datasets_names = [name]
-            kwargs["models"] = model
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().cutout(**cutout_kwargs)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1293,12 +1290,10 @@ class MapDataset(Dataset):
             else:
                 kwargs["exposure"] = self.exposure.copy()
 
-        if self.background_model is not None:
-            m = self.background_model.evaluate().downsample(
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
-            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
-
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
@@ -1351,9 +1346,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
-        if self.background_model is not None:
-            m = self.background_model.evaluate().pad(pad_width=pad_width, mode=mode)
-            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+        if self.background is not None:
+            kwargs["background"] = self.npred_background().pad(pad_width=pad_width, mode=mode)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.copy()
@@ -1398,9 +1392,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
-        if self.background_model is not None:
-            m = self.background_model.evaluate().slice_by_idx(slices=slices)
-            kwargs["models"] = BackgroundModel(map=m, datasets_names=[name])
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().slice_by_idx(slices=slices)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
@@ -1463,15 +1456,10 @@ class MapDataset(Dataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-        if self.background_model is not None:
-            background = self.background_model.evaluate()
-            background = background.resample_axis(
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background().resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )
-            model = BackgroundModel(
-                background, datasets_names=[name], name=f"{name}-bkg"
-            )
-            kwargs["models"] = [model]
 
         # Mask_safe or mask_irf??
         if isinstance(self.edisp, EDispKernelMap):
@@ -1575,7 +1563,6 @@ class MapDatasetOnOff(MapDataset):
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
-        self._background_model = None
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
@@ -1607,16 +1594,26 @@ class MapDatasetOnOff(MapDataset):
 
     @property
     def alpha(self):
-        """Exposure ratio between signal and background regions"""
+        """Exposure ratio between signal and background regions
+
+        Returns
+        -------
+        alpha : `Map`
+            Alpha map
+        """
         alpha = self.acceptance / self.acceptance_off
         alpha.data = np.nan_to_num(alpha.data)
         return alpha
 
-    @property
-    def background(self):
-        """`
-        Background counts estimated from the marginalized likelihood estimate.
+    def npred_background(self):
+        """Prediced background counts estimated from the marginalized likelihood estimate.
+
         See :ref:`wstat`
+
+        Returns
+        -------
+        npred_background : `Map`
+            Predicted background counts
         """
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
             n_on=self.counts.data,
@@ -1628,36 +1625,9 @@ class MapDatasetOnOff(MapDataset):
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
-    def counts_off_normalised(self):
+    def background(self):
         """ alpha * n_off"""
         return self.alpha * self.counts_off
-
-    @property
-    def excess(self):
-        """Excess (counts - alpha * counts_off)"""
-        return self.counts - self.counts_off_normalised
-
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
-            Else, the total signal counts are returned.
-
-        Parameters
-        -------------
-        model: `~gammapy.modeling.models.Models`, optional
-           The model to computed the npred for.
-
-        Returns
-        ----------
-        npred_sig: `gammapy.maps.WcsNDMap`
-        """
-        if model is None:
-            return super().npred()
-        else:
-            return super().npred_sig(model=model)
-
-    def npred(self):
-        """Predicted counts from source + background(`WcsNDMap`)."""
-        return self.npred_sig() + self.background
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -1752,9 +1722,9 @@ class MapDatasetOnOff(MapDataset):
 
         """
 
-        if counts_off is None and dataset.background_model is not None:
+        if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.background_model.evaluate() / alpha
+            counts_off = dataset.npred_background() / alpha
 
         return cls(
             counts=dataset.counts,
@@ -1787,8 +1757,6 @@ class MapDatasetOnOff(MapDataset):
 
         name = make_name(name)
 
-        background_model = BackgroundModel(self.counts_off * self.alpha)
-        background_model.datasets_names = [name]
         return MapDataset(
             counts=self.counts,
             exposure=self.exposure,
@@ -1798,7 +1766,7 @@ class MapDatasetOnOff(MapDataset):
             gti=self.gti,
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
-            models=background_model,
+            background=self.counts_off * self.alpha,
             meta_table=self.meta_table,
         )
 
@@ -1837,8 +1805,8 @@ class MapDatasetOnOff(MapDataset):
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
-        tmp_factor = self.counts_off_normalised * self.mask_safe
-        tmp_factor.stack(other.counts_off_normalised, weights=other.mask_safe)
+        tmp_factor = self.background * self.mask_safe
+        tmp_factor.stack(other.background, weights=other.mask_safe)
 
         # Stack the off counts (in place)
         self.counts_off.data[~self.mask_safe.data] = 0
@@ -1853,7 +1821,7 @@ class MapDatasetOnOff(MapDataset):
         """Total likelihood given the current model parameters."""
         return Dataset.stat_sum(self)
 
-    def fake(self, background_model, random_state="random-seed"):
+    def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
 
         This method overwrites the counts defined on the dataset object.
@@ -1868,12 +1836,11 @@ class MapDatasetOnOff(MapDataset):
         npred = self.npred_sig()
         npred.data = random_state.poisson(npred.data)
 
-        npred_bkg = background_model.copy()
-        npred_bkg.data = random_state.poisson(npred_bkg.data)
+        npred_bkg = random_state.poisson(npred_background.data)
 
         self.counts = npred + npred_bkg
 
-        npred_off = background_model / self.alpha
+        npred_off = npred_background / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
         self.counts_off = npred_off
 
@@ -1887,6 +1854,9 @@ class MapDatasetOnOff(MapDataset):
         """
         hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
+
+        del hdulist["BACKGROUND"]
+        del hdulist["BACKGROUND_BANDS"]
 
         if self.counts_off is not None:
             hdulist += self.counts_off.to_hdulist(hdu="counts_off")[exclude_primary]
@@ -2055,7 +2025,7 @@ class MapDatasetOnOff(MapDataset):
 
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean, weights=self.mask_safe)
-            norm = self.counts_off_normalised.get_spectrum(on_region, np.sum, weights=self.mask_safe)
+            norm = self.background.get_spectrum(on_region, np.sum, weights=self.mask_safe)
             acceptance_off = kwargs["acceptance"] * kwargs["counts_off"] / norm
             np.nan_to_num(acceptance_off.data, copy=False)
             kwargs["acceptance_off"] = acceptance_off
@@ -2141,7 +2111,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance = self.acceptance.downsample(
                 factor=factor, preserve_counts=False, axis_name=axis_name
             )
-            factor = self.counts_off_normalised.downsample(
+            factor = self.background.downsample(
                 factor=factor,
                 preserve_counts=True,
                 axis_name=axis_name,
@@ -2227,7 +2197,7 @@ class MapDatasetOnOff(MapDataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-            norm_factor = self.counts_off_normalised.resample_axis(
+            norm_factor = self.background.resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )
 

@@ -6,7 +6,7 @@ import numpy as np
 import logging
 from astropy.table import vstack, Table
 from astropy import units as u
-from gammapy.modeling.models import Models, ProperModels, BackgroundModel
+from gammapy.modeling.models import Models, ProperModels, FoVBackgroundModel
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from gammapy.data import GTI
@@ -69,6 +69,7 @@ class Dataset(abc.ABC):
         new = copy.deepcopy(self)
         name = make_name(name)
         new._name = name
+
         # propagate new dataset name
         if new._models is not None:
             for m in new._models:
@@ -76,8 +77,6 @@ class Dataset(abc.ABC):
                     for k, d in enumerate(m.datasets_names):
                         if d == self.name:
                             m.datasets_names[k] = name
-                    if hasattr(new, "background_model") and m == new.background_model:
-                        m._name = name + "-bkg"
         return new
 
     @staticmethod
@@ -238,14 +237,13 @@ class Datasets(collections.abc.MutableSequence):
                 int(group["idx_max"][0]) + 1)
             }
 
-            name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
+            name = f"{dataset.name}-{e_min:.1f}-{e_max:.1f}"
             dataset_sliced = dataset.slice_by_idx(slices, name=name)
-
             # TODO: Simplify model handling!!!!
             models = []
 
             for model in dataset.models:
-                if isinstance(model, BackgroundModel):
+                if isinstance(model, FoVBackgroundModel):
                     models.append(dataset_sliced.background_model)
                 else:
                     models.append(model)
@@ -290,7 +288,8 @@ class Datasets(collections.abc.MutableSequence):
                 instrument = set(dataset.meta_table["TELESCOP"]).pop()
             except (KeyError, TypeError):
                 instrument = ""
-            str_ += f"\tInstrument : {instrument}\n\n"
+            str_ += f"\tInstrument : {instrument}\n"
+            str_ += f"\tModels     : {dataset.models.names}\n\n"
 
         return str_.expandtabs(tabsize=2)
 
@@ -343,8 +342,10 @@ class Datasets(collections.abc.MutableSequence):
                 data["filename"] = str(make_path(path / data["filename"]))
 
             dataset_cls = DATASET_REGISTRY.get_cls(data["type"])
-            dataset = dataset_cls.from_dict(data, models, lazy=lazy, cache=cache)
+            dataset = dataset_cls.from_dict(data, lazy=lazy, cache=cache)
+            dataset.models = models
             datasets.append(dataset)
+
         return cls(datasets)
 
     def write(self, path, prefix="", overwrite=False, write_covariance=True):

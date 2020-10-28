@@ -67,6 +67,7 @@ class SpectrumDataset(MapDataset):
         models=None,
         counts=None,
         exposure=None,
+        background=None,
         edisp=None,
         mask_safe=None,
         mask_fit=None,
@@ -83,7 +84,7 @@ class SpectrumDataset(MapDataset):
         self.mask_fit = mask_fit
         self.exposure = exposure
         self.edisp = edisp
-        self._background_model = None
+        self.background = background
         self.mask_safe = mask_safe
         self.gti = gti
         self.meta_table = meta_table
@@ -305,9 +306,6 @@ class SpectrumDataset(MapDataset):
         name = make_name(name)
         counts = RegionNDMap.create(region=region, axes=[e_reco])
         background = RegionNDMap.create(region=region, axes=[e_reco])
-        models = Models(
-            [BackgroundModel(background, name=name + "-bkg", datasets_names=[name])]
-        )
         exposure = RegionNDMap.create(region=region, axes=[e_true], unit="cm2 s")
         edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, geom=counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
@@ -316,10 +314,10 @@ class SpectrumDataset(MapDataset):
         return SpectrumDataset(
             counts=counts,
             exposure=exposure,
+            background=background,
             edisp=edisp,
             mask_safe=mask_safe,
             gti=gti,
-            models=models,
             name=name,
         )
 
@@ -334,9 +332,9 @@ class SpectrumDataset(MapDataset):
         ax1.set_title("Counts")
 
         if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            self.counts_off_normalised.plot_hist(ax=ax1, label="alpha * N_off")
-        elif self.background_model is not None:
-            self.background_model.evaluate().plot_hist(ax=ax1, label="background")
+            self.background.plot_hist(ax=ax1, label="alpha * N_off")
+        elif self.background is not None:
+            self.npred_background().plot_hist(ax=ax1, label="background")
 
         self.counts.plot_hist(ax=ax1, label="n_on")
 
@@ -420,6 +418,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         meta_table=None,
     ):
 
+        self._name = make_name(name)
+
         self.counts = counts
         self.counts_off = counts_off
 
@@ -441,11 +441,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         self.acceptance_off = acceptance_off
 
-        self._evaluators = {}
-        self._name = make_name(name)
         self.gti = gti
         self.models = models
-        self._background_model = None
 
     def __str__(self):
         str_ = super().__str__()
@@ -472,8 +469,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         return str_.expandtabs(tabsize=2)
 
-    @property
-    def background(self):
+    def npred_background(self):
         """Background counts estimated from the marginalized likelihood estimate.
          See :ref:`wstat`
          """
@@ -486,14 +482,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
-    def counts_off_normalised(self):
+    def background(self):
         """ alpha * noff"""
         return self.alpha * self.counts_off
-
-    @property
-    def excess(self):
-        """counts - alpha * off"""
-        return self.counts - self.counts_off_normalised
 
     @property
     def alpha(self):
@@ -501,29 +492,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         alpha = self.acceptance / self.acceptance_off
         np.nan_to_num(alpha.data, copy=False)
         return alpha
-
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
-        Else, the total signal counts are returned.
-
-        Parameters
-        -------------
-        model: `~gammapy.modeling.models.Models`, optional
-           The model to computed the npred for.
-
-        Returns
-        ----------
-        npred_sig: `gammapy.maps.RegionNDMap`
-            Predicted signal counts
-        """
-        if model is None:
-            return super().npred()
-        else:
-            return super().npred_sig(model=model)
-
-    def npred(self):
-        """Predicted counts from source + background(`RegionNDMap`)."""
-        return self.npred_sig() + self.background
 
     @property
     def _geom(self):
@@ -552,15 +520,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
         return np.nan_to_num(on_stat_)
 
-    def fake(self, background_model, random_state="random-seed"):
+    def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
 
         This method overwrites the counts and off counts defined on the dataset object.
 
         Parameters
         ----------
-        background_model : `~gammapy.maps.RegionNDMap`
-            Background model.
+        npred_background : `~gammapy.maps.RegionNDMap`
+            Predicted background to be used in the on region.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
@@ -569,13 +537,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         npred = self.npred_sig()
         npred.data = random_state.poisson(npred.data)
-
-        npred_bkg = background_model.evaluate().copy()
-        npred_bkg.data = random_state.poisson(npred_bkg.data)
-
+        npred_bkg = random_state.poisson(npred_background.data)
         self.counts = npred + npred_bkg
 
-        npred_off = background_model.evaluate() / self.alpha
+        npred_off = npred_background / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
         self.counts_off = npred_off
 
@@ -1063,15 +1028,13 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.to_ogip_files(outdir=outdir, overwrite=overwrite)
 
     @classmethod
-    def from_dict(cls, data, models, **kwargs):
+    def from_dict(cls, data, **kwargs):
         """Create flux point dataset from dict.
 
         Parameters
         ----------
         data : dict
             Dict containing data to create dataset from.
-        models : list of `SkyModel`
-            List of model components.
 
         Returns
         -------
@@ -1083,7 +1046,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         filename = make_path(data["filename"])
         dataset = cls.from_ogip_files(filename=filename)
         dataset.mask_fit = None
-        dataset.models = models
         return dataset
 
     @classmethod
@@ -1111,9 +1073,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             Spectrum dataset on off.
 
         """
-        if counts_off is None and dataset.background_model is not None:
+        if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.background_model.evaluate() / alpha
+            counts_off = dataset.npred_background() / alpha
 
         return cls(
             models=dataset.models,
@@ -1146,9 +1108,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
 
         name = make_name(name)
-
-        background_model = BackgroundModel(self.counts_off * self.alpha)
-        background_model.datasets_names = [name]
         return SpectrumDataset(
             counts=self.counts,
             exposure=self.exposure,
@@ -1157,8 +1116,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             gti=self.gti,
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
-            models=background_model,
             meta_table=self.meta_table,
+            background=self.background
         )
 
     def slice_by_idx(self, slices, name=None):

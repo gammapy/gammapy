@@ -187,8 +187,7 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         geom = dataset.counts.geom
-        background_spectrum = dataset.background_model.map.get_spectrum()
-
+        background_spectrum = dataset.npred_background().get_spectrum()
         idx = np.argmax(background_spectrum.data, axis=0)
         energy_axis = geom.axes["energy"]
         e_min = energy_axis.pix_to_coord(idx)
