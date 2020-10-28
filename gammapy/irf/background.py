@@ -111,9 +111,14 @@ class Background3D:
         #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
         #  For now, we suport both.
 
-        data = table[bkg_name].data[0] * data_unit
+        data = table[bkg_name].data[0].T * data_unit
         shape = (energy_axis.nbin, fov_lon_axis.nbin, fov_lat_axis.nbin)
+
+        if shape == shape[::-1]:
+            log.error("Ambiguous axes order in Background fits files!")
+
         if np.shape(data) != shape:
+            log.debug("Transposing background table on read")
             data = data.transpose()
 
         return cls(
@@ -289,9 +294,14 @@ class Background2D:
         # have a reverse order (theta, E) than recommened in GADF(E, theta)
         # For now, we suport both.
 
-        data = table[bkg_name].data[0] * data_unit
+        data = table[bkg_name].data[0].T * data_unit
         shape = (energy_axis.nbin, offset_axis.nbin)
+
+        if shape == shape[::-1]:
+            log.error("Ambiguous axes order in Background fits files!")
+
         if np.shape(data) != shape:
+            log.debug("Transposing background table on read")
             data = data.transpose()
 
         return cls(

@@ -140,15 +140,17 @@ def test_background_3D_read():
     )
     bkg = Background3D.read(filename)
     data = bkg.data.data
+    assert bkg.data.axes.names == ["energy", "fov_lon", "fov_lat"]
     assert data.shape == (21, 36, 36)
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
 @requires_data()
 def test_background_3D_read_gadf():
-    filename = "$GAMMAPY_DATA/tests/bkg_3d_full_example.fits"
+    filename = "$GAMMAPY_DATA/tests/irf/bkg_3d_full_example.fits"
     bkg = Background3D.read(filename)
     data = bkg.data.data
+    assert bkg.data.axes.names == ["energy", "fov_lon", "fov_lat"]
     assert data.shape == (20, 15, 15)
     assert data.unit == "s-1 MeV-1 sr-1"
 
@@ -224,10 +226,11 @@ def test_background_2d_read_write(tmp_path, bkg_2d):
 
 @requires_data()
 def test_background_2D_read_gadf():
-    filename = "$GAMMAPY_DATA/tests/bkg_2d_full_example.fits"
+    filename = "$GAMMAPY_DATA/tests/irf/bkg_2d_full_example.fits"
     bkg = Background2D.read(filename)
     data = bkg.data.data
     assert data.shape == (20, 5)
+    assert bkg.data.axes.names == ["energy", "offset"]
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
