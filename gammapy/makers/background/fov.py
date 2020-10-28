@@ -101,7 +101,7 @@ class FoVBackgroundMaker(Maker):
         """Fit the FoV background model on the dataset counts data"""
         mask = dataset.mask
         count_tot = dataset.counts.data[mask].sum()
-        bkg_tot = dataset.background.data[mask].sum()
+        bkg_tot = dataset.npred_background.data[mask].sum()
 
         if count_tot <= 0.0:
             log.info(

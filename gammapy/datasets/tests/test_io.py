@@ -24,7 +24,7 @@ def test_datasets_to_io(tmp_path):
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
 
-    assert_allclose(dataset0.background.data.sum(), 15726.8, atol=0.1)
+    assert_allclose(dataset0.npred_background.data.sum(), 15726.8, atol=0.1)
 
     assert dataset0.background_model.name == "gc-bkg"
 
@@ -61,7 +61,7 @@ def test_datasets_to_io(tmp_path):
     assert_allclose(dataset0.exposure.data.sum(), 8.057342e+12, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
-    assert_allclose(dataset0.background.data.sum(), 15726.8, atol=0.1)
+    assert_allclose(dataset0.npred_background.data.sum(), 15726.8, atol=0.1)
 
     dataset_copy = dataset0.copy(name="dataset0-copy")
     assert dataset_copy.background_model.datasets_names == ["dataset0-copy"]

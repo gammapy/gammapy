@@ -29,7 +29,7 @@ def simple_dataset():
     dataset = MapDataset.create(geom)
     dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.counts += 2
-    dataset.background += 1
+    dataset.npred_background += 1
     return dataset
 
 

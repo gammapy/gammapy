@@ -215,8 +215,8 @@ def test_exclusion_region(tmp_path):
     exclusion_mask.data = mask.astype(int)
     filename = tmp_path / "exclusion.fits"
     exclusion_mask.write(filename)
-    config.datasets.background.method = "reflected"
-    config.datasets.background.exclusion = filename
+    config.datasets.npred_background.method = "reflected"
+    config.datasets.npred_background.exclusion = filename
     analysis.get_observations()
     analysis.get_datasets()
     assert len(analysis.datasets) == 2
@@ -230,7 +230,7 @@ def test_exclusion_region(tmp_path):
     exclusion.data = geom.region_mask([exclusion_region], inside=False).astype(int)
     filename = tmp_path / "exclusion3d.fits"
     exclusion.write(filename)
-    config.datasets.background.exclusion = filename
+    config.datasets.npred_background.exclusion = filename
     analysis.get_datasets()
     assert len(analysis.datasets) == 1
 
@@ -267,23 +267,23 @@ def test_analysis_1d_stacked():
 @requires_data()
 def test_analysis_ring_background():
     config = get_example_config("3d")
-    config.datasets.background.method = "ring"
-    config.datasets.background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
+    config.datasets.npred_background.method = "ring"
+    config.datasets.npred_background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
     config.datasets.geom.axes.energy.nbins = 1
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
-        analysis.datasets[0].background.data[0, 10, 10], 0.091799, rtol=1e-2
+        analysis.datasets[0].npred_background.data[0, 10, 10], 0.091799, rtol=1e-2
     )
 
 
 @requires_data()
 def test_analysis_ring_3d():
     config = get_example_config("3d")
-    config.datasets.background.method = "ring"
-    config.datasets.background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
+    config.datasets.npred_background.method = "ring"
+    config.datasets.npred_background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
     analysis = Analysis(config)
     analysis.get_observations()
     with pytest.raises(ValueError):
@@ -299,7 +299,7 @@ def test_analysis_no_bkg():
     assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
 
     config = get_example_config("3d")
-    config.datasets.background.method = None
+    config.datasets.npred_background.method = None
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()

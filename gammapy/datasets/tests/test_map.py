@@ -194,7 +194,7 @@ def test_different_exposure_unit(sky_model, geom):
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=edisp_mode)
 
-    dataset_ref.counts = dataset_ref.background * 0.0
+    dataset_ref.counts = dataset_ref.npred_background * 0.0
     dataset_ref.counts.data[1, 50, 50] = 1
     dataset_ref.counts.data[1, 60, 50] = 1
 
@@ -212,7 +212,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
 
     assert np.sum(spectrum_dataset.counts.data) == 1
     assert spectrum_dataset.data_shape == (2, 1, 1)
-    assert spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
+    assert spectrum_dataset.background.geom.axes[0].nbin == 2
     assert spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert spectrum_dataset.exposure.unit == "m2s"
     assert spectrum_dataset.edisp.get_edisp_kernel().e_reco.nbin == 2
@@ -278,7 +278,7 @@ def test_resample_energy_3fhl():
 
     assert grouped.counts.data.shape == (2, 200, 400)
     assert grouped.counts.data[0].sum() == 28581
-    assert_allclose(grouped.background.data.sum(axis=(1,2)), [25074.366386,  3474.265917], rtol=1e-5)
+    assert_allclose(grouped.npred_background.data.sum(axis=(1, 2)), [25074.366386, 3474.265917], rtol=1e-5)
     assert_allclose(grouped.exposure.data, dataset.exposure.data, rtol=1e-5)
 
     axis = grouped.counts.geom.axes[0]
@@ -294,7 +294,7 @@ def test_to_image_3fhl():
     dataset_im = dataset.to_image()
 
     assert dataset_im.counts.data.sum() == dataset.counts.data.sum()
-    assert_allclose(dataset_im.background.data.sum(), 28548.625, rtol=1e-5)
+    assert_allclose(dataset_im.npred_background.data.sum(), 28548.625, rtol=1e-5)
     assert_allclose(dataset_im.exposure.data, dataset.exposure.data, rtol=1e-5)
 
     npred = dataset.npred()
@@ -339,7 +339,7 @@ def test_downsample():
 
     assert downsampled.counts.data.shape == (11, 100, 200)
     assert downsampled.counts.data.sum() == dataset.counts.data.sum()
-    assert_allclose(downsampled.background.data.sum(axis=(1,2)), dataset.background.data.sum(axis=(1,2)), rtol=1e-5)
+    assert_allclose(downsampled.npred_background.data.sum(axis=(1, 2)), dataset.npred_background.data.sum(axis=(1, 2)), rtol=1e-5)
     assert_allclose(downsampled.exposure.data[5,50,100], 3.318082e+11, rtol=1e-5)
 
     with pytest.raises(ValueError):
@@ -390,7 +390,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
     assert_allclose(
-        dataset.background.data, dataset_new.background.data
+        dataset.npred_background.data, dataset_new.npred_background.data
     )
     assert_allclose(dataset.edisp.edisp_map.data, dataset_new.edisp.edisp_map.data)
     assert_allclose(dataset.psf.psf_map.data, dataset_new.psf.psf_map.data)
@@ -400,7 +400,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
-    assert dataset.background.geom == dataset_new.background.geom
+    assert dataset.npred_background.geom == dataset_new.npred_background.geom
     assert dataset.edisp.edisp_map.geom == dataset_new.edisp.edisp_map.geom
 
     assert_allclose(
@@ -667,7 +667,7 @@ def test_stack(sky_model):
     npred_b = dataset1.npred()
 
     assert_allclose(npred_b.data.sum(), 1459.985035, 1e-5)
-    assert_allclose(dataset1.background.data.sum(), 1360.00, 1e-5)
+    assert_allclose(dataset1.npred_background.data.sum(), 1360.00, 1e-5)
     assert_allclose(dataset1.counts.data.sum(), 9000, 1e-5)
     assert_allclose(dataset1.mask_safe.data.sum(), 4600)
     assert_allclose(dataset1.exposure.data.sum(), 1.6e+11)
@@ -713,7 +713,7 @@ def test_stack_npred():
     dataset_1.psf = None
     dataset_1.exposure.data += 1
     dataset_1.mask_safe.data = geom.energy_mask(emin=1 * u.TeV)
-    dataset_1._background.data += 1
+    dataset_1.background.data += 1
     dataset_1.models.append(model)
 
     dataset_2 = MapDataset.create(
@@ -725,7 +725,7 @@ def test_stack_npred():
     dataset_2.psf = None
     dataset_2.exposure.data += 1
     dataset_2.mask_safe.data = geom.energy_mask(emin=0.2 * u.TeV)
-    dataset_2._background.data += 1
+    dataset_2.background.data += 1
     dataset_2.models.append(model)
 
     npred_1 = dataset_1.npred()
@@ -773,7 +773,7 @@ def test_npred_psf_after_edisp():
 
     geom = WcsGeom.create(width=4 * u.deg, binsz=0.02, axes=[energy_axis])
     dataset = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true)
-    dataset._background.data += 1
+    dataset.background.data += 1
     dataset.exposure.data += 1e12
     dataset.mask_safe.data += True
     dataset.psf = PSFMap.from_gauss(
@@ -1188,7 +1188,7 @@ def test_stack_dataset_dataset_on_off():
     dataset_on_off.counts_off += 1
     dataset.stack(dataset_on_off)
 
-    assert_allclose(dataset.background.data, 0.166667, rtol=1e-3)
+    assert_allclose(dataset.npred_background.data, 0.166667, rtol=1e-3)
 
 
 @requires_data()
@@ -1223,7 +1223,7 @@ def test_slice_by_idx():
 
     assert sub_dataset.counts.geom.data_shape == (5, 4, 4)
     assert sub_dataset.mask_safe.geom.data_shape == (5, 4, 4)
-    assert sub_dataset.background.geom.data_shape == (5, 4, 4)
+    assert sub_dataset.npred_background.geom.data_shape == (5, 4, 4)
     assert sub_dataset.exposure.geom.data_shape == (31, 4, 4)
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (31, 5, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (31, 66, 4, 4)
@@ -1236,7 +1236,7 @@ def test_slice_by_idx():
 
     assert sub_dataset.counts.geom.data_shape == (17, 4, 4)
     assert sub_dataset.mask_safe.geom.data_shape == (17, 4, 4)
-    assert sub_dataset.background.geom.data_shape == (17, 4, 4)
+    assert sub_dataset.npred_background.geom.data_shape == (17, 4, 4)
     assert sub_dataset.exposure.geom.data_shape == (5, 4, 4)
     assert sub_dataset.edisp.edisp_map.geom.data_shape == (5, 17, 4, 4)
     assert sub_dataset.psf.psf_map.geom.data_shape == (5, 66, 4, 4)
@@ -1289,7 +1289,7 @@ def test_to_map_dataset():
     dataset = dataset_onoff.to_map_dataset(name="ds")
 
     assert dataset.name == "ds"
-    assert_allclose(dataset.background.data.sum(), 100)
+    assert_allclose(dataset.npred_background.data.sum(), 100)
     assert isinstance(dataset, MapDataset)
     assert dataset.counts == dataset_onoff.counts
 

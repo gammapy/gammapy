@@ -135,12 +135,12 @@ class MapDataset(Dataset):
     counts = LazyFitsData(cache=True)
     exposure = LazyFitsData(cache=True)
     edisp = LazyFitsData(cache=True)
-    _background = LazyFitsData(cache=True)
+    background = LazyFitsData(cache=True)
     psf = LazyFitsData(cache=True)
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
-    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe", "_background"]
+    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe", "background"]
 
     def __init__(
         self,
@@ -157,9 +157,9 @@ class MapDataset(Dataset):
         name=None,
     ):
         self._name = make_name(name)
-        self.background = background
         self.counts = counts
         self.exposure = exposure
+        self.background = background
         self.mask_fit = mask_fit
         self.psf = psf
 
@@ -176,25 +176,6 @@ class MapDataset(Dataset):
         self.models = models
         self.gti = gti
         self.meta_table = meta_table
-
-    @property
-    def background(self):
-        """Background """
-        background = self._background
-
-        if self.background_model and background:
-            values = self.background_model.evaluate_geom(
-                geom=self._background.geom
-            )
-            background = background * values
-
-        return background
-
-    @background.setter
-    def background(self, value):
-        """Background IRF"""
-        if isinstance(value, Map) or value is None:
-            self._background = value
 
     # TODO: keep or remove?
     @property
@@ -294,6 +275,7 @@ class MapDataset(Dataset):
 
     @property
     def excess(self):
+        """Excess"""
         return self.counts - self.background
 
     @models.setter
@@ -353,8 +335,8 @@ class MapDataset(Dataset):
         """Main analysis geometry"""
         if self.counts is not None:
             return self.counts.geom
-        elif self.background is not None:
-            return self.background.geom
+        elif self.npred_background is not None:
+            return self.npred_background.geom
         elif self.mask_safe is not None:
             return self.mask_safe.geom
         elif self.mask_fit is not None:
@@ -375,9 +357,22 @@ class MapDataset(Dataset):
         npred_total = self.npred_sig()
 
         if self.background:
-            npred_total += self.background
+            npred_total += self.npred_background
 
         return npred_total
+
+    @property
+    def npred_background(self):
+        """Background """
+        background = self.background
+
+        if self.background_model and background:
+            values = self.background_model.evaluate_geom(
+                geom=self.background.geom
+            )
+            background = background * values
+
+        return background
 
     def npred_sig(self, model=None):
         """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
@@ -559,8 +554,8 @@ class MapDataset(Dataset):
         if self.exposure:
             self.exposure *= self.mask_safe_image.data
 
-        if self.background and self.stat_type == "cash":
-            self._background *= self.mask_safe
+        if self.stat_type == "cash" and self.background:
+            self.background *= self.mask_safe
 
         if self.psf:
             self.psf.psf_map *= self.mask_safe_psf.data
@@ -621,10 +616,11 @@ class MapDataset(Dataset):
                 else:
                     self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
 
-        if self.background and other.background and self.stat_type == "cash":
-            background = self.background * self.mask_safe
-            background.stack(other.background, other.mask_safe)
-            self.background = background
+        if self.stat_type == "cash":
+            if self.background and other.background:
+                background = self.npred_background * self.mask_safe
+                background.stack(other.npred_background, other.mask_safe)
+                self.background = background
 
         if self.psf and other.psf:
             if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
@@ -840,8 +836,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
 
-        if self.background is not None:
-            hdulist += self.background.to_hdulist(hdu="background")[
+        if self.npred_background is not None:
+            hdulist += self.npred_background.to_hdulist(hdu="background")[
                 exclude_primary
             ]
 
@@ -982,7 +978,7 @@ class MapDataset(Dataset):
             pass
 
         path = make_path(filename)
-        for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe"]:
+        for hdu_name in ["counts", "exposure", "mask_fit", "mask_safe", "background"]:
             kwargs[hdu_name] = HDULocation(
                 hdu_class="map",
                 file_dir=path.parent,
@@ -1007,8 +1003,6 @@ class MapDataset(Dataset):
             cache=cache,
         )
 
-        # TODO: reactivate lazy loading for background
-        kwargs["background"] = Map.read(path.parent / path.name, hdu="BACKGROUND")
         return cls(**kwargs)
 
     @classmethod
@@ -1079,7 +1073,7 @@ class MapDataset(Dataset):
 
         background = np.nan
         if self.background:
-            background = self.background.data[mask].sum()
+            background = self.npred_background.data[mask].sum()
 
         info["background"] = background
 
@@ -1181,10 +1175,9 @@ class MapDataset(Dataset):
         if self.counts is not None:
             kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum, weights=self.mask_safe)
 
-        if self.background is not None:
-            kwargs["models"] = BackgroundModel(
-                self.background.get_spectrum(on_region, func=np.sum, weights=self.mask_safe),
-                datasets_names=[name], name=f"{name}-bkg"
+        if self.stat_type == "cash" and self.background is not None:
+            kwargs["background"] = self.npred_background.get_spectrum(
+                on_region, func=np.sum, weights=self.mask_safe
             )
 
         if self.exposure is not None:
@@ -1251,8 +1244,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
-        if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.background.cutout(**cutout_kwargs)
+        if self.npred_background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background.cutout(**cutout_kwargs)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1308,8 +1301,8 @@ class MapDataset(Dataset):
             else:
                 kwargs["exposure"] = self.exposure.copy()
 
-        if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.background.downsample(
+        if self.npred_background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background.downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
         if self.edisp is not None:
@@ -1364,8 +1357,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
-        if self.background is not None:
-            kwargs["background"] = self.background.pad(pad_width=pad_width, mode=mode)
+        if self.npred_background is not None:
+            kwargs["background"] = self.npred_background.pad(pad_width=pad_width, mode=mode)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.copy()
@@ -1410,8 +1403,8 @@ class MapDataset(Dataset):
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
-        if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.background.slice_by_idx(slices=slices)
+        if self.npred_background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background.slice_by_idx(slices=slices)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
@@ -1474,8 +1467,8 @@ class MapDataset(Dataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-        if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.background.resample_axis(
+        if self.npred_background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.npred_background.resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )
 
@@ -1581,7 +1574,6 @@ class MapDatasetOnOff(MapDataset):
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
-        self._background_model = None
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
@@ -1613,16 +1605,27 @@ class MapDatasetOnOff(MapDataset):
 
     @property
     def alpha(self):
-        """Exposure ratio between signal and background regions"""
+        """Exposure ratio between signal and background regions
+
+        Returns
+        -------
+        alpha : `Map`
+            Alpha map
+        """
         alpha = self.acceptance / self.acceptance_off
         alpha.data = np.nan_to_num(alpha.data)
         return alpha
 
     @property
-    def background(self):
-        """`
-        Background counts estimated from the marginalized likelihood estimate.
+    def npred_background(self):
+        """Prediced background counts estimated from the marginalized likelihood estimate.
+
         See :ref:`wstat`
+
+        Returns
+        -------
+        npred_background : `Map`
+            Predicted background counts
         """
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
             n_on=self.counts.data,
@@ -1634,14 +1637,9 @@ class MapDatasetOnOff(MapDataset):
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     @property
-    def counts_off_normalised(self):
+    def background(self):
         """ alpha * n_off"""
         return self.alpha * self.counts_off
-
-    @property
-    def excess(self):
-        """Excess (counts - alpha * counts_off)"""
-        return self.counts - self.counts_off_normalised
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
@@ -1736,9 +1734,9 @@ class MapDatasetOnOff(MapDataset):
 
         """
 
-        if counts_off is None and dataset.background is not None:
+        if counts_off is None and dataset.npred_background is not None:
             alpha = acceptance / acceptance_off
-            counts_off = dataset.background / alpha
+            counts_off = dataset.npred_background / alpha
 
         return cls(
             counts=dataset.counts,
@@ -1819,8 +1817,8 @@ class MapDatasetOnOff(MapDataset):
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
         # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
-        tmp_factor = self.counts_off_normalised * self.mask_safe
-        tmp_factor.stack(other.counts_off_normalised, weights=other.mask_safe)
+        tmp_factor = self.background * self.mask_safe
+        tmp_factor.stack(other.background, weights=other.mask_safe)
 
         # Stack the off counts (in place)
         self.counts_off.data[~self.mask_safe.data] = 0
@@ -2040,7 +2038,7 @@ class MapDatasetOnOff(MapDataset):
 
         if self.acceptance is not None:
             kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean, weights=self.mask_safe)
-            norm = self.counts_off_normalised.get_spectrum(on_region, np.sum, weights=self.mask_safe)
+            norm = self.background.get_spectrum(on_region, np.sum, weights=self.mask_safe)
             acceptance_off = kwargs["acceptance"] * kwargs["counts_off"] / norm
             np.nan_to_num(acceptance_off.data, copy=False)
             kwargs["acceptance_off"] = acceptance_off
@@ -2126,7 +2124,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance = self.acceptance.downsample(
                 factor=factor, preserve_counts=False, axis_name=axis_name
             )
-            factor = self.counts_off_normalised.downsample(
+            factor = self.background.downsample(
                 factor=factor,
                 preserve_counts=True,
                 axis_name=axis_name,
@@ -2212,7 +2210,7 @@ class MapDatasetOnOff(MapDataset):
                 axis=energy_axis, weights=self.mask_safe
             )
 
-            norm_factor = self.counts_off_normalised.resample_axis(
+            norm_factor = self.background.resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )
 
