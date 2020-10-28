@@ -47,7 +47,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
         background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
 
-        npred_sig = dataset.npred_sig() * mask
+        npred_sig = dataset.npred_signal() * mask
         npred_sig = npred_sig.sum_over_axes(keepdims=True)
         mu_sig = npred_sig.convolve(kernel.array)
 

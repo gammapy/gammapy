@@ -128,10 +128,10 @@ def test_npred_models():
 
     assert_allclose(npred.data.sum(), 64.8)
 
-    npred_sig = spectrum_dataset.npred_sig()
+    npred_sig = spectrum_dataset.npred_signal()
     assert_allclose(npred_sig.data.sum(), 64.8)
 
-    npred_sig_model1 = spectrum_dataset.npred_sig(model=model_1)
+    npred_sig_model1 = spectrum_dataset.npred_signal(model=model_1)
     assert_allclose(npred_sig_model1.data.sum(), 32.4)
 
 
@@ -437,7 +437,7 @@ class TestSpectrumOnOff:
         energy = aeff.geom.axes[0].edges
         expected = aeff.data[0] * (energy[-1] - energy[0]) * const * livetime
 
-        assert_allclose(dataset.npred_sig().data.sum(), expected.value)
+        assert_allclose(dataset.npred_signal().data.sum(), expected.value)
 
     def test_to_spectrum_dataset(self):
         ds = self.dataset.to_spectrum_dataset()
@@ -854,13 +854,13 @@ class TestSpectrumDatasetOnOffStack:
 
         self.stacked_dataset.models = pwl
 
-        npred_stacked = self.stacked_dataset.npred_sig().data
+        npred_stacked = self.stacked_dataset.npred_signal().data
         npred_stacked[~self.stacked_dataset.mask_safe.data] = 0
         npred_summed = np.zeros_like(npred_stacked)
 
         for dataset in self.datasets:
             dataset.models = pwl
-            npred_summed[dataset.mask_safe] += dataset.npred_sig().data[
+            npred_summed[dataset.mask_safe] += dataset.npred_signal().data[
                 dataset.mask_safe
             ]
 

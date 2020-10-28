@@ -344,7 +344,7 @@ class MapDataset(Dataset):
 
     def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
-        npred_total = self.npred_sig()
+        npred_total = self.npred_signal()
 
         if self.background:
             npred_total += self.npred_background()
@@ -363,8 +363,10 @@ class MapDataset(Dataset):
 
         return background
 
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
+    def npred_signal(self, model=None):
+        """"Model predicted signal counts.
+
+        If a model is passed, predicted counts from that component is returned.
         Else, the total signal counts are returned.
 
         Parameters
@@ -1619,7 +1621,7 @@ class MapDatasetOnOff(MapDataset):
             n_on=self.counts.data,
             n_off=self.counts_off.data,
             alpha=self.alpha.data,
-            mu_sig=self.npred_sig().data,
+            mu_sig=self.npred_signal().data,
         )
         mu_bkg = np.nan_to_num(mu_bkg)
         return Map.from_geom(geom=self._geom, data=mu_bkg)
@@ -1631,7 +1633,7 @@ class MapDatasetOnOff(MapDataset):
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
-        mu_sig = self.npred_sig().data
+        mu_sig = self.npred_signal().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -1833,7 +1835,7 @@ class MapDatasetOnOff(MapDataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        npred = self.npred_sig()
+        npred = self.npred_signal()
         npred.data = random_state.poisson(npred.data)
 
         npred_bkg = random_state.poisson(npred_background.data)

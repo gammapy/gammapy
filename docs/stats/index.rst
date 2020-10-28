@@ -32,14 +32,14 @@ Variable          Dataset attribute name Definition
 ================= ====================== ====================================================
 ``n_on``          ``counts``             Total observed counts in the on region
 ``n_off``         ``counts_off``         Total observed counts in the off region
+``n_bkg``         ``background``         Background estimate in the on region
 ``mu_on``         ``npred``              Predicted counts in the on region
 ``mu_off``        ``npred_off``          Predicted counts in the off region
-``mu_sig``        ``npred_sig``          Predicted signal counts in the on region
+``mu_sig``        ``npred_signal``       Predicted signal counts in the on region
 ``mu_bkg``        ``npred_background``   Predicted background counts in the on region
 ``a_on``          ``acceptance``         Relative background exposure in the on region
 ``a_off``         ``acceptance_off``     Relative background exposure in the off region
 ``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
-``n_bkg``         ``background``         Background estimate in the on region
 ================= ====================== ====================================================
 
 
