@@ -9,6 +9,7 @@ from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
+    SpatialModel,
     BackgroundModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
@@ -22,7 +23,9 @@ from gammapy.modeling.models import (
     SkyModel,
     create_fermi_isotropic_diffuse_model,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, mpl_plot_check
+from gammapy.modeling import Parameter
+from astropy.coordinates.angle_utilities import angular_separation
 
 
 @pytest.fixture(scope="session")
@@ -558,3 +561,58 @@ def test_fermi_isotropic():
     assert_allclose(flux.value, 1.463e-13, rtol=1e-3)
     assert flux.unit == "MeV-1 cm-2 s-1 sr-1"
     assert isinstance(model.spectral_model, CompoundSpectralModel)
+
+
+class MyCustomGaussianModel(SpatialModel):
+    """My custom gaussian model.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    sigma_1TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 1 TeV
+    sigma_10TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 10 TeV
+
+    """
+
+    tag = "MyCustomGaussianModel"
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+
+    sigma_1TeV = Parameter("sigma_1TeV", "1 deg", min=0)
+    sigma_10TeV = Parameter("sigma_10TeV", "0.5 deg", min=0)
+
+    @staticmethod
+    def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
+        """Evaluate custom Gaussian model"""
+        sigmas = u.Quantity([sigma_1TeV, sigma_10TeV])
+        energy_nodes = [1, 10] * u.TeV
+        sigma = np.interp(energy, energy_nodes, sigmas)
+
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+
+        exponent = -0.5 * (sep / sigma) ** 2
+        norm = 1 / (2 * np.pi * sigma ** 2)
+        return norm * np.exp(exponent)
+
+    @property
+    def evaluation_radius(self):
+        """Evaluation radius (`~astropy.coordinates.Angle`)."""
+        return 5 * self.sigma_1TeV.quantity
+
+
+def test_energy_dependent_model(geom_true):
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    spatial_model = MyCustomGaussianModel(frame="galactic")
+    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    model = sky_model.integrate_geom(geom_true)
+
+    assert_allclose(model.data.sum(), 1.678314e-14, rtol=1e-3)
+
+
+def test_plot_grid(geom_true):
+    spatial_model = MyCustomGaussianModel(frame="galactic")
+    with mpl_plot_check():
+        spatial_model.plot_grid(geom=geom_true)
