@@ -88,8 +88,10 @@ class Background3D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
-        if isinstance(data_unit, u.UnrecognizedUnit):
+        data_unit = table[bkg_name].unit
+        if data_unit is not None:
+            data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
             data_unit = u.Unit("s-1 MeV-1 sr-1")
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
@@ -105,11 +107,25 @@ class Background3D:
             table, column_prefix="DETY", format="gadf-dl3"
         )
 
+        # TODO: The present HESS and CTA backgroundfits files
+        #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
+        #  For now, we suport both.
+
+        data = table[bkg_name].data[0].T * data_unit
+        shape = (energy_axis.nbin, fov_lon_axis.nbin, fov_lat_axis.nbin)
+
+        if shape == shape[::-1]:
+            log.error("Ambiguous axes order in Background fits files!")
+
+        if np.shape(data) != shape:
+            log.debug("Transposing background table on read")
+            data = data.transpose()
+
         return cls(
             energy_axis=energy_axis,
             fov_lon_axis=fov_lon_axis,
             fov_lat_axis=fov_lat_axis,
-            data=table[bkg_name].data[0] * data_unit,
+            data=data,
             meta=table.meta,
         )
 
@@ -130,7 +146,7 @@ class Background3D:
         axes = MapAxes(self.data.axes[::-1])
         table = axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
-        table["BKG"] = self.data.data[np.newaxis]
+        table["BKG"] = self.data.data.T[np.newaxis]
         return table
 
     def to_table_hdu(self, name="BACKGROUND"):
@@ -258,8 +274,10 @@ class Background2D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
-        if isinstance(data_unit, u.UnrecognizedUnit):
+        data_unit = table[bkg_name].unit
+        if data_unit is not None:
+            data_unit = u.Unit(data_unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
             data_unit = u.Unit("s-1 MeV-1 sr-1")
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
@@ -272,10 +290,24 @@ class Background2D:
             table, column_prefix="THETA", format="gadf-dl3"
         )
 
+        # TODO: The present HESS and CTA backgroundfits files
+        # have a reverse order (theta, E) than recommened in GADF(E, theta)
+        # For now, we suport both.
+
+        data = table[bkg_name].data[0].T * data_unit
+        shape = (energy_axis.nbin, offset_axis.nbin)
+
+        if shape == shape[::-1]:
+            log.error("Ambiguous axes order in Background fits files!")
+
+        if np.shape(data) != shape:
+            log.debug("Transposing background table on read")
+            data = data.transpose()
+
         return cls(
             energy_axis=energy_axis,
             offset_axis=offset_axis,
-            data=table[bkg_name].data[0] * data_unit,
+            data=data,
             meta=table.meta,
         )
 
@@ -294,7 +326,7 @@ class Background2D:
         """Convert to `~astropy.table.Table`."""
         table = self.data.axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
-        table["BKG"] = self.data.data[np.newaxis]
+        table["BKG"] = self.data.data.T[np.newaxis]
         return table
 
     def to_table_hdu(self, name="BACKGROUND"):
