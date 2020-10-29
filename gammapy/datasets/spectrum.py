@@ -8,7 +8,6 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import Models
 from gammapy.stats import (
     WStatCountsStatistic,
     cash,
@@ -17,7 +16,6 @@ from gammapy.stats import (
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.modeling.models import BackgroundModel
 from .map import MapDataset
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]

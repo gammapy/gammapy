@@ -326,7 +326,6 @@ class Datasets(collections.abc.MutableSequence):
         cache : bool
             Whether to cache the data after loading.
 
-
         Returns
         -------
         dataset : `gammapy.datasets.Datasets`
