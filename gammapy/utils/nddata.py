@@ -74,7 +74,7 @@ class NDDataArray:
         """
         data = Quantity(data)
         self._regular_grid_interp = None
-        self._data = data.reshape(self.axes.shape)
+        self._data = data
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array

@@ -1728,7 +1728,7 @@ class MapDatasetOnOff(MapDataset):
 
     @classmethod
     def from_map_dataset(
-        cls, dataset, acceptance, acceptance_off, counts_off=None
+        cls, dataset, acceptance, acceptance_off, counts_off=None, name=None
     ):
         """Create on off dataset from a map dataset.
 
@@ -1744,6 +1744,8 @@ class MapDatasetOnOff(MapDataset):
             Off counts map . If the dataset provides a background model,
             and no off counts are defined. The off counts are deferred from
             counts_off / alpha.
+        name : str
+            Name of the returned dataset.
 
         Returns
         -------
@@ -1751,6 +1753,7 @@ class MapDatasetOnOff(MapDataset):
             Map dataset on off.
 
         """
+        name = make_name(name)
 
         if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
@@ -1766,7 +1769,7 @@ class MapDatasetOnOff(MapDataset):
             mask_fit=dataset.mask_fit,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            name=dataset.name,
+            name=name,
             psf=dataset.psf,
         )
 

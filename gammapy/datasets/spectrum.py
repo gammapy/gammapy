@@ -481,6 +481,16 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
         return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
 
+    def npred_off(self):
+        """Predicted counts in the off region
+
+        Returns
+        -------
+        npred_off : `Map`
+            Predicted off counts
+        """
+        return self.npred_background() / self.alpha
+
     @property
     def background(self):
         """ alpha * noff"""
