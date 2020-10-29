@@ -157,7 +157,7 @@ class Datasets(collections.abc.MutableSequence):
         The order of the unique models remains.
         """
         for dataset in self:
-            dataset.models = models.select(dataset.name)
+            dataset.models = models
 
     @property
     def names(self):

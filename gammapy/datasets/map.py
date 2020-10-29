@@ -281,16 +281,13 @@ class MapDataset(Dataset):
 
     @models.setter
     def models(self, models):
-        if models is None:
-            self._models = None
-        else:
-            self._models = DatasetModels(models)
-            self._evaluators = {}
+        """Models setter"""
+        self._evaluators = {}
 
-            for model in self._models:
-                if isinstance(model, FoVBackgroundModel):
-                    continue
+        if models is not None:
+            models = DatasetModels(models).select(dataset_name=self.name)
 
+            for model in models.select(tag="sky-model"):
                 evaluator = MapEvaluator(
                     model=model,
                     evaluation_mode=EVALUATION_MODE,
@@ -299,7 +296,9 @@ class MapDataset(Dataset):
                 )
                 # TODO: do we need the update here?
                 evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-                self._evaluators[model] = evaluator
+                self._evaluators[model.name] = evaluator
+
+        self._models = models
 
     @property
     def evaluators(self):
