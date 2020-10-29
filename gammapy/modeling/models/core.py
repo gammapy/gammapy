@@ -113,10 +113,14 @@ class Model:
         if not full_output:
             for par, par_default in zip(params, self.default_parameters):
                 init = par_default.to_dict()
-                for item in ["min", "max", "frozen", "error"]:
+                for item in ["min", "max", "error"]:
                     default = init[item]
+
                     if par[item] == default or np.isnan(default):
                         del par[item]
+
+                if not par["frozen"]:
+                    del par["frozen"]
 
                 if init["unit"] == "":
                     del par["unit"]
@@ -126,7 +130,15 @@ class Model:
     @classmethod
     def from_dict(cls, data):
         kwargs = {}
-        parameters = Parameters.from_dict(data["parameters"])
+
+        par_data = []
+
+        for par, par_yaml in zip(cls.default_parameters, data["parameters"]):
+            par_dict = par.to_dict()
+            par_dict.update(par_yaml)
+            par_data.append(par_dict)
+
+        parameters = Parameters.from_dict(par_data)
 
         # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
         if "frame" in data:

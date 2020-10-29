@@ -478,8 +478,8 @@ class FoVBackgroundModel(Model):
     def to_dict(self, full_output=False):
         data = {}
         data["type"] = self.tag[0]
-        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)
         data["datasets_names"] = self.datasets_names
+        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)
         return data
 
     @classmethod

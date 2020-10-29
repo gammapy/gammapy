@@ -301,7 +301,11 @@ class Datasets(collections.abc.MutableSequence):
             except (KeyError, TypeError):
                 instrument = ""
             str_ += f"\tInstrument : {instrument}\n"
-            str_ += f"\tModels     : {dataset.models.names}\n\n"
+            if dataset.models:
+                names = dataset.models.names
+            else:
+                names = ""
+            str_ += f"\tModels     : {names}\n\n"
 
         return str_.expandtabs(tabsize=2)
 
