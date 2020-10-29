@@ -1613,6 +1613,8 @@ class MapDatasetOnOff(MapDataset):
     def alpha(self):
         """Exposure ratio between signal and background regions
 
+        See :ref:`wstat`
+
         Returns
         -------
         alpha : `Map`
@@ -1644,6 +1646,8 @@ class MapDatasetOnOff(MapDataset):
     def npred_off(self):
         """Predicted counts in the off region
 
+        See :ref:`wstat`
+
         Returns
         -------
         npred_off : `Map`
@@ -1654,6 +1658,8 @@ class MapDatasetOnOff(MapDataset):
     @property
     def background(self):
         """Computed as alpha * n_off
+
+        See :ref:`wstat`
 
         Returns
         -------
