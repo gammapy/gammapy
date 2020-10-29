@@ -135,7 +135,7 @@ class ParameterEstimator(Estimator):
 
             ts = datasets.stat_sum() - stat
 
-        return {"ts": ts}# "sqrt_ts": self.get_sqrt_ts(ts)}
+        return {"ts": ts}
 
     def estimate_errn_errp(self, datasets, parameter):
         """Estimate parameter assymetric errors
