@@ -310,14 +310,13 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
-        path : `pathlib.Path`
+        path : `pathlib.Path` or str
             path to write files
         overwrite : bool
             overwrite files
         write_covariance : bool
             save covariance or not
         """
-
         base_path, _ = split(path)
         path = make_path(path)
         base_path = make_path(base_path)

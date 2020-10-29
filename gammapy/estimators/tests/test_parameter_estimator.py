@@ -24,10 +24,12 @@ def PLmodel():
 
 @pytest.fixture
 def crab_datasets_fermi():
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+
     return Datasets.read(
-        "$GAMMAPY_DATA/fermi-3fhl-crab",
-        "Fermi-LAT-3FHL_datasets.yaml",
-        "Fermi-LAT-3FHL_models.yaml",
+        filename=filename,
+        filename_models=filename_models
     )
 
 

@@ -314,17 +314,15 @@ class Datasets(collections.abc.MutableSequence):
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, path, filedata="_datasets.yaml", filemodel="_models.yaml", lazy=True, cache=True):
+    def read(cls, filename, filename_models=None, lazy=True, cache=True):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
         ----------
-        path : str, Path
-            Base directory of the datasets files.
-        filedata : str
-            file path or name of yaml datasets file
-        filemodel : str
-            file path or name of yaml models file
+        filename : str or `Path`
+            File path or name of datasets yaml file
+        filename_models : str or `Path`
+            File path or name of models fyaml ile
         lazy : bool
             Whether to lazy load data into memory
         cache : bool
@@ -337,22 +335,13 @@ class Datasets(collections.abc.MutableSequence):
         """
         from . import DATASET_REGISTRY
 
-        path = make_path(path)
-
-        if (path / filedata).exists():
-            filedata = path / filedata
-        else:
-            filedata = make_path(filedata)
-        if (path / filemodel).exists():
-            filemodel = path / filemodel
-        else:
-            filemodel = make_path(filemodel)
-
-        models = Models.read(filemodel)
-        data_list = read_yaml(filedata)
+        filename = make_path(filename)
+        data_list = read_yaml(filename)
 
         datasets = []
         for data in data_list["datasets"]:
+            path = filename.parent
+
             if (path / data["filename"]).exists():
                 data["filename"] = str(make_path(path / data["filename"]))
 
@@ -361,38 +350,45 @@ class Datasets(collections.abc.MutableSequence):
             datasets.append(dataset)
 
         datasets = cls(datasets)
-        datasets.models = models
+
+        if filename_models:
+            datasets.models = Models.read(filename_models)
+
         return datasets
 
-    def write(self, path, prefix="", overwrite=False, write_covariance=True):
+    def write(self, filename, filename_models=None, overwrite=False, write_covariance=True):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
         ----------
-        path : `pathlib.Path`
-            path to write files
-        prefix : str
-            common prefix of file names
+        filename : str or `Path`
+            File path or name of datasets yaml file
+        filename_models : str or `Path`
+            File path or name of models fyaml ile
         overwrite : bool
             overwrite datasets FITS files
         write_covariance : bool
             save covariance or not
         """
+        path = make_path(filename).resolve()
 
-        path = make_path(path).resolve()
         datasets_dictlist = []
         for dataset in self._datasets:
-            filename = f"{prefix}_data_{dataset.name}.fits"
-            dataset.write(path / filename, overwrite)
+            name = dataset.name.replace(" ", "_")
+            filename = f"{name}.fits"
+            dataset.write(path.parent / filename, overwrite)
             datasets_dictlist.append(dataset.to_dict(filename=filename))
+
         datasets_dict = {"datasets": datasets_dictlist}
 
-        write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
-        self.models.write(
-            path / f"{prefix}_models.yaml",
-            overwrite=overwrite,
-            write_covariance=write_covariance,
-        )
+        write_yaml(datasets_dict, path, sort_keys=False)
+
+        if filename_models:
+            self.models.write(
+                filename_models,
+                overwrite=overwrite,
+                write_covariance=write_covariance,
+            )
 
     def stack_reduce(self, name=None):
         """Reduce the Datasets to a unique Dataset by stacking them together.

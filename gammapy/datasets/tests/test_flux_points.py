@@ -52,8 +52,16 @@ def test_flux_point_dataset_serialization(tmp_path):
     model = SkyModel(spectral_model=spectral_model, name="test_model")
     dataset = FluxPointsDataset(model, data, name="test_dataset")
 
-    Datasets([dataset]).write(tmp_path, prefix="tmp")
-    datasets = Datasets.read(tmp_path, "tmp_datasets.yaml", "tmp_models.yaml")
+    Datasets([dataset]).write(
+        filename=tmp_path / "tmp_datasets.yaml",
+        filename_models=tmp_path / "tmp_models.yaml",
+    )
+
+    datasets = Datasets.read(
+        filename=tmp_path / "tmp_datasets.yaml",
+        filename_models=tmp_path / "tmp_models.yaml"
+    )
+
     new_dataset = datasets[0]
     assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
     if dataset.mask_fit is None:

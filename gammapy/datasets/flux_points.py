@@ -86,7 +86,7 @@ class FluxPointsDataset(Dataset):
         if models is None:
             self._models = None
         else:
-            self._models = DatasetModels(models)
+            self._models = DatasetModels(models).select(self.name)
 
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
