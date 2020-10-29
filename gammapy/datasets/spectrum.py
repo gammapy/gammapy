@@ -76,11 +76,13 @@ class SpectrumDataset(MapDataset):
         meta_table=None,
     ):
 
+        self._name = make_name(name)
+        self._evaluators = {}
+
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.counts = counts
-
         self.mask_fit = mask_fit
         self.exposure = exposure
         self.edisp = edisp
@@ -88,8 +90,6 @@ class SpectrumDataset(MapDataset):
         self.mask_safe = mask_safe
         self.gti = gti
         self.meta_table = meta_table
-
-        self._name = make_name(name)
         self.models = models
 
     @property
@@ -421,6 +421,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     ):
 
         self._name = make_name(name)
+        self._evaluators = {}
 
         self.counts = counts
         self.counts_off = counts_off

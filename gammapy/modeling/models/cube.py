@@ -60,7 +60,7 @@ class SkyModel(SkyModelBase):
         Which datasets this model is applied to.
     """
 
-    tag = "SkyModel"
+    tag = ["SkyModel", "sky-model"]
     _apply_irf_default = {"exposure": True, "psf": True, "edisp": True}
 
     def __init__(
@@ -317,7 +317,7 @@ class SkyModel(SkyModelBase):
         """Create dict for YAML serilisation"""
         data = {}
         data["name"] = self.name
-        data["type"] = self.tag
+        data["type"] = self.tag[0]
         data["spectral"] = self.spectral_model.to_dict(full_output)
 
         if self.spatial_model is not None:
@@ -417,7 +417,7 @@ class FoVBackgroundModel(Model):
         Dataset name
 
     """
-    tag = "FoVBackgroundModel"
+    tag = ["FoVBackgroundModel", "fov-bkg"]
 
     def __init__(self, spectral_model=None, dataset_name=None):
         if dataset_name is None:
@@ -477,7 +477,7 @@ class FoVBackgroundModel(Model):
 
     def to_dict(self, full_output=False):
         data = {}
-        data["type"] = self.tag
+        data["type"] = self.tag[0]
         data["spectral"] = self.spectral_model.to_dict(full_output=full_output)
         data["datasets_names"] = self.datasets_names
         return data

@@ -426,6 +426,7 @@ class TestSpectrumOnOff:
             unit="cm2",
             axes=[self.e_reco.copy(name="energy_true")],
         )
+
         aeff.data += 1
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -433,7 +434,6 @@ class TestSpectrumOnOff:
             exposure=aeff * livetime,
             models=model,
         )
-
         energy = aeff.geom.axes[0].edges
         expected = aeff.data[0] * (energy[-1] - energy[0]) * const * livetime
 

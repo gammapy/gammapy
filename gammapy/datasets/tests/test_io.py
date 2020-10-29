@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data, requires_dependency
-from gammapy.modeling import Fit
 
 
 @requires_data()
@@ -36,7 +35,7 @@ def test_datasets_to_io(tmp_path):
         dataset0.models["gll_iem_v06_cutout"] == dataset1.models["gll_iem_v06_cutout"]
     )
 
-    assert isinstance(dataset0.models, Models)
+    assert isinstance(dataset0.models, DatasetModels)
     assert len(dataset0.models) ==4
     assert dataset0.models[0].name == "gc"
     assert dataset0.models[1].name == "gll_iem_v06_cutout"

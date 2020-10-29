@@ -13,7 +13,7 @@ from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_spectrum_dataset,
 )
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, FoVBackgroundModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -464,10 +464,11 @@ def get_map_datasets():
     dataset_2.gti = gti2
 
     model = dataset_1.models["source"].copy("test_source")
-    dataset_1.models.pop("source")
-    dataset_2.models.pop("source")
-    dataset_1.models.append(model)
-    dataset_2.models.append(model)
+    bkg_model_1 = FoVBackgroundModel(dataset_name="dataset_1")
+    bkg_model_2 = FoVBackgroundModel(dataset_name="dataset_2")
+
+    dataset_1.models = [model, bkg_model_1]
+    dataset_2.models = [model, bkg_model_2]
 
     return [dataset_1, dataset_2]
 

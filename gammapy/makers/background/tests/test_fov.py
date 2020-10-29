@@ -11,7 +11,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    PowerLawNormSpectralModel,
+    FoVBackgroundModel
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -112,7 +112,10 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
     model = SkyModel(
         spatial_model=spatial_model, spectral_model=spectral_model, name="test-source"
     )
-    test_dataset.models.append(model)
+
+    bkg_model = FoVBackgroundModel(dataset_name="test-fov")
+    test_dataset.models = [model, bkg_model]
+
     dataset = fov_bkg_maker.run(test_dataset)
 
     # Here we check that source parameters are correctly thawed after fit.

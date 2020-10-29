@@ -6,7 +6,7 @@ import numpy as np
 import logging
 from astropy.table import vstack, Table
 from astropy import units as u
-from gammapy.modeling.models import Models, ProperModels, FoVBackgroundModel
+from gammapy.modeling.models import Models, DatasetModels, FoVBackgroundModel
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
 from gammapy.data import GTI
@@ -140,7 +140,24 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate model objects have been removed.
         The order of the unique models remains.
         """
-        return ProperModels(self)
+        models = {}
+
+        for dataset in self:
+            if dataset.models is not None:
+                for model in dataset.models:
+                    models[model] = model
+
+        return DatasetModels(list(models.keys()))
+
+    @models.setter
+    def models(self, models):
+        """Unique models (`~gammapy.modeling.Models`).
+
+        Duplicate model objects have been removed.
+        The order of the unique models remains.
+        """
+        for dataset in self:
+            dataset.models = models.select(dataset.name)
 
     @property
     def names(self):
@@ -232,16 +249,18 @@ class Datasets(collections.abc.MutableSequence):
                 log.info(f"Dataset {dataset.name} does not contribute in the energy range")
                 continue
 
-            # TODO: Simplify model handling!!!!
-            models = []
+            if dataset.models:
+                # TODO: Simplify model handling!!!!
+                models = []
 
-            for model in dataset.models:
-                if isinstance(model, FoVBackgroundModel):
-                    models.append(dataset_sliced.background_model)
-                else:
-                    models.append(model)
+                for model in dataset.models:
+                    if isinstance(model, FoVBackgroundModel):
+                        models.append(dataset_sliced.background_model)
+                    else:
+                        models.append(model)
 
-            dataset_sliced.models = models
+                dataset_sliced.models = models
+
             datasets.append(dataset_sliced)
 
         return self.__class__(datasets=datasets)
@@ -336,10 +355,11 @@ class Datasets(collections.abc.MutableSequence):
 
             dataset_cls = DATASET_REGISTRY.get_cls(data["type"])
             dataset = dataset_cls.from_dict(data, lazy=lazy, cache=cache)
-            dataset.models = models
             datasets.append(dataset)
 
-        return cls(datasets)
+        datasets = cls(datasets)
+        datasets.models = models
+        return datasets
 
     def write(self, path, prefix="", overwrite=False, write_covariance=True):
         """Serialize datasets to YAML and FITS files.
