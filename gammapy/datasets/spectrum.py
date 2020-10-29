@@ -219,7 +219,7 @@ class SpectrumDataset(MapDataset):
             label="Measured excess",
             yerr=np.sqrt(np.abs(self.excess.data.flatten())),
         )
-        self.npred_sig().plot_hist(ax=ax, label="Predicted signal counts")
+        self.npred_signal().plot_hist(ax=ax, label="Predicted signal counts")
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -477,9 +477,19 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             n_on=self.counts.data,
             n_off=self.counts_off.data,
             alpha=self.alpha.data,
-            mu_sig=self.npred_sig().data,
+            mu_sig=self.npred_signal().data,
         )
         return RegionNDMap.from_geom(geom=self._geom, data=mu_bkg)
+
+    def npred_off(self):
+        """Predicted counts in the off region
+
+        Returns
+        -------
+        npred_off : `Map`
+            Predicted off counts
+        """
+        return self.npred_background() / self.alpha
 
     @property
     def background(self):
@@ -511,7 +521,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
-        mu_sig = self.npred_sig().data
+        mu_sig = self.npred_signal().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -535,7 +545,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
         random_state = get_random_state(random_state)
 
-        npred = self.npred_sig()
+        npred = self.npred_signal()
         npred.data = random_state.poisson(npred.data)
         npred_bkg = random_state.poisson(npred_background.data)
         self.counts = npred + npred_bkg

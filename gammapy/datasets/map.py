@@ -343,8 +343,14 @@ class MapDataset(Dataset):
         return self._geom.data_shape
 
     def npred(self):
-        """Predicted source and background counts (`~gammapy.maps.Map`)."""
-        npred_total = self.npred_sig()
+        """Predicted source and background counts
+
+        Returns
+        -------
+        npred : `Map`
+            Total predicted counts
+        """
+        npred_total = self.npred_signal()
 
         if self.background:
             npred_total += self.npred_background()
@@ -352,7 +358,16 @@ class MapDataset(Dataset):
         return npred_total
 
     def npred_background(self):
-        """Background """
+        """Predicted background counts
+
+        The predicted background counts depend on the parameters
+        of the `FoVBackgroundModel` defined in the dataset.
+
+        Returns
+        -------
+        npred_background : `Map`
+            Predicted counts from the background.
+        """
         background = self.background
 
         if self.background_model and background:
@@ -363,8 +378,10 @@ class MapDataset(Dataset):
 
         return background
 
-    def npred_sig(self, model=None):
-        """"Model predicted signal counts. If a model is passed, predicted counts from that component is returned.
+    def npred_signal(self, model=None):
+        """"Model predicted signal counts.
+
+        If a model is passed, predicted counts from that component is returned.
         Else, the total signal counts are returned.
 
         Parameters
@@ -1596,6 +1613,8 @@ class MapDatasetOnOff(MapDataset):
     def alpha(self):
         """Exposure ratio between signal and background regions
 
+        See :ref:`wstat`
+
         Returns
         -------
         alpha : `Map`
@@ -1619,19 +1638,39 @@ class MapDatasetOnOff(MapDataset):
             n_on=self.counts.data,
             n_off=self.counts_off.data,
             alpha=self.alpha.data,
-            mu_sig=self.npred_sig().data,
+            mu_sig=self.npred_signal().data,
         )
         mu_bkg = np.nan_to_num(mu_bkg)
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
+    def npred_off(self):
+        """Predicted counts in the off region
+
+        See :ref:`wstat`
+
+        Returns
+        -------
+        npred_off : `Map`
+            Predicted off counts
+        """
+        return self.npred_background() / self.alpha
+
     @property
     def background(self):
-        """ alpha * n_off"""
+        """Computed as alpha * n_off
+
+        See :ref:`wstat`
+
+        Returns
+        -------
+        background : `Map`
+            Background map
+        """
         return self.alpha * self.counts_off
 
     def stat_array(self):
         """Likelihood per bin given the current model parameters"""
-        mu_sig = self.npred_sig().data
+        mu_sig = self.npred_signal().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
@@ -1651,8 +1690,7 @@ class MapDatasetOnOff(MapDataset):
         name=None,
         **kwargs,
     ):
-        """
-        Create a MapDatasetOnOff object with zero filled maps according to the specified geometries
+        """Create a MapDatasetOnOff object  swith zero filled maps according to the specified geometries
 
         Parameters
         ----------
@@ -1698,7 +1736,7 @@ class MapDatasetOnOff(MapDataset):
     def from_map_dataset(
         cls, dataset, acceptance, acceptance_off, counts_off=None, name=None
     ):
-        """Create map dataseton off from another dataset.
+        """Create on off dataset from a map dataset.
 
         Parameters
         ----------
@@ -1721,6 +1759,7 @@ class MapDatasetOnOff(MapDataset):
             Map dataset on off.
 
         """
+        name = make_name(name)
 
         if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
@@ -1736,7 +1775,7 @@ class MapDatasetOnOff(MapDataset):
             mask_fit=dataset.mask_fit,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            name=dataset.name,
+            name=name,
             psf=dataset.psf,
         )
 
@@ -1833,7 +1872,7 @@ class MapDatasetOnOff(MapDataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        npred = self.npred_sig()
+        npred = self.npred_signal()
         npred.data = random_state.poisson(npred.data)
 
         npred_bkg = random_state.poisson(npred_background.data)

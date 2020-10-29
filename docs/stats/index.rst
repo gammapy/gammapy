@@ -30,30 +30,30 @@ notation in [Cousins2007]_:
 ================= ====================== ====================================================
 Variable          Dataset attribute name Definition
 ================= ====================== ====================================================
-``n_on``          ``counts``             Total observed counts in the on region
+``n_on``          ``counts``             Total observed counts
 ``n_off``         ``counts_off``         Total observed counts in the off region
-``mu_on``         ``npred``              Predicted counts in the on region
+``n_bkg``         ``background``         Known background in the on region, independent of ``mu_sig``
+``mu_on``         ``npred``              Predicted counts
 ``mu_off``        ``npred_off``          Predicted counts in the off region
-``mu_sig``        ``npred_sig``          Predicted signal counts in the on region
-``mu_bkg``        ``npred_background``   Predicted background counts in the on region
-``a_on``          ``acceptance``         Relative background exposure in the on region
+``mu_sig``        ``npred_signal``       Predicted signal counts
+``mu_bkg``        ``npred_background``   Predicted background counts, depends on ``mu_sig``
+``a_on``          ``acceptance``         Relative background exposure
 ``a_off``         ``acceptance_off``     Relative background exposure in the off region
 ``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
-``n_bkg``         ``background``         Background estimate in the on region
 ================= ====================== ====================================================
 
 
-The ON measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
+The on measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
 a Poisson random variable with expected value
 :math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
 
-The OFF measurement is assumed to contain only background counts, with an acceptance to background
-:math:`a_{off}`. This OFF measurement can be used to etimate the number of background counts in the
-ON measurement: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
-ON and OFF acceptances.
+The off measurement is assumed to contain only background counts, with an acceptance to background
+:math:`a_{off}`. This off measurement can be used to estimate the number of background counts in the
+on region: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
+on and off acceptances.
 
-Therefore :math:`n_{off}` follows a Poisson distribution  with expected value
-:math:\mu_{off} = \mu_{bkg) / \alpha
+Therefore :math:`n_{off}` follows a Poisson distribution with expected value
+:math:`\mu_{off} = \mu_{bkg) / \alpha`
 
 
 Counts and fit statistics
