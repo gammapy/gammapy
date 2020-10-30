@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from gammapy.stats import WStatCountsStatistic
 
 count_statistic = WStatCountsStatistic(n_on=13, n_off=11, alpha=0.5)
-excess = count_statistic.excess
+excess = count_statistic.n_sig
 
 # We compute the WStat statistic profile
 mu_signal = np.linspace(-2.5, 26, 100)

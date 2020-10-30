@@ -193,7 +193,7 @@ class ExcessProfileEstimator(Estimator):
                 {
                     "counts": stats.n_on,
                     "background": stats.mu_bkg,
-                    "excess": stats.excess,
+                    "excess": stats.n_sig,
                 }
             )
 
@@ -213,20 +213,20 @@ class ExcessProfileEstimator(Estimator):
             e_reco_lo = e_reco[:-1]
             e_reco_hi = e_reco[1:]
             flux = (
-                stats.excess
+                stats.n_sig
                 / npred
                 * spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
             )
             result["flux"] = flux
 
-            result["flux_err"] = stats.error / stats.excess * flux
+            result["flux_err"] = stats.error / stats.n_sig * flux
 
             if "errn-errp" in self.selection_optional:
-                result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
-                result["flux_errp"] = result["errp"] / stats.excess * flux
+                result["flux_errn"] = np.abs(result["errn"]) / stats.n_sig * flux
+                result["flux_errp"] = result["errp"] / stats.n_sig * flux
 
             if "ul" in self.selection_optional:
-                result["flux_ul"] = result["ul"] / stats.excess * flux
+                result["flux_ul"] = result["ul"] / stats.n_sig * flux
 
             solid_angle = spds.counts.geom.solid_angle()
             result["solid_angle"] = (

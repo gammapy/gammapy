@@ -19,7 +19,7 @@ values = [
 @pytest.mark.parametrize(("n_on", "mu_bkg", "result"), values)
 def test_cash_basic(n_on, mu_bkg, result):
     stat = CashCountsStatistic(n_on, mu_bkg)
-    excess = stat.excess
+    excess = stat.n_sig
     sqrt_ts = stat.sqrt_ts
     p_value = stat.p_value
 
@@ -77,7 +77,7 @@ values = [
 @pytest.mark.parametrize(("mu_bkg", "significance", "result"), values)
 def test_cash_excess_matching_significance(mu_bkg, significance, result):
     stat = CashCountsStatistic(1, mu_bkg)
-    excess = stat.excess_matching_significance(significance)
+    excess = stat.n_sig_matching_significance(significance)
 
     assert_allclose(excess, result, atol=1e-3)
 
@@ -100,7 +100,7 @@ values = [
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), values)
 def test_wstat_basic(n_on, n_off, alpha, result):
     stat = WStatCountsStatistic(n_on, n_off, alpha)
-    excess = stat.excess
+    excess = stat.n_sig
     sqrt_ts = stat.sqrt_ts
     p_value = stat.p_value
 
@@ -120,7 +120,7 @@ values = [
 def test_wstat_with_musig(n_on, n_off, alpha, mu_sig, result):
 
     stat = WStatCountsStatistic(n_on, n_off, alpha, mu_sig)
-    excess = stat.excess
+    excess = stat.n_sig
     sqrt_ts = stat.sqrt_ts
     p_value = stat.p_value
     del_ts = stat.ts
@@ -185,6 +185,6 @@ values = [
 @pytest.mark.parametrize(("n_off", "alpha", "significance", "result"), values)
 def test_wstat_excess_matching_significance(n_off, alpha, significance, result):
     stat = WStatCountsStatistic(1, n_off, alpha)
-    excess = stat.excess_matching_significance(significance)
+    excess = stat.n_sig_matching_significance(significance)
 
     assert_allclose(excess, result, rtol=1e-2)
