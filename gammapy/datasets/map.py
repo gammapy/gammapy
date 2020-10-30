@@ -1426,6 +1426,53 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def slice_energy(self, e_min, e_max, name=None, edisp_pdf_threshold=None):
+        """Select and slice datasets in energy range
+
+        Parameters
+        ----------
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
+        name : str
+            Name of the sliced dataset.
+        edisp_pdf_threshold : float
+            Slice the true energy axis according to the given edisp
+            pdf threshold
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Sliced Dataset
+
+        """
+        name = make_name(name)
+        energy_axis = self._geom.axes["energy"]
+
+        group = energy_axis.group_table(edges=[e_min, e_max])
+
+        is_normal = group["bin_type"] == "normal   "
+        group = group[is_normal]
+
+        slices = {"energy": slice(
+            int(group["idx_min"][0]),
+            int(group["idx_max"][0]) + 1)
+        }
+
+        dataset = self.slice_by_idx(slices, name=name)
+
+        if edisp_pdf_threshold is not None and self.edisp:
+            above_threshold = self.edisp.edisp_map.data > edisp_pdf_threshold
+            mask = above_threshold.any(axis=(1, 2, 3))
+
+            idx_min = np.argmax(mask)
+            idx_max = len(mask) - np.argmax(mask[::-1])
+
+            dataset = dataset.slice_by_idx(
+                slices={"energy_true": slice(idx_min, idx_max)}
+            )
+
+        return dataset
+
     def reset_data_cache(self):
         """Reset data cache to free memory space"""
         for name in self._lazy_data_members:

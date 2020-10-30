@@ -138,7 +138,7 @@ class EDispMap(IRFMap):
             migra = energy_axis.edges / e_true
 
             cumsum = np.insert(edisp_values[:, idx], 0, 0).cumsum()
-            with np.errstate(invalid="ignore"):
+            with np.errstate(invalid="ignore", divide="ignore"):
                 cumsum = np.nan_to_num(cumsum / cumsum[-1])
 
             f = interp1d(
@@ -279,7 +279,7 @@ class EDispMap(IRFMap):
             edisp_e_true = self.edisp_map.slice_by_idx({"energy_true": idx})
 
             cumsum = np.insert(edisp_e_true.data, 0, 0, axis=axis).cumsum(axis=axis)
-            with np.errstate(invalid="ignore"):
+            with np.errstate(invalid="ignore", divide="ignore"):
                 cumsum = np.nan_to_num(cumsum / cumsum[slice(-2, -1)])
 
             f = interp1d(

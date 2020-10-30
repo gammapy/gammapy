@@ -204,13 +204,17 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets)
 
-    def slice_energy(self, e_min, e_max):
+    def slice_energy(self, e_min, e_max, edisp_pdf_threshold=None):
         """Select and slice datasets in energy range
 
         Parameters
         ----------
         e_min, e_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
+        edisp_pdf_threshold : float
+            Slice the true energy axis according to the given edisp
+            pdf threshold
+
 
         Returns
         -------
@@ -221,24 +225,18 @@ class Datasets(collections.abc.MutableSequence):
         datasets = []
 
         for dataset in self:
-            # TODO: implement slice_by_coord() and simplify?
-            energy_axis = dataset.counts.geom.axes["energy"]
+            name = f"{dataset.name}-{e_min:.1f}-{e_max:.1f}"
             try:
-                group = energy_axis.group_table(edges=[e_min, e_max])
+                dataset_sliced = dataset.slice_energy(
+                    e_min=e_min,
+                    e_max=e_max,
+                    name=name,
+                    edisp_pdf_threshold=edisp_pdf_threshold
+                )
             except ValueError:
                 log.info(f"Dataset {dataset.name} does not contribute in the energy range")
                 continue
 
-            is_normal = group["bin_type"] == "normal   "
-            group = group[is_normal]
-
-            slices = {"energy": slice(
-                int(group["idx_min"][0]),
-                int(group["idx_max"][0]) + 1)
-            }
-
-            name = f"{dataset.name}-{e_min:.1f}-{e_max:.1f}"
-            dataset_sliced = dataset.slice_by_idx(slices, name=name)
             # TODO: Simplify model handling!!!!
             models = []
 
