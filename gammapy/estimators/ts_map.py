@@ -423,7 +423,7 @@ class TSMapEstimator(Estimator):
         results = []
 
         for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_energy(e_min, e_max)[0]
+            dataset = datasets.slice_by_energy(e_min, e_max)[0]
 
             if self.sum_over_energy_groups:
                 dataset = dataset.to_image()

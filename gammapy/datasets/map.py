@@ -1426,7 +1426,7 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
-    def slice_energy(self, e_min, e_max, name=None, edisp_pdf_threshold=None):
+    def slice_by_energy(self, e_min, e_max, name=None):
         """Select and slice datasets in energy range
 
         Parameters
@@ -1435,9 +1435,6 @@ class MapDataset(Dataset):
             Energy bounds to compute the flux point for.
         name : str
             Name of the sliced dataset.
-        edisp_pdf_threshold : float
-            Slice the true energy axis according to the given edisp
-            pdf threshold
 
         Returns
         -------
@@ -1458,20 +1455,7 @@ class MapDataset(Dataset):
             int(group["idx_max"][0]) + 1)
         }
 
-        dataset = self.slice_by_idx(slices, name=name)
-
-        if edisp_pdf_threshold is not None and self.edisp:
-            above_threshold = self.edisp.edisp_map.data > edisp_pdf_threshold
-            mask = above_threshold.any(axis=(1, 2, 3))
-
-            idx_min = np.argmax(mask)
-            idx_max = len(mask) - np.argmax(mask[::-1])
-
-            dataset = dataset.slice_by_idx(
-                slices={"energy_true": slice(idx_min, idx_max)}
-            )
-
-        return dataset
+        return self.slice_by_idx(slices, name=name)
 
     def reset_data_cache(self):
         """Reset data cache to free memory space"""

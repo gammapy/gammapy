@@ -204,17 +204,13 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets)
 
-    def slice_energy(self, e_min, e_max, edisp_pdf_threshold=None):
+    def slice_by_energy(self, e_min, e_max):
         """Select and slice datasets in energy range
 
         Parameters
         ----------
         e_min, e_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
-        edisp_pdf_threshold : float
-            Slice the true energy axis according to the given edisp
-            pdf threshold
-
 
         Returns
         -------
@@ -227,11 +223,10 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             name = f"{dataset.name}-{e_min:.1f}-{e_max:.1f}"
             try:
-                dataset_sliced = dataset.slice_energy(
+                dataset_sliced = dataset.slice_by_energy(
                     e_min=e_min,
                     e_max=e_max,
                     name=name,
-                    edisp_pdf_threshold=edisp_pdf_threshold
                 )
             except ValueError:
                 log.info(f"Dataset {dataset.name} does not contribute in the energy range")
