@@ -24,19 +24,21 @@ counts measurements.
 Notations
 ---------
 
-For on-off methods we use the following variable names following the
-notation in [Cousins2007]_:
+For statistical analysis we use the following variable names following mostly the
+notation in [LiMa1983]_. For the ``MapDataset`` attributes we chose more verbose
+equivalents:
 
 ================= ====================== ====================================================
 Variable          Dataset attribute name Definition
 ================= ====================== ====================================================
-``n_on``          ``counts``             Total observed counts
-``n_off``         ``counts_off``         Total observed counts in the off region
-``n_bkg``         ``background``         Known background in the on region, independent of ``mu_sig``
+``n_on``          ``counts``             Observed counts
+``n_off``         ``counts_off``         Observed counts in the off region
+``n_bkg``         ``background``         Estimated background counts, defined as ``alpha * n_off``
+``n_sig``		  ``excess``			 Estimated signal counts defined as ``n_on`` - ``n_bkg``
 ``mu_on``         ``npred``              Predicted counts
 ``mu_off``        ``npred_off``          Predicted counts in the off region
+``mu_bkg``        ``npred_background``   Predicted background counts
 ``mu_sig``        ``npred_signal``       Predicted signal counts
-``mu_bkg``        ``npred_background``   Predicted background counts, depends on ``mu_sig``
 ``a_on``          ``acceptance``         Relative background exposure
 ``a_off``         ``acceptance_off``     Relative background exposure in the off region
 ``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
@@ -52,30 +54,32 @@ The off measurement is assumed to contain only background counts, with an accept
 on region: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
 on and off acceptances.
 
-Therefore :math:`n_{off}` follows a Poisson distribution with expected value
-:math:`\mu_{off} = \mu_{bkg) / \alpha`
+Therefore :math:`n_{off}` follows a Poisson distribution with expected value :math:`\mu_{off} = \mu_{bkg) / \alpha`
+
+The expectation or predicted values :math:`\mu_X` are in general derived using maximum
+likelihood estimation.
 
 
 Counts and fit statistics
 -------------------------
 
-Gamma-ray measurements are counts, ``n_on``, containing both signal and background events.
+Gamma-ray measurements are counts, :math:`n_{on}`, containing both signal and background events.
 
 Estimation of number of signal events or of quantities in physical models is done through
 Poisson likelihood functions, the fit statistics. In gammapy, they are all log-likelihood
 functions normalized like chi-squares, i.e. if :math:`L` is the likelihood function used,
 they follow the expression :math:`2 \times log L`.
 
-When the expected number of background events, ``mu_bkg`` is known, the statistic function
+When the expected number of background events, :math:`\mu_{bkg}` is known, the statistic function
 is ``Cash`` (see :ref:`cash`). When the number of background events is unknown, one has to
-use a background estimate ``n_bkg`` taken from an OFF measurement where only background events
+use a background estimate :math:`n_{bkg}` taken from an off measurement where only background events
 are expected. In this case, the statistic function is ``WStat`` (see :ref:`wstat`).
 
 These statistic functions are at the heart of the model fitting approach in gammapy. They are
 used to estimate the best fit values of model parameters and their associated confidence intervals.
 
 They are used also to estimate the excess counts significance, i.e. the probability that
-a given number of measured events ``n_on`` actually contains some signal events :math:`n_{excess}`,
+a given number of measured events :math:`\n_{on}` actually contains some signal events :math:`n_{sig}`,
 as well as the errors associated to this estimated number of signal counts.
 
 Estimating TS

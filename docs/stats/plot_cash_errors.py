@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from gammapy.stats import CashCountsStatistic
 
 count_statistic = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-excess = count_statistic.excess
+excess = count_statistic.n_sig
 
 errn = count_statistic.compute_errn(1.0)
 errp = count_statistic.compute_errp(1.0)

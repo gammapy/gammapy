@@ -68,7 +68,7 @@ class SensitivityEstimator(Estimator):
         stat = WStatCountsStatistic(
             n_on=dataset.alpha.data * n_off, n_off=n_off, alpha=dataset.alpha.data
         )
-        excess_counts = stat.excess_matching_significance(self.n_sigma)
+        excess_counts = stat.n_sig_matching_significance(self.n_sigma)
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
         bkg_syst_limited = excess_counts < self.bkg_syst_fraction * dataset.background.data
