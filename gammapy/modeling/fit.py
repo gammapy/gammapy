@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import itertools
 from astropy.utils import lazyproperty
+from gammapy.utils.table import table_from_row_data
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
@@ -70,9 +71,10 @@ class Fit:
         Datasets
     """
 
-    def __init__(self, datasets):
+    def __init__(self, datasets, store_trace=False):
         from gammapy.datasets import Datasets
 
+        self.store_trace = store_trace
         self.datasets = Datasets(datasets)
 
     @lazyproperty
@@ -164,7 +166,10 @@ class Fit:
         # probably should pass a fit statistic, which has a model, which has parameters
         # and return something simpler, not a tuple of three things
         factors, info, optimizer = compute(
-            parameters=parameters, function=self.datasets.stat_sum, **kwargs
+            parameters=parameters,
+            function=self.datasets.stat_sum,
+            store_trace=self.store_trace,
+            **kwargs
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
@@ -174,6 +179,14 @@ class Fit:
         if backend == "minuit":
             self.minuit = optimizer
 
+        trace = table_from_row_data(info.pop("trace"))
+
+        if self.store_trace:
+            pars = self._models.parameters
+            idx = [pars.index(par) for par in pars.unique_parameters.free_parameters]
+            unique_names = np.array(self._models.parameters_unique_names)[idx]
+            trace.rename_columns(trace.colnames[1:], list(unique_names))
+
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
         parameters.check_limits()
@@ -182,6 +195,7 @@ class Fit:
             total_stat=self.datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),
+            trace=trace,
             **info,
         )
 
@@ -360,7 +374,7 @@ class Fit:
                     stat = self.datasets.stat_sum()
                 stats.append(stat)
 
-        return {"values": values, "stat": np.array(stats), "fit_results": fit_results}
+        return {f"{parameter.name}_scan": values, "stat_scan": np.array(stats), "fit_results": fit_results}
 
     def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
@@ -386,10 +400,8 @@ class Fit:
         Returns
         -------
         results : dict
-        Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
-        empty list, if `reoptimize` is set to False
-
-
+            Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
+            empty list, if `reoptimize` is set to False
         """
         parameters = self._parameters
         x = parameters[x]
@@ -422,9 +434,9 @@ class Fit:
             fit_results = fit_results.reshape(shape)
 
         return {
-            "x_values": x_values,
-            "y_values": y_values,
-            "stat": stats,
+            f"{x.name}_scan": x_values,
+            f"{y.name}_scan": y_values,
+            "stat_scan": stats,
             "fit_results": fit_results,
         }
 
@@ -453,10 +465,8 @@ class Fit:
         Returns
         -------
         result : dict
-            Dictionary with keys "x", "y" (Numpy arrays with contour points)
-            and a boolean flag "success".
-            The result objects from ``mncontour`` are in the additional
-            keys "x_info" and "y_info".
+            Dictionary containing the parameter values defining the contour, with the
+            boolean flag "success" and the info objects from ``mncontour``.
         """
         parameters = self._parameters
         x = parameters[x]
@@ -465,15 +475,17 @@ class Fit:
         with parameters.restore_values:
             result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
 
+        x_name = x.name
+        y_name = y.name
         x = result["x"] * x.scale
         y = result["y"] * y.scale
 
         return {
-            "x": x,
-            "y": y,
+            x_name: x,
+            y_name: y,
             "success": result["success"],
-            "x_info": result["x_info"],
-            "y_info": result["y_info"],
+            f"{x_name}_info": result["x_info"],
+            f"{y_name}_info": result["y_info"],
         }
 
 
@@ -531,10 +543,16 @@ class CovarianceResult(FitResult):
 class OptimizeResult(FitResult):
     """Optimize result object."""
 
-    def __init__(self, nfev, total_stat, **kwargs):
+    def __init__(self, nfev, total_stat, trace, **kwargs):
         self._nfev = nfev
         self._total_stat = total_stat
+        self._trace = trace
         super().__init__(**kwargs)
+
+    @property
+    def trace(self):
+        """Optimizer backend used for the fit."""
+        return self._trace
 
     @property
     def nfev(self):

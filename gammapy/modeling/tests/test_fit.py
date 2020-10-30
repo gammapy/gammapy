@@ -17,6 +17,7 @@ class MyModel(Model):
     z = Parameter("z", 4e-2)
     name = "test"
     datasets_names = ["test"]
+    type = "model"
 
 
 class MyDataset(Dataset):
@@ -24,7 +25,7 @@ class MyDataset(Dataset):
 
     def __init__(self, name="test"):
         self.name = name
-        self._models = Models([MyModel()])
+        self._models = Models([MyModel(x=1.99, y=2.99e3, z=3.99e-2)])
         self.data_shape = (1,)
         self.meta_table = Table()
 
@@ -79,17 +80,24 @@ def test_run(backend):
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     dataset = MyDataset()
-    fit = Fit([dataset])
-    result = fit.optimize(backend=backend)
+    fit = Fit([dataset], store_trace=True)
+
+    if backend == "scipy":
+        kwargs = {"method": "L-BFGS-B"}
+    else:
+        kwargs = {}
+
+    result = fit.optimize(backend=backend, **kwargs)
     pars = dataset.models.parameters
 
     assert result.success is True
-    assert_allclose(result.total_stat, 0)
+    assert_allclose(result.total_stat, 0, atol=1)
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
-    assert_allclose(pars["z"].value, 4e-2, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
 
+    assert len(result.trace) == result.nfev
 
 # TODO: add some extra covariance tests, in addition to run
 # Probably mainly if error message is OK if optimize didn't run first.
@@ -130,8 +138,8 @@ def test_stat_profile():
     fit.run()
     result = fit.stat_profile("x", nvalues=3)
 
-    assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
-    assert_allclose(result["stat"], [4, 0, 4], atol=1e-7)
+    assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
+    assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
     assert len(result["fit_results"]) == 0
 
     # Check that original value state wasn't changed
@@ -146,9 +154,9 @@ def test_stat_profile_reoptimize():
     dataset.models.parameters["y"].value = 0
     result = fit.stat_profile("x", nvalues=3, reoptimize=True)
 
-    assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
-    assert_allclose(result["stat"], [4, 0, 4], atol=1e-7)
-    assert_allclose(result["fit_results"][0].total_stat, result["stat"][0], atol=1e-7)
+    assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
+    assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
+    assert_allclose(result["fit_results"][0].total_stat, result["stat_scan"][0], atol=1e-7)
 
 
 def test_stat_surface():
@@ -159,14 +167,14 @@ def test_stat_surface():
     y_values = [2e2, 3e2, 4e2]
     result = fit.stat_surface("x", "y", x_values=x_values, y_values=y_values)
 
-    assert_allclose(result["x_values"], x_values, atol=1e-7)
-    assert_allclose(result["y_values"], y_values, atol=1e-7)
+    assert_allclose(result["x_scan"], x_values, atol=1e-7)
+    assert_allclose(result["y_scan"], y_values, atol=1e-7)
     expected_stat = [
         [1.0001e04, 1.0000e00, 1.0001e04],
         [1.0000e04, 0.0000e00, 1.0000e04],
         [1.0001e04, 1.0000e00, 1.0001e04],
     ]
-    assert_allclose(list(result["stat"]), expected_stat, atol=1e-7)
+    assert_allclose(list(result["stat_scan"]), expected_stat, atol=1e-7)
     assert len(result["fit_results"]) == 0
 
     # Check that original value state wasn't changed
@@ -186,16 +194,17 @@ def test_stat_surface_reoptimize():
         "x", "y", x_values=x_values, y_values=y_values, reoptimize=True
     )
 
-    assert_allclose(result["x_values"], x_values, atol=1e-7)
-    assert_allclose(result["y_values"], y_values, atol=1e-7)
+    assert_allclose(result["x_scan"], x_values, atol=1e-7)
+    assert_allclose(result["y_scan"], y_values, atol=1e-7)
     expected_stat = [
         [1.0001e04, 1.0000e00, 1.0001e04],
         [1.0000e04, 0.0000e00, 1.0000e04],
         [1.0001e04, 1.0000e00, 1.0001e04],
     ]
-    assert_allclose(list(result["stat"]), expected_stat, atol=1e-7)
+
+    assert_allclose(list(result["stat_scan"]), expected_stat, atol=1e-7)
     assert_allclose(
-        result["fit_results"][0][0].total_stat, result["stat"][0][0], atol=1e-7
+        result["fit_results"][0][0].total_stat, result["stat_scan"][0][0], atol=1e-7
     )
 
 
@@ -208,11 +217,11 @@ def test_minos_contour():
 
     assert result["success"] is True
 
-    x = result["x"]
+    x = result["y"]
     assert_allclose(len(x), 10)
     assert_allclose(x[0], 299, rtol=1e-5)
     assert_allclose(x[-1], 299.133975, rtol=1e-5)
-    y = result["y"]
+    y = result["z"]
     assert_allclose(len(y), 10)
     assert_allclose(y[0], 0.04, rtol=1e-5)
     assert_allclose(y[-1], 0.54, rtol=1e-5)

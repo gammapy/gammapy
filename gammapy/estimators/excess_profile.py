@@ -178,7 +178,7 @@ class ExcessProfileEstimator(Estimator):
             else:
                 stats = CashCountsStatistic(
                     spds.counts.data[mask][:, 0, 0],
-                    spds.background_model.evaluate().data[mask][:, 0, 0],
+                    spds.npred_background().data[mask][:, 0, 0],
                 )
 
             result = {
@@ -192,13 +192,13 @@ class ExcessProfileEstimator(Estimator):
             result.update(
                 {
                     "counts": stats.n_on,
-                    "background": stats.background,
+                    "background": stats.mu_bkg,
                     "excess": stats.excess,
                 }
             )
 
-            result["ts"] = stats.delta_ts
-            result["sqrt_ts"] = stats.significance
+            result["ts"] = stats.ts
+            result["sqrt_ts"] = stats.sqrt_ts
 
             result["err"] = stats.error * self.n_sigma
 

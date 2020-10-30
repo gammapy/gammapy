@@ -111,13 +111,16 @@ class Model:
         params = self.parameters.to_dict()
 
         if not full_output:
-            base = self.__class__
-            names = self.parameters.names
-            for k, name in enumerate(names):
-                init = base.__dict__[name].to_dict()
+            for par, par_default in zip(params, self.default_parameters):
+                init = par_default.to_dict()
                 for item in ["min", "max", "frozen", "error"]:
-                    if params[k][item] == init[item] or np.isnan(init[item]):
-                        del params[k][item]
+                    default = init[item]
+                    if par[item] == default or np.isnan(default):
+                        del par[item]
+
+                if init["unit"] == "":
+                    del par["unit"]
+
         return {"type": tag, "parameters": params}
 
     @classmethod
@@ -550,11 +553,11 @@ class ProperModels(Models):
                 model.datasets_names.append(d.name)
 
     def insert(self, idx, model):
-        from gammapy.modeling.models import SkyModel, BackgroundModel
+        from gammapy.modeling.models import SkyModel, BackgroundModel, FoVBackgroundModel
 
         for d in self._datasets:
             if model not in d._models:
-                if isinstance(model, (SkyModel, BackgroundModel)):
+                if isinstance(model, (SkyModel, BackgroundModel, FoVBackgroundModel)):
                     if idx == len(self):
                         index = len(d._models)
                     else:

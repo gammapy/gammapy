@@ -137,6 +137,7 @@ class MapDatasetMaker(Maker):
         if isinstance(observation.bkg, Map):
             return observation.bkg.interp_to_geom(
                 geom=geom,
+                preserve_counts=True
             )
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
 
@@ -299,12 +300,7 @@ class MapDatasetMaker(Maker):
             kwargs["exposure"] = exposure
 
         if "background" in self.selection:
-            background_map = self.make_background(dataset.counts.geom, observation)
-            kwargs["models"] = BackgroundModel(
-                background_map,
-                name=dataset.name + "-bkg",
-                datasets_names=[dataset.name],
-            )
+            kwargs["background"] = self.make_background(dataset.counts.geom, observation)
 
         if "psf" in self.selection:
             psf = self.make_psf(dataset.psf.psf_map.geom, observation)

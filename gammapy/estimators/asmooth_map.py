@@ -125,7 +125,7 @@ class ASmoothMapEstimator(Estimator):
         if method in {"lima"}:
             scube = CashCountsStatistic(
                 cubes["counts"], cubes["background"]
-            ).significance
+            ).sqrt_ts
         elif method == "asmooth":
             scube = _sqrt_ts_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":
@@ -201,10 +201,10 @@ class ASmoothMapEstimator(Estimator):
 
         # extract 2d arrays
         counts = dataset.counts.data[0].astype(float)
-        background = dataset.background_model.evaluate().data[0]
+        background = dataset.npred_background().data[0]
 
         if isinstance(dataset, MapDatasetOnOff):
-            background = dataset.counts_off_normalised.data[0]
+            background = dataset.background.data[0]
 
         if dataset.exposure is not None:
             exposure = estimate_exposure_reco_energy(dataset, self.spectrum)

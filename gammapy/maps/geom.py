@@ -678,6 +678,20 @@ class MapAxis:
         return self._nbin
 
     @property
+    def nbin_per_decade(self):
+        """Return number of bins."""
+        if self.interp != "log":
+            raise ValueError("Bins per decade can only be computed for log-spaced axes")
+
+        if self.node_type == "edges":
+            values = self.edges
+        else:
+            values = self.center
+
+        ndecades = np.log10(values.max() / values.min())
+        return (self._nbin / ndecades).value
+
+    @property
     def node_type(self):
         """Return node type ('center' or 'edge')."""
         return self._node_type
@@ -1968,6 +1982,12 @@ class Geom(abc.ABC):
         """
         axes = self.axes.slice_by_idx(slices)
         return self._init_copy(axes=axes)
+
+    @property
+    def as_energy_true(self):
+        """If the geom contains an energy axis rename it to energy true"""
+        energy_axis = self.axes["energy"].copy(name="energy_true")
+        return self.to_image().to_cube([energy_axis])
 
     @abc.abstractmethod
     def to_image(self):

@@ -52,6 +52,7 @@ def dataset():
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         temporal_model=temporal_model,
+        name="test-source"
     )
 
     geom = WcsGeom.create(
@@ -207,8 +208,9 @@ def test_mde_run(dataset):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
-    dataset_bkg = dataset.copy()
-    dataset_bkg.models = dataset_bkg.models[1]
+    dataset_bkg = dataset.copy(name="new-dataset")
+    dataset_bkg.models.pop("test-source")
+
     events_bkg = sampler.run(dataset=dataset_bkg, observation=obs)
 
     assert len(events.table) == 374
@@ -303,7 +305,7 @@ def test_mde_run_switchoff(dataset):
 
     dataset.psf = None
     dataset.edisp = None
-    dataset._background_model = None
+    dataset.background = None
 
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)

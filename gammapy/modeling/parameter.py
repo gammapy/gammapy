@@ -406,7 +406,8 @@ class Parameters(collections.abc.Sequence):
         rows = [p.to_dict() for p in self._parameters]
         table = table_from_row_data(rows)
 
-        for name in ["value", "error", "min", "max"]:
+        table["value"].format = ".4e"
+        for name in ["error", "min", "max"]:
             table[name].format = ".3e"
 
         return table

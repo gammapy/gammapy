@@ -33,6 +33,7 @@ class PSF3D:
     energy_thresh_hi : `~astropy.units.Quantity`
         Upper energy threshold.
     """
+
     tag = "psf_table"
 
     def __init__(
@@ -48,6 +49,12 @@ class PSF3D:
         assert energy_axis_true.name == "energy_true"
         assert offset_axis.name == "offset"
         assert rad_axis.name == "rad"
+
+        assert psf_value.shape == (
+            energy_axis_true.nbin,
+            offset_axis.nbin,
+            rad_axis.nbin,
+        )
 
         self._energy_axis_true = energy_axis_true
         self._offset_axis = offset_axis
@@ -77,7 +84,7 @@ class PSF3D:
         rad = self.rad_axis.center
 
         return ScaledRegularGridInterpolator(
-            points=(rad, offset, energy), values=self.psf_value, **self._interp_kwargs
+            points=(energy, offset, rad), values=self.psf_value, **self._interp_kwargs
         )
 
     def __repr__(self):
@@ -111,7 +118,7 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
-        psf_value = table["RPSF"].quantity[0]
+        psf_value = table["RPSF"].quantity[0].transpose()
 
         opts = {}
         try:
@@ -120,8 +127,12 @@ class PSF3D:
         except KeyError:
             pass
 
-        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        energy_axis_true = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        offset_axis = MapAxis.from_table(
+            table, column_prefix="THETA", format="gadf-dl3"
+        )
         rad_axis = MapAxis.from_table(table, column_prefix="RAD", format="gadf-dl3")
 
         return cls(
@@ -129,7 +140,7 @@ class PSF3D:
             offset_axis=offset_axis,
             rad_axis=rad_axis,
             psf_value=psf_value,
-            **opts
+            **opts,
         )
 
     def to_hdulist(self):
@@ -143,7 +154,7 @@ class PSF3D:
         axes = MapAxes([self.offset_axis, self.energy_axis_true, self.rad_axis])
         table = axes.to_table(format="gadf-dl3")
 
-        table["RPSF"] = self.psf_value[np.newaxis]
+        table["RPSF"] = self.psf_value.T[np.newaxis]
 
         hdu = fits.BinTableHDU(table)
         hdu.header["LO_THRES"] = self.energy_thresh_lo.value
@@ -187,9 +198,9 @@ class PSF3D:
         energy = np.atleast_1d(u.Quantity(energy))
         return self._interpolate(
             (
-                rad[:, np.newaxis, np.newaxis],
-                offset[np.newaxis, :, np.newaxis],
                 energy[np.newaxis, np.newaxis, :],
+                offset[np.newaxis, :, np.newaxis],
+                rad[:, np.newaxis, np.newaxis],
             )
         )
 
@@ -225,7 +236,7 @@ class PSF3D:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
-            psf_value=psf_value.T
+            psf_value=psf_value.transpose(),
         )
 
     def to_table_psf(self, energy, theta="0 deg", **kwargs):
@@ -315,9 +326,7 @@ class PSF3D:
         table = self.to_table_psf(energy=energy, theta=theta)
         return table.plot_psf_vs_rad()
 
-    def plot_containment(
-        self, fraction=0.68, ax=None, add_cbar=True, **kwargs
-    ):
+    def plot_containment(self, fraction=0.68, ax=None, add_cbar=True, **kwargs):
         """Plot containment image with energy and theta axes.
 
         Parameters
@@ -370,7 +379,7 @@ class PSF3D:
         esafe = self.energy_thresh_lo
         omin = self.offset_axis.center.value.min()
         omax = self.offset_axis.center.value.max()
-        ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
+        ax.vlines(x=esafe.value, ymin=omin, ymax=omax)
         label = f"Safe energy threshold: {esafe:3.2f}"
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 

@@ -25,6 +25,7 @@ from gammapy.modeling.models import (
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpectralModel,
+    PiecewiseNormSpectralModel,
 )
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -273,6 +274,15 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(13.522782989735022, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(40.06681812966845, "TeV cm-2 s-1"),
     ),
+    dict(
+        name="pbpl",
+        model=PiecewiseNormSpectralModel(
+            energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
+        ),
+        val_at_2TeV=u.Quantity(2.76058404, ""),
+        integral_1_10TeV=u.Quantity(24.757573885411876, "TeV"),
+        eflux_1_10TeV=u.Quantity(117.74087966682515, "TeV2"),
+    ),
 ]
 
 # Add compound models
@@ -334,11 +344,12 @@ def test_models(spectrum):
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
     # inverse for ConstantSpectralModel is irrelevant.
-    # inverse for Gaussian has a degeneracy
+    # inverse for Gaussian and PiecewiseNormSpectralModel have a degeneracy
     if not (
         isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
         or spectrum["name"] == "GaussianSpectralModel"
+        or spectrum["name"] == "pbpl"
     ):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 
@@ -791,11 +802,39 @@ def test_integral_error_ExpCutOffPowerLaw():
     emax = energy[1:]
 
     exppowerlaw = ExpCutoffPowerLawSpectralModel()
-    exppowerlaw.parameters["index"].error = 0.4
-    exppowerlaw.parameters["amplitude"].error = 1e-13
-    exppowerlaw.parameters["lambda_"].error = 0.03
+    exppowerlaw.parameters['index'].error = 0.4
+    exppowerlaw.parameters['amplitude'].error = 1e-13
+    exppowerlaw.parameters['lambda_'].error = 0.03
 
     flux, flux_error = exppowerlaw.integral_error(emin, emax)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.90907063, rtol=0.01)
+    assert_allclose(flux.value[0]/1e-13, 5.05855622, rtol=0.01)
+    assert_allclose(flux_error.value[0]/1e-14, 8.90907063, rtol=0.01)
+
+
+def test_energy_flux_error_PowerLaw():
+    emin = 1 * u.TeV
+    emax = 10 * u.TeV
+
+    powerlaw = PowerLawSpectralModel()
+    powerlaw.parameters['index'].error = 0.4
+    powerlaw.parameters['amplitude'].error = 1e-13
+
+    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(emin,emax)
+
+    assert_allclose(enrg_flux.value/1e-12, 2.303, rtol=0.001)
+    assert_allclose(enrg_flux_error.value/1e-12, 1.347, rtol=0.001)
+
+def test_energy_flux_error_ExpCutOffPowerLaw():
+    emin = 1 * u.TeV
+    emax = 10 * u.TeV
+
+    exppowerlaw = ExpCutoffPowerLawSpectralModel()
+    exppowerlaw.parameters['index'].error = 0.4
+    exppowerlaw.parameters['amplitude'].error = 1e-13
+    exppowerlaw.parameters['lambda_'].error = 0.03
+
+    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(emin, emax)
+
+    assert_allclose(enrg_flux.value/1e-12, 2.788, rtol=0.001)
+    assert_allclose(enrg_flux_error.value/1e-12, 2.226, rtol=0.001)

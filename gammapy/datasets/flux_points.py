@@ -59,7 +59,7 @@ class FluxPointsDataset(Dataset):
     stat_type = "chi2"
     tag = "FluxPointsDataset"
 
-    def __init__(self, models, data, mask_fit=None, mask_safe=None, name=None, meta_table=None):
+    def __init__(self, models=None, data=None, mask_fit=None, mask_safe=None, name=None, meta_table=None):
         self.data = data
         self.mask_fit = mask_fit
         self._name = make_name(name)
@@ -112,15 +112,13 @@ class FluxPointsDataset(Dataset):
         table.write(make_path(filename), overwrite=overwrite, **kwargs)
 
     @classmethod
-    def from_dict(cls, data, models, **kwargs):
+    def from_dict(cls, data, **kwargs):
         """Create flux point dataset from dict.
 
         Parameters
         ----------
         data : dict
             Dict containing data to create dataset from.
-        models : list of `SkyModel`
-            List of model components.
 
         Returns
         -------
@@ -135,7 +133,6 @@ class FluxPointsDataset(Dataset):
         mask_safe = table["mask_safe"].data.astype("bool")
         table.remove_columns(["mask_fit", "mask_safe"])
         return cls(
-            models=models,
             name=data["name"],
             data=FluxPoints(table),
             mask_fit=mask_fit,

@@ -45,7 +45,7 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     result = estimator.run(datasets, parameter="amplitude")
 
     assert_allclose(result["amplitude"], 5.1428e-11, rtol=1e-3)
-    assert_allclose(result["amplitude_err"], 6.0075e-12, rtol=1e-3)
+    assert_allclose(result["amplitude_err"], 6.42467e-12, rtol=1e-3)
     assert_allclose(result["ts"], 353.2092, rtol=1e-3)
     assert_allclose(result["amplitude_errp"], 6.703e-12, rtol=5e-3)
     assert_allclose(result["amplitude_errn"], 6.152e-12, rtol=5e-3)
@@ -65,6 +65,6 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
 
     assert not datasets[0].models.parameters["alpha"].frozen
     assert_allclose(datasets[0].models.parameters["alpha"].value, alpha_value)
-    assert_allclose(result["amplitude"], 0.018381, rtol=1e-4)
+    assert_allclose(result["amplitude"], 0.018251, rtol=1e-4)
     assert_allclose(result["amplitude_scan"].shape, 10)
     assert_allclose(result["amplitude_scan"][0], 0.017282, atol=1e-3)

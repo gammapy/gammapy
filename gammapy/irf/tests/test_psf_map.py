@@ -43,7 +43,7 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
         energy_axis_true=energy_axis_true,
         rad_axis=rad_axis,
         offset_axis=offset_axis,
-        psf_value=psf_value
+        psf_value=psf_value.T,
     )
 
 
@@ -59,9 +59,7 @@ def fake_aeff2d(area=1e6 * u.m ** 2):
     aeff_values = np.ones((4, 3)) * area
 
     return EffectiveAreaTable2D(
-        energy_axis_true=energy_axis_true,
-        offset_axis=offset_axis,
-        data=aeff_values,
+        energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=aeff_values,
     )
 
 
@@ -344,7 +342,10 @@ def test_make_mean_psf(data_store):
     psf = observations[0].psf
 
     geom = WcsGeom.create(
-        skydir=position, npix=(3, 3), axes=[psf.rad_axis, psf.energy_axis_true], binsz=0.2
+        skydir=position,
+        npix=(3, 3),
+        axes=[psf.rad_axis, psf.energy_axis_true],
+        binsz=0.2,
     )
 
     psf_map_1 = make_psf_map_obs(geom, observations[0])
@@ -388,12 +389,14 @@ def test_to_image():
 def test_psfmap_from_gauss():
     rad = np.linspace(0, 1.5, 50) * u.deg
     energy = np.logspace(-1, 2, 10) * u.TeV
-    energy_axis = MapAxis.from_nodes(energy, name="energy_true", interp="log", unit="TeV")
+    energy_axis = MapAxis.from_nodes(
+        energy, name="energy_true", interp="log", unit="TeV"
+    )
     rad_axis = MapAxis.from_nodes(rad, name="rad", unit="deg")
 
     # define sigmas starting at 0.1 in steps of 0.1 deg
     sigma = (np.arange(energy.shape[0]) * 0.1 + 0.1) * u.deg
-    
+
     # with energy-dependent sigma
     psfmap = PSFMap.from_gauss(energy_axis, rad_axis, sigma)
     assert psfmap.psf_map.geom.axes[0] == rad_axis
@@ -401,18 +404,20 @@ def test_psfmap_from_gauss():
     assert psfmap.psf_map.unit == Unit("sr-1")
     assert psfmap.psf_map.data.shape == (energy.shape[0], rad.shape[0], 1, 2)
     assert_allclose(
-        psfmap.get_energy_dependent_table_psf().containment_radius(1*u.TeV)[0],
-        psfmap.containment_radius_map(1*u.TeV).data[0][0]*u.deg
+        psfmap.get_energy_dependent_table_psf().containment_radius(1 * u.TeV)[0],
+        psfmap.containment_radius_map(1 * u.TeV).data[0][0] * u.deg,
     )
     assert_allclose(
-        psfmap.containment_radius_map(energy[3], 0.68).data[0][0]/sigma[3].value,
-          1.51, atol=1e-2
+        psfmap.containment_radius_map(energy[3], 0.68).data[0][0] / sigma[3].value,
+        1.51,
+        atol=1e-2,
     )
     assert_allclose(
-        psfmap.containment_radius_map(energy[3], 0.95).data[0][0]/sigma[3].value,
-         2.45, atol=1e-2
+        psfmap.containment_radius_map(energy[3], 0.95).data[0][0] / sigma[3].value,
+        2.45,
+        atol=1e-2,
     )
-    
+
     # with constant sigma
     psfmap1 = PSFMap.from_gauss(energy_axis, rad_axis, sigma[0])
     assert psfmap1.psf_map.geom.axes[0] == rad_axis
@@ -420,15 +425,15 @@ def test_psfmap_from_gauss():
     assert psfmap1.psf_map.unit == Unit("sr-1")
     assert psfmap1.psf_map.data.shape == (energy.shape[0], rad.shape[0], 1, 2)
     assert_allclose(
-        psfmap1.get_energy_dependent_table_psf().containment_radius(1*u.TeV)[0],
-         psfmap1.containment_radius_map(1*u.TeV).data[0][0]*u.deg
+        psfmap1.get_energy_dependent_table_psf().containment_radius(1 * u.TeV)[0],
+        psfmap1.containment_radius_map(1 * u.TeV).data[0][0] * u.deg,
     )
 
     # check that the PSF with the same sigma is the same
     psfvalue = psfmap.get_energy_dependent_table_psf().psf_value[0]
     psfvalue1 = psfmap1.get_energy_dependent_table_psf().psf_value[0]
     assert_allclose(psfvalue, psfvalue1, atol=1e-7)
-    
+
     # test that it won't work with different number of sigmas and energies
     with pytest.raises(AssertionError):
         psfmap2 = PSFMap.from_gauss(energy_axis, rad_axis, sigma[:3])

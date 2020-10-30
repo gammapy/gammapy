@@ -87,9 +87,7 @@ def _map_spectrum_weight(map, spectrum=None):
 
     # Compute weights vector
     energy_edges = map.geom.axes["energy_true"].edges
-    weights = spectrum.integral(
-        emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
-    )
+    weights = spectrum.integral(emin=energy_edges[:-1], emax=energy_edges[1:])
     weights /= weights.sum()
     shape = np.ones(len(map.geom.data_shape))
     shape[0] = -1
@@ -206,9 +204,9 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     # TODO: allow broadcasting in PSF3D.evaluate()
     psf_values = psf._interpolate(
         (
-            rad[:, np.newaxis, np.newaxis],
-            offset,
             energy[:, np.newaxis, np.newaxis, np.newaxis],
+            offset,
+            rad[:, np.newaxis, np.newaxis],
         )
     )
 
@@ -294,9 +292,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     migra_axis = edisp.data.axes["migra"]
 
     # Create temporary EDispMap Geom
-    new_geom = geom.to_image().to_cube(
-        [migra_axis, geom.axes["energy_true"]]
-    )
+    new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
     edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 
@@ -384,7 +380,7 @@ def make_theta_squared_table(
 
     stat = WStatCountsStatistic(table["counts"], table["counts_off"], table["alpha"])
     table["excess"] = stat.excess
-    table["sqrt_ts"] = stat.significance
+    table["sqrt_ts"] = stat.sqrt_ts
     table["excess_errn"] = stat.compute_errn()
     table["excess_errp"] = stat.compute_errp()
 

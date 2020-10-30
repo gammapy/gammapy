@@ -20,11 +20,11 @@ values = [
 def test_cash_basic(n_on, mu_bkg, result):
     stat = CashCountsStatistic(n_on, mu_bkg)
     excess = stat.excess
-    significance = stat.significance
+    sqrt_ts = stat.sqrt_ts
     p_value = stat.p_value
 
     assert_allclose(excess, result[0])
-    assert_allclose(significance, result[1], atol=1e-5)
+    assert_allclose(sqrt_ts, result[1], atol=1e-5)
     assert_allclose(p_value, result[2], atol=1e-5)
 
 
@@ -101,11 +101,11 @@ values = [
 def test_wstat_basic(n_on, n_off, alpha, result):
     stat = WStatCountsStatistic(n_on, n_off, alpha)
     excess = stat.excess
-    significance = stat.significance
+    sqrt_ts = stat.sqrt_ts
     p_value = stat.p_value
 
     assert_allclose(excess, result[0], rtol=1e-4)
-    assert_allclose(significance, result[1], rtol=1e-4)
+    assert_allclose(sqrt_ts, result[1], rtol=1e-4)
     assert_allclose(p_value, result[2], rtol=1e-4)
 
 
@@ -121,12 +121,12 @@ def test_wstat_with_musig(n_on, n_off, alpha, mu_sig, result):
 
     stat = WStatCountsStatistic(n_on, n_off, alpha, mu_sig)
     excess = stat.excess
-    significance = stat.significance
+    sqrt_ts = stat.sqrt_ts
     p_value = stat.p_value
-    del_ts = stat.delta_ts
+    del_ts = stat.ts
 
     assert_allclose(excess, result[0], rtol=1e-4)
-    assert_allclose(significance, result[1], rtol=1e-4)
+    assert_allclose(sqrt_ts, result[1], rtol=1e-4)
     assert_allclose(p_value, result[2], rtol=1e-4)
     assert_allclose(del_ts, result[3], rtol=1e-4)
 

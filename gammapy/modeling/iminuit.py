@@ -14,10 +14,16 @@ class MinuitLikelihood(Likelihood):
 
     def fcn(self, *factors):
         self.parameters.set_parameter_factors(factors)
-        return self.function()
+
+        total_stat = self.function()
+
+        if self.store_trace:
+            self.store_trace_iteration(total_stat)
+
+        return total_stat
 
 
-def optimize_iminuit(parameters, function, **kwargs):
+def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     """iminuit optimization
 
     Parameters
@@ -43,7 +49,7 @@ def optimize_iminuit(parameters, function, **kwargs):
     kwargs.setdefault("print_level", 0)
     kwargs.update(make_minuit_par_kwargs(parameters))
 
-    minuit_func = MinuitLikelihood(function, parameters)
+    minuit_func = MinuitLikelihood(function, parameters, store_trace=store_trace)
 
     kwargs = kwargs.copy()
     migrad_opts = kwargs.pop("migrad_opts", {})
@@ -59,6 +65,7 @@ def optimize_iminuit(parameters, function, **kwargs):
         "success": minuit.migrad_ok(),
         "nfev": minuit.get_num_call_fcn(),
         "message": _get_message(minuit, parameters),
+        "trace": minuit_func.trace
     }
     optimizer = minuit
 

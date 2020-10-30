@@ -48,10 +48,7 @@ def spectrum_dataset():
 
     background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis])
 
-    bkg_model = BackgroundModel(background, name=name + "-bkg", datasets_names=[name])
-    bkg_model.spectral_model.norm.frozen = True
-
-    models = Models([bkg_model, model])
+    models = Models([model])
     exposure = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])
     exposure.quantity = u.Quantity("1 cm2") * livetime
     bkg_rate = np.ones(30) / u.s
@@ -63,7 +60,7 @@ def spectrum_dataset():
     gti = GTI.create(start, stop, reference_time=t_ref)
 
     dataset = SpectrumDataset(
-        models=models, exposure=exposure, name=name, gti=gti,
+        models=models, exposure=exposure, background=background, name=name, gti=gti,
     )
     dataset.fake(random_state=23)
     return dataset
@@ -131,10 +128,10 @@ def test_npred_models():
 
     assert_allclose(npred.data.sum(), 64.8)
 
-    npred_sig = spectrum_dataset.npred_sig()
+    npred_sig = spectrum_dataset.npred_signal()
     assert_allclose(npred_sig.data.sum(), 64.8)
 
-    npred_sig_model1 = spectrum_dataset.npred_sig(model=model_1)
+    npred_sig_model1 = spectrum_dataset.npred_signal(model=model_1)
     assert_allclose(npred_sig_model1.data.sum(), 32.4)
 
 
@@ -153,10 +150,10 @@ def test_fit(spectrum_dataset):
 
     pars = result.parameters
     assert_allclose(pars["index"].value, 2.1, rtol=1e-2)
-    assert_allclose(pars["index"].error, 0.001206, rtol=1e-2)
+    assert_allclose(pars["index"].error, 0.001276, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e5, rtol=1e-3)
-    assert_allclose(pars["amplitude"].error, 139.61, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 153.450825, rtol=1e-2)
 
 
 def test_spectrum_dataset_create():
@@ -169,8 +166,8 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0
     assert empty_spectrum_dataset.data_shape[0] == 2
-    assert empty_spectrum_dataset.background_model.map.data.sum() == 0
-    assert empty_spectrum_dataset.background_model.map.geom.axes[0].nbin == 2
+    assert empty_spectrum_dataset.npred_background().data.sum() == 0
+    assert empty_spectrum_dataset.npred_background().geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert (
         empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
@@ -203,14 +200,14 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     )
     edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
 
-    background = spectrum_dataset.background_model.map.copy()
+    background = spectrum_dataset.npred_background().copy()
 
     spectrum_dataset1 = SpectrumDataset(
         name="ds1",
         counts=spectrum_dataset.counts.copy(),
         exposure=exposure.copy(),
         edisp=edisp.copy(),
-        models=BackgroundModel(background, name="ds1-bkg", datasets_names=["ds1"]),
+        background=background,
         gti=gti.copy()
     )
 
@@ -232,7 +229,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         counts=spectrum_dataset.counts.copy(),
         exposure=exposure2,
         edisp=edisp,
-        models=BackgroundModel(bkg2, name="ds2-bkg", datasets_names=["ds2"]),
+        background=bkg2,
         mask_safe=safe_mask2,
         gti=gti2
     )
@@ -244,9 +241,9 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     assert_allclose(spectrum_dataset1.counts.data[0], 141363)
     assert_allclose(spectrum_dataset1.exposure.data[0], 4.755644e+09)
     assert_allclose(
-        spectrum_dataset1.background_model.map.data[1:], 3 * background.data[1:]
+        spectrum_dataset1.npred_background().data[1:], 3 * background.data[1:]
     )
-    assert_allclose(spectrum_dataset1.background_model.map.data[0], background.data[0])
+    assert_allclose(spectrum_dataset1.npred_background().data[0], background.data[0])
 
     assert_allclose(
         spectrum_dataset1.exposure.quantity.to_value("m2s"),
@@ -324,11 +321,11 @@ class TestSpectrumOnOff:
 
     def setup(self):
         etrue = np.logspace(-1, 1, 10) * u.TeV
-        self.e_true = MapAxis.from_edges(etrue, name="energy_true")
+        self.e_true = MapAxis.from_energy_edges(etrue, name="energy_true")
         ereco = np.logspace(-1, 1, 5) * u.TeV
         elo = ereco[:-1]
         ehi = ereco[1:]
-        self.e_reco = MapAxis.from_edges(ereco, name="energy")
+        self.e_reco = MapAxis.from_energy_edges(ereco, name="energy")
 
         start = u.Quantity([0], "s")
         stop = u.Quantity([1000], "s")
@@ -440,13 +437,13 @@ class TestSpectrumOnOff:
         energy = aeff.geom.axes[0].edges
         expected = aeff.data[0] * (energy[-1] - energy[0]) * const * livetime
 
-        assert_allclose(dataset.npred_sig().data.sum(), expected.value)
+        assert_allclose(dataset.npred_signal().data.sum(), expected.value)
 
     def test_to_spectrum_dataset(self):
         ds = self.dataset.to_spectrum_dataset()
 
         assert isinstance(ds, SpectrumDataset)
-        assert_allclose(ds.background_model.map.data.sum(), 4)
+        assert_allclose(ds.npred_background().data.sum(), 4)
 
     @requires_dependency("matplotlib")
     def test_peek(self):
@@ -555,10 +552,7 @@ class TestSpectrumOnOff:
 
         background = RegionNDMap.from_geom(dataset.counts.geom)
         background.data += 1
-        background_model = BackgroundModel(
-            background, name="test-bkg", datasets_names="test"
-        )
-        dataset.fake(background_model=background_model, random_state=314)
+        dataset.fake(npred_background=background, random_state=314)
 
         assert real_dataset.counts.data.shape == dataset.counts.data.shape
         assert real_dataset.counts_off.data.shape == dataset.counts_off.data.shape
@@ -663,8 +657,8 @@ class TestSpectralFit:
         result = self.fit.run()
         pars = result.parameters
 
-        assert_allclose(pars["index"].error, 0.156045, rtol=1e-3)
-        assert_allclose(pars["amplitude"].error, 6.473577e-12, rtol=1e-3)
+        assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
+        assert_allclose(pars["amplitude"].error, 6.423139e-12, rtol=1e-3)
         pars.to_table()
 
     def test_ecpl_fit(self):
@@ -860,13 +854,13 @@ class TestSpectrumDatasetOnOffStack:
 
         self.stacked_dataset.models = pwl
 
-        npred_stacked = self.stacked_dataset.npred_sig().data
+        npred_stacked = self.stacked_dataset.npred_signal().data
         npred_stacked[~self.stacked_dataset.mask_safe.data] = 0
         npred_summed = np.zeros_like(npred_stacked)
 
         for dataset in self.datasets:
             dataset.models = pwl
-            npred_summed[dataset.mask_safe] += dataset.npred_sig().data[
+            npred_summed[dataset.mask_safe] += dataset.npred_signal().data[
                 dataset.mask_safe
             ]
 
@@ -1037,5 +1031,5 @@ class TestFit:
         true_idx = result.parameters["index"].value
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         profile = fit.stat_profile("index", values=values)
-        actual = values[np.argmin(profile["stat"])]
+        actual = values[np.argmin(profile["stat_scan"])]
         assert_allclose(actual, true_idx, rtol=0.01)

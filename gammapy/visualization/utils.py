@@ -156,25 +156,51 @@ def plot_theta_squared_table(table):
     """
     import matplotlib.pyplot as plt
 
-    theta2_edges = edges_from_lo_hi(table["theta2_min"], table["theta2_max"])
+    theta2_edges = edges_from_lo_hi(table["theta2_min"].quantity, table["theta2_max"].quantity)
     theta2_axis = MapAxis.from_edges(
         theta2_edges, interp="lin", name="theta_squared"
     )
 
     ax0 = plt.subplot(2, 1, 1)
-    xerr = (theta2_axis.center - theta2_axis.edges[:-1], theta2_axis.edges[1:] - theta2_axis.center)
+
+    x = theta2_axis.center.value
+    x_edges = theta2_axis.edges.value
+    xerr = (x - x_edges[:-1], x_edges[1:] - x)
 
     ax0.errorbar(
-        theta2_axis.center, table["counts"], xerr=xerr, yerr=np.sqrt(table["counts"]), linestyle='None', label="Counts")
-    ax0.errorbar(theta2_axis.center, table["counts_off"], xerr=xerr, yerr=np.sqrt(table["counts_off"]), linestyle='None',
-                 label="Counts Off")
-    ax0.errorbar(theta2_axis.center, table["excess"], xerr=xerr, yerr=(-table["excess_errn"], table["excess_errp"]), fmt="+",
-                 linestyle='None', label="Excess")
+        x,
+        table["counts"],
+        xerr=xerr,
+        yerr=np.sqrt(table["counts"]),
+        linestyle='None',
+        label="Counts"
+    )
+
+    ax0.errorbar(
+        x,
+        table["counts_off"],
+        xerr=xerr,
+        yerr=np.sqrt(table["counts_off"]),
+        linestyle='None',
+        label="Counts Off"
+    )
+
+    ax0.errorbar(
+        x,
+        table["excess"],
+        xerr=xerr,
+        yerr=(-table["excess_errn"], table["excess_errp"]),
+        fmt="+",
+        linestyle='None',
+        label="Excess"
+    )
+
     ax0.set_ylabel("Counts")
     ax0.set_xticks([])
     ax0.set_xlabel('')
     ax0.legend()
+
     ax1 = plt.subplot(2, 1, 2)
-    ax1.errorbar(theta2_axis.center, table["sqrt_ts"], xerr=xerr, linestyle='None')
+    ax1.errorbar(x, table["sqrt_ts"], xerr=xerr, linestyle='None')
     ax1.set_xlabel(f"Theta  [{theta2_axis.unit}]")
     ax1.set_ylabel("Significance")

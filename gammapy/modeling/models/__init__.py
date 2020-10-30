@@ -30,6 +30,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         PowerLaw2SpectralModel,
         BrokenPowerLawSpectralModel,
         SmoothBrokenPowerLawSpectralModel,
+        PiecewiseNormSpectralModel,
         ExpCutoffPowerLawSpectralModel,
         ExpCutoffPowerLaw3FGLSpectralModel,
         SuperExpCutoffPowerLaw3FGLSpectralModel,
@@ -57,7 +58,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
 )
 """Registry of temporal models classes."""
 
-MODEL_REGISTRY = Registry([SkyModel, BackgroundModel])
+MODEL_REGISTRY = Registry([SkyModel, FoVBackgroundModel, BackgroundModel])
 """Registry of model classes"""
 
 

@@ -19,9 +19,8 @@ def input_dataset_simple():
 
     counts = counts.to_cube(axes=[axis])
     bkg_map = bkg_map.to_cube(axes=[axis])
-    bkg_model = BackgroundModel(bkg_map, datasets_names="test")
 
-    return MapDataset(counts=counts, models=[bkg_model], name="test")
+    return MapDataset(counts=counts, background=bkg_map, name="test")
 
 
 @pytest.fixture(scope="session")

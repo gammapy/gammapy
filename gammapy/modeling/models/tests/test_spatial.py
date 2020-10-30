@@ -109,26 +109,27 @@ def test_sky_gaussian():
 @pytest.mark.parametrize("r_0", np.arange(0.1, 1.01, 0.3))
 @pytest.mark.parametrize("e", np.arange(0.0, 0.801, 0.4))
 def test_generalized_gaussian(eta, r_0, e):
-    reval = 6
-    dr = 0.01
-    geom = WcsGeom.create(
-        skydir=(0, 0), binsz=dr, width=(2 * reval, 2 * reval), frame="galactic",
-    )
-
     # check normalization is robust for a large set of values
     model = GeneralizedGaussianSpatialModel(
         eta=eta, r_0=r_0 * u.deg, e=e, frame="galactic"
     )
 
-    eval_geom = model.evaluate_geom(geom)
-    integ_geom = model.integrate_geom(geom)
-    assert eval_geom.unit.is_equivalent("sr-1")
-    assert integ_geom.unit.is_equivalent("")
-    assert_allclose(integ_geom.data.sum(), 1.0, atol=3e-2)
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.02, width=2 * model.evaluation_radius, frame="galactic",
+    )
+
+    integral = model.integrate_geom(geom)
+    assert integral.unit.is_equivalent("")
+    assert_allclose(integral.data.sum(), 1.0, atol=5e-3)
+
+
+def test_generalized_gaussian_io():
+    model = GeneralizedGaussianSpatialModel()
+
     assert isinstance(model.to_region(), EllipseSkyRegion)
     new_model = GeneralizedGaussianSpatialModel.from_dict(model.to_dict())
+
     assert isinstance(new_model, GeneralizedGaussianSpatialModel)
-    assert_allclose(new_model.integrate_geom(geom).data.sum(), integ_geom.data.sum())
 
 
 def test_sky_disk():
@@ -253,6 +254,8 @@ def test_sky_diffuse_map():
     assert isinstance(model.to_region(), PolygonSkyRegion)
     with pytest.raises(TypeError):
         model.plot_interative()
+    with pytest.raises(TypeError):
+        model.plot_grid()
 
 
 @requires_data()

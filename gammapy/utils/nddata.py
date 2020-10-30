@@ -31,8 +31,10 @@ class NDDataArray:
 
     def __init__(self, axes, data=None, meta=None, interp_kwargs=None):
         from gammapy.maps.geom import MapAxes
+
         self._axes = MapAxes(axes)
 
+        assert np.shape(data) == self._axes.shape
         if data is not None:
             self.data = data
 
@@ -72,7 +74,7 @@ class NDDataArray:
         """
         data = Quantity(data)
         self._regular_grid_interp = None
-        self._data = data.reshape(self.axes.shape)
+        self._data = data
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array

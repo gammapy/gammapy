@@ -71,8 +71,8 @@ class SensitivityEstimator(Estimator):
         excess_counts = stat.excess_matching_significance(self.n_sigma)
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
-        bkg_syst_limited = excess_counts < self.bkg_syst_fraction * dataset.counts_off_normalised.data
-        excess_counts[bkg_syst_limited] = self.bkg_syst_fraction * dataset.counts_off_normalised.data[bkg_syst_limited]
+        bkg_syst_limited = excess_counts < self.bkg_syst_fraction * dataset.background.data
+        excess_counts[bkg_syst_limited] = self.bkg_syst_fraction * dataset.background.data[bkg_syst_limited]
         excess = Map.from_geom(geom=dataset._geom, data=excess_counts)
         return excess
 
@@ -94,7 +94,7 @@ class SensitivityEstimator(Estimator):
         energy = dataset._geom.axes["energy"].center
 
         dataset.models = SkyModel(spectral_model=self.spectrum)
-        npred = dataset.npred_sig()
+        npred = dataset.npred_signal()
 
         phi_0 = excess / npred
 
@@ -127,7 +127,7 @@ class SensitivityEstimator(Estimator):
         energy = dataset._geom.axes["energy"].center
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
-        criterion = self._get_criterion(excess.data.squeeze(), dataset.counts_off_normalised.data.squeeze())
+        criterion = self._get_criterion(excess.data.squeeze(), dataset.background.data.squeeze())
 
         return Table(
             [
@@ -150,7 +150,7 @@ class SensitivityEstimator(Estimator):
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.counts_off_normalised.data.squeeze(),
+                    data=dataset.background.data.squeeze(),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",

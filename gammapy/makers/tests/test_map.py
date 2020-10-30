@@ -139,7 +139,7 @@ def test_map_maker(pars, observations):
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), pars["exposure"], rtol=3e-3)
 
-    background = stacked.background_model.map
+    background = stacked.npred_background()
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
 
@@ -153,7 +153,7 @@ def test_map_maker(pars, observations):
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.sum(), pars["exposure_image"], rtol=1e-3)
 
-    background = image_dataset.background_model.map
+    background = image_dataset.npred_background()
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
 
@@ -175,7 +175,7 @@ def test_map_maker_obs(observations):
 
     map_dataset = maker_obs.run(reference, observations[0])
     assert map_dataset.counts.geom == geom_reco
-    assert map_dataset.background_model.map.geom == geom_reco
+    assert map_dataset.npred_background().geom == geom_reco
     assert isinstance(map_dataset.edisp, EDispKernelMap)
     assert map_dataset.edisp.edisp_map.data.shape == (3, 2, 5, 10)
     assert map_dataset.edisp.exposure_map.data.shape == (3, 1, 5, 10)
@@ -225,9 +225,15 @@ def test_interpolate_map_dataset():
     geom_allsky_true = geom_allsky.drop('energy').to_cube([energy_true])
 
     #background
+    geom_background = WcsGeom.create(
+        skydir=(0, 0),
+        width=(5, 5),
+        binsz=0.2 * u.deg,
+        axes=[energy]
+    )
     value = 30
-    bkg_map = Map.from_geom(geom_allsky, unit="")
-    bkg_map.data = value*np.ones(bkg_map.data.shape)
+    bkg_map = Map.from_geom(geom_background, unit="")
+    bkg_map.data = value * np.ones(bkg_map.data.shape)
 
     #effective area - with a gradient that also depends on energy
     aeff_map = Map.from_geom(geom_allsky_true, unit="cm2 s")
@@ -278,8 +284,8 @@ def test_interpolate_map_dataset():
     #define analysis geometry
     geom_target = WcsGeom.create(
         skydir=(0, 0),
-        width=(10, 10),
-        binsz=0.1*u.deg,
+        width=(5, 5),
+        binsz=0.1 * u.deg,
         axes=[energy]
     )
 
@@ -291,24 +297,27 @@ def test_interpolate_map_dataset():
     assert dataset.counts.data.sum() == nr_ev
 
     #test background
+    assert np.floor(np.sum(dataset.npred_background().data)) == np.sum(bkg_map.data)
     coords_bg = {
-        'skycoord' : SkyCoord("0 deg", "0 deg"),
-        'energy' : energy.center[0]
+        "skycoord": SkyCoord("0 deg", "0 deg"),
+        "energy": energy.center[0]
     }
     assert_allclose(
-        dataset.background_model.evaluate().get_by_coord(coords_bg)[0],
-        value,
-        atol=1e-7)
+        dataset.npred_background().get_by_coord(coords_bg)[0],
+        7.5,
+        atol=1e-4
+    )
 
     #test effective area
     coords_aeff = {
-        'skycoord' : SkyCoord("0 deg", "0 deg"),
-        'energy_true' : energy_true.center[0]
+        "skycoord": SkyCoord("0 deg", "0 deg"),
+        "energy_true": energy_true.center[0]
     }
     assert_allclose(
-        aeff_map.get_by_coord(coords_aeff)[0]/dataset.exposure.get_by_coord(coords_aeff)[0],
-        1,
-        atol=1e-3)
+        aeff_map.get_by_coord(coords_aeff)[0],
+        dataset.exposure.interp_by_coord(coords_aeff)[0],
+        atol=1e-3
+    )
 
     #test edispmap
     pdfmatrix_preinterp = edispmap.get_edisp_kernel(SkyCoord("0 deg", "0 deg")).pdf_matrix

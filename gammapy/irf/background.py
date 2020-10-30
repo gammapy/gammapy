@@ -45,6 +45,7 @@ class Background3D:
     fov_lat           : size =    36, min = -5.833 deg, max =  5.833 deg
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
+
     tag = "bkg_3d"
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None, values_scale="log"
@@ -87,22 +88,44 @@ class Background3D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
-        if isinstance(data_unit, u.UnrecognizedUnit):
+        data_unit = table[bkg_name].unit
+        if data_unit is not None:
+            data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
             data_unit = u.Unit("s-1 MeV-1 sr-1")
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        fov_lon_axis = MapAxis.from_table(table, column_prefix="DETX", format="gadf-dl3")
-        fov_lat_axis = MapAxis.from_table(table, column_prefix="DETY", format="gadf-dl3")
+        energy_axis = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        fov_lon_axis = MapAxis.from_table(
+            table, column_prefix="DETX", format="gadf-dl3"
+        )
+        fov_lat_axis = MapAxis.from_table(
+            table, column_prefix="DETY", format="gadf-dl3"
+        )
+
+        # TODO: The present HESS and CTA backgroundfits files
+        #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
+        #  For now, we suport both.
+
+        data = table[bkg_name].data[0].T * data_unit
+        shape = (energy_axis.nbin, fov_lon_axis.nbin, fov_lat_axis.nbin)
+
+        if shape == shape[::-1]:
+            log.error("Ambiguous axes order in Background fits files!")
+
+        if np.shape(data) != shape:
+            log.debug("Transposing background table on read")
+            data = data.transpose()
 
         return cls(
             energy_axis=energy_axis,
             fov_lon_axis=fov_lon_axis,
             fov_lat_axis=fov_lat_axis,
-            data=table[bkg_name].data[0] * data_unit,
+            data=data,
             meta=table.meta,
         )
 
@@ -123,7 +146,7 @@ class Background3D:
         axes = MapAxes(self.data.axes[::-1])
         table = axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
-        table["BKG"] = self.data.data[np.newaxis]
+        table["BKG"] = self.data.data.T[np.newaxis]
         return table
 
     def to_table_hdu(self, name="BACKGROUND"):
@@ -194,9 +217,7 @@ class Background3D:
 
         offset_axis = MapAxis.from_edges(offset, name="offset")
         return Background2D(
-            energy_axis=self.data.axes["energy"],
-            offset_axis=offset_axis,
-            data=data,
+            energy_axis=self.data.axes["energy"], offset_axis=offset_axis, data=data,
         )
 
     def peek(self, figsize=(10, 8)):
@@ -217,17 +238,13 @@ class Background2D:
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
     """
+
     tag = "bkg_2d"
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(
-        self,
-        energy_axis,
-        offset_axis,
-        data,
-        meta=None,
-        interp_kwargs=None,
+        self, energy_axis, offset_axis, data, meta=None, interp_kwargs=None,
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
@@ -257,20 +274,40 @@ class Background2D:
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
-        if isinstance(data_unit, u.UnrecognizedUnit):
+        data_unit = table[bkg_name].unit
+        if data_unit is not None:
+            data_unit = u.Unit(data_unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
             data_unit = u.Unit("s-1 MeV-1 sr-1")
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        energy_axis = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        energy_axis = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        offset_axis = MapAxis.from_table(
+            table, column_prefix="THETA", format="gadf-dl3"
+        )
+
+        # TODO: The present HESS and CTA backgroundfits files
+        # have a reverse order (theta, E) than recommened in GADF(E, theta)
+        # For now, we suport both.
+
+        data = table[bkg_name].data[0].T * data_unit
+        shape = (energy_axis.nbin, offset_axis.nbin)
+
+        if shape == shape[::-1]:
+            log.error("Ambiguous axes order in Background fits files!")
+
+        if np.shape(data) != shape:
+            log.debug("Transposing background table on read")
+            data = data.transpose()
 
         return cls(
             energy_axis=energy_axis,
             offset_axis=offset_axis,
-            data=table[bkg_name].data[0] * data_unit,
+            data=data,
             meta=table.meta,
         )
 
@@ -289,7 +326,7 @@ class Background2D:
         """Convert to `~astropy.table.Table`."""
         table = self.data.axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
-        table["BKG"] = self.data.data[np.newaxis]
+        table["BKG"] = self.data.data.T[np.newaxis]
         return table
 
     def to_table_hdu(self, name="BACKGROUND"):

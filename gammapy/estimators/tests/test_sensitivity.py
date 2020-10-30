@@ -31,7 +31,7 @@ def spectrum_dataset():
         name="test",
         exposure=exposure,
         edisp=edisp,
-        models=BackgroundModel(background, name="test-bkg", datasets_names="test"),
+        background=background
     )
 
 

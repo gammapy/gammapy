@@ -11,12 +11,15 @@ from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.interpolation import (
+    ScaledRegularGridInterpolator,
+    interpolation_scale,
+)
 from gammapy.utils.scripts import make_path
 from .core import Model
 
 
-def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
+def integrate_spectrum(func, emin, emax, ndecade=100):
     """Integrate 1d function using the log-log trapezoidal rule.
 
     If scalar values for xmin and xmax are passed an oversampled grid is generated using the
@@ -35,24 +38,18 @@ def integrate_spectrum(func, emin, emax, ndecade=100, intervals=False):
     ndecade : int, optional
         Number of grid points per decade used for the integration.
         Default : 100.
-    intervals : bool, optional
-        Return integrals in the grid not the sum, default: False
     """
-    if emin.isscalar and emax.isscalar:
-        energies = MapAxis.from_energy_bounds(
-            emin=emin, emax=emax, nbin=ndecade, per_decade=True
-        ).edges
-    else:
-        energies = edges_from_lo_hi(emin, emax)
+    edges = edges_from_lo_hi(emin, emax)
+    energy_axis = MapAxis.from_energy_edges(edges=edges)
 
-    values = func(energies)
+    factor = np.ceil(ndecade / energy_axis.nbin_per_decade)
+    energy_axis_upsampled = energy_axis.upsample(factor=factor)
 
-    integral = trapz_loglog(values, energies)
+    values = func(energy_axis_upsampled.edges)
+    integral = trapz_loglog(values, energy_axis_upsampled.edges)
 
-    if intervals:
-        return integral
-
-    return integral.sum()
+    indices = energy_axis_upsampled.coord_to_idx(energy_axis.edges[:-1])
+    return np.add.reduceat(integral, indices)
 
 
 class SpectralModel(Model):
@@ -68,6 +65,11 @@ class SpectralModel(Model):
     @property
     def type(self):
         return self._type
+
+    @property
+    def is_norm_spectral_model(self):
+        """Whether model is a norm spectral model"""
+        return "Norm" in self.__class__.__name__
 
     @staticmethod
     def _convert_evaluate_unit(kwargs_ref, energy):
@@ -151,9 +153,6 @@ class SpectralModel(Model):
         .. math::
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} \phi(E) dE
 
-        If array input for ``emin`` and ``emax`` is given you have to set
-        ``intervals=True`` if you want the integral in each energy bin.
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -184,10 +183,48 @@ class SpectralModel(Model):
             Integral flux and flux error betwen emin and emax.
         """
         energy = np.sqrt(emin * emax)
-        flux = self.integral(emin, emax, intervals=True)
+        flux = self.integral(emin, emax)
         dnde, dnde_err = self.evaluate_error(energy, epsilon=1e-4)
         flux_err = flux * dnde_err / dnde
         return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
+
+    def _propagate_error(self, fct, emin, emax, eps):
+        """Evaluate error of a given function with uncertainty propagation.
+
+        Parameters
+        ----------
+        fct : `~astropy.units.Quantity`
+            Function to estimate the error.
+        emin, emax : `~astropy.units.Quantity`
+            Array of lower and upper bound of integration range.
+        epsilon : float
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error.
+
+        Returns
+        -------
+        f_cov : `~astropy.units.Quantity`
+            Error of the given function.
+        """
+        n = len(self.parameters)
+        C = self.covariance
+        f = fct
+        shape = (n, len(np.atleast_1d(emin)))
+        df_dp = np.zeros(shape)
+
+        for idx, parameter in enumerate(self.parameters):
+            if parameter.frozen or eps[idx] == 0:
+                continue
+
+            parameter.value += eps[idx]
+            df = self.energy_flux(emin,emax) - f
+            df_dp[idx] = df.value / eps[idx]
+
+            # Reset model to original parameter
+        parameter.value -= eps[idx]
+
+        f_cov = df_dp.T @ C @ df_dp
+        return np.sqrt(np.diagonal(f_cov))
 
     def energy_flux(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range.
@@ -212,6 +249,26 @@ class SpectralModel(Model):
             return self.evaluate_energy_flux(emin, emax, **kwargs)
         else:
             return integrate_spectrum(f, emin, emax, **kwargs)
+
+    def energy_flux_error(self, emin, emax, epsilon=1e-4, **kwargs):
+        """Evaluate the error of the energy flux of a given spectrum in
+            a given energy range.
+
+        Parameters
+        ----------
+        emin, emax :  `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+
+        Returns
+        -------
+        energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
+            Energy flux and energy flux error betwen emin and emax.
+        """
+        p_cov = self.covariance
+        eps = np.sqrt(np.diag(p_cov)) * epsilon
+        enrg_flux = self.energy_flux(emin, emax, **kwargs)
+        enrg_flux_err = self._propagate_error(enrg_flux, emin, emax, eps)
+        return u.Quantity([enrg_flux.value, enrg_flux_err], unit=enrg_flux.unit)
 
     def plot(
         self,
@@ -344,8 +401,7 @@ class SpectralModel(Model):
         self._plot_format_ax(ax, energy, y_lo, energy_power)
         return ax
 
-    @staticmethod
-    def _plot_format_ax(ax, energy, y, energy_power):
+    def _plot_format_ax(self, ax, energy, y, energy_power):
         ax.set_xlabel(f"Energy [{energy.unit}]")
         if energy_power > 0:
             ax.set_ylabel(f"E{energy_power} * Flux [{y.unit}]")
@@ -354,6 +410,10 @@ class SpectralModel(Model):
 
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
+
+        if "norm" in self.__class__.__name__.lower():
+            ax.set_ylabel(f"Norm [A.U.]")
+
 
     @staticmethod
     def _plot_scale_flux(energy, flux, energy_power):
@@ -626,7 +686,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
     norm = Parameter("norm", 1, unit="")
-    tilt = Parameter("tilt", 0)
+    tilt = Parameter("tilt", 0, frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
@@ -856,6 +916,88 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index1)
         brk = (1 + (energy / ebreak) ** ((index2 - index1) / beta)) ** (-beta)
         return pwl * brk
+
+
+class PiecewiseNormSpectralModel(SpectralModel):
+    """ Piecewise spectral correction
+       with a free normalization at each fixed energy nodes.
+       
+       For more information see :ref:`piecewise-norm-spectral`.
+
+    Parameters
+    ----------
+    energy : `~astropy.units.Quantity`
+        Array of energies at which the model values are given (nodes).
+    norms : `~numpy.ndarray` or list of `Parameter`
+        Array with the initial norms of the model at energies ``energy``.
+        A normalisation parameters is created for each value.
+        Default is one at each node.
+    interp : str
+        Interpolation scaling in {"log", "lin"}. Default is "log"
+    """
+
+    tag = ["PiecewiseNormSpectralModel", "piecewise-norm"]
+
+    def __init__(self, energy, norms=None, interp="log"):
+        self._energy = energy
+        self._interp = interp
+
+        if norms is None:
+            norms = np.ones(len(energy))
+
+        if len(norms) != len(energy):
+            raise ValueError("dimension mismatch")
+
+        if len(norms) < 2:
+            raise ValueError("Input arrays must contain at least 2 elements")
+
+        if not isinstance(norms[0], Parameter):
+            parameters = Parameters(
+                [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
+            )
+        else:
+            parameters = Parameters(norms)
+
+        self.default_parameters = parameters
+        super().__init__()
+
+    @property
+    def energy(self):
+        """Energy nodes"""
+        return self._energy
+
+    @property
+    def norms(self):
+        """Norm values"""
+        return u.Quantity(self.parameters.values)
+
+    def evaluate(self, energy, **norms):
+        scale = interpolation_scale(scale=self._interp)
+        e_eval = scale(np.atleast_1d(energy.value))
+        e_nodes = scale(self.energy.to(energy.unit).value)
+        v_nodes = scale(self.norms)
+        log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
+        return log_interp
+
+    def to_dict(self, full_output=False):
+        data = super().to_dict(full_output=full_output)
+        data["energy"] = {
+                "data": self.energy.data.tolist(),
+                "unit": str(self.energy.unit),
+            }
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create model from dict"""
+        energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
+        parameters = Parameters.from_dict(data["parameters"])
+        return cls.from_parameters(parameters, energy=energy)
+
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        """Create model from parameters"""
+        return cls(norms=parameters, **kwargs)
 
 
 class ExpCutoffPowerLawSpectralModel(SpectralModel):

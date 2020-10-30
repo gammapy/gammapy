@@ -8,16 +8,18 @@ irf - Instrument response functions
 
 Introduction
 ============
+For a definition of the response function you are invited to read 
+:ref:`irf-theory`.
 
-`gammapy.irf` handles instrument response functions (IRFs):
+`gammapy.irf` handles the following instrument response functions (IRFs):
 
-* Effective area (AEFF)
-* Energy dispersion (EDISP)
-* Point spread function (PSF)
-* Template background (BKG)
+* :ref:`irf-aeff` (AEFF)
+* :ref:`irf-edisp` (EDISP)
+* :ref:`irf-psf` (PSF)
+* :ref:`irf-bkg` (BKG)
 
-Most of the formats defined at :ref:`gadf:iact-irf` are supported.  Otherwise,
-at the moment, there is very little support for Fermi-LAT or other instruments.
+Most of the formats defined at :ref:`gadf:iact-irf` are supported.    
+At the moment, there is little support for Fermi-LAT or other instruments.
 
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as
 part of their spectrum, image or cube analysis to compute exposure and effective
@@ -31,59 +33,27 @@ IRF Axis naming
 ---------------
 In the IRF classes we use the following axis naming convention:
 
-================= ===================================
+================= ============================================================================
 Variable          Definition
-================= ===================================
-``energy``        Reconstructed energy axis
-``energy_true``   True energy axis
-``offset``        Field of view offset from center
+================= ============================================================================
+``energy``        Reconstructed energy axis (:math:`E` in :ref:`irf-theory`)
+``energy_true``   True energy axis (:math:`E_{\rm true}` in :ref:`irf-theory`)
+``offset``        Field of view offset from center (:math:`p_{\rm true}` in :ref:`irf-theory`)
 ``fov_lon``       Field of view	longitude
 ``fov_lat``       Field of view latitude
-``migra``         Energy migration
-``rad``        	  Offset angle from source position
-================= ===================================
+``migra``         Energy migration (:math:`\mu` in :ref:`irf-theory`)
+``rad``        	  Offset angle from source position (:math:`\delta p` in :ref:`irf-theory`)
+================= ============================================================================
 
 Getting Started
 ===============
 
 See `cta.html <../tutorials/cta.html>`__ for an example how to access IACT IRFs.
 
-Effective area
-==============
-
-See `~gammapy.irf.EffectiveAreaTable` and `~gammapy.irf.EffectiveAreaTable2D`.
-
-Background
-==========
-
-See `~gammapy.irf.Background2D` and `~gammapy.irf.Background3D`.
-
-PSF
-===
-
-The `~gammapy.irf.TablePSF` and `~gammapy.irf.EnergyDependentTablePSF` classes
-represent radially-symmetric PSFs where the PSF is given at a number of offsets.
-
-The `~gammapy.irf.PSFKernel` represents a PSF kernel.
-
-.. plot:: irf/plot_fermi_psf.py
-
-Energy Dispersion
-=================
-
-The `~gammapy.irf.EnergyDispersion` class represents an energy migration matrix
-(finite probabilities per pixel) with ``y=log(energy_reco)``.
-
-The `~gammapy.irf.EnergyDispersion2D` class represents a probability density
-with ``y=energy_reco/energy_true`` that can also have a FOV offset dependence.
-
-.. plot:: irf/plot_edisp.py
-
-
 Using `gammapy.irf`
 ===================
 
-If you'd like to learn more about using `gammapy.irf`, read the following
+If you'd like to learn more about using `gammapy.irf`, read the following 
 sub-pages:
 
 .. toctree::
@@ -93,6 +63,7 @@ sub-pages:
     aeff
     edisp
     psf
+    bkg
 
 Reference/API
 =============

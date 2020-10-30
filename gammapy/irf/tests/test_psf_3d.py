@@ -22,12 +22,20 @@ def test_psf_3d_basics(psf_3d):
     assert psf_3d.energy_axis_true.nbin == 32
     assert psf_3d.energy_axis_true.unit == "TeV"
 
-    assert psf_3d.psf_value.shape == (144, 6, 32)
+    assert psf_3d.psf_value.shape == (32, 6, 144)
     assert psf_3d.psf_value.unit == "sr-1"
 
     assert_allclose(psf_3d.energy_thresh_lo.value, 0.01)
 
     assert "PSF3D" in str(psf_3d)
+
+    with pytest.raises(AssertionError):
+        PSF3D(
+            energy_axis_true=psf_3d.energy_axis_true,
+            offset_axis=psf_3d.offset_axis,
+            rad_axis=psf_3d.rad_axis,
+            psf_value=psf_3d.psf_value.T,
+        )
 
 
 @requires_data()

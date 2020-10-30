@@ -151,7 +151,6 @@ class EnergyDispersion2D:
         offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
         migra_axis = MapAxis.from_table(table, column_prefix="MIGRA", format="gadf-dl3")
 
-        # TODO Why does this need to be transposed?
         matrix = table["MATRIX"].quantity[0].transpose()
 
         return cls(
