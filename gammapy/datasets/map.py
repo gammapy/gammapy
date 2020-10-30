@@ -1426,6 +1426,37 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def slice_by_energy(self, e_min, e_max, name=None):
+        """Select and slice datasets in energy range
+
+        Parameters
+        ----------
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
+        name : str
+            Name of the sliced dataset.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Sliced Dataset
+
+        """
+        name = make_name(name)
+        energy_axis = self._geom.axes["energy"]
+
+        group = energy_axis.group_table(edges=[e_min, e_max])
+
+        is_normal = group["bin_type"] == "normal   "
+        group = group[is_normal]
+
+        slices = {"energy": slice(
+            int(group["idx_min"][0]),
+            int(group["idx_max"][0]) + 1)
+        }
+
+        return self.slice_by_idx(slices, name=name)
+
     def reset_data_cache(self):
         """Reset data cache to free memory space"""
         for name in self._lazy_data_members:
