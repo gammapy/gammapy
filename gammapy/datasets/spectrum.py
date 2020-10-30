@@ -294,7 +294,7 @@ class SpectrumDataset(MapDataset):
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(pred_kwargs)
         plot_kwargs.setdefault("label", "Predicted signal counts")
-        self.npred_sigal().plot_hist(ax, **plot_kwargs)
+        self.npred_signal().plot_hist(ax, **plot_kwargs)
 
         self._plot_energy_range(ax)
         ax.legend(numpoints=1)
@@ -409,84 +409,6 @@ class SpectrumDataset(MapDataset):
             gti=gti,
             name=name,
         )
-
-    def stack(self, other):
-        r"""Stack this dataset with another one.
-
-        Safe mask is applied to compute the stacked counts vector.
-        Counts outside each dataset safe mask are lost.
-
-        Stacking is performed in-place.
-
-        The stacking of 2 datasets is implemented as follows.
-        Here, :math:`k` denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number
-
-        The ``mask_safe`` of each dataset is defined as:
-
-        .. math::
-            \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
-            \mbox{if bin k is inside the energy thresholds}\\ 0, &
-            \mbox{otherwise} \end{array}\right.
-
-        Then the total ``counts`` and model background ``bkg`` are computed according to:
-
-        .. math::
-            \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
-             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
-
-            \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
-             bkg_{2k} \cdot \epsilon_{2k}
-
-        The stacked ``safe_mask`` is then:
-
-        .. math::
-            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
-
-        Parameters
-        ----------
-        other : `~gammapy.datasets.SpectrumDataset`
-            the dataset to stack to the current one
-        """
-        if not isinstance(other, SpectrumDataset):
-            raise TypeError("Incompatible types for SpectrumDataset stacking")
-
-        if self.counts is not None:
-            self.counts *= self.mask_safe
-            self.counts.stack(other.counts, weights=other.mask_safe)
-
-        if self.stat_type == "cash":
-            if self.background_model and other.background_model:
-                self._background_model.map *= self.mask_safe
-                self._background_model.stack(other.background_model, other.mask_safe)
-                self.models = Models([self.background_model])
-        else:
-            self.models = None
-
-        if self.exposure is not None and other.exposure is not None:
-            self.exposure.stack(other.exposure)
-
-            # TODO: check whether this can be improved e.g. handling this in GTI
-            if "livetime" in other.exposure.meta:
-                if "livetime" in self.exposure.meta:
-                    self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
-                else:
-                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
-
-        if self.edisp is not None and other.edisp is not None:
-            self.edisp.edisp_map *= self.mask_safe.data
-            self.edisp.stack(other.edisp, weights=other.mask_safe)
-
-        if self.mask_safe is not None and other.mask_safe is not None:
-            self.mask_safe.stack(other.mask_safe)
-
-        if self.gti is not None and other.gti is not None:
-            self.gti.stack(other.gti)
-            self.gti = self.gti.union()
-
-        if self.meta_table and other.meta_table:
-            self.meta_table = hstack_columns(self.meta_table, other.meta_table)
-        elif other.meta_table:
-            self.meta_table = other.meta_table.copy()
 
     def peek(self, fig=None):
         """Quick-look summary plots.
