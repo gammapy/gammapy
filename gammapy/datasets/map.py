@@ -608,7 +608,7 @@ class MapDataset(Dataset):
         kwargs.setdefault("cmap", "coolwarm")
         kwargs.setdefault("vmin", -5)
         kwargs.setdefault("vmax", 5)
-        ax = residuals.plot(ax, **kwargs)
+        _, ax, _ = residuals.plot(ax, **kwargs)
 
         return ax
 
@@ -624,8 +624,8 @@ class MapDataset(Dataset):
             Axes to plot on.
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
-        region: `~regions.Region` (required)
-            Target region (pixel or sky regions accepted).
+        region: `~regions.SkyRegion` (required)
+            Target sky region.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
@@ -694,7 +694,7 @@ class MapDataset(Dataset):
             raise ValueError("'region' is a required parameter in 'kwargs_spectral'")
 
         ax_spatial, ax_spectral = get_axes(
-            ax_spatial, ax_spectral, 12, 4, (1, 2, 1), (1, 2, 2), {projection:self._geom.to_image().wcs}
+            ax_spatial, ax_spectral, 12, 4, [1, 2, 1], [1, 2, 2], {"projection":self._geom.to_image().wcs}
         )
         kwargs_spatial = kwargs_spatial or {}
 
@@ -702,9 +702,8 @@ class MapDataset(Dataset):
         self.plot_spectral_residuals(ax_spectral, **kwargs_spectral)
 
         # Overlay spectral extraction region on the spatial residuals
-        pix_region = kwargs_spectral["region"]
-        if isinstance(pix_region, SkyRegion):
-            pix_region = pix_region.to_pixel(self._geom.to_image().wcs)
+        region = kwargs_spectral["region"]
+        pix_region = region.to_pixel(self._geom.to_image().wcs)
         pix_region.plot(ax=ax_spatial)
 
         return ax_spatial, ax_spectral

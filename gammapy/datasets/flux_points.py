@@ -260,13 +260,13 @@ class FluxPointsDataset(Dataset):
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
-            Spectrum and residuals plots.
+            Flux points, best fit model and residuals plots.
         """
         from matplotlib.gridspec import GridSpec
 
         gs = GridSpec(7, 1)
         ax_spectrum, ax_residuals = get_axes(
-            ax_spectrum, ax_residuals, 8, 7, (gs[:5, :]), (gs[5:, :]), kwargs2={sharex:ax_spectrum}
+            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex":ax_spectrum}
         )
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
