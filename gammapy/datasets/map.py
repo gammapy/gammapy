@@ -1105,7 +1105,7 @@ class MapDataset(Dataset):
 
             exposure_min = np.min(self.exposure.quantity[mask_exposure])
             exposure_max = np.max(self.exposure.quantity[mask_exposure])
-            livetime = self.exposure.meta.get("livetime", np.nan)
+            livetime = self.exposure.meta.get("livetime", np.nan * u.s).copy()
 
         info["exposure_min"] = exposure_min
         info["exposure_max"] = exposure_max
@@ -1750,7 +1750,9 @@ class MapDatasetOnOff(MapDataset):
         for key in ["counts", "counts_off", "acceptance", "acceptance_off"]:
             kwargs[key] = Map.from_geom(geom, unit="")
 
-        kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
+        kwargs["exposure"] = Map.from_geom(
+            geom_exposure, unit="m2 s", meta={"livetime": 0 * u.s}
+        )
 
         if geom_edisp.axes[0].name.lower() == "energy":
             kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
