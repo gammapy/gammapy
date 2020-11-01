@@ -217,6 +217,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset.exposure.unit == "m2s"
     assert spectrum_dataset.edisp.get_edisp_kernel().e_reco.nbin == 2
     assert spectrum_dataset.edisp.get_edisp_kernel().e_true.nbin == 3
+    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.070884e+09, rtol=1e-5)
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
@@ -1003,6 +1004,7 @@ def test_map_dataset_on_off_to_spectrum_dataset(images):
 
     assert spectrum_dataset.name != dataset.name
 
+
 @requires_data()
 def test_map_dataset_on_off_to_spectrum_dataset_weights():
     e_reco = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
@@ -1044,7 +1046,6 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
     assert_allclose(spectrum_dataset.acceptance.data[:,0,0], [0, 0.08, 0.08])
     assert_allclose(spectrum_dataset.acceptance_off.data[:,0,0], [0, 0.32, 0.32])
     assert_allclose(spectrum_dataset.alpha.data[:,0,0], [0, 0.25, 0.25])
-
 
 
 @requires_data()
