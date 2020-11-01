@@ -306,7 +306,9 @@ class SpectrumDataset(MapDataset):
         name = make_name(name)
         counts = RegionNDMap.create(region=region, axes=[e_reco])
         background = RegionNDMap.create(region=region, axes=[e_reco])
-        exposure = RegionNDMap.create(region=region, axes=[e_true], unit="cm2 s")
+        exposure = RegionNDMap.create(
+            region=region, axes=[e_true], unit="cm2 s", meta={"livetime": 0 * u.s}
+        )
         edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, geom=counts.geom)
         mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
         gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)

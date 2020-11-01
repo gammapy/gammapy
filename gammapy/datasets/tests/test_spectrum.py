@@ -905,6 +905,26 @@ def test_datasets_stack_reduce():
     assert stacked.name == "stacked"
 
 
+@requires_data("gammapy-data")
+def test_stack_livetime():
+    dataset_ref = SpectrumDatasetOnOff.from_ogip_files(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    )
+
+    energy_axis = dataset_ref.counts.geom.axes["energy"]
+    energy_axis_true = dataset_ref.exposure.geom.axes["energy_true"]
+
+    dataset = SpectrumDatasetOnOff.create(
+        e_reco=energy_axis, e_true=energy_axis_true
+    )
+
+    dataset.stack(dataset_ref)
+    assert_allclose(dataset.exposure.meta["livetime"], 1581.736758 * u.s)
+
+    dataset.stack(dataset_ref)
+    assert_allclose(dataset.exposure.meta["livetime"], 2 * 1581.736758 * u.s)
+
+
 def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     spectrum_datasets_on_off = make_observation_list()
     datasets = Datasets(spectrum_datasets_on_off)
