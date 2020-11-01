@@ -64,6 +64,7 @@ def test_sherpa_frozen(pars):
     assert_allclose(ds.fcn(), 0.11111111, rtol=1e-6)
 
 
+@pytest.mark.xfail
 def test_sherpa_limits(pars):
     ds = MyDataset(pars)
     pars["y"].min = 301000
