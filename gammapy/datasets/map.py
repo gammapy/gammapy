@@ -1216,6 +1216,7 @@ class MapDataset(Dataset):
             edisp = EDispKernelMap.from_edisp_kernel(
                 edisp=edisp, geom=RegionGeom(on_region)
             )
+            edisp.exposure_map.data = kwargs["exposure"].data.copy()
             kwargs["edisp"] = edisp
 
         return SpectrumDataset(**kwargs)
