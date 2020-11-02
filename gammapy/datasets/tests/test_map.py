@@ -1304,7 +1304,7 @@ def test_plot_residual_onoff():
         acceptance_off=acceptance_off,
     )
     with mpl_plot_check():
-        dataset.plot_spatial_residuals()
+        dataset.plot_residuals_spatial()
 
 
 def test_to_map_dataset():
