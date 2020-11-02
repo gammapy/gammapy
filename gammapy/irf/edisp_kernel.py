@@ -443,9 +443,9 @@ class EDispKernel:
     def get_bias_energy(self, bias, energy_min=None, energy_max=None):
         """Find energy corresponding to a given bias.
 
-        In case the solution is not unique, provide the ``emin`` or ``emax`` arguments
+        In case the solution is not unique, provide the ``energy_min`` or ``energy_max`` arguments
         to limit the solution to the given range.  By default the peak energy of the
-        bias is chosen as ``emin``.
+        bias is chosen as ``energy_min``.
 
         Parameters
         ----------
