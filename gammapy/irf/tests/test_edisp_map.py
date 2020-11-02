@@ -112,8 +112,8 @@ def test_edisp_map_to_energydispersion():
 
     edisp = edmap.get_edisp_kernel(position, energy_axis=energy_axis)
     # Note that the bias and resolution are rather poorly evaluated on an EnergyDispersion object
-    assert_allclose(edisp.get_bias(e_true=1.0 * u.TeV), 0.0, atol=3e-2)
-    assert_allclose(edisp.get_resolution(e_true=1.0 * u.TeV), 0.2, atol=3e-2)
+    assert_allclose(edisp.get_bias(energy_true=1.0 * u.TeV), 0.0, atol=3e-2)
+    assert_allclose(edisp.get_resolution(energy_true=1.0 * u.TeV), 0.2, atol=3e-2)
 
 
 def test_edisp_map_stacking():

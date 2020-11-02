@@ -69,8 +69,8 @@ class EDispMap(IRFMap):
 
         # Get an Energy Dispersion (1D) at any position in the image
         pos = SkyCoord(2.0, 2.5, unit="deg")
-        e_reco = np.logspace(-1.0, 1.0, 10) * u.TeV
-        edisp = edisp_map.get_edisp_kernel(pos=pos, e_reco=e_reco)
+        energy = np.logspace(-1.0, 1.0, 10) * u.TeV
+        edisp = edisp_map.get_edisp_kernel(pos=pos, energy=energy)
 
         # Write map to disk
         edisp_map.write("edisp_map.fits")
@@ -133,9 +133,9 @@ class EDispMap(IRFMap):
 
         data = []
 
-        for idx, e_true in enumerate(energy_axis_true.center):
-            # migration value of e_reco bounds
-            migra = energy_axis.edges / e_true
+        for idx, energy_true in enumerate(energy_axis_true.center):
+            # migration value of energy bounds
+            migra = energy_axis.edges / energy_true
 
             cumsum = np.insert(edisp_values[:, idx], 0, 0).cumsum()
             with np.errstate(invalid="ignore", divide="ignore"):
@@ -149,12 +149,14 @@ class EDispMap(IRFMap):
                 fill_value=(0, 1),
             )
 
-            # We compute the difference between 2 successive bounds in e_reco
+            # We compute the difference between 2 successive bounds in energy
             # to get integral over reco energy bin
             integral = np.diff(np.clip(f(migra), a_min=0, a_max=1))
             data.append(integral)
 
-        return EDispKernel(e_true=energy_axis_true, e_reco=energy_axis, data=data)
+        return EDispKernel(
+            energy_axis_true=energy_axis_true, energy_axis=energy_axis, data=data
+        )
 
     @classmethod
     def from_geom(cls, geom):
@@ -258,7 +260,7 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        e_reco : `~gammapy.maps.MapAxis`
+        energy : `~gammapy.maps.MapAxis`
             Reconstructed enrgy axis.
 
         Returns
@@ -272,13 +274,13 @@ class EDispMap(IRFMap):
 
         data = []
 
-        for idx, e_true in enumerate(energy_axis_true.center):
-            # migration value of e_reco bounds
-            migra = energy_axis.edges / e_true
+        for idx, energy_true in enumerate(energy_axis_true.center):
+            # migration value of energy bounds
+            migra = energy_axis.edges / energy_true
 
-            edisp_e_true = self.edisp_map.slice_by_idx({"energy_true": idx})
+            edisp_energy_true = self.edisp_map.slice_by_idx({"energy_true": idx})
 
-            cumsum = np.insert(edisp_e_true.data, 0, 0, axis=axis).cumsum(axis=axis)
+            cumsum = np.insert(edisp_energy_true.data, 0, 0, axis=axis).cumsum(axis=axis)
             with np.errstate(invalid="ignore", divide="ignore"):
                 cumsum = np.nan_to_num(cumsum / cumsum[slice(-2, -1)])
 
@@ -408,8 +410,8 @@ class EDispKernelMap(IRFMap):
             kernel_map = self.edisp_map.to_region_nd_map(region=position)
 
         return EDispKernel(
-            e_true=kernel_map.geom.axes["energy_true"],
-            e_reco=kernel_map.geom.axes["energy"],
+            energy_axis_true=kernel_map.geom.axes["energy_true"],
+            energy_axis=kernel_map.geom.axes["energy"],
             data=kernel_map.data[..., 0, 0]
         )
 
@@ -458,7 +460,7 @@ class EDispKernelMap(IRFMap):
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        edisp_map = cls.from_diagonal_response(edisp.e_reco, edisp.e_true, geom=geom)
+        edisp_map = cls.from_diagonal_response(edisp.energy_axis, edisp.energy_axis_true, geom=geom)
         edisp_map.edisp_map.data *= 0
         edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[
             :, :, np.newaxis, np.newaxis
@@ -486,8 +488,8 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         kernel = EDispKernel.from_gauss(
-            e_reco=energy_axis.edges,
-            e_true=energy_axis_true.edges,
+            energy=energy_axis.edges,
+            energy_true=energy_axis_true.edges,
             sigma=sigma,
             bias=bias,
             pdf_threshold=pdf_threshold,
