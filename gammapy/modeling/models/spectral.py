@@ -1460,7 +1460,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         this and raise an error instead use interp_kwargs = {"extrapolate": False}
     """
 
-    tag = ["EBLAbsorptionNormSpectralModel", "ebl-absorption"]
+    tag = ["EBLAbsorptionNormSpectralModel", "ebl-norm"]
     alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
     redshift = Parameter("redshift", 0.1, frozen=True)
 
