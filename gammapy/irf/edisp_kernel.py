@@ -34,7 +34,7 @@ class EDispKernel:
         energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
         energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
         edisp = EDispKernel.from_gauss(
-            e_true=energy, e_reco=energy,
+            energy_true=energy, energy=energy,
             sigma=0.1, bias=0,
         )
 
@@ -123,18 +123,6 @@ class EDispKernel:
             energy_axis_true=self.energy_axis_true,
             data=np.sum(data, axis=1, keepdims=True),
         )
-
-    @classmethod
-    def from_energy_lo_hi(
-        cls, e_true_lo, e_true_hi, e_reco_lo, e_reco_hi, data, **kwargs
-    ):
-        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
-
-        e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
-        e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="energy")
-
-        return cls(e_true_axis, e_reco_axis, data, **kwargs)
 
     @classmethod
     def from_gauss(cls, energy_true, energy, sigma, bias, pdf_threshold=1e-6):
