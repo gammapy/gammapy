@@ -155,16 +155,16 @@ class SpectrumDataset(MapDataset):
     def energy_range(self):
         """Energy range defined by the safe mask"""
         energy = self._geom.axes["energy"].edges
-        e_min, e_max = energy[:-1], energy[1:]
+        energy_min, energy_max = energy[:-1], energy[1:]
 
         if self.mask_safe is not None:
             if self.mask_safe.data.any():
-                e_min = e_min[self.mask_safe.data[:, 0, 0]]
-                e_max = e_max[self.mask_safe.data[:, 0, 0]]
+                energy_min = energy_min[self.mask_safe.data[:, 0, 0]]
+                energy_max = energy_max[self.mask_safe.data[:, 0, 0]]
             else:
                 return None, None
 
-        return u.Quantity([e_min.min(), e_max.max()])
+        return u.Quantity([energy_min.min(), energy_max.max()])
 
     def plot_fit(self):
         """Plot counts and residuals in two panels.
@@ -186,14 +186,14 @@ class SpectrumDataset(MapDataset):
         return ax_spectrum, ax_residuals
 
     @property
-    def _e_unit(self):
+    def _energy_unit(self):
         return self._geom.axes[0].unit
 
     def _plot_energy_range(self, ax):
-        e_min, e_max = self.energy_range
+        energy_min, energy_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}
-        ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
-        ax.axvline(e_max.to_value(self._e_unit), **kwargs)
+        ax.axvline(energy_min.to_value(self._energy_unit), label="fit range", **kwargs)
+        ax.axvline(energy_max.to_value(self._energy_unit), **kwargs)
 
     def plot_counts(self, ax=None):
         """Plot predicted and detected counts.
@@ -254,7 +254,7 @@ class SpectrumDataset(MapDataset):
         residuals.plot(ax=ax, color="black", yerr=yerr, **kwargs)
         ax.axhline(0, color="black", lw=0.5)
 
-        ax.set_xlabel(f"Energy [{self._e_unit}]")
+        ax.set_xlabel(f"Energy [{self._energy_unit}]")
         ax.set_ylabel(f"Residuals ({label})")
         ax.set_yscale("linear")
 
@@ -325,7 +325,7 @@ class SpectrumDataset(MapDataset):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
 
-        e_min, e_max = self.energy_range
+        energy_min, energy_max = self.energy_range
 
         _, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
@@ -338,15 +338,15 @@ class SpectrumDataset(MapDataset):
 
         self.counts.plot_hist(ax=ax1, label="n_on")
 
-        e_unit = e_min.unit
-        ax1.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+        energy_unit = energy_min.unit
+        ax1.set_xlim(0.7 * energy_min.to_value(energy_unit), 1.3 * energy_max.to_value(energy_unit))
         self._plot_energy_range(ax=ax1)
         ax1.legend(numpoints=1)
 
         ax2.set_title("Exposure")
-        e_unit = self.exposure.geom.axes[0].unit
+        energy_unit = self.exposure.geom.axes[0].unit
         self.exposure.plot(ax=ax2)
-        ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+        ax2.set_xlim(0.7 * energy_min.to_value(energy_unit), 1.3 * energy_max.to_value(energy_unit))
         self._plot_energy_range(ax=ax2)
 
         ax3.set_title("Energy Dispersion")

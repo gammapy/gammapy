@@ -186,9 +186,9 @@ def test_fake(sky_model, geom, geom_etrue):
 
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
-    ebounds_true = np.logspace(2, 4, 3)
+    energy_range_true = np.logspace(2, 4, 3)
     axis = MapAxis.from_edges(
-        ebounds_true, name="energy_true", unit="GeV", interp="log"
+        energy_range_true, name="energy_true", unit="GeV", interp="log"
     )
     geom_gev = geom.to_image().to_cube([axis])
     dataset = get_map_dataset(geom, geom_gev, edisp="None")
@@ -496,7 +496,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
 
     # test mask_safe evaluation
-    mask_safe = geom.energy_mask(emin=1 * u.TeV)
+    mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
     dataset_1.mask_safe = Map.from_geom(geom, data=mask_safe)
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
@@ -747,7 +747,7 @@ def test_stack_npred():
     )
     dataset_1.psf = None
     dataset_1.exposure.data += 1
-    dataset_1.mask_safe.data = geom.energy_mask(emin=1 * u.TeV)
+    dataset_1.mask_safe.data = geom.energy_mask(energy_min=1 * u.TeV)
     dataset_1.background.data += 1
 
     bkg_model_1 = FoVBackgroundModel(dataset_name=dataset_1.name)
@@ -761,7 +761,7 @@ def test_stack_npred():
     )
     dataset_2.psf = None
     dataset_2.exposure.data += 1
-    dataset_2.mask_safe.data = geom.energy_mask(emin=0.2 * u.TeV)
+    dataset_2.mask_safe.data = geom.energy_mask(energy_min=0.2 * u.TeV)
     dataset_2.background.data += 1
 
     bkg_model_2 = FoVBackgroundModel(dataset_name=dataset_2.name)

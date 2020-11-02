@@ -509,15 +509,15 @@ class TestSpectrumOnOff:
         assert newdataset.gti is None
 
     def test_energy_mask(self):
-        mask = self.dataset.counts.geom.energy_mask(emin=0.3 * u.TeV, emax=6 * u.TeV)
+        mask = self.dataset.counts.geom.energy_mask(energy_min=0.3 * u.TeV, energy_max=6 * u.TeV)
         desired = [False, True, True, False]
         assert_allclose(mask[:, 0, 0], desired)
 
-        mask = self.dataset.counts.geom.energy_mask(emax=6 * u.TeV)
+        mask = self.dataset.counts.geom.energy_mask(energy_max=6 * u.TeV)
         desired = [True, True, True, False]
         assert_allclose(mask[:, 0, 0], desired)
 
-        mask = self.dataset.counts.geom.energy_mask(emin=1 * u.TeV)
+        mask = self.dataset.counts.geom.energy_mask(energy_min=1 * u.TeV)
         desired = [False, False, True, True]
         assert_allclose(mask[:, 0, 0], desired)
 
@@ -809,10 +809,10 @@ class TestSpectrumDatasetOnOffStack:
         # Change threshold to make stuff more interesting
 
         geom = self.datasets[0]._geom
-        data = geom.energy_mask(emin=1.2 * u.TeV, emax=50 * u.TeV)
+        data = geom.energy_mask(energy_min=1.2 * u.TeV, energy_max=50 * u.TeV)
         self.datasets[0].mask_safe = RegionNDMap.from_geom(geom=geom, data=data)
 
-        data = geom.energy_mask(emax=20 * u.TeV)
+        data = geom.energy_mask(energy_max=20 * u.TeV)
         self.datasets[1].mask_safe.data &= data
 
         self.stacked_dataset = self.datasets[0].copy()
@@ -836,13 +836,13 @@ class TestSpectrumDatasetOnOffStack:
         assert summed_off == stacked_off
 
     def test_thresholds(self):
-        e_min, e_max = self.stacked_dataset.energy_range
+        energy_min, energy_max = self.stacked_dataset.energy_range
 
-        assert e_min.unit == "keV"
-        assert_allclose(e_min.value, 8.912509e08, rtol=1e-3)
+        assert energy_min.unit == "keV"
+        assert_allclose(energy_min.value, 8.912509e08, rtol=1e-3)
 
-        assert e_max.unit == "keV"
-        assert_allclose(e_max.value, 4.466836e10, rtol=1e-3)
+        assert energy_max.unit == "keV"
+        assert_allclose(energy_max.value, 4.466836e10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Verifying npred is preserved during the stacking"""
@@ -1038,10 +1038,10 @@ class TestFit:
         dataset = SpectrumDatasetOnOff(counts=self.src, mask_safe=mask_safe)
 
         assert np.sum(dataset.mask_safe) == self.nbins
-        e_min, e_max = dataset.energy_range
+        energy_min, energy_max = dataset.energy_range
 
-        assert_allclose(e_max.value, 10)
-        assert_allclose(e_min.value, 0.1)
+        assert_allclose(energy_max.value, 10)
+        assert_allclose(energy_min.value, 0.1)
 
     def test_stat_profile(self):
         geom = self.src.geom

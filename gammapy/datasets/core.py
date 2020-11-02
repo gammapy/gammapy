@@ -221,12 +221,12 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets)
 
-    def slice_by_energy(self, e_min, e_max):
+    def slice_by_energy(self, energy_min, energy_max):
         """Select and slice datasets in energy range
 
         Parameters
         ----------
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
@@ -238,11 +238,11 @@ class Datasets(collections.abc.MutableSequence):
         datasets = []
 
         for dataset in self:
-            name = f"{dataset.name}-{e_min:.1f}-{e_max:.1f}"
+            name = f"{dataset.name}-{energy_min:.1f}-{energy_max:.1f}"
             try:
                 dataset_sliced = dataset.slice_by_energy(
-                    e_min=e_min,
-                    e_max=e_max,
+                    energy_min=energy_min,
+                    energy_max=energy_max,
                     name=name,
                 )
             except ValueError:
@@ -275,18 +275,18 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
         """
 
-        e_mins, e_maxs = [], []
+        energy_mins, energy_maxs = [], []
 
         for dataset in self:
             energy_axis = dataset.counts.geom.axes["energy"]
-            e_mins.append(energy_axis.edges[0])
-            e_maxs.append(energy_axis.edges[-1])
+            energy_mins.append(energy_axis.edges[0])
+            energy_maxs.append(energy_axis.edges[-1])
 
-        return u.Quantity(e_mins), u.Quantity(e_maxs)
+        return u.Quantity(energy_mins), u.Quantity(energy_maxs)
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
