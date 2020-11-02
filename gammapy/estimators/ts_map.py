@@ -99,7 +99,7 @@ class TSMapEstimator(Estimator):
             * "ul": estimate upper limits on flux.
 
         By default all steps are executed.
-    e_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy edges of the maps bins.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
@@ -138,7 +138,7 @@ class TSMapEstimator(Estimator):
         threshold=None,
         rtol=0.01,
         selection_optional="all",
-        e_edges=None,
+        energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
     ):
@@ -161,7 +161,7 @@ class TSMapEstimator(Estimator):
         self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
-        self.e_edges = e_edges
+        self.energy_edges = energy_edges
         self._flux_estimator = BrentqFluxEstimator(
             rtol=self.rtol,
             n_sigma=self.n_sigma,
@@ -414,16 +414,16 @@ class TSMapEstimator(Estimator):
         # TODO: add support for joint likelihood fitting to TSMapEstimator
         datasets = Datasets(dataset)
 
-        if self.e_edges is None:
+        if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
-            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            e_edges = self.e_edges
+            energy_edges = self.energy_edges
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_by_energy(e_min, e_max)[0]
+        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
+            dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
             if self.sum_over_energy_groups:
                 dataset = dataset.to_image()

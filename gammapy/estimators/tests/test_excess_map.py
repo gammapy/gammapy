@@ -14,10 +14,10 @@ from gammapy.modeling.models import (
 from gammapy.utils.testing import requires_data
 
 
-def image_to_cube(input_map, e_min, e_max):
-    e_min = u.Quantity(e_min)
-    e_max = u.Quantity(e_max)
-    axis = MapAxis.from_energy_bounds(e_min, e_max, nbin=1)
+def image_to_cube(input_map, energy_min, energy_max):
+    energy_min = u.Quantity(energy_min)
+    energy_max = u.Quantity(energy_max)
+    axis = MapAxis.from_energy_bounds(energy_min, energy_max, nbin=1)
     geom = input_map.geom.to_cube([axis])
     return Map.from_geom(geom, data=input_map.data[np.newaxis, :, :])
 
@@ -125,7 +125,7 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     estimator = ExcessMapEstimator(
         0.11 * u.deg,
         selection_optional=None,
-        e_edges=[0.1 * u.TeV, 1 * u.TeV, 10 * u.TeV],
+        energy_edges=[0.1 * u.TeV, 1 * u.TeV, 10 * u.TeV],
     )
     result = estimator.run(simple_dataset_on_off)
 
@@ -135,7 +135,7 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     assert_allclose(result["background"].data[:, 10, 10], 97)
     assert_allclose(result["sqrt_ts"].data[:, 10, 10], 5.741116, atol=1e-5)
 
-    estimator_image = ExcessMapEstimator(0.11 * u.deg, e_edges=[0.1 * u.TeV, 1 * u.TeV])
+    estimator_image = ExcessMapEstimator(0.11 * u.deg, energy_edges=[0.1 * u.TeV, 1 * u.TeV])
 
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)

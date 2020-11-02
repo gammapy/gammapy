@@ -129,7 +129,7 @@ def test_compute_ts_map_psf(fermi_dataset):
 def test_compute_ts_map_energy(fermi_dataset):
     estimator = TSMapEstimator(
             kernel_width="0.6 deg",
-            e_edges=[10, 100, 1000] * u.GeV,
+            energy_edges=[10, 100, 1000] * u.GeV,
             sum_over_energy_groups=False
         )
 

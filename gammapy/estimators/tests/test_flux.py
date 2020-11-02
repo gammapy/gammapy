@@ -40,8 +40,8 @@ def hess_datasets():
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     estimator = FluxEstimator(
         0,
-        e_min="1 GeV",
-        e_max="100 GeV",
+        energy_min="1 GeV",
+        energy_max="100 GeV",
         norm_n_values=5,
         norm_min=0.5,
         norm_max=2,
@@ -65,8 +65,8 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(
         0,
-        e_min="1 GeV",
-        e_max="100 GeV",
+        energy_min="1 GeV",
+        energy_max="100 GeV",
         reoptimize=True,
         selection_optional=None
     )
@@ -81,7 +81,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(
-        source="Crab", e_min=1 * u.TeV, e_max=10 * u.TeV, selection_optional=["errn-errp", "ul"]
+        source="Crab", energy_min=1 * u.TeV, energy_max=10 * u.TeV, selection_optional=["errn-errp", "ul"]
     )
     result = estimator.run(hess_datasets)
 
@@ -95,7 +95,7 @@ def test_flux_estimator_1d(hess_datasets):
 
 def test_flux_estimator_incorrect_energy_range():
     with pytest.raises(ValueError):
-        FluxEstimator(source="Crab", e_min=10 * u.TeV, e_max=1 * u.TeV)
+        FluxEstimator(source="Crab", energy_min=10 * u.TeV, energy_max=1 * u.TeV)
 
 
 @requires_data()
@@ -111,7 +111,7 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     datasets.extend(hess_datasets)
 
     estimator = FluxEstimator(
-        source="Crab Nebula", e_min=1 * u.TeV, e_max=10 * u.TeV, selection_optional=None
+        source="Crab Nebula", energy_min=1 * u.TeV, energy_max=10 * u.TeV, selection_optional=None
     )
     result = estimator.run(datasets)
 
