@@ -10,12 +10,13 @@ from gammapy.utils.testing import requires_data, requires_dependency
 
 @pytest.fixture(scope="session")
 def fermi_datasets():
-    fermi_datasets = Datasets.read(
-        "$GAMMAPY_DATA/fermi-3fhl-crab",
-        "Fermi-LAT-3FHL_datasets.yaml",
-        "Fermi-LAT-3FHL_models.yaml",
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+
+    return Datasets.read(
+        filename=filename,
+        filename_models=filename_models
     )
-    return fermi_datasets
 
 
 @pytest.fixture(scope="session")

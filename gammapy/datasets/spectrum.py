@@ -8,7 +8,6 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import Models
 from gammapy.stats import (
     WStatCountsStatistic,
     cash,
@@ -17,7 +16,6 @@ from gammapy.stats import (
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.modeling.models import BackgroundModel
 from .map import MapDataset
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
@@ -76,11 +74,13 @@ class SpectrumDataset(MapDataset):
         meta_table=None,
     ):
 
+        self._name = make_name(name)
+        self._evaluators = {}
+
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.counts = counts
-
         self.mask_fit = mask_fit
         self.exposure = exposure
         self.edisp = edisp
@@ -88,8 +88,6 @@ class SpectrumDataset(MapDataset):
         self.mask_safe = mask_safe
         self.gti = gti
         self.meta_table = meta_table
-
-        self._name = make_name(name)
         self.models = models
 
     @property
@@ -421,6 +419,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     ):
 
         self._name = make_name(name)
+        self._evaluators = {}
 
         self.counts = counts
         self.counts_off = counts_off

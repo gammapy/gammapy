@@ -426,6 +426,7 @@ class TestSpectrumOnOff:
             unit="cm2",
             axes=[self.e_reco.copy(name="energy_true")],
         )
+
         aeff.data += 1
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -433,7 +434,6 @@ class TestSpectrumOnOff:
             exposure=aeff * livetime,
             models=model,
         )
-
         energy = aeff.geom.axes[0].edges
         expected = aeff.data[0] * (energy[-1] - energy[0]) * const * livetime
 
@@ -928,8 +928,16 @@ def test_stack_livetime():
 def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     spectrum_datasets_on_off = make_observation_list()
     datasets = Datasets(spectrum_datasets_on_off)
-    datasets.write(path=tmpdir)
-    datasets_read = Datasets.read(tmpdir, "_datasets.yaml", "_models.yaml")
+    datasets.write(
+        filename=tmpdir / "datasets.yaml",
+        filename_models=tmpdir / "models.yaml"
+    )
+
+    datasets_read = Datasets.read(
+        filename=tmpdir / "datasets.yaml",
+        filename_models=tmpdir / "models.yaml"
+    )
+
     assert len(datasets_read) == len(datasets)
     assert datasets_read[0].name == datasets[0].name
     assert datasets_read[1].name == datasets[1].name

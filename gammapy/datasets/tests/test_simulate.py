@@ -17,24 +17,18 @@ from gammapy.modeling.models import (
     LightCurveTemplateTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
+    FoVBackgroundModel,
 )
 from gammapy.utils.testing import requires_data
 
 
-@pytest.fixture(scope="session")
-def dataset():
-    position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
-    energy_axis = MapAxis.from_bounds(
-        1, 10, nbin=3, unit="TeV", name="energy", interp="log"
-    )
-
+def get_model():
     spatial_model = GaussianSpatialModel(
         lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
     )
 
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
 
-    t_min = 0 * u.s
     t_max = 1000 * u.s
 
     time = np.arange(t_max.value) * u.s
@@ -48,27 +42,35 @@ def dataset():
     table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s")
     temporal_model = LightCurveTemplateTemporalModel(table)
 
-    skymodel = SkyModel(
+    return SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         temporal_model=temporal_model,
         name="test-source"
     )
 
-    geom = WcsGeom.create(
-        skydir=position, binsz=1, width="5 deg", frame="galactic", axes=[energy_axis]
+
+@pytest.fixture(scope="session")
+def dataset():
+    energy_axis = MapAxis.from_bounds(
+        1, 10, nbin=3, unit="TeV", name="energy", interp="log"
     )
 
-    gti = GTI.create(start=t_min, stop=t_max, reference_time=t_ref)
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=1, width="5 deg", frame="galactic", axes=[energy_axis]
+    )
 
     geom_true = geom.copy()
     geom_true.axes[0].name = "energy_true"
 
     dataset = get_map_dataset(
-        sky_model=skymodel, geom=geom, geom_etrue=geom_true, edisp="edispmap"
+        geom=geom, geom_etrue=geom_true, edisp="edispmap"
     )
-    dataset.gti = gti
 
+    dataset.gti = GTI.create(start=0 * u.s, stop=1000 * u.s, reference_time="2000-01-01")
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [get_model(), bkg_model]
     return dataset
 
 
@@ -209,7 +211,7 @@ def test_mde_run(dataset):
     events = sampler.run(dataset=dataset, observation=obs)
 
     dataset_bkg = dataset.copy(name="new-dataset")
-    dataset_bkg.models.pop("test-source")
+    dataset_bkg.models = [FoVBackgroundModel(dataset_name=dataset_bkg.name)]
 
     events_bkg = sampler.run(dataset=dataset_bkg, observation=obs)
 

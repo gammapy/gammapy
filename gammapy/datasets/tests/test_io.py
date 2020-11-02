@@ -1,19 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data, requires_dependency
-from gammapy.modeling import Fit
 
 
 @requires_data()
 @requires_dependency("iminuit")
 def test_datasets_to_io(tmp_path):
-    path = "$GAMMAPY_DATA/tests/models"
-    filedata = "gc_example_datasets.yaml"
-    filemodel = "gc_example_models.yaml"
+    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
+    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
-    datasets = Datasets.read(path, filedata, filemodel)
+    datasets = Datasets.read(
+        filename=filedata,
+        filename_models=filemodel,
+    )
 
     assert len(datasets) == 2
     assert len(datasets.models) == 5
@@ -36,7 +37,7 @@ def test_datasets_to_io(tmp_path):
         dataset0.models["gll_iem_v06_cutout"] == dataset1.models["gll_iem_v06_cutout"]
     )
 
-    assert isinstance(dataset0.models, Models)
+    assert isinstance(dataset0.models, DatasetModels)
     assert len(dataset0.models) ==4
     assert dataset0.models[0].name == "gc"
     assert dataset0.models[1].name == "gll_iem_v06_cutout"
@@ -48,9 +49,14 @@ def test_datasets_to_io(tmp_path):
     )
     assert_allclose(dataset1.models["g09"].parameters["lon_0"].value, 0.9, atol=0.1)
 
-    datasets.write(tmp_path, prefix="written")
+    datasets.write(
+        filename=tmp_path / "written_datasets.yaml",
+        filename_models=tmp_path / "written_models.yaml",
+    )
+
     datasets_read = Datasets.read(
-        tmp_path, "written_datasets.yaml", "written_models.yaml"
+        filename=tmp_path / "written_datasets.yaml",
+        filename_models=tmp_path / "written_models.yaml",
     )
 
     assert len(datasets.parameters) == 22

@@ -149,7 +149,8 @@ class Analysis:
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
-        self.datasets.models.extend(self.models)
+        self.models.extend(self.datasets.models)
+        self.datasets.models = self.models
 
         log.info(self.models)
 

@@ -20,7 +20,6 @@ from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    BackgroundModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
     Models,
@@ -98,18 +97,20 @@ def sky_model():
     spectral_model = PowerLawSpectralModel(
         index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
-    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    return SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        name="test-model"
+    )
 
 
 def get_map_dataset(
-    sky_model, geom, geom_etrue, edisp="edispmap", name="test", **kwargs
+    geom, geom_etrue, edisp="edispmap", name="test", **kwargs
 ):
     """Returns a MapDatasets"""
     # define background model
     background = Map.from_geom(geom)
     background.data += 0.2
-
-    background_model = FoVBackgroundModel(dataset_name=name)
 
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
@@ -131,13 +132,12 @@ def get_map_dataset(
         edisp = None
 
     # define fit mask
-    center = sky_model.spatial_model.position
+    center = SkyCoord("0.2 deg", "0.1 deg", frame="galactic")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
     mask_fit = geom.region_mask([circle])
     mask_fit = Map.from_geom(geom, data=mask_fit)
 
     return MapDataset(
-        models=[sky_model, background_model],
         exposure=exposure,
         background=background,
         psf=psf,
@@ -150,7 +150,11 @@ def get_map_dataset(
 
 @requires_data()
 def test_map_dataset_str(sky_model, geom, geom_etrue):
-    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
     assert "MapDataset" in str(dataset)
@@ -164,7 +168,11 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
 @requires_data()
 def test_fake(sky_model, geom, geom_etrue):
     """Test the fake dataset"""
-    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
     npred = dataset.npred()
     assert np.all(npred.data >= 0)  # npred must be positive
     dataset.counts = npred
@@ -183,7 +191,11 @@ def test_different_exposure_unit(sky_model, geom):
         ebounds_true, name="energy_true", unit="GeV", interp="log"
     )
     geom_gev = geom.to_image().to_cube([axis])
-    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp="None")
+    dataset = get_map_dataset(geom, geom_gev, edisp="None")
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
     npred = dataset.npred()
 
     assert_allclose(npred.data[0, 50, 50], 6.086019)
@@ -192,7 +204,11 @@ def test_different_exposure_unit(sky_model, geom):
 @pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"])
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
-    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=edisp_mode)
+
+    dataset_ref = get_map_dataset(geom, geom_etrue, edisp=edisp_mode)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset_ref.name)
+    dataset_ref.models = [sky_model, bkg_model]
 
     dataset_ref.counts = dataset_ref.npred_background() * 0.0
     dataset_ref.counts.data[1, 50, 50] = 1
@@ -227,7 +243,11 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
 
 @requires_data()
 def test_info_dict(sky_model, geom, geom_etrue):
-    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
     dataset.counts = dataset.npred()
     info_dict = dataset.info_dict()
 
@@ -349,7 +369,11 @@ def test_downsample():
 
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
-    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
@@ -426,20 +450,24 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
-    dataset_1 = get_map_dataset(sky_model, geom, geom_etrue, name="test-1")
-    dataset_1.models[f"{dataset_1.name}-bkg"].spectral_model.norm.value = 0.5
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
+    datasets = Datasets([dataset_1, dataset_2])
+
+    models = Models(datasets.models)
+    models.insert(0, sky_model)
+
+    models["test-1-bkg"].spectral_model.norm.value = 0.5
+    models["test-model"].spatial_model.sigma.frozen = True
+
+    datasets.models = models
+    dataset_2.counts = dataset_2.npred()
     dataset_1.counts = dataset_1.npred()
 
-    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, name="test-2")
+    models["test-1-bkg"].spectral_model.norm.value = 0.49
+    models["test-2-bkg"].spectral_model.norm.value = 0.99
 
-    dataset_2.counts = dataset_2.npred()
-
-    sky_model.parameters["sigma"].frozen = True
-
-    dataset_1.models[f"{dataset_1.name}-bkg"].spectral_model.norm.value = 0.49
-    dataset_2.models[f"{dataset_2.name}-bkg"].spectral_model.norm.value = 0.99
-
-    fit = Fit([dataset_1, dataset_2])
+    fit = Fit(datasets)
     result = fit.run()
 
     assert result.success
@@ -459,7 +487,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
     assert_allclose(pars["amplitude"].error, 4.216154e-13, rtol=1e-2)
 
-    # background norm 1
+     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
     assert_allclose(pars[8].error, 0.015811, rtol=1e-2)
 
@@ -483,7 +511,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     # test model evaluation outside image
     dataset_1.models[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
-    assert not dataset_1._evaluators[dataset_1.models[0]].contributes
+    assert not dataset_1._evaluators["test-model"].contributes
 
 
 @requires_dependency("iminuit")
@@ -492,7 +520,11 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     energy_axis = geom_image.axes["energy"]
     geom_etrue = geom_image.to_image().to_cube([energy_axis.copy(name="energy_true")])
 
-    dataset = get_map_dataset(sky_model, geom_image, geom_etrue)
+    dataset = get_map_dataset(geom_image, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
     sky_model.spectral_model.index.value = 3.0
     sky_model.spectral_model.index.frozen = True
     dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = 0.5
@@ -612,7 +644,6 @@ def test_stack(sky_model):
 
     bkg1 = Map.from_geom(geom)
     bkg1.data += 0.2
-    background_model1 = FoVBackgroundModel(dataset_name="dataset-1")
 
     cnt1 = Map.from_geom(geom)
     cnt1.data = 1.0 * np.ones(cnt1.data.shape)
@@ -625,7 +656,6 @@ def test_stack(sky_model):
     mask1.data[0][:][5:10] = False
     dataset1 = MapDataset(
         counts=cnt1,
-        models=[background_model1],
         background=bkg1,
         exposure=exp1,
         mask_safe=mask1,
@@ -636,7 +666,6 @@ def test_stack(sky_model):
 
     bkg2 = Map.from_geom(geom)
     bkg2.data = 0.1 * np.ones(bkg2.data.shape)
-    background_model2 = FoVBackgroundModel(dataset_name="dataset-2")
 
     cnt2 = Map.from_geom(geom)
     cnt2.data = 1.0 * np.ones(cnt2.data.shape)
@@ -651,7 +680,6 @@ def test_stack(sky_model):
 
     dataset2 = MapDataset(
         counts=cnt2,
-        models=[background_model2],
         background=bkg2,
         exposure=exp2,
         mask_safe=mask2,
@@ -660,11 +688,14 @@ def test_stack(sky_model):
         meta_table=Table({"OBS_ID": [1]}),
     )
 
-    dataset1.models.append(sky_model)
-    dataset2.models.append(sky_model)
+    background_model2 = FoVBackgroundModel(dataset_name="dataset-2")
+    background_model1 = FoVBackgroundModel(dataset_name="dataset-1")
 
+    dataset1.models = [background_model1, sky_model]
+    dataset2.models = [background_model2, sky_model]
     dataset1.stack(dataset2)
-    dataset1.models.append(sky_model)
+
+    dataset1.models = [sky_model]
     npred_b = dataset1.npred()
 
     assert_allclose(npred_b.data.sum(), 1459.985035, 1e-5)
@@ -678,13 +709,16 @@ def test_stack(sky_model):
 
 @requires_data()
 def test_npred_sig(sky_model, geom, geom_etrue):
-    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset = get_map_dataset(geom, geom_etrue)
+
     pwl = PowerLawSpectralModel()
     gauss = GaussianSpatialModel(
         lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
     )
     model1 = SkyModel(pwl, gauss)
-    dataset.models.append(model1)
+
+    bkg = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [bkg, sky_model, model1]
 
     assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
     assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
@@ -715,7 +749,9 @@ def test_stack_npred():
     dataset_1.exposure.data += 1
     dataset_1.mask_safe.data = geom.energy_mask(emin=1 * u.TeV)
     dataset_1.background.data += 1
-    dataset_1.models.append(model)
+
+    bkg_model_1 = FoVBackgroundModel(dataset_name=dataset_1.name)
+    dataset_1.models = [model, bkg_model_1]
 
     dataset_2 = MapDataset.create(
         geom,
@@ -727,7 +763,9 @@ def test_stack_npred():
     dataset_2.exposure.data += 1
     dataset_2.mask_safe.data = geom.energy_mask(emin=0.2 * u.TeV)
     dataset_2.background.data += 1
-    dataset_2.models.append(model)
+
+    bkg_model_2 = FoVBackgroundModel(dataset_name=dataset_2.name)
+    dataset_2.models = [model, bkg_model_2]
 
     npred_1 = dataset_1.npred()
     npred_1.data[~dataset_1.mask_safe.data] = 0
@@ -791,9 +829,10 @@ def test_npred_psf_after_edisp():
 
     model.apply_irf["psf_after_edisp"] = True
 
-    dataset.models.append(model)
-    npred = dataset.npred()
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [bkg_model, model]
 
+    npred = dataset.npred()
     assert_allclose(npred.data.sum(), 129553.858658)
 
 
@@ -847,7 +886,6 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits")
-    assert len(dataset_new.models) == 0
     assert dataset_new.mask.data.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
@@ -964,17 +1002,17 @@ def test_stack_onoff_cutout(geom_image):
 def test_datasets_io_no_model(tmpdir):
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(npix=(5, 5), axes=[axis])
-    dataset_1 = MapDataset.create(geom, name="1")
-    dataset_2 = MapDataset.create(geom, name="2")
+    dataset_1 = MapDataset.create(geom, name="dataset_1")
+    dataset_2 = MapDataset.create(geom, name="dataset_2")
 
     datasets = Datasets([dataset_1, dataset_2])
 
-    datasets.write(path=tmpdir, prefix="test")
+    datasets.write(filename=tmpdir / "datasets.yaml")
 
-    filename_1 = tmpdir / "test_data_1.fits"
+    filename_1 = tmpdir / "dataset_1.fits"
     assert filename_1.exists()
 
-    filename_2 = tmpdir / "test_data_2.fits"
+    filename_2 = tmpdir / "dataset_2.fits"
     assert filename_2.exists()
 
 
@@ -1125,7 +1163,6 @@ def test_map_dataset_geom(geom, sky_model):
     dataset = MapDataset.create(geom, energy_axis_true=e_true)
     dataset.counts = None
     dataset.background = None
-    dataset.models = sky_model
 
     npred = dataset.npred()
     assert npred.geom == geom

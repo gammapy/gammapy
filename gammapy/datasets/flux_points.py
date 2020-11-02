@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.modeling.models import Models, ProperModels
+from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -79,14 +79,14 @@ class FluxPointsDataset(Dataset):
 
     @property
     def models(self):
-        return ProperModels(self)
+        return self._models
 
     @models.setter
     def models(self, models):
         if models is None:
             self._models = None
         else:
-            self._models = Models(models)
+            self._models = DatasetModels(models).select(self.name)
 
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
