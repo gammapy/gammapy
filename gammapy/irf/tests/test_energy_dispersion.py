@@ -146,7 +146,7 @@ class TestEnergyDispersion2D:
         offset = Angle(0.612, "deg")
         e_reco = MapAxis.from_energy_bounds(1, 10, 7, "TeV").edges
         e_true = MapAxis.from_energy_bounds(0.8, 5, 5, "TeV").edges
-        rmf = self.edisp.to_energy_dispersion(offset, energy_true=e_true, energy=e_reco)
+        rmf = self.edisp.to_edisp_kernel(offset, energy_true=e_true, energy=e_reco)
         assert_allclose(rmf.data.data[2, 3], 0.08, atol=5e-2)  # same tolerance as above
         actual = rmf.pdf_matrix[2]
         e_val = np.sqrt(e_true[2] * e_true[3])

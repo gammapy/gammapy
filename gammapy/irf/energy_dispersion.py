@@ -44,7 +44,7 @@ class EnergyDispersion2D:
     for a given field of view offset and energy binning:
 
     >>> energy = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log").edges
-    >>> edisp = edisp2d.to_energy_dispersion(offset='1.2 deg', e_reco=energy, energy_true=energy)
+    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', e_reco=energy, energy_true=energy)
 
     See Also
     --------
@@ -177,7 +177,7 @@ class EnergyDispersion2D:
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu)
 
-    def to_energy_dispersion(self, offset, energy_true=None, energy=None):
+    def to_edisp_kernel(self, offset, energy_true=None, energy=None):
         """Detector response R(Delta E_reco, Delta E_true)
 
         Probability to reconstruct an energy in a given true energy band
@@ -394,7 +394,7 @@ class EnergyDispersion2D:
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_migration(ax=axes[1])
-        edisp = self.to_energy_dispersion(offset="1 deg")
+        edisp = self.to_edisp_kernel(offset="1 deg")
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()

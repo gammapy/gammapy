@@ -157,7 +157,7 @@ class EDispKernel:
             offset=offset,
             pdf_threshold=pdf_threshold,
         )
-        return edisp.to_energy_dispersion(offset=offset[0], energy=energy)
+        return edisp.to_edisp_kernel(offset=offset[0], energy=energy)
 
     @classmethod
     def from_diagonal_response(cls, energy_true, energy=None):
@@ -190,18 +190,15 @@ class EDispKernel:
             edisp = EnergyDispersion.from_diagonal_response(energy_true, energy)
             edisp.plot_matrix()
         """
+        from .edisp_map import get_overlap_fraction
+
         if energy is None:
             energy = energy_true
 
         energy_axis = MapAxis.from_energy_edges(energy)
         energy_axis_true = MapAxis.from_energy_edges(energy_true, name="energy_true")
 
-        etrue_2d, ereco_lo_2d = np.meshgrid(energy_axis_true.center, energy[:-1])
-        etrue_2d, ereco_hi_2d = np.meshgrid(energy_axis_true.center, energy[1:])
-
-        data = np.logical_and(etrue_2d >= ereco_lo_2d, etrue_2d < ereco_hi_2d)
-        data = np.transpose(data).astype("float")
-
+        data = get_overlap_fraction(energy_axis, energy_axis_true)
         return cls(
             energy_axis=energy_axis,
             energy_axis_true=energy_axis_true,

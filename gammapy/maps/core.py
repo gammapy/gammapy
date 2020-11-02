@@ -1094,13 +1094,13 @@ class Map(abc.ABC):
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
-            e_reco_axis = edisp.e_reco.copy(name="energy")
+            energy_axis = edisp.energy_axis.copy(name="energy")
         else:
             data = self.data
-            e_reco_axis = self.geom.axes["energy_true"].copy(name="energy")
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
 
-        geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
-        return self._init_copy(geom=geom_reco, data=data)
+        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+        return self._init_copy(geom=geom, data=data)
 
     def sum_over_axes(self, axes_names=None, keepdims=True, weights=None):
         """To sum map values over all non-spatial axes.

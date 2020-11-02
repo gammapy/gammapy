@@ -147,8 +147,8 @@ class SpectrumDatasetMaker(Maker):
 
         offset = observation.pointing_radec.separation(position)
 
-        kernel = observation.edisp.to_energy_dispersion(
-            offset, e_reco=energy_axis.edges, e_true=energy_axis_true.edges
+        kernel = observation.edisp.to_edisp_kernel(
+            offset, energy=energy_axis.edges, energy_true=energy_axis_true.edges
         )
 
         edisp = EDispKernelMap.from_edisp_kernel(
