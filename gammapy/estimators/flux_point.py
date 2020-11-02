@@ -435,7 +435,7 @@ class FluxPoints:
                 amplitude=dnde_model,
             )
         else:
-            flux_model = model.integral(e_min, e_max, intervals=True)
+            flux_model = model.integral(e_min, e_max)
 
         return dnde_model * (flux / flux_model)
 
