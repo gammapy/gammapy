@@ -139,6 +139,9 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
 
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
+    assert_allclose(result["counts"].data[0, 10, 10], 194)
+    assert_allclose(result["excess"].data[0, 10, 10], 97)
+    assert_allclose(result["background"].data[0, 10, 10], 97)
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 5.741116, atol=1e-3)
 
     mask_fit = Map.from_geom(
@@ -157,14 +160,17 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 7.186745, atol=1e-3)
-
-    assert_allclose(result_image["counts"].data[0, 10, 10], 304)
-    assert_allclose(result_image["excess"].data[0, 10, 10], 152)
-    assert_allclose(result_image["background"].data[0, 10, 10], 152)
+    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], np.nan, atol=1e-3)
+    assert_allclose(result_image["counts"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["excess"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["background"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["sqrt_ts"].data[0, 9, 9], 7.186745, atol=1e-3)
+    assert_allclose(result_image["counts"].data[0, 9, 9], 304)
+    assert_allclose(result_image["excess"].data[0, 9, 9], 152)
+    assert_allclose(result_image["background"].data[0, 9, 9], 152)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
-    assert_allclose(result_image["flux"].data[0, 10, 10], 7.6e-9, rtol=1e-3)
+    assert_allclose(result_image["flux"].data[0, 9, 9], 7.6e-9, rtol=1e-3)
 
     # test with an npred()
     simple_dataset_on_off.exposure.data = (

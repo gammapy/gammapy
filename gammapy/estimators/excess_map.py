@@ -6,7 +6,7 @@ from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
 import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff, Datasets
-from gammapy.maps import Map
+from gammapy.maps import Map, MapAxis
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
@@ -18,22 +18,15 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=False):
+def convolved_map_dataset_counts_statistics(dataset, kernel, mask):
     """Return CountsDataset objects containing smoothed maps from the MapDataset"""
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
     kernel.normalize("peak")
 
-    mask = np.ones(dataset.data_shape, dtype=bool)
-    if dataset.mask_safe:
-        mask *= dataset.mask_safe
-    if apply_mask_fit:
-        mask *= dataset.mask_fit
-
     # fft convolution adds numerical noise, to ensure integer results we call
     # np.rint
     n_on = dataset.counts * mask
-    n_on = n_on.sum_over_axes(keepdims=True)
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
@@ -41,14 +34,10 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
         background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
 
-        background = background.sum_over_axes(keepdims=True)
-        n_off = n_off.sum_over_axes(keepdims=True)
-
         background_conv = background.convolve(kernel.array)
         n_off_conv = n_off.convolve(kernel.array)
 
         npred_sig = dataset.npred_signal() * mask
-        npred_sig = npred_sig.sum_over_axes(keepdims=True)
         mu_sig = npred_sig.convolve(kernel.array)
 
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -60,7 +49,6 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, apply_mask_fit=Fals
     else:
 
         npred = dataset.npred() * mask
-        npred = npred.sum_over_axes(keepdims=True)
         background_conv = npred.convolve(kernel.array)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
@@ -168,11 +156,13 @@ class ExcessMapEstimator(Estimator):
 
         results_all = {}
 
-        for name in results[0].keys():
-            map_all = Map.from_images(images=[_[name] for _ in results])
-            results_all[name] = map_all
+        axis = MapAxis.from_edges(energy_edges, name="energy")
 
-        return results_all
+        resampled_dataset = dataset.resample_energy_axis(energy_axis=axis)
+
+        result = self.estimate_excess_map(resampled_dataset)
+
+        return result
 
     def estimate_excess_map(self, dataset):
         """Estimate excess and ts maps for single dataset.
@@ -189,11 +179,15 @@ class ExcessMapEstimator(Estimator):
         size = self.correlation_radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
 
-        counts_stat = convolved_map_dataset_counts_statistics(
-            dataset, kernel, self.apply_mask_fit
-        )
+        geom = dataset.counts.geom #.squash("energy")
 
-        geom = dataset.counts.geom.squash("energy")
+        mask = np.ones(dataset.data_shape, dtype=bool)
+        if dataset.mask_safe:
+            mask *= dataset.mask_safe
+        if self.apply_mask_fit:
+            mask *= dataset.mask_fit
+
+        counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel, mask)
 
         n_on = Map.from_geom(geom, data=counts_stat.n_on)
         bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
@@ -210,7 +204,6 @@ class ExcessMapEstimator(Estimator):
 
         if dataset.exposure:
             reco_exposure = estimate_exposure_reco_energy(dataset)
-            reco_exposure = reco_exposure.sum_over_axes(keepdims=True)
             flux = excess / reco_exposure
             flux.quantity = flux.quantity.to("1 / (cm2 s)")
         else:
@@ -229,5 +222,10 @@ class ExcessMapEstimator(Estimator):
                 geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )
             result.update({"ul": ul})
+
+        # return nan values outside mask
+#        mask = mask.all(axis=0, keepdims=True)
+        for key in result:
+            result[key].data[~mask] = np.nan
 
         return result
