@@ -198,6 +198,6 @@ class TestEventSelection:
         assert len(new_list.table) == 2
 
     def test_select_energy(self):
-        energy_band = u.Quantity([1, 10], 'TeV')
-        new_list = self.events.select_energy(energy_band)
+        energy_range = u.Quantity([1, 10], 'TeV')
+        new_list = self.events.select_energy(energy_range)
         assert len(new_list.table) == 3
