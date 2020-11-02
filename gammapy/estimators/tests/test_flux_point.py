@@ -139,6 +139,16 @@ def test_compute_flux_points_dnde_exp(method):
     assert_quantity_allclose(actual, desired, rtol=1e-8)
 
 
+@requires_data()
+def test_fermi_to_dnde():
+    from gammapy.catalog import CATALOG_REGISTRY
+    catalog_4fgl = CATALOG_REGISTRY.get_cls("4fgl")()
+    src = catalog_4fgl["FGES J1553.8-5325"]
+    fp_dnde = src.flux_points.to_sed_type("dnde", model=src.spectral_model())
+
+    assert_allclose(fp_dnde.table["dnde"].quantity[1], 4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"), rtol=1e-5)
+
+
 @pytest.fixture(params=FLUX_POINTS_FILES, scope="session")
 def flux_points(request):
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/" + request.param
