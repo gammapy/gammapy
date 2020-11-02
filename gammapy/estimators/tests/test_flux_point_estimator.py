@@ -23,7 +23,7 @@ from gammapy.utils.testing import requires_data, requires_dependency
 # TODO: use pregenerate data instead
 def simulate_spectrum_dataset(model, random_state=0):
     energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
-    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+    energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
 
     aeff = EffectiveAreaTable.from_parametrization(energy=energy_edges).to_region_map()
     bkg_model = SkyModel(

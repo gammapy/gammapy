@@ -530,7 +530,7 @@ class FluxPoints:
             Reference energy.
         """
         try:
-            return self.table["energy_ref"].quantity
+            return self.table["e_ref"].quantity
         except KeyError:
             return np.sqrt(self.energy_min * self.energy_max)
 
