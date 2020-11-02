@@ -745,12 +745,12 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
-    def from_energy_edges(cls, edges, unit=None, name=None, interp="log"):
+    def from_energy_edges(cls, energy_edges, unit=None, name=None, interp="log"):
         """Make an energy axis from adjacent edges.
 
         Parameters
         ----------
-        edges : `~astropy.units.Quantity`, float
+        energy_edges : `~astropy.units.Quantity`, float
             Energy edges
         unit : `~astropy.units.Unit`
             Energy unit
@@ -764,11 +764,11 @@ class MapAxis:
         axis : `MapAxis`
             Axis with name "energy" and interp "log".
         """
-        edges = u.Quantity(edges, unit)
+        energy_edges = u.Quantity(energy_edges, unit)
 
         if unit is None:
-            unit = edges.unit
-            edges = edges.to(unit)
+            unit = energy_edges.unit
+            energy_edges = energy_edges.to(unit)
 
         if name is None:
             name = "energy"
@@ -776,11 +776,11 @@ class MapAxis:
         if name not in ["energy", "energy_true"]:
             raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
-        return cls.from_edges(edges, unit=unit, interp=interp, name=name)
+        return cls.from_edges(energy_edges, unit=unit, interp=interp, name=name)
 
     @classmethod
     def from_energy_bounds(
-        cls, emin, emax, nbin, unit=None, per_decade=False, name=None, node_type="edges"
+        cls, energy_min, energy_max, nbin, unit=None, per_decade=False, name=None, node_type="edges"
     ):
         """Make an energy axis.
 
@@ -789,7 +789,7 @@ class MapAxis:
 
         Parameters
         ----------
-        emin, emax : `~astropy.units.Quantity`, float
+        energy_min, energy_max : `~astropy.units.Quantity`, float
             Energy range
         nbin : int
             Number of bins
@@ -805,15 +805,15 @@ class MapAxis:
         axis : `MapAxis`
             Axis with name "energy" and interp "log".
         """
-        emin = u.Quantity(emin, unit)
-        emax = u.Quantity(emax, unit)
+        energy_min = u.Quantity(energy_min, unit)
+        energy_max = u.Quantity(energy_max, unit)
 
         if unit is None:
-            unit = emax.unit
-            emin = emin.to(unit)
+            unit = energy_max.unit
+            energy_min = energy_min.to(unit)
 
         if per_decade:
-            nbin = np.ceil(np.log10(emax / emin).value * nbin)
+            nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
 
         if name is None:
             name = "energy"
@@ -822,8 +822,8 @@ class MapAxis:
             raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
         return cls.from_bounds(
-            emin.value,
-            emax.value,
+            energy_min.value,
+            energy_max.value,
             nbin=nbin,
             unit=unit,
             interp="log",
@@ -1369,16 +1369,16 @@ class MapAxis:
             Map Axis
         """
         if format in ["ogip", "fgst-ccube"]:
-            emin = table["E_MIN"].quantity
-            emax = table["E_MAX"].quantity
-            edges = np.append(emin.value, emax.value[-1]) * emin.unit
-            axis = cls.from_edges(edges, name="energy", interp="log")
+            energy_min = table["E_MIN"].quantity
+            energy_max = table["E_MAX"].quantity
+            energy_edges = np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            axis = cls.from_edges(energy_edges, name="energy", interp="log")
 
         elif format == "ogip-arf":
-            emin = table["ENERG_LO"].quantity
-            emax = table["ENERG_HI"].quantity
-            edges = np.append(emin.value, emax.value[-1]) * emin.unit
-            axis = cls.from_edges(edges, name="energy_true", interp="log")
+            energy_min = table["ENERG_LO"].quantity
+            energy_max = table["ENERG_HI"].quantity
+            energy_edges = np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            axis = cls.from_edges(energy_edges, name="energy_true", interp="log")
 
         elif format in ["fgst-template", "fgst-bexpcube"]:
             allowed_names = ["Energy", "ENERGY", "energy"]
@@ -2192,14 +2192,14 @@ class Geom(abc.ABC):
         """
         return self._init_copy(**kwargs)
 
-    def energy_mask(self, emin=None, emax=None, round_to_edge=False):
+    def energy_mask(self, energy_min=None, energy_max=None, round_to_edge=False):
         """Create a mask for a given energy range.
 
         The energy bin must be fully contained to be included in the mask.
 
         Parameters
         ----------
-        emin, emax : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy range
 
         Returns
@@ -2211,15 +2211,15 @@ class Geom(abc.ABC):
         energy_axis = self.axes["energy"]
 
         if round_to_edge:
-            emin, emax = energy_axis.round([emin, emax])
+            energy_min, energy_max = energy_axis.round([energy_min, energy_max])
 
         # TODO: make this more general
         shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
-        edges = energy_axis.edges.reshape(shape)
+        energy_edges = energy_axis.edges.reshape(shape)
 
         # set default values
-        emin = emin if emin is not None else edges[0]
-        emax = emax if emax is not None else edges[-1]
+        energy_min = energy_min if energy_min is not None else energy_edges[0]
+        energy_max = energy_max if energy_max is not None else energy_edges[-1]
 
-        mask = (edges[:-1] >= emin) & (edges[1:] <= emax)
+        mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
         return np.broadcast_to(mask, shape=self.data_shape)
