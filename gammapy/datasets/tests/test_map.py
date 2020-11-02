@@ -126,7 +126,7 @@ def get_map_dataset(
         )
     elif edisp == "edispkernel":
         edisp = EDispKernel.from_diagonal_response(
-            e_true=e_true.edges, e_reco=e_reco.edges
+            energy_true=e_true.edges, energy=e_reco.edges
         )
     else:
         edisp = None
@@ -186,9 +186,9 @@ def test_fake(sky_model, geom, geom_etrue):
 
 @requires_data()
 def test_different_exposure_unit(sky_model, geom):
-    ebounds_true = np.logspace(2, 4, 3)
+    energy_range_true = np.logspace(2, 4, 3)
     axis = MapAxis.from_edges(
-        ebounds_true, name="energy_true", unit="GeV", interp="log"
+        energy_range_true, name="energy_true", unit="GeV", interp="log"
     )
     geom_gev = geom.to_image().to_cube([axis])
     dataset = get_map_dataset(geom, geom_gev, edisp="None")
@@ -231,8 +231,8 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset.background.geom.axes[0].nbin == 2
     assert spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert spectrum_dataset.exposure.unit == "m2s"
-    assert spectrum_dataset.edisp.get_edisp_kernel().e_reco.nbin == 2
-    assert spectrum_dataset.edisp.get_edisp_kernel().e_true.nbin == 3
+    assert spectrum_dataset.edisp.get_edisp_kernel().energy_axis.nbin == 2
+    assert spectrum_dataset.edisp.get_edisp_kernel().energy_axis_true.nbin == 3
     assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.070884e+09, rtol=1e-5)
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
@@ -496,7 +496,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
 
     # test mask_safe evaluation
-    mask_safe = geom.energy_mask(emin=1 * u.TeV)
+    mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
     dataset_1.mask_safe = Map.from_geom(geom, data=mask_safe)
     dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
 
@@ -747,7 +747,7 @@ def test_stack_npred():
     )
     dataset_1.psf = None
     dataset_1.exposure.data += 1
-    dataset_1.mask_safe.data = geom.energy_mask(emin=1 * u.TeV)
+    dataset_1.mask_safe.data = geom.energy_mask(energy_min=1 * u.TeV)
     dataset_1.background.data += 1
 
     bkg_model_1 = FoVBackgroundModel(dataset_name=dataset_1.name)
@@ -761,7 +761,7 @@ def test_stack_npred():
     )
     dataset_2.psf = None
     dataset_2.exposure.data += 1
-    dataset_2.mask_safe.data = geom.energy_mask(emin=0.2 * u.TeV)
+    dataset_2.mask_safe.data = geom.energy_mask(energy_min=0.2 * u.TeV)
     dataset_2.background.data += 1
 
     bkg_model_2 = FoVBackgroundModel(dataset_name=dataset_2.name)

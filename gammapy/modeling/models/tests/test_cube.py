@@ -96,7 +96,9 @@ def background(geom):
 def edisp(geom, geom_true):
     e_reco = geom.axes["energy"].edges
     e_true = geom_true.axes["energy_true"].edges
-    return EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+    return EDispKernel.from_diagonal_response(
+        energy_true=e_true, energy=e_reco
+    )
 
 
 @pytest.fixture(scope="session")
@@ -452,14 +454,14 @@ class Test_template_cube_MapEvaluator:
         out = diffuse_evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.606345e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.164656e09, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.83018e+10, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.106403e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 5.586508e08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 8.778828e+09, rtol=1e-5)
 
 
 class TestSkyModelMapEvaluator:
@@ -503,14 +505,14 @@ class TestSkyModelMapEvaluator:
         out = evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 5.615601e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 7.938388e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.33602e-07, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(evaluator, gti):
         out = evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 3.862314e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 4.126612e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 6.94503e-08, rtol=1e-5)
 
 
 def test_sky_point_source():

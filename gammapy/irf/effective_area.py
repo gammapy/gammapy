@@ -4,7 +4,6 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxis, RegionNDMap, RegionGeom
-from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -272,20 +271,20 @@ class EffectiveAreaTable:
         cleaned_data = self.data.data[np.where(~np.isnan(self.data.data))]
         return cleaned_data.max()
 
-    def find_energy(self, aeff, emin=None, emax=None):
+    def find_energy(self, aeff, energy_min=None, energy_max=None):
         """Find energy for a given effective area.
 
-        In case the solution is not unique, provide the `emin` or `emax` arguments
+        In case the solution is not unique, provide the `energy_min` or `energy_max` arguments
         to limit the solution to the given range. By default the peak energy of the
-        effective area is chosen as `emax`.
+        effective area is chosen as `energy_max`.
 
         Parameters
         ----------
         aeff : `~astropy.units.Quantity`
             Effective area value
-        emin : `~astropy.units.Quantity`
+        energy_min : `~astropy.units.Quantity`
             Lower bracket value in case solution is not unique.
-        emax : `~astropy.units.Quantity`
+        energy_max : `~astropy.units.Quantity`
             Upper bracket value in case solution is not unique.
 
         Returns
@@ -297,14 +296,14 @@ class EffectiveAreaTable:
 
         energy = self.energy.center
 
-        if emin is None:
-            emin = energy[0]
-        if emax is None:
+        if energy_min is None:
+            energy_min = energy[0]
+        if energy_max is None:
             # use the peak effective area as a default for the energy maximum
-            emax = energy[np.argmax(self.data.data)]
+            energy_max = energy[np.argmax(self.data.data)]
 
         aeff_spectrum = TemplateSpectralModel(energy, self.data.data)
-        return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
+        return aeff_spectrum.inverse(aeff, energy_min=energy_min, energy_max=energy_max)
 
 
 class EffectiveAreaTable2D:

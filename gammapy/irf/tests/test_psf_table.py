@@ -70,8 +70,8 @@ class TestEnergyDependentTablePSF:
         # TODO: test info
         # TODO: test plotting methods
 
-        energy_band = u.Quantity([10, 500], "GeV")
-        psf_band = self.psf.table_psf_in_energy_band(energy_band)
+        energy_range = u.Quantity([10, 500], "GeV")
+        psf_band = self.psf.table_psf_in_energy_range(energy_range)
         # TODO: add assert
 
     @requires_dependency("matplotlib")

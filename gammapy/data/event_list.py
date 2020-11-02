@@ -217,13 +217,13 @@ class EventList:
         table = self.table[row_specifier]
         return self.__class__(table=table)
 
-    def select_energy(self, energy_band):
+    def select_energy(self, energy_range):
         """Select events in energy band.
 
         Parameters
         ----------
-        energy_band : `~astropy.units.Quantity`
-            Energy band ``[energy_min, energy_max)``
+        energy_range : `~astropy.units.Quantity`
+            Energy range ``[energy_min, energy_max)``
 
         Returns
         -------
@@ -235,12 +235,12 @@ class EventList:
         >>> from astropy.units import Quantity
         >>> from gammapy.data import EventList
         >>> event_list = EventList.read('events.fits')
-        >>> energy_band = Quantity([1, 20], 'TeV')
+        >>> energy_range = Quantity([1, 20], 'TeV')
         >>> event_list = event_list.select_energy()
         """
         energy = self.energy
-        mask = energy_band[0] <= energy
-        mask &= energy < energy_band[1]
+        mask = energy_range[0] <= energy
+        mask &= energy < energy_range[1]
         return self.select_row_subset(mask)
 
     def select_time(self, time_interval):
@@ -307,11 +307,11 @@ class EventList:
         mask &= self.table[parameter].quantity < band[1]
         return self.select_row_subset(mask)
 
-    def _default_plot_ebounds(self):
+    def _default_plot_energy_edges(self):
         energy = self.energy
         return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
 
-    def plot_energy(self, ax=None, ebounds=None, **kwargs):
+    def plot_energy(self, ax=None, energy_edges=None, **kwargs):
         """Plot counts as a function of energy."""
         import matplotlib.pyplot as plt
 
@@ -320,12 +320,12 @@ class EventList:
         kwargs.setdefault("log", True)
         kwargs.setdefault("histtype", "step")
 
-        if ebounds is None:
-            ebounds = self._default_plot_ebounds()
+        if energy_edges is None:
+            energy_edges = self._default_plot_energy_edges()
 
-        unit = ebounds.unit
+        unit = energy_edges.unit
 
-        ax.hist(self.energy.to_value(unit), bins=ebounds.value, **kwargs)
+        ax.hist(self.energy.to_value(unit), bins=energy_edges.value, **kwargs)
         ax.loglog()
         ax.set_xlabel(f"Energy ({unit})")
         ax.set_ylabel("Counts")
@@ -448,7 +448,7 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        energy_bounds = self._default_plot_ebounds().to_value(self.energy.unit)
+        energy_bounds = self._default_plot_energy_edges().to_value(self.energy.unit)
         offset = center.separation(self.radec)
         offset_max = offset.max()
         offset_bounds = np.linspace(0, offset_max.deg, 30)

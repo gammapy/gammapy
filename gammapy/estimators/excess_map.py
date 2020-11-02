@@ -86,7 +86,7 @@ class ExcessMapEstimator(Estimator):
             * "ul": estimate upper limits.
 
         By default all additional quantities are estimated.
-    e_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
     apply_mask_fit : Bool
         Apply a mask for the computation.
@@ -102,7 +102,7 @@ class ExcessMapEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=3,
         selection_optional="all",
-        e_edges=None,
+        energy_edges=None,
         apply_mask_fit=False,
     ):
         self.correlation_radius = correlation_radius
@@ -110,7 +110,7 @@ class ExcessMapEstimator(Estimator):
         self.n_sigma_ul = n_sigma_ul
         self.apply_mask_fit = apply_mask_fit
         self.selection_optional = selection_optional
-        self.e_edges = e_edges
+        self.energy_edges = energy_edges
 
     @property
     def correlation_radius(self):
@@ -152,16 +152,16 @@ class ExcessMapEstimator(Estimator):
         # TODO: add support for joint excess estimate to ExcessMapEstimator?
         datasets = Datasets(dataset)
 
-        if self.e_edges is None:
+        if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
-            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            e_edges = self.e_edges
+            energy_edges = self.energy_edges
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            sliced_dataset = datasets.slice_by_energy(e_min, e_max)[0]
+        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
+            sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
             result = self.estimate_excess_map(sliced_dataset)
             results.append(result)

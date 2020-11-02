@@ -44,7 +44,7 @@ class EnergyDispersion2D:
     for a given field of view offset and energy binning:
 
     >>> energy = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log").edges
-    >>> edisp = edisp2d.to_energy_dispersion(offset='1.2 deg', e_reco=energy, e_true=energy)
+    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', e_reco=energy, energy_true=energy)
 
     See Also
     --------
@@ -78,20 +78,20 @@ class EnergyDispersion2D:
         return ss
 
     @classmethod
-    def from_gauss(cls, e_true, migra, bias, sigma, offset, pdf_threshold=1e-6):
+    def from_gauss(cls, energy_true, migra, bias, sigma, offset, pdf_threshold=1e-6):
         """Create Gaussian energy dispersion matrix (`EnergyDispersion2D`).
 
-        The output matrix will be Gaussian in (e_true / e_reco).
+        The output matrix will be Gaussian in (energy_true / energy).
 
         The ``bias`` and ``sigma`` should be either floats or arrays of same dimension than
-        ``e_true``. ``bias`` refers to the mean value of the ``migra``
+        ``energy_true``. ``bias`` refers to the mean value of the ``migra``
         distribution minus one, i.e. ``bias=0`` means no bias.
 
         Note that, the output matrix is flat in offset.
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             Bin edges of true energy axis
         migra : `~astropy.units.Quantity`
             Bin edges of migra axis
@@ -104,10 +104,10 @@ class EnergyDispersion2D:
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        e_true = Quantity(e_true)
+        energy_true = Quantity(energy_true)
         # erf does not work with Quantities
         energy_axis_true = MapAxis.from_energy_edges(
-            e_true, interp="log", name="energy_true"
+            energy_true, interp="log", name="energy_true"
         )
 
         true2d, migra2d = np.meshgrid(energy_axis_true.center, migra)
@@ -177,7 +177,7 @@ class EnergyDispersion2D:
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu)
 
-    def to_energy_dispersion(self, offset, e_true=None, e_reco=None):
+    def to_edisp_kernel(self, offset, energy_true=None, energy=None):
         """Detector response R(Delta E_reco, Delta E_true)
 
         Probability to reconstruct an energy in a given true energy band
@@ -187,38 +187,41 @@ class EnergyDispersion2D:
         ----------
         offset : `~astropy.coordinates.Angle`
             Offset
-        e_true : `~astropy.units.Quantity`, None
+        energy_true : `~astropy.units.Quantity`, None
             True energy axis
-        e_reco : `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`
             Reconstructed energy axis
 
         Returns
         -------
-        edisp : `~gammapy.irf.EnergyDispersion`
+        edisp : `~gammapy.irf.EDispKernel`
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.data.axes["energy_true"].edges if e_true is None else e_true
-        e_reco = self.data.axes["energy_true"].edges if e_reco is None else e_reco
+
+        # TODO: expect directly MapAxis here?
+        if energy is None:
+            energy_axis = self.data.axes["energy_true"].copy(name="energy")
+        else:
+            energy_axis = MapAxis.from_energy_edges(energy)
+
+        if energy_true is None:
+            energy_axis_true = self.data.axes["energy_true"]
+        else:
+            energy_axis_true = MapAxis.from_energy_edges(energy_true, name="energy_true")
 
         data = []
-        for energy in MapAxis.from_edges(e_true, interp="log").center:
-            vec = self.get_response(offset=offset, e_true=energy, e_reco=e_reco)
+        for value in energy_axis_true.center:
+            vec = self.get_response(offset=offset, energy_true=value, energy=energy_axis.edges)
             data.append(vec)
 
-        data = np.asarray(data)
-        e_lo, e_hi = e_true[:-1], e_true[1:]
-        ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
-
-        return EDispKernel.from_energy_lo_hi(
-            e_true_lo=e_lo,
-            e_true_hi=e_hi,
-            e_reco_lo=ereco_lo,
-            e_reco_hi=ereco_hi,
-            data=data,
+        return EDispKernel(
+            energy_axis=energy_axis,
+            energy_axis_true=energy_axis_true,
+            data=np.asarray(data)
         )
 
-    def get_response(self, offset, e_true, e_reco=None):
+    def get_response(self, offset, energy_true, energy=None):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
@@ -227,9 +230,9 @@ class EnergyDispersion2D:
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             True energy
-        e_reco : `~astropy.units.Quantity`, None
+        energy : `~astropy.units.Quantity`, None
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset
@@ -239,22 +242,22 @@ class EnergyDispersion2D:
         rv : `~numpy.ndarray`
             Redistribution vector
         """
-        e_true = Quantity(e_true)
+        energy_true = Quantity(energy_true)
 
         migra_axis = self.data.axes["migra"]
 
-        if e_reco is None:
-            # Default: e_reco nodes = migra nodes * e_true nodes
-            e_reco = migra_axis.edges * e_true
+        if energy is None:
+            # Default: energy nodes = migra nodes * energy_true nodes
+            energy = migra_axis.edges * energy_true
         else:
-            # Translate given e_reco binning to migra at bin center
-            e_reco = Quantity(e_reco)
+            # Translate given energy binning to migra at bin center
+            energy = Quantity(energy)
 
-        # migration value of e_reco bounds
-        migra = e_reco / e_true
+        # migration value of energy bounds
+        migra = energy / energy_true
 
         values = self.data.evaluate(
-            offset=offset, energy_true=e_true, migra=migra_axis.center
+            offset=offset, energy_true=energy_true, migra=migra_axis.center
         )
 
         cumsum = np.insert(values, 0, 0).cumsum()
@@ -270,13 +273,13 @@ class EnergyDispersion2D:
             fill_value=(0, 1),
         )
 
-        # We compute the difference between 2 successive bounds in e_reco
+        # We compute the difference between 2 successive bounds in energy
         # to get integral over reco energy bin
         integral = np.diff(np.clip(f(migra), a_min=0, a_max=1))
 
         return integral
 
-    def plot_migration(self, ax=None, offset=None, e_true=None, migra=None, **kwargs):
+    def plot_migration(self, ax=None, offset=None, energy_true=None, migra=None, **kwargs):
         """Plot energy dispersion for given offset and true energy.
 
         Parameters
@@ -285,7 +288,7 @@ class EnergyDispersion2D:
             Axis
         offset : `~astropy.coordinates.Angle`, optional
             Offset
-        e_true : `~astropy.units.Quantity`, optional
+        energy_true : `~astropy.units.Quantity`, optional
             True energy
         migra : `~numpy.ndarray`, optional
             Migration nodes
@@ -304,14 +307,14 @@ class EnergyDispersion2D:
         else:
             offset = np.atleast_1d(Angle(offset))
 
-        if e_true is None:
-            e_true = Quantity([0.1, 1, 10], "TeV")
+        if energy_true is None:
+            energy_true = Quantity([0.1, 1, 10], "TeV")
         else:
-            e_true = np.atleast_1d(Quantity(e_true))
+            energy_true = np.atleast_1d(Quantity(energy_true))
 
         migra = self.data.axes["migra"].center if migra is None else migra
 
-        for ener in e_true:
+        for ener in energy_true:
             for off in offset:
                 disp = self.data.evaluate(offset=off, energy_true=ener, migra=migra)
                 label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
@@ -353,15 +356,15 @@ class EnergyDispersion2D:
         if offset is None:
             offset = Angle(1, "deg")
 
-        e_true = self.data.axes["energy_true"]
+        energy_true = self.data.axes["energy_true"]
         migra = self.data.axes["migra"]
 
-        x = e_true.edges.value
+        x = energy_true.edges.value
         y = migra.edges.value
 
         z = self.data.evaluate(
             offset=offset,
-            energy_true=e_true.center.reshape(1, -1, 1),
+            energy_true=energy_true.center.reshape(1, -1, 1),
             migra=migra.center.reshape(1, 1, -1),
         ).value[0]
 
@@ -371,7 +374,7 @@ class EnergyDispersion2D:
             label = "Probability density (A.U.)"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{e_true.unit}]")
+        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{energy_true.unit}]")
         ax.set_ylabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
@@ -391,7 +394,7 @@ class EnergyDispersion2D:
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_migration(ax=axes[1])
-        edisp = self.to_energy_dispersion(offset="1 deg")
+        edisp = self.to_edisp_kernel(offset="1 deg")
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()

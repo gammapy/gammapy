@@ -193,13 +193,13 @@ class FluxPointsDataset(Dataset):
 
     def data_shape(self):
         """Shape of the flux points data (tuple)."""
-        return self.data.e_ref.shape
+        return self.data.energy_ref.shape
 
     def flux_pred(self):
         """Compute predicted flux."""
         flux = 0.0
         for model in self.models:
-            flux += model.spectral_model(self.data.e_ref)
+            flux += model.spectral_model(self.data.energy_ref)
         return flux
 
     def stat_array(self):
@@ -260,15 +260,15 @@ class FluxPointsDataset(Dataset):
         return ax_spectrum, ax_residuals
 
     @property
-    def _e_range(self):
+    def _energy_range(self):
         try:
-            return u.Quantity([self.data.e_min.min(), self.data.e_max.max()])
+            return u.Quantity([self.data.energy_min.min(), self.data.energy_max.max()])
         except KeyError:
-            return u.Quantity([self.data.e_ref.min(), self.data.e_ref.max()])
+            return u.Quantity([self.data.energy_ref.min(), self.data.energy_ref.max()])
 
     @property
-    def _e_unit(self):
-        return self.data.e_ref.unit
+    def _energy_unit(self):
+        return self.data.energy_ref.unit
 
     def plot_residuals(self, ax=None, method="diff", **kwargs):
         """Plot flux point residuals.
@@ -297,7 +297,7 @@ class FluxPointsDataset(Dataset):
 
         xerr = fp._plot_get_energy_err()
         if xerr is not None:
-            xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
+            xerr = xerr[0].to_value(self._energy_unit), xerr[1].to_value(self._energy_unit)
 
         model = self.flux_pred()
         yerr = fp._plot_get_flux_err(fp.sed_type)
@@ -316,15 +316,15 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("color", "black")
 
         ax.errorbar(
-            self.data.e_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
+            self.data.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
         )
 
         # format axes
         ax.axhline(0, color="black", lw=0.5)
         ax.set_ylabel("Residuals {}".format(unit.__str__()))
-        ax.set_xlabel(f"Energy ({self._e_unit})")
+        ax.set_xlabel(f"Energy ({self._energy_unit})")
         ax.set_xscale("log")
-        ax.set_xlim(self._e_range.to_value(self._e_unit))
+        ax.set_xlim(self._energy_range.to_value(self._energy_unit))
         y_max = 2 * np.nanmax(residuals).value
         ax.set_ylim(-y_max, y_max)
         return ax
@@ -366,7 +366,7 @@ class FluxPointsDataset(Dataset):
         ax = self.data.plot(ax=ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
-        plot_kwargs.setdefault("energy_range", self._e_range)
+        plot_kwargs.setdefault("energy_range", self._energy_range)
         plot_kwargs.setdefault("zorder", 10)
         plot_kwargs.update(model_kwargs)
         plot_kwargs.setdefault("label", "Best fit model")
@@ -384,5 +384,5 @@ class FluxPointsDataset(Dataset):
                     model.spectral_model.plot_error(ax=ax, **plot_kwargs)
 
         # format axes
-        ax.set_xlim(self._e_range.to_value(self._e_unit))
+        ax.set_xlim(self._energy_range.to_value(self._energy_unit))
         return ax

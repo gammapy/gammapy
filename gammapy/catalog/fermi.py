@@ -217,7 +217,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         "ASSOC_GAM2",
         "ASSOC_GAM3",
     ]
-    _ebounds = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
+    _energy_edges = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
 
     def _info_more(self):
         d = self.data
@@ -427,8 +427,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
 
         flux = self._get_flux_values("Flux_Band")
         flux_err = self._get_flux_values("Unc_Flux_Band")
@@ -505,8 +505,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
 
-    _ebounds = u.Quantity([100, 300, 1000, 3000, 10000, 100000], "MeV")
-    _ebounds_suffix = ["100_300", "300_1000", "1000_3000", "3000_10000", "10000_100000"]
+    _energy_edges = u.Quantity([100, 300, 1000, 3000, 10000, 100000], "MeV")
+    _energy_edges_suffix = ["100_300", "300_1000", "1000_3000", "3000_10000", "10000_100000"]
     energy_range = u.Quantity([100, 100000], "MeV")
     """Energy range used for the catalog.
 
@@ -726,8 +726,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
 
         flux = self._get_flux_values("Flux")
         flux_err = self._get_flux_values("Unc_Flux")
@@ -754,11 +754,11 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
-        table["sqrt_TS"] = [self.data["Sqrt_TS" + _] for _ in self._ebounds_suffix]
+        table["sqrt_TS"] = [self.data["Sqrt_TS" + _] for _ in self._energy_edges_suffix]
         return FluxPoints(table)
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
-        values = [self.data[prefix + _] for _ in self._ebounds_suffix]
+        values = [self.data[prefix + _] for _ in self._energy_edges_suffix]
         return u.Quantity(values, unit)
 
     @property
@@ -805,8 +805,8 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
     """
 
     asso = ["ASSOC", "3FGL_Name", "1FHL_Name", "TeVCat_Name"]
-    _ebounds = u.Quantity([50, 171, 585, 2000], "GeV")
-    _ebounds_suffix = ["50_171", "171_585", "585_2000"]
+    _energy_edges = u.Quantity([50, 171, 585, 2000], "GeV")
+    _energy_edges_suffix = ["50_171", "171_585", "585_2000"]
     energy_range = u.Quantity([0.05, 2], "TeV")
     """Energy range used for the catalog."""
 
@@ -921,8 +921,8 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         """Integral flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
         table["flux"] = self._get_flux_values("Flux")
         flux_err = self._get_flux_values("Unc_Flux")
         table["flux_errn"] = np.abs(flux_err[:, 0])
@@ -937,7 +937,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return FluxPoints(table)
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
-        values = [self.data[prefix + _ + "GeV"] for _ in self._ebounds_suffix]
+        values = [self.data[prefix + _ + "GeV"] for _ in self._energy_edges_suffix]
         return u.Quantity(values, unit)
 
 
@@ -951,7 +951,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     energy_range = u.Quantity([0.01, 2], "TeV")
     """Energy range used for the catalog."""
 
-    _ebounds = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
+    _energy_edges = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
 
     def _info_position(self):
         d = self.data
@@ -1094,8 +1094,8 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
 
         flux = self.data["Flux_Band"]
         flux_err = self.data["Unc_Flux_Band"]

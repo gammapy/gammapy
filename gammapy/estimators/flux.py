@@ -24,7 +24,7 @@ class FluxEstimator(Estimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    e_min, e_max: `~astropy.units.Quantity`
+    energy_min, energy_max: `~astropy.units.Quantity`
         The energy interval on which to compute the flux
     norm_min : float
         Minimum value for the norm used for the fit statistic profile evaluation.
@@ -55,8 +55,8 @@ class FluxEstimator(Estimator):
     def __init__(
         self,
         source,
-        e_min,
-        e_max,
+        energy_min,
+        energy_max,
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -73,10 +73,10 @@ class FluxEstimator(Estimator):
             )
         self.norm_values = norm_values
         self.source = source
-        self.e_min = u.Quantity(e_min)
-        self.e_max = u.Quantity(e_max)
+        self.energy_min = u.Quantity(energy_min)
+        self.energy_max = u.Quantity(energy_max)
 
-        if self.e_min >= self.e_max:
+        if self.energy_min >= self.energy_max:
             raise ValueError("Incorrect energy_range for Flux Estimator")
 
         self.selection_optional = selection_optional
@@ -94,9 +94,9 @@ class FluxEstimator(Estimator):
         )
 
     @property
-    def e_ref(self):
+    def energy_ref(self):
         """Reference energy"""
-        return np.sqrt(self.e_min * self.e_max)
+        return np.sqrt(self.energy_min * self.energy_max)
 
     def get_reference_flux_values(self, model):
         """Get reference flux values
@@ -112,13 +112,13 @@ class FluxEstimator(Estimator):
             Dictionary with reference energies and flux values.
         """
         return {
-            "e_ref": self.e_ref,
-            "e_min": self.e_min,
-            "e_max": self.e_max,
-            "ref_dnde": model(self.e_ref),
-            "ref_flux": model.integral(self.e_min, self.e_max),
-            "ref_eflux": model.energy_flux(self.e_min, self.e_max),
-            "ref_e2dnde": model(self.e_ref) * self.e_ref ** 2,
+            "e_ref": self.energy_ref,
+            "e_min": self.energy_min,
+            "e_max": self.energy_max,
+            "ref_dnde": model(self.energy_ref),
+            "ref_flux": model.integral(self.energy_min, self.energy_max),
+            "ref_eflux": model.energy_flux(self.energy_min, self.energy_max),
+            "ref_e2dnde": model(self.energy_ref) * self.energy_ref ** 2,
         }
 
     def get_scale_model(self, models):
