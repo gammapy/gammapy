@@ -307,7 +307,7 @@ class EventList:
         mask &= self.table[parameter].quantity < band[1]
         return self.select_row_subset(mask)
 
-    def _default_plot_energybounds(self):
+    def _default_plot_energy_edges(self):
         energy = self.energy
         return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
 
@@ -321,7 +321,7 @@ class EventList:
         kwargs.setdefault("histtype", "step")
 
         if energy_edges is None:
-            energy_edges = self._default_plot_energybounds()
+            energy_edges = self._default_plot_energy_edges()
 
         unit = energy_edges.unit
 
@@ -448,7 +448,7 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        energy_bounds = self._default_plot_energybounds().to_value(self.energy.unit)
+        energy_bounds = self._default_plot_energy_edges().to_value(self.energy.unit)
         offset = center.separation(self.radec)
         offset_max = offset.max()
         offset_bounds = np.linspace(0, offset_max.deg, 30)
