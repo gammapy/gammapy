@@ -440,7 +440,7 @@ class EDispKernel:
         bias = (e_reco - e_true_real) / e_true_real
         return bias
 
-    def get_bias_energy(self, bias, emin=None, emax=None):
+    def get_bias_energy(self, bias, energy_min=None, energy_max=None):
         """Find energy corresponding to a given bias.
 
         In case the solution is not unique, provide the ``emin`` or ``emax`` arguments
@@ -451,9 +451,9 @@ class EDispKernel:
         ----------
         bias : float
             Bias value.
-        emin : `~astropy.units.Quantity`
+        energy_min : `~astropy.units.Quantity`
             Lower bracket value in case solution is not unique.
-        emax : `~astropy.units.Quantity`
+        energy_max : `~astropy.units.Quantity`
             Upper bracket value in case solution is not unique.
 
         Returns
@@ -466,14 +466,16 @@ class EDispKernel:
         e_true = self.e_true.center
         values = self.get_bias(e_true)
 
-        if emin is None:
+        if energy_min is None:
             # use the peak bias energy as default minimum
-            emin = e_true[np.nanargmax(values)]
-        if emax is None:
-            emax = e_true[-1]
+            energy_min = e_true[np.nanargmax(values)]
+        if energy_max is None:
+            energy_max = e_true[-1]
 
         bias_spectrum = TemplateSpectralModel(e_true, values)
-        e_true_bias = bias_spectrum.inverse(Quantity(bias), emin=emin, emax=emax)
+        e_true_bias = bias_spectrum.inverse(
+            Quantity(bias), energy_min=energy_min, energy_max=energy_max
+        )
 
         # return reconstructed energy
         return e_true_bias * (1 + bias)

@@ -241,7 +241,7 @@ class PSFKernel:
         # Compute weights vector
         energy_edges = map.geom.axes["energy_true"].edges
         weights = spectrum.integral(
-            emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
+            energy_min=energy_edges[:-1], energy_max=energy_edges[1:], intervals=True
         )
         weights *= exposure
         weights /= weights.sum()

@@ -331,13 +331,13 @@ def test_models(spectrum):
         value = model(energy)
         assert_quantity_allclose(value, spectrum["val_at_3TeV"], rtol=1e-7)
 
-    emin = 1 * u.TeV
-    emax = 10 * u.TeV
+    energy_min = 1 * u.TeV
+    energy_max = 10 * u.TeV
     assert_quantity_allclose(
-        model.integral(emin=emin, emax=emax), spectrum["integral_1_10TeV"], rtol=1e-5
+        model.integral(energy_min=energy_min, energy_max=energy_max), spectrum["integral_1_10TeV"], rtol=1e-5
     )
     assert_quantity_allclose(
-        model.energy_flux(emin=emin, emax=emax), spectrum["eflux_1_10TeV"], rtol=1e-5
+        model.energy_flux(energy_min=energy_min, energy_max=energy_max), spectrum["eflux_1_10TeV"], rtol=1e-5
     )
 
     if "e_peak" in spectrum:
@@ -354,10 +354,10 @@ def test_models(spectrum):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 
     if "integral_infinity" in spectrum:
-        emin = 0 * u.TeV
-        emax = 10000 * u.TeV
+        energy_min = 0 * u.TeV
+        energy_max = 10000 * u.TeV
         assert_quantity_allclose(
-            model.integral(emin=emin, emax=emax), spectrum["integral_infinity"]
+            model.integral(energy_min=energy_min, energy_max=energy_max), spectrum["integral_infinity"]
         )
 
     model.to_dict()
@@ -548,8 +548,8 @@ class TestNaimaModel:
     energy = 2 * u.TeV
 
     # Used to test model integral and energy flux
-    emin = 1 * u.TeV
-    emax = 10 * u.TeV
+    energy_min = 1 * u.TeV
+    energy_max = 10 * u.TeV
 
     # Used to that if array evaluation works
     e_array = [2, 10, 20] * u.TeV
@@ -573,10 +573,10 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV
+            model.integral(energy_min=self.energy_min, energy_max=self.energy_max), integral_1_10TeV
         )
         assert_quantity_allclose(
-            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV
+            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max), eflux_1_10TeV
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
@@ -610,10 +610,10 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV, rtol=1e-5
+            model.integral(energy_min=self.energy_min, energy_max=self.energy_max), integral_1_10TeV, rtol=1e-5
         )
         assert_quantity_allclose(
-            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV, rtol=1e-5
+            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max), eflux_1_10TeV, rtol=1e-5
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
@@ -635,10 +635,10 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV, rtol=1e-5
+            model.integral(energy_min=self.energy_min, energy_max=self.energy_max), integral_1_10TeV, rtol=1e-5
         )
         assert_quantity_allclose(
-            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV, rtol=1e-5
+            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max), eflux_1_10TeV, rtol=1e-5
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
@@ -783,14 +783,14 @@ class TestSpectralModelErrorPropagation:
 
 def test_integral_error_PowerLaw():
     energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
-    emin = energy[:-1]
-    emax = energy[1:]
+    energy_min = energy[:-1]
+    energy_max = energy[1:]
 
     powerlaw = PowerLawSpectralModel()
     powerlaw.parameters["index"].error = 0.4
     powerlaw.parameters["amplitude"].error = 1e-13
 
-    flux, flux_error = powerlaw.integral_error(emin, emax)
+    flux, flux_error = powerlaw.integral_error(energy_min, energy_max)
 
     assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=0.1)
     assert_allclose(flux_error.value[0] / 1e-14, 8.546615432273905, rtol=0.01)
@@ -798,43 +798,44 @@ def test_integral_error_PowerLaw():
 
 def test_integral_error_ExpCutOffPowerLaw():
     energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
-    emin = energy[:-1]
-    emax = energy[1:]
+    energy_min = energy[:-1]
+    energy_max = energy[1:]
 
     exppowerlaw = ExpCutoffPowerLawSpectralModel()
     exppowerlaw.parameters['index'].error = 0.4
     exppowerlaw.parameters['amplitude'].error = 1e-13
     exppowerlaw.parameters['lambda_'].error = 0.03
 
-    flux, flux_error = exppowerlaw.integral_error(emin, emax)
+    flux, flux_error = exppowerlaw.integral_error(energy_min, energy_max)
 
     assert_allclose(flux.value[0]/1e-13, 5.05855622, rtol=0.01)
     assert_allclose(flux_error.value[0]/1e-14, 8.90907063, rtol=0.01)
 
 
-def test_energy_flux_error_PowerLaw():
-    emin = 1 * u.TeV
-    emax = 10 * u.TeV
+def test_energy_flux_error_power_Law():
+    energy_min = 1 * u.TeV
+    energy_max = 10 * u.TeV
 
     powerlaw = PowerLawSpectralModel()
     powerlaw.parameters['index'].error = 0.4
     powerlaw.parameters['amplitude'].error = 1e-13
 
-    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(emin,emax)
+    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(energy_min,energy_max)
 
     assert_allclose(enrg_flux.value/1e-12, 2.303, rtol=0.001)
     assert_allclose(enrg_flux_error.value/1e-12, 1.347, rtol=0.001)
 
-def test_energy_flux_error_ExpCutOffPowerLaw():
-    emin = 1 * u.TeV
-    emax = 10 * u.TeV
+
+def test_energy_flux_error_exp_cutoff_power_law():
+    energy_min = 1 * u.TeV
+    energy_max = 10 * u.TeV
 
     exppowerlaw = ExpCutoffPowerLawSpectralModel()
     exppowerlaw.parameters['index'].error = 0.4
     exppowerlaw.parameters['amplitude'].error = 1e-13
     exppowerlaw.parameters['lambda_'].error = 0.03
 
-    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(emin, emax)
+    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(energy_min, energy_max)
 
     assert_allclose(enrg_flux.value/1e-12, 2.788, rtol=0.001)
     assert_allclose(enrg_flux_error.value/1e-12, 2.226, rtol=0.001)

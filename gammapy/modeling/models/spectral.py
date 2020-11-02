@@ -769,9 +769,9 @@ class PowerLaw2SpectralModel(SpectralModel):
         Spectral index :math:`\Gamma`
     amplitude : `~astropy.units.Quantity`
         Integral flux :math:`F_0`.
-    energy_min : `~astropy.units.Quantity`
+    emin : `~astropy.units.Quantity`
         Lower energy limit :math:`E_{0, min}`.
-    energy_max : `~astropy.units.Quantity`
+    emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
     
     See Also
@@ -782,20 +782,20 @@ class PowerLaw2SpectralModel(SpectralModel):
 
     amplitude = Parameter("amplitude", "1e-12 cm-2 s-1")
     index = Parameter("index", 2)
-    energy_min = Parameter("energy_min", "0.1 TeV", frozen=True)
-    energy_max = Parameter("energy_max", "100 TeV", frozen=True)
+    emin = Parameter("emin", "0.1 TeV", frozen=True)
+    emax = Parameter("emax", "100 TeV", frozen=True)
 
     @staticmethod
-    def evaluate(energy, amplitude, index, energy_min, energy_max):
+    def evaluate(energy, amplitude, index, emin, emax):
         """Evaluate the model (static function)."""
         top = -index + 1
 
         # to get the energies dimensionless we use a modified formula
-        bottom = energy_max - energy_min * (energy_min / energy_max) ** (-index)
-        return amplitude * (top / bottom) * np.power(energy / energy_max, -index)
+        bottom = emax - emin * (emin / emax) ** (-index)
+        return amplitude * (top / bottom) * np.power(energy / emax, -index)
 
     @staticmethod
-    def evaluate_integral(energy_min_lim, energy_max_lim, amplitude, index, energy_min, energy_max):
+    def evaluate_integral(energy_min, energy_max, amplitude, index, emin, emax):
         r"""Integrate power law analytically.
 
         .. math::
@@ -808,12 +808,12 @@ class PowerLaw2SpectralModel(SpectralModel):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-        temp1 = np.power(energy_max_lim, -index.value + 1)
-        temp2 = np.power(energy_min_lim, -index.value + 1)
-        top = temp1 - temp2
-
         temp1 = np.power(energy_max, -index.value + 1)
         temp2 = np.power(energy_min, -index.value + 1)
+        top = temp1 - temp2
+
+        temp1 = np.power(emax, -index.value + 1)
+        temp2 = np.power(emin, -index.value + 1)
         bottom = temp1 - temp2
 
         return amplitude * top / bottom
@@ -828,8 +828,8 @@ class PowerLaw2SpectralModel(SpectralModel):
         """
         amplitude = self.amplitude.quantity
         index = self.index.value
-        energy_min = self.energy_min.quantity
-        energy_max = self.energy_max.quantity
+        energy_min = self.emin.quantity
+        energy_max = self.emax.quantity
 
         # to get the energies dimensionless we use a modified formula
         top = -index + 1
@@ -1792,8 +1792,8 @@ class NaimaSpectralModel(SpectralModel):
         SYN = naima.models.Synchrotron(
             self._particle_distribution,
             B=self.B.quantity,
-            Eenergy_max=self.radiative_model.Eenergy_max,
-            Eenergy_min=self.radiative_model.Eenergy_min,
+            Eemax=self.radiative_model.Eemax,
+            Eemin=self.radiative_model.Eemin,
         )
 
         Esy = np.logspace(-7, 9, 100) * u.eV

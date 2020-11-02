@@ -193,13 +193,13 @@ class FluxPointsDataset(Dataset):
 
     def data_shape(self):
         """Shape of the flux points data (tuple)."""
-        return self.data.e_ref.shape
+        return self.data.energy_ref.shape
 
     def flux_pred(self):
         """Compute predicted flux."""
         flux = 0.0
         for model in self.models:
-            flux += model.spectral_model(self.data.e_ref)
+            flux += model.spectral_model(self.data.energy_ref)
         return flux
 
     def stat_array(self):
@@ -264,11 +264,11 @@ class FluxPointsDataset(Dataset):
         try:
             return u.Quantity([self.data.energy_min.min(), self.data.energy_max.max()])
         except KeyError:
-            return u.Quantity([self.data.e_ref.min(), self.data.e_ref.max()])
+            return u.Quantity([self.data.energy_ref.min(), self.data.energy_ref.max()])
 
     @property
     def _energy_unit(self):
-        return self.data.e_ref.unit
+        return self.data.energy_ref.unit
 
     def plot_residuals(self, ax=None, method="diff", **kwargs):
         """Plot flux point residuals.
@@ -316,7 +316,7 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("color", "black")
 
         ax.errorbar(
-            self.data.e_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
+            self.data.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
         )
 
         # format axes
