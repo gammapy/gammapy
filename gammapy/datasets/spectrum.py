@@ -192,7 +192,7 @@ class SpectrumDataset(MapDataset):
 
         gs = GridSpec(7, 1)
         ax_spectrum, ax_residuals = get_axes(
-            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex":ax_spectrum}
+            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex": ax_spectrum}
         )
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
@@ -217,16 +217,16 @@ class SpectrumDataset(MapDataset):
         ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
         ax.axvline(e_max.to_value(self._e_unit), **kwargs)
 
-    def plot_counts(self, ax=None, counts_kwargs=None, bkg_kwargs=None, **kwargs):
+    def plot_counts(self, ax=None, kwargs_counts=None, kwargs_background=None, **kwargs):
         """Plot counts and background.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
             Axes to plot on.
-        counts_kwargs: dict
+        kwargs_counts: dict
             Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts.
-        bkg_kwargs: dict
+        kwargs_background: dict
             Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background.
         **kwargs: dict
             Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
@@ -236,22 +236,19 @@ class SpectrumDataset(MapDataset):
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        counts_kwargs = counts_kwargs or {}
-        bkg_kwargs = bkg_kwargs or {}
+        kwargs_counts = kwargs_counts or {}
+        kwargs_background = kwargs_background or {}
 
         plot_kwargs = kwargs.copy()
-        plot_kwargs.update(counts_kwargs)
-        plot_kwargs.setdefault("label", "n_on")
+        plot_kwargs.update(kwargs_counts)
+        plot_kwargs.setdefault("label", "Counts")
         ax = self.counts.plot_hist(ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
-        plot_kwargs.update(bkg_kwargs)
-        if isinstance(self, SpectrumDatasetOnOff) and self.counts_off is not None:
-            plot_kwargs.setdefault("label", "alpha * n_off")
-            self.background.plot_hist(ax, **plot_kwargs)
-        elif self.background is not None:
-            plot_kwargs.setdefault("label", "background")
-            self.npred_background().plot_hist(ax, **plot_kwargs)
+        plot_kwargs.update(kwargs_background)
+
+        plot_kwargs.setdefault("label", "Background")
+        self.background.plot_hist(ax, **plot_kwargs)
 
         self._plot_energy_range(ax)
         e_min, e_max = self.energy_range
@@ -260,19 +257,19 @@ class SpectrumDataset(MapDataset):
         ax.legend(numpoints=1)
         return ax
 
-    def plot_excess(self, ax=None, measured_kwargs=None, pred_kwargs=None, **kwargs):
+    def plot_excess(self, ax=None, kwargs_excess=None, kwargs_npred_signal=None, **kwargs):
         """Plot measured and predicted excess.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
             Axes to plot on.
-        measured_kwargs: dict
+        kwargs_excess: dict
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for
             the measured excess.
-        pred_kwargs : dict
+        kwargs_npred_signal : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the
-            predicted excess.
+            predicted signal.
         **kwargs: dict
             Keyword arguments passed to both plot methods.
 
@@ -281,16 +278,16 @@ class SpectrumDataset(MapDataset):
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        measured_kwargs = measured_kwargs or {}
-        pred_kwargs = pred_kwargs or {}
+        kwargs_excess = kwargs_excess or {}
+        kwargs_npred_signal = kwargs_npred_signal or {}
 
         plot_kwargs = kwargs.copy()
-        plot_kwargs.update(measured_kwargs)
-        plot_kwargs.setdefault("label", "Measured excess")
+        plot_kwargs.update(kwargs_excess)
+        plot_kwargs.setdefault("label", "Excess counts")
         ax = self.excess.plot(ax, yerr=np.sqrt(np.abs(self.excess.data.flatten())), **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
-        plot_kwargs.update(pred_kwargs)
+        plot_kwargs.update(kwargs_npred_signal)
         plot_kwargs.setdefault("label", "Predicted signal counts")
         self.npred_signal().plot_hist(ax, **plot_kwargs)
 
