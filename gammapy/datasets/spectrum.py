@@ -295,59 +295,8 @@ class SpectrumDataset(MapDataset):
         ax.legend(numpoints=1)
         return ax
 
-    def residuals(self, method="diff"):
-        """Compute the spectral residuals.
-
-        Parameters
-        ----------
-        method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Method used to compute the residuals. Available options are:
-                - ``diff`` (default): data - model
-                - ``diff/model``: (data - model) / model
-                - ``diff/sqrt(model)``: (data - model) / sqrt(model)
-
-        Returns
-        -------
-        residuals : `RegionNDMap`
-            Residual spectrum
-        """
-        residuals = self._compute_residuals(self.counts, self.npred(), method)
-        return residuals
-
-    def plot_residuals(self, ax=None, method="diff", **kwargs):
-        """Plot spectrum residuals.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
-        method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Axes object.
-        """
-        residuals = self.residuals(method)
-        if method == "diff":
-            yerr = np.sqrt((self.counts.data + self.npred().data).flatten())
-        else:
-            yerr = np.ones_like(residuals.data.flatten())
-
-        kwargs.setdefault("color", kwargs.pop("c", "black"))
-        ax = residuals.plot(ax, yerr=yerr, **kwargs)
-        ax.axhline(0, color=kwargs["color"], lw=0.5)
-
-        label = self._residuals_labels[method]
-        ax.set_ylabel(f"Residuals ({label})")
-        ax.set_yscale("linear")
-        ymin = 1.05 * np.nanmin(residuals.data - yerr)
-        ymax = 1.05 * np.nanmax(residuals.data + yerr)
-        ax.set_ylim(ymin, ymax)
-        return ax
+    def plot_residuals_spatial(**kwargs):
+        raise NotImplementedError
 
     @classmethod
     def create(

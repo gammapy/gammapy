@@ -685,7 +685,7 @@ class MapDataset(Dataset):
 
         return residuals
 
-    def plot_spatial_residuals(
+    def plot_residuals_spatial(
         self, ax=None, method="diff", smooth_kernel="gauss", smooth_radius="0.1 deg", **kwargs
     ):
         """Plot spatial residuals.
@@ -738,7 +738,7 @@ class MapDataset(Dataset):
 
         return ax
 
-    def plot_spectral_residuals(self, ax=None, method="diff", region=None, **kwargs):
+    def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
         """Plot spectral residuals.
 
         The residuals are extracted from the provided region, and the normalization
@@ -824,8 +824,8 @@ class MapDataset(Dataset):
         )
         kwargs_spatial = kwargs_spatial or {}
 
-        self.plot_spatial_residuals(ax_spatial, **kwargs_spatial)
-        self.plot_spectral_residuals(ax_spectral, **kwargs_spectral)
+        self.plot_residuals_spatial(ax_spatial, **kwargs_spatial)
+        self.plot_residuals_spectral(ax_spectral, **kwargs_spectral)
 
         # Overlay spectral extraction region on the spatial residuals
         region = kwargs_spectral["region"]
