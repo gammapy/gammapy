@@ -168,10 +168,10 @@ class Analysis:
         fit_settings = self.config.fit
         for dataset in self.datasets:
             if fit_settings.fit_range:
-                e_min = fit_settings.fit_range.min
-                e_max = fit_settings.fit_range.max
+                energy_min = fit_settings.fit_range.min
+                energy_max = fit_settings.fit_range.max
                 geom = dataset.counts.geom
-                data = geom.energy_mask(e_min, e_max)
+                data = geom.energy_mask(energy_min, energy_max)
                 dataset.mask_fit = Map.from_geom(geom=geom, data=data)
 
         log.info("Fitting datasets.")
@@ -186,9 +186,9 @@ class Analysis:
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
-        e_edges = self._make_energy_axis(fp_settings.energy).edges
+        energy_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
-            e_edges=e_edges, source=fp_settings.source, **fp_settings.parameters,
+            e_edges=energy_edges, source=fp_settings.source, **fp_settings.parameters,
         )
         fp = flux_point_estimator.run(datasets=self.datasets)
         fp.table["is_ul"] = fp.table["ts"] < 4
