@@ -3,19 +3,17 @@ import numpy as np
 import pytest
 from gammapy.datasets import Datasets
 from gammapy.modeling.sampling import run_mcmc, ln_uniform_prior
+from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_dependency, requires_data
 
 
 @pytest.fixture(scope="session")
 def dataset():
-    dataset = Datasets.read(
-        "$GAMMAPY_DATA/fermi-3fhl-crab/",
-        "Fermi-LAT-3FHL_datasets.yaml",
-        "Fermi-LAT-3FHL_models.yaml",
-    )
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+    models = Models.read(filename_models)
 
     # Define the free parameters and min, max values
-    parameters = dataset.models.parameters
+    parameters = models.parameters
     parameters["lon_0"].frozen = False
     parameters["lat_0"].frozen = False
     parameters["norm"].frozen = True
@@ -28,7 +26,10 @@ def dataset():
     parameters["amplitude"].min = 0.01 * parameters["amplitude"].value
     parameters["amplitude"].max = 100 * parameters["amplitude"].value
 
-    return dataset
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    datasets = Datasets.read(filename=filename)
+    datasets.models = models
+    return datasets
 
 
 @requires_data()

@@ -17,8 +17,7 @@ from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import (
     BackgroundModel,
     FoVBackgroundModel,
-    Models,
-    ProperModels,
+    DatasetModels,
 )
 from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic, CashCountsStatistic
 from gammapy.utils.random import get_random_state
@@ -158,6 +157,8 @@ class MapDataset(Dataset):
         name=None,
     ):
         self._name = make_name(name)
+        self._evaluators = {}
+
         self.counts = counts
         self.exposure = exposure
         self.background = background
@@ -174,8 +175,8 @@ class MapDataset(Dataset):
         if models is None and background:
             models = [FoVBackgroundModel(dataset_name=self.name)]
 
-        self.models = models
         self.gti = gti
+        self.models = models
         self.meta_table = meta_table
 
     # TODO: keep or remove?
@@ -183,7 +184,7 @@ class MapDataset(Dataset):
     def background_model(self):
         try:
             return self.models[f"{self.name}-bkg"]
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
     @property
@@ -272,7 +273,7 @@ class MapDataset(Dataset):
     @property
     def models(self):
         """Models (`~gammapy.modeling.models.Models`)."""
-        return ProperModels(self)
+        return self._models
 
     @property
     def excess(self):
@@ -281,44 +282,28 @@ class MapDataset(Dataset):
 
     @models.setter
     def models(self, models):
-        if models is None:
-            self._models = None
-        else:
-            self._models = Models(models)
-
+        """Models setter"""
         self._evaluators = {}
+
+        if models is not None:
+            models = DatasetModels(models).select(dataset_name=self.name)
+
+            for model in models.select(tag="sky-model"):
+                evaluator = MapEvaluator(
+                    model=model,
+                    evaluation_mode=EVALUATION_MODE,
+                    gti=self.gti,
+                    use_cache=USE_NPRED_CACHE,
+                )
+                # TODO: do we need the update here?
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                self._evaluators[model.name] = evaluator
+
+        self._models = models
 
     @property
     def evaluators(self):
         """Model evaluators"""
-        models = self.models
-
-        if models:
-            keys = list(self._evaluators.keys())
-            for key in keys:
-                if key not in models:
-                    del self._evaluators[key]
-
-            for model in models:
-                if isinstance(model, FoVBackgroundModel):
-                    continue
-
-                evaluator = self._evaluators.get(model)
-
-                if evaluator is None:
-                    evaluator = MapEvaluator(
-                        model=model,
-                        evaluation_mode=EVALUATION_MODE,
-                        gti=self.gti,
-                        use_cache=USE_NPRED_CACHE,
-                    )
-                    self._evaluators[model] = evaluator
-
-                # if the model component drifts out of its support the evaluator has
-                # has to be updated
-                if evaluator.needs_update:
-                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-
         return self._evaluators
 
     @property
@@ -402,6 +387,9 @@ class MapDataset(Dataset):
         for evaluator in self.evaluators.values():
             if model is evaluator.model:
                 return evaluator.compute_npred()
+
+            if evaluator.needs_update:
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
@@ -1157,7 +1145,7 @@ class MapDataset(Dataset):
 
             exposure_min = np.min(self.exposure.quantity[mask_exposure])
             exposure_max = np.max(self.exposure.quantity[mask_exposure])
-            livetime = self.exposure.meta.get("livetime", np.nan)
+            livetime = self.exposure.meta.get("livetime", np.nan * u.s).copy()
 
         info["exposure_min"] = exposure_min
         info["exposure_max"] = exposure_max
@@ -1268,6 +1256,7 @@ class MapDataset(Dataset):
             edisp = EDispKernelMap.from_edisp_kernel(
                 edisp=edisp, geom=RegionGeom(on_region)
             )
+            edisp.exposure_map.data = kwargs["exposure"].data.copy()
             kwargs["edisp"] = edisp
 
         return SpectrumDataset(**kwargs)
@@ -1478,6 +1467,37 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
+    def slice_by_energy(self, e_min, e_max, name=None):
+        """Select and slice datasets in energy range
+
+        Parameters
+        ----------
+        e_min, e_max : `~astropy.units.Quantity`
+            Energy bounds to compute the flux point for.
+        name : str
+            Name of the sliced dataset.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Sliced Dataset
+
+        """
+        name = make_name(name)
+        energy_axis = self._geom.axes["energy"]
+
+        group = energy_axis.group_table(edges=[e_min, e_max])
+
+        is_normal = group["bin_type"] == "normal   "
+        group = group[is_normal]
+
+        slices = {"energy": slice(
+            int(group["idx_min"][0]),
+            int(group["idx_max"][0]) + 1)
+        }
+
+        return self.slice_by_idx(slices, name=name)
+
     def reset_data_cache(self):
         """Reset data cache to free memory space"""
         for name in self._lazy_data_members:
@@ -1616,6 +1636,9 @@ class MapDatasetOnOff(MapDataset):
         gti=None,
         meta_table=None,
     ):
+        self._name = make_name(name)
+        self._evaluators = {}
+
         self.counts = counts
         self.counts_off = counts_off
         self.exposure = exposure
@@ -1635,7 +1658,6 @@ class MapDatasetOnOff(MapDataset):
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
-        self._name = make_name(name)
         self.models = models
         self.mask_safe = mask_safe
         self.gti = gti
@@ -1771,7 +1793,9 @@ class MapDatasetOnOff(MapDataset):
         for key in ["counts", "counts_off", "acceptance", "acceptance_off"]:
             kwargs[key] = Map.from_geom(geom, unit="")
 
-        kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
+        kwargs["exposure"] = Map.from_geom(
+            geom_exposure, unit="m2 s", meta={"livetime": 0 * u.s}
+        )
 
         if geom_edisp.axes[0].name.lower() == "energy":
             kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)

@@ -25,11 +25,14 @@ def input_dataset_simple():
 
 @pytest.fixture(scope="session")
 def input_dataset():
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+
     datasets = Datasets.read(
-        "$GAMMAPY_DATA/fermi-3fhl-crab",
-        filedata="Fermi-LAT-3FHL_datasets.yaml",
-        filemodel="Fermi-LAT-3FHL_models.yaml",
+        filename=filename,
+        filename_models=filename_models
     )
+
     dataset = datasets[0]
     dataset.psf = None
     return dataset

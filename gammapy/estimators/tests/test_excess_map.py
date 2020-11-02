@@ -171,15 +171,18 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
         np.ones(simple_dataset_on_off.exposure.data.shape) * 1e10
     )
     simple_dataset_on_off.psf = None
-    model = SkyModel(
-        PowerLawSpectralModel(),
-        GaussianSpatialModel(
-            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
-        ),
-        datasets_names=[simple_dataset_on_off.name],
-        name="sky_model",
-    )
-    simple_dataset_on_off.models.append(model)
+
+    # TODO: this has never worked...
+    # model = SkyModel(
+    #     PowerLawSpectralModel(),
+    #     GaussianSpatialModel(
+    #         lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+    #     ),
+    #     name="sky_model",
+    # )
+    #
+    # #simple_dataset_on_off.models = [model]
+
     estimator_mod = ExcessMapEstimator(0.11 * u.deg, apply_mask_fit=False)
     result_mod = estimator_mod.run(simple_dataset_on_off)
     assert result_mod["counts"].data.shape == (1, 20, 20)

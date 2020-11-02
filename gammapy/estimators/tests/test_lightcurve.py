@@ -13,7 +13,7 @@ from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_spectrum_dataset,
 )
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, FoVBackgroundModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -411,7 +411,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(lightcurve.table["ref_eflux"][0], [3.453878e-12], rtol=1e-5)
     assert_allclose(lightcurve.table["ref_e2dnde"][0], [1e-12], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"][0], [34.219808], rtol=1e-5)
-    assert_allclose(lightcurve.table["norm"][0], [0.909454], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm"][0], [0.909646], rtol=1e-5)
     assert_allclose(lightcurve.table["norm_err"][0], [0.040874], rtol=1e-3)
     assert_allclose(lightcurve.table["ts"][0], [742.939324], rtol=1e-4)
 
@@ -464,10 +464,11 @@ def get_map_datasets():
     dataset_2.gti = gti2
 
     model = dataset_1.models["source"].copy("test_source")
-    dataset_1.models.pop("source")
-    dataset_2.models.pop("source")
-    dataset_1.models.append(model)
-    dataset_2.models.append(model)
+    bkg_model_1 = FoVBackgroundModel(dataset_name="dataset_1")
+    bkg_model_2 = FoVBackgroundModel(dataset_name="dataset_2")
+
+    dataset_1.models = [model, bkg_model_1]
+    dataset_2.models = [model, bkg_model_2]
 
     return [dataset_1, dataset_2]
 

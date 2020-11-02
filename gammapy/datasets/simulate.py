@@ -66,18 +66,14 @@ class MapDatasetEventSampler:
             Event list
         """
         events_all = []
-        for idx, model in enumerate(dataset.models):
-            if isinstance(model, FoVBackgroundModel):
-                continue
-
-            evaluator = dataset.evaluators.get(model)
+        for idx, evaluator in enumerate(dataset.evaluators.values()):
             flux = evaluator.compute_flux()
             npred = evaluator.apply_exposure(flux)
 
-            if model.temporal_model is None:
+            if evaluator.model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
             else:
-                temporal_model = model.temporal_model
+                temporal_model = evaluator.model.temporal_model
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             if len(table) > 0:

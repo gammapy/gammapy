@@ -435,7 +435,7 @@ class FluxPoints:
                 amplitude=dnde_model,
             )
         else:
-            flux_model = model.integral(e_min, e_max, intervals=True)
+            flux_model = model.integral(e_min, e_max)
 
         return dnde_model * (flux / flux_model)
 
@@ -886,7 +886,7 @@ class FluxPointsEstimator(Estimator):
         """
         result = self.estimate_counts(datasets, e_min=e_min, e_max=e_max)
 
-        datasets = datasets.slice_energy(e_min=e_min, e_max=e_max)
+        datasets = datasets.slice_by_energy(e_min=e_min, e_max=e_max)
 
         if len(datasets) > 0:
             # TODO: refactor energy handling of FluxEstimator?

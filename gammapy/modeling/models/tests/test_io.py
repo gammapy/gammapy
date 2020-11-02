@@ -9,8 +9,7 @@ from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
     PowerLawSpectralModel,
-    AbsorbedSpectralModel,
-    Absorption,
+    EBLAbsorptionNormSpectralModel,
     BackgroundModel,
     Model,
     Models,
@@ -111,10 +110,10 @@ def test_sky_models_io(tmp_path):
 
 def test_piecewise_norm_spectral_model_init():
     with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1, ] * u.TeV, norms=[1, 5])
+        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1, 5])
 
     with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1, ] * u.TeV, norms=[1, ])
+        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1,])
 
 
 def test_piecewise_norm_spectral_model_io():
@@ -139,43 +138,38 @@ def test_piecewise_norm_spectral_model_io():
 
 @requires_data()
 def test_absorption_io(tmp_path):
-    dominguez = Absorption.read_builtin("dominguez")
-    model = AbsorbedSpectralModel(
-        spectral_model=Model.create("pl", "spectral"),
-        absorption=dominguez,
-        redshift=0.5,
-    )
-    assert len(model.parameters) == 5
+    dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
+    assert len(dominguez.parameters) == 2
 
-    model_dict = model.to_dict()
+    model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["parameters"]]
-    assert parnames == ["redshift", "alpha_norm"]
+    assert parnames == [
+        "alpha_norm",
+        "redshift",
+    ]
 
-    new_model = AbsorbedSpectralModel.from_dict(model_dict)
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
     assert new_model.redshift.value == 0.5
     assert new_model.alpha_norm.name == "alpha_norm"
     assert new_model.alpha_norm.value == 1
-    assert "PowerLawSpectralModel" in new_model.spectral_model.tag
-    assert_allclose(new_model.absorption.energy, dominguez.energy)
-    assert_allclose(new_model.absorption.param, dominguez.param)
-    assert len(new_model.parameters) == 5
+    assert_allclose(new_model.energy, dominguez.energy)
+    assert_allclose(new_model.param, dominguez.param)
+    assert len(new_model.parameters) == 2
 
-    test_absorption = Absorption(
+    model = EBLAbsorptionNormSpectralModel(
         u.Quantity(range(3), "keV"),
         u.Quantity(range(2), ""),
         u.Quantity(np.ones((2, 3)), ""),
-    )
-    model = AbsorbedSpectralModel(
-        spectral_model=Model.create("PowerLawSpectralModel", "spectral"),
-        absorption=test_absorption,
         redshift=0.5,
+        alpha_norm=1,
     )
     model_dict = model.to_dict()
-    new_model = AbsorbedSpectralModel.from_dict(model_dict)
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
-    assert_allclose(new_model.absorption.energy, test_absorption.energy)
-    assert_allclose(new_model.absorption.param, test_absorption.param)
+    assert_allclose(new_model.energy, model.energy)
+    assert_allclose(new_model.param, model.param)
+    assert_allclose(new_model.data, model.data)
 
     write_yaml(model_dict, tmp_path / "tmp.yaml")
     read_yaml(tmp_path / "tmp.yaml")
@@ -227,7 +221,7 @@ def make_all_models():
         norms=[3, 4] * u.cm,
     )
     yield Model.create("GaussianSpectralModel", "spectral")
-    # TODO: yield Model.create("AbsorbedSpectralModel")
+    # TODO: yield Model.create("EBLAbsorptionNormSpectralModel")
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
     yield Model.create("ConstantTemporalModel", "temporal")
@@ -274,7 +268,7 @@ def test_simplified_output():
     full = model.to_dict(full_output=True)
     simplified = model.to_dict()
     for k, _ in enumerate(model.parameters.names):
-        for item in ["min", "max", "frozen", "error"]:
+        for item in ["min", "max", "error"]:
             assert item in full["parameters"][k]
             assert item not in simplified["parameters"][k]
 

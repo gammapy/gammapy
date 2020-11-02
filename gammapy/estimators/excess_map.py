@@ -161,7 +161,7 @@ class ExcessMapEstimator(Estimator):
         results = []
 
         for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            sliced_dataset = datasets.slice_energy(e_min, e_max)[0]
+            sliced_dataset = datasets.slice_by_energy(e_min, e_max)[0]
 
             result = self.estimate_excess_map(sliced_dataset)
             results.append(result)
@@ -196,8 +196,8 @@ class ExcessMapEstimator(Estimator):
         geom = dataset.counts.geom.squash("energy")
 
         n_on = Map.from_geom(geom, data=counts_stat.n_on)
-        bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.excess)
-        excess = Map.from_geom(geom, data=counts_stat.excess)
+        bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
+        excess = Map.from_geom(geom, data=counts_stat.n_sig)
 
         result = {"counts": n_on, "background": bkg, "excess": excess}
 

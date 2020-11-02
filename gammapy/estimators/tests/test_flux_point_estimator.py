@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    BackgroundModel,
+    FoVBackgroundModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -98,7 +98,9 @@ def simulate_map_dataset(random_state=0, name=None):
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)
 
-    dataset.models.append(skymodel)
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+
+    dataset.models = [bkg_model, skymodel]
     dataset.fake(random_state=random_state)
     return dataset
 

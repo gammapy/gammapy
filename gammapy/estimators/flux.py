@@ -136,7 +136,7 @@ class FluxEstimator(Estimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
-        scale_model.norm.min = 0
+        scale_model.norm.min = -1e5
         scale_model.norm.max = 1e5
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
@@ -171,6 +171,7 @@ class FluxEstimator(Estimator):
                 dataset.models[self.source].spectral_model = model
 
             result.update(self._parameter_estimator.run(datasets, model.norm))
+            result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
         return result
 
@@ -182,6 +183,7 @@ class FluxEstimator(Estimator):
             "success": False,
             "norm_err": np.nan,
             "ts": np.nan,
+            "sqrt_ts": np.nan,
         }
 
         if "errn-errp" in self.selection_optional:
