@@ -311,7 +311,7 @@ class EventList:
         energy = self.energy
         return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
 
-    def plot_energy(self, ax=None, energybounds=None, **kwargs):
+    def plot_energy(self, ax=None, energy_range=None, **kwargs):
         """Plot counts as a function of energy."""
         import matplotlib.pyplot as plt
 
@@ -320,12 +320,12 @@ class EventList:
         kwargs.setdefault("log", True)
         kwargs.setdefault("histtype", "step")
 
-        if energybounds is None:
-            energybounds = self._default_plot_energybounds()
+        if energy_range is None:
+            energy_range = self._default_plot_energybounds()
 
-        unit = energybounds.unit
+        unit = energy_range.unit
 
-        ax.hist(self.energy.to_value(unit), bins=energybounds.value, **kwargs)
+        ax.hist(self.energy.to_value(unit), bins=energy_range.value, **kwargs)
         ax.loglog()
         ax.set_xlabel(f"Energy ({unit})")
         ax.set_ylabel("Counts")
