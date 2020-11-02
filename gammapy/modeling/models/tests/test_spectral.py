@@ -7,8 +7,7 @@ import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
-    AbsorbedSpectralModel,
-    Absorption,
+    EBLAbsorptionNormSpectralModel,
     ConstantSpectralModel,
     CompoundSpectralModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
@@ -438,7 +437,9 @@ def test_table_model_from_file():
 def test_absorption():
     # absorption values for given redshift
     redshift = 0.117
-    absorption = Absorption.read_builtin("dominguez")
+    absorption = EBLAbsorptionNormSpectralModel.read_builtin(
+        "dominguez", redshift=redshift
+    )
 
     # Spectral model corresponding to PKS 2155-304 (quiescent state)
     index = 3.53
@@ -447,30 +448,26 @@ def test_absorption():
     pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
 
     # EBL + PWL model
-    model = AbsorbedSpectralModel(
-        spectral_model=pwl, absorption=absorption, redshift=redshift
-    )
-
+    model = pwl * absorption
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
-    assert model.alpha_norm.value == 1.0
+    assert model.model2.alpha_norm.value == 1.0
 
     # EBL + PWL model: test if norm of EBL=0: it mean model =pwl
-    model = AbsorbedSpectralModel(
-        spectral_model=pwl, absorption=absorption, alpha_norm=0, redshift=redshift
-    )
+    model.parameters["alpha_norm"].value = 0
     assert_quantity_allclose(model(1 * u.TeV), pwl(1 * u.TeV), rtol=1e-3)
 
     # EBL + PWL model: Test with a norm different of 1
-    model = AbsorbedSpectralModel(
-        spectral_model=pwl, absorption=absorption, alpha_norm=1.5, redshift=redshift
+    absorption = EBLAbsorptionNormSpectralModel.read_builtin(
+        "dominguez", redshift=redshift, alpha_norm=1.5
     )
+    model = pwl * absorption
     desired = u.Quantity(2.739695e-13, "TeV-1 s-1 cm-2")
-    assert model.alpha_norm.value == 1.5
+    assert model.model2.alpha_norm.value == 1.5
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
     # Test error propagation
-    model.spectral_model.amplitude.error = 0.1 * model.spectral_model.amplitude.value
+    model.model1.amplitude.error = 0.1 * model.model1.amplitude.value
     dnde, dnde_err = model.evaluate_error(1 * u.TeV)
     assert_allclose(dnde_err / dnde, 0.1)
 
@@ -479,10 +476,11 @@ def test_absorption():
 def test_absorbed_extrapolate():
     ebl_model = "dominguez"
     z = 0.001
-    absorption = Absorption.read_builtin(ebl_model)
+    alpha_norm = 1
+    absorption = EBLAbsorptionNormSpectralModel.read_builtin(ebl_model)
 
-    model = absorption.table_model(z)
-    assert_allclose(model(1 * u.TeV), 1)
+    values = absorption.evaluate(1 * u.TeV, z, alpha_norm)
+    assert_allclose(values, 1)
 
 
 def test_ecpl_integrate():
@@ -802,14 +800,14 @@ def test_integral_error_ExpCutOffPowerLaw():
     energy_max = energy[1:]
 
     exppowerlaw = ExpCutoffPowerLawSpectralModel()
-    exppowerlaw.parameters['index'].error = 0.4
-    exppowerlaw.parameters['amplitude'].error = 1e-13
-    exppowerlaw.parameters['lambda_'].error = 0.03
+    exppowerlaw.parameters["index"].error = 0.4
+    exppowerlaw.parameters["amplitude"].error = 1e-13
+    exppowerlaw.parameters["lambda_"].error = 0.03
 
     flux, flux_error = exppowerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0]/1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0]/1e-14, 8.90907063, rtol=0.01)
+    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.90907063, rtol=0.01)
 
 
 def test_energy_flux_error_power_Law():
@@ -817,13 +815,12 @@ def test_energy_flux_error_power_Law():
     energy_max = 10 * u.TeV
 
     powerlaw = PowerLawSpectralModel()
-    powerlaw.parameters['index'].error = 0.4
-    powerlaw.parameters['amplitude'].error = 1e-13
+    powerlaw.parameters["index"].error = 0.4
+    powerlaw.parameters["amplitude"].error = 1e-13
 
-    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(energy_min,energy_max)
-
-    assert_allclose(enrg_flux.value/1e-12, 2.303, rtol=0.001)
-    assert_allclose(enrg_flux_error.value/1e-12, 1.347, rtol=0.001)
+    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(energy_min, energy_max)
+    assert_allclose(enrg_flux.value / 1e-12, 2.303, rtol=0.001)
+    assert_allclose(enrg_flux_error.value / 1e-12, 1.347, rtol=0.001)
 
 
 def test_energy_flux_error_exp_cutoff_power_law():
@@ -831,11 +828,11 @@ def test_energy_flux_error_exp_cutoff_power_law():
     energy_max = 10 * u.TeV
 
     exppowerlaw = ExpCutoffPowerLawSpectralModel()
-    exppowerlaw.parameters['index'].error = 0.4
-    exppowerlaw.parameters['amplitude'].error = 1e-13
-    exppowerlaw.parameters['lambda_'].error = 0.03
+    exppowerlaw.parameters["index"].error = 0.4
+    exppowerlaw.parameters["amplitude"].error = 1e-13
+    exppowerlaw.parameters["lambda_"].error = 0.03
 
     enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(energy_min, energy_max)
 
-    assert_allclose(enrg_flux.value/1e-12, 2.788, rtol=0.001)
-    assert_allclose(enrg_flux_error.value/1e-12, 2.226, rtol=0.001)
+    assert_allclose(enrg_flux.value / 1e-12, 2.788, rtol=0.001)
+    assert_allclose(enrg_flux_error.value / 1e-12, 2.226, rtol=0.001)

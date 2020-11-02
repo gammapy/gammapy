@@ -217,7 +217,7 @@ class SpectralModel(Model):
                 continue
 
             parameter.value += eps[idx]
-            df = self.energy_flux(energy_min,energy_max) - f
+            df = self.energy_flux(energy_min, energy_max) - f
             df_dp[idx] = df.value / eps[idx]
 
             # Reset model to original parameter
@@ -413,7 +413,6 @@ class SpectralModel(Model):
 
         if "norm" in self.__class__.__name__.lower():
             ax.set_ylabel(f"Norm [A.U.]")
-
 
     @staticmethod
     def _plot_scale_flux(energy, flux, energy_power):
@@ -982,9 +981,9 @@ class PiecewiseNormSpectralModel(SpectralModel):
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
         data["energy"] = {
-                "data": self.energy.data.tolist(),
-                "unit": str(self.energy.unit),
-            }
+            "data": self.energy.data.tolist(),
+            "unit": str(self.energy.unit),
+        }
         return data
 
     @classmethod
@@ -1438,7 +1437,7 @@ class ScaleSpectralModel(SpectralModel):
         return self.norm.value * self.model.integral(energy_min, energy_max, **kwargs)
 
 
-class Absorption:
+class EBLAbsorptionNormSpectralModel(SpectralModel):
     r"""Gamma-ray absorption models.
 
     For more information see :ref:`absorption-spectral-model`.
@@ -1451,18 +1450,22 @@ class Absorption:
         Parameter node values
     data : `~astropy.units.Quantity`
         Model value
-    filename : str
-        Filename of the absorption model used for serialisation.
+    redshift : float
+        Redshift of the absorption model
+    alpha_norm: float
+        Norm of the EBL model
     interp_kwargs : dict
         Interpolation option passed to `ScaledRegularGridInterpolator`.
         By default the models are extrapolated outside the range. To prevent
         this and raise an error instead use interp_kwargs = {"extrapolate": False}
     """
 
-    tag = "Absorption"
+    tag = ["EBLAbsorptionNormSpectralModel", "ebl-norm"]
+    alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
+    redshift = Parameter("redshift", 0.1, frozen=True)
 
-    def __init__(self, energy, param, data, filename=None, interp_kwargs=None):
-        self.filename = filename
+    def __init__(self, energy, param, data, redshift, alpha_norm, interp_kwargs=None):
+        self.filename = None
         # set values log centers
         self.param = param
         self.energy = energy
@@ -1473,58 +1476,70 @@ class Absorption:
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
         interp_kwargs.setdefault("extrapolate", True)
 
-        self._evaluate = ScaledRegularGridInterpolator(
+        self._evaluate_table_model = ScaledRegularGridInterpolator(
             points=(self.param, self.energy), values=self.data, **interp_kwargs
         )
+        super().__init__(redshift=redshift, alpha_norm=alpha_norm)
 
     def to_dict(self, full_output=False):
+        data = super().to_dict(full_output=full_output)
         if self.filename is None:
-            return {
-                "type": self.tag,
-                "energy": {
-                    "data": self.energy.data.tolist(),
-                    "unit": str(self.energy.unit),
-                },
-                "param": {
-                    "data": self.param.data.tolist(),
-                    "unit": str(self.param.unit),
-                },
-                "values": {
-                    "data": self.data.data.tolist(),
-                    "unit": str(self.data.unit),
-                },
+            data["energy"] = {
+                "data": self.energy.data.tolist(),
+                "unit": str(self.energy.unit),
+            }
+            data["param"] = {
+                "data": self.param.data.tolist(),
+                "unit": str(self.param.unit),
+            }
+            data["values"] = {
+                "data": self.data.data.tolist(),
+                "unit": str(self.data.unit),
             }
         else:
-            return {"type": self.tag, "filename": self.filename}
+            data["filename"] = str(self.filename)
+        return data
 
     @classmethod
     def from_dict(cls, data):
-
+        redshift = [p["value"] for p in data["parameters"] if p["name"] == "redshift"][
+            0
+        ]
+        alpha_norm = [
+            p["value"] for p in data["parameters"] if p["name"] == "alpha_norm"
+        ][0]
         if "filename" in data:
-            return cls.read(data["filename"])
+            return cls.read(data["filename"], redshift=redshift, alpha_norm=alpha_norm)
         else:
             energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
             param = u.Quantity(data["param"]["data"], data["param"]["unit"])
             values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-            return cls(energy=energy, param=param, data=values)
+            return cls(
+                energy=energy,
+                param=param,
+                data=values,
+                redshift=redshift,
+                alpha_norm=alpha_norm,
+            )
 
     @classmethod
-    def read(cls, filename, interp_kwargs=None):
+    def read(cls, filename, redshift=0.1, alpha_norm=1, interp_kwargs=None):
         """Build object from an XSPEC model.
 
         Todo: Format of XSPEC binary files should be referenced at https://gamma-astro-data-formats.readthedocs.io/en/latest/
 
         Parameters
         ----------
+
         filename : str
             File containing the model.
+        redshift : float
+            Redshift of the absorption model
+        alpha_norm: float
+            Norm of the EBL model
         interp_kwargs : dict
             Interpolation option passed to `ScaledRegularGridInterpolator`.
 
-        Returns
-        -------
-        absorption : `Absorption`
-            Absorption model.
         """
         # Create EBL data array
         filename = make_path(filename)
@@ -1546,22 +1561,31 @@ class Absorption:
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
         data = table_spectra["INTPSPEC"].data[idx, :]
-        return cls(
+        model = cls(
             energy=energy,
             param=param,
             data=data,
-            filename=filename,
+            redshift=redshift,
+            alpha_norm=alpha_norm,
             interp_kwargs=interp_kwargs,
         )
+        model.filename = filename
+        return model
 
     @classmethod
-    def read_builtin(cls, name, interp_kwargs=None):
-        """Read one of the built-in absorption models.
+    def read_builtin(
+        cls, reference="dominguez", redshift=0.1, alpha_norm=1, interp_kwargs=None
+    ):
+        """Read  from one of the built-in absorption models.
 
         Parameters
         ----------
-        name : {'franceschini', 'dominguez', 'finke'}
+        reference : {'franceschini', 'dominguez', 'finke'}
             name of one of the available model in gammapy-data
+        redshift : float
+            Redshift of the absorption model
+        alpha_norm: float
+            Norm of the EBL model
 
         References
         ----------
@@ -1572,137 +1596,20 @@ class Absorption:
         .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
 
-        Returns
-        -------
-        absorption : `Absorption`
-            Absorption model.
-
         """
         models = dict()
         models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
         models["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
         models["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
 
-        return cls.read(models[name], interp_kwargs=interp_kwargs)
-
-    def table_model(self, parameter):
-        """Table model for a given parameter value.
-
-        Parameters
-        ----------
-        parameter : float
-            Parameter value.
-
-        Returns
-        -------
-        template_model : `TemplateSpectralModel`
-            Template spectral model.
-        """
-        energy = self.energy
-        values = self.evaluate(energy=energy, parameter=parameter)
-        return TemplateSpectralModel(
-            energy=energy, values=values, interp_kwargs={"values_scale": "log"}
+        return cls.read(
+            models[reference], redshift, alpha_norm, interp_kwargs=interp_kwargs
         )
 
-    def evaluate(self, energy, parameter):
+    def evaluate(self, energy, redshift, alpha_norm):
         """Evaluate model for energy and parameter value."""
-        return np.clip(self._evaluate((parameter, energy)), 0, 1)
-
-
-class AbsorbedSpectralModel(SpectralModel):
-    r"""Spectral model with EBL absorption.
-
-    For more information see :ref:`absorbed-spectral-model`.
-
-    Parameters
-    ----------
-    spectral_model : `SpectralModel`
-        Spectral model.
-    absorption : `Absorption`
-        Absorption model.
-    redshift : float
-        Redshift of the absorption model
-    alpha_norm: float
-        Norm of the EBL model
-    """
-
-    tag = ["AbsorbedSpectralModel", "ebl-absorption"]
-    alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
-    redshift = Parameter("redshift", 0.1, frozen=True)
-
-    def __init__(
-        self, spectral_model, absorption, redshift, alpha_norm=alpha_norm.quantity,
-    ):
-        self.spectral_model = spectral_model
-        self.absorption = absorption
-
-        min_ = self.absorption.param.min()
-        max_ = self.absorption.param.max()
-
-        redshift = Parameter("redshift", redshift, frozen=True, min=min_, max=max_)
-        super().__init__(redshift=redshift, alpha_norm=alpha_norm)
-
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance(self.parameters)
-
-    @property
-    def covariance(self):
-        self._check_covariance()
-        self._covariance.set_subcovariance(self.spectral_model.covariance)
-        return self._covariance
-
-    @covariance.setter
-    def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
-
-        subcovar = self._covariance.get_subcovariance(
-            self.spectral_model.covariance.parameters
-        )
-        self.spectral_model.covariance = subcovar
-
-    @property
-    def parameters(self):
-        return (
-            Parameters([self.redshift, self.alpha_norm])
-            + self.spectral_model.parameters
-        )
-
-    def evaluate(self, energy, **kwargs):
-        """Evaluate the model at a given energy."""
-        # assign redshift value and remove it from dictionary
-        # since it does not belong to the spectral model
-        parameter = kwargs.pop("redshift")
-        alpha_norm = kwargs.pop("alpha_norm")
-
-        dnde = self.spectral_model.evaluate(energy=energy, **kwargs)
-        absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
-        # Power rule: (e ^ a) ^ b = e ^ (a * b)
-        absorption = np.power(absorption, alpha_norm)
-        return dnde * absorption
-
-    def to_dict(self, full_output=False):
-        return {
-            "type": self.tag,
-            "base_model": self.spectral_model.to_dict(full_output),
-            "absorption": self.absorption.to_dict(full_output),
-            "absorption_parameter": {"name": "redshift", "value": self.redshift.value,},
-            "parameters": Parameters([self.redshift, self.alpha_norm]).to_dict(),
-        }
-
-    @classmethod
-    def from_dict(cls, data):
-        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
-
-        model_class = SPECTRAL_MODEL_REGISTRY.get_cls(data["base_model"]["type"])
-
-        model = cls(
-            spectral_model=model_class.from_dict(data["base_model"]),
-            absorption=Absorption.from_dict(data["absorption"]),
-            redshift=data["absorption_parameter"]["value"],
-        )
-        return model
+        absorption = np.clip(self._evaluate_table_model((redshift, energy)), 0, 1)
+        return np.power(absorption, alpha_norm)
 
 
 class NaimaSpectralModel(SpectralModel):
