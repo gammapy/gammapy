@@ -712,7 +712,7 @@ class WcsNDMap(WcsMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.data[cutout_slices]
+        data = other.quantity[cutout_slices].to_value(self.unit)
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
