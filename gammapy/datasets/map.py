@@ -190,11 +190,12 @@ class MapDataset(Dataset):
         str_ += "\n"
         str_ += "\t{:32}: {{name}} \n\n".format("Name")
         str_ += "\t{:32}: {{counts:.0f}} \n".format("Total counts")
-        str_ += "\t{:32}: {{background:.2f}}\n\n".format("Total background counts")
+        str_ += "\t{:32}: {{background:.2f}}\n".format("Total background counts")
+        str_ += "\t{:32}: {{excess:.2f}}\n\n".format("Total excess counts")
 
-        str_ += "\t{:32}: {{npred:.2f}}\n".format("Total predicted counts")
-        str_ += "\t{:32}: {{npred_background:.2f}}\n".format("Total predicted bkg. counts")
-        str_ += "\t{:32}: {{npred_signal:.2f}}\n\n".format("Total predicted signal counts")
+        str_ += "\t{:32}: {{npred:.2f}}\n".format("Predicted counts")
+        str_ += "\t{:32}: {{npred_background:.2f}}\n".format("Predicted background counts")
+        str_ += "\t{:32}: {{npred_signal:.2f}}\n\n".format("Predicted excess counts")
 
         str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
         str_ += "\t{:32}: {{exposure_max:.2e}}\n\n".format("Exposure max")
@@ -2538,10 +2539,10 @@ class MapEvaluator:
         if isinstance(self.model, BackgroundModel):
             npred = self.model.evaluate()
         else:
-            flux_conv = self.compute_flux_psf_convolved()
+            npred = self.compute_flux_psf_convolved()
 
             if self.model.apply_irf["exposure"]:
-                npred = self.apply_exposure(flux_conv)
+                npred = self.apply_exposure(npred)
 
             if self.model.apply_irf["edisp"]:
                 npred = self.apply_edisp(npred)
@@ -2559,9 +2560,10 @@ class MapEvaluator:
         if isinstance(self.model, BackgroundModel):
             return self.model.evaluate()
 
-        flux = self.compute_flux()
+        npred = self.compute_flux()
 
-        npred = self.apply_exposure(flux)
+        if self.model.apply_irf["exposure"]:
+            npred = self.apply_exposure(npred)
 
         if self.model.apply_irf["edisp"]:
             npred = self.apply_edisp(npred)

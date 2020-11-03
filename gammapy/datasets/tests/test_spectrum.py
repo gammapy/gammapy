@@ -565,12 +565,12 @@ class TestSpectrumOnOff:
         assert_allclose(info_dict["counts"], 3)
         assert_allclose(info_dict["counts_off"], 40)
         assert_allclose(info_dict["acceptance"], 4)
-        assert_allclose(info_dict["acceptance_off"], 40.930232)
+        assert_allclose(info_dict["acceptance_off"], 40)
 
         assert_allclose(info_dict["alpha"], 0.1)
-        assert_allclose(info_dict["excess"], -0.909, rtol=1e-2)
+        assert_allclose(info_dict["excess"], -1, rtol=1e-2)
         assert_allclose(info_dict["ontime"].value, 1e3)
-        assert_allclose(info_dict["sqrt_ts"], -0.459427, rtol=1e-2)
+        assert_allclose(info_dict["sqrt_ts"], -0.501005, rtol=1e-2)
 
         assert info_dict["name"] == "test"
 

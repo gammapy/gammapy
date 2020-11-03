@@ -25,7 +25,9 @@ from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
     SkyModel,
-    PointSpatialModel
+    PointSpatialModel,
+    PowerLawNormSpectralModel,
+    TemplateSpatialModel
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -255,7 +257,8 @@ def test_info_dict(sky_model, geom, geom_etrue):
     info_dict = dataset.info_dict()
 
     assert_allclose(info_dict["counts"], 9526, rtol=1e-3)
-    assert_allclose(info_dict["background"], 4000.0)
+    assert_allclose(info_dict["background"], 4000.0005, rtol=1e-3)
+    assert_allclose(info_dict["npred_background"], 4000.0, rtol=1e-3)
     assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
     assert_allclose(info_dict["exposure_min"].value, 8.32e8, rtol=1e-3)
     assert_allclose(info_dict["exposure_max"].value, 1.105e10, rtol=1e-3)
@@ -266,7 +269,8 @@ def test_info_dict(sky_model, geom, geom_etrue):
     dataset.gti = gti
     info_dict = dataset.info_dict()
     assert_allclose(info_dict["counts"], 9526, rtol=1e-3)
-    assert_allclose(info_dict["background"], 4000.0, rtol=1e-3)
+    assert_allclose(info_dict["background"], 4000.0005, rtol=1e-3)
+    assert_allclose(info_dict["npred_background"], 4000.0, rtol=1e-3)
     assert_allclose(info_dict["sqrt_ts"], 74.024180, rtol=1e-3)
     assert_allclose(info_dict["excess"], 5525.756, rtol=1e-3)
     assert_allclose(info_dict["ontime"].value, 3600)

@@ -619,3 +619,10 @@ def test_plot_grid(geom_true):
     spatial_model = MyCustomGaussianModel(frame="galactic")
     with mpl_plot_check():
         spatial_model.plot_grid(geom=geom_true)
+
+
+def test_sky_model_create():
+    m = SkyModel.create("pl", "point", name="my-source")
+    assert isinstance(m.spatial_model, PointSpatialModel)
+    assert isinstance(m.spectral_model, PowerLawSpectralModel)
+    assert m.name == "my-source"
