@@ -1161,7 +1161,7 @@ class MapDataset(Dataset):
         from .spectrum import SpectrumDataset
 
         name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name}
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.get_spectrum(on_region, func=np.any)
@@ -1230,7 +1230,7 @@ class MapDataset(Dataset):
             Cutout map dataset.
         """
         name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name}
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
 
         if self.counts is not None:
@@ -1278,7 +1278,7 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
 
-        kwargs = {"gti": self.gti, "name": name}
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.downsample(
@@ -1344,7 +1344,7 @@ class MapDataset(Dataset):
 
         """
         name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name}
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.pad(pad_width=pad_width, mode=mode)
@@ -1390,7 +1390,7 @@ class MapDataset(Dataset):
             Sliced dataset
         """
         name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name}
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.slice_by_idx(slices=slices)
@@ -1470,12 +1470,7 @@ class MapDataset(Dataset):
             Resampled dataset .
         """
         name = make_name(name)
-
-        kwargs = {}
-        kwargs["name"] = name
-
-        if self.gti:
-            kwargs["gti"] = self.gti
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
         if self.exposure:
             kwargs["exposure"] = self.exposure
