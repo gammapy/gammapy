@@ -12,7 +12,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 

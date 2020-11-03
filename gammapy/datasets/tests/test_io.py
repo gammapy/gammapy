@@ -11,17 +11,14 @@ def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
-    datasets = Datasets.read(
-        filename=filedata,
-        filename_models=filemodel,
-    )
+    datasets = Datasets.read(filename=filedata, filename_models=filemodel,)
 
     assert len(datasets) == 2
     assert len(datasets.models) == 5
     dataset0 = datasets[0]
     assert dataset0.name == "gc"
     assert dataset0.counts.data.sum() == 22258
-    assert_allclose(dataset0.exposure.data.sum(), 8.057342e+12, atol=0.1)
+    assert_allclose(dataset0.exposure.data.sum(), 8.057342e12, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
 
@@ -38,7 +35,7 @@ def test_datasets_to_io(tmp_path):
     )
 
     assert isinstance(dataset0.models, DatasetModels)
-    assert len(dataset0.models) ==4
+    assert len(dataset0.models) == 4
     assert dataset0.models[0].name == "gc"
     assert dataset0.models[1].name == "gll_iem_v06_cutout"
     assert dataset0.models[2].name == "gc-bkg"
@@ -64,7 +61,7 @@ def test_datasets_to_io(tmp_path):
     assert len(datasets_read) == 2
     dataset0 = datasets_read[0]
     assert dataset0.counts.data.sum() == 22258
-    assert_allclose(dataset0.exposure.data.sum(), 8.057342e+12, atol=0.1)
+    assert_allclose(dataset0.exposure.data.sum(), 8.057342e12, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
     assert_allclose(dataset0.npred_background().data.sum(), 15726.8, atol=0.1)

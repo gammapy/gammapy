@@ -5,7 +5,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF, TablePSF

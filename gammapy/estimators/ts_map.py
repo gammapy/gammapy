@@ -1,28 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
+import contextlib
 import functools
 import logging
 import warnings
-import numpy as np
-import contextlib
 from multiprocessing import Pool
+import numpy as np
 import scipy.optimize
+from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from astropy import units as u
-from gammapy.maps import Map, WcsGeom, MapAxis
-from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import (
-    PointSpatialModel,
-    PowerLawSpectralModel,
-    SkyModel,
-)
-from gammapy.stats import (
-    norm_bounds_cython,
-    cash_sum_cython,
-    f_cash_root_cython,
-)
+from gammapy.datasets.map import MapEvaluator
+from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
+from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
@@ -445,7 +437,9 @@ class TSMapEstimator(Estimator):
 
             result_all[name] = map_all
 
-        result_all["sqrt_ts"] = self.estimate_sqrt_ts(result_all["ts"], result_all["flux"])
+        result_all["sqrt_ts"] = self.estimate_sqrt_ts(
+            result_all["ts"], result_all["flux"]
+        )
         return result_all
 
 
@@ -567,7 +561,7 @@ class BrentqFluxEstimator(Estimator):
 
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        result["ts"] = (stat_null - stat)
+        result["ts"] = stat_null - stat
         result["norm"] = norm
         result["niter"] = niter
 
@@ -633,12 +627,10 @@ class BrentqFluxEstimator(Estimator):
         norm = dataset.norm_guess
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        ts = (stat_null - stat)
+        ts = stat_null - stat
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            norm_err = (
-                    np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-            )
+            norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
         return {"norm": norm, "ts": ts, "norm_err": norm_err, "stat": stat, "niter": 0}
 
     def run(self, dataset):

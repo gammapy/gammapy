@@ -319,7 +319,9 @@ class SpectralModel(Model):
         ax = plt.gca() if ax is None else ax
 
         energy_min, energy_max = energy_range
-        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit).edges
+        energy = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points, energy_unit
+        ).edges
 
         # evaluate model
         flux = self(energy).to(flux_unit)
@@ -388,7 +390,9 @@ class SpectralModel(Model):
         kwargs.setdefault("linewidth", 0)
 
         energy_min, energy_max = energy_range
-        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit).edges
+        energy = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points, energy_unit
+        ).edges
 
         flux, flux_err = self.evaluate_error(energy).to(flux_unit)
 
@@ -564,7 +568,7 @@ class PowerLawSpectralModel(SpectralModel):
         :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
-        
+
     See Also
     --------
     PowerLaw2SpectralModel, PowerLawNormSpectralModel
@@ -604,7 +608,9 @@ class PowerLawSpectralModel(SpectralModel):
         mask = np.isclose(val, 0)
 
         if mask.any():
-            integral[mask] = (amplitude * reference * np.log(energy_max / energy_min))[mask]
+            integral[mask] = (amplitude * reference * np.log(energy_max / energy_min))[
+                mask
+            ]
 
         return integral
 
@@ -634,7 +640,9 @@ class PowerLawSpectralModel(SpectralModel):
         if mask.any():
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
-            energy_flux[mask] = amplitude * reference ** 2 * np.log(energy_max / energy_min)[mask]
+            energy_flux[mask] = (
+                amplitude * reference ** 2 * np.log(energy_max / energy_min)[mask]
+            )
 
         return energy_flux
 
@@ -677,7 +685,7 @@ class PowerLawNormSpectralModel(SpectralModel):
         :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
-        
+
     See Also
     --------
     PowerLawSpectralModel, PowerLaw2SpectralModel
@@ -725,7 +733,9 @@ class PowerLawNormSpectralModel(SpectralModel):
         if mask.any():
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
-            energy_flux[mask] = norm * reference ** 2 * np.log(energy_max / energy_min)[mask]
+            energy_flux[mask] = (
+                norm * reference ** 2 * np.log(energy_max / energy_min)[mask]
+            )
 
         return energy_flux
 
@@ -772,7 +782,7 @@ class PowerLaw2SpectralModel(SpectralModel):
         Lower energy limit :math:`E_{0, min}`.
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
-    
+
     See Also
     --------
     PowerLawSpectralModel, PowerLawNormSpectralModel
@@ -852,7 +862,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         :math:`\phi_0`
     ebreak : `~astropy.units.Quantity`
         :math:`E_{break}`
-        
+
     See Also
     --------
     SmoothBrokenPowerLawSpectralModel
@@ -894,7 +904,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         :math:`E_{break}`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
-        
+
     See Also
     --------
     BrokenPowerLawSpectralModel
@@ -920,7 +930,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 class PiecewiseNormSpectralModel(SpectralModel):
     """ Piecewise spectral correction
        with a free normalization at each fixed energy nodes.
-       
+
        For more information see :ref:`piecewise-norm-spectral`.
 
     Parameters

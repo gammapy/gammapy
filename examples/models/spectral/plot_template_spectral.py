@@ -23,7 +23,18 @@ The class implementation follows closely what has been done in
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.modeling.models import Models, SkyModel, TemplateSpectralModel
+# %%
+# Spectral correction
+# Corrections to templates can be applied by multiplication with a normalized spectral model,
+# for example `gammapy.modeling.models.PowerLawNormSpectralModel`.
+# This operation create a new `gammapy.modeling.models.CompoundSpectralModel`
+#
+from gammapy.modeling.models import (
+    Models,
+    PowerLawNormSpectralModel,
+    SkyModel,
+    TemplateSpectralModel,
+)
 
 energy_range = [0.1, 1] * u.TeV
 energy = np.array([1e6, 3e6, 1e7, 3e7]) * u.MeV
@@ -32,13 +43,6 @@ template = TemplateSpectralModel(energy=energy, values=values)
 template.plot(energy_range)
 plt.grid(which="both")
 
-# %%
-# Spectral correction
-# Corrections to templates can be applied by multiplication with a normalized spectral model,
-# for example `gammapy.modeling.models.PowerLawNormSpectralModel`.
-# This operation create a new `gammapy.modeling.models.CompoundSpectralModel`
-#
-from gammapy.modeling.models import PowerLawNormSpectralModel
 
 new_model = template * PowerLawNormSpectralModel(norm=2, tilt=0)
 

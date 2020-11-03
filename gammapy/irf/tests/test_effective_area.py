@@ -169,7 +169,9 @@ def test_compute_thresholds_from_parametrization():
 
     thresh_lo = aeff.find_energy(aeff=0.1 * aeff.max_area)
     e_max = aeff.energy.edges[-1]
-    thresh_hi = aeff.find_energy(aeff=0.9 * aeff.max_area, energy_min=0.1 * e_max, energy_max=e_max)
+    thresh_hi = aeff.find_energy(
+        aeff=0.9 * aeff.max_area, energy_min=0.1 * e_max, energy_max=e_max
+    )
 
     assert_allclose(thresh_lo.to("TeV").value, 0.18557, rtol=1e-4)
     assert_allclose(thresh_hi.to("TeV").value, 43.818, rtol=1e-4)

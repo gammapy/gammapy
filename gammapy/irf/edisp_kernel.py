@@ -200,9 +200,7 @@ class EDispKernel:
 
         data = get_overlap_fraction(energy_axis, energy_axis_true)
         return cls(
-            energy_axis=energy_axis,
-            energy_axis_true=energy_axis_true,
-            data=data,
+            energy_axis=energy_axis, energy_axis_true=energy_axis_true, data=data,
         )
 
     @classmethod
@@ -244,9 +242,7 @@ class EDispKernel:
         energy_axis_true = MapAxis.from_table(table, format="ogip-arf")
 
         return cls(
-            energy_axis=energy_axis,
-            energy_axis_true=energy_axis_true,
-            data=pdf_matrix,
+            energy_axis=energy_axis, energy_axis_true=energy_axis_true, data=pdf_matrix,
         )
 
     @classmethod

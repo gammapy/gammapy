@@ -50,6 +50,7 @@ class EnergyDispersion2D:
     --------
     EnergyDispersion
     """
+
     tag = "edisp_2d"
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
@@ -65,7 +66,6 @@ class EnergyDispersion2D:
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-
 
         axes = [energy_axis_true, migra_axis, offset_axis]
 
@@ -131,7 +131,7 @@ class EnergyDispersion2D:
             energy_axis_true=energy_axis_true,
             migra_axis=migra_axis,
             offset_axis=offset_axis,
-            data=data
+            data=data,
         )
 
     @classmethod
@@ -140,15 +140,21 @@ class EnergyDispersion2D:
         # TODO: move this to MapAxis.from_table()
 
         if "ENERG_LO" in table.colnames:
-            energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
+            energy_axis_true = MapAxis.from_table(
+                table, column_prefix="ENERG", format="gadf-dl3"
+            )
         elif "ETRUE_LO" in table.colnames:
-            energy_axis_true = MapAxis.from_table(table, column_prefix="ETRUE", format="gadf-dl3")
+            energy_axis_true = MapAxis.from_table(
+                table, column_prefix="ETRUE", format="gadf-dl3"
+            )
         else:
             raise ValueError(
                 'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
             )
 
-        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        offset_axis = MapAxis.from_table(
+            table, column_prefix="THETA", format="gadf-dl3"
+        )
         migra_axis = MapAxis.from_table(table, column_prefix="MIGRA", format="gadf-dl3")
 
         matrix = table["MATRIX"].quantity[0].transpose()
@@ -208,17 +214,21 @@ class EnergyDispersion2D:
         if energy_true is None:
             energy_axis_true = self.data.axes["energy_true"]
         else:
-            energy_axis_true = MapAxis.from_energy_edges(energy_true, name="energy_true")
+            energy_axis_true = MapAxis.from_energy_edges(
+                energy_true, name="energy_true"
+            )
 
         data = []
         for value in energy_axis_true.center:
-            vec = self.get_response(offset=offset, energy_true=value, energy=energy_axis.edges)
+            vec = self.get_response(
+                offset=offset, energy_true=value, energy=energy_axis.edges
+            )
             data.append(vec)
 
         return EDispKernel(
             energy_axis=energy_axis,
             energy_axis_true=energy_axis_true,
-            data=np.asarray(data)
+            data=np.asarray(data),
         )
 
     def get_response(self, offset, energy_true, energy=None):
@@ -279,7 +289,9 @@ class EnergyDispersion2D:
 
         return integral
 
-    def plot_migration(self, ax=None, offset=None, energy_true=None, migra=None, **kwargs):
+    def plot_migration(
+        self, ax=None, offset=None, energy_true=None, migra=None, **kwargs
+    ):
         """Plot energy dispersion for given offset and true energy.
 
         Parameters

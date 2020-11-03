@@ -38,5 +38,9 @@ def trapz_loglog(y, x, axis=-1):
     index[np.isnan(index)] = np.inf
 
     return pl.evaluate_integral(
-        energy_min=energy_min, energy_max=energy_max, index=index, reference=energy_min, amplitude=vals_energy_min
+        energy_min=energy_min,
+        energy_max=energy_max,
+        index=index,
+        reference=energy_min,
+        amplitude=vals_energy_min,
     )

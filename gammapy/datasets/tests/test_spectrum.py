@@ -7,17 +7,17 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import EDispKernel, EffectiveAreaTable, EDispKernelMap
+from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    BackgroundModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
     ExpCutoffPowerLawSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
-    BackgroundModel,
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_list, make_region
@@ -169,9 +169,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.npred_background().data.sum() == 0
     assert empty_spectrum_dataset.npred_background().geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.exposure.geom.axes[0].nbin == 3
-    assert (
-        empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
-    )
+    assert empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
     assert empty_spectrum_dataset.gti.time_sum.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert empty_spectrum_dataset.energy_range[0] is None
@@ -208,7 +206,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         exposure=exposure.copy(),
         edisp=edisp.copy(),
         background=background,
-        gti=gti.copy()
+        gti=gti.copy(),
     )
 
     livetime2 = 0.5 * livetime
@@ -231,7 +229,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         edisp=edisp,
         background=bkg2,
         mask_safe=safe_mask2,
-        gti=gti2
+        gti=gti2,
     )
 
     spectrum_dataset1.stack(spectrum_dataset2)
@@ -239,7 +237,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     reference = spectrum_dataset.counts.data
     assert_allclose(spectrum_dataset1.counts.data[1:], reference[1:] * 2)
     assert_allclose(spectrum_dataset1.counts.data[0], 141363)
-    assert_allclose(spectrum_dataset1.exposure.data[0], 4.755644e+09)
+    assert_allclose(spectrum_dataset1.exposure.data[0], 4.755644e09)
     assert_allclose(
         spectrum_dataset1.npred_background().data[1:], 3 * background.data[1:]
     )
@@ -276,7 +274,7 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
         exposure=aeff * gti.time_sum,
         edisp=edisp1,
         meta_table=Table({"OBS_ID": [0]}),
-        gti=gti.copy()
+        gti=gti.copy(),
     )
 
     edisp2 = EDispKernelMap.from_gauss(energy, energy, 0.2, 0.0, geom=geom)
@@ -289,7 +287,7 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
         exposure=aeff * gti2.time_sum,
         edisp=edisp2,
         meta_table=Table({"OBS_ID": [1]}),
-        gti=gti2
+        gti=gti2,
     )
     spectrum_dataset1.stack(spectrum_dataset2)
 
@@ -297,7 +295,9 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
 
     assert spectrum_dataset1.background_model is None
     assert_allclose(spectrum_dataset1.gti.time_sum.to_value("s"), 200)
-    assert_allclose(spectrum_dataset1.exposure.quantity[2].to_value("m2 s"), 1573851.079861)
+    assert_allclose(
+        spectrum_dataset1.exposure.quantity[2].to_value("m2 s"), 1573851.079861
+    )
     kernel = edisp1.get_edisp_kernel()
     assert_allclose(kernel.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
     assert_allclose(kernel.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
@@ -350,7 +350,10 @@ class TestSpectrumOnOff:
 
         axis = MapAxis.from_edges(ereco, name="energy", interp="log")
         self.on_counts = RegionNDMap.create(
-            region=self.on_region, wcs=self.wcs, axes=[axis], meta={"EXPOSURE": self.livetime.to_value("s")}
+            region=self.on_region,
+            wcs=self.wcs,
+            axes=[axis],
+            meta={"EXPOSURE": self.livetime.to_value("s")},
         )
         self.on_counts.data += 1
         self.on_counts.data[-1] = 0
@@ -509,7 +512,9 @@ class TestSpectrumOnOff:
         assert newdataset.gti is None
 
     def test_energy_mask(self):
-        mask = self.dataset.counts.geom.energy_mask(energy_min=0.3 * u.TeV, energy_max=6 * u.TeV)
+        mask = self.dataset.counts.geom.energy_mask(
+            energy_min=0.3 * u.TeV, energy_max=6 * u.TeV
+        )
         desired = [False, True, True, False]
         assert_allclose(mask[:, 0, 0], desired)
 
@@ -575,7 +580,7 @@ class TestSpectrumOnOff:
         assert info_dict["name"] == "test"
 
     def test_resample_energy_axis(self):
-        axis = MapAxis.from_edges([0.1, 1, 10] * u.TeV, name="energy", interp='log')
+        axis = MapAxis.from_edges([0.1, 1, 10] * u.TeV, name="energy", interp="log")
         grouped = self.dataset.resample_energy_axis(energy_axis=axis)
 
         assert grouped.counts.data.shape == (2, 1, 1)
@@ -914,9 +919,7 @@ def test_stack_livetime():
     energy_axis = dataset_ref.counts.geom.axes["energy"]
     energy_axis_true = dataset_ref.exposure.geom.axes["energy_true"]
 
-    dataset = SpectrumDatasetOnOff.create(
-        e_reco=energy_axis, e_true=energy_axis_true
-    )
+    dataset = SpectrumDatasetOnOff.create(e_reco=energy_axis, e_true=energy_axis_true)
 
     dataset.stack(dataset_ref)
     assert_allclose(dataset.exposure.meta["livetime"], 1581.736758 * u.s)
@@ -929,13 +932,11 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     spectrum_datasets_on_off = make_observation_list()
     datasets = Datasets(spectrum_datasets_on_off)
     datasets.write(
-        filename=tmpdir / "datasets.yaml",
-        filename_models=tmpdir / "models.yaml"
+        filename=tmpdir / "datasets.yaml", filename_models=tmpdir / "models.yaml"
     )
 
     datasets_read = Datasets.read(
-        filename=tmpdir / "datasets.yaml",
-        filename_models=tmpdir / "models.yaml"
+        filename=tmpdir / "datasets.yaml", filename_models=tmpdir / "models.yaml"
     )
 
     assert len(datasets_read) == len(datasets)

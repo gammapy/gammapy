@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from astropy import units as u
 from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
-from astropy import units as u
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator

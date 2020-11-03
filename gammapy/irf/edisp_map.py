@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from scipy.interpolate import interp1d
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
 from .irf_map import IRFMap
@@ -280,7 +280,9 @@ class EDispMap(IRFMap):
 
             edisp_energy_true = self.edisp_map.slice_by_idx({"energy_true": idx})
 
-            cumsum = np.insert(edisp_energy_true.data, 0, 0, axis=axis).cumsum(axis=axis)
+            cumsum = np.insert(edisp_energy_true.data, 0, 0, axis=axis).cumsum(
+                axis=axis
+            )
             with np.errstate(invalid="ignore", divide="ignore"):
                 cumsum = np.nan_to_num(cumsum / cumsum[slice(-2, -1)])
 
@@ -327,6 +329,7 @@ class EDispKernelMap(IRFMap):
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
+
     tag = "edisp_kernel_map"
     _hdu_name = "edisp"
 
@@ -412,7 +415,7 @@ class EDispKernelMap(IRFMap):
         return EDispKernel(
             energy_axis_true=kernel_map.geom.axes["energy_true"],
             energy_axis=kernel_map.geom.axes["energy"],
-            data=kernel_map.data[..., 0, 0]
+            data=kernel_map.data[..., 0, 0],
         )
 
     @classmethod
@@ -460,7 +463,9 @@ class EDispKernelMap(IRFMap):
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        edisp_map = cls.from_diagonal_response(edisp.energy_axis, edisp.energy_axis_true, geom=geom)
+        edisp_map = cls.from_diagonal_response(
+            edisp.energy_axis, edisp.energy_axis_true, geom=geom
+        )
         edisp_map.edisp_map.data *= 0
         edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[
             :, :, np.newaxis, np.newaxis
@@ -543,4 +548,3 @@ class EDispKernelMap(IRFMap):
         return self.__class__(
             edisp_kernel_map=new_edisp_map, exposure_map=self.exposure_map
         )
-

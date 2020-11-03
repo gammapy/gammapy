@@ -3,7 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis, RegionNDMap, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -350,17 +350,13 @@ class EffectiveAreaTable2D:
     offset         : size =     4, min =  0.000 deg, max =  1.000 deg
     Data           : size =    30, min =  1.000 cm2, max =  1.000 cm2
     """
+
     tag = "aeff_2d"
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
 
     def __init__(
-        self,
-        energy_axis_true,
-        offset_axis,
-        data,
-        meta=None,
-        interp_kwargs=None,
+        self, energy_axis_true, offset_axis, data, meta=None, interp_kwargs=None,
     ):
         assert energy_axis_true.name == "energy_true"
         assert offset_axis.name == "offset"
@@ -391,8 +387,12 @@ class EffectiveAreaTable2D:
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
-        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        energy_axis_true = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        offset_axis = MapAxis.from_table(
+            table, column_prefix="THETA", format="gadf-dl3"
+        )
 
         return cls(
             energy_axis_true=energy_axis_true,
@@ -427,13 +427,9 @@ class EffectiveAreaTable2D:
         else:
             energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
 
-        area = self.data.evaluate(
-            offset=offset, energy_true=energy_axis_true.center
-        )
+        area = self.data.evaluate(offset=offset, energy_true=energy_axis_true.center)
 
-        return EffectiveAreaTable(
-            energy_axis_true=energy_axis_true, data=area
-        )
+        return EffectiveAreaTable(energy_axis_true=energy_axis_true, data=area)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.

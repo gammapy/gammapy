@@ -92,7 +92,7 @@ class TestEventListHESS:
         assert len(self.events.table) == 11243 * 2
 
     def test_offset_selection(self):
-        offset_range = u.Quantity([0.5, 1.0]*u.deg)
+        offset_range = u.Quantity([0.5, 1.0] * u.deg)
         new_list = self.events.select_offset(offset_range)
         assert len(new_list.table) == 1820 * 2
 
@@ -198,6 +198,6 @@ class TestEventSelection:
         assert len(new_list.table) == 2
 
     def test_select_energy(self):
-        energy_range = u.Quantity([1, 10], 'TeV')
+        energy_range = u.Quantity([1, 10], "TeV")
         new_list = self.events.select_energy(energy_range)
         assert len(new_list.table) == 3

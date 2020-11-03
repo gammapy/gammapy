@@ -4,13 +4,13 @@ import scipy.ndimage
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import WcsNDMap
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     ConstantFluxSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.datasets.map import MapEvaluator
 
 __all__ = ["find_peaks", "estimate_exposure_reco_energy"]
 
@@ -68,7 +68,7 @@ def find_peaks(image, threshold, min_distance=1):
     if isinstance(min_distance, (str, u.Quantity)):
         min_distance = np.mean(u.Quantity(min_distance) / image.geom.pixel_scales)
         min_distance = np.round(min_distance).to_value("")
- 
+
     size = 2 * min_distance + 1
 
     # Remove non-finite values to avoid warnings or spurious detection
@@ -136,9 +136,7 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None):
     edisp = None
 
     if dataset.edisp is not None:
-        edisp = dataset.edisp.get_edisp_kernel(
-            position=None, energy_axis=energy_axis
-        )
+        edisp = dataset.edisp.get_edisp_kernel(position=None, energy_axis=energy_axis)
 
     meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=edisp)
     npred = meval.compute_npred()

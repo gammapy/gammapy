@@ -17,19 +17,19 @@ Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
 import operator
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from regions import (
+    CircleAnnulusSkyRegion,
     CircleSkyRegion,
     CompoundSkyRegion,
     DS9Parser,
     PixelRegion,
+    RectangleSkyRegion,
     Region,
     SkyRegion,
-    RectangleSkyRegion,
-    CircleAnnulusSkyRegion
 )
-import numpy as np
-from astropy import units as u
-from astropy.coordinates import SkyCoord
 
 __all__ = [
     "make_region",
@@ -37,7 +37,7 @@ __all__ = [
     "make_orthogonal_rectangle_sky_regions",
     "make_concentric_annulus_sky_regions",
     "compound_region_to_list",
-    "list_to_compound_region"
+    "list_to_compound_region",
 ]
 
 
@@ -228,7 +228,8 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     for center in coords:
         reg = RectangleSkyRegion(
-            center=center, width=width, height=u.Quantity(height), angle=angle)
+            center=center, width=width, height=u.Quantity(height), angle=angle
+        )
         regions.append(reg)
 
     return regions
@@ -257,13 +258,8 @@ def make_concentric_annulus_sky_regions(center, radius_max, nbin=11):
 
     for r_in, r_out in zip(edges[:-1], edges[1:]):
         region = CircleAnnulusSkyRegion(
-            center=center,
-            inner_radius=r_in,
-            outer_radius=r_out,
+            center=center, inner_radius=r_in, outer_radius=r_out,
         )
         regions.append(region)
 
     return regions
-
-
-

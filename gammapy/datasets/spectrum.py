@@ -1,19 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 from pathlib import Path
 import numpy as np
-import logging
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.stats import (
-    WStatCountsStatistic,
-    cash,
-    wstat,
-    get_wstat_mu_bkg,
-)
+from gammapy.stats import WStatCountsStatistic, cash, get_wstat_mu_bkg, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .map import MapDataset
@@ -339,14 +334,20 @@ class SpectrumDataset(MapDataset):
         self.counts.plot_hist(ax=ax1, label="n_on")
 
         energy_unit = energy_min.unit
-        ax1.set_xlim(0.7 * energy_min.to_value(energy_unit), 1.3 * energy_max.to_value(energy_unit))
+        ax1.set_xlim(
+            0.7 * energy_min.to_value(energy_unit),
+            1.3 * energy_max.to_value(energy_unit),
+        )
         self._plot_energy_range(ax=ax1)
         ax1.legend(numpoints=1)
 
         ax2.set_title("Exposure")
         energy_unit = self.exposure.geom.axes[0].unit
         self.exposure.plot(ax=ax2)
-        ax2.set_xlim(0.7 * energy_min.to_value(energy_unit), 1.3 * energy_max.to_value(energy_unit))
+        ax2.set_xlim(
+            0.7 * energy_min.to_value(energy_unit),
+            1.3 * energy_max.to_value(energy_unit),
+        )
         self._plot_energy_range(ax=ax2)
 
         ax3.set_title("Energy Dispersion")
@@ -852,17 +853,17 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         if self.edisp is not None:
             kernel = self.edisp.get_edisp_kernel()
-            kernel.write(
-                outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa
-            )
+            kernel.write(outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
     def _ogip_meta(self):
         """Meta info for the OGIP data format"""
         try:
             livetime = self.exposure.meta["livetime"]
         except KeyError:
-            raise ValueError("Storing in ogip format require the livetime "
-                             "to be defined in the exposure meta data")
+            raise ValueError(
+                "Storing in ogip format require the livetime "
+                "to be defined in the exposure meta data"
+            )
         return {
             "name": "SPECTRUM",
             "hduclass": "OGIP",
@@ -1009,9 +1010,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info["alpha"] = alpha
 
         info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"],
-            info["counts_off"],
-            acceptance / acceptance_off,
+            info["counts"], info["counts_off"], acceptance / acceptance_off,
         ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
@@ -1128,7 +1127,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
             meta_table=self.meta_table,
-            background=self.background
+            background=self.background,
         )
 
     def slice_by_idx(self, slices, name=None):

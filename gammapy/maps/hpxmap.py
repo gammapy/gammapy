@@ -183,7 +183,9 @@ class HpxMap(Map):
             hdu_bands_out = None
             hdu_bands = None
 
-        hdu_out = self.to_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, format=format)
+        hdu_out = self.to_hdu(
+            hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, format=format
+        )
         hdu_out.header["META"] = json.dumps(self.meta)
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 

@@ -156,14 +156,12 @@ class ParameterEstimator(Estimator):
         self._fit.optimize()
 
         res = self._fit.confidence(
-            parameter=parameter,
-            sigma=self.n_sigma,
-            reoptimize=self.reoptimize
+            parameter=parameter, sigma=self.n_sigma, reoptimize=self.reoptimize
         )
         return {
-                f"{parameter.name}_errp": res["errp"],
-                f"{parameter.name}_errn": res["errn"],
-            }
+            f"{parameter.name}_errp": res["errp"],
+            f"{parameter.name}_errn": res["errn"],
+        }
 
     def estimate_scan(self, datasets, parameter):
         """Estimate parameter stat scan.
@@ -194,12 +192,12 @@ class ParameterEstimator(Estimator):
             values=self.scan_values,
             bounds=bounds,
             nvalues=self.scan_n_values,
-            reoptimize=self.reoptimize
+            reoptimize=self.reoptimize,
         )
 
         return {
             f"{parameter.name}_scan": profile[f"{parameter.name}_scan"],
-            "stat_scan": profile["stat_scan"]
+            "stat_scan": profile["stat_scan"],
         }
 
     def estimate_ul(self, datasets, parameter):

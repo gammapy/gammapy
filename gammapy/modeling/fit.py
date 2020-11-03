@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import itertools
 import logging
 import numpy as np
-import itertools
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data
 from .covariance import Covariance
@@ -169,7 +169,7 @@ class Fit:
             parameters=parameters,
             function=self.datasets.stat_sum,
             store_trace=self.store_trace,
-            **kwargs
+            **kwargs,
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
@@ -374,7 +374,11 @@ class Fit:
                     stat = self.datasets.stat_sum()
                 stats.append(stat)
 
-        return {f"{parameter.name}_scan": values, "stat_scan": np.array(stats), "fit_results": fit_results}
+        return {
+            f"{parameter.name}_scan": values,
+            "stat_scan": np.array(stats),
+            "fit_results": fit_results,
+        }
 
     def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.

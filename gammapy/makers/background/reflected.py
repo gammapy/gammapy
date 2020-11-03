@@ -268,6 +268,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
     """
+
     tag = "ReflectedRegionsBackgroundMaker"
 
     def __init__(

@@ -6,15 +6,19 @@ import astropy.units as u
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
-from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData
+from gammapy.utils.scripts import make_name, make_path
 from .core import Model, Models
-from .spatial import SpatialModel, ConstantSpatialModel
-from .spectral import SpectralModel, PowerLawNormSpectralModel, TemplateSpectralModel
+from .spatial import ConstantSpatialModel, SpatialModel
+from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
 
-
-__all__ = ["SkyModel", "FoVBackgroundModel", "BackgroundModel", "create_fermi_isotropic_diffuse_model"]
+__all__ = [
+    "SkyModel",
+    "FoVBackgroundModel",
+    "BackgroundModel",
+    "create_fermi_isotropic_diffuse_model",
+]
 
 
 class SkyModel(Model):
@@ -86,9 +90,7 @@ class SkyModel(Model):
             "0.1 TeV", "10 TeV", nbin=1, name="energy_true"
         )
 
-        geom = WcsGeom.create(
-            skydir=self.position, npix=(2, 2), axes=[axis]
-        )
+        geom = WcsGeom.create(skydir=self.position, npix=(2, 2), axes=[axis])
 
         gti = GTI.create(1 * u.day, 2 * u.day)
         value = self.evaluate_geom(geom, gti)
@@ -281,9 +283,9 @@ class SkyModel(Model):
             Predicted flux map
         """
         energy = geom.axes["energy_true"].edges
-        value = self.spectral_model.integral(
-            energy[:-1], energy[1:],
-        ).reshape((-1, 1, 1))
+        value = self.spectral_model.integral(energy[:-1], energy[1:],).reshape(
+            (-1, 1, 1)
+        )
 
         if self.spatial_model and not isinstance(geom, RegionGeom):
             # TODO: integrate spatial model over region to correct for
@@ -438,7 +440,7 @@ class SkyModel(Model):
             spectral_model=spectral_model,
             spatial_model=spatial_model,
             temporal_model=temporal_model,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -457,6 +459,7 @@ class FoVBackgroundModel(Model):
         Dataset name
 
     """
+
     tag = ["FoVBackgroundModel", "fov-bkg"]
 
     def __init__(self, spectral_model=None, dataset_name=None):
@@ -549,10 +552,7 @@ class FoVBackgroundModel(Model):
         if len(datasets_names) > 1:
             raise ValueError("FoVBackgroundModel can only be assigned to one dataset")
 
-        return cls(
-            spectral_model=spectral_model,
-            dataset_name=datasets_names[0],
-        )
+        return cls(spectral_model=spectral_model, dataset_name=datasets_names[0],)
 
 
 class BackgroundModel(Model):
@@ -793,5 +793,5 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         name="fermi-diffuse-iso",
-        apply_irf={"psf": False, "exposure": True, "edisp": True}
+        apply_irf={"psf": False, "exposure": True, "edisp": True},
     )

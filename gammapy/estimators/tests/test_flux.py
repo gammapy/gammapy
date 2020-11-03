@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, PointSpatialModel
+from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -13,10 +13,7 @@ def fermi_datasets():
     filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
     filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
 
-    return Datasets.read(
-        filename=filename,
-        filename_models=filename_models
-    )
+    return Datasets.read(filename=filename, filename_models=filename_models)
 
 
 @pytest.fixture(scope="session")
@@ -62,7 +59,6 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     assert_allclose(result["e_max"], 83.255 * u.GeV, atol=1e-3)
 
 
-
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
@@ -71,7 +67,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
         energy_min="1 GeV",
         energy_max="100 GeV",
         reoptimize=True,
-        selection_optional=None
+        selection_optional=None,
     )
     result = estimator.run(fermi_datasets)
 
@@ -84,7 +80,10 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(
-        source="Crab", energy_min=1 * u.TeV, energy_max=10 * u.TeV, selection_optional=["errn-errp", "ul"]
+        source="Crab",
+        energy_min=1 * u.TeV,
+        energy_max=10 * u.TeV,
+        selection_optional=["errn-errp", "ul"],
     )
     result = estimator.run(hess_datasets)
 
@@ -116,7 +115,10 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     datasets.extend(hess_datasets)
 
     estimator = FluxEstimator(
-        source="Crab Nebula", energy_min=1 * u.TeV, energy_max=10 * u.TeV, selection_optional=None
+        source="Crab Nebula",
+        energy_min=1 * u.TeV,
+        energy_max=10 * u.TeV,
+        selection_optional=None,
     )
     result = estimator.run(datasets)
 
@@ -125,6 +127,3 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     assert_allclose(result["norm_err"], 0.090744, atol=1e-3)
     assert_allclose(result["e_min"], 0.693145 * u.TeV, atol=1e-3)
     assert_allclose(result["e_max"], 2 * u.TeV, atol=1e-3)
-
-
-

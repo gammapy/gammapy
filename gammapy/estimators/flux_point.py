@@ -12,7 +12,6 @@ from gammapy.utils.table import table_from_row_data, table_standardise_units_cop
 from .core import Estimator
 from .flux import FluxEstimator
 
-
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
 
 log = logging.getLogger(__name__)
@@ -23,13 +22,7 @@ REQUIRED_COLUMNS = {
     "flux": ["e_min", "e_max", "flux"],
     "eflux": ["e_min", "e_max", "eflux"],
     # TODO: extend required columns
-    "likelihood": [
-        "e_min",
-        "e_max",
-        "e_ref",
-        "ref_dnde",
-        "norm",
-    ],
+    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "norm",],
 }
 
 OPTIONAL_COLUMNS = {
@@ -276,7 +269,9 @@ class FluxPoints:
         energy_min, energy_max = self.energy_min, self.energy_max
 
         flux = table["flux"].quantity
-        dnde = self._dnde_from_flux(flux, model, energy_ref, energy_min, energy_max, pwl_approx)
+        dnde = self._dnde_from_flux(
+            flux, model, energy_ref, energy_min, energy_max, pwl_approx
+        )
 
         # Add to result table
         table["e_ref"] = energy_ref
@@ -316,7 +311,9 @@ class FluxPoints:
         for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
             try:
                 data = table["e2dnde" + suffix].quantity
-                table["dnde" + suffix] = (data / energy_ref ** 2).to(DEFAULT_UNIT["dnde"])
+                table["dnde" + suffix] = (data / energy_ref ** 2).to(
+                    DEFAULT_UNIT["dnde"]
+                )
             except KeyError:
                 continue
 
@@ -376,7 +373,9 @@ class FluxPoints:
                 energy_ref = np.sqrt(self.energy_min * self.energy_max)
             elif method == "lafferty":
                 # set energy_ref that it represents the mean dnde in the given energy bin
-                energy_ref = self._energy_ref_lafferty(model, self.energy_min, self.energy_max)
+                energy_ref = self._energy_ref_lafferty(
+                    model, self.energy_min, self.energy_max
+                )
             else:
                 raise ValueError(f"Invalid method: {method}")
             table = self._flux_to_dnde(energy_ref, table, model, pwl_approx)
@@ -841,7 +840,6 @@ class FluxPointsEstimator(Estimator):
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
-
         )
 
     def run(self, datasets):
@@ -861,14 +859,17 @@ class FluxPointsEstimator(Estimator):
 
         rows = []
 
-        for energy_min, energy_max in zip(self.energy_edges[:-1], self.energy_edges[1:]):
-            row = self.estimate_flux_point(datasets, energy_min=energy_min, energy_max=energy_max)
+        for energy_min, energy_max in zip(
+            self.energy_edges[:-1], self.energy_edges[1:]
+        ):
+            row = self.estimate_flux_point(
+                datasets, energy_min=energy_min, energy_max=energy_max
+            )
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
 
-
-        #TODO: this should be changed once likelihood is fully supported
+        # TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
@@ -886,7 +887,9 @@ class FluxPointsEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        result = self.estimate_counts(datasets, energy_min=energy_min, energy_max=energy_max)
+        result = self.estimate_counts(
+            datasets, energy_min=energy_min, energy_max=energy_max
+        )
         fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
         result.update(fe.run(datasets=datasets))

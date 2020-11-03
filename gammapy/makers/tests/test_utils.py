@@ -4,16 +4,16 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
-from astropy.time import Time
 from astropy.table import Table
-from gammapy.data import FixedPointingInfo, Observation, EventList, GTI
+from astropy.time import Time
+from gammapy.data import GTI, EventList, FixedPointingInfo, Observation
 from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.makers.utils import (
     _map_spectrum_weight,
+    make_edisp_kernel_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
-    make_edisp_kernel_map,
-    make_theta_squared_table
+    make_theta_squared_table,
 )
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
@@ -294,7 +294,9 @@ class TestTheta2Table:
         gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
         gti = GTI(gti_table)
 
-        self.observation = Observation(events=EventList(table), obs_info=meta_obs, gti=gti)
+        self.observation = Observation(
+            events=EventList(table), obs_info=meta_obs, gti=gti
+        )
 
     def test_make_theta_squared_table(self):
         # pointing position: (0,0.5) degree in ra/dec
@@ -302,9 +304,9 @@ class TestTheta2Table:
         # OFF theta2 distribution from the mirror position at (0,1) in ra/dec.
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
         axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
-        theta2_table = make_theta_squared_table(observations=[self.observation],
-                                                position=position, theta_squared_axis=axis
-                                                )
+        theta2_table = make_theta_squared_table(
+            observations=[self.observation], position=position, theta_squared_axis=axis
+        )
         theta2_lo = [0, 0.05, 0.1, 0.15]
         theta2_hi = [0.05, 0.1, 0.15, 0.2]
         on_counts = [2, 0, 0, 0]
@@ -326,16 +328,21 @@ class TestTheta2Table:
 
         # Taking the off position as the on one
         off_position = position
-        theta2_table2 = make_theta_squared_table(observations=[self.observation],
-                                                 position=position, theta_squared_axis=axis, position_off=off_position
-                                                 )
+        theta2_table2 = make_theta_squared_table(
+            observations=[self.observation],
+            position=position,
+            theta_squared_axis=axis,
+            position_off=off_position,
+        )
 
         assert_allclose(theta2_table2["counts_off"], theta2_table["counts"])
 
         # Test for two observations, here identical
-        theta2_table_two_obs = make_theta_squared_table(observations=[self.observation, self.observation],
-                                                        position=position, theta_squared_axis=axis
-                                                        )
+        theta2_table_two_obs = make_theta_squared_table(
+            observations=[self.observation, self.observation],
+            position=position,
+            theta_squared_axis=axis,
+        )
         on_counts_two_obs = [4, 0, 0, 0]
         off_counts_two_obs = [2, 0, 0, 0]
         acceptance_two_obs = [2, 2, 2, 2]

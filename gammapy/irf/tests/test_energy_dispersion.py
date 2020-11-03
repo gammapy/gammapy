@@ -160,15 +160,12 @@ class TestEnergyDispersion2D:
 
         offset_axis = MapAxis.from_bounds(
             0, 1, nbin=3, unit="deg", name="offset", node_type="edges"
-
         )
 
-        migra_axis = MapAxis.from_bounds(
-            0, 3, nbin=3, name="migra", node_type="edges"
-        )
+        migra_axis = MapAxis.from_bounds(0, 3, nbin=3, name="migra", node_type="edges")
 
         shape = (energy_axis_true.nbin, migra_axis.nbin, offset_axis.nbin)
-        
+
         data = np.ones(shape=shape) * u.cm ** 2
 
         edisp = EnergyDispersion2D(

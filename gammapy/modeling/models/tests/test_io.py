@@ -8,12 +8,12 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
-    PowerLawSpectralModel,
-    EBLAbsorptionNormSpectralModel,
     BackgroundModel,
+    EBLAbsorptionNormSpectralModel,
     Model,
     Models,
     PiecewiseNormSpectralModel,
+    PowerLawSpectralModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data

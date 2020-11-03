@@ -58,7 +58,15 @@ class FluxPointsDataset(Dataset):
     stat_type = "chi2"
     tag = "FluxPointsDataset"
 
-    def __init__(self, models=None, data=None, mask_fit=None, mask_safe=None, name=None, meta_table=None):
+    def __init__(
+        self,
+        models=None,
+        data=None,
+        mask_fit=None,
+        mask_safe=None,
+        name=None,
+        meta_table=None,
+    ):
         self.data = data
         self.mask_fit = mask_fit
         self._name = make_name(name)
@@ -297,7 +305,10 @@ class FluxPointsDataset(Dataset):
 
         xerr = fp._plot_get_energy_err()
         if xerr is not None:
-            xerr = xerr[0].to_value(self._energy_unit), xerr[1].to_value(self._energy_unit)
+            xerr = (
+                xerr[0].to_value(self._energy_unit),
+                xerr[1].to_value(self._energy_unit),
+            )
 
         model = self.flux_pred()
         yerr = fp._plot_get_flux_err(fp.sed_type)

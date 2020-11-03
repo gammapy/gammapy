@@ -2,15 +2,14 @@
 import abc
 import collections.abc
 import copy
-import numpy as np
 import logging
-from astropy.table import vstack, Table
+import numpy as np
 from astropy import units as u
-from gammapy.modeling.models import Models, DatasetModels, FoVBackgroundModel
+from astropy.table import Table, vstack
+from gammapy.data import GTI
+from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
-from gammapy.data import GTI
-
 
 log = logging.getLogger(__name__)
 
@@ -240,12 +239,12 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             try:
                 dataset_sliced = dataset.slice_by_energy(
-                    energy_min=energy_min,
-                    energy_max=energy_max,
-                    name=dataset.name,
+                    energy_min=energy_min, energy_max=energy_max, name=dataset.name,
                 )
             except ValueError:
-                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+                log.info(
+                    f"Dataset {dataset.name} does not contribute in the energy range"
+                )
                 continue
 
             datasets.append(dataset_sliced)
@@ -343,7 +342,9 @@ class Datasets(collections.abc.MutableSequence):
 
         return datasets
 
-    def write(self, filename, filename_models=None, overwrite=False, write_covariance=True):
+    def write(
+        self, filename, filename_models=None, overwrite=False, write_covariance=True
+    ):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
@@ -371,9 +372,7 @@ class Datasets(collections.abc.MutableSequence):
 
         if filename_models:
             self.models.write(
-                filename_models,
-                overwrite=overwrite,
-                write_covariance=write_covariance,
+                filename_models, overwrite=overwrite, write_covariance=write_covariance,
             )
 
     def stack_reduce(self, name=None):

@@ -40,6 +40,10 @@ plt.hlines(
 )
 plt.vlines(0, ymin=ymin, ymax=count_statistic.stat_null, linestyle="dotted", color="k")
 
-plt.vlines(excess, ymin=count_statistic.stat_max, ymax=count_statistic.stat_null, color="r")
-plt.hlines(count_statistic.stat_null, xmin=0, xmax=excess, linestyle="dotted", color="r")
+plt.vlines(
+    excess, ymin=count_statistic.stat_max, ymax=count_statistic.stat_null, color="r"
+)
+plt.hlines(
+    count_statistic.stat_null, xmin=0, xmax=excess, linestyle="dotted", color="r"
+)
 plt.legend()

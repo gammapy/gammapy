@@ -65,7 +65,7 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
         "success": minuit.migrad_ok(),
         "nfev": minuit.get_num_call_fcn(),
         "message": _get_message(minuit, parameters),
-        "trace": minuit_func.trace
+        "trace": minuit_func.trace,
     }
     optimizer = minuit
 

@@ -15,8 +15,8 @@ from astropy.wcs.utils import (
 from regions import SkyRegion
 from .geom import (
     Geom,
-    MapCoord,
     MapAxes,
+    MapCoord,
     get_shape,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
@@ -200,8 +200,9 @@ class WcsGeom(Geom):
     @property
     def is_allsky(self):
         """Flag for all-sky maps."""
-        if (np.all(np.isclose(self._npix[0] * self._cdelt[0], 360.0)) and
-            np.all(np.isclose(self._npix[1] * self._cdelt[1], 180.0))):
+        if np.all(np.isclose(self._npix[0] * self._cdelt[0], 360.0)) and np.all(
+            np.isclose(self._npix[1] * self._cdelt[1], 180.0)
+        ):
             return True
         else:
             return False

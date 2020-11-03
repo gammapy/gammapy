@@ -2,10 +2,10 @@
 import logging
 import numpy as np
 from astropy import units as u
+from gammapy.datasets import Datasets
 from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
-from gammapy.modeling.models import ScaleSpectralModel, Models
-from gammapy.datasets import Datasets
+from gammapy.modeling.models import Models, ScaleSpectralModel
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +49,7 @@ class FluxEstimator(Estimator):
 
         By default all steps are executed.
     """
+
     tag = "FluxEstimator"
     _available_selection_optional = ["errn-errp", "ul", "scan"]
 
@@ -90,7 +91,7 @@ class FluxEstimator(Estimator):
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,
-            selection_optional=self.selection_optional
+            selection_optional=self.selection_optional,
         )
 
     @staticmethod
@@ -173,9 +174,7 @@ class FluxEstimator(Estimator):
         model = self.get_scale_model(models)
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            result = self.get_reference_flux_values(
-                model.model, energy_min, energy_max
-            )
+            result = self.get_reference_flux_values(model.model, energy_min, energy_max)
 
         if len(datasets) == 0 or not any_contribution:
             result.update(self.nan_result)

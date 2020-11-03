@@ -2,8 +2,7 @@
 import numpy as np
 from astropy.table import Table
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
-from gammapy.visualization import plot_contour_line
-from gammapy.visualization import plot_theta_squared_table
+from gammapy.visualization import plot_contour_line, plot_theta_squared_table
 
 
 @requires_dependency("matplotlib")
@@ -31,7 +30,7 @@ def test_plot_theta2_distribution():
         "excess",
         "excess_errp",
         "excess_errn",
-        "sqrt_ts"
+        "sqrt_ts",
     ]:
         table[column] = [1, 1]
 

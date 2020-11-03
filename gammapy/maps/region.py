@@ -12,7 +12,7 @@ from gammapy.utils.regions import (
     make_region,
 )
 from .core import MapCoord
-from .geom import Geom, MapAxis, MapAxes, pix_tuple_to_idx
+from .geom import Geom, MapAxes, MapAxis, pix_tuple_to_idx
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -141,14 +141,14 @@ class RegionGeom(Geom):
         coord : `~MapCoord`
             Map coordinate object.
         """
-        #TODO: support mode=edges?
+        # TODO: support mode=edges?
         cdict = {}
         cdict["skycoord"] = self.center_skydir.reshape((1, 1))
 
         if self.axes is not None:
             coords = []
             for ax in self.axes:
-                coords.append(ax.center) #.reshape((-1, 1, 1)))
+                coords.append(ax.center)  # .reshape((-1, 1, 1)))
 
             coords = np.meshgrid(*coords)
             for idx, ax in enumerate(self.axes):
@@ -174,7 +174,7 @@ class RegionGeom(Geom):
         return solid_angle.to("sr")
 
     def bin_volume(self):
-        bin_volume = self.solid_angle()*np.ones(self.data_shape)
+        bin_volume = self.solid_angle() * np.ones(self.data_shape)
 
         for idx, ax in enumerate(self.axes):
             shape = self.ndim * [1]
@@ -228,9 +228,7 @@ class RegionGeom(Geom):
         return tuple(idxs)
 
     def coord_to_pix(self, coords):
-        coords = MapCoord.create(
-            coords, frame=self.frame, axis_names=self.axes.names
-        )
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
         if self.region is None:
             pix = (0, 0)

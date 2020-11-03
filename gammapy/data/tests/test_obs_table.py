@@ -305,7 +305,6 @@ def test_select_sky_regions():
     assert len(obs_table) == 30
 
 
-
 @requires_data()
 def test_observation_table_checker():
     path = "$GAMMAPY_DATA/cta-1dc/index/gps/obs-index.fits.gz"

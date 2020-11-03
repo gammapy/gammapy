@@ -23,6 +23,7 @@ class PhaseBackgroundMaker(Maker):
     off_phase : `tuple` or list of tuples
         off-phase defined by the two edges of each interval (edges are excluded)
     """
+
     tag = "PhaseBackgroundMaker"
 
     def __init__(self, on_phase, off_phase):

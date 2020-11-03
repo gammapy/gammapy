@@ -13,11 +13,11 @@ from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
+    FoVBackgroundModel,
     GaussianSpatialModel,
     LightCurveTemplateTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
-    FoVBackgroundModel,
 )
 from gammapy.utils.testing import requires_data
 
@@ -46,7 +46,7 @@ def get_model():
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         temporal_model=temporal_model,
-        name="test-source"
+        name="test-source",
     )
 
 
@@ -63,11 +63,11 @@ def dataset():
     geom_true = geom.copy()
     geom_true.axes[0].name = "energy_true"
 
-    dataset = get_map_dataset(
-        geom=geom, geom_etrue=geom_true, edisp="edispmap"
-    )
+    dataset = get_map_dataset(geom=geom, geom_etrue=geom_true, edisp="edispmap")
 
-    dataset.gti = GTI.create(start=0 * u.s, stop=1000 * u.s, reference_time="2000-01-01")
+    dataset.gti = GTI.create(
+        start=0 * u.s, stop=1000 * u.s, reference_time="2000-01-01"
+    )
 
     bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
     dataset.models = [get_model(), bkg_model]

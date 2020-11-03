@@ -95,7 +95,9 @@ class ExcessProfileEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
 
-        self.energy_edges = u.Quantity(energy_edges) if energy_edges is not None else None
+        self.energy_edges = (
+            u.Quantity(energy_edges) if energy_edges is not None else None
+        )
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel()

@@ -1,30 +1,30 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import operator
 import pytest
 import numpy as np
-import operator
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
-    EBLAbsorptionNormSpectralModel,
-    ConstantSpectralModel,
-    CompoundSpectralModel,
-    ExpCutoffPowerLaw3FGLSpectralModel,
-    ExpCutoffPowerLawSpectralModel,
-    ExpCutoffPowerLawNormSpectralModel,
-    GaussianSpectralModel,
-    LogParabolaSpectralModel,
-    LogParabolaNormSpectralModel,
-    NaimaSpectralModel,
-    PowerLaw2SpectralModel,
-    PowerLawSpectralModel,
-    PowerLawNormSpectralModel,
     BrokenPowerLawSpectralModel,
+    CompoundSpectralModel,
+    ConstantSpectralModel,
+    EBLAbsorptionNormSpectralModel,
+    ExpCutoffPowerLaw3FGLSpectralModel,
+    ExpCutoffPowerLawNormSpectralModel,
+    ExpCutoffPowerLawSpectralModel,
+    GaussianSpectralModel,
+    LogParabolaNormSpectralModel,
+    LogParabolaSpectralModel,
+    NaimaSpectralModel,
+    PiecewiseNormSpectralModel,
+    PowerLaw2SpectralModel,
+    PowerLawNormSpectralModel,
+    PowerLawSpectralModel,
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpectralModel,
-    PiecewiseNormSpectralModel,
 )
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -333,10 +333,14 @@ def test_models(spectrum):
     energy_min = 1 * u.TeV
     energy_max = 10 * u.TeV
     assert_quantity_allclose(
-        model.integral(energy_min=energy_min, energy_max=energy_max), spectrum["integral_1_10TeV"], rtol=1e-5
+        model.integral(energy_min=energy_min, energy_max=energy_max),
+        spectrum["integral_1_10TeV"],
+        rtol=1e-5,
     )
     assert_quantity_allclose(
-        model.energy_flux(energy_min=energy_min, energy_max=energy_max), spectrum["eflux_1_10TeV"], rtol=1e-5
+        model.energy_flux(energy_min=energy_min, energy_max=energy_max),
+        spectrum["eflux_1_10TeV"],
+        rtol=1e-5,
     )
 
     if "e_peak" in spectrum:
@@ -356,7 +360,8 @@ def test_models(spectrum):
         energy_min = 0 * u.TeV
         energy_max = 10000 * u.TeV
         assert_quantity_allclose(
-            model.integral(energy_min=energy_min, energy_max=energy_max), spectrum["integral_infinity"]
+            model.integral(energy_min=energy_min, energy_max=energy_max),
+            spectrum["integral_infinity"],
         )
 
     model.to_dict()
@@ -571,10 +576,12 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(energy_min=self.energy_min, energy_max=self.energy_max), integral_1_10TeV
+            model.integral(energy_min=self.energy_min, energy_max=self.energy_max),
+            integral_1_10TeV,
         )
         assert_quantity_allclose(
-            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max), eflux_1_10TeV
+            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max),
+            eflux_1_10TeV,
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
@@ -608,10 +615,14 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(energy_min=self.energy_min, energy_max=self.energy_max), integral_1_10TeV, rtol=1e-5
+            model.integral(energy_min=self.energy_min, energy_max=self.energy_max),
+            integral_1_10TeV,
+            rtol=1e-5,
         )
         assert_quantity_allclose(
-            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max), eflux_1_10TeV, rtol=1e-5
+            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max),
+            eflux_1_10TeV,
+            rtol=1e-5,
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
@@ -633,10 +644,14 @@ class TestNaimaModel:
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
         assert_quantity_allclose(
-            model.integral(energy_min=self.energy_min, energy_max=self.energy_max), integral_1_10TeV, rtol=1e-5
+            model.integral(energy_min=self.energy_min, energy_max=self.energy_max),
+            integral_1_10TeV,
+            rtol=1e-5,
         )
         assert_quantity_allclose(
-            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max), eflux_1_10TeV, rtol=1e-5
+            model.energy_flux(energy_min=self.energy_min, energy_max=self.energy_max),
+            eflux_1_10TeV,
+            rtol=1e-5,
         )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape

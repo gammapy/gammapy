@@ -3,11 +3,11 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.datasets import Datasets, MapDatasetOnOff, MapDataset
+from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.estimators import ASmoothMapEstimator
-from gammapy.maps import Map, WcsNDMap, MapAxis
-from gammapy.utils.testing import requires_data
+from gammapy.maps import Map, MapAxis, WcsNDMap
 from gammapy.modeling.models import BackgroundModel
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
@@ -28,10 +28,7 @@ def input_dataset():
     filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
     filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
 
-    datasets = Datasets.read(
-        filename=filename,
-        filename_models=filename_models
-    )
+    datasets = Datasets.read(filename=filename, filename_models=filename_models)
 
     dataset = datasets[0]
     dataset.psf = None

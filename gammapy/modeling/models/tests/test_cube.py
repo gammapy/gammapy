@@ -3,29 +3,29 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
-    SpatialModel,
     BackgroundModel,
+    CompoundSpectralModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
-    PowerLawSpectralModel,
     PowerLawNormSpectralModel,
-    TemplateSpatialModel,
-    CompoundSpectralModel,
+    PowerLawSpectralModel,
     SkyModel,
+    SpatialModel,
+    TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
-from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
-from gammapy.modeling import Parameter
-from astropy.coordinates.angle_utilities import angular_separation
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -96,9 +96,7 @@ def background(geom):
 def edisp(geom, geom_true):
     e_reco = geom.axes["energy"].edges
     e_true = geom_true.axes["energy_true"].edges
-    return EDispKernel.from_diagonal_response(
-        energy_true=e_true, energy=e_reco
-    )
+    return EDispKernel.from_diagonal_response(energy_true=e_true, energy=e_reco)
 
 
 @pytest.fixture(scope="session")
@@ -454,14 +452,14 @@ class Test_template_cube_MapEvaluator:
         out = diffuse_evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.606345e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.83018e+10, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.83018e10, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.106403e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 8.778828e+09, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=1e-5)
 
 
 class TestSkyModelMapEvaluator:

@@ -2,14 +2,14 @@
 import collections
 import logging
 import numpy as np
-from regions import CircleSkyRegion
+from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.units import Quantity, Unit
-from astropy import units as u
-from gammapy.maps import MapAxis, MapCoord, WcsNDMap, RegionGeom
+from regions import CircleSkyRegion
+from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.regions import make_region
 from gammapy.utils.scripts import make_path
@@ -454,9 +454,7 @@ class EventList:
         offset_bounds = np.linspace(0, offset_max.deg, 30)
 
         counts = np.histogram2d(
-            x=self.energy.value,
-            y=offset.deg,
-            bins=(energy_bounds, offset_bounds),
+            x=self.energy.value, y=offset.deg, bins=(energy_bounds, offset_bounds),
         )[0]
 
         ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
@@ -683,7 +681,7 @@ class EventList:
                 "npix": (360, 180),
                 "binsz": 1.0,
                 "proj": "AIT",
-                "frame": "galactic"
+                "frame": "galactic",
             }
         else:
             opts = {

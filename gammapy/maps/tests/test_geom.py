@@ -368,7 +368,8 @@ def test_group_table_basic(energy_axis_ref):
 
 
 @pytest.mark.parametrize(
-    "energy_edges", [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV]
+    "energy_edges",
+    [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
 )
 def test_group_tablenergy_edges(energy_axis_ref, energy_edges):
     groups = energy_axis_ref.group_table(energy_edges)
@@ -424,6 +425,6 @@ def test_map_axis_single_bin():
 
 
 def test_map_axis_aligned():
-    ax1 = MapAxis([1, 2, 3], interp='lin', node_type='edges')
-    ax2 = MapAxis([1.5, 2.5], interp='log', node_type='center')
+    ax1 = MapAxis([1, 2, 3], interp="lin", node_type="edges")
+    ax2 = MapAxis([1.5, 2.5], interp="log", node_type="center")
     assert not ax1.is_aligned(ax2)

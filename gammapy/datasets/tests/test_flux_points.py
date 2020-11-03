@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from astropy.table import Table
 from numpy.testing import assert_allclose
+from astropy.table import Table
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
@@ -14,12 +14,14 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def fit(dataset):
     return Fit([dataset])
 
+
 @pytest.fixture()
 def test_meta_table(dataset):
     meta_table = dataset.meta_table
     assert meta_table["TELESCOP"] == "CTA"
     assert meta_table["OBS_ID"] == "0001"
     assert meta_table["INSTRUME"] == "South_Z20_50h"
+
 
 @pytest.fixture()
 def dataset():
@@ -59,7 +61,7 @@ def test_flux_point_dataset_serialization(tmp_path):
 
     datasets = Datasets.read(
         filename=tmp_path / "tmp_datasets.yaml",
-        filename_models=tmp_path / "tmp_models.yaml"
+        filename_models=tmp_path / "tmp_models.yaml",
     )
 
     new_dataset = datasets[0]

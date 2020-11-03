@@ -190,6 +190,7 @@ class DatasetModels(collections.abc.Sequence):
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models
     """
+
     def __init__(self, models=None):
         if models is None:
             models = []
@@ -477,13 +478,15 @@ class DatasetModels(collections.abc.Sequence):
             selection = True
 
             if dataset_name:
-                selection &= model.datasets_names is None or dataset_name in model.datasets_names
+                selection &= (
+                    model.datasets_names is None or dataset_name in model.datasets_names
+                )
 
             if tag:
-                selection &= (tag in model.tag)
+                selection &= tag in model.tag
 
             if name_substring:
-                selection &= (name_substring in model.name)
+                selection &= name_substring in model.name
 
             if selection:
                 models.append(model)
@@ -499,6 +502,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models
     """
+
     def __delitem__(self, key):
         del self._models[self.index(key)]
 
@@ -515,4 +519,3 @@ class Models(DatasetModels, collections.abc.MutableSequence):
             raise (ValueError("Model names must be unique"))
 
         self._models.insert(idx, model)
-

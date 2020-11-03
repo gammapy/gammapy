@@ -5,7 +5,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF
@@ -31,6 +31,7 @@ class PSFKing:
     sigma : `~astropy.coordinates.Angle`
         PSF parameter (2D)
     """
+
     tag = "psf_king"
 
     def __init__(
@@ -100,8 +101,12 @@ class PSFKing:
         table : `~astropy.table.Table`
             Table King PSF info.
         """
-        energy_axis_true = MapAxis.from_table(table, column_prefix="ENERG", format="gadf-dl3")
-        offset_axis = MapAxis.from_table(table, column_prefix="THETA", format="gadf-dl3")
+        energy_axis_true = MapAxis.from_table(
+            table, column_prefix="ENERG", format="gadf-dl3"
+        )
+        offset_axis = MapAxis.from_table(
+            table, column_prefix="THETA", format="gadf-dl3"
+        )
 
         gamma = table["GAMMA"].quantity[0]
         sigma = table["SIGMA"].quantity[0]
@@ -267,5 +272,5 @@ class PSFKing:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
-            psf_value=psf_value
+            psf_value=psf_value,
         )

@@ -506,7 +506,13 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     """
 
     _energy_edges = u.Quantity([100, 300, 1000, 3000, 10000, 100000], "MeV")
-    _energy_edges_suffix = ["100_300", "300_1000", "1000_3000", "3000_10000", "10000_100000"]
+    _energy_edges_suffix = [
+        "100_300",
+        "300_1000",
+        "1000_3000",
+        "3000_10000",
+        "10000_100000",
+    ]
     energy_range = u.Quantity([100, 100000], "MeV")
     """Energy range used for the catalog.
 

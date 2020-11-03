@@ -6,7 +6,6 @@ from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from .core import Estimator
 
-
 __all__ = ["SensitivityEstimator"]
 
 
@@ -71,8 +70,12 @@ class SensitivityEstimator(Estimator):
         excess_counts = stat.n_sig_matching_significance(self.n_sigma)
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
-        bkg_syst_limited = excess_counts < self.bkg_syst_fraction * dataset.background.data
-        excess_counts[bkg_syst_limited] = self.bkg_syst_fraction * dataset.background.data[bkg_syst_limited]
+        bkg_syst_limited = (
+            excess_counts < self.bkg_syst_fraction * dataset.background.data
+        )
+        excess_counts[bkg_syst_limited] = (
+            self.bkg_syst_fraction * dataset.background.data[bkg_syst_limited]
+        )
         excess = Map.from_geom(geom=dataset._geom, data=excess_counts)
         return excess
 
@@ -108,7 +111,9 @@ class SensitivityEstimator(Estimator):
         criterion = np.chararray(excess.shape, itemsize=12)
         criterion[is_gamma_limited] = "gamma"
         criterion[is_bkg_syst_limited] = "bkg"
-        criterion[~np.logical_or(is_gamma_limited, is_bkg_syst_limited)] = "significance"
+        criterion[
+            ~np.logical_or(is_gamma_limited, is_bkg_syst_limited)
+        ] = "significance"
         return criterion
 
     def run(self, dataset):
@@ -127,7 +132,9 @@ class SensitivityEstimator(Estimator):
         energy = dataset._geom.axes["energy"].center
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
-        criterion = self._get_criterion(excess.data.squeeze(), dataset.background.data.squeeze())
+        criterion = self._get_criterion(
+            excess.data.squeeze(), dataset.background.data.squeeze()
+        )
 
         return Table(
             [

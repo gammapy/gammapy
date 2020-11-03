@@ -10,18 +10,22 @@ from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel
-from gammapy.irf.edisp_map import EDispMap, EDispKernelMap
+from gammapy.irf.edisp_map import EDispKernelMap, EDispMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
-from gammapy.modeling.models import (
-    BackgroundModel,
-    DatasetModels,
+from gammapy.modeling.models import BackgroundModel, DatasetModels
+from gammapy.stats import (
+    CashCountsStatistic,
+    WStatCountsStatistic,
+    cash,
+    cash_sum_cython,
+    get_wstat_mu_bkg,
+    wstat,
 )
-from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic, CashCountsStatistic
+from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.utils.fits import LazyFitsData, HDULocation
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
 
@@ -138,7 +142,15 @@ class MapDataset(Dataset):
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
-    _lazy_data_members = ["counts", "exposure", "edisp", "psf", "mask_fit", "mask_safe", "background"]
+    _lazy_data_members = [
+        "counts",
+        "exposure",
+        "edisp",
+        "psf",
+        "mask_fit",
+        "mask_safe",
+        "background",
+    ]
 
     def __init__(
         self,
@@ -194,7 +206,9 @@ class MapDataset(Dataset):
         str_ += "\t{:32}: {{excess:.2f}}\n\n".format("Total excess counts")
 
         str_ += "\t{:32}: {{npred:.2f}}\n".format("Predicted counts")
-        str_ += "\t{:32}: {{npred_background:.2f}}\n".format("Predicted background counts")
+        str_ += "\t{:32}: {{npred_background:.2f}}\n".format(
+            "Predicted background counts"
+        )
         str_ += "\t{:32}: {{npred_signal:.2f}}\n\n".format("Predicted excess counts")
 
         str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
@@ -205,7 +219,9 @@ class MapDataset(Dataset):
 
         # likelihood section
         str_ += "\t{:32}: {{stat_type}}\n".format("Fit statistic type")
-        str_ += "\t{:32}: {{stat_sum:.2f}}\n\n".format("Fit statistic value (-2 log(L))")
+        str_ += "\t{:32}: {{stat_sum:.2f}}\n\n".format(
+            "Fit statistic value (-2 log(L))"
+        )
 
         info = self.info_dict()
         str_ = str_.format(**info)
@@ -354,9 +370,7 @@ class MapDataset(Dataset):
         background = self.background
 
         if self.background_model and background:
-            values = self.background_model.evaluate_geom(
-                geom=self.background.geom
-            )
+            values = self.background_model.evaluate_geom(geom=self.background.geom)
             background = background * values
 
         return background
@@ -555,7 +569,7 @@ class MapDataset(Dataset):
 
         if self.edisp:
             self.edisp.edisp_map *= self.mask_safe_edisp.data
-            #self.edisp.exposure_map *= self.mask_safe_edisp.data
+            # self.edisp.exposure_map *= self.mask_safe_edisp.data
 
     def stack(self, other):
         """Stack another dataset in place.
@@ -601,7 +615,7 @@ class MapDataset(Dataset):
 
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
-             # TODO: check whether this can be improved e.g. handling this in GTI
+            # TODO: check whether this can be improved e.g. handling this in GTI
             if "livetime" in other.exposure.meta:
                 if "livetime" in self.exposure.meta:
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
@@ -829,9 +843,7 @@ class MapDataset(Dataset):
             hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
 
         if self.background is not None:
-            hdulist += self.background.to_hdulist(hdu="background")[
-                exclude_primary
-            ]
+            hdulist += self.background.to_hdulist(hdu="background")[exclude_primary]
 
         if self.edisp is not None:
             if isinstance(self.edisp, EDispKernel):
@@ -1093,7 +1105,7 @@ class MapDataset(Dataset):
         exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
 
         if self.exposure is not None:
-            mask_exposure = (self.exposure.data > 0)
+            mask_exposure = self.exposure.data > 0
 
             if self.mask_safe is not None:
                 mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
@@ -1177,7 +1189,9 @@ class MapDataset(Dataset):
             kwargs["mask_safe"] = self.mask_safe.get_spectrum(on_region, func=np.any)
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.get_spectrum(on_region, np.sum, weights=self.mask_safe)
+            kwargs["counts"] = self.counts.get_spectrum(
+                on_region, np.sum, weights=self.mask_safe
+            )
 
         if self.stat_type == "cash" and self.background is not None:
             kwargs["background"] = self.npred_background().get_spectrum(
@@ -1363,7 +1377,9 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
         if self.background is not None:
-            kwargs["background"] = self.npred_background().pad(pad_width=pad_width, mode=mode)
+            kwargs["background"] = self.npred_background().pad(
+                pad_width=pad_width, mode=mode
+            )
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.copy()
@@ -1449,9 +1465,8 @@ class MapDataset(Dataset):
         is_normal = group["bin_type"] == "normal   "
         group = group[is_normal]
 
-        slices = {"energy": slice(
-            int(group["idx_min"][0]),
-            int(group["idx_max"][0]) + 1)
+        slices = {
+            "energy": slice(int(group["idx_min"][0]), int(group["idx_max"][0]) + 1)
         }
 
         return self.slice_by_idx(slices, name=name)
@@ -2050,9 +2065,7 @@ class MapDatasetOnOff(MapDataset):
         info["alpha"] = alpha
 
         info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"],
-            info["counts_off"],
-            acceptance / acceptance_off,
+            info["counts"], info["counts_off"], acceptance / acceptance_off,
         ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
@@ -2094,11 +2107,17 @@ class MapDatasetOnOff(MapDataset):
 
         kwargs = {}
         if self.counts_off is not None:
-           kwargs["counts_off"] = self.counts_off.get_spectrum(on_region, np.sum, weights=self.mask_safe)
+            kwargs["counts_off"] = self.counts_off.get_spectrum(
+                on_region, np.sum, weights=self.mask_safe
+            )
 
         if self.acceptance is not None:
-            kwargs["acceptance"] = self.acceptance.get_spectrum(on_region, np.mean, weights=self.mask_safe)
-            norm = self.background.get_spectrum(on_region, np.sum, weights=self.mask_safe)
+            kwargs["acceptance"] = self.acceptance.get_spectrum(
+                on_region, np.mean, weights=self.mask_safe
+            )
+            norm = self.background.get_spectrum(
+                on_region, np.sum, weights=self.mask_safe
+            )
             acceptance_off = kwargs["acceptance"] * kwargs["counts_off"] / norm
             np.nan_to_num(acceptance_off.data, copy=False)
             kwargs["acceptance_off"] = acceptance_off
@@ -2347,7 +2366,9 @@ class MapEvaluator:
 
         # define cached computations
         self._compute_npred = lru_cache()(self._compute_npred)
-        self._compute_npred_psf_after_edisp = lru_cache()(self._compute_npred_psf_after_edisp)
+        self._compute_npred_psf_after_edisp = lru_cache()(
+            self._compute_npred_psf_after_edisp
+        )
         self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_spatial = None
@@ -2493,9 +2514,7 @@ class MapEvaluator:
     def compute_flux_spectral(self):
         """Compute spectral flux"""
         energy = self.geom.axes["energy_true"].edges
-        value = self.model.spectral_model.integral(
-            energy[:-1], energy[1:],
-        )
+        value = self.model.spectral_model.integral(energy[:-1], energy[1:],)
         return value.reshape((-1, 1, 1))
 
     def compute_temporal_norm(self):

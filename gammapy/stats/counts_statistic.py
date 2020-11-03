@@ -3,13 +3,12 @@ import abc
 import numpy as np
 from scipy.optimize import brentq, newton
 from scipy.stats import chi2
-from .fit_statistics import cash, wstat, get_wstat_mu_bkg
+from .fit_statistics import cash, get_wstat_mu_bkg, wstat
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
 class CountsStatistic(abc.ABC):
-
     @property
     def ts(self):
         """Return stat difference (TS) of measured excess versus no excess."""
@@ -267,9 +266,6 @@ class WStatCountsStatistic(CountsStatistic):
             n_sig + self.mu_bkg[index], self.n_off[index], self.alpha[index], 0
         )
         stat1 = wstat(
-            n_sig + self.mu_bkg[index],
-            self.n_off[index],
-            self.alpha[index],
-            n_sig,
+            n_sig + self.mu_bkg[index], self.n_off[index], self.alpha[index], n_sig,
         )
         return np.sign(n_sig) * np.sqrt(np.clip(stat0 - stat1, 0, None)) - significance

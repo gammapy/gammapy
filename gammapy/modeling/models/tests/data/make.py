@@ -15,8 +15,8 @@ from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
-    TemplateSpatialModel,
     SkyModel,
+    TemplateSpatialModel,
 )
 
 DATA_PATH = Path("./")

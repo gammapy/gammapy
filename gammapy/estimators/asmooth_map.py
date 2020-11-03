@@ -4,11 +4,11 @@ import numpy as np
 from astropy import units as u
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDatasetOnOff, Datasets
-from gammapy.maps import WcsNDMap, Map
+from gammapy.datasets import Datasets, MapDatasetOnOff
+from gammapy.maps import Map, WcsNDMap
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
-from gammapy.modeling.models import PowerLawSpectralModel
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
@@ -123,9 +123,7 @@ class ASmoothMapEstimator(Estimator):
     @staticmethod
     def _sqrt_ts_cube(cubes, method):
         if method in {"lima"}:
-            scube = CashCountsStatistic(
-                cubes["counts"], cubes["background"]
-            ).sqrt_ts
+            scube = CashCountsStatistic(cubes["counts"], cubes["background"]).sqrt_ts
         elif method == "asmooth":
             scube = _sqrt_ts_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":

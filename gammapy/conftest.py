@@ -7,7 +7,7 @@ from astropy.tests.helper import enable_deprecations_as_exceptions
 from pytest_astropy_header.display import PYTEST_HEADER_MODULES
 
 # TODO: activate this again and handle deprecations in the code
-#enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["numpy", "astropy"])
+# enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["numpy", "astropy"])
 
 # Declare for which packages version numbers should be displayed
 # when running the tests

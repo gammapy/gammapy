@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.maps.utils import fill_poisson
-from gammapy.utils.testing import mpl_plot_check, requires_dependency, requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("healpy")
 
@@ -121,9 +121,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
 
 @requires_data()
 def test_read_fgst_exposure():
-    exposure = Map.read(
-        "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz"
-    )
+    exposure = Map.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz")
     energy_axis = exposure.geom.axes["energy_true"]
     assert energy_axis.node_type == "center"
     assert exposure.unit == "cm2 s"
@@ -319,6 +317,7 @@ def test_plot_poly():
     with mpl_plot_check():
         m.plot(method="poly")
 
+
 def test_hpxndmap_resample_axis():
     axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
     axis_2 = MapAxis.from_edges([1, 2, 3, 4], name="test-2")
@@ -330,7 +329,7 @@ def test_hpxndmap_resample_axis():
     new_axis = MapAxis.from_edges([2, 3, 5], name="test-1")
     m2 = m.resample_axis(axis=new_axis)
     assert m2.data.shape == (3, 2, 3072)
-    assert_allclose(m2.data[0,:,0], [1,2])
+    assert_allclose(m2.data[0, :, 0], [1, 2])
 
     # Test without all interval covered
     new_axis = MapAxis.from_edges([1.7, 4], name="test-1")

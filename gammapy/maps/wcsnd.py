@@ -7,9 +7,9 @@ import scipy.ndimage
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from regions import RectangleSkyRegion, PointSkyRegion
+from astropy.io import fits
+from regions import PointSkyRegion, RectangleSkyRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -18,7 +18,6 @@ from .geom import MapCoord, pix_tuple_to_idx
 from .regionnd import RegionGeom, RegionNDMap
 from .utils import INVALID_INDEX, interp_to_order
 from .wcsmap import WcsGeom, WcsMap
-
 
 __all__ = ["WcsNDMap"]
 
@@ -220,7 +219,6 @@ class WcsNDMap(WcsMap):
     def set_by_idx(self, idx, vals):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
-
 
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         if np.isscalar(pad_width):
@@ -534,11 +532,7 @@ class WcsNDMap(WcsMap):
             if not self.geom == weights.geom:
                 raise ValueError("Incompatible spatial geoms between map and weights")
 
-        geom = RegionGeom(
-            region=region,
-            axes=self.geom.axes,
-            wcs=self.geom.wcs
-        )
+        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
 
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
@@ -549,7 +543,9 @@ class WcsNDMap(WcsMap):
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
 
             if weights is not None:
-                weights_cutout = weights.cutout(position=geom.center_skydir, width=geom.width)
+                weights_cutout = weights.cutout(
+                    position=geom.center_skydir, width=geom.width
+                )
                 cutout.data *= weights_cutout.data
 
             mask = cutout.geom.to_image().region_mask([region])
@@ -580,7 +576,9 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
-        has_energy_axis = ("energy" in self.geom.axes.names) ^ ("energy_true" in self.geom.axes.names)
+        has_energy_axis = ("energy" in self.geom.axes.names) ^ (
+            "energy_true" in self.geom.axes.names
+        )
 
         if not has_energy_axis:
             raise ValueError("Energy axis required")
@@ -641,7 +639,9 @@ class WcsNDMap(WcsMap):
 
         if len(shape_axes_kernel) > 0:
             if not geom.shape_axes == shape_axes_kernel:
-                raise ValueError(f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}")
+                raise ValueError(
+                    f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}"
+                )
 
         if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
@@ -748,4 +748,3 @@ class WcsNDMap(WcsMap):
         cdict = OrderedDict(zip(axes_names, coords))
 
         return MapCoord.create(cdict, frame=self.geom.frame)
-

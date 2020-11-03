@@ -103,6 +103,7 @@ class MapAxes(Sequence):
     axes : list of `MapAxis`
         List of map axis objects.
     """
+
     def __init__(self, axes):
         unique_names = []
         for ax in axes:
@@ -195,8 +196,7 @@ class MapAxes(Sequence):
         groups = groups[groups["bin_type"] == "normal   "]
 
         edges = edges_from_lo_hi(
-            groups[axis.name + "_min"].quantity,
-            groups[axis.name + "_max"].quantity,
+            groups[axis.name + "_min"].quantity, groups[axis.name + "_max"].quantity,
         )
 
         axis_resampled = MapAxis.from_edges(
@@ -780,7 +780,14 @@ class MapAxis:
 
     @classmethod
     def from_energy_bounds(
-        cls, energy_min, energy_max, nbin, unit=None, per_decade=False, name=None, node_type="edges"
+        cls,
+        energy_min,
+        energy_max,
+        nbin,
+        unit=None,
+        per_decade=False,
+        name=None,
+        node_type="edges",
     ):
         """Make an energy axis.
 
@@ -1227,7 +1234,9 @@ class MapAxis:
             nbin = self.nbin / factor
 
             if np.mod(nbin, 1) > 0:
-                raise ValueError(f"Number of {self.name} bins is not divisible by {factor}")
+                raise ValueError(
+                    f"Number of {self.name} bins is not divisible by {factor}"
+                )
 
             edges = self.edges[::factor]
             return self.from_edges(edges, name=self.name, interp=self.interp)
@@ -1235,7 +1244,9 @@ class MapAxis:
             nbin = (self.nbin - 1) / factor
 
             if np.mod(nbin, 1) > 0:
-                raise ValueError(f"Number of {self.name} bins - 1 is not divisible by {factor}")
+                raise ValueError(
+                    f"Number of {self.name} bins - 1 is not divisible by {factor}"
+                )
 
             nodes = self.center[::factor]
             return self.from_nodes(nodes, name=self.name, interp=self.interp)
@@ -1371,13 +1382,17 @@ class MapAxis:
         if format in ["ogip", "fgst-ccube"]:
             energy_min = table["E_MIN"].quantity
             energy_max = table["E_MAX"].quantity
-            energy_edges = np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            energy_edges = (
+                np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            )
             axis = cls.from_edges(energy_edges, name="energy", interp="log")
 
         elif format == "ogip-arf":
             energy_min = table["ENERG_LO"].quantity
             energy_max = table["ENERG_HI"].quantity
-            energy_edges = np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            energy_edges = (
+                np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            )
             axis = cls.from_edges(energy_edges, name="energy_true", interp="log")
 
         elif format in ["fgst-template", "fgst-bexpcube"]:
@@ -1388,7 +1403,9 @@ class MapAxis:
                     break
 
             nodes = table[tag].data
-            axis = cls.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
+            axis = cls.from_nodes(
+                nodes=nodes, name="energy_true", unit="MeV", interp="log"
+            )
 
         elif format == "gadf":
             axcols = table.meta.get("AXCOLS{}".format(idx + 1))

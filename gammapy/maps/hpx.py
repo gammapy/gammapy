@@ -6,13 +6,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
-from .geom import (
-    Geom,
-    MapCoord,
-    MapAxes,
-    pix_tuple_to_idx,
-    skycoord_to_lonlat,
-)
+from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
 

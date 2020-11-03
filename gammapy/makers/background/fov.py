@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
 import logging
-from gammapy.maps import Map
-from gammapy.modeling.models import FoVBackgroundModel, Model
-from gammapy.modeling import Fit
 from gammapy.datasets import Datasets
-
+from gammapy.maps import Map
+from gammapy.modeling import Fit
+from gammapy.modeling.models import FoVBackgroundModel, Model
 from ..core import Maker
 
 __all__ = ["FoVBackgroundMaker"]
@@ -37,7 +36,9 @@ class FoVBackgroundMaker(Maker):
 
     tag = "FoVBackgroundMaker"
 
-    def __init__(self, method="scale", exclusion_mask=None, spectral_model_tag="pl-norm"):
+    def __init__(
+        self, method="scale", exclusion_mask=None, spectral_model_tag="pl-norm"
+    ):
         if method in ["fit", "scale"]:
             self.method = method
         else:
@@ -64,11 +65,12 @@ class FoVBackgroundMaker(Maker):
             Map dataset including
 
         """
-        spectral_model = Model.create(tag=self.spectral_model_tag, model_type="spectral")
+        spectral_model = Model.create(
+            tag=self.spectral_model_tag, model_type="spectral"
+        )
 
         bkg_model = FoVBackgroundModel(
-            dataset_name=dataset.name,
-            spectral_model=spectral_model.copy()
+            dataset_name=dataset.name, spectral_model=spectral_model.copy()
         )
 
         if dataset.models is None:

@@ -7,8 +7,8 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     GaussianSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.testing import requires_data
@@ -120,7 +120,6 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
 
 
-
 def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     exposure = simple_dataset_on_off.exposure
     exposure.data += 1e6
@@ -129,9 +128,7 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     simple_dataset_on_off.exposure = None
 
     estimator = ExcessMapEstimator(
-        0.11 * u.deg,
-        selection_optional=None,
-        energy_edges=[0.1, 1, 10]*u.TeV,
+        0.11 * u.deg, selection_optional=None, energy_edges=[0.1, 1, 10] * u.TeV,
     )
     result = estimator.run(simple_dataset_on_off)
 
@@ -144,7 +141,7 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
 
     # Test with exposure
     simple_dataset_on_off.exposure = exposure
-    estimator_image = ExcessMapEstimator(0.11 * u.deg, energy_edges=[0.1, 1]*u.TeV)
+    estimator_image = ExcessMapEstimator(0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV)
 
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)

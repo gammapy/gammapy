@@ -6,7 +6,7 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .irf_map import IRFMap
 from .psf_kernel import PSFKernel
-from .psf_table import EnergyDependentTablePSF,TablePSF
+from .psf_table import EnergyDependentTablePSF, TablePSF
 
 __all__ = ["PSFMap"]
 
@@ -65,6 +65,7 @@ class PSFMap(IRFMap):
         # Write map to disk
         psf_map.write('psf_map.fits')
     """
+
     tag = "psf_map"
     _hdu_name = "psf"
 
@@ -136,7 +137,7 @@ class PSFMap(IRFMap):
             energy_axis_true=self.psf_map.geom.axes["energy_true"],
             rad_axis=self.psf_map.geom.axes["rad"],
             psf_value=psf_values,
-            exposure=exposure
+            exposure=exposure,
         )
 
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
@@ -167,7 +168,7 @@ class PSFMap(IRFMap):
 
         if max_radius is None:
             max_radius = np.max(table_psf.rad_axis.center)
-            min_radius_geom = np.min(geom.width) / 2.
+            min_radius_geom = np.min(geom.width) / 2.0
             max_radius = min(max_radius, min_radius_geom)
 
         return PSFKernel.from_table_psf(table_psf, geom, max_radius, factor)
@@ -280,14 +281,17 @@ class PSFMap(IRFMap):
         """
         if geom is None:
             geom = WcsGeom.create(
-                npix=(2, 1), proj="CAR", binsz=180, axes=[table_psf.rad_axis, table_psf.energy_axis_true]
+                npix=(2, 1),
+                proj="CAR",
+                binsz=180,
+                axes=[table_psf.rad_axis, table_psf.energy_axis_true],
             )
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf._interpolate(
-            (coords["energy_true"], coords["rad"])
-        ).to_value("sr-1")
+        data = table_psf._interpolate((coords["energy_true"], coords["rad"])).to_value(
+            "sr-1"
+        )
         psf_map = Map.from_geom(geom, data=data, unit="sr-1")
 
         geom_exposure = geom.squash(axis_name="rad")
@@ -335,21 +339,25 @@ class PSFMap(IRFMap):
 
         if np.size(sigma) == 1:
             # same width for all energies
-            tablepsf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
+            tablepsf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
             energytable_temp = np.tile(tablepsf.psf_value, (tableshape[0], 1))
         elif np.size(sigma) == np.size(energy):
             # one width per energy
-            energytable_temp = np.zeros(tableshape)*u.sr**-1
+            energytable_temp = np.zeros(tableshape) * u.sr ** -1
             for idx in np.arange(tableshape[0]):
-                energytable_temp[idx, :] = TablePSF.from_shape(shape='gauss', width=sigma[idx], rad=rad).psf_value
+                energytable_temp[idx, :] = TablePSF.from_shape(
+                    shape="gauss", width=sigma[idx], rad=rad
+                ).psf_value
         else:
-            raise AssertionError('There need to be the same number of sigma values as energies')
+            raise AssertionError(
+                "There need to be the same number of sigma values as energies"
+            )
 
         table_psf = EnergyDependentTablePSF(
             energy_axis_true=energy_axis_true,
             rad_axis=rad_axis,
             exposure=None,
-            psf_value=energytable_temp
+            psf_value=energytable_temp,
         )
         return cls.from_energy_dependent_table_psf(table_psf)
 
@@ -378,7 +386,9 @@ class PSFMap(IRFMap):
             spectrum = PowerLawSpectralModel(index=2.0)
 
         exp_weighed = _map_spectrum_weight(self.exposure_map, spectrum)
-        exposure = exp_weighed.sum_over_axes(axes_names=["energy_true"], keepdims=keepdims)
+        exposure = exp_weighed.sum_over_axes(
+            axes_names=["energy_true"], keepdims=keepdims
+        )
 
         psf_data = exp_weighed.data * self.psf_map.data / exposure.data
         psf_map = Map.from_geom(geom=self.psf_map.geom, data=psf_data, unit="sr-1")

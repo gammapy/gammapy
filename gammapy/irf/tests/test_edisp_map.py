@@ -13,7 +13,7 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.regions import make_region
 
 
@@ -29,9 +29,7 @@ def fake_aeff2d(area=1e6 * u.m ** 2):
     aeff_values = np.ones((4, 3)) * area
 
     return EffectiveAreaTable2D(
-        energy_axis_true=energy_axis_true,
-        offset_axis=offset_axis,
-        data=aeff_values,
+        energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=aeff_values,
     )
 
 

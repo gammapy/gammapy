@@ -7,15 +7,15 @@ from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.irf import EffectiveAreaTable, load_cta_irfs, EDispKernelMap
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    FoVBackgroundModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -58,8 +58,7 @@ def simulate_spectrum_dataset(model, random_state=0):
 
     dataset.models = model
     dataset.fake(
-        random_state=random_state,
-        npred_background=bkg_npred,
+        random_state=random_state, npred_background=bkg_npred,
     )
     return dataset
 
@@ -69,7 +68,9 @@ def create_fpe(model):
     dataset = simulate_spectrum_dataset(model)
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
-    fpe = FluxPointsEstimator(energy_edges=energy_edges, norm_n_values=11, source="source")
+    fpe = FluxPointsEstimator(
+        energy_edges=energy_edges, norm_n_values=11, source="source"
+    )
     datasets = [dataset]
     return datasets, fpe
 
@@ -115,7 +116,9 @@ def fpe_map_pwl():
 
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
-    fpe = FluxPointsEstimator(energy_edges=energy_edges, norm_n_values=3, source="source")
+    fpe = FluxPointsEstimator(
+        energy_edges=energy_edges, norm_n_values=3, source="source"
+    )
     return datasets, fpe
 
 
@@ -228,7 +231,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, [1.628530e+02, 1.436323e-01, 2.007461e+03], rtol=1e-2)
+        assert_allclose(actual, [1.628530e02, 1.436323e-01, 2.007461e03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")

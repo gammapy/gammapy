@@ -1,15 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
 import numpy as np
-from astropy.coordinates import SkyCoord, SkyOffsetFrame
 import astropy.units as u
+from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 import gammapy
 from gammapy.data import EventList
 from gammapy.maps import MapCoord
-from gammapy.modeling.models import FoVBackgroundModel, ConstantTemporalModel
+from gammapy.modeling.models import ConstantTemporalModel, FoVBackgroundModel
 from gammapy.utils.random import get_random_state
-
 
 __all__ = ["MapDatasetEventSampler"]
 
