@@ -50,14 +50,17 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 
     result = estimator.run(fermi_datasets)
 
-    assert_allclose(result["norm"], 1.003784, atol=1e-3)
-    assert_allclose(result["ts"], 28086.565, atol=1e-3)
+    assert_allclose(result["norm"], 0.98949, atol=1e-3)
+    assert_allclose(result["ts"], 25082.190245, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
     assert_allclose(result["norm_errn"], 0.0199, atol=1e-3)
     assert_allclose(result["norm_errp"], 0.0199, atol=1e-3)
     assert len(result["norm_scan"]) == 5
     assert_allclose(result["norm_scan"][0], 0.5)
     assert_allclose(result["norm_scan"][-1], 2)
+    assert_allclose(result["e_min"], 10 * u.GeV, atol=1e-3)
+    assert_allclose(result["e_max"], 83.255 * u.GeV, atol=1e-3)
+
 
 
 @requires_data()
@@ -72,8 +75,8 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     )
     result = estimator.run(fermi_datasets)
 
-    assert_allclose(result["norm"], 1.003784, atol=1e-3)
-    assert_allclose(result["ts"], 20896.1864, atol=1e-3)
+    assert_allclose(result["norm"], 0.989989, atol=1e-3)
+    assert_allclose(result["ts"], 18728.35303, atol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
 
 
@@ -85,12 +88,14 @@ def test_flux_estimator_1d(hess_datasets):
     )
     result = estimator.run(hess_datasets)
 
-    assert_allclose(result["norm"], 1.176789, atol=1e-3)
-    assert_allclose(result["ts"], 693.111777, atol=1e-3)
-    assert_allclose(result["norm_err"], 0.07984, atol=1e-3)
-    assert_allclose(result["norm_errn"], 0.078046, atol=1e-3)
-    assert_allclose(result["norm_errp"], 0.081665, atol=1e-3)
-    assert_allclose(result["norm_ul"], 1.431722, atol=1e-3)
+    assert_allclose(result["norm"], 1.218139, atol=1e-3)
+    assert_allclose(result["ts"], 527.492959, atol=1e-3)
+    assert_allclose(result["norm_err"], 0.095496, atol=1e-3)
+    assert_allclose(result["norm_errn"], 0.093204, atol=1e-3)
+    assert_allclose(result["norm_errp"], 0.097818, atol=1e-3)
+    assert_allclose(result["norm_ul"], 1.525773, atol=1e-3)
+    assert_allclose(result["e_min"], 1 * u.TeV, atol=1e-3)
+    assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)
 
 
 def test_flux_estimator_incorrect_energy_range():
@@ -115,9 +120,11 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     )
     result = estimator.run(datasets)
 
-    assert_allclose(result["norm"], 1.015983, atol=1e-3)
-    assert_allclose(result["ts"], 21584.092045, atol=1e-3)
-    assert_allclose(result["norm_err"], 0.01966, atol=1e-3)
+    assert_allclose(result["norm"], 1.190622, atol=1e-3)
+    assert_allclose(result["ts"], 612.500392, atol=1e-3)
+    assert_allclose(result["norm_err"], 0.090744, atol=1e-3)
+    assert_allclose(result["e_min"], 0.693145 * u.TeV, atol=1e-3)
+    assert_allclose(result["e_max"], 2 * u.TeV, atol=1e-3)
 
 
 

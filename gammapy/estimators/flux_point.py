@@ -886,13 +886,6 @@ class FluxPointsEstimator(Estimator):
         """
         result = self.estimate_counts(datasets, energy_min=energy_min, energy_max=energy_max)
 
-        datasets = datasets.slice_by_energy(energy_min=energy_min, energy_max=energy_max)
-
-        if len(datasets) > 0:
-            # TODO: refactor energy handling of FluxEstimator?
-            energy_axis = datasets[0].counts.geom.axes["energy"]
-            energy_min, energy_max = energy_axis.edges.min(), energy_axis.edges.max()
-
         fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
         result.update(fe.run(datasets=datasets))
