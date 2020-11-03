@@ -1483,6 +1483,11 @@ class MapDataset(Dataset):
                 axis=energy_axis, ufunc=np.logical_or
             )
 
+        if self.mask_fit is not None:
+            kwargs["mask_fit"] = self.mask_fit.resample_axis(
+                axis=energy_axis, ufunc=np.logical_or
+            )
+
         if self.counts is not None:
             kwargs["counts"] = self.counts.resample_axis(
                 axis=energy_axis, weights=self.mask_safe
