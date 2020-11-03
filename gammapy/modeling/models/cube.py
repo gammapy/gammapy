@@ -14,7 +14,7 @@ from .spectral import SpectralModel, PowerLawNormSpectralModel, TemplateSpectral
 from .temporal import TemporalModel
 
 
-__all__ = ["SkyModel", "FoVBackgroundModel"]
+__all__ = ["SkyModel", "FoVBackgroundModel", "BackgroundModel"]
 
 
 class SkyModel(Model):

@@ -16,7 +16,6 @@ from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import (
     BackgroundModel,
-    FoVBackgroundModel,
     DatasetModels,
 )
 from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic, CashCountsStatistic
@@ -191,8 +190,11 @@ class MapDataset(Dataset):
         str_ += "\n"
         str_ += "\t{:32}: {{name}} \n\n".format("Name")
         str_ += "\t{:32}: {{counts:.0f}} \n".format("Total counts")
-        str_ += "\t{:32}: {{npred:.2f}}\n".format("Total predicted counts")
         str_ += "\t{:32}: {{background:.2f}}\n\n".format("Total background counts")
+
+        str_ += "\t{:32}: {{npred:.2f}}\n".format("Total predicted counts")
+        str_ += "\t{:32}: {{npred_background:.2f}}\n".format("Total predicted bkg. counts")
+        str_ += "\t{:32}: {{npred_signal:.2f}}\n\n".format("Total predicted signal counts")
 
         str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
         str_ += "\t{:32}: {{exposure_max:.2e}}\n\n".format("Exposure max")
@@ -1062,7 +1064,7 @@ class MapDataset(Dataset):
 
         background = np.nan
         if self.background:
-            background = self.npred_background().data[mask].sum()
+            background = self.background.data[mask].sum()
 
         info["background"] = background
 
@@ -1074,6 +1076,18 @@ class MapDataset(Dataset):
             npred = self.npred().data[mask].sum()
 
         info["npred"] = npred
+
+        npred_background = np.nan
+        if self.background:
+            npred_background = self.npred_background().data[mask].sum()
+
+        info["npred_background"] = npred_background
+
+        npred_signal = np.nan
+        if self.models:
+            npred_signal = self.npred_signal().data[mask].sum()
+
+        info["npred_signal"] = npred_signal
 
         exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
 
