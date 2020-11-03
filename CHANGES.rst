@@ -1,7 +1,102 @@
-0.18 (unreleased)
------------------
+0.18 (Nov 4th, 2020)
+--------------------
 
-- Planned for June 2020
+- Released November 4, 2020
+- 9 contributors
+- 160 pull requests (not all listed below)
+
+**What's new**
+
+Gammapy v0.18 comes with many new features, further unified API, bug fixes
+and improved performance.
+
+For Gammapy v0.18 the handling of the instrumental background was refactored
+by introducing a ``FoVBackgroundModel`` which is specific to each ``MapDataset``.
+Instead of relying on the previous ``BackgroundModel``, which couples
+the map template and spectral parameters, the information is now split such that
+``MapDataset.background`` contains the map template and the ``FoVBackgroundModel``
+the corresponding parameters. The model corrected background can now be
+accessed via ``MapDataset.npred_background()``. By default the un-corrected
+background map is now added to the predicted counts. The consistent behaviour
+has been implemented on the ``MapDatasetOnOff``.
+
+The ``FoVBackgroundModel`` has support for a ``spectral_model`` argument, which
+allows different background corrections using different "norm" spectral models
+(see below).
+
+The definition of the quantities defined on ``MapDataset`` and ``MapDatasetOnOff``
+as well as the corresponding attributes on the ``CountsStatistics`` has been
+improved in the stats definition table :ref:`stats_notation`.
+
+Many additional methods to modify the data have been added to the ``MapDataset``.
+This includes ``.downsample()``, ``.pad()``, ``.resample_energy_axis()``, ``.slice_by_energy()``
+``.slice_by_idx()``. The models definition in the dataset is now reset consistently
+in all of the listed methods. The information returned by ``.info_dict()`` has been
+unified. The information contained in ``.meta_table`` is now handled correctly
+during stacking of datasets.
+
+
+Following the proposal in `PIG 21`_ Gammapy v0.18 comes with many improvements
+to the ``gammapy.modeling.models`` sub-package. This includes the introduction
+of "norm" spectral models, which are multiplicative models to used with spatial
+and spectral template or parametric models. Among those are a
+``PowerLawNormSpectralModel``, ``LogParabolaNormSpectralModel`` and
+``PiecewiseNormSectralModel``. The EBL absorption was refactored
+accordingly to an ``EBLAbsorptionNormSpectralModel``. A new
+``GeneralizedGaussianSpatialModel`` has been introduced. Gammapy v0.18 comes
+now with support for custom energy dependent spatial models. The ``SkyDiffuseCube``
+had been removed, the same functionality can now be achieved with the ``TemplateSpatialModel``.
+Following the proposal in `PIG 21`_, short YAML tags were introduced for
+all models. An overview of the tags can be found in a table in the linked
+PIG document.
+
+Gammpy v0.18 now supports an ``EDispKernelMap``, which stores a spatially
+dependent energy redistribution matrix. This allows to handle the safe
+energy threshold for stacked analyses correctly. The ``MapDataset.edisp``
+attribute has been changed to this class by default. The ``IRFStacker`` class has been removed.
+
+All ``Estimator`` classes support now the definition of energy bins on init. This
+means light-curves, excess maps, excess profiles and ts maps can be computed in
+energy bins with the same API.
+
+An ``Fit.stat_surface()`` method was introduce which allows to compute a
+fit statistic surface. In addition am option to store the trace of the fit was
+added. Both are demonstrated in dedicated sections in the `modeling and fitting tutorial <tutorials/modeling.html>`__
+
+Following the proposal in `PIG 19`_, the ``gammapy.time`` sub-package was removed.
+All functionality related to light curves can be found in ``gammapy.estimators``.
+The Feldman-Cousins method has been removed from the ``gammapy.stats``.
+
+Gammapy v0.18 comes with an improved performance related to caching the computation
+of predicted counts and caching of psf convolution. In Gammapy v0.18 the support
+for Numpy<1.17 had been dropped.
+
+
+**Contributors:**
+
+In alphabetical order by first name:
+
+- Atreyee Sinha
+- Axel Donath
+- Fabio Pintore
+- José Enrique Ruiz
+- Luca Giunti
+- Quentin Remy
+- Régis Terrier
+- Laura Olivera Nieto
+- Alexis de Almeida Coutinho
+
+
+
+Pull Requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy v0.18 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.18>`__.
+
+
+.. _PIG 21: https://docs.gammapy.org/dev/development/pigs/pig-021.html
 
 
 .. _gammapy_0p17_release:
