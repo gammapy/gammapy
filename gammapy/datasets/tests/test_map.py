@@ -137,7 +137,10 @@ def get_map_dataset(
     mask_fit = geom.region_mask([circle])
     mask_fit = Map.from_geom(geom, data=mask_fit)
 
+    models = FoVBackgroundModel(dataset_name=name)
+
     return MapDataset(
+        models=models,
         exposure=exposure,
         background=background,
         psf=psf,
@@ -410,7 +413,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset.write(tmp_path / "test.fits")
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
-    assert len(dataset_new.models) == 1
+
     assert dataset_new.mask.data.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)

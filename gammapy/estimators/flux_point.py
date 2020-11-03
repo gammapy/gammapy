@@ -856,7 +856,7 @@ class FluxPointsEstimator(Estimator):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = Datasets(datasets)
+        datasets = Datasets(datasets).copy()
 
         rows = []
 
@@ -865,6 +865,7 @@ class FluxPointsEstimator(Estimator):
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
+
 
         #TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
