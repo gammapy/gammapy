@@ -8,6 +8,7 @@ from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
 from .geom import MapCoord, pix_tuple_to_idx, MapAxis
+from gammapy.maps.hpx import HpxGeom
 from .utils import INVALID_VALUE
 
 __all__ = ["Map"]
@@ -476,12 +477,26 @@ class Map(abc.ABC):
         axis_self = self.geom.axes[axis.name]
         axis_resampled = geom.axes[axis.name]
 
-        indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
+        # We don't use MapAxis.coord_to_idx because is does not behave as needed with boundaries
+        coord = axis_resampled.edges.value
+        edges = axis_self.edges.value
+        indices = np.digitize(coord, edges) - 1
+
         idx = self.geom.axes.index_data(axis.name)
 
         weights = 1 if weights is None else weights.data
 
-        data = ufunc.reduceat(self.data * weights, indices=indices, axis=idx)
+        if not isinstance(self.geom, HpxGeom):
+            shape = self.geom._shape[:2]
+        else:
+            shape = (self.geom.data_shape[-1],)
+        shape += tuple([ax.nbin if ax != axis else 1 for ax in self.geom.axes])
+
+        padded_array = np.append(self.data * weights, np.zeros(shape[::-1]), axis=idx)
+
+        slices = tuple([slice(0, _) for _ in geom.data_shape])
+        data = ufunc.reduceat(padded_array, indices=indices, axis=idx)[slices]
+
         return self._init_copy(data=data, geom=geom)
 
     def slice_by_idx(self, slices, ):

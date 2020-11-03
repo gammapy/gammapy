@@ -435,6 +435,11 @@ def test_wcsndmap_resample_axis():
     assert m2.data.shape == (3, 2, 6, 7)
     assert_allclose(m2.data, 2)
 
+    # Test without all interval covered
+    new_axis = MapAxis.from_edges([2, 3], name="test-1")
+    m3 = m.resample_axis(axis=new_axis)
+    assert m3.data.shape == (3, 1, 6, 7)
+    assert_allclose(m3.data, 1)
 
 def test_wcsndmap_resample_axis_logical_and():
     axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
