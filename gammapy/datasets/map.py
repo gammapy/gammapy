@@ -1639,7 +1639,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off = np.sum(self.acceptance_off.data)
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
 
-        return str_.expandtabs(tabsize=4)
+        return str_.expandtabs(tabsize=2)
 
     @property
     def alpha(self):

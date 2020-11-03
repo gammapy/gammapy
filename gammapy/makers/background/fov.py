@@ -58,8 +58,8 @@ class FoVBackgroundMaker(Maker):
         dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
-        Parameters
-        ----------
+        Returns
+        -------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset including
 
