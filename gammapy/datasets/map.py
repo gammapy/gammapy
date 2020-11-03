@@ -16,7 +16,6 @@ from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import (
     BackgroundModel,
-    FoVBackgroundModel,
     DatasetModels,
 )
 from gammapy.stats import cash, cash_sum_cython, wstat, get_wstat_mu_bkg, WStatCountsStatistic, CashCountsStatistic
@@ -169,11 +168,6 @@ class MapDataset(Dataset):
 
         self.edisp = edisp
         self.mask_safe = mask_safe
-
-        # TODO: should we rely on pre-defined background models?
-        if models is None and background:
-            models = [FoVBackgroundModel(dataset_name=self.name)]
-
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
@@ -196,8 +190,12 @@ class MapDataset(Dataset):
         str_ += "\n"
         str_ += "\t{:32}: {{name}} \n\n".format("Name")
         str_ += "\t{:32}: {{counts:.0f}} \n".format("Total counts")
-        str_ += "\t{:32}: {{npred:.2f}}\n".format("Total predicted counts")
-        str_ += "\t{:32}: {{background:.2f}}\n\n".format("Total background counts")
+        str_ += "\t{:32}: {{background:.2f}}\n".format("Total background counts")
+        str_ += "\t{:32}: {{excess:.2f}}\n\n".format("Total excess counts")
+
+        str_ += "\t{:32}: {{npred:.2f}}\n".format("Predicted counts")
+        str_ += "\t{:32}: {{npred_background:.2f}}\n".format("Predicted background counts")
+        str_ += "\t{:32}: {{npred_signal:.2f}}\n\n".format("Predicted excess counts")
 
         str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
         str_ += "\t{:32}: {{exposure_max:.2e}}\n\n".format("Exposure max")
@@ -233,8 +231,8 @@ class MapDataset(Dataset):
         """Main analysis geometry"""
         if self.counts is not None:
             return self.counts.geom
-        elif self.background_model is not None:
-            return self.background_model.map.geom
+        elif self.background is not None:
+            return self.background.geom
         elif self.mask_safe is not None:
             return self.mask_safe.geom
         elif self.mask_fit is not None:
@@ -1067,7 +1065,7 @@ class MapDataset(Dataset):
 
         background = np.nan
         if self.background:
-            background = self.npred_background().data[mask].sum()
+            background = self.background.data[mask].sum()
 
         info["background"] = background
 
@@ -1079,6 +1077,18 @@ class MapDataset(Dataset):
             npred = self.npred().data[mask].sum()
 
         info["npred"] = npred
+
+        npred_background = np.nan
+        if self.background:
+            npred_background = self.npred_background().data[mask].sum()
+
+        info["npred_background"] = npred_background
+
+        npred_signal = np.nan
+        if self.models:
+            npred_signal = self.npred_signal().data[mask].sum()
+
+        info["npred_signal"] = npred_signal
 
         exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
 
@@ -1629,7 +1639,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off = np.sum(self.acceptance_off.data)
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
 
-        return str_.expandtabs(tabsize=4)
+        return str_.expandtabs(tabsize=2)
 
     @property
     def alpha(self):
@@ -2529,10 +2539,10 @@ class MapEvaluator:
         if isinstance(self.model, BackgroundModel):
             npred = self.model.evaluate()
         else:
-            flux_conv = self.compute_flux_psf_convolved()
+            npred = self.compute_flux_psf_convolved()
 
             if self.model.apply_irf["exposure"]:
-                npred = self.apply_exposure(flux_conv)
+                npred = self.apply_exposure(npred)
 
             if self.model.apply_irf["edisp"]:
                 npred = self.apply_edisp(npred)
@@ -2550,9 +2560,10 @@ class MapEvaluator:
         if isinstance(self.model, BackgroundModel):
             return self.model.evaluate()
 
-        flux = self.compute_flux()
+        npred = self.compute_flux()
 
-        npred = self.apply_exposure(flux)
+        if self.model.apply_irf["exposure"]:
+            npred = self.apply_exposure(npred)
 
         if self.model.apply_irf["edisp"]:
             npred = self.apply_edisp(npred)

@@ -238,28 +238,15 @@ class Datasets(collections.abc.MutableSequence):
         datasets = []
 
         for dataset in self:
-            name = f"{dataset.name}-{energy_min:.1f}-{energy_max:.1f}"
             try:
                 dataset_sliced = dataset.slice_by_energy(
                     energy_min=energy_min,
                     energy_max=energy_max,
-                    name=name,
+                    name=dataset.name,
                 )
             except ValueError:
                 log.info(f"Dataset {dataset.name} does not contribute in the energy range")
                 continue
-
-            if dataset.models:
-                # TODO: Simplify model handling!!!!
-                models = []
-
-                for model in dataset.models:
-                    if isinstance(model, FoVBackgroundModel):
-                        models.append(dataset_sliced.background_model)
-                    else:
-                        models.append(model)
-
-                dataset_sliced.models = models
 
             datasets.append(dataset_sliced)
 
@@ -372,16 +359,15 @@ class Datasets(collections.abc.MutableSequence):
         """
         path = make_path(filename).resolve()
 
-        datasets_dictlist = []
+        data = {"datasets": []}
+
         for dataset in self._datasets:
             name = dataset.name.replace(" ", "_")
             filename = f"{name}.fits"
-            dataset.write(path.parent / filename, overwrite)
-            datasets_dictlist.append(dataset.to_dict(filename=filename))
+            dataset.write(path.parent / filename, overwrite=overwrite)
+            data["datasets"].append(dataset.to_dict(filename=filename))
 
-        datasets_dict = {"datasets": datasets_dictlist}
-
-        write_yaml(datasets_dict, path, sort_keys=False)
+        write_yaml(data, path, sort_keys=False)
 
         if filename_models:
             self.models.write(

@@ -14,29 +14,10 @@ from .spectral import SpectralModel, PowerLawNormSpectralModel, TemplateSpectral
 from .temporal import TemporalModel
 
 
-class SkyModelBase(Model):
-    """Sky model base class"""
-
-    def __add__(self, other):
-        if isinstance(other, (Models, list)):
-            return Models([self, *other])
-        elif isinstance(other, (SkyModel, BackgroundModel)):
-            return Models([self, other])
-        else:
-            raise TypeError(f"Invalid type: {other!r}")
-
-    def __radd__(self, model):
-        return self.__add__(model)
-
-    def __call__(self, lon, lat, energy, time=None):
-        return self.evaluate(lon, lat, energy, time)
-
-    def evaluate_geom(self, geom, gti=None):
-        coords = geom.get_coord(frame=self.frame)
-        return self(coords.lon, coords.lat, coords["energy_true"])
+__all__ = ["SkyModel", "FoVBackgroundModel", "BackgroundModel", "create_fermi_isotropic_diffuse_model"]
 
 
-class SkyModel(SkyModelBase):
+class SkyModel(Model):
     """Sky model component.
 
     This model represents a factorised sky model.
@@ -97,20 +78,29 @@ class SkyModel(SkyModelBase):
             )
 
     def _check_unit(self):
-        from astropy.time import Time
         from gammapy.data.gti import GTI
 
         # evaluate over a test geom to check output unit
         # TODO simpler way to test this ?
-        axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy_true")
-        geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), frame="galactic", axes=[axis])
-        t_ref = Time(55555, format="mjd")
-        gti = GTI.create([1, 5] * u.day, [2, 6] * u.day, reference_time=t_ref)
+        axis = MapAxis.from_energy_bounds(
+            "0.1 TeV", "10 TeV", nbin=1, name="energy_true"
+        )
+
+        geom = WcsGeom.create(
+            skydir=self.position, npix=(2, 2), axes=[axis]
+        )
+
+        gti = GTI.create(1 * u.day, 2 * u.day)
         value = self.evaluate_geom(geom, gti)
-        if self.spatial_model is not None:
-            ref_unit = "cm-2 s-1 MeV-1 sr-1"
+
+        if self.apply_irf["exposure"]:
+            ref_unit = u.Unit("cm-2 s-1 MeV-1 sr-1")
         else:
-            ref_unit = "cm-2 s-1 MeV-1"
+            ref_unit = u.Unit("sr-1")
+
+        if self.spatial_model is None:
+            ref_unit = ref_unit / u.Unit("sr-1")
+
         if not value.unit.is_equivalent(ref_unit):
             raise ValueError(
                 f"SkyModel unit {value.unit} is not equivalent to {ref_unit}"
@@ -200,6 +190,20 @@ class SkyModel(SkyModelBase):
     @property
     def frame(self):
         return self.spatial_model.frame
+
+    def __add__(self, other):
+        if isinstance(other, (Models, list)):
+            return Models([self, *other])
+        elif isinstance(other, (SkyModel, BackgroundModel)):
+            return Models([self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+
+    def __radd__(self, model):
+        return self.__add__(model)
+
+    def __call__(self, lon, lat, energy, time=None):
+        return self.evaluate(lon, lat, energy, time)
 
     def __repr__(self):
         return (
@@ -372,7 +376,8 @@ class SkyModel(SkyModelBase):
         )
 
     def __str__(self):
-        str_ = self.__class__.__name__ + "\n\n"
+        str_ = f"{self.__class__.__name__}\n\n"
+
         str_ += "\t{:26}: {}\n".format("Name", self.name)
 
         str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
@@ -400,6 +405,41 @@ class SkyModel(SkyModelBase):
 
         str_ += "\n\n"
         return str_.expandtabs(tabsize=2)
+
+    @classmethod
+    def create(cls, spectral_model, spatial_model=None, temporal_model=None, **kwargs):
+        """Create a model instance.
+
+        Parameters
+        ----------
+        spectral_model : str
+            Tag to create spectral model
+        spatial_model : str
+            Tag to create spatial model
+        temporal_model : str
+            Tag to create temporal model
+        **kwargs : dict
+            Keyword arguments passed to `SkyModel`
+
+        Returns
+        -------
+        model : SkyModel
+            Sky model
+        """
+        spectral_model = Model.create(spectral_model, model_type="spectral")
+
+        if spatial_model:
+            spatial_model = Model.create(spatial_model, model_type="spatial")
+
+        if temporal_model:
+            temporal_model = Model.create(temporal_model, model_type="temporal")
+
+        return cls(
+            spectral_model=spectral_model,
+            spatial_model=spatial_model,
+            temporal_model=temporal_model,
+            **kwargs
+        )
 
 
 class FoVBackgroundModel(Model):
@@ -452,7 +492,8 @@ class FoVBackgroundModel(Model):
         return Parameters.from_stack(parameters)
 
     def __str__(self):
-        str_ = self.__class__.__name__ + "\n\n"
+        str_ = f"{self.__class__.__name__}\n\n"
+
         str_ += "\t{:26}: {}\n".format("Name", self.name)
         str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
         str_ += "\t{:26}: {}\n".format(

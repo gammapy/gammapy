@@ -137,16 +137,13 @@ class ExcessMapEstimator(Estimator):
         if not isinstance(dataset, MapDataset):
             raise ValueError("Unsupported dataset type")
 
-        # TODO: add support for joint excess estimate to ExcessMapEstimator?
-        datasets = Datasets(dataset)
-
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
             energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
             energy_edges = self.energy_edges
 
-        axis = MapAxis.from_edges(energy_edges, name="energy")
+        axis = MapAxis.from_energy_edges(energy_edges)
 
         resampled_dataset = dataset.resample_energy_axis(energy_axis=axis)
 

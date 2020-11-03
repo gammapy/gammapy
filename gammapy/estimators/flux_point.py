@@ -485,8 +485,8 @@ class FluxPoints:
     def _plot_get_energy_err(self):
         """Compute energy error for given sed type"""
         try:
-            energy_min = self.table["e_min"].quantity
-            energy_max = self.table["e_max"].quantity
+            energy_min = self.energy_min
+            energy_max = self.energy_max
             energy_ref = self.energy_ref
             x_err = ((energy_ref - energy_min), (energy_max - energy_ref))
         except KeyError:
@@ -613,8 +613,8 @@ class FluxPoints:
         y_err_all = self._plot_get_flux_err(sed_type)
 
         # handle energy power
-        energy_unit = self._get_y_energy_unit(y_unit)
-        y_unit = y.unit * energy_unit ** energy_power
+        energy_unit_y = self._get_y_energy_unit(y_unit)
+        y_unit = y.unit * energy_unit_y ** energy_power
         y = (y * np.power(x, energy_power)).to(y_unit)
 
         y_err, x_err = None, None
@@ -635,6 +635,7 @@ class FluxPoints:
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
 
+        print(x_err)
         ebar = ax.errorbar(
             x[~is_ul].value, y[~is_ul].value, yerr=y_err, xerr=x_err, **kwargs
         )
@@ -866,6 +867,7 @@ class FluxPointsEstimator(Estimator):
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
 
+
         #TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
@@ -885,7 +887,6 @@ class FluxPointsEstimator(Estimator):
             Dict with results for the flux point.
         """
         result = self.estimate_counts(datasets, energy_min=energy_min, energy_max=energy_max)
-
         fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
         result.update(fe.run(datasets=datasets))

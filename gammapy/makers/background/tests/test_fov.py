@@ -136,7 +136,10 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     )
 
     test_dataset = obs_dataset.copy(name="test-fov")
-    test_dataset.background_model.spectral_model.tilt.frozen = False
+
+    model = FoVBackgroundModel(dataset_name="test-fov")
+    model.spectral_model.tilt.frozen = False
+    test_dataset.models = [model]
     dataset = fov_bkg_maker.run(test_dataset)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model

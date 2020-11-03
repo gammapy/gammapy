@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
-from gammapy.modeling.models import ScaleSpectralModel
+from gammapy.modeling.models import ScaleSpectralModel, Models
 from gammapy.datasets import Datasets
 
 log = logging.getLogger(__name__)
@@ -155,8 +155,7 @@ class FluxEstimator(Estimator):
             Dict with results for the flux point.
         """
         datasets = Datasets(datasets)
-
-        model = self.get_scale_model(datasets.models)
+        models = datasets.models
 
         datasets = datasets.slice_by_energy(
             energy_min=self.energy_min, energy_max=self.energy_max
@@ -169,19 +168,21 @@ class FluxEstimator(Estimator):
         else:
             energy_min, energy_max = self.energy_min, self.energy_max
 
+        any_contribution = np.any([dataset.mask.data.any() for dataset in datasets])
+
+        model = self.get_scale_model(models)
+
         with np.errstate(invalid="ignore", divide="ignore"):
             result = self.get_reference_flux_values(
                 model.model, energy_min, energy_max
             )
 
-        any_contribution = np.any([dataset.mask.data.any() for dataset in datasets])
-
         if len(datasets) == 0 or not any_contribution:
             result.update(self.nan_result)
         else:
-            for dataset in datasets:
-                dataset.models[self.source].spectral_model = model
+            models[self.source].spectral_model = model
 
+            datasets.models = models
             result.update(self._parameter_estimator.run(datasets, model.norm))
             result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
