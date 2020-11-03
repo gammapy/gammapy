@@ -169,11 +169,6 @@ class MapDataset(Dataset):
 
         self.edisp = edisp
         self.mask_safe = mask_safe
-
-        # TODO: should we rely on pre-defined background models?
-        if models is None and background:
-            models = [FoVBackgroundModel(dataset_name=self.name)]
-
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
@@ -233,8 +228,8 @@ class MapDataset(Dataset):
         """Main analysis geometry"""
         if self.counts is not None:
             return self.counts.geom
-        elif self.background_model is not None:
-            return self.background_model.map.geom
+        elif self.background is not None:
+            return self.background.geom
         elif self.mask_safe is not None:
             return self.mask_safe.geom
         elif self.mask_fit is not None:

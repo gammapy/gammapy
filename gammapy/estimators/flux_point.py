@@ -856,7 +856,7 @@ class FluxPointsEstimator(Estimator):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = Datasets(datasets).copy()
+        datasets = Datasets(datasets)
 
         rows = []
 
@@ -885,7 +885,6 @@ class FluxPointsEstimator(Estimator):
             Dict with results for the flux point.
         """
         result = self.estimate_counts(datasets, energy_min=energy_min, energy_max=energy_max)
-
         fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
         result.update(fe.run(datasets=datasets))

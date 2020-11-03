@@ -238,28 +238,15 @@ class Datasets(collections.abc.MutableSequence):
         datasets = []
 
         for dataset in self:
-            name = f"{dataset.name}-{energy_min:.1f}-{energy_max:.1f}"
             try:
                 dataset_sliced = dataset.slice_by_energy(
                     energy_min=energy_min,
                     energy_max=energy_max,
-                    name=name,
+                    name=dataset.name,
                 )
             except ValueError:
                 log.info(f"Dataset {dataset.name} does not contribute in the energy range")
                 continue
-
-            if dataset.models:
-                # TODO: Simplify model handling!!!!
-                models = []
-
-                for model in dataset.models:
-                    if isinstance(model, FoVBackgroundModel):
-                        models.append(dataset_sliced.background_model)
-                    else:
-                        models.append(model)
-
-                dataset_sliced.models = models
 
             datasets.append(dataset_sliced)
 
