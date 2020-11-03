@@ -58,7 +58,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
 )
 """Registry of temporal models classes."""
 
-MODEL_REGISTRY = Registry([SkyModel, FoVBackgroundModel, BackgroundModel])
+MODEL_REGISTRY = Registry([SkyModel, FoVBackgroundModel])
 """Registry of model classes"""
 
 
@@ -67,10 +67,8 @@ __all__ = [
     "SPATIAL_MODEL_REGISTRY",
     "TEMPORAL_MODEL_REGISTRY",
     "SPECTRAL_MODEL_REGISTRY",
-    "SkyModelBase",
     "Models",
     "SkyModel",
-    "BackgroundModel",
     "create_crab_spectral_model",
     "create_cosmic_ray_spectral_model",
     "SpatialModel",

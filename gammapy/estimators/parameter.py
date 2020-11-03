@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from .core import Estimator

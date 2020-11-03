@@ -359,16 +359,15 @@ class Datasets(collections.abc.MutableSequence):
         """
         path = make_path(filename).resolve()
 
-        datasets_dictlist = []
+        data = {"datasets": []}
+
         for dataset in self._datasets:
             name = dataset.name.replace(" ", "_")
             filename = f"{name}.fits"
-            dataset.write(path.parent / filename, overwrite)
-            datasets_dictlist.append(dataset.to_dict(filename=filename))
+            dataset.write(path.parent / filename, overwrite=overwrite)
+            data["datasets"].append(dataset.to_dict(filename=filename))
 
-        datasets_dict = {"datasets": datasets_dictlist}
-
-        write_yaml(datasets_dict, path, sort_keys=False)
+        write_yaml(data, path, sort_keys=False)
 
         if filename_models:
             self.models.write(

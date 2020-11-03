@@ -14,29 +14,10 @@ from .spectral import SpectralModel, PowerLawNormSpectralModel, TemplateSpectral
 from .temporal import TemporalModel
 
 
-class SkyModelBase(Model):
-    """Sky model base class"""
-
-    def __add__(self, other):
-        if isinstance(other, (Models, list)):
-            return Models([self, *other])
-        elif isinstance(other, (SkyModel, BackgroundModel)):
-            return Models([self, other])
-        else:
-            raise TypeError(f"Invalid type: {other!r}")
-
-    def __radd__(self, model):
-        return self.__add__(model)
-
-    def __call__(self, lon, lat, energy, time=None):
-        return self.evaluate(lon, lat, energy, time)
-
-    def evaluate_geom(self, geom, gti=None):
-        coords = geom.get_coord(frame=self.frame)
-        return self(coords.lon, coords.lat, coords["energy_true"])
+__all__ = ["SkyModel", "FoVBackgroundModel"]
 
 
-class SkyModel(SkyModelBase):
+class SkyModel(Model):
     """Sky model component.
 
     This model represents a factorised sky model.
@@ -200,6 +181,20 @@ class SkyModel(SkyModelBase):
     @property
     def frame(self):
         return self.spatial_model.frame
+
+    def __add__(self, other):
+        if isinstance(other, (Models, list)):
+            return Models([self, *other])
+        elif isinstance(other, (SkyModel, BackgroundModel)):
+            return Models([self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+
+    def __radd__(self, model):
+        return self.__add__(model)
+
+    def __call__(self, lon, lat, energy, time=None):
+        return self.evaluate(lon, lat, energy, time)
 
     def __repr__(self):
         return (
