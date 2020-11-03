@@ -193,6 +193,12 @@ class ExcessMapEstimator(Estimator):
         bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
         excess = Map.from_geom(geom, data=counts_stat.n_sig)
 
+        if hasattr(counts_stat, "alpha"):
+            print(dataset.counts.data[:,10,10])
+            print(counts_stat.n_on[:,10,10])
+            print(counts_stat.n_off[:,10,10])
+            print(counts_stat.alpha[:,10,10])
+
         result = {"counts": n_on, "background": bkg, "excess": excess}
 
         tsmap = Map.from_geom(geom, data=counts_stat.ts)
@@ -224,7 +230,6 @@ class ExcessMapEstimator(Estimator):
             result.update({"ul": ul})
 
         # return nan values outside mask
-#        mask = mask.all(axis=0, keepdims=True)
         for key in result:
             result[key].data[~mask] = np.nan
 
