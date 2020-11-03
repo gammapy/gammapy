@@ -58,7 +58,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
 )
 """Registry of temporal models classes."""
 
-MODEL_REGISTRY = Registry([SkyModel, FoVBackgroundModel])
+MODEL_REGISTRY = Registry([SkyModel, FoVBackgroundModel, BackgroundModel])
 """Registry of model classes"""
 
 

@@ -9,12 +9,12 @@ from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.fits import LazyFitsData
 from .core import Model, Models
-from .spatial import SpatialModel, ConstantSpatialModel, TemplateSpatialModel
+from .spatial import SpatialModel, ConstantSpatialModel
 from .spectral import SpectralModel, PowerLawNormSpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
 
 
-__all__ = ["SkyModel", "FoVBackgroundModel", "BackgroundModel"]
+__all__ = ["SkyModel", "FoVBackgroundModel", "BackgroundModel", "create_fermi_isotropic_diffuse_model"]
 
 
 class SkyModel(Model):
@@ -376,8 +376,7 @@ class SkyModel(Model):
         )
 
     def __str__(self):
-        str_ = f"{self.__class__.__name__}\n"
-        str_ += "-" * len(self.__class__.__name__) + "\n\n"
+        str_ = f"{self.__class__.__name__}\n\n"
 
         str_ += "\t{:26}: {}\n".format("Name", self.name)
 
@@ -443,7 +442,6 @@ class SkyModel(Model):
         )
 
 
-
 class FoVBackgroundModel(Model):
     """Field of view background model
 
@@ -494,8 +492,7 @@ class FoVBackgroundModel(Model):
         return Parameters.from_stack(parameters)
 
     def __str__(self):
-        str_ = f"{self.__class__.__name__}\n"
-        str_ += "-" * len(self.__class__.__name__) + "\n\n"
+        str_ = f"{self.__class__.__name__}\n\n"
 
         str_ += "\t{:26}: {}\n".format("Name", self.name)
         str_ += "\t{:26}: {}\n".format("Datasets names", self.datasets_names)
