@@ -163,9 +163,11 @@ class FluxEstimator(Estimator):
         )
 
         if len(datasets) > 0:
-            # TODO: refactor energy handling of FluxEstimator?
+            # TODO: this relies on the energy binning of the first dataset
             energy_axis = datasets[0].counts.geom.axes["energy"]
             energy_min, energy_max = energy_axis.edges.min(), energy_axis.edges.max()
+        else:
+            energy_min, energy_max = self.energy_min, self.energy_max
 
         with np.errstate(invalid="ignore", divide="ignore"):
             result = self.get_reference_flux_values(
