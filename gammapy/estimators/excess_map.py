@@ -146,16 +146,6 @@ class ExcessMapEstimator(Estimator):
         else:
             energy_edges = self.energy_edges
 
-        results = []
-
-        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
-
-            result = self.estimate_excess_map(sliced_dataset)
-            results.append(result)
-
-        results_all = {}
-
         axis = MapAxis.from_edges(energy_edges, name="energy")
 
         resampled_dataset = dataset.resample_energy_axis(energy_axis=axis)
@@ -181,11 +171,12 @@ class ExcessMapEstimator(Estimator):
 
         geom = dataset.counts.geom #.squash("energy")
 
-        mask = np.ones(dataset.data_shape, dtype=bool)
-        if dataset.mask_safe:
-            mask *= dataset.mask_safe
         if self.apply_mask_fit:
-            mask *= dataset.mask_fit
+            mask = dataset.mask
+        elif dataset.mask_safe:
+            mask = dataset.mask_safe
+        else:
+            mask = np.ones(dataset.data_shape, dtype=bool)
 
         counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel, mask)
 
@@ -193,11 +184,11 @@ class ExcessMapEstimator(Estimator):
         bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
         excess = Map.from_geom(geom, data=counts_stat.n_sig)
 
-        if hasattr(counts_stat, "alpha"):
-            print(dataset.counts.data[:,10,10])
-            print(counts_stat.n_on[:,10,10])
-            print(counts_stat.n_off[:,10,10])
-            print(counts_stat.alpha[:,10,10])
+        # if hasattr(counts_stat, "alpha"):
+        #     print(dataset.counts.data[:,10,10])
+        #     print(counts_stat.n_on[:,10,10])
+        #     print(counts_stat.n_off[:,10,10])
+        #     print(counts_stat.alpha[:,10,10])
 
         result = {"counts": n_on, "background": bkg, "excess": excess}
 
