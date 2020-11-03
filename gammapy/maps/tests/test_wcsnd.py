@@ -610,6 +610,7 @@ def test_get_spectrum():
     spec = m.get_spectrum(region=region)
     assert_allclose(spec.data.squeeze(), [1.0, 1.0, 1.0])
 
+
 def test_get_spectrum_type():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
 
@@ -633,6 +634,7 @@ def test_get_spectrum_type():
     spec_bool = m_bool.get_spectrum(region=region, func=np.any)
     assert spec_bool.data.dtype == np.dtype('bool')
     assert_allclose(spec_bool.data.squeeze(), [1, 1, 1])
+
 
 def test_get_spectrum_weights():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
@@ -658,6 +660,7 @@ def test_get_spectrum_weights():
 
     with pytest.raises(ValueError):
         m_int.get_spectrum(region=region, weights=bad_weights)
+
 
 def get_npred_map():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
@@ -770,3 +773,15 @@ def test_to_cube():
     ax4 = MapAxis.from_edges([8, 9, 10], name="ax4")
     with pytest.raises(ValueError):
         m1.to_cube([ax4])
+
+
+def test_stack_unit_handling():
+    m = WcsNDMap.create(npix=(3, 3), unit="m2 s")
+    m.data += 1
+
+    m_other = WcsNDMap.create(npix=(3, 3), unit="cm2 s")
+    m_other.data += 1
+
+    m.stack(m_other)
+
+    assert_allclose(m.data, 1.0001)

@@ -345,7 +345,7 @@ class RegionNDMap(Map):
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
         """
-        data = other.data
+        data = other.quantity.to_value(self.unit)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)

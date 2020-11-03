@@ -16,9 +16,8 @@ def region_map():
         map_type="region",
         axes=[axis],
         unit="1/TeV",
-        dtype=np.int,
     )
-    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    m.data = np.arange(m.data.size, dtype=float).reshape(m.geom.data_shape)
     return m
 
 
@@ -30,9 +29,8 @@ def region_map_true():
         map_type="region",
         axes=[axis],
         unit="1/TeV",
-        dtype=np.int,
     )
-    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
+    m.data = np.arange(m.data.size, dtype=float).reshape(m.geom.data_shape)
     return m
 
 
@@ -40,9 +38,10 @@ def test_region_nd_map(region_map):
     assert_allclose(region_map.data.sum(), 15)
     assert region_map.geom.frame == "icrs"
     assert region_map.unit == "TeV-1"
-    assert region_map.data.dtype == np.int
+    assert region_map.data.dtype == float
     assert "RegionNDMap" in str(region_map)
     assert "1 / TeV" in str(region_map)
+
 
 def test_region_nd_map_sum_over_axes(region_map):
     region_map_summed = region_map.sum_over_axes()
@@ -78,6 +77,23 @@ def test_region_nd_map_misc(region_map):
     weights = Map.from_geom(region_map.geom, dtype=np.int)
     stacked.stack(region_map, weights=weights)
     assert_allclose(stacked.data.sum(), 15)
+
+
+def test_stack_differen_unit():
+    region = "icrs;circle(0, 0, 1)"
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    region_map = RegionNDMap.create(
+        axes=[axis], unit="m2 s", region=region
+    )
+    region_map.data += 1
+
+    region_map_other = RegionNDMap.create(
+        axes=[axis], unit="cm2 s", region=region
+    )
+    region_map_other.data += 1
+
+    region_map.stack(region_map_other)
+    assert_allclose(region_map.data, 1.0001)
 
 
 def test_region_nd_map_sample(region_map):

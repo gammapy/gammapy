@@ -93,32 +93,31 @@ class FluxEstimator(Estimator):
             selection_optional=self.selection_optional
         )
 
-    @property
-    def energy_ref(self):
-        """Reference energy"""
-        return np.sqrt(self.energy_min * self.energy_max)
-
-    def get_reference_flux_values(self, model):
+    @staticmethod
+    def get_reference_flux_values(model, energy_min, energy_max):
         """Get reference flux values
 
         Parameters
         ----------
         model : `SpectralModel`
             Models
+        energy_min, energy_max : `~astropy.units.Quantity`
+            Energy range
 
         Returns
         -------
         values : dict
             Dictionary with reference energies and flux values.
         """
+        energy_ref = np.sqrt(energy_min * energy_max)
         return {
-            "e_ref": self.energy_ref,
-            "e_min": self.energy_min,
-            "e_max": self.energy_max,
-            "ref_dnde": model(self.energy_ref),
-            "ref_flux": model.integral(self.energy_min, self.energy_max),
-            "ref_eflux": model.energy_flux(self.energy_min, self.energy_max),
-            "ref_e2dnde": model(self.energy_ref) * self.energy_ref ** 2,
+            "e_ref": energy_ref,
+            "e_min": energy_min,
+            "e_max": energy_max,
+            "ref_dnde": model(energy_ref),
+            "ref_flux": model.integral(energy_min, energy_max),
+            "ref_eflux": model.energy_flux(energy_min, energy_max),
+            "ref_e2dnde": model(energy_ref) * energy_ref ** 2,
         }
 
     def get_scale_model(self, models):
@@ -159,8 +158,21 @@ class FluxEstimator(Estimator):
 
         model = self.get_scale_model(datasets.models)
 
+        datasets = datasets.slice_by_energy(
+            energy_min=self.energy_min, energy_max=self.energy_max
+        )
+
+        if len(datasets) > 0:
+            # TODO: this relies on the energy binning of the first dataset
+            energy_axis = datasets[0].counts.geom.axes["energy"]
+            energy_min, energy_max = energy_axis.edges.min(), energy_axis.edges.max()
+        else:
+            energy_min, energy_max = self.energy_min, self.energy_max
+
         with np.errstate(invalid="ignore", divide="ignore"):
-            result = self.get_reference_flux_values(model.model)
+            result = self.get_reference_flux_values(
+                model.model, energy_min, energy_max
+            )
 
         any_contribution = np.any([dataset.mask.data.any() for dataset in datasets])
 
