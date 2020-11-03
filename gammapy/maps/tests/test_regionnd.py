@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapAxis, RegionNDMap
+from gammapy.maps import Map, MapAxis, RegionNDMap, RegionGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -168,3 +168,22 @@ def test_apply_edisp(region_map_true):
     assert e_reco.unit == "TeV"
     assert m.geom.axes[0].name == "energy"
     assert_allclose(e_reco[[0, -1]].value, [1, 10])
+
+def test_regionndmap_resample_axis():
+    axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
+    axis_2 = MapAxis.from_edges([1, 2, 3, 4], name="test-2")
+
+    geom = RegionGeom.create(region="icrs;circle(83.63, 21.51, 1)", axes=[axis_1, axis_2])
+    m = RegionNDMap(geom, unit="m2")
+    m.data += 1
+
+    new_axis = MapAxis.from_edges([2, 3, 5], name="test-1")
+    m2 = m.resample_axis(axis=new_axis)
+    assert m2.data.shape == (3, 2, 1, 1)
+    assert_allclose(m2.data[0,:,0,0], [1,2])
+
+    # Test without all interval covered
+    new_axis = MapAxis.from_edges([1.7, 4], name="test-1")
+    m3 = m.resample_axis(axis=new_axis)
+    assert m3.data.shape == (3, 1, 1, 1)
+    assert_allclose(m3.data, 2)

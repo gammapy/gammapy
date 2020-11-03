@@ -318,3 +318,22 @@ def test_plot_poly():
     m = HpxNDMap.create(binsz=10)
     with mpl_plot_check():
         m.plot(method="poly")
+
+def test_hpxndmap_resample_axis():
+    axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
+    axis_2 = MapAxis.from_edges([1, 2, 3, 4], name="test-2")
+
+    geom = HpxGeom.create(nside=16, axes=[axis_1, axis_2])
+    m = HpxNDMap(geom, unit="m2")
+    m.data += 1
+
+    new_axis = MapAxis.from_edges([2, 3, 5], name="test-1")
+    m2 = m.resample_axis(axis=new_axis)
+    assert m2.data.shape == (3, 2, 3072)
+    assert_allclose(m2.data[0,:,0], [1,2])
+
+    # Test without all interval covered
+    new_axis = MapAxis.from_edges([1.7, 4], name="test-1")
+    m3 = m.resample_axis(axis=new_axis)
+    assert m3.data.shape == (3, 1, 3072)
+    assert_allclose(m3.data, 2)

@@ -489,7 +489,7 @@ class Map(abc.ABC):
         if not isinstance(self.geom, HpxGeom):
             shape = self.geom._shape[:2]
         else:
-            shape = (1,)
+            shape = (self.geom.data_shape[-1],)
         shape += tuple([ax.nbin if ax != axis else 1 for ax in self.geom.axes])
 
         padded_array = np.append(self.data * weights, np.zeros(shape[::-1]), axis=idx)
