@@ -218,7 +218,9 @@ class ParameterEstimator(Estimator):
         """
         self._setup_fit(datasets)
         self._fit.optimize()
-        res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
+        res = self._fit.confidence(
+            parameter=parameter, sigma=self.n_sigma_ul, backend="scipy"
+        )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
     def run(self, datasets, parameter):
