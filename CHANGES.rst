@@ -2,7 +2,7 @@
 --------------------
 
 - Released November 4, 2020
-- 14 contributors
+- 15 contributors
 - 160 pull requests (not all listed below)
 
 **What's new**
@@ -44,12 +44,15 @@ and spectral template or parametric models. Among those are a
 ``PowerLawNormSpectralModel``, ``LogParabolaNormSpectralModel`` and
 ``PiecewiseNormSectralModel``. The EBL absorption was refactored
 accordingly to an ``EBLAbsorptionNormSpectralModel``. A new
-``GeneralizedGaussianSpatialModel`` has been introduced. Gammapy v0.18 comes
-now with support for custom energy dependent spatial models. The ``SkyDiffuseCube``
-has been removed, the same functionality can now be achieved with the ``TemplateSpatialModel``.
-Following the proposal in `PIG 21`_, short YAML tags were introduced for
-all models. An overview of the tags can be found in a table in the linked
-PIG document.
+``GeneralizedGaussianSpatialModel`` and ``BrokenPowerlawSpectralModel``
+have been introduced.
+
+Gammapy v0.18 comesnow with support for custom energy dependent spatial models.
+An example for this can be found in the `models tutorial <tutorials/models.html>`__.
+The ``SkyDiffuseCube`` has been removed, the same functionality can now be
+achieved with the ``TemplateSpatialModel``. Following the proposal in
+`PIG 21`_, short YAML tags were introduced for all models. An overview of the
+tags can be found in a table in the linked PIG document.
 
 For Gammapy v0.18 the stacking behaviour of the ``EDispKernelMap`` was fixed.
 it now handles safe energy threshold for stacked analyses correctly.
@@ -95,6 +98,7 @@ In alphabetical order by first name:
 - Laura Olivera Nieto
 - Lea Jouvin
 - Luca Giunti
+- Max Noethe
 - Quentin Remy
 - Régis Terrier
 
@@ -106,6 +110,81 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy v0.18 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.18>`__.
 
+
+- [#3106] Remove default FoVBackgroundModel (Axel Donath)
+- [#3100] Simplify EBL absorption spectral model (Quentin Remy)
+- [#3092] Update energy naming convention (Fabio Pintore)
+- [#3091] Implement Dataset.slice_by_energy (Axel Donath)
+- [#3089] Introduce DatasetModels class and global model (Axel Donath)
+- [#3088] Allowing Estimators norm parameter to be negative (Régis Terrier)
+- [#3086] Stats background convention (Axel Donath)
+- [#3085] Remove feldman cousins method (Axel Donath)
+- [#3083] Example of energy dependent spatial model (Atreyee Sinha)
+- [#3081] Unify axis ordering in gammapy.irf (Atreyee Sinha)
+- [#3080] Remove significance and replace with sqrt_ts (Régis Terrier)
+- [#3076] Introduce MapDataset.geoms property (Axel Donath)
+- [#3074] Implement option to store fit trace to Fit (Axel Donath)
+- [#3072] Allow to apply PSF in reconstructed energy (Axel Donath)
+- [#3070] Remove intervals option from integrate_spectrum() (Axel Donath)
+- [#3069] Remove pre-processing from Fermi tutorial (Axel Donath)
+- [#3063] Add PiecewiseNormSpectralModel (Quentin Remy)
+- [#3060] Remove code duplication between MapDataset and SpectrumDataset (Axel Donath)
+- [#3058] Clean up MapDataset mask handling (Axel Donath)
+- [#3054] Unify dataset info dicts (Axel Donath)
+- [#3053] Add bkg systematics condition for the sensitivity computation (Bruno Khelifi)
+- [#3052] Adapt LightCurveEstimator to take energy edges (Régis Terrier)
+- [#3051] Introduce dataset specific FoVBackgroundModel (Axel Donath)
+- [#3045] Add temporal models to model gallery (Jalel Hajlaoui)
+- [#3042] Refactor SpectrumDataset to use exposure (Axel Donath)
+- [#3041] Add SpectralModel.integral_error (Fabio Pintore)
+- [#3039] Use MapAxis in gammapy.irf consistently (Axel Donath)
+- [#3038] Implement Fit.stat_surface() method (Luca Giunti)
+- [#3037] Add generalized gaussian model (Quentin Remy)
+- [#3035] Update Numpy to 1.17 (Axel Donath)
+- [#3032] Introduce MapAxes object (Axel Donath)
+- [#3030] Fix inconsistency between EventList.stack() and GTI.stack() (Laura Olivera Nieto)
+- [#3012] Replace SkyDiffuseCube by TemplateSpatialModel (Quentin Remy)
+- [#3007] Support Map based IRFs in MapDatasetMaker (Laura Olivera Nieto)
+- [#3005] Allow custom spectral models corrections for BackgroundModel (Quentin Remy)
+- [#3002] Implement PSFMap.from_gaussian (Laura Olivera Nieto)
+- [#3001] Improve the datasets plot/peek interface (Alexis de Almeida Coutinho)
+- [#2999] Add e_edges to AsmoothMapEstimator (Axel Donath)
+- [#2998] Add e_edges to ExcessMapEstimator (Régis Terrier)
+- [#2993] Reuse FluxPointsEstimator in LightCurveEstimator (Axel Donath)
+- [#2992] Implement WcsNDMap.to_region_nd_map() (Axel Donath)
+- [#2991] Implement energy slicing for FluxPointsEstimator (Axel Donath)
+- [#2990] Optional exposure map for the EdispMap and PSF in the MapDataset (Laura Olivera Nieto)
+- [#2984] Change SpectrumDataset.aeff to RegionNDMap (Axel Donath)
+- [#2981] Add basic NormSpectralModels (Quentin Remy)
+- [#2976] Fix filename handling in read/write methods (Alexis de Almeida Coutinho)
+- [#2974] Implement meta table stacking (Axel Donath)
+- [#2967] Allow for varying energy range between datasets in FluxPointEstimator (Axel Donath)
+- [#2966] Implement MapDataset.slice_by_idx (Axel Donath)
+- [#2965] Add Map.to_cube() (Atreyee Sinha)
+- [#2956] Implement MapDataset.downsample() and MapDataset.pad() (Axel Donath)
+- [#2951] Implement Map.resample_axis() method (Axel Donath)
+- [#2950] Remove IRFStacker class (Axel Donath)
+- [#2948] Add ExcessProfileEstimator class (Bruno Khelifi)
+- [#2947] Improve spectral residuals plot (Luca Giunti)
+- [#2945] PSF-convolved spatial model caching in MapEvaluator (Quentin Remy)
+- [#2944] PIG 21 - Model framework improvements (Axel Donath)
+- [#2943] Add BrokenPowerLawSpectralModel (Quentin Remy)
+- [#2939] Add theta squared plot example (Léa Jouvin)
+- [#2938] Add shorter tags for models (Quentin Remy)
+- [#2932] Fix plot_spectrum_datasets_off_regions and add more options (Alexis de Almeida Coutinho)
+- [#2931] Remove gammapy.time sub-package (Axel Donath)
+- [#2929] Add meta_table to SpectrumDataset (Fabio Pintore)
+- [#2927] Introduce Maker and Estimator base classes and registries (Axel Donath)
+- [#2924] Add meta_table to MapDataset (Fabio Pintore)
+- [#2912] Cache npred in MapEvaluator (Quentin Remy)
+- [#2907] Add info_dict to MapDataset (Atreyee Sinha)
+- [#2903] Add multi-dimension support for RegionGeom (Régis Terrier)
+- [#2897] Change to EDispKernelMap in MapDataset (Régis Terrier)
+- [#2896] Add pyproject.toml (Max Noethe)
+- [#2891] Modify SpectrumDataset.create() to take MapAxis arguments (Régis Terrier)
+- [#2885] Add comparators on Map (Régis Terrier)
+- [#2874] Fix IRFMap stacking (Régis Terrier)
+- [#2872] Fix MCMC position spread (Fabio Acero)
 
 .. _PIG 21: https://docs.gammapy.org/dev/development/pigs/pig-021.html
 
@@ -496,12 +575,12 @@ See the complete `Gammapy v0.15 merged pull requests list on Github <https://git
 - [#2616] Add MapDatasetEventSampler.sample_background() method (Fabio Pintore)
 - [#2604] Implement additional methods for SafeMaskMaker (Luca Giunti)
 - [#2595] Change SpectrumDataset and FluxPointDataset model to SkyModels (Quentin Remy)
-- [#2594] Add light curve flare tutorial notebook (Lea Jouvin)
+- [#2594] Add light curve flare tutorial notebook (Léa Jouvin)
 - [#2587] Activate EDispMap in MapEvaluator (Axel Donath)
 - [#2585] Improve spectral model error propagation (Christoph Deil)
 - [#2580] Speed up Observations.select_time (Régis Terrier)
 - [#2574] Generalise exponential cutoff power law spectral model (Bruno Khelifi)
-- [#2567] Add time intervals to LightCurveEstimator (Lea Jouvin)
+- [#2567] Add time intervals to LightCurveEstimator (Léa Jouvin)
 - [#2564] Remove HpxSparseMap class (Axel Donath)
 - [#2563] Add in memory Observation class (Atreyee Sinha)
 - [#2562] Remove map reprojection functionality (Axel Donath)
@@ -626,7 +705,7 @@ In alphabetical order by first name:
 - José Enrique Ruiz
 - Johannes King
 - Luca Giunti
-- Lea Jouvin
+- Léa Jouvin
 
 Pull Requests
 +++++++++++++
@@ -665,7 +744,7 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 - [#2335] Remove ``SpectrumAnalysisIACT`` class (José Enrique Ruiz)
 - [#2334] Simplify and extend background model handling (Axel Donath)
 - [#2330] Migrate SpectrumAnalysisIACT to the high-level interface (José Enrique Ruiz)
-- [#2326] Fix bug in the spectral gaussian model evaluate method (Lea Jouvin)
+- [#2326] Fix bug in the spectral gaussian model evaluate method (Léa Jouvin)
 - [#2323] Add high-level Config and Analysis classes (José Enrique Ruiz)
 - [#2321] Dissolve ``gammapy.image`` (Christoph Deil)
 - [#2320] Dissolve ``gammapy.background`` (Christoph Deil)
