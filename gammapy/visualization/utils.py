@@ -16,8 +16,7 @@ def plot_spectrum_datasets_off_regions(
 
     Parameters
     ----------
-    datasets : `~gammapy.datasets.Datasets` of or sequence of
-    `~gammapy.datasets.SpectrumDatasetOnOff`
+    datasets : `~gammapy.datasets.Datasets` of or sequence of `~gammapy.datasets.SpectrumDatasetOnOff`
         List of spectrum on-off datasets.
     ax : `~astropy.visualization.wcsaxes.WCSAxes`
         Axes object to plot on.
@@ -33,7 +32,7 @@ def plot_spectrum_datasets_off_regions(
 
     Notes
     -----
-    Properties from the ``prop_cycle`` have maximum priority, except ``color``.
+    Properties from the ``prop_cycle`` have maximum priority, except ``color``,
     ``edgecolor``/``color`` is selected from the sources below in this order:
         ``kwargs["edgecolor"]``
 

@@ -651,6 +651,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         The ``mask_safe`` of each dataset is defined as:
 
         .. math::
+
             \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
             \mbox{if k is inside the energy thresholds}\\ 0, &
             \mbox{otherwise} \end{array}\right.
@@ -658,6 +659,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Then the total ``counts`` and ``counts_off`` are computed according to:
 
         .. math::
+
             \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
 
@@ -667,6 +669,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         The stacked ``safe_mask`` is then:
 
         .. math::
+
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
 
         In each energy bin :math:`k`, the count excess is computed taking into account the ON ``acceptance``,
@@ -675,6 +678,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         We define the stacked value of :math:`\overline{{a}_{on}}_k = 1` so that:
 
         .. math::
+
             \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
             \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} + \alpha_{2k} \cdot \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}}
 
@@ -683,6 +687,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         and :math:`l` denote a bin in reconstructed and true energy, respectively.
 
         .. math::
+
             \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
                 bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
 

@@ -572,7 +572,7 @@ class MapDataset(Dataset):
             # self.edisp.exposure_map *= self.mask_safe_edisp.data
 
     def stack(self, other):
-        """Stack another dataset in place.
+        r"""Stack another dataset in place.
 
         Safe mask is applied to compute the stacked counts data. Counts outside
         each dataset safe mask are lost.
@@ -583,6 +583,7 @@ class MapDataset(Dataset):
         The ``mask_safe`` of each dataset is defined as:
 
         .. math::
+
             \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
             \mbox{if bin k is inside the thresholds}\\ 0, &
             \mbox{otherwise} \end{array}\right.
@@ -590,6 +591,7 @@ class MapDataset(Dataset):
         Then the total ``counts`` and model background ``bkg`` are computed according to:
 
         .. math::
+
             \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
              \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
 
@@ -599,6 +601,7 @@ class MapDataset(Dataset):
         The stacked ``safe_mask`` is then:
 
         .. math::
+
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
 
 

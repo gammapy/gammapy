@@ -198,9 +198,9 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     Parameters
     ----------
-    start_pos : `~astropy.regions.SkyCoord'
+    start_pos : `~astropy.regions.SkyCoord`
         First sky coordinate defining the line to which the orthogonal boxes made
-    end_pos : `~astropy.regions.SkyCoord'
+    end_pos : `~astropy.regions.SkyCoord`
         Second sky coordinate defining the line to which the orthogonal boxes made
     height : `~astropy.quantity.Quantity`
         Height of the rectangle region.
