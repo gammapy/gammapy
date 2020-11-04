@@ -2,7 +2,7 @@
 --------------------
 
 - Released November 4, 2020
-- 9 contributors
+- 14 contributors
 - 160 pull requests (not all listed below)
 
 **What's new**
@@ -12,10 +12,10 @@ and improved performance.
 
 For Gammapy v0.18 the handling of the instrumental background was refactored
 by introducing a ``FoVBackgroundModel`` which is specific to each ``MapDataset``.
-Instead of relying on the previous ``BackgroundModel``, which couples
+Instead of relying on the previous ``BackgroundModel``, which coupled
 the map template and spectral parameters, the information is now split such that
 ``MapDataset.background`` contains the map template and the ``FoVBackgroundModel``
-the corresponding parameters. The model corrected background can now be
+the corresponding parameters, respectively. The model corrected background can now be
 accessed via ``MapDataset.npred_background()``. By default the un-corrected
 background map is now added to the predicted counts. The consistent behaviour
 has been implemented on the ``MapDatasetOnOff``.
@@ -28,10 +28,11 @@ The definition of the quantities defined on ``MapDataset`` and ``MapDatasetOnOff
 as well as the corresponding attributes on the ``CountsStatistics`` has been
 improved in the stats definition table :ref:`stats_notation`.
 
-Many additional methods to modify the data have been added to the ``MapDataset``.
-This includes ``.downsample()``, ``.pad()``, ``.resample_energy_axis()``, ``.slice_by_energy()``
-``.slice_by_idx()``. The models definition in the dataset is now reset consistently
-in all of the listed methods. The information returned by ``.info_dict()`` has been
+Many additional methods to modify the data have been added to the ``MapDataset``
+and ``SpectrumDataset``. This includes ``.downsample()``, ``.pad()``,
+``.resample_energy_axis()``, ``.slice_by_energy()`` ``.slice_by_idx()``.
+The models definition in the dataset is now reset consistently in all of the
+listed methods. The information returned by ``.info_dict()`` has been
 unified. The information contained in ``.meta_table`` is now handled correctly
 during stacking of datasets.
 
@@ -45,22 +46,22 @@ and spectral template or parametric models. Among those are a
 accordingly to an ``EBLAbsorptionNormSpectralModel``. A new
 ``GeneralizedGaussianSpatialModel`` has been introduced. Gammapy v0.18 comes
 now with support for custom energy dependent spatial models. The ``SkyDiffuseCube``
-had been removed, the same functionality can now be achieved with the ``TemplateSpatialModel``.
+has been removed, the same functionality can now be achieved with the ``TemplateSpatialModel``.
 Following the proposal in `PIG 21`_, short YAML tags were introduced for
 all models. An overview of the tags can be found in a table in the linked
 PIG document.
 
-Gammpy v0.18 now supports an ``EDispKernelMap``, which stores a spatially
-dependent energy redistribution matrix. This allows to handle the safe
-energy threshold for stacked analyses correctly. The ``MapDataset.edisp``
-attribute has been changed to this class by default. The ``IRFStacker`` class has been removed.
+For Gammapy v0.18 the stacking behaviour of the ``EDispKernelMap`` was fixed.
+it now handles safe energy threshold for stacked analyses correctly.
+The ``MapDataset.edisp`` attribute has been changed to this class by default.
+The ``IRFStacker`` class has been removed.
 
-All ``Estimator`` classes support now the definition of energy bins on init. This
-means light-curves, excess maps, excess profiles and ts maps can be computed in
-energy bins with the same API.
+The ``Estimator``` API has been homogenized, in particular, they now support
+the definition of energy edges on init. This means light-curves, excess maps,
+excess profiles and ts maps can be computed in energy bins with the same API.
 
-An ``Fit.stat_surface()`` method was introduce which allows to compute a
-fit statistic surface. In addition am option to store the trace of the fit was
+A ``Fit.stat_surface()`` method was introduced which allows to compute a
+fit statistic surface. In addition an option to store the trace of the fit was
 added. Both are demonstrated in dedicated sections in the `modeling and fitting tutorial <tutorials/modeling.html>`__
 
 Following the proposal in `PIG 19`_, the ``gammapy.time`` sub-package was removed.
@@ -76,16 +77,20 @@ for Numpy<1.17 had been dropped.
 
 In alphabetical order by first name:
 
+- Alexis de Almeida Coutinho
 - Atreyee Sinha
 - Axel Donath
+- Bruno Khelifi
+- Cosimo Nigro
+- Fabio Acero
 - Fabio Pintore
+- Jalel Hajlaoui
 - José Enrique Ruiz
+- Laura Olivera Nieto
+- Lea Jouvin
 - Luca Giunti
 - Quentin Remy
 - Régis Terrier
-- Laura Olivera Nieto
-- Alexis de Almeida Coutinho
-
 
 
 Pull Requests
