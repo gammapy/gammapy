@@ -36,7 +36,7 @@ class ExcessProfileEstimator(Estimator):
 
         By default all quantities are estimated.
 
-    Example
+    Examples
     --------
     This example shows how to compute a counts profile for the Fermi galactic
     center region::

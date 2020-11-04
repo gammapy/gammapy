@@ -1887,15 +1887,15 @@ class MapDatasetOnOff(MapDataset):
         """ Convert a MapDatasetOnOff to  MapDataset
         The background model template is taken as alpha*counts_off
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name: str
             Name of the new dataset
 
-        Returns:
+        Returns
         -------
         dataset: `MapDataset`
-            MapDatset with cash statistics
+            Map dataset with cash statistics
         """
 
         name = make_name(name)

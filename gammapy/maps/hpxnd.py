@@ -61,10 +61,19 @@ class HpxNDMap(HpxMap):
             The FITS HDU
         hdu_bands  : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU
-        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-                  'fgst-srcmap', 'fgst-template', 'fgst-srcmap-sparse',
-                  'galprop', 'galprop2'}
-            FITS convention. If None the format is guessed.
+        format : str, optional
+            FITS convention. If None the format is guessed. The following
+            formats are supported:
+
+                - "gadf"
+                - "fgst-ccube"
+                - "fgst-ltcube"
+                - "fgst-bexpcube"
+                - "fgst-srcmap"
+                - "fgst-template"
+                - "fgst-srcmap-sparse"
+                - "galprop"
+                - "galprop2"
 
         Returns
         -------

@@ -34,36 +34,32 @@ def plot_spectrum_datasets_off_regions(
     -----
     Properties from the ``prop_cycle`` have maximum priority, except ``color``,
     ``edgecolor``/``color`` is selected from the sources below in this order:
-        ``kwargs["edgecolor"]``
-
-        ``kwargs["prop_cycle"]``
-
-        ``matplotlib.rcParams["axes.prop_cycle"]``
-
-        ``matplotlib.rcParams["patch.edgecolor"]``
-
-    ``matplotlib.rcParams["patch.facecolor"]`` is never used.
+    ``kwargs["edgecolor"]``, ``kwargs["prop_cycle"]``, ``matplotlib.rcParams["axes.prop_cycle"]``
+    ``matplotlib.rcParams["patch.edgecolor"]``, ``matplotlib.rcParams["patch.facecolor"]``
+    is never used.
 
     Examples
     --------
-    Plot forcibly without legend and with thick circles:
-    >>> plot_spectrum_datasets_off_regions(datasets, ax, legend=False, linewidth=2.5)
+    Plot forcibly without legend and with thick circles::
 
-    Plot that quantifies the overlap of off regions:
-    >>> plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='black')
+        plot_spectrum_datasets_off_regions(datasets, ax, legend=False, linewidth=2.5)
 
-    Plot that cycles through colors (``edgecolor``) and line styles together:
-    >>> plot_spectrum_datasets_off_regions(datasets, ax,
-        prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':'])
-        )
+    Plot that quantifies the overlap of off regions::
+
+        plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='black')
+
+    Plot that cycles through colors (``edgecolor``) and line styles together::
+
+        plot_spectrum_datasets_off_regions(datasets, ax, prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':']))
 
     Plot that uses a modified `~matplotlib.rcParams`, has two legend columns, static and
     dynamic colors, but only shows labels for ``datasets1`` and ``datasets2``. Note that
-    ``legend_kwargs`` only applies if it's given in the last function call with ``legend=True``:
-    >>> plt.rc('legend', columnspacing=1, fontsize=9)
-    >>> plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor='cyan')
-    >>> plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
-    >>> plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
+    ``legend_kwargs`` only applies if it's given in the last function call with ``legend=True``::
+
+        plt.rc('legend', columnspacing=1, fontsize=9)
+        plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor='cyan')
+        plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
+        plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
     """
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch, CirclePolygon

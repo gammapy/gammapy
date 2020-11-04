@@ -1192,15 +1192,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """ Convert a SpectrumDatasetOnOff to a SpectrumDataset
         The background model template is taken as alpha*counts_off
 
-        Parameters:
-        -----------
-            name: str
-                Name of the new dataset
+        Parameters
+        ----------
+        name: str
+            Name of the new dataset
 
-        Returns:
+        Returns
         -------
-            dataset: `SpectrumDataset`
-                SpectrumDatset with cash statistics
+        dataset: `SpectrumDataset`
+            SpectrumDatset with cash statistics
         """
 
         name = make_name(name)

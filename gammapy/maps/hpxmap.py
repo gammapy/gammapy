@@ -112,14 +112,22 @@ class HpxMap(Map):
             BinTableHDU in the file.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
-        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-                  'galprop', 'galprop2'}
+        format : str, optional
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
-            Fermi Science Tools).
+            Fermi Science Tools). The following formats are supported:
+
+                - "gadf" (default)
+                - "fgst-ccube"
+                - "fgst-ltcube"
+                - "fgst-bexpcube"
+                - "fgst-srcmap"
+                - "fgst-template"
+                - "fgst-srcmap-sparse"
+                - "galprop"
+                - "galprop2"
 
         Returns
         -------
@@ -161,14 +169,22 @@ class HpxMap(Map):
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-                  'galprop', 'galprop2'}
+        format : str, optional
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
-            Fermi Science Tools).
+            Fermi Science Tools). The following formats are supported:
+
+                - "gadf" (default)
+                - "fgst-ccube"
+                - "fgst-ltcube"
+                - "fgst-bexpcube"
+                - "fgst-srcmap"
+                - "fgst-template"
+                - "fgst-srcmap-sparse"
+                - "galprop"
+                - "galprop2"
 
         Returns
         -------

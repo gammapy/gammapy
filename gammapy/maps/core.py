@@ -308,14 +308,23 @@ class Map(abc.ABC):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        format : {'gadf', 'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-                  'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-                  'galprop', 'galprop2'}
+        format : str, optional
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
-            Fermi Science Tools).
+            Fermi Science Tools). The following formats are supported:
+
+                - "gadf" (default)
+                - "fgst-ccube"
+                - "fgst-ltcube"
+                - "fgst-bexpcube"
+                - "fgst-srcmap"
+                - "fgst-template"
+                - "fgst-srcmap-sparse"
+                - "galprop"
+                - "galprop2"
+
         sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
