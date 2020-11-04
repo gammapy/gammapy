@@ -1483,7 +1483,8 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         self.data = u.Quantity(data, copy=False)
 
         interp_kwargs = interp_kwargs or {}
-        interp_kwargs.setdefault("points_scale", ("log", "lin"))
+        interp_kwargs.setdefault("points_scale", ("lin", "log"))
+        interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("extrapolate", True)
 
         self._evaluate_table_model = ScaledRegularGridInterpolator(

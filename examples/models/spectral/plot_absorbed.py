@@ -32,6 +32,7 @@ from gammapy.modeling.models import (
 )
 
 # Here we illustrate how to create and plot EBL absorption models for a redshift of 0.5
+# sphinx_gallery_thumbnail_number = 1
 
 redshift = 0.5
 dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=redshift)
@@ -68,6 +69,7 @@ absorption = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=r
 model = pwl * absorption
 
 energy_range = [0.1, 100] * u.TeV
+plt.figure()
 model.plot(energy_range)
 plt.grid(which="both")
 plt.ylim(1e-24, 1e-8)
