@@ -795,7 +795,7 @@ class MapDataset(Dataset):
     ):
         """Plot spatial and spectral residuals in two panels.
 
-        Calls `~MapDataset.plot_spatial_residuals` and `~MapDataset.plot_spectral_residuals`.
+        Calls `~MapDataset.plot_residuals_spatial` and `~MapDataset.plot_residuals_spectral`.
         The spectral residuals are extracted from the provided region, and the
         normalization used for its computation can be controlled using the method
         parameter. The region outline is overlaid on the residuals map.
@@ -807,9 +807,9 @@ class MapDataset(Dataset):
         ax_spectral : `~matplotlib.axes.Axes`
             Axes to plot spectral residuals on.
         kwargs_spatial : dict
-            Keyword arguments passed to `~MapDataset.plot_spatial_residuals`.
+            Keyword arguments passed to `~MapDataset.plot_residuals_spatial`.
         kwargs_spectral : dict (``region`` required)
-            Keyword arguments passed to `~MapDataset.plot_spectral_residuals`.
+            Keyword arguments passed to `~MapDataset.plot_residuals_spectral`.
 
         Returns
         -------
@@ -820,7 +820,7 @@ class MapDataset(Dataset):
             raise ValueError("'region' is a required parameter in 'kwargs_spectral'")
 
         ax_spatial, ax_spectral = get_axes(
-            ax_spatial, ax_spectral, 12, 4, [1, 2, 1], [1, 2, 2], {"projection":self._geom.to_image().wcs}
+            ax_spatial, ax_spectral, 12, 4, [1, 2, 1], [1, 2, 2], {"projection": self._geom.to_image().wcs}
         )
         kwargs_spatial = kwargs_spatial or {}
 

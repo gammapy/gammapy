@@ -263,7 +263,7 @@ class FluxPointsDataset(Dataset):
 
         gs = GridSpec(7, 1)
         ax_spectrum, ax_residuals = get_axes(
-            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex":ax_spectrum}
+            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex": ax_spectrum}
         )
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
@@ -348,16 +348,16 @@ class FluxPointsDataset(Dataset):
         ax.set_ylim(ymin, ymax)
         return ax
 
-    def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None, **kwargs):
+    def plot_spectrum(self, ax=None, kwargs_fp=None, kwargs_model=None, **kwargs):
         """Plot spectrum including flux points and model.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
             Axes to plot on.
-        fp_kwargs : dict
+        kwargs_fp : dict
             Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`.
-        model_kwargs : dict
+        kwargs_model : dict
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
             `gammapy.modeling.models.SpectralModel.plot_error`.
         **kwargs: dict
@@ -368,8 +368,8 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        fp_kwargs = fp_kwargs or {}
-        model_kwargs = model_kwargs or {}
+        kwargs_fp = kwargs_fp or {}
+        kwargs_model = kwargs_model or {}
 
         kwargs.setdefault("energy_power", 2)
         kwargs.setdefault("energy_unit", "TeV")
@@ -377,12 +377,12 @@ class FluxPointsDataset(Dataset):
 
         # plot flux points
         plot_kwargs = kwargs.copy()
-        plot_kwargs.update(fp_kwargs)
+        plot_kwargs.update(kwargs_fp)
         plot_kwargs.setdefault("label", "Flux points")
         ax = self.data.plot(ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
-        plot_kwargs.update(model_kwargs)
+        plot_kwargs.update(kwargs_model)
         plot_kwargs.setdefault("energy_range", self._e_range)
         plot_kwargs.setdefault("label", "Best fit model")
         plot_kwargs.setdefault("zorder", 10)
