@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from gammapy.utils.scripts import make_path
 from gammapy.utils.fits import HDULocation
+from gammapy.utils.scripts import make_path
 
 __all__ = ["HDUIndexTable"]
 

@@ -2,11 +2,10 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
-from astropy.coordinates.angle_utilities import angular_separation
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
-from .psf_table import TablePSF, EnergyDependentTablePSF
+from .psf_table import EnergyDependentTablePSF, TablePSF
 
 __all__ = ["PSFKernel"]
 
@@ -241,7 +240,7 @@ class PSFKernel:
         # Compute weights vector
         energy_edges = map.geom.axes["energy_true"].edges
         weights = spectrum.integral(
-            emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
+            energy_min=energy_edges[:-1], energy_max=energy_edges[1:], intervals=True
         )
         weights *= exposure
         weights /= weights.sum()

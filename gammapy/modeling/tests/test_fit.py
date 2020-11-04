@@ -2,11 +2,11 @@
 """Unit tests for the Fit class"""
 import pytest
 from numpy.testing import assert_allclose
+from astropy.table import Table
 from gammapy.datasets import Dataset
 from gammapy.modeling import Fit, Parameter
 from gammapy.modeling.models import Model, Models
 from gammapy.utils.testing import requires_dependency
-from astropy.table import Table
 
 pytest.importorskip("iminuit")
 
@@ -99,6 +99,7 @@ def test_optimize(backend):
 
     assert len(result.trace) == result.nfev
 
+
 # TODO: add some extra covariance tests, in addition to run
 # Probably mainly if error message is OK if optimize didn't run first.
 # def test_covariance():
@@ -156,7 +157,9 @@ def test_stat_profile_reoptimize():
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
-    assert_allclose(result["fit_results"][0].total_stat, result["stat_scan"][0], atol=1e-7)
+    assert_allclose(
+        result["fit_results"][0].total_stat, result["stat_scan"][0], atol=1e-7
+    )
 
 
 def test_stat_surface():

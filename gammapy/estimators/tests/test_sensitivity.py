@@ -4,9 +4,8 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import SensitivityEstimator
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable
+from gammapy.irf import EDispKernelMap
 from gammapy.maps import MapAxis, RegionNDMap
-from gammapy.modeling.models import BackgroundModel
 
 
 @pytest.fixture()
@@ -28,10 +27,7 @@ def spectrum_dataset():
     exposure = aeff * livetime
 
     return SpectrumDataset(
-        name="test",
-        exposure=exposure,
-        edisp=edisp,
-        background=background
+        name="test", exposure=exposure, edisp=edisp, background=background
     )
 
 
@@ -51,7 +47,7 @@ def test_cta_sensitivity_estimator(spectrum_dataset):
     assert_allclose(row["energy"], 1.33352, rtol=1e-3)
     assert_allclose(row["e2dnde"], 2.74559e-08, rtol=1e-3)
     assert_allclose(row["excess"], 270000, rtol=1e-3)
-    assert_allclose(row["background"], 3.6e+06, rtol=1e-3)
+    assert_allclose(row["background"], 3.6e06, rtol=1e-3)
     assert row["criterion"] == "bkg"
 
     row = table[1]

@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.coordinates import SkyOffsetFrame
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
-from gammapy.stats import WStatCountsStatistic
 from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
 
 __all__ = [
@@ -87,7 +86,9 @@ def _map_spectrum_weight(map, spectrum=None):
 
     # Compute weights vector
     energy_edges = map.geom.axes["energy_true"].edges
-    weights = spectrum.integral(emin=energy_edges[:-1], emax=energy_edges[1:])
+    weights = spectrum.integral(
+        energy_min=energy_edges[:-1], energy_max=energy_edges[1:]
+    )
     weights /= weights.sum()
     shape = np.ones(len(map.geom.data_shape))
     shape[0] = -1

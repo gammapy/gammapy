@@ -25,15 +25,15 @@ if ellipticity tend to one and radius is large or :math:`\eta` much larger than 
 # ------------
 # Here is an example plot of the model for different shape parameter:
 
-from gammapy.maps import WcsGeom, Map
+from astropy import units as u
+import matplotlib.pyplot as plt
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
     GeneralizedGaussianSpatialModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
 )
-from astropy import units as u
-import matplotlib.pyplot as plt
 
 lon_0 = 20
 lat_0 = 0

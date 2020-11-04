@@ -31,11 +31,13 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-#Here we illustrate how to create and plot EBL absorption models for a redshift of 0.5
+# Here we illustrate how to create and plot EBL absorption models for a redshift of 0.5
 
 redshift = 0.5
 dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=redshift)
-franceschini = EBLAbsorptionNormSpectralModel.read_builtin("franceschini", redshift=redshift)
+franceschini = EBLAbsorptionNormSpectralModel.read_builtin(
+    "franceschini", redshift=redshift
+)
 finke = EBLAbsorptionNormSpectralModel.read_builtin("finke", redshift=redshift)
 
 plt.figure()

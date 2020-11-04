@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
 import logging
+from gammapy.datasets import Datasets
 from gammapy.maps import Map
-from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY, FoVBackgroundModel
+from gammapy.modeling import Fit
+from gammapy.modeling.models import FoVBackgroundModel, Model
 from ..core import Maker
 
 __all__ = ["FoVBackgroundMaker"]
@@ -27,17 +29,56 @@ class FoVBackgroundMaker(Maker):
         the normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
+    spectral_model_tag : str
+        Default norm spectral model to use for the `FoVBackgroundModel`, if none is defined
+        on the dataset.
     """
 
     tag = "FoVBackgroundMaker"
 
-    def __init__(self, method="scale", exclusion_mask=None):
+    def __init__(
+        self, method="scale", exclusion_mask=None, spectral_model_tag="pl-norm"
+    ):
         if method in ["fit", "scale"]:
             self.method = method
         else:
             raise ValueError(f"Not a valid method for FoVBackgroundMaker: {method}.")
 
         self.exclusion_mask = exclusion_mask
+
+        if "norm" not in spectral_model_tag:
+            raise ValueError("Spectral model must be a norm spectral model")
+
+        self.spectral_model_tag = spectral_model_tag
+
+    def make_default_fov_background_model(self, dataset):
+        """Add fov background model to the model definition
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input map dataset.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset including
+
+        """
+        spectral_model = Model.create(
+            tag=self.spectral_model_tag, model_type="spectral"
+        )
+
+        bkg_model = FoVBackgroundModel(
+            dataset_name=dataset.name, spectral_model=spectral_model.copy()
+        )
+
+        if dataset.models is None:
+            dataset.models = bkg_model
+        else:
+            dataset.models = dataset.models + bkg_model
+
+        return dataset
 
     def run(self, dataset, observation=None):
         """Run FoV background maker.
@@ -52,6 +93,9 @@ class FoVBackgroundMaker(Maker):
         """
         mask_fit = dataset.mask_fit
         dataset.mask_fit = self._reproject_exclusion_mask(dataset)
+
+        if dataset.background_model is None:
+            dataset = self.make_default_fov_background_model(dataset)
 
         if self.method == "fit":
             self._fit_bkg(dataset)
@@ -76,9 +120,6 @@ class FoVBackgroundMaker(Maker):
 
     def _fit_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""
-        from gammapy.modeling import Fit
-        from gammapy.datasets import Datasets
-
         # freeze all model components not related to background model
         datasets = Datasets([dataset])
 

@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 # TODO: add light-curve test case from scratch

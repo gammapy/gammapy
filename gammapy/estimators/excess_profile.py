@@ -1,7 +1,6 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from regions import CircleAnnulusSkyRegion, RectangleSkyRegion
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.maps import MapAxis
@@ -20,7 +19,7 @@ class ExcessProfileEstimator(Estimator):
     ----------
     regions : list of `regions`
         regions to use
-    e_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy edges of the profiles to be computed.
     n_sigma : float (optional)
         Number of sigma to compute errors. By default, it is 1.
@@ -85,7 +84,7 @@ class ExcessProfileEstimator(Estimator):
     def __init__(
         self,
         regions,
-        e_edges=None,
+        energy_edges=None,
         spectrum=None,
         n_sigma=1.0,
         n_sigma_ul=3.0,
@@ -95,7 +94,9 @@ class ExcessProfileEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
 
-        self.e_edges = u.Quantity(e_edges) if e_edges is not None else None
+        self.energy_edges = (
+            u.Quantity(energy_edges) if energy_edges is not None else None
+        )
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -252,8 +253,8 @@ class ExcessProfileEstimator(Estimator):
         imageprofile : `~gammapy.estimators.ImageProfile`
             Return an image profile class containing the result
         """
-        if self.e_edges is not None:
-            axis = MapAxis.from_energy_edges(self.e_edges)
+        if self.energy_edges is not None:
+            axis = MapAxis.from_energy_edges(self.energy_edges)
             dataset = dataset.resample_energy_axis(energy_axis=axis)
         else:
             dataset = dataset.to_image()

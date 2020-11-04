@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import inspect
 from copy import deepcopy
 import numpy as np
 from gammapy.modeling.models import Model
-import inspect
 
 __all__ = ["Estimator"]
 

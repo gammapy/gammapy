@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from astropy.table import Table
 from numpy.testing import assert_allclose
+from astropy.table import Table
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
@@ -14,6 +14,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def fit(dataset):
     return Fit([dataset])
 
+
 @pytest.fixture()
 def test_meta_table(dataset):
     meta_table = dataset.meta_table
@@ -21,11 +22,12 @@ def test_meta_table(dataset):
     assert meta_table["OBS_ID"] == "0001"
     assert meta_table["INSTRUME"] == "South_Z20_50h"
 
+
 @pytest.fixture()
 def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
-    data.table["e_ref"] = data.e_ref.to("TeV")
+    data.table["e_ref"] = data.energy_ref.to("TeV")
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
@@ -45,7 +47,7 @@ def dataset():
 def test_flux_point_dataset_serialization(tmp_path):
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
-    data.table["e_ref"] = data.e_ref.to("TeV")
+    data.table["e_ref"] = data.energy_ref.to("TeV")
     spectral_model = PowerLawSpectralModel(
         index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
     )
@@ -59,7 +61,7 @@ def test_flux_point_dataset_serialization(tmp_path):
 
     datasets = Datasets.read(
         filename=tmp_path / "tmp_datasets.yaml",
-        filename_models=tmp_path / "tmp_models.yaml"
+        filename_models=tmp_path / "tmp_models.yaml",
     )
 
     new_dataset = datasets[0]

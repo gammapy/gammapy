@@ -58,7 +58,7 @@ class ExpTestModel(SpectralModel):
         return np.log(y * u.TeV) * u.TeV
 
 
-def test_e_ref_lafferty():
+def test_energy_ref_lafferty():
     """
     Tests Lafferty & Wyatt x-point method.
 
@@ -70,31 +70,31 @@ def test_e_ref_lafferty():
     desired = np.array([0.048, 0.190, 0.428, 0.762])
 
     model = LWTestModel()
-    e_min = np.array([0.0, 0.1, 0.3, 0.6])
-    e_max = np.array([0.1, 0.3, 0.6, 1.0])
-    actual = FluxPoints._e_ref_lafferty(model, e_min, e_max)
+    energy_min = np.array([0.0, 0.1, 0.3, 0.6])
+    energy_max = np.array([0.1, 0.3, 0.6, 1.0])
+    actual = FluxPoints._energy_ref_lafferty(model, energy_min, energy_max)
     assert_allclose(actual, desired, atol=1e-3)
 
 
 def test_dnde_from_flux():
     """Tests y-value normalization adjustment method.
     """
-    e_min = np.array([10, 20, 30, 40])
-    e_max = np.array([20, 30, 40, 50])
+    energy_min = np.array([10, 20, 30, 40])
+    energy_max = np.array([20, 30, 40, 50])
     flux = np.array([42, 52, 62, 72])  # 'True' integral flux in this test bin
 
     # Get values
     model = XSqrTestModel()
-    e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
+    energy_ref = FluxPoints._energy_ref_lafferty(model, energy_min, energy_max)
     dnde = FluxPoints._dnde_from_flux(
-        flux, model, e_ref, e_min, e_max, pwl_approx=False
+        flux, model, energy_ref, energy_min, energy_max, pwl_approx=False
     )
 
     # Set up test case comparison
-    dnde_model = model(e_ref)
+    dnde_model = model(energy_ref)
 
     # Test comparison result
-    desired = model.integral(e_min, e_max)
+    desired = model.integral(energy_min, energy_max)
     # Test output result
     actual = flux * (dnde_model / dnde)
     # Compare
@@ -108,45 +108,50 @@ def test_compute_flux_points_dnde_exp(method):
     """
     model = ExpTestModel()
 
-    e_min = [1.0, 10.0] * u.TeV
-    e_max = [10.0, 100.0] * u.TeV
+    energy_min = [1.0, 10.0] * u.TeV
+    energy_max = [10.0, 100.0] * u.TeV
 
     table = Table()
     table.meta["SED_TYPE"] = "flux"
-    table["e_min"] = e_min
-    table["e_max"] = e_max
+    table["e_min"] = energy_min
+    table["e_max"] = energy_max
 
-    flux = model.integral(e_min, e_max)
+    flux = model.integral(energy_min, energy_max)
     table["flux"] = flux
 
     if method == "log_center":
-        e_ref = np.sqrt(e_min * e_max)
+        energy_ref = np.sqrt(energy_min * energy_max)
     elif method == "table":
-        e_ref = [2.0, 20.0] * u.TeV
-        table["e_ref"] = e_ref
+        energy_ref = [2.0, 20.0] * u.TeV
+        table["e_ref"] = energy_ref
     elif method == "lafferty":
-        e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
+        energy_ref = FluxPoints._energy_ref_lafferty(model, energy_min, energy_max)
 
     result = FluxPoints(table).to_sed_type("dnde", model=model, method=method)
 
     # Test energy
-    actual = result.e_ref
-    assert_quantity_allclose(actual, e_ref, rtol=1e-8)
+    actual = result.energy_ref
+    assert_quantity_allclose(actual, energy_ref, rtol=1e-8)
 
     # Test flux
     actual = result.table["dnde"].quantity
-    desired = model(e_ref)
+    desired = model(energy_ref)
     assert_quantity_allclose(actual, desired, rtol=1e-8)
 
 
 @requires_data()
 def test_fermi_to_dnde():
     from gammapy.catalog import CATALOG_REGISTRY
+
     catalog_4fgl = CATALOG_REGISTRY.get_cls("4fgl")()
     src = catalog_4fgl["FGES J1553.8-5325"]
     fp_dnde = src.flux_points.to_sed_type("dnde", model=src.spectral_model())
 
-    assert_allclose(fp_dnde.table["dnde"].quantity[1], 4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"), rtol=1e-5)
+    assert_allclose(
+        fp_dnde.table["dnde"].quantity[1],
+        4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"),
+        rtol=1e-5,
+    )
 
 
 @pytest.fixture(params=FLUX_POINTS_FILES, scope="session")
@@ -167,27 +172,27 @@ class TestFluxPoints:
         info = str(flux_points)
         assert flux_points.sed_type in info
 
-    def test_e_ref(self, flux_points):
-        actual = flux_points.e_ref
+    def test_energy_ref(self, flux_points):
+        actual = flux_points.energy_ref
         if flux_points.sed_type == "dnde":
             pass
         elif flux_points.sed_type == "flux":
-            desired = np.sqrt(flux_points.e_min * flux_points.e_max)
+            desired = np.sqrt(flux_points.energy_min * flux_points.energy_max)
             assert_quantity_allclose(actual, desired)
 
-    def test_e_min(self, flux_points):
+    def test_energy_min(self, flux_points):
         if flux_points.sed_type == "dnde":
             pass
         elif flux_points.sed_type == "flux":
-            actual = flux_points.e_min
+            actual = flux_points.energy_min
             desired = 299530.97 * u.MeV
             assert_quantity_allclose(actual.sum(), desired)
 
-    def test_e_max(self, flux_points):
+    def test_energy_max(self, flux_points):
         if flux_points.sed_type == "dnde":
             pass
         elif flux_points.sed_type == "flux":
-            actual = flux_points.e_max
+            actual = flux_points.energy_max
             desired = 399430.975 * u.MeV
             assert_quantity_allclose(actual.sum(), desired)
 
@@ -233,7 +238,7 @@ def test_compute_flux_points_dnde_fermi():
     )
     for column in ["dnde", "dnde_errn", "dnde_errp", "dnde_ul"]:
         actual = flux_points.table["e2" + column].quantity
-        desired = flux_points.table[column].quantity * flux_points.e_ref ** 2
+        desired = flux_points.table[column].quantity * flux_points.energy_ref ** 2
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
 
 
@@ -244,34 +249,34 @@ def model():
 
 @pytest.fixture(scope="session")
 def flux_points_dnde(model):
-    e_ref = [np.sqrt(10), np.sqrt(10 * 100)] * u.TeV
+    energy_ref = [np.sqrt(10), np.sqrt(10 * 100)] * u.TeV
     table = Table()
     table.meta["SED_TYPE"] = "dnde"
-    table["e_ref"] = e_ref
-    table["dnde"] = model(e_ref)
+    table["e_ref"] = energy_ref
+    table["dnde"] = model(energy_ref)
     return FluxPoints(table)
 
 
 @pytest.fixture(scope="session")
 def flux_points_e2dnde(model):
-    e_ref = [np.sqrt(10), np.sqrt(10 * 100)] * u.TeV
+    energy_ref = [np.sqrt(10), np.sqrt(10 * 100)] * u.TeV
     table = Table()
     table.meta["SED_TYPE"] = "e2dnde"
-    table["e_ref"] = e_ref
-    table["e2dnde"] = (model(e_ref) * e_ref ** 2).to("erg cm-2 s-1")
+    table["e_ref"] = energy_ref
+    table["e2dnde"] = (model(energy_ref) * energy_ref ** 2).to("erg cm-2 s-1")
     return FluxPoints(table)
 
 
 @pytest.fixture(scope="session")
 def flux_points_flux(model):
-    e_min = [1, 10] * u.TeV
-    e_max = [10, 100] * u.TeV
+    energy_min = [1, 10] * u.TeV
+    energy_max = [10, 100] * u.TeV
 
     table = Table()
     table.meta["SED_TYPE"] = "flux"
-    table["e_min"] = e_min
-    table["e_max"] = e_max
-    table["flux"] = model.integral(e_min, e_max)
+    table["e_min"] = energy_min
+    table["e_max"] = energy_max
+    table["flux"] = model.integral(energy_min, energy_max)
     return FluxPoints(table)
 
 

@@ -102,8 +102,10 @@ class TestSourceCatalogObjectGammaCat:
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
         dne = spectral_model(e_min)
-        flux = spectral_model.integral(emin=e_min, emax=e_inf)
-        eflux = spectral_model.energy_flux(emin=e_min, emax=e_max).to("erg cm-2 s-1")
+        flux = spectral_model.integral(energy_min=e_min, energy_max=e_inf)
+        eflux = spectral_model.energy_flux(energy_min=e_min, energy_max=e_max).to(
+            "erg cm-2 s-1"
+        )
 
         assert_quantity_allclose(dne, ref["dnde_1TeV"], rtol=1e-3)
         assert_quantity_allclose(flux, ref["flux_1TeV"], rtol=1e-3)

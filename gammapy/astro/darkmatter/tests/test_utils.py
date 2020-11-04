@@ -23,13 +23,15 @@ def jfact(geom):
 
 @requires_data()
 def test_dmfluxmap(jfact):
-    emin = 0.1 * u.TeV
-    emax = 10 * u.TeV
+    energy_min = 0.1 * u.TeV
+    energy_max = 10 * u.TeV
     massDM = 1 * u.TeV
     channel = "W"
 
     diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
-    int_flux = (jfact * diff_flux.integral(emin=emin, emax=emax)).to("cm-2 s-1")
+    int_flux = (
+        jfact * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
+    ).to("cm-2 s-1")
     actual = int_flux[5, 5]
     desired = 1.9483e-12 / u.cm ** 2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)

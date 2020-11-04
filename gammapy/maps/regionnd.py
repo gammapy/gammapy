@@ -1,8 +1,8 @@
 import numpy as np
 from astropy import units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import quantity_support
-from astropy.io import fits
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.regions import compound_region_to_list
@@ -79,9 +79,7 @@ class RegionNDMap(Map):
 
         with quantity_support():
             xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
-            ax.errorbar(
-                axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs
-            )
+            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
@@ -188,7 +186,9 @@ class RegionNDMap(Map):
         geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
-    def downsample(self, factor, preserve_counts=True, axis_name="energy", weights=None):
+    def downsample(
+        self, factor, preserve_counts=True, axis_name="energy", weights=None
+    ):
         if axis_name is None:
             return self.copy()
 
@@ -273,9 +273,9 @@ class RegionNDMap(Map):
     def write(self, filename, overwrite=False, format="ogip", ogip_column="COUNTS"):
         """"""
         filename = make_path(filename)
-        self.to_hdulist(
-            format=format, ogip_column=ogip_column
-        ).writeto(filename, overwrite=overwrite)
+        self.to_hdulist(format=format, ogip_column=ogip_column).writeto(
+            filename, overwrite=overwrite
+        )
 
     def to_hdulist(self, format="ogip", ogip_column="COUNTS"):
         """Convert to `~astropy.io.fits.HDUList`.
@@ -293,7 +293,9 @@ class RegionNDMap(Map):
             HDU list
         """
         table = self.to_table(format=format, ogip_column=ogip_column)
-        return fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(table, name=ogip_column)])
+        return fits.HDUList(
+            [fits.PrimaryHDU(), fits.BinTableHDU(table, name=ogip_column)]
+        )
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
@@ -345,7 +347,7 @@ class RegionNDMap(Map):
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
         """
-        data = other.data
+        data = other.quantity.to_value(self.unit)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
@@ -411,4 +413,3 @@ class RegionNDMap(Map):
     def cutout(self, *args, **kwargs):
         """Return self"""
         return self
-

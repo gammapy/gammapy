@@ -66,7 +66,7 @@ def optimize_sherpa(parameters, function, store_trace=False, **kwargs):
         "success": result[0],
         "message": result[3],
         "nfev": result[4]["nfev"],
-        "trace": statfunc.trace
+        "trace": statfunc.trace,
     }
 
     return factors, info, optimizer

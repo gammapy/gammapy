@@ -29,14 +29,18 @@ def trapz_loglog(y, x, axis=-1):
     # see https://stackoverflow.com/a/56840428
     x, y = np.moveaxis(x, axis, 0), np.moveaxis(y, axis, 0)
 
-    emin, emax = x[:-1], x[1:]
-    vals_emin, vals_emax = y[:-1], y[1:]
+    energy_min, energy_max = x[:-1], x[1:]
+    vals_energy_min, vals_energy_max = y[:-1], y[1:]
 
     # log scale has the build-in zero clipping
     log = LogScale()
-    index = -log(vals_emin / vals_emax) / log(emin / emax)
+    index = -log(vals_energy_min / vals_energy_max) / log(energy_min / energy_max)
     index[np.isnan(index)] = np.inf
 
     return pl.evaluate_integral(
-        emin=emin, emax=emax, index=index, reference=emin, amplitude=vals_emin
+        energy_min=energy_min,
+        energy_max=energy_max,
+        index=index,
+        reference=energy_min,
+        amplitude=vals_energy_min,
     )

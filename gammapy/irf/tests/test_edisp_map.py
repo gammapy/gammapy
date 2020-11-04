@@ -13,7 +13,7 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.regions import make_region
 
 
@@ -29,9 +29,7 @@ def fake_aeff2d(area=1e6 * u.m ** 2):
     aeff_values = np.ones((4, 3)) * area
 
     return EffectiveAreaTable2D(
-        energy_axis_true=energy_axis_true,
-        offset_axis=offset_axis,
-        data=aeff_values,
+        energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=aeff_values,
     )
 
 
@@ -112,8 +110,8 @@ def test_edisp_map_to_energydispersion():
 
     edisp = edmap.get_edisp_kernel(position, energy_axis=energy_axis)
     # Note that the bias and resolution are rather poorly evaluated on an EnergyDispersion object
-    assert_allclose(edisp.get_bias(e_true=1.0 * u.TeV), 0.0, atol=3e-2)
-    assert_allclose(edisp.get_resolution(e_true=1.0 * u.TeV), 0.2, atol=3e-2)
+    assert_allclose(edisp.get_bias(energy_true=1.0 * u.TeV), 0.0, atol=3e-2)
+    assert_allclose(edisp.get_resolution(energy_true=1.0 * u.TeV), 0.2, atol=3e-2)
 
 
 def test_edisp_map_stacking():
@@ -199,7 +197,7 @@ def test_edisp_kernel_map_stack():
     edisp_2.exposure_map.data += 2
 
     geom = edisp_1.edisp_map.geom
-    data = geom.energy_mask(emin=2 * u.TeV)
+    data = geom.energy_mask(energy_min=2 * u.TeV)
     weights = Map.from_geom(geom=geom, data=data)
     edisp_1.stack(edisp_2, weights=weights)
 

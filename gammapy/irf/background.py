@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path

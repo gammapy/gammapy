@@ -1,19 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 from pathlib import Path
 import numpy as np
-import logging
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.stats import (
-    WStatCountsStatistic,
-    cash,
-    wstat,
-    get_wstat_mu_bkg,
-)
+from gammapy.stats import WStatCountsStatistic, cash, get_wstat_mu_bkg, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .map import MapDataset
@@ -156,16 +151,16 @@ class SpectrumDataset(MapDataset):
     def energy_range(self):
         """Energy range defined by the safe mask"""
         energy = self._geom.axes["energy"].edges
-        e_min, e_max = energy[:-1], energy[1:]
+        energy_min, energy_max = energy[:-1], energy[1:]
 
         if self.mask_safe is not None:
             if self.mask_safe.data.any():
-                e_min = e_min[self.mask_safe.data[:, 0, 0]]
-                e_max = e_max[self.mask_safe.data[:, 0, 0]]
+                energy_min = energy_min[self.mask_safe.data[:, 0, 0]]
+                energy_max = energy_max[self.mask_safe.data[:, 0, 0]]
             else:
                 return None, None
 
-        return u.Quantity([e_min.min(), e_max.max()])
+        return u.Quantity([energy_min.min(), energy_max.max()])
 
     def plot_fit(self, ax_spectrum=None, ax_residuals=None, kwargs_spectrum=None, kwargs_residuals=None):
         """Plot spectrum and residuals in two panels.
@@ -208,14 +203,14 @@ class SpectrumDataset(MapDataset):
         return ax_spectrum, ax_residuals
 
     @property
-    def _e_unit(self):
+    def _energy_unit(self):
         return self._geom.axes[0].unit
 
     def _plot_energy_range(self, ax):
-        e_min, e_max = self.energy_range
+        energy_min, energy_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}
-        ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
-        ax.axvline(e_max.to_value(self._e_unit), **kwargs)
+        ax.axvline(energy_min.to_value(self._energy_unit), label="fit range", **kwargs)
+        ax.axvline(energy_max.to_value(self._energy_unit), **kwargs)
 
     def plot_counts(self, ax=None, kwargs_counts=None, kwargs_background=None, **kwargs):
         """Plot counts and background.
@@ -251,8 +246,8 @@ class SpectrumDataset(MapDataset):
         self.background.plot_hist(ax, **plot_kwargs)
 
         self._plot_energy_range(ax)
-        e_min, e_max = self.energy_range
-        ax.set_xlim(0.7 * e_min.value, 1.3 * e_max.value)
+        energy_min, energy_max = self.energy_range
+        ax.set_xlim(0.7 * energy_min.value, 1.3 * energy_max.value)
 
         ax.legend(numpoints=1)
         return ax
@@ -430,8 +425,8 @@ class SpectrumDataset(MapDataset):
         ax2.set_title("Exposure")
         self.exposure.plot(ax2)
         self._plot_energy_range(ax2)
-        e_min, e_max = self.energy_range
-        ax2.set_xlim(0.7 * e_min.value, 1.3 * e_max.value)
+        energy_min, energy_max = self.energy_range
+        ax2.set_xlim(0.7 * energy_min.value, 1.3 * energy_max.value)
 
         ax3.set_title("Energy Dispersion")
         if self.edisp is not None:
@@ -735,6 +730,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         The ``mask_safe`` of each dataset is defined as:
 
         .. math::
+
             \epsilon_{jk} =\left\{\begin{array}{cl} 1, &
             \mbox{if k is inside the energy thresholds}\\ 0, &
             \mbox{otherwise} \end{array}\right.
@@ -742,6 +738,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Then the total ``counts`` and ``counts_off`` are computed according to:
 
         .. math::
+
             \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
 
@@ -751,6 +748,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         The stacked ``safe_mask`` is then:
 
         .. math::
+
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
 
         In each energy bin :math:`k`, the count excess is computed taking into account the ON ``acceptance``,
@@ -759,6 +757,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         We define the stacked value of :math:`\overline{{a}_{on}}_k = 1` so that:
 
         .. math::
+
             \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
             \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} + \alpha_{2k} \cdot \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}}
 
@@ -767,6 +766,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         and :math:`l` denote a bin in reconstructed and true energy, respectively.
 
         .. math::
+
             \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
                 bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
 
@@ -937,17 +937,17 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         if self.edisp is not None:
             kernel = self.edisp.get_edisp_kernel()
-            kernel.write(
-                outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa
-            )
+            kernel.write(outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
     def _ogip_meta(self):
         """Meta info for the OGIP data format"""
         try:
             livetime = self.exposure.meta["livetime"]
         except KeyError:
-            raise ValueError("Storing in ogip format require the livetime "
-                             "to be defined in the exposure meta data")
+            raise ValueError(
+                "Storing in ogip format require the livetime "
+                "to be defined in the exposure meta data"
+            )
         return {
             "name": "SPECTRUM",
             "hduclass": "OGIP",
@@ -1094,9 +1094,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         info["alpha"] = alpha
 
         info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"],
-            info["counts_off"],
-            acceptance / acceptance_off,
+            info["counts"], info["counts_off"], acceptance / acceptance_off,
         ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
@@ -1213,7 +1211,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
             meta_table=self.meta_table,
-            background=self.background
+            background=self.background,
         )
 
     def slice_by_idx(self, slices, name=None):

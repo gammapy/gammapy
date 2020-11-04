@@ -15,7 +15,12 @@ with a free norm parameter at each fixed energy node.
 
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.modeling.models import PiecewiseNormSpectralModel, SkyModel, Models, PowerLawSpectralModel
+from gammapy.modeling.models import (
+    Models,
+    PiecewiseNormSpectralModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 
 energy_range = [0.1, 100] * u.TeV
 model = PiecewiseNormSpectralModel(

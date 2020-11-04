@@ -9,7 +9,7 @@ def test_trapz_loglog():
     energy = Quantity([1, 10], "TeV")
     pwl = PowerLawSpectralModel(index=2.3)
 
-    ref = pwl.integral(emin=energy[0], emax=energy[1])
+    ref = pwl.integral(energy_min=energy[0], energy_max=energy[1])
 
     val = trapz_loglog(pwl(energy), energy)
     assert_quantity_allclose(val, ref)

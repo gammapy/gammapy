@@ -1,15 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from astropy.table import Table
 import astropy.units as u
+from astropy.table import Table
 from gammapy.datasets import MapDataset
-from gammapy.irf import EnergyDependentMultiGaussPSF,EDispKernelMap, PSFMap
+from gammapy.irf import EDispKernelMap, EnergyDependentMultiGaussPSF, PSFMap
 from gammapy.maps import Map
-from gammapy.modeling.models import BackgroundModel
 from .core import Maker
 from .utils import (
-    make_edisp_map,
     make_edisp_kernel_map,
+    make_edisp_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_psf_map,
@@ -32,6 +31,7 @@ class MapDatasetMaker(Maker):
     background_oversampling : int
         Background evaluation oversampling factor in energy.
     """
+
     tag = "MapDatasetMaker"
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
@@ -86,9 +86,7 @@ class MapDatasetMaker(Maker):
             Exposure map.
         """
         if isinstance(observation.aeff, Map):
-            return observation.aeff.interp_to_geom(
-                geom=geom,
-            )
+            return observation.aeff.interp_to_geom(geom=geom,)
         return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -135,10 +133,7 @@ class MapDatasetMaker(Maker):
             Background map.
         """
         if isinstance(observation.bkg, Map):
-            return observation.bkg.interp_to_geom(
-                geom=geom,
-                preserve_counts=True
-            )
+            return observation.bkg.interp_to_geom(geom=geom, preserve_counts=True)
         bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
 
         if bkg_coordsys == "ALTAZ":
@@ -201,10 +196,7 @@ class MapDatasetMaker(Maker):
         if isinstance(observation.edisp, EDispKernelMap):
             exposure = None
             interp_map = observation.edisp.edisp_map.interp_to_geom(geom)
-            return EDispKernelMap(
-                edisp_kernel_map = interp_map,
-                exposure_map = exposure
-                )
+            return EDispKernelMap(edisp_kernel_map=interp_map, exposure_map=exposure)
         exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
 
         return make_edisp_kernel_map(
@@ -231,9 +223,7 @@ class MapDatasetMaker(Maker):
         """
         psf = observation.psf
         if isinstance(psf, PSFMap):
-            return PSFMap(
-                psf.psf_map.interp_to_geom(geom)
-                )
+            return PSFMap(psf.psf_map.interp_to_geom(geom))
 
         if isinstance(psf, EnergyDependentMultiGaussPSF):
             rad_axis = geom.axes["rad"]
@@ -300,7 +290,9 @@ class MapDatasetMaker(Maker):
             kwargs["exposure"] = exposure
 
         if "background" in self.selection:
-            kwargs["background"] = self.make_background(dataset.counts.geom, observation)
+            kwargs["background"] = self.make_background(
+                dataset.counts.geom, observation
+            )
 
         if "psf" in self.selection:
             psf = self.make_psf(dataset.psf.psf_map.geom, observation)

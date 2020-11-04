@@ -7,7 +7,7 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 from .flux_point import FluxPoints, FluxPointsEstimator
 
@@ -318,7 +318,7 @@ class LightCurveEstimator(Estimator):
         Start and stop time for each interval to compute the LC
     source : str
         For which source in the model to compute the flux points. Default is 0
-    e_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy edges of the light curve.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
@@ -353,7 +353,7 @@ class LightCurveEstimator(Estimator):
         self,
         time_intervals=None,
         source=0,
-        e_edges=None,
+        energy_edges=None,
         atol="1e-6 s",
         norm_min=0.2,
         norm_max=5,
@@ -370,7 +370,7 @@ class LightCurveEstimator(Estimator):
 
         self.atol = u.Quantity(atol)
 
-        self.e_edges = e_edges
+        self.energy_edges = energy_edges
 
         self.norm_min = norm_min
         self.norm_max = norm_max
@@ -439,15 +439,15 @@ class LightCurveEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        if self.e_edges is None:
-            e_mins, e_maxs = datasets.energy_ranges
-            e_edges = e_mins.min(), e_maxs.max()
+        if self.energy_edges is None:
+            energy_min, energy_max = datasets.energy_ranges
+            energy_edges = energy_min.min(), energy_max.max()
         else:
-            e_edges = self.e_edges
+            energy_edges = self.energy_edges
 
         fe = FluxPointsEstimator(
             source=self.source,
-            e_edges=e_edges,
+            energy_edges=energy_edges,
             norm_min=self.norm_min,
             norm_max=self.norm_max,
             norm_n_values=self.norm_n_values,

@@ -4,7 +4,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -18,9 +17,9 @@ class EDispKernel:
 
     Parameters
     ----------
-    e_true : `~gammapy.maps.MapAxis`
+    energy_axis_true : `~gammapy.maps.MapAxis`
         True energy axis. Its name must be "energy_true"
-    e_reco : `~gammapy.maps.MapAxis`
+    energy_axis : `~gammapy.maps.MapAxis`
         Reconstructed energy axis. Its name must be "energy"
     data : array_like
         2-dim energy dispersion matrix
@@ -34,7 +33,7 @@ class EDispKernel:
         energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
         energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
         edisp = EDispKernel.from_gauss(
-            e_true=energy, e_reco=energy,
+            energy_true=energy, energy=energy,
             sigma=0.1, bias=0,
         )
 
@@ -50,13 +49,13 @@ class EDispKernel:
     interpolate"""
 
     def __init__(
-        self, e_true, e_reco, data, interp_kwargs=None, meta=None,
+        self, energy_axis_true, energy_axis, data, interp_kwargs=None, meta=None,
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
         self.data = NDDataArray(
-            axes=[e_true, e_reco], data=data, interp_kwargs=interp_kwargs
+            axes=[energy_axis_true, energy_axis], data=data, interp_kwargs=interp_kwargs
         )
         self.meta = meta or {}
 
@@ -66,12 +65,12 @@ class EDispKernel:
         return ss
 
     @property
-    def e_reco(self):
+    def energy_axis(self):
         """Reconstructed energy axis (`~gammapy.maps.MapAxis`)"""
         return self.data.axes["energy"]
 
     @property
-    def e_true(self):
+    def energy_axis_true(self):
         """True energy axis (`~gammapy.maps.MapAxis`)"""
         return self.data.axes["energy_true"]
 
@@ -95,7 +94,7 @@ class EDispKernel:
             High reco energy threshold
         """
         data = self.pdf_matrix.copy()
-        energy = self.e_reco.edges
+        energy = self.energy_axis.edges
 
         if lo_threshold is None and hi_threshold is None:
             idx = slice(None)
@@ -114,39 +113,27 @@ class EDispKernel:
         hi_threshold : `~astropy.units.Quantity`, optional
             High reco energy threshold
         """
-        lo_threshold = lo_threshold or self.e_reco.edges[0]
-        hi_threshold = hi_threshold or self.e_reco.edges[-1]
+        lo_threshold = lo_threshold or self.energy_axis.edges[0]
+        hi_threshold = hi_threshold or self.energy_axis.edges[-1]
         data = self.pdf_in_safe_range(lo_threshold, hi_threshold)
 
         return self.__class__(
-            e_reco=self.e_reco.squash(),
-            e_true=self.e_true,
+            energy_axis=self.energy_axis.squash(),
+            energy_axis_true=self.energy_axis_true,
             data=np.sum(data, axis=1, keepdims=True),
         )
 
     @classmethod
-    def from_energy_lo_hi(
-        cls, e_true_lo, e_true_hi, e_reco_lo, e_reco_hi, data, **kwargs
-    ):
-        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
-        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="energy_true")
-
-        e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
-        e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="energy")
-
-        return cls(e_true_axis, e_reco_axis, data, **kwargs)
-
-    @classmethod
-    def from_gauss(cls, e_true, e_reco, sigma, bias, pdf_threshold=1e-6):
+    def from_gauss(cls, energy_true, energy, sigma, bias, pdf_threshold=1e-6):
         """Create Gaussian energy dispersion matrix (`EnergyDispersion`).
 
         Calls :func:`gammapy.irf.EnergyDispersion2D.from_gauss`
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             Bin edges of true energy axis
-        e_reco : `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`
             Bin edges of reconstructed energy axis
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
@@ -162,62 +149,57 @@ class EDispKernel:
         offset = Quantity([0, 1, 2], "deg")
 
         edisp = EnergyDispersion2D.from_gauss(
-            e_true=e_true,
+            energy_true=energy_true,
             migra=migra,
             sigma=sigma,
             bias=bias,
             offset=offset,
             pdf_threshold=pdf_threshold,
         )
-        return edisp.to_energy_dispersion(offset=offset[0], e_reco=e_reco)
+        return edisp.to_edisp_kernel(offset=offset[0], energy=energy)
 
     @classmethod
-    def from_diagonal_response(cls, e_true, e_reco=None):
+    def from_diagonal_response(cls, energy_true, energy=None):
         """Create energy dispersion from a diagonal response, i.e. perfect energy resolution
 
         This creates the matrix corresponding to a perfect energy response.
-        It contains ones where the e_true center is inside the e_reco bin.
-        It is a square diagonal matrix if e_true = e_reco.
+        It contains ones where the energy_true center is inside the e_reco bin.
+        It is a square diagonal matrix if energy_true = e_reco.
 
         This is useful in cases where code always applies an edisp,
         but you don't want it to do anything.
 
         Parameters
         ----------
-        e_true, e_reco : `~astropy.units.Quantity`
-            Energy bounds for true and reconstructed energy axis
+        energy_true, energy : `~astropy.units.Quantity`
+            Energy edges for true and reconstructed energy axis
 
         Examples
         --------
-        If ``e_true`` equals ``e_reco``, you get a diagonal matrix::
+        If ``energy_true`` equals ``energy``, you get a diagonal matrix::
 
-            e_true = [0.5, 1, 2, 4, 6] * u.TeV
-            edisp = EnergyDispersion.from_diagonal_response(e_true)
+            energy_true = [0.5, 1, 2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(energy_true)
             edisp.plot_matrix()
 
         Example with different energy binnings::
 
-            e_true = [0.5, 1, 2, 4, 6] * u.TeV
-            e_reco = [2, 4, 6] * u.TeV
-            edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+            energy_true = [0.5, 1, 2, 4, 6] * u.TeV
+            energy = [2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(energy_true, energy)
             edisp.plot_matrix()
         """
-        if e_reco is None:
-            e_reco = e_true
+        from .edisp_map import get_overlap_fraction
 
-        e_true_center = 0.5 * (e_true[1:] + e_true[:-1])
-        etrue_2d, ereco_lo_2d = np.meshgrid(e_true_center, e_reco[:-1])
-        etrue_2d, ereco_hi_2d = np.meshgrid(e_true_center, e_reco[1:])
+        if energy is None:
+            energy = energy_true
 
-        data = np.logical_and(etrue_2d >= ereco_lo_2d, etrue_2d < ereco_hi_2d)
-        data = np.transpose(data).astype("float")
+        energy_axis = MapAxis.from_energy_edges(energy)
+        energy_axis_true = MapAxis.from_energy_edges(energy_true, name="energy_true")
 
-        return cls.from_energy_lo_hi(
-            e_true_lo=e_true[:-1],
-            e_true_hi=e_true[1:],
-            e_reco_lo=e_reco[:-1],
-            e_reco_hi=e_reco[1:],
-            data=data,
+        data = get_overlap_fraction(energy_axis, energy_axis_true)
+        return cls(
+            energy_axis=energy_axis, energy_axis_true=energy_axis_true, data=data,
         )
 
     @classmethod
@@ -252,20 +234,14 @@ class EDispKernel:
                     ] = l.field("MATRIX")[m_start : m_start + l.field("N_CHAN")[k]]
                     m_start += l.field("N_CHAN")[k]
 
-        unit = ebounds_hdu.header.get("TUNIT2")
-        e_reco_lo = Quantity(ebounds_hdu.data["E_MIN"], unit=unit)
-        e_reco_hi = Quantity(ebounds_hdu.data["E_MAX"], unit=unit)
+        table = Table.read(ebounds_hdu)
+        energy_axis = MapAxis.from_table(table, format="ogip")
 
-        unit = matrix_hdu.header.get("TUNIT1")
-        e_true_lo = Quantity(matrix_hdu.data["ENERG_LO"], unit=unit)
-        e_true_hi = Quantity(matrix_hdu.data["ENERG_HI"], unit=unit)
+        table = Table.read(matrix_hdu)
+        energy_axis_true = MapAxis.from_table(table, format="ogip-arf")
 
-        return cls.from_energy_lo_hi(
-            e_true_lo=e_true_lo,
-            e_true_hi=e_true_hi,
-            e_reco_lo=e_reco_lo,
-            e_reco_hi=e_reco_hi,
-            data=pdf_matrix,
+        return cls(
+            energy_axis=energy_axis, energy_axis_true=energy_axis_true, data=pdf_matrix,
         )
 
     @classmethod
@@ -335,7 +311,7 @@ class EDispKernel:
 
         hdu_format = "ogip-sherpa" if use_sherpa else "ogip"
 
-        ebounds_hdu = self.e_reco.to_table_hdu(format=hdu_format)
+        ebounds_hdu = self.energy_axis.to_table_hdu(format=hdu_format)
         prim_hdu = fits.PrimaryHDU()
 
         return fits.HDUList([prim_hdu, hdu, ebounds_hdu])
@@ -380,7 +356,7 @@ class EDispKernel:
 
         table = Table()
 
-        energy = self.e_true.edges
+        energy = self.energy_axis_true.edges
         table["ENERG_LO"] = energy[:-1]
         table["ENERG_HI"] = energy[1:]
         table["N_GRP"] = n_grp
@@ -394,7 +370,7 @@ class EDispKernel:
             "hduclass": "OGIP",
             "hduclas1": "RESPONSE",
             "hduclas2": "RSP_MATRIX",
-            "detchans": self.e_reco.nbin,
+            "detchans": self.energy_axis.nbin,
             "numgrp": numgrp,
             "numelt": numelt,
             "tlmin4": 0,
@@ -407,22 +383,22 @@ class EDispKernel:
         filename = str(make_path(filename))
         self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
 
-    def get_resolution(self, e_true):
+    def get_resolution(self, energy_true):
         """Get energy resolution for a given true energy.
 
         The resolution is given as a percentage of the true energy
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             True energy
         """
-        var = self._get_variance(e_true)
-        idx_true = self.e_true.coord_to_idx(e_true)
-        e_true_real = self.e_true.center[idx_true]
-        return np.sqrt(var) / e_true_real
+        var = self._get_variance(energy_true)
+        idx_true = self.energy_axis_true.coord_to_idx(energy_true)
+        energy_true_real = self.energy_axis_true.center[idx_true]
+        return np.sqrt(var) / energy_true_real
 
-    def get_bias(self, e_true):
+    def get_bias(self, energy_true):
         r"""Get reconstruction bias for a given true energy.
 
         Bias is defined as
@@ -431,29 +407,29 @@ class EDispKernel:
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             True energy
         """
-        e_reco = self.get_mean(e_true)
-        idx_true = self.e_true.coord_to_idx(e_true)
-        e_true_real = self.e_true.center[idx_true]
-        bias = (e_reco - e_true_real) / e_true_real
+        energy = self.get_mean(energy_true)
+        idx_true = self.energy_axis_true.coord_to_idx(energy_true)
+        energy_true_real = self.energy_axis_true.center[idx_true]
+        bias = (energy - energy_true_real) / energy_true_real
         return bias
 
-    def get_bias_energy(self, bias, emin=None, emax=None):
+    def get_bias_energy(self, bias, energy_min=None, energy_max=None):
         """Find energy corresponding to a given bias.
 
-        In case the solution is not unique, provide the ``emin`` or ``emax`` arguments
+        In case the solution is not unique, provide the ``energy_min`` or ``energy_max`` arguments
         to limit the solution to the given range.  By default the peak energy of the
-        bias is chosen as ``emin``.
+        bias is chosen as ``energy_min``.
 
         Parameters
         ----------
         bias : float
             Bias value.
-        emin : `~astropy.units.Quantity`
+        energy_min : `~astropy.units.Quantity`
             Lower bracket value in case solution is not unique.
-        emax : `~astropy.units.Quantity`
+        energy_max : `~astropy.units.Quantity`
             Upper bracket value in case solution is not unique.
 
         Returns
@@ -463,31 +439,33 @@ class EDispKernel:
         """
         from gammapy.modeling.models import TemplateSpectralModel
 
-        e_true = self.e_true.center
-        values = self.get_bias(e_true)
+        energy_true = self.energy_axis_true.center
+        values = self.get_bias(energy_true)
 
-        if emin is None:
+        if energy_min is None:
             # use the peak bias energy as default minimum
-            emin = e_true[np.nanargmax(values)]
-        if emax is None:
-            emax = e_true[-1]
+            energy_min = energy_true[np.nanargmax(values)]
+        if energy_max is None:
+            energy_max = energy_true[-1]
 
-        bias_spectrum = TemplateSpectralModel(e_true, values)
-        e_true_bias = bias_spectrum.inverse(Quantity(bias), emin=emin, emax=emax)
+        bias_spectrum = TemplateSpectralModel(energy_true, values)
+        energy_true_bias = bias_spectrum.inverse(
+            Quantity(bias), energy_min=energy_min, energy_max=energy_max
+        )
 
         # return reconstructed energy
-        return e_true_bias * (1 + bias)
+        return energy_true_bias * (1 + bias)
 
-    def get_mean(self, e_true):
+    def get_mean(self, energy_true):
         """Get mean reconstructed energy for a given true energy."""
         # find pdf for true energies
-        idx = self.e_true.coord_to_idx(e_true)
+        idx = self.energy_axis_true.coord_to_idx(energy_true)
         pdf = self.data.data[idx]
 
         # compute sum along reconstructed energy
         # axis to determine the mean
         norm = np.sum(pdf, axis=-1)
-        temp = np.sum(pdf * self.e_reco.center, axis=-1)
+        temp = np.sum(pdf * self.energy_axis.center, axis=-1)
 
         with np.errstate(invalid="ignore"):
             # corm can be zero
@@ -495,19 +473,19 @@ class EDispKernel:
 
         return mean
 
-    def _get_variance(self, e_true):
+    def _get_variance(self, energy_true):
         """Get variance of log reconstructed energy."""
         # evaluate the pdf at given true energies
-        idx = self.e_true.coord_to_idx(e_true)
+        idx = self.energy_axis_true.coord_to_idx(energy_true)
         pdf = self.data.data[idx]
 
         # compute mean
-        mean = self.get_mean(e_true)
+        mean = self.get_mean(energy_true)
 
         # create array of reconstructed-energy nodes
         # for each given true energy value
         # (first axis is reconstructed energy)
-        erec = self.e_reco.center
+        erec = self.energy_axis.center
         erec = np.repeat(erec, max(np.sum(mean.shape), 1)).reshape(
             erec.shape + mean.shape
         )
@@ -550,23 +528,23 @@ class EDispKernel:
 
         ax = plt.gca() if ax is None else ax
 
-        e_true = self.e_true.edges
-        e_reco = self.e_reco.edges
-        x = e_true.value
-        y = e_reco.value
+        energy_true = self.energy_axis_true.edges
+        energy = self.energy_axis.edges
+        x = energy_true.value
+        y = energy.value
         z = self.pdf_matrix
         caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
         if show_energy is not None:
-            ener_val = show_energy.to_value(self.reco_energy.unit)
+            ener_val = show_energy.to_value(self.energy_axis.unit)
             ax.hlines(ener_val, 0, 200200, linestyles="dashed")
 
         if add_cbar:
             label = "Probability density (A.U.)"
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{e_true.unit}]")
-        ax.set_ylabel(fr"$E_\mathrm{{Reco}}$ [{e_reco.unit}]")
+        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{energy_true.unit}]")
+        ax.set_ylabel(fr"$E_\mathrm{{Reco}}$ [{energy.unit}]")
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(x.min(), x.max())
@@ -587,8 +565,8 @@ class EDispKernel:
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.e_true.center.to_value("TeV")
-        y = self.get_bias(self.e_true.center)
+        x = self.energy_axis_true.center.to_value("TeV")
+        y = self.get_bias(self.energy_axis_true.center)
 
         ax.plot(x, y, **kwargs)
         ax.set_xlabel(r"$E_\mathrm{{True}}$ [TeV]")

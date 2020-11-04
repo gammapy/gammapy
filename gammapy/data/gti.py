@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import copy
-from operator import lt, le
+from operator import le, lt
+import numpy as np
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy.units import Quantity
@@ -145,7 +145,10 @@ class GTI:
     @property
     def time_intervals(self):
         """List of time intervals"""
-        return [(t_start, t_stop) for t_start, t_stop in zip(self.time_start, self.time_stop)]
+        return [
+            (t_start, t_stop)
+            for t_start, t_stop in zip(self.time_start, self.time_stop)
+        ]
 
     @classmethod
     def from_time_intervals(cls, time_intervals, reference_time="2000-01-01"):

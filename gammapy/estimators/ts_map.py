@@ -1,28 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
+import contextlib
 import functools
 import logging
 import warnings
-import numpy as np
-import contextlib
 from multiprocessing import Pool
+import numpy as np
 import scipy.optimize
+from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from astropy import units as u
-from gammapy.maps import Map, WcsGeom, MapAxis
-from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import (
-    PointSpatialModel,
-    PowerLawSpectralModel,
-    SkyModel,
-)
-from gammapy.stats import (
-    norm_bounds_cython,
-    cash_sum_cython,
-    f_cash_root_cython,
-)
+from gammapy.datasets.map import MapEvaluator
+from gammapy.maps import Map, WcsGeom
+from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
+from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
@@ -99,7 +91,7 @@ class TSMapEstimator(Estimator):
             * "ul": estimate upper limits on flux.
 
         By default all steps are executed.
-    e_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy edges of the maps bins.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
@@ -138,7 +130,7 @@ class TSMapEstimator(Estimator):
         threshold=None,
         rtol=0.01,
         selection_optional="all",
-        e_edges=None,
+        energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
     ):
@@ -161,7 +153,7 @@ class TSMapEstimator(Estimator):
         self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
-        self.e_edges = e_edges
+        self.energy_edges = energy_edges
         self._flux_estimator = BrentqFluxEstimator(
             rtol=self.rtol,
             n_sigma=self.n_sigma,
@@ -414,16 +406,16 @@ class TSMapEstimator(Estimator):
         # TODO: add support for joint likelihood fitting to TSMapEstimator
         datasets = Datasets(dataset)
 
-        if self.e_edges is None:
+        if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
-            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            e_edges = self.e_edges
+            energy_edges = self.energy_edges
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_by_energy(e_min, e_max)[0]
+        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
+            dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
             if self.sum_over_energy_groups:
                 dataset = dataset.to_image()
@@ -445,7 +437,9 @@ class TSMapEstimator(Estimator):
 
             result_all[name] = map_all
 
-        result_all["sqrt_ts"] = self.estimate_sqrt_ts(result_all["ts"], result_all["flux"])
+        result_all["sqrt_ts"] = self.estimate_sqrt_ts(
+            result_all["ts"], result_all["flux"]
+        )
         return result_all
 
 
@@ -567,7 +561,7 @@ class BrentqFluxEstimator(Estimator):
 
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        result["ts"] = (stat_null - stat)
+        result["ts"] = stat_null - stat
         result["norm"] = norm
         result["niter"] = niter
 
@@ -633,12 +627,10 @@ class BrentqFluxEstimator(Estimator):
         norm = dataset.norm_guess
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        ts = (stat_null - stat)
+        ts = stat_null - stat
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            norm_err = (
-                    np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-            )
+            norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
         return {"norm": norm, "ts": ts, "norm_err": norm_err, "stat": stat, "niter": 0}
 
     def run(self, dataset):

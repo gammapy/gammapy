@@ -26,7 +26,7 @@ rectangle = RectangleSkyRegion(
 bkg_maker = ReflectedRegionsBackgroundMaker(min_distance=0.1 * u.rad)
 dataset_maker = SpectrumDatasetMaker(selection=["counts"])
 
-e_reco = MapAxis.from_energy_bounds(0.1,100,30, unit="TeV")
+e_reco = MapAxis.from_energy_bounds(0.1, 100, 30, unit="TeV")
 dataset_empty = SpectrumDataset.create(e_reco=e_reco, region=rectangle)
 
 datasets = []

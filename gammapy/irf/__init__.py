@@ -16,7 +16,6 @@ from .psf_king import *
 from .psf_map import *
 from .psf_table import *
 
-
 IRF_REGISTRY = Registry(
     [
         EffectiveAreaTable2D,

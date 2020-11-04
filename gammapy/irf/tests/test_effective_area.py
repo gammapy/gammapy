@@ -106,7 +106,7 @@ class TestEffectiveAreaTable:
         assert_allclose(elo_threshold.value, 0.554086, rtol=1e-3)
 
         ehi_threshold = arf.find_energy(
-            0.9 * arf.max_area, emin=30 * u.TeV, emax=100 * u.TeV
+            0.9 * arf.max_area, energy_min=30 * u.TeV, energy_max=100 * u.TeV
         )
         assert ehi_threshold.unit == "TeV"
         assert_allclose(ehi_threshold.value, 53.347217, rtol=1e-3)
@@ -169,7 +169,9 @@ def test_compute_thresholds_from_parametrization():
 
     thresh_lo = aeff.find_energy(aeff=0.1 * aeff.max_area)
     e_max = aeff.energy.edges[-1]
-    thresh_hi = aeff.find_energy(aeff=0.9 * aeff.max_area, emin=0.1 * e_max, emax=e_max)
+    thresh_hi = aeff.find_energy(
+        aeff=0.9 * aeff.max_area, energy_min=0.1 * e_max, energy_max=e_max
+    )
 
     assert_allclose(thresh_lo.to("TeV").value, 0.18557, rtol=1e-4)
     assert_allclose(thresh_hi.to("TeV").value, 43.818, rtol=1e-4)

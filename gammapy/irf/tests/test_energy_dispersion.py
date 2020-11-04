@@ -15,8 +15,8 @@ class TestEDispKernel:
         self.resolution = 0.1
         self.bias = 0
         self.edisp = EDispKernel.from_gauss(
-            e_true=self.e_true,
-            e_reco=self.e_reco,
+            energy_true=self.e_true,
+            energy=self.e_reco,
             pdf_threshold=1e-7,
             sigma=self.resolution,
             bias=self.bias,
@@ -35,8 +35,8 @@ class TestEDispKernel:
 
         # Test square matrix
         edisp = EDispKernel.from_diagonal_response(e_true)
-        assert_allclose(edisp.e_reco.edges.value, e_true.value)
-        assert edisp.e_reco.unit == "TeV"
+        assert_allclose(edisp.energy_axis.edges.value, e_true.value)
+        assert edisp.energy_axis.unit == "TeV"
         assert_equal(edisp.pdf_matrix[0][0], 1)
         assert_equal(edisp.pdf_matrix[2][0], 0)
         assert edisp.pdf_matrix.sum() == 4
@@ -47,7 +47,7 @@ class TestEDispKernel:
             "0.08 TeV", "20 TeV", nbin=5, name="energy_true"
         )
         edisp = EDispKernel.from_gauss(
-            e_reco=e_reco.edges, e_true=e_true.edges, sigma=0.2, bias=0.1
+            energy=e_reco.edges, energy_true=e_true.edges, sigma=0.2, bias=0.1
         )
         im = edisp.to_image()
 
@@ -55,7 +55,7 @@ class TestEDispKernel:
         assert_allclose(
             im.pdf_matrix, [[0.97142], [1.0], [1.0], [1.0], [0.12349]], rtol=1e-3
         )
-        assert_allclose(im.e_reco.edges, [0.1, 10] * u.TeV)
+        assert_allclose(im.energy_axis.edges, [0.1, 10] * u.TeV)
 
     def test_str(self):
         assert "EDispKernel" in str(self.edisp)
@@ -137,7 +137,7 @@ class TestEnergyDispersion2D:
         assert_equal(actual, desired)
 
     def test_get_response(self):
-        pdf = self.edisp2.get_response(offset=0.7 * u.deg, e_true=1 * u.TeV)
+        pdf = self.edisp2.get_response(offset=0.7 * u.deg, energy_true=1 * u.TeV)
         assert_allclose(pdf.sum(), 1)
         assert_allclose(pdf.max(), 0.010421, rtol=1e-4)
 
@@ -146,7 +146,7 @@ class TestEnergyDispersion2D:
         offset = Angle(0.612, "deg")
         e_reco = MapAxis.from_energy_bounds(1, 10, 7, "TeV").edges
         e_true = MapAxis.from_energy_bounds(0.8, 5, 5, "TeV").edges
-        rmf = self.edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
+        rmf = self.edisp.to_edisp_kernel(offset, energy_true=e_true, energy=e_reco)
         assert_allclose(rmf.data.data[2, 3], 0.08, atol=5e-2)  # same tolerance as above
         actual = rmf.pdf_matrix[2]
         e_val = np.sqrt(e_true[2] * e_true[3])
@@ -160,15 +160,12 @@ class TestEnergyDispersion2D:
 
         offset_axis = MapAxis.from_bounds(
             0, 1, nbin=3, unit="deg", name="offset", node_type="edges"
-
         )
 
-        migra_axis = MapAxis.from_bounds(
-            0, 3, nbin=3, name="migra", node_type="edges"
-        )
+        migra_axis = MapAxis.from_bounds(0, 3, nbin=3, name="migra", node_type="edges")
 
         shape = (energy_axis_true.nbin, migra_axis.nbin, offset_axis.nbin)
-        
+
         data = np.ones(shape=shape) * u.cm ** 2
 
         edisp = EnergyDispersion2D(

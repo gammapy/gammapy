@@ -41,6 +41,7 @@ class AdaptiveRingBackgroundMaker(Maker):
     --------
     RingBackgroundMaker
     """
+
     tag = "AdaptiveRingBackgroundMaker"
 
     def __init__(
@@ -244,6 +245,7 @@ class RingBackgroundMaker(Maker):
     --------
     AdaptiveRingBackgroundEstimator
     """
+
     tag = "RingBackgroundMaker"
 
     def __init__(self, r_in, width, exclusion_mask=None):

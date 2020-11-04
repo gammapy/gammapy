@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import pytest
+import numpy as np
 from gammapy.datasets import Datasets
-from gammapy.modeling.sampling import run_mcmc, ln_uniform_prior
 from gammapy.modeling.models import Models
-from gammapy.utils.testing import requires_dependency, requires_data
+from gammapy.modeling.sampling import ln_uniform_prior, run_mcmc
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")

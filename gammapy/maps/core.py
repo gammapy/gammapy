@@ -6,8 +6,9 @@ import json
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
+from gammapy.maps.hpx import HpxGeom
 from gammapy.utils.scripts import make_path
-from .geom import MapCoord, pix_tuple_to_idx, MapAxis
+from .geom import MapAxis, MapCoord, pix_tuple_to_idx
 from .utils import INVALID_VALUE
 
 __all__ = ["Map"]
@@ -30,6 +31,7 @@ class Map(abc.ABC):
     unit : str or `~astropy.units.Unit`
         Data unit
     """
+
     tag = "map"
 
     def __init__(self, geom, data, meta=None, unit=""):
@@ -189,9 +191,7 @@ class Map(abc.ABC):
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format)
 
     @staticmethod
-    def from_geom(
-        geom, meta=None, data=None, unit="", dtype="float32"
-    ):
+    def from_geom(geom, meta=None, data=None, unit="", dtype="float32"):
         """Generate an empty map from a `Geom` instance.
 
         Parameters
@@ -233,7 +233,9 @@ class Map(abc.ABC):
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
+        return cls_out.from_hdulist(
+            hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
+        )
 
     @staticmethod
     def _get_meta_from_header(header):
@@ -476,15 +478,31 @@ class Map(abc.ABC):
         axis_self = self.geom.axes[axis.name]
         axis_resampled = geom.axes[axis.name]
 
-        indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
+        # We don't use MapAxis.coord_to_idx because is does not behave as needed with boundaries
+        coord = axis_resampled.edges.value
+        edges = axis_self.edges.value
+        indices = np.digitize(coord, edges) - 1
+
         idx = self.geom.axes.index_data(axis.name)
 
         weights = 1 if weights is None else weights.data
 
-        data = ufunc.reduceat(self.data * weights, indices=indices, axis=idx)
+        if not isinstance(self.geom, HpxGeom):
+            shape = self.geom._shape[:2]
+        else:
+            shape = (self.geom.data_shape[-1],)
+        shape += tuple([ax.nbin if ax != axis else 1 for ax in self.geom.axes])
+
+        padded_array = np.append(self.data * weights, np.zeros(shape[::-1]), axis=idx)
+
+        slices = tuple([slice(0, _) for _ in geom.data_shape])
+        data = ufunc.reduceat(padded_array, indices=indices, axis=idx)[slices]
+
         return self._init_copy(data=data, geom=geom)
 
-    def slice_by_idx(self, slices, ):
+    def slice_by_idx(
+        self, slices,
+    ):
         """Slice sub map from map object.
 
         For usage examples, see :ref:`mapslicing`.
@@ -637,7 +655,9 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(coords, frame=self.geom.frame, axis_names=self.geom.axes.names)
+        coords = MapCoord.create(
+            coords, frame=self.geom.frame, axis_names=self.geom.axes.names
+        )
         pix = self.geom.coord_to_pix(coords)
         vals = self.get_by_pix(pix)
         return vals
@@ -783,7 +803,7 @@ class Map(abc.ABC):
 
         if preserve_counts:
             if geom.ndim > 2:
-                assert self.geom.axes[0] == geom.axes[0] # Energy axis has to match
+                assert self.geom.axes[0] == geom.axes[0]  # Energy axis has to match
             old_map_copy = self.copy()
             old_map_copy.data /= self.geom.solid_angle().to_value("deg2")
             data = old_map_copy.interp_by_coord(coords, **kwargs)
@@ -922,7 +942,7 @@ class Map(abc.ABC):
 
         if figsize is None:
             width = 12
-            figsize=(width, width * rows / cols)
+            figsize = (width, width * rows / cols)
 
         if self.geom.is_hpx:
             wcs = self.geom.to_wcs_geom().wcs
@@ -934,7 +954,7 @@ class Map(abc.ABC):
             nrows=rows,
             subplot_kw={"projection": wcs},
             figsize=figsize,
-            gridspec_kw={"hspace": 0.1, "wspace": 0.1}
+            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
         )
 
         for idx in range(cols * rows):
@@ -947,11 +967,7 @@ class Map(abc.ABC):
                 continue
 
             if image.geom.is_hpx:
-                image_wcs = image.to_wcs(
-                    normalize=False,
-                    proj="AIT",
-                    oversample=2,
-                ),
+                image_wcs = (image.to_wcs(normalize=False, proj="AIT", oversample=2,),)
             else:
                 image_wcs = image
 
@@ -1094,13 +1110,13 @@ class Map(abc.ABC):
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
-            e_reco_axis = edisp.e_reco.copy(name="energy")
+            energy_axis = edisp.energy_axis.copy(name="energy")
         else:
             data = self.data
-            e_reco_axis = self.geom.axes["energy_true"].copy(name="energy")
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
 
-        geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
-        return self._init_copy(geom=geom_reco, data=data)
+        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+        return self._init_copy(geom=geom, data=data)
 
     def sum_over_axes(self, axes_names=None, keepdims=True, weights=None):
         """To sum map values over all non-spatial axes.
@@ -1124,7 +1140,9 @@ class Map(abc.ABC):
             func=np.add, axes_names=axes_names, keepdims=keepdims, weights=weights
         )
 
-    def reduce_over_axes(self, func=np.add, keepdims=False, axes_names=None, weights=None):
+    def reduce_over_axes(
+        self, func=np.add, keepdims=False, axes_names=None, weights=None
+    ):
         """Reduce map over non-spatial axes
 
         Parameters
@@ -1150,7 +1168,9 @@ class Map(abc.ABC):
 
         map_out = self.copy()
         for axis_name in axes_names:
-            map_out = map_out.reduce(axis_name, func=func, keepdims=keepdims, weights=weights)
+            map_out = map_out.reduce(
+                axis_name, func=func, keepdims=keepdims, weights=weights
+            )
 
         return map_out
 
@@ -1186,9 +1206,7 @@ class Map(abc.ABC):
         if weights is not None:
             data = data * weights
 
-        data = func.reduce(
-            data, axis=idx, keepdims=keepdims, where=~np.isnan(data)
-        )
+        data = func.reduce(data, axis=idx, keepdims=keepdims, where=~np.isnan(data))
         return self._init_copy(geom=geom, data=data)
 
     @classmethod
@@ -1222,17 +1240,15 @@ class Map(abc.ABC):
 
         if axis is None:
             try:
-                axis = MapAxis.from_stack(
-                    axes=[image.geom.axes[0] for image in images]
-                )
+                axis = MapAxis.from_stack(axes=[image.geom.axes[0] for image in images])
             except IndexError:
-                ValueError("Images don't have a non-spatial axis. Please provide"
-                           " the axis separately")
+                ValueError(
+                    "Images don't have a non-spatial axis. Please provide"
+                    " the axis separately"
+                )
 
         return cls.from_geom(
-            data=np.stack(data),
-            geom=geom_ref.to_cube(axes=[axis]),
-            unit=images[0].unit
+            data=np.stack(data), geom=geom_ref.to_cube(axes=[axis]), unit=images[0].unit
         )
 
     def to_cube(self, axes):

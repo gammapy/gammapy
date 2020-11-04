@@ -32,9 +32,7 @@ def hstack_columns(table, table_other):
     stacked = Table()
 
     for column in table.colnames:
-        data = np.hstack(
-            [table[column].data[0], table_other[column].data[0]]
-        )
+        data = np.hstack([table[column].data[0], table_other[column].data[0]])
         stacked[column] = data[np.newaxis, :]
     return stacked
 

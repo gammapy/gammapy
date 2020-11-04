@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.estimators import TSMapEstimator
-from gammapy.irf import EnergyDependentTablePSF, PSFMap, EDispKernelMap
+from gammapy.irf import EDispKernelMap, EnergyDependentTablePSF, PSFMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -128,16 +128,20 @@ def test_compute_ts_map_psf(fermi_dataset):
 @requires_data()
 def test_compute_ts_map_energy(fermi_dataset):
     estimator = TSMapEstimator(
-            kernel_width="0.6 deg",
-            e_edges=[10, 100, 1000] * u.GeV,
-            sum_over_energy_groups=False
-        )
+        kernel_width="0.6 deg",
+        energy_edges=[10, 100, 1000] * u.GeV,
+        sum_over_energy_groups=False,
+    )
 
     result = estimator.run(fermi_dataset)
 
     assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
-    assert_allclose(result["flux"].data[:, 29, 29], [1.233119e-09, 3.590694e-11], rtol=1e-2)
-    assert_allclose(result["flux_err"].data[:, 29, 29], [7.382305e-11, 1.338985e-11], rtol=1e-2)
+    assert_allclose(
+        result["flux"].data[:, 29, 29], [1.233119e-09, 3.590694e-11], rtol=1e-2
+    )
+    assert_allclose(
+        result["flux_err"].data[:, 29, 29], [7.382305e-11, 1.338985e-11], rtol=1e-2
+    )
     assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
 
     energy_axis = result["ts"].geom.axes["energy"]

@@ -8,10 +8,10 @@ from gammapy.datasets import MapDataset
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
+    FoVBackgroundModel,
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    FoVBackgroundModel
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -131,12 +131,13 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
 @requires_data()
 @requires_dependency("iminuit")
 def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
-    fov_bkg_maker = FoVBackgroundMaker(
-        method="fit", exclusion_mask=exclusion_mask,
-    )
+    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask,)
 
     test_dataset = obs_dataset.copy(name="test-fov")
-    test_dataset.background_model.spectral_model.tilt.frozen = False
+
+    model = FoVBackgroundModel(dataset_name="test-fov")
+    model.spectral_model.tilt.frozen = False
+    test_dataset.models = [model]
     dataset = fov_bkg_maker.run(test_dataset)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model

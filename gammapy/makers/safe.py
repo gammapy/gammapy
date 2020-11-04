@@ -2,10 +2,9 @@
 import logging
 import numpy as np
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDataset
-from gammapy.irf import EffectiveAreaTable, EDispKernelMap
-from gammapy.maps import Map, WcsGeom
 from regions import PointSkyRegion
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable
+from gammapy.maps import Map
 from .core import Maker
 
 __all__ = ["SafeMaskMaker"]
@@ -102,13 +101,15 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         try:
-            e_max = observation.aeff.high_threshold
-            e_min = observation.aeff.low_threshold
+            energy_max = observation.aeff.high_threshold
+            energy_min = observation.aeff.low_threshold
         except KeyError:
             log.warning(f"No thresholds defined for obs {observation.obs_id}")
-            e_min, e_max = None, None
+            energy_min, energy_max = None, None
 
-        return dataset.counts.geom.energy_mask(emin=e_min, emax=e_max)
+        return dataset.counts.geom.energy_mask(
+            energy_min=energy_min, energy_max=energy_max
+        )
 
     def make_mask_energy_aeff_max(self, dataset):
         """Make safe energy mask from effective area maximum value.
@@ -138,8 +139,8 @@ class SafeMaskMaker(Maker):
             data=(exposure.quantity / dataset.gti.time_sum).squeeze(),
         )
         aeff_thres = (self.aeff_percent / 100) * aeff.max_area
-        e_min = aeff.find_energy(aeff_thres)
-        return geom.energy_mask(emin=e_min)
+        energy_min = aeff.find_energy(aeff_thres)
+        return geom.energy_mask(energy_min=energy_min)
 
     def make_mask_energy_edisp_bias(self, dataset):
         """Make safe energy mask from energy dispersion bias.
@@ -165,8 +166,8 @@ class SafeMaskMaker(Maker):
         else:
             edisp = edisp.get_edisp_kernel(position, e_reco)
 
-        e_min = edisp.get_bias_energy(self.bias_percent / 100)
-        return geom.energy_mask(emin=e_min)
+        energy_min = edisp.get_bias_energy(self.bias_percent / 100)
+        return geom.energy_mask(energy_min=energy_min)
 
     @staticmethod
     def make_mask_energy_bkg_peak(dataset):
@@ -190,8 +191,8 @@ class SafeMaskMaker(Maker):
         background_spectrum = dataset.npred_background().get_spectrum()
         idx = np.argmax(background_spectrum.data, axis=0)
         energy_axis = geom.axes["energy"]
-        e_min = energy_axis.pix_to_coord(idx)
-        return geom.energy_mask(emin=e_min)
+        energy_min = energy_axis.pix_to_coord(idx)
+        return geom.energy_mask(energy_min=energy_min)
 
     def run(self, dataset, observation=None):
         """Make safe data range mask.

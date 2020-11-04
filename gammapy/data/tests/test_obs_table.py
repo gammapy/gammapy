@@ -3,14 +3,10 @@ import numpy as np
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.time import Time, TimeDelta
 from astropy.units import Quantity
-from gammapy.data import GTI, observatory_locations
+from gammapy.data import observatory_locations
 from gammapy.data.obs_table import ObservationTable, ObservationTableChecker
 from gammapy.utils.random import get_random_state, sample_sphere
-from gammapy.utils.testing import (
-    assert_quantity_allclose,
-    assert_time_allclose,
-    requires_data,
-)
+from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
 
 
@@ -303,7 +299,6 @@ def test_select_sky_regions():
     )
     obs_table = obs_table.select_observations(selection)
     assert len(obs_table) == 30
-
 
 
 @requires_data()

@@ -33,7 +33,7 @@ methods. See example for CTA `here <tutorials/cta.html#IRFs>`__ and for H.E.S.S.
 `here <tutorials/hess.html#DL3-DR1>`__.
 
 Use gammapy for modeling 2D images
-+++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++
 
 Gammapy treats 2D maps as 3D cubes with one bin in energy. To see an example of the relevant data reduction, see
 `2-dim sky image analysis <tutorials#core-tutorials>`
@@ -118,8 +118,8 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 For an example, see ` Implementing a Custom Model
 <tutorials/models.html#Implementing-a-Custom-Model>`__.
 
-Energy Dependent Morphological Models
-++++++++++++++++++++++++
+Energy Dependent Spatial Models
++++++++++++++++++++++++++++++++
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.
 For an example, see ` here

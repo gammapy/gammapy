@@ -7,25 +7,25 @@ from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.irf import EffectiveAreaTable, load_cta_irfs, EDispKernelMap
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    FoVBackgroundModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
 # TODO: use pregenerate data instead
 def simulate_spectrum_dataset(model, random_state=0):
-    edges = np.logspace(-0.5, 1.5, 21) * u.TeV
-    energy_axis = MapAxis.from_edges(edges, interp="log", name="energy")
+    energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
+    energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
 
-    aeff = EffectiveAreaTable.from_parametrization(energy=edges).to_region_map()
+    aeff = EffectiveAreaTable.from_parametrization(energy=energy_edges).to_region_map()
     bkg_model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
@@ -58,8 +58,7 @@ def simulate_spectrum_dataset(model, random_state=0):
 
     dataset.models = model
     dataset.fake(
-        random_state=random_state,
-        npred_background=bkg_npred,
+        random_state=random_state, npred_background=bkg_npred,
     )
     return dataset
 
@@ -67,9 +66,11 @@ def simulate_spectrum_dataset(model, random_state=0):
 def create_fpe(model):
     model = SkyModel(spectral_model=model, name="source")
     dataset = simulate_spectrum_dataset(model)
-    e_edges = [0.1, 1, 10, 100] * u.TeV
+    energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
-    fpe = FluxPointsEstimator(e_edges=e_edges, norm_n_values=11, source="source")
+    fpe = FluxPointsEstimator(
+        energy_edges=energy_edges, norm_n_values=11, source="source"
+    )
     datasets = [dataset]
     return datasets, fpe
 
@@ -80,8 +81,8 @@ def simulate_map_dataset(random_state=0, name=None):
     )
 
     skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
-    edges = np.logspace(-1, 2, 15) * u.TeV
-    energy_axis = MapAxis.from_edges(edges=edges, name="energy", interp="log")
+    energy_edges = np.logspace(-1, 2, 15) * u.TeV
+    energy_axis = MapAxis.from_edges(edges=energy_edges, name="energy", interp="log")
 
     geom = WcsGeom.create(
         skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], frame="galactic"
@@ -113,23 +114,25 @@ def fpe_map_pwl():
 
     dataset_2.mask_safe = RegionNDMap.from_geom(dataset_2.counts.geom, dtype=bool)
 
-    e_edges = [0.1, 1, 10, 100] * u.TeV
+    energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
-    fpe = FluxPointsEstimator(e_edges=e_edges, norm_n_values=3, source="source")
+    fpe = FluxPointsEstimator(
+        energy_edges=energy_edges, norm_n_values=3, source="source"
+    )
     return datasets, fpe
 
 
 @pytest.fixture(scope="session")
 def fpe_map_pwl_reoptimize():
     dataset = simulate_map_dataset()
-    e_edges = [1, 10] * u.TeV
+    energy_edges = [1, 10] * u.TeV
     dataset.models.parameters["lon_0"].frozen = True
     dataset.models.parameters["lat_0"].frozen = True
     #    dataset.models.parameters["index"].frozen = True
     dataset.models.parameters["sigma"].frozen = True
     datasets = [dataset]
     fpe = FluxPointsEstimator(
-        e_edges=e_edges, norm_values=[1], reoptimize=True, source="source"
+        energy_edges=energy_edges, norm_values=[1], reoptimize=True, source="source"
     )
     return datasets, fpe
 
@@ -228,7 +231,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.2, 1, 5])
 
         actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, [1.628530e+02, 1.436323e-01, 2.007461e+03], rtol=1e-2)
+        assert_allclose(actual, [1.628530e02, 1.436323e-01, 2.007461e03], rtol=1e-2)
 
     @staticmethod
     @requires_dependency("iminuit")
@@ -277,7 +280,7 @@ def test_no_likelihood_contribution():
 
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
-    fpe = FluxPointsEstimator(e_edges=[1, 3, 10] * u.TeV, source="source")
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV, source="source")
     fp = fpe.run([dataset, dataset_2])
 
     assert np.isnan(fp.table["norm"]).all()
@@ -308,7 +311,7 @@ def test_mask_shape():
     dataset_1.models = model
     dataset_2.models = model
 
-    fpe = FluxPointsEstimator(e_edges=[1, 10] * u.TeV, source="source")
+    fpe = FluxPointsEstimator(energy_edges=[1, 10] * u.TeV, source="source")
 
     fp = fpe.run([dataset_2, dataset_1])
 

@@ -27,10 +27,7 @@ def crab_datasets_fermi():
     filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
     filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
 
-    return Datasets.read(
-        filename=filename,
-        filename_models=filename_models
-    )
+    return Datasets.read(filename=filename, filename_models=filename_models)
 
 
 @requires_data()
@@ -39,10 +36,7 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
     for dataset in datasets:
         dataset.models = SkyModel(spectral_model=PLmodel, name="Crab")
 
-    estimator = ParameterEstimator(
-        scan_n_values=10,
-        selection_optional="all"
-    )
+    estimator = ParameterEstimator(scan_n_values=10, selection_optional="all")
 
     result = estimator.run(datasets, parameter="amplitude")
 

@@ -133,6 +133,8 @@ class Analysis:
     def set_models(self, models):
         """Set models on datasets.
 
+        Adds `FoVVackgroundModel` if not present already
+
         Parameters
         ----------
         models : `~gammapy.modeling.models.Models` or str
@@ -150,6 +152,14 @@ class Analysis:
             raise TypeError(f"Invalid type: {models!r}")
 
         self.models.extend(self.datasets.models)
+
+        for dataset in self.datasets:
+
+            if dataset.background_model is None:
+                bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+
+            self.models.append(bkg_model)
+
         self.datasets.models = self.models
 
         log.info(self.models)
@@ -188,7 +198,9 @@ class Analysis:
         log.info("Calculating flux points.")
         energy_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
-            e_edges=energy_edges, source=fp_settings.source, **fp_settings.parameters,
+            energy_edges=energy_edges,
+            source=fp_settings.source,
+            **fp_settings.parameters,
         )
         fp = flux_point_estimator.run(datasets=self.datasets)
         fp.table["is_ul"] = fp.table["ts"] < 4

@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
-from gammapy.maps import MapAxis
 from gammapy.datasets import SpectrumDataset
 from gammapy.makers import PhaseBackgroundMaker, SpectrumDatasetMaker
+from gammapy.maps import MapAxis
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import requires_data
 

@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.table import Table
 from astropy import units as u
+from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import BackgroundModel
 from .core import Maker
 
 __all__ = ["SpectrumDatasetMaker"]
@@ -121,9 +120,7 @@ class SpectrumDatasetMaker(Maker):
             data *= containment.squeeze()
 
         data = data * observation.observation_live_time_duration
-        meta = {
-            "livetime": observation.observation_live_time_duration
-        }
+        meta = {"livetime": observation.observation_live_time_duration}
         return RegionNDMap.from_geom(geom, data=data.value, unit=data.unit, meta=meta)
 
     def make_edisp_kernel(self, geom, observation):
@@ -147,13 +144,11 @@ class SpectrumDatasetMaker(Maker):
 
         offset = observation.pointing_radec.separation(position)
 
-        kernel = observation.edisp.to_energy_dispersion(
-            offset, e_reco=energy_axis.edges, e_true=energy_axis_true.edges
+        kernel = observation.edisp.to_edisp_kernel(
+            offset, energy=energy_axis.edges, energy_true=energy_axis_true.edges
         )
 
-        edisp = EDispKernelMap.from_edisp_kernel(
-            kernel, geom=geom.to_image()
-        )
+        edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=geom.to_image())
 
         exposure = self.make_exposure(geom.squash("energy"), observation)
         edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
@@ -203,12 +198,16 @@ class SpectrumDatasetMaker(Maker):
             kwargs["counts"] = self.make_counts(dataset.counts.geom, observation)
 
         if "background" in self.selection:
-            kwargs["background"] = self.make_background(dataset.counts.geom, observation)
+            kwargs["background"] = self.make_background(
+                dataset.counts.geom, observation
+            )
 
         if "exposure" in self.selection:
             kwargs["exposure"] = self.make_exposure(dataset.exposure.geom, observation)
 
         if "edisp" in self.selection:
-            kwargs["edisp"] = self.make_edisp_kernel(dataset.edisp.edisp_map.geom, observation)
+            kwargs["edisp"] = self.make_edisp_kernel(
+                dataset.edisp.edisp_map.geom, observation
+            )
 
         return SpectrumDataset(name=dataset.name, **kwargs)

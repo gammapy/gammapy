@@ -4,11 +4,11 @@ import numpy as np
 from astropy import units as u
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDatasetOnOff, Datasets
-from gammapy.maps import WcsNDMap, Map
+from gammapy.datasets import Datasets, MapDatasetOnOff
+from gammapy.maps import Map, WcsNDMap
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
-from gammapy.modeling.models import PowerLawSpectralModel
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
@@ -53,7 +53,7 @@ class ASmoothMapEstimator(Estimator):
         spectrum=None,
         method="lima",
         threshold=5,
-        e_edges=None,
+        energy_edges=None,
     ):
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -67,7 +67,7 @@ class ASmoothMapEstimator(Estimator):
         self.kernel = kernel
         self.threshold = threshold
         self.method = method
-        self.e_edges = e_edges
+        self.energy_edges = energy_edges
 
     def selection_all(self):
         """Which quantities are computed"""
@@ -123,9 +123,7 @@ class ASmoothMapEstimator(Estimator):
     @staticmethod
     def _sqrt_ts_cube(cubes, method):
         if method in {"lima"}:
-            scube = CashCountsStatistic(
-                cubes["counts"], cubes["background"]
-            ).sqrt_ts
+            scube = CashCountsStatistic(cubes["counts"], cubes["background"]).sqrt_ts
         elif method == "asmooth":
             scube = _sqrt_ts_asmooth(cubes["counts"], cubes["background"])
         elif method == "ts":
@@ -157,16 +155,16 @@ class ASmoothMapEstimator(Estimator):
         """
         datasets = Datasets([dataset])
 
-        if self.e_edges is None:
+        if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
-            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            e_edges = self.e_edges
+            energy_edges = self.energy_edges
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_by_energy(e_min, e_max)[0]
+        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
+            dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
             result = self.estimate_maps(dataset)
             results.append(result)
 

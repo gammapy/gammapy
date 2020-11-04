@@ -430,7 +430,9 @@ class EnergyDependentTablePSF:
         psf_value = self.evaluate(energy=energy, method=method)[0, :]
         return TablePSF(rad_axis=self.rad_axis, psf_value=psf_value, **kwargs)
 
-    def table_psf_in_energy_band(self, energy_band, spectrum=None, n_bins=11, **kwargs):
+    def table_psf_in_energy_range(
+        self, energy_range, spectrum=None, n_bins=11, **kwargs
+    ):
         """Average PSF in a given energy band.
 
         Expected counts in sub energy bands given the given exposure
@@ -438,7 +440,7 @@ class EnergyDependentTablePSF:
 
         Parameters
         ----------
-        energy_band : `~astropy.units.Quantity`
+        energy_range : `~astropy.units.Quantity`
             Energy band
         spectrum : `~gammapy.modeling.models.SpectralModel`
             Spectral model used for weighting the PSF. Default is a power law
@@ -459,7 +461,7 @@ class EnergyDependentTablePSF:
 
         exposure = TemplateSpectralModel(self.energy_axis_true.center, self.exposure)
 
-        e_min, e_max = energy_band
+        e_min, e_max = energy_range
         energy = MapAxis.from_energy_bounds(e_min, e_max, n_bins).edges
 
         weights = spectrum(energy) * exposure(energy)

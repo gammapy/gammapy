@@ -32,7 +32,7 @@ def optimize_scipy(parameters, function, store_trace=False, **kwargs):
         "success": result.success,
         "message": result.message,
         "nfev": result.nfev,
-        "trace": likelihood.trace
+        "trace": likelihood.trace,
     }
     optimizer = None
 

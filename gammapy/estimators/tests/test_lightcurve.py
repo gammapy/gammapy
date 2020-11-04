@@ -13,7 +13,7 @@ from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_spectrum_dataset,
 )
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, FoVBackgroundModel
+from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -210,7 +210,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     ]
 
     estimator = LightCurveEstimator(
-        e_edges=[1, 30] * u.TeV, norm_n_values=3, time_intervals=time_intervals
+        energy_edges=[1, 30] * u.TeV, norm_n_values=3, time_intervals=time_intervals
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -256,7 +256,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     ]
 
     estimator = LightCurveEstimator(
-        e_edges=[1, 5, 30] * u.TeV, norm_n_values=3, time_intervals=time_intervals
+        energy_edges=[1, 5, 30] * u.TeV, norm_n_values=3, time_intervals=time_intervals
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -285,7 +285,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     )
     assert_allclose(
         lightcurve.table["norm_err"],
-        [[0.065905, 0.121288], [0.06601 , 0.119457]],
+        [[0.065905, 0.121288], [0.06601, 0.119457]],
         rtol=1e-2,
     )
     assert_allclose(lightcurve.table["counts"], [[669.0, 122.0], [667.0, 117.0]])
@@ -329,16 +329,16 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
 
-    e_min_fit = 1 * u.TeV
-    e_max_fit = 3 * u.TeV
+    energy_min_fit = 1 * u.TeV
+    energy_max_fit = 3 * u.TeV
     for dataset in datasets:
         geom = dataset.counts.geom
-        data = geom.energy_mask(emin=e_min_fit, emax=e_max_fit)
+        data = geom.energy_mask(energy_min=energy_min_fit, energy_max=energy_max_fit)
         dataset.mask_fit = RegionNDMap.from_geom(geom, data=data, dtype=bool)
 
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        e_edges=[1, 30] * u.TeV,
+        energy_edges=[1, 30] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=selection,
@@ -357,7 +357,7 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        e_edges=[1, 30] * u.TeV, norm_n_values=3, selection_optional=selection
+        energy_edges=[1, 30] * u.TeV, norm_n_values=3, selection_optional=selection
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -376,7 +376,7 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
         Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
     ]
     estimator = LightCurveEstimator(
-        e_edges=[1, 100] * u.TeV,
+        energy_edges=[1, 100] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -394,7 +394,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     datasets = get_spectrum_datasets()
     time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator = LightCurveEstimator(
-        e_edges=[1, 30] * u.TeV,
+        energy_edges=[1, 30] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -443,7 +443,7 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
         Time(["2010-01-01T01:00:00", "2010-01-01T01:05:00"]),
     ]
     estimator = LightCurveEstimator(
-        e_edges=[1, 30] * u.TeV,
+        energy_edges=[1, 30] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -483,7 +483,7 @@ def test_lightcurve_estimator_map_datasets():
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
     estimator = LightCurveEstimator(
-        e_edges=[1, 100] * u.TeV,
+        energy_edges=[1, 100] * u.TeV,
         source="test_source",
         time_intervals=time_intervals,
         selection_optional=["scan"],
@@ -514,7 +514,7 @@ def test_lightcurve_estimator_map_datasets():
 
     time_intervals2 = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator2 = LightCurveEstimator(
-        e_edges=[1, 100] * u.TeV,
+        energy_edges=[1, 100] * u.TeV,
         source="test_source",
         time_intervals=time_intervals2,
         selection_optional=["scan"],

@@ -2,15 +2,14 @@
 import abc
 import collections.abc
 import copy
-import numpy as np
 import logging
-from astropy.table import vstack, Table
+import numpy as np
 from astropy import units as u
-from gammapy.modeling.models import Models, DatasetModels, FoVBackgroundModel
+from astropy.table import Table, vstack
+from gammapy.data import GTI
+from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
-from gammapy.data import GTI
-
 
 log = logging.getLogger(__name__)
 
@@ -221,12 +220,12 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets)
 
-    def slice_by_energy(self, e_min, e_max):
+    def slice_by_energy(self, energy_min, energy_max):
         """Select and slice datasets in energy range
 
         Parameters
         ----------
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
@@ -238,28 +237,15 @@ class Datasets(collections.abc.MutableSequence):
         datasets = []
 
         for dataset in self:
-            name = f"{dataset.name}-{e_min:.1f}-{e_max:.1f}"
             try:
                 dataset_sliced = dataset.slice_by_energy(
-                    e_min=e_min,
-                    e_max=e_max,
-                    name=name,
+                    energy_min=energy_min, energy_max=energy_max, name=dataset.name,
                 )
             except ValueError:
-                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+                log.info(
+                    f"Dataset {dataset.name} does not contribute in the energy range"
+                )
                 continue
-
-            if dataset.models:
-                # TODO: Simplify model handling!!!!
-                models = []
-
-                for model in dataset.models:
-                    if isinstance(model, FoVBackgroundModel):
-                        models.append(dataset_sliced.background_model)
-                    else:
-                        models.append(model)
-
-                dataset_sliced.models = models
 
             datasets.append(dataset_sliced)
 
@@ -275,18 +261,18 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
         """
 
-        e_mins, e_maxs = [], []
+        energy_mins, energy_maxs = [], []
 
         for dataset in self:
             energy_axis = dataset.counts.geom.axes["energy"]
-            e_mins.append(energy_axis.edges[0])
-            e_maxs.append(energy_axis.edges[-1])
+            energy_mins.append(energy_axis.edges[0])
+            energy_maxs.append(energy_axis.edges[-1])
 
-        return u.Quantity(e_mins), u.Quantity(e_maxs)
+        return u.Quantity(energy_mins), u.Quantity(energy_maxs)
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
@@ -356,7 +342,9 @@ class Datasets(collections.abc.MutableSequence):
 
         return datasets
 
-    def write(self, filename, filename_models=None, overwrite=False, write_covariance=True):
+    def write(
+        self, filename, filename_models=None, overwrite=False, write_covariance=True
+    ):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
@@ -372,22 +360,19 @@ class Datasets(collections.abc.MutableSequence):
         """
         path = make_path(filename).resolve()
 
-        datasets_dictlist = []
+        data = {"datasets": []}
+
         for dataset in self._datasets:
             name = dataset.name.replace(" ", "_")
             filename = f"{name}.fits"
-            dataset.write(path.parent / filename, overwrite)
-            datasets_dictlist.append(dataset.to_dict(filename=filename))
+            dataset.write(path.parent / filename, overwrite=overwrite)
+            data["datasets"].append(dataset.to_dict(filename=filename))
 
-        datasets_dict = {"datasets": datasets_dictlist}
-
-        write_yaml(datasets_dict, path, sort_keys=False)
+        write_yaml(data, path, sort_keys=False)
 
         if filename_models:
             self.models.write(
-                filename_models,
-                overwrite=overwrite,
-                write_covariance=write_covariance,
+                filename_models, overwrite=overwrite, write_covariance=write_covariance,
             )
 
     def stack_reduce(self, name=None):

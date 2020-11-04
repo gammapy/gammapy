@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.wcs import WCS
@@ -12,14 +12,13 @@ from regions import (
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
-    Models,
     ConstantSpatialModel,
     DiskSpatialModel,
     GaussianSpatialModel,
+    GeneralizedGaussianSpatialModel,
     PointSpatialModel,
     ShellSpatialModel,
     TemplateSpatialModel,
-    GeneralizedGaussianSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 

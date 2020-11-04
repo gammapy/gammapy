@@ -7,7 +7,7 @@ from astropy.convolution import Box2DKernel, Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
-from regions import CircleSkyRegion, RectangleSkyRegion, PointSkyRegion
+from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
@@ -120,7 +120,9 @@ def test_wcsndmap_read_ccube():
 
 @requires_data()
 def test_wcsndmap_read_exposure():
-    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz")
+    exposure = Map.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
+    )
     energy_axis = exposure.geom.axes["energy_true"]
     assert energy_axis.node_type == "center"
     assert exposure.unit == "cm2 s"
@@ -435,6 +437,12 @@ def test_wcsndmap_resample_axis():
     assert m2.data.shape == (3, 2, 6, 7)
     assert_allclose(m2.data, 2)
 
+    # Test without all interval covered
+    new_axis = MapAxis.from_edges([2, 3], name="test-1")
+    m3 = m.resample_axis(axis=new_axis)
+    assert m3.data.shape == (3, 1, 6, 7)
+    assert_allclose(m3.data, 1)
+
 
 def test_wcsndmap_resample_axis_logical_and():
     axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
@@ -446,8 +454,8 @@ def test_wcsndmap_resample_axis_logical_and():
 
     new_axis = MapAxis.from_edges([1, 3, 5], name="test-1")
     m2 = m.resample_axis(axis=new_axis, ufunc=np.logical_and)
-    assert_allclose(m2.data[0,0,0], False)
-    assert_allclose(m2.data[1,0,0], True)
+    assert_allclose(m2.data[0, 0, 0], False)
+    assert_allclose(m2.data[1, 0, 0], True)
 
 
 def test_coadd_unit():
@@ -610,6 +618,7 @@ def test_get_spectrum():
     spec = m.get_spectrum(region=region)
     assert_allclose(spec.data.squeeze(), [1.0, 1.0, 1.0])
 
+
 def test_get_spectrum_type():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
 
@@ -617,22 +626,23 @@ def test_get_spectrum_type():
         skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
     )
 
-    m_int = Map.from_geom(geom, dtype='int')
+    m_int = Map.from_geom(geom, dtype="int")
     m_int.data += 1
 
-    m_bool = Map.from_geom(geom, dtype='bool')
+    m_bool = Map.from_geom(geom, dtype="bool")
     m_bool.data += True
 
     center = SkyCoord(0, 0, frame="galactic", unit="deg")
     region = CircleSkyRegion(center=center, radius=1 * u.deg)
 
     spec_int = m_int.get_spectrum(region=region)
-    assert spec_int.data.dtype == np.dtype('int')
+    assert spec_int.data.dtype == np.dtype("int")
     assert_allclose(spec_int.data.squeeze(), [13, 13, 13])
 
     spec_bool = m_bool.get_spectrum(region=region, func=np.any)
-    assert spec_bool.data.dtype == np.dtype('bool')
+    assert spec_bool.data.dtype == np.dtype("bool")
     assert_allclose(spec_bool.data.squeeze(), [1, 1, 1])
+
 
 def test_get_spectrum_weights():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
@@ -641,23 +651,24 @@ def test_get_spectrum_weights():
         skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], frame="galactic"
     )
 
-    m_int = Map.from_geom(geom,dtype='int')
+    m_int = Map.from_geom(geom, dtype="int")
     m_int.data += 1
 
-    weights = Map.from_geom(geom, dtype='bool')
-    weights.data[:,2,2]=True
+    weights = Map.from_geom(geom, dtype="bool")
+    weights.data[:, 2, 2] = True
 
-    bad_weights = Map.from_geom(geom.to_image(), dtype='bool')
+    bad_weights = Map.from_geom(geom.to_image(), dtype="bool")
 
     center = SkyCoord(0, 0, frame="galactic", unit="deg")
     region = CircleSkyRegion(center=center, radius=1 * u.deg)
 
     spec_int = m_int.get_spectrum(region=region, weights=weights)
-    assert spec_int.data.dtype == np.dtype('int')
+    assert spec_int.data.dtype == np.dtype("int")
     assert_allclose(spec_int.data.squeeze(), [1, 1, 1])
 
     with pytest.raises(ValueError):
         m_int.get_spectrum(region=region, weights=bad_weights)
+
 
 def get_npred_map():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
@@ -770,3 +781,15 @@ def test_to_cube():
     ax4 = MapAxis.from_edges([8, 9, 10], name="ax4")
     with pytest.raises(ValueError):
         m1.to_cube([ax4])
+
+
+def test_stack_unit_handling():
+    m = WcsNDMap.create(npix=(3, 3), unit="m2 s")
+    m.data += 1
+
+    m_other = WcsNDMap.create(npix=(3, 3), unit="cm2 s")
+    m_other.data += 1
+
+    m.stack(m_other)
+
+    assert_allclose(m.data, 1.0001)

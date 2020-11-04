@@ -311,7 +311,7 @@ def test_wcsgeom_resample_overflows():
     ax1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="ax1")
     ax2 = MapAxis.from_nodes([1, 2, 3], name="ax2")
     geom = WcsGeom.create(npix=(3, 3), axes=[ax1, ax2])
-    new_axis = MapAxis.from_edges([-1., 1, 2.3,4.8,6], name="ax1")
+    new_axis = MapAxis.from_edges([-1.0, 1, 2.3, 4.8, 6], name="ax1")
     geom_resample = geom.resample_axis(axis=new_axis)
 
     assert geom_resample.data_shape == (3, 2, 3, 3)
@@ -372,17 +372,17 @@ def test_energy_mask():
     )
     geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
 
-    mask = geom.energy_mask(emin=3 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV)
     assert not mask[0, 0, 0]
     assert mask[1, 0, 0]
     assert mask[2, 0, 0]
 
-    mask = geom.energy_mask(emax=30 * u.TeV)
+    mask = geom.energy_mask(energy_max=30 * u.TeV)
     assert mask[0, 0, 0]
     assert not mask[1, 0, 0]
     assert not mask[2, 0, 0]
 
-    mask = geom.energy_mask(emin=3 * u.TeV, emax=40 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV)
     assert not mask[0, 0, 0]
     assert not mask[2, 0, 0]
     assert mask[1, 0, 0]
@@ -462,11 +462,12 @@ def test_wcs_geom_equal(npix, binsz, frame, proj, skypos, axes, result):
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
 
+
 def test_irregular_geom_equality():
-    axis = MapAxis.from_bounds(1,3,10, name="axis", unit="")
-    geom0 = WcsGeom.create(skydir=(0,0), npix=10, binsz=0.1, axes=[axis])
-    binsizes = np.ones((10))*0.1
-    geom1 = WcsGeom.create(skydir=(0,0), npix=10, binsz=binsizes, axes=[axis])
+    axis = MapAxis.from_bounds(1, 3, 10, name="axis", unit="")
+    geom0 = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.1, axes=[axis])
+    binsizes = np.ones((10)) * 0.1
+    geom1 = WcsGeom.create(skydir=(0, 0), npix=10, binsz=binsizes, axes=[axis])
 
     with pytest.raises(NotImplementedError):
         geom0 == geom1
@@ -508,11 +509,7 @@ def test_wcs_geom_to_binsz(npix, binsz, frame, proj, skypos, axes, result):
 
 def test_non_equal_binsz():
     geom = WcsGeom.create(
-        width=(360, 180),
-        binsz=(360, 60),
-        frame='icrs',
-        skydir=(0, 0),
-        proj="CAR"
+        width=(360, 180), binsz=(360, 60), frame="icrs", skydir=(0, 0), proj="CAR"
     )
 
     coords = geom.get_coord()
