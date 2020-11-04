@@ -94,9 +94,9 @@ class SpectrumDataset(MapDataset):
     def mask_safe(self):
         if self._mask_safe is None:
             data = np.ones(self._geom.data_shape, dtype=bool)
-            return RegionNDMap.from_geom(self._geom, data=data)
-        else:
-            return self._mask_safe
+            self._mask_safe = RegionNDMap.from_geom(self._geom, data=data)
+
+        return self._mask_safe
 
     @mask_safe.setter
     def mask_safe(self, mask):
