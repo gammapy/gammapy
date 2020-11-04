@@ -6,6 +6,7 @@ from astropy.table import Table
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
+from .utils import get_axes
 
 log = logging.getLogger(__name__)
 
@@ -245,26 +246,46 @@ class FluxPointsDataset(Dataset):
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self, method="diff/model", **kwargs):
-        """Plot flux points, best fit model and residuals.
+    def plot_fit(self, ax_spectrum=None, ax_residuals=None, kwargs_spectrum=None, kwargs_residuals=None):
+        """Plot flux points, best fit model and residuals in two panels.
+
+        Calls `~FluxPointsDataset.plot_spectrum` and `~FluxPointsDataset.plot_residuals`.
 
         Parameters
         ----------
-        method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Method used to compute the residuals, see `MapDataset.residuals()`
+        ax_spectrum : `~matplotlib.axes.Axes`
+            Axes to plot flux points and best fit model on.
+        ax_residuals : `~matplotlib.axes.Axes`
+            Axes to plot residuals on.
+        kwargs_spectrum : dict
+            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`.
+        kwargs_residuals : dict
+            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`.
+
+        Returns
+        -------
+        ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
+            Flux points, best fit model and residuals plots.
         """
         from matplotlib.gridspec import GridSpec
-        import matplotlib.pyplot as plt
 
         gs = GridSpec(7, 1)
+        ax_spectrum, ax_residuals = get_axes(
+            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex": ax_spectrum}
+        )
+        kwargs_spectrum = kwargs_spectrum or {}
+        kwargs_residuals = kwargs_residuals or {}
+        kwargs_residuals.setdefault("method", "diff/model")
 
-        ax_spectrum = plt.subplot(gs[:5, :])
-        self.plot_spectrum(ax=ax_spectrum, **kwargs)
+        self.plot_spectrum(ax_spectrum, **kwargs_spectrum)
+        ax_spectrum.label_outer()
 
-        ax_spectrum.set_xticks([])
+        self.plot_residuals(ax_residuals, **kwargs_residuals)
+        method = kwargs_residuals["method"]
+        label = self._residuals_labels[method]
+        unit = self.data._plot_get_flux_err(self.data.sed_type)[0].unit if method == "diff" else ""
+        ax_residuals.set_ylabel("Residuals\n" + label + (f"\n[{unit}]" if unit else ""))
 
-        ax_residuals = plt.subplot(gs[5:, :])
-        self.plot_residuals(ax=ax_residuals, method=method)
         return ax_spectrum, ax_residuals
 
     @property
@@ -283,25 +304,24 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes object.
-        method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Method used to compute the residuals, see `MapDataset.residuals()`
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on.
+        method : {"diff", "diff/model"}
+            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
+            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `~matplotlib.axes.Axes`
             Axes object.
         """
         import matplotlib.pyplot as plt
 
-        ax = plt.gca() if ax is None else ax
-
-        residuals = self.residuals(method=method)
+        ax = ax or plt.gca()
 
         fp = self.data
+        residuals = self.residuals(method)
 
         xerr = fp._plot_get_energy_err()
         if xerr is not None:
@@ -310,83 +330,79 @@ class FluxPointsDataset(Dataset):
                 xerr[1].to_value(self._energy_unit),
             )
 
-        model = self.flux_pred()
         yerr = fp._plot_get_flux_err(fp.sed_type)
-
         if method == "diff":
             unit = yerr[0].unit
             yerr = yerr[0].to_value(unit), yerr[1].to_value(unit)
         elif method == "diff/model":
+            model = self.flux_pred()
             unit = ""
-            yerr = (yerr[0] / model).to_value(""), (yerr[1] / model).to_value(unit)
+            yerr = (yerr[0] / model).to_value(unit), (yerr[1] / model).to_value(unit)
         else:
-            raise ValueError("Invalid method, choose between 'diff' and 'diff/model'")
+            raise ValueError('Invalid method, choose between "diff" and "diff/model"')
 
+        kwargs.setdefault("color", kwargs.pop("c", "black"))
         kwargs.setdefault("marker", "+")
-        kwargs.setdefault("ls", "None")
-        kwargs.setdefault("color", "black")
+        kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
 
-        ax.errorbar(
-            self.data.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
-        )
+        ax.errorbar(fp.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs)
+        ax.axhline(0, color=kwargs["color"], lw=0.5)
 
         # format axes
-        ax.axhline(0, color="black", lw=0.5)
-        ax.set_ylabel("Residuals {}".format(unit.__str__()))
-        ax.set_xlabel(f"Energy ({self._energy_unit})")
+        ax.set_xlabel(f"Energy [{self._energy_unit}]")
         ax.set_xscale("log")
         ax.set_xlim(self._energy_range.to_value(self._energy_unit))
-        y_max = 2 * np.nanmax(residuals).value
-        ax.set_ylim(-y_max, y_max)
+        label = self._residuals_labels[method]
+        ax.set_ylabel(f"Residuals ({label}){f' [{unit}]' if unit else ''}")
+        ymin = 1.05 * np.nanmin(residuals.value - yerr[0])
+        ymax = 1.05 * np.nanmax(residuals.value + yerr[1])
+        ax.set_ylim(ymin, ymax)
         return ax
 
-    def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None):
-        """
-        Plot spectrum including flux points and model.
+    def plot_spectrum(self, ax=None, kwargs_fp=None, kwargs_model=None, **kwargs):
+        """Plot spectrum including flux points and model.
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes object.
-        fp_kwargs : dict
-            Keyword arguments passed to `FluxPoints.plot`.
-        model_kwargs : dict
-            Keywords passed to `SpectralModel.plot` and `SpectralModel.plot_error`
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on.
+        kwargs_fp : dict
+            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`.
+        kwargs_model : dict
+            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
+            `gammapy.modeling.models.SpectralModel.plot_error`.
+        **kwargs: dict
+            Keyword arguments passed to all plot methods.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        import matplotlib.pyplot as plt
+        kwargs_fp = kwargs_fp or {}
+        kwargs_model = kwargs_model or {}
 
-        ax = plt.gca() if ax is None else ax
-        fp_kwargs = {} if fp_kwargs is None else fp_kwargs
-        model_kwargs = {} if model_kwargs is None else model_kwargs
-
-        kwargs = {
-            "flux_unit": "erg-1 cm-2 s-1",
-            "energy_unit": "TeV",
-            "energy_power": 2,
-        }
+        kwargs.setdefault("energy_power", 2)
+        kwargs.setdefault("energy_unit", "TeV")
+        kwargs.setdefault("flux_unit", "erg-1 cm-2 s-1")
 
         # plot flux points
         plot_kwargs = kwargs.copy()
-        plot_kwargs.update(fp_kwargs)
+        plot_kwargs.update(kwargs_fp)
         plot_kwargs.setdefault("label", "Flux points")
-        ax = self.data.plot(ax=ax, **plot_kwargs)
+        ax = self.data.plot(ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
+        plot_kwargs.update(kwargs_model)
         plot_kwargs.setdefault("energy_range", self._energy_range)
-        plot_kwargs.setdefault("zorder", 10)
-        plot_kwargs.update(model_kwargs)
         plot_kwargs.setdefault("label", "Best fit model")
+        plot_kwargs.setdefault("zorder", 10)
 
         for model in self.models:
             if model.datasets_names is None or self.name in model.datasets_names:
                 model.spectral_model.plot(ax=ax, **plot_kwargs)
 
-        plot_kwargs.setdefault("color", ax.lines[-1].get_color())
+        plot_kwargs.setdefault("color", plot_kwargs.pop("c", ax.lines[-1].get_color()))
         del plot_kwargs["label"]
 
         for model in self.models:

@@ -28,6 +28,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
+from .utils import get_axes
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
 
@@ -699,53 +700,38 @@ class MapDataset(Dataset):
 
         return residuals
 
-    def plot_residuals(
-        self,
-        method="diff",
-        smooth_kernel="gauss",
-        smooth_radius="0.1 deg",
-        region=None,
-        figsize=(12, 4),
-        **kwargs,
+    def plot_residuals_spatial(
+        self, ax=None, method="diff", smooth_kernel="gauss", smooth_radius="0.1 deg", **kwargs
     ):
-        """
-        Plot spatial and spectral residuals.
+        """Plot spatial residuals.
 
-        The spectral residuals are extracted from the provided region, and the
-        normalization used for the residuals computation can be controlled using
-        the method parameter. If no region is passed, only the spatial
-        residuals are shown.
+        The normalization used for the residuals computation can be controlled
+        using the method parameter.
 
         Parameters
         ----------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            Axes to plot on.
         method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Method used to compute the residuals, see `MapDataset.residuals()`
-        smooth_kernel : {'gauss', 'box'}
+            Normalization used to compute the residuals, see `MapDataset.residuals`.
+        smooth_kernel : {"gauss", "box"}
             Kernel shape.
         smooth_radius: `~astropy.units.Quantity`, str or float
-            Smoothing width given as quantity or float. If a float is given it
+            Smoothing width given as quantity or float. If a float is given, it
             is interpreted as smoothing width in pixels.
-        region: `~regions.Region`
-            Region (pixel or sky regions accepted)
-        figsize : tuple
-            Figure size used for the plotting.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `~matplotlib.axes.Axes.imshow`.
 
         Returns
         -------
-        ax_image, ax_spec : `~matplotlib.pyplot.Axes`,
-            Image and spectrum axes.
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            WCSAxes object.
         """
-        import matplotlib.pyplot as plt
-
-        fig = plt.figure(figsize=figsize)
-
         counts, npred = self.counts, self.npred()
 
         if self.mask is not None:
-            counts = counts * self.mask
-            npred = npred * self.mask
+            counts *= self.mask
+            npred *= self.mask
 
         counts_spatial = counts.sum_over_axes().smooth(
             width=smooth_radius, kernel=smooth_kernel
@@ -753,49 +739,115 @@ class MapDataset(Dataset):
         npred_spatial = npred.sum_over_axes().smooth(
             width=smooth_radius, kernel=smooth_kernel
         )
-        spatial_residuals = self._compute_residuals(
-            counts_spatial, npred_spatial, method
-        )
+        residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
 
         if self.mask_safe is not None:
             mask = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
-            spatial_residuals.data[~mask.data] = np.nan
+            residuals.data[~mask.data] = np.nan
 
-        # If no region is provided, skip spectral residuals
-        ncols = 2 if region is not None else 1
-        ax_image = fig.add_subplot(1, ncols, 1, projection=spatial_residuals.geom.wcs)
-        ax_spec = None
-
+        kwargs.setdefault("add_cbar", True)
         kwargs.setdefault("cmap", "coolwarm")
-        kwargs.setdefault("stretch", "linear")
         kwargs.setdefault("vmin", -5)
         kwargs.setdefault("vmax", 5)
-        spatial_residuals.plot(ax=ax_image, add_cbar=True, **kwargs)
+        _, ax, _ = residuals.plot(ax, **kwargs)
 
-        # Spectral residuals
-        if region:
-            ax_spec = fig.add_subplot(1, 2, 2)
-            counts_spec = counts.get_spectrum(region=region)
-            npred_spec = npred.get_spectrum(region=region)
-            residuals = self._compute_residuals(counts_spec, npred_spec, method)
-            if method == "diff":
-                yerr = np.sqrt((counts_spec.data + npred_spec.data).flatten())
-            else:
-                yerr = np.ones_like(residuals.data.flatten())
-            ax = residuals.plot(yerr=yerr, fmt=".", capsize=2, lw=1)
-            ax.set_yscale("linear")
-            ax.axhline(0, color="black", lw=0.5)
-            ymax = 1.05 * np.nanmax(residuals.data + yerr.data)
-            ymin = 1.05 * np.nanmin(residuals.data - yerr.data)
-            plt.ylim(ymin, ymax)
-            label = self._residuals_labels[method]
-            plt.ylabel(f"Residuals ({label})")
+        return ax
 
-            # Overlay spectral extraction region on the spatial residuals
-            pix_region = region.to_pixel(wcs=spatial_residuals.geom.wcs)
-            pix_region.plot(ax=ax_image)
+    def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
+        """Plot spectral residuals.
 
-        return ax_image, ax_spec
+        The residuals are extracted from the provided region, and the normalization
+        used for its computation can be controlled using the method parameter.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on.
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
+        region: `~regions.SkyRegion` (required)
+            Target sky region.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object.
+        """
+        if not region:
+            raise ValueError("'region' is a required parameter")
+
+        counts, npred = self.counts, self.npred()
+
+        if self.mask is not None:
+            counts *= self.mask
+            npred *= self.mask
+
+        counts_spec = counts.get_spectrum(region)
+        npred_spec = npred.get_spectrum(region)
+        residuals = self._compute_residuals(counts_spec, npred_spec, method)
+
+        if method == "diff":
+            yerr = np.sqrt((counts_spec.data + npred_spec.data).flatten())
+        else:
+            yerr = np.ones_like(residuals.data.flatten())
+
+        kwargs.setdefault("color", kwargs.pop("c", "black"))
+        ax = residuals.plot(ax, yerr=yerr, **kwargs)
+        ax.axhline(0, color=kwargs["color"], lw=0.5)
+
+        label = self._residuals_labels[method]
+        ax.set_ylabel(f"Residuals ({label})")
+        ax.set_yscale("linear")
+        ymin = 1.05 * np.nanmin(residuals.data - yerr)
+        ymax = 1.05 * np.nanmax(residuals.data + yerr)
+        ax.set_ylim(ymin, ymax)
+        return ax
+
+    def plot_residuals(
+        self, ax_spatial=None, ax_spectral=None, kwargs_spatial=None, kwargs_spectral=None
+    ):
+        """Plot spatial and spectral residuals in two panels.
+
+        Calls `~MapDataset.plot_residuals_spatial` and `~MapDataset.plot_residuals_spectral`.
+        The spectral residuals are extracted from the provided region, and the
+        normalization used for its computation can be controlled using the method
+        parameter. The region outline is overlaid on the residuals map.
+
+        Parameters
+        ----------
+        ax_spatial : `~astropy.visualization.wcsaxes.WCSAxes`
+            Axes to plot spatial residuals on.
+        ax_spectral : `~matplotlib.axes.Axes`
+            Axes to plot spectral residuals on.
+        kwargs_spatial : dict
+            Keyword arguments passed to `~MapDataset.plot_residuals_spatial`.
+        kwargs_spectral : dict (``region`` required)
+            Keyword arguments passed to `~MapDataset.plot_residuals_spectral`.
+
+        Returns
+        -------
+        ax_spatial, ax_spectral : `~astropy.visualization.wcsaxes.WCSAxes`, `~matplotlib.axes.Axes`
+            Spatial and spectral residuals plots.
+        """
+        if not kwargs_spectral:
+            raise ValueError("'region' is a required parameter in 'kwargs_spectral'")
+
+        ax_spatial, ax_spectral = get_axes(
+            ax_spatial, ax_spectral, 12, 4, [1, 2, 1], [1, 2, 2], {"projection": self._geom.to_image().wcs}
+        )
+        kwargs_spatial = kwargs_spatial or {}
+
+        self.plot_residuals_spatial(ax_spatial, **kwargs_spatial)
+        self.plot_residuals_spectral(ax_spectral, **kwargs_spectral)
+
+        # Overlay spectral extraction region on the spatial residuals
+        region = kwargs_spectral["region"]
+        pix_region = region.to_pixel(self._geom.to_image().wcs)
+        pix_region.plot(ax=ax_spatial)
+
+        return ax_spatial, ax_spectral
 
     @lazyproperty
     def _counts_data(self):

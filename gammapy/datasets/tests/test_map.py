@@ -515,7 +515,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     region = sky_model.spatial_model.to_region()
 
     with mpl_plot_check():
-        dataset_1.plot_residuals(region=region)
+        dataset_1.plot_residuals(kwargs_spectral=dict(region=region))
 
     # test model evaluation outside image
     dataset_1.models[0].spatial_model.lon_0.value = 150
@@ -1315,7 +1315,7 @@ def test_plot_residual_onoff():
         acceptance_off=acceptance_off,
     )
     with mpl_plot_check():
-        dataset.plot_residuals()
+        dataset.plot_residuals_spatial()
 
 
 def test_to_map_dataset():

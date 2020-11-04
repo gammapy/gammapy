@@ -125,8 +125,8 @@ class TestFluxPointFit:
 
     @staticmethod
     @requires_dependency("matplotlib")
-    def test_fp_dataset_peek(fit):
+    def test_fp_dataset_plot_fit(fit):
         fp_dataset = fit.datasets[0]
 
         with mpl_plot_check():
-            fp_dataset.peek(method="diff/model")
+            fp_dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))
