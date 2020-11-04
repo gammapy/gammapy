@@ -9,7 +9,6 @@ from gammapy.data import DataStore
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, EnergyDependentTablePSF, PSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import MapAxis, MapCoord, WcsGeom
-from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.testing import requires_data
 
 

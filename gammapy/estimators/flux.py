@@ -5,7 +5,7 @@ from astropy import units as u
 from gammapy.datasets import Datasets
 from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
-from gammapy.modeling.models import Models, ScaleSpectralModel
+from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 from .flux_point import FluxPoints, FluxPointsEstimator
 

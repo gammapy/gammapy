@@ -7,11 +7,10 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import EDispKernel, EDispKernelMap, EffectiveAreaTable
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    BackgroundModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
     ExpCutoffPowerLawSpectralModel,

@@ -3,9 +3,8 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from regions import PointSkyRegion
-from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map
 from .core import Maker
 
 __all__ = ["SafeMaskMaker"]

@@ -5,7 +5,7 @@ import numpy as np
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
+from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map, MapAxis
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator

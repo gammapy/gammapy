@@ -16,7 +16,6 @@ from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
-    Models,
     PointSpatialModel,
     ShellSpatialModel,
     TemplateSpatialModel,

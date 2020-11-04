@@ -2,9 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.datasets import Datasets
 from gammapy.modeling.models import Model, Parameter, Parameters
-from gammapy.utils.testing import requires_data
 
 
 class MyModel(Model):

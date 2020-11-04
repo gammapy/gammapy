@@ -7,7 +7,6 @@ from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.modeling.models import BackgroundModel
 from .core import Maker
 
 __all__ = ["SpectrumDatasetMaker"]

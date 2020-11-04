@@ -6,7 +6,6 @@ from astropy.convolution import Tophat2DKernel
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.estimators import ASmoothMapEstimator
 from gammapy.maps import Map, MapAxis, WcsNDMap
-from gammapy.modeling.models import BackgroundModel
 from gammapy.utils.testing import requires_data
 
 

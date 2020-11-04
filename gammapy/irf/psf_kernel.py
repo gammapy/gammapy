@@ -2,7 +2,6 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
-from astropy.coordinates.angle_utilities import angular_separation
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF

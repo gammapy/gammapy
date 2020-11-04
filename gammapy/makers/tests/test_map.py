@@ -6,12 +6,11 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
-from regions import PointSkyRegion
 from gammapy.data import GTI, DataStore, EventList, Observation
 from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
 
 

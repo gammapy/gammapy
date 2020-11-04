@@ -24,10 +24,8 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
-    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
-    TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 

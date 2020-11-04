@@ -1,7 +1,6 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from regions import CircleAnnulusSkyRegion, RectangleSkyRegion
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.maps import MapAxis

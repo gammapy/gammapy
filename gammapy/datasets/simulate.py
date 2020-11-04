@@ -7,7 +7,7 @@ from astropy.table import Table
 import gammapy
 from gammapy.data import EventList
 from gammapy.maps import MapCoord
-from gammapy.modeling.models import ConstantTemporalModel, FoVBackgroundModel
+from gammapy.modeling.models import ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
 __all__ = ["MapDatasetEventSampler"]

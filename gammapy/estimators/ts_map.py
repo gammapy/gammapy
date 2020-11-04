@@ -12,7 +12,7 @@ from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width

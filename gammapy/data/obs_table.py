@@ -9,7 +9,7 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from .gti import GTI
+
 
 __all__ = ["ObservationTable"]
 

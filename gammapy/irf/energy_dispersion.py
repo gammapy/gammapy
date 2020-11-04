@@ -7,7 +7,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 from .edisp_kernel import EDispKernel

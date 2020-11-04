@@ -6,11 +6,6 @@ import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling.models import (
-    GaussianSpatialModel,
-    PowerLawSpectralModel,
-    SkyModel,
-)
 from gammapy.utils.testing import requires_data
 
 
