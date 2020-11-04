@@ -480,7 +480,7 @@ def test_absorption():
 @requires_data()
 def test_absorbed_extrapolate():
     ebl_model = "dominguez"
-    z = 0.001
+    z = 0.0001
     alpha_norm = 1
     absorption = EBLAbsorptionNormSpectralModel.read_builtin(ebl_model)
 
