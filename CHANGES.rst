@@ -59,6 +59,12 @@ The ``IRFStacker`` class has been removed.
 The ``Estimator``` API has been homogenized, in particular, they now support
 the definition of energy edges on init. This means light-curves, excess maps,
 excess profiles and ts maps can be computed in energy bins with the same API.
+The ``LightCurveEstimator`` was refactored to rely on the same algorithm
+as the ``FluxPointsEstimator``. It now also fits the data in the provided
+energy range.
+
+The ``Map`` class now supports boolean and comparator operations, such as
+``>,<,&,|`` etc. . A convenience ``Map.interp_to_geom()`` has been added.
 
 A ``Fit.stat_surface()`` method was introduced which allows to compute a
 fit statistic surface. In addition an option to store the trace of the fit was
