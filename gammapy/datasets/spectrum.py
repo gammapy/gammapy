@@ -532,20 +532,22 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         if getattr(self, "counts_off", None) is not None:
             counts_off = np.sum(self.counts_off.data)
-            str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+            str_cts = "\t{:32}: {:.2f}".format("Total off counts", counts_off)
+
+        str_list.insert(6, str_cts)
 
         acceptance = np.nan
         if self.acceptance is not None:
             acceptance = np.mean(self.acceptance.data)
 
-        str_acc = "\t{:32}: {:.3f}\n".format("Acceptance mean", acceptance)
+        str_acc = "\n\t{:32}: {:.3f}\n".format("Acceptance mean", acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off is not None:
             acceptance_off = np.sum(self.acceptance_off.data)
-        str_acc += "\t{:32}: {:.3f} \n".format("Acceptance off", acceptance_off)
+        str_acc += "\t{:32}: {:.3f}".format("Acceptance off", acceptance_off)
 
-        str_list.insert(15, str_acc)
+        str_list.insert(16, str_acc)
         str_ = "\n".join(str_list)
 
         return str_.expandtabs(tabsize=2)
