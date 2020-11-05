@@ -147,6 +147,9 @@ class ExcessMapEstimator(Estimator):
 
         resampled_dataset = dataset.resample_energy_axis(energy_axis=axis)
 
+        # Beware we rely here on the correct npred background in MapDataset.resample_energy_axis
+        resampled_dataset.models = dataset.models
+
         result = self.estimate_excess_map(resampled_dataset)
 
         return result
