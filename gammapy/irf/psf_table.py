@@ -32,7 +32,11 @@ class TablePSF:
     """
 
     def __init__(self, rad_axis, psf_value, interp_kwargs=None):
-        assert rad_axis.name == "rad"
+        if rad_axis.name != "rad":
+            raise ValueError(
+                f'rad_axis has wrong name, expected "rad", got: {rad_axis.name}'
+            )
+
         self._rad_axis = rad_axis
 
         self.psf_value = u.Quantity(psf_value).to("sr^-1")
@@ -259,7 +263,11 @@ class EnergyDependentTablePSF:
         if psf_value is None:
             self.psf_value = np.zeros(shape) * u.Unit("sr^-1")
         else:
-            assert np.shape(psf_value) == shape
+            if np.shape(psf_value) != shape:
+                raise ValueError(
+                    'psf_value has wrong shape'
+                    f', expected {shape}, got {np.shape(psf_value)}'
+                )
             self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
         self._interp_kwargs = interp_kwargs or {}

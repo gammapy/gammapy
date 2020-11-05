@@ -34,7 +34,12 @@ class NDDataArray:
 
         self._axes = MapAxes(axes)
 
-        assert np.shape(data) == self._axes.shape
+        if np.shape(data) != self._axes.shape:
+            raise ValueError(
+                f'data shape {data.shape} does not match'
+                f'axes shape {self._axes.shape}'
+            )
+
         if data is not None:
             self.data = data
 
