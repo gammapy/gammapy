@@ -330,6 +330,15 @@ class Parameters(collections.abc.Sequence):
         """Parameter values (`numpy.ndarray`)."""
         return np.array([_.value for _ in self._parameters], dtype=np.float64)
 
+    @values.setter
+    def values(self, values):
+        """Parameter values (`numpy.ndarray`)."""
+        if not len(self) == len(values):
+            raise ValueError("Values must have same length as parameter list")
+
+        for value, par in zip(values, self):
+            par.value = value
+
     @classmethod
     def from_stack(cls, parameters_list):
         """Create `Parameters` by stacking a list of other `Parameters` objects.

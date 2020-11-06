@@ -239,7 +239,7 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             try:
                 dataset_sliced = dataset.slice_by_energy(
-                    energy_min=energy_min, energy_max=energy_max,
+                    energy_min=energy_min, energy_max=energy_max, name=dataset.name + "-slice"
                 )
             except ValueError:
                 log.info(

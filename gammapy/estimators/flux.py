@@ -5,7 +5,7 @@ from astropy import units as u
 from gammapy.datasets import Datasets
 from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
-from gammapy.modeling.models import ScaleSpectralModel
+from gammapy.modeling.models import ScaleSpectralModel, Models
 
 log = logging.getLogger(__name__)
 
@@ -156,20 +156,32 @@ class FluxEstimator(Estimator):
             Dict with results for the flux point.
         """
         datasets = Datasets(datasets)
-        models = datasets.models
 
-        datasets = datasets.slice_by_energy(
+        datasets_sliced = datasets.slice_by_energy(
             energy_min=self.energy_min, energy_max=self.energy_max
         )
 
+        # TODO: simplify model book-keeping!!
+        models = Models()
+
+        for model in datasets.models:
+            if "sky-model" in model.tag:
+                models.append(model)
+            elif "fov-bkg" in model.tag:
+                bkg_model = model.copy(
+                    dataset_name=model.datasets_names[0] + "-sliced"
+                )
+                bkg_model.reset_to_default()
+                models.append(bkg_model)
+
         if len(datasets) > 0:
             # TODO: this relies on the energy binning of the first dataset
-            energy_axis = datasets[0].counts.geom.axes["energy"]
+            energy_axis = datasets_sliced[0].counts.geom.axes["energy"]
             energy_min, energy_max = energy_axis.edges.min(), energy_axis.edges.max()
         else:
             energy_min, energy_max = self.energy_min, self.energy_max
 
-        any_contribution = np.any([dataset.mask.data.any() for dataset in datasets])
+        any_contribution = np.any([dataset.mask.data.any() for dataset in datasets_sliced])
 
         model = self.get_scale_model(models)
 
@@ -181,8 +193,8 @@ class FluxEstimator(Estimator):
         else:
             models[self.source].spectral_model = model
 
-            datasets.models = models
-            result.update(self._parameter_estimator.run(datasets, model.norm))
+            datasets_sliced.models = models
+            result.update(self._parameter_estimator.run(datasets_sliced, model.norm))
             result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
         return result
