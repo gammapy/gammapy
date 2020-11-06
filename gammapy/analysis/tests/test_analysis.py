@@ -325,8 +325,8 @@ def test_analysis_3d():
     assert len(analysis.flux_points.data.table) == 2
     dnde = analysis.flux_points.data.table["dnde"].quantity
 
-    assert_allclose(dnde[0].value, 1.376879e-11, rtol=1e-2)
-    assert_allclose(dnde[-1].value, 2.691466e-13, rtol=1e-2)
+    assert_allclose(dnde[0].value, 1.339052e-11, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 2.775197e-13, rtol=1e-2)
     assert_allclose(res["index"].value, 3.097613, rtol=1e-2)
     assert_allclose(res["tilt"].value, -0.207792, rtol=1e-2)
 
