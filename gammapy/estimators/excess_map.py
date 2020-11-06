@@ -56,6 +56,9 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask):
 class ExcessMapEstimator(Estimator):
     """Computes correlated excess, sqrt TS (i.e. Li-Ma significance) and errors for MapDatasets.
 
+    If a model is set on the dataset the excess map estimator will compute the excess taking into account
+    the predicted counts of the model.
+
     Parameters
     ----------
     correlation_radius : ~astropy.coordinate.Angle
@@ -112,6 +115,9 @@ class ExcessMapEstimator(Estimator):
     def run(self, dataset):
         """Compute correlated excess, Li & Ma significance and flux maps
 
+        If a model is set on the dataset the excess map estimator will compute the excess taking into account
+        the predicted counts of the model.
+
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
@@ -146,6 +152,9 @@ class ExcessMapEstimator(Estimator):
         axis = MapAxis.from_energy_edges(energy_edges)
 
         resampled_dataset = dataset.resample_energy_axis(energy_axis=axis)
+
+        # Beware we rely here on the correct npred background in MapDataset.resample_energy_axis
+        resampled_dataset.models = dataset.models
 
         result = self.estimate_excess_map(resampled_dataset)
 
