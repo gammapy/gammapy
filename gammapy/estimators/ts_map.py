@@ -398,6 +398,7 @@ class TSMapEstimator(Estimator):
                 * flux_ul : upper limit map
 
         """
+        dataset_models = dataset.models
         if self.downsampling_factor:
             shape = dataset.counts.geom.to_image().data_shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
@@ -415,12 +416,13 @@ class TSMapEstimator(Estimator):
         results = []
 
         for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
+            sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
             if self.sum_over_energy_groups:
-                dataset = dataset.to_image()
+                sliced_dataset = sliced_dataset.to_image()
 
-            result = self.estimate_flux_map(dataset)
+            sliced_dataset.models = dataset_models
+            result = self.estimate_flux_map(sliced_dataset)
             results.append(result)
 
         result_all = {}
