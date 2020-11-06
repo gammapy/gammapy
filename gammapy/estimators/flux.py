@@ -5,7 +5,7 @@ from astropy import units as u
 from gammapy.datasets import Datasets
 from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
-from gammapy.modeling.models import ScaleSpectralModel, Models
+from gammapy.modeling.models import Models, ScaleSpectralModel
 
 log = logging.getLogger(__name__)
 
@@ -168,9 +168,7 @@ class FluxEstimator(Estimator):
             if "sky-model" in model.tag:
                 models.append(model)
             elif "fov-bkg" in model.tag:
-                bkg_model = model.copy(
-                    dataset_name=model.datasets_names[0] + "-sliced"
-                )
+                bkg_model = model.copy(dataset_name=model.datasets_names[0] + "-sliced")
                 bkg_model.reset_to_default()
                 models.append(bkg_model)
 
@@ -181,7 +179,9 @@ class FluxEstimator(Estimator):
         else:
             energy_min, energy_max = self.energy_min, self.energy_max
 
-        any_contribution = np.any([dataset.mask.data.any() for dataset in datasets_sliced])
+        any_contribution = np.any(
+            [dataset.mask.data.any() for dataset in datasets_sliced]
+        )
 
         model = self.get_scale_model(models)
 

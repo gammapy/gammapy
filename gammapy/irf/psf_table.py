@@ -265,8 +265,8 @@ class EnergyDependentTablePSF:
         else:
             if np.shape(psf_value) != shape:
                 raise ValueError(
-                    'psf_value has wrong shape'
-                    f', expected {shape}, got {np.shape(psf_value)}'
+                    "psf_value has wrong shape"
+                    f", expected {shape}, got {np.shape(psf_value)}"
                 )
             self.psf_value = u.Quantity(psf_value).to("sr^-1")
 

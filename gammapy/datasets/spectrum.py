@@ -12,7 +12,7 @@ from gammapy.stats import WStatCountsStatistic, cash, get_wstat_mu_bkg, wstat
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .map import MapDataset
-from .utils import get_figure, get_axes
+from .utils import get_axes, get_figure
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -162,7 +162,13 @@ class SpectrumDataset(MapDataset):
 
         return u.Quantity([energy_min.min(), energy_max.max()])
 
-    def plot_fit(self, ax_spectrum=None, ax_residuals=None, kwargs_spectrum=None, kwargs_residuals=None):
+    def plot_fit(
+        self,
+        ax_spectrum=None,
+        ax_residuals=None,
+        kwargs_spectrum=None,
+        kwargs_residuals=None,
+    ):
         """Plot spectrum and residuals in two panels.
 
         Calls `~SpectrumDataset.plot_excess` and `~SpectrumDataset.plot_residuals`.
@@ -187,7 +193,13 @@ class SpectrumDataset(MapDataset):
 
         gs = GridSpec(7, 1)
         ax_spectrum, ax_residuals = get_axes(
-            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex": ax_spectrum}
+            ax_spectrum,
+            ax_residuals,
+            8,
+            7,
+            [gs[:5, :]],
+            [gs[5:, :]],
+            kwargs2={"sharex": ax_spectrum},
         )
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
@@ -212,7 +224,9 @@ class SpectrumDataset(MapDataset):
         ax.axvline(energy_min.to_value(self._energy_unit), label="fit range", **kwargs)
         ax.axvline(energy_max.to_value(self._energy_unit), **kwargs)
 
-    def plot_counts(self, ax=None, kwargs_counts=None, kwargs_background=None, **kwargs):
+    def plot_counts(
+        self, ax=None, kwargs_counts=None, kwargs_background=None, **kwargs
+    ):
         """Plot counts and background.
 
         Parameters
@@ -252,7 +266,9 @@ class SpectrumDataset(MapDataset):
         ax.legend(numpoints=1)
         return ax
 
-    def plot_excess(self, ax=None, kwargs_excess=None, kwargs_npred_signal=None, **kwargs):
+    def plot_excess(
+        self, ax=None, kwargs_excess=None, kwargs_npred_signal=None, **kwargs
+    ):
         """Plot excess and predicted signal.
 
         Parameters
@@ -279,7 +295,9 @@ class SpectrumDataset(MapDataset):
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_excess)
         plot_kwargs.setdefault("label", "Excess counts")
-        ax = self.excess.plot(ax, yerr=np.sqrt(np.abs(self.excess.data.flatten())), **plot_kwargs)
+        ax = self.excess.plot(
+            ax, yerr=np.sqrt(np.abs(self.excess.data.flatten())), **plot_kwargs
+        )
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_npred_signal)

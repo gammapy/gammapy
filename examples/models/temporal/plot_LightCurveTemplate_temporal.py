@@ -28,7 +28,6 @@ light_curve_model = LightCurveTemplateTemporalModel.read(path)
 light_curve_model.plot(time_range)
 
 
-
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),
     temporal_model=light_curve_model,

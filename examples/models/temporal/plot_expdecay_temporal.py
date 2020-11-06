@@ -39,7 +39,6 @@ expdecay_model.plot(time_range)
 plt.grid(which="both")
 
 
-
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),
     temporal_model=expdecay_model,

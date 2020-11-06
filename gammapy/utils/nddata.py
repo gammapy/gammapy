@@ -36,8 +36,8 @@ class NDDataArray:
 
         if np.shape(data) != self._axes.shape:
             raise ValueError(
-                f'data shape {data.shape} does not match'
-                f'axes shape {self._axes.shape}'
+                f"data shape {data.shape} does not match"
+                f"axes shape {self._axes.shape}"
             )
 
         if data is not None:

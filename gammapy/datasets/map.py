@@ -701,7 +701,12 @@ class MapDataset(Dataset):
         return residuals
 
     def plot_residuals_spatial(
-        self, ax=None, method="diff", smooth_kernel="gauss", smooth_radius="0.1 deg", **kwargs
+        self,
+        ax=None,
+        method="diff",
+        smooth_kernel="gauss",
+        smooth_radius="0.1 deg",
+        **kwargs,
     ):
         """Plot spatial residuals.
 
@@ -806,7 +811,11 @@ class MapDataset(Dataset):
         return ax
 
     def plot_residuals(
-        self, ax_spatial=None, ax_spectral=None, kwargs_spatial=None, kwargs_spectral=None
+        self,
+        ax_spatial=None,
+        ax_spectral=None,
+        kwargs_spatial=None,
+        kwargs_spectral=None,
     ):
         """Plot spatial and spectral residuals in two panels.
 
@@ -835,7 +844,13 @@ class MapDataset(Dataset):
             raise ValueError("'region' is a required parameter in 'kwargs_spectral'")
 
         ax_spatial, ax_spectral = get_axes(
-            ax_spatial, ax_spectral, 12, 4, [1, 2, 1], [1, 2, 2], {"projection": self._geom.to_image().wcs}
+            ax_spatial,
+            ax_spectral,
+            12,
+            4,
+            [1, 2, 1],
+            [1, 2, 2],
+            {"projection": self._geom.to_image().wcs},
         )
         kwargs_spatial = kwargs_spatial or {}
 

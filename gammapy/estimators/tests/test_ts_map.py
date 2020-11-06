@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.testing import requires_data
 
+
 @pytest.fixture(scope="session")
 def fake_dataset():
     axis = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV", name="energy")
@@ -30,10 +31,13 @@ def fake_dataset():
 
     spatial_model = PointSpatialModel()
     spectral_model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)
-    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name='source')
+    model = SkyModel(
+        spatial_model=spatial_model, spectral_model=spectral_model, name="source"
+    )
     dataset.models = [model]
     dataset.fake(random_state=42)
     return dataset
+
 
 @pytest.fixture(scope="session")
 def input_dataset():
@@ -201,8 +205,9 @@ def test_large_kernel(input_dataset):
     with pytest.raises(ValueError):
         ts_estimator.run(input_dataset)
 
+
 def test_ts_map_with_model(fake_dataset):
-    model = fake_dataset.models['source']
+    model = fake_dataset.models["source"]
 
     fake_dataset.models = []
 
@@ -214,14 +219,14 @@ def test_ts_map_with_model(fake_dataset):
     )
     maps = estimator.run(fake_dataset)
 
-    assert_allclose(maps["sqrt_ts"].data[:,25,25],18.369942, atol=0.1)
-    assert_allclose(maps["flux"].data[:,25,25], 3.513e-10, atol=1e-12)
+    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 18.369942, atol=0.1)
+    assert_allclose(maps["flux"].data[:, 25, 25], 3.513e-10, atol=1e-12)
 
     fake_dataset.models = [model]
     maps = estimator.run(fake_dataset)
 
-    assert_allclose(maps["sqrt_ts"].data[:,25,25], -0.231187, atol=0.1)
-    assert_allclose(maps["flux"].data[:,25,25], -5.899423e-12, atol=1e-12)
+    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], -0.231187, atol=0.1)
+    assert_allclose(maps["flux"].data[:, 25, 25], -5.899423e-12, atol=1e-12)
 
     # Try downsmapling
     estimator = TSMapEstimator(
@@ -232,6 +237,5 @@ def test_ts_map_with_model(fake_dataset):
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
-    assert_allclose(maps["sqrt_ts"].data[:,25,25], 0.323, atol=0.1)
-    assert_allclose(maps["flux"].data[:,25,25], 1.015417e-12, atol=1e-12)
-
+    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323, atol=0.1)
+    assert_allclose(maps["flux"].data[:, 25, 25], 1.015417e-12, atol=1e-12)

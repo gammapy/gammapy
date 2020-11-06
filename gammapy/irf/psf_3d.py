@@ -48,26 +48,25 @@ class PSF3D:
     ):
         if energy_axis_true.name != "energy_true":
             raise ValueError(
-                'Unexpected `energy_axis_true.name`,'
+                "Unexpected `energy_axis_true.name`,"
                 f' expected "energy_true", got: {energy_axis_true.name}'
             )
 
         if offset_axis.name != "offset":
             raise ValueError(
-                'Unexpected `offset_axis.name`,'
+                "Unexpected `offset_axis.name`,"
                 f' expected "offset", got: {offset_axis.name}'
             )
         if rad_axis.name != "rad":
             raise ValueError(
-                'Unexpected `rad_axis.name`,'
-                f' expected "rad", got: {rad_axis.name}'
+                "Unexpected `rad_axis.name`," f' expected "rad", got: {rad_axis.name}'
             )
 
         expected_shape = (energy_axis_true.nbin, offset_axis.nbin, rad_axis.nbin)
         if psf_value.shape != expected_shape:
             raise ValueError(
-                'PSF has wrong shape'
-                f', expected {expected_shape}, got {psf_value.shape}'
+                "PSF has wrong shape"
+                f", expected {expected_shape}, got {psf_value.shape}"
             )
 
         self._energy_axis_true = energy_axis_true

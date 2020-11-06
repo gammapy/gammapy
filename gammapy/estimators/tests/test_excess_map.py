@@ -6,8 +6,13 @@ import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.modeling.models import (
+    GaussianSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 from gammapy.utils.testing import requires_data
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, GaussianSpatialModel
+
 
 def image_to_cube(input_map, energy_min, energy_max):
     energy_min = u.Quantity(energy_min)
@@ -176,12 +181,12 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
 
     # TODO: this has never worked...
     model = SkyModel(
-         PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
-         GaussianSpatialModel(
-             lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
-         ),
-         name="sky_model",
-     )
+        PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
+        GaussianSpatialModel(
+            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+        ),
+        name="sky_model",
+    )
     #
     simple_dataset_on_off.models = [model]
 

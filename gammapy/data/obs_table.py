@@ -10,7 +10,6 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 
-
 __all__ = ["ObservationTable"]
 
 

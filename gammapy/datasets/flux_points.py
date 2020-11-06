@@ -246,7 +246,13 @@ class FluxPointsDataset(Dataset):
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def plot_fit(self, ax_spectrum=None, ax_residuals=None, kwargs_spectrum=None, kwargs_residuals=None):
+    def plot_fit(
+        self,
+        ax_spectrum=None,
+        ax_residuals=None,
+        kwargs_spectrum=None,
+        kwargs_residuals=None,
+    ):
         """Plot flux points, best fit model and residuals in two panels.
 
         Calls `~FluxPointsDataset.plot_spectrum` and `~FluxPointsDataset.plot_residuals`.
@@ -271,7 +277,13 @@ class FluxPointsDataset(Dataset):
 
         gs = GridSpec(7, 1)
         ax_spectrum, ax_residuals = get_axes(
-            ax_spectrum, ax_residuals, 8, 7, [gs[:5, :]], [gs[5:, :]], kwargs2={"sharex": ax_spectrum}
+            ax_spectrum,
+            ax_residuals,
+            8,
+            7,
+            [gs[:5, :]],
+            [gs[5:, :]],
+            kwargs2={"sharex": ax_spectrum},
         )
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
@@ -283,7 +295,11 @@ class FluxPointsDataset(Dataset):
         self.plot_residuals(ax_residuals, **kwargs_residuals)
         method = kwargs_residuals["method"]
         label = self._residuals_labels[method]
-        unit = self.data._plot_get_flux_err(self.data.sed_type)[0].unit if method == "diff" else ""
+        unit = (
+            self.data._plot_get_flux_err(self.data.sed_type)[0].unit
+            if method == "diff"
+            else ""
+        )
         ax_residuals.set_ylabel("Residuals\n" + label + (f"\n[{unit}]" if unit else ""))
 
         return ax_spectrum, ax_residuals
@@ -345,7 +361,9 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
 
-        ax.errorbar(fp.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs)
+        ax.errorbar(
+            fp.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
+        )
         ax.axhline(0, color=kwargs["color"], lw=0.5)
 
         # format axes
