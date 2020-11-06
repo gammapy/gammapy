@@ -514,8 +514,12 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     region = sky_model.spatial_model.to_region()
 
+    initial_counts = dataset_1.counts.copy()
     with mpl_plot_check():
         dataset_1.plot_residuals(kwargs_spectral=dict(region=region))
+
+    # check dataset has not changed
+    assert initial_counts == dataset_1.counts
 
     # test model evaluation outside image
     dataset_1.models[0].spatial_model.lon_0.value = 150

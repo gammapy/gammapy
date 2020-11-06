@@ -675,7 +675,7 @@ class MapDataset(Dataset):
         residuals : `gammapy.maps.Map`
             Residual map.
         """
-        npred, counts = self.npred(), self.counts
+        npred, counts = self.npred(), self.counts.copy()
 
         if self.mask:
             npred = npred * self.mask
@@ -727,7 +727,7 @@ class MapDataset(Dataset):
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCSAxes object.
         """
-        counts, npred = self.counts, self.npred()
+        counts, npred = self.counts.copy(), self.npred()
 
         if self.mask is not None:
             counts *= self.mask
@@ -778,7 +778,7 @@ class MapDataset(Dataset):
         if not region:
             raise ValueError("'region' is a required parameter")
 
-        counts, npred = self.counts, self.npred()
+        counts, npred = self.counts.copy(), self.npred()
 
         if self.mask is not None:
             counts *= self.mask
