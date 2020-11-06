@@ -1,7 +1,24 @@
-0.19 (unreleased)
-----------------
+0.18.1 (Nov 6th, 2020)
+----------------------
 
-- No changes yet
+- Released November 6, 2020
+- 3 contributors
+- 6 pull requests
+
+**What's new**
+
+This release fixes multiple bugs found after v0.18. See the list of pull requests
+below for details.
+
+Pull Requests
++++++++++++++
+
+- [#3116] Fix model handling in FluxEstimator (Axel Donath)
+- [#3114] Corrected exclusion mask notebook (Régis Terrier)
+- [#3113] Modified TSMapEstimator to keep model term (Régis Terrier)
+- [#3112] Improve error messages for wrong shapes (Max Noethe)
+- [#3111] Adapt ExcessMapEstimator for missing models (Régis Terrier)
+- [#3110] Correct plot_residual methods (Régis Terrier)
 
 
 0.18 (Nov 4th, 2020)
