@@ -187,7 +187,7 @@ def test_wrong_axis_order():
 
     data = np.ones(shape=(offset_axis.nbin, energy_axis_true.nbin)) * u.cm ** 2
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         EffectiveAreaTable2D(
             energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=data,
         )

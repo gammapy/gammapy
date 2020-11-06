@@ -46,15 +46,29 @@ class PSF3D:
         energy_thresh_hi=u.Quantity(100, "TeV"),
         interp_kwargs=None,
     ):
-        assert energy_axis_true.name == "energy_true"
-        assert offset_axis.name == "offset"
-        assert rad_axis.name == "rad"
+        if energy_axis_true.name != "energy_true":
+            raise ValueError(
+                'Unexpected `energy_axis_true.name`,'
+                f' expected "energy_true", got: {energy_axis_true.name}'
+            )
 
-        assert psf_value.shape == (
-            energy_axis_true.nbin,
-            offset_axis.nbin,
-            rad_axis.nbin,
-        )
+        if offset_axis.name != "offset":
+            raise ValueError(
+                'Unexpected `offset_axis.name`,'
+                f' expected "offset", got: {offset_axis.name}'
+            )
+        if rad_axis.name != "rad":
+            raise ValueError(
+                'Unexpected `rad_axis.name`,'
+                f' expected "rad", got: {rad_axis.name}'
+            )
+
+        expected_shape = (energy_axis_true.nbin, offset_axis.nbin, rad_axis.nbin)
+        if psf_value.shape != expected_shape:
+            raise ValueError(
+                'PSF has wrong shape'
+                f', expected {expected_shape}, got {psf_value.shape}'
+            )
 
         self._energy_axis_true = energy_axis_true
         self._offset_axis = offset_axis
