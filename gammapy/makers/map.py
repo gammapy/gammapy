@@ -252,7 +252,7 @@ class MapDatasetMaker(Maker):
         meta_table: `~astropy.table.Table`
         """
         meta_table = Table()
-        meta_table["TELESCOP"] = [observation.aeff.meta["TELESCOP"]]
+        meta_table["TELESCOP"] = [observation.events.table.meta.get("TELESCOP", "UNKNOWN")]
         meta_table["OBS_ID"] = [observation.obs_id]
         meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
         meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
