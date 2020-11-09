@@ -117,7 +117,7 @@ class Analysis:
             self.observations = self.observations.select_time([(start, stop)])
         log.info(f"Number of selected observations: {len(self.observations)}")
         for obs in self.observations:
-            log.debug(obs)
+            log.debug(str(obs))
 
     def get_datasets(self):
         """Produce reduced datasets."""
@@ -143,7 +143,7 @@ class Analysis:
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
 
-        log.info(f"Reading model.")
+        log.info("Reading model.")
         if isinstance(models, str):
             self.models = Models.from_yaml(models)
         elif isinstance(models, Models):
@@ -295,7 +295,7 @@ class Analysis:
                 if bkg_method == "ring":
                     dataset = dataset.to_map_dataset()
 
-                log.debug(dataset)
+                log.debug(str(dataset))
                 stacked.stack(dataset)
             datasets = [stacked]
         else:
@@ -308,7 +308,7 @@ class Analysis:
                 dataset = maker_safe_mask.run(dataset, obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
-                log.debug(dataset)
+                log.debug(str(dataset))
                 datasets.append(dataset)
 
         self.datasets = Datasets(datasets)
