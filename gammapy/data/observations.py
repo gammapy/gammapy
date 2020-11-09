@@ -198,7 +198,7 @@ class Observation:
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        return 1 - self.obs_info["DEADC"]
+        return 1 - self.events.table.meta["DEADC"]
 
     @property
     def pointing_radec(self):
