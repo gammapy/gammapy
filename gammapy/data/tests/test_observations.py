@@ -210,7 +210,7 @@ def test_observations_select_time_time_intervals_list(data_store):
 
 
 @requires_data()
-def test_observation():
+def test_observation_2():
     livetime = 5.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     irfs = load_cta_irfs(

@@ -63,6 +63,14 @@ class Observation:
         events=None,
         obs_filter=None,
     ):
+        if "DEADC" in obs_info:
+            deadc = obs_info["DEADC"]
+        else:
+            if events is None or "DEADC" not in events.meta:
+                raise ValueError("DEADC must be provided either in events or obs_info")
+            deadc = events.meta["DEADC"]
+
+        self._deadc = deadc
         self.obs_id = obs_id
         self.obs_info = obs_info
         self.aeff = aeff
@@ -198,7 +206,9 @@ class Observation:
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        return 1 - self.events.table.meta["DEADC"]
+        # if events is available, 'DEADC' is required to be 
+        # in the metadata of the events table
+        return 1 - self._deadc
 
     @property
     def pointing_radec(self):
