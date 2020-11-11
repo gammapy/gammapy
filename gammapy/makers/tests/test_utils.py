@@ -282,13 +282,14 @@ class TestTheta2Table:
         table["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
         table["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
 
+        table.meta["DEADC"] = 1.0
         table.meta["RA_PNT"] = 0 * u.deg
         table.meta["DEC_PNT"] = 0.5 * u.deg
 
         meta_obs = dict()
         meta_obs["RA_PNT"] = 0 * u.deg
         meta_obs["DEC_PNT"] = 0.5 * u.deg
-        meta_obs["DEADC"] = 1
+        meta_obs["DEADC"] = 1.0
 
         meta = time_ref_to_dict("2010-01-01")
         gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
