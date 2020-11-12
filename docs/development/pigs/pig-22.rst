@@ -144,31 +144,57 @@ and contain the required quantities.
 Introduce a FluxMap API
 -----------------------
 
+Handling a simple dictionary of ``Maps`` is not very convenient. It is complex to perform flux transform, it is more
+complex to provide standard plotting functions for instance. More importantly, there is no way to serialize the maps
+with their associated quantities and other informations. It could be useful to export the ``GTI`` table of the
+``Dataset`` that was used to extract the map or its ``meta`` table. Some information on the way the flux was obtained
+could be kept as well (e.g. spatial model assumed or correlation radius used).
+
+The ``FluxMap`` would inherit from the general likelihood SED class discussed above and could include the possibility to
+export the resulting maps (in particular the ``norm_scan`` maps) after sparsification according to the format definition
+from fermipy and presented in gamma astro data format.
+
+In addition, utilities to extract flux points at various positions could be provided.
+
+Typical usage would be:
+
 .. code::
 
-    class FluxMaps(LikelihoodSED):
-        """"""
-        def __init__(self, maps, ref_model):
-            super().__init__(data=table, spectra_model=spectra_model, energy_axis)
+    model = SkyModel(PointSpatialModel(), PowerLawSpectralModel(index=2.5))
 
-        @property
-        def maps(self):
-            return self._data
+    estimator = TSMapEstimator(model, energy_edges=[0.2, 1.0, 10.0]*u.TeV)
 
-        def get_flux_points(self, positions, regions):
-            return FluxPointsCollection()
+    flux_maps = estimator.run(dataset)
 
-        def sparsify(self, ts_threshold=None):
-            """"""
-            return FluxPointsCollection()
+    # plot differential flux map in each energy band
+    flux_maps.dnde.plot_grid()
 
-        def read(filename):
-            pass
+    # plot energy flux map in each energy band
+    flux_maps.eflux.plot_grid()
 
-        def write(filename):
-            pass
+    # one can access other quantities
+    flux_maps.sqrt_ts.plot_grid()
+    flux_maps.excess.plot_grid()
+
+    # Extract flux points at selected position
+    position = SkyCoord(225.31, 35.65, unit="deg", frame="icrs")
+    fp = flux_maps.get_flux_points(position)
+    fp.plot()
+
+    # Save to disk as a fits file
+    flux_maps.save("my_flux_maps.fits", overwrite=True)
+
+    # Read from disk
+    new_flux = FluxMap.read("my_flux_maps.fits")
 
 
+Introduce a FluxPointsCollection API
+------------------------------------
 
 
+Alternative
+===========
 
+
+Decision
+========
