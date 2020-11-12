@@ -218,14 +218,6 @@ class WStatCountsStatistic(CountsStatistic):
             self.mu_sig = np.asanyarray(mu_sig)
 
     @property
-    def mu_bkg(self):
-        """Expected background"""
-        mu_bkg = self.alpha * get_wstat_mu_bkg(
-            n_on=self.n_on, n_off=self.n_off, alpha=self.alpha, mu_sig=self.mu_sig,
-        )
-        return np.nan_to_num(mu_bkg)
-
-    @property
     def n_bkg(self):
         """Known background computed alpha * n_off"""
         return self.alpha * self.n_off
@@ -263,9 +255,9 @@ class WStatCountsStatistic(CountsStatistic):
 
     def _n_sig_matching_significance_fcn(self, n_sig, significance, index):
         stat0 = wstat(
-            n_sig + self.mu_bkg[index], self.n_off[index], self.alpha[index], 0
+            n_sig + self.n_bkg[index], self.n_off[index], self.alpha[index], 0
         )
         stat1 = wstat(
-            n_sig + self.mu_bkg[index], self.n_off[index], self.alpha[index], n_sig,
+            n_sig + self.n_bkg[index], self.n_off[index], self.alpha[index], n_sig,
         )
         return np.sign(n_sig) * np.sqrt(np.clip(stat0 - stat1, 0, None)) - significance
