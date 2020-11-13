@@ -193,7 +193,7 @@ class ExcessProfileEstimator(Estimator):
             result.update(
                 {
                     "counts": stats.n_on,
-                    "background": stats.mu_bkg,
+                    "background": stats.n_bkg,
                     "excess": stats.n_sig,
                 }
             )
