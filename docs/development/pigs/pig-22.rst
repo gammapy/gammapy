@@ -191,9 +191,26 @@ Typical usage would be:
 Introduce a FluxPointsCollection API
 ------------------------------------
 
+Several estimators return a set of ``FluxPoints`` (or in the future possibly a list of ``FluxMap``?). It is the case of
+the ``LightCurveEstimator``, a light curve being a time ordered list of fluxes. It is also the case of the
+``ExcessProfileEstimator`` which return list of fluxes ordered along a direction or radially.
+
+A dedicated API could be introduced to support these objects. Internally a ``Table`` could be used to store the various
+fluxes.
+
+.. code::
+
+    estimator = LightCurveEstimator()
+    lc = estimator.run(datasets)
+
+    print(lc.times)
+
+    lc.get_lightcurve()
+
 
 Alternative
 ===========
+
 
 
 Decision
