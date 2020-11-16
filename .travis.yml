@@ -86,6 +86,10 @@ jobs:
         - env: PYTHON_VERSION=3.7 ASTROPY_VERSION=dev CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
+        # Test with Astropy dev version
+        - env: PYTHON_VERSION=3.7 ASTROPY_VERSION=4.0 CMD='make test'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+
         # Test with Sherpa dev, this may take a longer time
         - env: PYTHON_VERSION=3.7 SETUP_CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
