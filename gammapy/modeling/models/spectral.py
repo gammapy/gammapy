@@ -39,17 +39,21 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
         Number of grid points per decade used for the integration.
         Default : 100.
     """
-    edges = edges_from_lo_hi(energy_min, energy_max)
-    energy_axis = MapAxis.from_energy_edges(energy_edges=edges)
+    if energy_min.isscalar and energy_max.isscalar:
+        energies = MapAxis.from_energy_bounds(
+            energy_min=energy_min, energy_max=energy_max, nbin=ndecade, per_decade=True
+        ).edges
+    else:
+        energies = edges_from_lo_hi(energy_min, energy_max)
 
-    factor = np.ceil(ndecade / energy_axis.nbin_per_decade)
-    energy_axis_upsampled = energy_axis.upsample(factor=factor)
+    values = func(energies)
 
-    values = func(energy_axis_upsampled.edges)
-    integral = trapz_loglog(values, energy_axis_upsampled.edges)
+    integral = trapz_loglog(values, energies)
 
-    indices = energy_axis_upsampled.coord_to_idx(energy_axis.edges[:-1])
-    return np.add.reduceat(integral, indices)
+    if energy_min.isscalar and energy_max.isscalar:
+        return integral.sum()
+
+    return integral
 
 
 class SpectralModel(Model):
