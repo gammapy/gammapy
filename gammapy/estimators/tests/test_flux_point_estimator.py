@@ -147,128 +147,182 @@ def fpe_ecpl():
     return create_fpe(ExpCutoffPowerLawSpectralModel(lambda_="1 TeV-1"))
 
 
-class TestFluxPointsEstimator:
-    @staticmethod
-    def test_str(fpe_pwl):
-        datasets, fpe = fpe_pwl
-        assert "FluxPointsEstimator" in str(fpe)
+def test_str(fpe_pwl):
+    datasets, fpe = fpe_pwl
+    assert "FluxPointsEstimator" in str(fpe)
 
-    @staticmethod
-    @requires_dependency("iminuit")
-    def test_run_pwl(fpe_pwl):
-        datasets, fpe = fpe_pwl
 
-        fp = fpe.run(datasets)
+@requires_dependency("iminuit")
+def test_run_pwl(fpe_pwl):
+    datasets, fpe = fpe_pwl
 
-        actual = fp.table["e_min"].data
-        assert_allclose(actual, [0.316228, 1.0, 10.0], rtol=1e-5)
+    fp = fpe.run(datasets)
 
-        actual = fp.table["e_max"].data
-        assert_allclose(actual, [1.0, 10.0, 31.622777], rtol=1e-5)
+    actual = fp.table["e_min"].data
+    assert_allclose(actual, [0.316228, 1.0, 10.0], rtol=1e-5)
 
-        actual = fp.table["e_ref"].data
-        assert_allclose(actual, [0.562341, 3.162278, 17.782794], rtol=1e-3)
+    actual = fp.table["e_max"].data
+    assert_allclose(actual, [1.0, 10.0, 31.622777], rtol=1e-5)
 
-        actual = fp.table["norm"].data
-        assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+    actual = fp.table["e_ref"].data
+    assert_allclose(actual, [0.562341, 3.162278, 17.782794], rtol=1e-3)
 
-        actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-2)
+    actual = fp.table["ref_flux"].quantity
+    desired = [2.162278e-12, 9.000000e-13, 6.837722e-14] * u.Unit("1 / (cm2 s)")
+    assert_allclose(actual, desired, rtol=1e-3)
 
-        actual = fp.table["norm_errn"].data
-        assert_allclose(actual, [0.065803, 0.060403, 0.171376], rtol=1e-2)
+    actual = fp.table["ref_dnde"].quantity
+    desired = [3.162278e-12, 1.000000e-13, 3.162278e-15] * u.Unit("1 / (cm2 s TeV)")
+    assert_allclose(actual, desired, rtol=1e-3)
 
-        actual = fp.table["norm_errp"].data
-        assert_allclose(actual, [0.06695, 0.061652, 0.18839], rtol=1e-2)
+    actual = fp.table["ref_e2dnde"].quantity
+    assert_allclose(actual, 1e-12 * u.Unit("TeV / (cm2 s)"), rtol=1e-3)
 
-        actual = fp.table["counts"].data.squeeze()
-        assert_allclose(actual, [1490, 748, 43])
+    actual = fp.table["ref_eflux"].quantity
+    desired = [1.151293e-12, 2.302585e-12, 1.151293e-12] * u.Unit("TeV / (cm2 s)")
+    assert_allclose(actual, desired, rtol=1e-3)
 
-        actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
+    actual = fp.table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
-        actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
+    actual = fp.table["norm_err"].data
+    assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-2)
 
-        actual = fp.table["norm_scan"][0][[0, 5, -1]]
-        assert_allclose(actual, [0.2, 1, 5])
+    actual = fp.table["norm_errn"].data
+    assert_allclose(actual, [0.065803, 0.060403, 0.171376], rtol=1e-2)
 
-        actual = fp.table["stat_scan"][0][[0, 5, -1]]
-        assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-2)
+    actual = fp.table["norm_errp"].data
+    assert_allclose(actual, [0.06695, 0.061652, 0.18839], rtol=1e-2)
 
-    @staticmethod
-    @requires_dependency("iminuit")
-    @requires_data()
-    def test_run_map_pwl(fpe_map_pwl):
-        datasets, fpe = fpe_map_pwl
-        fp = fpe.run(datasets)
+    actual = fp.table["counts"].data.squeeze()
+    assert_allclose(actual, [1490, 748, 43])
 
-        actual = fp.table["e_min"].data
-        assert_allclose(actual, [0.1, 1.178769, 8.48342], rtol=1e-5)
+    actual = fp.table["norm_ul"].data
+    assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
-        actual = fp.table["e_max"].data
-        assert_allclose(actual, [1.178769, 8.483429, 100.0], rtol=1e-5)
+    actual = fp.table["sqrt_ts"].data
+    assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
 
-        actual = fp.table["e_ref"].data
-        assert_allclose(actual, [0.343332, 3.162278, 29.126327], rtol=1e-5)
+    actual = fp.table["norm_scan"][0][[0, 5, -1]]
+    assert_allclose(actual, [0.2, 1, 5])
 
-        actual = fp.table["norm"].data
-        assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+    actual = fp.table["stat_scan"][0][[0, 5, -1]]
+    assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-2)
 
-        actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.067637, 0.052022, 0.087059], rtol=3e-2)
 
-        actual = fp.table["counts"].data
-        assert_allclose(actual, [[44611, 0], [1923, 0], [282, 0]])
+@requires_dependency("iminuit")
+def test_run_ecpl(fpe_ecpl):
+    datasets, fpe = fpe_ecpl
 
-        actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.111852, 1.07004, 1.17829], rtol=1e-2)
+    fp = fpe.run(datasets)
 
-        actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
+    actual = fp.table["ref_flux"].quantity
+    desired = [9.024362e-13, 1.781341e-13, 1.260298e-18] * u.Unit("1 / (cm2 s)")
+    assert_allclose(actual, desired, rtol=1e-3)
 
-        actual = fp.table["norm_scan"][0]
-        assert_allclose(actual, [0.2, 1, 5])
+    actual = fp.table["ref_dnde"].quantity
+    desired = [1.351382e-12, 7.527318e-15, 2.523659e-22] * u.Unit("1 / (cm2 s TeV)")
+    assert_allclose(actual, desired, rtol=1e-3)
 
-        actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, [1.628530e02, 1.436323e-01, 2.007461e03], rtol=1e-2)
+    actual = fp.table["ref_e2dnde"].quantity
+    desired = [4.273446e-13, 7.527318e-14, 7.980510e-20] * u.Unit("TeV / (cm2 s)")
+    assert_allclose(actual, desired, rtol=1e-3)
 
-    @staticmethod
-    @requires_dependency("iminuit")
-    @requires_data()
-    def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
-        datasets, fpe = fpe_map_pwl_reoptimize
-        fpe = fpe.copy()
-        fpe.selection = ["scan"]
+    actual = fp.table["ref_eflux"].quantity
+    desired = [4.770557e-13, 2.787695e-13, 1.371963e-17] * u.Unit("TeV / (cm2 s)")
+    assert_allclose(actual, desired, rtol=1e-3)
 
-        fp = fpe.run(datasets)
+    actual = fp.table["norm"].data
+    assert_allclose(actual, [1.001683, 1.061821, 1.237512e+03], rtol=1e-3)
 
-        actual = fp.table["norm"].data
-        assert_allclose(actual, 0.962368, rtol=1e-2)
+    actual = fp.table["norm_err"].data
+    assert_allclose(actual, [1.386091e-01, 2.394241e-01, 3.259756e+03], rtol=1e-2)
 
-        actual = fp.table["norm_err"].data
-        assert_allclose(actual, 0.051955, rtol=1e-2)
+    actual = fp.table["norm_errn"].data
+    assert_allclose(actual, [1.374962e-01, 2.361246e-01, 2.888978e+03], rtol=1e-2)
 
-        actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, 28.408426, rtol=1e-2)
+    actual = fp.table["norm_errp"].data
+    assert_allclose(actual, [1.397358e-01, 2.428481e-01, 3.716550e+03], rtol=1e-2)
 
-        actual = fp.table["norm_scan"][0]
-        assert_allclose(actual, 1)
+    actual = fp.table["norm_ul"].data
+    assert_allclose(actual, [1.283433e+00, 1.555117e+00, 9.698645e+03], rtol=1e-2)
 
-        actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-        assert_allclose(actual, 0.489359, rtol=1e-2)
+    actual = fp.table["sqrt_ts"].data
+    assert_allclose(actual, [7.678454, 4.735691, 0.399243], rtol=1e-2)
 
-    @staticmethod
-    @requires_dependency("iminuit")
-    @requires_data()
-    def test_flux_points_estimator_no_norm_scan(fpe_pwl):
-        datasets, fpe = fpe_pwl
-        fpe.selection_optional = None
 
-        fp = fpe.run(datasets)
+@requires_dependency("iminuit")
+@requires_data()
+def test_run_map_pwl(fpe_map_pwl):
+    datasets, fpe = fpe_map_pwl
+    fp = fpe.run(datasets)
 
-        assert fp.sed_type == "dnde"
-        assert "norm_scan" not in fp.table.colnames
+    actual = fp.table["e_min"].data
+    assert_allclose(actual, [0.1, 1.178769, 8.48342], rtol=1e-5)
+
+    actual = fp.table["e_max"].data
+    assert_allclose(actual, [1.178769, 8.483429, 100.0], rtol=1e-5)
+
+    actual = fp.table["e_ref"].data
+    assert_allclose(actual, [0.343332, 3.162278, 29.126327], rtol=1e-5)
+
+    actual = fp.table["norm"].data
+    assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+
+    actual = fp.table["norm_err"].data
+    assert_allclose(actual, [0.067637, 0.052022, 0.087059], rtol=3e-2)
+
+    actual = fp.table["counts"].data
+    assert_allclose(actual, [[44611, 0], [1923, 0], [282, 0]])
+
+    actual = fp.table["norm_ul"].data
+    assert_allclose(actual, [1.111852, 1.07004, 1.17829], rtol=1e-2)
+
+    actual = fp.table["sqrt_ts"].data
+    assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
+
+    actual = fp.table["norm_scan"][0]
+    assert_allclose(actual, [0.2, 1, 5])
+
+    actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
+    assert_allclose(actual, [1.628530e02, 1.436323e-01, 2.007461e03], rtol=1e-2)
+
+
+@requires_dependency("iminuit")
+@requires_data()
+def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
+    datasets, fpe = fpe_map_pwl_reoptimize
+    fpe = fpe.copy()
+    fpe.selection = ["scan"]
+
+    fp = fpe.run(datasets)
+
+    actual = fp.table["norm"].data
+    assert_allclose(actual, 0.962368, rtol=1e-2)
+
+    actual = fp.table["norm_err"].data
+    assert_allclose(actual, 0.051955, rtol=1e-2)
+
+    actual = fp.table["sqrt_ts"].data
+    assert_allclose(actual, 28.408426, rtol=1e-2)
+
+    actual = fp.table["norm_scan"][0]
+    assert_allclose(actual, 1)
+
+    actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
+    assert_allclose(actual, 0.489359, rtol=1e-2)
+
+
+@requires_dependency("iminuit")
+@requires_data()
+def test_flux_points_estimator_no_norm_scan(fpe_pwl):
+    datasets, fpe = fpe_pwl
+    fpe.selection_optional = None
+
+    fp = fpe.run(datasets)
+
+    assert fp.sed_type == "dnde"
+    assert "norm_scan" not in fp.table.colnames
 
 
 def test_no_likelihood_contribution():

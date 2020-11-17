@@ -279,8 +279,8 @@ TEST_MODELS = [
             energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
         ),
         val_at_2TeV=u.Quantity(2.76058404, ""),
-        integral_1_10TeV=u.Quantity(24.757573885411876, "TeV"),
-        eflux_1_10TeV=u.Quantity(117.74087966682515, "TeV2"),
+        integral_1_10TeV=u.Quantity(24.758255, "TeV"),
+        eflux_1_10TeV=u.Quantity(117.745068, "TeV2"),
     ),
 ]
 
@@ -492,7 +492,8 @@ def test_ecpl_integrate():
     # regression test to check the numerical integration for small energy bins
     ecpl = ExpCutoffPowerLawSpectralModel()
     value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
-    assert_quantity_allclose(value, 8.380761e-14 * u.Unit("s-1 cm-2"))
+    assert value.isscalar
+    assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
 
 
 def test_pwl_pivot_energy():
@@ -638,8 +639,8 @@ class TestNaimaModel:
         model = NaimaSpectralModel(radiative_model)
 
         val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
-        integral_1_10TeV = 4.449303e-13 * u.Unit("cm-2 s-1")
-        eflux_1_10TeV = 4.594242e-13 * u.Unit("TeV cm-2 s-1")
+        integral_1_10TeV = 4.449186e-13 * u.Unit("cm-2 s-1")
+        eflux_1_10TeV = 4.594121e-13 * u.Unit("TeV cm-2 s-1")
 
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)

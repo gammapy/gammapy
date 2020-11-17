@@ -22,10 +22,7 @@ from .core import Model
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     """Integrate 1d function using the log-log trapezoidal rule.
 
-    If scalar values for xmin and xmax are passed an oversampled grid is generated using the
-    ``ndecade`` keyword argument. If xmin and xmax arrays are passed, no
-    oversampling is performed and the integral is computed in the provided
-    grid.
+    Internally an oversampling of the energy bins to "ndecade" is used.
 
     Parameters
     ----------
@@ -37,19 +34,12 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
         Integration range minimum
     ndecade : int, optional
         Number of grid points per decade used for the integration.
-        Default : 100.
+        Default : 100
     """
-    edges = edges_from_lo_hi(energy_min, energy_max)
-    energy_axis = MapAxis.from_energy_edges(energy_edges=edges)
-
-    factor = np.ceil(ndecade / energy_axis.nbin_per_decade)
-    energy_axis_upsampled = energy_axis.upsample(factor=factor)
-
-    values = func(energy_axis_upsampled.edges)
-    integral = trapz_loglog(values, energy_axis_upsampled.edges)
-
-    indices = energy_axis_upsampled.coord_to_idx(energy_axis.edges[:-1])
-    return np.add.reduceat(integral, indices)
+    num = np.max(ndecade * np.log10(energy_max / energy_min))
+    energy = np.geomspace(energy_min, energy_max, num=int(num), axis=-1)
+    integral = trapz_loglog(func(energy), energy, axis=-1)
+    return integral.sum(axis=0)
 
 
 class SpectralModel(Model):
