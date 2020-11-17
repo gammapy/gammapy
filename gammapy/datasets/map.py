@@ -244,23 +244,6 @@ class MapDataset(Dataset):
         return str_.expandtabs(tabsize=2)
 
     @property
-    def _geom(self):
-        """Main analysis geometry"""
-        if self.counts is not None:
-            return self.counts.geom
-        elif self.background is not None:
-            return self.background.geom
-        elif self.mask_safe is not None:
-            return self.mask_safe.geom
-        elif self.mask_fit is not None:
-            return self.mask_fit.geom
-        else:
-            raise ValueError(
-                "Either 'counts', 'background_model', 'mask_fit'"
-                " or 'mask_safe' must be defined."
-            )
-
-    @property
     def geoms(self):
         """Map geometries
 
@@ -341,6 +324,22 @@ class MapDataset(Dataset):
     def data_shape(self):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
+
+    @property
+    # TODO: make this a method to support different methods?
+    def energy_range(self):
+        """Energy range defined by the safe mask"""
+        energy = self._geom.axes["energy"].edges
+        energy_min, energy_max = energy[:-1], energy[1:]
+
+        if self.mask_safe is not None:
+            if self.mask_safe.data.any():
+                energy_min = energy_min[self.mask_safe.data[:, 0, 0]]
+                energy_max = energy_max[self.mask_safe.data[:, 0, 0]]
+            else:
+                return None, None
+
+        return u.Quantity([energy_min.min(), energy_max.max()])
 
     def npred(self):
         """Predicted source and background counts
@@ -1691,19 +1690,21 @@ class MapDatasetOnOff(MapDataset):
                 self._geom, data=np.ones(self.data_shape) * acceptance
             )
 
+        self.acceptance = acceptance
+
         if np.isscalar(acceptance_off):
             acceptance_off = Map.from_geom(
                 self._geom, data=np.ones(self.data_shape) * acceptance_off
             )
-
-        self.acceptance = acceptance
+            
         self.acceptance_off = acceptance_off
+
+        self.gti = gti
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
         self.models = models
         self.mask_safe = mask_safe
-        self.gti = gti
         self.meta_table = meta_table
 
     def __str__(self):
@@ -1725,6 +1726,22 @@ class MapDatasetOnOff(MapDataset):
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
 
         return str_.expandtabs(tabsize=2)
+
+    @property
+    def _geom(self):
+        """Main analysis geometry"""
+        if self.counts is not None:
+            return self.counts.geom
+        elif self.counts_off is not None:
+            return self.counts_off.geom
+        elif self.acceptance is not None:
+            return self.acceptance.geom
+        elif self.acceptance_off is not None:
+            return self.acceptance_off.geom
+        else:
+            raise ValueError(
+                "Either 'counts', 'counts_off', 'acceptance' or 'acceptance_of' must be defined."
+            )
 
     @property
     def alpha(self):
@@ -1878,24 +1895,23 @@ class MapDatasetOnOff(MapDataset):
             Map dataset on off.
 
         """
-        name = make_name(name)
-
         if counts_off is None and dataset.background is not None:
             alpha = acceptance / acceptance_off
             counts_off = dataset.npred_background() / alpha
 
         return cls(
+            models=dataset.models,
             counts=dataset.counts,
             exposure=dataset.exposure,
             counts_off=counts_off,
             edisp=dataset.edisp,
-            gti=dataset.gti,
             mask_safe=dataset.mask_safe,
             mask_fit=dataset.mask_fit,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            name=name,
-            psf=dataset.psf,
+            gti=dataset.gti,
+            name=dataset.name,
+            meta_table=dataset.meta_table,
         )
 
     def to_map_dataset(self, name=None):
@@ -1962,16 +1978,32 @@ class MapDatasetOnOff(MapDataset):
         if not self._is_stackable or not other._is_stackable:
             raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
 
-        # Factor containing: self.alpha * self.counts_off + other.alpha * other.counts_off
-        tmp_factor = self.background * self.mask_safe
-        tmp_factor.stack(other.background, weights=other.mask_safe)
+        geom = self.counts.geom
+        total_off = Map.from_geom(geom)
+        total_alpha = Map.from_geom(geom)
 
-        # Stack the off counts (in place)
-        self.counts_off.data[~self.mask_safe.data] = 0
-        self.counts_off.stack(other.counts_off, weights=other.mask_safe)
+        total_off.stack(self.counts_off, weights=self.mask_safe)
+        total_off.stack(other.counts_off, weights=other.mask_safe)
 
-        self.acceptance_off = self.counts_off / tmp_factor
-        self.acceptance.data = np.ones(self.data_shape)
+        total_alpha.stack(self.alpha * self.counts_off, weights=self.mask_safe)
+        total_alpha.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            acceptance_off = total_off / total_alpha
+            average_alpha = total_alpha.data.sum() / total_off.data.sum()
+
+        # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
+        # OFF counts of each run
+        is_zero = total_off.data == 0
+        acceptance_off.data[is_zero] = 1 / average_alpha
+
+        self.acceptance = Map.from_geom(geom)
+        self.acceptance.data += 1
+        self.acceptance_off = acceptance_off
+
+        if self.counts_off is not None:
+            self.counts_off *= self.mask_safe
+            self.counts_off.stack(other.counts_off, weights=other.mask_safe)
 
         super().stack(other)
 
