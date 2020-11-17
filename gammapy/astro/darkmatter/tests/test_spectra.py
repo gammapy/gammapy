@@ -32,5 +32,5 @@ def test_DMAnnihilation():
     )
     differential_flux = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
 
-    assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-5)
-    assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-5)
+    assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-3)
+    assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-3)

@@ -233,19 +233,19 @@ def test_run_ecpl(fpe_ecpl):
     assert_allclose(actual, desired, rtol=1e-3)
 
     actual = fp.table["norm"].data
-    assert_allclose(actual, [1.004226, 1.068479, 1.292519e+03], rtol=1e-3)
+    assert_allclose(actual, [1.001683, 1.061821, 1.237512e+03], rtol=1e-3)
 
     actual = fp.table["norm_err"].data
-    assert_allclose(actual, [1.389684e-01, 2.409809e-01, 3.405469e+03], rtol=1e-2)
+    assert_allclose(actual, [1.386091e-01, 2.394241e-01, 3.259756e+03], rtol=1e-2)
 
     actual = fp.table["norm_errn"].data
-    assert_allclose(actual, [1.378534e-01, 2.376631e-01, 3.018099e+03], rtol=1e-2)
+    assert_allclose(actual, [1.374962e-01, 2.361246e-01, 2.888978e+03], rtol=1e-2)
 
     actual = fp.table["norm_errp"].data
-    assert_allclose(actual, [1.400978e-01, 2.444366e-01, 3.882732e+03], rtol=1e-2)
+    assert_allclose(actual, [1.397358e-01, 2.428481e-01, 3.716550e+03], rtol=1e-2)
 
     actual = fp.table["norm_ul"].data
-    assert_allclose(actual, [1.286709e+00, 1.565156e+00, 1.013214e+04], rtol=1e-2)
+    assert_allclose(actual, [1.283433e+00, 1.555117e+00, 9.698645e+03], rtol=1e-2)
 
     actual = fp.table["sqrt_ts"].data
     assert_allclose(actual, [7.678454, 4.735691, 0.399243], rtol=1e-2)
