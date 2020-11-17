@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import scipy.integrate
 from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
@@ -56,17 +55,21 @@ class TablePSF:
 
     @lazyproperty
     def _interpolate_containment(self):
-        rad = self.rad_axis.center
-
-        if rad[0] > 0:
-            rad = rad.insert(0, 0)
-
-        rad_drad = 2 * np.pi * rad * self.evaluate(rad)
-        values = scipy.integrate.cumtrapz(
-            rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0
+        rad_drad = (
+            2
+            * np.pi
+            * self.rad_axis.center
+            * self.psf_value
+            * self.rad_axis.bin_width
         )
+        values = rad_drad.cumsum().to_value("")
 
-        return ScaledRegularGridInterpolator(points=(rad,), values=values, fill_value=1)
+        rad = self.rad_axis.edges
+        values = np.insert(values, 0, 0)
+
+        return ScaledRegularGridInterpolator(
+            points=(rad,), values=values, fill_value=1,
+        )
 
     @classmethod
     def from_shape(cls, shape, width, rad):
@@ -289,23 +292,22 @@ class EnergyDependentTablePSF:
 
     @lazyproperty
     def _interpolate_containment(self):
-        rad = self.rad_axis.center
-
-        if rad[0] > 0:
-            rad = rad.insert(0, 0)
-
         rad_drad = (
             2
             * np.pi
-            * rad
-            * self.evaluate(energy=self.energy_axis_true.center, rad=rad)
+            * self.rad_axis.center
+            * self.psf_value
+            * self.rad_axis.bin_width
         )
-        values = scipy.integrate.cumtrapz(
-            rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0, axis=1
-        )
+        values = rad_drad.cumsum(axis=1).to_value("")
+
+        rad = self.rad_axis.edges
+        values = np.insert(values, 0, 0, axis=1)
 
         points = (self.energy_axis_true.center, rad)
-        return ScaledRegularGridInterpolator(points=points, values=values, fill_value=1)
+        return ScaledRegularGridInterpolator(
+            points=points, values=values, fill_value=1,
+        )
 
     def __str__(self):
         ss = "EnergyDependentTablePSF\n"

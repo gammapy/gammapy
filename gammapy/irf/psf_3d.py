@@ -316,9 +316,10 @@ class PSF3D:
 
         for theta in thetas:
             for fraction in fractions:
+                plot_kwargs = kwargs.copy()
                 radius = self.containment_radius(energy, theta, fraction)
-                kwargs.setdefault("label", f"{theta.deg} deg, {100 * fraction:.1f}%")
-                ax.plot(energy.value, radius.value, **kwargs)
+                plot_kwargs.setdefault("label", f"{theta.deg} deg, {100 * fraction:.1f}%")
+                ax.plot(energy.value, radius.value, **plot_kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")
