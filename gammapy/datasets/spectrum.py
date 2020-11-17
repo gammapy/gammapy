@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EDispKernelMap
-from gammapy.maps import RegionNDMap
+from gammapy.maps import RegionNDMap, RegionGeom
 from gammapy.stats import cash
 from gammapy.utils.scripts import make_name, make_path
 from .map import MapDataset, MapDatasetOnOff
@@ -301,64 +301,6 @@ class SpectrumDataset(PlotMixin, MapDataset):
         """Returns self"""
         return self
 
-    @classmethod
-    def create(
-        cls,
-        e_reco,
-        e_true=None,
-        region=None,
-        reference_time="2000-01-01",
-        name=None,
-        meta_table=None,
-    ):
-        """Creates empty spectrum dataset.
-
-        Empty containers are created with the correct geometry.
-        counts, background and aeff are zero and edisp is diagonal.
-
-        The safe_mask is set to False in every bin.
-
-        Parameters
-        ----------
-        e_reco : `~gammapy.maps.MapAxis`
-            counts energy axis. Its name must be "energy".
-        e_true : `~gammapy.maps.MapAxis`
-            effective area table energy axis. Its name must be "energy-true".
-            If not set use reco energy values. Default : None
-        region : `~regions.SkyRegion`
-            Region to define the dataset for.
-        reference_time : `~astropy.time.Time`
-            reference time of the dataset, Default is "2000-01-01"
-        meta_table : `~astropy.table.Table`
-            Table listing informations on observations used to create the dataset.
-            One line per observation for stacked datasets.
-        """
-        if e_true is None:
-            e_true = e_reco.copy(name="energy_true")
-
-        if region is None:
-            region = "icrs;circle(0, 0, 1)"
-
-        name = make_name(name)
-        counts = RegionNDMap.create(region=region, axes=[e_reco])
-        background = RegionNDMap.create(region=region, axes=[e_reco])
-        exposure = RegionNDMap.create(
-            region=region, axes=[e_true], unit="cm2 s", meta={"livetime": 0 * u.s}
-        )
-        edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true, geom=counts.geom)
-        mask_safe = RegionNDMap.from_geom(counts.geom, dtype="bool")
-        gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
-
-        return SpectrumDataset(
-            counts=counts,
-            exposure=exposure,
-            background=background,
-            edisp=edisp,
-            mask_safe=mask_safe,
-            gti=gti,
-            name=name,
-        )
-
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     stat_type = "wstat"
@@ -396,10 +338,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             Table listing informations on observations used to create the dataset.
             One line per observation for stacked datasets.
         """
+        geom = RegionGeom(region=region, axes=[e_reco])
+
         dataset = SpectrumDataset.create(
-            e_reco=e_reco,
-            e_true=e_true,
-            region=region,
+            geom=geom,
+            energy_axis_true=e_true,
             reference_time=reference_time,
             name=name,
         )
@@ -647,7 +590,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             gti=gti,
         )
 
-
     def to_dict(self, filename, *args, **kwargs):
         """Convert to dict for YAML serialization."""
         outdir = Path(filename).parent
@@ -732,7 +674,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         dataset: `SpectrumDataset`
             SpectrumDatset with cash statistics
         """
-
         name = make_name(name)
         return SpectrumDataset(
             counts=self.counts,

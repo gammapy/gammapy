@@ -106,7 +106,10 @@ def test_set_model(spectrum_dataset):
 
 def test_npred_models():
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
-    spectrum_dataset = SpectrumDataset.create(e_reco=e_reco)
+
+    geom = RegionGeom(region=None, axes=[e_reco])
+
+    spectrum_dataset = SpectrumDataset.create(geom=geom)
     spectrum_dataset.exposure.quantity = 1e10 * u.Unit("cm2 h")
 
     pwl_1 = PowerLawSpectralModel(index=2)
@@ -152,7 +155,10 @@ def test_spectrum_dataset_create():
     e_true = MapAxis.from_edges(
         u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true"
     )
-    empty_spectrum_dataset = SpectrumDataset.create(e_reco, e_true, name="test")
+    geom = RegionGeom(region=None, axes=[e_reco])
+    empty_spectrum_dataset = SpectrumDataset.create(
+        geom, energy_axis_true=e_true, name="test"
+    )
 
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0

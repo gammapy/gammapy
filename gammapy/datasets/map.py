@@ -455,7 +455,9 @@ class MapDataset(Dataset):
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
-        kwargs["psf"] = PSFMap.from_geom(geom_psf)
+        # TODO: allow PSF as well...
+        if not isinstance(geom_psf, RegionGeom):
+            kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
             "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
@@ -514,7 +516,6 @@ class MapDataset(Dataset):
         )
 
         kwargs.update(geoms)
-
         return cls.from_geoms(reference_time=reference_time, name=name, **kwargs)
 
     @property
@@ -1862,7 +1863,9 @@ class MapDatasetOnOff(MapDataset):
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
-        kwargs["psf"] = PSFMap.from_geom(geom_psf)
+        if not isinstance(geom_psf, RegionGeom):
+            kwargs["psf"] = PSFMap.from_geom(geom_psf)
+
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
         kwargs["mask_safe"] = Map.from_geom(geom, dtype=bool)
 
