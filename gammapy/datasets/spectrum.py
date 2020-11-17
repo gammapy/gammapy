@@ -307,61 +307,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     tag = "SpectrumDatasetOnOff"
 
     @classmethod
-    def create(
-        cls,
-        e_reco,
-        e_true=None,
-        region=None,
-        reference_time="2000-01-01",
-        name=None,
-        meta_table=None,
-    ):
-        """Create empty SpectrumDatasetOnOff.
-
-        Empty containers are created with the correct geometry.
-        counts, counts_off and aeff are zero and edisp is diagonal.
-
-        The safe_mask is set to False in every bin.
-
-        Parameters
-        ----------
-        e_reco : `~gammapy.maps.MapAxis`
-            counts energy axis. Its name must be "energy".
-        e_true : `~gammapy.maps.MapAxis`
-            effective area table energy axis. Its name must be "energy-true".
-            If not set use reco energy values. Default : None
-        region : `~regions.SkyRegion`
-            Region to define the dataset for.
-        reference_time : `~astropy.time.Time`
-            reference time of the dataset, Default is "2000-01-01"
-        meta_table : `~astropy.table.Table`
-            Table listing informations on observations used to create the dataset.
-            One line per observation for stacked datasets.
-        """
-        geom = RegionGeom(region=region, axes=[e_reco])
-
-        dataset = SpectrumDataset.create(
-            geom=geom,
-            energy_axis_true=e_true,
-            reference_time=reference_time,
-            name=name,
-        )
-
-        counts_off = dataset.counts.copy()
-        acceptance = RegionNDMap.from_geom(counts_off.geom, dtype=int)
-        acceptance.data += 1
-
-        acceptance_off = RegionNDMap.from_geom(counts_off.geom, dtype=int)
-        acceptance_off.data += 1
-
-        return cls.from_spectrum_dataset(
-            dataset=dataset,
-            acceptance=acceptance,
-            acceptance_off=acceptance_off,
-            counts_off=counts_off,
-        )
-
-    @classmethod
     def read(cls, filename):
         """Read from file
 

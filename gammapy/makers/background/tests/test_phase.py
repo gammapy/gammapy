@@ -7,7 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
 from gammapy.datasets import SpectrumDataset
 from gammapy.makers import PhaseBackgroundMaker, SpectrumDatasetMaker
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, RegionGeom
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import requires_data
 
@@ -42,7 +42,8 @@ def test_run(observations, phase_bkg_maker):
     radius = Angle(0.2, "deg")
     region = SphericalCircleSkyRegion(pos, radius)
 
-    dataset_empty = SpectrumDataset.create(e_reco, e_true, region=region)
+    geom = RegionGeom.create(region=region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
     obs = observations["111630"]
     dataset = maker.run(dataset_empty, obs)

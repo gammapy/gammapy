@@ -400,7 +400,10 @@ class TestSpectrumOnOff:
         e_true = MapAxis.from_edges(
             u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true"
         )
-        empty_dataset = SpectrumDatasetOnOff.create(e_reco, e_true)
+        geom = RegionGeom(region=None, axes=[e_reco])
+        empty_dataset = SpectrumDatasetOnOff.create(
+            geom=geom, energy_axis_true=e_true
+        )
 
         assert empty_dataset.counts.data.sum() == 0
         assert empty_dataset.data_shape[0] == 2
@@ -415,7 +418,11 @@ class TestSpectrumOnOff:
         assert empty_dataset.energy_range[0] is None
 
     def test_create_stack(self):
-        stacked = SpectrumDatasetOnOff.create(self.e_reco, self.e_true)
+        geom = RegionGeom(region=None, axes=[self.e_reco])
+
+        stacked = SpectrumDatasetOnOff.create(
+            geom=geom, energy_axis_true=self.e_true
+        )
         stacked.mask_safe.data += True
 
         stacked.stack(self.dataset)
@@ -925,7 +932,11 @@ def test_stack_livetime():
     energy_axis = dataset_ref.counts.geom.axes["energy"]
     energy_axis_true = dataset_ref.exposure.geom.axes["energy_true"]
 
-    dataset = SpectrumDatasetOnOff.create(e_reco=energy_axis, e_true=energy_axis_true)
+    geom = RegionGeom(region=None, axes=[energy_axis])
+
+    dataset = SpectrumDatasetOnOff.create(
+        geom=geom, energy_axis_true=energy_axis_true
+    )
 
     dataset.stack(dataset_ref)
     assert_allclose(dataset.exposure.meta["livetime"], 1581.736758 * u.s)
