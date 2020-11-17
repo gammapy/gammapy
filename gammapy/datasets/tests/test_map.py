@@ -961,12 +961,7 @@ def test_stack_onoff(images):
     assert_allclose(
         stacked.acceptance.data.sum(), dataset.data_shape[1] * dataset.data_shape[2]
     )
-    assert_allclose(
-        np.nansum(stacked.acceptance_off.data),
-        np.nansum(
-            dataset.counts_off.data / (dataset.counts_off.data * dataset.alpha.data)
-        ),
-    )
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e+08, rtol=1e-5)
     assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
 
 

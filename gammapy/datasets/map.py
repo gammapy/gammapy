@@ -1696,7 +1696,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off = Map.from_geom(
                 self._geom, data=np.ones(self.data_shape) * acceptance_off
             )
-            
+
         self.acceptance_off = acceptance_off
 
         self.gti = gti

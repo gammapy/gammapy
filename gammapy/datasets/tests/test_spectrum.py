@@ -92,14 +92,6 @@ def test_info_dict(spectrum_dataset):
     assert info_dict["name"] == "test"
 
 
-def test_incorrect_mask(spectrum_dataset):
-    mask_fit = np.ones(30, dtype=np.dtype("float"))
-    with pytest.raises(ValueError):
-        SpectrumDataset(
-            counts=spectrum_dataset.counts.copy(), mask_fit=mask_fit,
-        )
-
-
 def test_set_model(spectrum_dataset):
     spectrum_dataset = spectrum_dataset.copy()
     spectral_model = PowerLawSpectralModel()
@@ -199,6 +191,9 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
 
     background = spectrum_dataset.npred_background().copy()
 
+    mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
+    mask_safe.data += True
+
     spectrum_dataset1 = SpectrumDataset(
         name="ds1",
         counts=spectrum_dataset.counts.copy(),
@@ -206,6 +201,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         edisp=edisp.copy(),
         background=background,
         gti=gti.copy(),
+        mask_safe=mask_safe
     )
 
     livetime2 = 0.5 * livetime
@@ -378,6 +374,9 @@ class TestSpectrumOnOff:
         exposure = self.aeff * self.livetime
         exposure.meta["livetime"] = self.livetime
 
+        mask_safe = RegionNDMap.from_geom(self.on_counts.geom, dtype=bool)
+        mask_safe.data += True
+
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -387,6 +386,7 @@ class TestSpectrumOnOff:
             acceptance_off=acceptance_off,
             name="test",
             gti=self.gti,
+            mask_safe=mask_safe
         )
 
     def test_spectrum_dataset_on_off_create(self):
@@ -410,6 +410,7 @@ class TestSpectrumOnOff:
 
     def test_create_stack(self):
         stacked = SpectrumDatasetOnOff.create(self.e_reco, self.e_true)
+        stacked.mask_safe.data += True
 
         stacked.stack(self.dataset)
         assert_allclose(stacked.energy_range.value, self.dataset.energy_range.value)
