@@ -166,25 +166,6 @@ class PlotMixin:
         ax.legend(numpoints=1)
         return ax
 
-    def residuals(self, method="diff"):
-        """Compute the spectral residuals.
-
-        Parameters
-        ----------
-        method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Method used to compute the residuals. Available options are:
-                - ``diff`` (default): data - model
-                - ``diff/model``: (data - model) / model
-                - ``diff/sqrt(model)``: (data - model) / sqrt(model)
-
-        Returns
-        -------
-        residuals : `RegionNDMap`
-            Residual spectrum
-        """
-        residuals = self._compute_residuals(self.counts, self.npred(), method)
-        return residuals
-
     def plot_residuals(self, ax=None, method="diff", **kwargs):
         """Plot spectrum residuals.
 
@@ -260,19 +241,6 @@ class SpectrumDataset(PlotMixin, MapDataset):
     stat_type = "cash"
     tag = "SpectrumDataset"
 
-    def stat_array(self):
-        """Likelihood per bin given the current model parameters"""
-        return cash(n_on=self.counts.data, mu_on=self.npred().data)
-
-    def stat_sum(self):
-        """Total statistic given the current model parameters."""
-        stat = self.stat_array()
-
-        if self.mask is not None:
-            stat = stat[self.mask.data]
-
-        return np.sum(stat, dtype=np.float64)
-
     def write(self):
         raise NotImplementedError
 
@@ -287,19 +255,6 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
     def from_dict(self):
         raise NotImplementedError
-
-    # TODO: decide what to about these "useless" methods
-    def to_spectrum_dataset(self, *args, **kwargs):
-        """Returns self"""
-        return self
-
-    def cutout(self, *args, **kwargs):
-        """Returns self"""
-        return self
-
-    def pad(self, *args, **kwargs):
-        """Returns self"""
-        return self
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
