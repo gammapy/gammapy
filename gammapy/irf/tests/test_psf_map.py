@@ -91,8 +91,8 @@ def make_test_psfmap(size, shape="gauss"):
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
     )
-    rad_axis = MapAxis.from_nodes(
-        nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="rad"
+    rad_axis = MapAxis.from_edges(
+        edges=np.linspace(0.0, 1, 101), unit="deg", name="rad"
     )
 
     geom = WcsGeom.create(
@@ -210,8 +210,8 @@ def test_sample_coord():
     coords = psf_map.sample_coord(map_coord=coords_in)
     assert coords.frame == "icrs"
     assert len(coords.lon) == 2
-    assert_allclose(coords.lon, [0.07498478, 0.04274561], rtol=1e-3)
-    assert_allclose(coords.lat, [-0.10173629, 0.34703959], rtol=1e-3)
+    assert_allclose(coords.lon, [0.074855, 0.042655], rtol=1e-3)
+    assert_allclose(coords.lat, [-0.101561,  0.347365], rtol=1e-3)
 
 
 def test_sample_coord_gauss():
@@ -380,13 +380,13 @@ def test_to_image():
     psfmap = make_test_psfmap(0.15 * u.deg)
 
     psf2D = psfmap.to_image()
-    assert_allclose(psf2D.psf_map.geom.data_shape, (1, 50, 25, 25))
+    assert_allclose(psf2D.psf_map.geom.data_shape, (1, 100, 25, 25))
     assert_allclose(psf2D.exposure_map.geom.data_shape, (1, 1, 25, 25))
     assert_allclose(psf2D.psf_map.data[0][0][12][12], 23255.41204827, rtol=1e-2)
 
 
 def test_psfmap_from_gauss():
-    rad = np.linspace(0, 1.5, 50) * u.deg
+    rad = np.linspace(0, 1.5, 100) * u.deg
     energy = np.logspace(-1, 2, 10) * u.TeV
     energy_axis = MapAxis.from_nodes(
         energy, name="energy_true", interp="log", unit="TeV"

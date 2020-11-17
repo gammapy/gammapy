@@ -177,7 +177,7 @@ class TestSpectrumMakerChain:
                 dict(
                     n_on=125,
                     sigma=18.953014,
-                    aeff=361924.746081 * u.m ** 2,
+                    aeff=375314.356461 * u.m ** 2,
                     edisp=0.235864,
                 ),
             ),

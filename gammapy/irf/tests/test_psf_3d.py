@@ -52,18 +52,18 @@ def test_to_energy_dependent_table_psf(psf_3d):
     psf = psf_3d.to_energy_dependent_table_psf()
     assert psf.psf_value.shape == (32, 144)
     radius = psf.table_psf_at_energy("1 TeV").containment_radius(0.68).deg
-    assert_allclose(radius, 0.124733, atol=1e-4)
+    assert_allclose(radius, 0.123352, atol=1e-4)
 
 
 @requires_data()
 def test_psf_3d_containment_radius(psf_3d):
     q = psf_3d.containment_radius(energy="1 TeV")
-    assert_allclose(q.value, 0.124733, rtol=1e-2)
+    assert_allclose(q.value, 0.123352, rtol=1e-2)
     assert q.isscalar
     assert q.unit == "deg"
 
     q = psf_3d.containment_radius(energy=[1, 3] * u.TeV)
-    assert_allclose(q.value, [0.124733, 0.13762], rtol=1e-2)
+    assert_allclose(q.value, [0.123261, 0.13131], rtol=1e-2)
     assert q.shape == (2,)
 
 
