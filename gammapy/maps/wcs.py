@@ -107,6 +107,7 @@ class WcsGeom(Geom):
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     is_hpx = False
+    is_region = False
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, cutout_info=None):
         self._wcs = wcs

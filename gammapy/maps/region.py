@@ -35,6 +35,8 @@ class RegionGeom(Geom):
     is_regular = True
     is_allsky = False
     is_hpx = False
+    is_region = True
+
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"

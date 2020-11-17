@@ -7,8 +7,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EDispKernelMap
-from gammapy.maps import RegionNDMap, RegionGeom
-from gammapy.stats import cash
+from gammapy.maps import RegionNDMap
 from gammapy.utils.scripts import make_name, make_path
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes, get_figure
@@ -65,7 +64,7 @@ class PlotMixin:
         self.plot_excess(ax_spectrum, **kwargs_spectrum)
         ax_spectrum.label_outer()
 
-        self.plot_residuals(ax_residuals, **kwargs_residuals)
+        self.plot_residuals_spectral(ax_residuals, **kwargs_residuals)
         method = kwargs_residuals.get("method", "diff")
         label = self._residuals_labels[method]
         ax_residuals.set_ylabel(f"Residuals\n{label}")
@@ -164,42 +163,6 @@ class PlotMixin:
 
         self._plot_energy_range(ax)
         ax.legend(numpoints=1)
-        return ax
-
-    def plot_residuals(self, ax=None, method="diff", **kwargs):
-        """Plot spectrum residuals.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
-        method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Axes object.
-        """
-        # TODO: remove code duplication with `MapDataset.plot_residuals_spectral()`
-        residuals = self.residuals(method)
-        if method == "diff":
-            yerr = np.sqrt((self.counts.data + self.npred().data).flatten())
-        else:
-            yerr = np.ones_like(residuals.data.flatten())
-
-        kwargs.setdefault("color", kwargs.pop("c", "black"))
-        ax = residuals.plot(ax, yerr=yerr, **kwargs)
-        ax.axhline(0, color=kwargs["color"], lw=0.5)
-
-        label = self._residuals_labels[method]
-        ax.set_ylabel(f"Residuals ({label})")
-        ax.set_yscale("linear")
-        ymin = 1.05 * np.nanmin(residuals.data - yerr)
-        ymax = 1.05 * np.nanmax(residuals.data + yerr)
-        ax.set_ylim(ymin, ymax)
         return ax
 
     def peek(self, fig=None):

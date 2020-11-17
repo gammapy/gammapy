@@ -204,6 +204,8 @@ class RegionNDMap(Map):
             weights = weights.data
 
         func = np.nansum if preserve_counts else np.nanmean
+        if self.data.dtype == bool:
+            func = np.all
         data = block_reduce(self.data * weights, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)

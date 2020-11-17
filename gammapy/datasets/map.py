@@ -734,6 +734,9 @@ class MapDataset(Dataset):
         """
         counts, npred = self.counts.copy(), self.npred()
 
+        if counts.geom.is_region:
+            raise ValueError("Cannot plot spatial residuals for RegionNDMap")
+
         if self.mask is not None:
             counts *= self.mask
             npred *= self.mask
@@ -780,9 +783,6 @@ class MapDataset(Dataset):
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        if not region:
-            raise ValueError("'region' is a required parameter")
-
         counts, npred = self.counts.copy(), self.npred()
 
         if self.mask is not None:
@@ -840,9 +840,6 @@ class MapDataset(Dataset):
         ax_spatial, ax_spectral : `~astropy.visualization.wcsaxes.WCSAxes`, `~matplotlib.axes.Axes`
             Spatial and spectral residuals plots.
         """
-        if not kwargs_spectral:
-            raise ValueError("'region' is a required parameter in 'kwargs_spectral'")
-
         ax_spatial, ax_spectral = get_axes(
             ax_spatial,
             ax_spectral,

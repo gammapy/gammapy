@@ -458,6 +458,7 @@ class HpxGeom(Geom):
     """
 
     is_hpx = True
+    is_region = False
 
     def __init__(
         self, nside, nest=True, frame="icrs", region=None, axes=None, sparse=False
