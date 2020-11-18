@@ -334,12 +334,13 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             if self.mask_safe.data.any():
-                energy_min = energy_min[self.mask_safe.data[:, 0, 0]]
-                energy_max = energy_max[self.mask_safe.data[:, 0, 0]]
+                mask = self.mask_safe.data.any(axis=(1, 2))
             else:
                 return None, None
+        else:
+            mask = None
 
-        return u.Quantity([energy_min.min(), energy_max.max()])
+        return u.Quantity([energy_min[mask].min(), energy_max[mask].max()])
 
     def npred(self):
         """Predicted source and background counts
