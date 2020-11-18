@@ -823,7 +823,7 @@ def test_integral_error_ExpCutOffPowerLaw():
     flux, flux_error = exppowerlaw.integral_error(energy_min, energy_max)
 
     assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.90907063, rtol=0.01)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.9598, rtol=0.01)
 
 
 def test_energy_flux_error_power_Law():
@@ -836,7 +836,7 @@ def test_energy_flux_error_power_Law():
 
     enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(energy_min, energy_max)
     assert_allclose(enrg_flux.value / 1e-12, 2.303, rtol=0.001)
-    assert_allclose(enrg_flux_error.value / 1e-12, 1.347, rtol=0.001)
+    assert_allclose(enrg_flux_error.value / 1e-12, 1.085, rtol=0.001)
 
 
 def test_energy_flux_error_exp_cutoff_power_law():
@@ -851,4 +851,4 @@ def test_energy_flux_error_exp_cutoff_power_law():
     enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(energy_min, energy_max)
 
     assert_allclose(enrg_flux.value / 1e-12, 2.788, rtol=0.001)
-    assert_allclose(enrg_flux_error.value / 1e-12, 2.226, rtol=0.001)
+    assert_allclose(enrg_flux_error.value / 1e-12, 1.419, rtol=0.001)

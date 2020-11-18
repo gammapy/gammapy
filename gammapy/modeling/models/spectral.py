@@ -211,7 +211,7 @@ class SpectralModel(Model):
             df_dp[idx] = df.value / eps[idx]
 
             # Reset model to original parameter
-        parameter.value -= eps[idx]
+            parameter.value -= eps[idx]
 
         f_cov = df_dp.T @ C @ df_dp
         return np.sqrt(np.diagonal(f_cov))
