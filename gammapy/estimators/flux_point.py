@@ -634,7 +634,6 @@ class FluxPoints:
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
 
-        print(x_err)
         ebar = ax.errorbar(
             x[~is_ul].value, y[~is_ul].value, yerr=y_err, xerr=x_err, **kwargs
         )
