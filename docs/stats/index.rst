@@ -54,7 +54,8 @@ The off measurement is assumed to contain only background counts, with an accept
 on region: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
 on and off acceptances.
 
-Therefore :math:`n_{off}` follows a Poisson distribution with expected value :math:`\mu_{off} = \mu_{bkg) / \alpha`
+Therefore :math:`n_{off}` follows a Poisson distribution with expected
+value :math:`\mu_{off} = \mu_{bkg} / \alpha`.
 
 The expectation or predicted values :math:`\mu_X` are in general derived using maximum
 likelihood estimation.
