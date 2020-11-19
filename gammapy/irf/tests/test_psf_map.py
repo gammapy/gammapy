@@ -211,7 +211,7 @@ def test_sample_coord():
     assert coords.frame == "icrs"
     assert len(coords.lon) == 2
     assert_allclose(coords.lon, [0.074855, 0.042655], rtol=1e-3)
-    assert_allclose(coords.lat, [-0.101561,  0.347365], rtol=1e-3)
+    assert_allclose(coords.lat, [-0.101561, 0.347365], rtol=1e-3)
 
 
 def test_sample_coord_gauss():

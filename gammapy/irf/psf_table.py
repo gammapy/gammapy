@@ -56,11 +56,7 @@ class TablePSF:
     @lazyproperty
     def _interpolate_containment(self):
         rad_drad = (
-            2
-            * np.pi
-            * self.rad_axis.center
-            * self.psf_value
-            * self.rad_axis.bin_width
+            2 * np.pi * self.rad_axis.center * self.psf_value * self.rad_axis.bin_width
         )
         values = rad_drad.cumsum().to_value("")
 
@@ -293,11 +289,7 @@ class EnergyDependentTablePSF:
     @lazyproperty
     def _interpolate_containment(self):
         rad_drad = (
-            2
-            * np.pi
-            * self.rad_axis.center
-            * self.psf_value
-            * self.rad_axis.bin_width
+            2 * np.pi * self.rad_axis.center * self.psf_value * self.rad_axis.bin_width
         )
         values = rad_drad.cumsum(axis=1).to_value("")
 

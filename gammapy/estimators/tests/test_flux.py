@@ -105,9 +105,7 @@ def test_flux_estimator_incorrect_energy_range(fermi_datasets):
         FluxEstimator(source="Crab", energy_min=10 * u.TeV, energy_max=1 * u.TeV)
 
     fe = FluxEstimator(
-        source="Crab Nebula",
-        energy_min=0.18 * u.TeV,
-        energy_max=0.2 * u.TeV
+        source="Crab Nebula", energy_min=0.18 * u.TeV, energy_max=0.2 * u.TeV
     )
 
     result = fe.run(fermi_datasets)
