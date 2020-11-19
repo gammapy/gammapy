@@ -98,6 +98,8 @@ def test_flux_estimator_1d(hess_datasets):
     assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)
 
 
+@requires_data()
+@requires_dependency("iminuit")
 def test_flux_estimator_incorrect_energy_range(fermi_datasets):
     with pytest.raises(ValueError):
         FluxEstimator(source="Crab", energy_min=10 * u.TeV, energy_max=1 * u.TeV)
