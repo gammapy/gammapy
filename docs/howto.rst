@@ -77,7 +77,7 @@ significance or p-value. To obtain the test statistic, call
 `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
 hypotheses (or take this value from the print output when running the fit), and
 take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
-- 2 * log(L)`` for likelihood ``L``, such that ``TS = S_1 - S_0``. See
+- 2 * log(L)`` for likelihood ``L``, such that ``TS = S_0 - S_1``. See
 :ref:`overview_datasets` for an overview of fit statistics used.
 
 Compute cumulative significance
