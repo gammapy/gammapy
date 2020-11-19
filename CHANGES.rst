@@ -1,7 +1,25 @@
-0.19 (unreleased)
------------------
+0.18.2 (Nov 19th, 2020)
+-----------------------
 
-- No changes yet
+- Released November 19, 2020
+- 4 contributors
+- 7 pull requests
+
+**What's new**
+
+This release again fixes a few minor bugs found after v0.18.1 See the list of pull requests
+below for details.
+
+Pull Requests
++++++++++++++
+
+- [#3130] Fix too small energy bin handling for FluxEstimator (Axel Donath)
+- [#3129] Fix spectral._propagate_error (Fabio Pintore)
+- [#3127] Fix containment radius computation (Axel Donath)
+- [#3126] Fix #3123 (Axel Donath)
+- [#3125] Update Astropy version to 4.0 (Axel Donath)
+- [#3124] Small cleanup in tutorial (Atreyee Sinha)
+- [#3122] Correct excess_matching_significance behavior (Régis Terrier)
 
 
 0.18.1 (Nov 6th, 2020)

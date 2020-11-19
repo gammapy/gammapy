@@ -16,8 +16,8 @@ Gammapy and it's dependencies by executing these commands in a terminal:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.18.1-environment.yml
-    conda env create -f gammapy-0.18.1-environment.yml
+    curl -O https://gammapy.org/download/install/gammapy-0.18.2-environment.yml
+    conda env create -f gammapy-0.18.2-environment.yml
 
 .. note::
 
@@ -25,11 +25,11 @@ Gammapy and it's dependencies by executing these commands in a terminal:
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
-This creates a conda environment called ``gammapy-0.18.1`` which you can activate via:
+This creates a conda environment called ``gammapy-0.18.2`` which you can activate via:
 
 .. code-block:: bash
 
-    conda activate gammapy-0.18.1
+    conda activate gammapy-0.18.2
 
 Note that you have to execute that activation command (but not the environment
 creation command) every time you open a new terminal window, because the default
@@ -63,7 +63,7 @@ the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
-    gammapy download tutorials --release 0.18.1
+    gammapy download tutorials --release 0.18.2
     cd gammapy-tutorials
     export GAMMAPY_DATA=$PWD/datasets
 
