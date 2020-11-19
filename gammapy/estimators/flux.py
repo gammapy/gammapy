@@ -172,7 +172,7 @@ class FluxEstimator(Estimator):
                 bkg_model.reset_to_default()
                 models.append(bkg_model)
 
-        if len(datasets) > 0:
+        if len(datasets_sliced) > 0:
             # TODO: this relies on the energy binning of the first dataset
             energy_axis = datasets_sliced[0].counts.geom.axes["energy"]
             energy_min, energy_max = energy_axis.edges.min(), energy_axis.edges.max()
