@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
@@ -97,9 +98,19 @@ def test_flux_estimator_1d(hess_datasets):
     assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)
 
 
-def test_flux_estimator_incorrect_energy_range():
+def test_flux_estimator_incorrect_energy_range(fermi_datasets):
     with pytest.raises(ValueError):
         FluxEstimator(source="Crab", energy_min=10 * u.TeV, energy_max=1 * u.TeV)
+
+    fe = FluxEstimator(
+        source="Crab Nebula",
+        energy_min=0.18 * u.TeV,
+        energy_max=0.2 * u.TeV
+    )
+
+    result = fe.run(fermi_datasets)
+
+    assert np.isnan(result["norm"])
 
 
 @requires_data()
