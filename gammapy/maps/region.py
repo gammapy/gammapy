@@ -184,6 +184,14 @@ class RegionGeom(Geom):
         return bin_volume
 
     def to_wcs_geom(self):
+        """Get the minimal equivalent geometry that
+            contains the region.
+
+        Returns
+        -------
+        wcs_geom : `~WcsGeom`
+            A WCS geometry object.
+        """
         wcs_new = self.wcs.copy()
         width = self.width.value
         binsz = np.abs(self.wcs.wcs.cdelt)
@@ -200,6 +208,21 @@ class RegionGeom(Geom):
                         npix=npix,
                         )
         return wcs_geom
+
+    def get_wcs_coords(self):
+        """Get the array of coordinates that define
+            the region.
+
+        Returns
+        -------
+        region_coords : `~SkyCoord`
+            SkyCoord object with the coordinates inside
+            the region.
+        """
+        wcs_geom = self.to_wcs_geom()
+        common_coord = self.contains(wcs_geom.get_coord())
+        region_coords = wcs_geom.get_coord().skycoord[common_coord]
+        return region_coords
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
