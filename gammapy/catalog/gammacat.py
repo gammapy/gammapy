@@ -288,7 +288,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """Differential flux points (`~gammapy.spectrum.FluxPoints`)."""
+        """Differential flux points (`~gammapy.estimators.FluxPoints`)."""
         d = self.data
         table = Table()
         table.meta["SED_TYPE"] = "dnde"

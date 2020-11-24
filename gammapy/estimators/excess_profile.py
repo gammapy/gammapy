@@ -1,13 +1,12 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
-from regions import RectangleSkyRegion, CircleAnnulusSkyRegion
-from gammapy.utils.table import table_from_row_data
-from gammapy.stats import WStatCountsStatistic, CashCountsStatistic
-from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+from regions import CircleAnnulusSkyRegion, RectangleSkyRegion
+from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.maps import MapAxis
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+from gammapy.utils.table import table_from_row_data
 from .core import Estimator
 
 __all__ = ["ExcessProfileEstimator"]
@@ -20,6 +19,8 @@ class ExcessProfileEstimator(Estimator):
     ----------
     regions : list of `regions`
         regions to use
+    energy_edges : `~astropy.units.Quantity`
+        Energy edges of the profiles to be computed.
     n_sigma : float (optional)
         Number of sigma to compute errors. By default, it is 1.
     n_sigma_ul : float (optional)
@@ -35,7 +36,7 @@ class ExcessProfileEstimator(Estimator):
 
         By default all quantities are estimated.
 
-    Example
+    Examples
     --------
     This example shows how to compute a counts profile for the Fermi galactic
     center region::
@@ -83,6 +84,7 @@ class ExcessProfileEstimator(Estimator):
     def __init__(
         self,
         regions,
+        energy_edges=None,
         spectrum=None,
         n_sigma=1.0,
         n_sigma_ul=3.0,
@@ -91,6 +93,10 @@ class ExcessProfileEstimator(Estimator):
         self.regions = regions
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+
+        self.energy_edges = (
+            u.Quantity(energy_edges) if energy_edges is not None else None
+        )
 
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -158,7 +164,7 @@ class ExcessProfileEstimator(Estimator):
             if spds.models is not None:
                 old_model = spds.models
             spds.models = SkyModel(spectral_model=self.spectrum)
-            e_reco = spds.counts.geom.get_axis_by_name("energy").edges
+            e_reco = spds.counts.geom.axes["energy"].edges
 
             # ToDo: When the function to_spectrum_dataset will manage the masks, use the following line
             # mask = spds.mask if spds.mask is not None else slice(None)
@@ -173,7 +179,7 @@ class ExcessProfileEstimator(Estimator):
             else:
                 stats = CashCountsStatistic(
                     spds.counts.data[mask][:, 0, 0],
-                    spds.background.data[mask][:, 0, 0],
+                    spds.npred_background().data[mask][:, 0, 0],
                 )
 
             result = {
@@ -187,13 +193,13 @@ class ExcessProfileEstimator(Estimator):
             result.update(
                 {
                     "counts": stats.n_on,
-                    "background": stats.background,
-                    "excess": stats.excess,
+                    "background": stats.n_bkg,
+                    "excess": stats.n_sig,
                 }
             )
 
-            result["ts"] = stats.delta_ts
-            result["sqrt_ts"] = stats.significance
+            result["ts"] = stats.ts
+            result["sqrt_ts"] = stats.sqrt_ts
 
             result["err"] = stats.error * self.n_sigma
 
@@ -208,20 +214,20 @@ class ExcessProfileEstimator(Estimator):
             e_reco_lo = e_reco[:-1]
             e_reco_hi = e_reco[1:]
             flux = (
-                stats.excess
+                stats.n_sig
                 / npred
                 * spds.models[0].spectral_model.integral(e_reco_lo, e_reco_hi).value
             )
             result["flux"] = flux
 
-            result["flux_err"] = stats.error / stats.excess * flux
+            result["flux_err"] = stats.error / stats.n_sig * flux
 
             if "errn-errp" in self.selection_optional:
-                result["flux_errn"] = np.abs(result["errn"]) / stats.excess * flux
-                result["flux_errp"] = result["errp"] / stats.excess * flux
+                result["flux_errn"] = np.abs(result["errn"]) / stats.n_sig * flux
+                result["flux_errp"] = result["errp"] / stats.n_sig * flux
 
             if "ul" in self.selection_optional:
-                result["flux_ul"] = result["ul"] / stats.excess * flux
+                result["flux_ul"] = result["ul"] / stats.n_sig * flux
 
             solid_angle = spds.counts.geom.solid_angle()
             result["solid_angle"] = (
@@ -247,7 +253,14 @@ class ExcessProfileEstimator(Estimator):
         imageprofile : `~gammapy.estimators.ImageProfile`
             Return an image profile class containing the result
         """
+        if self.energy_edges is not None:
+            axis = MapAxis.from_energy_edges(self.energy_edges)
+            dataset = dataset.resample_energy_axis(energy_axis=axis)
+        else:
+            dataset = dataset.to_image()
+
         spectrum_datasets = self.get_spectrum_datasets(dataset)
+
         results = self.make_prof(spectrum_datasets)
         table = table_from_row_data(results)
         if isinstance(self.regions[0], RectangleSkyRegion):

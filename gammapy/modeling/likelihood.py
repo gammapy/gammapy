@@ -23,10 +23,25 @@ class Likelihood:
         Likelihood function
     """
 
-    def __init__(self, function, parameters):
+    def __init__(self, function, parameters, store_trace):
         self.function = function
         self.parameters = parameters
+        self.trace = []
+        self.store_trace = store_trace
+
+    def store_trace_iteration(self, total_stat):
+        row = {"total_stat": total_stat}
+        pars = self.parameters.free_parameters
+        names = [f"par-{idx}" for idx in range(len(pars))]
+        vals = dict(zip(names, pars.values))
+        row.update(vals)
+        self.trace.append(row)
 
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
-        return self.function()
+        total_stat = self.function()
+
+        if self.store_trace:
+            self.store_trace_iteration(total_stat)
+
+        return total_stat

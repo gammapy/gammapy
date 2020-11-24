@@ -24,7 +24,7 @@ Status shields
     :alt: Build Status
 
 * .. image:: http://img.shields.io/travis/gammapy/gammapy.svg?branch=master
-    :target: https://travis-ci.org/gammapy/gammapy
+    :target: https://travis-ci.com/gammapy/gammapy
     :alt: Test Status Travis-CI
 
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg

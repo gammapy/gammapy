@@ -17,7 +17,7 @@ from gammapy.makers import (
     ReflectedRegionsFinder,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.testing import (
     assert_quantity_allclose,

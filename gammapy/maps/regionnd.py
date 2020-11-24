@@ -1,8 +1,8 @@
 import numpy as np
 from astropy import units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import quantity_support
-from astropy.io import fits
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.regions import compound_region_to_list
@@ -36,6 +36,9 @@ class RegionNDMap(Map):
         if data is None:
             data = np.zeros(geom.data_shape, dtype=dtype)
 
+        if meta is None:
+            meta = {}
+
         self._geom = geom
         self.data = data
         self.meta = meta
@@ -66,9 +69,9 @@ class RegionNDMap(Map):
             )
 
         try:
-            axis = self.geom.get_axis_by_name("energy")
+            axis = self.geom.axes["energy"]
         except KeyError:
-            axis = self.geom.get_axis_by_name("energy_true")
+            axis = self.geom.axes["energy_true"]
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
@@ -76,9 +79,7 @@ class RegionNDMap(Map):
 
         with quantity_support():
             xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
-            ax.errorbar(
-                axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs
-            )
+            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
@@ -185,19 +186,30 @@ class RegionNDMap(Map):
         geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
-    def downsample(self, factor, preserve_counts=True, axis="energy"):
-        geom = self.geom.downsample(factor=factor, axis=axis)
+    def downsample(
+        self, factor, preserve_counts=True, axis_name="energy", weights=None
+    ):
+        if axis_name is None:
+            return self.copy()
+
+        geom = self.geom.downsample(factor=factor, axis_name=axis_name)
+
         block_size = [1] * self.data.ndim
-        idx = self.geom.get_axis_index_by_name(axis)
-        block_size[-(idx + 1)] = factor
+        idx = self.geom.axes.index_data(axis_name)
+        block_size[idx] = factor
+
+        if weights is None:
+            weights = 1
+        else:
+            weights = weights.data
 
         func = np.nansum if preserve_counts else np.nanmean
-        data = block_reduce(self.data, tuple(block_size[::-1]), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)
 
-    def upsample(self, factor, preserve_counts=True, axis="energy"):
-        geom = self.geom.upsample(factor=factor, axis=axis)
+    def upsample(self, factor, preserve_counts=True, axis_name="energy"):
+        geom = self.geom.upsample(factor=factor, axis_name=axis_name)
         data = self.interp_by_coord(geom.get_coord())
 
         if preserve_counts:
@@ -224,9 +236,15 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords):
+    def interp_by_coord(self, coords, interp=1):
         pix = self.geom.coord_to_pix(coords)
-        return self.interp_by_pix(pix)
+        if interp == 1:
+            method = "linear"
+        elif interp == 0:
+            method = "nearest"
+        else:
+            raise ValueError(f"Not a valid interp order {interp}")
+        return self.interp_by_pix(pix, method=method)
 
     def interp_by_pix(self, pix, method="linear", fill_value=None):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
@@ -255,9 +273,9 @@ class RegionNDMap(Map):
     def write(self, filename, overwrite=False, format="ogip", ogip_column="COUNTS"):
         """"""
         filename = make_path(filename)
-        self.to_hdulist(
-            format=format, ogip_column=ogip_column
-        ).writeto(filename, overwrite=overwrite)
+        self.to_hdulist(format=format, ogip_column=ogip_column).writeto(
+            filename, overwrite=overwrite
+        )
 
     def to_hdulist(self, format="ogip", ogip_column="COUNTS"):
         """Convert to `~astropy.io.fits.HDUList`.
@@ -275,7 +293,9 @@ class RegionNDMap(Map):
             HDU list
         """
         table = self.to_table(format=format, ogip_column=ogip_column)
-        return fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(table, name=ogip_column)])
+        return fits.HDUList(
+            [fits.PrimaryHDU(), fits.BinTableHDU(table, name=ogip_column)]
+        )
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
@@ -316,16 +336,6 @@ class RegionNDMap(Map):
     def pad(self):
         raise NotImplementedError("Pad is not supported by RegionNDMap")
 
-    def sum_over_axes(self, keepdims=True):
-        axis = tuple(range(self.data.ndim - 2))
-        geom = self.geom.to_image()
-        if keepdims:
-            for ax in self.geom.axes:
-                geom = geom.to_cube([ax.squash()])
-        data = np.nansum(self.data, axis=axis, keepdims=keepdims)
-        # TODO: summing over the axis can change the unit, handle this correctly
-        return self._init_copy(geom=geom, data=data)
-
     def stack(self, other, weights=None):
         """Stack other region map into map.
 
@@ -337,7 +347,7 @@ class RegionNDMap(Map):
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
         """
-        data = other.data
+        data = other.quantity.to_value(self.unit)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
@@ -395,3 +405,11 @@ class RegionNDMap(Map):
             raise ValueError(f"Unsupported ogip column: '{ogip_column}'")
 
         return table
+
+    def get_spectrum(self, *args, **kwargs):
+        """Return self"""
+        return self
+
+    def cutout(self, *args, **kwargs):
+        """Return self"""
+        return self

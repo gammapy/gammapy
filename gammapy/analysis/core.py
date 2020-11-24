@@ -18,7 +18,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import BackgroundModel, Models
+from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]
@@ -133,6 +133,8 @@ class Analysis:
     def set_models(self, models):
         """Set models on datasets.
 
+        Adds `FoVVackgroundModel` if not present already
+
         Parameters
         ----------
         models : `~gammapy.modeling.models.Models` or str
@@ -149,7 +151,16 @@ class Analysis:
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
-        self.datasets.models.extend(self.models)
+        self.models.extend(self.datasets.models)
+
+        for dataset in self.datasets:
+
+            if dataset.background_model is None:
+                bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+
+            self.models.append(bkg_model)
+
+        self.datasets.models = self.models
 
         log.info(self.models)
 
@@ -167,10 +178,10 @@ class Analysis:
         fit_settings = self.config.fit
         for dataset in self.datasets:
             if fit_settings.fit_range:
-                e_min = fit_settings.fit_range.min
-                e_max = fit_settings.fit_range.max
+                energy_min = fit_settings.fit_range.min
+                energy_max = fit_settings.fit_range.max
                 geom = dataset.counts.geom
-                data = geom.energy_mask(e_min, e_max)
+                data = geom.energy_mask(energy_min, energy_max)
                 dataset.mask_fit = Map.from_geom(geom=geom, data=data)
 
         log.info("Fitting datasets.")
@@ -185,9 +196,11 @@ class Analysis:
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
-        e_edges = self._make_energy_axis(fp_settings.energy).edges
+        energy_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
-            e_edges=e_edges, source=fp_settings.source, **fp_settings.parameters,
+            energy_edges=energy_edges,
+            source=fp_settings.source,
+            **fp_settings.parameters,
         )
         fp = flux_point_estimator.run(datasets=self.datasets)
         fp.table["is_ul"] = fp.table["ts"] < 4
@@ -278,13 +291,16 @@ class Analysis:
                 dataset = maker_safe_mask.run(dataset, obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
+
                 if bkg_method == "ring":
-                    dataset.models = Models([BackgroundModel(dataset.background)])
+                    dataset = dataset.to_map_dataset()
+
                 log.debug(dataset)
                 stacked.stack(dataset)
             datasets = [stacked]
         else:
             datasets = []
+
             for obs in self.observations:
                 log.info(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
@@ -294,6 +310,7 @@ class Analysis:
                     dataset = bkg_maker.run(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
+
         self.datasets = Datasets(datasets)
 
     def _spectrum_extraction(self):
@@ -312,7 +329,7 @@ class Analysis:
             ] = datasets_settings.containment_correction
         e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy)
 
-        maker_config["selection"] = ["counts", "aeff", "edisp"]
+        maker_config["selection"] = ["counts", "exposure", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
 
         bkg_maker_config = {}

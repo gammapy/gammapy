@@ -1,28 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
+import contextlib
 import functools
 import logging
 import warnings
-import numpy as np
-import contextlib
 from multiprocessing import Pool
+import numpy as np
 import scipy.optimize
+from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from astropy import units as u
-from gammapy.maps import Map, WcsGeom, MapAxis
-from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import (
-    PointSpatialModel,
-    PowerLawSpectralModel,
-    SkyModel,
-)
-from gammapy.stats import (
-    norm_bounds_cython,
-    cash_sum_cython,
-    f_cash_root_cython,
-)
+from gammapy.datasets.map import MapEvaluator
+from gammapy.maps import Map, WcsGeom
+from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
+from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
@@ -92,14 +84,14 @@ class TSMapEstimator(Estimator):
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit.
     selection_optional : list of str or 'all'
-        Which maps to compute besides delta TS, significance, flux and symmetric error on flux.
+        Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
 
             * "errn-errp": estimate assymmetric error on flux.
             * "ul": estimate upper limits on flux.
 
         By default all steps are executed.
-    e_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy edges of the maps bins.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
@@ -138,7 +130,7 @@ class TSMapEstimator(Estimator):
         threshold=None,
         rtol=0.01,
         selection_optional="all",
-        e_edges=None,
+        energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
     ):
@@ -161,7 +153,7 @@ class TSMapEstimator(Estimator):
         self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
-        self.e_edges = e_edges
+        self.energy_edges = energy_edges
         self._flux_estimator = BrentqFluxEstimator(
             rtol=self.rtol,
             n_sigma=self.n_sigma,
@@ -210,7 +202,7 @@ class TSMapEstimator(Estimator):
 
         npix = round_up_to_odd(width_pix.to_value(""))
 
-        axis = dataset.exposure.geom.get_axis_by_name("energy_true")
+        axis = dataset.exposure.geom.axes["energy_true"]
 
         geom_kernel = WcsGeom.create(
             skydir=model.position, proj="TAN", npix=npix, axes=[axis], binsz=binsz
@@ -291,8 +283,7 @@ class TSMapEstimator(Estimator):
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
 
-    @staticmethod
-    def estimate_sqrt_ts(map_ts):
+    def estimate_sqrt_ts(self, map_ts, norm):
         r"""Compute sqrt(TS) map.
 
         Compute sqrt(TS) as defined by:
@@ -315,9 +306,7 @@ class TSMapEstimator(Estimator):
         sqrt_ts : `gammapy.maps.WcsNDMap`
             Sqrt(TS) map.
         """
-        with np.errstate(invalid="ignore", divide="ignore"):
-            ts = map_ts.data
-            sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
+        sqrt_ts = self.get_sqrt_ts(map_ts.data, norm.data)
         return map_ts.copy(data=sqrt_ts)
 
     def estimate_flux_map(self, dataset):
@@ -340,7 +329,7 @@ class TSMapEstimator(Estimator):
 
         flux = self.estimate_flux_default(dataset, kernel.data, exposure=exposure)
 
-        energy_axis = counts.geom.get_axis_by_name("energy")
+        energy_axis = counts.geom.axes["energy"]
         flux_ref = self.model.spectral_model.integral(
             energy_axis.edges[0], energy_axis.edges[-1]
         )
@@ -372,7 +361,7 @@ class TSMapEstimator(Estimator):
 
         j, i = zip(*positions)
 
-        geom = counts.geom.squash(axis="energy")
+        geom = counts.geom.squash(axis_name="energy")
 
         for name in self.selection_all:
             unit = 1 / exposure.unit if "flux" in name else ""
@@ -409,6 +398,7 @@ class TSMapEstimator(Estimator):
                 * flux_ul : upper limit map
 
         """
+        dataset_models = dataset.models
         if self.downsampling_factor:
             shape = dataset.counts.geom.to_image().data_shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
@@ -417,21 +407,22 @@ class TSMapEstimator(Estimator):
         # TODO: add support for joint likelihood fitting to TSMapEstimator
         datasets = Datasets(dataset)
 
-        if self.e_edges is None:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-            e_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
+        if self.energy_edges is None:
+            energy_axis = dataset.counts.geom.axes["energy"]
+            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            e_edges = self.e_edges
+            energy_edges = self.energy_edges
 
         results = []
 
-        for e_min, e_max in zip(e_edges[:-1], e_edges[1:]):
-            dataset = datasets.slice_energy(e_min, e_max)[0]
+        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
+            sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
             if self.sum_over_energy_groups:
-                dataset = dataset.to_image()
+                sliced_dataset = sliced_dataset.to_image()
 
-            result = self.estimate_flux_map(dataset)
+            sliced_dataset.models = dataset_models
+            result = self.estimate_flux_map(sliced_dataset)
             results.append(result)
 
         result_all = {}
@@ -448,7 +439,9 @@ class TSMapEstimator(Estimator):
 
             result_all[name] = map_all
 
-        result_all["sqrt_ts"] = self.estimate_sqrt_ts(result_all["ts"])
+        result_all["sqrt_ts"] = self.estimate_sqrt_ts(
+            result_all["ts"], result_all["flux"]
+        )
         return result_all
 
 
@@ -509,7 +502,7 @@ class SimpleMapDataset:
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
-        norm_guess = norm[position]
+        norm_guess = norm[0, position[0], position[1]]
         return cls(
             counts=counts_cutout,
             background=background_cutout,
@@ -570,7 +563,7 @@ class BrentqFluxEstimator(Estimator):
 
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        result["ts"] = (stat_null - stat) * np.sign(norm)
+        result["ts"] = stat_null - stat
         result["norm"] = norm
         result["niter"] = niter
 
@@ -636,11 +629,10 @@ class BrentqFluxEstimator(Estimator):
         norm = dataset.norm_guess
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
-        ts = (stat_null - stat) * np.sign(norm)
+        ts = stat_null - stat
+
         with np.errstate(invalid="ignore", divide="ignore"):
-            norm_err = (
-                    np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-            )
+            norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
         return {"norm": norm, "ts": ts, "norm_err": norm_err, "stat": stat, "niter": 0}
 
     def run(self, dataset):

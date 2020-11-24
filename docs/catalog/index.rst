@@ -24,7 +24,7 @@ and a matching `SourceCatalogObject` class to represent one catalog source and t
 
 The main functionality provided is methods that map catalog information to
 `~gammapy.modeling.models.SkyModel`, `~gammapy.modeling.models.SpectralModel`,
-`~gammapy.modeling.models.SpatialModel`, `~gammapy.spectrum.FluxPoints` and `~gammapy.time.LightCurve` objects.
+`~gammapy.modeling.models.SpatialModel`, `~gammapy.estimators.FluxPoints` and `~gammapy.estimators.LightCurve` objects.
 
 `gammapy.catalog` is independent from the rest of Gammapy. The typical use cases
 are to compare your results against previous results in the catalogs (e.g. overplot a spectral model),

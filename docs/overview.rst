@@ -140,11 +140,9 @@ To learn more about modeling and fitting, see  :ref:`gammapy.modeling
 Time analysis
 -------------
 
-Light curves are represented as `~gammapy.time.LightCurve` objects, a wrapper
+Light curves are represented as `~gammapy.estimators.LightCurve` objects, a wrapper
 class around `~astropy.table.Table`. To compute light curves, use the
-`~gammapy.time.LightCurveEstimator`.
-
-To learn more about time, see :ref:`gammapy.time <time>`.
+`~gammapy.estimators.LightCurveEstimator`.
 
 .. _overview_simulation:
 
@@ -174,8 +172,8 @@ started. To learn more, see the following sub packages and documentation pages:
 :ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool).
 
 Note that in Gammapy, 2D image analyses are partly done with actual 2D images
-that don't have an energy axis (e.g. in :ref:`gammapy.detect <detect>`), and
-partly with 3D cubes with a single energy bin, e.g. for modeling and fitting,
+that don't have an energy axis, and partly with 3D cubes with a single energy bin,
+e.g. for modeling and fitting,
 see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
 For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are

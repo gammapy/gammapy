@@ -3,24 +3,29 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     BackgroundModel,
+    CompoundSpectralModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
+    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
-    SkyDiffuseCube,
     SkyModel,
+    SpatialModel,
+    TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -56,7 +61,8 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    return SkyDiffuseCube(m)
+    spatial_model = TemplateSpatialModel(m, normalize=False)
+    return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
 @pytest.fixture(scope="session")
@@ -88,9 +94,9 @@ def background(geom):
 
 @pytest.fixture(scope="session")
 def edisp(geom, geom_true):
-    e_reco = geom.get_axis_by_name("energy").edges
-    e_true = geom_true.get_axis_by_name("energy_true").edges
-    return EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+    e_reco = geom.axes["energy"].edges
+    e_true = geom_true.axes["energy_true"].edges
+    return EDispKernel.from_diagonal_response(energy_true=e_true, energy=e_reco)
 
 
 @pytest.fixture(scope="session")
@@ -182,20 +188,26 @@ def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
 
 
 def test_background_model(background):
-    bkg1 = BackgroundModel(background, norm=2.0).evaluate()
-    assert_allclose(bkg1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
-    assert_allclose(bkg1.data.sum(), background.data.sum() * 2.0, rtol=1e-3)
+    bkg1 = BackgroundModel(background)
+    bkg1.spectral_model.norm.value = 2.0
+    npred1 = bkg1.evaluate()
+    assert_allclose(npred1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
+    assert_allclose(npred1.data.sum(), background.data.sum() * 2.0, rtol=1e-3)
 
-    bkg2 = BackgroundModel(
-        background, norm=2.0, tilt=0.2, reference="1000 GeV"
-    ).evaluate()
-    assert_allclose(bkg2.data[0][0][0], 2.254e-07, rtol=1e-3)
-    assert_allclose(bkg2.data.sum(), 7.352e-06, rtol=1e-3)
+    bkg2 = BackgroundModel(background)
+    bkg2.spectral_model.norm.value = 2.0
+    bkg2.spectral_model.tilt.value = 0.2
+    bkg2.spectral_model.reference.quantity = "1000 GeV"
+
+    npred2 = bkg2.evaluate()
+    assert_allclose(npred2.data[0][0][0], 2.254e-07, rtol=1e-3)
+    assert_allclose(npred2.data.sum(), 7.352e-06, rtol=1e-3)
 
 
 def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
-    bkg = BackgroundModel(background, norm=2.0, filename=filename)
+    bkg = BackgroundModel(background, filename=filename)
+    bkg.spectral_model.norm.value = 2.0
     bkg.map.write(filename, overwrite=True)
     bkg_dict = bkg.to_dict()
     bkg_read = bkg.from_dict(bkg_dict)
@@ -330,7 +342,7 @@ class TestSkyModel:
         sky_model.apply_irf["edisp"] = True
 
 
-class TestSkyDiffuseCube:
+class Test_Template_with_cube:
     @staticmethod
     def test_evaluate_scalar(diffuse_model):
         # Check pixel inside map
@@ -361,8 +373,9 @@ class TestSkyDiffuseCube:
     @staticmethod
     @requires_data()
     def test_read():
-        model = SkyDiffuseCube.read(
-            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"
+        model = TemplateSpatialModel.read(
+            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits",
+            normalize=False,
         )
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 
@@ -406,7 +419,7 @@ class TestSkyDiffuseCube:
         assert "datasets_names" not in out
 
 
-class TestSkyDiffuseCubeMapEvaluator:
+class Test_template_cube_MapEvaluator:
     @staticmethod
     def test_compute_dnde(diffuse_evaluator):
         out = diffuse_evaluator.compute_dnde()
@@ -439,14 +452,14 @@ class TestSkyDiffuseCubeMapEvaluator:
         out = diffuse_evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.606345e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.164656e09, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.83018e10, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.106403e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 5.586508e08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=1e-5)
 
 
 class TestSkyModelMapEvaluator:
@@ -490,14 +503,14 @@ class TestSkyModelMapEvaluator:
         out = evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 5.615601e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 7.938388e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.33602e-07, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(evaluator, gti):
         out = evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 3.862314e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 4.126612e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 6.94503e-08, rtol=1e-5)
 
 
 def test_sky_point_source():
@@ -547,3 +560,67 @@ def test_fermi_isotropic():
 
     assert_allclose(flux.value, 1.463e-13, rtol=1e-3)
     assert flux.unit == "MeV-1 cm-2 s-1 sr-1"
+    assert isinstance(model.spectral_model, CompoundSpectralModel)
+
+
+class MyCustomGaussianModel(SpatialModel):
+    """My custom gaussian model.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    sigma_1TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 1 TeV
+    sigma_10TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 10 TeV
+
+    """
+
+    tag = "MyCustomGaussianModel"
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+
+    sigma_1TeV = Parameter("sigma_1TeV", "1 deg", min=0)
+    sigma_10TeV = Parameter("sigma_10TeV", "0.5 deg", min=0)
+
+    @staticmethod
+    def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
+        """Evaluate custom Gaussian model"""
+        sigmas = u.Quantity([sigma_1TeV, sigma_10TeV])
+        energy_nodes = [1, 10] * u.TeV
+        sigma = np.interp(energy, energy_nodes, sigmas)
+
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+
+        exponent = -0.5 * (sep / sigma) ** 2
+        norm = 1 / (2 * np.pi * sigma ** 2)
+        return norm * np.exp(exponent)
+
+    @property
+    def evaluation_radius(self):
+        """Evaluation radius (`~astropy.coordinates.Angle`)."""
+        return 5 * self.sigma_1TeV.quantity
+
+
+def test_energy_dependent_model(geom_true):
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    spatial_model = MyCustomGaussianModel(frame="galactic")
+    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    model = sky_model.integrate_geom(geom_true)
+
+    assert_allclose(model.data.sum(), 1.678314e-14, rtol=1e-3)
+
+
+@requires_dependency("matplotlib")
+def test_plot_grid(geom_true):
+    spatial_model = MyCustomGaussianModel(frame="galactic")
+    with mpl_plot_check():
+        spatial_model.plot_grid(geom=geom_true)
+
+
+def test_sky_model_create():
+    m = SkyModel.create("pl", "point", name="my-source")
+    assert isinstance(m.spatial_model, PointSpatialModel)
+    assert isinstance(m.spectral_model, PowerLawSpectralModel)
+    assert m.name == "my-source"

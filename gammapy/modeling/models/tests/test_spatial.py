@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.wcs import WCS
@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     ConstantSpatialModel,
     DiskSpatialModel,
     GaussianSpatialModel,
+    GeneralizedGaussianSpatialModel,
     PointSpatialModel,
     ShellSpatialModel,
     TemplateSpatialModel,
@@ -101,6 +102,33 @@ def test_sky_gaussian():
     assert_allclose(ratio_minor_rotated, np.exp(0.5))
 
     assert isinstance(model.to_region(), EllipseSkyRegion)
+
+
+@pytest.mark.parametrize("eta", np.arange(0.1, 1.01, 0.3))
+@pytest.mark.parametrize("r_0", np.arange(0.1, 1.01, 0.3))
+@pytest.mark.parametrize("e", np.arange(0.0, 0.801, 0.4))
+def test_generalized_gaussian(eta, r_0, e):
+    # check normalization is robust for a large set of values
+    model = GeneralizedGaussianSpatialModel(
+        eta=eta, r_0=r_0 * u.deg, e=e, frame="galactic"
+    )
+
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=0.02, width=2 * model.evaluation_radius, frame="galactic",
+    )
+
+    integral = model.integrate_geom(geom)
+    assert integral.unit.is_equivalent("")
+    assert_allclose(integral.data.sum(), 1.0, atol=5e-3)
+
+
+def test_generalized_gaussian_io():
+    model = GeneralizedGaussianSpatialModel()
+
+    assert isinstance(model.to_region(), EllipseSkyRegion)
+    new_model = GeneralizedGaussianSpatialModel.from_dict(model.to_dict())
+
+    assert isinstance(new_model, GeneralizedGaussianSpatialModel)
 
 
 def test_sky_disk():
@@ -206,6 +234,7 @@ def test_sky_diffuse_constant():
     assert isinstance(model.to_region(), EllipseSkyRegion)
 
 
+@requires_dependency("matplotlib")
 @requires_data()
 def test_sky_diffuse_map():
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
@@ -213,18 +242,25 @@ def test_sky_diffuse_map():
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
     val = model(lon, lat)
+
     assert val.unit == "sr-1"
     desired = [3269.178107, 0]
     assert_allclose(val.value, desired)
+
     res = model.evaluate_geom(model.map.geom)
     assert_allclose(np.sum(res.value), 32816514.42078349)
     radius = model.evaluation_radius
+
     assert radius.unit == "deg"
     assert_allclose(radius.value, 0.64, rtol=1.0e-2)
     assert model.frame == "fk5"
     assert isinstance(model.to_region(), PolygonSkyRegion)
+
     with pytest.raises(TypeError):
         model.plot_interative()
+
+    with pytest.raises(TypeError):
+        model.plot_grid()
 
 
 @requires_data()
@@ -235,14 +271,17 @@ def test_sky_diffuse_map_3d():
     lat = -39.8 * u.deg
     energy = 1 * u.GeV
     val = model(lon, lat, energy)
+
     with pytest.raises(ValueError):
         model(lon, lat)
-    assert val.unit == "sr-1"
-    model.map.unit = "cm-2 s-1 MeV-1 sr-1"
+    assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
+
     val = model(lon, lat, energy)
     assert val.unit == "cm-2 s-1 MeV-1 sr-1"
+
     res = model.evaluate_geom(model.map.geom)
     assert_allclose(np.sum(res.value), 0.11803847221522712)
+
     with pytest.raises(TypeError):
         model.plot()
 

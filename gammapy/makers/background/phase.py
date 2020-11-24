@@ -23,6 +23,7 @@ class PhaseBackgroundMaker(Maker):
     off_phase : `tuple` or list of tuples
         off-phase defined by the two edges of each interval (edges are excluded)
     """
+
     tag = "PhaseBackgroundMaker"
 
     def __init__(self, on_phase, off_phase):
@@ -45,7 +46,7 @@ class PhaseBackgroundMaker(Maker):
             )
             event_lists.append(events)
 
-        events = EventList.stack(event_lists)
+        events = EventList.from_stack(event_lists)
         counts = RegionNDMap.from_geom(dataset.counts.geom)
         counts.fill_events(events)
         return counts

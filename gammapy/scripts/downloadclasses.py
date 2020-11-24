@@ -48,7 +48,7 @@ def parse_imagefiles(notebookslist):
             for im in record["images"]:
                 label = "im: " + im
                 path = "images/" + im + ".png"
-                filename_img = record["url"][record["url"].rfind("/"):]
+                filename_img = record["url"][record["url"].rfind("/") :]
                 url = record["url"].replace(filename_img, "")
                 url = url + "/" + path
                 data = {"url": url, "path": path}
@@ -59,7 +59,14 @@ class ComputePlan:
     """Generates the whole list of files to download"""
 
     def __init__(
-        self, src, outfolder, release, option, modetutorials=False, download_tests=False, all_notebooks=False
+        self,
+        src,
+        outfolder,
+        release,
+        option,
+        modetutorials=False,
+        download_tests=False,
+        all_notebooks=False,
     ):
         self.src = src
         self.outfolder = Path(outfolder)

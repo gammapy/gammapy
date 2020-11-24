@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import inspect
 from copy import deepcopy
 import numpy as np
 from gammapy.modeling.models import Model
-import inspect
 
 __all__ = ["Estimator"]
 
@@ -44,7 +44,7 @@ class Estimator(abc.ABC):
                 raise ValueError(f"{difference} is not a valid method.")
 
     @staticmethod
-    def get_sqrt_ts(ts):
+    def get_sqrt_ts(ts, norm):
         r"""Compute sqrt(TS) value.
 
         Compute sqrt(TS) as defined by:
@@ -52,7 +52,7 @@ class Estimator(abc.ABC):
         .. math::
             \sqrt{TS} = \left \{
             \begin{array}{ll}
-              -\sqrt{-TS} & : \text{if} \ TS < 0 \\
+              -\sqrt{TS} & : \text{if} \ norm < 0 \\
               \sqrt{TS} & : \text{else}
             \end{array}
             \right.
@@ -61,14 +61,15 @@ class Estimator(abc.ABC):
         ----------
         ts : `~numpy.ndarray`
             TS value.
-
+        norm : `~numpy.ndarray`
+            norm value
         Returns
         -------
         sqrt_ts : `~numpy.ndarray`
             Sqrt(TS) value.
         """
         with np.errstate(invalid="ignore", divide="ignore"):
-            return np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
+            return np.where(norm > 0, np.sqrt(ts), -np.sqrt(ts))
 
     def copy(self):
         """Copy estimator"""

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.random import get_random_state
 
@@ -142,6 +143,9 @@ def find_bintable_hdu(hdulist):
 
 
 def edges_from_lo_hi(edges_lo, edges_hi):
+    if np.isscalar(edges_lo.value) and np.isscalar(edges_hi.value):
+        return u.Quantity([edges_lo, edges_hi])
+
     edges = edges_lo.copy()
     try:
         edges = edges.insert(len(edges), edges_hi[-1])

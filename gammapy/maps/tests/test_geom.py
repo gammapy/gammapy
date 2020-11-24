@@ -299,6 +299,53 @@ def test_downsample():
     assert axis_down.node_type == axis.node_type
 
 
+def test_upsample_non_regular():
+    axis = MapAxis.from_edges([0, 1, 3, 7], name="test", interp="lin")
+    axis_up = axis.upsample(2)
+
+    assert_allclose(axis_up.nbin, 2 * axis.nbin)
+    assert_allclose(axis_up.edges[0], axis.edges[0])
+    assert_allclose(axis_up.edges[-1], axis.edges[-1])
+    assert axis_up.node_type == axis.node_type
+
+
+def test_upsample_non_regular_nodes():
+    axis = MapAxis.from_nodes([0, 1, 3, 7], name="test", interp="lin")
+    axis_up = axis.upsample(2)
+
+    assert_allclose(axis_up.nbin, 2 * axis.nbin - 1)
+    assert_allclose(axis_up.center[0], axis.center[0])
+    assert_allclose(axis_up.center[-1], axis.center[-1])
+    assert axis_up.node_type == axis.node_type
+
+
+def test_downsample_non_regular():
+    axis = MapAxis.from_edges([0, 1, 3, 7, 13], name="test", interp="lin")
+    axis_down = axis.downsample(2)
+
+    assert_allclose(axis_down.nbin, 0.5 * axis.nbin)
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+    assert axis_down.node_type == axis.node_type
+
+
+def test_downsample_non_regular_nodes():
+    axis = MapAxis.from_edges([0, 1, 3, 7, 9], name="test", interp="lin")
+    axis_down = axis.downsample(2)
+
+    assert_allclose(axis_down.nbin, 0.5 * axis.nbin)
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+    assert axis_down.node_type == axis.node_type
+
+
+@pytest.mark.parametrize("factor", [1, 3, 5, 7, 11])
+def test_up_downsample_consistency(factor):
+    axis = MapAxis.from_edges([0, 1, 3, 7, 13], name="test", interp="lin")
+    axis_new = axis.upsample(factor).downsample(factor)
+    assert_allclose(axis.edges, axis_new.edges)
+
+
 @pytest.fixture(scope="session")
 def energy_axis_ref():
     edges = np.arange(1, 11) * u.TeV
@@ -306,69 +353,70 @@ def energy_axis_ref():
 
 
 def test_group_table_basic(energy_axis_ref):
-    e_edges = [1, 2, 10] * u.TeV
+    energy_edges = [1, 2, 10] * u.TeV
 
-    groups = energy_axis_ref.group_table(e_edges)
+    groups = energy_axis_ref.group_table(energy_edges)
 
     assert_allclose(groups["group_idx"], [0, 1])
     assert_allclose(groups["idx_min"], [0, 1])
     assert_allclose(groups["idx_max"], [0, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 2])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [2, 10])
+    assert_allclose(groups["energy_min"], [1, 2])
+    assert_allclose(groups["energy_max"], [2, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["normal", "normal"])
 
 
 @pytest.mark.parametrize(
-    "e_edges", [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV]
+    "energy_edges",
+    [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
 )
-def test_group_table_edges(energy_axis_ref, e_edges):
-    groups = energy_axis_ref.group_table(e_edges)
+def test_group_tablenergy_edges(energy_axis_ref, energy_edges):
+    groups = energy_axis_ref.group_table(energy_edges)
 
     assert_allclose(groups["group_idx"], [0, 1, 2, 3])
     assert_allclose(groups["idx_min"], [0, 1, 4, 6])
     assert_allclose(groups["idx_max"], [0, 3, 5, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 2, 5, 7])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [2, 5, 7, 10])
+    assert_allclose(groups["energy_min"].quantity.to_value("TeV"), [1, 2, 5, 7])
+    assert_allclose(groups["energy_max"].quantity.to_value("TeV"), [2, 5, 7, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["underflow", "normal", "normal", "overflow"])
 
 
 def test_group_table_below_range(energy_axis_ref):
-    e_edges = [0.7, 0.8, 1, 4] * u.TeV
-    groups = energy_axis_ref.group_table(e_edges)
+    energy_edges = [0.7, 0.8, 1, 4] * u.TeV
+    groups = energy_axis_ref.group_table(energy_edges)
 
     assert_allclose(groups["group_idx"], [0, 1])
     assert_allclose(groups["idx_min"], [0, 3])
     assert_allclose(groups["idx_max"], [2, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 4])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [4, 10])
+    assert_allclose(groups["energy_min"], [1, 4])
+    assert_allclose(groups["energy_max"], [4, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["normal", "overflow"])
 
 
 def test_group_table_above_range(energy_axis_ref):
-    e_edges = [5, 7, 11, 13] * u.TeV
-    groups = energy_axis_ref.group_table(e_edges)
+    energy_edges = [5, 7, 11, 13] * u.TeV
+    groups = energy_axis_ref.group_table(energy_edges)
 
     assert_allclose(groups["group_idx"], [0, 1, 2])
     assert_allclose(groups["idx_min"], [0, 4, 6])
     assert_allclose(groups["idx_max"], [3, 5, 8])
-    assert_allclose(groups["energy_min"].to_value("TeV"), [1, 5, 7])
-    assert_allclose(groups["energy_max"].to_value("TeV"), [5, 7, 10])
+    assert_allclose(groups["energy_min"], [1, 5, 7])
+    assert_allclose(groups["energy_max"], [5, 7, 10])
 
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["underflow", "normal", "normal"])
 
 
 def test_group_table_outside_range(energy_axis_ref):
-    e_edges = [20, 30, 40] * u.TeV
+    energy_edges = [20, 30, 40] * u.TeV
 
     with pytest.raises(ValueError):
-        energy_axis_ref.group_table(e_edges)
+        energy_axis_ref.group_table(energy_edges)
 
 
 def test_map_axis_single_bin():
@@ -377,6 +425,6 @@ def test_map_axis_single_bin():
 
 
 def test_map_axis_aligned():
-    ax1 = MapAxis([1, 2, 3], interp='lin', node_type='edges')
-    ax2 = MapAxis([1.5, 2.5], interp='log', node_type='center')
+    ax1 = MapAxis([1, 2, 3], interp="lin", node_type="edges")
+    ax2 = MapAxis([1.5, 2.5], interp="log", node_type="center")
     assert not ax1.is_aligned(ax2)

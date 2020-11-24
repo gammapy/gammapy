@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.coordinates import SkyOffsetFrame
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
-from gammapy.stats import WStatCountsStatistic
 from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
 
 __all__ = [
@@ -43,7 +42,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         Exposure map
     """
     offset = geom.separation(pointing)
-    energy = geom.get_axis_by_name("energy_true").center
+    energy = geom.axes["energy_true"].center
 
     exposure = aeff.data.evaluate(
         offset=offset, energy_true=energy[:, np.newaxis, np.newaxis]
@@ -56,7 +55,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
     exposure = (exposure * livetime).to("m2 s")
 
     return Map.from_geom(
-        geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit
+        geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit,
     )
 
 
@@ -86,9 +85,9 @@ def _map_spectrum_weight(map, spectrum=None):
         spectrum = PowerLawSpectralModel(index=2.0)
 
     # Compute weights vector
-    energy_edges = map.geom.get_axis_by_name("energy_true").edges
+    energy_edges = map.geom.axes["energy_true"].edges
     weights = spectrum.integral(
-        emin=energy_edges[:-1], emax=energy_edges[1:], intervals=True
+        energy_min=energy_edges[:-1], energy_max=energy_edges[1:]
     )
     weights /= weights.sum()
     shape = np.ones(len(map.geom.data_shape))
@@ -132,7 +131,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
 
     # Get altaz coords for map
     if oversampling is not None:
-        geom = geom.upsample(factor=oversampling, axis="energy")
+        geom = geom.upsample(factor=oversampling, axis_name="energy")
 
     map_coord = geom.to_image().get_coord()
     sky_coord = map_coord.skycoord
@@ -151,7 +150,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
         fov_lon = pseudo_fov_coord.lon
         fov_lat = pseudo_fov_coord.lat
 
-    energies = geom.get_axis_by_name("energy").edges
+    energies = geom.axes["energy"].edges
 
     bkg_de = bkg.evaluate_integrate(
         fov_lon=fov_lon,
@@ -164,7 +163,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     bkg_map = WcsNDMap(geom, data=data)
 
     if oversampling is not None:
-        bkg_map = bkg_map.downsample(factor=oversampling, axis="energy")
+        bkg_map = bkg_map.downsample(factor=oversampling, axis_name="energy")
 
     return bkg_map
 
@@ -190,13 +189,13 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     Returns
     -------
-    psfmap : `~gammapy.cube.PSFMap`
+    psfmap : `~gammapy.irf.PSFMap`
         the resulting PSF map
     """
-    energy_axis = geom.get_axis_by_name("energy_true")
+    energy_axis = geom.axes["energy_true"]
     energy = energy_axis.center
 
-    rad_axis = geom.get_axis_by_name("theta")
+    rad_axis = geom.axes["rad"]
     rad = rad_axis.center
 
     # Compute separations with pointing position
@@ -206,9 +205,9 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     # TODO: allow broadcasting in PSF3D.evaluate()
     psf_values = psf._interpolate(
         (
-            rad[:, np.newaxis, np.newaxis],
-            offset,
             energy[:, np.newaxis, np.newaxis, np.newaxis],
+            offset,
+            rad[:, np.newaxis, np.newaxis],
         )
     )
 
@@ -240,13 +239,13 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
 
     Returns
     -------
-    edispmap : `~gammapy.cube.EDispMap`
+    edispmap : `~gammapy.irf.EDispMap`
         the resulting EDisp map
     """
-    energy_axis = geom.get_axis_by_name("energy_true")
+    energy_axis = geom.axes["energy_true"]
     energy = energy_axis.center
 
-    migra_axis = geom.get_axis_by_name("migra")
+    migra_axis = geom.axes["migra"]
     migra = migra_axis.center
 
     # Compute separations with pointing position
@@ -287,20 +286,18 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
 
     Returns
     -------
-    edispmap : `~gammapy.cube.EDispKernelMap`
+    edispmap : `~gammapy.irf.EDispKernelMap`
         the resulting EDispKernel map
     """
     # Use EnergyDispersion2D migra axis.
-    migra_axis = edisp.data.axis("migra")
+    migra_axis = edisp.data.axes["migra"]
 
     # Create temporary EDispMap Geom
-    new_geom = geom.to_image().to_cube(
-        [migra_axis, geom.get_axis_by_name("energy_true")]
-    )
+    new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
     edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
 
-    return edisp_map.to_edisp_kernel_map(geom.get_axis_by_name("energy"))
+    return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 
 
 def make_theta_squared_table(
@@ -383,8 +380,8 @@ def make_theta_squared_table(
     table["alpha"] = alpha_tot
 
     stat = WStatCountsStatistic(table["counts"], table["counts_off"], table["alpha"])
-    table["excess"] = stat.excess
-    table["sqrt_ts"] = stat.significance
+    table["excess"] = stat.n_sig
+    table["sqrt_ts"] = stat.sqrt_ts
     table["excess_errn"] = stat.compute_errn()
     table["excess_errp"] = stat.compute_errp()
 

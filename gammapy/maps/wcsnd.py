@@ -7,9 +7,9 @@ import scipy.ndimage
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from regions import RectangleSkyRegion, PointSkyRegion
+from astropy.io import fits
+from regions import PointSkyRegion, RectangleSkyRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -19,14 +19,13 @@ from .regionnd import RegionGeom, RegionNDMap
 from .utils import INVALID_INDEX, interp_to_order
 from .wcsmap import WcsGeom, WcsMap
 
-
 __all__ = ["WcsNDMap"]
 
 log = logging.getLogger(__name__)
 
 
 class WcsNDMap(WcsMap):
-    """HEALPix map with any number of non-spatial dimensions.
+    """WCS map with any number of non-spatial dimensions.
 
     This class uses an ND numpy array to store map values. For maps with
     non-spatial dimensions and variable pixel size it will allocate an
@@ -70,7 +69,7 @@ class WcsNDMap(WcsMap):
         return data
 
     @classmethod
-    def from_hdu(cls, hdu, hdu_bands=None):
+    def from_hdu(cls, hdu, hdu_bands=None, format=None):
         """Make a WcsNDMap object from a FITS HDU.
 
         Parameters
@@ -79,9 +78,16 @@ class WcsNDMap(WcsMap):
             The map FITS HDU.
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
+        format : {'gadf', 'fgst-ccube','fgst-template'}
+            FITS format convention.
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Wcs map
         """
-        geom = WcsGeom.from_header(hdu.header, hdu_bands)
-        shape = tuple([ax.nbin for ax in geom.axes])
+        geom = WcsGeom.from_header(hdu.header, hdu_bands, format=format)
+        shape = geom.axes.shape
         shape_wcs = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])])
 
         meta = cls._get_meta_from_header(hdu.header)
@@ -214,27 +220,6 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def sum_over_axes(self, axes=None, keepdims=False, weights=None):
-        """To sum map values over all non-spatial axes.
-
-        Parameters
-        ----------
-        keepdims : bool, optional
-            If this is set to true, the axes which are summed over are left in
-            the map with a single bin
-        axes: list
-            Names of MapAxis to reduce over
-            If None, all will summed over
-        weights : `WcsNDMapMap`
-            Weights to be applied.
-
-        Returns
-        -------
-        map_out : `~WcsNDMap`
-            Map with non-spatial axes summed over
-        """
-        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims, weights=weights)
-
     def pad(self, pad_width, mode="constant", cval=0, order=1):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
@@ -307,41 +292,43 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def upsample(self, factor, order=0, preserve_counts=True, axis=None):
-        geom = self.geom.upsample(factor, axis=axis)
+    def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
+        geom = self.geom.upsample(factor, axis_name=axis_name)
         idx = geom.get_idx()
 
-        if axis is None:
+        if axis_name is None:
             pix = (
                 (idx[0] - 0.5 * (factor - 1)) / factor,
                 (idx[1] - 0.5 * (factor - 1)) / factor,
             ) + idx[2:]
         else:
             pix = list(idx)
-            idx_ax = self.geom.get_axis_index_by_name(axis)
+            idx_ax = self.geom.axes.index(axis_name)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
+        if preserve_counts:
+            data = self.data / self.geom.bin_volume().value
+        else:
+            data = self.data
+
         data = scipy.ndimage.map_coordinates(
-            self.data.T, tuple(pix), order=order, mode="nearest"
+            data.T, tuple(pix), order=order, mode="nearest"
         )
 
         if preserve_counts:
-            if axis is None:
-                data /= factor ** 2
-            else:
-                data /= factor
+            data *= geom.bin_volume().value
 
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
-    def downsample(self, factor, preserve_counts=True, axis=None, weights=None):
-        geom = self.geom.downsample(factor, axis=axis)
+    def downsample(self, factor, preserve_counts=True, axis_name=None, weights=None):
+        geom = self.geom.downsample(factor, axis_name=axis_name)
 
-        if axis is None:
-            block_size = (factor, factor) + (1,) * len(self.geom.axes)
+        if axis_name is None:
+            block_size = (1,) * len(self.geom.axes) + (factor, factor)
         else:
             block_size = [1] * self.data.ndim
-            idx = self.geom.get_axis_index_by_name(axis)
-            block_size[idx + 2] = factor
+            idx = self.geom.axes.index_data(axis_name)
+            block_size[idx] = factor
 
         func = np.nansum if preserve_counts else np.nanmean
 
@@ -350,7 +337,7 @@ class WcsNDMap(WcsMap):
         else:
             weights = weights.data
 
-        data = block_reduce(self.data * weights, tuple(block_size[::-1]), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=func)
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch="linear", **kwargs):
@@ -400,7 +387,8 @@ class WcsNDMap(WcsMap):
         if self.geom.is_image:
             data = self.data.astype(float)
         else:
-            data = self.data[0].astype(float)
+            axis = tuple(np.arange(len(self.geom.axes)))
+            data = np.squeeze(self.data, axis=axis).astype(float)
 
         kwargs.setdefault("interpolation", "nearest")
         kwargs.setdefault("origin", "lower")
@@ -409,8 +397,9 @@ class WcsNDMap(WcsMap):
         norm = simple_norm(data[np.isfinite(data)], stretch)
         kwargs.setdefault("norm", norm)
 
-        caxes = ax.imshow(data, **kwargs)
-        cbar = fig.colorbar(caxes, ax=ax, label=str(self.unit)) if add_cbar else None
+        im = ax.imshow(data, **kwargs)
+
+        cbar = fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
@@ -511,7 +500,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def to_region_nd_map(self, region=None, func=np.nansum):
+    def to_region_nd_map(self, region=None, func=np.nansum, weights=None):
         """Get region ND map in a given region.
 
         By default the whole map region is considered.
@@ -520,8 +509,11 @@ class WcsNDMap(WcsMap):
         ----------
         region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
              Region.
-        func : numpy.ufunc
-            Function to reduce the data.
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
 
         Returns
         -------
@@ -536,24 +528,33 @@ class WcsNDMap(WcsMap):
                 center=self.geom.center_skydir, width=width[0], height=height[0]
             )
 
-        geom = RegionGeom(
-            region=region,
-            axes=self.geom.axes,
-            wcs=self.geom.wcs
-        )
+        if weights is not None:
+            if not self.geom == weights.geom:
+                raise ValueError("Incompatible spatial geoms between map and weights")
+
+        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
 
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
             data = self.get_by_coord(coords=coords)
+            if weights is not None:
+                data *= weights.get_by_coord(coords=coords)
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+
+            if weights is not None:
+                weights_cutout = weights.cutout(
+                    position=geom.center_skydir, width=geom.width
+                )
+                cutout.data *= weights_cutout.data
+
             mask = cutout.geom.to_image().region_mask([region])
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit)
 
-    def get_spectrum(self, region=None, func=np.nansum):
+    def get_spectrum(self, region=None, func=np.nansum, weights=None):
         """Extract spectrum in a given region.
 
         The spectrum can be computed by summing (or, more generally, applying ``func``)
@@ -564,20 +565,25 @@ class WcsNDMap(WcsMap):
         ----------
         region: `~regions.Region`
              Region (pixel or sky regions accepted).
-        func : numpy.ufunc
-            Function to reduce the data.
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For a boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
 
         Returns
         -------
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
-        has_energy_axis = ("energy" in self.geom.axes_names) ^ ("energy_true" in self.geom.axes_names)
+        has_energy_axis = ("energy" in self.geom.axes.names) ^ (
+            "energy_true" in self.geom.axes.names
+        )
 
         if not has_energy_axis:
             raise ValueError("Energy axis required")
 
-        return self.to_region_nd_map(region=region, func=func)
+        return self.to_region_nd_map(region=region, func=func, weights=weights)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
@@ -589,7 +595,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        kernel : `~gammapy.cube.PSFKernel` or `numpy.ndarray`
+        kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
             Use `scipy.signal.fftconvolve` or `scipy.ndimage.convolve`.
@@ -633,7 +639,9 @@ class WcsNDMap(WcsMap):
 
         if len(shape_axes_kernel) > 0:
             if not geom.shape_axes == shape_axes_kernel:
-                raise ValueError(f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}")
+                raise ValueError(
+                    f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}"
+                )
 
         if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
@@ -704,7 +712,7 @@ class WcsNDMap(WcsMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.data[cutout_slices]
+        data = other.quantity[cutout_slices].to_value(self.unit)
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
@@ -736,33 +744,7 @@ class WcsNDMap(WcsMap):
         coords = self.geom.pix_to_coord(coords_pix[::-1])
 
         # TODO: pix_to_coord should return a MapCoord object
-        axes_names = ["lon", "lat"] + [ax.name for ax in self.geom.axes]
+        axes_names = ["lon", "lat"] + self.geom.axes.names
         cdict = OrderedDict(zip(axes_names, coords))
 
         return MapCoord.create(cdict, frame=self.geom.frame)
-
-    def to_cube(self, axes):
-        """Append non-spatial axes to create a higher-dimensional Map.
-
-        This will result in a Map with a new geometry with
-        N+M dimensions where N is the number of current dimensions and
-        M is the number of axes in the list. The data is reshaped onto the
-        new geometry
-
-        Parameters
-        ----------
-        axes : list
-            Axes that will be appended to this Map.
-            The axes should have only one bin
-
-        Returns
-        -------
-        map : `~gammapy.maps.WcsNDMap`
-            new map
-        """
-        for ax in axes:
-            if ax.nbin > 1:
-                raise ValueError(ax.name, "should have only one bin")
-        geom = self.geom.to_cube(axes)
-        data = self.data.reshape((1,) * len(axes) + self.data.shape)
-        return self.from_geom(data=data, geom=geom, unit=self.unit)

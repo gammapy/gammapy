@@ -403,18 +403,18 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def energy_range(self):
         """Spectral model energy range (`~astropy.units.Quantity` with length 2)."""
-        emin, emax = (
+        energy_min, energy_max = (
             self.data["Energy_Range_Spec_Min"],
             self.data["Energy_Range_Spec_Max"],
         )
 
-        if np.isnan(emin):
-            emin = u.Quantity(0.2, "TeV")
+        if np.isnan(energy_min):
+            energy_min = u.Quantity(0.2, "TeV")
 
-        if np.isnan(emax):
-            emax = u.Quantity(50, "TeV")
+        if np.isnan(energy_max):
+            energy_max = u.Quantity(50, "TeV")
 
-        return u.Quantity([emin, emax], "TeV")
+        return u.Quantity([energy_min, energy_max], "TeV")
 
     def spectral_model(self, which="best"):
         """Spectral model (`~gammapy.modeling.models.SpectralModel`).
@@ -549,7 +549,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.spectrum.FluxPoints`)."""
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "dnde"
         mask = ~np.isnan(self.data["Flux_Points_Energy"])

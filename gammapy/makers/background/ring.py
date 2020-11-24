@@ -41,6 +41,7 @@ class AdaptiveRingBackgroundMaker(Maker):
     --------
     RingBackgroundMaker
     """
+
     tag = "AdaptiveRingBackgroundMaker"
 
     def __init__(
@@ -150,7 +151,7 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
@@ -159,7 +160,7 @@ class AdaptiveRingBackgroundMaker(Maker):
             Dictionary containing ``counts_off``, ``acceptance`` and ``acceptance_off`` cubes.
         """
         counts = dataset.counts
-        background = dataset.background_model.map
+        background = dataset.npred_background()
         kernels = self.kernels(counts)
 
         if self.exclusion_mask is not None:
@@ -196,12 +197,12 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
+        dataset_on_off : `~gammapy.datasets.MapDatasetOnOff`
             On off dataset.
         """
         from gammapy.datasets import MapDatasetOnOff
@@ -244,6 +245,7 @@ class RingBackgroundMaker(Maker):
     --------
     AdaptiveRingBackgroundEstimator
     """
+
     tag = "RingBackgroundMaker"
 
     def __init__(self, r_in, width, exclusion_mask=None):
@@ -277,7 +279,7 @@ class RingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
@@ -286,7 +288,7 @@ class RingBackgroundMaker(Maker):
             Dictionary containing `counts_off` and `acceptance_off` maps.
         """
         counts = dataset.counts
-        background = dataset.background_model.map
+        background = dataset.npred_background()
 
         if self.exclusion_mask is not None:
             # reproject exclusion mask
@@ -313,18 +315,18 @@ class RingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.cube.fit.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.cube.fit.MapDatasetOnOff`
+        dataset_on_off : `~gammapy.datasets.MapDatasetOnOff`
             On off dataset.
         """
         from gammapy.datasets import MapDatasetOnOff
 
         maps_off = self.make_maps_off(dataset)
-        maps_off["acceptance"] = dataset.background_model.map
+        maps_off["acceptance"] = dataset.npred_background()
 
         mask_safe = dataset.mask_safe.copy()
         not_has_off_acceptance = maps_off["acceptance_off"].data <= 0

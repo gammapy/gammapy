@@ -13,24 +13,23 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.regions import make_region
 
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
-    energy = np.logspace(-1, 1, 5) * u.TeV
-    energy_lo = energy[:-1]
-    energy_hi = energy[1:]
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    offset_axis = MapAxis.from_edges(offsets, name="offset")
 
     aeff_values = np.ones((4, 3)) * area
 
     return EffectiveAreaTable2D(
-        energy_lo,
-        energy_hi,
-        offset_lo=offsets[:-1],
-        offset_hi=offsets[1:],
-        data=aeff_values,
+        energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=aeff_values,
     )
 
 
@@ -56,7 +55,7 @@ def make_edisp_map_test():
     )
 
     aeff2d = fake_aeff2d()
-    exposure_geom = geom.squash(axis="migra")
+    exposure_geom = geom.squash(axis_name="migra")
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
     return make_edisp_map(edisp2d, pointing, geom, exposure_map)
@@ -111,8 +110,8 @@ def test_edisp_map_to_energydispersion():
 
     edisp = edmap.get_edisp_kernel(position, energy_axis=energy_axis)
     # Note that the bias and resolution are rather poorly evaluated on an EnergyDispersion object
-    assert_allclose(edisp.get_bias(e_true=1.0 * u.TeV), 0.0, atol=3e-2)
-    assert_allclose(edisp.get_resolution(e_true=1.0 * u.TeV), 0.2, atol=3e-2)
+    assert_allclose(edisp.get_bias(energy_true=1.0 * u.TeV), 0.0, atol=3e-2)
+    assert_allclose(edisp.get_resolution(energy_true=1.0 * u.TeV), 0.2, atol=3e-2)
 
 
 def test_edisp_map_stacking():
@@ -147,8 +146,12 @@ def test_edisp_from_diagonal_response(position):
     energy_axis_true = MapAxis.from_energy_bounds(
         "0.3 TeV", "10 TeV", nbin=31, name="energy_true"
     )
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.3 TeV", "10 TeV", nbin=31, name="energy"
+    )
+
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
-    edisp_kernel = edisp_map.get_edisp_kernel(position, energy_axis=energy_axis_true)
+    edisp_kernel = edisp_map.get_edisp_kernel(position, energy_axis=energy_axis)
 
     sum_kernel = np.sum(edisp_kernel.data.data, axis=1).data
 
@@ -194,7 +197,7 @@ def test_edisp_kernel_map_stack():
     edisp_2.exposure_map.data += 2
 
     geom = edisp_1.edisp_map.geom
-    data = geom.energy_mask(emin=2 * u.TeV)
+    data = geom.energy_mask(energy_min=2 * u.TeV)
     weights = Map.from_geom(geom=geom, data=data)
     edisp_1.stack(edisp_2, weights=weights)
 
@@ -271,7 +274,7 @@ def test_edispkernel_from_1D():
     assert_allclose(sum_kernel, 1, rtol=1e-5)
 
 
-def test_edsip_kernel_map_to_image():
+def test_edisp_kernel_map_to_image():
     e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
     e_true = MapAxis.from_energy_bounds(
         "0.08 TeV", "20 TeV", nbin=5, name="energy_true"
@@ -281,3 +284,19 @@ def test_edsip_kernel_map_to_image():
 
     assert im.edisp_map.data.shape == (5, 1, 1, 2)
     assert_allclose(im.edisp_map.data[0, 0, 0, 0], 0.87605894, rtol=1e-5)
+
+
+def test_edisp_kernel_map_resample_axis():
+    e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=4)
+    e_true = MapAxis.from_energy_bounds(
+        "0.08 TeV", "20 TeV", nbin=10, name="energy_true"
+    )
+    edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true)
+
+    e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    im = edisp.resample_energy_axis(energy_axis=e_reco)
+
+    res = np.sum(im.edisp_map.data[4, :, 0, 0])
+
+    assert im.edisp_map.data.shape == (10, 2, 1, 2)
+    assert_allclose(res, 1.0, rtol=1e-5)

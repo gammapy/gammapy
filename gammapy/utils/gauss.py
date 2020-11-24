@@ -282,27 +282,17 @@ class MultiGauss2D:
         containment_radius : `~numpy.ndarray`
             Containment radius
         """
-        # I had big problems with fsolve running into negative thetas.
-        # So instead I'll find a theta_max myself so that theta
-        # is in the interval [0, theta_max] and then use good ol brentq
-        if not containment_fraction < self.integral:
-            raise ValueError(
-                "containment_fraction = {} not possible for integral = {}"
-                "".format(containment_fraction, self.integral)
-            )
+        theta_max = 1e3
 
         def f(theta):
             # positive if theta too large
             return self.containment_fraction(theta) - containment_fraction
 
-        # TODO: if it is an array we have to loop by hand!
-        # containment = np.asarray(containment, dtype=np.float64)
-        # Inital guess for theta
-        theta_max = self.eff_sigma
-        # Expand until we really find a theta_max
-        while f(theta_max) < 0:
-            theta_max *= 2
-        return scipy.optimize.brentq(f, a=0, b=theta_max)
+        theta = scipy.optimize.brentq(f, a=0, b=theta_max)
+        if np.allclose(theta, theta_max):
+            theta = np.inf
+
+        return theta
 
     def match_sigma(self, containment_fraction):
         """Compute equivalent Gauss width.

@@ -6,12 +6,12 @@ from astropy.io import fits
 from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
+    HpxToWcsMapping,
     get_hpxregion_dir,
     get_hpxregion_size,
     get_pix_size_from_nside,
     get_subpixels,
     get_superpixels,
-    make_hpx_to_wcs_mapping,
     nside_to_order,
     ravel_hpx_index,
     unravel_hpx_index,
@@ -396,11 +396,11 @@ def test_hpxgeom_make_wcs():
     ax0 = np.linspace(0.0, 3.0, 4)
 
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
-    wcs = hpx.make_wcs()
+    wcs = hpx.to_wcs_geom()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
-    wcs = hpx.make_wcs()
+    wcs = hpx.to_wcs_geom()
     assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
 
@@ -462,10 +462,10 @@ def test_make_hpx_to_wcs_mapping():
     ax0 = np.linspace(0.0, 1.0, 3)
     hpx = HpxGeom(16, False, "galactic", region="DISK(110.,75.,2.)")
     # FIXME construct explicit WCS projection here
-    wcs = hpx.make_wcs()
-    hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
+    wcs = hpx.to_wcs_geom()
+    hpx2wcs = HpxToWcsMapping.create(hpx, wcs)
     assert_allclose(
-        hpx2wcs[0],
+        hpx2wcs.ipix,
         np.array(
             [
                 67,
@@ -508,7 +508,7 @@ def test_make_hpx_to_wcs_mapping():
         ),
     )
     assert_allclose(
-        hpx2wcs[1],
+        hpx2wcs.mult_val,
         np.array(
             [
                 0.11111111,
@@ -552,9 +552,9 @@ def test_make_hpx_to_wcs_mapping():
     )
 
     hpx = HpxGeom([8, 16], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
-    hpx2wcs = make_hpx_to_wcs_mapping(hpx, wcs)
+    hpx2wcs = HpxToWcsMapping.create(hpx, wcs)
     assert_allclose(
-        hpx2wcs[0],
+        hpx2wcs.ipix,
         np.array(
             [
                 [
@@ -665,9 +665,9 @@ def test_hpxgeom_from_header():
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_read_write(tmp_path, nside, nested, frame, region, axes):
     geom0 = HpxGeom(nside, nested, frame, region=region, axes=axes)
-    hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
+    hdu_bands = geom0.to_bands_hdu(hdu="BANDS")
     hdu_prim = fits.PrimaryHDU()
-    hdu_prim.header.update(geom0.make_header())
+    hdu_prim.header.update(geom0.to_header())
 
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
     hdulist.writeto(tmp_path / "tmp.fits")

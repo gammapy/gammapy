@@ -121,7 +121,12 @@ def cli_download(ctx):  # noqa: D301
 
 @cli.group("jupyter", short_help="Perform actions on notebooks")
 @click.option("--src", default=".", help="Local folder or Jupyter notebook filename.")
-@click.option("--r", default=False, is_flag=True, help="Apply to notebooks found recursively in folder.")
+@click.option(
+    "--r",
+    default=False,
+    is_flag=True,
+    help="Apply to notebooks found recursively in folder.",
+)
 @click.pass_context
 def cli_jupyter(ctx, src, r):  # noqa: D301
     """

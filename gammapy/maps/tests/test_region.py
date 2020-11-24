@@ -13,13 +13,15 @@ def region():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     return CircleSkyRegion(center=center, radius=1 * u.deg)
 
+
 @pytest.fixture()
 def energy_axis():
     return MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 
+
 @pytest.fixture()
 def test_axis():
-    return MapAxis.from_nodes([1,2], unit="", name="test")
+    return MapAxis.from_nodes([1, 2], unit="", name="test")
 
 
 def test_create(region):
@@ -57,20 +59,25 @@ def test_create_axis(region, energy_axis, test_axis):
     assert len(geom.axes) == 2
     assert geom.data_shape == (2, 3, 1, 1)
 
+
 def test_get_coord(region, energy_axis, test_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
     coords = geom.get_coord()
 
     assert_allclose(coords.lon, 0)
     assert_allclose(coords.lat, 0)
-    assert_allclose(coords["energy"].value.squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5)
+    assert_allclose(
+        coords["energy"].value.squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5
+    )
 
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
     coords = geom.get_coord()
     assert coords["lon"].shape == (2, 3, 1, 1)
     assert coords["test"].shape == (2, 3, 1, 1)
-    assert_allclose(coords["energy"].value[1].squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5)
-    assert_allclose(coords["test"].value[:,1].squeeze(), [1,2], rtol=1e-5)
+    assert_allclose(
+        coords["energy"].value[1].squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5
+    )
+    assert_allclose(coords["test"].value[:, 1].squeeze(), [1, 2], rtol=1e-5)
 
 
 def test_get_idx(region, energy_axis, test_axis):
@@ -88,6 +95,7 @@ def test_get_idx(region, energy_axis, test_axis):
     assert_allclose(pix[0], 0)
     assert_allclose(pix[1], 0)
     assert_allclose(pix[2][0].squeeze(), [0, 1, 2])
+
 
 def test_coord_to_pix(region, energy_axis, test_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
@@ -109,6 +117,7 @@ def test_coord_to_pix(region, energy_axis, test_axis):
     assert_allclose(coords_pix[2], -0.5)
     assert_allclose(coords_pix[3], 1)
 
+
 def test_pix_to_coord(region, energy_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
 
@@ -127,6 +136,7 @@ def test_pix_to_coord(region, energy_axis):
     pix = (1, 1, 3)
     coords = geom.pix_to_coord(pix)
     assert_allclose(coords[2].value, 14.677993, rtol=1e-5)
+
 
 def test_pix_to_coord_2axes(region, energy_axis, test_axis):
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
@@ -182,7 +192,7 @@ def test_separation(region):
 def test_upsample(region):
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy", interp="log")
     geom = RegionGeom.create(region, axes=[axis])
-    geom_up = geom.upsample(factor=2, axis="energy")
+    geom_up = geom.upsample(factor=2, axis_name="energy")
 
     assert_allclose(geom_up.axes[0].edges.value, [1.0, 3.162278, 10.0], rtol=1e-5)
 
@@ -190,7 +200,7 @@ def test_upsample(region):
 def test_downsample(region):
     axis = MapAxis.from_edges([1, 3.162278, 10] * u.TeV, name="energy", interp="log")
     geom = RegionGeom.create(region, axes=[axis])
-    geom_down = geom.downsample(factor=2, axis="energy")
+    geom_down = geom.downsample(factor=2, axis_name="energy")
 
     assert_allclose(geom_down.axes[0].edges.value, [1.0, 10.0], rtol=1e-5)
 
@@ -226,6 +236,7 @@ def test_to_cube_to_image(region):
     geom = geom_cube.to_image()
     assert geom.ndim == 2
 
+
 def test_squash(region):
     axis1 = MapAxis.from_edges([1, 10, 100] * u.TeV, name="energy", interp="log")
     axis2 = MapAxis.from_edges([1, 2, 3, 4] * u.deg, name="angle", interp="lin")
@@ -237,4 +248,3 @@ def test_squash(region):
     assert len(geom_squashed.axes) == 2
     assert geom_squashed.axes[1] == axis2
     assert_allclose(geom_squashed.axes[0].edges.to_value("TeV"), (1, 100))
-

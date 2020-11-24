@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from scipy.interpolate import interp1d
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
 from .irf_map import IRFMap
@@ -41,7 +41,7 @@ class EDispMap(IRFMap):
         from astropy.coordinates import SkyCoord
         from gammapy.maps import WcsGeom, MapAxis
         from gammapy.irf import EnergyDispersion2D, EffectiveAreaTable2D
-        from gammapy.cube import make_edisp_map, make_map_exposure_true_energy
+        from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 
         # Define energy dispersion map geometry
         energy_axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit="TeV", name="energy")
@@ -69,8 +69,8 @@ class EDispMap(IRFMap):
 
         # Get an Energy Dispersion (1D) at any position in the image
         pos = SkyCoord(2.0, 2.5, unit="deg")
-        e_reco = np.logspace(-1.0, 1.0, 10) * u.TeV
-        edisp = edisp_map.get_edisp_kernel(pos=pos, e_reco=e_reco)
+        energy = np.logspace(-1.0, 1.0, 10) * u.TeV
+        edisp = edisp_map.get_edisp_kernel(pos=pos, energy=energy)
 
         # Write map to disk
         edisp_map.write("edisp_map.fits")
@@ -118,8 +118,8 @@ class EDispMap(IRFMap):
                 "EnergyDispersion can be extracted at one single position only."
             )
 
-        energy_axis_true = self.edisp_map.geom.get_axis_by_name("energy_true")
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+        energy_axis_true = self.edisp_map.geom.axes["energy_true"]
+        migra_axis = self.edisp_map.geom.axes["migra"]
 
         coords = {
             "skycoord": position,
@@ -133,12 +133,12 @@ class EDispMap(IRFMap):
 
         data = []
 
-        for idx, e_true in enumerate(energy_axis_true.center):
-            # migration value of e_reco bounds
-            migra = energy_axis.edges / e_true
+        for idx, energy_true in enumerate(energy_axis_true.center):
+            # migration value of energy bounds
+            migra = energy_axis.edges / energy_true
 
             cumsum = np.insert(edisp_values[:, idx], 0, 0).cumsum()
-            with np.errstate(invalid="ignore"):
+            with np.errstate(invalid="ignore", divide="ignore"):
                 cumsum = np.nan_to_num(cumsum / cumsum[-1])
 
             f = interp1d(
@@ -149,12 +149,14 @@ class EDispMap(IRFMap):
                 fill_value=(0, 1),
             )
 
-            # We compute the difference between 2 successive bounds in e_reco
+            # We compute the difference between 2 successive bounds in energy
             # to get integral over reco energy bin
             integral = np.diff(np.clip(f(migra), a_min=0, a_max=1))
             data.append(integral)
 
-        return EDispKernel(e_true=energy_axis_true, e_reco=energy_axis, data=data)
+        return EDispKernel(
+            energy_axis_true=energy_axis_true, energy_axis=energy_axis, data=data
+        )
 
     @classmethod
     def from_geom(cls, geom):
@@ -175,10 +177,10 @@ class EDispMap(IRFMap):
         if "energy_true" not in [ax.name for ax in geom.axes]:
             raise ValueError("EDispMap requires true energy axis")
 
-        geom_exposure_edisp = geom.squash(axis="migra")
+        geom_exposure_edisp = geom.squash(axis_name="migra")
         exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
 
-        migra_axis = geom.get_axis_by_name("migra")
+        migra_axis = geom.axes["migra"]
         edisp_map = Map.from_geom(geom, unit="")
         migra_0 = migra_axis.coord_to_pix(1)
 
@@ -206,7 +208,7 @@ class EDispMap(IRFMap):
             Sequence of Edisp-corrected coordinates of the input map_coord map.
         """
         random_state = get_random_state(random_state)
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+        migra_axis = self.edisp_map.geom.axes["migra"]
 
         coord = {
             "skycoord": map_coord.skycoord.reshape(-1, 1),
@@ -258,7 +260,7 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        e_reco : `~gammapy.maps.MapAxis`
+        energy : `~gammapy.maps.MapAxis`
             Reconstructed enrgy axis.
 
         Returns
@@ -267,19 +269,21 @@ class EDispMap(IRFMap):
             Energy dispersion kernel map.
         """
         axis = 0
-        energy_axis_true = self.edisp_map.geom.get_axis_by_name("energy_true")
-        migra_axis = self.edisp_map.geom.get_axis_by_name("migra")
+        energy_axis_true = self.edisp_map.geom.axes["energy_true"]
+        migra_axis = self.edisp_map.geom.axes["migra"]
 
         data = []
 
-        for idx, e_true in enumerate(energy_axis_true.center):
-            # migration value of e_reco bounds
-            migra = energy_axis.edges / e_true
+        for idx, energy_true in enumerate(energy_axis_true.center):
+            # migration value of energy bounds
+            migra = energy_axis.edges / energy_true
 
-            edisp_e_true = self.edisp_map.slice_by_idx({"energy_true": idx})
+            edisp_energy_true = self.edisp_map.slice_by_idx({"energy_true": idx})
 
-            cumsum = np.insert(edisp_e_true.data, 0, 0, axis=axis).cumsum(axis=axis)
-            with np.errstate(invalid="ignore"):
+            cumsum = np.insert(edisp_energy_true.data, 0, 0, axis=axis).cumsum(
+                axis=axis
+            )
+            with np.errstate(invalid="ignore", divide="ignore"):
                 cumsum = np.nan_to_num(cumsum / cumsum[slice(-2, -1)])
 
             f = interp1d(
@@ -302,7 +306,7 @@ class EDispMap(IRFMap):
         exposure_map = None
         if self.exposure_map is not None:
             exposure_map = Map.from_geom(
-                geom.squash(axis=energy_axis.name),
+                geom.squash(axis_name=energy_axis.name),
                 data=self.exposure_map.data,
                 unit=self.exposure_map.unit,
                 meta=self.exposure_map.meta,
@@ -325,6 +329,7 @@ class EDispKernelMap(IRFMap):
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
+
     tag = "edisp_kernel_map"
     _hdu_name = "edisp"
 
@@ -369,11 +374,11 @@ class EDispKernelMap(IRFMap):
         if "energy" not in axis_names:
             raise ValueError("EDispKernelMap requires energy axis")
 
-        geom_exposure = geom.squash(axis="energy")
+        geom_exposure = geom.squash(axis_name="energy")
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
-        energy_axis = geom.get_axis_by_name("energy")
-        energy_axis_true = geom.get_axis_by_name("energy_true")
+        energy_axis = geom.axes["energy"]
+        energy_axis_true = geom.axes["energy_true"]
 
         data = get_overlap_fraction(energy_axis, energy_axis_true)
 
@@ -397,7 +402,7 @@ class EDispKernelMap(IRFMap):
             the energy dispersion (i.e. rmf object)
         """
         if energy_axis:
-            assert energy_axis == self.edisp_map.geom.get_axis_by_name("energy")
+            assert energy_axis == self.edisp_map.geom.axes["energy"]
 
         if isinstance(self.edisp_map.geom, RegionGeom):
             kernel_map = self.edisp_map
@@ -408,9 +413,9 @@ class EDispKernelMap(IRFMap):
             kernel_map = self.edisp_map.to_region_nd_map(region=position)
 
         return EDispKernel(
-            e_true=kernel_map.geom.get_axis_by_name("energy_true"),
-            e_reco=kernel_map.geom.get_axis_by_name("energy"),
-            data=kernel_map.data[..., 0, 0]
+            energy_axis_true=kernel_map.geom.axes["energy_true"],
+            energy_axis=kernel_map.geom.axes["energy"],
+            data=kernel_map.data[..., 0, 0],
         )
 
     @classmethod
@@ -458,7 +463,9 @@ class EDispKernelMap(IRFMap):
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        edisp_map = cls.from_diagonal_response(edisp.e_reco, edisp.e_true, geom)
+        edisp_map = cls.from_diagonal_response(
+            edisp.energy_axis, edisp.energy_axis_true, geom=geom
+        )
         edisp_map.edisp_map.data *= 0
         edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[
             :, :, np.newaxis, np.newaxis
@@ -486,8 +493,8 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         kernel = EDispKernel.from_gauss(
-            e_reco=energy_axis.edges,
-            e_true=energy_axis_true.edges,
+            energy=energy_axis.edges,
+            energy_true=energy_axis_true.edges,
             sigma=sigma,
             bias=bias,
             pdf_threshold=pdf_threshold,
@@ -513,8 +520,31 @@ class EDispKernelMap(IRFMap):
             edisp = edisp * weights.data
 
         data = np.sum(edisp, axis=1, keepdims=True)
-        geom = self.edisp_map.geom.squash("energy")
+        geom = self.edisp_map.geom.squash(axis_name="energy")
         edisp_map = Map.from_geom(geom=geom, data=data)
         return self.__class__(
             edisp_kernel_map=edisp_map, exposure_map=self.exposure_map
+        )
+
+    def resample_energy_axis(self, energy_axis, weights=None):
+        """Returns a resampled EdispKernelMap
+
+        Bins are grouped according to the edges of the reconstructed energy axis provided.
+        The true energy is left unchanged.
+
+        Parameters
+        ----------
+        energy_axis : `~gammapy.maps.MapAxis`
+            The reco energy axis to use for the reco energy grouping
+        weights: `~gammapy.maps.Map`, optional
+            Weights to be applied
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Edisp kernel map
+        """
+        new_edisp_map = self.edisp_map.resample_axis(axis=energy_axis, weights=weights)
+        return self.__class__(
+            edisp_kernel_map=new_edisp_map, exposure_map=self.exposure_map
         )

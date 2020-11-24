@@ -32,6 +32,17 @@ contained in an observation. This is usually done thanks to their ``peek()``
 methods. See example for CTA `here <tutorials/cta.html#IRFs>`__ and for H.E.S.S.
 `here <tutorials/hess.html#DL3-DR1>`__.
 
+Use gammapy for modeling 2D images
+++++++++++++++++++++++++++++++++++
+
+Gammapy treats 2D maps as 3D cubes with one bin in energy. To see an example of the relevant data reduction, see
+`2-dim sky image analysis <tutorials#core-tutorials>`
+
+Sometimes, you might want to use previously obtained images lacking an energy axis
+(eg: reduced using traditional IACT tools) for modeling and fitting inside gammapy.
+In this case, it is necessary to attach an `energy` axis on  
+
+
 Extract 1D spectra
 ++++++++++++++++++
 
@@ -52,7 +63,7 @@ an new observation containing events in the specified time range. With the new
 `~gammapy.data.Observations` it is then possible to perform the usual data
 reduction which will produce datasets in the correct time range. The light curve
 extraction can then be performed as usual with the
-`~gammapy.time.LightCurveEstimator`. This is demonstrated in the `Light curve -
+`~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the `Light curve -
 Flare <tutorials/light_curve_flare.html>`__ tutorial.
 
 Compute source significance
@@ -66,7 +77,7 @@ significance or p-value. To obtain the test statistic, call
 `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
 hypotheses (or take this value from the print output when running the fit), and
 take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
-- 2 * log(L)`` for likelihood ``L``, such that ``TS = S_1 - S_0``. See
+- 2 * log(L)`` for likelihood ``L``, such that ``TS = S_0 - S_1``. See
 :ref:`overview_datasets` for an overview of fit statistics used.
 
 Compute cumulative significance
@@ -85,10 +96,10 @@ Detect sources in a map
 Gammapy provides methods to perform source detection in a 2D map. First step is
 to produce a significance map, i.e. a map giving the probability that the flux
 measured at each position is a background fluctuation. For a
-`~gammapy.cube.MapDataset`, the class `~gammapy.detect.TSMapEstimator` can be
+`~gammapy.datasets.MapDataset`, the class `~gammapy.estimators.TSMapEstimator` can be
 used. A simple correlated Li & Ma significance can be used, in particular for
 ON-OFF datasets. The second step consists in applying a peak finer algorithm,
-such as `~gammapy.detect.find_peaks`. This is demonstrated in the `Source
+such as `~gammapy.estimators.utils.find_peaks`. This is demonstrated in the `Source
 detection tutorial <tutorials/detect.html>`__.
 
 Astrophysical source modeling
@@ -100,3 +111,16 @@ e.g. `~gammapy.modeling.models.NaimaSpectralModel` is an example of a Gammapy
 wrapper class around the Naima spectral model and radiation classes, which then
 allows modeling and fitting of Naima models within Gammapy (e.g. using CTA,
 H.E.S.S. or Fermi-LAT data).
+
+Implement a custom model
+++++++++++++++++++++++++
+Gammapy allows the flexibility of using user-defined models for analysis.
+For an example, see ` Implementing a Custom Model
+<tutorials/models.html#Implementing-a-Custom-Model>`__.
+
+Energy Dependent Spatial Models
++++++++++++++++++++++++++++++++
+While Gammapy does not ship energy dependent spatial models, it is possible to define
+such models within the modeling framework.
+For an example, see ` here
+<tutorials/models.html#Models-with-Energy-dependent-morphologyl>`__.

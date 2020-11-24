@@ -92,9 +92,9 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, frame, proj, skydir, axes):
 def test_wcsgeom_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     geom0 = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
 
-    hdu_bands = geom0.make_bands_hdu(hdu="BANDS")
+    hdu_bands = geom0.to_bands_hdu(hdu="BANDS")
     hdu_prim = fits.PrimaryHDU()
-    hdu_prim.header.update(geom0.make_header())
+    hdu_prim.header.update(geom0.to_header())
 
     hdulist = fits.HDUList([hdu_prim, hdu_bands])
     hdulist.writeto(tmp_path / "tmp.fits")
@@ -110,7 +110,7 @@ def test_wcsgeom_to_hdulist():
     npix, binsz, frame, proj, skydir, axes = wcs_test_geoms[3]
     geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
 
-    hdu = geom.make_bands_hdu(hdu="TEST")
+    hdu = geom.to_bands_hdu(hdu="TEST")
     assert hdu.header["AXCOLS1"] == "E_MIN,E_MAX"
     assert hdu.header["AXCOLS2"] == "AXIS1_MIN,AXIS1_MAX"
 
@@ -245,7 +245,7 @@ def test_cutout_info():
     assert cutout_geom.cutout_info["cutout-slices"][0].start == 0
     assert cutout_geom.cutout_info["cutout-slices"][1].start == 0
 
-    header = cutout_geom.make_header()
+    header = cutout_geom.to_header()
     assert "PSLICE1" in header
     assert "PSLICE2" in header
     assert "CSLICE1" in header
@@ -294,7 +294,7 @@ def test_wcsgeom_instance_cache():
 def test_wcsgeom_squash():
     axis = MapAxis.from_nodes([1, 2, 3], name="test-axis")
     geom = WcsGeom.create(npix=(3, 3), axes=[axis])
-    geom_squashed = geom.squash(axis="test-axis")
+    geom_squashed = geom.squash(axis_name="test-axis")
     assert geom_squashed.data_shape == (1, 3, 3)
 
 
@@ -303,8 +303,19 @@ def test_wcsgeom_drop():
     ax2 = MapAxis.from_nodes([1, 2], name="ax2")
     ax3 = MapAxis.from_nodes([1, 2, 3, 4], name="ax3")
     geom = WcsGeom.create(npix=(3, 3), axes=[ax1, ax2, ax3])
-    geom_drop = geom.drop(axis="ax1")
+    geom_drop = geom.drop(axis_name="ax1")
     assert geom_drop.data_shape == (4, 2, 3, 3)
+
+
+def test_wcsgeom_resample_overflows():
+    ax1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="ax1")
+    ax2 = MapAxis.from_nodes([1, 2, 3], name="ax2")
+    geom = WcsGeom.create(npix=(3, 3), axes=[ax1, ax2])
+    new_axis = MapAxis.from_edges([-1.0, 1, 2.3, 4.8, 6], name="ax1")
+    geom_resample = geom.resample_axis(axis=new_axis)
+
+    assert geom_resample.data_shape == (3, 2, 3, 3)
+    assert_allclose(geom_resample.axes[0].edges, [1, 2, 5])
 
 
 def test_wcsgeom_get_pix_coords():
@@ -361,17 +372,17 @@ def test_energy_mask():
     )
     geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
 
-    mask = geom.energy_mask(emin=3 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV)
     assert not mask[0, 0, 0]
     assert mask[1, 0, 0]
     assert mask[2, 0, 0]
 
-    mask = geom.energy_mask(emax=30 * u.TeV)
+    mask = geom.energy_mask(energy_max=30 * u.TeV)
     assert mask[0, 0, 0]
     assert not mask[1, 0, 0]
     assert not mask[2, 0, 0]
 
-    mask = geom.energy_mask(emin=3 * u.TeV, emax=40 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV)
     assert not mask[0, 0, 0]
     assert not mask[2, 0, 0]
     assert mask[1, 0, 0]
@@ -411,9 +422,9 @@ def test_check_width_bad_input():
 def test_get_axis_index_by_name():
     e_axis = MapAxis.from_edges([1, 5], name="energy")
     geom = WcsGeom.create(width=5, binsz=1.0, axes=[e_axis])
-    assert geom.get_axis_index_by_name("Energy") == 0
+    assert geom.axes.index("energy") == 0
     with pytest.raises(ValueError):
-        geom.get_axis_index_by_name("time")
+        geom.axes.index("time")
 
 
 test_axis1 = [MapAxis(nodes=(1, 2, 3, 4), unit="TeV", node_type="center")]
@@ -451,14 +462,16 @@ def test_wcs_geom_equal(npix, binsz, frame, proj, skypos, axes, result):
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
 
+
 def test_irregular_geom_equality():
-    axis = MapAxis.from_bounds(1,3,10, name="axis", unit="")
-    geom0 = WcsGeom.create(skydir=(0,0), npix=10, binsz=0.1, axes=[axis])
-    binsizes = np.ones((10))*0.1
-    geom1 = WcsGeom.create(skydir=(0,0), npix=10, binsz=binsizes, axes=[axis])
+    axis = MapAxis.from_bounds(1, 3, 10, name="axis", unit="")
+    geom0 = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.1, axes=[axis])
+    binsizes = np.ones((10)) * 0.1
+    geom1 = WcsGeom.create(skydir=(0, 0), npix=10, binsz=binsizes, axes=[axis])
 
     with pytest.raises(NotImplementedError):
         geom0 == geom1
+
 
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
@@ -470,7 +483,7 @@ def test_read_write(tmp_path, node_type, interp):
     m = Map.create(binsz=1, npix=10, axes=[e_ax, t_ax], unit="m2")
 
     # Check what Gammapy writes in the FITS header
-    header = m.make_hdu().header
+    header = m.to_hdu().header
     assert header["INTERP1"] == interp
     assert header["INTERP2"] == interp
 
@@ -496,11 +509,7 @@ def test_wcs_geom_to_binsz(npix, binsz, frame, proj, skypos, axes, result):
 
 def test_non_equal_binsz():
     geom = WcsGeom.create(
-        width=(360, 180),
-        binsz=(360, 60),
-        frame='icrs',
-        skydir=(0, 0),
-        proj="CAR"
+        width=(360, 180), binsz=(360, 60), frame="icrs", skydir=(0, 0), proj="CAR"
     )
 
     coords = geom.get_coord()

@@ -2568,20 +2568,20 @@
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_data_Fermi-LAT.fits",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_data_Fermi-LAT.fits",
-    "filesize": 391680,
-    "hashmd5": "3ca12b9f8f8100a9c8254566c5054e71"
+    "filesize": 639360,
+    "hashmd5": "1028b9a2d5d56c7f61691c4ed47bc383"
    },
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_datasets.yaml",
-    "filesize": 124,
-    "hashmd5": "5e17b2f385049b660ce2bd6c1bebf65d"
+    "filesize": 94,
+    "hashmd5": "8ac185c67e42735b265ae248c05a291e"
    },
    {
     "path": "fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/crab/Fermi-LAT-3FHL_models.yaml",
-    "filesize": 1283,
-    "hashmd5": "e99438be2fe12115cada40b5c2ace4a7"
+    "filesize": 1866,
+    "hashmd5": "229f3c4e52a9143b3853612914f3cfb5"
    }
   ]
  },

@@ -74,7 +74,7 @@ Gammapy is a Python package, so you can of course import and use it from Python:
     [GCC 4.2.1 Compatible Apple LLVM 7.3.0 (clang-703.0.31)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from gammapy.stats import CashCountsStatistic
-    >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).significance
+    >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
     array([2.39791813])
 
 IPython
@@ -91,7 +91,7 @@ IPython is nicer to use for interactive analysis:
 
     In [1]: from gammapy.stats import CashCountsStatistic
 
-    In [2]: CashCountsStatistic(n_on=10, mu_bkg=4.2).significance
+    In [2]: CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
     Out[2]: array([2.39791813])
 
 For example you can use ``?`` to look up **help for any Gammapy function, class or

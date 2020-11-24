@@ -9,7 +9,6 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from .gti import GTI
 
 __all__ = ["ObservationTable"]
 
@@ -300,42 +299,6 @@ class ObservationTable(Table):
             )
         else:
             raise ValueError(f"Invalid selection type: {selection['type']}")
-
-    def create_gti(self, obs_id):
-        """Returns a GTI table containing TSTART and TSTOP from the table.
-
-        TODO: This method can be removed once GTI tables are explicitly required in Gammapy.
-
-        Parameters
-        ----------
-        obs_id : int
-            ID of the observation for which the GTI table will be created
-
-        Returns
-        -------
-        gti : `~gammapy.data.GTI`
-            GTI table containing one row (TSTART and TSTOP of the observation with ``obs_id``)
-        """
-        meta = dict(
-            EXTNAME="GTI",
-            HDUCLASS="GADF",
-            HDUDOC="https://github.com/open-gamma-ray-astro/gamma-astro-data-formats",
-            HDUVERS="0.2",
-            HDUCLAS1="GTI",
-            MJDREFI=self.meta["MJDREFI"],
-            MJDREFF=self.meta["MJDREFF"],
-            TIMEUNIT=self.meta.get("TIMEUNIT", "s"),
-            TIMESYS=self.meta["TIMESYS"],
-            TIMEREF=self.meta.get("TIMEREF", "LOCAL"),
-        )
-
-        obs = self.select_obs_id(obs_id)
-
-        gti = Table(meta=meta)
-        gti["START"] = obs["TSTART"].quantity.to("s")
-        gti["STOP"] = obs["TSTOP"].quantity.to("s")
-
-        return GTI(gti)
 
 
 class ObservationTableChecker(Checker):

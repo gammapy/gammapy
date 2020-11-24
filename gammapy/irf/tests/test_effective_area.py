@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable, EffectiveAreaTable2D
+from gammapy.maps import MapAxis
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -25,12 +26,12 @@ class TestEffectiveAreaTable2D:
     @staticmethod
     @requires_data()
     def test(aeff):
-        assert aeff.data.axis("energy_true").nbin == 96
-        assert aeff.data.axis("offset").nbin == 6
+        assert aeff.data.axes["energy_true"].nbin == 96
+        assert aeff.data.axes["offset"].nbin == 6
         assert aeff.data.data.shape == (96, 6)
 
-        assert aeff.data.axis("energy_true").unit == "TeV"
-        assert aeff.data.axis("offset").unit == "deg"
+        assert aeff.data.axes["energy_true"].unit == "TeV"
+        assert aeff.data.axes["offset"].unit == "deg"
         assert aeff.data.data.unit == "m2"
 
         assert_quantity_allclose(aeff.high_threshold, 100 * u.TeV, rtol=1e-3)
@@ -46,9 +47,9 @@ class TestEffectiveAreaTable2D:
 
         energy = np.sqrt(e_axis[:-1] * e_axis[1:])
         area = aeff.data.evaluate(energy_true=energy, offset=offset)
-        effarea1d = EffectiveAreaTable(
-            energy_lo=e_axis[:-1], energy_hi=e_axis[1:], data=area
-        )
+
+        energy_axis_true = MapAxis.from_energy_edges(e_axis, name="energy_true")
+        effarea1d = EffectiveAreaTable(energy_axis_true=energy_axis_true, data=area)
 
         actual = effareafrom2d.data.evaluate(energy_true="2.34 TeV")
         desired = effarea1d.data.evaluate(energy_true="2.34 TeV")
@@ -93,7 +94,7 @@ class TestEffectiveAreaTable:
 
         test_aeff = 0.6 * arf.max_area
         node_above = np.where(arf.data.data > test_aeff)[0][0]
-        energy = arf.data.axis("energy_true")
+        energy = arf.data.axes["energy_true"]
         ener_above = energy.center[node_above]
         ener_below = energy.center[node_above - 1]
         test_ener = arf.find_energy(test_aeff)
@@ -105,17 +106,17 @@ class TestEffectiveAreaTable:
         assert_allclose(elo_threshold.value, 0.554086, rtol=1e-3)
 
         ehi_threshold = arf.find_energy(
-            0.9 * arf.max_area, emin=30 * u.TeV, emax=100 * u.TeV
+            0.9 * arf.max_area, energy_min=30 * u.TeV, energy_max=100 * u.TeV
         )
         assert ehi_threshold.unit == "TeV"
         assert_allclose(ehi_threshold.value, 53.347217, rtol=1e-3)
 
         # Test evaluation outside safe range
         data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]
-        energy = np.logspace(0, 10, 10) * u.TeV
-        aeff = EffectiveAreaTable(
-            data=data, energy_lo=energy[:-1], energy_hi=energy[1:]
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "1 TeV", "10 TeV", nbin=9, name="energy_true"
         )
+        aeff = EffectiveAreaTable(data=data, energy_axis_true=energy_axis_true)
         vals = aeff.evaluate_fill_nan()
         assert vals[1] == 0
         assert vals[-1] == 3
@@ -143,26 +144,23 @@ class TestEffectiveAreaTable:
 
     @staticmethod
     def test_write():
-        energy = np.logspace(0, 1, 11) * u.TeV
-        energy_lo = energy[:-1]
-        energy_hi = energy[1:]
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "1 TeV", "10 TeV", nbin=10, name="energy_true"
+        )
+
         offset = np.linspace(0, 1, 4) * u.deg
-        offset_lo = offset[:-1]
-        offset_hi = offset[1:]
-        data = np.ones(shape=(len(energy_lo), len(offset_lo))) * u.cm * u.cm
+        offset_axis = MapAxis.from_nodes(offset, name="offset")
+
+        data = np.ones(shape=(energy_axis_true.nbin, offset_axis.nbin)) * u.cm ** 2
 
         aeff = EffectiveAreaTable2D(
-            energy_lo=energy_lo,
-            energy_hi=energy_hi,
-            offset_lo=offset_lo,
-            offset_hi=offset_hi,
-            data=data,
+            energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=data,
         )
-        hdu = aeff.to_fits()
+        hdu = aeff.to_table_hdu()
         assert_equal(
-            hdu.data["ENERG_LO"][0], aeff.data.axis("energy_true").edges[:-1].value
+            hdu.data["ENERG_LO"][0], aeff.data.axes["energy_true"].edges[:-1].value
         )
-        assert hdu.header["TUNIT1"] == aeff.data.axis("energy_true").unit
+        assert hdu.header["TUNIT1"] == aeff.data.axes["energy_true"].unit
 
 
 def test_compute_thresholds_from_parametrization():
@@ -171,7 +169,25 @@ def test_compute_thresholds_from_parametrization():
 
     thresh_lo = aeff.find_energy(aeff=0.1 * aeff.max_area)
     e_max = aeff.energy.edges[-1]
-    thresh_hi = aeff.find_energy(aeff=0.9 * aeff.max_area, emin=0.1 * e_max, emax=e_max)
+    thresh_hi = aeff.find_energy(
+        aeff=0.9 * aeff.max_area, energy_min=0.1 * e_max, energy_max=e_max
+    )
 
     assert_allclose(thresh_lo.to("TeV").value, 0.18557, rtol=1e-4)
     assert_allclose(thresh_hi.to("TeV").value, 43.818, rtol=1e-4)
+
+
+def test_wrong_axis_order():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=10, name="energy_true"
+    )
+
+    offset = np.linspace(0, 1, 4) * u.deg
+    offset_axis = MapAxis.from_nodes(offset, name="offset")
+
+    data = np.ones(shape=(offset_axis.nbin, energy_axis_true.nbin)) * u.cm ** 2
+
+    with pytest.raises(ValueError):
+        EffectiveAreaTable2D(
+            energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=data,
+        )

@@ -30,10 +30,20 @@
   datasets:
     - dark_matter_spectra
   tutorial: True
+- name: catalog
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/catalog.ipynb
+  datasets:
+    - catalogs
+  tutorial: True
 - name: cta
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/cta.ipynb
   datasets:
     - cta-1dc
+  tutorial: True
+- name: background_model
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/background_model.ipynb
+  datasets:
+    - hess-dl3-dr1
   tutorial: True
 - name: cta_data_analysis
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/docs/tutorials/cta_data_analysis.ipynb

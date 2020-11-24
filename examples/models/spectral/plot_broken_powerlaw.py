@@ -22,14 +22,11 @@ It is defined by the following equation:
 
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.modeling.models import Models, SkyModel, BrokenPowerLawSpectralModel
+from gammapy.modeling.models import BrokenPowerLawSpectralModel, Models, SkyModel
 
 energy_range = [0.1, 100] * u.TeV
 model = BrokenPowerLawSpectralModel(
-    index1=1.5,
-    index2=2.5,
-    amplitude="1e-12 TeV-1 cm-2 s-1",
-    ebreak="1 TeV",
+    index1=1.5, index2=2.5, amplitude="1e-12 TeV-1 cm-2 s-1", ebreak="1 TeV",
 )
 model.plot(energy_range)
 plt.grid(which="both")

@@ -26,7 +26,7 @@ class ReflectedRegionsFinder:
 
     If you want to make a
     background estimate for an IACT observation using the reflected regions
-    method, see also `~gammapy.spectrum.ReflectedRegionsBackgroundMaker`
+    method, see also `~gammapy.makers.ReflectedRegionsBackgroundMaker`
 
     Parameters
     ----------
@@ -268,6 +268,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
     """
+
     tag = "ReflectedRegionsBackgroundMaker"
 
     def __init__(
@@ -317,7 +318,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         finder = self._get_finder(dataset, observation)
         finder.run()
 
-        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+        energy_axis = dataset.counts.geom.axes["energy"]
 
         if len(finder.reflected_regions) > 0:
             region_union = list_to_compound_region(finder.reflected_regions)
