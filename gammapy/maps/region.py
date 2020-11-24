@@ -215,13 +215,14 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        region_coords : `~SkyCoord`
-            SkyCoord object with the coordinates inside
+        region_coords : `~MapCoord`
+            MapCoord object with the coordinates inside
             the region.
         """
         wcs_geom = self.to_wcs_geom()
         common_coord = self.contains(wcs_geom.get_coord())
-        region_coords = wcs_geom.get_coord().skycoord[common_coord]
+        region_coords_skycoord = wcs_geom.get_coord().skycoord[common_coord]
+        region_coords = MapCoord.create(region_coords_skycoord)
         return region_coords
 
     def to_cube(self, axes):
