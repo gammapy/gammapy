@@ -248,3 +248,10 @@ def test_squash(region):
     assert len(geom_squashed.axes) == 2
     assert geom_squashed.axes[1] == axis2
     assert_allclose(geom_squashed.axes[0].edges.to_value("TeV"), (1, 100))
+
+def test_to_wcs_geom(region):
+    geom = RegionGeom(region)
+    wcs_geom = geom.to_wcs_geom()
+    assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
+    assert_allclose(wcs_geom.width[0], 360*u.deg, rtol=1, atol=0)
+    assert wcs_geom.wcs.wcs.ctype[1] == 'GLAT-TAN'
