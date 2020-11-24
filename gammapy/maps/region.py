@@ -183,6 +183,24 @@ class RegionGeom(Geom):
 
         return bin_volume
 
+    def to_wcs_geom(self):
+        wcs_new = self.wcs.copy()
+        width = self.width.value
+        binsz = np.abs(self.wcs.wcs.cdelt)
+        npix = (
+            np.rint(width[0] / binsz[0]).astype(int),
+            np.rint(width[1] / binsz[1]).astype(int),
+        )
+        nxpix = int(npix[0].flat[0])
+        nypix = int(npix[1].flat[0])
+        refpix = ((nxpix + 1) / 2.0, (nypix + 1) / 2.0)
+        wcs_new.wcs.crpix = refpix
+        wcs_new.array_shape = npix[0].flat[0], npix[1].flat[0]
+        wcs_geom = WcsGeom(wcs_new,
+                        npix=npix,
+                        )
+        return wcs_geom
+
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
         return self._init_copy(axes=axes)
