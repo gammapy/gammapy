@@ -30,7 +30,15 @@ dependencies:
   - reproject
   - sherpa
   - iminuit
+  - pydantic
+  - naima
+  - twine
+  - parfive
+  - requests
+  - tqdm
+  - yamllint
   # dev dependencies
+  - codecov
   - pytest
   - pytest-cov
   - pytest-xdist
@@ -48,11 +56,4 @@ dependencies:
   - nbsphinx
   - sphinx-click
   - pydocstyle
-  - naima
   - numdifftools
-  - twine
-  - parfive
-  - requests
-  - tqdm
-  - yamllint
-  - pydantic
