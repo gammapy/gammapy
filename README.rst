@@ -23,8 +23,8 @@ Status shields
     :target: https://dev.azure.com/gammapy/gammapy/_build/latest?definitionId=1
     :alt: Build Status
 
-* .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg?branch=master
-    :target: https://github.com/gammapy/gammapy/actions?query=workflow%3ACI+branch%3Amaster
+* .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg
+    :target: https://github.com/gammapy/gammapy/actions
     :alt: Github actions CI
 
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg

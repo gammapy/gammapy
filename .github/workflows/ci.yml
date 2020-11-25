@@ -29,25 +29,23 @@ jobs:
           codecov -X gcov
       - name: test notebooks
         run: make test-nb
-#      - name: test build docs
-#        run: make docs-all
       - name: test astropy 4.0
         if: always()
         run: |
           conda install astropy=4.0
           make test
-      - name: test astropy dev
-        if: always()
-        run: |
-          conda remove astropy
-          pip install git+https://github.com/astropy/astropy.git#egg=astropy
-          make test
-      - name: test sherpa dev
-        if: always()
-        run: |
-          conda remove sherpa
-          pip install git+https://github.com/sherpa/sherpa.git#egg=sherpa
-          make test
+#      - name: test astropy dev
+#        if: always()
+#        run: |
+#          conda remove astropy
+#          pip install git+https://github.com/astropy/astropy.git#egg=astropy
+#          make test
+#      - name: test sherpa dev
+#        if: always()
+#        run: |
+#          conda remove sherpa
+#          pip install git+https://github.com/sherpa/sherpa.git#egg=sherpa
+#          make test
       - name: test conda build
         if: always()
         run: |
@@ -57,3 +55,26 @@ jobs:
           conda --version
           conda build --version
           python setup.py bdist_conda
+  docs:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: create and activate env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: gammapy-dev
+          environment-file: environment-dev.yml
+          auto-update-conda: true
+      - name: install gammapy
+        run: |
+          pip install -e .
+      - name: download datasets
+        run: gammapy download datasets
+      - name: test build docs
+        run: make docs-all
