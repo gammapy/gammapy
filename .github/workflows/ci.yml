@@ -36,6 +36,12 @@ jobs:
         run: |
           conda install astropy=4.0
           make test
+      - name: test astropy dev
+        if: always()
+        run: |
+          conda remove astropy
+          pip install git+https://github.com/astropy/astropy.git#egg=astropy
+          make test
       - name: conda build
         if: always()
         run: |
