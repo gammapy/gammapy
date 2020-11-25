@@ -1,5 +1,4 @@
 name: CI
-
 on: [push, pull_request]
 
 jobs:
@@ -24,20 +23,19 @@ jobs:
           pip install -e .
       - name: download datasets
         run: gammapy download datasets
-
       - name: test coverage
         run: |
           make test-cov
           codecov -X gcov
-#      Test with Astropy dev version
-#      Test with Astropy 4.0 version
-#      Test with Sherpa dev
       - name: test notebooks
-        if: always()
         run: make test-nb
       - name: build docs
-        if: always()
         run: make docs-all
+      - name: test astropy 4.0
+        if: always()
+        run: |
+          conda install astropy=4.0
+          make test
       - name: conda build
         if: always()
         run: |
