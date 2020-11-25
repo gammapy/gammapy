@@ -204,25 +204,37 @@ class SpectrumDataset(PlotMixin, MapDataset):
     stat_type = "cash"
     tag = "SpectrumDataset"
 
-    def write(self):
+    def write(self, *args, **kwargs):
         raise NotImplementedError
 
-    def read(self):
+    def read(self, *args, **kwargs):
         raise NotImplementedError
 
-    def to_hdulist(self):
+    def to_hdulist(self, *args, **kwargs):
         raise NotImplementedError
 
-    def from_hdulist(self):
+    def from_hdulist(self, *args, **kwargs):
         raise NotImplementedError
 
-    def from_dict(self):
+    def from_dict(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def cutout(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def plot_residuals_spatial(self, *args, **kwargs):
         raise NotImplementedError
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     stat_type = "wstat"
     tag = "SpectrumDatasetOnOff"
+
+    def cutout(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def plot_residuals_spatial(self, *args, **kwargs):
+        raise NotImplementedError
 
     @classmethod
     def read(cls, filename):
