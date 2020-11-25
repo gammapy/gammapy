@@ -914,10 +914,12 @@ class FluxPointsEstimator(Estimator):
         counts = []
 
         for dataset in datasets:
-            energy_mask = dataset.counts.geom.energy_mask(
+            mask = dataset.counts.geom.energy_mask(
                 energy_min=energy_min, energy_max=energy_max, round_to_edge=True
             )
-            mask = dataset.mask & energy_mask
+            if dataset.mask is not None:
+                mask &= dataset.mask
+
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}
