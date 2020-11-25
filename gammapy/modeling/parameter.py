@@ -247,6 +247,11 @@ class Parameter:
         """A deep copy"""
         return copy.deepcopy(self)
 
+    def update_from_dict(self, data):
+        """Update parameters from a dict.
+            Key name is accessed as a hidden parameters with _keyname. """
+        self.__dict__.update({ '_'+k: v for k, v in data.items() })
+
     def to_dict(self):
         """Convert to dict."""
         output = {
