@@ -29,8 +29,8 @@ jobs:
           codecov -X gcov
       - name: test notebooks
         run: make test-nb
-      - name: build docs
-        run: make docs-all
+#      - name: test build docs
+#        run: make docs-all
       - name: test astropy 4.0
         if: always()
         run: |
@@ -48,7 +48,7 @@ jobs:
           conda remove sherpa
           pip install git+https://github.com/sherpa/sherpa.git#egg=sherpa
           make test
-      - name: conda build
+      - name: test conda build
         if: always()
         run: |
           make clean
