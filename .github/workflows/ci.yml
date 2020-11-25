@@ -42,6 +42,12 @@ jobs:
           conda remove astropy
           pip install git+https://github.com/astropy/astropy.git#egg=astropy
           make test
+      - name: test sherpa dev
+        if: always()
+        run: |
+          conda remove sherpa
+          pip install git+https://github.com/sherpa/sherpa.git#egg=sherpa
+          make test
       - name: conda build
         if: always()
         run: |
