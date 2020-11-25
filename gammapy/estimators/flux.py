@@ -179,16 +179,21 @@ class FluxEstimator(Estimator):
         else:
             energy_min, energy_max = self.energy_min, self.energy_max
 
-        any_contribution = np.any(
-            [dataset.mask.data.any() for dataset in datasets_sliced]
-        )
+        contributions = []
+
+        for dataset in datasets_sliced:
+            if dataset.mask is not None:
+                value = dataset.mask.data.any()
+            else:
+                value = True
+            contributions.append(value)
 
         model = self.get_scale_model(models)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             result = self.get_reference_flux_values(model.model, energy_min, energy_max)
 
-        if len(datasets) == 0 or not any_contribution:
+        if len(datasets) == 0 or not np.any(contributions):
             result.update(self.nan_result)
         else:
             models[self.source].spectral_model = model

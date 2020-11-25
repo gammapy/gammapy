@@ -918,7 +918,7 @@ class FluxPointsEstimator(Estimator):
                 energy_min=energy_min, energy_max=energy_max, round_to_edge=True
             )
             if dataset.mask is not None:
-                mask &= dataset.mask
+                mask = mask & dataset.mask
 
             counts.append(dataset.counts.data[mask].sum())
 

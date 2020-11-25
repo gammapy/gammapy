@@ -1998,8 +1998,7 @@ class MapDatasetOnOff(MapDataset):
         is_zero = total_off.data == 0
         acceptance_off.data[is_zero] = 1 / average_alpha
 
-        self.acceptance = Map.from_geom(geom)
-        self.acceptance.data += 1
+        self.acceptance.data[...] = 1
         self.acceptance_off = acceptance_off
 
         if self.counts_off is not None:

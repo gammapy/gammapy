@@ -409,8 +409,8 @@ class TestSpectrumOnOff:
         assert empty_dataset.data_shape[0] == 2
         assert empty_dataset.counts_off.data.sum() == 0
         assert empty_dataset.counts_off.geom.axes[0].nbin == 2
-        assert_allclose(empty_dataset.acceptance_off, 1)
-        assert_allclose(empty_dataset.acceptance, 1)
+        assert_allclose(empty_dataset.acceptance_off, 0)
+        assert_allclose(empty_dataset.acceptance, 0)
         assert empty_dataset.acceptance.data.shape[0] == 2
         assert empty_dataset.acceptance_off.data.shape[0] == 2
         assert empty_dataset.gti.time_sum.value == 0
