@@ -192,21 +192,9 @@ class RegionGeom(Geom):
         wcs_geom : `~WcsGeom`
             A WCS geometry object.
         """
-        wcs_new = self.wcs.copy()
-        width = self.width.value
-        binsz = np.abs(self.wcs.wcs.cdelt)
-        npix = (
-            np.rint(width[0] / binsz[0]).astype(int),
-            np.rint(width[1] / binsz[1]).astype(int),
-        )
-        nxpix = int(npix[0].flat[0])
-        nypix = int(npix[1].flat[0])
-        refpix = ((nxpix + 1) / 2.0, (nypix + 1) / 2.0)
-        wcs_new.wcs.crpix = refpix
-        wcs_new.array_shape = npix[0].flat[0], npix[1].flat[0]
-        wcs_geom = WcsGeom(wcs_new,
-                        npix=npix,
-                        )
+        wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
+        wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=self.width)
+        wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
 
     def get_wcs_coord(self):
@@ -215,15 +203,14 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        region_coords : `~MapCoord`
+        region_coord : `~MapCoord`
             MapCoord object with the coordinates inside
             the region.
         """
         wcs_geom = self.to_wcs_geom()
         common_coord = self.contains(wcs_geom.get_coord())
-        region_coords_skycoord = wcs_geom.get_coord().skycoord[common_coord]
-        region_coords = MapCoord.create(region_coords_skycoord)
-        return region_coords
+        region_coord = wcs_geom.get_coord().apply_mask(common_coord)
+        return region_coord
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
