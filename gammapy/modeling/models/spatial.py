@@ -14,7 +14,7 @@ from regions import (
     PointSkyRegion,
     PolygonSkyRegion,
 )
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map, WcsGeom, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
@@ -138,9 +138,24 @@ class SpatialModel(Model):
             return self(coords.lon, coords.lat)
 
     def integrate_geom(self, geom):
-        """Integrate model on `~gammapy.maps.Geom`."""
-        values = self.evaluate_geom(geom)
-        data = values * geom.solid_angle()
+        """Integrate model on `~gammapy.maps.Geom` or `~gammapy.maps.RegionGeom`.
+        
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom` or `~gammapy.maps.RegionGeom`
+
+        Returns
+        ---------
+        `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
+                the predicted model counts integrated in each spatial bin.
+        """
+        if isinstance(geom, RegionGeom):
+            coordinates = geom.get_wcs_coord()
+            values = self(coordinates.lon, coordinates.lat)
+            data = values.sum() * geom.solid_angle()
+        else:
+            values = self.evaluate_geom(geom)
+            data = values * geom.solid_angle()
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
     def to_dict(self, full_output=False):
