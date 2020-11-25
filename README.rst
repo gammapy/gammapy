@@ -23,9 +23,9 @@ Status shields
     :target: https://dev.azure.com/gammapy/gammapy/_build/latest?definitionId=1
     :alt: Build Status
 
-* .. image:: http://img.shields.io/travis/gammapy/gammapy.svg?branch=master
-    :target: https://travis-ci.com/gammapy/gammapy
-    :alt: Test Status Travis-CI
+* .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg?branch=master
+    :target: https://github.com/gammapy/gammapy/actions?query=workflow%3ACI+branch%3Amaster
+    :alt: Github actions CI
 
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/gammapy/gammapy
