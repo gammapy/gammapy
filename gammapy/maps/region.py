@@ -209,7 +209,7 @@ class RegionGeom(Geom):
                         )
         return wcs_geom
 
-    def get_wcs_coords(self):
+    def get_wcs_coord(self):
         """Get the array of coordinates that define
             the region.
 
