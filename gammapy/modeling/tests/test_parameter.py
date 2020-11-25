@@ -173,7 +173,7 @@ def test_update_from_dict():
     par = Parameter("test", value=1, scale=1e-2, min="nan", max="nan", frozen=False, unit="TeV")
     data={"name": "test", "factor":3.0, "scale":1e-2,"min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
     par.update_from_dict(data)
-   
+    assert par.name == "test"
     assert par.factor == 3.0
     assert par.value == 3e-2
     assert par.unit == "GeV"
