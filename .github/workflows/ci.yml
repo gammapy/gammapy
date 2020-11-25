@@ -29,9 +29,21 @@ jobs:
         run: |
           make test-cov
           codecov -X gcov
+#      Test with Astropy dev version
+#      Test with Astropy 4.0 version
+#      Test with Sherpa dev
       - name: test notebooks
         if: always()
         run: make test-nb
       - name: build docs
         if: always()
         run: make docs-all
+      - name: conda build
+        if: always()
+        run: |
+          make clean
+          conda install conda-build
+          conda info
+          conda --version
+          conda build --version
+          python setup.py bdist_conda
