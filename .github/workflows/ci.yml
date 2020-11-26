@@ -12,6 +12,8 @@ jobs:
       fail-fast: false # true
       matrix:
         include:
+          - name: Linux python 3.6 core
+            os: ubuntu-latest
           - name: Linux python 3.7 core
             os: ubuntu-latest
           - name: Linux python 3.8 core
@@ -23,6 +25,14 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
+      - name: install python3.6
+        if: contains(matrix.name, '3.6')
+        run: |
+          sed -i 's/python==3.7/python==3.6/' environment-dev.yml
+      - name: install python3.8
+        if: contains(matrix.name, '3.8')
+        run: |
+          sed -i 's/python==3.7/python==3.8/' environment-dev.yml
       - name: add core dependencies env file
         if: contains(matrix.name, 'core')
         run: |
@@ -34,10 +44,6 @@ jobs:
         with:
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
-      - name: install python3.6
-        if: contains(matrix.name, '3.8')
-        run: |
-          conda install python==3.8 -y
       - name: install gammapy
         run: |
           pip install -e .
