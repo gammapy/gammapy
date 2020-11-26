@@ -43,21 +43,21 @@ jobs:
       - name: download datasets
         run: gammapy download datasets
       - name: test coverage
-        if: matrix.os=='ubuntu-latest' && matrix.python=='3.7'
+        if: matrix.name=='Linux python 3.7 all'
         run: |
           make test-cov
           codecov -X gcov
-          pytest --doctest-glob="*.rst" docs/
+# pytest --doctest-glob="*.rst" docs/
       - name: test simple
-        if: matrix.os!='ubuntu-latest' && matrix.python!='3.7'
+        if: matrix.name!='Linux python 3.7 all'
         run: |
           make test
-          pytest --doctest-glob="*.rst" docs/
+# pytest --doctest-glob="*.rst" docs/
       - name: test simple without datasets
         run: |
           unset GAMMAPY_DATA
           make test
-          pytest --doctest-glob="*.rst" docs/
+# pytest --doctest-glob="*.rst" docs/
   notebooks:
     runs-on: ubuntu-latest
     defaults:
