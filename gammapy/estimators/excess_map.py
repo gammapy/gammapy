@@ -18,7 +18,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def convolved_map_dataset_counts_statistics(dataset, kernel, mask):
+def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
     """Return CountsDataset objects containing smoothed maps from the MapDataset"""
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
@@ -33,18 +33,18 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask):
         background = dataset.background * mask
         background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
-
-        background_conv = background.convolve(kernel.array)
-        n_off_conv = n_off.convolve(kernel.array)
-
         npred_sig = dataset.npred_signal() * mask
-        mu_sig = npred_sig.convolve(kernel.array)
+
+        background_convolve = background.convolve(kernel.array)
+        npred_sig_convolve = npred_sig.convolve(kernel.array)
+        if correlate_off:
+            n_off = n_off.convolve(kernel.array)
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            alpha_conv = background_conv / n_off_conv
+            alpha = background_convolve / n_off
 
         return WStatCountsStatistic(
-            n_on_conv.data, n_off_conv.data, alpha_conv.data, mu_sig.data
+            n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
         )
     else:
 
@@ -82,6 +82,8 @@ class ExcessMapEstimator(Estimator):
     apply_mask_fit : Bool
         Apply a mask for the computation.
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
+    correlate_off : Bool
+        Correlate OFF events in the case of a MapDatasetOnOff
     """
 
     tag = "ExcessMapEstimator"
@@ -95,6 +97,7 @@ class ExcessMapEstimator(Estimator):
         selection_optional="all",
         energy_edges=None,
         apply_mask_fit=False,
+        correlate_off=True
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -102,6 +105,7 @@ class ExcessMapEstimator(Estimator):
         self.apply_mask_fit = apply_mask_fit
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
+        self.correlate_off = correlate_off
 
     @property
     def correlation_radius(self):
@@ -184,7 +188,7 @@ class ExcessMapEstimator(Estimator):
         else:
             mask = np.ones(dataset.data_shape, dtype=bool)
 
-        counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel, mask)
+        counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel, mask, self.correlate_off)
 
         n_on = Map.from_geom(geom, data=counts_stat.n_on)
         bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
