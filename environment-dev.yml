@@ -35,9 +35,14 @@ dependencies:
   - scipy
   - sherpa
   - tqdm
+  # test dependencies
+  - codecov
+  - pytest
+  - pytest-astropy
+  - pytest-cov
+  - pytest-xdist
   # dev dependencies
   - black
-  - codecov
   - flake8
   - isort
   - nbsphinx
@@ -45,10 +50,6 @@ dependencies:
   - pandoc
   - pydocstyle
   - pylint
-  - pytest
-  - pytest-astropy
-  - pytest-cov
-  - pytest-xdist
   - setuptools_scm
   - sphinx==2.4.4
   - sphinx-astropy
