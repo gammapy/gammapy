@@ -147,12 +147,13 @@ class SpatialModel(Model):
         Returns
         ---------
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
-                the predicted model counts integrated in each spatial bin.
+                the integral value in each spatial bin.
         """
         if isinstance(geom, RegionGeom):
-            coordinates = geom.get_wcs_coord()
-            values = self(coordinates.lon, coordinates.lat)
-            data = values.sum() * geom.solid_angle()
+            wcs_geom = geom.to_wcs_geom().to_image()
+            mask = geom.contains(wcs_geom.get_coord())
+            values = self.evaluate_geom(wcs_geom)
+            data = ((values* wcs_geom.solid_angle())[mask]).sum()
         else:
             values = self.evaluate_geom(geom)
             data = values * geom.solid_angle()
