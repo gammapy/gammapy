@@ -12,8 +12,6 @@ jobs:
       fail-fast: false # true
       matrix:
         include:
-          - name: Linux python 3.6 core
-            os: ubuntu-latest
           - name: Linux python 3.7 core
             os: ubuntu-latest
           - name: Linux python 3.8 core
@@ -30,15 +28,12 @@ jobs:
         run: |
           awk '{f="env" NR; print $0> f}' RS='# extra dependencies' environment-dev.yml
           mv env1 environment-dev.yml
+          cat environment-dev.yml
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
-      - name: install python3.6
-        if: contains(matrix.name, '3.6')
-        run: |
-          conda install python==3.6 -y
       - name: install python3.6
         if: contains(matrix.name, '3.8')
         run: |
@@ -97,6 +92,7 @@ jobs:
         run: |
           awk '{f="env" NR; print $0> f}' RS='# extra dependencies' environment-dev.yml
           mv env1 environment-dev.yml
+          cat environment-dev.yml
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:
