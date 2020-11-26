@@ -97,7 +97,7 @@ class ExcessMapEstimator(Estimator):
         selection_optional="all",
         energy_edges=None,
         apply_mask_fit=False,
-        correlate_off=True
+        correlate_off=False
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
