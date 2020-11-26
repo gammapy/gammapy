@@ -2,7 +2,63 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  tests:
+  basic:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+#    env:
+#      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux python 3.6 core
+            os: ubuntu-latest
+          - name: Linux python 3.7 all
+            os: ubuntu-latest
+          - name: Linux python 3.8 core
+            os: ubuntu-latest
+          - name: Windows python 3.7 all
+            os: windows-latest
+          - name: Mac python 3.7 all
+            os: macos-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: add core dependencies env file
+        if: contains(matrix.name, 'core')
+        run: |
+          awk '{f="env" NR; print $0> f}' RS='# dev dependencies' environment-dev.yml
+          mv env1 environment-dev.yml
+      - name: create and activate env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: gammapy-dev
+          environment-file: environment-dev.yml
+      - name: install gammapy
+        run: |
+          pip install -e .
+      - name: download datasets
+        run: gammapy download datasets
+      - name: test coverage
+        if: matrix.os=='ubuntu-latest' && matrix.python=='3.7'
+        run: |
+          make test-cov
+          codecov -X gcov
+          pytest --doctest-glob="*.rst" docs/
+      - name: test simple
+        if: matrix.os!='ubuntu-latest' && matrix.python!='3.7'
+        run: |
+          make test
+          pytest --doctest-glob="*.rst" docs/
+      - name: test simple without datasets
+        run: |
+          unset GAMMAPY_DATA
+          make test
+          pytest --doctest-glob="*.rst" docs/
+  notebooks:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -23,39 +79,9 @@ jobs:
           pip install -e .
       - name: download datasets
         run: gammapy download datasets
-      - name: test coverage
-        run: |
-          make test-cov
-          codecov -X gcov
       - name: test notebooks
         run: make test-nb
-      - name: test astropy 4.0
-        if: always()
-        run: |
-          conda install astropy=4.0
-          make test
-#      - name: test astropy dev
-#        if: always()
-#        run: |
-#          conda remove astropy
-#          pip install git+https://github.com/astropy/astropy.git#egg=astropy
-#          make test
-#      - name: test sherpa dev
-#        if: always()
-#        run: |
-#          conda remove sherpa
-#          pip install git+https://github.com/sherpa/sherpa.git#egg=sherpa
-#          make test
-      - name: test conda build
-        if: always()
-        run: |
-          make clean
-          conda install conda-build
-          conda info
-          conda --version
-          conda build --version
-          python setup.py bdist_conda
-  docs:
+  others:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -77,4 +103,20 @@ jobs:
       - name: download datasets
         run: gammapy download datasets
       - name: test build docs
-        run: make docs-all
+        run: |
+          make docs-sphinx
+      - name: test astropy dev
+        if: always()
+        run: |
+          conda remove astropy --force -y
+          pip install git+https://github.com/astropy/astropy.git#egg=astropy
+          make test
+      - name: test conda build
+        if: always()
+        run: |
+          make clean
+          conda install conda-build
+          conda info
+          conda --version
+          conda build --version
+          python setup.py bdist_conda
