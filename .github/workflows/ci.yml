@@ -9,12 +9,12 @@ jobs:
       run:
         shell: bash -l {0}
     strategy:
-      fail-fast: false
+      fail-fast: false # true
       matrix:
         include:
           - name: Linux python 3.6 core
             os: ubuntu-latest
-          - name: Linux python 3.7 all
+          - name: Linux python 3.7 core
             os: ubuntu-latest
           - name: Linux python 3.8 core
             os: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
       - name: add core dependencies env file
         if: contains(matrix.name, 'core')
         run: |
-          awk '{f="env" NR; print $0> f}' RS='# dev dependencies' environment-dev.yml
+          awk '{f="env" NR; print $0> f}' RS='# extra dependencies' environment-dev.yml
           mv env1 environment-dev.yml
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
@@ -50,6 +50,7 @@ jobs:
           make test
 # pytest --doctest-glob="*.rst" docs/
   notebooks:
+    name: Linux notebooks tests core
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -73,6 +74,7 @@ jobs:
       - name: test notebooks
         run: make test-nb
   others:
+    name: Linux others tests core
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -82,6 +84,11 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
+      - name: add core dependencies env file
+        if: contains(matrix.name, 'core')
+        run: |
+          awk '{f="env" NR; print $0> f}' RS='# extra dependencies' environment-dev.yml
+          mv env1 environment-dev.yml
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:

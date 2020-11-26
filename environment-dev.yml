@@ -12,11 +12,24 @@ channels:
   - sherpa
 
 dependencies:
+  # core dependencies
   - python==3.7
   - pip
   - astropy
   - click
   - cython
+  - numpy
+  - pydantic
+  - pyyaml
+  - regions
+  - scipy
+  # test dependencies
+  - codecov
+  - pytest
+  - pytest-astropy
+  - pytest-cov
+  - pytest-xdist
+  # extra dependencies
   - healpy
   - iminuit
   - ipython
@@ -24,23 +37,12 @@ dependencies:
   - jupyterlab
   - matplotlib
   - naima
-  - numpy
   - pandas
   - parfive
-  - pydantic
-  - pyyaml
-  - regions
   - reproject
   - requests
-  - scipy
   - sherpa
   - tqdm
-  # test dependencies
-  - codecov
-  - pytest
-  - pytest-astropy
-  - pytest-cov
-  - pytest-xdist
   # dev dependencies
   - black
   - flake8
