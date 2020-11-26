@@ -147,7 +147,7 @@ class SpatialModel(Model):
         Returns
         ---------
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
-                the predicted model counts integrated in each spatial bin.
+                the integral value in each spatial bin.
         """
         if isinstance(geom, RegionGeom):
             wcs_geom = geom.to_wcs_geom().to_image()
