@@ -8,8 +8,6 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
-#    env:
-#      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
     strategy:
       fail-fast: false
       matrix:
@@ -40,8 +38,6 @@ jobs:
       - name: install gammapy
         run: |
           pip install -e .
-      - name: download datasets
-        run: gammapy download datasets
       - name: test coverage
         if: matrix.name=='Linux python 3.7 all'
         run: |
@@ -51,11 +47,6 @@ jobs:
       - name: test simple
         if: matrix.name!='Linux python 3.7 all'
         run: |
-          make test
-# pytest --doctest-glob="*.rst" docs/
-      - name: test simple without datasets
-        run: |
-          unset GAMMAPY_DATA
           make test
 # pytest --doctest-glob="*.rst" docs/
   notebooks:
