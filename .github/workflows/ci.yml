@@ -35,6 +35,14 @@ jobs:
         with:
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
+      - name: install python3.6
+        if: contains(matrix.name, '3.6')
+        run: |
+          conda install python==3.6 -y
+      - name: install python3.6
+        if: contains(matrix.name, '3.8')
+        run: |
+          conda install python==3.8 -y
       - name: install gammapy
         run: |
           pip install -e .
@@ -50,7 +58,7 @@ jobs:
           make test
 # pytest --doctest-glob="*.rst" docs/
   notebooks:
-    name: Linux notebooks tests core
+    name: Linux notebooks all
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -74,7 +82,7 @@ jobs:
       - name: test notebooks
         run: make test-nb
   others:
-    name: Linux others tests core
+    name: Linux others core
     runs-on: ubuntu-latest
     defaults:
       run:
