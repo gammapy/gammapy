@@ -5,6 +5,8 @@ jobs:
   basic:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    env:
+      PYTEST_ADDOPTS: --color=yes
     defaults:
       run:
         shell: bash -l {0}
@@ -65,6 +67,7 @@ jobs:
       run:
         shell: bash -l {0}
     env:
+      PYTEST_ADDOPTS: --color=yes
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
     steps:
       - name: checkout repo
@@ -89,6 +92,7 @@ jobs:
       run:
         shell: bash -l {0}
     env:
+      PYTEST_ADDOPTS: --color=yes
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
     steps:
       - name: checkout repo
