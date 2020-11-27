@@ -35,6 +35,8 @@ class RegionGeom(Geom):
     is_regular = True
     is_allsky = False
     is_hpx = False
+    is_region = True
+
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
@@ -211,6 +213,10 @@ class RegionGeom(Geom):
         common_coord = self.contains(wcs_geom.get_coord())
         region_coord = wcs_geom.get_coord().apply_mask(common_coord)
         return region_coord
+
+    def to_binsz(self, binsz):
+        """Returns self"""
+        return self
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes

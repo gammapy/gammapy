@@ -204,6 +204,8 @@ class RegionNDMap(Map):
             weights = weights.data
 
         func = np.nansum if preserve_counts else np.nanmean
+        if self.data.dtype == bool:
+            func = np.all
         data = block_reduce(self.data * weights, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)
@@ -347,7 +349,8 @@ class RegionNDMap(Map):
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
         """
-        data = other.quantity.to_value(self.unit)
+        # TODO: check and remove the type-cast here...
+        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)

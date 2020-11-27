@@ -16,7 +16,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
@@ -359,9 +359,8 @@ class Analysis:
             datasets_settings.geom.axes.energy_true, name="energy_true"
         )
 
-        reference = SpectrumDataset.create(
-            e_reco=e_reco, e_true=e_true, region=on_region
-        )
+        geom = RegionGeom.create(region=on_region, axes=[e_reco])
+        reference = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
         datasets = []
         for obs in self.observations:

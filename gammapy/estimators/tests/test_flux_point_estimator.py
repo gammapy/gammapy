@@ -46,12 +46,16 @@ def simulate_spectrum_dataset(model, random_state=0):
     livetime = 100 * u.h
     exposure = aeff * livetime
 
+    mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
+    mask_safe.data += True
+
     dataset = SpectrumDatasetOnOff(
         name="test_onoff",
         exposure=exposure,
         acceptance=acceptance,
         acceptance_off=5,
         edisp=edisp,
+        mask_safe=mask_safe
     )
     dataset.models = bkg_model
     bkg_npred = dataset.npred_signal()
