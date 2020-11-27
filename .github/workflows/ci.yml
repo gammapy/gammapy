@@ -14,7 +14,7 @@ jobs:
       fail-fast: false # true
       matrix:
         include:
-          - name: Linux python 3.6 core
+          - name: Linux python 3.6.1 core
             os: ubuntu-latest
           - name: Linux python 3.7 all
             os: ubuntu-latest
@@ -30,7 +30,7 @@ jobs:
       - name: install python3.6
         if: contains(matrix.name, '3.6')
         run: |
-          sed -i 's/python==3.7/python==3.6/' environment-dev.yml
+          sed -i 's/python==3.7/python==3.6.1/' environment-dev.yml
       - name: install python3.8
         if: contains(matrix.name, '3.8')
         run: |
@@ -53,6 +53,7 @@ jobs:
         if: matrix.name=='Linux python 3.7 all'
         run: |
           gammapy download datasets
+          export GAMMAPY_DATA=/home/runner/work/gammapy/gammapy/gammapy-datasets
           make test-cov
           codecov -X gcov
 # pytest --doctest-glob="*.rst" docs/
