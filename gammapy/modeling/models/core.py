@@ -377,35 +377,30 @@ class DatasetModels(collections.abc.Sequence):
         """Convert Models parameters to an astropy Table."""
         pars = self.parameters.to_table()
         rows = []
+        #Warning: splitting of parameters will break is source name has a "." in its name.
         for name in self.parameters_unique_names:
             row = {}
-            #Warning: splitting of parameters will break is source name has a "." in its name.
             parts = name.split(".")
-            if len(parts) == 3:
-                row["model"], row["type"], _ = parts
-            elif len(parts) == 2:
-                row["model"], row["type"] = parts[0], ""
+            row["model"], row["type"], _ = parts
             rows.append(row)
         table = table_from_row_data(rows)
         table = hstack([table, pars])
         self._table_cached = table
         return  table
 
-    def update_from_table(self, t):
+    def set_parameters_from_table(self, t):
         """Update Models from an astropy Table."""
-        self._check_non_editable_columns(t, self._table_cached)
+#        self._check_non_editable_columns(t, self._table_cached)
         parameters_dict = [dict(zip( t.colnames, row)) for row in t]
+        #Astropy Table has masked values for NaN. Replacing with np.nan in dict.
         for k, data in enumerate(parameters_dict):
-            self._update_from_dict(self.parameters[k], data)
-
-    def _update_from_dict(self, parameter, data):
-        """Update Models from a dictionary of parameters."""
-        parameter.quantity = f'{data["value"]} {data["unit"]}'
-        if np.isfinite(data["min"]):
-            parameter.min = data["min"]
-        if np.isfinite(data["max"]):
-            parameter.max = data["max"]
-        parameter.frozen = bool(data["frozen"])
+            parameters_dict[k]['frozen']=bool(data['frozen'])
+            pars=['min','max']
+            for p in pars:
+                if type(data[p]) is np.ma.core.MaskedConstant:
+                    parameters_dict[k][p] = np.nan        
+        for k, data in enumerate(parameters_dict):
+            self.parameters[k].update_from_dict(data)
 
     def _check_non_editable_columns(self, table, table_cached):
         non_editable = ["model", "type", "name", "error"]
