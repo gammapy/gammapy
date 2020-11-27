@@ -324,6 +324,13 @@ class SkyModel(Model):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag[0]
+
+        if self.apply_irf != self._apply_irf_default:
+            data["apply_irf"] = self.apply_irf
+
+        if self.datasets_names is not None:
+            data["datasets_names"] = self.datasets_names
+
         data["spectral"] = self.spectral_model.to_dict(full_output)
 
         if self.spatial_model is not None:
@@ -331,12 +338,6 @@ class SkyModel(Model):
 
         if self.temporal_model is not None:
             data["temporal"] = self.temporal_model.to_dict(full_output)
-
-        if self.apply_irf != self._apply_irf_default:
-            data["apply_irf"] = self.apply_irf
-
-        if self.datasets_names is not None:
-            data["datasets_names"] = self.datasets_names
 
         return data
 

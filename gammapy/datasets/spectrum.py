@@ -205,25 +205,25 @@ class SpectrumDataset(PlotMixin, MapDataset):
     tag = "SpectrumDataset"
 
     def write(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def read(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def to_hdulist(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def from_hdulist(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def from_dict(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def cutout(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
@@ -231,10 +231,10 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     tag = "SpectrumDatasetOnOff"
 
     def cutout(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
     def read(cls, filename):
