@@ -16,7 +16,7 @@ jobs:
         include:
           - name: Linux python 3.6 core
             os: ubuntu-latest
-          - name: Linux python 3.7 core
+          - name: Linux python 3.7 all
             os: ubuntu-latest
           - name: Linux python 3.8 core
             os: ubuntu-latest
@@ -52,6 +52,7 @@ jobs:
       - name: test coverage
         if: matrix.name=='Linux python 3.7 all'
         run: |
+          gammapy download datasets
           make test-cov
           codecov -X gcov
 # pytest --doctest-glob="*.rst" docs/
@@ -61,7 +62,7 @@ jobs:
           make test
 # pytest --doctest-glob="*.rst" docs/
   notebooks:
-    name: Linux notebooks all
+    name: Linux python 3.7 notebooks all
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -82,11 +83,13 @@ jobs:
         run: |
           pip install -e .
       - name: download datasets
-        run: gammapy download datasets
+        run: |
+          gammapy download datasets
       - name: test notebooks
-        run: make test-nb
+        run: |
+          make test-nb
   others:
-    name: Linux others core
+    name: Linux python 3.7 others all
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -97,12 +100,6 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
-      - name: add core dependencies env file
-        if: contains(matrix.name, 'core')
-        run: |
-          awk '{f="env" NR; print $0> f}' RS='# extra dependencies' environment-dev.yml
-          mv env1 environment-dev.yml
-          cat environment-dev.yml
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:
@@ -113,10 +110,15 @@ jobs:
         run: |
           pip install -e .
       - name: download datasets
-        run: gammapy download datasets
+        run: |
+          gammapy download datasets
       - name: test build docs
         run: |
           make docs-sphinx
+      - name: test without datasets
+        run: |
+          unset GAMMAPY_DATA
+          make test
       - name: test astropy dev
         if: always()
         run: |
