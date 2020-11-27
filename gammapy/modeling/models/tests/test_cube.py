@@ -637,9 +637,11 @@ def test_integrate_geom():
     radius = 0.3 * u.deg
     square = CircleSkyRegion(center, radius)
 
-    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10, name='energy_true')
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name='energy_true')
     geom = RegionGeom(region=square, axes=[axis])
 
     integral = sky_model.integrate_geom(geom).data
-    print(integral.sum())
-    assert_allclose(integral.sum()/1e-12, 8.900, rtol=1e-3)
+
+    assert_allclose(integral[0]/1e-12, 5.299, rtol=1e-3)
+    assert_allclose(integral[1]/1e-12, 2.460, rtol=1e-3)
+    assert_allclose(integral[2]/1e-12, 1.142, rtol=1e-3)
