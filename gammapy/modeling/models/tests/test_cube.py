@@ -642,6 +642,4 @@ def test_integrate_geom():
 
     integral = sky_model.integrate_geom(geom).data
 
-    assert_allclose(integral[0]/1e-12, 5.299, rtol=1e-3)
-    assert_allclose(integral[1]/1e-12, 2.460, rtol=1e-3)
-    assert_allclose(integral[2]/1e-12, 1.142, rtol=1e-3)
+    assert_allclose(integral/1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)
