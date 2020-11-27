@@ -247,6 +247,13 @@ class Parameter:
         """A deep copy"""
         return copy.deepcopy(self)
 
+    def update_from_dict(self, data):
+        """Update parameters from a dict.
+           Protection against changing parameter name."""
+        data.pop("name")
+        for k in data.keys(): setattr(self, k, data[k])
+
+
     def to_dict(self):
         """Convert to dict."""
         output = {
