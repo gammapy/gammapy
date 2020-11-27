@@ -4,11 +4,13 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import SkyCoord
 from astropy.time import Time
+from regions import CircleSkyRegion
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     BackgroundModel,
@@ -624,3 +626,20 @@ def test_sky_model_create():
     assert isinstance(m.spatial_model, PointSpatialModel)
     assert isinstance(m.spectral_model, PowerLawSpectralModel)
     assert m.name == "my-source"
+
+
+def test_integrate_geom():
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1*u.deg, frame='icrs')
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
+
+    center = SkyCoord("0d", "0d", frame='icrs')
+    radius = 0.3 * u.deg
+    square = CircleSkyRegion(center, radius)
+
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name='energy_true')
+    geom = RegionGeom(region=square, axes=[axis])
+
+    integral = sky_model.integrate_geom(geom).data
+
+    assert_allclose(integral/1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)

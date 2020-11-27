@@ -272,7 +272,7 @@ class SkyModel(Model):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `Geom` or `~gammapy.maps.RegionGeom`
             Map geometry
         gti : `GTI`
             GIT table
@@ -287,9 +287,7 @@ class SkyModel(Model):
             (-1, 1, 1)
         )
 
-        if self.spatial_model and not isinstance(geom, RegionGeom):
-            # TODO: integrate spatial model over region to correct for
-            #  containment
+        if self.spatial_model:
             value = value * self.spatial_model.integrate_geom(geom).quantity
 
         if self.temporal_model:
