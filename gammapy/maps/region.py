@@ -35,6 +35,8 @@ class RegionGeom(Geom):
     is_regular = True
     is_allsky = False
     is_hpx = False
+    is_region = True
+
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
@@ -182,6 +184,39 @@ class RegionGeom(Geom):
             bin_volume = bin_volume * ax.bin_width.reshape(tuple(shape))
 
         return bin_volume
+
+    def to_wcs_geom(self):
+        """Get the minimal equivalent geometry that
+            contains the region.
+
+        Returns
+        -------
+        wcs_geom : `~WcsGeom`
+            A WCS geometry object.
+        """
+        wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
+        wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=self.width)
+        wcs_geom = wcs_geom.to_cube(self.axes)
+        return wcs_geom
+
+    def get_wcs_coord(self):
+        """Get the array of coordinates that define
+            the region.
+
+        Returns
+        -------
+        region_coord : `~MapCoord`
+            MapCoord object with the coordinates inside
+            the region.
+        """
+        wcs_geom = self.to_wcs_geom()
+        common_coord = self.contains(wcs_geom.get_coord())
+        region_coord = wcs_geom.get_coord().apply_mask(common_coord)
+        return region_coord
+
+    def to_binsz(self, binsz):
+        """Returns self"""
+        return self
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes

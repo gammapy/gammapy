@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.maps import MapAxis, RegionGeom
 
 
@@ -248,3 +248,34 @@ def test_squash(region):
     assert len(geom_squashed.axes) == 2
     assert geom_squashed.axes[1] == axis2
     assert_allclose(geom_squashed.axes[0].edges.to_value("TeV"), (1, 100))
+
+def test_to_wcs_geom(region):
+    geom = RegionGeom(region)
+    wcs_geom = geom.to_wcs_geom()
+    assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
+    assert_allclose(wcs_geom.width[0], 360*u.deg, rtol=1, atol=0)
+    assert wcs_geom.wcs.wcs.ctype[1] == 'GLAT-TAN'
+
+    # test with an extra axis
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
+    geom_cube = geom.to_cube([axis])
+    wcs_geom_cube = geom_cube.to_wcs_geom()
+    assert wcs_geom_cube.to_image() == wcs_geom
+    assert wcs_geom_cube.axes[0] == axis
+
+
+def test_get_wcs_coord(region):
+    # test on circular region
+    geom = RegionGeom(region)
+    region_coords = geom.get_wcs_coord()
+    sep = geom.region.center.separation(region_coords.skycoord).value
+    assert max(sep) <= geom.region.radius.value
+
+    # test on rectangular region (assymetric)
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+    region = RectangleSkyRegion(center=center, width = 1 * u.deg, height=2 * u.deg)
+    geom = RegionGeom(region)
+    region_coords = geom.get_wcs_coord()
+    coord = SkyCoord("100d", "30d")
+    assert geom.contains(region_coords.skycoord[0])
+    assert geom.contains(coord) is not True

@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.wcs import WCS
 from regions import (
@@ -9,8 +10,10 @@ from regions import (
     EllipseSkyRegion,
     PointSkyRegion,
     PolygonSkyRegion,
+    CircleSkyRegion,
+    RectangleSkyRegion
 )
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map, WcsGeom, RegionGeom, MapAxis
 from gammapy.modeling.models import (
     ConstantSpatialModel,
     DiskSpatialModel,
@@ -345,3 +348,39 @@ def test_spatial_model_plot():
 
     with mpl_plot_check():
         model.plot_error(ax=ax)
+
+
+def test_integrate_geom():
+    center = SkyCoord("0d", "0d", frame='icrs')
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1*u.deg, frame='icrs')
+
+    radius_large = 1 * u.deg
+    circle_large = CircleSkyRegion(center, radius_large)
+    radius_small = 0.1 * u.deg
+    circle_small = CircleSkyRegion(center, radius_small)
+
+    geom_large, geom_small = RegionGeom(region=circle_large), RegionGeom(region=circle_small)
+
+    integral_large, integral_small = model.integrate_geom(geom_large).data, model.integrate_geom(geom_small).data
+
+    assert_allclose(integral_large[0], 1, rtol=0.01)
+    assert_allclose(integral_small[0], 0.3953, rtol=0.01)
+
+
+def test_integrate_geom_energy_axis():
+    center = SkyCoord("0d", "0d", frame='icrs')
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1*u.deg, frame='icrs')
+    
+    radius = 1 * u.deg
+    square = RectangleSkyRegion(center, radius, radius)
+    
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
+    geom = RegionGeom(region=square, axes=[axis])
+    
+    integral = model.integrate_geom(geom).data
+    
+    assert_allclose(integral, 1, rtol=0.01)
+
+
+
+

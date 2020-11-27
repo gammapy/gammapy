@@ -12,7 +12,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap, RegionGeom
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -36,30 +36,24 @@ def observations_cta_dc1():
 def spectrum_dataset_gc():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-1, 2, 13) * u.TeV, name="energy_true")
-    pos = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
-    return SpectrumDataset.create(e_reco, e_true, region=region)
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.11)", axes=[e_reco])
+    return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
 @pytest.fixture()
 def spectrum_dataset_crab():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
-    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
-    return SpectrumDataset.create(e_reco, e_true, region=region)
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco])
+    return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
 @pytest.fixture()
 def spectrum_dataset_crab_fine():
     e_true = MapAxis.from_edges(np.logspace(-2, 2.5, 109) * u.TeV, name="energy_true")
-    e_reco = MapAxis.from_edges(np.logspace(-2, 2, 73) * u.TeV, name="energy")
-    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
-    return SpectrumDataset.create(e_reco, e_true, region=region)
+    e_reco = MapAxis.from_energy_edges(np.logspace(-2, 2, 73) * u.TeV)
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco])
+    return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
 @pytest.fixture
