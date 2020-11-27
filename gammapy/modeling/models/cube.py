@@ -272,7 +272,7 @@ class SkyModel(Model):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `Geom` or `~gammapy.maps.RegionGeom`
             Map geometry
         gti : `GTI`
             GIT table
