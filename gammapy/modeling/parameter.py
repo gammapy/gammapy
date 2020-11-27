@@ -248,10 +248,11 @@ class Parameter:
         return copy.deepcopy(self)
 
     def update_from_dict(self, data):
-        """Update parameters from a dict. Do not modify the name of parameters.
-            Key name is accessed as a hidden parameters with _keyname. """
+        """Update parameters from a dict.
+           Protection against changing parameter name."""
         data.pop("name")
-        self.__dict__.update({ '_'+k: v for k, v in data.items() })
+        for k in data.keys(): setattr(self, k, data[k])
+
 
     def to_dict(self):
         """Convert to dict."""
