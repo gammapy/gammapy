@@ -174,10 +174,14 @@ class MapDataset(Dataset):
         self.exposure = exposure
         self.background = background
         self.mask_fit = mask_fit
+
+        if isinstance(psf, PSFKernel):
+            raise ValueError("'psf' must be a 'PSFMap' object")
+
         self.psf = psf
 
         if isinstance(edisp, EDispKernel):
-            edisp = EDispKernelMap.from_edisp_kernel(edisp=edisp)
+            raise ValueError("'edisp' must be a 'EDispMap' or `EDispKernel` object")
 
         self.edisp = edisp
         self.mask_safe = mask_safe
@@ -634,10 +638,7 @@ class MapDataset(Dataset):
                 self.background = background
 
         if self.psf and other.psf:
-            if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                self.psf.stack(other.psf, weights=other.mask_safe_psf)
-            else:
-                raise ValueError("Stacking of PSF kernels not supported")
+            self.psf.stack(other.psf, weights=other.mask_safe_psf)
 
         if self.edisp and other.edisp:
             self.edisp.stack(other.edisp, weights=other.mask_safe_edisp)
@@ -914,30 +915,18 @@ class MapDataset(Dataset):
             hdulist += self.background.to_hdulist(hdu="background")[exclude_primary]
 
         if self.edisp is not None:
-            if isinstance(self.edisp, EDispKernel):
-                hdus = self.edisp.to_hdulist()
-                hdus["MATRIX"].name = "edisp_matrix"
-                hdus["EBOUNDS"].name = "edisp_matrix_ebounds"
-                hdulist.append(hdus["EDISP_MATRIX"])
-                hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
-            else:
-                hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-                if self.edisp.exposure_map is not None:
-                    hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
-                        exclude_primary
-                    ]
-
-        if self.psf is not None:
-            if isinstance(self.psf, PSFKernel):
-                hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf_kernel")[
+            hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
+            if self.edisp.exposure_map is not None:
+                hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
                     exclude_primary
                 ]
-            else:
-                hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-                if self.psf.exposure_map is not None:
-                    hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
-                        exclude_primary
-                    ]
+
+        if self.psf is not None:
+            hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
+            if self.psf.exposure_map is not None:
+                hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
+                    exclude_primary
+                ]
 
         if self.mask_safe is not None:
             mask_safe_int = self.mask_safe.copy()
@@ -985,25 +974,18 @@ class MapDataset(Dataset):
         if "BACKGROUND" in hdulist:
             kwargs["background"] = Map.from_hdulist(hdulist, hdu="background")
 
-        if "EDISP_MATRIX" in hdulist:
-            kwargs["edisp"] = EDispKernel.from_hdulist(
-                hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
-            )
-
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp")
+
             try:
                 exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure")
             except KeyError:
                 exposure_map = None
+
             if edisp_map.geom.axes[0].name == "energy":
                 kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
             else:
                 kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
-
-        if "PSF_KERNEL" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
-            kwargs["psf"] = PSFKernel(psf_map)
 
         if "PSF" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf")
@@ -2095,14 +2077,7 @@ class MapDatasetOnOff(MapDataset):
         if "EXPOSURE" in hdulist:
             kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
-        if "EDISP_MATRIX" in hdulist:
-            kwargs["edisp"] = EDispKernel.from_hdulist(
-                hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
-            )
-
-        if "PSF_KERNEL" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
-            kwargs["psf"] = PSFKernel(psf_map)
+        # TODO: this misses the PSFMap and EDispMap
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe")
@@ -2515,6 +2490,16 @@ class MapEvaluator:
 
         return update
 
+    @property
+    def cutout_width(self):
+        """Cutout width for the model component"""
+        if self.psf is not None:
+            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
+        else:
+            psf_width = 0 * u.deg
+
+        return psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
+
     def update(self, exposure, psf, edisp, geom):
         """Update MapEvaluator, based on the current position of the model component.
 
@@ -2540,7 +2525,7 @@ class MapEvaluator:
                 self.model.position, energy_axis=energy_axis
             )
 
-        if isinstance(psf, PSFMap):
+        if psf:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
@@ -2548,20 +2533,12 @@ class MapEvaluator:
 
             # lookup psf
             self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
-        else:
-            self.psf = psf
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
-            if self.psf is not None:
-                psf_width = np.max(self.psf.psf_kernel_map.geom.width)
-            else:
-                psf_width = 0 * u.deg
-
-            width = psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
             try:
                 self.exposure = exposure.cutout(
-                    position=self.model.position, width=width
+                    position=self.model.position, width=self.cutout_width
                 )
                 self.contributes = True
             except (NoOverlapError, ValueError):
