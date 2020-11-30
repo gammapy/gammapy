@@ -275,113 +275,9 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         overwrite : bool
             Overwrite existing files?
         """
-        # TODO: refactor and reduce amount of code duplication
-        outdir = Path.cwd() if outdir is None else make_path(outdir)
-        outdir.mkdir(exist_ok=True, parents=True)
-
-        phafile = f"pha_obs{self.name}.fits"
-
-        bkgfile = phafile.replace("pha", "bkg")
-        arffile = phafile.replace("pha", "arf")
-        rmffile = phafile.replace("pha", "rmf")
-
-        counts_table = self.counts.to_table()
-        counts_table["QUALITY"] = np.logical_not(self.mask_safe.data[:, 0, 0])
-        counts_table["BACKSCAL"] = self.acceptance.data[:, 0, 0]
-        counts_table["AREASCAL"] = np.ones(self.acceptance.data.size)
-        meta = self._ogip_meta()
-
-        meta["respfile"] = rmffile
-        meta["backfile"] = bkgfile
-        meta["ancrfile"] = arffile
-        meta["hduclas2"] = "TOTAL"
-        counts_table.meta = meta
-
-        name = counts_table.meta["name"]
-        hdu = fits.BinTableHDU(counts_table, name=name)
-
-        energy_axis = self.counts.geom.axes[0]
-
-        hdu_format = "ogip-sherpa" if use_sherpa else "ogip"
-
-        hdulist = fits.HDUList(
-            [fits.PrimaryHDU(), hdu, energy_axis.to_table_hdu(format=hdu_format)]
-        )
-
-        if self.gti is not None:
-            hdu = fits.BinTableHDU(self.gti.table, name="GTI")
-            hdulist.append(hdu)
-
-        if self.counts.geom._region is not None and self.counts.geom.wcs is not None:
-            region_table = self.counts.geom._to_region_table()
-            region_hdu = fits.BinTableHDU(region_table, name="REGION")
-            hdulist.append(region_hdu)
-
-        hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
-
-        aeff = self.exposure / self.exposure.meta["livetime"]
-
-        aeff.write(
-            outdir / arffile,
-            overwrite=overwrite,
-            format=hdu_format,
-            ogip_column="SPECRESP",
-        )
-
-        if self.counts_off is not None:
-            counts_off_table = self.counts_off.to_table()
-            counts_off_table["QUALITY"] = np.logical_not(self.mask_safe.data[:, 0, 0])
-            counts_off_table["BACKSCAL"] = self.acceptance_off.data[:, 0, 0]
-            counts_off_table["AREASCAL"] = np.ones(self.acceptance.data.size)
-            meta = self._ogip_meta()
-            meta["hduclas2"] = "BKG"
-
-            counts_off_table.meta = meta
-            name = counts_off_table.meta["name"]
-            hdu = fits.BinTableHDU(counts_off_table, name=name)
-            hdulist = fits.HDUList(
-                [fits.PrimaryHDU(), hdu, energy_axis.to_table_hdu(format=hdu_format)]
-            )
-            if (
-                self.counts_off.geom._region is not None
-                and self.counts_off.geom.wcs is not None
-            ):
-                region_table = self.counts_off.geom._to_region_table()
-                region_hdu = fits.BinTableHDU(region_table, name="REGION")
-                hdulist.append(region_hdu)
-
-            hdulist.writeto(str(outdir / bkgfile), overwrite=overwrite)
-
-        if self.edisp is not None:
-            kernel = self.edisp.get_edisp_kernel()
-            kernel.write(outdir / rmffile, overwrite=overwrite, use_sherpa=use_sherpa)
-
-    def _ogip_meta(self):
-        """Meta info for the OGIP data format"""
-        try:
-            livetime = self.exposure.meta["livetime"]
-        except KeyError:
-            raise ValueError(
-                "Storing in ogip format require the livetime "
-                "to be defined in the exposure meta data"
-            )
-        return {
-            "name": "SPECTRUM",
-            "hduclass": "OGIP",
-            "hduclas1": "SPECTRUM",
-            "corrscal": "",
-            "chantype": "PHA",
-            "detchans": self.counts.geom.axes[0].nbin,
-            "filter": "None",
-            "corrfile": "",
-            "poisserr": True,
-            "hduclas3": "COUNT",
-            "hduclas4": "TYPE:1",
-            "lo_thres": self.energy_range[0].to_value("TeV"),
-            "hi_thres": self.energy_range[1].to_value("TeV"),
-            "exposure": livetime.to_value("s"),
-            "obs_id": self.name,
-        }
+        from .io import OGIPDatasetWriter
+        writer = OGIPDatasetWriter(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)
+        writer.write(self)
 
     @classmethod
     def from_ogip_files(cls, filename):
@@ -403,67 +299,10 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         filename : str
             OGIP PHA file to read
         """
-        filename = make_path(filename)
-        dirname = filename.parent
+        from .io import OGIPDatasetReader
 
-        with fits.open(str(filename), memmap=False) as hdulist:
-            counts = RegionNDMap.from_hdulist(hdulist, format="ogip")
-            acceptance = RegionNDMap.from_hdulist(
-                hdulist, format="ogip", ogip_column="BACKSCAL"
-            )
-            livetime = counts.meta["EXPOSURE"] * u.s
-
-            if "GTI" in hdulist:
-                gti = GTI(Table.read(hdulist["GTI"]))
-            else:
-                gti = None
-
-            mask_safe = RegionNDMap.from_hdulist(
-                hdulist, format="ogip", ogip_column="QUALITY"
-            )
-            mask_safe.data = np.logical_not(mask_safe.data)
-
-        phafile = filename.name
-
-        try:
-            rmffile = phafile.replace("pha", "rmf")
-            kernel = EDispKernel.read(dirname / rmffile)
-            edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom)
-
-        except OSError:
-            # TODO : Add logger and echo warning
-            edisp = None
-
-        try:
-            bkgfile = phafile.replace("pha", "bkg")
-            with fits.open(str(dirname / bkgfile), memmap=False) as hdulist:
-                counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
-                acceptance_off = RegionNDMap.from_hdulist(
-                    hdulist, ogip_column="BACKSCAL"
-                )
-        except OSError:
-            # TODO : Add logger and echo warning
-            counts_off, acceptance_off = None, None
-
-        arffile = phafile.replace("pha", "arf")
-        aeff = RegionNDMap.read(dirname / arffile, format="ogip-arf")
-        exposure = aeff * livetime
-        exposure.meta["livetime"] = livetime
-
-        if edisp is not None:
-            edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
-
-        return cls(
-            counts=counts,
-            exposure=exposure,
-            counts_off=counts_off,
-            edisp=edisp,
-            mask_safe=mask_safe,
-            acceptance=acceptance,
-            acceptance_off=acceptance_off,
-            name=str(counts.meta["OBS_ID"]),
-            gti=gti,
-        )
+        reader = OGIPDatasetReader(filename=filename)
+        return reader.read()
 
     def to_dict(self, filename, *args, **kwargs):
         """Convert to dict for YAML serialization."""
