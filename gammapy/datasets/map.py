@@ -175,13 +175,13 @@ class MapDataset(Dataset):
         self.background = background
         self.mask_fit = mask_fit
 
-        if psf and not isinstance(psf, PSFMap):
-            raise ValueError(f"'psf' must be a 'PSFMap' object, got {type(psf)}")
+        if psf and not isinstance(psf, (PSFMap, HDULocation)):
+            raise ValueError(f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}")
 
         self.psf = psf
 
-        if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap)):
-            raise ValueError(f"'edisp' must be a 'EDispMap' or `EDispKernelMap` object, got {type(edisp)}")
+        if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
+            raise ValueError(f"'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' object, got {type(edisp)}")
 
         self.edisp = edisp
         self.mask_safe = mask_safe
