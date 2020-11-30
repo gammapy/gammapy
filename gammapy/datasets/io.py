@@ -74,29 +74,23 @@ class OGIPDatasetWriter(DatasetWriter):
         self.use_sherpa = use_sherpa
         self.overwrite = overwrite
 
-    @staticmethod
-    def get_filenames(dataset):
+    def get_filenames(self, name):
         """Get filenames
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
-            Dataset to write
+        name : str
+            Dataset name
 
         """
-        # TODO: allow
-        filenames = {}
-        phafile = f"pha_obs{dataset.name}.fits"
-
-        bkgfile = phafile.replace("pha", "bkg")
-        arffile = phafile.replace("pha", "arf")
-        rmffile = phafile.replace("pha", "rmf")
-
-        filenames["phafile"] = phafile
-        filenames["respfile"] = rmffile
-        filenames["backfile"] = bkgfile
-        filenames["ancrfile"] = arffile
-        return filenames
+        # TODO: allow arbitrary filenames?
+        phafile = f"pha_obs{name}.fits"
+        return {
+            "phafile": self.outdir / phafile,
+            "respfile": self.outdir/ phafile.replace("pha", "rmf"),
+            "backfile": self.outdir / phafile.replace("pha", "bkg"),
+            "ancrfile": self.outdir / phafile.replace("pha", "arf")
+        }
 
     @staticmethod
     def get_ogip_meta(dataset):
@@ -134,7 +128,7 @@ class OGIPDatasetWriter(DatasetWriter):
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         """
-        filenames = self.get_filenames(dataset)
+        filenames = self.get_filenames(dataset.name)
 
         self.write_counts(dataset, filename=filenames["phafile"])
         self.write_aeff(dataset, filename=filenames["ancrfile"])
@@ -152,7 +146,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
-        filename : str
+        filename : str or `Path`
             Filename to use.
         """
         kernel = dataset.edisp.get_edisp_kernel()
@@ -165,7 +159,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
-        filename : str
+        filename : str or `Path`
             Filename to use.
 
         """
@@ -204,7 +198,7 @@ class OGIPDatasetWriter(DatasetWriter):
         if is_counts_off:
             meta["hduclas2"] = "BKG"
         else:
-            meta.update(self.get_filenames(dataset))
+            meta.update(self.get_filenames(dataset.name))
             meta["hduclas2"] = "TOTAL"
 
         table.meta = meta
@@ -234,7 +228,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
-        filename : str
+        filename : str or `Path`
             Filename to use.
 
         """
@@ -253,7 +247,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
-        filename : str
+        filename : str or `Path`
             Filename to use.
         """
         hdulist = self.to_counts_hdulist(dataset, is_counts_off=True)
@@ -282,68 +276,103 @@ class OGIPDatasetReader(DatasetReader):
     tag = "ogip"
 
     def __init__(self, filename):
-        self.filename = filename
+        self.filename = make_path(filename)
+        self.path = self.filename.parent
 
-    def read(self):
-        """Read dataset"""
-        filename = make_path(self.filename)
-        dirname = filename.parent
+    def get_filenames(self):
+        """"""
+        pass
+
+    @staticmethod
+    def read_pha(filename):
+        """Read PHA file
+
+        Parameters
+        ----------
+        filename : str
+            PHA file name
+
+        Returns
+        -------
+        data : dict
+            Dict with counts, acceptance and mask_safe
+        """
+        data = {}
 
         with fits.open(str(filename), memmap=False) as hdulist:
-            counts = RegionNDMap.from_hdulist(hdulist, format="ogip")
-            acceptance = RegionNDMap.from_hdulist(
+            data["counts"] = RegionNDMap.from_hdulist(hdulist, format="ogip")
+
+            data["acceptance"] = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="BACKSCAL"
             )
-            livetime = counts.meta["EXPOSURE"] * u.s
 
             if "GTI" in hdulist:
-                gti = GTI(Table.read(hdulist["GTI"]))
-            else:
-                gti = None
+                data["gti"] = GTI(Table.read(hdulist["GTI"]))
 
-            mask_safe = RegionNDMap.from_hdulist(
+            data["mask_safe"] = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="QUALITY"
             )
-            mask_safe.data = np.logical_not(mask_safe.data)
 
-        phafile = filename.name
+        return data
 
+    @staticmethod
+    def read_bkg(filename):
+        """Read PHA background file
+
+        Parameters
+        ----------
+        filename : str
+            PHA file name
+
+        Returns
+        -------
+        data : dict
+            Dict with counts_off and acceptance_off
+        """
+        with fits.open(filename, memmap=False) as hdulist:
+            counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
+            acceptance_off = RegionNDMap.from_hdulist(
+                hdulist, ogip_column="BACKSCAL"
+            )
+        return {"counts_off": counts_off, "acceptance_off": acceptance_off}
+
+    @staticmethod
+    def read_rmf(filename):
+        """"""
         try:
-            rmffile = phafile.replace("pha", "rmf")
-            kernel = EDispKernel.read(dirname / rmffile)
+            kernel = EDispKernel.read(filename / filename)
             edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=counts.geom)
 
         except OSError:
             # TODO : Add logger and echo warning
             edisp = None
 
-        try:
-            bkgfile = phafile.replace("pha", "bkg")
-            with fits.open(str(dirname / bkgfile), memmap=False) as hdulist:
-                counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
-                acceptance_off = RegionNDMap.from_hdulist(
-                    hdulist, ogip_column="BACKSCAL"
-                )
-        except OSError:
-            # TODO : Add logger and echo warning
-            counts_off, acceptance_off = None, None
-
-        arffile = phafile.replace("pha", "arf")
-        aeff = RegionNDMap.read(dirname / arffile, format="ogip-arf")
-        exposure = aeff * livetime
-        exposure.meta["livetime"] = livetime
-
         if edisp is not None:
             edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
 
-        return SpectrumDatasetOnOff(
-            counts=counts,
-            exposure=exposure,
-            counts_off=counts_off,
-            edisp=edisp,
-            mask_safe=mask_safe,
-            acceptance=acceptance,
-            acceptance_off=acceptance_off,
-            name=str(counts.meta["OBS_ID"]),
-            gti=gti,
-        )
+        return {"edisp": edisp}
+
+    @staticmethod
+    def read_arf(filename):
+        """"""
+        aeff = RegionNDMap.read(filename, format="ogip-arf")
+        exposure = aeff * livetime
+        exposure.meta["livetime"] = livetime
+
+        livetime = counts.meta["EXPOSURE"] * u.s
+
+    def read(self):
+        """Read dataset"""
+        kwargs = {}
+
+        filenames = self.get_filenames()
+
+        kwargs.update(self.read_pha(filenames[""])
+
+        kwargs["name"] = str(kwargs["counts"].meta["OBS_ID"])
+
+        kwargs.update(self.read_pha(self.filename))
+
+        filenames = OGIPDatasetWriter.get_filenames()
+
+        return SpectrumDatasetOnOff(**kwargs)
