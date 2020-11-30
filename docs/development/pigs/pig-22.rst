@@ -191,12 +191,21 @@ Typical usage would be:
 Introduce a FluxPointsCollection API
 ------------------------------------
 
-Several estimators return a set of ``FluxPoints`` (or in the future possibly a list of ``FluxMap``?). It is the case of
-the ``LightCurveEstimator``, a light curve being a time ordered list of fluxes. It is also the case of the
-``ExcessProfileEstimator`` which return list of fluxes ordered along a direction or radially.
+Several estimators return a set of ``FluxPoints`` . It is the case of the ``LightCurveEstimator``,
+a light curve being a time ordered list of fluxes. It is also the case of the ``ExcessProfileEstimator``
+which return a list of flux points ordered along a direction or radially. In the current implementation,
+they produce an ``~astropy.Table`` where each row contain an array of fluxes representing flux points at a
+given time or position.
 
-A dedicated API could be introduced to support these objects. Internally a ``Table`` could be used to store the various
-fluxes.
+This solution is not ideal. It introduces a different container logic than the ``FluxPoints`` for which
+one row represents one energy.
+
+A dedicated API could be introduced to support these objects. In order to keep the logic used in
+``FluxPoints``, a flat table ``Table`` could be used to store the various fluxes, where each row
+ would represent the flux at a given energy, time, position etc.
+
+ Astropy provides a mechanism to group table rows according to column entries. It is then possible
+
 
 .. code::
 
