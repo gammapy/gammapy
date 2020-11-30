@@ -185,17 +185,33 @@ class RegionGeom(Geom):
 
         return bin_volume
 
-    def to_wcs_geom(self):
+    def to_wcs_geom(self, width_min=None):
         """Get the minimal equivalent geometry that
             contains the region.
+
+        Parameters
+         ----------
+            width_min : `~astropy.quantity.Quantity`
+            Minimal width for the resulting geometry.
+            Can be a single number or two, for 
+            different minimum widths in each spatial dimension.
 
         Returns
         -------
         wcs_geom : `~WcsGeom`
             A WCS geometry object.
         """
+        if width_min is not None:
+            if np.size(width_min)==1:
+                width_min = 2*[width_min.value]*width_min.unit
+            width = self.width.copy()
+            for idx, entry in enumerate(width_min):
+                if entry > self.width[idx]:
+                   width[idx] = entry
+        else:
+            width = self.width
         wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
-        wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=self.width)
+        wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=width)
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
 
