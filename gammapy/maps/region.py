@@ -23,6 +23,9 @@ __all__ = ["RegionGeom"]
 
 class RegionGeom(Geom):
     """Map geometry representing a region on the sky.
+    The resulting object is effectively "one large pixel" with
+    the chosen shape and dimensions.
+    ADD: how is this different from an astropy region?
 
     Parameters
     ----------
@@ -106,6 +109,7 @@ class RegionGeom(Geom):
 
     @property
     def center_pix(self):
+        """Pixel values corresponding to the center of the region"""
         return tuple((np.array(self.data_shape) - 1.0) / 2)[::-1]
 
     @property
@@ -120,6 +124,21 @@ class RegionGeom(Geom):
             return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
 
     def contains(self, coords):
+        """Check if the input coordinates are inside the region.
+            Requires the `.region` attribute to be set.
+
+        Parameters
+        ----------
+        coords : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
+            Object containing coordinate arrays we wish to check for inclusion
+            in the region.
+
+        Returns
+        -------
+        mask : `~numpy.ndarray`
+            Boolean Numpy array with the same shape as the input that indicates
+            which coordinates are inside the region.
+        """
         if self.region is None:
             raise ValueError("Region definition required.")
 
@@ -127,6 +146,18 @@ class RegionGeom(Geom):
         return self.region.contains(coords.skycoord, self.wcs)
 
     def separation(self, position):
+        """Angular distance between the center of the region and the given position.
+
+        Parameters
+        ----------
+        position : `astropy.coordinates.SkyCoord`
+            Sky coordinate we want the angular distance to.
+
+        Returns
+        -------
+        sep : `~astropy.coordinates.Angle`
+            The on-sky separation between the given coordinate and the region center.
+        """
         return self.center_skydir.separation(position)
 
     @property
