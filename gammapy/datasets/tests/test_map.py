@@ -120,10 +120,6 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
         edisp = EDispKernelMap.from_diagonal_response(
             energy_axis=e_reco, energy_axis_true=e_true
         )
-    elif edisp == "edispkernel":
-        edisp = EDispKernel.from_diagonal_response(
-            energy_true=e_true.edges, energy=e_reco.edges
-        )
     else:
         edisp = None
 
@@ -200,7 +196,7 @@ def test_different_exposure_unit(sky_model, geom):
     assert_allclose(npred.data[0, 50, 50], 6.086019)
 
 
-@pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap", "edispkernel"])
+@pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap"])
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
 
