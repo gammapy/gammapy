@@ -263,6 +263,16 @@ def test_to_wcs_geom(region):
     assert wcs_geom_cube.to_image() == wcs_geom
     assert wcs_geom_cube.axes[0] == axis
 
+    # test with minimum widths
+    width_min = 3*u.deg
+    wcs_geom = geom.to_wcs_geom(width_min=width_min)
+    assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
+    assert_allclose(wcs_geom.width, [[3], [3]]*u.deg, rtol=1, atol=0)
+
+    width_min = [1,3]*u.deg
+    wcs_geom = geom.to_wcs_geom(width_min=width_min)
+    assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
+    assert_allclose(wcs_geom.width, [[2], [3]]*u.deg, rtol=1, atol=0)
 
 def test_get_wcs_coord(region):
     # test on circular region
