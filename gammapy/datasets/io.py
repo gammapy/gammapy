@@ -12,8 +12,12 @@ from gammapy.irf import EDispKernelMap, EDispKernel
 from .spectrum import SpectrumDatasetOnOff
 
 
+__all__ = ["DatasetWriter", "DatasetReader", "OGIPDatasetReader", "OGIPDatasetWriter"]
+
+
 class DatasetReader(abc.ABC):
     """Dataset reader base class"""
+
     @property
     @abc.abstractmethod
     def tag(self):
@@ -127,7 +131,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `SpectrumDatasetOnOff`
             Dataset to write
         """
         filenames = self.get_filenames(dataset)
@@ -142,12 +146,29 @@ class OGIPDatasetWriter(DatasetWriter):
             self.write_edisp(dataset, filename=filenames["respfile"])
 
     def write_edisp(self, dataset, filename):
-        """Write energy dispersion"""
+        """Write energy dispersion.
+
+        Parameters
+        ----------
+        dataset : `SpectrumDatasetOnOff`
+            Dataset to write
+        filename : str
+            Filename to use.
+        """
         kernel = dataset.edisp.get_edisp_kernel()
         kernel.write(self.outdir / filename, overwrite=self.overwrite, use_sherpa=self.use_sherpa)
 
     def write_aeff(self, dataset, filename):
-        """Write effective area"""
+        """Write effective area
+
+        Parameters
+        ----------
+        dataset : `SpectrumDatasetOnOff`
+            Dataset to write
+        filename : str
+            Filename to use.
+
+        """
         aeff = dataset.exposure / dataset.exposure.meta["livetime"]
 
         hdu_format = "ogip-sherpa" if self.use_sherpa else "ogip"
@@ -160,7 +181,15 @@ class OGIPDatasetWriter(DatasetWriter):
         )
 
     def to_counts_hdulist(self, dataset, is_counts_off=False):
-        """"""
+        """Convert counts region map to hdulist
+
+        Parameters
+        ----------
+        dataset : `SpectrumDatasetOnOff`
+            Dataset to write
+        is_counts_off : bool
+            Whether to use counts off.
+        """
         counts = dataset.counts_off if is_counts_off else dataset.counts
         acceptance = dataset.acceptance_off if is_counts_off else dataset.acceptance
 
@@ -199,7 +228,16 @@ class OGIPDatasetWriter(DatasetWriter):
         return hdulist
 
     def write_counts(self, dataset, filename):
-        """Write counts file"""
+        """Write counts file
+
+        Parameters
+        ----------
+        dataset : `SpectrumDatasetOnOff`
+            Dataset to write
+        filename : str
+            Filename to use.
+
+        """
         hdulist = self.to_counts_hdulist(dataset)
 
         if dataset.gti:
@@ -209,7 +247,15 @@ class OGIPDatasetWriter(DatasetWriter):
         hdulist.writeto(str(self.outdir / filename), overwrite=self.overwrite)
 
     def write_counts_off(self, dataset, filename):
-        """Write off counts file"""
+        """Write off counts file
+
+        Parameters
+        ----------
+        dataset : `SpectrumDatasetOnOff`
+            Dataset to write
+        filename : str
+            Filename to use.
+        """
         hdulist = self.to_counts_hdulist(dataset, is_counts_off=True)
         hdulist.writeto(str(self.outdir / filename), overwrite=self.overwrite)
 
