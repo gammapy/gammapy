@@ -11,6 +11,7 @@ from gammapy.utils.regions import (
     list_to_compound_region,
     make_region,
 )
+from gammapy.maps.wcs import _check_width
 from .core import MapCoord
 from .geom import Geom, MapAxes, MapAxis, pix_tuple_to_idx
 from .wcs import WcsGeom
@@ -185,17 +186,28 @@ class RegionGeom(Geom):
 
         return bin_volume
 
-    def to_wcs_geom(self):
+    def to_wcs_geom(self, width_min=None):
         """Get the minimal equivalent geometry that
             contains the region.
+
+        Parameters
+         ----------
+        width_min : `~astropy.quantity.Quantity`
+        Minimal width for the resulting geometry.
+        Can be a single number or two, for 
+        different minimum widths in each spatial dimension.
 
         Returns
         -------
         wcs_geom : `~WcsGeom`
             A WCS geometry object.
         """
+        if width_min is not None:
+            width = np.min([self.width.to_value("deg"), _check_width(width_min)], axis=0)
+        else:
+            width = self.width
         wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
-        wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=self.width)
+        wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=width)
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
 
