@@ -11,6 +11,7 @@ from gammapy.utils.regions import (
     list_to_compound_region,
     make_region,
 )
+from gammapy.maps.wcs import _check_width
 from .core import MapCoord
 from .geom import Geom, MapAxes, MapAxis, pix_tuple_to_idx
 from .wcs import WcsGeom
@@ -191,10 +192,10 @@ class RegionGeom(Geom):
 
         Parameters
          ----------
-            width_min : `~astropy.quantity.Quantity`
-            Minimal width for the resulting geometry.
-            Can be a single number or two, for 
-            different minimum widths in each spatial dimension.
+        width_min : `~astropy.quantity.Quantity`
+        Minimal width for the resulting geometry.
+        Can be a single number or two, for 
+        different minimum widths in each spatial dimension.
 
         Returns
         -------
@@ -202,12 +203,7 @@ class RegionGeom(Geom):
             A WCS geometry object.
         """
         if width_min is not None:
-            if np.size(width_min)==1:
-                width_min = 2*[width_min.value]*width_min.unit
-            width = self.width.copy()
-            for idx, entry in enumerate(width_min):
-                if entry > self.width[idx]:
-                   width[idx] = entry
+            width = np.min([self.width.to_value("deg"), _check_width(width_min)], axis=0)
         else:
             width = self.width
         wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
