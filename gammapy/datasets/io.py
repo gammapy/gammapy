@@ -86,14 +86,14 @@ class OGIPDatasetWriter(DatasetWriter):
         # TODO: allow arbitrary filenames?
         phafile = f"pha_obs{name}.fits"
         return {
-            "phafile": outdir / phafile,
-            "respfile": outdir/ phafile.replace("pha", "rmf"),
-            "backfile": outdir / phafile.replace("pha", "bkg"),
-            "ancrfile": outdir / phafile.replace("pha", "arf")
+            "phafile": str(outdir / phafile),
+            "respfile": str(outdir / phafile.replace("pha", "rmf")),
+            "backfile": str(outdir / phafile.replace("pha", "bkg")),
+            "ancrfile": str(outdir / phafile.replace("pha", "arf"))
         }
 
     @staticmethod
-    def get_ogip_meta(dataset):
+    def get_ogip_meta(dataset, is_bkg=False):
         """Meta info for the OGIP data format"""
         try:
             livetime = dataset.exposure.meta["livetime"]
@@ -102,10 +102,14 @@ class OGIPDatasetWriter(DatasetWriter):
                 "Storing in ogip format require the livetime "
                 "to be defined in the exposure meta data"
             )
-        return {
+
+        hdu_class = "BKG" if is_bkg else "TOTAL"
+
+        meta = {
             "name": "SPECTRUM",
             "hduclass": "OGIP",
             "hduclas1": "SPECTRUM",
+            "hduclas2": hdu_class,
             "corrscal": "",
             "chantype": "PHA",
             "detchans": dataset.counts.geom.axes[0].nbin,
@@ -120,6 +124,12 @@ class OGIPDatasetWriter(DatasetWriter):
             "obs_id": dataset.name,
         }
 
+        if not is_bkg:
+            filenames = OGIPDatasetWriter.get_filenames(outdir=Path(""), name=dataset.name)
+            meta.update(filenames)
+
+        return meta
+
     def write(self, dataset):
         """Write dataset to files
 
@@ -128,7 +138,7 @@ class OGIPDatasetWriter(DatasetWriter):
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         """
-        filenames = self.get_filenames(self.outdir, dataset.name)
+        filenames = self.get_filenames(outdir=self.outdir, name=dataset.name)
 
         self.write_pha(dataset, filename=filenames["phafile"])
         self.write_arf(dataset, filename=filenames["ancrfile"])
@@ -169,27 +179,29 @@ class OGIPDatasetWriter(DatasetWriter):
         """
         aeff = dataset.exposure / dataset.exposure.meta["livetime"]
 
-        hdu_format = "ogip-sherpa" if self.use_sherpa else "ogip"
+        format = "ogip-sherpa" if self.use_sherpa else "ogip"
 
         aeff.write(
             filename=filename,
             overwrite=self.overwrite,
-            format=hdu_format,
+            format=format,
             ogip_column="SPECRESP",
         )
 
-    def to_counts_hdulist(self, dataset, is_counts_off=False):
+    def to_counts_hdulist(self, dataset, is_bkg=False):
         """Convert counts region map to hdulist
 
         Parameters
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
-        is_counts_off : bool
+        is_bkg : bool
             Whether to use counts off.
         """
-        counts = dataset.counts_off if is_counts_off else dataset.counts
-        acceptance = dataset.acceptance_off if is_counts_off else dataset.acceptance
+        hdulist = fits.HDUList()
+
+        counts = dataset.counts_off if is_bkg else dataset.counts
+        acceptance = dataset.acceptance_off if is_bkg else dataset.acceptance
 
         table = counts.to_table()
         table["QUALITY"] = np.logical_not(dataset.mask_safe.data[:, 0, 0])
@@ -197,32 +209,13 @@ class OGIPDatasetWriter(DatasetWriter):
         table["AREASCAL"] = np.ones(acceptance.data.size)
 
         # prepare meta data
-        meta = self.get_ogip_meta(dataset)
+        table.meta = self.get_ogip_meta(dataset, is_bkg=is_bkg)
+        hdulist.append(fits.BinTableHDU(table, name=table.meta["name"]))
 
-        if is_counts_off:
-            meta["hduclas2"] = "BKG"
-        else:
-            meta.update(self.get_filenames(self.outdir, dataset.name))
-            meta["hduclas2"] = "TOTAL"
+        format = "ogip-sherpa" if self.use_sherpa else "ogip"
+        hdulist_geom = counts.geom.to_hdulist(format=format)[1:]
 
-        table.meta = meta
-
-        name = table.meta["name"]
-        hdu = fits.BinTableHDU(table, name=name)
-
-        energy_axis = dataset.counts.geom.axes[0]
-
-        hdu_format = "ogip-sherpa" if self.use_sherpa else "ogip"
-
-        hdulist = fits.HDUList(
-            [fits.PrimaryHDU(), hdu, energy_axis.to_table_hdu(format=hdu_format)]
-        )
-
-        if counts.geom.region:
-            region_table = counts.geom._to_region_table()
-            region_hdu = fits.BinTableHDU(region_table, name="REGION")
-            hdulist.append(region_hdu)
-
+        hdulist.extend(hdulist_geom)
         return hdulist
 
     def write_pha(self, dataset, filename):
@@ -254,7 +247,7 @@ class OGIPDatasetWriter(DatasetWriter):
         filename : str or `Path`
             Filename to use.
         """
-        hdulist = self.to_counts_hdulist(dataset, is_counts_off=True)
+        hdulist = self.to_counts_hdulist(dataset, is_bkg=True)
         hdulist.writeto(filename, overwrite=self.overwrite)
 
 

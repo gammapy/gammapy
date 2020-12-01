@@ -2,6 +2,7 @@ import copy
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
@@ -353,6 +354,34 @@ class RegionGeom(Geom):
         table = fits_region_objects_to_table(pixel_region_list)
         table.meta.update(self.wcs.to_header())
         return table
+
+    def to_hdulist(self, format="ogip"):
+        """Convert geom to hdulist
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa"}
+            HDU format
+
+        Returns
+        -------
+        hdulist : `~astropy.io.fits.HDUList`
+            HDU list
+
+        """
+        hdulist = fits.HDUList()
+
+        # energy bounds HDU
+        energy_axis = self.axes["energy"]
+        hdulist.append(energy_axis.to_table_hdu(format=format))
+
+        # region HDU
+        if self.region:
+            region_table = self._to_region_table()
+            region_hdu = fits.BinTableHDU(region_table, name="REGION")
+            hdulist.append(region_hdu)
+
+        return hdulist
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip"):
