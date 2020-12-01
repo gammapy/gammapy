@@ -492,6 +492,11 @@ class TestSpectrumOnOff:
         expected_regions = compound_region_to_list(self.off_counts.geom.region)
         regions = compound_region_to_list(newdataset.counts_off.geom.region)
 
+        assert newdataset.counts.meta["PHAFILE"] == "pha_obstest.fits"
+        assert newdataset.counts.meta["RESPFILE"] == "rmf_obstest.fits"
+        assert newdataset.counts.meta["BACKFILE"] == "bkg_obstest.fits"
+        assert newdataset.counts.meta["ANCRFILE"] == "arf_obstest.fits"
+
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
         assert_allclose(self.edisp.edisp_map.data, newdataset.edisp.edisp_map.data)

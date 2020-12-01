@@ -328,9 +328,14 @@ class RegionNDMap(Map):
         table = Table.read(hdulist[hdu])
         geom = RegionGeom.from_hdulist(hdulist, format=format)
 
-        data = table[ogip_column].quantity
+        quantity = table[ogip_column].quantity
 
-        return cls(geom=geom, data=data.value, meta=table.meta, unit=data.unit)
+        if ogip_column == "QUALITY":
+            data, unit = np.logical_not(quantity.value), ""
+        else:
+            data, unit = quantity.value, quantity.unit
+
+        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
