@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 import astropy.units as u
+from numpy.testing import assert_allclose
 from gammapy.modeling.models import (
     BackgroundModel,
     GaussianSpatialModel,
@@ -84,3 +85,23 @@ def test_select(models):
         mask = models.mask(**cdt)
         selected = models.select(mask)
         assert selected.names == xp
+
+    mask = models.mask(**conditions[4]) | models.mask(**conditions[6])
+    selected = models.select(mask)
+    assert selected.names == ["source-3", "bkg1", "bkg2"]
+
+
+def test_restore_status(models):
+
+    with models.parameters.restore_status(restore_values=True):
+        models[1].spectral_model.amplitude.value = 0
+        models[1].spectral_model.amplitude.frozen = True
+        assert models[1].spectral_model.amplitude.value == 0
+        assert models[1].spectral_model.amplitude.frozen == True
+    assert_allclose(models[1].spectral_model.amplitude.value, 1e-11)
+    assert models[1].spectral_model.amplitude.frozen == False
+
+    with models.parameters.restore_status(restore_values=False):
+        models[1].spectral_model.amplitude.value = 0
+        models[1].spectral_model.amplitude.frozen = True
+    assert models[1].spectral_model.amplitude.value == 0

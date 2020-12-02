@@ -251,8 +251,8 @@ class Parameter:
         """Update parameters from a dict.
            Protection against changing parameter name."""
         data.pop("name")
-        for k in data.keys(): setattr(self, k, data[k])
-
+        for k in data.keys():
+            setattr(self, k, data[k])
 
     def to_dict(self):
         """Convert to dict."""
@@ -466,12 +466,16 @@ class Parameters(collections.abc.Sequence):
         for par in self._parameters:
             par.autoscale(method)
 
-    @property
-    def restore_values(self):
-        """Context manager to restore values.
+    def restore_status(self, restore_values=True):
+        """Context manager to restore status.
 
         A copy of the values is made on enter,
         and those values are restored on exit.
+
+        Parameters
+        ----------
+        restore_values : bool
+            Restore values if True, otherwise restore only frozen status.
 
         Examples
         --------
@@ -479,11 +483,11 @@ class Parameters(collections.abc.Sequence):
 
             from gammapy.modeling.models import PowerLawSpectralModel
             pwl = PowerLawSpectralModel(index=2)
-            with pwl.parameters.restore_values:
+            with pwl.parameters.restore_status():
                 pwl.parameters["index"].value = 3
             print(pwl.parameters["index"].value)
         """
-        return restore_parameters_values(self)
+        return restore_parameters_status(self, restore_values)
 
     def freeze_all(self):
         """Freeze all parameters"""
@@ -491,8 +495,9 @@ class Parameters(collections.abc.Sequence):
             par.frozen = True
 
 
-class restore_parameters_values:
-    def __init__(self, parameters):
+class restore_parameters_status:
+    def __init__(self, parameters, restore_values=True):
+        self.restore_values = restore_values
         self._parameters = parameters
         self.values = [_.value for _ in parameters]
         self.frozen = [_.frozen for _ in parameters]
@@ -501,6 +506,9 @@ class restore_parameters_values:
         pass
 
     def __exit__(self, type, value, traceback):
+        # TODO: also restore the covariance ?
+        # (for now reset to zero if frosen==False)
         for value, par, frozen in zip(self.values, self._parameters, self.frozen):
-            par.value = value
+            if self.restore_values:
+                par.value = value
             par.frozen = frozen
