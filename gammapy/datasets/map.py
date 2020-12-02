@@ -14,7 +14,7 @@ from gammapy.irf.edisp_map import EDispKernelMap, EDispMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
-from gammapy.modeling.models import BackgroundModel, DatasetModels
+from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
@@ -176,12 +176,16 @@ class MapDataset(Dataset):
         self.mask_fit = mask_fit
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
-            raise ValueError(f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}")
+            raise ValueError(
+                f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
+            )
 
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
-            raise ValueError(f"'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' object, got {type(edisp)}")
+            raise ValueError(
+                f"'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' object, got {type(edisp)}"
+            )
 
         self.edisp = edisp
         self.mask_safe = mask_safe
@@ -283,18 +287,20 @@ class MapDataset(Dataset):
         self._evaluators = {}
 
         if models is not None:
-            models = DatasetModels(models).select(dataset_name=self.name)
+            models = DatasetModels(models)
+            models = models.select(models.mask(datasets_names=self.name))
 
-            for model in models.select(tag="sky-model"):
-                evaluator = MapEvaluator(
-                    model=model,
-                    evaluation_mode=EVALUATION_MODE,
-                    gti=self.gti,
-                    use_cache=USE_NPRED_CACHE,
-                )
-                # TODO: do we need the update here?
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-                self._evaluators[model.name] = evaluator
+            for model in models:
+                if not isinstance(model, FoVBackgroundModel):
+                    evaluator = MapEvaluator(
+                        model=model,
+                        evaluation_mode=EVALUATION_MODE,
+                        gti=self.gti,
+                        use_cache=USE_NPRED_CACHE,
+                    )
+                    # TODO: do we need the update here?
+                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                    self._evaluators[model.name] = evaluator
 
         self._models = models
 

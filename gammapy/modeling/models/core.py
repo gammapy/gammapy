@@ -455,43 +455,93 @@ class DatasetModels(collections.abc.Sequence):
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def select(self, dataset_name=None, tag=None, name_substring=None):
-        """Select subset of models correspondiog to a given dataset
+    def select(self, mask):
+        """Select subset of models from a mask
 
         Parameters
         ----------
-        dataset_name : str
-            Name of the dataset
-        tag : str
-            Model tag
-        name_substring : str
-            Substring contained in the model name
+        mask : `numpy.array`
+            Boolean mask
 
         Returns
         -------
         dataset_model : `DatasetModels`
             Dataset models
         """
-        models = []
-
-        for model in self:
-            selection = True
-
-            if dataset_name:
-                selection &= (
-                    model.datasets_names is None or dataset_name in model.datasets_names
-                )
-
-            if tag:
-                selection &= tag in model.tag
-
-            if name_substring:
-                selection &= name_substring in model.name
-
-            if selection:
-                models.append(model)
+        models = list(np.array(self)[mask])
 
         return self.__class__(models)
+
+    def mask(
+        self,
+        name_substring=None,
+        datasets_names=None,
+        tag=None,
+        spatial_tag=None,
+        spectral_tag=None,
+        frozen=None,
+    ):
+        """create a mask of models, true if all condition are verified
+        name_substring : str
+            Substring contained in the model name
+        dataset_name : str or list
+            Name of the dataset
+        tag : str or list
+            Model tag
+        spatial_tag : str or list
+            Spatial model tag if any
+        spectral_tag : str or list
+            Spectral model tag
+        frozen : bool
+            Select models with all parameters frozen if True, exclude them if False.
+        Returns
+        -------
+        mask : `numpy.array`
+            Boolean mask
+        """
+
+        selection = np.ones(len(self), dtype=bool)
+
+        for km, model in enumerate(self):
+            if name_substring:
+                selection[km] &= name_substring in model.name
+            if datasets_names:
+                if not isinstance(datasets_names, list):
+                    datasets_names = [datasets_names]
+                selection[km] &= model.datasets_names is None or np.any(
+                    [name in model.datasets_names for name in datasets_names]
+                )
+            if tag:
+                if not isinstance(tag, list):
+                    tag = [tag]
+                inlist = np.any([t in model.tag for t in tag])
+                selection[km] &= tag == model.tag or inlist
+            if spatial_tag:
+                if not isinstance(spatial_tag, list):
+                    spatial_tag = [spatial_tag]
+                if hasattr(model, "spatial_model"):
+                    selection[km] &= np.any(
+                        [t in model.spatial_model.tag for t in spatial_tag]
+                    )
+                else:
+                    selection[km] &= False
+            if spectral_tag:
+                if not isinstance(spectral_tag, list):
+                    spectral_tag = [spectral_tag]
+                if hasattr(model, "_spectral_model"):
+                    # use private attr to support BackgroundModel
+                    selection[km] &= np.any(
+                        [t in model._spectral_model.tag for t in spectral_tag]
+                    )
+                else:
+                    selection[km] &= False
+            if frozen is not None:
+                all_frozen = np.all([p.frozen for p in model.parameters])
+                if frozen == True:
+                    selection[km] &= all_frozen
+                else:
+                    selection[km] &= ~all_frozen
+        return selection
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
