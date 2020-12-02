@@ -197,10 +197,6 @@ class MapDataset(Dataset):
         except (ValueError, TypeError):
             pass
 
-    @property
-    def name(self):
-        return self._name
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__) + "\n"
@@ -1093,10 +1089,6 @@ class MapDataset(Dataset):
         filename = make_path(data["filename"])
         dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
         return dataset
-
-    def to_dict(self, filename=""):
-        """Convert to dict for YAML serialization."""
-        return {"name": self.name, "type": self.tag, "filename": str(filename)}
 
     def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy

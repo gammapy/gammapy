@@ -41,6 +41,16 @@ class Dataset(abc.ABC):
         pass
 
     @property
+    def name(self):
+        return self._name
+
+    def to_dict(self):
+        """Convert to dict for YAML serialization."""
+        name = self.name.replace(" ", "_")
+        filename = f"{name}.fits"
+        return {"name": self.name, "type": self.tag, "filename": filename}
+
+    @property
     def mask(self):
         """Combined fit and safe mask"""
         if self.mask_safe is not None and self.mask_fit is not None:
@@ -360,15 +370,14 @@ class Datasets(collections.abc.MutableSequence):
         write_covariance : bool
             save covariance or not
         """
-        path = make_path(filename).resolve()
+        path = make_path(filename)
 
         data = {"datasets": []}
 
         for dataset in self._datasets:
-            name = dataset.name.replace(" ", "_")
-            filename = f"{name}.fits"
-            dataset.write(path.parent / filename, overwrite=overwrite)
-            data["datasets"].append(dataset.to_dict(filename=filename))
+            d = dataset.to_dict()
+            dataset.write(path.parent / d["filename"], overwrite=overwrite)
+            data["datasets"].append(d)
 
         write_yaml(data, path, sort_keys=False)
 

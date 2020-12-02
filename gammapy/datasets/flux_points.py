@@ -147,14 +147,6 @@ class FluxPointsDataset(Dataset):
             mask_safe=mask_safe,
         )
 
-    def to_dict(self, filename=""):
-        """Convert to dict for YAML serialization."""
-        return {
-            "name": self.name,
-            "type": self.tag,
-            "filename": str(filename),
-        }
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__) + "\n"

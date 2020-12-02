@@ -1,14 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from pathlib import Path
 import numpy as np
-from astropy import units as u
-from astropy.io import fits
-from astropy.table import Table
-from gammapy.data import GTI
-from gammapy.irf import EDispKernel, EDispKernelMap
-from gammapy.maps import RegionNDMap
-from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.scripts import make_path
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes, get_figure
 
@@ -236,95 +229,53 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     def plot_residuals_spatial(self, *args, **kwargs):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
+    def to_hdulist(self, *args, **kwargs):
+        raise NotImplementedError("Method not supported on a spectrum dataset")
+
+    def from_hdulist(self, *args, **kwargs):
+        raise NotImplementedError("Method not supported on a spectrum dataset")
+
     @classmethod
     def read(cls, filename):
         """Read from file
 
         For now, filename is assumed to the name of a PHA file where BKG file, ARF, and RMF names
-        must be set in the PHA header and be present in the same folder
+        must be set in the PHA header and be present in the same folder.
+
+        For formats specs see `OGIPDatasetReader.read`
 
         Parameters
         ----------
-        filename : str
-            OGIP PHA file to read
-        """
-        raise NotImplementedError(
-            "To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files."
-        )
-
-    def to_ogip_files(self, outdir=None, use_sherpa=False, overwrite=False):
-        """Write OGIP files.
-
-        If you want to use the written files with Sherpa you have to set the
-        ``use_sherpa`` flag. Then all files will be written in units 'keV' and
-        'cm2'.
-
-        The naming scheme is fixed, with {name} the dataset name:
-
-        * PHA file is named pha_obs{name}.fits
-        * BKG file is named bkg_obs{name}.fits
-        * ARF file is named arf_obs{name}.fits
-        * RMF file is named rmf_obs{name}.fits
-
-        Parameters
-        ----------
-        outdir : `pathlib.Path`
-            output directory, default: pwd
-        use_sherpa : bool, optional
-            Write Sherpa compliant files, default: False
-        overwrite : bool
-            Overwrite existing files?
-        """
-        from .io import OGIPDatasetWriter
-        writer = OGIPDatasetWriter(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)
-        writer.write(self)
-
-    @classmethod
-    def from_ogip_files(cls, filename):
-        """Read `~gammapy.datasets.SpectrumDatasetOnOff` from OGIP files.
-
-        BKG file, ARF, and RMF must be set in the PHA header and be present in
-        the same folder.
-
-        The naming scheme is fixed to the following scheme:
-
-        * PHA file is named ``pha_obs{name}.fits``
-        * BKG file is named ``bkg_obs{name}.fits``
-        * ARF file is named ``arf_obs{name}.fits``
-        * RMF file is named ``rmf_obs{name}.fits``
-          with ``{name}`` the dataset name.
-
-        Parameters
-        ----------
-        filename : str
+        filename : `~pathlib.Path` or str
             OGIP PHA file to read
         """
         from .io import OGIPDatasetReader
-
         reader = OGIPDatasetReader(filename=filename)
         return reader.read()
 
-    def to_dict(self, filename, *args, **kwargs):
-        """Convert to dict for YAML serialization."""
-        outdir = Path(filename).parent
-        filename = str(outdir / f"pha_obs{self.name}.fits")
-
-        return {"name": self.name, "type": self.tag, "filename": filename}
-
-    def write(self, filename, overwrite):
+    def write(self, outdir, overwrite=False, format="ogip"):
         """Write spectrum dataset on off to file.
 
         Currently only the OGIP format is supported
 
+        For formats specs see `OGIPDatasetWriter.write`
+
         Parameters
         ----------
-        filename : str
-            Filename to write to.
+        outdir : `~pathlib.Path` or str
+            Output directory to write to.
         overwrite : bool
             Overwrite existing file.
+        format : {"ogip", "ogip-sherpa"}
+            Format to use.
         """
-        outdir = Path(filename).parent
-        self.to_ogip_files(outdir=outdir, overwrite=overwrite)
+        from .io import OGIPDatasetWriter
+        outdir = make_path(outdir)
+
+        use_sherpa = format == "ogip-sherpa"
+
+        writer = OGIPDatasetWriter(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)
+        writer.write(self)
 
     @classmethod
     def from_dict(cls, data, **kwargs):
@@ -343,9 +294,14 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         """
 
         filename = make_path(data["filename"])
-        dataset = cls.from_ogip_files(filename=filename)
+        dataset = cls.read(filename=filename)
         dataset.mask_fit = None
         return dataset
+
+    def to_dict(self):
+        """Convert to dict for YAML serialization."""
+        filename = f"pha_obs{self.name}.fits"
+        return {"name": self.name, "type": self.tag, "filename": filename}
 
     @classmethod
     def from_spectrum_dataset(
@@ -388,15 +344,4 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         dataset: `SpectrumDataset`
             SpectrumDatset with cash statistics
         """
-        name = make_name(name)
-        return SpectrumDataset(
-            counts=self.counts,
-            exposure=self.exposure,
-            edisp=self.edisp,
-            name=name,
-            gti=self.gti,
-            mask_fit=self.mask_fit,
-            mask_safe=self.mask_safe,
-            meta_table=self.meta_table,
-            background=self.background,
-        )
+        return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)

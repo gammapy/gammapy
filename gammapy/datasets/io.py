@@ -54,7 +54,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
     Parameters
     ----------
-    outdir : `pathlib.Path`
+    outdir : `pathlib.Path` or str
         output directory, default: pwd
     use_sherpa : bool, optional
         Write Sherpa compliant files, default: False
