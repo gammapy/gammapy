@@ -76,8 +76,8 @@ This diversity of output formats and flux types could be simplified with better 
 We propose below a generalized flux points API.
 
 
-Proposal
-========
+Proposal of API for flux estimate results
+=========================================
 
 Rely internally on likelihood SED type
 --------------------------------------
@@ -215,6 +215,38 @@ A dedicated API could be introduced to support these objects. In order to keep t
     print(lc.times)
 
     lc.get_lightcurve()
+
+
+Unification of flux estimators?
+===============================
+
+Most estimators actually do the same thing: `LightCurveEstimator`` is simply grouping datasets in time
+intervals and applies ``FluxPointsEstimator`` in each interval. Similarly, the ``ExcessProfileEstimator``
+is performing a similar thing in different regions. The necessity of a specific estimator for all
+these tasks is then questionable. Currently, the responsibility of an estimator is to group and reproject
+datasets in the relevant intervals or group of data and then to apply a general flux or excess estimate.
+
+In practice there are two different types of estimators. We can distinguish these:
+
+- Flux estimators perform a fit of all individual counts inside the requested range
+(energy-bin and/or spatial box) to obtain a flux given a certain physical model. Because
+it relies on a fit of the complete model,this approach allows to take into account fluctuations
+of other parameters by performing re-optimization.
+
+- Excess estimators sum all counts inside the requested range and estimate the corresponding excess
+counts taking into account background and other signal contributions from other sources. No explicit
+fit is actually performed, since we rely on ``CountsStatistics`` classes. The flux is then deduced
+computing the ratio of measured excess to total ``npred`` in a given model assumption.
+
+Currently, the ``FluxPointsEstimator`` and the ``LightCurveEstimator`` belong to the first category.
+The ``TSMapEstimator`` a priori belongs there as well although our current implementation does not
+allow for other parameters re-optimization. A more general implementation could also rely on
+``FluxPointsEstimator``.
+
+The ``ExcessMapEstimator`` and ``ExcessProfileEstimator`` are following the second approach (as
+their name suggest), but they still provide flux estimates through the excess/npred ratio. We note
+that flux points and light curve can also be estimated through this approach to provide rapid estimates.
+
 
 
 Alternative
