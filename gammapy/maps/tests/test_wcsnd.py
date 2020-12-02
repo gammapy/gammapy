@@ -592,6 +592,14 @@ def test_plot_allsky():
         m.plot()
 
 
+@requires_dependency("matplotlib")
+def test_plot_nan():
+    m = Map.create(width=10, binsz=1)
+    m.data += np.nan
+    with mpl_plot_check():
+        m.plot(add_cbar=False)
+
+
 def test_get_spectrum():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
 
