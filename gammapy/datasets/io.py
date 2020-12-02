@@ -41,8 +41,8 @@ class DatasetWriter(abc.ABC):
 class OGIPDatasetWriter(DatasetWriter):
     """Write OGIP files.
 
-    If you want to use the written files with Sherpa you have to set the
-    ``use_sherpa`` flag. Then all files will be written in units 'keV' and
+    If you want to use the written files with Sherpa you have to use the
+    ``ogip-sherpa`` format. Then all files will be written in units of 'keV' and
     'cm2'.
 
     The naming scheme is fixed, with {name} the dataset name:
@@ -56,19 +56,19 @@ class OGIPDatasetWriter(DatasetWriter):
     ----------
     outdir : `pathlib.Path` or str
         output directory, default: pwd
-    use_sherpa : bool, optional
-        Write Sherpa compliant files, default: False
+    format : {"ogip", "ogip-sherpa"}
+        Which format to use.
     overwrite : bool
         Overwrite existing files?
     """
-    tag = "ogip"
+    tag = ["ogip", "ogip-sherpa"]
 
-    def __init__(self, outdir=None, use_sherpa=False, overwrite=False):
+    def __init__(self, outdir=None, format="ogip", overwrite=False):
         outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
         self.outdir = outdir
-        self.use_sherpa = use_sherpa
+        self.format = format
         self.overwrite = overwrite
 
     @staticmethod
@@ -163,7 +163,7 @@ class OGIPDatasetWriter(DatasetWriter):
         kernel.write(
             filename=filename,
             overwrite=self.overwrite,
-            use_sherpa=self.use_sherpa
+            format=self.format
         )
 
     def write_arf(self, dataset, filename):
@@ -178,13 +178,10 @@ class OGIPDatasetWriter(DatasetWriter):
 
         """
         aeff = dataset.exposure / dataset.exposure.meta["livetime"]
-
-        format = "ogip-sherpa" if self.use_sherpa else "ogip"
-
         aeff.write(
             filename=filename,
             overwrite=self.overwrite,
-            format=format,
+            format=self.format,
             ogip_column="SPECRESP",
         )
 
@@ -212,8 +209,7 @@ class OGIPDatasetWriter(DatasetWriter):
         table.meta = self.get_ogip_meta(dataset, is_bkg=is_bkg)
         hdulist.append(fits.BinTableHDU(table, name=table.meta["name"]))
 
-        format = "ogip-sherpa" if self.use_sherpa else "ogip"
-        hdulist_geom = counts.geom.to_hdulist(format=format)[1:]
+        hdulist_geom = counts.geom.to_hdulist(format=self.format)[1:]
 
         hdulist.extend(hdulist_geom)
         return hdulist

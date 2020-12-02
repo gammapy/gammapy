@@ -271,10 +271,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         """
         from .io import OGIPDatasetWriter
         outdir = make_path(outdir)
-
-        use_sherpa = format == "ogip-sherpa"
-
-        writer = OGIPDatasetWriter(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)
+        writer = OGIPDatasetWriter(outdir=outdir, format=format, overwrite=overwrite)
         writer.write(self)
 
     @classmethod

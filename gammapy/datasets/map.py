@@ -1263,8 +1263,10 @@ class MapDataset(Dataset):
         # TODO: Compute average edisp in region
         if self.edisp is not None:
             energy_axis = self._geom.axes["energy"]
+
+            position = None if on_region is None else on_region.center
             edisp = self.edisp.get_edisp_kernel(
-                on_region.center, energy_axis=energy_axis
+                position=position, energy_axis=energy_axis
             )
 
             edisp = EDispKernelMap.from_edisp_kernel(
