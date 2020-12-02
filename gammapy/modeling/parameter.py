@@ -249,9 +249,9 @@ class Parameter:
 
     def update_from_dict(self, data):
         """Update parameters from a dict.
-           Protection against changing parameter mode, type, name."""
-        [data.pop(k) for k in ["model", "type", "name", "error"]] 
-        for k in data.keys(): setattr(self, k, data[k])
+           Protection against changing parameter model, type, name."""
+        keys=["value", "unit", "min", "max", "frozen"]
+        for k in keys: setattr(self, k, data[k])
 
 
     def to_dict(self):
@@ -441,20 +441,6 @@ class Parameters(collections.abc.Sequence):
             parameter._link_label_io = link_label
             parameters.append(parameter)
         return cls(parameters=parameters)
-
-    def set_parameters_from_table(self, t):
-        """Update Models from an astropy Table."""
-#        self._check_non_editable_columns(t, self._table_cached)
-        parameters_dict = [dict(zip( t.colnames, row)) for row in t]
-        #Astropy Table has masked values for NaN. Replacing with np.nan in dict.
-        for k, data in enumerate(parameters_dict):
-            parameters_dict[k]['frozen']=bool(data['frozen'])
-            pars=['min','max']
-            for p in pars:
-                if type(data[p]) is np.ma.core.MaskedConstant:
-                    parameters_dict[k][p] = np.nan        
-        for k, data in enumerate(parameters_dict):
-            self.parameters[k].update_from_dict(data)
 
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.

@@ -172,7 +172,7 @@ def test_parameters_autoscale():
 def test_update_from_dict():
     par = Parameter("test", value=1e-10, min="nan", max="nan", frozen=False, unit="TeV")
     par.autoscale()
-    data={"name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
+    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
     par.update_from_dict(data)
     assert par.name == "test"
     assert par.factor == 3
