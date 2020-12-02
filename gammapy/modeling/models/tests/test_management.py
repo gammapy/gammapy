@@ -105,3 +105,21 @@ def test_restore_status(models):
         models[1].spectral_model.amplitude.value = 0
         models[1].spectral_model.amplitude.frozen = True
     assert models[1].spectral_model.amplitude.value == 0
+
+
+def test_bounds(models):
+
+    models.set_parameters_bounds(
+        model_tag="pl", parameters_names="index", min=0, max=5, value=2.4
+    )
+    pl_mask = models.mask(spectral_tag="pl")
+    assert np.all([m.spectral_model.index.value == 2.4 for m in models.select(pl_mask)])
+    models.set_parameters_bounds(
+        model_tag=["pl", "pl-norm"],
+        parameters_names=["norm", "amplitude"],
+        min=0,
+        max=None,
+    )
+    bkg_mask = models.mask(tag="BackgroundModel")
+    assert np.all([m.spectral_model.amplitude.min == 0 for m in models.select(pl_mask)])
+    assert np.all([m._spectral_model.norm.min == 0 for m in models.select(bkg_mask)])

@@ -543,6 +543,50 @@ class DatasetModels(collections.abc.Sequence):
                     selection[km] &= ~all_frozen
         return selection
 
+    def set_parameters_bounds(
+        self, model_tag, parameters_names, min=None, max=None, value=None
+    ):
+        """Set bounds for the selected models types and parameters names
+        Parameters
+        ----------
+        model_tag : str or list
+            tag of the spatial or spectral models (do not mix spatial and spectral)
+        parameters_names : str or list
+            parameters names
+        min : float
+            min value
+        max : float
+            max value
+        value : float
+            init value
+        """
+
+        for m in self:
+            if not isinstance(model_tag, list):
+                model_tag = [model_tag]
+            if not isinstance(parameters_names, list):
+                parameters_names = [parameters_names]
+            sub_model = None
+            if hasattr(m, "spatial_model") and np.any(
+                [t in m.spatial_model.tag for t in model_tag]
+            ):
+                sub_model = m.spatial_model
+            if hasattr(m, "_spectral_model") and np.any(
+                [t in m._spectral_model.tag for t in model_tag]
+            ):
+                if sub_model is not None:
+                    raise ValueError("Do not mix spatial and spectral in model_tag")
+                sub_model = m.spectral_model
+            if sub_model is not None:
+                for p in sub_model.parameters:
+                    if p.name in parameters_names:
+                        if min is not None:
+                            p.min = min
+                        if max is not None:
+                            p.max = max
+                        if value is not None:
+                            p.value = value
+
 
 class Models(DatasetModels, collections.abc.MutableSequence):
     """Sky model collection.
