@@ -201,7 +201,8 @@ class ExcessMapEstimator(Estimator):
 
         if dataset.exposure:
             reco_exposure = estimate_exposure_reco_energy(dataset)
-            flux = excess / reco_exposure
+            with np.errstate(invalid="ignore", divide="ignore"):
+                flux = excess / reco_exposure
             flux.quantity = flux.quantity.to("1 / (cm2 s)")
         else:
             flux = Map.from_geom(
