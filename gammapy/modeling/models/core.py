@@ -481,7 +481,10 @@ class DatasetModels(collections.abc.Sequence):
         spectral_tag=None,
         frozen=None,
     ):
-        """create a mask of models, true if all condition are verified
+        """Create a mask of models, true if all condition are verified
+
+        Parameters
+        ----------
         name_substring : str
             Substring contained in the model name
         dataset_name : str or list
@@ -494,7 +497,8 @@ class DatasetModels(collections.abc.Sequence):
             Spectral model tag
         frozen : bool
             Select models with all parameters frozen if True, exclude them if False.
-        Returns
+ 
+       Returns
         -------
         mask : `numpy.array`
             Boolean mask
@@ -586,6 +590,51 @@ class DatasetModels(collections.abc.Sequence):
                             p.max = max
                         if value is not None:
                             p.value = value
+
+    def freeze(self, model_type=None):
+        """Freeze parameters depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           freeze all parameters or only spatial or only spectral 
+        """
+
+        if model_type is None:
+            self.parameters.freeze_all()
+        elif model_type == "spatial":
+            for m in self:
+                if hasattr(m, "spatial_model"):
+                    m.spatial_model.parameters.freeze_all()
+        elif model_type == "spectral":
+            for m in self:
+                if hasattr(m, "_spectral_model"):
+                    m._spectral_model.parameters.freeze_all()
+
+    def unfreeze(self, model_type=None):
+        """Restore parameters frozen status to default depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           restore frozen status to default for all parameters or only spatial or only spectral
+        """
+
+        for m in self:
+            if model_type is None or model_type == "spatial":
+                if hasattr(m, "spatial_model"):
+                    defaults = [
+                        p.frozen for p in m.spatial_model.__class__().parameters
+                    ]
+                    for p, status in zip(m.spatial_model.parameters, defaults):
+                        p.frozen = status
+            if model_type is None or model_type == "spectral":
+                if hasattr(m, "_spectral_model"):
+                    defaults = [
+                        p.frozen for p in m._spectral_model.__class__().parameters
+                    ]
+                    for p, status in zip(m._spectral_model.parameters, defaults):
+                        p.frozen = status
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):

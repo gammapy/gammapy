@@ -123,3 +123,32 @@ def test_bounds(models):
     bkg_mask = models.mask(tag="BackgroundModel")
     assert np.all([m.spectral_model.amplitude.min == 0 for m in models.select(pl_mask)])
     assert np.all([m._spectral_model.norm.min == 0 for m in models.select(bkg_mask)])
+
+
+def test_freeze(models):
+
+    models.freeze()
+    assert np.all([p.frozen for p in models.parameters])
+    models.unfreeze()
+    assert models["source-1"].spatial_model.lon_0.frozen == False
+    assert models["source-1"].spectral_model.reference.frozen == True
+    assert models["source-3"].spatial_model.lon_0.frozen == False
+    assert models["bkg1"]._spectral_model.tilt.frozen == True
+    assert models["bkg1"]._spectral_model.norm.frozen == False
+    models.freeze("spatial")
+    assert models["source-1"].spatial_model.lon_0.frozen == True
+    assert models["source-3"].spatial_model.lon_0.frozen == True
+    assert models["bkg1"]._spectral_model.norm.frozen == False
+    models.unfreeze("spatial")
+    assert models["source-1"].spatial_model.lon_0.frozen == False
+    assert models["source-1"].spectral_model.reference.frozen == True
+    assert models["source-3"].spatial_model.lon_0.frozen == False
+    models.freeze("spectral")
+    assert models["bkg1"]._spectral_model.tilt.frozen == True
+    assert models["bkg1"]._spectral_model.norm.frozen == True
+    assert models["source-1"].spectral_model.index.frozen == True
+    assert models["source-3"].spatial_model.lon_0.frozen == False
+    models.unfreeze("spectral")
+    assert models["bkg1"]._spectral_model.tilt.frozen == True
+    assert models["bkg1"]._spectral_model.norm.frozen == False
+    assert models["source-1"].spectral_model.index.frozen == False
