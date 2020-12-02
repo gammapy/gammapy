@@ -402,12 +402,6 @@ class DatasetModels(collections.abc.Sequence):
         for k, data in enumerate(parameters_dict):
             self.parameters[k].update_from_dict(data)
 
-    def _check_non_editable_columns(self, table, table_cached):
-        non_editable = ["model", "type", "name", "error"]
-        for tag in non_editable:
-            if np.any(table[tag] != table_cached[tag]):
-                raise ValueError("Column {tag} should not be updated")
-
     def read_covariance(self, path, filename="_covariance.dat", **kwargs):
         """Read covariance data from file
 
