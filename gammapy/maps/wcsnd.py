@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from collections import OrderedDict
+import warnings
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage
@@ -394,8 +395,11 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault("origin", "lower")
         kwargs.setdefault("cmap", "afmhot")
 
-        norm = simple_norm(data[np.isfinite(data)], stretch)
-        kwargs.setdefault("norm", norm)
+        mask = np.isfinite(data)
+
+        if mask.any():
+            norm = simple_norm(data[mask], stretch)
+            kwargs.setdefault("norm", norm)
 
         im = ax.imshow(data, **kwargs)
 
