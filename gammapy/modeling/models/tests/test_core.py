@@ -171,6 +171,7 @@ def test_parameter_link():
     m1.y.value = 100
     assert_allclose(m2.y.value, 100)
 
+@requires_data()
 def test_set_parameters_from_table():
     #read gammapy models
     models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
