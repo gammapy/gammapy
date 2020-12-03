@@ -7,7 +7,28 @@ from pathlib import Path
 from uuid import uuid4
 import yaml
 
-__all__ = ["read_yaml", "write_yaml", "make_path", "recursive_merge_dicts"]
+__all__ = [
+    "get_notebooks_paths",
+    "read_yaml",
+    "write_yaml",
+    "make_path",
+    "recursive_merge_dicts",
+]
+
+PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
+
+
+def get_notebooks_paths(folder=PATH_DOCS):
+    """Generator yields a Path for each notebook.
+    Parameters
+    ----------
+    folder : str
+        Folder where to search
+    """
+    skip = ["_static", "_build", "_checkpoints", "docs/modeling/gallery/"]
+    for i in Path(folder).rglob("*.ipynb"):
+        if not any(s in str(i) for s in skip):
+            yield i.resolve()
 
 
 def read_yaml(filename, logger=None):
