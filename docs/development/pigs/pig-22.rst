@@ -90,7 +90,7 @@ and contain the required quantities.
 
 .. code::
 
-    class LikelihoodSED: # FluxData / EstimatorResult /... ?
+    class FluxEstimate:
         """General likelihood sed conversion class
 
         Converts norm values into dnde, flux, etc.
@@ -109,36 +109,19 @@ and contain the required quantities.
             self.spectral_model = spectral_model
             self.energy_axis = energy_axis
 
-        @property
-        def energy_axis(self):
-            """TODO: either we create the map axis here or it is just passed on init..."""
-            try:
-                return self.data["norm"].geom.axes["energy"]
-            except AttributeError
-                return MapAxis.from_table()
+Practically, this would allow easy manipulation of flux quantities between formats:
 
-        def norm(self):
-            """"""
-            return self.data["norm"]
+.. code::
 
-        def norm_ul(self):
-            """"""
-            return self.data["norm"]
+    fpe = FluxPointsEtimator()
+    fp = fpe.run(datasets)
 
-        def dnde(self):
-            """"""
-            # TODO: take care of broadcasting here depending on data
-            e_ref = self.energy_axis.center
-            dnde_ref = self.spectra_model(e_ref)
-            return self.norm * dnde_ref
+    print(fp.dnde)
 
-        def flux(self):
-            """"""
-            # TODO: take care of broadcasting here depending on data
-            e_edges = self.energy_axis.edges
-            emin, emax = e_edges[:-1], e_edges[1:]
-            dnde_ref = self.spectra_model.integral(emin, emax)
-            return self.norm * dnde_ref
+    print(fp.eflux_err)
+
+    # but also get excess number estimate
+    fp.excess
 
 
 Introduce a FluxMap API
@@ -204,17 +187,51 @@ A dedicated API could be introduced to support these objects. In order to keep t
 ``FluxPoints``, a flat table ``Table`` could be used to store the various fluxes, where each row
  would represent the flux at a given energy, time, position etc.
 
- Astropy provides a mechanism to group table rows according to column entries. It is then possible
+Astropy provides a mechanism to group table rows according to column entries. It is then possible
+to extract the relevant ``FluxPoints`` object, representing the simple flux points or the lightcurve.
 
+A possible implementation could follow the following lines:
 
 .. code::
 
-    estimator = LightCurveEstimator()
-    lc = estimator.run(datasets)
+    energy_columns = ["e_min", "e_max", "e_ref"]
+    time_columns = ["t_min", "t_max"]
 
-    print(lc.times)
+    class FluxPointsCollection:
+        def __init__(self, table):
+            self.table = table
 
-    lc.get_lightcurve()
+            if all(_ in self.table.keys() for _ in energy_columns ):
+                self._energy_table = self.table.group_by(energy_columns)
+            else:
+                raise TypeError("Table does not describe a flux point. Missing energy columns.")
+
+            self._time_groups = None
+            if all(_ in self.table.keys() for _ in time_columns):
+                self._time_table = self.table.group_by(time_columns)
+
+
+       def flux_points_at_time(self, time):
+            if self._time_table is None:
+                raise KeyError("No time information")
+
+            index = np.where((time - self.t_min) <= 0)[0][0]
+            return self.__class__(self._time_table.groups[index])
+
+        def lightcurve_at_energy(self, energy):
+            if self._time_table is None:
+                raise KeyError("No time information")
+
+            index = np.where((energy - self.e_min) <= 0)[0][0]
+            return self.__class__(self._energy_table.groups[index])
+
+
+Keeping dedicated classes for specific types is an open question. While it might not be needed, it also
+provides a more explicit API for the user as well as specific functionalities. In particular, plotting
+is specific to each type. So will be I/O once specific data formats have been introduced.
+
+We also note that ``FluxPointsDataset`` rely on ``FluxPoints`` object for now. An important missing feature
+is the ability of using these for temporal model evaluation.  ``TemporalModel`` might requires a ``GTI``.
 
 
 Unification of flux estimators?
