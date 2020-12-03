@@ -12,7 +12,7 @@ pytest.importorskip("iminuit")
 @pytest.fixture
 def crab_datasets_1d():
     filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
-    dataset = SpectrumDatasetOnOff.from_ogip_files(filename)
+    dataset = SpectrumDatasetOnOff.read(filename)
     datasets = Datasets([dataset])
     return datasets
 

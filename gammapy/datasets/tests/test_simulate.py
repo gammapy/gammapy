@@ -106,11 +106,13 @@ def test_mde_sample_weak_src(dataset):
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
     )
 
-    dataset_weak_src = dataset.copy()
-    dataset_weak_src.models[0].parameters["amplitude"].value = 1e-25
+    models = dataset.models.copy()
+    models[0].parameters["amplitude"].value = 1e-25
+
+    dataset.models = models
 
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.run(dataset=dataset_weak_src, observation=obs)
+    events = sampler.run(dataset=dataset, observation=obs)
 
     assert len(events.table) == 18
     assert_allclose(
