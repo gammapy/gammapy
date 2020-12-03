@@ -419,6 +419,7 @@ class LightCurveEstimator(Estimator):
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
             row.update(self.estimate_time_bin_flux(datasets_to_fit))
             rows.append(row)
+
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 

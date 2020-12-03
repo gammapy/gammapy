@@ -74,18 +74,23 @@ class Dataset(abc.ABC):
         """Statistic array, one value per data point."""
 
     def copy(self, name=None):
-        """A deep copy."""
+        """A deep copy.
+
+        Parameters
+        ----------
+        name : str
+            Name of the copied dataset
+
+        Returns
+        -------
+        dataset : `Dataset`
+            Copied datasets.
+        """
         new = copy.deepcopy(self)
         name = make_name(name)
         new._name = name
-
-        # propagate new dataset name
-        if new._models is not None:
-            for m in new._models:
-                if m.datasets_names is not None:
-                    for k, d in enumerate(m.datasets_names):
-                        if d == self.name:
-                            m.datasets_names[k] = name
+        # TODO: check the model behaviour?
+        new.models = None
         return new
 
     @staticmethod

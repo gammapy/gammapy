@@ -1368,6 +1368,7 @@ class MapDataset(Dataset):
             kwargs["background"] = self.npred_background().downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
+
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
