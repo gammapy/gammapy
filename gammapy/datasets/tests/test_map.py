@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.irf import (
@@ -17,7 +17,7 @@ from gammapy.irf import (
     PSFMap,
 )
 from gammapy.makers.utils import make_map_exposure_true_energy
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -1361,3 +1361,46 @@ def test_downsample_onoff():
     assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
     assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
     assert_allclose(downsampled.alpha.data, 0.5)
+
+
+def test_compute_flux_spatial():
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+    region = RectangleSkyRegion(center=center, width = 0.5 * u.deg, height=0.5 * u.deg)
+
+    energy_axis_true = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=10, name="energy_true")
+
+    spectral_model = PowerLawSpectralModel(index = 2.0, amplitude="1e-10 cm-2 s-1 TeV-1", reference="1 TeV")
+    spatial_model = PointSpatialModel(lon_0 = 0*u.deg, lat_0 = 0*u.deg, frame='galactic')
+
+    model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+
+    psf = PSFMap.from_gauss(energy_axis_true)
+
+    # for a region
+    geom = RegionGeom(region)
+
+    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true])
+    exposure_region.data += 1e8
+    exposure_region.unit = "m2 s"
+
+    background_region = RegionNDMap.create(region, axes=[energy_axis_true])
+    background_region.data += 2
+
+    dataset_region = MapDataset(psf=psf, exposure=exposure_region, background=background_region)
+    dataset_region.models = [model]
+
+    npred_region = dataset_region.npred()
+
+    # for a WCSmap
+    exposure_wcs = Map.create(axes=[energy_axis_true], region=region, map_type="region")
+    exposure_wcs.data += 1e8
+    exposure_wcs.unit = "m2 s"
+
+    background_wcs = Map.create(axes=[energy_axis_true], region=region, map_type="region")
+    background_wcs.data += 2
+
+    dataset_wcs = MapDataset(psf=psf, exposure=exposure_wcs, background=background_wcs)
+    dataset_wcs.models = [model]
+    npred_wcs = dataset_wcs.npred()
+
+    assert_allclose(npred_region.data, npred_wcs.data)
