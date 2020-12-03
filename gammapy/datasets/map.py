@@ -2599,9 +2599,9 @@ class MapEvaluator:
             value = (values.data[mask]).sum()
 
         else:
-            values = self.model.spatial_model.integrate_geom(self.geom)
+            value = self.model.spatial_model.integrate_geom(self.geom)
             if self.psf and self.model.apply_irf["psf"]:
-                value = self.apply_psf(values)
+                value = self.apply_psf(value)
 
         return value
 
