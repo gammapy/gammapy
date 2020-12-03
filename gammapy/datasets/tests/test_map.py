@@ -1368,6 +1368,7 @@ def test_compute_flux_spatial():
     region = RectangleSkyRegion(center=center, width = 0.5 * u.deg, height=0.5 * u.deg)
 
     energy_axis_true = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=10, name="energy_true")
+    energy_axis = MapAxis.from_energy_bounds(".5 TeV", "8 TeV", nbin=10, name="energy")
 
     spectral_model = PowerLawSpectralModel(index = 2.0, amplitude="1e-10 cm-2 s-1 TeV-1", reference="1 TeV")
     spatial_model = PointSpatialModel(lon_0 = 0*u.deg, lat_0 = 0*u.deg, frame='galactic')
@@ -1392,11 +1393,13 @@ def test_compute_flux_spatial():
     npred_region = dataset_region.npred()
 
     # for a WCSmap
-    exposure_wcs = Map.create(axes=[energy_axis_true], region=region, map_type="region")
+#    exposure_wcs = Map.create(axes=[energy_axis_true], region=region, map_type="wcs")
+    exposure_wcs = WcsNDMap.create(skydir=center, axes=[energy_axis_true], frame='galactic', binsz=0.01, width=(0.5*u.deg,0.5*u.deg))
     exposure_wcs.data += 1e8
     exposure_wcs.unit = "m2 s"
 
-    background_wcs = Map.create(axes=[energy_axis_true], region=region, map_type="region")
+#    background_wcs = Map.create(axes=[energy_axis_true], region=region, map_type="wcs")
+    background_wcs = WcsNDMap.create(skydir=center, axes=[energy_axis], frame='galactic', binsz=0.01, width=(0.5*u.deg,0.5*u.deg))
     background_wcs.data += 2
 
     dataset_wcs = MapDataset(psf=psf, exposure=exposure_wcs, background=background_wcs)
