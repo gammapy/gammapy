@@ -2532,7 +2532,11 @@ class MapEvaluator:
                 geom = exposure.geom
 
             # lookup psf
-            self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
+            if isinstance(geom, RegionGeom):
+                wcs_geom = geom.to_wcs_geom()
+                self.psf = psf.get_psf_kernel(self.model.position, geom=wcs_geom)
+            else:
+                self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
@@ -2571,6 +2575,8 @@ class MapEvaluator:
 
         if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
             value = value * self.compute_flux_spatial().quantity
+        else:
+            value = value * self.compute_flux_spatial().quantity
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
@@ -2578,10 +2584,28 @@ class MapEvaluator:
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
     def _compute_flux_spatial(self):
-        """Compute spatial flux"""
-        value = self.model.spatial_model.integrate_geom(self.geom)
-        if self.psf and self.model.apply_irf["psf"]:
-            value = self.apply_psf(value)
+        """Compute spatial flux
+
+        Returns
+        ----------
+        value: `~astropy.units.Quantity`
+            Psf-corrected, integrated flux over a given region.
+        """
+        if isinstance(self.geom, RegionGeom):
+            wcs_geom = self.geom.to_wcs_geom()
+            values = self.model.spatial_model.integrate_geom(wcs_geom)
+            tmp_map = Map.from_geom(geom=wcs_geom, data=values.data,
+                                    unit=values.unit)
+
+            if self.psf and self.model.apply_irf["psf"]:
+                values = self.apply_psf(tmp_map)
+            value = ((values.data * wcs_geom.solid_angle())).sum()
+
+        else:
+            values = self.model.spatial_model.integrate_geom(self.geom)
+            if self.psf and self.model.apply_irf["psf"]:
+                value = self.apply_psf(values)
+
         return value
 
     def compute_flux_spatial(self):
