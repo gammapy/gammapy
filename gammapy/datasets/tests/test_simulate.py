@@ -22,7 +22,8 @@ from gammapy.modeling.models import (
 from gammapy.utils.testing import requires_data
 
 
-def get_model():
+@pytest.fixture()
+def models():
     spatial_model = GaussianSpatialModel(
         lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
     )
@@ -42,12 +43,15 @@ def get_model():
     table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s")
     temporal_model = LightCurveTemplateTemporalModel(table)
 
-    return SkyModel(
+    model = SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         temporal_model=temporal_model,
         name="test-source",
     )
+
+    bkg_model = FoVBackgroundModel(dataset_name="test")
+    return [model, bkg_model]
 
 
 @pytest.fixture(scope="session")
@@ -63,19 +67,18 @@ def dataset():
     geom_true = geom.copy()
     geom_true.axes[0].name = "energy_true"
 
-    dataset = get_map_dataset(geom=geom, geom_etrue=geom_true, edisp="edispmap")
+    dataset = get_map_dataset(geom=geom, geom_etrue=geom_true, edisp="edispmap", name="test")
 
     dataset.gti = GTI.create(
         start=0 * u.s, stop=1000 * u.s, reference_time="2000-01-01"
     )
 
-    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
-    dataset.models = [get_model(), bkg_model]
     return dataset
 
 
 @requires_data()
-def test_mde_sample_sources(dataset):
+def test_mde_sample_sources(dataset, models):
+    dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
 
@@ -96,7 +99,7 @@ def test_mde_sample_sources(dataset):
 
 
 @requires_data()
-def test_mde_sample_weak_src(dataset):
+def test_mde_sample_weak_src(dataset, models):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -106,7 +109,6 @@ def test_mde_sample_weak_src(dataset):
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
     )
 
-    models = dataset.models.copy()
     models[0].parameters["amplitude"].value = 1e-25
 
     dataset.models = models
@@ -121,7 +123,8 @@ def test_mde_sample_weak_src(dataset):
 
 
 @requires_data()
-def test_mde_sample_background(dataset):
+def test_mde_sample_background(dataset, models):
+    dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_background(dataset=dataset)
 
@@ -141,7 +144,8 @@ def test_mde_sample_background(dataset):
 
 
 @requires_data()
-def test_mde_sample_psf(dataset):
+def test_mde_sample_psf(dataset, models):
+    dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
     events = sampler.sample_psf(dataset.psf, events)
@@ -158,7 +162,8 @@ def test_mde_sample_psf(dataset):
 
 
 @requires_data()
-def test_mde_sample_edisp(dataset):
+def test_mde_sample_edisp(dataset, models):
+    dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
     events = sampler.sample_edisp(dataset.edisp, events)
@@ -177,7 +182,7 @@ def test_mde_sample_edisp(dataset):
 
 
 @requires_data()
-def test_event_det_coords(dataset):
+def test_event_det_coords(dataset, models):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -187,6 +192,7 @@ def test_event_det_coords(dataset):
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
     )
 
+    dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
@@ -199,7 +205,7 @@ def test_event_det_coords(dataset):
 
 
 @requires_data()
-def test_mde_run(dataset):
+def test_mde_run(dataset, models):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -209,6 +215,7 @@ def test_mde_run(dataset):
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
     )
 
+    dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
@@ -297,7 +304,7 @@ def test_mde_run(dataset):
 
 
 @requires_data()
-def test_mde_run_switchoff(dataset):
+def test_mde_run_switchoff(dataset, models):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -306,6 +313,8 @@ def test_mde_run_switchoff(dataset):
     obs = Observation.create(
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
     )
+
+    dataset.models = models
 
     dataset.psf = None
     dataset.edisp = None
@@ -328,7 +337,7 @@ def test_mde_run_switchoff(dataset):
 
 
 @requires_data()
-def test_events_datastore(tmp_path, dataset):
+def test_events_datastore(tmp_path, dataset, models):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -338,6 +347,7 @@ def test_events_datastore(tmp_path, dataset):
         obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
     )
 
+    dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
