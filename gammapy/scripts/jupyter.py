@@ -4,8 +4,11 @@ import logging
 import os
 import subprocess
 import sys
+import tarfile
 import time
+from pathlib import Path
 import click
+from gammapy.utils.scripts import get_notebooks_paths
 
 log = logging.getLogger(__name__)
 
@@ -95,9 +98,7 @@ def cli_jupyter_black(ctx):
 
 class BlackNotebook:
     """Manage the process of black formatting.
-
     Probably this will become available directly in the future.
-
     See https://github.com/ambv/black/issues/298#issuecomment-476960082
     """
 
@@ -215,3 +216,11 @@ class environment:
         if self.tutor:
             os.environ = self.old
             log.info("Environment variables recovered.")
+
+
+@click.command(name="tar")
+def cli_jupyter_tar():
+    """Create a tar file with the notebooks in docs."""
+    with tarfile.open("gammapy-notebooks.tar", "w:") as tar:
+        for name in get_notebooks_paths():
+            tar.add(name, arcname=Path(name).name)

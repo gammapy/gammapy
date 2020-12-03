@@ -200,6 +200,10 @@ def add_subcommands():
 
     cli_jupyter.add_command(cli_jupyter_test)
 
+    from .jupyter import cli_jupyter_tar
+
+    cli_jupyter.add_command(cli_jupyter_tar)
+
     from .analysis import cli_make_config
 
     cli_analysis.add_command(cli_make_config)
