@@ -8,7 +8,6 @@ from gammapy.utils.testing import requires_dependency, run_cli
 def config():
     return {
         "release": "0.8",
-        "dataset": "dark_matter_spectra",
         "notebook": "astro_dark_matter",
         "imagefile": "gammapy_datastore_butler.png",
         "envfilename": "gammapy-0.8-environment.yml",
@@ -26,13 +25,9 @@ def test_cli_download_datasets(tmp_path, config):
     args = [
         "download",
         "datasets",
-        f"--src={config['dataset']}",
         f"--out={tmp_path}",
-        f"--release={config['release']}",
     ]
     result = run_cli(cli, args)
-
-    assert (tmp_path / config["dataset"]).exists()
     assert "GAMMAPY_DATA" in result.output
 
 
@@ -42,7 +37,6 @@ def test_cli_download_notebooks(tmp_path, config):
     args = [
         "download",
         "notebooks",
-        f"--src={config['notebook']}",
         f"--out={tmp_path}",
         f"--release={config['release']}",
     ]
@@ -57,19 +51,7 @@ def test_cli_download_notebooks(tmp_path, config):
 @pytest.mark.remote_data
 def test_cli_download_tutorials(tmp_path, config):
     option_out = f"--out={tmp_path}"
-    nboption_src = f"--src={config['notebook']}"
     option_release = f"--release={config['release']}"
-    dsdirname = "datasets"
-    nbdirname = f"notebooks-{config['release']}"
-    nbfilename = f"{config['notebook']}.ipynb"
-
-    args = ["download", "tutorials", nboption_src, option_out, option_release]
-    result = run_cli(cli, args)
-    assert (tmp_path / config["envfilename"]).exists()
-    assert (tmp_path / nbdirname / nbfilename).exists()
-    assert (tmp_path / dsdirname / config["dataset"]).exists()
-    assert "GAMMAPY_DATA" in result.output
-    assert "jupyter lab" in result.output
 
     args = ["download", "tutorials", option_out, option_release]
     result = run_cli(cli, args)
