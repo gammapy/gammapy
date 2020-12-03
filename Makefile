@@ -15,7 +15,6 @@ help:
 	@echo '     test               Run pytest'
 	@echo '     test-cov           Run pytest with coverage'
 	@echo '     test-nb            Test tutorial notebooks'
-	@echo '     test-scripts       Test example scripts'
 	@echo ''
 	@echo '     docs-sphinx        Build docs (Sphinx only)'
 	@echo '     docs-all           Build docs (including Jupyter notebooks)'
@@ -88,9 +87,6 @@ test-cov:
 
 test-nb:
 	python -m gammapy.utils.notebooks_test
-
-test-scripts:
-	python -m gammapy.utils.scripts_test
 
 clean-nb:
 	python -m gammapy jupyter --src=docs --r black
