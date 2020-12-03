@@ -81,34 +81,6 @@ def cli_download_notebooks(src, out, release, all, modetutorials, silent):
     print("")
 
 
-@click.command(name="scripts")
-@click.option("--src", default="", help="Specific script to download.")
-@click.option(
-    "--out",
-    default="gammapy-scripts",
-    help="Path where the versioned python scripts will be copied.",
-    show_default=True,
-)
-@click.option("--release", default="", help="Number of release - ex: 0.12")
-@click.option("--modetutorials", default=False, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=False)
-def cli_download_scripts(src, out, release, modetutorials, silent):
-    """Download scripts"""
-    plan = ComputePlan(src, out, release, "scripts")
-    if release:
-        plan.getenvironment()
-    down = ParallelDownload(
-        plan.getfilelist(),
-        plan.getlocalfolder(),
-        release,
-        "scripts",
-        modetutorials,
-        silent,
-    )
-    down.run()
-    print("")
-
-
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
 @click.option(
@@ -161,7 +133,6 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
 @click.option("--modetutorials", default=True, hidden=True)
 @click.option("--silent", default=True, is_flag=True, hidden=True)
 def cli_download_tutorials(ctx, src, out, release, modetutorials, silent):
-    """Download notebooks, scripts and datasets"""
+    """Download notebooks and datasets"""
     ctx.forward(cli_download_notebooks)
-    ctx.forward(cli_download_scripts)
     ctx.forward(cli_download_datasets)

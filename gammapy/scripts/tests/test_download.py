@@ -11,7 +11,6 @@ def config():
         "dataset": "dark_matter_spectra",
         "notebook": "astro_dark_matter",
         "imagefile": "gammapy_datastore_butler.png",
-        "script": "example_2_gauss",
         "envfilename": "gammapy-0.8-environment.yml",
     }
 
@@ -56,31 +55,13 @@ def test_cli_download_notebooks(tmp_path, config):
 
 @requires_dependency("parfive")
 @pytest.mark.remote_data
-def test_cli_download_scripts(tmp_path, config):
-    args = [
-        "download",
-        "scripts",
-        f"--src={config['script']}",
-        f"--out={tmp_path}",
-        f"--release={config['release']}",
-    ]
-    run_cli(cli, args)
-    assert (tmp_path / config["envfilename"]).exists()
-    assert (tmp_path / f"scripts-{config['release']}/{config['script']}.py").exists()
-
-
-@requires_dependency("parfive")
-@pytest.mark.remote_data
 def test_cli_download_tutorials(tmp_path, config):
     option_out = f"--out={tmp_path}"
     nboption_src = f"--src={config['notebook']}"
-    scoption_src = f"--src={config['script']}"
     option_release = f"--release={config['release']}"
     dsdirname = "datasets"
     nbdirname = f"notebooks-{config['release']}"
-    scdirname = f"scripts-{config['release']}"
     nbfilename = f"{config['notebook']}.ipynb"
-    scfilename = f"{config['script']}.py"
 
     args = ["download", "tutorials", nboption_src, option_out, option_release]
     result = run_cli(cli, args)
@@ -90,9 +71,8 @@ def test_cli_download_tutorials(tmp_path, config):
     assert "GAMMAPY_DATA" in result.output
     assert "jupyter lab" in result.output
 
-    args = ["download", "tutorials", scoption_src, option_out, option_release]
+    args = ["download", "tutorials", option_out, option_release]
     result = run_cli(cli, args)
     assert (tmp_path / config["envfilename"]).exists()
-    assert (tmp_path / scdirname / scfilename).exists()
     assert "GAMMAPY_DATA" in result.output
     assert "jupyter lab" in result.output

@@ -85,22 +85,19 @@ def cli_analysis():
 @cli.group("download", short_help="Download datasets and notebooks")
 @click.pass_context
 def cli_download(ctx):  # noqa: D301
-    """Download notebooks, scripts and datasets.
+    """Download notebooks and datasets.
 
     \b
-    Download notebooks published as tutorials, example python scripts and the
+    Download notebooks published as tutorials and the
     related datasets needed to execute them. It is also possible to download
     individual notebooks, scrtipts or datasets.
     \b
     - The option `tutorials` will download versioned folders for the notebooks
-    and python scripts into a `gammapy-tutorials` folder created at the current
+    into a `gammapy-tutorials` folder created at the current
     working directory, as well as the datasets needed to reproduce them.
     \b
     - The option `notebooks` will download the notebook files used in the tutorials
     into a `gammapy-notebooks` folder created at the current working directory.
-    \b
-    - The option `scripts` will download a collection of example python scripts
-    into a `gammapy-scripts` folder created at the current working directory.
     \b
     - The option `datasets` will download the datasets used by Gammapy into a
     `gammapy-datasets` folder created at the current working directory.
@@ -110,7 +107,6 @@ def cli_download(ctx):  # noqa: D301
     --------
 
     \b
-    $ gammapy download scripts
     $ gammapy download datasets
     $ gammapy download notebooks
     $ gammapy download tutorials --release 0.8
@@ -171,10 +167,6 @@ def add_subcommands():
     from .download import cli_download_notebooks
 
     cli_download.add_command(cli_download_notebooks)
-
-    from .download import cli_download_scripts
-
-    cli_download.add_command(cli_download_scripts)
 
     from .download import cli_download_datasets
 

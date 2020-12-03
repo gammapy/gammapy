@@ -22,7 +22,6 @@ log = logging.getLogger(__name__)
 URL_GAMMAPY_MASTER = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 RELEASES_BASE_URL = "https://gammapy.org/download"
 DEV_NBS_YAML_URL = f"{URL_GAMMAPY_MASTER}notebooks.yaml"
-DEV_SCRIPTS_YAML_URL = f"{URL_GAMMAPY_MASTER}examples/scripts.yaml"
 DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"  # CI tests
 TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"
 # Curated datasets bundle
@@ -108,8 +107,6 @@ class ComputePlan:
             suffix += __version__
         if self.option == "notebooks":
             return self.outfolder / f"notebooks{suffix}"
-        if self.option == "scripts":
-            return self.outfolder / f"scripts{suffix}"
         if self.option == "datasets" and self.modetutorials:
             return self.outfolder / "datasets"
         return self.outfolder
@@ -130,11 +127,6 @@ class ComputePlan:
             if self.src != "":
                 self.getonefile("nb: " + self.src, "Notebook")
             self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
-
-        if (self.option == "scripts" or self.modetutorials) and not self.listfiles:
-            self.parse_scripts_yaml()
-            if self.src != "":
-                self.getonefile("sc: " + self.src, "Script")
 
         if self.option == "datasets":
             if self.modetutorials and not self.listfiles:
@@ -216,30 +208,6 @@ class ComputePlan:
             if nb.get("images", ""):
                 for im in nb["images"]:
                     self.listfiles[label]["images"].append(im)
-
-    def parse_scripts_yaml(self):
-        url = DEV_SCRIPTS_YAML_URL
-        if self.release:
-            filename_scripts = "gammapy-" + self.release + "-scripts.yml"
-            url = RELEASES_BASE_URL + "/tutorials/" + filename_scripts
-
-        log.info(f"Reading {url}")
-        try:
-            txt = urlopen(url).read().decode("utf-8")
-        except Exception as ex:
-            log.error(ex)
-            return False
-
-        for sc in yaml.safe_load(txt):
-            path = sc["name"] + ".py"
-            label = "sc: " + sc["name"]
-            self.listfiles[label] = {}
-            self.listfiles[label]["url"] = sc["url"]
-            self.listfiles[label]["path"] = path
-            self.listfiles[label]["datasets"] = []
-            if sc.get("datasets", ""):
-                for ds in sc["datasets"]:
-                    self.listfiles[label]["datasets"].append(ds)
 
 
 class ParallelDownload:
