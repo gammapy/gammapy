@@ -2573,10 +2573,8 @@ class MapEvaluator:
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
-        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
-            value = value * self.compute_flux_spatial().quantity
-        else:
-            value = value * self.compute_flux_spatial().quantity
+        if self.model.spatial_model:
+            value = value * self.compute_flux_spatial()#.quantity
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
@@ -2593,13 +2591,12 @@ class MapEvaluator:
         """
         if isinstance(self.geom, RegionGeom):
             wcs_geom = self.geom.to_wcs_geom()
+            mask = self.geom.contains(wcs_geom.get_coord())
             values = self.model.spatial_model.integrate_geom(wcs_geom)
-            tmp_map = Map.from_geom(geom=wcs_geom, data=values.data,
-                                    unit=values.unit)
 
             if self.psf and self.model.apply_irf["psf"]:
-                values = self.apply_psf(tmp_map)
-            value = ((values.data * wcs_geom.solid_angle())).sum()
+                values = self.apply_psf(values)
+            value = (values.data[mask]).sum()
 
         else:
             values = self.model.spatial_model.integrate_geom(self.geom)
