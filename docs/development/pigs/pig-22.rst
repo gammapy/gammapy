@@ -248,6 +248,51 @@ their name suggest), but they still provide flux estimates through the excess/np
 that flux points and light curve can also be estimated through this approach to provide rapid estimates.
 
 
+Excess estimators
+-----------------
+
+We can unify and clarify the general approach by introducing estimators following
+each of the methods.
+
+A general flux estimator already exists, it is the ``FluxEstimator``. It is the base of the
+``FluxPointsEstimator``.
+
+An equivalent ``ExcessEstimator`` could be added. Technically, it would mostly encapsulate
+functionalities provided by the ``CountsStatistics``.
+
+
+Generalist estimators
+---------------------
+
+It is possible to create a generalist ``FluxPointsEstimator`` that could return a general
+``FluxPointsCollection`` without knowing a priori what type of grouping is applied to the
+datasets. This would allow to perform lightcurve or region-based flux estimates with the same
+API. This would allow a direct generalization of the ``FluxPointsEstimator`` to cover other problematic
+e.g. flux estimation in phase to build phase curves, flux estimation in different observation condition or
+instrument states to study systematic effects.
+
+The main change required for this is to move dataset grouping to the ``Datasets`` level.
+
+Datasets grouping
++++++++++++++++++
+
+Selection by time is already possible on ``Datasets`` thanks to the ``select_time(t_min, t_max)``
+method. We should extend this functionality to other quantities characterizing the datasets.
+
+We propose to add a grouping functionality on the ``Datasets``. It could internally rely on the
+grouping of the meta table: ``Datasets.meta_table.group_by``. It would require the table to be
+present in memory and be recomputed each time the ``Datasets`` object is updated. Then retrieving
+a set of datasets could be done by ``Datasets.get_group_by_idx()``.
+
+.. code::
+
+    # group datasets according to phase
+    phase_axis = MapAxis.from_bounds(0., 1., 10, name="phase", unit="")
+    datasets.group_by_axis(phase_axis)
+
+    datasets_in_phase_bin_3 = datasets.get_group_by_idx(3)
+
+
 
 Alternative
 ===========
