@@ -132,50 +132,7 @@ class ComputePlan:
             if self.modetutorials and not self.listfiles:
                 sys.exit()
             # datasets bundle
-            if not self.src:
-                self.listfiles = {"bundle": {"path": self.outfolder, "url": TAR_BUNDLE}}
-                return self.listfiles
-            # collection of files
-            if self.release:
-                url_datasets_json = (
-                    RELEASES_BASE_URL
-                    + "/data/gammapy-"
-                    + self.release
-                    + "-data-index.json"
-                )
-                log.info(f"Reading {url_datasets_json}")
-                try:
-                    txt = urlopen(url_datasets_json).read().decode("utf-8")
-                except Exception as ex:
-                    log.error(ex)
-                    return False
-            else:
-                # for development just use the local index file
-                local_datasets_json = (
-                    Path(__file__).parent / DEV_DATA_JSON_LOCAL
-                ).resolve()
-                log.info(f"Reading {local_datasets_json}")
-                txt = local_datasets_json.read_text()
-            datasets = json.loads(txt)
-            datafound = {}
-            if not self.modetutorials:
-                datafound.update(
-                    dict(
-                        parse_datafiles(
-                            self.src, datasets, download_tests=self.download_tests
-                        )
-                    )
-                )
-            else:
-                for item in self.listfiles:
-                    record = self.listfiles[item]
-                    if record.get("datasets", ""):
-                        for ds in record["datasets"]:
-                            datafound.update(dict(parse_datafiles(ds, datasets)))
-            self.listfiles = datafound
-            if not datafound:
-                log.info("No datasets found")
-                sys.exit()
+            self.listfiles = {"bundle": {"path": self.outfolder, "url": TAR_BUNDLE}}
 
         return self.listfiles
 

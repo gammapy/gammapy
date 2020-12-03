@@ -82,7 +82,6 @@ def cli_download_notebooks(src, out, release, all, modetutorials, silent):
 
 
 @click.command(name="datasets")
-@click.option("--src", default="", help="Specific dataset to download.")
 @click.option(
     "--out", default="gammapy-datasets", help="Destination folder.", show_default=True,
 )
@@ -106,17 +105,11 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
     down = ParallelDownload(
         filelist, localfolder, release, "datasets", modetutorials, silent,
     )
-    # tar bundle
-    if "bundle" in filelist:
-        log.info(f"Downloading datasets from {filelist['bundle']['url']}")
-        tar_destination_file = Path(localfolder) / "datasets.tar.gz"
-        progress_download(filelist["bundle"]["url"], tar_destination_file)
-        log.info(f"Extracting {tar_destination_file}")
-        extract_bundle(tar_destination_file, localfolder)
-
-    # specific collection
-    else:
-        down.run()
+    log.info(f"Downloading datasets from {filelist['bundle']['url']}")
+    tar_destination_file = Path(localfolder) / "datasets.tar.gz"
+    progress_download(filelist["bundle"]["url"], tar_destination_file)
+    log.info(f"Extracting {tar_destination_file}")
+    extract_bundle(tar_destination_file, localfolder)
     down.show_info_datasets()
 
 
