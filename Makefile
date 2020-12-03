@@ -30,7 +30,6 @@ help:
 	@echo '     pylint             Run pylint static code analysis'
 	@echo '     pydocstyle         Run docstring checks'
 	@echo '     dataset-index      Create download dataset index json file'
-	@echo '     dataset-download   Download the latest data to the $GAMMAPY_DATA folder'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
@@ -146,8 +145,5 @@ pydocstyle:
 
 dataset-index:
 	python dev/datasets/make_dataset_index.py dataset-index
-
-dataset-download:
-	gammapy download datasets --out=$(GAMMAPY_DATA) --tests
 
 # TODO: add test and code quality checks for `examples`

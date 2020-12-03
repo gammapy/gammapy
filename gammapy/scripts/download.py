@@ -48,7 +48,6 @@ def extract_bundle(bundle, destination):
 
 
 @click.command(name="notebooks")
-@click.option("--src", default="", help="Specific notebook to download.")
 @click.option(
     "--out",
     default="gammapy-notebooks",
@@ -63,10 +62,9 @@ def extract_bundle(bundle, destination):
     help="Consider also other notebooks than tutorials",
 )
 @click.option("--modetutorials", default=False, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=True)
-def cli_download_notebooks(src, out, release, all, modetutorials, silent):
+def cli_download_notebooks(out, release, all, modetutorials):
     """Download notebooks"""
-    plan = ComputePlan(src, out, release, "notebooks", all_notebooks=all)
+    plan = ComputePlan(out, release, "notebooks", all_notebooks=all)
     if release:
         plan.getenvironment()
     down = ParallelDownload(
@@ -74,8 +72,7 @@ def cli_download_notebooks(src, out, release, all, modetutorials, silent):
         plan.getlocalfolder(),
         release,
         "notebooks",
-        modetutorials,
-        silent,
+        modetutorials
     )
     down.run()
     print("")
@@ -85,25 +82,17 @@ def cli_download_notebooks(src, out, release, all, modetutorials, silent):
 @click.option(
     "--out", default="gammapy-datasets", help="Destination folder.", show_default=True,
 )
-@click.option("--release", default="", help="Number of release - ex: 0.12")
+@click.option("--release", default="", hidden=True)
 @click.option("--modetutorials", default=False, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=True)
-@click.option(
-    "--tests",
-    default=True,
-    is_flag=True,
-    help="Include datasets needed for tests. [default: True]",
-    hidden=True,
-)
-def cli_download_datasets(src, out, release, modetutorials, silent, tests):
+def cli_download_datasets(out, release, modetutorials):
     """Download datasets"""
     plan = ComputePlan(
-        src, out, release, "datasets", modetutorials=modetutorials, download_tests=tests
+        out, "", "datasets", modetutorials=modetutorials
     )
     filelist = plan.getfilelist()
     localfolder = plan.getlocalfolder()
     down = ParallelDownload(
-        filelist, localfolder, release, "datasets", modetutorials, silent,
+        filelist, localfolder, release, "datasets", modetutorials
     )
     log.info(f"Downloading datasets from {filelist['bundle']['url']}")
     tar_destination_file = Path(localfolder) / "datasets.tar.gz"
@@ -115,7 +104,6 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
 
 @click.command(name="tutorials")
 @click.pass_context
-@click.option("--src", default="", help="Specific tutorial to download.")
 @click.option(
     "--out",
     default="gammapy-tutorials",
@@ -124,8 +112,7 @@ def cli_download_datasets(src, out, release, modetutorials, silent, tests):
 )
 @click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option("--modetutorials", default=True, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=True)
-def cli_download_tutorials(ctx, src, out, release, modetutorials, silent):
+def cli_download_tutorials(ctx, out, release, modetutorials):
     """Download notebooks and datasets"""
     ctx.forward(cli_download_notebooks)
     ctx.forward(cli_download_datasets)

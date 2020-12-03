@@ -27,19 +27,6 @@ TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"
 # Curated datasets bundle
 
 
-def parse_datafiles(datasearch, datasetslist, download_tests=False):
-    for dataset in datasetslist:
-        if dataset["name"] == "tests" and not download_tests and datasearch != "tests":
-            continue
-        if datasearch in [dataset["name"], ""] and dataset.get("files", ""):
-            for ds in dataset["files"]:
-                label = ds["path"]
-                data = {"url": ds["url"], "path": ds["path"]}
-                if "hashmd5" in ds:
-                    data["hashmd5"] = ds["hashmd5"]
-                yield label, data
-
-
 def parse_imagefiles(notebookslist):
     for item in notebookslist:
         record = notebookslist[item]
@@ -59,20 +46,16 @@ class ComputePlan:
 
     def __init__(
         self,
-        src,
         outfolder,
         release,
         option,
         modetutorials=False,
-        download_tests=False,
         all_notebooks=False,
     ):
-        self.src = src
         self.outfolder = Path(outfolder)
         self.release = release
         self.option = option
         self.modetutorials = modetutorials
-        self.download_tests = download_tests
         self.all_notebooks = all_notebooks
         self.listfiles = {}
         log.info(f"Looking for {self.option}...")
@@ -111,27 +94,12 @@ class ComputePlan:
             return self.outfolder / "datasets"
         return self.outfolder
 
-    def getonefile(self, keyrec, filetype):
-        if keyrec in self.listfiles:
-            record = self.listfiles[keyrec]
-            self.listfiles = {}
-            self.listfiles[keyrec] = record
-        else:
-            self.listfiles = {}
-            if not self.modetutorials:
-                log.warning(f"{filetype} {self.src} not found")
-
     def getfilelist(self):
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
-            if self.src != "":
-                self.getonefile("nb: " + self.src, "Notebook")
             self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
 
         if self.option == "datasets":
-            if self.modetutorials and not self.listfiles:
-                sys.exit()
-            # datasets bundle
             self.listfiles = {"bundle": {"path": self.outfolder, "url": TAR_BUNDLE}}
 
         return self.listfiles
@@ -170,13 +138,12 @@ class ComputePlan:
 class ParallelDownload:
     """Manages the process of downloading files"""
 
-    def __init__(self, listfiles, outfolder, release, option, modetutorials, progress):
+    def __init__(self, listfiles, outfolder, release, option, modetutorials):
         self.listfiles = listfiles
         self.outfolder = outfolder
         self.release = release
         self.option = option
         self.modetutorials = modetutorials
-        self.progress = progress
         self.bar = 0
 
     def run(self):
@@ -189,20 +156,11 @@ class ParallelDownload:
         if self.listfiles:
             log.info(f"Content will be downloaded in {self.outfolder}")
 
-        dl = Downloader(progress=self.progress, file_progress=False)
+        dl = Downloader(progress=True, file_progress=False)
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.outfolder / self.listfiles[rec]["path"]
-            md5 = ""
-            if "hashmd5" in self.listfiles[rec]:
-                md5 = self.listfiles[rec]["hashmd5"]
-            retrieve = True
-            if md5 and path.exists():
-                md5local = hashlib.md5(path.read_bytes()).hexdigest()
-                if md5local == md5:
-                    retrieve = False
-            if retrieve:
-                dl.enqueue_file(url, path=str(path.parent))
+            dl.enqueue_file(url, path=str(path.parent))
 
         log.info(f"{dl.queued_downloads} files to download.")
         res = dl.download()
