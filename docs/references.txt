@@ -52,7 +52,6 @@
 .. _pointlike: https://github.com/tburnett/Fermi-LAT
 .. _NaN: https://en.wikipedia.org/wiki/NaN
 .. _Python: https://www.python.org
-.. _parfive: https://parfive.readthedocs.io
 .. _corner: https://corner.readthedocs.io
 .. _gammapy-0.13-environment.yml: https://gammapy.org/download/install/gammapy-0.13-environment.yml
 

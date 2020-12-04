@@ -31,8 +31,7 @@ GAMMAPY_DEPENDENCIES = [
     "sherpa",
     "naima",
     "emcee",
-    "corner",
-    "parfive",
+    "corner"
 ]
 
 GAMMAPY_ENV_VARIABLES = ["GAMMAPY_DATA"]
