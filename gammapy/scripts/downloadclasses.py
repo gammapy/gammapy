@@ -10,7 +10,6 @@ log = logging.getLogger(__name__)
 
 RELEASES_BASE_URL = "https://gammapy.org/download"
 DEV_NBS_YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/notebooks.yaml"
-TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"  # curated datasets bundle
 
 
 class ComputePlan:
@@ -60,17 +59,11 @@ class ComputePlan:
             suffix += __version__
         if self.option == "notebooks":
             return self.outfolder / f"notebooks{suffix}"
-        if self.option == "datasets" and self.modetutorials:
-            return self.outfolder / "datasets"
         return self.outfolder
 
     def getfilelist(self):
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
-
-        if self.option == "datasets":
-            self.listfiles = {"bundle": {"path": self.outfolder, "url": TAR_BUNDLE}}
-
         return self.listfiles
 
     def parse_notebooks_yaml(self):
@@ -131,23 +124,3 @@ class ParallelDownload:
         for err in res.errors:
             _, _, exception = err
             log.error(f"Error: {exception}")
-
-    def show_info_datasets(self):
-        print("")
-        GAMMAPY_DATA = Path.cwd() / self.outfolder
-        if self.modetutorials:
-            GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
-            if self.release:
-                print(
-                    "*** Enter the following commands below to get started with this version of Gammapy"
-                )
-                print(f"cd {self.outfolder.parent}")
-                condaname = "gammapy-" + self.release
-                envfilename = condaname + "-environment.yml"
-                print(f"conda env create -f {envfilename}")
-                print(f"conda activate {condaname}")
-                print("jupyter lab")
-                print("")
-        print("*** You might want to declare GAMMAPY_DATA env variable")
-        print(f"export GAMMAPY_DATA={GAMMAPY_DATA}")
-        print("")

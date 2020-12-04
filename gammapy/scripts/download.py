@@ -9,6 +9,8 @@ from .downloadclasses import ComputePlan, ParallelDownload
 BUNDLESIZE = 152  # in MB
 log = logging.getLogger(__name__)
 
+TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"  # curated datasets bundle
+
 
 def progress_download(source, destination):
     import requests
@@ -80,20 +82,13 @@ def cli_download_notebooks(out, release, modetutorials):
 @click.option("--modetutorials", default=False, hidden=True)
 def cli_download_datasets(out, release, modetutorials):
     """Download datasets"""
-    plan = ComputePlan(
-        out, "", "datasets", modetutorials=modetutorials
-    )
-    filelist = plan.getfilelist()
-    localfolder = plan.getlocalfolder()
-    down = ParallelDownload(
-        filelist, localfolder, release, "datasets", modetutorials
-    )
-    log.info(f"Downloading datasets from {filelist['bundle']['url']}")
-    tar_destination_file = Path(localfolder) / "datasets.tar.gz"
-    progress_download(filelist["bundle"]["url"], tar_destination_file)
+    localfolder = Path(out) / "datasets" if modetutorials else Path(out)
+    log.info(f"Downloading datasets from {TAR_DATASETS}")
+    tar_destination_file = localfolder / "datasets.tar.gz"
+    progress_download(TAR_DATASETS, tar_destination_file)
     log.info(f"Extracting {tar_destination_file}")
     extract_bundle(tar_destination_file, localfolder)
-    down.show_info_datasets()
+    show_info_datasets(localfolder, modetutorials, release)
 
 
 @click.command(name="tutorials")
@@ -110,3 +105,19 @@ def cli_download_tutorials(ctx, out, release, modetutorials):
     """Download notebooks and datasets"""
     ctx.forward(cli_download_notebooks)
     ctx.forward(cli_download_datasets)
+
+
+def show_info_datasets(outfolder, modetutorials, release):
+    print("")
+    if modetutorials and release:
+        print(
+            "*** Enter the following commands below to get started with this version of Gammapy"
+        )
+        print(f"cd {outfolder.parent}")
+        print(f"conda env create -f gammapy-{release}-environment.yml")
+        print(f"conda activate gammapy-{release}")
+        print("jupyter lab")
+        print("")
+    print("*** You might want to declare GAMMAPY_DATA env variable")
+    print(f"export GAMMAPY_DATA={outfolder}")
+    print("")
