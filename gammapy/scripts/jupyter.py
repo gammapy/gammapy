@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 import click
 from gammapy.utils.scripts import get_notebooks_paths
+from gammapy import __version__
 
 log = logging.getLogger(__name__)
 
@@ -221,6 +222,9 @@ class environment:
 @click.command(name="tar")
 def cli_jupyter_tar():
     """Create a tar file with the notebooks in docs."""
-    with tarfile.open("gammapy-notebooks.tar", "w:") as tar:
+
+    tar_name = f"gammapy-notebooks-{__version__}.tar"
+    with tarfile.open(tar_name, "w:") as tar:
         for name in get_notebooks_paths():
             tar.add(name, arcname=Path(name).name)
+    log.info(f"{tar_name} file has been created.")
