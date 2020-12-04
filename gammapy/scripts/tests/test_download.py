@@ -21,18 +21,6 @@ def test_cli_download_help():
 
 @requires_dependency("parfive")
 @pytest.mark.remote_data
-def test_cli_download_datasets(tmp_path, config):
-    args = [
-        "download",
-        "datasets",
-        f"--out={tmp_path}",
-    ]
-    result = run_cli(cli, args)
-    assert "GAMMAPY_DATA" in result.output
-
-
-@requires_dependency("parfive")
-@pytest.mark.remote_data
 def test_cli_download_notebooks(tmp_path, config):
     args = [
         "download",
