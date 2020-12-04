@@ -382,12 +382,7 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self._datasets:
             d = dataset.to_dict()
             filename = d["filename"]
-
-            # TODO: unify Dataset.write() calling interface
-            if filename == f"pha_obs{dataset.name}.fits":
-                dataset.write(path.parent, overwrite=overwrite)
-            else:
-                dataset.write(path.parent / filename, overwrite=overwrite)
+            dataset.write(path.parent / filename, overwrite=overwrite)
             data["datasets"].append(d)
 
         write_yaml(data, path, sort_keys=False)

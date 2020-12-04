@@ -253,25 +253,24 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         reader = OGIPDatasetReader(filename=filename)
         return reader.read()
 
-    def write(self, outdir, overwrite=False, format="ogip"):
+    def write(self, filename, overwrite=False, format="ogip"):
         """Write spectrum dataset on off to file.
 
         Currently only the OGIP format is supported
 
-        For formats specs see `OGIPDatasetWriter.write`
+        For formats specs see `OGIPDatasetWriter`
 
         Parameters
         ----------
-        outdir : `~pathlib.Path` or str
-            Output directory to write to.
+        filename : `~pathlib.Path` or str
+            Filename to write to.
         overwrite : bool
             Overwrite existing file.
         format : {"ogip", "ogip-sherpa"}
             Format to use.
         """
         from .io import OGIPDatasetWriter
-        outdir = make_path(outdir)
-        writer = OGIPDatasetWriter(outdir=outdir, format=format, overwrite=overwrite)
+        writer = OGIPDatasetWriter(filename=filename, format=format, overwrite=overwrite)
         writer.write(self)
 
     @classmethod

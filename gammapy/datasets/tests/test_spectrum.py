@@ -486,16 +486,15 @@ class TestSpectrumOnOff:
 
     def test_to_from_ogip_files(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.write(outdir=tmp_path)
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "pha_obstest.fits")
+        dataset.write(tmp_path / "test.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
 
         expected_regions = compound_region_to_list(self.off_counts.geom.region)
         regions = compound_region_to_list(newdataset.counts_off.geom.region)
 
-        assert newdataset.counts.meta["PHAFILE"] == "pha_obstest.fits"
-        assert newdataset.counts.meta["RESPFILE"] == "rmf_obstest.fits"
-        assert newdataset.counts.meta["BACKFILE"] == "bkg_obstest.fits"
-        assert newdataset.counts.meta["ANCRFILE"] == "arf_obstest.fits"
+        assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits"
+        assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits"
+        assert newdataset.counts.meta["ANCRFILE"] == "test_arf.fits"
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
@@ -521,7 +520,7 @@ class TestSpectrumOnOff:
             acceptance=1,
             name="test",
         )
-        dataset.write(outdir=tmp_path)
+        dataset.write(tmp_path / "pha_obstest.fits")
         newdataset = SpectrumDatasetOnOff.read(tmp_path / "pha_obstest.fits")
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
