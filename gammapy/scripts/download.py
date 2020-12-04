@@ -55,16 +55,10 @@ def extract_bundle(bundle, destination):
     show_default=True,
 )
 @click.option("--release", default="", help="Number of release - ex: 0.12)")
-@click.option(
-    "--all",
-    default=True,
-    is_flag=True,
-    help="Consider also other notebooks than tutorials",
-)
 @click.option("--modetutorials", default=False, hidden=True)
-def cli_download_notebooks(out, release, all, modetutorials):
+def cli_download_notebooks(out, release, modetutorials):
     """Download notebooks"""
-    plan = ComputePlan(out, release, "notebooks", all_notebooks=all)
+    plan = ComputePlan(out, release, "notebooks")
     if release:
         plan.getenvironment()
     down = ParallelDownload(
