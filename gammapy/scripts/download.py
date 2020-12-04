@@ -51,12 +51,12 @@ def extract_bundle(bundle, destination):
 
 
 def get_release_number():
-    if 'dev' in __version__:
+    if "dev" in __version__:
         print("You are working with a not stable version of Gammapy")
         print("Please specify a published notebooks release")
         exit()
     else:
-        release = __version__.split('.dev', 1)[0]
+        release = __version__.split(".dev", 1)[0]
         return release
 
 
@@ -94,7 +94,7 @@ def cli_download_notebooks(out, release):
     filename_env = f"gammapy-{release}-environment.yml"
     url_file_env = f"{RELEASES_BASE_URL}/install/{filename_env}"
     log.info(f"Downloading {url_file_env}")
-    progress_download(url_file_env, localfolder/filename_env)
+    progress_download(url_file_env, localfolder / filename_env)
     filename_tar = f"notebooks-{release}.tar"
     tar_notebooks = f"{RELEASES_BASE_URL}/notebooks/{filename_tar}"
     tar_destination_file = localfolder / "notebooks.tar"
@@ -106,7 +106,10 @@ def cli_download_notebooks(out, release):
 
 @click.command(name="datasets")
 @click.option(
-    "--out", default="gammapy-datasets", help="Destination folder.", show_default=True,
+    "--out",
+    default="gammapy-datasets",
+    help="Destination folder.",
+    show_default=True,
 )
 def cli_download_datasets(out):
     """Download datasets"""

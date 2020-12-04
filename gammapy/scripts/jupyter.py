@@ -8,8 +8,8 @@ import tarfile
 import time
 from pathlib import Path
 import click
-from gammapy.utils.scripts import get_notebooks_paths
 from gammapy import __version__
+from gammapy.utils.scripts import get_notebooks_paths
 
 log = logging.getLogger(__name__)
 

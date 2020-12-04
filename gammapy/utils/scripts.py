@@ -20,6 +20,7 @@ PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
 
 def get_notebooks_paths(folder=PATH_DOCS):
     """Generator yields a Path for each notebook.
+
     Parameters
     ----------
     folder : str

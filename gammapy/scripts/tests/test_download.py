@@ -32,8 +32,8 @@ def test_cli_download_notebooks(tmp_path, config):
         f"--release={config['release']}",
     ]
     run_cli(cli, args)
-    assert (tmp_path / config['release'] / config["envfilename"]).exists()
-    assert (tmp_path / config['release'] / f"{config['notebook']}.ipynb").exists()
+    assert (tmp_path / config["release"] / config["envfilename"]).exists()
+    assert (tmp_path / config["release"] / f"{config['notebook']}.ipynb").exists()
 
 
 @pytest.mark.remote_data

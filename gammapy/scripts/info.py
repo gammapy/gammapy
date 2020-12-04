@@ -31,7 +31,7 @@ GAMMAPY_DEPENDENCIES = [
     "sherpa",
     "naima",
     "emcee",
-    "corner"
+    "corner",
 ]
 
 GAMMAPY_ENV_VARIABLES = ["GAMMAPY_DATA"]
@@ -45,8 +45,7 @@ GAMMAPY_ENV_VARIABLES = ["GAMMAPY_DATA"]
 )
 @click.option("--envvar/--no-envvar", default=True, help="Show environment variables")
 def cli_info(system, version, dependencies, envvar):
-    """Display information about Gammapy
-    """
+    """Display information about Gammapy"""
     if system:
         info = get_info_system()
         print_info(info=info, title="System")
