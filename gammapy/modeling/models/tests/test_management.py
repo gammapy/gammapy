@@ -55,14 +55,14 @@ def test_select(models):
         {"datasets_names": None},
         {"tag": "BackgroundModel"},
         {"tag": ["SkyModel", "BackgroundModel"]},
-        {"spatial_tag": "point"},
-        {"spatial_tag": ["point", "gauss"]},
-        {"spectral_tag": "pl"},
-        {"spectral_tag": ["pl", "pl-norm"]},
+        {"tag": "point", "model_type": "spatial"},
+        {"tag": ["point", "gauss"], "model_type": "spatial"},
+        {"tag": "pl", "model_type": "spectral"},
+        {"tag": ["pl", "pl-norm"], "model_type": "spectral"},
         {"name_substring": "bkg"},
         {"frozen": True},
         {"frozen": False},
-        {"datasets_names": "dataset-1", "spectral_tag": "pl"},
+        {"datasets_names": "dataset-1", "tag": "pl", "model_type": "spectral"},
     ]
 
     expected = [
@@ -82,12 +82,12 @@ def test_select(models):
         ["source-1", "source-2"],
     ]
     for cdt, xp in zip(conditions, expected):
-        mask = models.mask(**cdt)
-        selected = models.select(mask)
+        selected = models.select(**cdt)
+        print(selected.names)
         assert selected.names == xp
 
     mask = models.mask(**conditions[4]) | models.mask(**conditions[6])
-    selected = models.select(mask)
+    selected = models[mask]
     assert selected.names == ["source-3", "bkg1", "bkg2"]
 
 
@@ -113,16 +113,17 @@ def test_bounds(models):
         model_tag="pl", parameters_names="index", min=0, max=5, value=2.4
     )
     pl_mask = models.mask(spectral_tag="pl")
-    assert np.all([m.spectral_model.index.value == 2.4 for m in models.select(pl_mask)])
+    assert np.all([m.spectral_model.index.value == 2.4 for m in models[pl_mask]])
     models.set_parameters_bounds(
-        model_tag=["pl", "pl-norm"],
+        tag=["pl", "pl-norm"],
+        model_type="spectral",
         parameters_names=["norm", "amplitude"],
         min=0,
         max=None,
     )
     bkg_mask = models.mask(tag="BackgroundModel")
-    assert np.all([m.spectral_model.amplitude.min == 0 for m in models.select(pl_mask)])
-    assert np.all([m._spectral_model.norm.min == 0 for m in models.select(bkg_mask)])
+    assert np.all([m.spectral_model.amplitude.min == 0 for m in models[pl_mask]])
+    assert np.all([m._spectral_model.norm.min == 0 for m in models[bkg_mask]])
 
 
 def test_freeze(models):

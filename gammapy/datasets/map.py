@@ -288,7 +288,7 @@ class MapDataset(Dataset):
 
         if models is not None:
             models = DatasetModels(models)
-            models = models.select(models.mask(datasets_names=self.name))
+            models = models.select(datasets_names=self.name)
 
             for model in models:
                 if not isinstance(model, FoVBackgroundModel):

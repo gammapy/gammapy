@@ -395,10 +395,13 @@ class Parameters(collections.abc.Sequence):
         else:
             raise TypeError(f"Invalid type: {type(val)!r}")
 
-    def __getitem__(self, name):
-        """Access parameter by name or index"""
-        idx = self.index(name)
-        return self._parameters[idx]
+    def __getitem__(self, key):
+        """Access parameter by name, index or boolean mask"""
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return self.__class__(list(np.array(self._parameters)[key]))
+        else:
+            idx = self.index(key)
+            return self._parameters[idx]
 
     def __len__(self):
         return len(self._parameters)
@@ -493,6 +496,11 @@ class Parameters(collections.abc.Sequence):
         """Freeze all parameters"""
         for par in self._parameters:
             par.frozen = True
+
+    def unfreeze_all(self):
+        """ Unfreeze all parameters (even those frozen by default)"""
+        for par in self._parameters:
+            par.frozen = False
 
 
 class restore_parameters_status:

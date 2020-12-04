@@ -29,6 +29,8 @@ __all__ = ["Model", "Models", "DatasetModels"]
 class Model:
     """Model base class."""
 
+    _type = None
+
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
@@ -42,8 +44,11 @@ class Model:
                 par = value
 
             setattr(self, par.name, par)
-
         self._covariance = Covariance(self.parameters)
+
+    @property
+    def type(self):
+        return self._type
 
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)
@@ -180,6 +185,54 @@ class Model:
         if len(self.parameters) > 0:
             string += f"\n{self.parameters.to_table()}"
         return string
+
+    @property
+    def frozen(self, model_type=None):
+        """Frozen status of a model, True if all parameters are frozen """
+        return np.all([p.frozen for p in self.parameters])
+
+    def freeze(self, model_type=None):
+        """Freeze parameters depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           freeze all parameters or only spatial or only spectral 
+        """
+
+        if model_type is None or self.type == model_type:
+            self.parameters.freeze_all()
+        elif model_type == "spatial" and hasattr(self, "spatial_model"):
+            self.spatial_model.parameters.freeze_all()
+        elif model_type == "spectral" and hasattr(self, "_spectral_model"):
+            self._spectral_model.parameters.freeze_all()
+
+    def unfreeze(self, model_type=None):
+        """Restore parameters frozen status to default depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           restore frozen status to default for all parameters or only spatial or only spectral
+        """
+
+        if model_type is None or self.type == model_type:
+            if self.type == model_type or hasattr(self, "spatial_model"):
+                self._unfree_to_default()
+        if model_type is None or model_type == "spatial":
+            if hasattr(self, "spatial_model"):
+                self.spatial_model._unfree_to_default()
+        if model_type is None or model_type == "spectral":
+            if hasattr(self, "_spectral_model"):
+                self._spectral_model._unfree_to_default()
+
+    def _unfree_to_default(self):
+        try:
+            defaults = [p.frozen for p in self.__class__().parameters]
+            for p, status in zip(self.parameters, defaults):
+                p.frozen = status
+        except (TypeError):
+            pass
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -433,7 +486,10 @@ class DatasetModels(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {other!r}")
 
     def __getitem__(self, key):
-        return self._models[self.index(key)]
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return self.__class__(list(np.array(self._models)[key]))
+        else:
+            return self._models[self.index(key)]
 
     def index(self, key):
         if isinstance(key, (int, slice)):
@@ -455,33 +511,46 @@ class DatasetModels(collections.abc.Sequence):
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def select(self, mask):
-        """Select subset of models from a mask
+    def select(
+        self,
+        name_substring=None,
+        datasets_names=None,
+        tag=None,
+        model_type=None,
+        frozen=None,
+    ):
+        """Select models that verify all conditions
 
         Parameters
         ----------
-        mask : `numpy.array`
-            Boolean mask
 
-        Returns
+        name_substring : str
+            Substring contained in the model name
+        dataset_name : str or list
+            Name of the dataset
+        tag : str or list
+            Model tag
+        model_type :{None, spatial, spectral}
+           type of models
+        frozen : bool
+            Select models with all parameters frozen if True, exclude them if False.
+       Returns
         -------
         dataset_model : `DatasetModels`
-            Dataset models
+            Selected models
         """
-        models = list(np.array(self)[mask])
-
-        return self.__class__(models)
+        mask = self.mask(name_substring, datasets_names, tag, model_type, frozen)
+        return self[mask]
 
     def mask(
         self,
         name_substring=None,
         datasets_names=None,
         tag=None,
-        spatial_tag=None,
-        spectral_tag=None,
+        model_type=None,
         frozen=None,
     ):
-        """Create a mask of models, true if all condition are verified
+        """Create a mask of models, true if all conditions are verified
 
         Parameters
         ----------
@@ -491,17 +560,15 @@ class DatasetModels(collections.abc.Sequence):
             Name of the dataset
         tag : str or list
             Model tag
-        spatial_tag : str or list
-            Spatial model tag if any
-        spectral_tag : str or list
-            Spectral model tag
+        model_type :{None, spatial, spectral}
+           type of models
         frozen : bool
             Select models with all parameters frozen if True, exclude them if False.
  
        Returns
         -------
         mask : `numpy.array`
-            Boolean mask
+            Boolean mask, True for selected models 
         """
 
         selection = np.ones(len(self), dtype=bool)
@@ -509,52 +576,45 @@ class DatasetModels(collections.abc.Sequence):
         for km, model in enumerate(self):
             if name_substring:
                 selection[km] &= name_substring in model.name
+
             if datasets_names:
                 if not isinstance(datasets_names, list):
                     datasets_names = [datasets_names]
                 selection[km] &= model.datasets_names is None or np.any(
                     [name in model.datasets_names for name in datasets_names]
                 )
+
             if tag:
                 if not isinstance(tag, list):
                     tag = [tag]
-                inlist = np.any([t in model.tag for t in tag])
-                selection[km] &= tag == model.tag or inlist
-            if spatial_tag:
-                if not isinstance(spatial_tag, list):
-                    spatial_tag = [spatial_tag]
-                if hasattr(model, "spatial_model"):
-                    selection[km] &= np.any(
-                        [t in model.spatial_model.tag for t in spatial_tag]
-                    )
+                if model_type is None:
+                    sub_model = model
+                elif model_type == "spatial":
+                    sub_model = getattr(model, "spatial_model", None)
+                elif model_type == "spectral":
+                    sub_model = getattr(model, "_spectral_model", None)
+                if sub_model:
+                    inlist = np.any([t in sub_model.tag for t in tag])
+                    selection[km] &= tag == sub_model.tag or inlist
                 else:
                     selection[km] &= False
-            if spectral_tag:
-                if not isinstance(spectral_tag, list):
-                    spectral_tag = [spectral_tag]
-                if hasattr(model, "_spectral_model"):
-                    # use private attr to support BackgroundModel
-                    selection[km] &= np.any(
-                        [t in model._spectral_model.tag for t in spectral_tag]
-                    )
-                else:
-                    selection[km] &= False
+
             if frozen is not None:
-                all_frozen = np.all([p.frozen for p in model.parameters])
                 if frozen == True:
-                    selection[km] &= all_frozen
+                    selection[km] &= model.frozen
                 else:
-                    selection[km] &= ~all_frozen
+                    selection[km] &= ~model.frozen
         return selection
 
     def set_parameters_bounds(
-        self, model_tag, parameters_names, min=None, max=None, value=None
+        self, tag, model_type, parameters_names, min=None, max=None, value=None
     ):
         """Set bounds for the selected models types and parameters names
         Parameters
         ----------
-        model_tag : str or list
-            tag of the spatial or spectral models (do not mix spatial and spectral)
+        tag : str or list
+        model_type : {"spatial", "spectral"}
+            type of models
         parameters_names : str or list
             parameters names
         min : float
@@ -565,31 +625,14 @@ class DatasetModels(collections.abc.Sequence):
             init value
         """
 
-        for m in self:
-            if not isinstance(model_tag, list):
-                model_tag = [model_tag]
-            if not isinstance(parameters_names, list):
-                parameters_names = [parameters_names]
-            sub_model = None
-            if hasattr(m, "spatial_model") and np.any(
-                [t in m.spatial_model.tag for t in model_tag]
-            ):
-                sub_model = m.spatial_model
-            if hasattr(m, "_spectral_model") and np.any(
-                [t in m._spectral_model.tag for t in model_tag]
-            ):
-                if sub_model is not None:
-                    raise ValueError("Do not mix spatial and spectral in model_tag")
-                sub_model = m.spectral_model
-            if sub_model is not None:
-                for p in sub_model.parameters:
-                    if p.name in parameters_names:
-                        if min is not None:
-                            p.min = min
-                        if max is not None:
-                            p.max = max
-                        if value is not None:
-                            p.value = value
+        models = self.select(tag=tag, model_type=model_type)
+        parameters = models.parameters.select(name=parameters_names)
+        if min is not None:
+            parameters.mins = min
+        if max is not None:
+            parameters.maxs = min
+        if value is not None:
+            parameters.values = value
 
     def freeze(self, model_type=None):
         """Freeze parameters depending on model type
@@ -600,16 +643,8 @@ class DatasetModels(collections.abc.Sequence):
            freeze all parameters or only spatial or only spectral 
         """
 
-        if model_type is None:
-            self.parameters.freeze_all()
-        elif model_type == "spatial":
-            for m in self:
-                if hasattr(m, "spatial_model"):
-                    m.spatial_model.parameters.freeze_all()
-        elif model_type == "spectral":
-            for m in self:
-                if hasattr(m, "_spectral_model"):
-                    m._spectral_model.parameters.freeze_all()
+        for m in self:
+            m.freeze(model_type)
 
     def unfreeze(self, model_type=None):
         """Restore parameters frozen status to default depending on model type
@@ -621,20 +656,12 @@ class DatasetModels(collections.abc.Sequence):
         """
 
         for m in self:
-            if model_type is None or model_type == "spatial":
-                if hasattr(m, "spatial_model"):
-                    defaults = [
-                        p.frozen for p in m.spatial_model.__class__().parameters
-                    ]
-                    for p, status in zip(m.spatial_model.parameters, defaults):
-                        p.frozen = status
-            if model_type is None or model_type == "spectral":
-                if hasattr(m, "_spectral_model"):
-                    defaults = [
-                        p.frozen for p in m._spectral_model.__class__().parameters
-                    ]
-                    for p, status in zip(m._spectral_model.parameters, defaults):
-                        p.frozen = status
+            m.unfreeze(model_type)
+
+    @property
+    def frozen(self):
+        "Boolean mask, True if all parameters of a given model are frozen"
+        return np.array([m.frozen for m in self])
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
