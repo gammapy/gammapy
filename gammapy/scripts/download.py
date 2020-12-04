@@ -4,12 +4,13 @@ import logging
 import tarfile
 from pathlib import Path
 import click
-from .downloadclasses import ComputePlan, ParallelDownload
+from gammapy import __version__
 
-BUNDLESIZE = 152  # in MB
 log = logging.getLogger(__name__)
 
-TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"  # curated datasets bundle
+BUNDLESIZE = 152  # in MB
+RELEASES_BASE_URL = "https://gammapy.org/download"
+TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"
 
 
 def progress_download(source, destination):
@@ -49,6 +50,35 @@ def extract_bundle(bundle, destination):
     Path(bundle).unlink()
 
 
+def get_release_number():
+    if 'dev' in __version__:
+        print("You are working with a not stable version of Gammapy")
+        print("Please specify a published notebooks release")
+        exit()
+    else:
+        release = __version__.split('.dev', 1)[0]
+        return release
+
+
+def show_info_notebooks(outfolder, release):
+    print("")
+    print(
+        "*** Enter the following commands below to get started with this version of Gammapy"
+    )
+    print(f"cd {outfolder}")
+    print(f"conda env create -f gammapy-{release}-environment.yml")
+    print(f"conda activate gammapy-{release}")
+    print("jupyter lab")
+    print("")
+
+
+def show_info_datasets(outfolder):
+    print("")
+    print("*** You might want to declare GAMMAPY_DATA env variable")
+    print(f"export GAMMAPY_DATA={outfolder}")
+    print("")
+
+
 @click.command(name="notebooks")
 @click.option(
     "--out",
@@ -56,68 +86,34 @@ def extract_bundle(bundle, destination):
     help="Path where the versioned notebook files will be copied.",
     show_default=True,
 )
-@click.option("--release", default="", help="Number of release - ex: 0.12)")
-@click.option("--modetutorials", default=False, hidden=True)
-def cli_download_notebooks(out, release, modetutorials):
+@click.option("--release", default="", help="Number of release - ex: 0.18.2)")
+def cli_download_notebooks(out, release):
     """Download notebooks"""
-    plan = ComputePlan(out, release, "notebooks")
-    if release:
-        plan.getenvironment()
-    down = ParallelDownload(
-        plan.getfilelist(),
-        plan.getlocalfolder(),
-        release,
-        "notebooks",
-        modetutorials
-    )
-    down.run()
-    print("")
+    release = get_release_number() if not release else release
+    localfolder = Path(out) / release
+    filename_env = f"gammapy-{release}-environment.yml"
+    url_file_env = f"{RELEASES_BASE_URL}/install/{filename_env}"
+    log.info(f"Downloading {url_file_env}")
+    progress_download(url_file_env, localfolder/filename_env)
+    filename_tar = f"notebooks-{release}.tar"
+    tar_notebooks = f"{RELEASES_BASE_URL}/notebooks/{filename_tar}"
+    tar_destination_file = localfolder / "notebooks.tar"
+    log.info(f"Downloading {tar_notebooks}")
+    progress_download(tar_notebooks, tar_destination_file)
+    extract_bundle(tar_destination_file, localfolder)
+    show_info_notebooks(localfolder, release)
 
 
 @click.command(name="datasets")
 @click.option(
     "--out", default="gammapy-datasets", help="Destination folder.", show_default=True,
 )
-@click.option("--release", default="", hidden=True)
-@click.option("--modetutorials", default=False, hidden=True)
-def cli_download_datasets(out, release, modetutorials):
+def cli_download_datasets(out):
     """Download datasets"""
-    localfolder = Path(out) / "datasets" if modetutorials else Path(out)
+    localfolder = Path(out)
     log.info(f"Downloading datasets from {TAR_DATASETS}")
     tar_destination_file = localfolder / "datasets.tar.gz"
     progress_download(TAR_DATASETS, tar_destination_file)
     log.info(f"Extracting {tar_destination_file}")
     extract_bundle(tar_destination_file, localfolder)
-    show_info_datasets(localfolder, modetutorials, release)
-
-
-@click.command(name="tutorials")
-@click.pass_context
-@click.option(
-    "--out",
-    default="gammapy-tutorials",
-    help="Path where notebooks and datasets folders will be copied.",
-    show_default=True,
-)
-@click.option("--release", default="", help="Number of release - ex: 0.12")
-@click.option("--modetutorials", default=True, hidden=True)
-def cli_download_tutorials(ctx, out, release, modetutorials):
-    """Download notebooks and datasets"""
-    ctx.forward(cli_download_notebooks)
-    ctx.forward(cli_download_datasets)
-
-
-def show_info_datasets(outfolder, modetutorials, release):
-    print("")
-    if modetutorials and release:
-        print(
-            "*** Enter the following commands below to get started with this version of Gammapy"
-        )
-        print(f"cd {outfolder.parent}")
-        print(f"conda env create -f gammapy-{release}-environment.yml")
-        print(f"conda activate gammapy-{release}")
-        print("jupyter lab")
-        print("")
-    print("*** You might want to declare GAMMAPY_DATA env variable")
-    print(f"export GAMMAPY_DATA={outfolder}")
-    print("")
+    show_info_datasets(localfolder)

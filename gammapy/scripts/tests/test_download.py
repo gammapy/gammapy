@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from gammapy.scripts.main import cli
-from gammapy.utils.testing import requires_dependency, run_cli
+from gammapy.utils.testing import run_cli
 
 
 @pytest.fixture(scope="session")
 def config():
     return {
-        "release": "0.8",
+        "release": "0.18",
         "notebook": "astro_dark_matter",
-        "envfilename": "gammapy-0.8-environment.yml",
+        "envfilename": "gammapy-0.18-environment.yml",
     }
 
 
@@ -18,7 +18,11 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
-@requires_dependency("parfive")
+def test_cli_download_notebooks_norelease():
+    result = run_cli(cli, ["download", "notebooks"])
+    assert "Please specify a published notebooks release" in result.output
+
+
 @pytest.mark.remote_data
 def test_cli_download_notebooks(tmp_path, config):
     args = [
@@ -28,20 +32,15 @@ def test_cli_download_notebooks(tmp_path, config):
         f"--release={config['release']}",
     ]
     run_cli(cli, args)
-
-    assert (tmp_path / config["envfilename"]).exists()
-    path = tmp_path / f"notebooks-{config['release']}/{config['notebook']}.ipynb"
-    assert path.exists()
+    assert (tmp_path / config['release'] / config["envfilename"]).exists()
+    assert (tmp_path / config['release'] / f"{config['notebook']}.ipynb").exists()
 
 
-@requires_dependency("parfive")
 @pytest.mark.remote_data
-def test_cli_download_tutorials(tmp_path, config):
+def test_cli_download_datasets(tmp_path, config):
     option_out = f"--out={tmp_path}"
-    option_release = f"--release={config['release']}"
 
-    args = ["download", "tutorials", option_out, option_release]
+    args = ["download", "datasets", option_out]
     result = run_cli(cli, args)
-    assert (tmp_path / config["envfilename"]).exists()
+    assert tmp_path.exists()
     assert "GAMMAPY_DATA" in result.output
-    assert "jupyter lab" in result.output

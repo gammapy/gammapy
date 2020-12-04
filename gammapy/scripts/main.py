@@ -88,18 +88,13 @@ def cli_download(ctx):  # noqa: D301
     """Download notebooks and datasets.
 
     \b
-    Download notebooks published as tutorials and the
-    related datasets needed to execute them. It is also possible to download
-    individual notebooks, scrtipts or datasets.
+    Download notebooks published in the Gammapy documentation as well as the
+    related datasets needed to execute them.
     \b
-    - The option `tutorials` will download versioned folders for the notebooks
-    into a `gammapy-tutorials` folder created at the current
-    working directory, as well as the datasets needed to reproduce them.
+    - The option `notebooks` will download the notebook files into a `gammapy-notebooks`
+    folder created at the current working directory.
     \b
-    - The option `notebooks` will download the notebook files used in the tutorials
-    into a `gammapy-notebooks` folder created at the current working directory.
-    \b
-    - The option `datasets` will download the datasets used by Gammapy into a
+    - The option `datasets` will download the datasets used in the documentation into a
     `gammapy-datasets` folder created at the current working directory.
 
     \b
@@ -107,11 +102,8 @@ def cli_download(ctx):  # noqa: D301
     --------
 
     \b
-    $ gammapy download datasets
-    $ gammapy download notebooks
-    $ gammapy download tutorials --release 0.8
-    $ gammapy download notebooks --src overview
-    $ gammapy download datasets  --src fermi-3fhl-gc --out localfolder/
+    $ gammapy download datasets  --out localfolder
+    $ gammapy download notebooks --release 0.18 --out localfolder
     """
 
 
@@ -171,10 +163,6 @@ def add_subcommands():
     from .download import cli_download_datasets
 
     cli_download.add_command(cli_download_datasets)
-
-    from .download import cli_download_tutorials
-
-    cli_download.add_command(cli_download_tutorials)
 
     from .jupyter import cli_jupyter_black
 
