@@ -15,7 +15,7 @@ PIG 22 - Unified flux estimators API
 Abstract
 ========
 This pig discusses possible improvements for the API of flux ``Estimator`` results.
-We discuss the introduction of a general ``LikelihoodSED`` object that would allow
+We discuss the introduction of a general ``FluxEstimate`` object that would allow
 flux type conversions and that would serve as a base class for ``FluxPoints`` and
 ``FluxMap`` class. The latter would allow easier handling of ``TSMapEstimator`` results,
 in particular regarding serialization and flux conversion.
@@ -82,8 +82,9 @@ Proposal of API for flux estimate results
 Rely internally on likelihood SED type
 --------------------------------------
 
-First we propose that all ``Estimators`` compute quantities following the ``likelihood`` SED type. Beyond the
-uniform behavior, his has the advantage of making flux type conversion easier.
+First we propose that all ``Estimators`` compute quantities following a SED type inspired bythe ``likelihood``
+SED type. It would basically follow the ``norm``
+Beyond the uniform behavior, his has the advantage of making flux type conversion easier.
 
 To limit code duplication (e.g. for flux conversions), we propose a common base class to describe the format
 and contain the required quantities.
