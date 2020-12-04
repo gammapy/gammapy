@@ -29,6 +29,8 @@ dependencies:
   - pytest-astropy
   - pytest-cov
   - pytest-xdist
+  - requests
+  - tqdm
   # extra dependencies
   - healpy
   - iminuit<2.0
@@ -39,9 +41,7 @@ dependencies:
   - naima
   - pandas
   - reproject
-  - requests
   - sherpa
-  - tqdm
   # dev dependencies
   - black
   - flake8
