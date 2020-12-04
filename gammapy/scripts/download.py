@@ -14,8 +14,12 @@ TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"
 
 
 def progress_download(source, destination):
-    import requests
-    from tqdm import tqdm
+    try:
+        import requests
+        from tqdm import tqdm
+    except ImportError:
+        log.error("To use gammapy download install the tqdm and requests packages")
+        return
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(source, stream=True) as r:
