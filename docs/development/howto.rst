@@ -102,8 +102,6 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ git status
     $ cd astropy_helpers && git checkout -- . && cd ..
 
-.. _dev-check_html_links:
-
 What checks and conversions should I do for inputs?
 ---------------------------------------------------
 
@@ -979,6 +977,8 @@ use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive l
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+
+.. _dev-check_html_links:
 
 Check broken links
 ------------------
