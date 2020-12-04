@@ -1,10 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Download class for gammapy download CLI."""
-import hashlib
-import json
 import logging
-import sys
-# from configparser import ConfigParser
 from pathlib import Path
 from urllib.request import urlopen
 import yaml
@@ -12,19 +8,9 @@ from gammapy import __version__
 
 log = logging.getLogger(__name__)
 
-# fetch params from setup.cfg
-# PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
-# conf = ConfigParser()
-# conf.read(PATH_CFG / "setup.cfg")
-# setup_cfg = dict(conf.items("metadata"))
-# URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
-
-URL_GAMMAPY_MASTER = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 RELEASES_BASE_URL = "https://gammapy.org/download"
-DEV_NBS_YAML_URL = f"{URL_GAMMAPY_MASTER}notebooks.yaml"
-DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"  # CI tests
-TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"
-# Curated datasets bundle
+DEV_NBS_YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/notebooks.yaml"
+TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"  # curated datasets bundle
 
 
 def parse_imagefiles(notebookslist):
@@ -67,7 +53,7 @@ class ComputePlan:
         try:
             from parfive import Downloader
         except ImportError:
-            log.error("To use gammapy download, install the parfive package!")
+            log.error("To use gammapy download, install the parfive package.")
             return
 
         dl = Downloader(progress=False, file_progress=False)
@@ -150,7 +136,7 @@ class ParallelDownload:
         try:
             from parfive import Downloader
         except ImportError:
-            log.error("To use gammapy download, install the parfive package!")
+            log.error("To use gammapy download, install the parfive package.")
             return
 
         if self.listfiles:
