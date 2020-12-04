@@ -27,19 +27,6 @@ def get_notebooks():
         return yaml.safe_load(fh)
 
 
-def requirement_missing(notebook):
-    """Check if one of the requirements is missing."""
-    if "requires" in notebook:
-        if notebook["requires"] is None:
-            return False
-        for package in notebook["requires"].split():
-            try:
-                pkg_resources.working_set.require(package)
-            except Exception:
-                return True
-    return False
-
-
 def main():
     logging.basicConfig(level=logging.INFO)
 
@@ -57,9 +44,6 @@ def main():
 
     try:
         for notebook in get_notebooks():
-            if requirement_missing(notebook):
-                log.info(f"Skipping notebook (requirement missing): {notebook['name']}")
-                continue
             filename = notebook["name"] + ".ipynb"
             path_dest = path_temp / filename
             src_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
