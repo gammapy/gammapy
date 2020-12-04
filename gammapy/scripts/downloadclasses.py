@@ -13,20 +13,6 @@ DEV_NBS_YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/not
 TAR_BUNDLE = "https://github.com/gammapy/gammapy-data/tarball/master"  # curated datasets bundle
 
 
-def parse_imagefiles(notebookslist):
-    for item in notebookslist:
-        record = notebookslist[item]
-        if record.get("images", ""):
-            for im in record["images"]:
-                label = "im: " + im
-                path = "images/" + im + ".png"
-                filename_img = record["url"][record["url"].rfind("/") :]
-                url = record["url"].replace(filename_img, "")
-                url = url + "/" + path
-                data = {"url": url, "path": path}
-                yield label, data
-
-
 class ComputePlan:
     """Generates the whole list of files to download"""
 
@@ -81,7 +67,6 @@ class ComputePlan:
     def getfilelist(self):
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
-            self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
 
         if self.option == "datasets":
             self.listfiles = {"bundle": {"path": self.outfolder, "url": TAR_BUNDLE}}
@@ -108,13 +93,9 @@ class ComputePlan:
             self.listfiles[label]["url"] = nb["url"]
             self.listfiles[label]["path"] = path
             self.listfiles[label]["datasets"] = []
-            self.listfiles[label]["images"] = []
             if nb.get("datasets", ""):
                 for ds in nb["datasets"]:
                     self.listfiles[label]["datasets"].append(ds)
-            if nb.get("images", ""):
-                for im in nb["images"]:
-                    self.listfiles[label]["images"].append(im)
 
 
 class ParallelDownload:

@@ -9,7 +9,6 @@ def config():
     return {
         "release": "0.8",
         "notebook": "astro_dark_matter",
-        "imagefile": "gammapy_datastore_butler.png",
         "envfilename": "gammapy-0.8-environment.yml",
     }
 
