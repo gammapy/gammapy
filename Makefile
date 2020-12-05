@@ -70,7 +70,7 @@ clean:
 	rm -rf build dist docs/_build docs/api temp/ docs/_static/notebooks \
 	  htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache .pytest_cache \
 	  docs/modeling/gallery
-	find . -name ".ipynb_checkpoints" -prume -exec rm -rf {} \;
+	find . -name ".ipynb_checkpoints" -prune -exec rm -rf {} \;
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
