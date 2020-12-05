@@ -12,7 +12,7 @@ import nbformat
 from nbformat.v4 import new_markdown_cell
 from gammapy import __version__
 from gammapy.scripts.jupyter import notebook_test
-from gammapy.utils.notebooks_test import get_notebooks
+from gammapy.utils.scripts import get_notebooks_paths
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -34,14 +34,6 @@ BINDER_URL = "https://mybinder.org/v2/gh/gammapy/gammapy-webpage"
 def fill_notebook(nb_path, args):
     """Code formatting, strip output, file copy, execution and script conversion."""
 
-    if not Path(nb_path).exists():
-        log.info(f"File {nb_path} does not exist.")
-        return
-
-    if args.fmt:
-        subprocess.run(
-            [sys.executable, "-m", "gammapy", "jupyter", "--src", nb_path, "black"]
-        )
     subprocess.run(
         [sys.executable, "-m", "gammapy", "jupyter", "--src", nb_path, "strip"]
     )
@@ -138,8 +130,7 @@ def build_notebooks(args):
         fill_notebook(pathsrc, args)
         add_box(pathsrc)
     else:
-        for notebook in get_notebooks():
-            nb_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
+        for nb_path in get_notebooks_paths():
             fill_notebook(nb_path, args)
             add_box(nb_path)
 
