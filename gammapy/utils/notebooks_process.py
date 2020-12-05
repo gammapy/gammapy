@@ -27,8 +27,6 @@ URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 build_docs_cfg = dict(conf.items("build_docs"))
 DOWN_NBS = build_docs_cfg["downloadable-notebooks"]
 PATH_NBS = Path(build_docs_cfg["source-dir"]) / DOWN_NBS
-PATH_SOURCE_IMAGES = Path(build_docs_cfg["source-dir"]) / "tutorials" / "images"
-PATH_DEST_IMAGES = Path(build_docs_cfg["source-dir"]) / DOWN_NBS / "images"
 GITHUB_TUTOS_URL = "https://github.com/gammapy/gammapy/tree/master/docs/tutorials"
 BINDER_BADGE_URL = "https://static.mybinder.org/badge.svg"
 BINDER_URL = "https://mybinder.org/v2/gh/gammapy/gammapy-webpage"
@@ -162,8 +160,6 @@ def main():
         sys.exit()
 
     build_notebooks(args)
-    shutil.rmtree(PATH_DEST_IMAGES, ignore_errors=True)
-    shutil.copytree(PATH_SOURCE_IMAGES, PATH_DEST_IMAGES)
 
 
 if __name__ == "__main__":

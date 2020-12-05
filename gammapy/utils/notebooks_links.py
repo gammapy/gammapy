@@ -4,9 +4,7 @@ import argparse
 import logging
 import re
 import shutil
-import sys
 from configparser import ConfigParser
-from distutils.util import strtobool
 from pathlib import Path
 from gammapy import __version__
 from gammapy.utils.notebooks_test import get_notebooks
