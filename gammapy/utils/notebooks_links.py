@@ -7,7 +7,7 @@ import shutil
 from configparser import ConfigParser
 from pathlib import Path
 from gammapy import __version__
-from gammapy.utils.notebooks_test import get_notebooks
+from gammapy.utils.scripts import get_notebooks_paths
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -123,15 +123,13 @@ def main():
     log.info("Building API links in .ipynb and Sphinx formatted notebooks.")
     log.info("Bring back stripped and clean notebooks.")
 
-    for notebook in get_notebooks():
-        nb_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
-        if args.src and args.src != nb_path:
+    for nb_path in get_notebooks_paths():
+        if args.src and Path(args.src).resolve() != nb_path:
             continue
-        downloadable_path = Path(nb_path)
-        downloadable_path = PATH_NBS / downloadable_path.absolute().name
+        downloadable_path = PATH_NBS / nb_path.absolute().name
         shutil.copyfile(downloadable_path, nb_path)
         make_api_links(downloadable_path, file_type="ipynb")
-        html_path = nb_path.replace(str(SOURCE_DIR), str(PATH_DOC))
+        html_path = str(nb_path).replace(str(SOURCE_DIR), str(PATH_DOC))
         html_path = html_path.replace("ipynb", "html")
         make_api_links(Path(html_path), file_type="html")
 
