@@ -22,7 +22,6 @@ SETUP_FILE = "setup.cfg"
 conf = ConfigParser()
 conf.read(PATH_CFG / SETUP_FILE)
 setup_cfg = dict(conf.items("metadata"))
-URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 build_docs_cfg = dict(conf.items("build_docs"))
 DOWN_NBS = build_docs_cfg["downloadable-notebooks"]
 PATH_NBS = Path(build_docs_cfg["source-dir"]) / DOWN_NBS
@@ -31,19 +30,14 @@ BINDER_BADGE_URL = "https://static.mybinder.org/badge.svg"
 BINDER_URL = "https://mybinder.org/v2/gh/gammapy/gammapy-webpage"
 
 
-def fill_notebook(nb_path, args):
-    """Code formatting, strip output, file copy, execution and script conversion."""
+def copy_clean_notebook(nb_path):
+    """Strip output, copy file and convert to script."""
 
     subprocess.run(
         [sys.executable, "-m", "gammapy", "jupyter", "--src", nb_path, "strip"]
     )
-
     log.info(f"Copying notebook {nb_path} to {PATH_NBS}")
     shutil.copy(nb_path, PATH_NBS)
-
-    # execute notebook
-    notebook_run(nb_path)
-
     static_nb_path = PATH_NBS / Path(nb_path).absolute().name
     subprocess.run(
         [
@@ -125,13 +119,16 @@ def build_notebooks(args):
 
     PATH_NBS.mkdir(parents=True, exist_ok=True)
 
-    if args.src:
-        pathsrc = Path(args.src)
-        fill_notebook(pathsrc, args)
-        add_box(pathsrc)
-    else:
-        for nb_path in get_notebooks_paths():
-            fill_notebook(nb_path, args)
+    for nb_path in get_notebooks_paths():
+        if args.src and Path(args.src).resolve() != nb_path:
+            continue
+        skip = False
+        copy_clean_notebook(nb_path)
+        rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
+        if "gammapy" in rawnb.metadata and "skip_run" in rawnb.metadata["gammapy"]:
+            skip = rawnb.metadata["gammapy"]["skip_run"]
+        if not skip:
+            notebook_run(nb_path)
             add_box(nb_path)
 
 
