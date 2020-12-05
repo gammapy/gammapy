@@ -121,16 +121,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook to process")
-    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
     args = parser.parse_args()
-
-    if not args.nbs:
-        args.nbs = "True"
-    try:
-        args.nbs = strtobool(args.nbs)
-    except Exception as ex:
-        log.error(ex)
-        sys.exit()
 
     logging.basicConfig(level=logging.INFO)
     log.info("Building API links in .ipynb and Sphinx formatted notebooks.")
@@ -142,9 +133,8 @@ def main():
             continue
         downloadable_path = Path(nb_path)
         downloadable_path = PATH_NBS / downloadable_path.absolute().name
-        if args.nbs:
-            shutil.copyfile(downloadable_path, nb_path)
-            make_api_links(downloadable_path, file_type="ipynb")
+        shutil.copyfile(downloadable_path, nb_path)
+        make_api_links(downloadable_path, file_type="ipynb")
         html_path = nb_path.replace(str(SOURCE_DIR), str(PATH_DOC))
         html_path = html_path.replace("ipynb", "html")
         make_api_links(Path(html_path), file_type="html")

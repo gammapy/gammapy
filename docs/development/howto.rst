@@ -894,7 +894,7 @@ versions of the notebooks are linked to versioned Binder environments.
 Once the documentation is built you can optimize the speed of eventual re-building,
 for example in case you are modifying or creating new docs and you would like to check
 these changes are displayed nicely. For that purpose, if your modified RST file
-does not contain links to notebooks, you may run ``make docs-all nbs=False`` so
+does not contain links to notebooks, you may run ``make docs-sphinx`` so
 that notebooks are not executed during the docs build.
 
 In the case one single notebook is modified or added to the documentation, you can

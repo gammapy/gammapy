@@ -34,25 +34,6 @@ BINDER_BADGE_URL = "https://static.mybinder.org/badge.svg"
 BINDER_URL = "https://mybinder.org/v2/gh/gammapy/gammapy-webpage"
 
 
-def setup_sphinx_params(args):
-    """Set Sphinx params in config file setup.cfg"""
-
-    flagnotebooks = "True"
-    if not args.nbs:
-        flagnotebooks = "False"
-    build_notebooks_line = f"build_notebooks = {flagnotebooks}\n"
-
-    file_str = ""
-    with open(SETUP_FILE) as f:
-        for line in f:
-            if line.startswith("build_notebooks ="):
-                line = build_notebooks_line
-            file_str += line
-
-    with open(SETUP_FILE, "w") as f:
-        f.write(file_str)
-
-
 def fill_notebook(nb_path, args):
     """Code formatting, strip output, file copy, execution and script conversion."""
 
@@ -171,28 +152,18 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook to process")
-    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
     parser.add_argument("--fmt", help="Black format notebooks")
     args = parser.parse_args()
 
-    if not args.nbs:
-        args.nbs = "True"
-    if not args.fmt:
-        args.fmt = "True"
-
     try:
-        args.nbs = strtobool(args.nbs)
         args.fmt = strtobool(args.fmt)
     except Exception as ex:
         log.error(ex)
         sys.exit()
 
-    setup_sphinx_params(args)
-
-    if args.nbs:
-        build_notebooks(args)
-        shutil.rmtree(PATH_DEST_IMAGES, ignore_errors=True)
-        shutil.copytree(PATH_SOURCE_IMAGES, PATH_DEST_IMAGES)
+    build_notebooks(args)
+    shutil.rmtree(PATH_DEST_IMAGES, ignore_errors=True)
+    shutil.copytree(PATH_SOURCE_IMAGES, PATH_DEST_IMAGES)
 
 
 if __name__ == "__main__":
