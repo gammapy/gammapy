@@ -71,20 +71,20 @@ Skip unit tests for some Astropy versions
    def test_something():
       ...
 
+Check Python code present in RST files
+--------------------------------------
+
+.. code-block:: bash
+
+    pytest --doctest-glob="*.rst" docs/
+
 Making a pull request with new or modified datasets
 ---------------------------------------------------
 
-Datasets used in tests and tutorials are hosted in the
-`gammapy-data Github repository <https://github.com/gammapy/gammapy-data>`__. It is recommended that developers
-have `$GAMMAPY_DATA` environment variable pointing to the local folder where they have fetched the `gammapy-data` Github
-repository, so they can push and pull eventual modification of its content. In the cases they want to make a pull
-request with new or modified datasets, these are the steps to follow:
-
-#. Update the content of the remote specific dataset repository (i.e. `gammapy-extra`, `gammapy-fermi-lat-data`,
-   `gamma-cat`).
-#. Update the content of your local `gammapy-data` repository and JSON index file by running
-   `python make_datasets_index.py` in the `dev/datasets/` folder.
-#. Push eventual changes to remote `gammapy-data` Github repository.
+Datasets used in tests are hosted in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ Github
+repository. It is recommended that developers have `$GAMMAPY_DATA` environment variable pointing to the local folder
+where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  Github repository,
+so they can push and pull eventual modification of its content.
 
 
 Fix non-Unix line endings
@@ -881,13 +881,13 @@ This should work::
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
 Jupyter notebooks present in Gammapy documentation have stripped output cells.
-All notebooks declared in the ``notebooks.yaml`` index file are code formatted, tested,
-and filled during the process of documentation building. They are also converted to Sphinx
-formatted HTML files and ``.py`` scripts.
+All notebooks are code clean formatted, tested, and filled during the process of documentation
+building. They are also converted to Sphinx formatted HTML files and ``.py`` scripts.
 
 The Sphinx formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter
 files and ``.py`` script versions stored in ``docs/_static/notebooks`` folder, as well as
-a link pointing to its specific Binder space in the ``gammapy-webpage`` repository.
+a link pointing to its specific Binder space in the
+`gammapy-webpage <https://github.com/gammapy/gammapy-webpage>`__ repository.
 Since notebooks are evolving with Gammapy features and documentation, the different
 versions of the notebooks are linked to versioned Binder environments.
 
@@ -908,6 +908,18 @@ The documentation built-in process uses the `sphinx-gallery <https://sphinx-gall
 extension to build galleries of illustrated examples on how to use Gammapy (i.e.
 :ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
 ``examples/models`` and the configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
+
+Skip notebooks from being executed
+----------------------------------
+You may choose if a notebook is not executed during the documentation building process, and hence
+it will be published without the output cells in its static HTML version. To do this you may add
+the following code to the notebook metadata:
+
+.. code-block:: javascript
+
+  "gammapy": {
+    "skip_run": true
+  }
 
 Dealing with links and notebooks
 --------------------------------
@@ -1000,3 +1012,10 @@ To check for broken external links from the Sphinx documentation:
 
    $ python setup.py install
    $ cd docs; make linkcheck
+
+You may also use `brök <https://github.com/smallhadroncollider/brok>`__ software, which will also check
+the links present in the notebooks files.
+
+.. code-block:: bash
+
+   $ brok docs/tutorials/*.ipynb | grep "Failed|Could"

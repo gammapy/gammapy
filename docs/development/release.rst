@@ -47,7 +47,7 @@ Steps to prepare for the release (e.g. a week before) to check that things are i
        make flake8
 
 #. Check external HTML links from the docs (see :ref:`here <dev-check_html_links>`).
-#. Check that the githuub actions ci build is working.
+#. Check that the Github actions CI build is working.
 
    Links are at https://github.com/gammapy/gammapy#status-shields
 #. Check that the changelog is complete, by going through the list of Github issues for the
