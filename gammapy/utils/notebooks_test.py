@@ -8,7 +8,7 @@ from configparser import ConfigParser
 from pathlib import Path
 import pkg_resources
 import yaml
-from gammapy.scripts.jupyter import notebook_test
+from gammapy.scripts.jupyter import notebook_run
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -48,7 +48,7 @@ def main():
             path_dest = path_temp / filename
             src_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
             shutil.copyfile(src_path, path_dest)
-            if not notebook_test(path_dest):
+            if not notebook_run(path_dest):
                 passed = False
     finally:
         # tear down

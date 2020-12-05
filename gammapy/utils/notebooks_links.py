@@ -16,13 +16,11 @@ PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
 conf = ConfigParser()
 conf.read(PATH_CFG / "setup.cfg")
 setup_cfg = dict(conf.items("metadata"))
-URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 URL_DOCS = setup_cfg["url_docs"]
 build_docs_cfg = dict(conf.items("build_docs"))
-upload_docs_cfg = dict(conf.items("upload_docs"))
 SOURCE_DIR = Path(build_docs_cfg["source-dir"])
 PATH_NBS = SOURCE_DIR / build_docs_cfg["downloadable-notebooks"]
-PATH_DOC = Path(upload_docs_cfg["upload-dir"])
+PATH_DOC = Path(build_docs_cfg["build-dir"]) / "html"
 
 # release number in absolute links
 release_number_docs = __version__

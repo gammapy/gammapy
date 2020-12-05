@@ -11,7 +11,7 @@ from pathlib import Path
 import nbformat
 from nbformat.v4 import new_markdown_cell
 from gammapy import __version__
-from gammapy.scripts.jupyter import notebook_test
+from gammapy.scripts.jupyter import notebook_run
 from gammapy.utils.scripts import get_notebooks_paths
 
 log = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ def fill_notebook(nb_path, args):
     shutil.copy(nb_path, PATH_NBS)
 
     # execute notebook
-    notebook_test(nb_path)
+    notebook_run(nb_path)
 
     static_nb_path = PATH_NBS / Path(nb_path).absolute().name
     subprocess.run(
