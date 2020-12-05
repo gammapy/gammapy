@@ -7,7 +7,6 @@ import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
-from distutils.util import strtobool
 from pathlib import Path
 import nbformat
 from nbformat.v4 import new_markdown_cell
@@ -150,15 +149,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook to process")
-    parser.add_argument("--fmt", help="Black format notebooks")
     args = parser.parse_args()
-
-    try:
-        args.fmt = strtobool(args.fmt)
-    except Exception as ex:
-        log.error(ex)
-        sys.exit()
-
     build_notebooks(args)
 
 
