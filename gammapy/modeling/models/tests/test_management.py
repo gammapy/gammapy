@@ -130,23 +130,31 @@ def test_restore_status(models):
     assert model.amplitude.value == 0
 
 
-# def test_bounds(models):
-#
-#    models.set_parameters_bounds(
-#        model_tag="pl", parameters_names="index", min=0, max=5, value=2.4
-#    )
-#    pl_mask = models.mask(spectral_tag="pl")
-#    assert np.all([m.spectral_model.index.value == 2.4 for m in models[pl_mask]])
-#    models.set_parameters_bounds(
-#        tag=["pl", "pl-norm"],
-#        model_type="spectral",
-#        parameters_names=["norm", "amplitude"],
-#        min=0,
-#        max=None,
-#    )
-#    bkg_mask = models.mask(tag="BackgroundModel")
-#    assert np.all([m.spectral_model.amplitude.min == 0 for m in models[pl_mask]])
-#    assert np.all([m._spectral_model.norm.min == 0 for m in models[bkg_mask]])
+def test_bounds(models):
+
+    models.set_parameters_bounds(
+        tag="pl",
+        model_type="spectral",
+        parameters_names="index",
+        min=0,
+        max=5,
+        value=2.4,
+    )
+    pl_mask = models.mask(tag="pl", model_type="spectral")
+    assert np.all([m.spectral_model.index.value == 2.4 for m in models[pl_mask]])
+    assert np.all([m.spectral_model.index.min == 0 for m in models[pl_mask]])
+    assert np.all([m.spectral_model.index.max == 5 for m in models[pl_mask]])
+
+    models.set_parameters_bounds(
+        tag=["pl", "pl-norm"],
+        model_type="spectral",
+        parameters_names=["norm", "amplitude"],
+        min=0,
+        max=None,
+    )
+    bkg_mask = models.mask(tag="BackgroundModel")
+    assert np.all([m.spectral_model.amplitude.min == 0 for m in models[pl_mask]])
+    assert np.all([m._spectral_model.norm.min == 0 for m in models[bkg_mask]])
 
 
 def test_freeze(models):

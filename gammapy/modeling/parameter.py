@@ -333,6 +333,34 @@ class Parameters(collections.abc.Sequence):
         return [par.type for par in self]
 
     @property
+    def minima(self):
+        """Parameter mins (`numpy.ndarray`)."""
+        return np.array([_.min for _ in self._parameters], dtype=np.float64)
+
+    @minima.setter
+    def minima(self, minima):
+        """Parameter minima (`numpy.ndarray`)."""
+        if not len(self) == len(minima):
+            raise ValueError("Minima must have same length as parameter list")
+
+        for min_, par in zip(minima, self):
+            par.min = min_
+
+    @property
+    def maxima(self):
+        """Parameter maxima (`numpy.ndarray`)."""
+        return np.array([_.max for _ in self._parameters], dtype=np.float64)
+
+    @maxima.setter
+    def maxima(self, maxima):
+        """Parameter maxima (`numpy.ndarray`)."""
+        if not len(self) == len(maxima):
+            raise ValueError("Maxima must have same length as parameter list")
+
+        for max_, par in zip(maxima, self):
+            par.max = max_
+
+    @property
     def values(self):
         """Parameter values (`numpy.ndarray`)."""
         return np.array([_.value for _ in self._parameters], dtype=np.float64)
@@ -469,6 +497,51 @@ class Parameters(collections.abc.Sequence):
         for par in self._parameters:
             par.autoscale(method)
 
+    def select(
+        self, name=None, model_type=None, frozen=None,
+    ):
+        """Create a mask of models, true if all conditions are verified
+
+        Parameters
+        ----------
+        name : str or list
+            Name of the parameter
+        model_type :{None, spatial, spectral, temporal}
+           type of models
+        frozen : bool
+            Select frozen parameters if True, exclude them if False.
+ 
+       Returns
+        -------
+        parameters : `Parameters`
+           Selected parameters
+        """
+
+        selection = np.ones(len(self), dtype=bool)
+
+        for k, par in enumerate(self):
+            if name:
+                if not isinstance(name, list):
+                    name = [name]
+                par_type = getattr(par, "type", None)
+                selection[k] &= par.name in name and model_type == par_type
+            if frozen is not None:
+                if frozen == True:
+                    selection[k] &= par.frozen
+                else:
+                    selection[k] &= ~par.frozen
+        return self[selection]
+
+    def freeze_all(self):
+        """Freeze all parameters"""
+        for par in self._parameters:
+            par.frozen = True
+
+    def unfreeze_all(self):
+        """ Unfreeze all parameters (even those frozen by default)"""
+        for par in self._parameters:
+            par.frozen = False
+
     def restore_status(self, restore_values=True):
         """Context manager to restore status.
 
@@ -491,16 +564,6 @@ class Parameters(collections.abc.Sequence):
             print(pwl.parameters["index"].value)
         """
         return restore_parameters_status(self, restore_values)
-
-    def freeze_all(self):
-        """Freeze all parameters"""
-        for par in self._parameters:
-            par.frozen = True
-
-    def unfreeze_all(self):
-        """ Unfreeze all parameters (even those frozen by default)"""
-        for par in self._parameters:
-            par.frozen = False
 
 
 class restore_parameters_status:
