@@ -125,7 +125,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
         if not is_bkg:
             filenames = OGIPDatasetWriter.get_filenames(self.filename)
-            meta["ancrfile"] = filenames["backfile"]
+            meta["ancrfile"] = filenames["ancrfile"]
 
             if dataset.edisp:
                 meta["backfile"] = filenames["backfile"]
@@ -278,6 +278,54 @@ class OGIPDatasetReader(DatasetReader):
     def __init__(self, filename):
         self.filename = make_path(filename)
 
+    def get_valid_path(self, filename):
+        """Get absolute or relative path
+
+        The relative path is with respect to the name of the reference file.
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            Filename
+
+        Returns
+        -------
+        filename : `Path`
+            Valid path
+        """
+        filename = make_path(filename)
+
+        if not filename.exists():
+            return self.filename.parent / filename
+        else:
+            return filename
+
+    def get_filenames(self, pha_meta):
+        """Get filenames
+
+        Parameters
+        ----------
+        pha_meta : dict
+            Meta data from the PHA file
+
+        Returns
+        -------
+        filenames : dict
+            Dict with filenames of "arffile", "rmffile" (optional)
+            and "bkgfile" (optional)
+        """
+        filenames = {
+            "arffile": self.get_valid_path(pha_meta["ANCRFILE"])
+        }
+
+        if "BACKFILE" in pha_meta:
+            filenames["bkgfile"] = self.get_valid_path(pha_meta["BACKFILE"])
+
+        if "RESPFILE" in pha_meta:
+            filenames["rmffile"] = self.get_valid_path(pha_meta["RESPFILE"])
+
+        return filenames
+
     @staticmethod
     def read_pha(filename):
         """Read PHA file
@@ -296,7 +344,6 @@ class OGIPDatasetReader(DatasetReader):
 
         with fits.open(filename, memmap=False) as hdulist:
             data["counts"] = RegionNDMap.from_hdulist(hdulist, format="ogip")
-
             data["acceptance"] = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="BACKSCAL"
             )
@@ -349,6 +396,8 @@ class OGIPDatasetReader(DatasetReader):
         """
         kernel = EDispKernel.read(filename)
         edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=exposure.geom)
+
+        # TODO: resolve this separate handling of exposure for edisp
         edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
         return edisp
 
@@ -373,15 +422,6 @@ class OGIPDatasetReader(DatasetReader):
         exposure.meta["livetime"] = livetime
         return exposure
 
-    def _get_valid_path(self, filename):
-        """Get absolute or relative path"""
-        filename = make_path(filename)
-
-        if not filename.exists():
-            return self.filename.parent / filename
-        else:
-            return filename
-
     def read(self):
         """Read dataset
 
@@ -390,27 +430,20 @@ class OGIPDatasetReader(DatasetReader):
         dataset : SpectrumDatasetOnOff
             Spectrum dataset
         """
-        pha = self.read_pha(self.filename)
-        pha_meta = pha["counts"].meta
+        kwargs = self.read_pha(self.filename)
+        pha_meta = kwargs["counts"].meta
 
         name = str(pha_meta["OBS_ID"])
         livetime = pha_meta["EXPOSURE"] * u.s
 
-        filename = self._get_valid_path(pha_meta["ANCRFILE"])
-        exposure = self.read_arf(filename, livetime=livetime)
+        filenames = self.get_filenames(pha_meta=pha_meta)
+        exposure = self.read_arf(filenames["arffile"], livetime=livetime)
 
-        try:
-            filename = self._get_valid_path(pha_meta["BACKFILE"])
-            bkg = self.read_bkg(filename)
-        except KeyError:
-            bkg = None
+        if "bkgfile" in filenames:
+            bkg = self.read_bkg(filenames["bkgfile"])
+            kwargs.update(bkg)
 
-        try:
-            filename = self._get_valid_path(pha_meta["RESPFILE"])
-            edisp = self.read_rmf(filename, exposure=exposure)
-        except KeyError:
-            edisp = None
+        if "rmffile" in filenames:
+            kwargs["edisp"] = self.read_rmf(filenames["rmffile"], exposure=exposure)
 
-        return SpectrumDatasetOnOff(
-            name=name, exposure=exposure, edisp=edisp, **pha, **bkg,
-        )
+        return SpectrumDatasetOnOff(name=name, exposure=exposure, **kwargs)
