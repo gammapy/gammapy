@@ -606,6 +606,21 @@ class DatasetModels(collections.abc.Sequence):
                     selection[km] &= ~model.frozen
         return selection
 
+    def restore_status(self, restore_values=True):
+        """Context manager to restore status.
+
+        A copy of the values is made on enter,
+        and those values are restored on exit.
+
+        Parameters
+        ----------
+        restore_values : bool
+            Restore values if True,
+            otherwise restore only frozen status and covariance matrix.
+
+        """
+        return restore_models_status(self, restore_values)
+
     def set_parameters_bounds(
         self, tag, model_type, parameters_names, min=None, max=None, value=None
     ):
@@ -689,3 +704,23 @@ class Models(DatasetModels, collections.abc.MutableSequence):
             raise (ValueError("Model names must be unique"))
 
         self._models.insert(idx, model)
+
+
+class restore_models_status:
+    def __init__(self, models, restore_values=True):
+
+        self.restore_values = restore_values
+        self.models = models
+        self.values = [_.value for _ in models.parameters]
+        self.frozen = [_.frozen for _ in models.parameters]
+        self.covariance_data = models.covariance.data
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        for value, par, frozen in zip(self.values, self.models.parameters, self.frozen):
+            if self.restore_values:
+                par.value = value
+            par.frozen = frozen
+        self.models.covariance = self.covariance_data

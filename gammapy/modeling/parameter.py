@@ -514,8 +514,6 @@ class restore_parameters_status:
         pass
 
     def __exit__(self, type, value, traceback):
-        # TODO: also restore the covariance ?
-        # (for now reset to zero if frosen==False)
         for value, par, frozen in zip(self.values, self._parameters, self.frozen):
             if self.restore_values:
                 par.value = value
