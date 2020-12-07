@@ -8,6 +8,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
+from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import (
     EDispKernel,
     EDispKernelMap,
@@ -15,6 +16,7 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
+    PSFKernel
 )
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
@@ -26,6 +28,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    ConstantSpectralModel
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -1365,63 +1368,25 @@ def test_downsample_onoff():
 
 def test_compute_flux_spatial():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
-    region = RectangleSkyRegion(center=center, width = 0.5 * u.deg, height=0.5 * u.deg)
-    region_1sigma = CircleSkyRegion(center=center, radius=0.1 * u.deg)
+    region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
 
-    energy_axis_true = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=10, name="energy_true")
-    energy_axis = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=10, name="energy")
+    nbin = 2
+    energy_axis_true = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=nbin, name="energy_true")
 
-    spectral_model = PowerLawSpectralModel(index = 2.0, amplitude="1e-10 cm-2 s-1 TeV-1", reference="1 TeV")
+    spectral_model = ConstantSpectralModel()
     spatial_model = PointSpatialModel(lon_0 = 0*u.deg, lat_0 = 0*u.deg, frame='galactic')
 
-    model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    model = Models(models)
 
-    psf = PSFMap.from_gauss(energy_axis_true, sigma=0.1*u.deg)
-
-    # for a region
     exposure_region = RegionNDMap.create(region, axes=[energy_axis_true])
-    exposure_region.data += 1e8
+    exposure_region.data += 1.0
     exposure_region.unit = "m2 s"
 
-    background_region = RegionNDMap.create(region, axes=[energy_axis])
-    background_region.data += 2
+    geom = RegionGeom(region, axes=[energy_axis_true])
+    psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
 
-    dataset_region = MapDataset(psf=psf, exposure=exposure_region, background=background_region)
-    dataset_region.models = [model]
+    evaluator = MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
+    flux = evaluator.compute_flux_spatial()
 
-    npred_region = dataset_region.npred()
-    npred_region = np.reshape(npred_region.data,(10))
-
-    # for a 1sigma psf size region
-    exposure_region_1sigma = RegionNDMap.create(region_1sigma, axes=[energy_axis_true])
-    exposure_region_1sigma.data += 1e8
-    exposure_region_1sigma.unit = "m2 s"
-    
-    background_region_1sigma = RegionNDMap.create(region_1sigma, axes=[energy_axis])
-    background_region_1sigma.data += 2
-    
-    dataset_region_1sigma = MapDataset(psf=psf, exposure=exposure_region_1sigma, background=background_region_1sigma)
-    dataset_region_1sigma.models = [model]
-    
-    npred_region_1sigma = dataset_region_1sigma.npred()
-    npred_region_1sigma = np.reshape(npred_region_1sigma.data,(10))
-
-    # for a WCSmap
-    exposure_wcs = WcsNDMap.create(skydir=center, axes=[energy_axis_true], frame='galactic', binsz=0.01, width=(0.5*u.deg,0.5*u.deg))
-    exposure_wcs.data += 9.945e8
-    exposure_wcs.unit = "m2 s"
-
-    background_wcs = WcsNDMap.create(skydir=center, axes=[energy_axis], frame='galactic', binsz=0.01, width=(0.5*u.deg,0.5*u.deg))
-    background_wcs.data += 0.0008
-
-    dataset_wcs = MapDataset(psf=psf, exposure=exposure_wcs, background=background_wcs)
-    dataset_wcs.models = [model]
-    npred_wcs = dataset_wcs.npred()
-
-    npred_wcs_stacked = npred_wcs.data.sum(axis=1).sum(axis=1)
-
-    assert_allclose(np.reshape(npred_region.data,(10)),
-                    npred_wcs_stacked, atol=0.04)
-
-    assert_allclose(npred_region_1sigma/npred_wcs_stacked,
-                    0.70, atol=0.02)
+    assert_allclose(flux, 0.397 * nbin, atol=0.001)
