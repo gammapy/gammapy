@@ -616,11 +616,11 @@ class DatasetModels(collections.abc.Sequence):
         )
         n = len(parameters)
         if min is not None:
-            parameters.minima = np.ones(n) * min
+            parameters.min = np.ones(n) * min
         if max is not None:
-            parameters.maxima = np.ones(n) * max
+            parameters.max = np.ones(n) * max
         if value is not None:
-            parameters.values = np.ones(n) * value
+            parameters.value = np.ones(n) * value
 
     def freeze(self, model_type=None):
         """Freeze parameters depending on model type

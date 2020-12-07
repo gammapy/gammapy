@@ -333,40 +333,40 @@ class Parameters(collections.abc.Sequence):
         return [par.type for par in self]
 
     @property
-    def minima(self):
+    def min(self):
         """Parameter mins (`numpy.ndarray`)."""
         return np.array([_.min for _ in self._parameters], dtype=np.float64)
 
-    @minima.setter
-    def minima(self, minima):
+    @min.setter
+    def min(self, min_array):
         """Parameter minima (`numpy.ndarray`)."""
-        if not len(self) == len(minima):
+        if not len(self) == len(min_array):
             raise ValueError("Minima must have same length as parameter list")
 
-        for min_, par in zip(minima, self):
+        for min_, par in zip(min_array, self):
             par.min = min_
 
     @property
-    def maxima(self):
+    def max(self):
         """Parameter maxima (`numpy.ndarray`)."""
         return np.array([_.max for _ in self._parameters], dtype=np.float64)
 
-    @maxima.setter
-    def maxima(self, maxima):
+    @max.setter
+    def max(self, max_array):
         """Parameter maxima (`numpy.ndarray`)."""
-        if not len(self) == len(maxima):
+        if not len(self) == len(max_array):
             raise ValueError("Maxima must have same length as parameter list")
 
-        for max_, par in zip(maxima, self):
+        for max_, par in zip(max_array, self):
             par.max = max_
 
     @property
-    def values(self):
+    def value(self):
         """Parameter values (`numpy.ndarray`)."""
         return np.array([_.value for _ in self._parameters], dtype=np.float64)
 
-    @values.setter
-    def values(self, values):
+    @value.setter
+    def value(self, values):
         """Parameter values (`numpy.ndarray`)."""
         if not len(self) == len(values):
             raise ValueError("Values must have same length as parameter list")
