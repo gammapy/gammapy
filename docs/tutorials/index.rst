@@ -163,17 +163,11 @@ Examples how to run Gammapy via Python scripts:
 Extra topics
 ------------
 
-.. toctree::
-    :hidden:
+These notebooks contain examples on some more specialised functionality in Gammapy.
+
+.. nbgallery::
 
     astro_dark_matter.ipynb
     background_model.ipynb
     mcmc_sampling.ipynb
     pulsar_analysis.ipynb
-
-These notebooks contain examples on some more specialised functionality in Gammapy.
-
-- `Dark matter spatial and spectral models <astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
-- `Make template background model <background_model.html>`__ | *background_model.ipynb*
-- `MCMC sampling of Gammapy models using the emcee package <mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
-- `Pulsar analysis with Gammapy <pulsar_analysis.html>`__ | *pulsar_analysis.ipynb*
