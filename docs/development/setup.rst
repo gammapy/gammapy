@@ -101,9 +101,9 @@ Gammapy package, and is imported via ``gammapy/_astropy_init.py`` from
 ``gammapy/__init__.py``. This means that one can simply do this and always get
 the right version for Gammapy::
 
-    >>> import gammapy
-    >>> gammapy.__version__
-    >>> gammapy.__githash__
+    import gammapy
+    gammapy.__version__
+    gammapy.__githash__
 
 .. _setup_cython:
 
