@@ -79,12 +79,15 @@ We propose below a generalized flux points API.
 Proposal of API for flux estimate results
 =========================================
 
-Rely internally on likelihood SED type
---------------------------------------
+Introduce a FluxEstimate base class
+-----------------------------------
 
-First we propose that all ``Estimators`` compute quantities following a SED type inspired bythe ``likelihood``
-SED type. It would basically follow the ``norm``
-Beyond the uniform behavior, his has the advantage of making flux type conversion easier.
+First we propose that all ``Estimators`` compute quantities following a SED type inspired by
+the ``likelihood`` SED type. It would basically rely on the ``norm`` value and reference model
+to obtain fluxes in various formats. This is the basic ingredient of the current likelihood format
+described in the gadf but without the likelihood scan.
+
+Using such a format, beyond the uniform behavior,  has the advantage of making flux type conversion easier.
 
 To limit code duplication (e.g. for flux conversions), we propose a common base class to describe the format
 and contain the required quantities.
@@ -319,3 +322,11 @@ Alternative
 
 Decision
 ========
+
+A preliminary list of reasonable decisions:
+
+- Clarify
+
+- Go for a flat ``Table`` object to describe the variety of possible ``FluxPoints``
+
+- Postpone introduction of ``Datasets`` grouping as it requires a general clarification of ``meta_table`` usage.
