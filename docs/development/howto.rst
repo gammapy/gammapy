@@ -564,22 +564,22 @@ Let's use this as an example::
 
 The default ``repr`` and ``str`` are this::
 
-    >>> repr(p)
+    p = Person()
+    repr(p)
     '<__main__.Person object at 0x105fe3b70>'
-    >>> p.__repr__()
+    p.__repr__()
     '<__main__.Person object at 0x105fe3b70>'
-    >>> str(p)
+    str(p)
     '<__main__.Person object at 0x105fe3b70>'
-    >>> p.__str__()
+    p.__str__()
 
 Users will see that. If they just give an object in the Python REPL, the
 ``repr`` is shown. If they print the object, the ``str`` is shown. In both cases
 without the quotes seen above.
 
-    >>> p = Person()
-    >>> p
+    p
     <__main__.Person at 0x105fd0cf8>
-    >>> print(p)
+    print(p)
     <__main__.Person object at 0x105fe3b70>
 
 There are ways to make this better and avoid writing boilerplate code,
@@ -593,7 +593,7 @@ don't have to do that, it's mainly useful for objects users interact with a lot.
 For classes that are mainly used internally, developers can e.g. just do this to
 see the attributes printed nicely::
 
-    >>> p.__dict__
+    p.__dict__
     {'name': 'Anna', 'age': 8}
 
 
@@ -612,10 +612,10 @@ repr is inherited).
 This will give a nice string representation. The same one for ``repr`` and
 ``str``, you don't have to write ``__str__``::
 
-    >>> p = Person(name='Anna', age=8)
-    >>> p
+    p = Person(name='Anna', age=8)
+    p
     Person(name='Anna', age=8)
-    >>> print(p)
+    print(p)
     Person(name='Anna', age=8)
 
 The string representation is usually used for more informal or longer printout.
@@ -657,10 +657,10 @@ it with other text, or store it in a list and write it to file later.
 The main con is that users have to call ``print(p.info())`` to see a
 nice printed version of the string instead of ``\n``::
 
-    >>> p = Person()
-    >>> p.info()
+    p = Person()
+    p.info()
     "Hi, my name is Anna and I'm 8 years old.\nI live in Heidelberg"
-    >>> print(p.info())
+    print(p.info())
     Hi, my name is Anna and I'm 8 years old.
     I live in Heidelberg
 
