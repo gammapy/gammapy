@@ -191,65 +191,14 @@ class Model:
         """Frozen status of a model, True if all parameters are frozen """
         return np.all([p.frozen for p in self.parameters])
 
-    def freeze(self, model_type=None):
-        """Freeze parameters depending on model type
-        
-        Parameters
-        ----------
-        model_type : {None, "spatial", "spectral", "temporal"}
-           freeze all parameters or only spatial or only spectral 
-        """
-
-        if model_type is None or self.type == model_type:
-            self.parameters.freeze_all()
-        elif (
-            model_type == "spatial"
-            and hasattr(self, "spatial_model")
-            and self.spatial_model
-        ):
-            self.spatial_model.parameters.freeze_all()
-        elif (
-            model_type == "spectral"
-            and hasattr(self, "_spectral_model")
-            and self._spectral_model
-        ):
-            self._spectral_model.parameters.freeze_all()
-        elif (
-            model_type == "temporal"
-            and hasattr(self, "_spectral_model")
-            and self.temporal_model
-        ):
-            self.temporal_model.parameters.freeze_all()
+    def freeze(self):
+        """Freeze all parameters"""
+        self.parameters.freeze_all()
 
     def unfreeze(self, model_type=None):
-        """Restore parameters frozen status to default depending on model type
-        
-        Parameters
-        ----------
-        model_type : {None, "spatial", "spectral", "temporal"}
-           restore frozen status to default for all parameters or only spatial or only spectral
-        """
-
-        if model_type is None or self.type == model_type:
-            if self.type == model_type or hasattr(self, "spatial_model"):
-                self._unfree_to_default()
-        if model_type is None or model_type == "spatial":
-            if hasattr(self, "spatial_model") and self.spatial_model:
-                self.spatial_model._unfree_to_default()
-        if model_type is None or model_type == "spectral":
-            if hasattr(self, "_spectral_model") and self._spectral_model:
-                self._spectral_model._unfree_to_default()
-        if model_type is None or model_type == "temporal":
-            if hasattr(self, "temporal_model") and self.temporal_model:
-                self.temporal_model._unfree_to_default()
-
-    def _unfree_to_default(self):
-        try:
-            defaults = [p.frozen for p in self.__class__().parameters]
-            for p, status in zip(self.parameters, defaults):
-                p.frozen = status
-        except (TypeError):
-            pass
+        """Restore parameters frozen status to default"""
+        for p, default in zip(self.parameters, self.default_parameters):
+            p.frozen = default.frozen
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -578,7 +527,7 @@ class DatasetModels(collections.abc.Sequence):
         tag : str or list
             Model tag
         model_type :{None, spatial, spectral}
-           type of models
+           type of models, Default is None so this criterion is ignored.
         frozen : bool
             Select models with all parameters frozen if True, exclude them if False.
  
@@ -644,9 +593,11 @@ class DatasetModels(collections.abc.Sequence):
         self, tag, model_type, parameters_names, min=None, max=None, value=None
     ):
         """Set bounds for the selected models types and parameters names
+    
         Parameters
         ----------
         tag : str or list
+            tag of the models
         model_type : {"spatial", "spectral"}
             type of models
         parameters_names : str or list
