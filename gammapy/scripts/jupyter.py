@@ -9,11 +9,12 @@ import time
 from pathlib import Path
 import click
 from gammapy import __version__
-from gammapy.utils.scripts import get_notebooks_paths
+from gammapy.utils.scripts import get_images_paths, get_notebooks_paths
 
 log = logging.getLogger(__name__)
 
 OFF = ["GAMMA_CAT", "GAMMAPY_DATA", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
+PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
 
 
 @click.command(name="run")
@@ -227,4 +228,6 @@ def cli_jupyter_tar():
     with tarfile.open(tar_name, "w:") as tar:
         for name in get_notebooks_paths():
             tar.add(name, arcname=Path(name).name)
+        for img in get_images_paths():
+            tar.add(name, arcname=Path("images") / Path(img).name)
     log.info(f"{tar_name} file has been created.")

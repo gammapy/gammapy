@@ -8,6 +8,7 @@ from uuid import uuid4
 import yaml
 
 __all__ = [
+    "get_images_paths",
     "get_notebooks_paths",
     "read_yaml",
     "write_yaml",
@@ -16,6 +17,7 @@ __all__ = [
 ]
 
 PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
+SKIP = ["_static", "_build", "_checkpoints", "docs/modeling/gallery/"]
 
 
 def get_notebooks_paths(folder=PATH_DOCS):
@@ -26,9 +28,21 @@ def get_notebooks_paths(folder=PATH_DOCS):
     folder : str
         Folder where to search
     """
-    skip = ["_static", "_build", "_checkpoints", "docs/modeling/gallery/"]
     for i in Path(folder).rglob("*.ipynb"):
-        if not any(s in str(i) for s in skip):
+        if not any(s in str(i) for s in SKIP):
+            yield i.resolve()
+
+
+def get_images_paths(folder=PATH_DOCS):
+    """Generator yields a Path for each image used in notebook.
+
+    Parameters
+    ----------
+    folder : str
+        Folder where to search
+    """
+    for i in Path(folder).rglob("images/*"):
+        if not any(s in str(i) for s in SKIP):
             yield i.resolve()
 
 
