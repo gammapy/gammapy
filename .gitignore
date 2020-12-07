@@ -83,8 +83,8 @@ docs/api
 dev/crab
 
 # Data files generated in docs building
-#*.png
 #!tutorials/images/*
+*.png
 *.fits
 *.fits.gz
 *.root
