@@ -595,8 +595,8 @@ class FoVBackgroundModel(Model):
 
     def reset_to_default(self):
         """Reset parameter values to default"""
-        values = self.spectral_model.default_parameters.values
-        self.spectral_model.parameters.values = values
+        values = self.spectral_model.default_parameters.value
+        self.spectral_model.parameters.value = values
 
     def copy(self, **kwargs):
         """Copy SkyModel"""

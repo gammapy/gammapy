@@ -2694,7 +2694,7 @@ class MapEvaluator:
     @property
     def parameters_changed(self):
         """Parameters changed"""
-        values = self.model.parameters.values
+        values = self.model.parameters.value
 
         # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values == values)
@@ -2707,7 +2707,7 @@ class MapEvaluator:
     @property
     def parameters_spatial_changed(self):
         """Parameters changed"""
-        values = self.model.spatial_model.parameters.values
+        values = self.model.spatial_model.parameters.value
 
         # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values_spatial == values)

@@ -33,7 +33,7 @@ class Likelihood:
         row = {"total_stat": total_stat}
         pars = self.parameters.free_parameters
         names = [f"par-{idx}" for idx in range(len(pars))]
-        vals = dict(zip(names, pars.values))
+        vals = dict(zip(names, pars.value))
         row.update(vals)
         self.trace.append(row)
 

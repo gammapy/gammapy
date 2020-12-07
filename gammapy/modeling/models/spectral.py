@@ -964,7 +964,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     @property
     def norms(self):
         """Norm values"""
-        return u.Quantity(self.parameters.values)
+        return u.Quantity(self.parameters.value)
 
     def evaluate(self, energy, **norms):
         scale = interpolation_scale(scale=self._interp)
