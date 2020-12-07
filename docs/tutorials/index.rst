@@ -94,54 +94,17 @@ Advanced tutorials
 The following tutorials expose how to perform more complex analyses or they demonstrate how to use the
 Gammapy API.
 
-*Exclusion masks*
-
 .. nbgallery::
 
     exclusion_mask.ipynb
-
-*Source detection*
-
-.. nbgallery::
-
     detect.ipynb
-
-*Spectral analysis*
-
-.. nbgallery::
-
     extended_source_spectral_analysis.ipynb
-
-*Multi-instrument analysis*
-
-.. nbgallery::
-
     analysis_mwl.ipynb
     fermi_lat.ipynb
-
-*Sensitivity estimation*
-
-.. nbgallery::
-
     cta_sensitivity.ipynb
-
-*Modeling and fitting in gammapy*
-
-.. nbgallery::
-
     modeling.ipynb
     models.ipynb
-
-*Working with catalogs*
-
-.. nbgallery::
-
     catalog.ipynb
-
-*Working with gammapy maps*
-
-.. nbgallery::
-
     maps.ipynb
 
 
