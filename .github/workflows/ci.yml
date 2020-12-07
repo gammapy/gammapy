@@ -64,12 +64,12 @@ jobs:
           export GAMMAPY_DATA=/home/runner/work/gammapy/gammapy/gammapy-datasets
           make test-cov
           codecov -X gcov
-# pytest --doctest-glob="*.rst" docs/
+          pytest --doctest-glob="*.rst" docs/
       - name: test simple
         if: matrix.name!='Linux python 3.7 all'
         run: |
           make test
-# pytest --doctest-glob="*.rst" docs/
+          pytest --doctest-glob="*.rst" docs/
   notebooks:
     name: Linux python 3.7 notebooks all
     runs-on: ubuntu-latest
