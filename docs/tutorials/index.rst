@@ -24,12 +24,6 @@ handbook`_ and the `Astropy Hands-On Tutorial`_.
 Getting started
 ---------------
 
-.. toctree::
-   :hidden:
-
-   analysis_1.ipynb
-   analysis_2.ipynb
-
 The following tutorials show how to use gammapy to perform a complete data analysis,
 here a simple 3D cube analysis of the Crab. They show the gammapy workflow from data selection
 to data reduction and finally modeling and fitting.
@@ -38,8 +32,10 @@ First, we show how to do it with the high level interface in configuration-drive
 The second tutorial exposes the same analysis, this time using the medium level API, showing
 what is happening 'under-the-hood':
 
-- `Configuration driven analysis <analysis_1.html>`__ | *analysis_1.ipynb*
-- `Lower level analysis <analysis_2.html>`__ | *analysis_2.ipynb*
+.. nbgallery::
+
+    analysis_1.ipynb
+    analysis_2.ipynb
 
 
 Core tutorials
