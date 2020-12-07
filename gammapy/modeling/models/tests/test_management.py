@@ -184,3 +184,23 @@ def test_freeze(models):
     assert models["bkg1"]._spectral_model.tilt.frozen == True
     assert models["bkg1"]._spectral_model.norm.frozen == False
     assert models["source-1"].spectral_model.index.frozen == False
+
+
+def test_parameters(models):
+
+    pars = models.parameters.select(frozen=False)
+    pars.freeze_all()
+    assert np.all([p.frozen for p in pars])
+    assert len(pars.select(frozen=True)) == len(pars)
+
+    pars.unfreeze_all()
+    assert np.all([not p.frozen for p in pars])
+    assert len(pars.min) == len(pars)
+    assert len(pars.max) == len(pars)
+
+    with pytest.raises(TypeError):
+        pars.min = 1
+    with pytest.raises(ValueError):
+        pars.min = [1]
+    with pytest.raises(ValueError):
+        pars.max = [2]
