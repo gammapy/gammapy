@@ -451,15 +451,11 @@ class SkyModel(Model):
            freeze all parameters or only or only spatial/spectral/temporal. 
            Default is None so all parameters are frozen.
         """
-
         if model_type is None:
             self.parameters.freeze_all()
-        elif model_type == "spatial" and getattr(self, "spatial_model", None):
-            self.spatial_model.parameters.freeze_all()
-        elif model_type == "spectral" and getattr(self, "_spectral_model", None):
-            self._spectral_model.parameters.freeze_all()
-        elif model_type == "temporal" and getattr(self, "temporal_model", None):
-            self.temporal_model.parameters.freeze_all()
+        else:
+            model = getattr(self, f"{model_type}_model")
+            model.freeze()
 
     def unfreeze(self, model_type=None):
         """Restore parameters frozen status to default depending on model type
@@ -471,16 +467,13 @@ class SkyModel(Model):
            Default is None so all parameters are restore to defaut frozen status.
 
         """
-
-        if model_type is None or model_type == "spatial":
-            if getattr(self, "spatial_model", None):
-                self.spatial_model.unfreeze()
-        if model_type is None or model_type == "spectral":
-            if getattr(self, "_spectral_model", None):
-                self._spectral_model.unfreeze()
-        if model_type is None or model_type == "temporal":
-            if getattr(self, "temporal_model", None):
-                self.temporal_model.unfreeze()
+        if model_type is None:
+            for model_type in ["spectral", "spatial", "temporal"]:
+                self.unfreeze(model_type)
+        else:
+            model = getattr(self, f"{model_type}_model")
+            if model:
+                model.unfreeze()
 
 
 class FoVBackgroundModel(Model):
@@ -604,11 +597,11 @@ class FoVBackgroundModel(Model):
 
     def freeze(self):
         """Restore parameters frozen status to default"""
-        return self._spectral_model.freeze()
+        return self.spectral_model.freeze()
 
     def unfreeze(self):
         """Restore parameters frozen status to default"""
-        return self._spectral_model.unfreeze()
+        return self.spectral_model.unfreeze()
 
 
 class BackgroundModel(Model):
