@@ -156,7 +156,7 @@ as well as the confidence interval on the true signal counts number value.
 
     >>> from gammapy.stats import CashCountsStatistic
     >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.excess
+    >>> stat.n_sig
     7.5
     >>> stat.error
     3.605551275463989
@@ -185,7 +185,8 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confi
 .. code-block:: python
 
     >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    >>> count_statistic = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    >>> excess = count_statistic.n_sig
     >>> errn = count_statistic.compute_errn(1.)
     >>> errp = count_statistic.compute_errp(1.)
     >>> print(f"68% confidence range: {excess+errn} < mu < {excess+errp}")
@@ -225,8 +226,10 @@ Here's how you compute the statistical significance of your detection:
 
     >>> from gammapy.stats import WStatCountsStatistic
     >>> stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
-    >>> stat.excess
+    >>> stat.n_sig
+    7.5
     >>> stat.sqrt_ts
+    2.09283236849328
 
 .. plot:: stats/plot_wstat_significance.py
 
@@ -237,8 +240,10 @@ the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for k
 
     >>> from gammapy.stats import CashCountsStatistic
     >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.excess
+    >>> stat.n_sig
+    7.5
     >>> stat.sqrt_ts
+    2.7138962573762653
 
 .. plot:: stats/plot_cash_significance.py
 
@@ -254,13 +259,13 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
     >>> from gammapy.stats import CashCountsStatistic
     >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
     >>> stat.compute_errn(1.)
-    -3.91606323
+    array(-3.28021156)
     >>> stat.compute_errp(1.)
-    4.5823187389960225
+    3.9463091246231023
     >>> stat.compute_errn(2.)
-    -3.91606323
+    array(-5.94409081)
     >>> stat.compute_errp(2.)
-    4.5823187389960225
+    8.60168631791818
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values
