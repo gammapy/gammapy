@@ -41,60 +41,52 @@ what is happening 'under-the-hood':
 Core tutorials
 --------------
 
-.. toctree::
-   :hidden:
-
-   cta.ipynb
-   hess.ipynb
-   fermi_lat.ipynb
-   cta_data_analysis.ipynb
-   analysis_3d.ipynb
-   simulate_3d.ipynb
-   spectrum_analysis.ipynb
-   sed_fitting.ipynb
-   light_curve.ipynb
-   light_curve_flare.ipynb
-   light_curve_simulation.ipynb
-   spectrum_simulation.ipynb
-   modeling_2D.ipynb
-   ring_background.ipynb
-   event_sampling.ipynb
-
 The following tutorials expose common analysis tasks.
 
 *Accessing and exploring DL3 data*
 
-- `Overview <overview.html>`__  | *overview.ipynb*
-- `CTA with Gammapy <cta.html>`__ | *cta.ipynb*
-- `H.E.S.S. with Gammapy <hess.html>`__ |  *hess.ipynb*
+.. nbgallery::
+
+    overview.ipynb
+    cta.ipynb
+    hess.ipynb
 
 *1-dim spectral analysis*
 
-- `Spectral analysis <spectrum_analysis.html>`__ | *spectrum_analysis.ipynb*
-- `Flux point fitting <sed_fitting.html>`__ | *sed_fitting.ipynb*
+.. nbgallery::
+
+    spectrum_analysis.ipynb
+    sed_fitting.ipynb
 
 *2-dim sky image analysis*
 
-- `Ring background map creation <ring_background.html>`__ | *ring_background.ipynb*
-- `2D map fitting <modeling_2D.html>`__ | *modeling_2D.ipynb*
+.. nbgallery::
+
+    ring_background.ipynb
+    modeling_2D.ipynb
 
 *3-dim sky cube analysis*
 
-- `CTA data analysis <cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
-- `3D analysis <analysis_3d.html>`__ | *analysis_3d.ipynb*
+.. nbgallery::
+
+    cta_data_analysis.ipynb
+    analysis_3d.ipynb
 
 *Time-dependent analysis*
 
-- `Light curves <light_curve.html>`__ | *light_curve.ipynb*
-- `Light curves for flares <light_curve_flare.html>`__ | *light_curve_flare.ipynb*
-- `Simulating and fiting a time varying source <light_curve_simulation.html>`__ | *light_curve_simulation.ipynb*
+.. nbgallery::
+
+    light_curve.ipynb
+    light_curve_flare.ipynb
+    light_curve_simulation.ipynb
 
 *Simulations*
 
-- `1D spectrum simulation <spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
-- `3D map simulation <simulate_3d.html>`__ | *simulate_3d.ipynb*
-- `Event sampling <event_sampling.html>`__ | *event_sampling.ipynb*
+.. nbgallery::
 
+    spectrum_simulation.ipynb
+    simulate_3d.ipynb
+    event_sampling.ipynb
 
 Advanced tutorials
 ------------------
