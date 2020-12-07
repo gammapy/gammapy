@@ -91,58 +91,58 @@ The following tutorials expose common analysis tasks.
 Advanced tutorials
 ------------------
 
-.. toctree::
-   :hidden:
-
-   analysis_mwl.ipynb
-   extended_source_spectral_analysis.ipynb
-   detect.ipynb
-   cta_sensitivity.ipynb
-   modeling_2D.ipynb
-   ring_background.ipynb
-   exclusion_mask.ipynb
-   overview.ipynb
-   maps.ipynb
-   modeling.ipynb
-   models.ipynb
-   catalog.ipynb
-
 The following tutorials expose how to perform more complex analyses or they demonstrate how to use the
 Gammapy API.
 
 *Exclusion masks*
 
-- `How to create an exclusion mask <exclusion_mask.html>`__ | *exclusion_mask.ipynb*
+.. nbgallery::
+
+    exclusion_mask.ipynb
 
 *Source detection*
 
-- `Source detection and significance maps <detect.html>`__ | *detect.ipynb*
+.. nbgallery::
+
+    detect.ipynb
 
 *Spectral analysis*
 
-- `Spectral analysis of extended sources <extended_source_spectral_analysis.html>`__ | *extended_source_spectral_analysis.ipynb*
+.. nbgallery::
+
+    extended_source_spectral_analysis.ipynb
 
 *Multi-instrument analysis*
 
-- `Multi instrument joint 3D and 1D analysis <analysis_mwl.html>`__ | *analysis_mwl.ipynb*
-- `A Fermi-LAT analysis with Gammapy <fermi_lat.html>`__ | *fermi_lat.ipynb*
+.. nbgallery::
+
+    analysis_mwl.ipynb
+    fermi_lat.ipynb
 
 *Sensitivity estimation*
 
-- `Point source sensitivity <cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
+.. nbgallery::
+
+    cta_sensitivity.ipynb
 
 *Modeling and fitting in gammapy*
 
-- `Modeling and Fitting <modeling.html>`__  | *modeling.ipynb*
-- `Models <models.html>`__  | *models.ipynb*
+.. nbgallery::
+
+    modeling.ipynb
+    models.ipynb
 
 *Working with catalogs*
 
-- `Source catalogs <catalog.html>`__  | *catalog.ipynb*
+.. nbgallery::
+
+    catalog.ipynb
 
 *Working with gammapy maps*
 
-- `Maps <maps.html>`__  | *maps.ipynb*
+.. nbgallery::
+
+    maps.ipynb
 
 
 .. _tutorials_scripts:
