@@ -68,7 +68,7 @@ used:
     >>> time.mjd
     array([51179.00000143, 55197.        ])
     >>> time.plot_date
-    array([729755.00000143, 733773.        ])
+    array([10592.00000143, 14610.        ])
 
 Converting to other time scales is also easy, see the :ref:`time scale section,
 diagram and table in the Astropy docs <astropy:time-scale>`.
