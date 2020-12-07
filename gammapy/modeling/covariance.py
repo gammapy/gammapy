@@ -200,7 +200,7 @@ class Covariance:
     def scipy_mvn(self):
         # TODO: use this, as in https://github.com/cdeil/multinorm/blob/master/multinorm.py
         return scipy.stats.multivariate_normal(
-            self.parameters.values, self.data, allow_singular=True
+            self.parameters.value, self.data, allow_singular=True
         )
 
     def __str__(self):

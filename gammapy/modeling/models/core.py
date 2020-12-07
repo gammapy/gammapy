@@ -29,6 +29,8 @@ __all__ = ["Model", "Models", "DatasetModels"]
 class Model:
     """Model base class."""
 
+    _type = None
+
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
@@ -42,8 +44,11 @@ class Model:
                 par = value
 
             setattr(self, par.name, par)
-
         self._covariance = Covariance(self.parameters)
+
+    @property
+    def type(self):
+        return self._type
 
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)
@@ -180,6 +185,20 @@ class Model:
         if len(self.parameters) > 0:
             string += f"\n{self.parameters.to_table()}"
         return string
+
+    @property
+    def frozen(self, model_type=None):
+        """Frozen status of a model, True if all parameters are frozen """
+        return np.all([p.frozen for p in self.parameters])
+
+    def freeze(self):
+        """Freeze all parameters"""
+        self.parameters.freeze_all()
+
+    def unfreeze(self, model_type=None):
+        """Restore parameters frozen status to default"""
+        for p, default in zip(self.parameters, self.default_parameters):
+            p.frozen = default.frozen
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -433,7 +452,10 @@ class DatasetModels(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {other!r}")
 
     def __getitem__(self, key):
-        return self._models[self.index(key)]
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return self.__class__(list(np.array(self._models)[key]))
+        else:
+            return self._models[self.index(key)]
 
     def index(self, key):
         if isinstance(key, (int, slice)):
@@ -455,43 +477,179 @@ class DatasetModels(collections.abc.Sequence):
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def select(self, dataset_name=None, tag=None, name_substring=None):
-        """Select subset of models correspondiog to a given dataset
+    def select(
+        self,
+        name_substring=None,
+        datasets_names=None,
+        tag=None,
+        model_type=None,
+        frozen=None,
+    ):
+        """Select models that verify all conditions
 
         Parameters
         ----------
-        dataset_name : str
-            Name of the dataset
-        tag : str
-            Model tag
+
         name_substring : str
             Substring contained in the model name
-
-        Returns
+        dataset_name : str or list
+            Name of the dataset
+        tag : str or list
+            Model tag
+        model_type :{None, spatial, spectral}
+           type of models
+        frozen : bool
+            Select models with all parameters frozen if True, exclude them if False.
+       Returns
         -------
         dataset_model : `DatasetModels`
-            Dataset models
+            Selected models
         """
-        models = []
+        mask = self.mask(name_substring, datasets_names, tag, model_type, frozen)
+        return self[mask]
 
-        for model in self:
-            selection = True
+    def mask(
+        self,
+        name_substring=None,
+        datasets_names=None,
+        tag=None,
+        model_type=None,
+        frozen=None,
+    ):
+        """Create a mask of models, true if all conditions are verified
 
-            if dataset_name:
-                selection &= (
-                    model.datasets_names is None or dataset_name in model.datasets_names
+        Parameters
+        ----------
+        name_substring : str
+            Substring contained in the model name
+        dataset_name : str or list
+            Name of the dataset
+        tag : str or list
+            Model tag
+        model_type :{None, spatial, spectral}
+           type of models, Default is None so this criterion is ignored.
+        frozen : bool
+            Select models with all parameters frozen if True, exclude them if False.
+ 
+       Returns
+        -------
+        mask : `numpy.array`
+            Boolean mask, True for selected models 
+        """
+
+        selection = np.ones(len(self), dtype=bool)
+
+        for km, model in enumerate(self):
+            if name_substring:
+                selection[km] &= name_substring in model.name
+
+            if datasets_names:
+                if not isinstance(datasets_names, list):
+                    datasets_names = [datasets_names]
+                selection[km] &= model.datasets_names is None or np.any(
+                    [name in model.datasets_names for name in datasets_names]
                 )
 
             if tag:
-                selection &= tag in model.tag
+                if not isinstance(tag, list):
+                    tag = [tag]
+                if model_type is None:
+                    sub_model = model
+                elif model_type == "spatial":
+                    sub_model = getattr(model, "spatial_model", None)
+                elif model_type == "spectral":
+                    sub_model = getattr(model, "_spectral_model", None)
+                elif model_type == "temporal":
+                    sub_model = getattr(model, "temporal_model", None)
+                if sub_model:
+                    inlist = np.any([t in sub_model.tag for t in tag])
+                    selection[km] &= tag == sub_model.tag or inlist
+                else:
+                    selection[km] &= False
 
-            if name_substring:
-                selection &= name_substring in model.name
+            if frozen is not None:
+                if frozen == True:
+                    selection[km] &= model.frozen
+                else:
+                    selection[km] &= ~model.frozen
+        return selection
 
-            if selection:
-                models.append(model)
+    def restore_status(self, restore_values=True):
+        """Context manager to restore status.
 
-        return self.__class__(models)
+        A copy of the values is made on enter,
+        and those values are restored on exit.
+
+        Parameters
+        ----------
+        restore_values : bool
+            Restore values if True,
+            otherwise restore only frozen status and covariance matrix.
+
+        """
+        return restore_models_status(self, restore_values)
+
+    def set_parameters_bounds(
+        self, tag, model_type, parameters_names, min=None, max=None, value=None
+    ):
+        """Set bounds for the selected models types and parameters names
+    
+        Parameters
+        ----------
+        tag : str or list
+            tag of the models
+        model_type : {"spatial", "spectral"}
+            type of models
+        parameters_names : str or list
+            parameters names
+        min : float
+            min value
+        max : float
+            max value
+        value : float
+            init value
+        """
+
+        models = self.select(tag=tag, model_type=model_type)
+        parameters = models.parameters.select(
+            name=parameters_names, model_type=model_type
+        )
+        n = len(parameters)
+        if min is not None:
+            parameters.min = np.ones(n) * min
+        if max is not None:
+            parameters.max = np.ones(n) * max
+        if value is not None:
+            parameters.value = np.ones(n) * value
+
+    def freeze(self, model_type=None):
+        """Freeze parameters depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           freeze all parameters or only spatial or only spectral 
+        """
+
+        for m in self:
+            m.freeze(model_type)
+
+    def unfreeze(self, model_type=None):
+        """Restore parameters frozen status to default depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           restore frozen status to default for all parameters or only spatial or only spectral
+        """
+
+        for m in self:
+            m.unfreeze(model_type)
+
+    @property
+    def frozen(self):
+        "Boolean mask, True if all parameters of a given model are frozen"
+        return np.array([m.frozen for m in self])
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
@@ -519,3 +677,23 @@ class Models(DatasetModels, collections.abc.MutableSequence):
             raise (ValueError("Model names must be unique"))
 
         self._models.insert(idx, model)
+
+
+class restore_models_status:
+    def __init__(self, models, restore_values=True):
+
+        self.restore_values = restore_values
+        self.models = models
+        self.values = [_.value for _ in models.parameters]
+        self.frozen = [_.frozen for _ in models.parameters]
+        self.covariance_data = models.covariance.data
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        for value, par, frozen in zip(self.values, self.models.parameters, self.frozen):
+            if self.restore_values:
+                par.value = value
+            par.frozen = frozen
+        self.models.covariance = self.covariance_data
