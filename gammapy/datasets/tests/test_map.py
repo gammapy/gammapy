@@ -1205,16 +1205,13 @@ def test_names(geom, geom_etrue, sky_model):
     )
 
     dataset2 = dataset1.copy()
-    print(dataset2.models)
     assert dataset2.name != dataset1.name
-    assert dataset2.models[f"{dataset2.name}-bkg"]
+    assert dataset2.models is None
+
     dataset2 = dataset1.copy(name="dataset2")
 
     assert dataset2.name == "dataset2"
-    assert dataset2.models["dataset2-bkg"].name == "dataset2-bkg"
-    assert dataset2.models["dataset2-bkg"] is not dataset1.models["test-bkg"]
-    assert dataset2.models.names == ["model1", "model2", "dataset2-bkg"]
-    assert dataset2.models is not dataset1.models
+    assert dataset2.models is None
 
 
 def test_stack_dataset_dataset_on_off():

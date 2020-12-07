@@ -486,16 +486,15 @@ class TestSpectrumOnOff:
 
     def test_to_from_ogip_files(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.to_ogip_files(outdir=tmp_path)
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
+        dataset.write(tmp_path / "test.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
 
         expected_regions = compound_region_to_list(self.off_counts.geom.region)
         regions = compound_region_to_list(newdataset.counts_off.geom.region)
 
-        assert newdataset.counts.meta["PHAFILE"] == "pha_obstest.fits"
-        assert newdataset.counts.meta["RESPFILE"] == "rmf_obstest.fits"
-        assert newdataset.counts.meta["BACKFILE"] == "bkg_obstest.fits"
-        assert newdataset.counts.meta["ANCRFILE"] == "arf_obstest.fits"
+        assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits"
+        assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits"
+        assert newdataset.counts.meta["ANCRFILE"] == "test_arf.fits"
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
@@ -521,8 +520,8 @@ class TestSpectrumOnOff:
             acceptance=1,
             name="test",
         )
-        dataset.to_ogip_files(outdir=tmp_path)
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
+        dataset.write(tmp_path / "pha_obstest.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "pha_obstest.fits")
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None
@@ -632,8 +631,8 @@ class TestSpectralFit:
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
         self.datasets = Datasets(
             [
-                SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits"),
-                SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits"),
+                SpectrumDatasetOnOff.read(path + "pha_obs23523.fits"),
+                SpectrumDatasetOnOff.read(path + "pha_obs23592.fits"),
             ]
         )
 
@@ -751,8 +750,8 @@ class TestSpectralFit:
 
 def _read_hess_obs():
     path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-    obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
-    obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
+    obs1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+    obs2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
     return [obs1, obs2]
 
 
@@ -913,7 +912,7 @@ def test_datasets_stack_reduce():
 
     for obs_id in obs_ids:
         filename = f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
-        ds = SpectrumDatasetOnOff.from_ogip_files(filename)
+        ds = SpectrumDatasetOnOff.read(filename)
         datasets.append(ds)
 
     stacked = datasets.stack_reduce(name="stacked")
@@ -930,7 +929,7 @@ def test_datasets_stack_reduce():
 
 @requires_data("gammapy-data")
 def test_stack_livetime():
-    dataset_ref = SpectrumDatasetOnOff.from_ogip_files(
+    dataset_ref = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )
 

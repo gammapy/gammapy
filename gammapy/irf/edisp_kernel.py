@@ -260,15 +260,15 @@ class EDispKernel:
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
-    def to_hdulist(self, use_sherpa=False, **kwargs):
+    def to_hdulist(self, format="ogip", **kwargs):
         """Convert RMF to FITS HDU list format.
 
         Parameters
         ----------
-        header : `~astropy.io.fits.Header`
-            Header to be written in the fits file.
-        energy_unit : str
-            Unit in which the energy is written in the HDU list
+        filename : str
+            Filename
+        format : {"ogip", "ogip-sherpa"}
+            Format to use.
 
         Returns
         -------
@@ -289,7 +289,7 @@ class EDispKernel:
         header = fits.Header()
         header.update(table.meta)
 
-        if use_sherpa:
+        if format == "ogip=sherpa":
             table["ENERG_HI"] = table["ENERG_HI"].quantity.to("keV")
             table["ENERG_LO"] = table["ENERG_LO"].quantity.to("keV")
 
@@ -309,9 +309,7 @@ class EDispKernel:
             [c0, c1, c2, c3, c4, c5], header=header, name=name
         )
 
-        hdu_format = "ogip-sherpa" if use_sherpa else "ogip"
-
-        ebounds_hdu = self.energy_axis.to_table_hdu(format=hdu_format)
+        ebounds_hdu = self.energy_axis.to_table_hdu(format=format)
         prim_hdu = fits.PrimaryHDU()
 
         return fits.HDUList([prim_hdu, hdu, ebounds_hdu])
@@ -378,10 +376,19 @@ class EDispKernel:
 
         return table
 
-    def write(self, filename, use_sherpa=False, **kwargs):
-        """Write to file."""
+    def write(self, filename, format="ogip", **kwargs):
+        """Write to file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename
+        format : {"ogip", "ogip-sherpa"}
+            Format to use.
+
+        """
         filename = str(make_path(filename))
-        self.to_hdulist(use_sherpa=use_sherpa).writeto(filename, **kwargs)
+        self.to_hdulist(format=format).writeto(filename, **kwargs)
 
     def get_resolution(self, energy_true):
         """Get energy resolution for a given true energy.

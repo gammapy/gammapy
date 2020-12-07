@@ -24,7 +24,7 @@ def hess_datasets():
     model = SkyModel(spectral_model=pwl, name="Crab")
 
     for obsid in [23523, 23526]:
-        dataset = SpectrumDatasetOnOff.from_ogip_files(
+        dataset = SpectrumDatasetOnOff.read(
             f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obsid}.fits"
         )
         dataset.models = model

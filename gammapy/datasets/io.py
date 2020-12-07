@@ -41,59 +41,58 @@ class DatasetWriter(abc.ABC):
 class OGIPDatasetWriter(DatasetWriter):
     """Write OGIP files.
 
-    If you want to use the written files with Sherpa you have to set the
-    ``use_sherpa`` flag. Then all files will be written in units 'keV' and
+    If you want to use the written files with Sherpa you have to use the
+    ``ogip-sherpa`` format. Then all files will be written in units of 'keV' and
     'cm2'.
 
-    The naming scheme is fixed, with {name} the dataset name:
+    The naming scheme is fixed as following:
 
-    * PHA file is named pha_obs{name}.fits
-    * BKG file is named bkg_obs{name}.fits
-    * ARF file is named arf_obs{name}.fits
-    * RMF file is named rmf_obs{name}.fits
+    * PHA file is named filename.fits
+    * BKG file is named filename_bkg.fits
+    * ARF file is named filename_arf.fits
+    * RMF file is named filename_rmf.fits
 
     Parameters
     ----------
-    outdir : `pathlib.Path`
-        output directory, default: pwd
-    use_sherpa : bool, optional
-        Write Sherpa compliant files, default: False
+    filename : `pathlib.Path` or str
+        Filename.
+    format : {"ogip", "ogip-sherpa"}
+        Which format to use.
     overwrite : bool
         Overwrite existing files?
     """
-    tag = "ogip"
+    tag = ["ogip", "ogip-sherpa"]
 
-    def __init__(self, outdir=None, use_sherpa=False, overwrite=False):
-        outdir = Path.cwd() if outdir is None else make_path(outdir)
-        outdir.mkdir(exist_ok=True, parents=True)
+    def __init__(self, filename, format="ogip", overwrite=False):
+        filename = make_path(filename)
+        filename.parent.mkdir(exist_ok=True, parents=True)
 
-        self.outdir = outdir
-        self.use_sherpa = use_sherpa
+        self.filename = filename
+        self.format = format
         self.overwrite = overwrite
 
     @staticmethod
-    def get_filenames(outdir, name):
+    def get_filenames(filename):
         """Get filenames
 
         Parameters
         ----------
-        outdir : `Path`
-            Base directory
-        name : str
-            Dataset name
+        filename : `~pathlib.Path`
+            Filename
 
+        Returns
+        -------
+        filenames : dict
+            Dict of filenames.
         """
-        # TODO: allow arbitrary filenames?
-        phafile = f"pha_obs{name}.fits"
+        name = f"{filename.stem}{{}}{filename.suffix}"
         return {
-            "phafile": str(outdir / phafile),
-            "respfile": str(outdir / phafile.replace("pha", "rmf")),
-            "backfile": str(outdir / phafile.replace("pha", "bkg")),
-            "ancrfile": str(outdir / phafile.replace("pha", "arf"))
+            "respfile": name.format("_rmf"),
+            "backfile": name.format("_bkg"),
+            "ancrfile": name.format("_arf")
         }
 
-    @staticmethod
-    def get_ogip_meta(dataset, is_bkg=False):
+    def get_ogip_meta(self, dataset, is_bkg=False):
         """Meta info for the OGIP data format"""
         try:
             livetime = dataset.exposure.meta["livetime"]
@@ -125,8 +124,14 @@ class OGIPDatasetWriter(DatasetWriter):
         }
 
         if not is_bkg:
-            filenames = OGIPDatasetWriter.get_filenames(outdir=Path(""), name=dataset.name)
-            meta.update(filenames)
+            filenames = OGIPDatasetWriter.get_filenames(self.filename)
+            meta["ancrfile"] = filenames["ancrfile"]
+
+            if dataset.edisp:
+                meta["backfile"] = filenames["backfile"]
+
+            if dataset.counts_off:
+                meta["respfile"] = filenames["respfile"]
 
         return meta
 
@@ -138,16 +143,18 @@ class OGIPDatasetWriter(DatasetWriter):
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         """
-        filenames = self.get_filenames(outdir=self.outdir, name=dataset.name)
+        filenames = self.get_filenames(self.filename)
 
-        self.write_pha(dataset, filename=filenames["phafile"])
-        self.write_arf(dataset, filename=filenames["ancrfile"])
+        self.write_pha(dataset, filename=self.filename)
+
+        path = self.filename.parent
+        self.write_arf(dataset, filename=path / filenames["ancrfile"])
 
         if dataset.counts_off:
-            self.write_bkg(dataset, filename=filenames["backfile"])
+            self.write_bkg(dataset, filename=path / filenames["backfile"])
 
         if dataset.edisp:
-            self.write_rmf(dataset, filename=filenames["respfile"])
+            self.write_rmf(dataset, filename=path / filenames["respfile"])
 
     def write_rmf(self, dataset, filename):
         """Write energy dispersion.
@@ -163,7 +170,7 @@ class OGIPDatasetWriter(DatasetWriter):
         kernel.write(
             filename=filename,
             overwrite=self.overwrite,
-            use_sherpa=self.use_sherpa
+            format=self.format
         )
 
     def write_arf(self, dataset, filename):
@@ -178,13 +185,10 @@ class OGIPDatasetWriter(DatasetWriter):
 
         """
         aeff = dataset.exposure / dataset.exposure.meta["livetime"]
-
-        format = "ogip-sherpa" if self.use_sherpa else "ogip"
-
         aeff.write(
             filename=filename,
             overwrite=self.overwrite,
-            format=format,
+            format=self.format,
             ogip_column="SPECRESP",
         )
 
@@ -212,8 +216,7 @@ class OGIPDatasetWriter(DatasetWriter):
         table.meta = self.get_ogip_meta(dataset, is_bkg=is_bkg)
         hdulist.append(fits.BinTableHDU(table, name=table.meta["name"]))
 
-        format = "ogip-sherpa" if self.use_sherpa else "ogip"
-        hdulist_geom = counts.geom.to_hdulist(format=format)[1:]
+        hdulist_geom = counts.geom.to_hdulist(format=self.format)[1:]
 
         hdulist.extend(hdulist_geom)
         return hdulist
@@ -267,14 +270,61 @@ class OGIPDatasetReader(DatasetReader):
 
     Parameters
     ----------
-    filename : str
+    filename : str or `~pathlib.Path`
         OGIP PHA file to read
     """
     tag = "ogip"
 
     def __init__(self, filename):
         self.filename = make_path(filename)
-        self.path = self.filename.parent
+
+    def get_valid_path(self, filename):
+        """Get absolute or relative path
+
+        The relative path is with respect to the name of the reference file.
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            Filename
+
+        Returns
+        -------
+        filename : `Path`
+            Valid path
+        """
+        filename = make_path(filename)
+
+        if not filename.exists():
+            return self.filename.parent / filename
+        else:
+            return filename
+
+    def get_filenames(self, pha_meta):
+        """Get filenames
+
+        Parameters
+        ----------
+        pha_meta : dict
+            Meta data from the PHA file
+
+        Returns
+        -------
+        filenames : dict
+            Dict with filenames of "arffile", "rmffile" (optional)
+            and "bkgfile" (optional)
+        """
+        filenames = {
+            "arffile": self.get_valid_path(pha_meta["ANCRFILE"])
+        }
+
+        if "BACKFILE" in pha_meta:
+            filenames["bkgfile"] = self.get_valid_path(pha_meta["BACKFILE"])
+
+        if "RESPFILE" in pha_meta:
+            filenames["rmffile"] = self.get_valid_path(pha_meta["RESPFILE"])
+
+        return filenames
 
     @staticmethod
     def read_pha(filename):
@@ -294,7 +344,6 @@ class OGIPDatasetReader(DatasetReader):
 
         with fits.open(filename, memmap=False) as hdulist:
             data["counts"] = RegionNDMap.from_hdulist(hdulist, format="ogip")
-
             data["acceptance"] = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="BACKSCAL"
             )
@@ -322,9 +371,6 @@ class OGIPDatasetReader(DatasetReader):
         data : dict
             Dict with counts_off and acceptance_off
         """
-        if not Path(filename).exists():
-            return {"counts_off": None, "acceptance_off": None}
-
         with fits.open(filename, memmap=False) as hdulist:
             counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
             acceptance_off = RegionNDMap.from_hdulist(
@@ -348,11 +394,10 @@ class OGIPDatasetReader(DatasetReader):
         data : `EDispKernelMap`
             Dict with edisp
         """
-        if not Path(filename).exists():
-            return
-
         kernel = EDispKernel.read(filename)
         edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=exposure.geom)
+
+        # TODO: resolve this separate handling of exposure for edisp
         edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
         return edisp
 
@@ -385,18 +430,20 @@ class OGIPDatasetReader(DatasetReader):
         dataset : SpectrumDatasetOnOff
             Spectrum dataset
         """
-        pha = self.read_pha(self.filename)
-        meta = pha["counts"].meta
+        kwargs = self.read_pha(self.filename)
+        pha_meta = kwargs["counts"].meta
 
-        name = str(meta["OBS_ID"])
-        livetime = meta["EXPOSURE"] * u.s
+        name = str(pha_meta["OBS_ID"])
+        livetime = pha_meta["EXPOSURE"] * u.s
 
-        filenames = OGIPDatasetWriter.get_filenames(self.path, name)
+        filenames = self.get_filenames(pha_meta=pha_meta)
+        exposure = self.read_arf(filenames["arffile"], livetime=livetime)
 
-        exposure = self.read_arf(filenames["ancrfile"], livetime=livetime)
-        bkg = self.read_bkg(filenames["backfile"])
-        edisp = self.read_rmf(filenames["respfile"], exposure=exposure)
+        if "bkgfile" in filenames:
+            bkg = self.read_bkg(filenames["bkgfile"])
+            kwargs.update(bkg)
 
-        return SpectrumDatasetOnOff(
-            name=name, exposure=exposure, edisp=edisp, **pha, **bkg,
-        )
+        if "rmffile" in filenames:
+            kwargs["edisp"] = self.read_rmf(filenames["rmffile"], exposure=exposure)
+
+        return SpectrumDatasetOnOff(name=name, exposure=exposure, **kwargs)

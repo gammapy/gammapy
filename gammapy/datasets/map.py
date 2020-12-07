@@ -197,10 +197,6 @@ class MapDataset(Dataset):
         except (ValueError, TypeError):
             pass
 
-    @property
-    def name(self):
-        return self._name
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__) + "\n"
@@ -1094,10 +1090,6 @@ class MapDataset(Dataset):
         dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
         return dataset
 
-    def to_dict(self, filename=""):
-        """Convert to dict for YAML serialization."""
-        return {"name": self.name, "type": self.tag, "filename": str(filename)}
-
     def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy
 
@@ -1271,8 +1263,10 @@ class MapDataset(Dataset):
         # TODO: Compute average edisp in region
         if self.edisp is not None:
             energy_axis = self._geom.axes["energy"]
+
+            position = None if on_region is None else on_region.center
             edisp = self.edisp.get_edisp_kernel(
-                on_region.center, energy_axis=energy_axis
+                position=position, energy_axis=energy_axis
             )
 
             edisp = EDispKernelMap.from_edisp_kernel(
@@ -1374,6 +1368,7 @@ class MapDataset(Dataset):
             kwargs["background"] = self.npred_background().downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
+
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(

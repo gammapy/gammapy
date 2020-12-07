@@ -41,6 +41,16 @@ class Dataset(abc.ABC):
         pass
 
     @property
+    def name(self):
+        return self._name
+
+    def to_dict(self):
+        """Convert to dict for YAML serialization."""
+        name = self.name.replace(" ", "_")
+        filename = f"{name}.fits"
+        return {"name": self.name, "type": self.tag, "filename": filename}
+
+    @property
     def mask(self):
         """Combined fit and safe mask"""
         if self.mask_safe is not None and self.mask_fit is not None:
@@ -64,18 +74,23 @@ class Dataset(abc.ABC):
         """Statistic array, one value per data point."""
 
     def copy(self, name=None):
-        """A deep copy."""
+        """A deep copy.
+
+        Parameters
+        ----------
+        name : str
+            Name of the copied dataset
+
+        Returns
+        -------
+        dataset : `Dataset`
+            Copied datasets.
+        """
         new = copy.deepcopy(self)
         name = make_name(name)
         new._name = name
-
-        # propagate new dataset name
-        if new._models is not None:
-            for m in new._models:
-                if m.datasets_names is not None:
-                    for k, d in enumerate(m.datasets_names):
-                        if d == self.name:
-                            m.datasets_names[k] = name
+        # TODO: check the model behaviour?
+        new.models = None
         return new
 
     @staticmethod
@@ -360,15 +375,15 @@ class Datasets(collections.abc.MutableSequence):
         write_covariance : bool
             save covariance or not
         """
-        path = make_path(filename).resolve()
+        path = make_path(filename)
 
         data = {"datasets": []}
 
         for dataset in self._datasets:
-            name = dataset.name.replace(" ", "_")
-            filename = f"{name}.fits"
+            d = dataset.to_dict()
+            filename = d["filename"]
             dataset.write(path.parent / filename, overwrite=overwrite)
-            data["datasets"].append(dataset.to_dict(filename=filename))
+            data["datasets"].append(d)
 
         write_yaml(data, path, sort_keys=False)
 

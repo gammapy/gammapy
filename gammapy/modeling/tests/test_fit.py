@@ -24,7 +24,7 @@ class MyDataset(Dataset):
     tag = "MyDataset"
 
     def __init__(self, name="test"):
-        self.name = name
+        self._name = name
         self._models = Models([MyModel(x=1.99, y=2.99e3, z=3.99e-2)])
         self.data_shape = (1,)
         self.meta_table = Table()
