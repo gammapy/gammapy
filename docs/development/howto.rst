@@ -973,7 +973,8 @@ You may include static images in notebooks using the following markdown directiv
 
     ![](images/my_static_image.png)
 
-Please note that your images should be placed inside an `images` folder, accessed with that relative path.
+Please note that your images should be placed inside an `images` folder, accessed with that relative
+path from your notebook.
 
 Include images from gammapy-data into the docs
 ----------------------------------------------
