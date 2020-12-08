@@ -161,16 +161,12 @@ class FluxEstimator(Estimator):
             energy_min=self.energy_min, energy_max=self.energy_max
         )
 
-        # TODO: simplify model book-keeping!!
-        models = Models()
-
-        for model in datasets.models:
-            if "sky-model" in model.tag:
-                models.append(model)
-            elif "fov-bkg" in model.tag:
-                bkg_model = model.copy(dataset_name=model.datasets_names[0] + "-sliced")
-                bkg_model.reset_to_default()
-                models.append(bkg_model)
+        models = datasets.models.copy()
+        datasets_sliced.models = models
+        for idx, d in enumerate(datasets_sliced):
+            d.models.reassign_dataset(datasets.names[idx], d.name)
+            if d.background_model:
+                d.background_model.reset_to_default()
 
         if len(datasets_sliced) > 0:
             # TODO: this relies on the energy binning of the first dataset
