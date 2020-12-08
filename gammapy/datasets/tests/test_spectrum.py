@@ -505,6 +505,15 @@ class TestSpectrumOnOff:
         assert regions[0].center.is_equivalent_frame(expected_regions[0].center)
         assert_allclose(regions[1].angle, expected_regions[1].angle)
 
+    def test_to_from_ogip_files_zip(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits.gz")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits.gz")
+
+        assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits.gz"
+        assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits.gz"
+        assert newdataset.counts.meta["ANCRFILE"] == "test_arf.fits.gz"
+
     def test_to_from_ogip_files_no_edisp(self, tmp_path):
 
         mask_safe = RegionNDMap.from_geom(self.on_counts.geom, dtype=bool)

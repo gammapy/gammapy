@@ -85,7 +85,9 @@ class OGIPDatasetWriter(DatasetWriter):
         filenames : dict
             Dict of filenames.
         """
-        name = f"{filename.stem}{{}}{filename.suffix}"
+        suffix = "".join(filename.suffixes)
+        name = filename.name.replace(suffix, "")
+        name = f"{name}{{}}{suffix}"
         return {
             "respfile": name.format("_rmf"),
             "backfile": name.format("_bkg"),
