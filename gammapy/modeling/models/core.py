@@ -187,7 +187,7 @@ class Model:
         return string
 
     @property
-    def frozen(self, model_type=None):
+    def frozen(self):
         """Frozen status of a model, True if all parameters are frozen """
         return np.all([p.frozen for p in self.parameters])
 
@@ -195,7 +195,7 @@ class Model:
         """Freeze all parameters"""
         self.parameters.freeze_all()
 
-    def unfreeze(self, model_type=None):
+    def unfreeze(self):
         """Restore parameters frozen status to default"""
         for p, default in zip(self.parameters, self.default_parameters):
             p.frozen = default.frozen
@@ -485,30 +485,31 @@ class DatasetModels(collections.abc.Sequence):
         model_type=None,
         frozen=None,
     ):
-        """Select models that verify all conditions
+        """Select models that meet all specified conditions
 
         Parameters
         ----------
 
         name_substring : str
             Substring contained in the model name
-        dataset_name : str or list
+        datasets_names : str or list
             Name of the dataset
         tag : str or list
             Model tag
-        model_type :{None, spatial, spectral}
-           type of models
+        model_type : {None, spatial, spectral}
+           Type of model, used together with "tag", if the tag is not unique.
         frozen : bool
             Select models with all parameters frozen if True, exclude them if False.
-       Returns
+
+        Returns
         -------
-        dataset_model : `DatasetModels`
+        models : `DatasetModels`
             Selected models
         """
-        mask = self.mask(name_substring, datasets_names, tag, model_type, frozen)
+        mask = self.selection_mask(name_substring, datasets_names, tag, model_type, frozen)
         return self[mask]
 
-    def mask(
+    def selection_mask(
         self,
         name_substring=None,
         datasets_names=None,
@@ -516,63 +517,61 @@ class DatasetModels(collections.abc.Sequence):
         model_type=None,
         frozen=None,
     ):
-        """Create a mask of models, true if all conditions are verified
+        """Create a mask of models, that meet all specified conditions
 
         Parameters
         ----------
         name_substring : str
             Substring contained in the model name
-        dataset_name : str or list
+        datasets_names : str or list of str
             Name of the dataset
-        tag : str or list
+        tag : str or list of str
             Model tag
-        model_type :{None, spatial, spectral}
-           type of models, Default is None so this criterion is ignored.
+        model_type : {None, spatial, spectral}
+           Type of model, used together with "tag", if the tag is not unique.
         frozen : bool
             Select models with all parameters frozen if True, exclude them if False.
  
-       Returns
+        Returns
         -------
         mask : `numpy.array`
             Boolean mask, True for selected models 
         """
-
         selection = np.ones(len(self), dtype=bool)
 
-        for km, model in enumerate(self):
+        if tag and not isinstance(tag, list):
+            tag = [tag]
+
+        if datasets_names and not isinstance(datasets_names, list):
+            datasets_names = [datasets_names]
+
+        for idx, model in enumerate(self):
             if name_substring:
-                selection[km] &= name_substring in model.name
+                selection[idx] &= name_substring in model.name
 
             if datasets_names:
-                if not isinstance(datasets_names, list):
-                    datasets_names = [datasets_names]
-                selection[km] &= model.datasets_names is None or np.any(
+                selection[idx] &= model.datasets_names is None or np.any(
                     [name in model.datasets_names for name in datasets_names]
                 )
 
             if tag:
-                if not isinstance(tag, list):
-                    tag = [tag]
                 if model_type is None:
                     sub_model = model
-                elif model_type == "spatial":
-                    sub_model = getattr(model, "spatial_model", None)
-                elif model_type == "spectral":
-                    sub_model = getattr(model, "_spectral_model", None)
-                elif model_type == "temporal":
-                    sub_model = getattr(model, "temporal_model", None)
-                if sub_model:
-                    inlist = np.any([t in sub_model.tag for t in tag])
-                    selection[km] &= tag == sub_model.tag or inlist
                 else:
-                    selection[km] &= False
+                    sub_model = getattr(model, f"{model_type}_model", None)
+
+                if sub_model:
+                    selection[idx] &= np.any([t in sub_model.tag for t in tag])
+                else:
+                    selection[idx] &= False
 
             if frozen is not None:
-                if frozen == True:
-                    selection[km] &= model.frozen
+                if frozen:
+                    selection[idx] &= model.frozen
                 else:
-                    selection[km] &= ~model.frozen
-        return selection
+                    selection[idx] &= ~model.frozen
+
+        return np.array(selection, dtype=bool)
 
     def restore_status(self, restore_values=True):
         """Context manager to restore status.
@@ -615,6 +614,7 @@ class DatasetModels(collections.abc.Sequence):
             name=parameters_names, model_type=model_type
         )
         n = len(parameters)
+
         if min is not None:
             parameters.min = np.ones(n) * min
         if max is not None:
@@ -648,7 +648,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def frozen(self):
-        "Boolean mask, True if all parameters of a given model are frozen"
+        """Boolean mask, True if all parameters of a given model are frozen"""
         return np.array([m.frozen for m in self])
 
 

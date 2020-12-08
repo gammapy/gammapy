@@ -87,7 +87,7 @@ def test_select(models):
         print(selected.names)
         assert selected.names == xp
 
-    mask = models.mask(**conditions[4]) | models.mask(**conditions[6])
+    mask = models.selection_mask(**conditions[4]) | models.selection_mask(**conditions[6])
     selected = models[mask]
     assert selected.names == ["source-3", "bkg1", "bkg2"]
 
@@ -140,7 +140,7 @@ def test_bounds(models):
         max=5,
         value=2.4,
     )
-    pl_mask = models.mask(tag="pl", model_type="spectral")
+    pl_mask = models.selection_mask(tag="pl", model_type="spectral")
     assert np.all([m.spectral_model.index.value == 2.4 for m in models[pl_mask]])
     assert np.all([m.spectral_model.index.min == 0 for m in models[pl_mask]])
     assert np.all([m.spectral_model.index.max == 5 for m in models[pl_mask]])
@@ -152,44 +152,48 @@ def test_bounds(models):
         min=0,
         max=None,
     )
-    bkg_mask = models.mask(tag="BackgroundModel")
+    bkg_mask = models.selection_mask(tag="BackgroundModel")
     assert np.all([m.spectral_model.amplitude.min == 0 for m in models[pl_mask]])
     assert np.all([m._spectral_model.norm.min == 0 for m in models[bkg_mask]])
 
 
 def test_freeze(models):
-
     models.freeze()
     assert np.all([p.frozen for p in models.parameters])
     models.unfreeze()
-    assert models["source-1"].spatial_model.lon_0.frozen == False
-    assert models["source-1"].spectral_model.reference.frozen == True
-    assert models["source-3"].spatial_model.lon_0.frozen == False
-    assert models["bkg1"]._spectral_model.tilt.frozen == True
-    assert models["bkg1"]._spectral_model.norm.frozen == False
+
+    assert not models["source-1"].spatial_model.lon_0.frozen
+    assert models["source-1"].spectral_model.reference.frozen
+    assert not models["source-3"].spatial_model.lon_0.frozen
+    assert models["bkg1"].spectral_model.tilt.frozen
+    assert not models["bkg1"].spectral_model.norm.frozen
+
     models.freeze("spatial")
-    assert models["source-1"].spatial_model.lon_0.frozen == True
-    assert models["source-3"].spatial_model.lon_0.frozen == True
-    assert models["bkg1"]._spectral_model.norm.frozen == False
+    assert models["source-1"].spatial_model.lon_0.frozen
+    assert models["source-3"].spatial_model.lon_0.frozen
+    assert not models["bkg1"].spectral_model.norm.frozen
+
     models.unfreeze("spatial")
-    assert models["source-1"].spatial_model.lon_0.frozen == False
-    assert models["source-1"].spectral_model.reference.frozen == True
-    assert models["source-3"].spatial_model.lon_0.frozen == False
+    assert not models["source-1"].spatial_model.lon_0.frozen
+    assert models["source-1"].spectral_model.reference.frozen
+    assert not models["source-3"].spatial_model.lon_0.frozen
+
     models.freeze("spectral")
-    assert models["bkg1"]._spectral_model.tilt.frozen == True
-    assert models["bkg1"]._spectral_model.norm.frozen == True
-    assert models["source-1"].spectral_model.index.frozen == True
-    assert models["source-3"].spatial_model.lon_0.frozen == False
+    assert models["bkg1"].spectral_model.tilt.frozen
+    assert models["bkg1"].spectral_model.norm.frozen
+    assert models["source-1"].spectral_model.index.frozen
+    assert not models["source-3"].spatial_model.lon_0.frozen
+
     models.unfreeze("spectral")
-    assert models["bkg1"]._spectral_model.tilt.frozen == True
-    assert models["bkg1"]._spectral_model.norm.frozen == False
-    assert models["source-1"].spectral_model.index.frozen == False
+    assert models["bkg1"].spectral_model.tilt.frozen
+    assert not models["bkg1"].spectral_model.norm.frozen
+    assert not models["source-1"].spectral_model.index.frozen
 
 
 def test_parameters(models):
-
     pars = models.parameters.select(frozen=False)
     pars.freeze_all()
+
     assert np.all([p.frozen for p in pars])
     assert len(pars.select(frozen=True)) == len(pars)
 
