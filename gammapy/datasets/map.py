@@ -2571,8 +2571,13 @@ class MapEvaluator:
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
-        if self.model.spatial_model:
-            value = value * self.compute_flux_spatial()#.quantity
+        if self.geom.is_region:
+            evaluate_spatial_model = self.geom.region is not None
+        else:
+            evaluate_spatial_model = True
+
+        if self.model.spatial_model and evaluate_spatial_model:
+            value = value * self.compute_flux_spatial().quantity
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
