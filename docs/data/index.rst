@@ -29,9 +29,9 @@ To load Fermi-LAT event lists, use the `~gammapy.data.EventListLAT` class:
 
 .. code-block:: python
 
-    >>> from gammapy.data import EventListLAT
+    >>> from gammapy.data import EventList
     >>> filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
-    >>> events = EventListLAT.read(filename)
+    >>> events = EventList.read(filename)
 
 The other main class in `gammapy.data` is the `~gammapy.data.DataStore`, which makes it easy
 to load IACT data. E.g. an alternative way to load the events for observation ID 23523 is this:
