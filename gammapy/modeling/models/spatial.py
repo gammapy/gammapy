@@ -153,10 +153,11 @@ class SpatialModel(Model):
             wcs_geom = geom.to_wcs_geom().to_image()
             mask = geom.contains(wcs_geom.get_coord())
             values = self.evaluate_geom(wcs_geom)
-            data = ((values* wcs_geom.solid_angle())[mask]).sum()
+            data = ((values * wcs_geom.solid_angle())[mask]).sum()
         else:
             values = self.evaluate_geom(geom)
             data = values * geom.solid_angle()
+
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
     def to_dict(self, full_output=False):

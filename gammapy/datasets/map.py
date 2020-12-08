@@ -2572,12 +2572,12 @@ class MapEvaluator:
         value = self.compute_flux_spectral()
 
         if self.geom.is_region:
-            evaluate_spatial_model = self.geom.region is not None
+            evaluate_spatial_model = self.geom.region is not None and self.psf
         else:
             evaluate_spatial_model = True
 
         if self.model.spatial_model and evaluate_spatial_model:
-            value = value * self.compute_flux_spatial().quantity
+            value = value * self.compute_flux_spatial()
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
@@ -2599,7 +2599,7 @@ class MapEvaluator:
 
             if self.psf and self.model.apply_irf["psf"]:
                 values = self.apply_psf(values)
-            value = (values.data * mask).sum(axis=(1,2))
+            value = (values.quantity * mask).sum(axis=(1, 2))
 
         else:
             value = self.model.spatial_model.integrate_geom(self.geom)

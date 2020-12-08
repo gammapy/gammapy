@@ -153,12 +153,12 @@ class Analysis:
 
         self.models.extend(self.datasets.models)
 
-        for dataset in self.datasets:
+        if self.config.datasets.type == "3d":
+            for dataset in self.datasets:
+                if dataset.background_model is None:
+                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
 
-            if dataset.background_model is None:
-                bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
-
-            self.models.append(bkg_model)
+                self.models.append(bkg_model)
 
         self.datasets.models = self.models
 
