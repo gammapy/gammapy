@@ -14,7 +14,7 @@ from regions import (
     PointSkyRegion,
     PolygonSkyRegion,
 )
-from gammapy.maps import Map, WcsGeom, RegionGeom
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
@@ -149,7 +149,7 @@ class SpatialModel(Model):
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
                 the integral value in each spatial bin.
         """
-        if isinstance(geom, RegionGeom):
+        if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
             mask = geom.contains(wcs_geom.get_coord())
             values = self.evaluate_geom(wcs_geom)

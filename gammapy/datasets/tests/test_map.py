@@ -5,12 +5,11 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion, RectangleSkyRegion
+from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import (
-    EDispKernel,
     EDispKernelMap,
     EDispMap,
     EffectiveAreaTable2D,

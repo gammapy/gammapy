@@ -9,7 +9,6 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf import EDispKernel
 from gammapy.irf.edisp_map import EDispKernelMap, EDispMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
@@ -461,7 +460,7 @@ class MapDataset(Dataset):
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
         # TODO: allow PSF as well...
-        if not isinstance(geom_psf, RegionGeom):
+        if not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
@@ -1843,7 +1842,7 @@ class MapDatasetOnOff(MapDataset):
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
-        if not isinstance(geom_psf, RegionGeom):
+        if not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
@@ -2525,18 +2524,17 @@ class MapEvaluator:
                 self.model.position, energy_axis=energy_axis
             )
 
+        # lookup psf
         if psf:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
                 geom = exposure.geom
 
-            # lookup psf
-            if isinstance(geom, RegionGeom):
-                wcs_geom = geom.to_wcs_geom()
-                self.psf = psf.get_psf_kernel(self.model.position, geom=wcs_geom)
-            else:
-                self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
+            if geom.is_region:
+                geom = geom.to_wcs_geom()
+
+            self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
@@ -2589,7 +2587,7 @@ class MapEvaluator:
         value: `~astropy.units.Quantity`
             Psf-corrected, integrated flux over a given region.
         """
-        if isinstance(self.geom, RegionGeom):
+        if self.geom.is_region:
             wcs_geom = self.geom.to_wcs_geom()
             mask = self.geom.contains(wcs_geom.get_coord())
             values = self.model.spatial_model.integrate_geom(wcs_geom)
