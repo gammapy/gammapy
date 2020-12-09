@@ -25,6 +25,25 @@ __all__ = ["WcsNDMap"]
 log = logging.getLogger(__name__)
 
 
+def _apply_binary_operations(map_, width, func):
+    """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
+
+    if map_.data.dtype != bool:
+        raise (TypeError, "Binary operations should be applied only on boolean mask")
+    if not isinstance(width, tuple):
+        width = (width, width)
+    shape = tuple(
+        [
+            int(np.ceil(x / scale).value * 2 + 1)
+            for x, scale in zip(width, map_.geom.pixel_scales)
+        ]
+    )
+    mask_data = np.empty(map_.data.shape, dtype=bool)
+    for img, idx in map_.iter_by_image():
+        mask_data[idx] = func(img, structure=np.ones(shape))
+    return mask_data
+
+
 class WcsNDMap(WcsMap):
     """WCS map with any number of non-spatial dimensions.
 
@@ -585,62 +604,41 @@ class WcsNDMap(WcsMap):
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
 
-    def binary_erosion(self, margin, from_edges=False):
+    def binary_erode(self, width, from_edges=False):
         """Binary erosion of boolean mask removing a given margin
         Parameters
         ----------
-        margin : tuple of `~astropy.units.Quantity`
+        width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
-        from_edge : bool
-            If True apply the margin only from edges (Default is False).
         """
-        if self.data.dtype != bool:
-            raise (TypeError, "Binary erosion should be applied only on boolean mask")
-        if from_edges:
-            mask_margin = np.ones(self.data.shape[-2:], dtype=bool)
-        else:
-            # TODO: should we apply the erosin independently to each other dim
-            # for now just combine non-spatial dim with OR condition
-            axis = tuple(np.arange(len(self.geom.axes)))
-            mask_margin = np.sum(self.data, axis=axis).astype(bool)
-        if not isinstance(margin, tuple):
-            margin = (margin, margin)
-        shape = tuple(
-            [
-                int(np.ceil(x / scale).value * 2 + 1)
-                for x, scale in zip(margin, self.geom.pixel_scales)
-            ]
-        )
-        mask_margin = ndi.binary_erosion(
-            mask_margin[..., :, :], structure=np.ones(shape)
-        )
-        idx_y, idx_x = np.where(~mask_margin)
-        self.data[..., idx_y, idx_x] = False
+        mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
+        return self._init_copy(data=mask_data)
 
-    def binary_dilation(self, margin):
-        """Binary dilation of boolean mask addding a given margin
+    def boundary_mask(self, width):
+        """Binary erosion of boolean mask removing a given margin from edges
         Parameters
         ----------
-        margin : tuple of `~astropy.units.Quantity`
+        width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
         """
-        if self.data.dtype != bool:
-            raise (TypeError, "Binary dilation should be applied only on boolean mask")
-        axis = tuple(np.arange(len(self.geom.axes)))
-        mask_margin = np.sum(self.data, axis=axis).astype(bool)
-        shape = tuple(
-            [
-                int(np.ceil(x / scale).value * 2 + 1)
-                for x, scale in zip(margin, self.geom.pixel_scales)
-            ]
-        )
-        mask_margin = ndi.binary_dilation(
-            mask_margin[..., :, :], structure=np.ones(shape)
-        )
-        idx_y, idx_x = np.where(mask_margin)
-        self.data[..., idx_y, idx_x] = True
+        mask_data = np.ones(self.data.shape, dtype=bool)
+        mask_map = self._init_copy(data=mask_data).binary_erode(width)
+        mask_map.data &= self.data
+        return mask_map
+
+    def binary_dilate(self, width):
+        """Binary dilation of boolean mask addding a given margin
+
+        Parameters
+        ----------
+        width : tuple of `~astropy.units.Quantity`
+            Angular sizes of the margin in (lon, lat) in that specific order.
+            If only one value is passed, the same margin is applied in (lon, lat).
+        """
+        mask_data = _apply_binary_operations(self, width, ndi.binary_dilation)
+        return self._init_copy(data=mask_data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """

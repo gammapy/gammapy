@@ -15,7 +15,7 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
-    PSFKernel
+    PSFKernel,
 )
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
@@ -27,7 +27,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    ConstantSpectralModel
+    ConstantSpectralModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -1365,21 +1365,26 @@ def test_downsample_onoff():
 def test_mask_fit_modifications(geom, geom_etrue):
     d = get_map_dataset(geom, geom_etrue)
     d.mask_fit.data = np.ones(d.mask_fit.data.shape, dtype=bool)
-    d.mask_fit.binary_erosion(margin=(0.3 * u.deg, 0.1 * u.deg), from_edges=True)
+    d.mask_fit = d.mask_fit.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
     assert np.sum(d.mask_fit.data[0, :, :]) == 6300
     assert np.sum(d.mask_fit.data[1, :, :]) == 6300
-    d.mask_fit.binary_dilation(margin=(0.3 * u.deg, 0.1 * u.deg))
+    d.mask_fit = d.mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))
     assert np.sum(d.mask_fit.data) == np.prod(d.mask_fit.data.shape)
+
 
 def test_compute_flux_spatial():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
 
     nbin = 2
-    energy_axis_true = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=nbin, name="energy_true")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        ".1 TeV", "10 TeV", nbin=nbin, name="energy_true"
+    )
 
     spectral_model = ConstantSpectralModel()
-    spatial_model = PointSpatialModel(lon_0 = 0*u.deg, lat_0 = 0*u.deg, frame='galactic')
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
 
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = Models(models)
