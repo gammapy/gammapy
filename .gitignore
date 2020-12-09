@@ -87,7 +87,4 @@ dev/crab
 *.png
 *.fits
 *.fits.gz
-*.fits_arf.gz
-*.fits_bkg.gz
-*.fits_rmf.gz
 *.root
