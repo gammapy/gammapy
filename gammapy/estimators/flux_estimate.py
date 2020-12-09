@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.maps import Geom
+from gammapy.modeling.models import PowerLawSpectralModel
 
 __all__ = ["FluxEstimate"]
 
@@ -23,9 +24,13 @@ class FluxEstimate:
     energy_axis : `MapAxis`
         Reference energy axis
     """
-    def __init__(self, data, spectral_model):
+    def __init__(self, data, spectral_model=None):
         # TODO: Check data
         self._data = data
+
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(index=2)
+
         self.spectral_model = spectral_model
 
         if hasattr(self.data["norm"], Geom):
@@ -73,8 +78,6 @@ class FluxEstimate:
     def norm_ul(self):
         return self.data["norm_ul"]
 
-    def get_flux_quantity(self, type, quantity=""):
-
     @property
     def dnde(self):
         return self.dnde_ref * self.norm
@@ -95,3 +98,62 @@ class FluxEstimate:
     def dnde_ul(self):
         return self.dnde_ref * self.norm_ul
 
+    @property
+    def e2dnde(self):
+        return self.e2dnde_ref * self.norm
+
+    @property
+    def e2dnde_err(self):
+        return self.e2dnde_ref * self.norm_err
+
+    @property
+    def e2dnde_errn(self):
+        return self.e2dnde_ref * self.norm_errn
+
+    @property
+    def e2dnde_errp(self):
+        return self.e2dnde_ref * self.norm_errp
+
+    @property
+    def e2dnde_ul(self):
+        return self.e2dnde_ref * self.norm_ul
+
+    @property
+    def flux(self):
+        return self.flux_ref * self.norm
+
+    @property
+    def flux_err(self):
+        return self.flux_ref * self.norm_err
+
+    @property
+    def flux_errn(self):
+        return self.flux_ref * self.norm_errn
+
+    @property
+    def flux_errp(self):
+        return self.flux_ref * self.norm_errp
+
+    @property
+    def eflux_ul(self):
+        return self.eflux_ref * self.norm_ul
+
+    @property
+    def eflux(self):
+        return self.eflux_ref * self.norm
+
+    @property
+    def eflux_err(self):
+        return self.eflux_ref * self.norm_err
+
+    @property
+    def eflux_errn(self):
+        return self.eflux_ref * self.norm_errn
+
+    @property
+    def eflux_errp(self):
+        return self.eflux_ref * self.norm_errp
+
+    @property
+    def eflux_ul(self):
+        return self.eflux_ref * self.norm_ul
