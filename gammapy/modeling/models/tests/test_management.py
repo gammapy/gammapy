@@ -10,6 +10,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    FoVBackgroundModel
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 
@@ -204,7 +205,27 @@ def test_parameters(models):
 
     with pytest.raises(TypeError):
         pars.min = 1
+
     with pytest.raises(ValueError):
         pars.min = [1]
+
     with pytest.raises(ValueError):
         pars.max = [2]
+
+
+def test_fov_bkg_models():
+    models = Models([FoVBackgroundModel(dataset_name=name) for name in ["test-1", "test-2"]])
+    models.freeze()
+    assert models.frozen
+
+    models.parameters.select(name="tilt").unfreeze_all()
+
+    assert not models["test-1-bkg"].spectral_model.tilt.frozen
+    assert not models["test-2-bkg"].spectral_model.tilt.frozen
+
+    models.parameters.select(name=["tilt", "norm"]).freeze_all()
+
+    assert models["test-1-bkg"].spectral_model.tilt.frozen
+    assert models["test-1-bkg"].spectral_model.norm.frozen
+
+

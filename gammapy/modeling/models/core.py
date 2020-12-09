@@ -611,7 +611,7 @@ class DatasetModels(collections.abc.Sequence):
 
         models = self.select(tag=tag, model_type=model_type)
         parameters = models.parameters.select(
-            name=parameters_names, model_type=model_type
+            name=parameters_names, type=model_type
         )
         n = len(parameters)
 
@@ -649,7 +649,7 @@ class DatasetModels(collections.abc.Sequence):
     @property
     def frozen(self):
         """Boolean mask, True if all parameters of a given model are frozen"""
-        return np.array([m.frozen for m in self])
+        return np.all([m.frozen for m in self])
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
