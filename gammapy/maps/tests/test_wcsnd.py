@@ -803,8 +803,7 @@ def test_stack_unit_handling():
     assert_allclose(m.data, 1.0001)
 
 
-def test_mask_fit_modifications(geom, geom_etrue):
-
+def test_mask_fit_modifications():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(
         skydir=(266.40498829, -28.93617776),
