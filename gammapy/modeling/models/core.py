@@ -200,22 +200,34 @@ class Model:
         for p, default in zip(self.parameters, self.default_parameters):
             p.frozen = default.frozen
 
-    def reassign_dataset(self, dataset_name, new_dataset_name):
+    def reassign(self, datasets_names, new_datasets_names):
         """Reassign a model from one dataset to another
         
         Parameters
         ----------
-        dataset_name : str
-            Name of a dataset where the model is currently defined
-        new_dataset_name : str
-            Name of a dataset where the model should be defined instead
+        dataset_name : str or list
+            Name of the datasets where the model is currently defined
+        new_dataset_name : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
         """
-        if self.datasets_names is not None:
-            if not isinstance(self.datasets_names, list):
-                self.datasets_names = [self.datasets_names]
-            for k, name in enumerate(self.datasets_names):
-                if name == dataset_name:
-                    self.datasets_names[k] = new_dataset_name
+        model = self.copy()
+        if not isinstance(datasets_names, list):
+            datasets_names = [datasets_names]
+        if not isinstance(new_datasets_names, list):
+            datasets_names = [new_datasets_names]
+
+        if model.datasets_names is not None:
+            if not isinstance(model.datasets_names, list):
+                model.datasets_names = [model.datasets_names]
+            for dataset_name, new_dataset_name in zip(
+                datasets_names, new_datasets_names
+            ):
+                for k, name in enumerate(model.datasets_names):
+                    if name == dataset_name:
+                        model.datasets_names[k] = new_dataset_name
+        return model
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -670,7 +682,7 @@ class DatasetModels(collections.abc.Sequence):
         """Boolean mask, True if all parameters of a given model are frozen"""
         return np.all([m.frozen for m in self])
 
-    def reassign_dataset(self, dataset_name, new_dataset_name):
+    def reassign(self, dataset_name, new_dataset_name):
         """Reassign a model from one dataset to another
     
         Parameters
@@ -680,8 +692,8 @@ class DatasetModels(collections.abc.Sequence):
         new_dataset_name : str
             Name of a dataset where the model should be defined instead
         """
-        for m in self:
-            m.reassign_dataset(dataset_name, new_dataset_name)
+        models = [m.reassign(dataset_name, new_dataset_name) for m in self]
+        return self.__class__(models)
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):

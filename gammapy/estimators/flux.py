@@ -161,10 +161,10 @@ class FluxEstimator(Estimator):
             energy_min=self.energy_min, energy_max=self.energy_max
         )
 
-        models = datasets.models.copy()
+        new_names = [name + "-sliced" for name in datasets.names]
+        models = datasets.models.reassign_dataset(datasets.names, new_names)
         datasets_sliced.models = models
-        for idx, d in enumerate(datasets_sliced):
-            d.models.reassign_dataset(datasets.names[idx], d.name)
+        for d in datasets_sliced:
             if d.background_model:
                 d.background_model.reset_to_default()
 
