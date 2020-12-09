@@ -498,7 +498,7 @@ class Parameters(collections.abc.Sequence):
             par.autoscale(method)
 
     def select(
-        self, name=None, model_type=None, frozen=None,
+        self, name=None, type=None, frozen=None,
     ):
         """Create a mask of models, true if all conditions are verified
 
@@ -506,30 +506,34 @@ class Parameters(collections.abc.Sequence):
         ----------
         name : str or list
             Name of the parameter
-        model_type :{None, spatial, spectral, temporal}
+        type : {None, spatial, spectral, temporal}
            type of models
         frozen : bool
             Select frozen parameters if True, exclude them if False.
  
-       Returns
+        Returns
         -------
         parameters : `Parameters`
            Selected parameters
         """
-
         selection = np.ones(len(self), dtype=bool)
 
-        for k, par in enumerate(self):
+        if name and not isinstance(name, list):
+            name = [name]
+
+        for idx, par in enumerate(self):
             if name:
-                if not isinstance(name, list):
-                    name = [name]
-                par_type = getattr(par, "type", None)
-                selection[k] &= par.name in name and model_type == par_type
+                selection[idx] &= np.any([_ == par.name for _ in name])
+
+            if type:
+                selection[idx] &= type == par.type
+
             if frozen is not None:
-                if frozen == True:
-                    selection[k] &= par.frozen
+                if frozen:
+                    selection[idx] &= par.frozen
                 else:
-                    selection[k] &= ~par.frozen
+                    selection[idx] &= ~par.frozen
+
         return self[selection]
 
     def freeze_all(self):
