@@ -9,7 +9,6 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf import EDispKernel
 from gammapy.irf.edisp_map import EDispKernelMap, EDispMap
 from gammapy.irf.psf_kernel import PSFKernel
 from gammapy.irf.psf_map import PSFMap
@@ -463,7 +462,7 @@ class MapDataset(Dataset):
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
         # TODO: allow PSF as well...
-        if not isinstance(geom_psf, RegionGeom):
+        if not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
@@ -1844,7 +1843,7 @@ class MapDatasetOnOff(MapDataset):
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
-        if not isinstance(geom_psf, RegionGeom):
+        if not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
@@ -2526,13 +2525,16 @@ class MapEvaluator:
                 self.model.position, energy_axis=energy_axis
             )
 
+        # lookup psf
         if psf:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
                 geom = exposure.geom
 
-            # lookup psf
+            if geom.is_region:
+                geom = geom.to_wcs_geom()
+
             self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
@@ -2570,8 +2572,13 @@ class MapEvaluator:
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
-        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
-            value = value * self.compute_flux_spatial().quantity
+        if self.geom.is_region:
+            evaluate_spatial_model = self.geom.region is not None and self.psf
+        else:
+            evaluate_spatial_model = True
+
+        if self.model.spatial_model and evaluate_spatial_model:
+            value = value * self.compute_flux_spatial()
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
@@ -2579,10 +2586,27 @@ class MapEvaluator:
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
     def _compute_flux_spatial(self):
-        """Compute spatial flux"""
-        value = self.model.spatial_model.integrate_geom(self.geom)
-        if self.psf and self.model.apply_irf["psf"]:
-            value = self.apply_psf(value)
+        """Compute spatial flux
+
+        Returns
+        ----------
+        value: `~astropy.units.Quantity`
+            Psf-corrected, integrated flux over a given region.
+        """
+        if self.geom.is_region:
+            wcs_geom = self.geom.to_wcs_geom()
+            mask = self.geom.contains(wcs_geom.get_coord())
+            values = self.model.spatial_model.integrate_geom(wcs_geom)
+
+            if self.psf and self.model.apply_irf["psf"]:
+                values = self.apply_psf(values)
+            value = (values.quantity * mask).sum(axis=(1, 2))
+
+        else:
+            value = self.model.spatial_model.integrate_geom(self.geom)
+            if self.psf and self.model.apply_irf["psf"]:
+                value = self.apply_psf(value)
+
         return value
 
     def compute_flux_spatial(self):
