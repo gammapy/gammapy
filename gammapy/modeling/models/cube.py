@@ -551,6 +551,15 @@ class FoVBackgroundModel(Model):
         """Evaluate model"""
         return self.spectral_model(energy)
 
+    def copy(self, **kwargs):
+        """Copy SkyModel"""
+        kwargs.pop("name")
+        if "spectral_model" not in kwargs:
+            kwargs.setdefault("spectral_model", self.spectral_model.copy())
+        if "dataset_name" not in kwargs:
+            kwargs.setdefault("dataset_name", self.datasets_names[0])
+        return self.__class__(**kwargs)
+
     def to_dict(self, full_output=False):
         data = {}
         data["type"] = self.tag[0]
