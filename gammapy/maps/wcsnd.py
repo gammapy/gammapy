@@ -4,7 +4,7 @@ from collections import OrderedDict
 import warnings
 import numpy as np
 import scipy.interpolate
-import scipy.ndimage
+import ndi as ndi
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
@@ -176,7 +176,7 @@ class WcsNDMap(WcsMap):
                 for x in pix
             ]
         )
-        return scipy.ndimage.map_coordinates(
+        return ndi.map_coordinates(
             self.data.T, pix, order=order, mode="nearest"
         )
 
@@ -312,7 +312,7 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data
 
-        data = scipy.ndimage.map_coordinates(
+        data = ndi.map_coordinates(
             data.T, tuple(pix), order=order, mode="nearest"
         )
 
@@ -473,9 +473,9 @@ class WcsNDMap(WcsMap):
         kernel : {'gauss', 'disk', 'box'}
             Kernel shape
         kwargs : dict
-            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
-            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss') or
-            `~scipy.ndimage.convolve` ('disk').
+            Keyword arguments passed to `~ndi.uniform_filter`
+            ('box'), `~ndi.gaussian_filter` ('gauss') or
+            `~ndi.convolve` ('disk').
 
         Returns
         -------
@@ -491,13 +491,13 @@ class WcsNDMap(WcsMap):
         for img, idx in self.iter_by_image():
             img = img.astype(float)
             if kernel == "gauss":
-                data = scipy.ndimage.gaussian_filter(img, width, **kwargs)
+                data = ndi.gaussian_filter(img, width, **kwargs)
             elif kernel == "disk":
                 disk = Tophat2DKernel(width)
                 disk.normalize("integral")
-                data = scipy.ndimage.convolve(img, disk.array, **kwargs)
+                data = ndi.convolve(img, disk.array, **kwargs)
             elif kernel == "box":
-                data = scipy.ndimage.uniform_filter(img, width, **kwargs)
+                data = ndi.uniform_filter(img, width, **kwargs)
             else:
                 raise ValueError(f"Invalid kernel: {kernel!r}")
             smoothed_data[idx] = data
@@ -589,6 +589,51 @@ class WcsNDMap(WcsMap):
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
 
+    def binary_erosion(self, margin, from_edge = False):
+        """Binary erosion of boolean mask removing a given margin
+        Parameters
+        ----------
+        margin : tuple of `~astropy.units.Quantity`
+            Angular sizes of the margin in (lon, lat) in that specific order.
+            If only one value is passed, the same margin is applied in (lon, lat).
+        from_edge : bool
+            If True apply the margin only from edges (Default is False).
+        """
+        if self.data.dtype != bool:
+            raise(TypeError, "Binary erosion should be applied only on boolean mask")
+        if from_edge:
+            mask_margin = np.ones(self.data.shape[-2:], dtype=bool)
+        else:
+            #TODO: should we apply the erosin independently to each other dim
+            # for now just combine non-spatial dim with OR condition
+            axis = tuple(np.arange(len(self.geom.axes)))
+            mask_margin = np.sum(self.data, axis=axis).astype(bool) 
+        if not isinstance(margin, tuple):
+            margin = (margin, margin)
+        shape = tuple([int(np.ceil(x / scale).value * 2 + 1) for x, scale in zip(margin, self.geom.pixel_scales)])
+        mask_margin =  ndi.binary_erosion(mask_margin[..., :, :], structure=np.ones(shape))
+        idx_y, idx_x = np.where(mask_margin)
+        self.data[..., idx_y, idx_x] &= mask_margin
+
+            
+    def binary_dilation(self, margin):
+        """Binary dilation of boolean mask addding a given margin
+        Parameters
+        ----------
+        margin : tuple of `~astropy.units.Quantity`
+            Angular sizes of the margin in (lon, lat) in that specific order.
+            If only one value is passed, the same margin is applied in (lon, lat).
+        """
+        if self.data.dtype != bool:
+            raise(TypeError, "Binary dilation should be applied only on boolean mask")
+        axis = tuple(np.arange(len(self.geom.axes)))
+        mask_margin = np.sum(self.data, axis=axis).astype(bool) 
+        shape = tuple([int(np.ceil(x / scale).value * 2 + 1) for x, scale in zip(margin, self.geom.pixel_scales)])
+        mask_margin =  ndi.binary_dilation(mask_margin[..., :, :], structure=np.ones(shape))
+        idx_y, idx_x = np.where(mask_margin)
+        self.data[..., idx_y, idx_x] = mask_margin
+    
+
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
         Convolve map with a kernel.
@@ -602,10 +647,10 @@ class WcsNDMap(WcsMap):
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
-            Use `scipy.signal.fftconvolve` or `scipy.ndimage.convolve`.
+            Use `scipy.signal.fftconvolve` or `ndi.convolve`.
         kwargs : dict
             Keyword arguments passed to `scipy.signal.fftconvolve` or
-            `scipy.ndimage.convolve`.
+            `ndi.convolve`.
 
         Returns
         -------
@@ -614,7 +659,7 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.irf import PSFKernel
 
-        conv_function = scipy.signal.fftconvolve if use_fft else scipy.ndimage.convolve
+        conv_function = scipy.signal.fftconvolve if use_fft else ndi.convolve
 
         if use_fft:
             kwargs.setdefault("mode", "same")
