@@ -801,3 +801,22 @@ def test_stack_unit_handling():
     m.stack(m_other)
 
     assert_allclose(m.data, 1.0001)
+
+
+def test_mask_fit_modifications(geom, geom_etrue):
+
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+    mask_fit = Map.from_geom(geom)
+    mask_fit.data = np.ones(mask_fit.data.shape, dtype=bool)
+    mask_fit = mask_fit.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(mask_fit.data[0, :, :]) == 6300
+    assert np.sum(mask_fit.data[1, :, :]) == 6300
+    mask_fit = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(mask_fit.data) == np.prod(mask_fit.data.shape)

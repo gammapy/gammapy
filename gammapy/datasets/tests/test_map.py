@@ -1362,16 +1362,6 @@ def test_downsample_onoff():
     assert_allclose(downsampled.alpha.data, 0.5)
 
 
-def test_mask_fit_modifications(geom, geom_etrue):
-    d = get_map_dataset(geom, geom_etrue)
-    d.mask_fit.data = np.ones(d.mask_fit.data.shape, dtype=bool)
-    d.mask_fit = d.mask_fit.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
-    assert np.sum(d.mask_fit.data[0, :, :]) == 6300
-    assert np.sum(d.mask_fit.data[1, :, :]) == 6300
-    d.mask_fit = d.mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))
-    assert np.sum(d.mask_fit.data) == np.prod(d.mask_fit.data.shape)
-
-
 def test_compute_flux_spatial():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
