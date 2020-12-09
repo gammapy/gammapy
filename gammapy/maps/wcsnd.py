@@ -4,7 +4,7 @@ from collections import OrderedDict
 import warnings
 import numpy as np
 import scipy.interpolate
-import ndi as ndi
+import scipy.ndimage as ndi
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
@@ -589,7 +589,7 @@ class WcsNDMap(WcsMap):
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
 
-    def binary_erosion(self, margin, from_edge = False):
+    def binary_erosion(self, margin, from_edges=False):
         """Binary erosion of boolean mask removing a given margin
         Parameters
         ----------
@@ -601,7 +601,7 @@ class WcsNDMap(WcsMap):
         """
         if self.data.dtype != bool:
             raise(TypeError, "Binary erosion should be applied only on boolean mask")
-        if from_edge:
+        if from_edges:
             mask_margin = np.ones(self.data.shape[-2:], dtype=bool)
         else:
             #TODO: should we apply the erosin independently to each other dim
@@ -612,8 +612,8 @@ class WcsNDMap(WcsMap):
             margin = (margin, margin)
         shape = tuple([int(np.ceil(x / scale).value * 2 + 1) for x, scale in zip(margin, self.geom.pixel_scales)])
         mask_margin =  ndi.binary_erosion(mask_margin[..., :, :], structure=np.ones(shape))
-        idx_y, idx_x = np.where(mask_margin)
-        self.data[..., idx_y, idx_x] &= mask_margin
+        idx_y, idx_x = np.where(~mask_margin)
+        self.data[..., idx_y, idx_x] = False
 
             
     def binary_dilation(self, margin):
@@ -631,7 +631,7 @@ class WcsNDMap(WcsMap):
         shape = tuple([int(np.ceil(x / scale).value * 2 + 1) for x, scale in zip(margin, self.geom.pixel_scales)])
         mask_margin =  ndi.binary_dilation(mask_margin[..., :, :], structure=np.ones(shape))
         idx_y, idx_x = np.where(mask_margin)
-        self.data[..., idx_y, idx_x] = mask_margin
+        self.data[..., idx_y, idx_x] = True
     
 
     def convolve(self, kernel, use_fft=True, **kwargs):

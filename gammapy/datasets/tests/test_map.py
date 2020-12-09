@@ -1358,3 +1358,14 @@ def test_downsample_onoff():
     assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
     assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
     assert_allclose(downsampled.alpha.data, 0.5)
+
+
+def test_mask_fit_modifications(geom, geom_etrue):
+    d = get_map_dataset(geom, geom_etrue)
+    d.mask_fit.data = np.ones(d.mask_fit.data.shape, dtype=bool)
+    d.mask_fit.binary_erosion(margin=(0.3 * u.deg, 0.1 * u.deg), from_edges=True)
+    assert np.sum(d.mask_fit.data[0, :, :]) == 6300
+    assert np.sum(d.mask_fit.data[1, :, :]) == 6300
+    d.mask_fit.binary_dilation(margin=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(d.mask_fit.data) == np.prod(d.mask_fit.data.shape)
+ 
