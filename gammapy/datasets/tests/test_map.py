@@ -8,16 +8,17 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
+from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import (
-    EDispKernel,
     EDispKernelMap,
     EDispMap,
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
+    PSFKernel
 )
 from gammapy.makers.utils import make_map_exposure_true_energy
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -26,6 +27,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    ConstantSpectralModel
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -1358,3 +1360,29 @@ def test_downsample_onoff():
     assert downsampled.counts.data.sum() == dataset_onoff.counts.data.sum()
     assert downsampled.counts_off.data.sum() == dataset_onoff.counts_off.data.sum()
     assert_allclose(downsampled.alpha.data, 0.5)
+
+
+def test_compute_flux_spatial():
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+    region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
+
+    nbin = 2
+    energy_axis_true = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=nbin, name="energy_true")
+
+    spectral_model = ConstantSpectralModel()
+    spatial_model = PointSpatialModel(lon_0 = 0*u.deg, lat_0 = 0*u.deg, frame='galactic')
+
+    models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    model = Models(models)
+
+    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true])
+    exposure_region.data += 1.0
+    exposure_region.unit = "m2 s"
+
+    geom = RegionGeom(region, axes=[energy_axis_true])
+    psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
+
+    evaluator = MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
+    flux = evaluator.compute_flux_spatial()
+
+    assert_allclose(flux.value, [0.39677402, 0.39677402], atol=0.001)
