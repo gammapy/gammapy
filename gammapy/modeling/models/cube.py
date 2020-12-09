@@ -595,13 +595,15 @@ class FoVBackgroundModel(Model):
         """Copy SkyModel"""
         return self.__class__(**kwargs)
 
-    def freeze(self):
-        """Restore parameters frozen status to default"""
-        return self.spectral_model.freeze()
+    def freeze(self, model_type="spectral"):
+        """Freeze model parameters"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.freeze()
 
-    def unfreeze(self):
+    def unfreeze(self, model_type="spectral"):
         """Restore parameters frozen status to default"""
-        return self.spectral_model.unfreeze()
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.unfreeze()
 
 
 class BackgroundModel(Model):
@@ -810,7 +812,7 @@ class BackgroundModel(Model):
         return np.max(self.map.geom.width) / 2.0
 
     def freeze(self, model_type="spectral"):
-        """Restore parameters frozen status to default"""
+        """Freeze model parameters"""
         if model_type is None or model_type == "spectral":
             self._spectral_model.freeze()
 
