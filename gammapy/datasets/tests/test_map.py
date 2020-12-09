@@ -957,7 +957,7 @@ def test_stack_onoff(images):
     assert_allclose(
         stacked.acceptance.data.sum(), dataset.data_shape[1] * dataset.data_shape[2]
     )
-    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e+08, rtol=1e-5)
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e08, rtol=1e-5)
     assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
 
 
@@ -1368,4 +1368,3 @@ def test_mask_fit_modifications(geom, geom_etrue):
     assert np.sum(d.mask_fit.data[1, :, :]) == 6300
     d.mask_fit.binary_dilation(margin=(0.3 * u.deg, 0.1 * u.deg))
     assert np.sum(d.mask_fit.data) == np.prod(d.mask_fit.data.shape)
- 

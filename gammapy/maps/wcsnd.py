@@ -176,9 +176,7 @@ class WcsNDMap(WcsMap):
                 for x in pix
             ]
         )
-        return ndi.map_coordinates(
-            self.data.T, pix, order=order, mode="nearest"
-        )
+        return ndi.map_coordinates(self.data.T, pix, order=order, mode="nearest")
 
     def _interp_by_coord_griddata(self, coords, interp=None):
         order = interp_to_order(interp)
@@ -312,9 +310,7 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data
 
-        data = ndi.map_coordinates(
-            data.T, tuple(pix), order=order, mode="nearest"
-        )
+        data = ndi.map_coordinates(data.T, tuple(pix), order=order, mode="nearest")
 
         if preserve_counts:
             data *= geom.bin_volume().value
@@ -600,22 +596,28 @@ class WcsNDMap(WcsMap):
             If True apply the margin only from edges (Default is False).
         """
         if self.data.dtype != bool:
-            raise(TypeError, "Binary erosion should be applied only on boolean mask")
+            raise (TypeError, "Binary erosion should be applied only on boolean mask")
         if from_edges:
             mask_margin = np.ones(self.data.shape[-2:], dtype=bool)
         else:
-            #TODO: should we apply the erosin independently to each other dim
+            # TODO: should we apply the erosin independently to each other dim
             # for now just combine non-spatial dim with OR condition
             axis = tuple(np.arange(len(self.geom.axes)))
-            mask_margin = np.sum(self.data, axis=axis).astype(bool) 
+            mask_margin = np.sum(self.data, axis=axis).astype(bool)
         if not isinstance(margin, tuple):
             margin = (margin, margin)
-        shape = tuple([int(np.ceil(x / scale).value * 2 + 1) for x, scale in zip(margin, self.geom.pixel_scales)])
-        mask_margin =  ndi.binary_erosion(mask_margin[..., :, :], structure=np.ones(shape))
+        shape = tuple(
+            [
+                int(np.ceil(x / scale).value * 2 + 1)
+                for x, scale in zip(margin, self.geom.pixel_scales)
+            ]
+        )
+        mask_margin = ndi.binary_erosion(
+            mask_margin[..., :, :], structure=np.ones(shape)
+        )
         idx_y, idx_x = np.where(~mask_margin)
         self.data[..., idx_y, idx_x] = False
 
-            
     def binary_dilation(self, margin):
         """Binary dilation of boolean mask addding a given margin
         Parameters
@@ -625,14 +627,20 @@ class WcsNDMap(WcsMap):
             If only one value is passed, the same margin is applied in (lon, lat).
         """
         if self.data.dtype != bool:
-            raise(TypeError, "Binary dilation should be applied only on boolean mask")
+            raise (TypeError, "Binary dilation should be applied only on boolean mask")
         axis = tuple(np.arange(len(self.geom.axes)))
-        mask_margin = np.sum(self.data, axis=axis).astype(bool) 
-        shape = tuple([int(np.ceil(x / scale).value * 2 + 1) for x, scale in zip(margin, self.geom.pixel_scales)])
-        mask_margin =  ndi.binary_dilation(mask_margin[..., :, :], structure=np.ones(shape))
+        mask_margin = np.sum(self.data, axis=axis).astype(bool)
+        shape = tuple(
+            [
+                int(np.ceil(x / scale).value * 2 + 1)
+                for x, scale in zip(margin, self.geom.pixel_scales)
+            ]
+        )
+        mask_margin = ndi.binary_dilation(
+            mask_margin[..., :, :], structure=np.ones(shape)
+        )
         idx_y, idx_x = np.where(mask_margin)
         self.data[..., idx_y, idx_x] = True
-    
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
