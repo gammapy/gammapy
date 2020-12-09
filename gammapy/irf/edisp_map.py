@@ -77,14 +77,9 @@ class EDispMap(IRFMap):
     """
 
     _hdu_name = "edisp"
+    _axis_names = ["migra", "energy_true"]
 
     def __init__(self, edisp_map, exposure_map=None):
-        if edisp_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
-            raise ValueError("Incorrect energy axis position in input Map")
-
-        if edisp_map.geom.axes[0].name.upper() != "MIGRA":
-            raise ValueError("Incorrect migra axis position in input Map")
-
         super().__init__(irf_map=edisp_map, exposure_map=exposure_map)
 
     @property
@@ -332,14 +327,9 @@ class EDispKernelMap(IRFMap):
 
     tag = "edisp_kernel_map"
     _hdu_name = "edisp"
+    _axis_names = ["energy", "energy_true"]
 
-    def __init__(self, edisp_kernel_map, exposure_map):
-        if edisp_kernel_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
-            raise ValueError("Incorrect energy axis position in input Map")
-
-        if edisp_kernel_map.geom.axes[0].name.upper() != "ENERGY":
-            raise ValueError("Incorrect migra axis position in input Map")
-
+    def __init__(self, edisp_kernel_map, exposure_map=None):
         super().__init__(irf_map=edisp_kernel_map, exposure_map=exposure_map)
 
     @property

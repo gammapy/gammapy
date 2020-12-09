@@ -57,6 +57,7 @@ class EDispKernel:
         self.data = NDDataArray(
             axes=[energy_axis_true, energy_axis], data=data, interp_kwargs=interp_kwargs
         )
+        self.data.axes.assert_names(["energy_true", "energy"])
         self.meta = meta or {}
 
     def __str__(self):

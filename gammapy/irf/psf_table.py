@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -31,15 +31,9 @@ class TablePSF:
     """
 
     def __init__(self, rad_axis, psf_value, interp_kwargs=None):
-        if rad_axis.name != "rad":
-            raise ValueError(
-                f'rad_axis has wrong name, expected "rad", got: {rad_axis.name}'
-            )
-
+        rad_axis.assert_name("rad")
         self._rad_axis = rad_axis
-
         self.psf_value = u.Quantity(psf_value).to("sr^-1")
-
         self._interp_kwargs = interp_kwargs or {}
 
     @property
@@ -250,22 +244,21 @@ class EnergyDependentTablePSF:
         self._rad_axis = rad_axis
         self._energy_axis_true = energy_axis_true
 
-        assert energy_axis_true.name == "energy_true"
-        assert rad_axis.name == "rad"
+        axes = MapAxes([energy_axis_true, rad_axis])
+        axes.assert_names(["energy_true", "rad"])
 
         if exposure is None:
             self.exposure = u.Quantity(np.ones(self.energy_axis_true.nbin), "cm^2 s")
         else:
             self.exposure = u.Quantity(exposure).to("cm^2 s")
 
-        shape = (energy_axis_true.nbin, rad_axis.nbin)
         if psf_value is None:
-            self.psf_value = np.zeros(shape) * u.Unit("sr^-1")
+            self.psf_value = np.zeros(axes.shape) * u.Unit("sr^-1")
         else:
-            if np.shape(psf_value) != shape:
+            if np.shape(psf_value) != axes.shape:
                 raise ValueError(
                     "psf_value has wrong shape"
-                    f", expected {shape}, got {np.shape(psf_value)}"
+                    f", expected {axes.shape}, got {np.shape(psf_value)}"
                 )
             self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
