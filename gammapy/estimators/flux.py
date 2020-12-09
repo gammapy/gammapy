@@ -162,7 +162,7 @@ class FluxEstimator(Estimator):
         )
 
         new_names = [name + "-sliced" for name in datasets.names]
-        models = datasets.models.reassign_dataset(datasets.names, new_names)
+        models = datasets.models.reassign(datasets.names, new_names)
         datasets_sliced.models = models
         for d in datasets_sliced:
             if d.background_model:

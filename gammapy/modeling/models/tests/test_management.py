@@ -235,7 +235,7 @@ def test_fov_bkg_models():
 
 def test_reassign_dataset(models):
     ref = models.select(datasets_names="dataset-2")
-    models.reassign_dataset("dataset-2", "dataset-2-copy")
+    models = models.reassign("dataset-2", "dataset-2-copy")
     assert len(models.select(datasets_names="dataset-2")) == np.sum(
         [m.datasets_names == None for m in models]
     )

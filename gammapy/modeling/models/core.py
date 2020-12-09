@@ -205,18 +205,18 @@ class Model:
         
         Parameters
         ----------
-        dataset_name : str or list
+        datasets_names : str or list
             Name of the datasets where the model is currently defined
-        new_dataset_name : str or list
+        new_datasets_names : str or list
             Name of the datasets where the model should be defined instead.
             If multiple names are given the two list must have the save lenght,
             as the reassignment is element-wise.
         """
-        model = self.copy()
+        model = self.copy(name=self.name)
         if not isinstance(datasets_names, list):
             datasets_names = [datasets_names]
         if not isinstance(new_datasets_names, list):
-            datasets_names = [new_datasets_names]
+            new_datasets_names = [new_datasets_names]
 
         if model.datasets_names is not None:
             if not isinstance(model.datasets_names, list):
@@ -687,10 +687,12 @@ class DatasetModels(collections.abc.Sequence):
     
         Parameters
         ----------
-        dataset_name : str
-            Name of a dataset where the model is currently defined
-        new_dataset_name : str
-            Name of a dataset where the model should be defined instead
+        dataset_name : str or list
+            Name of the datasets where the model is currently defined
+        new_dataset_name : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
         """
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
