@@ -69,6 +69,7 @@ class EnergyDispersion2D:
         axes = [energy_axis_true, migra_axis, offset_axis]
 
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+        self.data.axes.assert_names(["energy_true", "migra", "offset"])
         self.meta = meta or {}
 
     def __str__(self):

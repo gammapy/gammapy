@@ -6,10 +6,12 @@ from gammapy.maps import Map
 
 class IRFMap:
     """IRF map base class"""
+    _axis_names = []
 
     def __init__(self, irf_map, exposure_map):
         self._irf_map = irf_map
         self.exposure_map = exposure_map
+        irf_map.geom.axes.assert_names(self._axis_names)
 
     @classmethod
     def from_hdulist(

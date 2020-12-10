@@ -68,6 +68,10 @@ class PSFMap(IRFMap):
 
     tag = "psf_map"
     _hdu_name = "psf"
+    _axis_names = ["rad", "energy_true"]
+
+    def __init__(self, psf_map, exposure_map=None):
+        super().__init__(irf_map=psf_map, exposure_map=exposure_map)
 
     @property
     def psf_map(self):
@@ -76,15 +80,6 @@ class PSFMap(IRFMap):
     @psf_map.setter
     def psf_map(self, value):
         self._irf_map = value
-
-    def __init__(self, psf_map, exposure_map=None):
-        if psf_map.geom.axes[1].name != "energy_true":
-            raise ValueError("Incorrect energy axis position in input Map")
-
-        if psf_map.geom.axes[0].name != "rad":
-            raise ValueError("Incorrect rad axis position in input Map")
-
-        super().__init__(irf_map=psf_map, exposure_map=exposure_map)
 
     def get_energy_dependent_table_psf(self, position=None):
         """Get energy-dependent PSF at a given position.

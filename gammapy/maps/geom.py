@@ -513,6 +513,21 @@ class MapAxes(Sequence):
 
         return cls(axes_out)
 
+    def assert_names(self, required_names):
+        """Assert required axis names and order
+
+        Parameters
+        ----------
+        required_names : list of str
+            Required
+        """
+        try:
+            for ax, required_name in zip(self, required_names):
+                ax.assert_name(required_name)
+        except ValueError:
+            raise ValueError("Incorrect axis order or names. Expected axis "
+                             f"order: {required_names}, got: {self.names}.")
+
 
 class MapAxis:
     """Class representing an axis of a map.
@@ -587,6 +602,20 @@ class MapAxis:
             raise ValueError(f"Invalid node type: {node_type!r}")
 
         self._nbin = nbin
+
+    def assert_name(self, required_name):
+        """Assert axis name if a specific one is required.
+
+        Parameters
+        ----------
+        required_name : str
+            Required
+        """
+        if self.name != required_name:
+            raise ValueError(
+                "Unexpected axis name,"
+                f' expected "{required_name}", got: "{self.name}"'
+            )
 
     def is_aligned(self, other, atol=2e-2):
         """Check if other map axis is aligned.
@@ -1439,8 +1468,8 @@ class MapAxis:
             name, interp = spec["name"], spec["interp"]
 
             # background models are stored in reconstructed energy
-            extname = table.meta.get("EXTNAME")
-            if extname in ["BACKGROUND", "BKG"] and column_prefix == "ENERG":
+            hduclass = table.meta.get("HDUCLAS2")
+            if hduclass == "BKG" and column_prefix == "ENERG":
                 name = "energy"
 
             edges_lo = table[f"{column_prefix}_LO"].quantity[0]

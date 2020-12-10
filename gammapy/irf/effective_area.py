@@ -63,11 +63,10 @@ class EffectiveAreaTable:
     def __init__(self, energy_axis_true, data, meta=None):
         interp_kwargs = {"extrapolate": False, "bounds_error": False}
 
-        assert energy_axis_true.name == "energy_true"
-
         self.data = NDDataArray(
             axes=[energy_axis_true], data=data, interp_kwargs=interp_kwargs
         )
+        self.data.axes.assert_names(["energy_true"])
         self.meta = meta or {}
 
     @property
@@ -358,15 +357,13 @@ class EffectiveAreaTable2D:
     def __init__(
         self, energy_axis_true, offset_axis, data, meta=None, interp_kwargs=None,
     ):
-        assert energy_axis_true.name == "energy_true"
-        assert offset_axis.name == "offset"
-
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
         self.data = NDDataArray(
             axes=[energy_axis_true, offset_axis], data=data, interp_kwargs=interp_kwargs
         )
+        self.data.axes.assert_names(["energy_true", "offset"])
         self.meta = meta or {}
 
     def __str__(self):

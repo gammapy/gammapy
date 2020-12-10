@@ -69,6 +69,7 @@ class Background3D:
             data=data,
             interp_kwargs=interp_kwargs,
         )
+        self.data.axes.assert_names(["energy", "fov_lon", "fov_lat"])
         self.meta = meta or {}
 
     def __str__(self):
@@ -146,6 +147,7 @@ class Background3D:
         axes = MapAxes(self.data.axes[::-1])
         table = axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
+        table.meta["HDUCLAS2"] = "BKG"
         table["BKG"] = self.data.data.T[np.newaxis]
         return table
 
@@ -249,11 +251,10 @@ class Background2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        assert offset_axis.name == "offset"
-
         self.data = NDDataArray(
             axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
         )
+        self.data.axes.assert_names(["energy", "offset"])
         self.meta = meta or {}
 
     def __str__(self):
@@ -326,6 +327,9 @@ class Background2D:
         """Convert to `~astropy.table.Table`."""
         table = self.data.axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
+
+        # TODO: add other required meta data
+        table.meta["HDUCLAS2"] = "BKG"
         table["BKG"] = self.data.data.T[np.newaxis]
         return table
 

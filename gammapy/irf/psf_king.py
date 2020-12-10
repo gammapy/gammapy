@@ -43,10 +43,9 @@ class PSFKing:
         energy_thresh_lo=Quantity(0.1, "TeV"),
         energy_thresh_hi=Quantity(100, "TeV"),
     ):
-        assert energy_axis_true.name == "energy_true"
+        energy_axis_true.assert_name("energy_true")
+        offset_axis.assert_name("offset")
         self._energy_axis_true = energy_axis_true
-
-        assert offset_axis.name == "offset"
         self._offset_axis = offset_axis
 
         self.gamma = np.asanyarray(gamma)
