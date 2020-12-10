@@ -567,7 +567,7 @@ class WcsNDMap(WcsMap):
                 )
                 cutout.data *= weights_cutout.data
 
-            mask = cutout.geom.to_image().region_mask([region])
+            mask = cutout.geom.to_image().region_mask([region]).data
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 

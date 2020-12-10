@@ -187,7 +187,7 @@ class ReflectedRegionsFinder:
         self._pix_center = PixCoord.from_sky(self.center, geom.wcs)
 
         # Make the ON reference map
-        mask = geom.region_mask([self.region], inside=True)
+        mask = geom.region_mask([self.region], inside=True).data
         # on_reference_map = WcsNDMap(geom=geom, data=mask)
 
         # Extract all pixcoords in the geom

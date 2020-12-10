@@ -358,11 +358,11 @@ def test_region_mask():
     r2 = CircleSkyRegion(SkyCoord(20, 20, unit="deg"), 1 * u.deg)
     regions = [r1, r2]
 
-    mask = geom.region_mask(regions)  # default inside=True
+    mask = geom.region_mask(regions).data  # default inside=True
     assert mask.dtype == bool
     assert np.sum(mask) == 1
 
-    mask = geom.region_mask(regions, inside=False)
+    mask = geom.region_mask(regions, inside=False).data
     assert np.sum(mask) == 8
 
 
