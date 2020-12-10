@@ -71,8 +71,8 @@ class EnergyDependentMultiGaussPSF:
         energy_thresh_lo="0.1 TeV",
         energy_thresh_hi="100 TeV",
     ):
-        assert energy_axis_true.name == "energy_true"
-        assert offset_axis.name == "offset"
+        energy_axis_true.assert_name("energy_true")
+        offset_axis.assert_name("offset")
 
         self._energy_axis_true = energy_axis_true
         self._offset_axis = offset_axis

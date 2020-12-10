@@ -114,6 +114,20 @@ def test_edisp_map_to_energydispersion():
     assert_allclose(edisp.get_resolution(energy_true=1.0 * u.TeV), 0.2, atol=3e-2)
 
 
+def test_edisp_map_from_geom_error():
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3
+    )
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+
+    geom = WcsGeom.create(npix=(1, 1), axes=[energy_axis_true, energy_axis])
+
+    with pytest.raises(ValueError):
+        EDispKernelMap.from_geom(geom=geom)
+
+
 def test_edisp_map_stacking():
     edmap1 = make_edisp_map_test()
     edmap2 = make_edisp_map_test()

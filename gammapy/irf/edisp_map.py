@@ -356,14 +356,6 @@ class EDispKernelMap(IRFMap):
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        axis_names = [ax.name for ax in geom.axes]
-
-        if "energy_true" not in axis_names:
-            raise ValueError("EDispKernelMap requires true energy axis")
-
-        if "energy" not in axis_names:
-            raise ValueError("EDispKernelMap requires energy axis")
-
         geom_exposure = geom.squash(axis_name="energy")
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 

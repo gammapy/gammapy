@@ -521,8 +521,12 @@ class MapAxes(Sequence):
         required_names : list of str
             Required
         """
-        for ax, required_name in zip(self, required_names):
-            ax.assert_name(required_name)
+        try:
+            for ax, required_name in zip(self, required_names):
+                ax.assert_name(required_name)
+        except ValueError:
+            raise ValueError("Incorrect axis order or names. Expected axis "
+                             f"order: {required_names}, got: {self.names}.")
 
 
 class MapAxis:
@@ -610,7 +614,7 @@ class MapAxis:
         if self.name != required_name:
             raise ValueError(
                 "Unexpected axis name,"
-                f' expected "{required_name}", got: {self.name}'
+                f' expected "{required_name}", got: "{self.name}"'
             )
 
     def is_aligned(self, other, atol=2e-2):
