@@ -44,7 +44,7 @@ A given `MapDataset` has to be reduced to a single image by calling
 	)
 
 	circle = CircleSkyRegion(center=geom.center_skydir, radius=0.2 * u.deg)
-	exclusion_mask = Map.from_geom(geom, data=geom.region_mask([circle], inside=False))
+	exclusion_mask = geom.region_mask([circle], inside=False)
 
 	ring_bkg_maker = RingBackgroundMaker(r_in="0.3 deg", width="0.3 deg", exclusion_mask=exclusion_mask)
 
