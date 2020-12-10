@@ -6,7 +6,6 @@ Tutorials
 =========
 
 This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks.
-
 You can read them here, or execute them using a temporary cloud server in Binder.
 
 To execute them locally, you have to first install Gammapy locally (see
@@ -21,116 +20,137 @@ handbook`_ and the `Astropy Hands-On Tutorial`_.
 
 .. _tutorials_notebooks:
 
-Getting started
----------------
+Starting
+--------
 
-The following tutorials show how to use gammapy to perform a complete data analysis,
-here a simple 3D cube analysis of the Crab. They show the gammapy workflow from data selection
-to data reduction and finally modeling and fitting.
+The following three tutorials show different ways of how to use Gammapy to perform a complete data analysis,
+from data selection to data reduction and finally modeling and fitting.
 
-First, we show how to do it with the high level interface in configuration-driven approach.
-The second tutorial exposes the same analysis, this time using the medium level API, showing
-what is happening 'under-the-hood':
-
-.. nbgallery::
-
-    analysis_1.ipynb
-    analysis_2.ipynb
-
-
-Core tutorials
---------------
-
-The following tutorials expose common analysis tasks.
-
-*Accessing and exploring DL3 data*
+The first tutorial is an overview on how to perform a standard analysis workflow using the high-level interface
+in a configuration-driven approach, whilst the second deals with the same use-case using the low-level API
+and showing what is happening *under-the-hood*. The third tutorial shows a glimpse of how to handle different
+basic data structures like event lists, source catalogs, sky maps, spectral models and flux points tables.
 
 .. nbgallery::
 
-    overview.ipynb
-    cta.ipynb
-    hess.ipynb
+   analysis_1.ipynb
+   analysis_2.ipynb
+   overview.ipynb
 
-*1-dim spectral analysis*
+Data exploration
+----------------
 
-.. nbgallery::
-
-    spectrum_analysis.ipynb
-    sed_fitting.ipynb
-
-*2-dim sky image analysis*
+These three tutorials show how to perform data exploration with Gammapy, providing an introduction to the CTA,
+H.E.S.S. and Fermi-LAT data and instrument response functions (IRFs). You will be able to explore and filter
+event lists according to different criteria, as well as to get a quick look of the multidimensional IRFs files.
 
 .. nbgallery::
 
-    ring_background.ipynb
-    modeling_2D.ipynb
+   cta.ipynb
+   hess.ipynb
+   fermi_lat.ipynb
 
-*3-dim sky cube analysis*
 
-.. nbgallery::
+Data analysis
+-------------
 
-    cta_data_analysis.ipynb
-    analysis_3d.ipynb
+The following set of tutorials are devoted to data analysis, and grouped according to the specific covered use
+cases in spectral analysis and flux fitting, image and cube analysis modelling and fitting, as well as
+time-dependent analysis with light-curves.
 
-*Time-dependent analysis*
-
-.. nbgallery::
-
-    light_curve.ipynb
-    light_curve_flare.ipynb
-    light_curve_simulation.ipynb
-
-*Simulations*
+1D Spectral
+~~~~~~~~~~~
 
 .. nbgallery::
 
-    spectrum_simulation.ipynb
-    simulate_3d.ipynb
-    event_sampling.ipynb
+   spectrum_analysis.ipynb
+   sed_fitting.ipynb
 
-Advanced tutorials
-------------------
-
-The following tutorials expose how to perform more complex analyses or they demonstrate how to use the
-Gammapy API.
+2D Image
+~~~~~~~~
 
 .. nbgallery::
 
-    exclusion_mask.ipynb
-    detect.ipynb
-    extended_source_spectral_analysis.ipynb
-    analysis_mwl.ipynb
-    fermi_lat.ipynb
-    cta_sensitivity.ipynb
-    modeling.ipynb
-    models.ipynb
-    catalog.ipynb
-    maps.ipynb
+   ring_background.ipynb
+   modeling_2D.ipynb
 
+3D Cube
+~~~~~~~
+
+.. nbgallery::
+
+   cta_data_analysis.ipynb
+   analysis_3d.ipynb
+
+Time
+~~~~
+
+.. nbgallery::
+
+   light_curve_simulation.ipynb
+   light_curve.ipynb
+   light_curve_flare.ipynb
+
+Simulations
+-----------
+
+These three notebooks cover different use cases to use Gammapy to perform simulations, from the basis
+of event sampling to spectrum and 3D datasets simulations.
+
+.. nbgallery::
+
+   event_sampling.ipynb
+   spectrum_simulation.ipynb
+   simulate_3d.ipynb
+
+Advanced
+--------
+
+The following tutorials demonstrate different dimensions of the Gammapy API or
+expose how to perform more complex and specific analyses.
+
+Package
+~~~~~~~
+
+.. nbgallery::
+
+   catalog.ipynb
+   models.ipynb
+   modeling.ipynb
+   maps.ipynb
+
+Specific use cases
+~~~~~~~~~~~~~~~~~~
+
+.. nbgallery::
+
+   detect.ipynb
+   exclusion_mask.ipynb
+   extended_source_spectral_analysis.ipynb
+   analysis_mwl.ipynb
+   cta_sensitivity.ipynb
+
+Extra topics
+~~~~~~~~~~~~
+
+.. nbgallery::
+
+   astro_dark_matter.ipynb
+   background_model.ipynb
+   mcmc_sampling.ipynb
+   pulsar_analysis.ipynb
 
 .. _tutorials_scripts:
 
 Scripts
 -------
 
-Examples how to run Gammapy via Python scripts:
+For interactive use, IPython and Jupyter are great, and most Gammapy examples use those.
+However, for long-running, non-interactive tasks like data reduction or survey maps,
+you might prefer a Python script.
+
+The following example shows how to run Gammapy within a Python script.
 
 .. toctree::
-    :maxdepth: 1
 
-    survey_map
-
-
-.. _tutorials_extras:
-
-Extra topics
-------------
-
-These notebooks contain examples on some more specialised functionality in Gammapy.
-
-.. nbgallery::
-
-    astro_dark_matter.ipynb
-    background_model.ipynb
-    mcmc_sampling.ipynb
-    pulsar_analysis.ipynb
+   survey_map
