@@ -814,7 +814,7 @@ def test_mask_fit_modifications():
     )
     mask_fit = Map.from_geom(geom)
     mask_fit.data = np.ones(mask_fit.data.shape, dtype=bool)
-    mask_fit = mask_fit.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
+    mask_fit = mask_fit & geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
     assert np.sum(mask_fit.data[0, :, :]) == 6300
     assert np.sum(mask_fit.data[1, :, :]) == 6300
     mask_fit = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))

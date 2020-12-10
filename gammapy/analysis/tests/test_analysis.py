@@ -212,7 +212,7 @@ def test_exclusion_region(tmp_path):
     exclusion_region = CircleSkyRegion(center=SkyCoord("85d 23d"), radius=1 * u.deg)
     exclusion_mask = Map.create(npix=(150, 150), binsz=0.05, skydir=SkyCoord("83d 22d"))
     mask = exclusion_mask.geom.region_mask([exclusion_region], inside=False)
-    exclusion_mask.data = mask.astype(int)
+    exclusion_mask.data = mask.data.astype(int)
     filename = tmp_path / "exclusion.fits"
     exclusion_mask.write(filename)
     config.datasets.background.method = "reflected"
@@ -227,7 +227,8 @@ def test_exclusion_region(tmp_path):
     analysis.get_datasets()
     geom = analysis.datasets[0]._geom
     exclusion = WcsNDMap.from_geom(geom)
-    exclusion.data = geom.region_mask([exclusion_region], inside=False).astype(int)
+    mask = exclusion_mask.geom.region_mask([exclusion_region], inside=False)
+    exclusion_mask.data = mask.data.astype(int)
     filename = tmp_path / "exclusion3d.fits"
     exclusion.write(filename)
     config.datasets.background.exclusion = filename

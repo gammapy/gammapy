@@ -129,7 +129,6 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     center = SkyCoord("0.2 deg", "0.1 deg", frame="galactic")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
     mask_fit = geom.region_mask([circle])
-    mask_fit = Map.from_geom(geom, data=mask_fit)
 
     models = FoVBackgroundModel(dataset_name=name)
 

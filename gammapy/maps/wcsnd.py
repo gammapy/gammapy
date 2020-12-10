@@ -615,19 +615,6 @@ class WcsNDMap(WcsMap):
         mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
         return self._init_copy(data=mask_data)
 
-    def boundary_mask(self, width):
-        """Binary erosion of boolean mask removing a given margin from edges
-        Parameters
-        ----------
-        width : tuple of `~astropy.units.Quantity`
-            Angular sizes of the margin in (lon, lat) in that specific order.
-            If only one value is passed, the same margin is applied in (lon, lat).
-        """
-        mask_data = np.ones(self.data.shape, dtype=bool)
-        mask_map = self._init_copy(data=mask_data).binary_erode(width)
-        mask_map.data &= self.data
-        return mask_map
-
     def binary_dilate(self, width):
         """Binary dilation of boolean mask addding a given margin
 
