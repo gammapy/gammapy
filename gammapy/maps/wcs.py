@@ -861,6 +861,23 @@ class WcsGeom(Geom):
             wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info
         )
 
+    def boundary_mask(self, width, inside=True):
+        """Create a mask applying binary erosion with a given width from geom edges
+
+        Parameters
+        ----------
+        width : tuple of `~astropy.units.Quantity`
+            Angular sizes of the margin in (lon, lat) in that specific order.
+            If only one value is passed, the same margin is applied in (lon, lat).
+        """
+        from . import Map
+
+        mask_data = np.ones(self.data_shape, dtype=bool)
+        mask_map = Map.from_geom(self, data=mask_data).binary_erode(width)
+        if inside is False:
+            mask_map.data = ~mask_map.data
+        return mask_map
+
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions
 
@@ -874,8 +891,9 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        mask_map : `~numpy.ndarray` of boolean type
+        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
             Boolean region mask
+
 
         Examples
         --------
@@ -896,15 +914,9 @@ class WcsGeom(Geom):
 
         Note how we made a list with a single region,
         since this method expects a list of regions.
-
-        The return ``mask`` is a boolean Numpy array.
-        If you want a map object (e.g. for storing in FITS or plotting),
-        this is how you can make the map::
-
-            mask_map = WcsNDMap(geom=geom, data=mask)
-            mask_map.plot()
         """
         from regions import PixCoord
+        from . import Map
 
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
@@ -922,7 +934,7 @@ class WcsGeom(Geom):
         if inside is False:
             np.logical_not(mask, out=mask)
 
-        return mask
+        return Map.from_geom(self, data=mask)
 
     def __repr__(self):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]

@@ -15,7 +15,7 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
-    PSFKernel
+    PSFKernel,
 )
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
@@ -27,7 +27,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    ConstantSpectralModel
+    ConstantSpectralModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -129,7 +129,6 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     center = SkyCoord("0.2 deg", "0.1 deg", frame="galactic")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
     mask_fit = geom.region_mask([circle])
-    mask_fit = Map.from_geom(geom, data=mask_fit)
 
     models = FoVBackgroundModel(dataset_name=name)
 
@@ -959,7 +958,7 @@ def test_stack_onoff(images):
     assert_allclose(
         stacked.acceptance.data.sum(), dataset.data_shape[1] * dataset.data_shape[2]
     )
-    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e+08, rtol=1e-5)
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e08, rtol=1e-5)
     assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
 
 
@@ -1367,10 +1366,14 @@ def test_compute_flux_spatial():
     region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
 
     nbin = 2
-    energy_axis_true = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=nbin, name="energy_true")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        ".1 TeV", "10 TeV", nbin=nbin, name="energy_true"
+    )
 
     spectral_model = ConstantSpectralModel()
-    spatial_model = PointSpatialModel(lon_0 = 0*u.deg, lat_0 = 0*u.deg, frame='galactic')
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
 
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = Models(models)
