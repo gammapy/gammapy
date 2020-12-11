@@ -224,7 +224,7 @@ class environment:
 def cli_jupyter_tar():
     """Create a tar file with the notebooks in docs."""
 
-    tar_name = f"gammapy-notebooks-{__version__}.tar"
+    tar_name = f"notebooks.tar"
     with tarfile.open(tar_name, "w:") as tar:
         for name in get_notebooks_paths():
             tar.add(name, arcname=Path(name).name)
