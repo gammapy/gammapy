@@ -600,10 +600,6 @@ class FoVBackgroundModel(Model):
         values = self.spectral_model.default_parameters.value
         self.spectral_model.parameters.value = values
 
-    def copy(self, **kwargs):
-        """Copy SkyModel"""
-        return self.__class__(**kwargs)
-
     def freeze(self, model_type="spectral"):
         """Freeze model parameters"""
         if model_type is None or model_type == "spectral":
