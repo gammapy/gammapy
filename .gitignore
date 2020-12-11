@@ -84,7 +84,7 @@ dev/crab
 
 # Data files generated in docs building
 #!tutorials/images/*
-*.png
+#*.png
 *.fits
 *.fits.gz
 *.root
