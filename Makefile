@@ -97,7 +97,7 @@ docs-sphinx:
 
 docs-all:
 	python -m gammapy jupyter tar --out docs/_downloads/notebooks-dev.tar
-	python -m gammapy.utils.notebooks_process --src="$(src)" --nbs="$(nbs)" --fmt="$(fmt)"
+	python -m gammapy.utils.notebooks_process --src="$(src)"
 	cd docs && python -m sphinx . _build/html -b html
 	python -m gammapy.utils.notebooks_links --src="$(src)"
 
