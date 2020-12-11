@@ -65,6 +65,9 @@ time-dependent analysis with light-curves.
 
    spectrum_analysis.ipynb
    sed_fitting.ipynb
+   extended_source_spectral_analysis.ipynb
+   spectrum_simulation.ipynb
+   cta_sensitivity.ipynb
 
 2D Image
 ~~~~~~~~
@@ -73,6 +76,8 @@ time-dependent analysis with light-curves.
 
    ring_background.ipynb
    modeling_2D.ipynb
+   detect.ipynb
+
 
 3D Cube
 ~~~~~~~
@@ -81,6 +86,10 @@ time-dependent analysis with light-curves.
 
    cta_data_analysis.ipynb
    analysis_3d.ipynb
+   simulate_3d.ipynb
+   mcmc_sampling.ipynb
+   analysis_mwl.ipynb
+
 
 Time
 ~~~~
@@ -90,24 +99,13 @@ Time
    light_curve_simulation.ipynb
    light_curve.ipynb
    light_curve_flare.ipynb
-
-Simulations
------------
-
-These three notebooks cover different use cases to use Gammapy to perform simulations, from the basis
-of event sampling to spectrum and 3D datasets simulations.
-
-.. nbgallery::
-
-   event_sampling.ipynb
-   spectrum_simulation.ipynb
-   simulate_3d.ipynb
+   pulsar_analysis.ipynb
 
 Advanced
 --------
 
 The following tutorials demonstrate different dimensions of the Gammapy API or
-expose how to perform more complex and specific analyses.
+expose how to perform more specific use cases.
 
 Package
 ~~~~~~~
@@ -118,27 +116,17 @@ Package
    models.ipynb
    modeling.ipynb
    maps.ipynb
+   astro_dark_matter.ipynb
 
 Specific use cases
 ~~~~~~~~~~~~~~~~~~
 
 .. nbgallery::
 
-   detect.ipynb
    exclusion_mask.ipynb
-   extended_source_spectral_analysis.ipynb
-   analysis_mwl.ipynb
-   cta_sensitivity.ipynb
-
-Extra topics
-~~~~~~~~~~~~
-
-.. nbgallery::
-
-   astro_dark_matter.ipynb
+   event_sampling.ipynb
    background_model.ipynb
-   mcmc_sampling.ipynb
-   pulsar_analysis.ipynb
+
 
 .. _tutorials_scripts:
 
