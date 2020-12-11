@@ -9,18 +9,13 @@ def config():
     return {
         "release": "0.18",
         "notebook": "astro_dark_matter",
-        "envfilename": "gammapy-0.18-environment.yml",
+        "envfilename": "gammapy-environment.yml",
     }
 
 
 def test_cli_download_help():
     result = run_cli(cli, ["download", "--help"])
     assert "Usage" in result.output
-
-
-def test_cli_download_notebooks_norelease():
-    result = run_cli(cli, ["download", "notebooks"])
-    assert "Please specify a published notebooks release" in result.output
 
 
 @pytest.mark.remote_data
