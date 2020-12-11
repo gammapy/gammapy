@@ -16,8 +16,8 @@ Gammapy and it's dependencies by executing these commands in a terminal:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.18.2-environment.yml
-    conda env create -f gammapy-0.18.2-environment.yml
+    curl -O https://docs.gammapy.org/0.18.2/_static/gammapy-environment.yml
+    conda env create -f gammapy-environment.yml
 
 .. note::
 

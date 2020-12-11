@@ -9,7 +9,7 @@ from gammapy import __version__
 log = logging.getLogger(__name__)
 
 BUNDLESIZE = 152  # in MB
-RELEASES_BASE_URL = "https://gammapy.org/download"
+RELEASES_BASE_URL = "https://docs.gammapy.org"
 TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"
 
 
@@ -56,12 +56,9 @@ def extract_bundle(bundle, destination):
 
 def get_release_number():
     if "dev" in __version__:
-        print("You are working with a not stable version of Gammapy")
-        print("Please specify a published notebooks release")
-        exit()
+        return "dev"
     else:
-        release = __version__.split(".dev", 1)[0]
-        return release
+        return __version__
 
 
 def show_info_notebooks(outfolder, release):
@@ -70,7 +67,7 @@ def show_info_notebooks(outfolder, release):
         "*** Enter the following commands below to get started with this version of Gammapy"
     )
     print(f"cd {outfolder}")
-    print(f"conda env create -f gammapy-{release}-environment.yml")
+    print(f"conda env create -f gammapy-environment.yml")
     print(f"conda activate gammapy-{release}")
     print("jupyter lab")
     print("")
@@ -95,15 +92,12 @@ def cli_download_notebooks(out, release):
     """Download notebooks"""
     release = get_release_number() if not release else release
     localfolder = Path(out) / release
-    filename_env = f"gammapy-{release}-environment.yml"
-    url_file_env = f"{RELEASES_BASE_URL}/install/{filename_env}"
-    log.info(f"Downloading {url_file_env}")
-    progress_download(url_file_env, localfolder / filename_env)
-    filename_tar = f"notebooks-{release}.tar"
-    tar_notebooks = f"{RELEASES_BASE_URL}/notebooks/{filename_tar}"
-    tar_destination_file = localfolder / "notebooks.tar"
-    log.info(f"Downloading {tar_notebooks}")
-    progress_download(tar_notebooks, tar_destination_file)
+    url_file_env = f"{RELEASES_BASE_URL}/{release}/_static/gammapy-environment.yml"
+    yaml_destination_file = localfolder / f"gammapy-environment.yml"
+    progress_download(url_file_env, yaml_destination_file)
+    url_tar_notebooks = f"{RELEASES_BASE_URL}/{release}/_static/notebooks.tar"
+    tar_destination_file = localfolder / f"notebooks-{release}.tar"
+    progress_download(url_tar_notebooks, tar_destination_file)
     extract_bundle(tar_destination_file, localfolder)
     show_info_notebooks(localfolder, release)
 
