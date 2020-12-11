@@ -401,6 +401,9 @@ def test_to_from_dict():
     model = spectrum["model"]
 
     model_dict = model.to_dict()
+    # Here we reverse the order of parameters list to ensure assignment is correct
+    model_dict['parameters'].reverse()
+
     model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
 
@@ -409,6 +412,32 @@ def test_to_from_dict():
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
+
+    actual = [par.frozen for par in new_model.parameters]
+    desired = [par.frozen for par in model.parameters]
+    assert_allclose(actual, desired)
+
+def test_to_from_dict_partial_input():
+    spectrum = TEST_MODELS[0]
+    model = spectrum["model"]
+
+    model_dict = model.to_dict()
+    # Here we remove the reference energy
+    model_dict['parameters'].remove(model_dict['parameters'][2])
+    print(model_dict['parameters'][0])
+
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    new_model = model_class.from_dict(model_dict)
+
+    assert isinstance(new_model, PowerLawSpectralModel)
+
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+
+    actual = [par.frozen for par in new_model.parameters]
+    desired = [par.frozen for par in model.parameters]
+    assert_allclose(actual, desired)
 
 
 def test_to_from_dict_compound():
