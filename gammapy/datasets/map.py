@@ -930,14 +930,10 @@ class MapDataset(Dataset):
                 ]
 
         if self.mask_safe is not None:
-            mask_safe_int = self.mask_safe.copy()
-            mask_safe_int.data = mask_safe_int.data.astype(int)
-            hdulist += mask_safe_int.to_hdulist(hdu="mask_safe")[exclude_primary]
+            hdulist += self.mask_safe.to_hdulist(hdu="mask_safe")[exclude_primary]
 
         if self.mask_fit is not None:
-            mask_fit_int = self.mask_fit.copy()
-            mask_fit_int.data = mask_fit_int.data.astype(int)
-            hdulist += mask_fit_int.to_hdulist(hdu="mask_fit")[exclude_primary]
+            hdulist += self.mask_fit.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         if self.gti is not None:
             hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))

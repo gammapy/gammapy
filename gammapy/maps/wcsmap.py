@@ -237,15 +237,20 @@ class WcsMap(Map):
         """
         header = self.geom.to_header()
 
+        if self.is_mask:
+            data = self.data.atype(int)
+        else:
+            data = self.data
+
         if hdu_bands is not None:
             header["BANDSHDU"] = hdu_bands
 
         if sparse:
-            hdu_out = self._make_hdu_sparse(self.data, self.geom.npix, hdu, header)
+            hdu_out = self._make_hdu_sparse(data, self.geom.npix, hdu, header)
         elif hdu == "PRIMARY":
-            hdu_out = fits.PrimaryHDU(self.data, header=header)
+            hdu_out = fits.PrimaryHDU(data, header=header)
         else:
-            hdu_out = fits.ImageHDU(self.data, header=header, name=hdu)
+            hdu_out = fits.ImageHDU(data, header=header, name=hdu)
 
         return hdu_out
 
