@@ -110,30 +110,57 @@ class FoVBackgroundMaker(Maker):
             dataset = self.make_default_fov_background_model(dataset)
 
         if self.method == "fit":
-            self._fit_bkg(dataset)
+            dataset = self.make_background_fit(dataset)
         else:
             # always scale the background first
-            self._scale_bkg(dataset)
+            dataset = self.make_background_scale(dataset)
 
         dataset.mask_fit = mask_fit
         return dataset
 
-    def _fit_bkg(self, dataset):
-        """Fit the FoV background model on the dataset counts data"""
+    @staticmethod
+    def make_background_fit(dataset):
+        """Fit the FoV background model on the dataset counts data
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input dataset.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset with fitted background model
+        """
         # freeze all model components not related to background model
 
         models = dataset.models
 
         with models.restore_status(restore_values=False):
             models.select(tag="sky-model").freeze()
-            
+
             fit = Fit([dataset])
             fit_result = fit.run()
             if not fit_result.success:
                 log.info(f"Fit did not converge for {dataset.name}.")
 
-    def _scale_bkg(self, dataset):
-        """Fit the FoV background model on the dataset counts data"""
+        return dataset
+
+    @staticmethod
+    def make_background_scale(dataset):
+        """Fit the FoV background model on the dataset counts data
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input dataset.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset with scaled background model
+
+        """
         mask = dataset.mask
         count_tot = dataset.counts.data[mask].sum()
         bkg_tot = dataset.npred_background().data[mask].sum()
@@ -149,3 +176,5 @@ class FoVBackgroundMaker(Maker):
         else:
             value = count_tot / bkg_tot
             dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = value
+
+        return dataset
