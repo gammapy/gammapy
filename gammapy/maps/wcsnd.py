@@ -28,19 +28,24 @@ log = logging.getLogger(__name__)
 def _apply_binary_operations(map_, width, func):
     """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
 
-    if map_.data.dtype != bool:
-        raise (TypeError, "Binary operations should be applied only on boolean mask")
+    if not map_.is_mask:
+        raise ValueError("Binary operations only supported for boolean masks")
+
     if not isinstance(width, tuple):
         width = (width, width)
+
     shape = tuple(
         [
             int(np.ceil(x / scale).value * 2 + 1)
             for x, scale in zip(width, map_.geom.pixel_scales)
         ]
     )
+
     mask_data = np.empty(map_.data.shape, dtype=bool)
+
     for img, idx in map_.iter_by_image():
         mask_data[idx] = func(img, structure=np.ones(shape))
+
     return mask_data
 
 
@@ -595,22 +600,25 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
-        has_energy_axis = ("energy" in self.geom.axes.names) ^ (
-            "energy_true" in self.geom.axes.names
-        )
-
-        if not has_energy_axis:
+        if not self.geom.has_energy_axis:
             raise ValueError("Energy axis required")
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
 
-    def binary_erode(self, width, from_edges=False):
+    def binary_erode(self, width):
         """Binary erosion of boolean mask removing a given margin
+
         Parameters
         ----------
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Eroded mask map
+
         """
         mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
         return self._init_copy(data=mask_data)
@@ -623,6 +631,12 @@ class WcsNDMap(WcsMap):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Dilated mask map
+
         """
         mask_data = _apply_binary_operations(self, width, ndi.binary_dilation)
         return self._init_copy(data=mask_data)
