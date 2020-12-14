@@ -121,25 +121,16 @@ class FoVBackgroundMaker(Maker):
     def _fit_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""
         # freeze all model components not related to background model
-        datasets = Datasets([dataset])
 
-        parameters_frozen = []
-        for par in datasets.parameters:
-            parameters_frozen.append(par.frozen)
-            if par not in dataset.background_model.parameters:
-                par.frozen = True
+        models = dataset.models
 
-        fit = Fit(datasets)
-        fit_result = fit.run()
-        if not fit_result.success:
-            log.warning(
-                f"FoVBackgroundMaker failed: Fit did not converge for {dataset.name}. \
-                Background model parameters might be unphysical for {dataset.name}."
-            )
-
-        # Unfreeze parameters
-        for idx, par in enumerate(datasets.parameters):
-            par.frozen = parameters_frozen[idx]
+        with models.restore_status(restore_values=False):
+            models.select(tag="sky-model").freeze()
+            
+            fit = Fit([dataset])
+            fit_result = fit.run()
+            if not fit_result.success:
+                log.info(f"Fit did not converge for {dataset.name}.")
 
     def _scale_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""
