@@ -2035,6 +2035,13 @@ class Geom(abc.ABC):
         energy_axis = self.axes["energy"].copy(name="energy_true")
         return self.to_image().to_cube([energy_axis])
 
+    @property
+    def has_energy_axis(self):
+        """Whether geom has an energy axis"""
+        return ("energy" in self.axes.names) ^ (
+            "energy_true" in self.axes.names
+        )
+
     @abc.abstractmethod
     def to_image(self):
         """Create 2D image geometry (drop non-spatial dimensions).

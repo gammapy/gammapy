@@ -238,7 +238,7 @@ class WcsMap(Map):
         header = self.geom.to_header()
 
         if self.is_mask:
-            data = self.data.atype(int)
+            data = self.data.astype(int)
         else:
             data = self.data
 
