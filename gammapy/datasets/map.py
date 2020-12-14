@@ -1530,7 +1530,7 @@ class MapDataset(Dataset):
         Returns
         -------
         dataset: `MapDataset` or `SpectrumDataset`
-            Resampled dataset .
+            Resampled dataset.
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
@@ -1557,7 +1557,7 @@ class MapDataset(Dataset):
             )
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background().resample_axis(
+            kwargs["background"] = self.background.resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )
 
