@@ -65,6 +65,8 @@ class RegionGeom(Geom):
 
     @property
     def frame(self):
+        """Coordinate system, either Galactic ("galactic") or Equatorial
+            ("icrs")."""
         if self.region is None:
             return "icrs"
         try:
@@ -99,6 +101,8 @@ class RegionGeom(Geom):
 
     @property
     def region(self):
+        """`~regions.SkyRegion` object that defines the spatial component
+        of the region geometry"""
         return self._region
 
     @property
