@@ -1463,7 +1463,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background().slice_by_idx(slices=slices)
+            kwargs["background"] = self.background.slice_by_idx(slices=slices)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)

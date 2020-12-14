@@ -153,8 +153,6 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        datasets = Datasets([dataset])
-
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
             energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
@@ -164,8 +162,9 @@ class ASmoothMapEstimator(Estimator):
         results = []
 
         for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
-            result = self.estimate_maps(dataset)
+            dataset_sliced = dataset.slice_by_energy(energy_min, energy_max)
+            dataset_sliced.models = dataset.models.reassign(dataset.name, dataset_sliced.name)
+            result = self.estimate_maps(dataset_sliced)
             results.append(result)
 
         result_all = {}

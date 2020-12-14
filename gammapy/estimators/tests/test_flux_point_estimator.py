@@ -305,16 +305,16 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, 0.962368, rtol=1e-2)
 
     actual = fp.table["norm_err"].data
-    assert_allclose(actual, 0.051955, rtol=1e-2)
+    assert_allclose(actual, 0.053878, rtol=1e-2)
 
     actual = fp.table["sqrt_ts"].data
-    assert_allclose(actual, 28.408426, rtol=1e-2)
+    assert_allclose(actual, 25.196585, rtol=1e-2)
 
     actual = fp.table["norm_scan"][0]
     assert_allclose(actual, 1)
 
     actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-    assert_allclose(actual, 0.489359, rtol=1e-2)
+    assert_allclose(actual, 0.483593, rtol=1e-2)
 
 
 @requires_dependency("iminuit")
