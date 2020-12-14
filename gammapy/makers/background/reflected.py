@@ -97,7 +97,7 @@ class ReflectedRegionsFinder:
         self.reference_map = self.make_reference_map(
             self.region, self.center, self.binsz
         )
-        if self.exclusion_mask is not None:
+        if self.exclusion_mask:
             coords = self.reference_map.geom.get_coord()
             vals = self.exclusion_mask.get_by_coord(coords)
             self.reference_map.data += vals
