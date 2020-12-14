@@ -180,6 +180,27 @@ class RegionNDMap(Map):
     def downsample(
         self, factor, preserve_counts=True, axis_name="energy", weights=None
     ):
+        """Downsample the non-spatial dimension by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity).
+        axis_name : str
+            Which axis to downsample. Default is "energy".
+        weights : `RegionNDMap`
+            Contains the weights to apply to the axis to reduce. Default 
+            is just weighs of one.
+
+        Returns
+        -------
+        map : `RegionNDMap`
+            Downsampled region map.
+        """
         if axis_name is None:
             return self.copy()
 
@@ -202,6 +223,24 @@ class RegionNDMap(Map):
         return self._init_copy(geom=geom, data=data)
 
     def upsample(self, factor, preserve_counts=True, axis_name="energy"):
+        """Upsample the non-spatial dimension by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the RegionNDMap is an integral quantity (e.g. counts) and false if
+            the RegionNDMap is a differential quantity (e.g. intensity).
+        axis_name : str
+            Which axis to upsample. Default is "energy".
+
+        Returns
+        -------
+        map : `RegionNDMap`
+            Upsampled region map.
+        """
         geom = self.geom.upsample(factor=factor, axis_name=axis_name)
         data = self.interp_by_coord(geom.get_coord())
 
