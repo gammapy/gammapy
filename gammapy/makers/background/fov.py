@@ -32,23 +32,33 @@ class FoVBackgroundMaker(Maker):
         Default norm spectral model to use for the `FoVBackgroundModel`, if none is defined
         on the dataset.
     """
-
     tag = "FoVBackgroundMaker"
+    available_methods = ["fit", "scale"]
 
     def __init__(
         self, method="scale", exclusion_mask=None, spectral_model_tag="pl-norm"
     ):
-        if method in ["fit", "scale"]:
-            self.method = method
-        else:
-            raise ValueError(f"Not a valid method for FoVBackgroundMaker: {method}.")
-
+        self.method = method
         self.exclusion_mask = exclusion_mask
 
         if "norm" not in spectral_model_tag:
             raise ValueError("Spectral model must be a norm spectral model")
 
         self.spectral_model_tag = spectral_model_tag
+
+    @property
+    def method(self):
+        """Method"""
+        return self._method
+
+    @method.setter
+    def method(self, value):
+        """Method setter"""
+        if value not in self.available_methods:
+            raise ValueError(f"Not a valid method for FoVBackgroundMaker: {value}."
+                             f" Choose from {self.available_methods}")
+
+        self._method = value
 
     def make_default_fov_background_model(self, dataset):
         """Add fov background model to the model definition

@@ -750,7 +750,6 @@ class Models(DatasetModels, collections.abc.MutableSequence):
 
 class restore_models_status:
     def __init__(self, models, restore_values=True):
-
         self.restore_values = restore_values
         self.models = models
         self.values = [_.value for _ in models.parameters]
