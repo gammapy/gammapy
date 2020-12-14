@@ -211,8 +211,7 @@ def test_edisp_kernel_map_stack():
     edisp_2.exposure_map.data += 2
 
     geom = edisp_1.edisp_map.geom
-    data = geom.energy_mask(energy_min=2 * u.TeV)
-    weights = Map.from_geom(geom=geom, data=data)
+    weights = geom.energy_mask(energy_min=2 * u.TeV)
     edisp_1.stack(edisp_2, weights=weights)
 
     position = SkyCoord(0, 0, unit="deg")

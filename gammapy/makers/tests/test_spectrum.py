@@ -120,13 +120,13 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert dataset.energy_range[0].unit == "TeV"
 
     mask_safe = safe_mask_maker.make_mask_energy_aeff_max(dataset)
-    assert mask_safe.sum() == 4
+    assert mask_safe.data.sum() == 4
 
     mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert mask_safe.sum() == 3
+    assert mask_safe.data.sum() == 3
 
     mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert mask_safe.sum() == 3
+    assert mask_safe.data.sum() == 3
 
 
 @requires_data()

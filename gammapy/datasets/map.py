@@ -418,9 +418,9 @@ class MapDataset(Dataset):
     def from_geoms(
         cls,
         geom,
-        geom_exposure,
-        geom_psf,
-        geom_edisp,
+        geom_exposure=None,
+        geom_psf=None,
+        geom_edisp=None,
         reference_time="2000-01-01",
         name=None,
         **kwargs,
@@ -462,7 +462,7 @@ class MapDataset(Dataset):
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
         # TODO: allow PSF as well...
-        if not geom_psf.is_region:
+        if geom_psf and not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
@@ -556,27 +556,22 @@ class MapDataset(Dataset):
 
         return self.mask_safe.interp_to_geom(geom)
 
-    def apply_mask_safe(self):
-        """Apply mask safe to the dataset"""
-        if self.mask_safe is None:
-            return
+    def to_masked(self, name=None):
+        """Return masked dataset
 
-        if self.counts:
-            self.counts *= self.mask_safe
+        Parameters
+        ----------
+        name : str
+            Name of the masked dataset.
 
-        if self.exposure:
-            self.exposure *= self.mask_safe_image.data
-
-        if self.stat_type == "cash" and self.background:
-            self.background *= self.mask_safe
-
-        if self.psf:
-            self.psf.psf_map *= self.mask_safe_psf.data
-            self.psf.exposure_map *= self.mask_safe_psf.data
-
-        if self.edisp:
-            self.edisp.edisp_map *= self.mask_safe_edisp.data
-            # self.edisp.exposure_map *= self.mask_safe_edisp.data
+        Returns
+        -------
+        dataset : `MapDataset` or `SpectrumDataset`
+            Masked dataset
+        """
+        dataset = self.__class__.from_geoms(**self.geoms, name=name)
+        dataset.stack(self)
+        return dataset
 
     def stack(self, other):
         r"""Stack another dataset in place.
@@ -618,8 +613,6 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
-        self.apply_mask_safe()
-
         if self.counts and other.counts:
             self.counts.stack(other.counts, weights=other.mask_safe)
 
@@ -1795,8 +1788,8 @@ class MapDatasetOnOff(MapDataset):
         cls,
         geom,
         geom_exposure,
-        geom_psf,
-        geom_edisp,
+        geom_psf=None,
+        geom_edisp=None,
         reference_time="2000-01-01",
         name=None,
         **kwargs,
@@ -1839,7 +1832,7 @@ class MapDatasetOnOff(MapDataset):
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
-        if not geom_psf.is_region:
+        if geom_psf and not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)

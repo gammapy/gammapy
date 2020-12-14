@@ -333,8 +333,7 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
     energy_max_fit = 3 * u.TeV
     for dataset in datasets:
         geom = dataset.counts.geom
-        data = geom.energy_mask(energy_min=energy_min_fit, energy_max=energy_max_fit)
-        dataset.mask_fit = RegionNDMap.from_geom(geom, data=data, dtype=bool)
+        dataset.mask_fit = geom.energy_mask(energy_min=energy_min_fit, energy_max=energy_max_fit)
 
     selection = ["scan"]
     estimator = LightCurveEstimator(

@@ -869,14 +869,23 @@ class WcsGeom(Geom):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
+        inside : bool
+            For ``inside=True``, pixels in the region to True (the default).
+            For ``inside=False``, pixels in the region are False.
+
+        Returns
+        -------
+        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
+            Boundary mask
+
         """
         from . import Map
+        data = np.ones(self.data_shape, dtype=bool)
 
-        mask_data = np.ones(self.data_shape, dtype=bool)
-        mask_map = Map.from_geom(self, data=mask_data).binary_erode(width)
         if inside is False:
-            mask_map.data = ~mask_map.data
-        return mask_map
+            data = ~data
+
+        return Map.from_geom(self, data=data).binary_erode(width)
 
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions

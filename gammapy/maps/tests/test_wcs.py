@@ -372,17 +372,17 @@ def test_energy_mask():
     )
     geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
 
-    mask = geom.energy_mask(energy_min=3 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV).data
     assert not mask[0, 0, 0]
     assert mask[1, 0, 0]
     assert mask[2, 0, 0]
 
-    mask = geom.energy_mask(energy_max=30 * u.TeV)
+    mask = geom.energy_mask(energy_max=30 * u.TeV).data
     assert mask[0, 0, 0]
     assert not mask[1, 0, 0]
     assert not mask[2, 0, 0]
 
-    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV).data
     assert not mask[0, 0, 0]
     assert not mask[2, 0, 0]
     assert mask[1, 0, 0]
