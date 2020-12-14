@@ -542,15 +542,15 @@ class TestSpectrumOnOff:
             energy_min=0.3 * u.TeV, energy_max=6 * u.TeV
         )
         desired = [False, True, True, False]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
         mask = self.dataset.counts.geom.energy_mask(energy_max=6 * u.TeV)
         desired = [True, True, True, False]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
         mask = self.dataset.counts.geom.energy_mask(energy_min=1 * u.TeV)
         desired = [False, False, True, True]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
     def test_str(self):
         model = SkyModel(spectral_model=PowerLawSpectralModel())
@@ -840,11 +840,10 @@ class TestSpectrumDatasetOnOffStack:
         # Change threshold to make stuff more interesting
 
         geom = self.datasets[0]._geom
-        data = geom.energy_mask(energy_min=1.2 * u.TeV, energy_max=50 * u.TeV)
-        self.datasets[0].mask_safe = RegionNDMap.from_geom(geom=geom, data=data)
+        self.datasets[0].mask_safe = geom.energy_mask(energy_min=1.2 * u.TeV, energy_max=50 * u.TeV)
 
-        data = geom.energy_mask(energy_max=20 * u.TeV)
-        self.datasets[1].mask_safe.data &= data
+        mask = geom.energy_mask(energy_max=20 * u.TeV)
+        self.datasets[1].mask_safe &= mask
 
         self.stacked_dataset = self.datasets[0].to_masked()
         self.stacked_dataset.stack(self.datasets[1])

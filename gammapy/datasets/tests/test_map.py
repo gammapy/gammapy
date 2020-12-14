@@ -502,9 +502,8 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
 
     # test mask_safe evaluation
-    mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
-    dataset_1.mask_safe = Map.from_geom(geom, data=mask_safe)
-    dataset_2.mask_safe = Map.from_geom(geom, data=mask_safe)
+    dataset_1.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
+    dataset_2.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
 
     stat = fit.datasets.stat_sum()
     assert_allclose(stat, 14823.579908, rtol=1e-5)
@@ -760,7 +759,7 @@ def test_stack_npred():
     )
     dataset_1.psf = None
     dataset_1.exposure.data += 1
-    dataset_1.mask_safe.data = geom.energy_mask(energy_min=1 * u.TeV)
+    dataset_1.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
     dataset_1.background.data += 1
 
     bkg_model_1 = FoVBackgroundModel(dataset_name=dataset_1.name)
@@ -774,7 +773,7 @@ def test_stack_npred():
     )
     dataset_2.psf = None
     dataset_2.exposure.data += 1
-    dataset_2.mask_safe.data = geom.energy_mask(energy_min=0.2 * u.TeV)
+    dataset_2.mask_safe = geom.energy_mask(energy_min=0.2 * u.TeV)
     dataset_2.background.data += 1
 
     bkg_model_2 = FoVBackgroundModel(dataset_name=dataset_2.name)

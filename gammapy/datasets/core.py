@@ -413,7 +413,7 @@ class Datasets(collections.abc.MutableSequence):
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        stacked = self[0].to_masked(name="stacked")
+        stacked = self[0].to_masked(name=name)
 
         for dataset in self[1:]:
             stacked.stack(dataset)

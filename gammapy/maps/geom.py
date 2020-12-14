@@ -2253,6 +2253,8 @@ class Geom(abc.ABC):
         mask : `~numpy.ndarray`
             Energy mask
         """
+        from . import Map
+
         # get energy axes and values
         energy_axis = self.axes["energy"]
 
@@ -2268,4 +2270,5 @@ class Geom(abc.ABC):
         energy_max = energy_max if energy_max is not None else energy_edges[-1]
 
         mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
-        return np.broadcast_to(mask, shape=self.data_shape)
+        data = np.broadcast_to(mask, shape=self.data_shape)
+        return Map.from_geom(geom=self, data=data)
