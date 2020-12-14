@@ -200,6 +200,35 @@ class Model:
         for p, default in zip(self.parameters, self.default_parameters):
             p.frozen = default.frozen
 
+    def reassign(self, datasets_names, new_datasets_names):
+        """Reassign a model from one dataset to another
+        
+        Parameters
+        ----------
+        datasets_names : str or list
+            Name of the datasets where the model is currently defined
+        new_datasets_names : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
+        """
+        model = self.copy(name=self.name)
+        if not isinstance(datasets_names, list):
+            datasets_names = [datasets_names]
+        if not isinstance(new_datasets_names, list):
+            new_datasets_names = [new_datasets_names]
+
+        if model.datasets_names is not None:
+            if not isinstance(model.datasets_names, list):
+                model.datasets_names = [model.datasets_names]
+            for dataset_name, new_dataset_name in zip(
+                datasets_names, new_datasets_names
+            ):
+                for k, name in enumerate(model.datasets_names):
+                    if name == dataset_name:
+                        model.datasets_names[k] = new_dataset_name
+        return model
+
 
 class DatasetModels(collections.abc.Sequence):
     """Immutable models container
@@ -506,7 +535,9 @@ class DatasetModels(collections.abc.Sequence):
         models : `DatasetModels`
             Selected models
         """
-        mask = self.selection_mask(name_substring, datasets_names, tag, model_type, frozen)
+        mask = self.selection_mask(
+            name_substring, datasets_names, tag, model_type, frozen
+        )
         return self[mask]
 
     def selection_mask(
@@ -650,6 +681,21 @@ class DatasetModels(collections.abc.Sequence):
     def frozen(self):
         """Boolean mask, True if all parameters of a given model are frozen"""
         return np.all([m.frozen for m in self])
+
+    def reassign(self, dataset_name, new_dataset_name):
+        """Reassign a model from one dataset to another
+    
+        Parameters
+        ----------
+        dataset_name : str or list
+            Name of the datasets where the model is currently defined
+        new_dataset_name : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
+        """
+        models = [m.reassign(dataset_name, new_dataset_name) for m in self]
+        return self.__class__(models)
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
