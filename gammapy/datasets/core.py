@@ -398,9 +398,14 @@ class Datasets(collections.abc.MutableSequence):
         This works only if all Dataset are of the same type and if a proper
         in-place stack method exists for the Dataset type.
 
+        Parameters
+        ----------
+        name : str
+            Name of the stacked dataset.
+
         Returns
         -------
-        dataset : ~gammapy.utils.Dataset
+        dataset : `~gammapy.datasets.Dataset`
             the stacked dataset
         """
         if not self.is_all_same_type:
@@ -408,10 +413,12 @@ class Datasets(collections.abc.MutableSequence):
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        dataset = self[0].copy(name=name)
-        for ds in self[1:]:
-            dataset.stack(ds)
-        return dataset
+        stacked = self[0].to_masked(name="stacked")
+
+        for dataset in self[1:]:
+            stacked.stack(dataset)
+
+        return stacked
 
     def info_table(self, cumulative=False, region=None):
         """Get info table for datasets.
@@ -429,7 +436,7 @@ class Datasets(collections.abc.MutableSequence):
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        stacked = self[0].copy(name=self[0].name)
+        stacked = self[0].to_masked(name="stacked")
 
         rows = [stacked.info_dict()]
 

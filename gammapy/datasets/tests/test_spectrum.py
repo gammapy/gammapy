@@ -846,7 +846,7 @@ class TestSpectrumDatasetOnOffStack:
         data = geom.energy_mask(energy_max=20 * u.TeV)
         self.datasets[1].mask_safe.data &= data
 
-        self.stacked_dataset = self.datasets[0].copy()
+        self.stacked_dataset = self.datasets[0].to_masked()
         self.stacked_dataset.stack(self.datasets[1])
 
     def test_basic(self):
