@@ -314,10 +314,24 @@ class RegionGeom(Geom):
         return self._init_copy(axes=None)
 
     def upsample(self, factor, axis_name):
+        """Upsample a non-spatial dimension of the region by a given factor.
+
+        Returns
+        -------
+        region : `~RegionGeom`
+            RegionGeom with the upsampled axis.
+        """
         axes = self.axes.upsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
     def downsample(self, factor, axis_name):
+        """Downsample a non-spatial dimension of the region by a given factor.
+
+        Returns
+        -------
+        region : `~RegionGeom`
+            RegionGeom with the downsampled axis.
+        """
         axes = self.axes.downsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
