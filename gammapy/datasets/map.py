@@ -1415,7 +1415,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
         if self.background is not None:
-            kwargs["background"] = self.npred_background().pad(
+            kwargs["background"] = self.background.pad(
                 pad_width=pad_width, mode=mode
             )
 
