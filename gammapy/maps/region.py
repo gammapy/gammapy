@@ -219,14 +219,6 @@ class RegionGeom(Geom):
         raise NotImplementedError("Cropping of `RegionGeom` not supported")
 
     def solid_angle(self):
-        """Get solid angle of the region.
-
-        Returns
-        -------
-        angle : `~astropy.units.Quantity`
-            Solid angle of the region. In sr.
-            Units: ``sr``
-        """
         if self.region is None:
             raise ValueError("Region definition required.")
 
