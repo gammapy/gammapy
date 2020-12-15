@@ -142,21 +142,13 @@ class RegionNDMap(Map):
         Parameters
         ----------
         ax : `~astropy.vizualisation.WCSAxes`
-            Axes to plot on.
+            Axes to plot on. If no axes are given,
+            the region is shown using the minimal
+            equivalent WCS geometry.
         **kwargs : dict
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.collections import PatchCollection
-
-        if ax is None:
-            ax = plt.gca()
-
-        regions = compound_region_to_list(self.geom.region)
-        artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
-
-        patches = PatchCollection(artists, **kwargs)
-        ax.add_collection(patches)
+        ax = self.geom.plot_region(ax, **kwargs)
         return ax
 
     @classmethod
