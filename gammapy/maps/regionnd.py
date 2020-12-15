@@ -44,7 +44,7 @@ class RegionNDMap(Map):
         self.unit = u.Unit(unit)
 
     def plot(self, ax=None, **kwargs):
-        """Plot region map.
+        """Plot the data contained in region map along the non-spatial axis.
 
         Parameters
         ----------
@@ -152,7 +152,7 @@ class RegionNDMap(Map):
 
     @classmethod
     def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None):
-        """
+        """Create an empty region map object.
 
         Parameters
         ----------

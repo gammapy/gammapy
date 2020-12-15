@@ -23,9 +23,10 @@ __all__ = ["RegionGeom"]
 
 class RegionGeom(Geom):
     """Map geometry representing a region on the sky.
-    The resulting object is effectively "one large pixel" with
-    the chosen shape and dimensions.
-    ADD: how is this different from an astropy region?
+    The spatial component of the geometry is made up of a
+    single pixel with an arbitrary shape and size. It can
+    also have any number of non-spatial dimensions. This class
+    represents the geometry for the `RegionNDMap` maps.
 
     Parameters
     ----------
