@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import collections.abc
 import copy
 from os.path import split
@@ -9,6 +10,7 @@ import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
 
+log = logging.getLogger(__name__)
 
 def _set_link(shared_register, model):
     for param in model.parameters:
@@ -138,9 +140,15 @@ class Model:
 
         par_data = []
 
-        for par, par_yaml in zip(cls.default_parameters, data["parameters"]):
+        input_names = [_["name"] for _ in data["parameters"]]
+
+        for par in cls.default_parameters:
             par_dict = par.to_dict()
-            par_dict.update(par_yaml)
+            try:
+                index = input_names.index(par_dict["name"])
+                par_dict.update(data["parameters"][index])
+            except ValueError:
+                log.warning(f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}")
             par_data.append(par_dict)
 
         parameters = Parameters.from_dict(par_data)
