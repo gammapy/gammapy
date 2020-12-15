@@ -30,18 +30,19 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
 
     if isinstance(dataset, MapDatasetOnOff):
-        background = dataset.background * mask
-        background.data[dataset.acceptance_off.data == 0] = 0.0
         n_off = dataset.counts_off * mask
         npred_sig = dataset.npred_signal() * mask
+        acceptance_on = dataset.acceptance * mask
+        acceptance_off = dataset.acceptance_off * mask
 
-        background_convolve = background.convolve(kernel.array)
         npred_sig_convolve = npred_sig.convolve(kernel.array)
+        acceptance_on_convolve = acceptance_on.convolve(kernel.array)
         if correlate_off:
             n_off = n_off.convolve(kernel.array)
+            acceptance_off = acceptance_off.convolve(kernel.array)
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            alpha = background_convolve / n_off
+            alpha = acceptance_on_convolve / acceptance_off
 
         return WStatCountsStatistic(
             n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
