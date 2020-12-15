@@ -59,6 +59,10 @@ class ExcessMapEstimator(Estimator):
     If a model is set on the dataset the excess map estimator will compute the excess taking into account
     the predicted counts of the model.
 
+    Some background estimation techniques like ring background or adaptive ring background will provide already
+    correlated data for OFF. In the case of already correlated OFF data, the OFF data should not be correlated again,
+    and so the option correlate_off should set to False (default).
+
     Parameters
     ----------
     correlation_radius : ~astropy.coordinate.Angle
