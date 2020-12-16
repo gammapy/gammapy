@@ -289,7 +289,7 @@ def test_get_wcs_coord(region):
     region_coords = geom.get_wcs_coord()
     coord = SkyCoord("100d", "30d")
     assert geom.contains(region_coords.skycoord[0])
-    assert geom.contains(coord) is not True
+    assert not geom.contains(coord)
 
 @requires_dependency("matplotlib")
 def test_region_nd_map_plot(region):
