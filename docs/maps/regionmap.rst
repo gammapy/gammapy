@@ -11,6 +11,7 @@ The RegionGeom and RegionNDMap
 This page provides examples and documentation specific to the Region
 classes. 
 
+
 RegionGeom
 ==========
 A `~RegionGeom` is analogous to a  map geometry `~Geom`, but instead of a fine grid on a rectangular region, 
@@ -301,17 +302,16 @@ created from an existing `~RegionGeom`, this can be done in the same step:
     region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
 
     # Fill the region map
-    #with the same value for each of the 12 energy bins
-    region_map.data = 1 
-    # or with an entry for each of the 12 energy bins
-    region_map.data = np.linspace(1,50,12) 
+    # with an entry for each of the 12 energy bins
+    region_map.data = np.logspace(-2,3,12) 
 
-    # Create another region map with the same RegionGeom but different data
+    # Create another region map with the same RegionGeom but different data,
+    # with the same value for each of the 12 energy bins
     geom = region_map.geom
-    region_map_2 = RegionNDMap.from_geom(geom, data = np.linspace(50,100,12))
+    region_map_2 = RegionNDMap.from_geom(geom, data = 1)
 
     # Access the data
-    print(region_map_2.data)
+    print(region_map_1.data)
 
 The data contained in a region map is a `~numpy.ndarray` with shape defined by the underlying
 `~RegionGeom.data_shape`. In the case of only spatial dimensions, the shape is just (1,1), one single
@@ -336,4 +336,72 @@ or a function of the non-spatial axis bins. This is done by `~RegionNDMap.plot()
         region_map.plot_region()
 
 + Plotting the map contents:
-    T
+    This is only possible if the region map has a non-spatial axis.
+
+    .. code-block:: python
+
+        from gammapy.maps import MapAxis, RegionNDMap
+        import numpy as np  
+
+        # Create a RegionNDMap with 12 energy bins
+        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+
+        # Fill the data along the energy axis and plot
+        region_map.data = np.logspace(-2,3,12) 
+        region_map.plot()
+
+    .. plot:: 
+
+        from gammapy.maps import MapAxis, RegionNDMap
+        import numpy as np  
+
+        # Create a RegionNDMap with 12 energy bins
+        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+
+        # Fill the data along the energy axis and plot
+        region_map.data = np.logspace(-2,3,12) 
+        region_map.plot()
+
+    Similarly, the map contents can also be plotted as a histogram:
+
+    .. code-block:: python
+
+        from gammapy.maps import MapAxis, RegionNDMap
+        import numpy as np  
+
+        # Create a RegionNDMap with 12 energy bins
+        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+
+        # Fill the data along the energy axis and plot
+        region_map.data = np.logspace(-2,3,12) 
+        region_map.plot_hist()
+
+    .. plot:: 
+
+        from gammapy.maps import MapAxis, RegionNDMap
+        import numpy as np  
+
+        # Create a RegionNDMap with 12 energy bins
+        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+
+        # Fill the data along the energy axis and plot
+        region_map.data = np.logspace(-2,3,12) 
+        region_map.plot_hist()
+
+
+Writing and reading a RegionNDMap to/from a FITS file
+-----------------------------------------------------
+Region maps can be written to and read from a FITS file with the
+`~RegionNDMap.write()` and `~RegionNDMap.read()` methods:
+
+.. code-block:: python
+
+    from gammapy.maps import RegionNDMap,MapAxis
+    energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+    m.write('file.fits', overwrite=True)
+    m = RegionNDMap.read('file.fits')
