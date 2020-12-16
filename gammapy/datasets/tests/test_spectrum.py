@@ -505,6 +505,14 @@ class TestSpectrumOnOff:
         assert regions[0].center.is_equivalent_frame(expected_regions[0].center)
         assert_allclose(regions[1].angle, expected_regions[1].angle)
 
+    def test_to_from_ogip_files_no_mask(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.mask_safe = None
+        dataset.write(tmp_path / "test.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+
+        assert_allclose(newdataset.mask_safe.data, True)
+
     def test_to_from_ogip_files_zip(self, tmp_path):
         dataset = self.dataset.copy(name="test")
         dataset.write(tmp_path / "test.fits.gz")

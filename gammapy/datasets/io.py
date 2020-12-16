@@ -210,7 +210,11 @@ class OGIPDatasetWriter(DatasetWriter):
         acceptance = dataset.acceptance_off if is_bkg else dataset.acceptance
 
         table = counts.to_table()
-        table["QUALITY"] = np.logical_not(dataset.mask_safe.data[:, 0, 0])
+        if dataset.mask_safe is not None:
+            mask_array = dataset.mask_safe.data[:, 0, 0]
+        else:
+            mask_array = np.ones(acceptance.data.size)
+        table["QUALITY"] = np.logical_not(mask_array)
         table["BACKSCAL"] = acceptance.data[:, 0, 0]
         table["AREASCAL"] = np.ones(acceptance.data.size)
 
