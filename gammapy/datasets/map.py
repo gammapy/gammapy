@@ -54,7 +54,7 @@ def get_cutout_width(model, psf=None):
     else:
         psf_width = 0 * u.deg
 
-    return psf_width + 2 * (model.model.evaluation_radius + CUTOUT_MARGIN)
+    return psf_width + 2 * (model.evaluation_radius + CUTOUT_MARGIN)
 
 
 def create_map_dataset_geoms(

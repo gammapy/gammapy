@@ -247,7 +247,8 @@ class Model:
 
     def contribute(self, mask, psf=None):
         """Check if a model contribute within a mask map
-    
+           Note that BackgroundModel are assumed to always contribute. 
+
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
@@ -265,7 +266,7 @@ class Model:
             but its center is located ouside the region where mask==True
         """
 
-        from gammapy.datasets.map import get_cutout_width, CUTOUT_MARGIN
+        from gammapy.datasets.map import get_cutout_width
         from .cube import BackgroundModel, FoVBackgroundModel
 
         if isinstance(self, BackgroundModel) or isinstance(self, FoVBackgroundModel):
@@ -274,18 +275,22 @@ class Model:
             try:
                 _ = mask.cutout(
                     position=self.position,
-                    width=get_cutout_width(self, psf, CUTOUT_MARGIN),
+                    width=get_cutout_width(self, psf),
                 )
                 contributes = True
             except (NoOverlapError, ValueError):
                 contributes = False
+
 
         ind = self.position.to_pixel(mask.geom.wcs)
         ind = tuple([int(round(idx.item())) for idx in ind])
         mask_data = mask.data
         if len(mask_data.shape) == 3:
             mask_data = np.sum(mask.data, axis=0).astype(bool)
-        inmask = mask_data[ind]
+        try:
+            inmask = mask_data[ind]
+        except(IndexError):
+            inmask = False
 
         inside = contributes and inmask
         outside = contributes and ~inmask
@@ -683,7 +688,8 @@ class DatasetModels(collections.abc.Sequence):
         return np.array(selection, dtype=bool)
 
     def contribute(self, mask, psf=None):
-        """Check if a model contribute within a mask map
+        """Check if a model contribute within a mask map.
+           Note that BackgroundModel are assumed to always contribute. 
     
         Parameters
         ----------
@@ -710,7 +716,7 @@ class DatasetModels(collections.abc.Sequence):
         return inside, outside
 
     def select_region(self, regions):
-        """Select models with center position contained within a given region
+        """Select skymodels with center position contained within a given region
 
         Parameters
         ----------
@@ -723,16 +729,18 @@ class DatasetModels(collections.abc.Sequence):
             Selected models 
         """
 
+        models = self.select(tag="SkyModel")
+
         if not isinstance(regions, list):
             regions = [regions]
 
-        nmod = len(self)
+        nmod = len(models)
         inside = np.zeros(nmod, dtype=bool)
-        for k, m in enumerate(self):
+        for k, m in enumerate(models):
             pos = MapCoord.create(m.position)
             for region in regions:
                 inside[k] |= np.all(RegionGeom(region).contains(pos))
-        return self[inside]
+        return models[inside]
 
     def restore_status(self, restore_values=True):
         """Context manager to restore status.
