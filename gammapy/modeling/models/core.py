@@ -14,6 +14,7 @@ from gammapy.maps import MapCoord, RegionGeom
 
 log = logging.getLogger(__name__)
 
+
 def _set_link(shared_register, model):
     for param in model.parameters:
         name = param.name
@@ -150,7 +151,9 @@ class Model:
                 index = input_names.index(par_dict["name"])
                 par_dict.update(data["parameters"][index])
             except ValueError:
-                log.warning(f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}")
+                log.warning(
+                    f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}"
+                )
             par_data.append(par_dict)
 
         parameters = Parameters.from_dict(par_data)
@@ -242,7 +245,6 @@ class Model:
 
         return model
 
-
     def contribute(self, mask, psf=None):
         """Check if a model contribute within a mask map
     
@@ -265,10 +267,8 @@ class Model:
 
         from gammapy.datasets.map import get_cutout_width, CUTOUT_MARGIN
         from .cube import BackgroundModel, FoVBackgroundModel
-    
-        if isinstance(self, BackgroundModel) or isinstance(
-            self, FoVBackgroundModel
-        ):
+
+        if isinstance(self, BackgroundModel) or isinstance(self, FoVBackgroundModel):
             contributes = True  # just ignore the background models
         else:
             try:
@@ -706,9 +706,9 @@ class DatasetModels(collections.abc.Sequence):
         inside = np.zeros(nmod, dtype=bool)
         outside = np.zeros(nmod, dtype=bool)
         for k, m in enumerate(self):
-           inside[k], outside[k] = m.contribute(mask, psf)
-        return inside, outside 
-    
+            inside[k], outside[k] = m.contribute(mask, psf)
+        return inside, outside
+
     def select_region(self, regions):
         """Select models with center position contained within a given region
 
@@ -722,18 +722,17 @@ class DatasetModels(collections.abc.Sequence):
         models : `DatasetModels`
             Selected models 
         """
-        
+
         if not isinstance(regions, list):
             regions = [regions]
-            
+
         nmod = len(self)
         inside = np.zeros(nmod, dtype=bool)
-        for  k, m in enumerate(self):
-            pos  = MapCoord.create(m.position)
+        for k, m in enumerate(self):
+            pos = MapCoord.create(m.position)
             for region in regions:
                 inside[k] |= np.all(RegionGeom(region).contains(pos))
         return self[inside]
- 
 
     def restore_status(self, restore_values=True):
         """Context manager to restore status.
@@ -772,9 +771,7 @@ class DatasetModels(collections.abc.Sequence):
         """
 
         models = self.select(tag=tag, model_type=model_type)
-        parameters = models.parameters.select(
-            name=parameters_names, type=model_type
-        )
+        parameters = models.parameters.select(name=parameters_names, type=model_type)
         n = len(parameters)
 
         if min is not None:
@@ -828,7 +825,7 @@ class DatasetModels(collections.abc.Sequence):
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
 
-           
+
 class Models(DatasetModels, collections.abc.MutableSequence):
     """Sky model collection.
 
