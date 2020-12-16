@@ -19,7 +19,7 @@ number of non-spatial dimensions.
 
 Creating a RegionGeom
 ---------------------
-A `~RegionGeom`can be created via a DS9 region string (see http://ds9.si.edu/doc/ref/region.html for a list of options)
+A `~RegionGeom` can be created via a DS9 region string (see http://ds9.si.edu/doc/ref/region.html for a list of options)
 or an Astropy Region (https://astropy-regions.readthedocs.io/en/latest/).
 
 .. code-block:: python
@@ -199,6 +199,30 @@ they can have any number of bins. There are different methods that can be used t
             projection : TAN
             center     : 0.0 deg, 0.0 deg
             width      : 2.0 deg x 2.0 deg
+
+Plotting a RegionGeom
+---------------------
+It can be useful to plot the region that defines a `~RegionGeom`, on its own or on top
+of an existing `~Map`. This is done via `~RegionGeom.plot_region()`:
+
+.. code-block:: python
+
+    from gammapy.maps import RegionGeom
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+    geom.plot_region()
+
+One can also plot the region on top of an existing map, and change the properties of the
+different regions by passing keyword arguments forwarded to `~regions.PixelRegion.as_artist`.
+
+.. code-block:: python
+
+    from gammapy.maps import RegionGeom, Map
+    m = Map.create(width=3, skydir=(83.63, 22.01), frame='icrs')
+    geom1 = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+    geom2 = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+    m.plot(add_cbar=True)
+    geom1.plot_region(ec="k")
+    geom2.plot_region(lw=2, linestyle='--')
 
 RegionNDMap
 ===========
