@@ -4,6 +4,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.wcs import WCS
+from astropy.visualization.wcsaxes import WCSAxes
+
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from regions import FITSRegionParser, fits_region_objects_to_table
 from gammapy.utils.regions import (
@@ -432,12 +434,16 @@ class RegionGeom(Geom):
         from matplotlib.collections import PatchCollection
 
         if ax is None:
-            wcs_geom = self.to_wcs_geom()
-            m = Map.from_geom(wcs_geom)
-            fig, ax, cbar = m.plot(add_cbar=False)
+            ax = plt.gca()
+            if not isinstance(ax, WCSAxes):
+                ax.remove()
+                wcs_geom = self.to_wcs_geom()
+                m = Map.from_geom(wcs_geom)
+                fig, ax, cbar = m.plot(add_cbar=False)
         regions = compound_region_to_list(self.region)
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
-
+        kwargs.setdefault("fc", "None")
+        kwargs.setdefault("ec", "b")
         patches = PatchCollection(artists, **kwargs)
         ax.add_collection(patches)
         return ax
