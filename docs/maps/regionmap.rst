@@ -211,10 +211,26 @@ of an existing `~Map`. This is done via `~RegionGeom.plot_region()`:
     geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
     geom.plot_region()
 
+.. plot::
+
+    from gammapy.maps import RegionGeom
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+    geom.plot_region()
+
 One can also plot the region on top of an existing map, and change the properties of the
 different regions by passing keyword arguments forwarded to `~regions.PixelRegion.as_artist`.
 
 .. code-block:: python
+
+    from gammapy.maps import RegionGeom, Map
+    m = Map.create(width=3, skydir=(83.63, 22.01), frame='icrs')
+    geom1 = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+    geom2 = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+    m.plot(add_cbar=True)
+    geom1.plot_region(ec="k")
+    geom2.plot_region(lw=2, linestyle='--')
+
+.. plot::
 
     from gammapy.maps import RegionGeom, Map
     m = Map.create(width=3, skydir=(83.63, 22.01), frame='icrs')
@@ -285,7 +301,10 @@ created from an existing `~RegionGeom`, this can be done in the same step:
     region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
 
     # Fill the region map
-    region_map.data = np.linspace(1,50,12) #an entry for each of the 12 energy bins
+    #with the same value for each of the 12 energy bins
+    region_map.data = 1 
+    # or with an entry for each of the 12 energy bins
+    region_map.data = np.linspace(1,50,12) 
 
     # Create another region map with the same RegionGeom but different data
     geom = region_map.geom
@@ -305,3 +324,16 @@ Visualizing a `~RegionNDMap` can be interpreted in two different ways. One is to
 indicating the area of the sky encompassed by the spatial component of the region map. This is done via `~RegionNDMap.plot_region()`.
 Another option is to plot the contents of the region map, which would be either a single value for the case of only spatial axes, 
 or a function of the non-spatial axis bins. This is done by `~RegionNDMap.plot()` and `~RegionNDMap.plot_hist()`.
+
++ Plotting the underlying region:
+    This is equivalent to the `~RegionGeom.plot_region()` described above, and, in fact, the `~RegionNDMap` method simply calls it on the associated 
+    region geometry, `~RegionNDMap.geom`. Consequently, the use of this method is already described by the section above.
+
+    .. code-block:: python
+
+        from gammapy.maps import RegionNDMap
+        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)")
+        region_map.plot_region()
+
++ Plotting the map contents:
+    T
