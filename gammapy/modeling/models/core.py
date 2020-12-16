@@ -5,10 +5,12 @@ import copy
 from os.path import split
 import numpy as np
 import astropy.units as u
+from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.maps import MapCoord, RegionGeom
 
 log = logging.getLogger(__name__)
 
@@ -239,6 +241,56 @@ class Model:
                 model.datasets_names = [_.replace(name, name_new) for _ in model.datasets_names]
 
         return model
+
+
+    def contribute(self, mask, psf=None):
+        """Check if a model contribute within a mask map
+    
+        Parameters
+        ----------
+        mask : `~gammapy.maps.WcsNDMap` of boolean type
+            Map containing a boolean mask
+        psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
+            PSF kernel
+        
+        Returns
+        -------
+        inside : bool
+            True if the model contributes within the mask geom
+            and its center is located inside the region where mask==True
+        outside : bool
+             True if the model contributes within the mask geom
+            but its center is located ouside the region where mask==True
+        """
+
+        from gammapy.datasets.map import get_cutout_width, CUTOUT_MARGIN
+        from .cube import BackgroundModel, FoVBackgroundModel
+    
+        if isinstance(self, BackgroundModel) or isinstance(
+            self, FoVBackgroundModel
+        ):
+            contributes = True  # just ignore the background models
+        else:
+            try:
+                _ = mask.cutout(
+                    position=self.position,
+                    width=get_cutout_width(self, psf, CUTOUT_MARGIN),
+                )
+                contributes = True
+            except (NoOverlapError, ValueError):
+                contributes = False
+
+        ind = self.position.to_pixel(mask.geom.wcs)
+        ind = tuple([int(round(idx.item())) for idx in ind])
+        mask_data = mask.data
+        if len(mask_data.shape) == 3:
+            mask_data = np.sum(mask.data, axis=0).astype(bool)
+        inmask = mask_data[ind]
+
+        inside = contributes and inmask
+        outside = contributes and ~inmask
+
+        return inside, outside
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -630,6 +682,59 @@ class DatasetModels(collections.abc.Sequence):
 
         return np.array(selection, dtype=bool)
 
+    def contribute(self, mask, psf=None):
+        """Check if a model contribute within a mask map
+    
+        Parameters
+        ----------
+        mask : `~gammapy.maps.WcsNDMap` of boolean type
+            Map containing a boolean mask
+        psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
+            PSF kernel
+        
+        Returns
+        -------
+        inside : `numpy.array` of boolean type
+            True where models contribute within the mask geom
+            and its center is located inside the region where mask==True
+        outside : `numpy.array` of boolean type
+            True  where models contribute within the mask geom
+            but its center is located ouside the region where mask==True
+        """
+
+        nmod = len(self)
+        inside = np.zeros(nmod, dtype=bool)
+        outside = np.zeros(nmod, dtype=bool)
+        for k, m in enumerate(self):
+           inside[k], outside[k] = m.contribute(mask, psf)
+        return inside, outside 
+    
+    def select_region(self, regions):
+        """Select models with center position contained within a given region
+
+        Parameters
+        ----------
+        regions : list of  `~regions.Region`
+            Sky region or list of sky regions
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models 
+        """
+        
+        if not isinstance(regions, list):
+            regions = [regions]
+            
+        nmod = len(self)
+        inside = np.zeros(nmod, dtype=bool)
+        for  k, m in enumerate(self):
+            pos  = MapCoord.create(m.position)
+            for region in regions:
+                inside[k] |= np.all(RegionGeom(region).contains(pos))
+        return self[inside]
+ 
+
     def restore_status(self, restore_values=True):
         """Context manager to restore status.
 
@@ -723,7 +828,7 @@ class DatasetModels(collections.abc.Sequence):
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
 
-
+           
 class Models(DatasetModels, collections.abc.MutableSequence):
     """Sky model collection.
 
