@@ -10,6 +10,7 @@ The RegionGeom and RegionNDMap
 
 This page provides examples and documentation specific to the Region
 classes. 
+TO DO: why would one use them??
 
 
 RegionGeom
@@ -224,7 +225,9 @@ different regions by passing keyword arguments forwarded to `~regions.PixelRegio
 .. code-block:: python
 
     from gammapy.maps import RegionGeom, Map
-    m = Map.create(width=3, skydir=(83.63, 22.01), frame='icrs')
+    import numpy as np
+    m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
+    m.data = np.add(*np.indices((100, 100)))
     geom1 = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
     geom2 = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
     m.plot(add_cbar=True)
@@ -234,7 +237,9 @@ different regions by passing keyword arguments forwarded to `~regions.PixelRegio
 .. plot::
 
     from gammapy.maps import RegionGeom, Map
-    m = Map.create(width=3, skydir=(83.63, 22.01), frame='icrs')
+    import numpy as np
+    m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
+    m.data = np.add(*np.indices((100, 100)))
     geom1 = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
     geom2 = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
     m.plot(add_cbar=True)
