@@ -297,8 +297,6 @@ class MapDataset(Dataset):
                         gti=self.gti,
                         use_cache=USE_NPRED_CACHE,
                     )
-                    # TODO: do we need the update here?
-                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
                     self._evaluators[model.name] = evaluator
 
         self._models = models
