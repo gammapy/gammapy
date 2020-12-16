@@ -5,6 +5,8 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
+from astropy.visualization.wcsaxes import WCSAxes
+
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from regions import FITSRegionParser, fits_region_objects_to_table
 from gammapy.utils.regions import (
@@ -13,7 +15,7 @@ from gammapy.utils.regions import (
     make_region,
 )
 from gammapy.maps.wcs import _check_width
-from .core import MapCoord
+from .core import MapCoord, Map
 from .geom import Geom, MapAxes, MapAxis, pix_tuple_to_idx
 from .wcs import WcsGeom
 
@@ -444,3 +446,33 @@ class RegionGeom(Geom):
                 self._region = self.region.union(other.region)
             else:
                 self._region = other.region
+
+    def plot_region(self, ax=None, **kwargs):
+        """Plot region in the sky.
+
+        Parameters
+        ----------
+        ax : `~astropy.vizualisation.WCSAxes`
+            Axes to plot on. If no axes are given,
+            the region is shown using the minimal
+            equivalent WCS geometry.
+        **kwargs : dict
+            Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.collections import PatchCollection
+
+        if ax is None:
+            ax = plt.gca()
+            if not isinstance(ax, WCSAxes):
+                ax.remove()
+                wcs_geom = self.to_wcs_geom()
+                m = Map.from_geom(wcs_geom)
+                fig, ax, cbar = m.plot(add_cbar=False)
+        regions = compound_region_to_list(self.region)
+        artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
+        kwargs.setdefault("fc", "None")
+        kwargs.setdefault("ec", "b")
+        patches = PatchCollection(artists, **kwargs)
+        ax.add_collection(patches)
+        return ax

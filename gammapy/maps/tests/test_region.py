@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.maps import MapAxis, RegionGeom
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 
 @pytest.fixture()
@@ -288,4 +289,13 @@ def test_get_wcs_coord(region):
     region_coords = geom.get_wcs_coord()
     coord = SkyCoord("100d", "30d")
     assert geom.contains(region_coords.skycoord[0])
-    assert geom.contains(coord) is not True
+    assert not geom.contains(coord)
+
+@requires_dependency("matplotlib")
+def test_region_nd_map_plot(region):
+    import matplotlib.pyplot as plt
+    geom = RegionGeom(region)
+
+    ax = plt.subplot(projection=geom.wcs)
+    with mpl_plot_check():
+        geom.plot_region(ax=ax)
