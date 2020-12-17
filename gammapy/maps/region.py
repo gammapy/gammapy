@@ -365,7 +365,9 @@ class RegionGeom(Geom):
         for reg in region_list:
             pixel_region_list.append(reg.to_pixel(self.wcs))
         table = fits_region_objects_to_table(pixel_region_list)
-        table.meta.update(self.wcs.to_header())
+
+        header = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape).to_header()
+        table.meta.update(header)
         return table
 
     def to_hdulist(self, format="ogip"):
@@ -417,7 +419,7 @@ class RegionGeom(Geom):
             region_table = Table.read(hdulist["REGION"])
             parser = FITSRegionParser(region_table)
             pix_region = parser.shapes.to_regions()
-            wcs = WCS(region_table.meta)
+            wcs = WcsGeom.from_header(region_table.meta).wcs
 
             regions = []
             for reg in pix_region:
@@ -468,7 +470,7 @@ class RegionGeom(Geom):
             if not isinstance(ax, WCSAxes):
                 ax.remove()
                 wcs_geom = self.to_wcs_geom()
-                m = Map.from_geom(wcs_geom)
+                m = Map.from_geom(wcs_geom.to_image())
                 fig, ax, cbar = m.plot(add_cbar=False)
 
         regions = compound_region_to_list(self.region)
