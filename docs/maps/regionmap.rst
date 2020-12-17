@@ -2,22 +2,27 @@
 
 .. _regionmap:
 
-******************************
-The RegionGeom and RegionNDMap
-******************************
+**************************
+RegionGeom and RegionNDMap
+**************************
 
 .. currentmodule:: gammapy.maps
 
 This page provides examples and documentation specific to the Region
-classes. 
-TO DO: why would one use them??
+classes. These objecs are used to bundle the energy distribution (or any other
+non-spatial axis) of quantities (counts, exposure,...) inside of a given region in the sky while retaining
+the information of the chosen spatial region.
+In particular, they are suited for so-called 1D analysis (see https://docs.gammapy.org/dev/references.html#glossary).
 
 
 RegionGeom
 ==========
-A `~RegionGeom` is analogous to a  map geometry `~Geom`, but instead of a fine grid on a rectangular region, 
-it is made up of a single large pixel with an arbitrary shape that can also have any 
-number of non-spatial dimensions.
+A `~RegionGeom` describes the underlying geometry of a region in the sky with any number of non-spatial axes associated to it.
+Is analogous to a  map geometry `~Geom`, but instead of a fine spatial grid on a rectangular region, 
+the spatial dimension is reduced to a single bin with an arbitrary shape (cisrcular, rectangular,...), which describes a
+region in the sky with that same shape. Besides the spatial region, a `~RegionGeom` can also have any number of non-spatial dimensions, 
+the most common use being an energy axis. The `~RegionGeom` object defines the structure into which the data contained in a `~RegionNDMap`
+is distributed.
 
 Creating a RegionGeom
 ---------------------
@@ -134,7 +139,6 @@ they can have any number of bins. There are different methods that can be used t
             array([ True, False, False])
         
 
-
 + Upsampling and downsampling the non-spatial axes:
     The spatial binning of a `~RegionGeom` is made up of a single bin, that cannot be modified as it defines the region. However, if any non-spatial axes are present, they can be modified using the 
     `~RegionGeom.upsample()` and `~RegionGeom.downsample()` methods, which take as input a factor by which the indicated axis is to be up- or downsampled.
@@ -248,9 +252,11 @@ different regions by passing keyword arguments forwarded to `~regions.PixelRegio
 
 RegionNDMap
 ===========
-A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array containing map values.
+A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array containing the values associated 
+to that region in the sky along the non-spatial axis, which is usually an energy axis.
 It can be thought of as a `Map` but with a single spatial bin that can have an arbitrary 
-shape, together with any non-spatial axis. It is to a `~RegionGeom` what a `~Map` is to a `~Geom`.
+shape, together with any non-spatial axis. It is to a `~RegionGeom` what a `~Map` is to a `~Geom`, it contains
+the data that is distributed in the structure defined by the `~RegionGeom` axes.
 
 Creating a RegionNDMap
 ----------------------
