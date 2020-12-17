@@ -286,7 +286,7 @@ class RegionNDMap(Map):
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Which format to use.
         overwrite : bool
             Overwrite existing files?
@@ -301,7 +301,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
 
         Returns
