@@ -161,8 +161,7 @@ class FluxEstimator(Estimator):
             energy_min=self.energy_min, energy_max=self.energy_max
         )
 
-        new_names = [name + "-slice" for name in datasets.names]
-        models = datasets.models.reassign(datasets.names, new_names)
+        models = datasets.models.copy()
         datasets_sliced.models = models
 
         if len(datasets_sliced) > 0:

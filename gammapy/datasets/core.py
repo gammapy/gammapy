@@ -238,6 +238,9 @@ class Datasets(collections.abc.MutableSequence):
     def slice_by_energy(self, energy_min, energy_max):
         """Select and slice datasets in energy range
 
+        The method keeps the current dataset names. Datasets, that do not
+        contribute to the selected energy range are dismissed.
+
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
@@ -256,7 +259,7 @@ class Datasets(collections.abc.MutableSequence):
                 dataset_sliced = dataset.slice_by_energy(
                     energy_min=energy_min,
                     energy_max=energy_max,
-                    name=dataset.name + "-slice",
+                    name=dataset.name,
                 )
             except ValueError:
                 log.info(

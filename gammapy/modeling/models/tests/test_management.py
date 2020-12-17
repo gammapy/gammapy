@@ -42,7 +42,7 @@ def models(backgrounds):
     model2 = model1.copy(name="source-2")
     model2.datasets_names = ["dataset-1"]
     model3 = model1.copy(name="source-3")
-    model3.datasets_names = "dataset-2"
+    model3.datasets_names = ["dataset-2"]
     model3.spatial_model = PointSpatialModel()
     model3.parameters.freeze_all()
     models = Models([model1, model2, model3] + backgrounds)
@@ -229,8 +229,6 @@ def test_fov_bkg_models():
 
     assert models["test-1-bkg"].spectral_model.tilt.frozen
     assert models["test-1-bkg"].spectral_model.norm.frozen
-
-
 
 
 def test_reassign_dataset(models):

@@ -162,8 +162,8 @@ class ASmoothMapEstimator(Estimator):
         results = []
 
         for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            dataset_sliced = dataset.slice_by_energy(energy_min, energy_max)
-            dataset_sliced.models = dataset.models.reassign(dataset.name, dataset_sliced.name)
+            dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
+            dataset_sliced.models = dataset.models
             result = self.estimate_maps(dataset_sliced)
             results.append(result)
 
@@ -193,10 +193,8 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        dataset_image = dataset.to_image()
-
-        if dataset.models:
-            dataset_image.models = dataset.models.reassign(dataset.name, dataset_image.name)
+        dataset_image = dataset.to_image(name=dataset.name)
+        dataset_image.models = dataset.models
 
         # extract 2d arrays
         counts = dataset_image.counts.data[0].astype(float)

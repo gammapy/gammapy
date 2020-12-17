@@ -219,22 +219,25 @@ class Model:
             Name of the datasets where the model should be defined instead.
             If multiple names are given the two list must have the save lenght,
             as the reassignment is element-wise.
+
+        Returns
+        -------
+        model : `Model`
+            Reassigned model.
+
         """
         model = self.copy(name=self.name)
+
         if not isinstance(datasets_names, list):
             datasets_names = [datasets_names]
+
         if not isinstance(new_datasets_names, list):
             new_datasets_names = [new_datasets_names]
 
-        if model.datasets_names is not None:
-            if not isinstance(model.datasets_names, list):
-                model.datasets_names = [model.datasets_names]
-            for dataset_name, new_dataset_name in zip(
-                datasets_names, new_datasets_names
-            ):
-                for k, name in enumerate(model.datasets_names):
-                    if name == dataset_name:
-                        model.datasets_names[k] = new_dataset_name
+        if getattr(model, "datasets_names", None):
+            for name, name_new in zip(datasets_names, new_datasets_names):
+                model.datasets_names = [_.replace(name, name_new) for _ in model.datasets_names]
+
         return model
 
 
