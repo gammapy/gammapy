@@ -264,31 +264,35 @@ class RegionNDMap(Map):
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
 
-    def write(self, filename, overwrite=False, format="ogip", ogip_column="COUNTS"):
-        """"""
+    def write(self, filename, overwrite=False, format="ogip"):
+        """Write map to file
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
+            Format specification
+        """
         filename = make_path(filename)
-        self.to_hdulist(format=format, ogip_column=ogip_column).writeto(
+        self.to_hdulist(format=format).writeto(
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="ogip", ogip_column="COUNTS"):
+    def to_hdulist(self, format="ogip"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
         format : {"ogip", "ogip-sherpa"}
             Format specification
-        ogip_column : {"COUNTS", "SPECRESP"}
-            Ogip column format
 
         Returns
         -------
         hdulist : `~astropy.fits.HDUList`
             HDU list
         """
-        table = self.to_table(format=format, ogip_column=ogip_column)
+        table = self.to_table(format=format)
         return fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(table, name=ogip_column)]
+            [fits.PrimaryHDU(), fits.BinTableHDU(table)]
         )
 
     @classmethod
@@ -359,17 +363,15 @@ class RegionNDMap(Map):
 
         self.data += data
 
-    def to_table(self, format="ogip", ogip_column="COUNTS"):
+    def to_table(self, format="ogip"):
         """Convert to `~astropy.table.Table`.
 
         Data format specification: :ref:`gadf:ogip-pha`
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"ogip", "ogip-arf", "ogip-arf-sherps"}
             Format specification
-        ogip_column : {"COUNTS", "SPECRESP"}
-            Ogip column format
 
         Returns
         -------
@@ -381,12 +383,12 @@ class RegionNDMap(Map):
         edges = self.geom.axes[0].edges
         data = np.nan_to_num(self.quantity[:, 0, 0])
 
-        if ogip_column == "COUNTS":
+        if format == "ogip":
             table["CHANNEL"] = np.arange(len(edges) - 1, dtype=np.int16)
             table["COUNTS"] = np.array(data, dtype=np.int32)
-            table.meta = {"name": "COUNTS"}
+            table.meta = {"EXTNAME": "COUNTS"}
 
-        elif ogip_column == "SPECRESP":
+        elif format in ["ogip-arf", "ogip-arf-sherpa"]:
             table.meta = {
                 "EXTNAME": "SPECRESP",
                 "hduclass": "OGIP",
@@ -402,7 +404,7 @@ class RegionNDMap(Map):
             table["ENERG_HI"] = edges[1:]
             table["SPECRESP"] = data
         else:
-            raise ValueError(f"Unsupported ogip column: '{ogip_column}'")
+            raise ValueError(f"Unsupported format: '{format}'")
 
         return table
 

@@ -190,8 +190,7 @@ class OGIPDatasetWriter(DatasetWriter):
         aeff.write(
             filename=filename,
             overwrite=self.overwrite,
-            format=self.format,
-            ogip_column="SPECRESP",
+            format=self.format.replace("ogip", "ogip-arf"),
         )
 
     def to_counts_hdulist(self, dataset, is_bkg=False):
