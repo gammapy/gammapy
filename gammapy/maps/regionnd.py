@@ -15,7 +15,12 @@ __all__ = ["RegionNDMap"]
 
 
 class RegionNDMap(Map):
-    """Region ND map
+    """N-dimensional region map.
+    A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array
+    containing the values associated to that region in the sky along the non-spatial
+    axis, usually an energy axis. The spatial dimensions of a `~RegionNDMap`
+    are reduced to a single spatial bin with an arbitrary shape,
+    and any extra dimensions are described by an arbitrary number of non-spatial axes.
 
     Parameters
     ----------

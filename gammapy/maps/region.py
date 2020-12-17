@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
-
+from astropy.visualization.wcsaxes import WCSAxes
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from regions import FITSRegionParser, fits_region_objects_to_table
 from gammapy.utils.regions import (
@@ -139,7 +139,7 @@ class RegionGeom(Geom):
 
     def contains(self, coords):
         """Check if a given map coordinate is contained in the region.
-            Requires the `.region` attribute to be set.
+        Requires the `.region` attribute to be set.
 
         Parameters
         ----------
@@ -237,8 +237,8 @@ class RegionGeom(Geom):
 
     def bin_volume(self):
         """If the RegionGeom has a non-spatial axis, it
-            returns the volume of the region. If not, it 
-            just retuns the solid angle size.
+        returns the volume of the region. If not, it 
+        just retuns the solid angle size.
 
         Returns
         -------
@@ -255,8 +255,8 @@ class RegionGeom(Geom):
         return bin_volume
 
     def to_wcs_geom(self, width_min=None):
-        """Get the minimal equivalent geometry that
-            contains the region.
+        """Get the minimal equivalent geometry
+        which contains the region.
 
         Parameters
          ----------

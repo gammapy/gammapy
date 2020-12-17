@@ -9,8 +9,8 @@ RegionGeom and RegionNDMap
 .. currentmodule:: gammapy.maps
 
 This page provides examples and documentation specific to the Region
-classes. These objecs are used to bundle the energy distribution (or any other
-non-spatial axis) of quantities (counts, exposure,...) inside of a given region in the sky while retaining
+classes. These objects are used to bundle the energy distribution - or any other
+non-spatial axis - of quantities (counts, exposure, ...) inside of a given region in the sky while retaining
 the information of the chosen spatial region.
 In particular, they are suited for so-called 1D analysis (see https://docs.gammapy.org/dev/references.html#glossary).
 
@@ -19,9 +19,9 @@ RegionGeom
 ==========
 A `~RegionGeom` describes the underlying geometry of a region in the sky with any number of non-spatial axes associated to it.
 Is analogous to a  map geometry `~Geom`, but instead of a fine spatial grid on a rectangular region, 
-the spatial dimension is reduced to a single bin with an arbitrary shape (cisrcular, rectangular,...), which describes a
+the spatial dimension is reduced to a single bin with an arbitrary shape, which describes a
 region in the sky with that same shape. Besides the spatial region, a `~RegionGeom` can also have any number of non-spatial dimensions, 
-the most common use being an energy axis. The `~RegionGeom` object defines the structure into which the data contained in a `~RegionNDMap`
+the most common case being an additional energy axis. The `~RegionGeom` object defines the structure into which the data contained in a `~RegionNDMap`
 is distributed.
 
 Creating a RegionGeom
@@ -93,7 +93,7 @@ The resulting `~RegionGeom` object has `ndim = 3`, two spatial dimensions with o
 
 RegionGeom and coordinates
 --------------------------
-A `~RegionGeom` defines a single spatial bin with arbitrary shape. The spatial coordinates are then given by the center of the region geometry. If one or more non-spatial axis are present, 
+A `~RegionGeom` defines a single spatial bin with arbitrary shape. The spatial coordinates are then given by the center of the region geometry. If one or more non-spatial axes are present, 
 they can have any number of bins. There are different methods that can be used to access or modify the coordinates of a `~RegionGeom`.
 
 + Bin volume and angular size:
@@ -116,7 +116,7 @@ they can have any number of bins. There are different methods that can be used t
 + Coordinates defined by the `~RegionGeom`:
     Given a map coordinate or `~MapCoord` object, the method `~RegionGeom.contains()` checks if they are contained in the region geometry. One can also retrieve the coordinates of the region geometry with
     `~RegionGeom.get_coord()` and `~RegionGeom.get_idx()`, which return the sky coordinates and indexes respectively. Note that the spatial coordinate will always be a single entry, namely the center, while any non-spatial 
-    axis can have as many bins as desired.
+    axes can have as many bins as desired.
 
     .. code-block:: python
 
@@ -160,9 +160,9 @@ they can have any number of bins. There are different methods that can be used t
         geom_6_energy_bins = geom.downsample(2, "energy")
 
 + Image and WCS geometries:
-    * If a `~RegionGeom` has any number of non-spatial axis, the corresponding region geometry with just the spatial dimensions is given by the method `~RegionGeom.to_image()`. If the region geometry only has spatial
+    * If a `~RegionGeom` has any number of non-spatial axes, the corresponding region geometry with just the spatial dimensions is given by the method `~RegionGeom.to_image()`. If the region geometry only has spatial
       dimensions, a copy of it is returned.
-    * Conversely, non-spatial axis can be added to an existing `~RegionGeom` by `~RegionGeom.to_cube()`, which takes a list of non-spatial axes with unique names to add to the region geometry.    
+    * Conversely, non-spatial axes can be added to an existing `~RegionGeom` by `~RegionGeom.to_cube()`, which takes a list of non-spatial axes with unique names to add to the region geometry.    
     * Region geometries are made of a single spatial bin, but are constructed on top of a finer `WcsGeom`. The method `~RegionGeom.to_wcs_geom()` returns the minimal equivalent geometry that contains the region geometry.
       It can also be given as an argument a minimal width for the resulting geometry.
 
@@ -177,7 +177,7 @@ they can have any number of bins. There are different methods that can be used t
         energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
         geom_energy = geom.to_cube([energy_axis])
 
-        # Get the image region geometry without energy axis. 
+        # Get the image region geometry without the energy axis. 
         # Note that geom_image == geom
         geom_image = geom_energy.to_image()
 
@@ -254,9 +254,10 @@ RegionNDMap
 ===========
 A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array containing the values associated 
 to that region in the sky along the non-spatial axis, which is usually an energy axis.
-It can be thought of as a `Map` but with a single spatial bin that can have an arbitrary 
-shape, together with any non-spatial axis. It is to a `~RegionGeom` what a `~Map` is to a `~Geom`, it contains
-the data that is distributed in the structure defined by the `~RegionGeom` axes.
+The spatial dimensions of a `~RegionNDMap` are reduced to a single spatial bin with an arbitrary 
+shape, and any extra dimensions are described by an arbitrary number of non-spatial axes. It is 
+to a `~RegionGeom` what a `~Map` is to a `~Geom`: it contains the data which is distributed 
+in the structure defined by the `~RegionGeom` axes.
 
 Creating a RegionNDMap
 ----------------------
@@ -329,8 +330,8 @@ The data contained in a region map is a `~numpy.ndarray` with shape defined by t
 spatial bin. If the associated `~RegionGeom` has a non-spatial axis with N bins, the data shape is
 then (N, 1, 1), and similarly for additional non-spatial axes.
 
-Visualization of a RegionNDMap
-------------------------------
+Visualing a RegionNDMap
+-----------------------
 Visualizing a `~RegionNDMap` can be interpreted in two different ways. One is to plot a sky map that contains the region,
 indicating the area of the sky encompassed by the spatial component of the region map. This is done via `~RegionNDMap.plot_region()`.
 Another option is to plot the contents of the region map, which would be either a single value for the case of only spatial axes, 
