@@ -309,10 +309,17 @@ class RegionNDMap(Map):
         hdulist : `~astropy.fits.HDUList`
             HDU list
         """
+        hdulist = fits.HDUList()
+
+        # add data hdu
         table = self.to_table(format=format)
-        return fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(table)]
-        )
+        hdulist.append(fits.BinTableHDU(table))
+
+        if format in ["ogip", "ogip-sherpa"]:
+            hdulist_geom = self.geom.to_hdulist(format=format)[1:]
+            hdulist.extend(hdulist_geom)
+
+        return hdulist
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):

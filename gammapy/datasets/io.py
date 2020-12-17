@@ -203,27 +203,25 @@ class OGIPDatasetWriter(DatasetWriter):
         is_bkg : bool
             Whether to use counts off.
         """
-        hdulist = fits.HDUList()
-
         counts = dataset.counts_off if is_bkg else dataset.counts
         acceptance = dataset.acceptance_off if is_bkg else dataset.acceptance
 
-        table = counts.to_table()
+        hdulist = counts.to_hdulist()
+
+        table = Table.read(hdulist["SPECTRUM"])
+
         if dataset.mask_safe is not None:
             mask_array = dataset.mask_safe.data[:, 0, 0]
         else:
             mask_array = np.ones(acceptance.data.size)
+
         table["QUALITY"] = np.logical_not(mask_array)
         table["BACKSCAL"] = acceptance.data[:, 0, 0]
         table["AREASCAL"] = np.ones(acceptance.data.size)
 
         # prepare meta data
         table.meta = self.get_ogip_meta(dataset, is_bkg=is_bkg)
-        hdulist.append(fits.BinTableHDU(table, name=table.meta["name"]))
-
-        hdulist_geom = counts.geom.to_hdulist(format=self.format)[1:]
-
-        hdulist.extend(hdulist_geom)
+        hdulist["SPECTRUM"] = fits.BinTableHDU(table, name=table.meta["name"])
         return hdulist
 
     def write_pha(self, dataset, filename):
