@@ -397,21 +397,22 @@ class RegionNDMap(Map):
         table : `~astropy.table.Table`
             Table
         """
-        table = Table()
-
         if len(self.geom.axes) > 1 or not self.geom.has_energy_axis:
             raise ValueError(f"Writing to format '{format}' is only "
                              "supported for a single energy axis.")
 
-        edges = self.geom.axes[0].edges
         data = np.nan_to_num(self.quantity[:, 0, 0])
+        energy_axis = self.geom.axes[0]
 
         if format == "ogip":
-            table["CHANNEL"] = np.arange(len(edges) - 1, dtype=np.int16)
+            table = Table()
+            table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
             table["COUNTS"] = np.array(data, dtype=np.int32)
             table.meta = {"EXTNAME": "SPECTRUM"}
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            table = energy_axis.to_table(format=format)
+
             table.meta = {
                 "EXTNAME": "SPECRESP",
                 "hduclass": "OGIP",
@@ -420,11 +421,8 @@ class RegionNDMap(Map):
             }
 
             if format == "ogip-arf-sherpa":
-                edges = edges.to("keV")
                 data = data.to("cm2")
 
-            table["ENERG_LO"] = edges[:-1]
-            table["ENERG_HI"] = edges[1:]
             table["SPECRESP"] = data
         else:
             raise ValueError(f"Unsupported format: '{format}'")

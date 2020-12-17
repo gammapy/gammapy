@@ -1343,6 +1343,13 @@ class MapAxis:
             table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
             table["E_MIN"] = edges[:-1]
             table["E_MAX"] = edges[1:]
+        elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            edges = self.edges
+            if format == "ogip-arf-sherpa":
+                edges = edges.to("keV")
+
+            table["ENERG_LO"] = edges[:-1]
+            table["ENERG_HI"] = edges[1:]
         elif format == "gadf-dl3":
             from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
 
