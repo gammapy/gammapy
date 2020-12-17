@@ -259,7 +259,22 @@ class RegionNDMap(Map):
 
     @classmethod
     def read(cls, filename, format="ogip", ogip_column="COUNTS"):
-        """Read from file."""
+        """Read from file.
+
+        Parameters
+        ----------
+        filename : `pathlib.Path` or str
+            Filename.
+        format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
+            Which format to use.
+        ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
+            If format 'ogip' is chosen which table hdu column to read.
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region nd map
+        """
         filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
@@ -269,8 +284,12 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
+        filename : `pathlib.Path` or str
+            Filename.
         format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
-            Format specification
+            Which format to use.
+        overwrite : bool
+            Overwrite existing files?
         """
         filename = make_path(filename)
         self.to_hdulist(format=format).writeto(
@@ -305,8 +324,8 @@ class RegionNDMap(Map):
             HDU list.
         format : {"ogip", "ogip-arf"}
             Format specification
-        ogip_column : {"COUNTS"}
-            OGIP data format column
+        ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
+            If format 'ogip' is chosen which table hdu column to read.
 
         Returns
         -------
@@ -370,7 +389,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        format : {"ogip", "ogip-arf", "ogip-arf-sherps"}
+        format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
 
         Returns
@@ -380,13 +399,17 @@ class RegionNDMap(Map):
         """
         table = Table()
 
+        if len(self.geom.axes) > 1 or not self.geom.has_energy_axis:
+            raise ValueError(f"Writing to format '{format}' is only "
+                             "supported for a single energy axis.")
+
         edges = self.geom.axes[0].edges
         data = np.nan_to_num(self.quantity[:, 0, 0])
 
         if format == "ogip":
             table["CHANNEL"] = np.arange(len(edges) - 1, dtype=np.int16)
             table["COUNTS"] = np.array(data, dtype=np.int32)
-            table.meta = {"EXTNAME": "COUNTS"}
+            table.meta = {"EXTNAME": "SPECTRUM"}
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
             table.meta = {
@@ -396,7 +419,7 @@ class RegionNDMap(Map):
                 "hduclas2": "SPECRESP",
             }
 
-            if format == "ogip-sherpa":
+            if format == "ogip-arf-sherpa":
                 edges = edges.to("keV")
                 data = data.to("cm2")
 
