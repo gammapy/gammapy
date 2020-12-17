@@ -404,14 +404,15 @@ class RegionNDMap(Map):
         table : `~astropy.table.Table`
             Table
         """
-        if len(self.geom.axes) > 1 or not self.geom.has_energy_axis:
-            raise ValueError(f"Writing to format '{format}' is only "
-                             "supported for a single energy axis.")
+        if len(self.geom.axes) > 1:
+            raise ValueError(f"Writing to format '{format}' only supports a "
+                             f"single energy axis. Got {self.geom.axes.names}")
 
         data = np.nan_to_num(self.quantity[:, 0, 0])
         energy_axis = self.geom.axes[0]
 
         if format == "ogip":
+            energy_axis.assert_name("energy")
             table = Table()
             table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
             table["COUNTS"] = np.array(data, dtype=np.int32)
@@ -419,7 +420,6 @@ class RegionNDMap(Map):
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
             table = energy_axis.to_table(format=format)
-
             table.meta = {
                 "EXTNAME": "SPECRESP",
                 "hduclass": "OGIP",
