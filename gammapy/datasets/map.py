@@ -547,6 +547,9 @@ class MapDataset(Dataset):
         if self.mask_safe is None:
             return None
 
+        if self.mask_safe.geom.is_region:
+            return self.mask_safe
+
         geom = self.edisp.edisp_map.geom.squash("energy_true")
 
         if "migra" in geom.axes.names:
@@ -1724,7 +1727,9 @@ class MapDatasetOnOff(MapDataset):
         alpha : `Map`
             Alpha map
         """
-        alpha = self.acceptance / self.acceptance_off
+        with np.errstate(invalid="ignore", divide="ignore"):
+            alpha = self.acceptance / self.acceptance_off
+
         alpha.data = np.nan_to_num(alpha.data)
         return alpha
 

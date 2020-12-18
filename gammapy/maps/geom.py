@@ -1330,12 +1330,10 @@ class MapAxis:
             Table HDU
         """
         table = Table()
+        edges = self.edges
 
         if format in ["ogip", "ogip-sherpa"]:
-            if "energy" not in self.name:
-                raise ValueError("Only energy axes can be converted to HDU")
-
-            edges = self.edges
+            self.assert_name("energy")
 
             if format == "ogip-sherpa":
                 edges = edges.to("keV")
@@ -1343,6 +1341,14 @@ class MapAxis:
             table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
             table["E_MIN"] = edges[:-1]
             table["E_MAX"] = edges[1:]
+        elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            self.assert_name("energy_true")
+
+            if format == "ogip-arf-sherpa":
+                edges = edges.to("keV")
+
+            table["ENERG_LO"] = edges[:-1]
+            table["ENERG_HI"] = edges[1:]
         elif format == "gadf-dl3":
             from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
 
@@ -1354,7 +1360,7 @@ class MapAxis:
                         break
 
             if self.node_type == "edges":
-                edges_hi, edges_lo = self.edges[:-1], self.edges[1:]
+                edges_hi, edges_lo = edges[:-1], edges[1:]
             else:
                 edges_hi, edges_lo = self.center, self.center
 

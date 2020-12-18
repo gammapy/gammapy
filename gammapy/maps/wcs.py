@@ -440,6 +440,7 @@ class WcsGeom(Geom):
             wcs_shape = eval(header["WCSSHAPE"])
             npix = (wcs_shape[0], wcs_shape[1])
             cdelt = None
+            wcs.array_shape = npix
         else:
             npix = (header["NAXIS1"], header["NAXIS2"])
             cdelt = None
