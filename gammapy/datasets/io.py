@@ -107,33 +107,21 @@ class OGIPDatasetWriter(DatasetWriter):
         hdu_class = "BKG" if is_bkg else "TOTAL"
 
         meta = {
-            "name": "SPECTRUM",
-            "hduclass": "OGIP",
-            "hduclas1": "SPECTRUM",
-            "hduclas2": hdu_class,
-            "corrscal": "",
-            "chantype": "PHA",
-            "detchans": dataset.counts.geom.axes[0].nbin,
-            "filter": "None",
-            "corrfile": "",
-            "poisserr": True,
-            "hduclas3": "COUNT",
-            "hduclas4": "TYPE:1",
-            "lo_thres": dataset.energy_range[0].to_value("TeV"),
-            "hi_thres": dataset.energy_range[1].to_value("TeV"),
-            "exposure": livetime.to_value("s"),
-            "obs_id": dataset.name,
+            "HDUCLAS2": hdu_class,
+            "HDUCLAS3": "COUNT",
+            "HDUCLAS4": "TYPE:1",
+            "EXPOSURE": livetime.to_value("s"),
+            "OBS_ID": dataset.name,
         }
 
-        if not is_bkg:
-            filenames = OGIPDatasetWriter.get_filenames(self.filename)
-            meta["ancrfile"] = filenames["ancrfile"]
+        filenames = OGIPDatasetWriter.get_filenames(self.filename)
+        meta["ANCRFILE"] = filenames["ancrfile"]
 
-            if dataset.edisp:
-                meta["backfile"] = filenames["backfile"]
+        if dataset.edisp:
+            meta["BACKFILE"] = filenames["backfile"]
 
-            if dataset.counts_off:
-                meta["respfile"] = filenames["respfile"]
+        if dataset.counts_off:
+            meta["RESPFILE"] = filenames["respfile"]
 
         return meta
 
@@ -209,6 +197,7 @@ class OGIPDatasetWriter(DatasetWriter):
         hdulist = counts.to_hdulist()
 
         table = Table.read(hdulist["SPECTRUM"])
+        meta = self.get_ogip_meta(dataset, is_bkg=is_bkg)
 
         if dataset.mask_safe is not None:
             mask_array = dataset.mask_safe.data[:, 0, 0]
@@ -216,12 +205,14 @@ class OGIPDatasetWriter(DatasetWriter):
             mask_array = np.ones(acceptance.data.size)
 
         table["QUALITY"] = np.logical_not(mask_array)
-        table["BACKSCAL"] = acceptance.data[:, 0, 0]
-        table["AREASCAL"] = np.ones(acceptance.data.size)
+        del table.meta["QUALITY"]
 
-        # prepare meta data
-        table.meta = self.get_ogip_meta(dataset, is_bkg=is_bkg)
-        hdulist["SPECTRUM"] = fits.BinTableHDU(table, name=table.meta["name"])
+        table["BACKSCAL"] = acceptance.data[:, 0, 0]
+        del table.meta["BACKSCAL"]
+
+        # adapt meta data
+        table.meta.update(meta)
+        hdulist["SPECTRUM"] = fits.BinTableHDU(table)
         return hdulist
 
     def write_pha(self, dataset, filename):

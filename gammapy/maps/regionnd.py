@@ -265,7 +265,7 @@ class RegionNDMap(Map):
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"ogip", "ogip-arf"}
             Which format to use.
         ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
             If format 'ogip' is chosen which table hdu column to read.
@@ -279,7 +279,7 @@ class RegionNDMap(Map):
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
 
-    def write(self, filename, overwrite=False, format="ogip"):
+    def write(self, filename, overwrite=False, format="ogip-arf"):
         """Write map to file
 
         Parameters
@@ -416,15 +416,40 @@ class RegionNDMap(Map):
             table = Table()
             table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
             table["COUNTS"] = np.array(data, dtype=np.int32)
-            table.meta = {"EXTNAME": "SPECTRUM"}
+
+            # see https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node6.html
+            table.meta = {
+                "EXTNAME": "SPECTRUM",
+                "telescop": "unknown",
+                "instrume": "unknown",
+                "filter": "None",
+                "exposure": 0,
+                "corrfile": "",
+                "corrscal": "",
+                "ancrfile": "",
+                "hduclass": "OGIP",
+                "hduclas1": "SPECTRUM",
+                "hduvers": "1.2.1",
+                "poisserr": True,
+                "chantype": "PHA",
+                "detchans": energy_axis.nbin,
+                "quality": 0,
+                "backscal": 0,
+                "grouping": 0,
+                "areascal": 1,
+            }
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
             table = energy_axis.to_table(format=format)
             table.meta = {
                 "EXTNAME": "SPECRESP",
+                "telescop": "unknown",
+                "instrume": "unknown",
+                "filter": "None",
                 "hduclass": "OGIP",
                 "hduclas1": "RESPONSE",
                 "hduclas2": "SPECRESP",
+                "hduvers": "1.1.0"
             }
 
             if format == "ogip-arf-sherpa":
@@ -434,6 +459,7 @@ class RegionNDMap(Map):
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 
+        table.meta.update(self.meta)
         return table
 
     def get_spectrum(self, *args, **kwargs):
