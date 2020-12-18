@@ -212,7 +212,7 @@ class Parameter:
     def frozen(self, val):
         if val in ['True', 'False']:
             val=bool(val)
-        if not isinstance(val, bool):
+        if not isinstance(val, bool) and not isinstance(val, np.bool_):
             raise TypeError(f"Invalid type: {val}, {type(val)}")
         self._frozen = val
 
