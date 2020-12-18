@@ -5,7 +5,6 @@ from astropy.table import Table
 from astropy.visualization import quantity_support
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
@@ -353,7 +352,7 @@ class RegionNDMap(Map):
         quantity = table[ogip_column].quantity
 
         if ogip_column == "QUALITY":
-            data, unit = np.logical_not(quantity.value), ""
+            data, unit = np.logical_not(quantity.value.astype(bool)), ""
         else:
             data, unit = quantity.value, quantity.unit
 
@@ -376,7 +375,6 @@ class RegionNDMap(Map):
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
         """
-        # TODO: check and remove the type-cast here...
         data = other.quantity.to_value(self.unit).astype(self.data.dtype)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
