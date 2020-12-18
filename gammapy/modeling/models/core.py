@@ -390,15 +390,7 @@ class DatasetModels(collections.abc.Sequence):
 
     def set_parameters_from_table(self, t):
         """Update Models from an astropy Table."""
-#        self._check_non_editable_columns(t, self._table_cached)
-        parameters_dict = [dict(zip( t.colnames, row)) for row in t]
-        #Astropy Table has masked values for NaN. Replacing with np.nan in dict.
-        for k, data in enumerate(parameters_dict):
-            parameters_dict[k]['frozen']=bool(data['frozen'])
-            pars=['min','max']
-            for p in pars:
-                if type(data[p]) is np.ma.core.MaskedConstant:
-                    parameters_dict[k][p] = np.nan        
+        parameters_dict = [dict(zip( t.colnames, row)) for row in t]      
         for k, data in enumerate(parameters_dict):
             self.parameters[k].update_from_dict(data)
 

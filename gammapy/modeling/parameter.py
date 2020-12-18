@@ -168,7 +168,11 @@ class Parameter:
 
     @min.setter
     def min(self, val):
-        self._min = float(val)
+        "Astropy Table has masked values for NaN. Replacing with np.nan."
+        if isinstance(val, np.ma.core.MaskedConstant):
+            self._min = np.nan
+        else:
+            self._min = float(val)
 
     @property
     def factor_min(self):
@@ -185,7 +189,11 @@ class Parameter:
 
     @max.setter
     def max(self, val):
-        self._max = float(val)
+        "Astropy Table has masked values for NaN. Replacing with np.nan."
+        if isinstance(val, np.ma.core.MaskedConstant):
+            self._max = np.nan
+        else:
+            self._max = float(val)
 
     @property
     def factor_max(self):
@@ -202,6 +210,8 @@ class Parameter:
 
     @frozen.setter
     def frozen(self, val):
+        if val in ['True', 'False']:
+            val=bool(val)
         if not isinstance(val, bool):
             raise TypeError(f"Invalid type: {val}, {type(val)}")
         self._frozen = val

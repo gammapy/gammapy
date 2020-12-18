@@ -181,3 +181,6 @@ def test_update_from_dict():
     assert par.min == 0
     assert par.max is np.nan    
     assert par.frozen == True
+    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":'True', "unit":"GeV"}
+    par.update_from_dict(data)
+    assert par.frozen == True
