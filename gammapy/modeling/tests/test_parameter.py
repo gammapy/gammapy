@@ -152,7 +152,7 @@ def test_parameters_to_table(pars):
     pars["ham"].error = 1e-10
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 7
+    assert len(table.columns) == 8
 
 
 def test_parameters_set_parameter_factors(pars):

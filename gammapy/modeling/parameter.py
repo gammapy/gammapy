@@ -429,7 +429,10 @@ class Parameters(collections.abc.Sequence):
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        rows = [p.to_dict() for p in self._parameters]
+        rows=[]
+        for p in self._parameters:
+            d = p.to_dict()
+            rows.append({**dict(type=p.type), **d})
         table = table_from_row_data(rows)
 
         table["value"].format = ".4e"
