@@ -457,7 +457,8 @@ class RegionNDMap(Map):
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 
-        table.meta.update(self.meta)
+        meta = {k: self.meta.get(k, v) for k, v in table.meta.items()}
+        table.meta.update(meta)
         return table
 
     def get_spectrum(self, *args, **kwargs):
