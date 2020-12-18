@@ -4,7 +4,7 @@ import copy
 from os.path import split
 import numpy as np
 import astropy.units as u
-from astropy.table import Table, hstack
+from astropy.table import Table
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
