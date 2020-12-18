@@ -375,16 +375,10 @@ class DatasetModels(collections.abc.Sequence):
 
     def to_parameters_table(self):
         """Convert Models parameters to an astropy Table."""
-        pars = self.parameters.to_table()
-        rows = []
+        table = self.parameters.to_table()
         #Warning: splitting of parameters will break is source name has a "." in its name.
-        for name in self.parameters_unique_names:
-            row = {}
-            parts = name.split(".")
-            row["model"], row["type"], _ = parts
-            rows.append(row)
-        table = table_from_row_data(rows)
-        table = hstack([table, pars])
+        model_name = [name.split(".")[0] for name in self.parameters_unique_names]
+        table.add_column(model_name, name='model', index=0)
         self._table_cached = table
         return  table
 
