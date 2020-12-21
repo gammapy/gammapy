@@ -27,12 +27,14 @@ is distributed.
 Creating a RegionGeom
 ---------------------
 A `~RegionGeom` can be created via a DS9 region string (see http://ds9.si.edu/doc/ref/region.html for a list of options)
-or an Astropy Region (https://astropy-regions.readthedocs.io/en/latest/).
+or an Astropy Region (https://astropy-regions.readthedocs.io/en/latest/shapes.html). Note that region geometries have an associated
+WCS projection object. This requires the region to have a defined center, which is not the case for all the shapes defined
+in DS9. Hence only certain shapes are supported for constructing a `~RegionGeom`: circles, boxes, ellipses and annuli.
 
 .. code-block:: python
 
     from astropy.coordinates import SkyCoord
-    from regions import CircleSkyRegion, RectangleSkyRegion
+    from regions import CircleSkyRegion, RectangleSkyRegion, EllipseAnnulusSkyRegion
     from gammapy.maps import RegionGeom
     import astropy.units as u
 
@@ -55,10 +57,22 @@ or an Astropy Region (https://astropy-regions.readthedocs.io/en/latest/).
     geom = RegionGeom(region)
 
     # Equivalent factory method call
-    geom = RegionGeom.create(region) 
+    geom = RegionGeom.create(region)
+    
+    # Something a bit more complicated: an elliptical annulus
+    center_sky = SkyCoord(42, 43, unit='deg', frame='fk5')
+    region = EllipseAnnulusSkyRegion(center=center_sky,
+                                    inner_width=3 * u.deg,
+                                    outer_width=4 * u.deg,
+                                    inner_height=6 * u.deg,
+                                    outer_height=7 * u.deg,
+                                    angle=6 * u.deg)
+    geom = RegionGeom(region)
 
 
-Higher dimensional region geometries (cubes and hypercubes) can be constructed by passing a list of `~MapAxis` objects for non-spatial dimensions with the axes parameter:
+
+Higher dimensional region geometries (cubes and hypercubes) can be constructed in exactly the same way as a `~WcsGeom`
+by passing a list of `~MapAxis` objects for non-spatial dimensions with the axes parameter:
 
 .. code-block:: python
 
@@ -232,11 +246,23 @@ different regions by passing keyword arguments forwarded to `~regions.PixelRegio
     import numpy as np
     m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
     m.data = np.add(*np.indices((100, 100)))
-    geom1 = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
-    geom2 = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+    # A circle centered in the Crab position
+    circle = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+    # A box centered in the same position
+    box = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+    # An ellipse in a different location
+    ellipse = RegionGeom.create("icrs;ellipse(84.63, 21.01, 0.3,0.6,-45)")
+    # An annulus in a different location
+    annulus = RegionGeom.create("icrs;annulus(82.8, 22.91, 0.1,0.3)")
+
     m.plot(add_cbar=True)
-    geom1.plot_region(ec="k")
-    geom2.plot_region(lw=2, linestyle='--')
+    # Default plotting settings
+    circle.plot_region()
+    # Different line styles, widths and colors
+    box.plot_region(lw=2, linestyle='--', ec='k')
+    ellipse.plot_region(lw=2, linestyle=':', ec='white')
+    # Filling the region with a color
+    annulus.plot_region(lw=2, ec='purple', fc='purple')
 
 .. plot::
 
@@ -244,11 +270,23 @@ different regions by passing keyword arguments forwarded to `~regions.PixelRegio
     import numpy as np
     m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
     m.data = np.add(*np.indices((100, 100)))
-    geom1 = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
-    geom2 = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+    # A circle centered in the Crab position
+    circle = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+    # A box centered in the same position
+    box = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+    # An ellipse in a different location
+    ellipse = RegionGeom.create("icrs;ellipse(84.63, 21.01, 0.3,0.6,-45)")
+    # An annulus in a different location
+    annulus = RegionGeom.create("icrs;annulus(82.8, 22.91, 0.1,0.3)")
+
     m.plot(add_cbar=True)
-    geom1.plot_region(ec="k")
-    geom2.plot_region(lw=2, linestyle='--')
+    # Default plotting settings
+    circle.plot_region()
+    # Different line styles, widths and colors
+    box.plot_region(lw=2, linestyle='--', ec='k')
+    ellipse.plot_region(lw=2, linestyle=':', ec='white')
+    # Filling the region with a color
+    annulus.plot_region(lw=2, ec='purple', fc='purple')
 
 RegionNDMap
 ===========
@@ -417,3 +455,17 @@ Region maps can be written to and read from a FITS file with the
     m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
     m.write('file.fits', overwrite=True)
     m = RegionNDMap.read('file.fits')
+
+TO DO: add tutorial links,
+        wcs tangential projection
+        write/read
+        
+
+Relevant tutorials
+------------------
+:ref:`tutorials` that show examples using `~RegionNDMap` and `~RegionGeom`:
+
+* `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
+* `extended_source_spectral_analysis.html <../tutorials/extended_source_spectral_analysis.html>`__
+* `spectrum_simulation.html <../tutorials/spectrum_simulation.html>`__
+* `cta_sensitivity.html <../tutorials/cta_sensitivity.html>`__
