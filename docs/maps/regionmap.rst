@@ -24,12 +24,17 @@ region in the sky with that same shape. Besides the spatial region, a `~RegionGe
 the most common case being an additional energy axis. The `~RegionGeom` object defines the structure into which the data contained in a `~RegionNDMap`
 is distributed.
 
+Region geometries have an associated WCS projection object, which is used to project into the tangential plane for certain
+operations, such as convolution with a PSF. This projection is defined using the region center, and might introduce deformations for
+very large regions. This is why the use of regions with size larger than a few degrees is not recommended.
+
+
 Creating a RegionGeom
 ---------------------
 A `~RegionGeom` can be created via a DS9 region string (see http://ds9.si.edu/doc/ref/region.html for a list of options)
 or an Astropy Region (https://astropy-regions.readthedocs.io/en/latest/shapes.html). Note that region geometries have an associated
 WCS projection object. This requires the region to have a defined center, which is not the case for all the shapes defined
-in DS9. Hence only certain shapes are supported for constructing a `~RegionGeom`: circles, boxes, ellipses and annuli.
+in DS9. Hence only certain shapes are supported for constructing a `~RegionGeom`, such as circles, boxes, ellipses and annuli.
 
 .. code-block:: python
 
@@ -446,24 +451,39 @@ or a function of the non-spatial axis bins. This is done by `~RegionNDMap.plot()
 Writing and reading a RegionNDMap to/from a FITS file
 -----------------------------------------------------
 Region maps can be written to and read from a FITS file with the
-`~RegionNDMap.write()` and `~RegionNDMap.read()` methods:
+`~RegionNDMap.write()` and `~RegionNDMap.read()` methods. The
+format specification depends on which type of axis the region has:
+ 
+* Regions with a reconstructed energy axis:
+    For data with an `energy` axis, so reconstructed energy,
+    the formats `ogip` and `ogip-sherpa` store the data along with the `REGION` and `EBOUNDS HDU`.
 
-.. code-block:: python
+    .. code-block:: python
 
-    from gammapy.maps import RegionNDMap,MapAxis
-    energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
-    m.write('file.fits', overwrite=True)
-    m = RegionNDMap.read('file.fits')
+        from gammapy.maps import RegionNDMap,MapAxis
+        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+        m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+        m.write('file.fits', overwrite=True, format="ogip")
+        m = RegionNDMap.read('file.fits', format="ogip")
 
-TO DO: add tutorial links,
-        wcs tangential projection
-        write/read
-        
+
+* Regions with a true energy axis:
+    For data with an `energy_true` axis, so true energy,
+    the formats `ogip-arf` and `ogip-arf-sherpa` store the data in true energy, with the definition
+    of the energy bins. The region information is however lost.
+
+    .. code-block:: python
+
+        from gammapy.maps import RegionNDMap,MapAxis
+        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy_true', unit='GeV')
+        m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+        m.write('file.fits', overwrite=True, format="ogip-arf")
+        m = RegionNDMap.read('file.fits', format="ogip-arf")
+
 
 Relevant tutorials
 ------------------
-:ref:`tutorials` that show examples using `~RegionNDMap` and `~RegionGeom`:
+:ref:`tutorials` that use `~RegionNDMap` and `~RegionGeom`:
 
 * `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
 * `extended_source_spectral_analysis.html <../tutorials/extended_source_spectral_analysis.html>`__

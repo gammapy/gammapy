@@ -574,6 +574,7 @@ found in the following sub-pages:
     :maxdepth: 1
 
     hpxmap
+    regionmap
 
 Reference/API
 =============
