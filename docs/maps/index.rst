@@ -32,6 +32,7 @@ to use the abstract `~Map` interface for accessing or updating the contents of a
 map as this allows algorithms to be used interchangeably with different map
 representations. The following reviews methods of the abstract map interface.
 Documentation specific to WCS- and HEALPix-based maps is provided in :doc:`hpxmap`.
+Documentation specific to region-based maps is provided in :doc:`regionmap`.
 
 
 Getting Started
@@ -573,6 +574,7 @@ found in the following sub-pages:
     :maxdepth: 1
 
     hpxmap
+    regionmap
 
 Reference/API
 =============

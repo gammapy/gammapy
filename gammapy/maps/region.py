@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
-
+from astropy.visualization.wcsaxes import WCSAxes
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from regions import FITSRegionParser, fits_region_objects_to_table
 from gammapy.utils.regions import (
@@ -23,6 +23,10 @@ __all__ = ["RegionGeom"]
 
 class RegionGeom(Geom):
     """Map geometry representing a region on the sky.
+    The spatial component of the geometry is made up of a
+    single pixel with an arbitrary shape and size. It can
+    also have any number of non-spatial dimensions. This class
+    represents the geometry for the `RegionNDMap` maps.
 
     Parameters
     ----------
@@ -62,6 +66,8 @@ class RegionGeom(Geom):
 
     @property
     def frame(self):
+        """Coordinate system, either Galactic ("galactic") or Equatorial
+            ("icrs")."""
         if self.region is None:
             return "icrs"
         try:
@@ -71,7 +77,14 @@ class RegionGeom(Geom):
 
     @property
     def width(self):
-        """Width of bounding box of the region"""
+        """Width of bounding box of the region.
+        
+        Returns
+        -------
+        width : `~astropy.units.Quantity`
+            Dimensions of the region in both spatial dimensions.
+            Units: ``deg``
+        """
         if self.region is None:
             raise ValueError("Region definition required.")
 
@@ -89,14 +102,18 @@ class RegionGeom(Geom):
 
     @property
     def region(self):
+        """`~regions.SkyRegion` object that defines the spatial component
+        of the region geometry"""
         return self._region
 
     @property
     def axes(self):
+        """List of non-spatial axes."""
         return self._axes
 
     @property
     def wcs(self):
+        """WCS projection object."""
         return self._wcs
 
     @property
@@ -106,11 +123,12 @@ class RegionGeom(Geom):
 
     @property
     def center_pix(self):
+        """Pixel values corresponding to the center of the region"""
         return tuple((np.array(self.data_shape) - 1.0) / 2)[::-1]
 
     @property
     def center_skydir(self):
-        """Center skydir"""
+        """Sky coordinate of the center of the region"""
         if self.region is None:
             return SkyCoord(np.nan * u.deg, np.nan * u.deg)
         try:
@@ -120,6 +138,21 @@ class RegionGeom(Geom):
             return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
 
     def contains(self, coords):
+        """Check if a given map coordinate is contained in the region.
+        Requires the `.region` attribute to be set.
+
+        Parameters
+        ----------
+        coords : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
+            Object containing coordinate arrays we wish to check for inclusion
+            in the region.
+
+        Returns
+        -------
+        mask : `~numpy.ndarray`
+            Boolean Numpy array with the same shape as the input that indicates
+            which coordinates are inside the region.
+        """
         if self.region is None:
             raise ValueError("Region definition required.")
 
@@ -127,6 +160,18 @@ class RegionGeom(Geom):
         return self.region.contains(coords.skycoord, self.wcs)
 
     def separation(self, position):
+        """Angular distance between the center of the region and the given position.
+
+        Parameters
+        ----------
+        position : `astropy.coordinates.SkyCoord`
+            Sky coordinate we want the angular distance to.
+
+        Returns
+        -------
+        sep : `~astropy.coordinates.Angle`
+            The on-sky separation between the given coordinate and the region center.
+        """
         return self.center_skydir.separation(position)
 
     @property
@@ -136,6 +181,10 @@ class RegionGeom(Geom):
 
     @property
     def _shape(self):
+        """Number of bins in each dimension.
+        The spatial dimension is always (1, 1), as a 
+        `RegionGeom` is not pixelized further
+        """
         return tuple((1, 1) + self.axes.shape)
 
     def get_coord(self, frame=None):
@@ -171,6 +220,14 @@ class RegionGeom(Geom):
         raise NotImplementedError("Cropping of `RegionGeom` not supported")
 
     def solid_angle(self):
+        """Get solid angle of the region.
+
+        Returns
+        -------
+        angle : `~astropy.units.Quantity`
+            Solid angle of the region. In sr.
+            Units: ``sr``
+        """
         if self.region is None:
             raise ValueError("Region definition required.")
 
@@ -179,6 +236,15 @@ class RegionGeom(Geom):
         return solid_angle.to("sr")
 
     def bin_volume(self):
+        """If the RegionGeom has a non-spatial axis, it
+        returns the volume of the region. If not, it 
+        just retuns the solid angle size.
+
+        Returns
+        -------
+        volume : `~astropy.units.Quantity`
+            Volume of the region.
+        """
         bin_volume = self.solid_angle() * np.ones(self.data_shape)
 
         for idx, ax in enumerate(self.axes):
@@ -189,8 +255,8 @@ class RegionGeom(Geom):
         return bin_volume
 
     def to_wcs_geom(self, width_min=None):
-        """Get the minimal equivalent geometry that
-            contains the region.
+        """Get the minimal equivalent geometry
+        which contains the region.
 
         Parameters
          ----------
@@ -214,8 +280,7 @@ class RegionGeom(Geom):
         return wcs_geom
 
     def get_wcs_coord(self):
-        """Get the array of coordinates that define
-            the region.
+        """Get the array of coordinates that define the region.
 
         Returns
         -------
@@ -233,17 +298,45 @@ class RegionGeom(Geom):
         return self
 
     def to_cube(self, axes):
+        """Append non-spatial axes to create a higher-dimensional geometry.
+
+        Returns
+        -------
+        region : `~RegionGeom`
+            RegionGeom with the added axes.
+        """
         axes = copy.deepcopy(self.axes) + axes
         return self._init_copy(axes=axes)
 
     def to_image(self):
+        """Remove non-spatial axes to create a 2D region.
+
+        Returns
+        -------
+        region : `~RegionGeom`
+            RegionGeom without any non-spatial axes.
+        """
         return self._init_copy(axes=None)
 
     def upsample(self, factor, axis_name):
+        """Upsample a non-spatial dimension of the region by a given factor.
+
+        Returns
+        -------
+        region : `~RegionGeom`
+            RegionGeom with the upsampled axis.
+        """
         axes = self.axes.upsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
     def downsample(self, factor, axis_name):
+        """Downsample a non-spatial dimension of the region by a given factor.
+
+        Returns
+        -------
+        region : `~RegionGeom`
+            RegionGeom with the downsampled axis.
+        """
         axes = self.axes.downsample(factor=factor, axis_name=axis_name)
         return self._init_copy(axes=axes)
 
