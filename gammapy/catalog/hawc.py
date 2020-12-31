@@ -6,10 +6,10 @@ from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = ["SourceCatalog2HWC", "SourceCatalogObject2HWC"]
+__all__ = ["SourceCatalog2HWC", "SourceCatalogObjectHWC"]
 
 
-class SourceCatalogObject2HWC(SourceCatalogObject):
+class SourceCatalogObjectHWC(SourceCatalogObject):
     """One source from the HAWC 2HWC catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog2HWC`.
@@ -100,33 +100,6 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         else:
             raise ValueError(f"Invalid which: {which!r}")
 
-    def spectral_model(self, which="point"):
-        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
-
-        * ``which="point"`` -- Spectral model under the point source assumption.
-        * ``which="extended"`` -- Spectral model under the extended source assumption.
-          Only available for some sources. Raise ValueError if not available.
-        """
-        idx = self._get_idx(which)
-
-        pars = {
-            "reference": "7 TeV",
-            "amplitude": self.data[f"spec{idx}_dnde"],
-            "index": -self.data[f"spec{idx}_index"],
-        }
-
-        errs = {
-            "amplitude": self.data[f"spec{idx}_dnde_err"],
-            "index": self.data[f"spec{idx}_index_err"],
-        }
-
-        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
-
-        for name, value in errs.items():
-            model.parameters[name].error = value
-
-        return model
-
     def spatial_model(self, which="point"):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
@@ -196,7 +169,114 @@ class SourceCatalog2HWC(SourceCatalog):
     description = "2HWC catalog from the HAWC observatory"
     """Catalog description"""
 
-    source_object_class = SourceCatalogObject2HWC
+    source_object_class = SourceCatalogObjectHWC
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/2HWC.ecsv"):
+        table = Table.read(make_path(filename), format="ascii.ecsv")
+
+        source_name_key = "source_name"
+
+        super().__init__(table=table, source_name_key=source_name_key)
+
+
+
+
+class SourceCatalogObject2HWC(SourceCatalogObjectHWC):
+
+
+    def spectral_model(self, which="point"):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+
+        * ``which="point"`` -- Spectral model under the point source assumption.
+        * ``which="extended"`` -- Spectral model under the extended source assumption.
+          Only available for some sources. Raise ValueError if not available.
+        """
+        idx = self._get_idx(which)
+
+        pars = {
+            "reference": "7 TeV",
+            "amplitude": self.data[f"spec{idx}_dnde"],
+            "index": -self.data[f"spec{idx}_index"],
+        }
+
+        errs = {
+            "amplitude": self.data[f"spec{idx}_dnde_err"],
+            "index": self.data[f"spec{idx}_index_err"],
+        }
+
+        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
+        return model
+
+
+class SourceCatalogObject3HWC(SourceCatalogObjectHWC):
+
+
+    def spectral_model(self, which="point"):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+
+        * ``which="point"`` -- Spectral model under the point source assumption.
+        * ``which="extended"`` -- Spectral model under the extended source assumption.
+          Only available for some sources. Raise ValueError if not available.
+        """
+        # index_errp = self.data["spec_{idx}_index_errp"]
+        # index_errn = self.data["spec_{idx}_index_errn"]
+        # index_err = 0.5 * (index_errn + index_errp)
+        #
+        #
+        #
+        # amplitude_errp = self.data["spec_{idx}_dnde_errp"]
+        # amplitude_errn = self.data["spec_{idx}_dnde_errp"]
+        # amplitude_err = 0.5 * (index_errn + index_errp)
+
+        idx = self._get_idx(which)
+
+        pars = {
+            "reference": "7 TeV",
+            "amplitude": self.data[f"spec{idx}_dnde"],
+            "index": -self.data[f"spec{idx}_index"],
+        }
+
+        errs = {
+             "index_err" : 0.5 * ( self.data[f"spec_{idx}_index_errp"] + self.data[f"spec_{idx}_index_errn"]),
+             "amplitude_err" : 0.5 * (self.data[f"spec_{idx}_dnde_errp"] + self.data[f"spec_{idx}_dnde_errp"])
+        }
+
+        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
+        return model
+
+class SourceCatalog3HWC():
+    """HAWC 3HWC catalog.
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject3HWC`.
+
+    The data is from tables 2 and 3 in the paper [1]_.
+
+    The catalog table contains 40 rows / sources.
+    The paper mentions 39 sources e.g. in the abstract.
+    The difference is due to Geminga, which was detected as two "sources" by the algorithm
+    used to make the catalog, but then in the discussion considered as one source.
+
+    References
+    ----------
+    .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
+       On ADS: `2017ApJ...843...40A <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
+    """
+
+    tag = "3hwc"
+    """Catalog name"""
+
+    description = "3HWC catalog from the HAWC observatory"
+    """Catalog description"""
+
+    source_object_class = SourceCatalogObjectHWC
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/2HWC.ecsv"):
         table = Table.read(make_path(filename), format="ascii.ecsv")
