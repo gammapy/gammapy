@@ -6,7 +6,7 @@ from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = ["SourceCatalog2HWC", "SourceCatalogObjectHWC"]
+__all__ = ["SourceCatalog2HWC", "SourceCatalog3HWC", "SourceCatalogObjectHWC"]
 
 
 class SourceCatalogObjectHWC(SourceCatalogObject):
@@ -252,7 +252,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWC):
 
         return model
 
-class SourceCatalog3HWC():
+class SourceCatalog3HWC(SourceCatalog):
     """HAWC 3HWC catalog.
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3HWC`.
@@ -278,9 +278,10 @@ class SourceCatalog3HWC():
 
     source_object_class = SourceCatalogObjectHWC
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/2HWC.ecsv"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/3HWC.ecsv"):
         table = Table.read(make_path(filename), format="ascii.ecsv")
 
         source_name_key = "source_name"
 
         super().__init__(table=table, source_name_key=source_name_key)
+
