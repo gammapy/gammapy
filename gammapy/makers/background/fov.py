@@ -123,7 +123,10 @@ class FoVBackgroundMaker(Maker):
         fit = Fit(datasets)
         fit_result = fit.run()
         if not fit_result.success:
-            log.info(f"Fit did not converge for {dataset.name}.")
+            log.warning(
+                f"FoVBackgroundMaker failed: Fit did not converge for {dataset.name}. \
+                Background model parameters might be unphysical for {dataset.name}."
+            )
 
         # Unfreeze parameters
         for idx, par in enumerate(datasets.parameters):
@@ -136,11 +139,11 @@ class FoVBackgroundMaker(Maker):
         bkg_tot = dataset.npred_background().data[mask].sum()
 
         if count_tot <= 0.0:
-            log.info(
+            log.warning(
                 f"FoVBackgroundMaker failed. No counts found outside exclusion mask for {dataset.name}."
             )
         elif bkg_tot <= 0.0:
-            log.info(
+            log.warning(
                 f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}."
             )
         else:
