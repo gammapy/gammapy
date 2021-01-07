@@ -5,6 +5,8 @@ from .core import *
 from .fermi import *
 from .gammacat import *
 from .hawc import *
+from .hawc import SourceCatalogObject2HWC
+from .hawc import SourceCatalogObject3HWC
 from .hess import *
 
 CATALOG_REGISTRY = Registry(
@@ -16,9 +18,11 @@ CATALOG_REGISTRY = Registry(
         SourceCatalog4FGL,
         SourceCatalog2FHL,
         SourceCatalog3FHL,
+        SourceCatalog3HWC,
     ]
 )
 """Registry of source catalogs in Gammapy."""
+
 
 __all__ = [
     "CATALOG_REGISTRY",
@@ -30,9 +34,11 @@ __all__ = [
     "SourceCatalogObject3FGL",
     "SourceCatalogObject4FGL",
     "SourceCatalogObject2HWC",
+    "SourceCatalogObject3HWC",
     "SourceCatalogObjectGammaCat",
     "SourceCatalogObjectHGPSComponent",
     "SourceCatalogLargeScaleHGPS",
+    "SourceCatalogObject",
 ]
 
 __all__.extend(cls.__name__ for cls in CATALOG_REGISTRY)
