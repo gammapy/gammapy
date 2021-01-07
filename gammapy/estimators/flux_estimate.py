@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.maps import Geom
+import astropy.units as u
+from gammapy.maps import Geom, MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel
 
 __all__ = ["FluxEstimate"]
@@ -20,23 +21,27 @@ class FluxEstimate:
     data : dict of `Map` or `Table`
         Mappable containing the sed likelihood data
     spectral_model : `SpectralModel`
-        Reference spectral model
-    energy_axis : `MapAxis`
-        Reference energy axis
+        Reference spectral model.
     """
-    def __init__(self, data, spectral_model=None):
+    def __init__(self, data, spectral_model):
         # TODO: Check data
-        self._data = data
+        self.data = data
 
-        if spectral_model is None:
-            spectral_model = PowerLawSpectralModel(index=2)
-
-        self.spectral_model = spectral_model
-
-        if hasattr(self.data["norm"], Geom):
+        if hasattr(self.data["norm"], "Geom"):
             self.energy_axis = self.data["norm"].geom.axes["energy"]
         else:
-            pass
+            # Here we assume there is only one row per energy
+            e_edges = self.data["e_min"].quantity
+            e_edges = e_edges.insert(len(self.data), self.data["e_max"].quantity[-1])
+            self.energy_axis = MapAxis.from_energy_edges(e_edges)
+
+        # Note that here we could use the specification from dnde_ref to build piecewise PL
+        # But does it work beyond min and max centers?
+        self.spectral_model = spectral_model
+
+        for quantity in OPTIONAL_QUANTITIES:
+            name_property = f"norm_{quantity}"
+            setattr(self, name_property, self.data[name_property])
 
     @property
     def dnde_ref(self):
@@ -61,7 +66,7 @@ class FluxEstimate:
     @property
     def norm(self):
         return self.data["norm"]
-
+"""
     @property
     def norm_err(self):
         return self.data["norm_err"]
@@ -157,3 +162,5 @@ class FluxEstimate:
     @property
     def eflux_ul(self):
         return self.eflux_ref * self.norm_ul
+
+"""
