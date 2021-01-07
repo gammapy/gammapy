@@ -155,8 +155,6 @@ class WcsNDMap(WcsMap):
             return self._interp_by_coord_griddata(coords, method=method)
 
     def interp_by_pix(self, pix, method="nearest", fill_value=None):
-        """Interpolate map values at the given pixel coordinates.
-        """
         if not self.geom.is_regular:
             raise ValueError("interp_by_pix only supported for regular geom.")
 

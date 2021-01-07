@@ -113,6 +113,25 @@ class MapAxes(Sequence):
 
         self._axes = axes
 
+    def get_coord(self):
+        """Get coordinates
+
+        Returns
+        -------
+        coords : dict
+            Map coordinates
+        """
+        coords = {}
+
+        for idx, axis in enumerate(self):
+            # Extract values for each axis, default: nodes
+            shape = [1] * len(self)
+            shape[idx] = -1
+            coord = axis.center.reshape(tuple(shape))
+            coords[axis.name] = coord
+
+        return coords
+
     @property
     def shape(self):
         """Shape of the axes"""

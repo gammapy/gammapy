@@ -73,7 +73,6 @@ class ScaledRegularGridInterpolator:
             kwargs.setdefault("fill_value", None)
 
         if axis is None:
-            # print(points_scaled, values_scaled)
             self._interpolate = scipy.interpolate.RegularGridInterpolator(
                 points=points_scaled, values=values_scaled, **kwargs
             )
