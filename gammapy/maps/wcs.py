@@ -543,8 +543,7 @@ class WcsGeom(Geom):
             for pix_array in pix[self._slice_spatial_axes]:
                 pix_array -= 0.5
 
-        pix = np.meshgrid(*pix[::-1], indexing="ij")[::-1]
-        return pix
+        return np.meshgrid(*pix[::-1], indexing="ij")[::-1]
 
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
@@ -794,14 +793,12 @@ class WcsGeom(Geom):
 
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
-        bin_volume = self.to_image().solid_angle()
+        value = self.to_image().solid_angle()
 
-        for idx, ax in enumerate(self.axes):
-            shape = self.ndim * [1]
-            shape[-(idx + 3)] = -1
-            bin_volume = bin_volume * ax.bin_width.reshape(tuple(shape))
+        if not self.is_image:
+            value = value * self.axes.bin_volume().T[..., np.newaxis, np.newaxis]
 
-        return bin_volume
+        return value
 
     def separation(self, center):
         """Compute sky separation wrt a given center.

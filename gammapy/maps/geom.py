@@ -113,8 +113,17 @@ class MapAxes(Sequence):
 
         self._axes = axes
 
+    @property
+    def iter_by_shape(self):
+        """Iterate by shape"""
+        for idx, axis in enumerate(self):
+            # Extract values for each axis, default: nodes
+            shape = [1] * len(self)
+            shape[idx] = -1
+            yield tuple(shape), axis
+
     def get_coord(self):
-        """Get coordinates
+        """Get axes coordinates
 
         Returns
         -------
@@ -123,14 +132,26 @@ class MapAxes(Sequence):
         """
         coords = {}
 
-        for idx, axis in enumerate(self):
-            # Extract values for each axis, default: nodes
-            shape = [1] * len(self)
-            shape[idx] = -1
-            coord = axis.center.reshape(tuple(shape))
+        for shape, axis in self.iter_by_shape:
+            coord = axis.center.reshape(shape)
             coords[axis.name] = coord
 
         return coords
+
+    def bin_volume(self):
+        """Bin axes volume
+
+        Returns
+        -------
+        bin_volume : `~astropy.units.Quantity`
+            Bin volume
+        """
+        bin_volume = np.array(1)
+
+        for shape, axis in self.iter_by_shape:
+            bin_volume = bin_volume * axis.bin_width.reshape(shape)
+
+        return bin_volume
 
     @property
     def shape(self):
