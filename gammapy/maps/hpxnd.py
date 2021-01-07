@@ -6,7 +6,7 @@ from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
 from .hpx import HPX_FITS_CONVENTIONS, HpxConv, HpxGeom, HpxToWcsMapping, nside_to_order
 from .hpxmap import HpxMap
-from .utils import INVALID_INDEX, interp_to_order
+from .utils import INVALID_INDEX
 
 __all__ = ["HpxNDMap"]
 
@@ -220,17 +220,16 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def interp_by_coord(self, coords, interp=1):
+    def interp_by_coord(self, coords, method="linear"):
         # inherited docstring
         coords = MapCoord.create(coords, frame=self.geom.frame)
 
-        order = interp_to_order(interp)
-        if order == 1:
-            return self._interp_by_coord(coords, order)
+        if method == "linear":
+            return self._interp_by_coord(coords)
         else:
-            raise ValueError(f"Invalid interpolation order: {order!r}")
+            raise ValueError(f"Invalid interpolation method: {method!r}")
 
-    def interp_by_pix(self, pix, interp=None):
+    def interp_by_pix(self, pix, method=None):
         """Interpolate map values at the given pixel coordinates.
         """
         raise NotImplementedError
@@ -279,7 +278,7 @@ class HpxNDMap(HpxMap):
         pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
         return pix_local, wts
 
-    def _interp_by_coord(self, coords, order):
+    def _interp_by_coord(self, coords):
         """Linearly interpolate map values."""
         pix, wts = self._get_interp_weights(coords)
 

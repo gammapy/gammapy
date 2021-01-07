@@ -17,7 +17,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
 from .regionnd import RegionGeom, RegionNDMap
-from .utils import INVALID_INDEX, interp_to_order
+from .utils import INVALID_INDEX
 from .wcsmap import WcsGeom, WcsMap
 
 __all__ = ["WcsNDMap"]
@@ -146,37 +146,19 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self.data.T[idx]
 
-    def interp_by_coord(self, coords, interp=None, fill_value=None):
+    def interp_by_coord(self, coords, method="nearest", fill_value=None):
 
         if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
-            return self.interp_by_pix(pix, interp=interp, fill_value=fill_value)
+            return self.interp_by_pix(pix, method=method, fill_value=fill_value)
         else:
-            return self._interp_by_coord_griddata(coords, interp=interp)
+            return self._interp_by_coord_griddata(coords, method=method)
 
-    def interp_by_pix(self, pix, interp=None, fill_value=None):
+    def interp_by_pix(self, pix, method="nearest", fill_value=None):
         """Interpolate map values at the given pixel coordinates.
         """
         if not self.geom.is_regular:
             raise ValueError("interp_by_pix only supported for regular geom.")
-
-        order = interp_to_order(interp)
-        if order == 0 or order == 1:
-            return self._interp_by_pix_linear_grid(
-                pix, order=order, fill_value=fill_value
-            )
-        elif order == 2 or order == 3:
-            return self._interp_by_pix_map_coordinates(pix, order=order)
-        else:
-            raise ValueError(f"Invalid interpolation order: {order!r}")
-
-    def _interp_by_pix_linear_grid(self, pix, order=1, fill_value=None):
-        # TODO: Cache interpolator
-        method_lookup = {0: "nearest", 1: "linear"}
-        try:
-            method = method_lookup[order]
-        except KeyError:
-            raise ValueError(f"Invalid interpolation order: {order!r}")
 
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
@@ -191,24 +173,7 @@ class WcsNDMap(WcsMap):
         )
         return fn(tuple(pix), clip=False)
 
-    def _interp_by_pix_map_coordinates(self, pix, order=1):
-        pix = tuple(
-            [
-                np.array(x, ndmin=1)
-                if not isinstance(x, np.ndarray) or x.ndim == 0
-                else x
-                for x in pix
-            ]
-        )
-        return ndi.map_coordinates(self.data.T, pix, order=order, mode="nearest")
-
-    def _interp_by_coord_griddata(self, coords, interp=None):
-        order = interp_to_order(interp)
-        method_lookup = {0: "nearest", 1: "linear", 3: "cubic"}
-        method = method_lookup.get(order, None)
-        if method is None:
-            raise ValueError(f"Invalid interp: {interp!r}")
-
+    def _interp_by_coord_griddata(self, coords, method="linear"):
         grid_coords = tuple(self.geom.get_coord(flat=True))
         data = self.data[np.isfinite(self.data)]
         vals = scipy.interpolate.griddata(
@@ -243,7 +208,7 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def pad(self, pad_width, mode="constant", cval=0, order=1):
+    def pad(self, pad_width, mode="constant", cval=0, method="linear"):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
 
@@ -254,7 +219,7 @@ class WcsNDMap(WcsMap):
         if self.geom.is_regular and mode != "interp":
             return self._pad_np(geom, pad_width, mode, cval)
         else:
-            return self._pad_coadd(geom, pad_width, mode, cval, order)
+            return self._pad_coadd(geom, pad_width, mode, cval, method)
 
     def _pad_np(self, geom, pad_width, mode, cval):
         """Pad a map using ``numpy.pad``.
@@ -270,7 +235,7 @@ class WcsNDMap(WcsMap):
         data = np.pad(self.data, pad_width[::-1], mode, **kwargs)
         return self._init_copy(geom=geom, data=data)
 
-    def _pad_coadd(self, geom, pad_width, mode, cval, order):
+    def _pad_coadd(self, geom, pad_width, mode, cval, method):
         """Pad a map manually by coadding the original map with the new map."""
         idx_in = self.geom.get_idx(flat=True)
         idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
@@ -287,7 +252,7 @@ class WcsNDMap(WcsMap):
             coords = geom.pix_to_coord(idx_out[::-1])
             m = self.geom.contains(coords)
             coords = tuple([c[~m] for c in coords])
-            vals = self.interp_by_coord(coords, interp=order)
+            vals = self.interp_by_coord(coords, method=method)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError(f"Invalid mode: {mode!r}")

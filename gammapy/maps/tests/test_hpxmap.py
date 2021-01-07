@@ -164,7 +164,7 @@ def test_hpxmap_interp_by_coord(nside, nested, frame, region, axes):
     )
     coords = m.geom.get_coord(flat=True)
     m.set_by_coord(coords, coords[1])
-    assert_allclose(m.get_by_coord(coords), m.interp_by_coord(coords, interp="linear"))
+    assert_allclose(m.get_by_coord(coords), m.interp_by_coord(coords, method="linear"))
 
 
 def test_hpxmap_interp_by_coord_quantities():
