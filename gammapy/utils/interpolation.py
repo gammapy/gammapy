@@ -10,6 +10,10 @@ __all__ = [
     "interpolate_profile",
 ]
 
+INTERPOLATION_ORDER = {
+    None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3
+}
+
 
 class ScaledRegularGridInterpolator:
     """Thin wrapper around `scipy.interpolate.RegularGridInterpolator`.
