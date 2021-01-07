@@ -1769,6 +1769,12 @@ class MapCoord:
         data = {k: v[mask] for k, v in self._data.items()}
         return self.__class__(data, self.frame, self._match_by_name)
 
+    @property
+    def flat(self):
+        """Return flattened, valid coordinates"""
+        is_finite = np.isfinite(self[0])
+        return self.apply_mask(is_finite)
+
     def copy(self):
         """Copy `MapCoord` object."""
         return copy.deepcopy(self)

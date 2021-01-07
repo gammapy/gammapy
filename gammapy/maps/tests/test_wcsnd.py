@@ -291,7 +291,7 @@ def test_wcsndmap_interp_by_coord(npix, binsz, frame, proj, skydir, axes):
         npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
-    coords = m.geom.get_coord(flat=True)
+    coords = m.geom.get_coord().flat
     m.set_by_coord(coords, coords[1].value)
     assert_allclose(coords[1].value, m.interp_by_coord(coords, method="nearest"))
     assert_allclose(coords[1].value, m.interp_by_coord(coords, method="linear"))

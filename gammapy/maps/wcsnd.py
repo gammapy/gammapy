@@ -172,16 +172,17 @@ class WcsNDMap(WcsMap):
         return fn(tuple(pix), clip=False)
 
     def _interp_by_coord_griddata(self, coords, method="linear"):
-        grid_coords = tuple(self.geom.get_coord(flat=True))
+        grid_coords = self.geom.get_coord()
+
         data = self.data[np.isfinite(self.data)]
         vals = scipy.interpolate.griddata(
-            grid_coords, data, tuple(coords), method=method
+           tuple(grid_coords.flat), data, tuple(coords), method=method
         )
 
         m = ~np.isfinite(vals)
         if np.any(m):
             vals_fill = scipy.interpolate.griddata(
-                grid_coords, data, tuple([c[m] for c in coords]), method="nearest"
+                tuple(grid_coords.flat), data, tuple([c[m] for c in coords]), method="nearest"
             )
             vals[m] = vals_fill
 

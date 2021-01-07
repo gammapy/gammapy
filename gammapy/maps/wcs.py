@@ -566,7 +566,7 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, flat=False, mode="center", frame=None):
+    def get_coord(self, idx=None, mode="center", frame=None):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -581,10 +581,6 @@ class WcsGeom(Geom):
         """
         pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
-
-        if flat:
-            is_finite = np.isfinite(coords[0])
-            coords = tuple([c[is_finite] for c in coords])
 
         axes_names = ["lon", "lat"] + self.axes.names
         cdict = dict(zip(axes_names, coords))
