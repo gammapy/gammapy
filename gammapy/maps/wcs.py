@@ -620,31 +620,28 @@ class WcsGeom(Geom):
         return coords
 
     def pix_to_idx(self, pix, clip=False):
-        # TODO: copy idx to avoid modifying input pix?
-        # pix_tuple_to_idx seems to always make a copy!?
-        idxs = pix_tuple_to_idx(pix)
+        pix = pix_tuple_to_idx(pix)
+
+        idx_non_spatial = self.axes.pix_to_idx(
+            pix[self._slice_non_spatial_axes], clip=clip
+        )
+
         if not self.is_regular:
-            ibin = pix[self._slice_non_spatial_axes]
-            ibin = pix_tuple_to_idx(ibin)
-            for i, ax in enumerate(self.axes):
-                np.clip(ibin[i], 0, ax.nbin - 1, out=ibin[i])
-            npix = (self.npix[0][ibin], self.npix[1][ibin])
+            npix = (self.npix[0][idx_non_spatial], self.npix[1][idx_non_spatial])
         else:
             npix = self.npix
 
-        for i, idx in enumerate(idxs):
-            if clip:
-                if i < 2:
-                    np.clip(idxs[i], 0, npix[i], out=idxs[i])
-                else:
-                    np.clip(idxs[i], 0, self.axes[i - 2].nbin - 1, out=idxs[i])
-            else:
-                if i < 2:
-                    np.putmask(idxs[i], (idx < 0) | (idx >= npix[i]), -1)
-                else:
-                    np.putmask(idxs[i], (idx < 0) | (idx >= self.axes[i - 2].nbin), -1)
+        idx_spatial = []
 
-        return idxs
+        for idx, npix_ in zip(pix[self._slice_spatial_axes], npix):
+            if clip:
+                idx = np.clip(idx, 0, npix_)
+            else:
+                idx = np.where((idx < 0) | (idx >= npix_), -1, idx)
+
+            idx_spatial.append(idx)
+
+        return tuple(idx_spatial) + idx_non_spatial
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)

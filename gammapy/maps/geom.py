@@ -378,6 +378,30 @@ class MapAxes(Sequence):
         """
         return tuple([ax.pix_to_coord(p) for ax, p in zip(self, pix)])
 
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : tuple of `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : tuple `~numpy.ndarray`
+            Pixel indices.
+        """
+        idx = []
+
+        for pix_array, ax in zip(pix, self):
+            idx.append(ax.pix_to_idx(pix_array, clip=clip))
+
+        return tuple(idx)
+
     def slice_by_idx(self, slices):
         """Create a new geometry by slicing the non-spatial axes.
 
@@ -1044,6 +1068,31 @@ class MapAxis:
         pix = pix - self._pix_offset
         values = pix_to_coord(self._nodes, pix, interp=self._interp)
         return u.Quantity(values, unit=self.unit, copy=False)
+
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : `~numpy.ndarray`
+            Pixel indices.
+        """
+        if clip:
+            idx = np.clip(pix, 0, self.nbin - 1)
+        else:
+            condition = (pix < 0) | (pix >= self.nbin)
+            idx = np.where(condition, -1, pix)
+
+        return idx
 
     def coord_to_pix(self, coord):
         """Transform from axis to pixel coordinates.
