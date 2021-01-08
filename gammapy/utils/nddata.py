@@ -2,9 +2,9 @@
 """Utility functions and classes for n-dimensional data and axes."""
 import numpy as np
 from astropy import units as u
-from scipy.ndimage import map_coordinates
+from astropy.utils import lazyproperty
 from .array import array_stats_str
-from .interpolation import ScaledRegularGridInterpolator, INTERPOLATION_ORDER
+from .interpolation import ScaledRegularGridInterpolator
 
 __all__ = ["NDDataArray"]
 
@@ -119,3 +119,33 @@ class NDDataArray:
             points, self.data, points_scale=points_scale, **self.interp_kwargs
         )
 
+    @lazyproperty
+    def _integrate_rad(self):
+        rad_axis = self.axes["rad"]
+        rad_drad = (
+                2 * np.pi * rad_axis.center * self.data * rad_axis.bin_width
+        )
+        values = rad_drad.cumsum().to_value("")
+        values = np.insert(values, 0, 0)
+
+        return ScaledRegularGridInterpolator(
+            points=(rad_axis.edges,), values=values, fill_value=1,
+        )
+
+    # TODO: make this a more general integration method
+    def integral_rad(self, rad_min, rad_max):
+        """Compute radial integral, requires a "rad" axis to be defined.
+
+        Parameters
+        ----------
+        rad_min, rad_max : `~astropy.units.Quantity`
+            Integration limits.
+
+        Returns
+        -------
+        integral : `~astropy.units.Quantity`
+            Integral
+        """
+        integral_min = self._integrate_rad((rad_min,))
+        integral_max = self._integrate_rad((rad_max,))
+        return integral_max - integral_min

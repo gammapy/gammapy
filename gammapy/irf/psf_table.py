@@ -8,6 +8,7 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.array import array_stats_str
+from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -31,35 +32,24 @@ class TablePSF:
     """
 
     def __init__(self, rad_axis, data, interp_kwargs=None):
-        rad_axis.assert_name("rad")
-        self._rad_axis = rad_axis
-        self.data = u.Quantity(data).to("sr^-1")
-        self._interp_kwargs = interp_kwargs or {}
+        interp_kwargs = interp_kwargs or {"extrapolate": False, "bounds_error": False}
+
+        self._nd_data = NDDataArray(
+            axes=[rad_axis], data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
+        )
+        self._nd_data.axes.assert_names(["rad"])
+
+    @property
+    def quantity(self):
+        return self._nd_data.data
+
+    @property
+    def data(self):
+        return self._nd_data.data.value
 
     @property
     def rad_axis(self):
-        return self._rad_axis
-
-    @lazyproperty
-    def _interpolate(self):
-        points = (self.rad_axis.center,)
-        return ScaledRegularGridInterpolator(
-            points=points, values=self.data, **self._interp_kwargs
-        )
-
-    @lazyproperty
-    def _interpolate_containment(self):
-        rad_drad = (
-                2 * np.pi * self.rad_axis.center * self.data * self.rad_axis.bin_width
-        )
-        values = rad_drad.cumsum().to_value("")
-
-        rad = self.rad_axis.edges
-        values = np.insert(values, 0, 0)
-
-        return ScaledRegularGridInterpolator(
-            points=(rad,), values=values, fill_value=1,
-        )
+        return self._nd_data.axes["rad"]
 
     @classmethod
     def from_shape(cls, shape, width, rad):
@@ -136,8 +126,7 @@ class TablePSF:
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        rad = np.atleast_1d(u.Quantity(rad))
-        return self._interpolate((rad,))
+        return self._nd_data.evaluate(rad=rad)
 
     def containment(self, rad_max):
         """Compute PSF containment fraction.
@@ -152,8 +141,8 @@ class TablePSF:
         integral : float
             PSF integral
         """
-        rad = np.atleast_1d(rad_max)
-        return self._interpolate_containment((rad,))
+        rad_max = np.atleast_1d(rad_max)
+        return self._nd_data.integral_rad(0 * u.deg, rad_max)
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -206,7 +195,7 @@ class TablePSF:
 
         ax.plot(
             self.rad_axis.center.to_value("deg"),
-            self.data.to_value("sr-1"),
+            self.quantity.to_value("sr-1"),
             **kwargs,
         )
         ax.set_yscale("log")
