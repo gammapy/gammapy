@@ -42,12 +42,10 @@ class NDDataArray:
             )
 
         if data is not None:
-            self.data = data
+            self._data = u.Quantity(data)
 
         self.meta = meta or {}
         self.interp_kwargs = interp_kwargs or self.default_interp_kwargs
-
-        self._regular_grid_interp = None
 
     def __str__(self):
         ss = "NDDataArray summary info\n"
@@ -65,22 +63,6 @@ class NDDataArray:
     def data(self):
         """Array holding the n-dimensional data."""
         return self._data
-
-    @data.setter
-    def data(self, data):
-        """Set data.
-
-        Some sanity checks are performed to avoid an invalid array.
-        Also, the interpolator is set to None to avoid unwanted behaviour.
-
-        Parameters
-        ----------
-        data : `~astropy.units.Quantity`, array-like
-            Data array
-        """
-        data = u.Quantity(data)
-        self._regular_grid_interp = None
-        self._data = data
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
