@@ -11,7 +11,6 @@ from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
-from gammapy.maps.utils import fill_poisson
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -65,7 +64,6 @@ def test_wcsndmap_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     path = tmp_path / "tmp.fits"
 
     m0 = WcsNDMap(geom)
-    fill_poisson(m0, mu=0.5)
     m0.write(path, overwrite=True)
     m1 = WcsNDMap.read(path)
     m2 = Map.read(path)

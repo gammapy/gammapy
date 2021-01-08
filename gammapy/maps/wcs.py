@@ -513,13 +513,6 @@ class WcsGeom(Geom):
 
         return header
 
-    def get_image_shape(self, idx):
-        """Get the shape of the image plane at index ``idx``."""
-        if self.is_regular:
-            return int(self.npix[0]), int(self.npix[1])
-        else:
-            return int(self.npix[0][idx]), int(self.npix[1][idx])
-
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode="center")
         if flat:
