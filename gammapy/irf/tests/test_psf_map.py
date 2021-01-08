@@ -266,7 +266,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.0015362848,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 144),
-            "psf_value": 3719.21488,
+            "psf_value": 3714.303683,
         },
         {
             "energy": None,
@@ -288,7 +288,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.000524,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 1000),
-            "psf_value": 22561.543595,
+            "psf_value": 22453.412121,
         },
     ],
 )

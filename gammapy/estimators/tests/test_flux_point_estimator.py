@@ -289,7 +289,7 @@ def test_run_map_pwl(fpe_map_pwl):
     assert_allclose(actual, [0.2, 1, 5])
 
     actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-    assert_allclose(actual, [1.628530e02, 1.436323e-01, 2.007461e03], rtol=1e-2)
+    assert_allclose(actual, [1.628398e+02, 1.452456e-01, 2.008018e+03], rtol=1e-2)
 
 
 @requires_dependency("iminuit")
