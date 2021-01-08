@@ -29,8 +29,6 @@ def table_flux_estimate():
     return table
 
 
-    return FluxEstimate(data=table, spectral_model=model)
-
 class TestTableFluxEstimate:
     def test_properties(self, table_flux_estimate):
         model = PowerLawSpectralModel(amplitude='1e-10 cm-2s-1TeV-1', index=2)
