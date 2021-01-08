@@ -24,16 +24,16 @@ class TablePSF:
     ----------
     rad_axis : `~astropy.units.Quantity` with angle units
         Offset wrt source position
-    psf_value : `~astropy.units.Quantity` with sr^-1 units
+    data : `~astropy.units.Quantity` with sr^-1 units
         PSF value array
     interp_kwargs : dict
         Keyword arguments passed to `ScaledRegularGridInterpolator`
     """
 
-    def __init__(self, rad_axis, psf_value, interp_kwargs=None):
+    def __init__(self, rad_axis, data, interp_kwargs=None):
         rad_axis.assert_name("rad")
         self._rad_axis = rad_axis
-        self.psf_value = u.Quantity(psf_value).to("sr^-1")
+        self.data = u.Quantity(data).to("sr^-1")
         self._interp_kwargs = interp_kwargs or {}
 
     @property
@@ -44,13 +44,13 @@ class TablePSF:
     def _interpolate(self):
         points = (self.rad_axis.center,)
         return ScaledRegularGridInterpolator(
-            points=points, values=self.psf_value, **self._interp_kwargs
+            points=points, values=self.data, **self._interp_kwargs
         )
 
     @lazyproperty
     def _interpolate_containment(self):
         rad_drad = (
-            2 * np.pi * self.rad_axis.center * self.psf_value * self.rad_axis.bin_width
+                2 * np.pi * self.rad_axis.center * self.data * self.rad_axis.bin_width
         )
         values = rad_drad.cumsum().to_value("")
 
@@ -94,16 +94,16 @@ class TablePSF:
 
         if shape == "disk":
             amplitude = 1 / (np.pi * width.radian ** 2)
-            psf_value = np.where(rad < width, amplitude, 0)
+            data = np.where(rad < width, amplitude, 0)
         elif shape == "gauss":
             gauss2d_pdf = Gauss2DPDF(sigma=width.radian)
-            psf_value = gauss2d_pdf(rad.radian)
+            data = gauss2d_pdf(rad.radian)
         else:
             raise ValueError(f"Invalid shape: {shape}")
 
-        psf_value = u.Quantity(psf_value, "sr^-1")
+        data = u.Quantity(data, "sr^-1")
         rad_axis = MapAxis.from_nodes(rad, name="rad")
-        return cls(rad_axis=rad_axis, psf_value=psf_value)
+        return cls(rad_axis=rad_axis, data=data)
 
     def info(self):
         """Print basic info."""
@@ -188,7 +188,7 @@ class TablePSF:
         and then divides the :math:`dP / dr` array.
         """
         integral = self.containment(self.rad_axis.edges[-1])
-        self.psf_value /= integral
+        self.data /= integral
 
     def plot_psf_vs_rad(self, ax=None, **kwargs):
         """Plot PSF vs radius.
@@ -206,7 +206,7 @@ class TablePSF:
 
         ax.plot(
             self.rad_axis.center.to_value("deg"),
-            self.psf_value.to_value("sr-1"),
+            self.data.to_value("sr-1"),
             **kwargs,
         )
         ax.set_yscale("log")
@@ -238,7 +238,7 @@ class EnergyDependentTablePSF:
         energy_axis_true,
         rad_axis,
         exposure=None,
-        psf_value=None,
+        data=None,
         interp_kwargs=None,
     ):
         self._rad_axis = rad_axis
@@ -252,16 +252,13 @@ class EnergyDependentTablePSF:
         else:
             self.exposure = u.Quantity(exposure).to("cm^2 s")
 
-        if psf_value is None:
-            self.psf_value = np.zeros(axes.shape) * u.Unit("sr^-1")
-        else:
-            if np.shape(psf_value) != axes.shape:
-                raise ValueError(
-                    "psf_value has wrong shape"
-                    f", expected {axes.shape}, got {np.shape(psf_value)}"
-                )
-            self.psf_value = u.Quantity(psf_value).to("sr^-1")
+        if np.shape(data) != axes.shape:
+            raise ValueError(
+                "psf_value has wrong shape"
+                f", expected {axes.shape}, got {np.shape(data)}"
+            )
 
+        self.data = u.Quantity(data).to("sr^-1")
         self._interp_kwargs = interp_kwargs or {}
 
     @property
@@ -276,13 +273,13 @@ class EnergyDependentTablePSF:
     def _interpolate(self):
         points = (self.energy_axis_true.center, self.rad_axis.center)
         return ScaledRegularGridInterpolator(
-            points=points, values=self.psf_value, **self._interp_kwargs
+            points=points, values=self.data, **self._interp_kwargs
         )
 
     @lazyproperty
     def _interpolate_containment(self):
         rad_drad = (
-            2 * np.pi * self.rad_axis.center * self.psf_value * self.rad_axis.bin_width
+                2 * np.pi * self.rad_axis.center * self.data * self.rad_axis.bin_width
         )
         values = rad_drad.cumsum(axis=1).to_value("")
 
@@ -326,13 +323,12 @@ class EnergyDependentTablePSF:
         energy = u.Quantity(hdu_list["PSF"].data["Energy"], "MeV")
         energy_axis_true = MapAxis.from_nodes(energy, name="energy_true", interp="log")
         exposure = u.Quantity(hdu_list["PSF"].data["Exposure"], "cm^2 s")
-        psf_value = u.Quantity(hdu_list["PSF"].data["PSF"], "sr^-1")
-
+        data = u.Quantity(hdu_list["PSF"].data["PSF"], "sr^-1")
         return cls(
             energy_axis_true=energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
-            psf_value=psf_value,
+            data=data,
         )
 
     def to_hdulist(self):
@@ -352,7 +348,7 @@ class EnergyDependentTablePSF:
             [
                 self.energy_axis_true.center.to("MeV"),
                 self.exposure.to("cm^2 s"),
-                self.psf_value.to("sr^-1"),
+                self.data.to("sr^-1"),
             ],
             names=["Energy", "Exposure", "PSF"],
         )
@@ -423,7 +419,7 @@ class EnergyDependentTablePSF:
             Table PSF
         """
         psf_value = self.evaluate(energy=energy, method=method)[0, :]
-        return TablePSF(rad_axis=self.rad_axis, psf_value=psf_value, **kwargs)
+        return TablePSF(rad_axis=self.rad_axis, data=psf_value, **kwargs)
 
     def table_psf_in_energy_range(
         self, energy_range, spectrum=None, n_bins=11, **kwargs
@@ -596,7 +592,7 @@ class EnergyDependentTablePSF:
 
         """
         exposure = self.exposure + psf.exposure
-        psf_value = self.psf_value.T * self.exposure + psf.psf_value.T * psf.exposure
+        psf_value = self.data.T * self.exposure + psf.data.T * psf.exposure
 
         with np.errstate(invalid="ignore"):
             # exposure can be zero

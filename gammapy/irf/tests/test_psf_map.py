@@ -328,9 +328,9 @@ def test_make_psf(pars, data_store):
     assert psf.exposure.shape == (pars["energy_shape"],)
     assert_allclose(psf.exposure.value[15], pars["psf_exposure"], rtol=1e-3)
 
-    assert psf.psf_value.unit == "sr-1"
-    assert psf.psf_value.shape == pars["psf_value_shape"]
-    assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
+    assert psf.data.unit == "sr-1"
+    assert psf.data.shape == pars["psf_value_shape"]
+    assert_allclose(psf.data.value[15, 50], pars["psf_value"], rtol=1e-3)
 
 
 @requires_data()
@@ -355,8 +355,8 @@ def test_make_mean_psf(data_store):
 
     psf = stacked_psf.get_energy_dependent_table_psf(position)
 
-    assert not np.isnan(psf.psf_value.value).any()
-    assert_allclose(psf.psf_value.value[22, 22], 12206.1665, rtol=1e-3)
+    assert not np.isnan(psf.data.value).any()
+    assert_allclose(psf.data.value[22, 22], 12206.1665, rtol=1e-3)
 
 
 @requires_data()
@@ -369,8 +369,8 @@ def test_psf_map_from_table_psf(position):
 
     table_psf_new = psf_map.get_energy_dependent_table_psf(position)
 
-    assert_allclose(table_psf_new.psf_value.value, table_psf.psf_value.value)
-    assert table_psf_new.psf_value.unit == "sr-1"
+    assert_allclose(table_psf_new.data.value, table_psf.data.value)
+    assert table_psf_new.data.unit == "sr-1"
 
     assert_allclose(table_psf_new.exposure.value, table_psf.exposure.value)
     assert table_psf_new.exposure.unit == "cm2 s"
@@ -429,8 +429,8 @@ def test_psfmap_from_gauss():
     )
 
     # check that the PSF with the same sigma is the same
-    psfvalue = psfmap.get_energy_dependent_table_psf().psf_value[0]
-    psfvalue1 = psfmap1.get_energy_dependent_table_psf().psf_value[0]
+    psfvalue = psfmap.get_energy_dependent_table_psf().data[0]
+    psfvalue1 = psfmap1.get_energy_dependent_table_psf().data[0]
     assert_allclose(psfvalue, psfvalue1, atol=1e-7)
 
     # test that it won't work with different number of sigmas and energies

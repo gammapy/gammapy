@@ -39,14 +39,14 @@ def test_psf_king_to_table(psf_king):
     )
     # Test that the value at 1 degree in the histogram for the energy 1 Tev and theta=0 or 1 degree is equal to the one
     # obtained from the self.evaluate_direct() method at 1 degree
-    assert_quantity_allclose(psf_king_table_off1.psf_value[8, 200], value_off1)
-    assert_quantity_allclose(psf_king_table_off2.psf_value[8, 200], value_off2)
+    assert_quantity_allclose(psf_king_table_off1.data[8, 200], value_off1)
+    assert_quantity_allclose(psf_king_table_off2.data[8, 200], value_off2)
 
     # Test that the integral value is close to one
     bin_off = psf_king_table_off1.rad_axis.bin_width[0]
 
     integral = np.sum(
-        psf_king_table_off1.psf_value[8]
+        psf_king_table_off1.data[8]
         * 2
         * np.pi
         * psf_king_table_off1.rad_axis.center

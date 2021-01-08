@@ -451,7 +451,7 @@ class EnergyDependentMultiGaussPSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
-            psf_value=psf_value,
+            data=psf_value,
         )
 
     def to_psf3d(self, rad=None):

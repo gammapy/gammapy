@@ -131,7 +131,7 @@ class PSFMap(IRFMap):
         return EnergyDependentTablePSF(
             energy_axis_true=self.psf_map.geom.axes["energy_true"],
             rad_axis=self.psf_map.geom.axes["rad"],
-            psf_value=psf_values,
+            data=psf_values,
             exposure=exposure,
         )
 
@@ -335,14 +335,14 @@ class PSFMap(IRFMap):
         if np.size(sigma) == 1:
             # same width for all energies
             tablepsf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
-            energytable_temp = np.tile(tablepsf.psf_value, (tableshape[0], 1))
+            energytable_temp = np.tile(tablepsf.data, (tableshape[0], 1))
         elif np.size(sigma) == np.size(energy):
             # one width per energy
             energytable_temp = np.zeros(tableshape) * u.sr ** -1
             for idx in np.arange(tableshape[0]):
                 energytable_temp[idx, :] = TablePSF.from_shape(
                     shape="gauss", width=sigma[idx], rad=rad
-                ).psf_value
+                ).data
         else:
             raise AssertionError(
                 "There need to be the same number of sigma values as energies"
@@ -352,7 +352,7 @@ class PSFMap(IRFMap):
             energy_axis_true=energy_axis_true,
             rad_axis=rad_axis,
             exposure=None,
-            psf_value=energytable_temp,
+            data=energytable_temp,
         )
         return cls.from_energy_dependent_table_psf(table_psf)
 

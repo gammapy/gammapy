@@ -99,7 +99,7 @@ class TestEnergyDependentTablePSF:
         new = EnergyDependentTablePSF.read(tmp_path / "test.fits")
         assert_allclose(new.rad_axis.center, self.psf.rad_axis.center)
         assert_allclose(new.energy_axis_true.center, self.psf.energy_axis_true.center)
-        assert_allclose(new.psf_value.value, self.psf.psf_value.value)
+        assert_allclose(new.data.value, self.psf.data.value)
 
     def test_repr(self):
         info = str(self.psf)

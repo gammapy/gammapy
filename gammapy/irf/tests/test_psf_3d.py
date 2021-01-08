@@ -50,7 +50,7 @@ def test_psf_3d_evaluate(psf_3d):
 @requires_data()
 def test_to_energy_dependent_table_psf(psf_3d):
     psf = psf_3d.to_energy_dependent_table_psf()
-    assert psf.psf_value.shape == (32, 144)
+    assert psf.data.shape == (32, 144)
     radius = psf.table_psf_at_energy("1 TeV").containment_radius(0.68).deg
     assert_allclose(radius, 0.123352, atol=1e-4)
 
