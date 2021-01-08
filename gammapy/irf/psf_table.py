@@ -32,7 +32,7 @@ class TablePSF:
     """
 
     def __init__(self, rad_axis, data, interp_kwargs=None):
-        interp_kwargs = interp_kwargs or {"extrapolate": False, "bounds_error": False}
+        interp_kwargs = interp_kwargs or {}
 
         rad_axis.assert_name("rad")
         self._nd_data = NDDataArray(

@@ -284,9 +284,7 @@ class PSFMap(IRFMap):
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf._nd_data.evaluate(
-            energy_true=coords["energy_true"], rad=coords["rad"]
-        )
+        data = table_psf._nd_data._interpolate((coords["energy_true"], coords["rad"]))
         psf_map = Map.from_geom(geom, data=data.to_value("sr-1"), unit="sr-1")
 
         geom_exposure = geom.squash(axis_name="rad")
