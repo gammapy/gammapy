@@ -52,6 +52,8 @@ class FluxEstimate:
             if norm_quantity in self.data.columns:
                 self._available_quantities.append(quantity)
 
+    #TODO: add support for scan
+
     def _check_norm_quantity(self, quantity):
         if not quantity in self._available_quantities:
             raise KeyError(f"Cannot compute required flux quantity. {quantity} is not defined on current flux estimate.")
