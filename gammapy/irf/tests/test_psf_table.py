@@ -61,7 +61,7 @@ class TestEnergyDependentTablePSF:
         psf1 = self.psf.table_psf_at_energy(energy)
         containment = np.linspace(0, 0.95, 3)
         actual = psf1.containment_radius(containment).to_value("deg")
-        desired = [0.0, 0.195423, 1.036735]
+        desired = [0., 0.251731, 0.967178]
         assert_allclose(actual, desired, rtol=1e-5)
 
         # TODO: test average_psf
