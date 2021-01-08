@@ -405,40 +405,25 @@ class MapAxes(Sequence):
 
         return self.__class__(axes=axes)
 
-    def to_header(self, header=None):
+    def to_header(self, format="gadf"):
         """Convert axes to FITS header
 
         Parameters
         ----------
-        header : `~astropy.io.fits.Header`
-            If a header is provided it is extended with the information.
-            Otherwise a new one is created.
+        format : {"gadf"}
+            Header format
 
         Returns
         -------
         header : `~astropy.io.fits.Header`
             FITS header.
         """
-        if header is None:
-            header = fits.Header()
+        header = fits.Header()
 
         for idx, ax in enumerate(self, start=1):
-            key = f"AXCOLS{idx}"
-            name = ax.name.upper()
+            header_ax = ax.to_header(format=format, idx=idx)
+            header.update(header_ax)
 
-            if ax.name == "energy" and ax.node_type == "edges":
-                header[key] = "E_MIN,E_MAX"
-            elif ax.name == "energy" and ax.node_type == "center":
-                header[key] = "ENERGY"
-            elif ax.node_type == "edges":
-                header[key] = f"{name}_MIN,{name}_MAX"
-            elif ax.node_type == "center":
-                header[key] = name
-            else:
-                raise ValueError(f"Invalid node type {ax.node_type!r}")
-
-            key_interp = f"INTERP{idx}"
-            header[key_interp] = ax.interp
         return header
 
     def to_table(self, format=None):
@@ -636,7 +621,6 @@ class MapAxis:
         String specifying the data units.
     """
 
-    # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
         self._name = name
@@ -1354,21 +1338,22 @@ class MapAxis:
             nodes = self.center[::factor]
             return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
-    def to_header(self, header, format="ogip"):
+    def to_header(self, format="ogip", idx=0):
         """Create FITS header
 
         Parameters
         ----------
-        header : `~astropy.io.fits.Header`
-            Header to extend.
         format : {"ogip"}
             Format specification
+        idx : int
+            Column index of the axis.
 
         Returns
         -------
         header : `~astropy.io.fits.Header`
             Header to extend.
         """
+        header = fits.Header()
 
         if format == "ogip":
             header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
@@ -1381,6 +1366,24 @@ class MapAxis:
             header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
             header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
             header["HDUVERS"] = "1.2.0", "Version of file format"
+        elif format == "gadf":
+            key = f"AXCOLS{idx}"
+            name = self.name.upper()
+
+            if self.name == "energy" and self.node_type == "edges":
+                header[key] = "E_MIN,E_MAX"
+            elif self.name == "energy" and self.node_type == "center":
+                header[key] = "ENERGY"
+            elif self.node_type == "edges":
+                header[key] = f"{name}_MIN,{name}_MAX"
+            elif self.node_type == "center":
+                header[key] = name
+            else:
+                raise ValueError(f"Invalid node type {self.node_type!r}")
+
+            key_interp = f"INTERP{idx}"
+            header[key_interp] = self.interp
+
         else:
             raise ValueError(f"Unknown format {format}")
 
@@ -1464,8 +1467,10 @@ class MapAxis:
         """
         table = self.to_table(format=format)
         hdu = fits.BinTableHDU(table)
+
         if format in ["ogip", "ogip-sherpa"]:
-            hdu.header = self.to_header(hdu.header, format=format)
+            hdu.header.update(self.to_header(format=format))
+
         return hdu
 
     @classmethod

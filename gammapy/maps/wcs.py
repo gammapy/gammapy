@@ -496,7 +496,7 @@ class WcsGeom(Geom):
 
     def to_header(self):
         header = self.wcs.to_header()
-        header = self.axes.to_header(header)
+        header.update(self.axes.to_header())
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))
         for ax in self.axes:
             shape += f",{ax.nbin}"
@@ -617,7 +617,6 @@ class WcsGeom(Geom):
         )
 
         coords += self.axes.pix_to_coord(pix[self._slice_non_spatial_axes])
-
         return coords
 
     def pix_to_idx(self, pix, clip=False):
