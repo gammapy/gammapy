@@ -5,12 +5,10 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 
 __all__ = ["TablePSF", "EnergyDependentTablePSF"]

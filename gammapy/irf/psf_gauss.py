@@ -486,7 +486,7 @@ class EnergyDependentMultiGaussPSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             offset_axis=self.offset_axis,
-            psf_value=psf_value,
+            data=psf_value,
             energy_thresh_lo=self.energy_thresh_lo,
             energy_thresh_hi=self.energy_thresh_hi,
         )

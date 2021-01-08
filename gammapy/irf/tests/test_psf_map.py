@@ -42,7 +42,7 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
         energy_axis_true=energy_axis_true,
         rad_axis=rad_axis,
         offset_axis=offset_axis,
-        psf_value=psf_value.T,
+        data=psf_value.T,
     )
 
 

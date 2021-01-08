@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxes, MapAxis
+from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF, TablePSF
@@ -26,7 +27,7 @@ class PSF3D:
         Offset axis
     rad_axis : `MapAxis`
         Rad axis
-    psf_value : `~astropy.units.Quantity`
+    data : `~astropy.units.Quantity`
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index]
     energy_thresh_lo : `~astropy.units.Quantity`
         Lower energy threshold.
@@ -41,58 +42,56 @@ class PSF3D:
         energy_axis_true,
         offset_axis,
         rad_axis,
-        psf_value,
+        data,
         energy_thresh_lo=u.Quantity(0.1, "TeV"),
         energy_thresh_hi=u.Quantity(100, "TeV"),
         interp_kwargs=None,
     ):
 
+        interp_kwargs = interp_kwargs or {}
+
         axes = MapAxes([energy_axis_true, offset_axis, rad_axis])
         axes.assert_names(["energy_true", "offset", "rad"])
 
-        if psf_value.shape != axes.shape:
+        if data.shape != axes.shape:
             raise ValueError(
                 "PSF has wrong shape"
-                f", expected {axes.shape}, got {psf_value.shape}"
+                f", expected {axes.shape}, got {data.shape}"
             )
 
-        self._energy_axis_true = energy_axis_true
-        self._offset_axis = offset_axis
-        self._rad_axis = rad_axis
-        self.psf_value = psf_value.to("sr^-1")
+        self._nd_data = NDDataArray(
+            axes=axes, data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
+        )
+
         self.energy_thresh_lo = energy_thresh_lo.to("TeV")
         self.energy_thresh_hi = energy_thresh_hi.to("TeV")
 
-        self._interp_kwargs = interp_kwargs or {}
-
     @property
     def energy_axis_true(self):
-        return self._energy_axis_true
+        return self._nd_data.axes["energy_true"]
 
     @property
     def rad_axis(self):
-        return self._rad_axis
+        return self._nd_data.axes["rad"]
 
     @property
     def offset_axis(self):
-        return self._offset_axis
+        return self._nd_data.axes["offset"]
 
-    @lazyproperty
-    def _interpolate(self):
-        energy = self.energy_axis_true.center
-        offset = self.offset_axis.center
-        rad = self.rad_axis.center
+    @property
+    def quantity(self):
+        return self._nd_data.data
 
-        return ScaledRegularGridInterpolator(
-            points=(energy, offset, rad), values=self.psf_value, **self._interp_kwargs
-        )
+    @property
+    def data(self):
+        return self._nd_data.data.value
 
     def __repr__(self):
         """Print some basic info.
         """
         info = self.__class__.__name__ + "\n"
         info += "-" * len(self.__class__.__name__) + "\n\n"
-        info += f"\tshape      : {self.psf_value.shape}\n"
+        info += f"\tshape      : {self.data.shape}\n"
         return info
 
     @classmethod
@@ -118,7 +117,7 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
-        psf_value = table["RPSF"].quantity[0].transpose()
+        data = table["RPSF"].quantity[0].transpose()
 
         opts = {}
         try:
@@ -139,7 +138,7 @@ class PSF3D:
             energy_axis_true=energy_axis_true,
             offset_axis=offset_axis,
             rad_axis=rad_axis,
-            psf_value=psf_value,
+            data=data,
             **opts,
         )
 
@@ -154,7 +153,7 @@ class PSF3D:
         axes = MapAxes([self.offset_axis, self.energy_axis_true, self.rad_axis])
         table = axes.to_table(format="gadf-dl3")
 
-        table["RPSF"] = self.psf_value.T[np.newaxis]
+        table["RPSF"] = self.quantity.T[np.newaxis]
 
         hdu = fits.BinTableHDU(table)
         hdu.header["LO_THRES"] = self.energy_thresh_lo.value
@@ -196,7 +195,7 @@ class PSF3D:
         rad = np.atleast_1d(u.Quantity(rad))
         offset = np.atleast_1d(u.Quantity(offset))
         energy = np.atleast_1d(u.Quantity(energy))
-        return self._interpolate(
+        return self._nd_data._interpolate(
             (
                 energy[np.newaxis, np.newaxis, :],
                 offset[np.newaxis, :, np.newaxis],
