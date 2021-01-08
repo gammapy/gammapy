@@ -393,7 +393,7 @@ def test_interp_to_geom():
     wcs_geom_target = WcsGeom.create(
         skydir=(0, 0), width=(10, 10), binsz=0.1 * u.deg, axes=[energy_target]
     )
-    interp_wcs_map = wcs_map.interp_to_geom(wcs_geom_target, interp=1)
+    interp_wcs_map = wcs_map.interp_to_geom(wcs_geom_target, method="linear")
 
     assert_allclose(interp_wcs_map.get_by_coord(coords)[0], value, atol=1e-7)
     assert isinstance(interp_wcs_map, WcsNDMap)

@@ -100,7 +100,7 @@ The resulting `~RegionGeom` object has `ndim = 3`, two spatial dimensions with o
 
 .. code-block:: python
 
-    >>> geom
+    >>> geom # doctest: +SKIP
 
     RegionGeom
             region     : CircleSkyRegion
@@ -115,115 +115,104 @@ RegionGeom and coordinates
 A `~RegionGeom` defines a single spatial bin with arbitrary shape. The spatial coordinates are then given by the center of the region geometry. If one or more non-spatial axes are present, 
 they can have any number of bins. There are different methods that can be used to access or modify the coordinates of a `~RegionGeom`.
 
-+ Bin volume and angular size:
-    The angular size of the region geometry is given by the method `~RegionGeom.solid_angle()`. If a region geometry has any number of non-spatial axes, 
-    then the volume of each bin is given by `~RegionGeom.bin_volume()`.
-    If there are no non-spatial axes, both return the same quantity.
+Bin volume and angular size
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The angular size of the region geometry is given by the method `~RegionGeom.solid_angle()`. If a region geometry has any number of non-spatial axes,
+then the volume of each bin is given by `~RegionGeom.bin_volume()`.
+If there are no non-spatial axes, both return the same quantity.
 
-    .. code-block:: python
+.. code-block:: python
 
-        from gammapy.maps import MapAxis, RegionGeom
+	from gammapy.maps import MapAxis, RegionGeom
 
-        # Create a circular region geometry with an energy axis
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        geom = RegionGeom.create("galactic;circle(0, 0, 1)", axes=[energy_axis])
+	# Create a circular region geometry with an energy axis
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	geom = RegionGeom.create("galactic;circle(0, 0, 1)", axes=[energy_axis])
 
-        # Get angular size and bin volume
-        angular_size = geom.solid_angle()
-        bin_volume = geom.bin_volume()
-    
-+ Coordinates defined by the `~RegionGeom`:
-    Given a map coordinate or `~MapCoord` object, the method `~RegionGeom.contains()` checks if they are contained in the region geometry. One can also retrieve the coordinates of the region geometry with
-    `~RegionGeom.get_coord()` and `~RegionGeom.get_idx()`, which return the sky coordinates and indexes respectively. Note that the spatial coordinate will always be a single entry, namely the center, while any non-spatial 
-    axes can have as many bins as desired.
+	# Get angular size and bin volume
+	angular_size = geom.solid_angle()
+	bin_volume = geom.bin_volume()
 
-    .. code-block:: python
+Coordinates defined by the `~RegionGeom`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Given a map coordinate or `~MapCoord` object, the method `~RegionGeom.contains()` checks if they are contained in the region geometry. One can also retrieve the coordinates of the region geometry with
+`~RegionGeom.get_coord()` and `~RegionGeom.get_idx()`, which return the sky coordinates and indexes respectively. Note that the spatial coordinate will always be a single entry, namely the center, while any non-spatial
+axes can have as many bins as desired.
 
-        from astropy.coordinates import SkyCoord
-        from gammapy.maps import RegionGeom
+.. code-block:: python
 
-        # Create a circular region geometry
-        geom = RegionGeom.create("galactic;circle(0, 0, 1)")
+	from astropy.coordinates import SkyCoord
+	from gammapy.maps import RegionGeom
 
-        # Get coordinates and indexes defined by the region geometry
-        coord = geom.get_coord()
-        indexes = geom.get_idx()
+	# Create a circular region geometry
+	geom = RegionGeom.create("galactic;circle(0, 0, 1)")
 
-        # Check if a coordinate is contained in the region
-        >>> geom.contains(center)
-            True
-        # Check if an  array  of coordinates are contained in the region
-        >>> coordinates = SkyCoord(l = [0, 0.5, 1.5], b = [0.5,2,0], frame='galactic', unit='deg')
-        >>> geom.contains(coordinates)
-            array([ True, False, False])
-        
+	# Get coordinates and indexes defined by the region geometry
+	coord = geom.get_coord()
+	indexes = geom.get_idx()
 
-+ Upsampling and downsampling the non-spatial axes:
-    The spatial binning of a `~RegionGeom` is made up of a single bin, that cannot be modified as it defines the region. However, if any non-spatial axes are present, they can be modified using the 
-    `~RegionGeom.upsample()` and `~RegionGeom.downsample()` methods, which take as input a factor by which the indicated axis is to be up- or downsampled.
+	# Check if a coordinate is contained in the region
+	geom.contains(center)
 
-    .. code-block:: python
+	# Check if an  array  of coordinates are contained in the region
+	coordinates = SkyCoord(l = [0, 0.5, 1.5], b = [0.5,2,0], frame='galactic', unit='deg')
+	geom.contains(coordinates)
 
-        from astropy.coordinates import SkyCoord
-        from regions import CircleSkyRegion
-        from gammapy.maps import MapAxis, RegionGeom
-        import astropy.units as u
 
-        # Create a circular region geometry with an energy axis
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        geom = RegionGeom.create("galactic;circle(0, 0, 1)", axes=[energy_axis])
+Upsampling and downsampling non-spatial axes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The spatial binning of a `~RegionGeom` is made up of a single bin, that cannot be modified as it defines the region. However, if any non-spatial axes are present, they can be modified using the
+`~RegionGeom.upsample()` and `~RegionGeom.downsample()` methods, which take as input a factor by which the indicated axis is to be up- or downsampled.
 
-        # Upsample the energy axis by a factor 2
-        geom_24_energy_bins = geom.upsample(2, "energy")
-        # Downsample the energy axis by a factor 2
-        geom_6_energy_bins = geom.downsample(2, "energy")
+.. code-block:: python
 
-+ Image and WCS geometries:
-    * If a `~RegionGeom` has any number of non-spatial axes, the corresponding region geometry with just the spatial dimensions is given by the method `~RegionGeom.to_image()`. If the region geometry only has spatial
-      dimensions, a copy of it is returned.
-    * Conversely, non-spatial axes can be added to an existing `~RegionGeom` by `~RegionGeom.to_cube()`, which takes a list of non-spatial axes with unique names to add to the region geometry.    
-    * Region geometries are made of a single spatial bin, but are constructed on top of a finer `WcsGeom`. The method `~RegionGeom.to_wcs_geom()` returns the minimal equivalent geometry that contains the region geometry.
-      It can also be given as an argument a minimal width for the resulting geometry.
+	from astropy.coordinates import SkyCoord
+	from regions import CircleSkyRegion
+	from gammapy.maps import MapAxis, RegionGeom
+	import astropy.units as u
 
-    .. code-block:: python
+	# Create a circular region geometry with an energy axis
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	geom = RegionGeom.create("galactic;circle(0, 0, 1)", axes=[energy_axis])
 
-        from gammapy.maps import MapAxis, RegionGeom
+	# Upsample the energy axis by a factor 2
+	geom_24_energy_bins = geom.upsample(2, "energy")
+	# Downsample the energy axis by a factor 2
+	geom_6_energy_bins = geom.downsample(2, "energy")
 
-        # Create a circular region geometry
-        geom = RegionGeom.create("galactic;circle(0, 0, 1)")
+Relation to WCS geometries
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+If a `~RegionGeom` has any number of non-spatial axes, the corresponding region
+geometry with just the spatial dimensions is given by the method `~RegionGeom.to_image()`.
+If the region geometry only has spatial dimensions, a copy of it is returned.
 
-        # Add an energy axis to the region geometry
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        geom_energy = geom.to_cube([energy_axis])
+Conversely, non-spatial axes can be added to an existing `~RegionGeom` by `~RegionGeom.to_cube()`,
+which takes a list of non-spatial axes with unique names to add to the region
+geometry.
 
-        # Get the image region geometry without the energy axis. 
-        # Note that geom_image == geom
-        geom_image = geom_energy.to_image()
+Region geometries are made of a single spatial bin, but are constructed on top
+of a finer `WcsGeom`. The method `~RegionGeom.to_wcs_geom()` returns the minimal
+equivalent geometry that contains the region geometry. It can also be given as an
+argument a minimal width for the resulting geometry.
 
-        >>> geom_image
+.. code-block:: python
 
-            RegionGeom
+	from gammapy.maps import MapAxis, RegionGeom
 
-            region     : CircleSkyRegion
-            axes       : ['lon', 'lat']
-            shape      : (1, 1)
-            ndim       : 2
-            frame      : galactic
-            center     : 0.0 deg, 0.0 deg
+	# Create a circular region geometry
+	geom = RegionGeom.create("galactic;circle(0, 0, 1)")
 
-        # Get the minimal wcs geometry that contains the region
-        wcs_geom = geom.to_wcs_geom()
+	# Add an energy axis to the region geometry
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	geom_energy = geom.to_cube([energy_axis])
 
-        >>> wcs_geom
-            WcsGeom
+	# Get the image region geometry without the energy axis.
+	# Note that geom_image == geom
+	geom_image = geom_energy.to_image()
 
-            axes       : ['lon', 'lat']
-            shape      : (202, 202)
-            ndim       : 2
-            frame      : galactic
-            projection : TAN
-            center     : 0.0 deg, 0.0 deg
-            width      : 2.0 deg x 2.0 deg
+	# Get the minimal wcs geometry that contains the region
+	wcs_geom = geom.to_wcs_geom()
+
 
 Plotting a RegionGeom
 ---------------------
@@ -245,51 +234,36 @@ of an existing `~Map`. This is done via `~RegionGeom.plot_region()`:
 One can also plot the region on top of an existing map, and change the properties of the
 different regions by passing keyword arguments forwarded to `~regions.PixelRegion.as_artist`.
 
-.. code-block:: python
-
-    from gammapy.maps import RegionGeom, Map
-    import numpy as np
-    m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
-    m.data = np.add(*np.indices((100, 100)))
-    # A circle centered in the Crab position
-    circle = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
-    # A box centered in the same position
-    box = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
-    # An ellipse in a different location
-    ellipse = RegionGeom.create("icrs;ellipse(84.63, 21.01, 0.3,0.6,-45)")
-    # An annulus in a different location
-    annulus = RegionGeom.create("icrs;annulus(82.8, 22.91, 0.1,0.3)")
-
-    m.plot(add_cbar=True)
-    # Default plotting settings
-    circle.plot_region()
-    # Different line styles, widths and colors
-    box.plot_region(lw=2, linestyle='--', ec='k')
-    ellipse.plot_region(lw=2, linestyle=':', ec='white')
-    # Filling the region with a color
-    annulus.plot_region(lw=2, ec='purple', fc='purple')
 
 .. plot::
-
+    :include-source:
     from gammapy.maps import RegionGeom, Map
     import numpy as np
+
     m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
     m.data = np.add(*np.indices((100, 100)))
+
     # A circle centered in the Crab position
     circle = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+
     # A box centered in the same position
     box = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+
     # An ellipse in a different location
     ellipse = RegionGeom.create("icrs;ellipse(84.63, 21.01, 0.3,0.6,-45)")
+
     # An annulus in a different location
     annulus = RegionGeom.create("icrs;annulus(82.8, 22.91, 0.1,0.3)")
 
     m.plot(add_cbar=True)
+
     # Default plotting settings
     circle.plot_region()
+
     # Different line styles, widths and colors
     box.plot_region(lw=2, linestyle='--', ec='k')
     ellipse.plot_region(lw=2, linestyle=':', ec='white')
+
     # Filling the region with a color
     annulus.plot_region(lw=2, ec='purple', fc='purple')
 
@@ -380,72 +354,53 @@ indicating the area of the sky encompassed by the spatial component of the regio
 Another option is to plot the contents of the region map, which would be either a single value for the case of only spatial axes, 
 or a function of the non-spatial axis bins. This is done by `~RegionNDMap.plot()` and `~RegionNDMap.plot_hist()`.
 
-+ Plotting the underlying region:
-    This is equivalent to the `~RegionGeom.plot_region()` described above, and, in fact, the `~RegionNDMap` method simply calls it on the associated 
-    region geometry, `~RegionNDMap.geom`. Consequently, the use of this method is already described by the section above.
+Plotting the underlying region
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is equivalent to the `~RegionGeom.plot_region()` described above, and, in fact, the `~RegionNDMap` method simply calls it on the associated
+region geometry, `~RegionNDMap.geom`. Consequently, the use of this method is already described by the section above.
 
-    .. code-block:: python
+.. code-block:: python
 
-        from gammapy.maps import RegionNDMap
-        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)")
-        region_map.plot_region()
+	from gammapy.maps import RegionNDMap
+	region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)")
+	region_map.plot_region()
 
-+ Plotting the map contents:
-    This is only possible if the region map has a non-spatial axis.
+Plotting the map content
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-    .. code-block:: python
+This is only possible if the region map has a non-spatial axis.
 
-        from gammapy.maps import MapAxis, RegionNDMap
-        import numpy as np  
+.. plot::
 
-        # Create a RegionNDMap with 12 energy bins
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+	:include-source:
 
-        # Fill the data along the energy axis and plot
-        region_map.data = np.logspace(-2,3,12) 
-        region_map.plot()
+	from gammapy.maps import MapAxis, RegionNDMap
+	import numpy as np
 
-    .. plot:: 
+	# Create a RegionNDMap with 12 energy bins
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
 
-        from gammapy.maps import MapAxis, RegionNDMap
-        import numpy as np  
+	# Fill the data along the energy axis and plot
+	region_map.data = np.logspace(-2,3,12)
+	region_map.plot()
 
-        # Create a RegionNDMap with 12 energy bins
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+Similarly, the map contents can also be plotted as a histogram:
 
-        # Fill the data along the energy axis and plot
-        region_map.data = np.logspace(-2,3,12) 
-        region_map.plot()
 
-    Similarly, the map contents can also be plotted as a histogram:
+.. plot::
+	:include-source:
 
-    .. code-block:: python
+	from gammapy.maps import MapAxis, RegionNDMap
+	import numpy as np
 
-        from gammapy.maps import MapAxis, RegionNDMap
-        import numpy as np  
+	# Create a RegionNDMap with 12 energy bins
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
 
-        # Create a RegionNDMap with 12 energy bins
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
-
-        # Fill the data along the energy axis and plot
-        region_map.data = np.logspace(-2,3,12) 
-        region_map.plot_hist()
-
-    .. plot:: 
-
-        from gammapy.maps import MapAxis, RegionNDMap
-        import numpy as np  
-
-        # Create a RegionNDMap with 12 energy bins
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
-
-        # Fill the data along the energy axis and plot
-        region_map.data = np.logspace(-2,3,12) 
-        region_map.plot_hist()
+	# Fill the data along the energy axis and plot
+	region_map.data = np.logspace(-2,3,12)
+	region_map.plot_hist()
 
 
 Writing and reading a RegionNDMap to/from a FITS file
@@ -454,32 +409,36 @@ Region maps can be written to and read from a FITS file with the
 `~RegionNDMap.write()` and `~RegionNDMap.read()` methods. The
 format specification depends on which type of axis the region has:
  
-* Regions with a reconstructed energy axis:
-    For data with an `energy` axis, so reconstructed energy,
-    the formats `ogip` and `ogip-sherpa` store the data along with the `REGION` and `EBOUNDS HDU`.
+Region maps with a reconstructed energy axis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For data with an `energy` axis, so reconstructed energy, the formats `ogip` and
+`ogip-sherpa` store the data along with the `REGION` and `EBOUNDS HDU`.
 
-    .. code-block:: python
+.. code-block:: python
 
-        from gammapy.maps import RegionNDMap,MapAxis
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-        m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
-        m.write('file.fits', overwrite=True, format="ogip")
-        m = RegionNDMap.read('file.fits', format="ogip")
+	from gammapy.maps import RegionNDMap,MapAxis
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+	m.write("file.fits", overwrite=True, format="ogip")
+	m = RegionNDMap.read("file.fits", format="ogip")
 
+The "sherpa" format is equivalent, except energies are stored in "keV".
 
-* Regions with a true energy axis:
-    For data with an `energy_true` axis, so true energy,
-    the formats `ogip-arf` and `ogip-arf-sherpa` store the data in true energy, with the definition
-    of the energy bins. The region information is however lost.
+Region maps with a true energy axis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For data with an `energy_true` axis, so true energy, the formats `ogip-arf` and `ogip-arf-sherpa`
+store the data in true energy, with the definition of the energy bins. The region information is
+however lost.
 
-    .. code-block:: python
+.. code-block:: python
 
-        from gammapy.maps import RegionNDMap,MapAxis
-        energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy_true', unit='GeV')
-        m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
-        m.write('file.fits', overwrite=True, format="ogip-arf")
-        m = RegionNDMap.read('file.fits', format="ogip-arf")
+	from gammapy.maps import RegionNDMap,MapAxis
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy_true', unit='GeV')
+	m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+	m.write("file.fits", overwrite=True, format="ogip-arf")
+	m = RegionNDMap.read("file.fits", format="ogip-arf")
 
+The "sherpa" format is equivalent, except energies are stored in "keV".
 
 Relevant tutorials
 ------------------

@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility functions and classes for n-dimensional data and axes."""
 import numpy as np
-from astropy.units import Quantity
+from astropy import units as u
+from scipy.ndimage import map_coordinates
 from .array import array_stats_str
-from .interpolation import ScaledRegularGridInterpolator
+from .interpolation import ScaledRegularGridInterpolator, INTERPOLATION_ORDER
 
 __all__ = ["NDDataArray"]
 
@@ -77,7 +78,7 @@ class NDDataArray:
         data : `~astropy.units.Quantity`, array-like
             Data array
         """
-        data = Quantity(data)
+        data = u.Quantity(data)
         self._regular_grid_interp = None
         self._data = data
 
@@ -102,39 +103,19 @@ class NDDataArray:
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        values = []
-        for idx, axis in enumerate(self.axes):
-            # Extract values for each axis, default: nodes
-            shape = [1] * len(self.axes)
-            shape[idx] = -1
-            default = axis.center.reshape(tuple(shape))
-            temp = Quantity(kwargs.pop(axis.name, default))
-            values.append(np.atleast_1d(temp))
+        coords = self.axes.get_coord()
 
-        # This is to catch e.g. typos in axis names
-        if kwargs != {}:
-            raise ValueError(f"Input given for unknown axis: {kwargs}")
+        for key, value in coords.items():
+            coord = u.Quantity(kwargs.get(key, value))
+            coords[key] = coord
 
-        if self._regular_grid_interp is None:
-            self._add_regular_grid_interp()
+        return self._interpolate(coords.values(), method=method)
 
-        return self._regular_grid_interp(values, method=method, **kwargs)
-
-    def _add_regular_grid_interp(self, interp_kwargs=None):
-        """Add `~scipy.interpolate.RegularGridInterpolator`
-
-        http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.interpolate.RegularGridInterpolator.html
-
-        Parameters
-        ----------
-        interp_kwargs : dict, optional
-            Interpolation kwargs
-        """
-        if interp_kwargs is None:
-            interp_kwargs = self.interp_kwargs
-
+    @property
+    def _interpolate(self):
         points = [a.center for a in self.axes]
         points_scale = [a.interp for a in self.axes]
-        self._regular_grid_interp = ScaledRegularGridInterpolator(
-            points, self.data, points_scale=points_scale, **interp_kwargs
+        return ScaledRegularGridInterpolator(
+            points, self.data, points_scale=points_scale, **self.interp_kwargs
         )
+

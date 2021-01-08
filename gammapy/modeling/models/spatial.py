@@ -764,7 +764,7 @@ class TemplateSpatialModel(SpatialModel):
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
-        interp_kwargs.setdefault("interp", "linear")
+        interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
         self.filename = filename

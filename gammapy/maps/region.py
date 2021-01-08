@@ -4,8 +4,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
-from astropy.wcs import WCS
-from astropy.visualization.wcsaxes import WCSAxes
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
 from regions import FITSRegionParser, fits_region_objects_to_table
 from gammapy.utils.regions import (
