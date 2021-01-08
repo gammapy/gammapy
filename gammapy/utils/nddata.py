@@ -14,7 +14,7 @@ class NDDataArray:
 
     Parameters
     ----------
-    axes : list
+    axes : list or `MapAxes`
         List of `~gammapy.utils.nddata.DataAxis`
     data : `~astropy.units.Quantity`
         Data
@@ -106,12 +106,13 @@ class NDDataArray:
         coords = self.axes.get_coord()
 
         for key, value in coords.items():
-            coord = u.Quantity(kwargs.get(key, value))
-            coords[key] = coord
+            coord = kwargs.get(key, value)
+            if coord is not None:
+                coords[key] = u.Quantity(coord)
 
         return self._interpolate(coords.values(), method=method)
 
-    @property
+    @lazyproperty
     def _interpolate(self):
         points = [a.center for a in self.axes]
         points_scale = [a.interp for a in self.axes]
@@ -119,33 +120,19 @@ class NDDataArray:
             points, self.data, points_scale=points_scale, **self.interp_kwargs
         )
 
+    # TODO: define a proper integration method
     @lazyproperty
     def _integrate_rad(self):
         rad_axis = self.axes["rad"]
         rad_drad = (
                 2 * np.pi * rad_axis.center * self.data * rad_axis.bin_width
         )
-        values = rad_drad.cumsum().to_value("")
-        values = np.insert(values, 0, 0)
+        idx_rad = self.axes.index("rad")
+        values = rad_drad.cumsum(axis=idx_rad).to_value("")
+        values = np.insert(values, 0, 0, axis=idx_rad)
 
+        points = [ax.center for ax in self.axes]
+        points[idx_rad] = rad_axis.edges
         return ScaledRegularGridInterpolator(
-            points=(rad_axis.edges,), values=values, fill_value=1,
+            points=points, values=values, fill_value=1,
         )
-
-    # TODO: make this a more general integration method
-    def integral_rad(self, rad_min, rad_max):
-        """Compute radial integral, requires a "rad" axis to be defined.
-
-        Parameters
-        ----------
-        rad_min, rad_max : `~astropy.units.Quantity`
-            Integration limits.
-
-        Returns
-        -------
-        integral : `~astropy.units.Quantity`
-            Integral
-        """
-        integral_min = self._integrate_rad((rad_min,))
-        integral_max = self._integrate_rad((rad_max,))
-        return integral_max - integral_min

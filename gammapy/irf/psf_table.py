@@ -34,10 +34,10 @@ class TablePSF:
     def __init__(self, rad_axis, data, interp_kwargs=None):
         interp_kwargs = interp_kwargs or {"extrapolate": False, "bounds_error": False}
 
+        rad_axis.assert_name("rad")
         self._nd_data = NDDataArray(
             axes=[rad_axis], data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
         )
-        self._nd_data.axes.assert_names(["rad"])
 
     @property
     def quantity(self):
@@ -142,7 +142,7 @@ class TablePSF:
             PSF integral
         """
         rad_max = np.atleast_1d(rad_max)
-        return self._nd_data.integral_rad(0 * u.deg, rad_max)
+        return self._nd_data._integrate_rad((rad_max,))
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -230,55 +230,34 @@ class EnergyDependentTablePSF:
         data=None,
         interp_kwargs=None,
     ):
-        self._rad_axis = rad_axis
-        self._energy_axis_true = energy_axis_true
-
+        interp_kwargs = interp_kwargs or {}
         axes = MapAxes([energy_axis_true, rad_axis])
         axes.assert_names(["energy_true", "rad"])
+
+        self._nd_data = NDDataArray(
+            axes=axes, data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
+        )
 
         if exposure is None:
             self.exposure = u.Quantity(np.ones(self.energy_axis_true.nbin), "cm^2 s")
         else:
             self.exposure = u.Quantity(exposure).to("cm^2 s")
 
-        if np.shape(data) != axes.shape:
-            raise ValueError(
-                "psf_value has wrong shape"
-                f", expected {axes.shape}, got {np.shape(data)}"
-            )
+    @property
+    def quantity(self):
+        return self._nd_data.data
 
-        self.data = u.Quantity(data).to("sr^-1")
-        self._interp_kwargs = interp_kwargs or {}
+    @property
+    def data(self):
+        return self._nd_data.data.value
 
     @property
     def energy_axis_true(self):
-        return self._energy_axis_true
+        return self._nd_data.axes["energy_true"]
 
     @property
     def rad_axis(self):
-        return self._rad_axis
-
-    @lazyproperty
-    def _interpolate(self):
-        points = (self.energy_axis_true.center, self.rad_axis.center)
-        return ScaledRegularGridInterpolator(
-            points=points, values=self.data, **self._interp_kwargs
-        )
-
-    @lazyproperty
-    def _interpolate_containment(self):
-        rad_drad = (
-                2 * np.pi * self.rad_axis.center * self.data * self.rad_axis.bin_width
-        )
-        values = rad_drad.cumsum(axis=1).to_value("")
-
-        rad = self.rad_axis.edges
-        values = np.insert(values, 0, 0, axis=1)
-
-        points = (self.energy_axis_true.center, rad)
-        return ScaledRegularGridInterpolator(
-            points=points, values=values, fill_value=1,
-        )
+        return self._nd_data.axes["rad"]
 
     def __str__(self):
         ss = "EnergyDependentTablePSF\n"
@@ -337,7 +316,7 @@ class EnergyDependentTablePSF:
             [
                 self.energy_axis_true.center.to("MeV"),
                 self.exposure.to("cm^2 s"),
-                self.data.to("sr^-1"),
+                self.quantity.to("sr^-1"),
             ],
             names=["Energy", "Exposure", "PSF"],
         )
@@ -390,7 +369,7 @@ class EnergyDependentTablePSF:
 
         energy = u.Quantity(energy, ndmin=1)[:, np.newaxis]
         rad = u.Quantity(rad, ndmin=1)
-        return self._interpolate((energy, rad), clip=True, method=method)
+        return self._nd_data._interpolate((energy, rad), method=method)
 
     def table_psf_at_energy(self, energy, method="linear", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
@@ -491,7 +470,7 @@ class EnergyDependentTablePSF:
         """
         energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
         rad_max = np.atleast_1d(u.Quantity(rad_max))
-        return self._interpolate_containment((energy, rad_max))
+        return self._nd_data._integrate_rad((energy, rad_max))
 
     def info(self):
         """Print basic info"""
