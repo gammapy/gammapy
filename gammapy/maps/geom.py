@@ -106,15 +106,16 @@ class MapAxes(Sequence):
 
     def __init__(self, axes):
         unique_names = []
+
         for ax in axes:
             if ax.name in unique_names:
-                raise (ValueError("Axis names must be unique"))
+                raise (ValueError(f"Axis names must be unique, got: '{ax.name}' twice."))
             unique_names.append(ax.name)
 
         self._axes = axes
 
     @property
-    def iter_by_shape(self):
+    def iter_with_reshape(self):
         """Iterate by shape"""
         for idx, axis in enumerate(self):
             # Extract values for each axis, default: nodes
@@ -127,12 +128,12 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        coords : dict
+        coords : dict of `~astropy.units.Quanity`
             Map coordinates
         """
         coords = {}
 
-        for shape, axis in self.iter_by_shape:
+        for shape, axis in self.iter_with_reshape:
             coord = axis.center.reshape(shape)
             coords[axis.name] = coord
 
@@ -148,7 +149,7 @@ class MapAxes(Sequence):
         """
         bin_volume = np.array(1)
 
-        for shape, axis in self.iter_by_shape:
+        for shape, axis in self.iter_with_reshape:
             bin_volume = bin_volume * axis.bin_width.reshape(shape)
 
         return bin_volume
