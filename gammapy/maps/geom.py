@@ -425,6 +425,7 @@ class MapAxes(Sequence):
         for idx, ax in enumerate(self, start=1):
             key = f"AXCOLS{idx}"
             name = ax.name.upper()
+
             if ax.name == "energy" and ax.node_type == "edges":
                 header[key] = "E_MIN,E_MAX"
             elif ax.name == "energy" and ax.node_type == "center":
@@ -516,23 +517,55 @@ class MapAxes(Sequence):
         return fits.BinTableHDU.from_columns(cols, name=hdu, header=header)
 
     @classmethod
-    def from_table_hdu(cls, hdu, format=None):
+    def from_table_hdu(cls, hdu, format="gadf"):
         """Create MapAxes from BinTableHDU
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Bin table HDU
+
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes object
         """
         if hdu is None:
             return cls([])
 
-        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
-            axes = [MapAxis.from_table_hdu(hdu, format=format)]
-        else:
-            axes = []
+        table = Table.read(hdu)
+        return cls.from_table(table, format=format)
 
+    @classmethod
+    def from_table(cls, table, format="gadf"):
+        """Create MapAxes from BinTableHDU
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Bin table HDU
+
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes object
+        """
+        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
+            axes = [MapAxis.from_table(table, format=format)]
+        elif format == "gadf":
+            axes = []
+            # This limits the max number of axes to 5
             for idx in range(5):
-                try:
-                    axis = MapAxis.from_table_hdu(hdu, format="gadf", idx=idx)
-                    axes.append(axis)
-                except AttributeError:
-                    continue
+                axcols = table.meta.get("AXCOLS{}".format(idx + 1))
+                if axcols is None:
+                    break
+
+                axis = MapAxis.from_table(table, format=format, idx=idx)
+                axes.append(axis)
+        else:
+            raise ValueError(f"Unsupported format: '{format}'")
 
         return cls(axes)
 

@@ -116,7 +116,7 @@ class WcsMap(Map):
             raise ValueError(f"Invalid map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format="gadf"):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters

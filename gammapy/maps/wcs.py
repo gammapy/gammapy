@@ -407,7 +407,7 @@ class WcsGeom(Geom):
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
     @classmethod
-    def from_header(cls, header, hdu_bands=None, format=None):
+    def from_header(cls, header, hdu_bands=None, format="gadf"):
         """Create a WCS geometry object from a FITS header.
 
         Parameters
