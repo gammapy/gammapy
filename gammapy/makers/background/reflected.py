@@ -329,6 +329,10 @@ class ReflectedRegionsBackgroundMaker(Maker):
             acceptance_off = len(finder.reflected_regions)
         else:
             # if no OFF regions are found, off is set to None and acceptance_off to zero
+            log.warning(
+                f"ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for {dataset.name}."
+            )
+
             counts_off = None
             acceptance_off = 0
         return counts_off, acceptance_off
