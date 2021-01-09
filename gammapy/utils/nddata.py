@@ -64,6 +64,19 @@ class NDDataArray:
         """Array holding the n-dimensional data."""
         return self._data
 
+    @data.setter
+    def data(self, data):
+        """Set data
+
+        Parameters
+        ----------
+        data : `~astropy.units.Quantity`, array-like
+            Data array
+        """
+        self._data = u.Quantity(data)
+        del self.__dict__["_interpolate"]
+        del self.__dict__["_integrate_rad"]
+
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
 
