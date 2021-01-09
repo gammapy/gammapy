@@ -492,8 +492,8 @@ class EffectiveAreaTable2D:
 
         if energy is None:
             energy_axis = self.data.axes["energy_true"]
-            e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
-            energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
+            e_min, e_max = energy_axis.center[[0, -1]]
+            energy = np.geomspace(e_min, e_max, 4)
 
         if offset is None:
             offset = self.data.axes["offset"].center
