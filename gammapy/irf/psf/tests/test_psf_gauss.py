@@ -8,7 +8,6 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.irf import (
     EnergyDependentMultiGaussPSF,
     HESSMultiGaussPSF,
-    multi_gauss_psf_kernel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -149,15 +148,3 @@ class TestHESS:
         for containment, theta in vals:
             actual = m.containment_radius(containment / 100.0)
             assert_almost_equal(actual, theta, decimal=2)
-
-
-def test_multi_gauss_psf_kernel():
-    psf_data = {
-        "psf1": {"ampl": 1, "fwhm": 2.5496814916215014},
-        "psf2": {"ampl": 0.062025099992752075, "fwhm": 11.149272133127273},
-        "psf3": {"ampl": 0.47460201382637024, "fwhm": 5.164014607542117},
-    }
-    psf_kernel = multi_gauss_psf_kernel(psf_data, x_size=51)
-
-    assert_allclose(psf_kernel.array[25, 25], 0.05047558713797154)
-    assert_allclose(psf_kernel.array[23, 29], 0.003259483464443567)

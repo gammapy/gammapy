@@ -2,10 +2,8 @@
 import logging
 import numpy as np
 from astropy import units as u
-from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import Angle
 from astropy.io import fits
-from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
@@ -14,7 +12,7 @@ from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .table import PSF3D, EnergyDependentTablePSF
 
-__all__ = ["EnergyDependentMultiGaussPSF",  "HESSMultiGaussPSF", "multi_gauss_psf_kernel"]
+__all__ = ["EnergyDependentMultiGaussPSF",  "HESSMultiGaussPSF"]
 
 log = logging.getLogger(__name__)
 
@@ -566,46 +564,3 @@ class HESSMultiGaussPSF:
         if normalize:
             m.normalize()
         return m
-
-
-def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs):
-    """Create multi-Gauss PSF kernel.
-
-    The Gaussian PSF components are specified via the
-    amplitude at the center and the FWHM.
-    See the example for the exact format.
-
-    Parameters
-    ----------
-    psf_parameters : dict
-        PSF parameters
-    BINSZ : float (0.02)
-        Pixel size used for the given parameters in deg.
-    NEW_BINSZ : float (0.02)
-        New pixel size in deg. USed to change the resolution of the PSF.
-
-    Returns
-    -------
-    psf_kernel : `astropy.convolution.Kernel2D`
-        PSF kernel
-
-    Examples
-    --------
-    >>> psf_pars = dict()
-    >>> psf_pars['psf1'] = dict(ampl=1, fwhm=2.5)
-    >>> psf_pars['psf2'] = dict(ampl=0.06, fwhm=11.14)
-    >>> psf_pars['psf3'] = dict(ampl=0.47, fwhm=5.16)
-    >>> psf_kernel = multi_gauss_psf_kernel(psf_pars, x_size=51)
-    """
-    psf = None
-    for ii in range(1, 4):
-        # Convert sigma and amplitude
-        pars = psf_parameters[f"psf{ii}"]
-        sigma = gaussian_fwhm_to_sigma * pars["fwhm"] * BINSZ / NEW_BINSZ
-        ampl = 2 * np.pi * sigma ** 2 * pars["ampl"]
-        if psf is None:
-            psf = float(ampl) * Gaussian2DKernel(sigma, **kwargs)
-        else:
-            psf += float(ampl) * Gaussian2DKernel(sigma, **kwargs)
-    psf.normalize()
-    return psf
