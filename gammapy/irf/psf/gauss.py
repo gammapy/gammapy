@@ -303,7 +303,10 @@ class EnergyDependentMultiGaussPSF:
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
-        self._plot_safe_energy_range(ax)
+        try:
+            self._plot_safe_energy_range(ax)
+        except KeyError:
+            pass
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"

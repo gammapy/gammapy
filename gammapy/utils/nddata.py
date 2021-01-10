@@ -74,8 +74,10 @@ class NDDataArray:
             Data array
         """
         self._data = u.Quantity(data)
-        del self.__dict__["_interpolate"]
-        del self.__dict__["_integrate_rad"]
+        
+        # reset cached interpolators
+        self.__dict__.pop("_interpolate", None)
+        self.__dict__.pop("_integrate_rad", None)
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
