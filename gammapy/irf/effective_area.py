@@ -21,6 +21,8 @@ class EffectiveAreaTable:
         Energy axis
     data : `~astropy.units.Quantity`
         Effective area
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -318,6 +320,8 @@ class EffectiveAreaTable2D:
         Field of view offset axis.
     data : `~astropy.units.Quantity`
         Effective area
+    meta : dict
+        Meta data
 
     Examples
     --------

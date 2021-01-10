@@ -30,6 +30,9 @@ class PSFKing:
         PSF parameter (2D)
     sigma : `~astropy.coordinates.Angle`
         PSF parameter (2D)
+    meta : dict
+        Meta data
+
     """
 
     tag = "psf_king"
@@ -40,8 +43,7 @@ class PSFKing:
         offset_axis,
         gamma,
         sigma,
-        energy_thresh_lo=Quantity(0.1, "TeV"),
-        energy_thresh_hi=Quantity(100, "TeV"),
+        meta=None
     ):
         energy_axis_true.assert_name("energy_true")
         offset_axis.assert_name("offset")
@@ -50,9 +52,17 @@ class PSFKing:
 
         self.gamma = np.asanyarray(gamma)
         self.sigma = Angle(sigma)
+        self.meta = meta or {}
 
-        self.energy_thresh_lo = Quantity(energy_thresh_lo).to("TeV")
-        self.energy_thresh_hi = Quantity(energy_thresh_hi).to("TeV")
+    @property
+    def energy_thresh_lo(self):
+        """Low energy threshold"""
+        return self.meta["LO_THRES"] * u.TeV
+
+    @property
+    def energy_thresh_hi(self):
+        """High energy threshold"""
+        return self.meta["HI_THRES"] * u.TeV
 
     @property
     def energy_axis_true(self):
@@ -110,19 +120,12 @@ class PSFKing:
         gamma = table["GAMMA"].quantity[0]
         sigma = table["SIGMA"].quantity[0]
 
-        opts = {}
-        try:
-            opts["energy_thresh_lo"] = Quantity(table.meta["LO_THRES"], "TeV")
-            opts["energy_thresh_hi"] = Quantity(table.meta["HI_THRES"], "TeV")
-        except KeyError:
-            pass
-
         return cls(
             energy_axis_true=energy_axis_true,
             offset_axis=offset_axis,
             gamma=gamma,
             sigma=sigma,
-            **opts
+            meta=table.meta
         )
 
     def to_hdulist(self):
@@ -150,9 +153,7 @@ class PSFKing:
             table[name_].unit = unit_
 
         hdu = fits.BinTableHDU(table)
-        hdu.header["LO_THRES"] = self.energy_thresh_lo.value
-        hdu.header["HI_THRES"] = self.energy_thresh_hi.value
-
+        hdu.header.update(self.meta)
         return fits.HDUList([fits.PrimaryHDU(), hdu])
 
     def write(self, filename, *args, **kwargs):
@@ -262,10 +263,10 @@ class PSFKing:
 
         psf_value = Quantity(np.empty((len(energies), len(rad))), "deg^-2")
 
-        for i, energy in enumerate(energies):
+        for idx, energy in enumerate(energies):
             param_king = self.evaluate(energy, theta)
             val = self.evaluate_direct(rad, param_king["gamma"], param_king["sigma"])
-            psf_value[i] = Quantity(val, "deg^-2")
+            psf_value[idx] = Quantity(val, "deg^-2")
 
         return EnergyDependentTablePSF(
             energy_axis_true=self.energy_axis_true,
