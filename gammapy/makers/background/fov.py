@@ -2,7 +2,6 @@
 """FoV background estimation."""
 import logging
 from gammapy.datasets import Datasets
-from gammapy.maps import Map
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Model
 from ..core import Maker

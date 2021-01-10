@@ -8,7 +8,7 @@ from astropy.units import Quantity
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.scripts import make_path
-from .psf_table import EnergyDependentTablePSF
+from .table import EnergyDependentTablePSF
 
 __all__ = ["PSFKing"]
 

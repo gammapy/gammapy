@@ -12,10 +12,9 @@ from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
-from .psf_3d import PSF3D
-from .psf_table import EnergyDependentTablePSF
+from .table import PSF3D, EnergyDependentTablePSF
 
-__all__ = ["EnergyDependentMultiGaussPSF"]
+__all__ = ["EnergyDependentMultiGaussPSF",  "HESSMultiGaussPSF", "multi_gauss_psf_kernel"]
 
 log = logging.getLogger(__name__)
 
