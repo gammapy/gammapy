@@ -6,7 +6,7 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .kernel import PSFKernel
 from .table import EnergyDependentTablePSF, TablePSF
-from ..irf_map import IRFMap
+from ..core import IRFMap
 
 __all__ = ["PSFMap"]
 

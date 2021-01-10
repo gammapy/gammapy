@@ -4,7 +4,7 @@ from scipy.interpolate import interp1d
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
-from .irf_map import IRFMap
+from .core import IRFMap
 
 __all__ = ["EDispMap", "EDispKernelMap"]
 
