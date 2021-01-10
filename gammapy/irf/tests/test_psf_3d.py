@@ -22,8 +22,8 @@ def test_psf_3d_basics(psf_3d):
     assert psf_3d.energy_axis_true.nbin == 32
     assert psf_3d.energy_axis_true.unit == "TeV"
 
-    assert psf_3d.data.shape == (32, 6, 144)
-    assert psf_3d.quantity.unit == "sr-1"
+    assert psf_3d.data.data.shape == (32, 6, 144)
+    assert psf_3d.data.data.unit == "sr-1"
 
     assert_allclose(psf_3d.energy_thresh_lo.value, 0.01)
 
@@ -34,7 +34,7 @@ def test_psf_3d_basics(psf_3d):
             energy_axis_true=psf_3d.energy_axis_true,
             offset_axis=psf_3d.offset_axis,
             rad_axis=psf_3d.rad_axis,
-            data=psf_3d.data.T,
+            data=psf_3d.data.data.T,
         )
 
 
@@ -50,7 +50,7 @@ def test_psf_3d_evaluate(psf_3d):
 @requires_data()
 def test_to_energy_dependent_table_psf(psf_3d):
     psf = psf_3d.to_energy_dependent_table_psf()
-    assert psf.data.shape == (32, 144)
+    assert psf.data.data.shape == (32, 144)
     radius = psf.table_psf_at_energy("1 TeV").containment_radius(0.68).deg
     assert_allclose(radius, 0.123352, atol=1e-2)
 

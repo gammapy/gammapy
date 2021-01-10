@@ -33,21 +33,14 @@ class TablePSF:
         interp_kwargs = interp_kwargs or {}
 
         rad_axis.assert_name("rad")
-        self._nd_data = NDDataArray(
+
+        self.data = NDDataArray(
             axes=[rad_axis], data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
         )
 
     @property
-    def quantity(self):
-        return self._nd_data.data
-
-    @property
-    def data(self):
-        return self._nd_data.data.value
-
-    @property
     def rad_axis(self):
-        return self._nd_data.axes["rad"]
+        return self.data.axes["rad"]
 
     @classmethod
     def from_shape(cls, shape, width, rad):
@@ -124,7 +117,7 @@ class TablePSF:
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        return self._nd_data.evaluate(rad=rad)
+        return self.data.evaluate(rad=rad)
 
     def containment(self, rad_max):
         """Compute PSF containment fraction.
@@ -140,7 +133,7 @@ class TablePSF:
             PSF integral
         """
         rad_max = np.atleast_1d(rad_max)
-        return self._nd_data._integrate_rad((rad_max,))
+        return self.data._integrate_rad((rad_max,))
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -193,7 +186,7 @@ class TablePSF:
 
         ax.plot(
             self.rad_axis.center.to_value("deg"),
-            self.quantity.to_value("sr-1"),
+            self.data.data.to_value("sr-1"),
             **kwargs,
         )
         ax.set_yscale("log")
@@ -214,7 +207,7 @@ class EnergyDependentTablePSF:
         Offset angle wrt source position axis
     exposure : `~astropy.units.Quantity`
         Exposure (1-dim)
-    psf_value : `~astropy.units.Quantity`
+    data : `~astropy.units.Quantity`
         PSF (2-dim with axes: psf[energy_index, offset_index]
     interp_kwargs : dict
         Interpolation keyword arguments pass to `ScaledRegularGridInterpolator`.
@@ -232,7 +225,7 @@ class EnergyDependentTablePSF:
         axes = MapAxes([energy_axis_true, rad_axis])
         axes.assert_names(["energy_true", "rad"])
 
-        self._nd_data = NDDataArray(
+        self.data = NDDataArray(
             axes=axes, data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
         )
 
@@ -242,20 +235,12 @@ class EnergyDependentTablePSF:
             self.exposure = u.Quantity(exposure).to("cm^2 s")
 
     @property
-    def quantity(self):
-        return self._nd_data.data
-
-    @property
-    def data(self):
-        return self._nd_data.data.value
-
-    @property
     def energy_axis_true(self):
-        return self._nd_data.axes["energy_true"]
+        return self.data.axes["energy_true"]
 
     @property
     def rad_axis(self):
-        return self._nd_data.axes["rad"]
+        return self.data.axes["rad"]
 
     def __str__(self):
         ss = "EnergyDependentTablePSF\n"
@@ -314,7 +299,7 @@ class EnergyDependentTablePSF:
             [
                 self.energy_axis_true.center.to("MeV"),
                 self.exposure.to("cm^2 s"),
-                self.quantity.to("sr^-1"),
+                self.data.data.to("sr^-1"),
             ],
             names=["Energy", "Exposure", "PSF"],
         )
@@ -367,7 +352,7 @@ class EnergyDependentTablePSF:
 
         energy = u.Quantity(energy, ndmin=1)[:, np.newaxis]
         rad = u.Quantity(rad, ndmin=1)
-        return self._nd_data._interpolate((energy, rad), method=method)
+        return self.data._interpolate((energy, rad), method=method)
 
     def table_psf_at_energy(self, energy, method="linear", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
@@ -468,13 +453,13 @@ class EnergyDependentTablePSF:
         """
         energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
         rad_max = np.atleast_1d(u.Quantity(rad_max))
-        return self._nd_data._integrate_rad((energy, rad_max))
+        return self.data._integrate_rad((energy, rad_max))
 
     def info(self):
         """Print basic info"""
         print(str(self))
 
-    def plot_psf_vs_rad(self, energies=None, ax=None, **kwargs):
+    def plot_psf_vs_rad(self, energy=None, ax=None, **kwargs):
         """Plot PSF vs radius.
 
         Parameters
@@ -486,14 +471,14 @@ class EnergyDependentTablePSF:
         """
         import matplotlib.pyplot as plt
 
-        if energies is None:
-            energies = [100, 1000, 10000] * u.GeV
+        if energy is None:
+            energy = [100, 1000, 10000] * u.GeV
 
         ax = plt.gca() if ax is None else ax
 
-        for energy in energies:
-            psf_value = np.squeeze(self.evaluate(energy=energy))
-            label = f"{energy:.0f}"
+        for value in energy:
+            psf_value = np.squeeze(self.evaluate(energy=value))
+            label = f"{value:.0f}"
             ax.plot(
                 self.rad_axis.center.to_value("deg"),
                 psf_value.to_value("sr-1"),

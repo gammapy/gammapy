@@ -284,7 +284,7 @@ class PSFMap(IRFMap):
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf._nd_data._interpolate((coords["energy_true"], coords["rad"]))
+        data = table_psf.data._interpolate((coords["energy_true"], coords["rad"]))
         psf_map = Map.from_geom(geom, data=data.to_value("sr-1"), unit="sr-1")
 
         geom_exposure = geom.squash(axis_name="rad")
@@ -328,19 +328,19 @@ class PSFMap(IRFMap):
         # of gauss
         energy = energy_axis_true.center
         rad = rad_axis.center
-        tableshape = (energy.shape[0], rad.shape[0])
+        shape = (energy.shape[0], rad.shape[0])
 
         if np.size(sigma) == 1:
             # same width for all energies
             table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
-            energytable_temp = np.tile(table_psf.quantity, (tableshape[0], 1))
+            data = np.tile(table_psf.data.data, (shape[0], 1))
         elif np.size(sigma) == np.size(energy):
             # one width per energy
-            energytable_temp = np.zeros(tableshape) * u.sr ** -1
-            for idx in np.arange(tableshape[0]):
-                energytable_temp[idx, :] = TablePSF.from_shape(
+            data = np.zeros(shape) * u.sr ** -1
+            for idx in range(energy_axis_true.nbin):
+                data[idx, :] = TablePSF.from_shape(
                     shape="gauss", width=sigma[idx], rad=rad
-                ).quantity
+                ).data.data
         else:
             raise AssertionError(
                 "There need to be the same number of sigma values as energies"
@@ -350,7 +350,7 @@ class PSFMap(IRFMap):
             energy_axis_true=energy_axis_true,
             rad_axis=rad_axis,
             exposure=None,
-            data=energytable_temp,
+            data=data,
         )
         return cls.from_energy_dependent_table_psf(table_psf)
 

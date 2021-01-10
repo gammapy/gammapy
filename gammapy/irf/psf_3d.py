@@ -4,10 +4,8 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import lazyproperty
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.nddata import NDDataArray
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF, TablePSF
 
@@ -43,8 +41,7 @@ class PSF3D:
         offset_axis,
         rad_axis,
         data,
-        energy_thresh_lo=u.Quantity(0.1, "TeV"),
-        energy_thresh_hi=u.Quantity(100, "TeV"),
+        meta=None,
         interp_kwargs=None,
     ):
 
@@ -53,45 +50,40 @@ class PSF3D:
         axes = MapAxes([energy_axis_true, offset_axis, rad_axis])
         axes.assert_names(["energy_true", "offset", "rad"])
 
-        if data.shape != axes.shape:
-            raise ValueError(
-                "PSF has wrong shape"
-                f", expected {axes.shape}, got {data.shape}"
-            )
-
-        self._nd_data = NDDataArray(
+        self.data = NDDataArray(
             axes=axes, data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
         )
 
-        self.energy_thresh_lo = energy_thresh_lo.to("TeV")
-        self.energy_thresh_hi = energy_thresh_hi.to("TeV")
+        self.meta = meta or {}
+
+    @property
+    def energy_thresh_lo(self):
+        """Low energy threshold"""
+        return self.meta["LO_THRES"] * u.TeV
+
+    @property
+    def energy_thresh_hi(self):
+        """High energy threshold"""
+        return self.meta["HI_THRES"] * u.TeV
 
     @property
     def energy_axis_true(self):
-        return self._nd_data.axes["energy_true"]
+        return self.data.axes["energy_true"]
 
     @property
     def rad_axis(self):
-        return self._nd_data.axes["rad"]
+        return self.data.axes["rad"]
 
     @property
     def offset_axis(self):
-        return self._nd_data.axes["offset"]
-
-    @property
-    def quantity(self):
-        return self._nd_data.data
-
-    @property
-    def data(self):
-        return self._nd_data.data.value
+        return self.data.axes["offset"]
 
     def __repr__(self):
         """Print some basic info.
         """
         info = self.__class__.__name__ + "\n"
         info += "-" * len(self.__class__.__name__) + "\n\n"
-        info += f"\tshape      : {self.data.shape}\n"
+        info += f"\tshape      : {self.data.data.shape}\n"
         return info
 
     @classmethod
@@ -119,13 +111,6 @@ class PSF3D:
         """
         data = table["RPSF"].quantity[0].transpose()
 
-        opts = {}
-        try:
-            opts["energy_thresh_lo"] = u.Quantity(table.meta["LO_THRES"], "TeV")
-            opts["energy_thresh_hi"] = u.Quantity(table.meta["HI_THRES"], "TeV")
-        except KeyError:
-            pass
-
         energy_axis_true = MapAxis.from_table(
             table, column_prefix="ENERG", format="gadf-dl3"
         )
@@ -139,7 +124,7 @@ class PSF3D:
             offset_axis=offset_axis,
             rad_axis=rad_axis,
             data=data,
-            **opts,
+            meta=table.meta
         )
 
     def to_hdulist(self):
@@ -153,7 +138,7 @@ class PSF3D:
         axes = MapAxes([self.offset_axis, self.energy_axis_true, self.rad_axis])
         table = axes.to_table(format="gadf-dl3")
 
-        table["RPSF"] = self.quantity.T[np.newaxis]
+        table["RPSF"] = self.data.data.T[np.newaxis]
 
         hdu = fits.BinTableHDU(table)
         hdu.header["LO_THRES"] = self.energy_thresh_lo.value
@@ -195,7 +180,7 @@ class PSF3D:
         rad = np.atleast_1d(u.Quantity(rad))
         offset = np.atleast_1d(u.Quantity(offset))
         energy = np.atleast_1d(u.Quantity(energy))
-        return self._nd_data._interpolate(
+        return self.data._interpolate(
             (
                 energy[np.newaxis, np.newaxis, :],
                 offset[np.newaxis, :, np.newaxis],
