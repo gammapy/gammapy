@@ -12,7 +12,7 @@ from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .table import PSF3D, EnergyDependentTablePSF
 
-__all__ = ["EnergyDependentMultiGaussPSF",  "HESSMultiGaussPSF"]
+__all__ = ["EnergyDependentMultiGaussPSF"]
 
 log = logging.getLogger(__name__)
 
@@ -223,21 +223,31 @@ class EnergyDependentMultiGaussPSF:
 
         Returns
         -------
-        psf : `~gammapy.morphology.MultiGauss2D`
+        psf : `~gammapy.utils.gauss.MultiGauss2D`
             Multigauss PSF object.
         """
         energy = u.Quantity(energy)
         theta = u.Quantity(theta)
 
-        pars = {}
+        sigmas, norms = [], []
+
+        pars = {"A_1": 1}
+
+        for interp_sigma in self._interp_sigmas:
+            sigma = interp_sigma((theta, energy))
+            sigmas.append(sigma)
+
         for name, interp_norm in zip(["scale", "A_2", "A_3"], self._interp_norms):
             pars[name] = interp_norm((theta, energy))
 
-        for idx, interp_sigma in enumerate(self._interp_sigmas):
-            pars[f"sigma_{idx + 1}"] = interp_sigma((theta, energy))
+        for idx, sigma in enumerate(sigmas):
+            a = pars[f"A_{idx + 1}"]
+            norm = pars["scale"] * 2 * a * sigma ** 2
+            norms.append(norm)
 
-        psf = HESSMultiGaussPSF(pars)
-        return psf.to_MultiGauss2D(normalize=True)
+        m = MultiGauss2D(sigmas, norms)
+        m.normalize()
+        return m
 
     def containment_radius(self, energy, theta, fraction=0.68):
         """Compute containment for all energy and theta values"""
@@ -485,82 +495,3 @@ class EnergyDependentMultiGaussPSF:
             data=psf_value,
             meta=self.meta.copy()
         )
-
-
-class HESSMultiGaussPSF:
-    """Multi-Gauss PSF as represented in the HESS software.
-
-    The 2D Gaussian is represented as a 1D exponential
-    probability density function per offset angle squared:
-    dp / dtheta**2 = [0]*(exp(-x/(2*[1]*[1]))+[2]*exp(-x/(2*[3]*[3]))
-
-    @param source: either a dict of a filename
-
-    The following two parameters control numerical
-    precision / speed. Usually the defaults are fine.
-    @param theta_max: Maximum offset in numerical computations
-    @param npoints: Number of points in numerical computations
-    @param eps: Allowed tolerance on normalization of total P to 1
-    """
-
-    def __init__(self, source):
-        if isinstance(source, dict):
-            # Assume source is a dict with correct format
-            self.pars = source
-        else:
-            # Assume source is a filename with correct format
-            self.pars = self._read_ascii(source)
-        # Scale will be computed from normalization anyways,
-        # so any default is fine here
-        self.pars["scale"] = self.pars.get("scale", 1)
-        # This avoids handling the first PSF as a special case
-        self.pars["A_1"] = self.pars.get("A_1", 1)
-
-    def _read_ascii(self, filename):
-        """Parse file with parameters."""
-        fh = open(filename)  # .readlines()
-        pars = {}
-        for line in fh:
-            try:
-                key, value = line.strip().split()[:2]
-                if key.startswith("#"):
-                    continue
-                else:
-                    pars[key] = float(value)
-            except ValueError:
-                pass
-        fh.close()
-        return pars
-
-    def n_gauss(self):
-        """Count number of Gaussians."""
-        return len([_ for _ in self.pars.keys() if "sigma" in _])
-
-    def dpdtheta2(self, theta2):
-        """dp / dtheta2 at position theta2 = theta ^ 2."""
-        theta2 = np.asarray(theta2, "f")
-        total = np.zeros_like(theta2)
-        for ii in range(1, self.n_gauss() + 1):
-            A = self.pars[f"A_{ii}"]
-            sigma = self.pars[f"sigma_{ii}"]
-            total += A * np.exp(-theta2 / (2 * sigma ** 2))
-        return self.pars["scale"] * total
-
-    def to_MultiGauss2D(self, normalize=True):
-        """Use this to compute containment angles and fractions.
-
-        Note: We have to set norm = 2 * A * sigma ^ 2, because in
-        MultiGauss2D norm represents the integral, and in HESS A
-        represents the amplitude at 0.
-        """
-        sigmas, norms = [], []
-        for ii in range(1, self.n_gauss() + 1):
-            A = self.pars[f"A_{ii}"]
-            sigma = self.pars[f"sigma_{ii}"]
-            norm = self.pars["scale"] * 2 * A * sigma ** 2
-            sigmas.append(sigma)
-            norms.append(norm)
-        m = MultiGauss2D(sigmas, norms)
-        if normalize:
-            m.normalize()
-        return m
