@@ -12,10 +12,9 @@ from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
-from .psf_3d import PSF3D
-from .psf_table import EnergyDependentTablePSF
+from .table import PSF3D, EnergyDependentTablePSF
 
-__all__ = ["EnergyDependentMultiGaussPSF"]
+__all__ = ["EnergyDependentMultiGaussPSF",  "HESSMultiGaussPSF", "multi_gauss_psf_kernel"]
 
 log = logging.getLogger(__name__)
 
@@ -40,10 +39,8 @@ class EnergyDependentMultiGaussPSF:
         a two dimensional 'numpy.ndarray' containing the norm
         value for every given energy and theta. Norm corresponds
         to the value of the Gaussian at theta = 0.
-    energy_thresh_lo : `~astropy.units.u.Quantity`
-        Lower save energy threshold of the psf.
-    energy_thresh_hi : `~astropy.units.u.Quantity`
-        Upper save energy threshold of the psf.
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -68,8 +65,7 @@ class EnergyDependentMultiGaussPSF:
         offset_axis,
         sigmas,
         norms,
-        energy_thresh_lo="0.1 TeV",
-        energy_thresh_hi="100 TeV",
+        meta,
     ):
         energy_axis_true.assert_name("energy_true")
         offset_axis.assert_name("offset")
@@ -83,11 +79,19 @@ class EnergyDependentMultiGaussPSF:
         self.sigmas = sigmas
 
         self.norms = norms
-        self.energy_thresh_lo = u.Quantity(energy_thresh_lo, "TeV")
-        self.energy_thresh_hi = u.Quantity(energy_thresh_hi, "TeV")
-
+        self.meta = meta or {}
         self._interp_norms = self._setup_interpolators(self.norms)
         self._interp_sigmas = self._setup_interpolators(self.sigmas)
+
+    @property
+    def energy_thresh_lo(self):
+        """Low energy threshold"""
+        return self.meta["LO_THRES"] * u.TeV
+
+    @property
+    def energy_thresh_hi(self):
+        """High energy threshold"""
+        return self.meta["HI_THRES"] * u.TeV
 
     @property
     def energy_axis_true(self):
@@ -150,19 +154,12 @@ class EnergyDependentMultiGaussPSF:
             norm = hdu.data[key].reshape(shape).copy()
             norms.append(norm)
 
-        opts = {}
-        try:
-            opts["energy_thresh_lo"] = u.Quantity(hdu.header["LO_THRES"], "TeV")
-            opts["energy_thresh_hi"] = u.Quantity(hdu.header["HI_THRES"], "TeV")
-        except KeyError:
-            pass
-
         return cls(
             energy_axis_true=energy_axis_true,
             offset_axis=offset_axis,
             sigmas=sigmas,
             norms=norms,
-            **opts,
+            meta=dict(hdu.header)
         )
 
     def to_hdulist(self):
@@ -203,9 +200,7 @@ class EnergyDependentMultiGaussPSF:
 
         # Create hdu and hdu list
         hdu = fits.BinTableHDU(table)
-        hdu.header["LO_THRES"] = self.energy_thresh_lo.value
-        hdu.header["HI_THRES"] = self.energy_thresh_hi.value
-
+        hdu.header.update(self.meta)
         return fits.HDUList([fits.PrimaryHDU(), hdu])
 
     def write(self, filename, *args, **kwargs):
@@ -308,7 +303,10 @@ class EnergyDependentMultiGaussPSF:
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
-        self._plot_safe_energy_range(ax)
+        try:
+            self._plot_safe_energy_range(ax)
+        except KeyError:
+            pass
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
@@ -451,7 +449,7 @@ class EnergyDependentMultiGaussPSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
-            psf_value=psf_value,
+            data=psf_value,
         )
 
     def to_psf3d(self, rad=None):
@@ -486,9 +484,8 @@ class EnergyDependentMultiGaussPSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             offset_axis=self.offset_axis,
-            psf_value=psf_value,
-            energy_thresh_lo=self.energy_thresh_lo,
-            energy_thresh_hi=self.energy_thresh_hi,
+            data=psf_value,
+            meta=self.meta.copy()
         )
 
 

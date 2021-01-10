@@ -2,7 +2,8 @@
 from .background import Background3D
 from .effective_area import EffectiveAreaTable2D
 from .energy_dispersion import EnergyDispersion2D
-from .psf_gauss import EnergyDependentMultiGaussPSF
+from .psf.gauss import EnergyDependentMultiGaussPSF
+
 
 __all__ = ["load_cta_irfs"]
 

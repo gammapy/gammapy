@@ -2,9 +2,9 @@
 """Utility functions and classes for n-dimensional data and axes."""
 import numpy as np
 from astropy import units as u
-from scipy.ndimage import map_coordinates
+from astropy.utils import lazyproperty
 from .array import array_stats_str
-from .interpolation import ScaledRegularGridInterpolator, INTERPOLATION_ORDER
+from .interpolation import ScaledRegularGridInterpolator
 
 __all__ = ["NDDataArray"]
 
@@ -14,7 +14,7 @@ class NDDataArray:
 
     Parameters
     ----------
-    axes : list
+    axes : list or `MapAxes`
         List of `~gammapy.utils.nddata.DataAxis`
     data : `~astropy.units.Quantity`
         Data
@@ -42,12 +42,10 @@ class NDDataArray:
             )
 
         if data is not None:
-            self.data = data
+            self._data = u.Quantity(data)
 
         self.meta = meta or {}
         self.interp_kwargs = interp_kwargs or self.default_interp_kwargs
-
-        self._regular_grid_interp = None
 
     def __str__(self):
         ss = "NDDataArray summary info\n"
@@ -68,19 +66,18 @@ class NDDataArray:
 
     @data.setter
     def data(self, data):
-        """Set data.
-
-        Some sanity checks are performed to avoid an invalid array.
-        Also, the interpolator is set to None to avoid unwanted behaviour.
+        """Set data
 
         Parameters
         ----------
         data : `~astropy.units.Quantity`, array-like
             Data array
         """
-        data = u.Quantity(data)
-        self._regular_grid_interp = None
-        self._data = data
+        self._data = u.Quantity(data)
+        
+        # reset cached interpolators
+        self.__dict__.pop("_interpolate", None)
+        self.__dict__.pop("_integrate_rad", None)
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
@@ -106,12 +103,13 @@ class NDDataArray:
         coords = self.axes.get_coord()
 
         for key, value in coords.items():
-            coord = u.Quantity(kwargs.get(key, value))
-            coords[key] = coord
+            coord = kwargs.get(key, value)
+            if coord is not None:
+                coords[key] = u.Quantity(coord)
 
         return self._interpolate(coords.values(), method=method)
 
-    @property
+    @lazyproperty
     def _interpolate(self):
         points = [a.center for a in self.axes]
         points_scale = [a.interp for a in self.axes]
@@ -119,3 +117,19 @@ class NDDataArray:
             points, self.data, points_scale=points_scale, **self.interp_kwargs
         )
 
+    # TODO: define a proper integration method
+    @lazyproperty
+    def _integrate_rad(self):
+        rad_axis = self.axes["rad"]
+        rad_drad = (
+                2 * np.pi * rad_axis.center * self.data * rad_axis.bin_width
+        )
+        idx_rad = self.axes.index("rad")
+        values = rad_drad.cumsum(axis=idx_rad).to_value("")
+        values = np.insert(values, 0, 0, axis=idx_rad)
+
+        points = [ax.center for ax in self.axes]
+        points[idx_rad] = rad_axis.edges
+        return ScaledRegularGridInterpolator(
+            points=points, values=values, fill_value=1,
+        )

@@ -203,7 +203,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     # Compute PSF values
     # TODO: allow broadcasting in PSF3D.evaluate()
-    psf_values = psf._interpolate(
+    psf_values = psf.data._interpolate(
         (
             energy[:, np.newaxis, np.newaxis, np.newaxis],
             offset,

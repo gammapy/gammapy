@@ -177,7 +177,7 @@ def test_fake(sky_model, geom, geom_etrue):
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
-    assert_allclose(dataset.counts.data.sum(), 9723)
+    assert_allclose(dataset.counts.data.sum(), 9709)
 
 
 @requires_data()
@@ -194,7 +194,7 @@ def test_different_exposure_unit(sky_model, geom):
 
     npred = dataset.npred()
 
-    assert_allclose(npred.data[0, 50, 50], 6.086019)
+    assert_allclose(npred.data[0, 50, 50], 6.086019, rtol=1e-2)
 
 
 @pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap"])
@@ -481,7 +481,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 7525.790688, rtol=1e-3)
-    assert_allclose(result.total_stat, 21659.2139, rtol=1e-3)
+    assert_allclose(result.total_stat, 21625.845714, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)

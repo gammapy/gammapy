@@ -4,9 +4,9 @@ import astropy.units as u
 from gammapy.maps import Map, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
-from .irf_map import IRFMap
-from .psf_kernel import PSFKernel
-from .psf_table import EnergyDependentTablePSF, TablePSF
+from .kernel import PSFKernel
+from .table import EnergyDependentTablePSF, TablePSF
+from ..core import IRFMap
 
 __all__ = ["PSFMap"]
 
@@ -131,7 +131,7 @@ class PSFMap(IRFMap):
         return EnergyDependentTablePSF(
             energy_axis_true=self.psf_map.geom.axes["energy_true"],
             rad_axis=self.psf_map.geom.axes["rad"],
-            psf_value=psf_values,
+            data=psf_values,
             exposure=exposure,
         )
 
@@ -284,10 +284,8 @@ class PSFMap(IRFMap):
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf._interpolate((coords["energy_true"], coords["rad"])).to_value(
-            "sr-1"
-        )
-        psf_map = Map.from_geom(geom, data=data, unit="sr-1")
+        data = table_psf.data._interpolate((coords["energy_true"], coords["rad"]))
+        psf_map = Map.from_geom(geom, data=data.to_value("sr-1"), unit="sr-1")
 
         geom_exposure = geom.squash(axis_name="rad")
 
@@ -330,19 +328,19 @@ class PSFMap(IRFMap):
         # of gauss
         energy = energy_axis_true.center
         rad = rad_axis.center
-        tableshape = (energy.shape[0], rad.shape[0])
+        shape = (energy.shape[0], rad.shape[0])
 
         if np.size(sigma) == 1:
             # same width for all energies
-            tablepsf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
-            energytable_temp = np.tile(tablepsf.psf_value, (tableshape[0], 1))
+            table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
+            data = np.tile(table_psf.data.data, (shape[0], 1))
         elif np.size(sigma) == np.size(energy):
             # one width per energy
-            energytable_temp = np.zeros(tableshape) * u.sr ** -1
-            for idx in np.arange(tableshape[0]):
-                energytable_temp[idx, :] = TablePSF.from_shape(
+            data = np.zeros(shape) * u.sr ** -1
+            for idx in range(energy_axis_true.nbin):
+                data[idx, :] = TablePSF.from_shape(
                     shape="gauss", width=sigma[idx], rad=rad
-                ).psf_value
+                ).data.data
         else:
             raise AssertionError(
                 "There need to be the same number of sigma values as energies"
@@ -352,7 +350,7 @@ class PSFMap(IRFMap):
             energy_axis_true=energy_axis_true,
             rad_axis=rad_axis,
             exposure=None,
-            psf_value=energytable_temp,
+            data=data,
         )
         return cls.from_energy_dependent_table_psf(table_psf)
 

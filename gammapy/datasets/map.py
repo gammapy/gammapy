@@ -9,9 +9,7 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf.edisp_map import EDispKernelMap, EDispMap
-from gammapy.irf.psf_kernel import PSFKernel
-from gammapy.irf.psf_map import PSFMap
+from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel,  PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
