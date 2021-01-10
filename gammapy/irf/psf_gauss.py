@@ -478,17 +478,12 @@ class EnergyDependentMultiGaussPSF:
             table_psf = self.to_energy_dependent_table_psf(offset)
             psf_value[:, idx, :] = table_psf.evaluate(energy, rad_axis.center)
 
-        meta = {
-            "LO_THRES": self.energy_thresh_lo,
-            "HI_THRES": self.energy_thresh_hi
-        }
-
         return PSF3D(
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             offset_axis=self.offset_axis,
             data=psf_value,
-            meta=meta
+            meta=self.meta.copy()
         )
 
 
