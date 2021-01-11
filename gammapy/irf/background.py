@@ -8,13 +8,14 @@ from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
+from .core import IRF
 
 __all__ = ["Background3D", "Background2D"]
 
 log = logging.getLogger(__name__)
 
 
-class Background3D:
+class Background3D(IRF):
     """Background 3D.
 
     Data format specification: :ref:`gadf:bkg_3d`
@@ -47,35 +48,11 @@ class Background3D:
     """
 
     tag = "bkg_3d"
+    required_axes = ["energy", "fov_lon", "fov_lat"]
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None, values_scale="log"
     )
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
-
-    def __init__(
-        self,
-        energy_axis,
-        fov_lon_axis,
-        fov_lat_axis,
-        data,
-        meta=None,
-        interp_kwargs=None,
-    ):
-        if interp_kwargs is None:
-            interp_kwargs = self.default_interp_kwargs
-
-        self.data = NDDataArray(
-            axes=[energy_axis, fov_lon_axis, fov_lat_axis],
-            data=data,
-            interp_kwargs=interp_kwargs,
-        )
-        self.data.axes.assert_names(["energy", "fov_lon", "fov_lat"])
-        self.meta = meta or {}
-
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += f"\n{self.data}"
-        return ss
 
     @classmethod
     def from_table(cls, table):
@@ -117,11 +94,10 @@ class Background3D:
             data = data.transpose()
 
         return cls(
-            energy_axis=axes["energy"],
-            fov_lon_axis=axes["fov_lon"],
-            fov_lat_axis=axes["fov_lat"],
+            axes=axes,
             data=data,
             meta=table.meta,
+            unit=data_unit
         )
 
     @classmethod
@@ -138,46 +114,18 @@ class Background3D:
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
         # TODO: fix axis order
-        table = self.data.axes.reverse.to_table(format="gadf-dl3")
+        table = self.axes.reverse.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
         table.meta["HDUCLAS2"] = "BKG"
-        table["BKG"] = self.data.data.T[np.newaxis]
+        table["BKG"] = self.quantity.T[np.newaxis]
         return table
 
     def to_table_hdu(self, name="BACKGROUND"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
-    def evaluate(self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs):
-        """Evaluate at given FOV position and energy.
-
-        Parameters
-        ----------
-        fov_lon, fov_lat : `~astropy.coordinates.Angle`
-            FOV coordinates expecting in AltAz frame.
-        energy_reco : `~astropy.units.Quantity`
-            energy on which you want to interpolate. Same dimension than fov_lat and fov_lat
-        method : str {'linear', 'nearest'}, optional
-            Interpolation method
-        kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
-
-        Returns
-        -------
-        array : `~astropy.units.Quantity`
-            Interpolated values, axis order is the same as for the NDData array
-        """
-        values = self.data.evaluate(
-            fov_lon=fov_lon,
-            fov_lat=fov_lat,
-            energy=energy_reco,
-            method=method,
-            **kwargs,
-        )
-        return values
-
     def evaluate_integrate(
-        self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs
+        self, fov_lon, fov_lat, energy_reco, method="linear"
     ):
         """Integrate in a given energy band.
 
@@ -195,7 +143,9 @@ class Background3D:
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
+        data = self.evaluate(
+            fov_lon=fov_lon, fov_lat=fov_lat, energy=energy_reco, method=method
+        )
         return trapz_loglog(data, energy_reco, axis=0)
 
     def to_2d(self):
@@ -204,15 +154,15 @@ class Background3D:
         This takes the values at Y = 0 and X >= 0.
         """
         # TODO: this is incorrect as it misses the Jacobian?
-        idx_lon = self.data.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
-        idx_lat = self.data.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
-        data = self.data.data[:, idx_lon:, idx_lat].copy()
+        idx_lon = self.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
+        idx_lat = self.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
+        data = self.quantity[:, idx_lon:, idx_lat].copy()
 
-        offset = self.data.axes["fov_lon"].edges[idx_lon:]
+        offset = self.axes["fov_lon"].edges[idx_lon:]
 
         offset_axis = MapAxis.from_edges(offset, name="offset")
         return Background2D(
-            energy_axis=self.data.axes["energy"], offset_axis=offset_axis, data=data,
+            energy_axis=self.axes["energy"], offset_axis=offset_axis, data=data,
         )
 
     def peek(self, figsize=(10, 8)):

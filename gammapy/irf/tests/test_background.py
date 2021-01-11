@@ -20,35 +20,34 @@ def bkg_3d():
     fov_lat = [0, 1, 2, 3] * u.deg
     fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
 
-    data = np.ones((2, 3, 3)) * u.Unit("s-1 GeV-1 sr-1")
+    data = np.ones((2, 3, 3))
     # Axis order is (energy, fov_lon, fov_lat)
     # data.value[1, 0, 0] = 1
-    data.value[1, 1, 1] = 100
+    data[1, 1, 1] = 100
     return Background3D(
-        energy_axis=energy_axis,
-        fov_lon_axis=fov_lon_axis,
-        fov_lat_axis=fov_lat_axis,
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
+        unit="s-1 GeV-1 sr-1"
     )
 
 
 @requires_data()
 def test_background_3d_basics(bkg_3d):
-    assert "NDDataArray summary info" in str(bkg_3d.data)
+    assert "Background3D" in str(bkg_3d)
 
-    axis = bkg_3d.data.axes["energy"]
+    axis = bkg_3d.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_3d.data.axes["fov_lon"]
+    axis = bkg_3d.axes["fov_lon"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    axis = bkg_3d.data.axes["fov_lat"]
+    axis = bkg_3d.axes["fov_lat"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    data = bkg_3d.data.data
+    data = bkg_3d.quantity
     assert data.shape == (2, 3, 3)
     assert data.unit == "s-1 GeV-1 sr-1"
 
@@ -60,19 +59,19 @@ def test_background_3d_read_write(tmp_path, bkg_3d):
     bkg_3d.to_table_hdu().writeto(tmp_path / "bkg3d.fits")
     bkg_3d_2 = Background3D.read(tmp_path / "bkg3d.fits")
 
-    axis = bkg_3d_2.data.axes["energy"]
+    axis = bkg_3d_2.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_3d_2.data.axes["fov_lon"]
+    axis = bkg_3d_2.axes["fov_lon"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    axis = bkg_3d_2.data.axes["fov_lat"]
+    axis = bkg_3d_2.axes["fov_lat"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    data = bkg_3d_2.data.data
+    data = bkg_3d_2.quantity
     assert data.shape == (2, 3, 3)
     assert data.unit == "s-1 GeV-1 sr-1"
 
@@ -82,7 +81,7 @@ def test_background_3d_evaluate(bkg_3d):
     res = bkg_3d.evaluate(
         fov_lon=[0.5, 1.5] * u.deg,
         fov_lat=[0.5, 1.5] * u.deg,
-        energy_reco=[100, 100] * u.TeV,
+        energy=[100, 100] * u.TeV,
     )
     assert_allclose(res.value, [1, 100])
     assert res.shape == (2,)
@@ -91,14 +90,14 @@ def test_background_3d_evaluate(bkg_3d):
     res = bkg_3d.evaluate(
         fov_lon=[1, 0.5] * u.deg,
         fov_lat=[1, 0.5] * u.deg,
-        energy_reco=[100, 100] * u.TeV,
+        energy=[100, 100] * u.TeV,
     )
     assert_allclose(res.value, [3.162278, 1], rtol=1e-5)
 
     res = bkg_3d.evaluate(
         fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
         fov_lat=[[1, 0.5], [1, 0.5]] * u.deg,
-        energy_reco=[[1, 1], [100, 100]] * u.TeV,
+        energy=[[1, 1], [100, 100]] * u.TeV,
     )
     assert_allclose(res.value, [[1, 1], [3.162278, 1]], rtol=1e-5)
     assert res.shape == (2, 2)
@@ -139,8 +138,8 @@ def test_background_3D_read():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     bkg = Background3D.read(filename)
-    data = bkg.data.data
-    assert bkg.data.axes.names == ["energy", "fov_lon", "fov_lat"]
+    data = bkg.quantity
+    assert bkg.axes.names == ["energy", "fov_lon", "fov_lat"]
     assert data.shape == (21, 36, 36)
     assert data.unit == "s-1 MeV-1 sr-1"
 
@@ -149,8 +148,8 @@ def test_background_3D_read():
 def test_background_3D_read_gadf():
     filename = "$GAMMAPY_DATA/tests/irf/bkg_3d_full_example.fits"
     bkg = Background3D.read(filename)
-    data = bkg.data.data
-    assert bkg.data.axes.names == ["energy", "fov_lon", "fov_lat"]
+    data = bkg.quantity
+    assert bkg.axes.names == ["energy", "fov_lon", "fov_lat"]
     assert data.shape == (20, 15, 15)
     assert data.unit == "s-1 MeV-1 sr-1"
 
