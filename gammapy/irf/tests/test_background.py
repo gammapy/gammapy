@@ -168,10 +168,10 @@ def bkg_2d():
 
     offset = [0, 1, 2, 3] * u.deg
     offset_axis = MapAxis.from_edges(offset, name="offset")
-    data = np.zeros((2, 3)) * u.Unit("s-1 MeV-1 sr-1")
-    data.value[1, 0] = 2
-    data.value[1, 1] = 4
-    return Background2D(energy_axis=energy_axis, offset_axis=offset_axis, data=data,)
+    data = np.zeros((2, 3))
+    data[1, 0] = 2
+    data[1, 1] = 4
+    return Background2D(axes=[energy_axis, offset_axis], data=data, unit="s-1 MeV-1 sr-1")
 
 
 def test_background_2d_evaluate(bkg_2d):
@@ -180,27 +180,26 @@ def test_background_2d_evaluate(bkg_2d):
 
     # Evaluate at log center between nodes in energy
     res = bkg_2d.evaluate(
-        fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 1] * u.TeV
+        offset=[1, 0.5] * u.deg, energy=[1, 1] * u.TeV
     )
     assert_allclose(res.value, [0, 0])
     assert res.shape == (2,)
     assert res.unit == "s-1 MeV-1 sr-1"
 
     res = bkg_2d.evaluate(
-        fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[100, 100] * u.TeV
+        offset=[1, 0.5] * u.deg, energy=[100, 100] * u.TeV
     )
     assert_allclose(res.value, [3, 2])
     res = bkg_2d.evaluate(
-        fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
-        fov_lat=0 * u.deg,
-        energy_reco=[[1, 1], [100, 100]] * u.TeV,
+        offset=[[1, 0.5], [1, 0.5]] * u.deg,
+        energy=[[1, 1], [100, 100]] * u.TeV,
     )
 
     assert_allclose(res.value, [[0, 0], [3, 2]])
     assert res.shape == (2, 2)
 
     res = bkg_2d.evaluate(
-        fov_lon=[1, 1] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 100] * u.TeV
+        offset=[1, 1] * u.deg, energy=[1, 100] * u.TeV
     )
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
@@ -210,26 +209,26 @@ def test_background_2d_read_write(tmp_path, bkg_2d):
     bkg_2d.to_table_hdu().writeto(tmp_path / "tmp.fits")
     bkg_2d_2 = Background2D.read(tmp_path / "tmp.fits")
 
-    axis = bkg_2d_2.data.axes["energy"]
+    axis = bkg_2d_2.axes["energy"]
     assert axis.nbin == 2
     assert axis.unit == "TeV"
 
-    axis = bkg_2d_2.data.axes["offset"]
+    axis = bkg_2d_2.axes["offset"]
     assert axis.nbin == 3
     assert axis.unit == "deg"
 
-    data = bkg_2d_2.data.data
+    data = bkg_2d_2.data
     assert data.shape == (2, 3)
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
 @requires_data()
-def test_background_2D_read_gadf():
+def test_background_2d_read_gadf():
     filename = "$GAMMAPY_DATA/tests/irf/bkg_2d_full_example.fits"
     bkg = Background2D.read(filename)
-    data = bkg.data.data
+    data = bkg.quantity
     assert data.shape == (20, 5)
-    assert bkg.data.axes.names == ["energy", "offset"]
+    assert bkg.axes.names == ["energy", "offset"]
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
