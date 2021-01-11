@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
+from astropy.table import Table
 from gammapy.maps import MapAxis
 
 __all__ = ["FluxEstimate"]
@@ -33,13 +35,17 @@ class FluxEstimate:
         # TODO: Check data
         self.data = data
 
-        if hasattr(self.data["norm"], "Geom"):
+        if hasattr(self.data["norm"], "geom"):
             self.energy_axis = self.data["norm"].geom.axes["energy"]
+            self._keys = self.data.keys()
+            self._expand_slice = (slice(None),np.newaxis, np.newaxis)
         else:
             # Here we assume there is only one row per energy
             e_edges = self.data["e_min"].quantity
             e_edges = e_edges.insert(len(self.data), self.data["e_max"].quantity[-1])
             self.energy_axis = MapAxis.from_energy_edges(e_edges)
+            self._keys = self.data.columns
+            self._expand_slice = (slice(None))
 
         # Note that here we could use the specification from dnde_ref to build piecewise PL
         # But does it work beyond min and max centers?
@@ -49,7 +55,7 @@ class FluxEstimate:
 
         for quantity in OPTIONAL_QUANTITIES:
             norm_quantity = f"norm_{quantity}"
-            if norm_quantity in self.data.columns:
+            if norm_quantity in self._keys:
                 self._available_quantities.append(quantity)
 
     #TODO: add support for scan
@@ -84,120 +90,125 @@ class FluxEstimate:
 
     @property
     def dnde_ref(self):
-        return self.spectral_model(self.energy_axis.center)
+        result = self.spectral_model(self.energy_axis.center)
+        return result[self._expand_slice]
 
     @property
     def e2dnde_ref(self):
-        return self.spectral_model(self.energy_axis.center)*self.energy_axis.center**2
+        result = self.spectral_model(self.energy_axis.center)*self.energy_axis.center**2
+        return result[self._expand_slice]
+
 
     @property
     def flux_ref(self):
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
-        return self.spectral_model.integral(energy_min, energy_max)
+        result = self.spectral_model.integral(energy_min, energy_max)
+        return result[self._expand_slice]
 
     @property
     def eflux_ref(self):
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
-        return self.spectral_model.energy_flux(energy_min, energy_max)
+        result = self.spectral_model.energy_flux(energy_min, energy_max)
+        return result[self._expand_slice]
 
     @property
     def dnde(self):
         """Return differential flux (dnde) SED values."""
-        return self.dnde_ref * self.norm
+        return self.norm * self.dnde_ref
 
     @property
     def dnde_err(self):
         """Return differential flux (dnde) SED errors."""
-        return self.dnde_ref * self.norm_err
+        return self.norm_err * self.dnde_ref
 
     @property
     def dnde_errn(self):
         """Return differential flux (dnde) SED negative errors."""
-        return self.dnde_ref * self.norm_errn
+        return self.norm_errn * self.dnde_ref
 
     @property
     def dnde_errp(self):
         """Return differential flux (dnde) SED positive errors."""
-        return self.dnde_ref * self.norm_errp
+        return self.norm_errp * self.dnde_ref
 
     @property
     def dnde_ul(self):
         """Return differential flux (dnde) SED upper limit."""
-        return self.dnde_ref * self.norm_ul
+        return self.norm_ul * self.dnde_ref
 
     @property
     def e2dnde(self):
         """Return differential energy flux (e2dnde) SED values."""
-        return self.e2dnde_ref * self.norm
+        return self.norm * self.e2dnde_ref
 
     @property
     def e2dnde_err(self):
         """Return differential energy flux (e2dnde) SED errors."""
-        return self.e2dnde_ref * self.norm_err
+        return self.norm_err * self.e2dnde_ref
 
     @property
     def e2dnde_errn(self):
         """Return differential energy flux (e2dnde) SED negative errors."""
-        return self.e2dnde_ref * self.norm_errn
+        return self.norm_errn * self.e2dnde_ref
 
     @property
     def e2dnde_errp(self):
         """Return differential energy flux (e2dnde) SED positive errors."""
-        return self.e2dnde_ref * self.norm_errp
+        return self.norm_errp * self.e2dnde_ref
 
     @property
     def e2dnde_ul(self):
         """Return differential energy flux (e2dnde) SED upper limit."""
-        return self.e2dnde_ref * self.norm_ul
+        return self.norm_ul * self.e2dnde_ref
 
     @property
     def flux(self):
         """Return integral flux (flux) SED values."""
-        return self.flux_ref * self.norm
+        return  self.norm * self.flux_ref
 
     @property
     def flux_err(self):
         """Return integral flux (flux) SED values."""
-        return self.flux_ref * self.norm_err
+        return self.norm_err * self.flux_ref
 
     @property
     def flux_errn(self):
         """Return integral flux (flux) SED negative errors."""
-        return self.flux_ref * self.norm_errn
+        return self.norm_errn * self.flux_ref
 
     @property
     def flux_errp(self):
         """Return integral flux (flux) SED positive errors."""
-        return self.flux_ref * self.norm_errp
+        return self.norm_errp * self.flux_ref
 
     @property
     def flux_ul(self):
         """Return integral flux (flux) SED upper limits."""
-        return self.flux_ref * self.norm_ul
+        return self.norm_ul * self.flux_ref
 
     @property
     def eflux(self):
         """Return energy flux (eflux) SED values."""
-        return self.eflux_ref * self.norm
+        return self.norm * self.eflux_ref
 
     @property
     def eflux_err(self):
         """Return energy flux (eflux) SED errors."""
-        return self.eflux_ref * self.norm_err
+        return self.norm_err * self.eflux_ref
 
     @property
     def eflux_errn(self):
         """Return energy flux (eflux) SED negative errors."""
-        return self.eflux_ref * self.norm_errn
+        return self.norm_errn * self.eflux_ref
 
     @property
     def eflux_errp(self):
         """Return energy flux (eflux) SED positive errors."""
-        return self.eflux_ref * self.norm_errp
+        return self.norm_errp * self.eflux_ref
 
     @property
     def eflux_ul(self):
         """Return energy flux (eflux) SED upper limits."""
-        return self.eflux_ref * self.norm_ul
+        return self.norm_ul * self.eflux_ref
