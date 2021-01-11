@@ -142,6 +142,11 @@ class EDispKernel:
             RMS width of Gaussian energy dispersion, resolution
         pdf_threshold : float, optional
             Zero suppression threshold
+
+        Returns
+        -------
+        edisp : `EDispKernel`
+            Edisp kernel.
         """
         from .energy_dispersion import EnergyDispersion2D
 

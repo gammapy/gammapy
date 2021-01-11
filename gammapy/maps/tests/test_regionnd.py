@@ -151,10 +151,10 @@ def test_region_nd_map_fill_events(region_map):
 
 
 def test_apply_edisp(region_map_true):
-    e_true = region_map_true.geom.axes[0].edges
-    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
+    e_true = region_map_true.geom.axes[0]
+    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 
-    edisp = EDispKernel.from_diagonal_response(energy_true=e_true, energy=e_reco)
+    edisp = EDispKernel.from_diagonal_response(energy_axis_true=e_true, energy_axis=e_reco)
 
     m = region_map_true.apply_edisp(edisp)
     assert m.geom.data_shape == (3, 1, 1)
