@@ -266,8 +266,6 @@ class EDispKernel:
 
         Parameters
         ----------
-        filename : str
-            Filename
         format : {"ogip", "ogip-sherpa"}
             Format to use.
 
@@ -283,16 +281,13 @@ class EDispKernel:
         """
         # Cannot use table_to_fits here due to variable length array
         # http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
+        format_arf = format.replace("ogip", "ogip-arf")
+        table = self.to_table(format=format_arf)
 
-        table = self.to_table()
         name = table.meta.pop("name")
 
         header = fits.Header()
         header.update(table.meta)
-
-        if format == "ogip=sherpa":
-            table["ENERG_HI"] = table["ENERG_HI"].quantity.to("keV")
-            table["ENERG_LO"] = table["ENERG_LO"].quantity.to("keV")
 
         cols = table.columns
         c0 = fits.Column(
@@ -315,12 +310,25 @@ class EDispKernel:
 
         return fits.HDUList([prim_hdu, hdu, ebounds_hdu])
 
-    def to_table(self):
+    def to_table(self, format="ogip"):
         """Convert to `~astropy.table.Table`.
 
         The output table is in the OGIP RMF format.
         https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa"}
+            Format to use.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Matrix table
+
         """
+        table = self.energy_axis_true.to_table(format=format)
+
         rows = self.pdf_matrix.shape[0]
         n_grp = []
         f_chan = np.ndarray(dtype=np.object, shape=rows)
@@ -328,7 +336,7 @@ class EDispKernel:
         matrix = np.ndarray(dtype=np.object, shape=rows)
 
         # Make RMF type matrix
-        for i, row in enumerate(self.data.data.value):
+        for idx, row in enumerate(self.data.data.value):
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
             # add 1 to borders for correct behaviour of np.split
@@ -341,9 +349,9 @@ class EDispKernel:
                 f_chan_temp = np.zeros(1)
 
             n_grp.append(n_grp_temp)
-            f_chan[i] = f_chan_temp
-            n_chan[i] = n_chan_temp
-            matrix[i] = row[pos]
+            f_chan[idx] = f_chan_temp
+            n_chan[idx] = n_chan_temp
+            matrix[idx] = row[pos]
 
         n_grp = np.asarray(n_grp, dtype=np.int16)
 
@@ -353,11 +361,6 @@ class EDispKernel:
             numgrp += np.sum(val)
             numelt += np.sum(val2)
 
-        table = Table()
-
-        energy = self.energy_axis_true.edges
-        table["ENERG_LO"] = energy[:-1]
-        table["ENERG_HI"] = energy[1:]
         table["N_GRP"] = n_grp
         table["F_CHAN"] = f_chan
         table["N_CHAN"] = n_chan
