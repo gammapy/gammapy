@@ -3,7 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
+from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -212,7 +212,7 @@ class EffectiveAreaTable:
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        table = Table()
+        table = self.energy.to_table(format="ogip-arf")
         table.meta = {
             "EXTNAME": "SPECRESP",
             "hduclass": "OGIP",
@@ -388,16 +388,13 @@ class EffectiveAreaTable2D:
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
-        energy_axis_true = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
+        axes = MapAxes.from_table(
+            table=table, column_prefixes=["ENERG", "THETA"], format="gadf-dl3"
         )
 
         return cls(
-            energy_axis_true=energy_axis_true,
-            offset_axis=offset_axis,
+            energy_axis_true=axes["energy_true"],
+            offset_axis=axes["offset"],
             data=table["EFFAREA"].quantity[0].transpose(),
             meta=table.meta,
         )

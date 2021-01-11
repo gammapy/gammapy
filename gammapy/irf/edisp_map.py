@@ -464,8 +464,16 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        edisp : `~gammapy.irfs.EDispKernel`
-            the input 1D kernel.
+        energy_axis_true : `~astropy.units.Quantity`
+            Bin edges of true energy axis
+        energy_axis : `~astropy.units.Quantity`
+            Bin edges of reconstructed energy axis
+        bias : float or `~numpy.ndarray`
+            Center of Gaussian energy dispersion, bias
+        sigma : float or `~numpy.ndarray`
+            RMS width of Gaussian energy dispersion, resolution
+        pdf_threshold : float, optional
+            Zero suppression threshold
         geom : `~gammapy.maps.Geom`
             The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
 
@@ -475,8 +483,8 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         kernel = EDispKernel.from_gauss(
-            energy=energy_axis.edges,
-            energy_true=energy_axis_true.edges,
+            energy_axis=energy_axis,
+            energy_axis_true=energy_axis_true,
             sigma=sigma,
             bias=bias,
             pdf_threshold=pdf_threshold,
