@@ -78,7 +78,7 @@ class EnergyDispersion2D:
         return ss
 
     @classmethod
-    def from_gauss(cls, energy_true, migra, bias, sigma, offset, pdf_threshold=1e-6):
+    def from_gauss(cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6):
         """Create Gaussian energy dispersion matrix (`EnergyDispersion2D`).
 
         The output matrix will be Gaussian in (energy_true / energy).
@@ -91,26 +91,20 @@ class EnergyDispersion2D:
 
         Parameters
         ----------
-        energy_true : `~astropy.units.Quantity`
-            Bin edges of true energy axis
-        migra : `~astropy.units.Quantity`
-            Bin edges of migra axis
+        energy_axis_true : `MapAxis`
+            True energy axis
+        migra_axis : `~astropy.units.Quantity`
+            Migra axis
+        offset_axis : `~astropy.units.Quantity`
+            Bin edges of offset
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
         sigma : float or `~numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution
-        offset : `~astropy.units.Quantity`
-            Bin edges of offset
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        energy_true = Quantity(energy_true)
-        # erf does not work with Quantities
-        energy_axis_true = MapAxis.from_energy_edges(
-            energy_true, interp="log", name="energy_true"
-        )
-
-        true2d, migra2d = np.meshgrid(energy_axis_true.center, migra)
+        true2d, migra2d = np.meshgrid(energy_axis_true.center, migra_axis.edges)
 
         migra2d_lo = migra2d[:-1, :]
         migra2d_hi = migra2d[1:, :]
@@ -121,12 +115,10 @@ class EnergyDispersion2D:
         t2 = (migra2d_lo - 1 - bias) / s
         pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
 
-        data = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
+        data = pdf.T[:, :, np.newaxis] * np.ones(offset_axis.nbin)
 
         data[data < pdf_threshold] = 0
 
-        offset_axis = MapAxis.from_edges(offset, name="offset")
-        migra_axis = MapAxis.from_edges(migra, name="migra")
         return cls(
             energy_axis_true=energy_axis_true,
             migra_axis=migra_axis,
