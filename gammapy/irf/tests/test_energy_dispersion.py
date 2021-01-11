@@ -24,10 +24,10 @@ class TestEDispKernel:
         )
 
     def test_from_diagonal_response(self):
-        e_true = [0.5, 1, 2, 4, 6] * u.TeV
-        e_reco = [2, 4, 6] * u.TeV
+        energy_axis_true = MapAxis.from_energy_edges([0.5, 1, 2, 4, 6] * u.TeV, name="energy_true")
+        energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
 
-        edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
+        edisp = EDispKernel.from_diagonal_response(energy_axis_true, energy_axis)
 
         assert edisp.pdf_matrix.shape == (4, 2)
         expected = [[0, 0], [0, 0], [1, 0], [0, 1]]
@@ -35,8 +35,8 @@ class TestEDispKernel:
         assert_equal(edisp.pdf_matrix, expected)
 
         # Test square matrix
-        edisp = EDispKernel.from_diagonal_response(e_true)
-        assert_allclose(edisp.energy_axis.edges.value, e_true.value)
+        edisp = EDispKernel.from_diagonal_response(energy_axis_true)
+        assert_allclose(edisp.energy_axis.edges, energy_axis_true.edges)
         assert edisp.energy_axis.unit == "TeV"
         assert_equal(edisp.pdf_matrix[0][0], 1)
         assert_equal(edisp.pdf_matrix[2][0], 0)
