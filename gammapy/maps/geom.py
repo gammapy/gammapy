@@ -547,24 +547,28 @@ class MapAxes(Sequence):
         return cls.from_table(table, format=format)
 
     @classmethod
-    def from_table(cls, table, format="gadf"):
+    def from_table(cls, table, format="gadf", column_prefixes=None):
         """Create MapAxes from BinTableHDU
 
         Parameters
         ----------
         table : `~astropy.table.Table`
             Bin table HDU
-
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube"}
+            Format to use.
+        column_prefixes : list of str
+            Column name prefixes of the axes..
 
         Returns
         -------
         axes : `MapAxes`
             Map axes object
         """
+        axes = []
+
         if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
-            axes = [MapAxis.from_table(table, format=format)]
+            axes.append(MapAxis.from_table(table, format=format))
         elif format == "gadf":
-            axes = []
             # This limits the max number of axes to 5
             for idx in range(5):
                 axcols = table.meta.get("AXCOLS{}".format(idx + 1))
@@ -572,6 +576,10 @@ class MapAxes(Sequence):
                     break
 
                 axis = MapAxis.from_table(table, format=format, idx=idx)
+                axes.append(axis)
+        elif format == "gadf-dl3":
+            for column_prefix in column_prefixes:
+                axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
                 axes.append(axis)
         else:
             raise ValueError(f"Unsupported format: '{format}'")
@@ -1404,7 +1412,7 @@ class MapAxis:
         """
         header = fits.Header()
 
-        if format == "ogip":
+        if format in ["ogip", "ogip-sherpa"]:
             header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
             header["TELESCOP"] = "DUMMY", "Mission/satellite name"
             header["INSTRUME"] = "DUMMY", "Instrument/detector"
@@ -1447,7 +1455,7 @@ class MapAxis:
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa", "gadf-dl3"}
+        format : {"ogip", "ogip-sherpa", "gadf-dl3", "gtpsf"}
             Format specification
 
         Returns
@@ -1492,6 +1500,14 @@ class MapAxis:
 
             table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
             table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
+        elif format == "gtpsf":
+            if self.name == "energy_true":
+                table["Energy"] = self.center.to("MeV")
+            elif self.name == "rad":
+                table["Theta"] = self.center.to("deg")
+            else:
+                raise ValueError("Can only convert true energy or rad axis to"
+                                 f"'gtpsf' format, got {self.name}")
         else:
             raise ValueError(f"{format} is not a valid format")
 
@@ -1506,7 +1522,7 @@ class MapAxis:
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"ogip", "ogip-sherpa", "gtpsf"}
             Format specification
 
         Returns
@@ -1515,7 +1531,13 @@ class MapAxis:
             Table HDU
         """
         table = self.to_table(format=format)
-        hdu = fits.BinTableHDU(table)
+
+        if format == "gtpsf":
+            name = "THETA"
+        else:
+            name = None
+
+        hdu = fits.BinTableHDU(table, name=name)
 
         if format in ["ogip", "ogip-sherpa"]:
             hdu.header.update(self.to_header(format=format))
@@ -1535,7 +1557,7 @@ class MapAxis:
         idx : int
             Column index of the axis.
         column_prefix : str
-            Column name prefix of the axis, used for
+            Column name prefix of the axis, used for creating the axis.
 
         Returns
         -------

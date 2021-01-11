@@ -290,23 +290,14 @@ class EnergyDependentTablePSF:
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        # TODO: write HEADER keywords as gtpsf
+        theta_hdu = self.rad_axis.to_table_hdu(format="gtpsf")
 
-        data = Table([self.rad_axis.center.to("deg")], names=["Theta"])
-        theta_hdu = fits.BinTableHDU(data=data, name="THETA")
+        psf_table = self.energy_axis_true.to_table(format="gtpsf")
+        psf_table["Exposure"] = self.exposure.to("cm^2 s")
+        psf_table["PSF"] = self.data.data.to("sr^-1")
+        psf_hdu = fits.BinTableHDU(data=psf_table, name="PSF")
 
-        data = Table(
-            [
-                self.energy_axis_true.center.to("MeV"),
-                self.exposure.to("cm^2 s"),
-                self.data.data.to("sr^-1"),
-            ],
-            names=["Energy", "Exposure", "PSF"],
-        )
-        psf_hdu = fits.BinTableHDU(data=data, name="PSF")
-
-        hdu_list = fits.HDUList([fits.PrimaryHDU(), theta_hdu, psf_hdu])
-        return hdu_list
+        return fits.HDUList([fits.PrimaryHDU(), theta_hdu, psf_hdu])
 
     @classmethod
     def read(cls, filename):
@@ -528,34 +519,6 @@ class EnergyDependentTablePSF:
         plt.ylim(0, 1.5e11)
         plt.tight_layout()
 
-    def stack(self, psf):
-        """Stack two EnergyDependentTablePSF objects.s
-
-        Parameters
-        ----------
-        psf : `EnergyDependentTablePSF`
-            PSF to stack.
-
-        Returns
-        -------
-        stacked_psf : `EnergyDependentTablePSF`
-            Stacked PSF.
-
-        """
-        exposure = self.exposure + psf.exposure
-        psf_value = self.data.T * self.exposure + psf.data.T * psf.exposure
-
-        with np.errstate(invalid="ignore"):
-            # exposure can be zero
-            psf_value = np.nan_to_num(psf_value / exposure)
-
-        return self.__class__(
-            energy_axis_true=self.energy_axis_true,
-            rad_axis=self.rad_axis,
-            psf_value=psf_value.T,
-            exposure=exposure,
-        )
-
 
 class PSF3D:
     """PSF with axes: energy, offset, rad.
@@ -572,10 +535,8 @@ class PSF3D:
         Rad axis
     data : `~astropy.units.Quantity`
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index]
-    energy_thresh_lo : `~astropy.units.Quantity`
-        Lower energy threshold.
-    energy_thresh_hi : `~astropy.units.Quantity`
-        Upper energy threshold.
+    meta : dict
+        Meta dict
     """
 
     tag = "psf_table"
@@ -654,20 +615,15 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
+        axes = MapAxes.from_table(
+            table=table, column_prefixes=["ENERG", "THETA", "RAD"], format="gadf-dl3"
+        )
+
         data = table["RPSF"].quantity[0].transpose()
-
-        energy_axis_true = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
-        )
-        rad_axis = MapAxis.from_table(table, column_prefix="RAD", format="gadf-dl3")
-
         return cls(
-            energy_axis_true=energy_axis_true,
-            offset_axis=offset_axis,
-            rad_axis=rad_axis,
+            energy_axis_true=axes["energy_true"],
+            offset_axis=axes["offset"],
+            rad_axis=axes["rad"],
             data=data,
             meta=table.meta
         )
@@ -680,8 +636,7 @@ class PSF3D:
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        axes = MapAxes([self.offset_axis, self.energy_axis_true, self.rad_axis])
-        table = axes.to_table(format="gadf-dl3")
+        table = self.data.axes.to_table(format="gadf-dl3")
 
         table["RPSF"] = self.data.data.T[np.newaxis]
 
@@ -789,7 +744,7 @@ class PSF3D:
         return TablePSF(rad_axis=self.rad_axis, data=psf_value, **kwargs)
 
     def containment_radius(
-        self, energy, theta="0 deg", fraction=0.68, interp_kwargs=None
+        self, energy, theta="0 deg", fraction=0.68
     ):
         """Containment radius.
 

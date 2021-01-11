@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 from .edisp_kernel import EDispKernel
@@ -136,34 +136,39 @@ class EnergyDispersion2D:
 
     @classmethod
     def from_table(cls, table):
-        """Create from `~astropy.table.Table`."""
-        # TODO: move this to MapAxis.from_table()
+        """Create from `~astropy.table.Table`.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table with effective area.
+
+        Returns
+        -------
+        aeff : `EffectiveArea2D`
+            Effective area
+        """
 
         if "ENERG_LO" in table.colnames:
-            energy_axis_true = MapAxis.from_table(
-                table, column_prefix="ENERG", format="gadf-dl3"
-            )
+            column_prefixes = ["ENERG", "THETA", "MIGRA"]
         elif "ETRUE_LO" in table.colnames:
-            energy_axis_true = MapAxis.from_table(
-                table, column_prefix="ETRUE", format="gadf-dl3"
-            )
+            column_prefixes = ["ETRUE", "THETA", "MIGRA"]
         else:
             raise ValueError(
                 'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
             )
 
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
+        axes = MapAxes.from_table(
+            table, column_prefixes=column_prefixes, format="gadf-dl3"
         )
-        migra_axis = MapAxis.from_table(table, column_prefix="MIGRA", format="gadf-dl3")
 
-        matrix = table["MATRIX"].quantity[0].transpose()
+        data = table["MATRIX"].quantity[0].transpose()
 
         return cls(
-            energy_axis_true=energy_axis_true,
-            offset_axis=offset_axis,
-            migra_axis=migra_axis,
-            data=matrix,
+            energy_axis_true=axes["energy_true"],
+            offset_axis=axes["offset"],
+            migra_axis=axes["migra"],
+            data=data,
         )
 
     @classmethod
