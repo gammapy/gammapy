@@ -105,7 +105,7 @@ class NDDataArray:
         for key, value in coords.items():
             coord = kwargs.get(key, value)
             if coord is not None:
-                coords[key] = u.Quantity(coord)
+                coords[key] = u.Quantity(coord, copy=False)
 
         return self._interpolate(coords.values(), method=method)
 

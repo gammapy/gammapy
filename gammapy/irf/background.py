@@ -138,8 +138,7 @@ class Background3D:
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
         # TODO: fix axis order
-        axes = MapAxes(self.data.axes[::-1])
-        table = axes.to_table(format="gadf-dl3")
+        table = self.data.axes.reverse.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
         table.meta["HDUCLAS2"] = "BKG"
         table["BKG"] = self.data.data.T[np.newaxis]
@@ -409,15 +408,13 @@ class Background2D:
             label = f"Background rate ({self.data.data.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
-    def plot_offset_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+    def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
         """Plot background rate versus offset for a given energy.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        offset : `~astropy.coordinates.Angle`
-            Offset axis
         energy : `~astropy.units.Quantity`
             Energy
 
@@ -435,8 +432,7 @@ class Background2D:
             e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
             energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
 
-        if offset is None:
-            offset = self.data.axes["offset"].center
+        offset = self.data.axes["offset"].center
 
         for ee in energy:
             bkg = self.data.evaluate(offset=offset, energy=ee)
@@ -451,7 +447,7 @@ class Background2D:
         ax.legend(loc="upper right")
         return ax
 
-    def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+    def plot_energy_dependence(self, ax=None, offset=None, **kwargs):
         """Plot background rate versus energy for a given offset.
 
         Parameters
@@ -460,8 +456,6 @@ class Background2D:
             Axis
         offset : `~astropy.coordinates.Angle`
             Offset
-        energy : `~astropy.units.Quantity`
-            Energy axis
         kwargs : dict
             Forwarded tp plt.plot()
 
@@ -479,8 +473,7 @@ class Background2D:
             off_min, off_max = offset_axis.center.value[[0, -1]]
             offset = np.linspace(off_min, off_max, 4) * offset_axis.unit
 
-        if energy is None:
-            energy = self.data.axes["energy"].center
+        energy = self.data.axes["energy"].center
 
         for off in offset:
             bkg = self.data.evaluate(offset=off, energy=energy)

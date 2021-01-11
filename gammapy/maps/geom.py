@@ -115,6 +115,11 @@ class MapAxes(Sequence):
         self._axes = axes
 
     @property
+    def reverse(self):
+        """Reverse axes order"""
+        return MapAxes(self[::-1])
+
+    @property
     def iter_with_reshape(self):
         """Iterate by shape"""
         for idx, axis in enumerate(self):
