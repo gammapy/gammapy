@@ -1,7 +1,104 @@
 from copy import deepcopy
+import abc
 import numpy as np
 from astropy.io import fits
-from gammapy.maps import Map
+from astropy import units as u
+from astropy.utils import lazyproperty
+from gammapy.maps import Map, MapAxes
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+
+
+class IRF:
+    """IRF base class"""
+    def __init__(self, axes, data, unit="", meta=None):
+        axes = MapAxes(axes)
+        axes.assert_names(self.required_axes)
+        self._axes = axes
+        self.data = data
+        self.unit = unit
+        self.meta = meta or {}
+
+    @property
+    @abc.abstractmethod
+    def tag(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def required_axes(self):
+        pass
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, data):
+        """Set data
+
+        Parameters
+        ----------
+        data : `~astropy.units.Quantity`, array-like
+            Data array
+        """
+        self._data = data
+
+        # reset cached interpolators
+        self.__dict__.pop("_interpolate", None)
+        self.__dict__.pop("_integrate_rad", None)
+
+    @property
+    def quantity(self):
+        """`~astropy.units.Quantity`"""
+        return u.Quantity(self.data, unit=self.unit, copy=False)
+
+    @property
+    def axes(self):
+        """`MapAxes`"""
+        return self._axes
+
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__}\n\n"
+            f"\taxes  : {self.axes.names}\n"
+            f"\tshape : {self.data.shape[::-1]}\n"
+            f"\tndim  : {len(self.axes)}\n"
+            f"\tunit  : {self.unit}\n"
+            f"\tdtype : {self.data.dtype}\n"
+        )
+
+    def evaluate(self, method=None, **kwargs):
+        """Evaluate IRF
+
+        Parameters
+        ----------
+        coords : dict
+            Coordinates at which to evaluate the IRF
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Interpolated values, axis order is the same as for the NDData array
+        """
+        coords_default = self.axes.get_coord()
+
+        for key, value in kwargs.items():
+            coord = kwargs.get(key, value)
+            if coord is not None:
+                coords_default[key] = u.Quantity(coord, copy=False)
+
+        return self._interpolate(coords_default.values(), method=method)
+
+    @lazyproperty
+    def _interpolate(self):
+        points = [a.center for a in self.axes]
+        points_scale = tuple([a.interp for a in self.axes])
+        return ScaledRegularGridInterpolator(
+            points, self.quantity, points_scale=points_scale, **self.default_interp_kwargs
+        )
+
 
 
 class IRFMap:
