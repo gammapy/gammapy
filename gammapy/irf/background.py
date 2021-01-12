@@ -16,6 +16,11 @@ log = logging.getLogger(__name__)
 
 class BackgroundIRF(IRF):
     """Background IRF base class"""
+    default_interp_kwargs = dict(
+        bounds_error=False, fill_value=None, values_scale="log"
+    )
+    """Default Interpolation kwargs to extrapolate."""
+
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
@@ -117,14 +122,14 @@ class Background3D(BackgroundIRF):
 
     Parameters
     ----------
-    energy_axis : `MapAxis`
-        Energy axis
-    fov_lon_axis: `MapAxis`
-        FOV coordinate X-axis
-    fov_lat_axis : `MapAxis`
-        FOV coordinate Y-axis.
-    data : `~astropy.units.Quantity`
-        Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
+    axes : list of `MapAxis` or `MapAxes` object
+        Required data axes: ["energy", "fov_lon", "fov_lat"] in the given order.
+    data : `~np.ndarray`
+        Data array.
+    unit : str or `~astropy.units.Unit`
+        Data unit usuually ``s^-1 MeV^-1 sr^-1``
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -141,13 +146,8 @@ class Background3D(BackgroundIRF):
     fov_lat           : size =    36, min = -5.833 deg, max =  5.833 deg
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
-
     tag = "bkg_3d"
     required_axes = ["energy", "fov_lon", "fov_lat"]
-    default_interp_kwargs = dict(
-        bounds_error=False, fill_value=None, values_scale="log"
-    )
-    """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def to_2d(self):
         """Convert to `Background2D`.
@@ -177,12 +177,14 @@ class Background2D(BackgroundIRF):
 
     Parameters
     ----------
-    energy_axis : `MapAxis`
-        Energy axis
-    offset_axis : `MapAxis`
-        FOV coordinate offset-axis
-    data : `~astropy.units.Quantity`
-        Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
+    axes : list of `MapAxis` or `MapAxes` object
+        Required data axes: ["energy", "offset"] in the given order.
+    data : `~np.ndarray`
+        Data array.
+    unit : str or `~astropy.units.Unit`
+        Data unit usually ``s^-1 MeV^-1 sr^-1``
+    meta : dict
+        Meta data
     """
 
     tag = "bkg_2d"

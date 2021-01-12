@@ -78,7 +78,7 @@ class IRF:
 
         Parameters
         ----------
-        coords : dict
+        **kwargs : dict
             Coordinates at which to evaluate the IRF
         method : str {'linear', 'nearest'}, optional
             Interpolation method
@@ -103,6 +103,8 @@ class IRF:
 
         Parameters
         ----------
+        **kwargs : dict
+            Coordinates at which to evaluate the IRF
         method : {'linear', 'nearest'}, optional
             Interpolation method
 
