@@ -64,14 +64,14 @@ class IRF:
         return self._axes
 
     def __str__(self):
-        return (
-            f"{self.__class__.__name__}\n\n"
-            f"\taxes  : {self.axes.names}\n"
-            f"\tshape : {self.data.shape[::-1]}\n"
-            f"\tndim  : {len(self.axes)}\n"
-            f"\tunit  : {self.unit}\n"
-            f"\tdtype : {self.data.dtype}\n"
-        )
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n\n"
+        str_ += f"\taxes  : {self.axes.names}\n"
+        str_ += f"\tshape : {self.data.shape}\n"
+        str_ += f"\tndim  : {len(self.axes)}\n"
+        str_ += f"\tunit  : {self.unit}\n"
+        str_ += f"\tdtype : {self.data.dtype}\n"
+        return str_.expandtabs(tabsize=2)
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate IRF
