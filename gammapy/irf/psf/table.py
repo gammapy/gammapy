@@ -252,33 +252,6 @@ class EnergyDependentTablePSF(IRF):
         """
         self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
-    def evaluate(self, energy=None, rad=None, method="linear"):
-        """Evaluate the PSF at a given energy and offset
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy value
-        rad : `~astropy.coordinates.Angle`
-            Offset wrt source position
-        method : {"linear", "nearest"}
-            Linear or nearest neighbour interpolation.
-
-        Returns
-        -------
-        values : `~astropy.units.Quantity`
-            Interpolated value
-        """
-        if energy is None:
-            energy = self.axes["energy_true"].center
-
-        if rad is None:
-            rad = self.axes["rad"].center
-
-        energy = u.Quantity(energy, ndmin=1)[:, np.newaxis]
-        rad = u.Quantity(rad, ndmin=1)
-        return self._interpolate((energy, rad), method=method)
-
     def table_psf_at_energy(self, energy, method="linear"):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 
@@ -294,7 +267,7 @@ class EnergyDependentTablePSF(IRF):
         psf : `~gammapy.irf.TablePSF`
             Table PSF
         """
-        data = self.evaluate(energy=energy, method=method).squeeze()
+        data = self.evaluate(energy_true=energy, method=method).squeeze()
         return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit)
 
     def table_psf_in_energy_range(
@@ -314,7 +287,7 @@ class EnergyDependentTablePSF(IRF):
             with index=2.
         n_bins : int
             Number of energy points in the energy band, used to compute the
-            weigthed PSF.
+            weighted PSF.
 
         Returns
         -------
@@ -329,13 +302,14 @@ class EnergyDependentTablePSF(IRF):
         exposure = TemplateSpectralModel(self.axes["energy_true"].center, self.exposure)
 
         e_min, e_max = energy_range
-        energy = MapAxis.from_energy_bounds(e_min, e_max, n_bins).edges
+        energy = MapAxis.from_energy_bounds(e_min, e_max, n_bins).edges[:, np.newaxis]
 
         weights = spectrum(energy) * exposure(energy)
         weights /= weights.sum()
 
-        psf_value = self.evaluate(energy=energy)
-        psf_value_weighted = weights[:, np.newaxis] * psf_value
+        psf_value = self.evaluate(energy_true=energy)
+        psf_value_weighted = weights * psf_value
+
         data = psf_value_weighted.sum(axis=0)
         return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
 
@@ -403,7 +377,7 @@ class EnergyDependentTablePSF(IRF):
         ax = plt.gca() if ax is None else ax
 
         for value in energy:
-            psf_value = np.squeeze(self.evaluate(energy=value))
+            psf_value = np.squeeze(self.evaluate(energy_true=value))
             label = f"{value:.0f}"
             ax.plot(
                 self.axes["rad"].center.to_value("deg"),

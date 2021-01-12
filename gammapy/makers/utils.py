@@ -203,12 +203,10 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     # Compute PSF values
     # TODO: allow broadcasting in PSF3D.evaluate()
-    psf_values = psf._interpolate(
-        (
-            energy[:, np.newaxis, np.newaxis, np.newaxis],
-            offset,
-            rad[:, np.newaxis, np.newaxis],
-        )
+    psf_values = psf.evaluate(
+            energy_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
+            offset=offset,
+            rad=rad[:, np.newaxis, np.newaxis],
     )
 
     # TODO: this probably does not ensure that probability is properly normalized in the PSFMap

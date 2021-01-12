@@ -473,6 +473,7 @@ class EnergyDependentMultiGaussPSF:
         psf3d : `~gammapy.irf.PSF3D`
             the PSF3D. It will be defined on the same energy and offset values than the input psf.
         """
+
         offsets = self.offset_axis.center
         energy = self.energy_axis_true.center
 
@@ -486,7 +487,9 @@ class EnergyDependentMultiGaussPSF:
 
         for idx, offset in enumerate(offsets):
             table_psf = self.to_energy_dependent_table_psf(offset)
-            psf_value[:, idx, :] = table_psf.evaluate(energy, rad_axis.center)
+            psf_value[:, idx, :] = table_psf.evaluate(
+                energy_true=energy[:, np.newaxis], rad=rad_axis.center
+            )
 
         return PSF3D(
             axes=[self.energy_axis_true, self.offset_axis, rad_axis],
