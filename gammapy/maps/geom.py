@@ -798,8 +798,8 @@ class MapAxis:
     def as_xerr(self):
         """Return tuple of xerr to be used with plt.errorbar()"""
         return (
-            (self.center - self.edges[:-1]).value,
-            (self.edges[1:] - self.center).value,
+            self.center - self.edges[:-1],
+            self.edges[1:] - self.center,
         )
 
     @lazyproperty
@@ -1658,6 +1658,13 @@ class MapAxis:
             else:
                 edges = edges_from_lo_hi(edges_lo, edges_hi)
                 axis = MapAxis.from_edges(edges, interp=interp, name=name)
+        elif format == "gtpsf":
+            try:
+                energy = table["Energy"].data * u.MeV
+                axis = MapAxis.from_nodes(energy, name="energy_true", interp="log")
+            except KeyError:
+                rad = table["Theta"].data * u.deg
+                axis = MapAxis.from_nodes(rad, name="rad")
         else:
             raise ValueError(f"Format '{format}' not supported")
 

@@ -108,7 +108,7 @@ class SpectrumDatasetMaker(Maker):
         offset = observation.pointing_radec.separation(geom.center_skydir)
         energy = geom.axes["energy_true"]
 
-        data = observation.aeff.data.evaluate(offset=offset, energy_true=energy.center)
+        data = observation.aeff.evaluate(offset=offset, energy_true=energy.center)
 
         if self.containment_correction:
             if not isinstance(geom.region, CircleSkyRegion):

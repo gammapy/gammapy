@@ -188,10 +188,10 @@ class TestEnergyDependentTablePSF:
     def test_write(self, tmp_path):
         self.psf.write(tmp_path / "test.fits")
         new = EnergyDependentTablePSF.read(tmp_path / "test.fits")
-        assert_allclose(new.rad_axis.center, self.psf.rad_axis.center)
-        assert_allclose(new.energy_axis_true.center, self.psf.energy_axis_true.center)
-        assert_allclose(new.data.data, self.psf.data.data)
+        assert_allclose(new.axes["rad"].center, self.psf.axes["rad"].center)
+        assert_allclose(new.axes["energy_true"].center, self.psf.axes["energy_true"].center)
+        assert_allclose(new.quantity, self.psf.quantity)
 
     def test_repr(self):
         info = str(self.psf)
-        assert "Containment" in info
+        assert "EnergyDependentTablePSF" in info

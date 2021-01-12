@@ -454,10 +454,10 @@ class EnergyDependentMultiGaussPSF:
             psf_value[idx] = u.Quantity(psf_gauss(rad), "deg^-2")
 
         return EnergyDependentTablePSF(
-            energy_axis_true=self.energy_axis_true,
-            rad_axis=rad_axis,
+            axes=[self.energy_axis_true, rad_axis],
             exposure=exposure,
-            data=psf_value,
+            data=psf_value.value,
+            unit=psf_value.unit
         )
 
     def to_psf3d(self, rad=None):

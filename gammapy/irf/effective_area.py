@@ -3,6 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
 from gammapy.utils.scripts import make_path
 from .core import IRF
@@ -88,11 +89,12 @@ class EffectiveAreaTable(IRF):
 
         energy_axis = self.axes["energy_true"]
 
-        ax.errorbar(energy_axis.center.value, self.data, xerr=energy_axis.as_xerr, **kwargs)
+        with quantity_support():
+            ax.errorbar(energy_axis.center, self.quantity, xerr=energy_axis.as_xerr, **kwargs)
 
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to_value(energy_axis.unit)
-            ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles="dashed")
+            ax.vlines(ener_val, 0, 1.1 * self.max_area, linestyles="dashed")
 
         ax.set_xscale("log")
         ax.set_xlabel(f"Energy [{energy_axis.unit}]")

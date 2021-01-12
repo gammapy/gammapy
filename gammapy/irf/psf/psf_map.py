@@ -129,9 +129,9 @@ class PSFMap(IRFMap):
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
-            energy_axis_true=self.psf_map.geom.axes["energy_true"],
-            rad_axis=self.psf_map.geom.axes["rad"],
-            data=psf_values,
+            axes=self.psf_map.geom.axes[["energy_true", "rad"]],
+            data=psf_values.value,
+            unit=psf_values.unit,
             exposure=exposure,
         )
 
@@ -279,20 +279,19 @@ class PSFMap(IRFMap):
                 npix=(2, 1),
                 proj="CAR",
                 binsz=180,
-                axes=[table_psf.rad_axis, table_psf.energy_axis_true],
+                axes=table_psf.axes.reverse,
             )
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf.data._interpolate((coords["energy_true"], coords["rad"]))
+        data = table_psf._interpolate((coords["energy_true"], coords["rad"]))
         psf_map = Map.from_geom(geom, data=data.to_value("sr-1"), unit="sr-1")
 
         geom_exposure = geom.squash(axis_name="rad")
 
-        data = table_psf.exposure.reshape((-1, 1, 1, 1))
-
-        exposure_map = Map.from_geom(geom_exposure, unit="cm2 s")
-        exposure_map.quantity += data
+        exposure_map = Map.from_geom(geom_exposure, unit="cm2 s", data=1)
+        data = table_psf.exposure
+        exposure_map.quantity = exposure_map.data * data.reshape((-1, 1, 1, 1))
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     @classmethod
@@ -347,10 +346,10 @@ class PSFMap(IRFMap):
             )
 
         table_psf = EnergyDependentTablePSF(
-            energy_axis_true=energy_axis_true,
-            rad_axis=rad_axis,
+            axes=[energy_axis_true, rad_axis],
             exposure=None,
-            data=data,
+            data=data.value,
+            unit=data.unit
         )
         return cls.from_energy_dependent_table_psf(table_psf)
 
