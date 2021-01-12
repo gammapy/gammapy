@@ -135,7 +135,8 @@ the required memory:
 - Reduce the spatial sampling of the `~gammapy.irf.PSFMap` and the `~gammapy.irf.EDispKernelMap`
 using the `binsz_irf` argument of the `~gammapy.datasets.MapDataset.create` method. This will reduce
 the accuracy of the IRF kernels used for model counts predictions.
-- Change the default IRFMap axes, in particular the `rad_axis` which controls the distribution of
-error angles used to sample the PSF. This will reduce the quality of the PSF description.
+- Change the default IRFMap axes, in particular the `rad_axis` argument of `~gammapy.datasets.MapDataset.create`
+This axis is used to define the geometry of the `~gammapy.irf.PSFMap` and controls the distribution of error angles
+used to sample the PSF. This will reduce the quality of the PSF description.
 - If one or several IRFs are not required for the study at hand, it is possible not to build them
  by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
