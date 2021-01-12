@@ -124,3 +124,18 @@ While Gammapy does not ship energy dependent spatial models, it is possible to d
 such models within the modeling framework.
 For an example, see ` here
 <tutorials/models.html#Models-with-Energy-dependent-morphologyl>`__.
+
+Reduce memory budget for large datasets
++++++++++++++++++++++++++++++++++++++++
+
+When dealing with surveys and large sky regions, the amount of memory required might become
+problematic, in particular because of the default settings of the IRF maps stored in the
+`~gammapy.datasets.MapDataset` used for the data reduction. Several options can be used to reduce
+the required memory:
+- Reduce the spatial sampling of the `~gammapy.irf.PSFMap` and the `~gammapy.irf.EDispKernelMap`
+using the `binsz_irf` argument of the `~gammapy.datasets.MapDataset.create` method. This will reduce
+the accuracy of the IRF kernels used for model counts predictions.
+- Change the default IRFMap axes, in particular the `rad_axis` which controls the distribution of
+error angles used to sample the PSF. This will reduce the quality of the PSF description.
+- If one or several IRFs are not required for the study at hand, it is possible not to build them
+ by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
