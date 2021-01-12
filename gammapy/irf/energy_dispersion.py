@@ -178,8 +178,7 @@ class EnergyDispersion2D(IRF):
             data.append(vec)
 
         return EDispKernel(
-            energy_axis=energy_axis,
-            energy_axis_true=energy_axis_true,
+            axes=[energy_axis_true, energy_axis],
             data=np.asarray(data),
         )
 

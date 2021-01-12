@@ -59,14 +59,14 @@ class TestEDispKernel:
         assert_allclose(
             im.pdf_matrix, [[0.97142], [1.0], [1.0], [1.0], [0.12349]], rtol=1e-3
         )
-        assert_allclose(im.energy_axis.edges, [0.1, 10] * u.TeV)
+        assert_allclose(im.axes["energy"].edges, [0.1, 10] * u.TeV)
 
     def test_str(self):
         assert "EDispKernel" in str(self.edisp)
 
     def test_evaluate(self):
         # Check for correct normalization
-        pdf = self.edisp.data.evaluate(energy_true=3.34 * u.TeV)
+        pdf = self.edisp.evaluate(energy_true=3.34 * u.TeV)
         assert_allclose(np.sum(pdf), 1, atol=1e-2)
 
     def test_get_bias(self):

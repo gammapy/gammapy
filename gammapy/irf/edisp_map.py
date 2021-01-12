@@ -150,7 +150,7 @@ class EDispMap(IRFMap):
             data.append(integral)
 
         return EDispKernel(
-            energy_axis_true=energy_axis_true, energy_axis=energy_axis, data=data
+            axes=[energy_axis_true, energy_axis], data=data
         )
 
     @classmethod
@@ -395,8 +395,7 @@ class EDispKernelMap(IRFMap):
             kernel_map = self.edisp_map.to_region_nd_map(region=position)
 
         return EDispKernel(
-            energy_axis_true=kernel_map.geom.axes["energy_true"],
-            energy_axis=kernel_map.geom.axes["energy"],
+            axes=kernel_map.geom.axes[["energy_true", "energy"]],
             data=kernel_map.data[..., 0, 0],
         )
 
@@ -446,7 +445,7 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         edisp_map = cls.from_diagonal_response(
-            edisp.energy_axis, edisp.energy_axis_true, geom=geom
+            edisp.axes["energy"], edisp.axes["energy_true"], geom=geom
         )
         edisp_map.edisp_map.data *= 0
         edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[

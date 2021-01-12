@@ -7,7 +7,6 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.array import array_stats_str
-from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from ..core import IRF

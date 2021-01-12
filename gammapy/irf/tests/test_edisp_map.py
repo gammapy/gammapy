@@ -166,7 +166,7 @@ def test_edisp_from_diagonal_response(position):
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
     edisp_kernel = edisp_map.get_edisp_kernel(position, energy_axis=energy_axis)
 
-    sum_kernel = np.sum(edisp_kernel.data.data, axis=1).data
+    sum_kernel = np.sum(edisp_kernel.data, axis=1)
 
     # We exclude the first and last bin, where there is no
     # e_reco to contribute to
