@@ -335,6 +335,12 @@ class MapAxes(Sequence):
                 if ax.name == idx:
                     return ax
             raise KeyError(f"No axes: {idx!r}")
+        elif isinstance(idx, list):
+            axes = []
+            for name in idx:
+                axes.append(self[name])
+
+            return self.__class__(axes=axes)
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
@@ -552,7 +558,7 @@ class MapAxes(Sequence):
         return cls.from_table(table, format=format)
 
     @classmethod
-    def from_table(cls, table, format="gadf", column_prefixes=None):
+    def from_table(cls, table, format="gadf"):
         """Create MapAxes from BinTableHDU
 
         Parameters
@@ -561,14 +567,13 @@ class MapAxes(Sequence):
             Bin table HDU
         format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube"}
             Format to use.
-        column_prefixes : list of str
-            Column name prefixes of the axes..
 
         Returns
         -------
         axes : `MapAxes`
             Map axes object
         """
+        from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
         axes = []
 
         if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
@@ -583,8 +588,11 @@ class MapAxes(Sequence):
                 axis = MapAxis.from_table(table, format=format, idx=idx)
                 axes.append(axis)
         elif format == "gadf-dl3":
-            for column_prefix in column_prefixes:
-                axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
+            for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
+                try:
+                    axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
+                except KeyError:
+                    continue
                 axes.append(axis)
         else:
             raise ValueError(f"Unsupported format: '{format}'")

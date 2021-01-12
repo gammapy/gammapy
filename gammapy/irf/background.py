@@ -6,7 +6,6 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
-from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 from .core import IRF
 
@@ -15,7 +14,103 @@ __all__ = ["Background3D", "Background2D"]
 log = logging.getLogger(__name__)
 
 
-class Background3D(IRF):
+class BackgroundIRF(IRF):
+    """Background IRF base class"""
+    @classmethod
+    def from_table(cls, table):
+        """Read from `~astropy.table.Table`."""
+        # Spec says key should be "BKG", but there are files around
+        # (e.g. CTA 1DC) that use "BGD". For now we support both
+        if "BKG" in table.colnames:
+            bkg_name = "BKG"
+        elif "BGD" in table.colnames:
+            bkg_name = "BGD"
+        else:
+            raise ValueError('Invalid column names. Need "BKG" or "BGD".')
+
+        data_unit = table[bkg_name].unit
+
+        if data_unit is not None:
+            data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
+        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
+            data_unit = u.Unit("s-1 MeV-1 sr-1")
+            log.warning(
+                "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
+            )
+
+        axes = MapAxes.from_table(table, format="gadf-dl3")[cls.required_axes]
+
+        # TODO: The present HESS and CTA backgroundfits files
+        #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
+        #  For now, we suport both.
+
+        data = table[bkg_name].data[0].T * data_unit
+
+        if axes.shape == axes.shape[::-1]:
+            log.error("Ambiguous axes order in Background fits files!")
+
+        if np.shape(data) != axes.shape:
+            log.debug("Transposing background table on read")
+            data = data.transpose()
+
+        return cls(
+            axes=axes,
+            data=data,
+            meta=table.meta,
+            unit=data_unit
+        )
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu="BACKGROUND"):
+        """Create from `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        hdulist : `~astropy.io.HDUList`
+            HDU list
+        hdu : str
+            HDU name
+
+        Returns
+        -------
+        background_irf : `BackgroundIRF`
+            Background IRF
+        """
+        return cls.from_table(Table.read(hdulist[hdu]))
+
+    @classmethod
+    def read(cls, filename, hdu="BACKGROUND"):
+        """Read from file.
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            Filename
+        hdu : str
+            HDU name
+
+        Returns
+        -------
+        background_irf : `BackgroundIRF`
+            Background IRF
+        """
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`."""
+        table = self.axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
+        table.meta["HDUCLAS2"] = "BKG"
+        table["BKG"] = self.quantity.T[np.newaxis]
+        return table
+
+    def to_table_hdu(self, name="BACKGROUND"):
+        """Convert to `~astropy.io.fits.BinTableHDU`."""
+        return fits.BinTableHDU(self.to_table(), name=name)
+
+
+class Background3D(BackgroundIRF):
     """Background 3D.
 
     Data format specification: :ref:`gadf:bkg_3d`
@@ -54,100 +149,6 @@ class Background3D(IRF):
     )
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
-    @classmethod
-    def from_table(cls, table):
-        """Read from `~astropy.table.Table`."""
-        # Spec says key should be "BKG", but there are files around
-        # (e.g. CTA 1DC) that use "BGD". For now we support both
-        if "BKG" in table.colnames:
-            bkg_name = "BKG"
-        elif "BGD" in table.colnames:
-            bkg_name = "BGD"
-        else:
-            raise ValueError('Invalid column names. Need "BKG" or "BGD".')
-
-        data_unit = table[bkg_name].unit
-
-        if data_unit is not None:
-            data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
-        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
-            data_unit = u.Unit("s-1 MeV-1 sr-1")
-            log.warning(
-                "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
-            )
-
-        axes = MapAxes.from_table(
-            table, column_prefixes=["ENERG", "DETX", "DETY"], format="gadf-dl3"
-        )
-
-        # TODO: The present HESS and CTA backgroundfits files
-        #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
-        #  For now, we suport both.
-
-        data = table[bkg_name].data[0].T * data_unit
-
-        if axes.shape == axes.shape[::-1]:
-            log.error("Ambiguous axes order in Background fits files!")
-
-        if np.shape(data) != axes.shape:
-            log.debug("Transposing background table on read")
-            data = data.transpose()
-
-        return cls(
-            axes=axes,
-            data=data,
-            meta=table.meta,
-            unit=data_unit
-        )
-
-    @classmethod
-    def from_hdulist(cls, hdulist, hdu="BACKGROUND"):
-        """Create from `~astropy.io.fits.HDUList`."""
-        return cls.from_table(Table.read(hdulist[hdu]))
-
-    @classmethod
-    def read(cls, filename, hdu="BACKGROUND"):
-        """Read from file."""
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu=hdu)
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        # TODO: fix axis order
-        table = self.axes.reverse.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
-        table.meta["HDUCLAS2"] = "BKG"
-        table["BKG"] = self.quantity.T[np.newaxis]
-        return table
-
-    def to_table_hdu(self, name="BACKGROUND"):
-        """Convert to `~astropy.io.fits.BinTableHDU`."""
-        return fits.BinTableHDU(self.to_table(), name=name)
-
-    def evaluate_integrate(
-        self, fov_lon, fov_lat, energy_reco, method="linear"
-    ):
-        """Integrate in a given energy band.
-
-        Parameters
-        ----------
-        fov_lon, fov_lat : `~astropy.coordinates.Angle`
-            FOV coordinates expecting in AltAz frame.
-        energy_reco: `~astropy.units.Quantity`
-            Reconstructed energy edges.
-        method : {'linear', 'nearest'}, optional
-            Interpolation method
-
-        Returns
-        -------
-        array : `~astropy.units.Quantity`
-            Returns 2D array with axes offset
-        """
-        data = self.evaluate(
-            fov_lon=fov_lon, fov_lat=fov_lat, energy=energy_reco, method=method
-        )
-        return trapz_loglog(data, energy_reco, axis=0)
-
     def to_2d(self):
         """Convert to `Background2D`.
 
@@ -169,7 +170,7 @@ class Background3D(IRF):
         return self.to_2d().peek(figsize)
 
 
-class Background2D(IRF):
+class Background2D(BackgroundIRF):
     """Background 2D.
 
     Data format specification: :ref:`gadf:bkg_2d`
@@ -188,96 +189,6 @@ class Background2D(IRF):
     required_axes = ["energy", "offset"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
-
-    @classmethod
-    def from_table(cls, table):
-        """Read from `~astropy.table.Table`."""
-        # Spec says key should be "BKG", but there are files around
-        # (e.g. CTA 1DC) that use "BGD". For now we support both
-
-        if "BKG" in table.colnames:
-            bkg_name = "BKG"
-        elif "BGD" in table.colnames:
-            bkg_name = "BGD"
-        else:
-            raise ValueError('Invalid column names. Need "BKG" or "BGD".')
-
-        data_unit = table[bkg_name].unit
-        if data_unit is not None:
-            data_unit = u.Unit(data_unit, parse_strict="silent")
-        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
-            data_unit = u.Unit("s-1 MeV-1 sr-1")
-            log.warning(
-                "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
-            )
-
-        axes = MapAxes.from_table(table, column_prefixes=["ENERG", "THETA"], format="gadf-dl3")
-
-        # TODO: The present HESS and CTA backgroundfits files
-        # have a reverse order (theta, E) than recommened in GADF(E, theta)
-        # For now, we suport both.
-
-        data = table[bkg_name].data[0].T * data_unit
-
-        if axes.shape == axes.shape[::-1]:
-            log.error("Ambiguous axes order in Background fits files!")
-
-        if np.shape(data) != axes.shape:
-            log.debug("Transposing background table on read")
-            data = data.transpose()
-
-        return cls(
-            axes=axes,
-            data=data,
-            meta=table.meta,
-            unit=data_unit
-        )
-
-    @classmethod
-    def from_hdulist(cls, hdulist, hdu="BACKGROUND"):
-        """Create from `~astropy.io.fits.HDUList`."""
-        return cls.from_table(Table.read(hdulist[hdu]))
-
-    @classmethod
-    def read(cls, filename, hdu="BACKGROUND"):
-        """Read from file."""
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu=hdu)
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        table = self.axes.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
-
-        # TODO: add other required meta data
-        table.meta["HDUCLAS2"] = "BKG"
-        table["BKG"] = self.quantity.T[np.newaxis]
-        return table
-
-    def to_table_hdu(self, name="BACKGROUND"):
-        """Convert to `~astropy.io.fits.BinTableHDU`."""
-        return fits.BinTableHDU(self.to_table(), name=name)
-
-    def evaluate_integrate(self, fov_lon, fov_lat, energy_reco, method="linear"):
-        """Evaluate at given FOV position and energy, by integrating over the energy range.
-
-        Parameters
-        ----------
-        fov_lon, fov_lat : `~astropy.coordinates.Angle`
-            FOV coordinates expecting in AltAz frame.
-        energy_reco: `~astropy.units.Quantity`
-            Reconstructed energy edges.
-        method : {'linear', 'nearest'}, optional
-            Interpolation method
-
-        Returns
-        -------
-        array : `~astropy.units.Quantity`
-            Returns 2D array with axes offset
-        """
-        offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
-        data = self.evaluate(offset=offset, energy=energy_reco, method=method)
-        return trapz_loglog(data, energy_reco, axis=0)
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model.

@@ -6,6 +6,7 @@ from astropy import units as u
 from astropy.utils import lazyproperty
 from gammapy.maps import Map, MapAxes
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.integrate import trapz_loglog
 
 
 class IRF:
@@ -27,6 +28,11 @@ class IRF:
     @abc.abstractmethod
     def required_axes(self):
         pass
+
+    @property
+    def is_offset_dependent(self):
+        """Whether the IRF depends on offset"""
+        return "offset" in self.required_axes
 
     @property
     def data(self):
@@ -82,6 +88,7 @@ class IRF:
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
+        # TODO: change to coord dict?
         coords_default = self.axes.get_coord()
 
         for key, value in kwargs.items():
@@ -91,6 +98,24 @@ class IRF:
 
         return self._interpolate(coords_default.values(), method=method)
 
+    def integrate_energy(self, method="linear", **kwargs):
+        """Integrate in a given energy band.
+
+        Parameters
+        ----------
+        method : {'linear', 'nearest'}, optional
+            Interpolation method
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Returns 2D array with axes offset
+        """
+        axis = self.axes.index("energy")
+        data = self.evaluate(**kwargs, method=method)
+        energy = kwargs["energy"]
+        return trapz_loglog(data, energy, axis=axis)
+
     @lazyproperty
     def _interpolate(self):
         points = [a.center for a in self.axes]
@@ -98,7 +123,6 @@ class IRF:
         return ScaledRegularGridInterpolator(
             points, self.quantity, points_scale=points_scale, **self.default_interp_kwargs
         )
-
 
 
 class IRFMap:
