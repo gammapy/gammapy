@@ -129,13 +129,13 @@ def bkg_3d():
 
 def bkg_3d_custom(symmetry="constant"):
     if symmetry == "constant":
-        data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
+        data = np.ones((2, 3, 3))
     elif symmetry == "symmetric":
-        data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
+        data = np.ones((2, 3, 3))
         data[:, 1, 1] *= 2
     elif symmetry == "asymmetric":
         data = np.indices((3, 3))[1] + 1
-        data = np.stack(2 * [data]) * u.Unit("s-1 MeV-1 sr-1")
+        data = np.stack(2 * [data])
     else:
         raise ValueError(f"Unkown value for symmetry: {symmetry}")
 
@@ -143,10 +143,9 @@ def bkg_3d_custom(symmetry="constant"):
     fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
     fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
     return Background3D(
-        energy_axis=energy_axis,
-        fov_lat_axis=fov_lat_axis,
-        fov_lon_axis=fov_lon_axis,
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
+        unit=u.Unit("s-1 MeV-1 sr-1")
     )
 
 

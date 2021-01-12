@@ -152,10 +152,10 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
 
     energies = geom.axes["energy"].edges
 
-    bkg_de = bkg.evaluate_integrate(
+    bkg_de = bkg.integrate_energy(
         fov_lon=fov_lon,
         fov_lat=fov_lat,
-        energy_reco=energies[:, np.newaxis, np.newaxis],
+        energy=energies[:, np.newaxis, np.newaxis],
     )
 
     d_omega = geom.to_image().solid_angle()

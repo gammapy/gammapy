@@ -82,8 +82,8 @@ class SpectrumDatasetMaker(Maker):
 
         bkg = observation.bkg
 
-        data = bkg.evaluate_integrate(
-            fov_lon=0 * u.deg, fov_lat=offset, energy_reco=e_reco
+        data = bkg.integrate_energy(
+            fov_lon=0 * u.deg, fov_lat=offset, energy=e_reco
         )
 
         data *= geom.solid_angle()
