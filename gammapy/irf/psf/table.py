@@ -545,41 +545,6 @@ class PSF3D(IRF):
         """
         self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
-    def evaluate(self, energy=None, offset=None, rad=None):
-        """Interpolate PSF value at a given offset and energy.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            energy value
-        offset : `~astropy.coordinates.Angle`
-            Offset in the field of view
-        rad : `~astropy.coordinates.Angle`
-            Offset wrt source position
-
-        Returns
-        -------
-        values : `~astropy.units.Quantity`
-            Interpolated value
-        """
-        if energy is None:
-            energy = self.axes["energy_true"].center
-        if offset is None:
-            offset = self.axes["offset"].center
-        if rad is None:
-            rad = self.axes["rad"].center
-
-        rad = np.atleast_1d(u.Quantity(rad))
-        offset = np.atleast_1d(u.Quantity(offset))
-        energy = np.atleast_1d(u.Quantity(energy))
-        return self._interpolate(
-            (
-                energy[np.newaxis, np.newaxis, :],
-                offset[np.newaxis, :, np.newaxis],
-                rad[:, np.newaxis, np.newaxis],
-            )
-        )
-
     def to_energy_dependent_table_psf(self, theta="0 deg", rad=None, exposure=None):
         """
         Convert PSF3D in EnergyDependentTablePSF.
@@ -611,7 +576,7 @@ class PSF3D(IRF):
         return EnergyDependentTablePSF(
             axes=self.axes[["energy_true", "rad"]],
             exposure=exposure,
-            data=data.value.transpose(),
+            data=data.value,
             unit=data.unit
         )
 
@@ -632,7 +597,7 @@ class PSF3D(IRF):
         """
         energy = u.Quantity(energy)
         theta = Angle(theta)
-        data = self.evaluate(energy, theta).squeeze()
+        data = self.evaluate(energy_true=energy, offset=theta).squeeze()
         return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
 
     def containment_radius(

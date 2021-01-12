@@ -106,6 +106,13 @@ class IRF:
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
+        non_valid_axis = set(kwargs).difference(self.axes.names)
+        if non_valid_axis:
+            raise ValueError(
+                f"Not a valid coordinate axis {non_valid_axis}"
+                f" Choose from: {self.axes.names}"
+            )
+
         # TODO: change to coord dict?
         coords_default = self.axes.get_coord()
 

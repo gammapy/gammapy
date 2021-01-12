@@ -39,10 +39,10 @@ def test_psf_3d_basics(psf_3d):
 
 @requires_data()
 def test_psf_3d_evaluate(psf_3d):
-    q = psf_3d.evaluate(energy="1 TeV", offset="0.3 deg", rad="0.1 deg")
+    q = psf_3d.evaluate(energy_true="1 TeV", offset="0.3 deg", rad="0.1 deg")
     assert_allclose(q.value, 25847.249548)
     # TODO: is this the shape we want here?
-    assert q.shape == (1, 1, 1)
+    assert q.shape == ()
     assert q.unit == "sr-1"
 
 
