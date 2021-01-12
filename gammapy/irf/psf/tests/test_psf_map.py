@@ -39,10 +39,9 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
     psf_value = val / ((val * drad).sum(0)[0])
 
     return PSF3D(
-        energy_axis_true=energy_axis_true,
-        rad_axis=rad_axis,
-        offset_axis=offset_axis,
-        data=psf_value.T,
+        axes=[energy_axis_true, offset_axis, rad_axis],
+        data=psf_value.T.value,
+        unit=psf_value.unit
     )
 
 
@@ -295,12 +294,12 @@ def test_make_psf(pars, data_store):
     psf = obs.psf
 
     if pars["energy"] is None:
-        energy_axis = psf.energy_axis_true
+        energy_axis = psf.axes["energy_true"]
     else:
         energy_axis = pars["energy"]
 
     if pars["rad"] is None:
-        rad_axis = psf.rad_axis
+        rad_axis = psf.axes["rad"]
     else:
         rad_axis = pars["rad"]
 
@@ -342,7 +341,7 @@ def test_make_mean_psf(data_store):
     geom = WcsGeom.create(
         skydir=position,
         npix=(3, 3),
-        axes=[psf.rad_axis, psf.energy_axis_true],
+        axes=psf.axes[["rad", "energy_true"]],
         binsz=0.2,
     )
 

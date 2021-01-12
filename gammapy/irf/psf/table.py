@@ -456,7 +456,7 @@ class EnergyDependentTablePSF(IRF):
         plt.tight_layout()
 
 
-class PSF3D:
+class PSF3D(IRF):
     """PSF with axes: energy, offset, rad.
 
     Data format specification: :ref:`gadf:psf_table`
@@ -476,27 +476,7 @@ class PSF3D:
     """
 
     tag = "psf_table"
-
-    def __init__(
-        self,
-        energy_axis_true,
-        offset_axis,
-        rad_axis,
-        data,
-        meta=None,
-        interp_kwargs=None,
-    ):
-
-        interp_kwargs = interp_kwargs or {}
-
-        axes = MapAxes([energy_axis_true, offset_axis, rad_axis])
-        axes.assert_names(["energy_true", "offset", "rad"])
-
-        self.data = NDDataArray(
-            axes=axes, data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
-        )
-
-        self.meta = meta or {}
+    required_axes = ["energy_true", "offset", "rad"]
 
     @property
     def energy_thresh_lo(self):
@@ -507,26 +487,6 @@ class PSF3D:
     def energy_thresh_hi(self):
         """High energy threshold"""
         return self.meta["HI_THRES"] * u.TeV
-
-    @property
-    def energy_axis_true(self):
-        return self.data.axes["energy_true"]
-
-    @property
-    def rad_axis(self):
-        return self.data.axes["rad"]
-
-    @property
-    def offset_axis(self):
-        return self.data.axes["offset"]
-
-    def __repr__(self):
-        """Print some basic info.
-        """
-        info = self.__class__.__name__ + "\n"
-        info += "-" * len(self.__class__.__name__) + "\n\n"
-        info += f"\tshape      : {self.data.data.shape}\n"
-        return info
 
     @classmethod
     def read(cls, filename, hdu="PSF_2D_TABLE"):
@@ -551,15 +511,13 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
-        axes = MapAxes.from_table(table=table, format="gadf-dl3")
-
+        axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
         data = table["RPSF"].quantity[0].transpose()
         return cls(
-            energy_axis_true=axes["energy_true"],
-            offset_axis=axes["offset"],
-            rad_axis=axes["rad"],
-            data=data,
-            meta=table.meta
+            axes=axes,
+            data=data.value,
+            meta=table.meta,
+            unit=data.unit
         )
 
     def to_hdulist(self):
@@ -570,9 +528,9 @@ class PSF3D:
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        table = self.data.axes.to_table(format="gadf-dl3")
+        table = self.axes.to_table(format="gadf-dl3")
 
-        table["RPSF"] = self.data.data.T[np.newaxis]
+        table["RPSF"] = self.quantity.T[np.newaxis]
 
         hdu = fits.BinTableHDU(table)
         hdu.header["LO_THRES"] = self.energy_thresh_lo.value
@@ -605,16 +563,16 @@ class PSF3D:
             Interpolated value
         """
         if energy is None:
-            energy = self.energy_axis_true.center
+            energy = self.axes["energy_true"].center
         if offset is None:
-            offset = self.offset_axis.center
+            offset = self.axes["offset"].center
         if rad is None:
-            rad = self.rad_axis.center
+            rad = self.axes["rad"].center
 
         rad = np.atleast_1d(u.Quantity(rad))
         offset = np.atleast_1d(u.Quantity(offset))
         energy = np.atleast_1d(u.Quantity(energy))
-        return self.data._interpolate(
+        return self._interpolate(
             (
                 energy[np.newaxis, np.newaxis, :],
                 offset[np.newaxis, :, np.newaxis],
@@ -647,11 +605,11 @@ class PSF3D:
         if rad is not None:
             rad_axis = MapAxis.from_edges(rad, name="rad")
         else:
-            rad_axis = self.rad_axis
+            rad_axis = self.axes["rad"]
 
         data = self.evaluate(offset=theta, rad=rad_axis.center).squeeze()
         return EnergyDependentTablePSF(
-            axes=[self.energy_axis_true, rad_axis],
+            axes=self.axes[["energy_true", "rad"]],
             exposure=exposure,
             data=data.value.transpose(),
             unit=data.unit
@@ -675,7 +633,7 @@ class PSF3D:
         energy = u.Quantity(energy)
         theta = Angle(theta)
         data = self.evaluate(energy, theta).squeeze()
-        return TablePSF(axes=[self.rad_axis], data=data.value, unit=data.unit, **kwargs)
+        return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
 
     def containment_radius(
         self, energy, theta="0 deg", fraction=0.68
@@ -715,9 +673,7 @@ class PSF3D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = MapAxis.from_energy_bounds(
-            self.energy_axis_true.edges[0], self.energy_axis_true.edges[-1], 100
-        ).edges
+        energy = self.axes["energy_true"].center
 
         for theta in thetas:
             for fraction in fractions:
@@ -761,8 +717,8 @@ class PSF3D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.energy_axis_true.center
-        offset = self.offset_axis.center
+        energy = self.axes["energy_true"].center
+        offset = self.axes["offset"].center
 
         # Set up and compute data
         containment = self.containment_radius(energy, offset, fraction)
@@ -798,8 +754,8 @@ class PSF3D:
     def _plot_safe_energy_range(self, ax):
         """add safe energy range lines to the plot"""
         esafe = self.energy_thresh_lo
-        omin = self.offset_axis.center.value.min()
-        omax = self.offset_axis.center.value.max()
+        omin = self.axes["offset"].center.value.min()
+        omax = self.axes["offset"].center.value.max()
         ax.vlines(x=esafe.value, ymin=omin, ymax=omax)
         label = f"Safe energy threshold: {esafe:3.2f}"
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
