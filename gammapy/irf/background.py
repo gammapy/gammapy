@@ -192,6 +192,8 @@ class Background2D(BackgroundIRF):
 
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
+    """Default Interpolation kwargs."""
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model.

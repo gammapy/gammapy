@@ -146,6 +146,23 @@ class IRF:
             points, self.quantity, points_scale=points_scale, **self.default_interp_kwargs
         )
 
+    # TODO: define a proper integration method
+    @lazyproperty
+    def _integrate_rad(self):
+        rad_axis = self.axes["rad"]
+        rad_drad = (
+                2 * np.pi * rad_axis.center * self.quantity * rad_axis.bin_width
+        )
+        idx_rad = self.axes.index("rad")
+        values = rad_drad.cumsum(axis=idx_rad).to_value("")
+        values = np.insert(values, 0, 0, axis=idx_rad)
+
+        points = [ax.center for ax in self.axes]
+        points[idx_rad] = rad_axis.edges
+        return ScaledRegularGridInterpolator(
+            points=points, values=values, fill_value=1,
+        )
+
 
 class IRFMap:
     """IRF map base class"""

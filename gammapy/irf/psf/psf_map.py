@@ -333,14 +333,14 @@ class PSFMap(IRFMap):
         if np.size(sigma) == 1:
             # same width for all energies
             table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
-            data = np.tile(table_psf.data.data, (shape[0], 1))
+            data = np.tile(table_psf.quantity, (shape[0], 1))
         elif np.size(sigma) == np.size(energy):
             # one width per energy
             data = np.zeros(shape) * u.sr ** -1
             for idx in range(energy_axis_true.nbin):
                 data[idx, :] = TablePSF.from_shape(
                     shape="gauss", width=sigma[idx], rad=rad
-                ).data.data
+                ).quantity
         else:
             raise AssertionError(
                 "There need to be the same number of sigma values as energies"

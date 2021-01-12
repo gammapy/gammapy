@@ -10,13 +10,14 @@ from gammapy.utils.array import array_stats_str
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
+from ..core import IRF
 
 __all__ = ["TablePSF", "EnergyDependentTablePSF", "PSF3D"]
 
 log = logging.getLogger(__name__)
 
 
-class TablePSF:
+class TablePSF(IRF):
     """Radially-symmetric table PSF.
 
     Parameters
@@ -28,19 +29,7 @@ class TablePSF:
     interp_kwargs : dict
         Keyword arguments passed to `ScaledRegularGridInterpolator`
     """
-
-    def __init__(self, rad_axis, data, interp_kwargs=None):
-        interp_kwargs = interp_kwargs or {}
-
-        rad_axis.assert_name("rad")
-
-        self.data = NDDataArray(
-            axes=[rad_axis], data=u.Quantity(data).to("sr^-1"), interp_kwargs=interp_kwargs
-        )
-
-    @property
-    def rad_axis(self):
-        return self.data.axes["rad"]
+    required_axes = ["rad"]
 
     @classmethod
     def from_shape(cls, shape, width, rad):
@@ -82,42 +71,19 @@ class TablePSF:
         else:
             raise ValueError(f"Invalid shape: {shape}")
 
-        data = u.Quantity(data, "sr^-1")
         rad_axis = MapAxis.from_nodes(rad, name="rad")
-        return cls(rad_axis=rad_axis, data=data)
+        return cls(axes=[rad_axis], data=data, unit="sr-1")
 
     def info(self):
         """Print basic info."""
-        ss = array_stats_str(self.rad_axis.center, "offset")
-        ss += f"integral = {self.containment(self.rad_axis.edges[-1])}\n"
+        ss = array_stats_str(self.axes["rad"].center, "offset")
+        ss += f"integral = {self.containment(self.axes['rad'].edges[-1])}\n"
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
             ss += f"containment radius {radius.deg} deg for {containment}%\n"
 
         return ss
-
-    def evaluate(self, rad):
-        r"""Evaluate PSF.
-
-        The following PSF quantities are available:
-
-        * 'dp_domega': PDF per 2-dim solid angle :math:`\Omega` in sr^-1
-
-            .. math:: \frac{dP}{d\Omega}
-
-
-        Parameters
-        ----------
-        rad : `~astropy.coordinates.Angle`
-            Offset wrt source position
-
-        Returns
-        -------
-        psf_value : `~astropy.units.Quantity`
-            PSF value
-        """
-        return self.data.evaluate(rad=rad)
 
     def containment(self, rad_max):
         """Compute PSF containment fraction.
@@ -133,7 +99,7 @@ class TablePSF:
             PSF integral
         """
         rad_max = np.atleast_1d(rad_max)
-        return self.data._integrate_rad((rad_max,))
+        return self._integrate_rad((rad_max,))
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -148,9 +114,10 @@ class TablePSF:
         rad : `~astropy.coordinates.Angle`
             Containment radius angle
         """
+        rad = self.axes["rad"].center
         # TODO: check whether starting
         rad_max = Angle(
-            np.linspace(0 * u.deg, self.rad_axis.center[-1], 10 * self.rad_axis.nbin),
+            np.linspace(0 * u.deg, rad[-1], 10 * len(rad)),
             "rad",
         )
 
@@ -167,7 +134,7 @@ class TablePSF:
         Computes the total PSF integral via the :math:`dP / dr` spline
         and then divides the :math:`dP / dr` array.
         """
-        integral = self.containment(self.rad_axis.edges[-1])
+        integral = self.containment(self.axes["rad"].edges[-1])
         self.data /= integral
 
     def plot_psf_vs_rad(self, ax=None, **kwargs):
@@ -185,8 +152,8 @@ class TablePSF:
         ax = plt.gca() if ax is None else ax
 
         ax.plot(
-            self.rad_axis.center.to_value("deg"),
-            self.data.data.to_value("sr-1"),
+            self.axes["rad"].center.to_value("deg"),
+            self.quantity.to_value("sr-1"),
             **kwargs,
         )
         ax.set_yscale("log")
@@ -345,7 +312,7 @@ class EnergyDependentTablePSF:
         rad = u.Quantity(rad, ndmin=1)
         return self.data._interpolate((energy, rad), method=method)
 
-    def table_psf_at_energy(self, energy, method="linear", **kwargs):
+    def table_psf_at_energy(self, energy, method="linear"):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
@@ -360,8 +327,8 @@ class EnergyDependentTablePSF:
         psf : `~gammapy.irf.TablePSF`
             Table PSF
         """
-        psf_value = self.evaluate(energy=energy, method=method)[0, :]
-        return TablePSF(rad_axis=self.rad_axis, data=psf_value, **kwargs)
+        data = self.evaluate(energy=energy, method=method).squeeze()
+        return TablePSF(axes=[self.rad_axis], data=data.value, unit=data.unit)
 
     def table_psf_in_energy_range(
         self, energy_range, spectrum=None, n_bins=11, **kwargs
@@ -402,7 +369,8 @@ class EnergyDependentTablePSF:
 
         psf_value = self.evaluate(energy=energy)
         psf_value_weighted = weights[:, np.newaxis] * psf_value
-        return TablePSF(self.rad_axis, psf_value_weighted.sum(axis=0), **kwargs)
+        data = psf_value_weighted.sum(axis=0)
+        return TablePSF(axes=[self.rad_axis], data=data.value, unit=data.unit, **kwargs)
 
     def containment_radius(self, energy, fraction=0.68):
         """Containment radius.
@@ -471,7 +439,7 @@ class EnergyDependentTablePSF:
             psf_value = np.squeeze(self.evaluate(energy=value))
             label = f"{value:.0f}"
             ax.plot(
-                self.rad_axis.center.to_value("deg"),
+                self.axes["rad"].center.to_value("deg"),
                 psf_value.to_value("sr-1"),
                 label=label,
                 **kwargs,
@@ -738,8 +706,8 @@ class PSF3D:
         """
         energy = u.Quantity(energy)
         theta = Angle(theta)
-        psf_value = self.evaluate(energy, theta).squeeze()
-        return TablePSF(rad_axis=self.rad_axis, data=psf_value, **kwargs)
+        data = self.evaluate(energy, theta).squeeze()
+        return TablePSF(axes=[self.rad_axis], data=data.value, unit=data.unit, **kwargs)
 
     def containment_radius(
         self, energy, theta="0 deg", fraction=0.68
