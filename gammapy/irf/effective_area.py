@@ -4,7 +4,6 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
-from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 from .core import IRF
 
@@ -228,8 +227,7 @@ class EffectiveAreaTable(IRF):
     def evaluate_fill_nan(self, **kwargs):
         """Modified evaluate function.
 
-        Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and replaces
-        possible nan values. Below the finite range the effective area is set
+        Replaces possible nan values. Below the finite range the effective area is set
         to zero and above to value of the last valid note. This is needed since
         other codes, e.g. sherpa, don't like nan values in FITS files. Make
         sure that the replacement happens outside of the energy range, where
@@ -307,26 +305,31 @@ class EffectiveAreaTable2D(IRF):
     >>> aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
     >>> print(aeff)
     EffectiveAreaTable2D
-    NDDataArray summary info
-    energy         : size =    42, min =  0.014 TeV, max = 177.828 TeV
-    offset         : size =     6, min =  0.500 deg, max =  5.500 deg
-    Data           : size =   252, min =  0.000 m2, max = 5371581.000 m2
+    --------------------
+
+      axes  : ['energy_true', 'offset']
+      shape : (42, 6)
+      ndim  : 2
+      unit  : m2
+      dtype : >f4
 
     Here's another one, created from scratch, without reading a file:
 
     >>> from gammapy.irf import EffectiveAreaTable2D
-    >>> import astropy.units as u
-    >>> import numpy as np
-    >>> energy = np.logspace(0,1,11) * u.TeV
-    >>> offset = np.linspace(0,1,4) * u.deg
-    >>> data = np.ones(shape=(10,3)) * u.cm * u.cm
-    >>> aeff = EffectiveAreaTable2D(energy_lo=energy[:-1], energy_hi=energy[1:], offset_lo=offset[:-1],
-    >>>                             offset_hi=offset[1:], data= data)
+    >>> from gammapy.maps import MapAxis
+    >>> energy_axis_true = MapAxis.from_energy_bounds("0.1 TeV", "100 TeV", nbin=30, name="energy_true")
+    >>> offset_axis = MapAxis.from_bounds(0, 5, nbin=4, name="offset")
+    >>> aeff = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2")
     >>> print(aeff)
-    Data array summary info
-    energy         : size =    11, min =  1.000 TeV, max = 10.000 TeV
-    offset         : size =     4, min =  0.000 deg, max =  1.000 deg
-    Data           : size =    30, min =  1.000 cm2, max =  1.000 cm2
+    EffectiveAreaTable2D
+    --------------------
+
+      axes  : ['energy_true', 'offset']
+      shape : (30, 4)
+      ndim  : 2
+      unit  : cm2
+      dtype : float64
+
     """
 
     tag = "aeff_2d"

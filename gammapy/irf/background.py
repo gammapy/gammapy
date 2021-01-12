@@ -140,11 +140,14 @@ class Background3D(BackgroundIRF):
     >>> bkg_3d = Background3D.read(filename, hdu='BACKGROUND')
     >>> print(bkg_3d)
     Background3D
-    NDDataArray summary info
-    energy         : size =    21, min =  0.016 TeV, max = 158.489 TeV
-    fov_lon           : size =    36, min = -5.833 deg, max =  5.833 deg
-    fov_lat           : size =    36, min = -5.833 deg, max =  5.833 deg
-    Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
+    ------------
+
+      axes  : ['energy', 'fov_lon', 'fov_lat']
+      shape : (21, 36, 36)
+      ndim  : 3
+      unit  : 1 / (MeV s sr)
+      dtype : >f4
+
     """
     tag = "bkg_3d"
     required_axes = ["energy", "fov_lon", "fov_lat"]
@@ -189,8 +192,6 @@ class Background2D(BackgroundIRF):
 
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
-    """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model.

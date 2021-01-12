@@ -51,9 +51,7 @@ class EnergyDispersion2D(IRF):
     """
 
     tag = "edisp_2d"
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     required_axes = ["energy_true", "migra", "offset"]
-    """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     @classmethod
     def from_gauss(cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6):
