@@ -10,6 +10,7 @@ SED_TYPES = ["dnde", "e2dnde", "flux", "eflux"]
 
 OPTIONAL_QUANTITIES = ["err", "errn", "errp", "ul", "scan"]
 
+
 class FluxEstimate:
     """A flux estimate produced by an Estimator.
 
@@ -31,6 +32,7 @@ class FluxEstimate:
     spectral_model : `SpectralModel`
         Reference spectral model used to produce the input data.
     """
+
     def __init__(self, data, spectral_model):
         # TODO: Check data
         self.data = data
@@ -38,14 +40,14 @@ class FluxEstimate:
         if hasattr(self.data["norm"], "geom"):
             self.energy_axis = self.data["norm"].geom.axes["energy"]
             self._keys = self.data.keys()
-            self._expand_slice = (slice(None),np.newaxis, np.newaxis)
+            self._expand_slice = (slice(None), np.newaxis, np.newaxis)
         else:
             # Here we assume there is only one row per energy
             e_edges = self.data["e_min"].quantity
             e_edges = e_edges.insert(len(self.data), self.data["e_max"].quantity[-1])
             self.energy_axis = MapAxis.from_energy_edges(e_edges)
             self._keys = self.data.columns
-            self._expand_slice = (slice(None))
+            self._expand_slice = slice(None)
 
         # Note that here we could use the specification from dnde_ref to build piecewise PL
         # But does it work beyond min and max centers?
@@ -58,11 +60,13 @@ class FluxEstimate:
             if norm_quantity in self._keys:
                 self._available_quantities.append(quantity)
 
-    #TODO: add support for scan
+    # TODO: add support for scan
 
     def _check_norm_quantity(self, quantity):
         if not quantity in self._available_quantities:
-            raise KeyError(f"Cannot compute required flux quantity. {quantity} is not defined on current flux estimate.")
+            raise KeyError(
+                f"Cannot compute required flux quantity. {quantity} is not defined on current flux estimate."
+            )
 
     @property
     def norm(self):
@@ -95,9 +99,10 @@ class FluxEstimate:
 
     @property
     def e2dnde_ref(self):
-        result = self.spectral_model(self.energy_axis.center)*self.energy_axis.center**2
+        result = (
+            self.spectral_model(self.energy_axis.center) * self.energy_axis.center ** 2
+        )
         return result[self._expand_slice]
-
 
     @property
     def flux_ref(self):
@@ -166,7 +171,7 @@ class FluxEstimate:
     @property
     def flux(self):
         """Return integral flux (flux) SED values."""
-        return  self.norm * self.flux_ref
+        return self.norm * self.flux_ref
 
     @property
     def flux_err(self):
