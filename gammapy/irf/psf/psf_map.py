@@ -162,7 +162,7 @@ class PSFMap(IRFMap):
         table_psf = self.get_energy_dependent_table_psf(position)
 
         if max_radius is None:
-            max_radius = np.max(table_psf.rad_axis.center)
+            max_radius = np.max(table_psf.axes["rad"].center)
             min_radius_geom = np.min(geom.width) / 2.0
             max_radius = min(max_radius, min_radius_geom)
 

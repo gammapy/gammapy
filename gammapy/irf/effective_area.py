@@ -156,9 +156,9 @@ class EffectiveAreaTable(IRF):
         value : `~astropy.units.Quantity`
             Effective area
         """
-        data = np.ones((len(energy) - 1)) * u.Quantity(value)
+        value = u.Quantity(value)
         energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
-        return cls(axes=[energy_axis_true], data=data)
+        return cls(axes=[energy_axis_true], data=value.value, unit=value.unit)
 
     @classmethod
     def from_table(cls, table):
