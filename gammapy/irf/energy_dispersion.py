@@ -140,19 +140,7 @@ class EnergyDispersion2D:
         aeff : `EffectiveArea2D`
             Effective area
         """
-
-        if "ENERG_LO" in table.colnames:
-            column_prefixes = ["ENERG", "THETA", "MIGRA"]
-        elif "ETRUE_LO" in table.colnames:
-            column_prefixes = ["ETRUE", "THETA", "MIGRA"]
-        else:
-            raise ValueError(
-                'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
-            )
-
-        axes = MapAxes.from_table(
-            table, column_prefixes=column_prefixes, format="gadf-dl3"
-        )
+        axes = MapAxes.from_table(table,  format="gadf-dl3")
 
         data = table["MATRIX"].quantity[0].transpose()
 

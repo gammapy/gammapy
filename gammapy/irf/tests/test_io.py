@@ -32,7 +32,7 @@ def test_cta_irf():
     val = psf(Quantity(0.1, "deg"))
     assert_allclose(val, 3.56989, rtol=1e-5)
 
-    val = irf["bkg"].data.evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
+    val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 9.400071e-05, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
 
@@ -79,17 +79,13 @@ class TestIRFWrite:
             migra_axis=self.migra_axis,
             data=self.edisp_data,
         )
-        self.bkg = Background3D(
-            energy_axis=self.energy_axis_true.copy(name="energy"),
-            fov_lon_axis=self.fov_lon_axis,
-            fov_lat_axis=self.fov_lat_axis,
-            data=self.bkg_data,
-        )
+        axes = [self.energy_axis_true.copy(name="energy"), self.fov_lon_axis, self.fov_lat_axis]
+        self.bkg = Background3D(axes=axes, data=self.bkg_data.value, unit=self.bkg_data.unit)
 
     def test_array_to_container(self):
         assert_allclose(self.aeff.data.data, self.aeff_data)
         assert_allclose(self.edisp.data.data, self.edisp_data)
-        assert_allclose(self.bkg.data.data, self.bkg_data)
+        assert_allclose(self.bkg.quantity, self.bkg_data)
 
     def test_container_to_table(self):
         assert_allclose(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
@@ -112,7 +108,6 @@ class TestIRFWrite:
 
         assert self.aeff.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
         assert self.edisp.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
-        assert self.bkg.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
 
         hdu = self.aeff.to_table_hdu()
         assert_allclose(
@@ -130,10 +125,10 @@ class TestIRFWrite:
 
         hdu = self.bkg.to_table_hdu()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0], self.bkg.data.axes[1].edges[:-1].value
+            hdu.data[hdu.header["TTYPE1"]][0], self.bkg.axes[0].edges[:-1].value
         )
         hdu = self.bkg.to_table_hdu()
-        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.bkg.data.data.value)
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.bkg.data)
 
     def test_writeread(self, tmp_path):
         path = tmp_path / "tmp.fits"
@@ -153,4 +148,4 @@ class TestIRFWrite:
         assert_allclose(read_edisp.data.data, self.edisp_data)
 
         read_bkg = Background3D.read(path, hdu="BACKGROUND")
-        assert_allclose(read_bkg.data.data, self.bkg_data)
+        assert_allclose(read_bkg.quantity, self.bkg_data)

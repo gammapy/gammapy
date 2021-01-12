@@ -615,9 +615,7 @@ class PSF3D:
         table : `~astropy.table.Table`
             Table Table-PSF info.
         """
-        axes = MapAxes.from_table(
-            table=table, column_prefixes=["ENERG", "THETA", "RAD"], format="gadf-dl3"
-        )
+        axes = MapAxes.from_table(table=table, format="gadf-dl3")
 
         data = table["RPSF"].quantity[0].transpose()
         return cls(

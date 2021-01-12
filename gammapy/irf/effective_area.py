@@ -388,9 +388,7 @@ class EffectiveAreaTable2D:
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
-        axes = MapAxes.from_table(
-            table=table, column_prefixes=["ENERG", "THETA"], format="gadf-dl3"
-        )
+        axes = MapAxes.from_table(table=table, format="gadf-dl3")
 
         return cls(
             energy_axis_true=axes["energy_true"],

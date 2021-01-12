@@ -105,9 +105,9 @@ class BackgroundIRF(IRF):
         table["BKG"] = self.quantity.T[np.newaxis]
         return table
 
-    def to_table_hdu(self, name="BACKGROUND"):
+    def to_table_hdu(self):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
-        return fits.BinTableHDU(self.to_table(), name=name)
+        return fits.BinTableHDU(self.to_table(), name="BACKGROUND")
 
 
 class Background3D(BackgroundIRF):
