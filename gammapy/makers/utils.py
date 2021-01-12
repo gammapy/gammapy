@@ -252,7 +252,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     offset = geom.separation(pointing)
 
     # Compute EDisp values
-    edisp_values = edisp.data.evaluate(
+    edisp_values = edisp.evaluate(
         offset=offset,
         energy_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
         migra=migra[:, np.newaxis, np.newaxis],

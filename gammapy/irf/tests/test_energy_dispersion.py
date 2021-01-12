@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.irf import EDispKernel, EnergyDispersion2D
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -136,7 +136,7 @@ class TestEnergyDispersion2D:
         energy = [1, 2] * u.TeV
         migra = np.array([0.98, 0.97, 0.7])
         offset = [0.1, 0.2, 0.3, 0.4] * u.deg
-        actual = self.edisp.data.evaluate(
+        actual = self.edisp.evaluate(
             energy_true=energy.reshape(-1, 1, 1),
             migra=migra.reshape(1, -1, 1),
             offset=offset.reshape(1, 1, -1),
@@ -144,11 +144,11 @@ class TestEnergyDispersion2D:
         assert_allclose(actual.shape, (2, 3, 4))
 
         # Check evaluation at all nodes
-        actual = self.edisp.data.evaluate().shape
+        actual = self.edisp.evaluate().shape
         desired = (
-            self.edisp.data.axes["energy_true"].nbin,
-            self.edisp.data.axes["migra"].nbin,
-            self.edisp.data.axes["offset"].nbin,
+            self.edisp.axes["energy_true"].nbin,
+            self.edisp.axes["migra"].nbin,
+            self.edisp.axes["offset"].nbin,
         )
         assert_equal(actual, desired)
 
@@ -180,21 +180,15 @@ class TestEnergyDispersion2D:
 
         migra_axis = MapAxis.from_bounds(0, 3, nbin=3, name="migra", node_type="edges")
 
-        shape = (energy_axis_true.nbin, migra_axis.nbin, offset_axis.nbin)
+        axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
 
-        data = np.ones(shape=shape) * u.cm ** 2
-
-        edisp = EnergyDispersion2D(
-            energy_axis_true=energy_axis_true,
-            migra_axis=migra_axis,
-            offset_axis=offset_axis,
-            data=data,
-        )
+        data = np.ones(shape=axes.shape)
+        edisp = EnergyDispersion2D(axes=axes, data=data)
 
         hdu = edisp.to_table_hdu()
-        energy = edisp.data.axes["energy_true"].edges
+        energy = edisp.axes["energy_true"].edges
         assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
-        assert hdu.header["TUNIT1"] == edisp.data.axes["energy_true"].unit
+        assert hdu.header["TUNIT1"] == edisp.axes["energy_true"].unit
 
     @requires_dependency("matplotlib")
     def test_plot_migration(self):

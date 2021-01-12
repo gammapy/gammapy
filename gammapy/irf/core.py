@@ -101,6 +101,8 @@ class IRF:
     def integrate_energy(self, method="linear", **kwargs):
         """Integrate in a given energy band.
 
+        This method uses log-log trapezoidal integration.
+
         Parameters
         ----------
         **kwargs : dict

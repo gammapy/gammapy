@@ -24,7 +24,7 @@ def test_cta_irf():
     assert_allclose(val.value, 545269.4675, rtol=1e-5)
     assert val.unit == "m2"
 
-    val = irf["edisp"].data.evaluate(offset=offset, energy_true=energy, migra=1)
+    val = irf["edisp"].evaluate(offset=offset, energy_true=energy, migra=1)
     assert_allclose(val.value, 3183.6882, rtol=1e-5)
     assert val.unit == ""
 
@@ -73,10 +73,9 @@ class TestIRFWrite:
             offset_axis=self.offset_axis,
             data=self.aeff_data,
         )
-        self.edisp = EnergyDispersion2D(
-            energy_axis_true=self.energy_axis_true,
-            offset_axis=self.offset_axis,
-            migra_axis=self.migra_axis,
+        self.edisp = EnergyDispersion2D(axes=[
+            self.energy_axis_true, self.migra_axis, self.offset_axis,
+            ],
             data=self.edisp_data,
         )
         axes = [self.energy_axis_true.copy(name="energy"), self.fov_lon_axis, self.fov_lat_axis]
@@ -118,10 +117,10 @@ class TestIRFWrite:
 
         hdu = self.edisp.to_table_hdu()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0], self.edisp.data.axes[0].edges[:-1].value
+            hdu.data[hdu.header["TTYPE1"]][0], self.edisp.axes[0].edges[:-1].value
         )
         hdu = self.edisp.to_table_hdu()
-        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data.data.value)
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data)
 
         hdu = self.bkg.to_table_hdu()
         assert_allclose(
