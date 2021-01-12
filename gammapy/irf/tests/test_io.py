@@ -20,7 +20,7 @@ def test_cta_irf():
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")
 
-    val = irf["aeff"].data.evaluate(energy_true=energy, offset=offset)
+    val = irf["aeff"].evaluate(energy_true=energy, offset=offset)
     assert_allclose(val.value, 545269.4675, rtol=1e-5)
     assert val.unit == "m2"
 
@@ -69,9 +69,9 @@ class TestIRFWrite:
         self.bkg_data = np.random.rand(9, 10, 10) / u.MeV / u.s / u.sr
 
         self.aeff = EffectiveAreaTable2D(
-            energy_axis_true=self.energy_axis_true,
-            offset_axis=self.offset_axis,
-            data=self.aeff_data,
+            axes=[self.energy_axis_true, self.offset_axis],
+            data=self.aeff_data.value,
+            unit=self.aeff_data.unit
         )
         self.edisp = EnergyDispersion2D(axes=[
             self.energy_axis_true, self.migra_axis, self.offset_axis,
@@ -82,8 +82,8 @@ class TestIRFWrite:
         self.bkg = Background3D(axes=axes, data=self.bkg_data.value, unit=self.bkg_data.unit)
 
     def test_array_to_container(self):
-        assert_allclose(self.aeff.data.data, self.aeff_data)
-        assert_allclose(self.edisp.data.data, self.edisp_data)
+        assert_allclose(self.aeff.quantity, self.aeff_data)
+        assert_allclose(self.edisp.quantity, self.edisp_data)
         assert_allclose(self.bkg.quantity, self.bkg_data)
 
     def test_container_to_table(self):
@@ -110,10 +110,10 @@ class TestIRFWrite:
 
         hdu = self.aeff.to_table_hdu()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0], self.aeff.data.axes[0].edges[:-1].value
+            hdu.data[hdu.header["TTYPE1"]][0], self.aeff.axes[0].edges[:-1].value
         )
         hdu = self.aeff.to_table_hdu()
-        assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data.data.value)
+        assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data)
 
         hdu = self.edisp.to_table_hdu()
         assert_allclose(
@@ -141,10 +141,10 @@ class TestIRFWrite:
         ).writeto(path)
 
         read_aeff = EffectiveAreaTable2D.read(path, hdu="EFFECTIVE AREA")
-        assert_allclose(read_aeff.data.data, self.aeff_data)
+        assert_allclose(read_aeff.quantity, self.aeff_data)
 
         read_edisp = EnergyDispersion2D.read(path, hdu="ENERGY DISPERSION")
-        assert_allclose(read_edisp.data.data, self.edisp_data)
+        assert_allclose(read_edisp.quantity, self.edisp_data)
 
         read_bkg = Background3D.read(path, hdu="BACKGROUND")
         assert_allclose(read_bkg.quantity, self.bkg_data)

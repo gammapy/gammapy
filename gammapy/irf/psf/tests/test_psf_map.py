@@ -47,19 +47,17 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
 
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
-    offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
-
     energy_axis_true = MapAxis.from_energy_bounds(
         "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
     )
 
-    offset_axis = MapAxis.from_edges(offsets, name="offset")
-
-    aeff_values = np.ones((4, 3)) * area
+    offset_axis = MapAxis.from_edges(
+        [0.0, 1.0, 2.0, 3.0] * u.deg, name="offset"
+    )
 
     return EffectiveAreaTable2D(
-        energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=aeff_values,
-    )
+        axes=[energy_axis_true, offset_axis], data=area.value, unit=area.unit
+     )
 
 
 def test_make_psf_map():

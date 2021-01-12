@@ -99,7 +99,7 @@ class EnergyDispersion2D(IRF):
 
         return cls(
             axes=[energy_axis_true, migra_axis, offset_axis],
-            data=data,
+            data=data.value,
         )
 
     @classmethod
@@ -118,7 +118,7 @@ class EnergyDispersion2D(IRF):
         """
         axes = MapAxes.from_table(table,  format="gadf-dl3")[cls.required_axes]
         data = table["MATRIX"].quantity[0].transpose()
-        return cls(axes=axes, data=data)
+        return cls(axes=axes, data=data.value, unit=data.unit)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu="edisp_2d"):

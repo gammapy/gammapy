@@ -60,7 +60,7 @@ class BackgroundIRF(IRF):
 
         return cls(
             axes=axes,
-            data=data,
+            data=data.value,
             meta=table.meta,
             unit=data_unit
         )

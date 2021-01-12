@@ -165,7 +165,7 @@ class EffectiveAreaTable(IRF):
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        axes = MapAxes.from_table(table, format="ogip-arf")
+        axes = MapAxes.from_table(table, format="ogip-arf")[cls.required_axes]
         data = table["SPECRESP"].quantity
         return cls(axes=axes, data=data.value, unit=data.unit)
 
@@ -282,7 +282,7 @@ class EffectiveAreaTable(IRF):
         return aeff_spectrum.inverse(aeff, energy_min=energy_min, energy_max=energy_max)
 
 
-class EffectiveAreaTable2D:
+class EffectiveAreaTable2D(IRF):
     """2D effective area table.
 
     Data format specification: :ref:`gadf:aeff_2d`
@@ -330,25 +330,7 @@ class EffectiveAreaTable2D:
     """
 
     tag = "aeff_2d"
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
-    """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
-
-    def __init__(
-        self, energy_axis_true, offset_axis, data, meta=None, interp_kwargs=None,
-    ):
-        if interp_kwargs is None:
-            interp_kwargs = self.default_interp_kwargs
-
-        self.data = NDDataArray(
-            axes=[energy_axis_true, offset_axis], data=data, interp_kwargs=interp_kwargs
-        )
-        self.data.axes.assert_names(["energy_true", "offset"])
-        self.meta = meta or {}
-
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += f"\n{self.data}"
-        return ss
+    required_axes = ["energy_true", "offset"]
 
     @property
     def low_threshold(self):
@@ -363,13 +345,13 @@ class EffectiveAreaTable2D:
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
-        axes = MapAxes.from_table(table=table, format="gadf-dl3")
-
+        axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
+        data = table["EFFAREA"].quantity[0].transpose()
         return cls(
-            energy_axis_true=axes["energy_true"],
-            offset_axis=axes["offset"],
-            data=table["EFFAREA"].quantity[0].transpose(),
+            axes=axes,
+            data=data.value,
             meta=table.meta,
+            unit=data.unit
         )
 
     @classmethod
@@ -394,15 +376,15 @@ class EffectiveAreaTable2D:
             Energy axis bin edges
         """
         if energy is None:
-            energy_axis_true = self.data.axes["energy_true"]
+            energy_axis_true = self.axes["energy_true"]
         else:
             energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
 
-        area = self.data.evaluate(offset=offset, energy_true=energy_axis_true.center)
+        area = self.evaluate(offset=offset, energy_true=energy_axis_true.center)
 
         return EffectiveAreaTable(axes=[energy_axis_true], data=area.value, unit=area.unit)
 
-    def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+    def plot_energy_dependence(self, ax=None, offset=None, **kwargs):
         """Plot effective area versus energy for a given offset.
 
         Parameters
@@ -411,8 +393,6 @@ class EffectiveAreaTable2D:
             Axis
         offset : `~astropy.coordinates.Angle`
             Offset
-        energy : `~astropy.units.Quantity`
-            Energy axis
         kwargs : dict
             Forwarded tp plt.plot()
 
@@ -426,20 +406,19 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.data.axes["offset"].center[[0, -1]]
+            off_min, off_max = self.axes["offset"].center[[0, -1]]
             offset = np.linspace(off_min.value, off_max.value, 4) * off_min.unit
 
-        if energy is None:
-            energy = self.data.axes["energy_true"].center
+        energy = self.axes["energy_true"].center
 
         for off in offset:
-            area = self.data.evaluate(offset=off, energy_true=energy)
+            area = self.evaluate(offset=off, energy_true=energy)
             kwargs.setdefault("label", f"offset = {off:.1f}")
             ax.plot(energy, area.value, **kwargs)
 
         ax.set_xscale("log")
         ax.set_xlabel(f"Energy [{energy.unit}]")
-        ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
+        ax.set_ylabel(f"Effective Area [{self.unit}]")
         ax.set_xlim(min(energy.value), max(energy.value))
         return ax
 
@@ -465,15 +444,15 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            energy_axis = self.data.axes["energy_true"]
+            energy_axis = self.axes["energy_true"]
             e_min, e_max = energy_axis.center[[0, -1]]
             energy = np.geomspace(e_min, e_max, 4)
 
         if offset is None:
-            offset = self.data.axes["offset"].center
+            offset = self.axes["offset"].center
 
         for ee in energy:
-            area = self.data.evaluate(offset=offset, energy_true=ee)
+            area = self.evaluate(offset=offset, energy_true=ee)
             area /= np.nanmax(area)
             if np.isnan(area).all():
                 continue
@@ -481,7 +460,7 @@ class EffectiveAreaTable2D:
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel(f"Offset ({self.data.axes['offset'].unit})")
+        ax.set_xlabel(f"Offset ({self.axes['offset'].unit})")
         ax.set_ylabel("Relative Effective Area")
         ax.legend(loc="best")
 
@@ -493,9 +472,9 @@ class EffectiveAreaTable2D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.data.axes["energy_true"].edges
-        offset = self.data.axes["offset"].edges
-        aeff = self.data.evaluate(offset=offset, energy_true=energy[:, np.newaxis])
+        energy = self.axes["energy_true"].edges
+        offset = self.axes["offset"].edges
+        aeff = self.evaluate(offset=offset, energy_true=energy[:, np.newaxis])
 
         vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
 
@@ -531,9 +510,9 @@ class EffectiveAreaTable2D:
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        table = self.data.axes.to_table(format="gadf-dl3")
+        table = self.axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
-        table["EFFAREA"] = self.data.data.T[np.newaxis]
+        table["EFFAREA"] = self.quantity.T[np.newaxis]
         return table
 
     def to_table_hdu(self, name="EFFECTIVE AREA"):

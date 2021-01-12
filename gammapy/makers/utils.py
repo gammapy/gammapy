@@ -44,7 +44,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
     offset = geom.separation(pointing)
     energy = geom.axes["energy_true"].center
 
-    exposure = aeff.data.evaluate(
+    exposure = aeff.evaluate(
         offset=offset, energy_true=energy[:, np.newaxis, np.newaxis]
     )
     # TODO: Improve IRF evaluate to preserve energy axis if length 1

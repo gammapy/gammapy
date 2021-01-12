@@ -43,15 +43,29 @@ class IRF:
         return self._data
 
     @data.setter
-    def data(self, data):
+    def data(self, value):
         """Set data
 
         Parameters
         ----------
-        data : `~astropy.units.Quantity`, array-like
+        value : `~astropy.units.Quantity`, array-like
             Data array
         """
-        self._data = data
+        required_shape = self.axes.shape
+
+        if np.isscalar(value):
+            value = value * np.ones(required_shape)
+
+        if isinstance(value, u.Quantity):
+            raise TypeError("Map data must be a Numpy array. Set unit separately")
+
+        if np.shape(value) != required_shape:
+            raise ValueError(
+                f"data shape {value.shape} does not match"
+                f"axes shape {required_shape}"
+            )
+
+        self._data = value
 
         # reset cached interpolators
         self.__dict__.pop("_interpolate", None)

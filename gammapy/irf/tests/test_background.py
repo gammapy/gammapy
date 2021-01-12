@@ -219,7 +219,7 @@ def test_background_2d_read_write(tmp_path, bkg_2d):
 
     data = bkg_2d_2.data
     assert data.shape == (2, 3)
-    assert data.unit == "s-1 MeV-1 sr-1"
+    assert bkg_2d_2.unit == "s-1 MeV-1 sr-1"
 
 
 @requires_data()
