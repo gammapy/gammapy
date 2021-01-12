@@ -6,11 +6,12 @@ from astropy.table import Table
 from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
+from .core import IRF
 
 __all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]
 
 
-class EffectiveAreaTable:
+class EffectiveAreaTable(IRF):
     """Effective area table.
 
     TODO: Document
@@ -61,21 +62,9 @@ class EffectiveAreaTable:
     >>> print(energy_threshold)
     0.185368478744 TeV
     """
+    required_axes = ["energy_true"]
 
-    def __init__(self, energy_axis_true, data, meta=None):
-        interp_kwargs = {"extrapolate": False, "bounds_error": False}
-
-        self.data = NDDataArray(
-            axes=[energy_axis_true], data=data, interp_kwargs=interp_kwargs
-        )
-        self.data.axes.assert_names(["energy_true"])
-        self.meta = meta or {}
-
-    @property
-    def energy(self):
-        return self.data.axes["energy_true"]
-
-    def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
+    def plot(self, ax=None, show_energy=None, **kwargs):
         """Plot effective area.
 
         Parameters
@@ -98,24 +87,17 @@ class EffectiveAreaTable:
 
         kwargs.setdefault("lw", 2)
 
-        if energy is None:
-            energy = self.energy.center
+        energy_axis = self.axes["energy_true"]
 
-        eff_area = self.data.evaluate(energy_true=energy)
+        ax.errorbar(energy_axis.center.value, self.data, xerr=energy_axis.as_xerr, **kwargs)
 
-        xerr = (
-            (energy - self.energy.edges[:-1]).value,
-            (self.energy.edges[1:] - energy).value,
-        )
-
-        ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
-            ener_val = u.Quantity(show_energy).to_value(self.energy.unit)
+            ener_val = u.Quantity(show_energy).to_value(energy_axis.unit)
             ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles="dashed")
-        ax.set_xscale("log")
-        ax.set_xlabel(f"Energy [{self.energy.unit}]")
-        ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
 
+        ax.set_xscale("log")
+        ax.set_xlabel(f"Energy [{energy_axis.unit}]")
+        ax.set_ylabel(f"Effective Area [{self.unit}]")
         return ax
 
     @classmethod
@@ -159,10 +141,8 @@ class EffectiveAreaTable:
         g3 = -pars[instrument][2]
 
         energy = energy_axis_true.center.to_value("MeV")
-        value = g1 * energy ** (-g2) * np.exp(g3 / energy)
-        data = u.Quantity(value, "cm2", copy=False)
-
-        return cls(energy_axis_true=energy_axis_true, data=data)
+        data = g1 * energy ** (-g2) * np.exp(g3 / energy)
+        return cls(axes=[energy_axis_true], data=data, unit="cm2")
 
     @classmethod
     def from_constant(cls, energy, value):
@@ -177,7 +157,7 @@ class EffectiveAreaTable:
         """
         data = np.ones((len(energy) - 1)) * u.Quantity(value)
         energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
-        return cls(energy_axis_true=energy_axis_true, data=data)
+        return cls(axes=[energy_axis_true], data=data)
 
     @classmethod
     def from_table(cls, table):
@@ -185,9 +165,9 @@ class EffectiveAreaTable:
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        energy_axis_true = MapAxis.from_table(table, format="ogip-arf")
+        axes = MapAxes.from_table(table, format="ogip-arf")
         data = table["SPECRESP"].quantity
-        return cls(energy_axis_true=energy_axis_true, data=data)
+        return cls(axes=axes, data=data.value, unit=data.unit)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu="SPECRESP"):
@@ -212,26 +192,21 @@ class EffectiveAreaTable:
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        table = self.energy.to_table(format="ogip-arf")
+        table = self.axes.to_table(format="ogip-arf")
         table.meta = {
             "EXTNAME": "SPECRESP",
             "hduclass": "OGIP",
             "hduclas1": "RESPONSE",
             "hduclas2": "SPECRESP",
         }
-
-        energy = self.energy.edges
-        table["ENERG_LO"] = energy[:-1]
-        table["ENERG_HI"] = energy[1:]
         table["SPECRESP"] = self.evaluate_fill_nan()
         return table
 
     def to_region_map(self, region=None):
         """"""
-        axis = self.data.axes["energy_true"]
-        geom = RegionGeom(region=region, axes=[axis])
+        geom = RegionGeom(region=region, axes=self.axes)
         return RegionNDMap.from_geom(
-            geom=geom, data=self.data.data.value, unit=self.data.data.unit
+            geom=geom, data=self.data, unit=self.unit
         )
 
     def to_hdulist(self, name=None, use_sherpa=False):
@@ -260,7 +235,7 @@ class EffectiveAreaTable:
         sure that the replacement happens outside of the energy range, where
         the `~gammapy.irf.EffectiveAreaTable` is used.
         """
-        retval = self.data.evaluate(**kwargs)
+        retval = self.evaluate(**kwargs)
         idx = np.where(np.isfinite(retval))[0]
         retval[np.arange(idx[0])] = 0
         retval[np.arange(idx[-1], len(retval))] = retval[idx[-1]]
@@ -269,7 +244,7 @@ class EffectiveAreaTable:
     @property
     def max_area(self):
         """Maximum effective area."""
-        cleaned_data = self.data.data[np.where(~np.isnan(self.data.data))]
+        cleaned_data = self.quantity[np.where(~np.isnan(self.quantity))]
         return cleaned_data.max()
 
     def find_energy(self, aeff, energy_min=None, energy_max=None):
@@ -295,7 +270,7 @@ class EffectiveAreaTable:
         """
         from gammapy.modeling.models import TemplateSpectralModel
 
-        energy = self.energy.center
+        energy = self.axes["energy_true"].center
 
         if energy_min is None:
             energy_min = energy[0]
@@ -303,7 +278,7 @@ class EffectiveAreaTable:
             # use the peak effective area as a default for the energy maximum
             energy_max = energy[np.argmax(self.data.data)]
 
-        aeff_spectrum = TemplateSpectralModel(energy, self.data.data)
+        aeff_spectrum = TemplateSpectralModel(energy, self.quantity)
         return aeff_spectrum.inverse(aeff, energy_min=energy_min, energy_max=energy_max)
 
 
@@ -425,7 +400,7 @@ class EffectiveAreaTable2D:
 
         area = self.data.evaluate(offset=offset, energy_true=energy_axis_true.center)
 
-        return EffectiveAreaTable(energy_axis_true=energy_axis_true, data=area)
+        return EffectiveAreaTable(axes=[energy_axis_true], data=area.value, unit=area.unit)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.

@@ -11,6 +11,10 @@ from gammapy.utils.integrate import trapz_loglog
 
 class IRF:
     """IRF base class"""
+    default_interp_kwargs = dict(
+        bounds_error=False, fill_value=None,
+    )
+
     def __init__(self, axes, data, unit="", meta=None):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)

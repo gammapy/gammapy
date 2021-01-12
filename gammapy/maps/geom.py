@@ -565,7 +565,7 @@ class MapAxes(Sequence):
         ----------
         table : `~astropy.table.Table`
             Bin table HDU
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube", "ogip-arf"}
             Format to use.
 
         Returns
@@ -576,7 +576,8 @@ class MapAxes(Sequence):
         from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
         axes = []
 
-        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
+        # Formats that support only one energy axis
+        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube", "ogip", "ogip-arf"]:
             axes.append(MapAxis.from_table(table, format=format))
         elif format == "gadf":
             # This limits the max number of axes to 5
@@ -792,6 +793,14 @@ class MapAxis:
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+
+    @property
+    def as_xerr(self):
+        """Return tuple of xerr to be used with plt.errorbar()"""
+        return (
+            (self.center - self.edges[:-1]).value,
+            (self.edges[1:] - self.center).value,
+        )
 
     @lazyproperty
     def center(self):

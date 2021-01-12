@@ -82,8 +82,7 @@ class RegionNDMap(Map):
         kwargs.setdefault("lw", 1)
 
         with quantity_support():
-            xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
-            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs)
+            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=axis.as_xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
