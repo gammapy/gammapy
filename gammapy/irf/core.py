@@ -4,9 +4,12 @@ import numpy as np
 from astropy.io import fits
 from astropy import units as u
 from astropy.utils import lazyproperty
+from astropy.table import Table
 from gammapy.maps import Map, MapAxes
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.integrate import trapz_loglog
+from gammapy.utils.scripts import make_path
+from .io import IRF_DL3_HDU_SPECIFICATION
 
 
 class IRF:
@@ -123,6 +126,7 @@ class IRF:
 
         return self._interpolate(coords_default.values(), method=method)
 
+    # TODO: define a proper integration method
     def integrate_energy(self, method="linear", **kwargs):
         """Integrate in a given energy band.
 
@@ -169,6 +173,85 @@ class IRF:
         return ScaledRegularGridInterpolator(
             points=points, values=values, fill_value=1,
         )
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu=None):
+        """Create from `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        hdulist : `~astropy.io.HDUList`
+            HDU list
+        hdu : str
+            HDU name
+
+        Returns
+        -------
+        irf : `IRF`
+            IRF class
+        """
+        if hdu is None:
+            hdu = IRF_DL3_HDU_SPECIFICATION[cls.tag]["hdu"]
+
+        return cls.from_table(Table.read(hdulist[hdu]))
+
+    @classmethod
+    def read(cls, filename, hdu=None):
+        """Read from file.
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            Filename
+        hdu : str
+            HDU name
+
+        Returns
+        -------
+        irf : `IRF`
+            IRF class
+        """
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, hdu=hdu)
+
+    @classmethod
+    def from_table(cls, table):
+        """Read from `~astropy.table.Table`.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table with irf data
+
+        Returns
+        -------
+        irf : `IRF`
+            IRF class.
+        """
+        axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
+        column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column"]
+        data = table[column_name].quantity[0].transpose()
+        return cls(
+            axes=axes,
+            data=data.value,
+            meta=table.meta,
+            unit=data.unit
+        )
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`."""
+        table = self.axes.to_table(format="gadf-dl3")
+        table.meta = self.meta.copy()
+
+        spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
+        table.meta["HDUCLAS2"] = spec["hduclas2"]
+        table[spec["column"]] = self.quantity.T[np.newaxis]
+        return table
+
+    def to_table_hdu(self):
+        """Convert to `~astropy.io.fits.BinTableHDU`."""
+        hdu = IRF_DL3_HDU_SPECIFICATION[self.tag]["hdu"]
+        return fits.BinTableHDU(self.to_table(), name=hdu)
 
 
 class IRFMap:

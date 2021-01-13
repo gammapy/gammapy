@@ -3,11 +3,8 @@ import numpy as np
 import scipy.special
 from scipy.interpolate import interp1d
 from astropy.coordinates import Angle
-from astropy.io import fits
-from astropy.table import Table
 from astropy.units import Quantity
-from gammapy.maps import MapAxis, MapAxes
-from gammapy.utils.scripts import make_path
+from gammapy.maps import MapAxis
 from .edisp_kernel import EDispKernel
 from .core import IRF
 
@@ -99,41 +96,6 @@ class EnergyDispersion2D(IRF):
             axes=[energy_axis_true, migra_axis, offset_axis],
             data=data.value,
         )
-
-    @classmethod
-    def from_table(cls, table):
-        """Create from `~astropy.table.Table`.
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-            Table with energy dispersion
-
-        Returns
-        -------
-        aeff : `EnergyDispersion2D`
-            Energy dispersion
-        """
-        axes = MapAxes.from_table(table,  format="gadf-dl3")[cls.required_axes]
-        data = table["MATRIX"].quantity[0].transpose()
-        return cls(axes=axes, data=data.value, unit=data.unit)
-
-    @classmethod
-    def from_hdulist(cls, hdulist, hdu="edisp_2d"):
-        """Create from `~astropy.io.fits.HDUList`."""
-        return cls.from_table(Table.read(hdulist[hdu]))
-
-    @classmethod
-    def read(cls, filename, hdu="edisp_2d"):
-        """Read from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            File name
-        """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu)
 
     def to_edisp_kernel(self, offset, energy_true=None, energy=None):
         """Detector response R(Delta E_reco, Delta E_true)
@@ -361,14 +323,3 @@ class EnergyDispersion2D(IRF):
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        table = self.axes.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
-        table["MATRIX"] = self.quantity.T[np.newaxis]
-        return table
-
-    def to_table_hdu(self, name="ENERGY DISPERSION"):
-        """Convert to `~astropy.io.fits.BinTable`."""
-        return fits.BinTableHDU(self.to_table(), name=name)

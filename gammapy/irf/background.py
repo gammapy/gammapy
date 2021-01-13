@@ -2,11 +2,8 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.io import fits
-from astropy.table import Table
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
-from gammapy.utils.scripts import make_path
 from .core import IRF
 
 __all__ = ["Background3D", "Background2D"]
@@ -23,7 +20,18 @@ class BackgroundIRF(IRF):
 
     @classmethod
     def from_table(cls, table):
-        """Read from `~astropy.table.Table`."""
+        """Read from `~astropy.table.Table`.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table with background data
+
+        Returns
+        -------
+        bkg : `Background2D` or `Background2D`
+            Background IRF class.
+        """
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
         if "BKG" in table.colnames:
@@ -64,55 +72,6 @@ class BackgroundIRF(IRF):
             meta=table.meta,
             unit=data_unit
         )
-
-    @classmethod
-    def from_hdulist(cls, hdulist, hdu="BACKGROUND"):
-        """Create from `~astropy.io.fits.HDUList`.
-
-        Parameters
-        ----------
-        hdulist : `~astropy.io.HDUList`
-            HDU list
-        hdu : str
-            HDU name
-
-        Returns
-        -------
-        background_irf : `BackgroundIRF`
-            Background IRF
-        """
-        return cls.from_table(Table.read(hdulist[hdu]))
-
-    @classmethod
-    def read(cls, filename, hdu="BACKGROUND"):
-        """Read from file.
-
-        Parameters
-        ----------
-        filename : str or `Path`
-            Filename
-        hdu : str
-            HDU name
-
-        Returns
-        -------
-        background_irf : `BackgroundIRF`
-            Background IRF
-        """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu=hdu)
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        table = self.axes.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
-        table.meta["HDUCLAS2"] = "BKG"
-        table["BKG"] = self.quantity.T[np.newaxis]
-        return table
-
-    def to_table_hdu(self):
-        """Convert to `~astropy.io.fits.BinTableHDU`."""
-        return fits.BinTableHDU(self.to_table(), name="BACKGROUND")
 
 
 class Background3D(BackgroundIRF):

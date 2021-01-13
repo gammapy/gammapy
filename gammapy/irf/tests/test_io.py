@@ -105,9 +105,6 @@ class TestIRFWrite:
         assert self.edisp.to_table_hdu().header["EXTNAME"] == "ENERGY DISPERSION"
         assert self.bkg.to_table_hdu().header["EXTNAME"] == "BACKGROUND"
 
-        assert self.aeff.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
-        assert self.edisp.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
-
         hdu = self.aeff.to_table_hdu()
         assert_allclose(
             hdu.data[hdu.header["TTYPE1"]][0], self.aeff.axes[0].edges[:-1].value

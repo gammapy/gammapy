@@ -1,10 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from .background import Background3D
-from .effective_area import EffectiveAreaTable2D
-from .energy_dispersion import EnergyDispersion2D
-from .psf.gauss import EnergyDependentMultiGaussPSF
-
-
 __all__ = ["load_cta_irfs"]
 
 
@@ -16,6 +10,38 @@ IRF_DL3_AXES_SPECIFICATION = {
     "DETX": {"name": "fov_lon", "interp": "lin"},
     "DETY": {"name": "fov_lat", "interp": "lin"},
     "MIGRA": {"name": "migra", "interp": "lin"},
+}
+
+
+# The key is the class tag. The hdu name is not strictly declared in the GADF
+# format
+# TODO: extend the info here
+IRF_DL3_HDU_SPECIFICATION = {
+    "bkg_3d": {
+        "hdu": "BACKGROUND",
+        "column": "BKG",
+        "hduclas2": "BKG"
+    },
+    "bkg_2d": {
+        "hdu": "BACKGROUND",
+        "column": "BKG",
+        "hduclas2": "BKG"
+    },
+    "edisp_2d": {
+        "hdu": "ENERGY DISPERSION",
+        "column": "MATRIX",
+        "hduclas2": "EDISP"
+    },
+    "psf_table": {
+        "hdu": "PSF_2D_TABLE",
+        "column": "RPSF",
+        "hduclas2": "PSF"
+    },
+    "aeff_2d": {
+        "hdu": "EFFECTIVE AREA",
+        "column": "EFFAREA",
+        "hduclas2": "EFF_AREA"
+    }
 }
 
 
@@ -52,6 +78,11 @@ def load_cta_irfs(filename):
         cta_irf = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
         print(cta_irf['aeff'])
     """
+    from .background import Background3D
+    from .effective_area import EffectiveAreaTable2D
+    from .energy_dispersion import EnergyDispersion2D
+    from .psf.gauss import EnergyDependentMultiGaussPSF
+
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
     bkg = Background3D.read(filename, hdu="BACKGROUND")
     edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")

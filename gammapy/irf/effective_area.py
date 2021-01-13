@@ -347,29 +347,6 @@ class EffectiveAreaTable2D(IRF):
         """High energy threshold"""
         return self.meta["HI_THRES"] * u.TeV
 
-    @classmethod
-    def from_table(cls, table):
-        """Read from `~astropy.table.Table`."""
-        axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
-        data = table["EFFAREA"].quantity[0].transpose()
-        return cls(
-            axes=axes,
-            data=data.value,
-            meta=table.meta,
-            unit=data.unit
-        )
-
-    @classmethod
-    def from_hdulist(cls, hdulist, hdu="EFFECTIVE AREA"):
-        """Create from `~astropy.io.fits.HDUList`."""
-        return cls.from_table(Table.read(hdulist[hdu]))
-
-    @classmethod
-    def read(cls, filename, hdu="EFFECTIVE AREA"):
-        """Read from file."""
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu=hdu)
-
     def to_effective_area_table(self, offset, energy=None):
         """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`.
 
@@ -512,14 +489,3 @@ class EffectiveAreaTable2D(IRF):
         self.plot_energy_dependence(ax=axes[0])
         self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        table = self.axes.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
-        table["EFFAREA"] = self.quantity.T[np.newaxis]
-        return table
-
-    def to_table_hdu(self, name="EFFECTIVE AREA"):
-        """Convert to `~astropy.io.fits.BinTableHDU`."""
-        return fits.BinTableHDU(self.to_table(), name=name)
