@@ -20,27 +20,27 @@ IRF_DL3_HDU_SPECIFICATION = {
     "bkg_3d": {
         "hdu": "BACKGROUND",
         "column": "BKG",
-        "hduclas2": "BKG"
+        "hduclas2": "BKG",
     },
     "bkg_2d": {
         "hdu": "BACKGROUND",
         "column": "BKG",
-        "hduclas2": "BKG"
+        "hduclas2": "BKG",
     },
     "edisp_2d": {
         "hdu": "ENERGY DISPERSION",
         "column": "MATRIX",
-        "hduclas2": "EDISP"
+        "hduclas2": "EDISP",
     },
     "psf_table": {
         "hdu": "PSF_2D_TABLE",
         "column": "RPSF",
-        "hduclas2": "PSF"
+        "hduclas2": "PSF",
     },
     "aeff_2d": {
         "hdu": "EFFECTIVE AREA",
         "column": "EFFAREA",
-        "hduclas2": "EFF_AREA"
+        "hduclas2": "EFF_AREA",
     }
 }
 

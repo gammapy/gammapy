@@ -32,6 +32,8 @@ class BackgroundIRF(IRF):
         bkg : `Background2D` or `Background2D`
             Background IRF class.
         """
+        axes = MapAxes.from_table(table, format="gadf-dl3")[cls.required_axes]
+
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
         if "BKG" in table.colnames:
@@ -41,23 +43,17 @@ class BackgroundIRF(IRF):
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
-        data_unit = table[bkg_name].unit
+        data = table[bkg_name].quantity[0].T
 
-        if data_unit is not None:
-            data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
-        if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
-            data_unit = u.Unit("s-1 MeV-1 sr-1")
+        if data.unit == "" or isinstance(data.unit, u.UnrecognizedUnit):
+            data = u.Quantity(data.value, "s-1 MeV-1 sr-1", copy=False)
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        axes = MapAxes.from_table(table, format="gadf-dl3")[cls.required_axes]
-
         # TODO: The present HESS and CTA backgroundfits files
         #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
         #  For now, we suport both.
-
-        data = table[bkg_name].data[0].T * data_unit
 
         if axes.shape == axes.shape[::-1]:
             log.error("Ambiguous axes order in Background fits files!")
@@ -70,7 +66,7 @@ class BackgroundIRF(IRF):
             axes=axes,
             data=data.value,
             meta=table.meta,
-            unit=data_unit
+            unit=data.unit
         )
 
 

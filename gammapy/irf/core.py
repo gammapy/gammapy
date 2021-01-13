@@ -1,5 +1,6 @@
 from copy import deepcopy
 import abc
+import logging
 import numpy as np
 from astropy.io import fits
 from astropy import units as u
@@ -11,6 +12,7 @@ from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.scripts import make_path
 from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
 
+log = logging.getLogger(__name__)
 
 class IRF:
     """IRF base class for DL3 instrument response functions"""
@@ -237,6 +239,7 @@ class IRF:
         axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column"]
         data = table[column_name].quantity[0].transpose()
+
         return cls(
             axes=axes,
             data=data.value,
