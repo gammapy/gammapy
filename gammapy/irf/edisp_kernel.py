@@ -449,12 +449,10 @@ class EDispKernel(IRF):
 
     def get_mean(self, energy_true):
         """Get mean reconstructed energy for a given true energy."""
-        # find pdf for true energies
         idx = self.axes["energy_true"].coord_to_idx(energy_true)
         pdf = self.data[idx]
 
         # compute sum along reconstructed energy
-        # axis to determine the mean
         norm = np.sum(pdf, axis=-1)
         temp = np.sum(pdf * self.axes["energy"].center, axis=-1)
 

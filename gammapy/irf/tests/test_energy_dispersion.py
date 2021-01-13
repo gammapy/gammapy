@@ -36,8 +36,8 @@ class TestEDispKernel:
 
         # Test square matrix
         edisp = EDispKernel.from_diagonal_response(energy_axis_true)
-        assert_allclose(edisp.energy_axis.edges, energy_axis_true.edges)
-        assert edisp.energy_axis.unit == "TeV"
+        assert_allclose(edisp.axes["energy"].edges, edisp.axes["energy_true"].edges)
+        assert edisp.axes["energy"].unit == "TeV"
         assert_equal(edisp.pdf_matrix[0][0], 1)
         assert_equal(edisp.pdf_matrix[2][0], 0)
         assert edisp.pdf_matrix.sum() == 4

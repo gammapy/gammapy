@@ -150,7 +150,7 @@ class EDispMap(IRFMap):
             data.append(integral)
 
         return EDispKernel(
-            axes=[energy_axis_true, energy_axis], data=data
+            axes=[energy_axis_true, energy_axis], data=np.array(data)
         )
 
     @classmethod
