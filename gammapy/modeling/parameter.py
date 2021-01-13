@@ -263,7 +263,6 @@ class Parameter:
         keys=["value", "unit", "min", "max", "frozen"]
         for k in keys: setattr(self, k, data[k])
 
-
     def to_dict(self):
         """Convert to dict."""
         output = {
@@ -343,12 +342,40 @@ class Parameters(collections.abc.Sequence):
         return [par.type for par in self]
 
     @property
-    def values(self):
+    def min(self):
+        """Parameter mins (`numpy.ndarray`)."""
+        return np.array([_.min for _ in self._parameters], dtype=np.float64)
+
+    @min.setter
+    def min(self, min_array):
+        """Parameter minima (`numpy.ndarray`)."""
+        if not len(self) == len(min_array):
+            raise ValueError("Minima must have same length as parameter list")
+
+        for min_, par in zip(min_array, self):
+            par.min = min_
+
+    @property
+    def max(self):
+        """Parameter maxima (`numpy.ndarray`)."""
+        return np.array([_.max for _ in self._parameters], dtype=np.float64)
+
+    @max.setter
+    def max(self, max_array):
+        """Parameter maxima (`numpy.ndarray`)."""
+        if not len(self) == len(max_array):
+            raise ValueError("Maxima must have same length as parameter list")
+
+        for max_, par in zip(max_array, self):
+            par.max = max_
+
+    @property
+    def value(self):
         """Parameter values (`numpy.ndarray`)."""
         return np.array([_.value for _ in self._parameters], dtype=np.float64)
 
-    @values.setter
-    def values(self, values):
+    @value.setter
+    def value(self, values):
         """Parameter values (`numpy.ndarray`)."""
         if not len(self) == len(values):
             raise ValueError("Values must have same length as parameter list")
@@ -405,10 +432,13 @@ class Parameters(collections.abc.Sequence):
         else:
             raise TypeError(f"Invalid type: {type(val)!r}")
 
-    def __getitem__(self, name):
-        """Access parameter by name or index"""
-        idx = self.index(name)
-        return self._parameters[idx]
+    def __getitem__(self, key):
+        """Access parameter by name, index or boolean mask"""
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return self.__class__(list(np.array(self._parameters)[key]))
+        else:
+            idx = self.index(key)
+            return self._parameters[idx]
 
     def __len__(self):
         return len(self._parameters)
@@ -479,12 +509,65 @@ class Parameters(collections.abc.Sequence):
         for par in self._parameters:
             par.autoscale(method)
 
-    @property
-    def restore_values(self):
-        """Context manager to restore values.
+    def select(
+        self, name=None, type=None, frozen=None,
+    ):
+        """Create a mask of models, true if all conditions are verified
+
+        Parameters
+        ----------
+        name : str or list
+            Name of the parameter
+        type : {None, spatial, spectral, temporal}
+           type of models
+        frozen : bool
+            Select frozen parameters if True, exclude them if False.
+ 
+        Returns
+        -------
+        parameters : `Parameters`
+           Selected parameters
+        """
+        selection = np.ones(len(self), dtype=bool)
+
+        if name and not isinstance(name, list):
+            name = [name]
+
+        for idx, par in enumerate(self):
+            if name:
+                selection[idx] &= np.any([_ == par.name for _ in name])
+
+            if type:
+                selection[idx] &= type == par.type
+
+            if frozen is not None:
+                if frozen:
+                    selection[idx] &= par.frozen
+                else:
+                    selection[idx] &= ~par.frozen
+
+        return self[selection]
+
+    def freeze_all(self):
+        """Freeze all parameters"""
+        for par in self._parameters:
+            par.frozen = True
+
+    def unfreeze_all(self):
+        """ Unfreeze all parameters (even those frozen by default)"""
+        for par in self._parameters:
+            par.frozen = False
+
+    def restore_status(self, restore_values=True):
+        """Context manager to restore status.
 
         A copy of the values is made on enter,
         and those values are restored on exit.
+
+        Parameters
+        ----------
+        restore_values : bool
+            Restore values if True, otherwise restore only frozen status.
 
         Examples
         --------
@@ -492,20 +575,16 @@ class Parameters(collections.abc.Sequence):
 
             from gammapy.modeling.models import PowerLawSpectralModel
             pwl = PowerLawSpectralModel(index=2)
-            with pwl.parameters.restore_values:
+            with pwl.parameters.restore_status():
                 pwl.parameters["index"].value = 3
             print(pwl.parameters["index"].value)
         """
-        return restore_parameters_values(self)
-
-    def freeze_all(self):
-        """Freeze all parameters"""
-        for par in self._parameters:
-            par.frozen = True
+        return restore_parameters_status(self, restore_values)
 
 
-class restore_parameters_values:
-    def __init__(self, parameters):
+class restore_parameters_status:
+    def __init__(self, parameters, restore_values=True):
+        self.restore_values = restore_values
         self._parameters = parameters
         self.values = [_.value for _ in parameters]
         self.frozen = [_.frozen for _ in parameters]
@@ -515,5 +594,6 @@ class restore_parameters_values:
 
     def __exit__(self, type, value, traceback):
         for value, par, frozen in zip(self.values, self._parameters, self.frozen):
-            par.value = value
+            if self.restore_values:
+                par.value = value
             par.frozen = frozen

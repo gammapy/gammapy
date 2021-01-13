@@ -67,4 +67,4 @@ def test_datasets_to_io(tmp_path):
     assert_allclose(dataset0.npred_background().data.sum(), 15726.8, atol=0.1)
 
     dataset_copy = dataset0.copy(name="dataset0-copy")
-    assert dataset_copy.background_model.datasets_names == ["dataset0-copy"]
+    assert dataset_copy.models is None

@@ -56,7 +56,7 @@ class TestNDDataArray:
     def test_evaluate_shape_1d(self, nddata_1d):
         # Scalar input
         out = nddata_1d.evaluate(x=1.5)
-        assert out.shape == (1,)
+        assert out.shape == ()
 
         # Array input
         out = nddata_1d.evaluate(x=[0, 1.5])

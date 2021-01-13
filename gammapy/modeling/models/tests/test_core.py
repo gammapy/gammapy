@@ -149,7 +149,7 @@ def test_compound_model():
     m = CoModel(m1, m2)
     assert len(m.parameters) == 5
     assert m.parameters.names == ["norm", "x", "y", "x", "y"]
-    assert_allclose(m.parameters.values, [42, 1, 2, 10, 20])
+    assert_allclose(m.parameters.value, [42, 1, 2, 10, 20])
 
 
 def test_parameter_link_init():

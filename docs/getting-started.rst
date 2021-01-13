@@ -75,7 +75,8 @@ Gammapy is a Python package, so you can of course import and use it from Python:
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from gammapy.stats import CashCountsStatistic
     >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
-    array([2.39791813])
+    2.397918129147546
+
 
 IPython
 +++++++
@@ -113,17 +114,30 @@ As an example, here's how you can create `gammapy.data.DataStore` and
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
     >>> events = data_store.obs(obs_id=23523).events
     >>> print(events)
-    EventList info:
-    - Number of events: 7613
-    - Median energy: 0.953 TeV
-    - OBS_ID = 23523
-    >>> events.energy.mean()
-    <Quantity 4.418008 TeV>
+    EventList
+    ---------
+    <BLANKLINE>
+      Instrument       : H.E.S.S. Phase I
+      Telescope        : HESS
+      Obs. ID          : 23523
+    <BLANKLINE>
+      Number of events : 7613
+      Event rate       : 4.513 1 / s
+    <BLANKLINE>
+      Time start       : 53343.92234009259
+      Time stop        : 53343.94186555556
+    <BLANKLINE>
+      Min. energy      : 2.44e-01 TeV
+      Max. energy      : 1.01e+02 TeV
+      Median energy    : 9.53e-01 TeV
+    <BLANKLINE>
+      Max. offset      : 58.0 deg
 
 Try to make your first plot using the `gammapy.data.EventList.peek` helper method:
 
 .. code-block:: python
 
+    >>> import matplotlib.pyplot as plt
     >>> events.peek()
     >>> plt.savefig("events.png")
 

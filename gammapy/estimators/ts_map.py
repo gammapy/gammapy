@@ -244,7 +244,8 @@ class TSMapEstimator(Estimator):
             exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
         kernel = kernel / np.sum(kernel ** 2)
-        flux = (dataset.counts - dataset.npred()) / exposure
+        with np.errstate(invalid="ignore", divide="ignore"):
+            flux = (dataset.counts - dataset.npred()) / exposure
         flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
         return flux.sum_over_axes()

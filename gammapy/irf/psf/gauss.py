@@ -2,18 +2,15 @@
 import logging
 import numpy as np
 from astropy import units as u
-from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import Angle
 from astropy.io import fits
-from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
-from .psf_3d import PSF3D
-from .psf_table import EnergyDependentTablePSF
+from .table import PSF3D, EnergyDependentTablePSF
 
 __all__ = ["EnergyDependentMultiGaussPSF"]
 
@@ -40,10 +37,8 @@ class EnergyDependentMultiGaussPSF:
         a two dimensional 'numpy.ndarray' containing the norm
         value for every given energy and theta. Norm corresponds
         to the value of the Gaussian at theta = 0.
-    energy_thresh_lo : `~astropy.units.u.Quantity`
-        Lower save energy threshold of the psf.
-    energy_thresh_hi : `~astropy.units.u.Quantity`
-        Upper save energy threshold of the psf.
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -68,11 +63,10 @@ class EnergyDependentMultiGaussPSF:
         offset_axis,
         sigmas,
         norms,
-        energy_thresh_lo="0.1 TeV",
-        energy_thresh_hi="100 TeV",
+        meta,
     ):
-        assert energy_axis_true.name == "energy_true"
-        assert offset_axis.name == "offset"
+        energy_axis_true.assert_name("energy_true")
+        offset_axis.assert_name("offset")
 
         self._energy_axis_true = energy_axis_true
         self._offset_axis = offset_axis
@@ -83,11 +77,19 @@ class EnergyDependentMultiGaussPSF:
         self.sigmas = sigmas
 
         self.norms = norms
-        self.energy_thresh_lo = u.Quantity(energy_thresh_lo, "TeV")
-        self.energy_thresh_hi = u.Quantity(energy_thresh_hi, "TeV")
-
+        self.meta = meta or {}
         self._interp_norms = self._setup_interpolators(self.norms)
         self._interp_sigmas = self._setup_interpolators(self.sigmas)
+
+    @property
+    def energy_thresh_lo(self):
+        """Low energy threshold"""
+        return self.meta["LO_THRES"] * u.TeV
+
+    @property
+    def energy_thresh_hi(self):
+        """High energy threshold"""
+        return self.meta["HI_THRES"] * u.TeV
 
     @property
     def energy_axis_true(self):
@@ -150,19 +152,12 @@ class EnergyDependentMultiGaussPSF:
             norm = hdu.data[key].reshape(shape).copy()
             norms.append(norm)
 
-        opts = {}
-        try:
-            opts["energy_thresh_lo"] = u.Quantity(hdu.header["LO_THRES"], "TeV")
-            opts["energy_thresh_hi"] = u.Quantity(hdu.header["HI_THRES"], "TeV")
-        except KeyError:
-            pass
-
         return cls(
             energy_axis_true=energy_axis_true,
             offset_axis=offset_axis,
             sigmas=sigmas,
             norms=norms,
-            **opts,
+            meta=dict(hdu.header)
         )
 
     def to_hdulist(self):
@@ -203,9 +198,7 @@ class EnergyDependentMultiGaussPSF:
 
         # Create hdu and hdu list
         hdu = fits.BinTableHDU(table)
-        hdu.header["LO_THRES"] = self.energy_thresh_lo.value
-        hdu.header["HI_THRES"] = self.energy_thresh_hi.value
-
+        hdu.header.update(self.meta)
         return fits.HDUList([fits.PrimaryHDU(), hdu])
 
     def write(self, filename, *args, **kwargs):
@@ -230,21 +223,31 @@ class EnergyDependentMultiGaussPSF:
 
         Returns
         -------
-        psf : `~gammapy.morphology.MultiGauss2D`
+        psf : `~gammapy.utils.gauss.MultiGauss2D`
             Multigauss PSF object.
         """
         energy = u.Quantity(energy)
         theta = u.Quantity(theta)
 
-        pars = {}
+        sigmas, norms = [], []
+
+        pars = {"A_1": 1}
+
+        for interp_sigma in self._interp_sigmas:
+            sigma = interp_sigma((theta, energy))
+            sigmas.append(sigma)
+
         for name, interp_norm in zip(["scale", "A_2", "A_3"], self._interp_norms):
             pars[name] = interp_norm((theta, energy))
 
-        for idx, interp_sigma in enumerate(self._interp_sigmas):
-            pars[f"sigma_{idx + 1}"] = interp_sigma((theta, energy))
+        for idx, sigma in enumerate(sigmas):
+            a = pars[f"A_{idx + 1}"]
+            norm = pars["scale"] * 2 * a * sigma ** 2
+            norms.append(norm)
 
-        psf = HESSMultiGaussPSF(pars)
-        return psf.to_MultiGauss2D(normalize=True)
+        m = MultiGauss2D(sigmas, norms)
+        m.normalize()
+        return m
 
     def containment_radius(self, energy, theta, fraction=0.68):
         """Compute containment for all energy and theta values"""
@@ -308,7 +311,10 @@ class EnergyDependentMultiGaussPSF:
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
-        self._plot_safe_energy_range(ax)
+        try:
+            self._plot_safe_energy_range(ax)
+        except KeyError:
+            pass
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
@@ -451,7 +457,7 @@ class EnergyDependentMultiGaussPSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             exposure=exposure,
-            psf_value=psf_value,
+            data=psf_value,
         )
 
     def to_psf3d(self, rad=None):
@@ -486,129 +492,6 @@ class EnergyDependentMultiGaussPSF:
             energy_axis_true=self.energy_axis_true,
             rad_axis=rad_axis,
             offset_axis=self.offset_axis,
-            psf_value=psf_value,
-            energy_thresh_lo=self.energy_thresh_lo,
-            energy_thresh_hi=self.energy_thresh_hi,
+            data=psf_value,
+            meta=self.meta.copy()
         )
-
-
-class HESSMultiGaussPSF:
-    """Multi-Gauss PSF as represented in the HESS software.
-
-    The 2D Gaussian is represented as a 1D exponential
-    probability density function per offset angle squared:
-    dp / dtheta**2 = [0]*(exp(-x/(2*[1]*[1]))+[2]*exp(-x/(2*[3]*[3]))
-
-    @param source: either a dict of a filename
-
-    The following two parameters control numerical
-    precision / speed. Usually the defaults are fine.
-    @param theta_max: Maximum offset in numerical computations
-    @param npoints: Number of points in numerical computations
-    @param eps: Allowed tolerance on normalization of total P to 1
-    """
-
-    def __init__(self, source):
-        if isinstance(source, dict):
-            # Assume source is a dict with correct format
-            self.pars = source
-        else:
-            # Assume source is a filename with correct format
-            self.pars = self._read_ascii(source)
-        # Scale will be computed from normalization anyways,
-        # so any default is fine here
-        self.pars["scale"] = self.pars.get("scale", 1)
-        # This avoids handling the first PSF as a special case
-        self.pars["A_1"] = self.pars.get("A_1", 1)
-
-    def _read_ascii(self, filename):
-        """Parse file with parameters."""
-        fh = open(filename)  # .readlines()
-        pars = {}
-        for line in fh:
-            try:
-                key, value = line.strip().split()[:2]
-                if key.startswith("#"):
-                    continue
-                else:
-                    pars[key] = float(value)
-            except ValueError:
-                pass
-        fh.close()
-        return pars
-
-    def n_gauss(self):
-        """Count number of Gaussians."""
-        return len([_ for _ in self.pars.keys() if "sigma" in _])
-
-    def dpdtheta2(self, theta2):
-        """dp / dtheta2 at position theta2 = theta ^ 2."""
-        theta2 = np.asarray(theta2, "f")
-        total = np.zeros_like(theta2)
-        for ii in range(1, self.n_gauss() + 1):
-            A = self.pars[f"A_{ii}"]
-            sigma = self.pars[f"sigma_{ii}"]
-            total += A * np.exp(-theta2 / (2 * sigma ** 2))
-        return self.pars["scale"] * total
-
-    def to_MultiGauss2D(self, normalize=True):
-        """Use this to compute containment angles and fractions.
-
-        Note: We have to set norm = 2 * A * sigma ^ 2, because in
-        MultiGauss2D norm represents the integral, and in HESS A
-        represents the amplitude at 0.
-        """
-        sigmas, norms = [], []
-        for ii in range(1, self.n_gauss() + 1):
-            A = self.pars[f"A_{ii}"]
-            sigma = self.pars[f"sigma_{ii}"]
-            norm = self.pars["scale"] * 2 * A * sigma ** 2
-            sigmas.append(sigma)
-            norms.append(norm)
-        m = MultiGauss2D(sigmas, norms)
-        if normalize:
-            m.normalize()
-        return m
-
-
-def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs):
-    """Create multi-Gauss PSF kernel.
-
-    The Gaussian PSF components are specified via the
-    amplitude at the center and the FWHM.
-    See the example for the exact format.
-
-    Parameters
-    ----------
-    psf_parameters : dict
-        PSF parameters
-    BINSZ : float (0.02)
-        Pixel size used for the given parameters in deg.
-    NEW_BINSZ : float (0.02)
-        New pixel size in deg. USed to change the resolution of the PSF.
-
-    Returns
-    -------
-    psf_kernel : `astropy.convolution.Kernel2D`
-        PSF kernel
-
-    Examples
-    --------
-    >>> psf_pars = dict()
-    >>> psf_pars['psf1'] = dict(ampl=1, fwhm=2.5)
-    >>> psf_pars['psf2'] = dict(ampl=0.06, fwhm=11.14)
-    >>> psf_pars['psf3'] = dict(ampl=0.47, fwhm=5.16)
-    >>> psf_kernel = multi_gauss_psf_kernel(psf_pars, x_size=51)
-    """
-    psf = None
-    for ii in range(1, 4):
-        # Convert sigma and amplitude
-        pars = psf_parameters[f"psf{ii}"]
-        sigma = gaussian_fwhm_to_sigma * pars["fwhm"] * BINSZ / NEW_BINSZ
-        ampl = 2 * np.pi * sigma ** 2 * pars["ampl"]
-        if psf is None:
-            psf = float(ampl) * Gaussian2DKernel(sigma, **kwargs)
-        else:
-            psf += float(ampl) * Gaussian2DKernel(sigma, **kwargs)
-    psf.normalize()
-    return psf

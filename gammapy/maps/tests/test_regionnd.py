@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from regions import CircleSkyRegion
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap
@@ -150,10 +151,10 @@ def test_region_nd_map_fill_events(region_map):
 
 
 def test_apply_edisp(region_map_true):
-    e_true = region_map_true.geom.axes[0].edges
-    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
+    e_true = region_map_true.geom.axes[0]
+    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 
-    edisp = EDispKernel.from_diagonal_response(energy_true=e_true, energy=e_reco)
+    edisp = EDispKernel.from_diagonal_response(energy_axis_true=e_true, energy_axis=e_reco)
 
     m = region_map_true.apply_edisp(edisp)
     assert m.geom.data_shape == (3, 1, 1)
@@ -184,3 +185,35 @@ def test_regionndmap_resample_axis():
     m3 = m.resample_axis(axis=new_axis)
     assert m3.data.shape == (3, 1, 1, 1)
     assert_allclose(m3.data, 2)
+
+
+def test_region_nd_io_ogip(tmpdir):
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 12, unit="TeV")
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+    m.write(tmpdir / "test.fits", format="ogip")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="ogip")
+
+    assert isinstance(m_new.geom.region, CircleSkyRegion)
+
+    geom = m_new.geom.to_wcs_geom()
+    assert geom.data_shape == (12, 102, 102)
+
+    with pytest.raises(ValueError):
+        m.write(tmpdir / "test.fits", format="ogip-arf")
+
+
+def test_region_nd_io_ogip_arf(tmpdir):
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 12, unit="TeV", name="energy_true")
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+    m.write(tmpdir / "test.fits", format="ogip-arf")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="ogip-arf")
+
+    assert m_new.geom.region is None
+
+    with pytest.raises(ValueError):
+        m.write(tmpdir / "test.fits", format="ogip")
+
+
+

@@ -61,8 +61,7 @@ def reflected_regions_bkg_maker():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
-    mask = geom.region_mask([exclusion_region], inside=False)
-    exclusion_mask = WcsNDMap(geom, data=mask)
+    exclusion_mask = geom.region_mask([exclusion_region], inside=False)
 
     return ReflectedRegionsBackgroundMaker(
         exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
@@ -121,13 +120,13 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert dataset.energy_range[0].unit == "TeV"
 
     mask_safe = safe_mask_maker.make_mask_energy_aeff_max(dataset)
-    assert mask_safe.sum() == 4
+    assert mask_safe.data.sum() == 4
 
     mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert mask_safe.sum() == 3
+    assert mask_safe.data.sum() == 3
 
     mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert mask_safe.sum() == 3
+    assert mask_safe.data.sum() == 3
 
 
 @requires_data()

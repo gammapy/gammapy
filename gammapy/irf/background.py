@@ -69,6 +69,7 @@ class Background3D:
             data=data,
             interp_kwargs=interp_kwargs,
         )
+        self.data.axes.assert_names(["energy", "fov_lon", "fov_lat"])
         self.meta = meta or {}
 
     def __str__(self):
@@ -89,6 +90,7 @@ class Background3D:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
         data_unit = table[bkg_name].unit
+
         if data_unit is not None:
             data_unit = u.Unit(table[bkg_name].unit, parse_strict="silent")
         if isinstance(data_unit, u.UnrecognizedUnit) or (data_unit is None):
@@ -97,14 +99,8 @@ class Background3D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        energy_axis = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        fov_lon_axis = MapAxis.from_table(
-            table, column_prefix="DETX", format="gadf-dl3"
-        )
-        fov_lat_axis = MapAxis.from_table(
-            table, column_prefix="DETY", format="gadf-dl3"
+        axes = MapAxes.from_table(
+            table, column_prefixes=["ENERG", "DETX", "DETY"], format="gadf-dl3"
         )
 
         # TODO: The present HESS and CTA backgroundfits files
@@ -112,19 +108,18 @@ class Background3D:
         #  For now, we suport both.
 
         data = table[bkg_name].data[0].T * data_unit
-        shape = (energy_axis.nbin, fov_lon_axis.nbin, fov_lat_axis.nbin)
 
-        if shape == shape[::-1]:
+        if axes.shape == axes.shape[::-1]:
             log.error("Ambiguous axes order in Background fits files!")
 
-        if np.shape(data) != shape:
+        if np.shape(data) != axes.shape:
             log.debug("Transposing background table on read")
             data = data.transpose()
 
         return cls(
-            energy_axis=energy_axis,
-            fov_lon_axis=fov_lon_axis,
-            fov_lat_axis=fov_lat_axis,
+            energy_axis=axes["energy"],
+            fov_lon_axis=axes["fov_lon"],
+            fov_lat_axis=axes["fov_lat"],
             data=data,
             meta=table.meta,
         )
@@ -146,6 +141,7 @@ class Background3D:
         axes = MapAxes(self.data.axes[::-1])
         table = axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
+        table.meta["HDUCLAS2"] = "BKG"
         table["BKG"] = self.data.data.T[np.newaxis]
         return table
 
@@ -249,11 +245,10 @@ class Background2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        assert offset_axis.name == "offset"
-
         self.data = NDDataArray(
             axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
         )
+        self.data.axes.assert_names(["energy", "offset"])
         self.meta = meta or {}
 
     def __str__(self):
@@ -283,30 +278,24 @@ class Background2D:
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        energy_axis = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
-        )
+        axes = MapAxes.from_table(table, column_prefixes=["ENERG", "THETA"], format="gadf-dl3")
 
         # TODO: The present HESS and CTA backgroundfits files
         # have a reverse order (theta, E) than recommened in GADF(E, theta)
         # For now, we suport both.
 
         data = table[bkg_name].data[0].T * data_unit
-        shape = (energy_axis.nbin, offset_axis.nbin)
 
-        if shape == shape[::-1]:
+        if axes.shape == axes.shape[::-1]:
             log.error("Ambiguous axes order in Background fits files!")
 
-        if np.shape(data) != shape:
+        if np.shape(data) != axes.shape:
             log.debug("Transposing background table on read")
             data = data.transpose()
 
         return cls(
-            energy_axis=energy_axis,
-            offset_axis=offset_axis,
+            energy_axis=axes["energy"],
+            offset_axis=axes["offset"],
             data=data,
             meta=table.meta,
         )
@@ -326,6 +315,9 @@ class Background2D:
         """Convert to `~astropy.table.Table`."""
         table = self.data.axes.to_table(format="gadf-dl3")
         table.meta = self.meta.copy()
+
+        # TODO: add other required meta data
+        table.meta["HDUCLAS2"] = "BKG"
         table["BKG"] = self.data.data.T[np.newaxis]
         return table
 

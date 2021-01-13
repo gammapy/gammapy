@@ -9,12 +9,9 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf import EDispKernel
-from gammapy.irf.edisp_map import EDispKernelMap, EDispMap
-from gammapy.irf.psf_kernel import PSFKernel
-from gammapy.irf.psf_map import PSFMap
+from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel,  PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
-from gammapy.modeling.models import BackgroundModel, DatasetModels
+from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
@@ -174,10 +171,18 @@ class MapDataset(Dataset):
         self.exposure = exposure
         self.background = background
         self.mask_fit = mask_fit
+
+        if psf and not isinstance(psf, (PSFMap, HDULocation)):
+            raise ValueError(
+                f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
+            )
+
         self.psf = psf
 
-        if isinstance(edisp, EDispKernel):
-            edisp = EDispKernelMap.from_edisp_kernel(edisp=edisp)
+        if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
+            raise ValueError(
+                f"'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' object, got {type(edisp)}"
+            )
 
         self.edisp = edisp
         self.mask_safe = mask_safe
@@ -192,10 +197,6 @@ class MapDataset(Dataset):
             return self.models[f"{self.name}-bkg"]
         except (ValueError, TypeError):
             pass
-
-    @property
-    def name(self):
-        return self._name
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
@@ -283,18 +284,18 @@ class MapDataset(Dataset):
         self._evaluators = {}
 
         if models is not None:
-            models = DatasetModels(models).select(dataset_name=self.name)
+            models = DatasetModels(models)
+            models = models.select(datasets_names=self.name)
 
-            for model in models.select(tag="sky-model"):
-                evaluator = MapEvaluator(
-                    model=model,
-                    evaluation_mode=EVALUATION_MODE,
-                    gti=self.gti,
-                    use_cache=USE_NPRED_CACHE,
-                )
-                # TODO: do we need the update here?
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
-                self._evaluators[model.name] = evaluator
+            for model in models:
+                if not isinstance(model, FoVBackgroundModel):
+                    evaluator = MapEvaluator(
+                        model=model,
+                        evaluation_mode=EVALUATION_MODE,
+                        gti=self.gti,
+                        use_cache=USE_NPRED_CACHE,
+                    )
+                    self._evaluators[model.name] = evaluator
 
         self._models = models
 
@@ -413,9 +414,9 @@ class MapDataset(Dataset):
     def from_geoms(
         cls,
         geom,
-        geom_exposure,
-        geom_psf,
-        geom_edisp,
+        geom_exposure=None,
+        geom_psf=None,
+        geom_edisp=None,
         reference_time="2000-01-01",
         name=None,
         **kwargs,
@@ -457,7 +458,7 @@ class MapDataset(Dataset):
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
         # TODO: allow PSF as well...
-        if not isinstance(geom_psf, RegionGeom):
+        if geom_psf and not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
@@ -542,6 +543,9 @@ class MapDataset(Dataset):
         if self.mask_safe is None:
             return None
 
+        if self.mask_safe.geom.is_region:
+            return self.mask_safe
+
         geom = self.edisp.edisp_map.geom.squash("energy_true")
 
         if "migra" in geom.axes.names:
@@ -551,27 +555,22 @@ class MapDataset(Dataset):
 
         return self.mask_safe.interp_to_geom(geom)
 
-    def apply_mask_safe(self):
-        """Apply mask safe to the dataset"""
-        if self.mask_safe is None:
-            return
+    def to_masked(self, name=None):
+        """Return masked dataset
 
-        if self.counts:
-            self.counts *= self.mask_safe
+        Parameters
+        ----------
+        name : str
+            Name of the masked dataset.
 
-        if self.exposure:
-            self.exposure *= self.mask_safe_image.data
-
-        if self.stat_type == "cash" and self.background:
-            self.background *= self.mask_safe
-
-        if self.psf:
-            self.psf.psf_map *= self.mask_safe_psf.data
-            self.psf.exposure_map *= self.mask_safe_psf.data
-
-        if self.edisp:
-            self.edisp.edisp_map *= self.mask_safe_edisp.data
-            # self.edisp.exposure_map *= self.mask_safe_edisp.data
+        Returns
+        -------
+        dataset : `MapDataset` or `SpectrumDataset`
+            Masked dataset
+        """
+        dataset = self.__class__.from_geoms(**self.geoms, name=name)
+        dataset.stack(self)
+        return dataset
 
     def stack(self, other):
         r"""Stack another dataset in place.
@@ -613,8 +612,6 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
-        self.apply_mask_safe()
-
         if self.counts and other.counts:
             self.counts.stack(other.counts, weights=other.mask_safe)
 
@@ -634,10 +631,7 @@ class MapDataset(Dataset):
                 self.background = background
 
         if self.psf and other.psf:
-            if isinstance(self.psf, PSFMap) and isinstance(other.psf, PSFMap):
-                self.psf.stack(other.psf, weights=other.mask_safe_psf)
-            else:
-                raise ValueError("Stacking of PSF kernels not supported")
+            self.psf.stack(other.psf, weights=other.mask_safe_psf)
 
         if self.edisp and other.edisp:
             self.edisp.stack(other.edisp, weights=other.mask_safe_edisp)
@@ -914,40 +908,24 @@ class MapDataset(Dataset):
             hdulist += self.background.to_hdulist(hdu="background")[exclude_primary]
 
         if self.edisp is not None:
-            if isinstance(self.edisp, EDispKernel):
-                hdus = self.edisp.to_hdulist()
-                hdus["MATRIX"].name = "edisp_matrix"
-                hdus["EBOUNDS"].name = "edisp_matrix_ebounds"
-                hdulist.append(hdus["EDISP_MATRIX"])
-                hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
-            else:
-                hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-                if self.edisp.exposure_map is not None:
-                    hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
-                        exclude_primary
-                    ]
-
-        if self.psf is not None:
-            if isinstance(self.psf, PSFKernel):
-                hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf_kernel")[
+            hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
+            if self.edisp.exposure_map is not None:
+                hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
                     exclude_primary
                 ]
-            else:
-                hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-                if self.psf.exposure_map is not None:
-                    hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
-                        exclude_primary
-                    ]
+
+        if self.psf is not None:
+            hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
+            if self.psf.exposure_map is not None:
+                hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
+                    exclude_primary
+                ]
 
         if self.mask_safe is not None:
-            mask_safe_int = self.mask_safe.copy()
-            mask_safe_int.data = mask_safe_int.data.astype(int)
-            hdulist += mask_safe_int.to_hdulist(hdu="mask_safe")[exclude_primary]
+            hdulist += self.mask_safe.to_hdulist(hdu="mask_safe")[exclude_primary]
 
         if self.mask_fit is not None:
-            mask_fit_int = self.mask_fit.copy()
-            mask_fit_int.data = mask_fit_int.data.astype(int)
-            hdulist += mask_fit_int.to_hdulist(hdu="mask_fit")[exclude_primary]
+            hdulist += self.mask_fit.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         if self.gti is not None:
             hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
@@ -985,25 +963,18 @@ class MapDataset(Dataset):
         if "BACKGROUND" in hdulist:
             kwargs["background"] = Map.from_hdulist(hdulist, hdu="background")
 
-        if "EDISP_MATRIX" in hdulist:
-            kwargs["edisp"] = EDispKernel.from_hdulist(
-                hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
-            )
-
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp")
+
             try:
                 exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure")
             except KeyError:
                 exposure_map = None
+
             if edisp_map.geom.axes[0].name == "energy":
                 kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
             else:
                 kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
-
-        if "PSF_KERNEL" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
-            kwargs["psf"] = PSFKernel(psf_map)
 
         if "PSF" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf")
@@ -1111,10 +1082,6 @@ class MapDataset(Dataset):
         filename = make_path(data["filename"])
         dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
         return dataset
-
-    def to_dict(self, filename=""):
-        """Convert to dict for YAML serialization."""
-        return {"name": self.name, "type": self.tag, "filename": str(filename)}
 
     def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy
@@ -1289,8 +1256,10 @@ class MapDataset(Dataset):
         # TODO: Compute average edisp in region
         if self.edisp is not None:
             energy_axis = self._geom.axes["energy"]
+
+            position = None if on_region is None else on_region.center
             edisp = self.edisp.get_edisp_kernel(
-                on_region.center, energy_axis=energy_axis
+                position=position, energy_axis=energy_axis
             )
 
             edisp = EDispKernelMap.from_edisp_kernel(
@@ -1392,6 +1361,7 @@ class MapDataset(Dataset):
             kwargs["background"] = self.npred_background().downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
+
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
@@ -1753,7 +1723,9 @@ class MapDatasetOnOff(MapDataset):
         alpha : `Map`
             Alpha map
         """
-        alpha = self.acceptance / self.acceptance_off
+        with np.errstate(invalid="ignore", divide="ignore"):
+            alpha = self.acceptance / self.acceptance_off
+
         alpha.data = np.nan_to_num(alpha.data)
         return alpha
 
@@ -1817,8 +1789,8 @@ class MapDatasetOnOff(MapDataset):
         cls,
         geom,
         geom_exposure,
-        geom_psf,
-        geom_edisp,
+        geom_psf=None,
+        geom_edisp=None,
         reference_time="2000-01-01",
         name=None,
         **kwargs,
@@ -1861,7 +1833,7 @@ class MapDatasetOnOff(MapDataset):
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
-        if not isinstance(geom_psf, RegionGeom):
+        if geom_psf and not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
@@ -2095,14 +2067,7 @@ class MapDatasetOnOff(MapDataset):
         if "EXPOSURE" in hdulist:
             kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
-        if "EDISP_MATRIX" in hdulist:
-            kwargs["edisp"] = EDispKernel.from_hdulist(
-                hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
-            )
-
-        if "PSF_KERNEL" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
-            kwargs["psf"] = PSFKernel(psf_map)
+        # TODO: this misses the PSFMap and EDispMap
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe")
@@ -2515,6 +2480,16 @@ class MapEvaluator:
 
         return update
 
+    @property
+    def cutout_width(self):
+        """Cutout width for the model component"""
+        if self.psf is not None:
+            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
+        else:
+            psf_width = 0 * u.deg
+
+        return psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
+
     def update(self, exposure, psf, edisp, geom):
         """Update MapEvaluator, based on the current position of the model component.
 
@@ -2540,28 +2515,23 @@ class MapEvaluator:
                 self.model.position, energy_axis=energy_axis
             )
 
-        if isinstance(psf, PSFMap):
+        # lookup psf
+        if psf:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
                 geom = exposure.geom
 
-            # lookup psf
+            if geom.is_region:
+                geom = geom.to_wcs_geom()
+
             self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
-        else:
-            self.psf = psf
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
-            if self.psf is not None:
-                psf_width = np.max(self.psf.psf_kernel_map.geom.width)
-            else:
-                psf_width = 0 * u.deg
-
-            width = psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
             try:
                 self.exposure = exposure.cutout(
-                    position=self.model.position, width=width
+                    position=self.model.position, width=self.cutout_width
                 )
                 self.contributes = True
             except (NoOverlapError, ValueError):
@@ -2592,8 +2562,13 @@ class MapEvaluator:
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
-        if self.model.spatial_model and not isinstance(self.geom, RegionGeom):
-            value = value * self.compute_flux_spatial().quantity
+        if self.geom.is_region:
+            evaluate_spatial_model = self.geom.region is not None and self.psf
+        else:
+            evaluate_spatial_model = True
+
+        if self.model.spatial_model and evaluate_spatial_model:
+            value = value * self.compute_flux_spatial()
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
@@ -2601,10 +2576,27 @@ class MapEvaluator:
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
     def _compute_flux_spatial(self):
-        """Compute spatial flux"""
-        value = self.model.spatial_model.integrate_geom(self.geom)
-        if self.psf and self.model.apply_irf["psf"]:
-            value = self.apply_psf(value)
+        """Compute spatial flux
+
+        Returns
+        ----------
+        value: `~astropy.units.Quantity`
+            Psf-corrected, integrated flux over a given region.
+        """
+        if self.geom.is_region:
+            wcs_geom = self.geom.to_wcs_geom()
+            mask = self.geom.contains(wcs_geom.get_coord())
+            values = self.model.spatial_model.integrate_geom(wcs_geom)
+
+            if self.psf and self.model.apply_irf["psf"]:
+                values = self.apply_psf(values)
+            value = (values.quantity * mask).sum(axis=(1, 2))
+
+        else:
+            value = self.model.spatial_model.integrate_geom(self.geom)
+            if self.psf and self.model.apply_irf["psf"]:
+                value = self.apply_psf(value)
+
         return value
 
     def compute_flux_spatial(self):
@@ -2716,7 +2708,7 @@ class MapEvaluator:
     @property
     def parameters_changed(self):
         """Parameters changed"""
-        values = self.model.parameters.values
+        values = self.model.parameters.value
 
         # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values == values)
@@ -2729,7 +2721,7 @@ class MapEvaluator:
     @property
     def parameters_spatial_changed(self):
         """Parameters changed"""
-        values = self.model.spatial_model.parameters.values
+        values = self.model.spatial_model.parameters.value
 
         # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values_spatial == values)

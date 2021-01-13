@@ -123,7 +123,7 @@ class ParameterEstimator(Estimator):
         """
         stat = datasets.stat_sum()
 
-        with datasets.parameters.restore_values:
+        with datasets.parameters.restore_status():
 
             # compute ts value
             parameter.value = self.null_value
@@ -241,7 +241,7 @@ class ParameterEstimator(Estimator):
         datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
 
-        with datasets.parameters.restore_values:
+        with datasets.parameters.restore_status():
 
             if not self.reoptimize:
                 datasets.parameters.freeze_all()

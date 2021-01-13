@@ -153,12 +153,12 @@ class Analysis:
 
         self.models.extend(self.datasets.models)
 
-        for dataset in self.datasets:
+        if self.config.datasets.type == "3d":
+            for dataset in self.datasets:
+                if dataset.background_model is None:
+                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
 
-            if dataset.background_model is None:
-                bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
-
-            self.models.append(bkg_model)
+                self.models.append(bkg_model)
 
         self.datasets.models = self.models
 
@@ -181,8 +181,7 @@ class Analysis:
                 energy_min = fit_settings.fit_range.min
                 energy_max = fit_settings.fit_range.max
                 geom = dataset.counts.geom
-                data = geom.energy_mask(energy_min, energy_max)
-                dataset.mask_fit = Map.from_geom(geom=geom, data=data)
+                dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
         log.info("Fitting datasets.")
         self.fit = Fit(self.datasets)

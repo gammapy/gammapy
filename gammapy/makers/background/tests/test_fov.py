@@ -6,7 +6,7 @@ from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     FoVBackgroundModel,
     GaussianSpatialModel,
@@ -47,9 +47,7 @@ def exclusion_mask(geom):
     """Example mask for testing."""
     pos = SkyCoord(83.633, 22.014, unit="deg", frame="icrs")
     region = CircleSkyRegion(pos, Angle(0.3, "deg"))
-    exclusion = WcsNDMap.from_geom(geom)
-    exclusion.data = geom.region_mask([region], inside=False)
-    return exclusion
+    return geom.region_mask([region], inside=False)
 
 
 @pytest.fixture(scope="session")

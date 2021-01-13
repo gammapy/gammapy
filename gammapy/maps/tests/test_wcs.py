@@ -358,11 +358,11 @@ def test_region_mask():
     r2 = CircleSkyRegion(SkyCoord(20, 20, unit="deg"), 1 * u.deg)
     regions = [r1, r2]
 
-    mask = geom.region_mask(regions)  # default inside=True
+    mask = geom.region_mask(regions).data  # default inside=True
     assert mask.dtype == bool
     assert np.sum(mask) == 1
 
-    mask = geom.region_mask(regions, inside=False)
+    mask = geom.region_mask(regions, inside=False).data
     assert np.sum(mask) == 8
 
 
@@ -372,17 +372,17 @@ def test_energy_mask():
     )
     geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
 
-    mask = geom.energy_mask(energy_min=3 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV).data
     assert not mask[0, 0, 0]
     assert mask[1, 0, 0]
     assert mask[2, 0, 0]
 
-    mask = geom.energy_mask(energy_max=30 * u.TeV)
+    mask = geom.energy_mask(energy_max=30 * u.TeV).data
     assert mask[0, 0, 0]
     assert not mask[1, 0, 0]
     assert not mask[2, 0, 0]
 
-    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV).data
     assert not mask[0, 0, 0]
     assert not mask[2, 0, 0]
     assert mask[1, 0, 0]

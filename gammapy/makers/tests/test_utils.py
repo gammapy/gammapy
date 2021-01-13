@@ -261,7 +261,11 @@ def test_make_edisp_kernel_map():
     ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
 
     edisp = EnergyDispersion2D.from_gauss(
-        etrue.edges, migra.edges, 0, 0.01, offset.edges
+        energy_axis_true=etrue,
+        migra_axis=migra,
+        bias=0,
+        sigma=0.01,
+        offset_axis=offset
     )
 
     geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])

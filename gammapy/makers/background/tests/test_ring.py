@@ -41,9 +41,7 @@ def exclusion_mask(geom):
     """Example mask for testing."""
     pos = SkyCoord(83.633, 22.014, unit="deg", frame="icrs")
     region = CircleSkyRegion(pos, Angle(0.15, "deg"))
-    exclusion = WcsNDMap.from_geom(geom)
-    exclusion.data = geom.region_mask([region], inside=False)
-    return exclusion
+    return  geom.region_mask([region], inside=False)
 
 
 @requires_data()

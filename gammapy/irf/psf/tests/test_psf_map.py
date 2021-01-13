@@ -42,7 +42,7 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
         energy_axis_true=energy_axis_true,
         rad_axis=rad_axis,
         offset_axis=offset_axis,
-        psf_value=psf_value.T,
+        data=psf_value.T,
     )
 
 
@@ -266,7 +266,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.0015362848,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 144),
-            "psf_value": 3719.21488,
+            "psf_value": 3714.303683,
         },
         {
             "energy": None,
@@ -288,7 +288,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.000524,
             "psf_exposure": 4.723409e12,
             "psf_value_shape": (100, 1000),
-            "psf_value": 22561.543595,
+            "psf_value": 22453.412121,
         },
     ],
 )
@@ -328,9 +328,9 @@ def test_make_psf(pars, data_store):
     assert psf.exposure.shape == (pars["energy_shape"],)
     assert_allclose(psf.exposure.value[15], pars["psf_exposure"], rtol=1e-3)
 
-    assert psf.psf_value.unit == "sr-1"
-    assert psf.psf_value.shape == pars["psf_value_shape"]
-    assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
+    assert psf.data.data.unit == "sr-1"
+    assert psf.data.data.shape == pars["psf_value_shape"]
+    assert_allclose(psf.data.data.value[15, 50], pars["psf_value"], rtol=1e-3)
 
 
 @requires_data()
@@ -355,8 +355,8 @@ def test_make_mean_psf(data_store):
 
     psf = stacked_psf.get_energy_dependent_table_psf(position)
 
-    assert not np.isnan(psf.psf_value.value).any()
-    assert_allclose(psf.psf_value.value[22, 22], 12206.1665, rtol=1e-3)
+    assert not np.isnan(psf.data.data).any()
+    assert_allclose(psf.data.data[22, 22], 12206.1665 / u.sr, rtol=1e-3)
 
 
 @requires_data()
@@ -369,8 +369,8 @@ def test_psf_map_from_table_psf(position):
 
     table_psf_new = psf_map.get_energy_dependent_table_psf(position)
 
-    assert_allclose(table_psf_new.psf_value.value, table_psf.psf_value.value)
-    assert table_psf_new.psf_value.unit == "sr-1"
+    assert_allclose(table_psf_new.data.data, table_psf.data.data)
+    assert table_psf_new.data.data.unit == "sr-1"
 
     assert_allclose(table_psf_new.exposure.value, table_psf.exposure.value)
     assert table_psf_new.exposure.unit == "cm2 s"
@@ -429,8 +429,8 @@ def test_psfmap_from_gauss():
     )
 
     # check that the PSF with the same sigma is the same
-    psfvalue = psfmap.get_energy_dependent_table_psf().psf_value[0]
-    psfvalue1 = psfmap1.get_energy_dependent_table_psf().psf_value[0]
+    psfvalue = psfmap.get_energy_dependent_table_psf().data.data[0]
+    psfvalue1 = psfmap1.get_energy_dependent_table_psf().data.data[0]
     assert_allclose(psfvalue, psfvalue1, atol=1e-7)
 
     # test that it won't work with different number of sigmas and energies

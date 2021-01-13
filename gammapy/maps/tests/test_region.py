@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.maps import MapAxis, RegionGeom
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 
 @pytest.fixture()
@@ -263,6 +264,16 @@ def test_to_wcs_geom(region):
     assert wcs_geom_cube.to_image() == wcs_geom
     assert wcs_geom_cube.axes[0] == axis
 
+    # test with minimum widths
+    width_min = 3*u.deg
+    wcs_geom = geom.to_wcs_geom(width_min=width_min)
+    assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
+    assert_allclose(wcs_geom.width, [[3], [3]]*u.deg, rtol=1, atol=0)
+
+    width_min = [1,3]*u.deg
+    wcs_geom = geom.to_wcs_geom(width_min=width_min)
+    assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
+    assert_allclose(wcs_geom.width, [[2], [3]]*u.deg, rtol=1, atol=0)
 
 def test_get_wcs_coord(region):
     # test on circular region
@@ -278,4 +289,13 @@ def test_get_wcs_coord(region):
     region_coords = geom.get_wcs_coord()
     coord = SkyCoord("100d", "30d")
     assert geom.contains(region_coords.skycoord[0])
-    assert geom.contains(coord) is not True
+    assert not geom.contains(coord)
+
+@requires_dependency("matplotlib")
+def test_region_nd_map_plot(region):
+    import matplotlib.pyplot as plt
+    geom = RegionGeom(region)
+
+    ax = plt.subplot(projection=geom.wcs)
+    with mpl_plot_check():
+        geom.plot_region(ax=ax)

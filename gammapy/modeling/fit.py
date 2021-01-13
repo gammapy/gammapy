@@ -218,7 +218,7 @@ class Fit:
         parameters = self._parameters
 
         # TODO: wrap MINUIT in a stateless backend
-        with parameters.restore_values:
+        with parameters.restore_status():
             if backend == "minuit":
                 method = "hesse"
                 if hasattr(self, "minuit"):
@@ -280,7 +280,7 @@ class Fit:
         parameter = parameters[parameter]
 
         # TODO: wrap MINUIT in a stateless backend
-        with parameters.restore_values:
+        with parameters.restore_status():
             if backend == "minuit":
                 if hasattr(self, "minuit"):
                     # This is ugly. We will access parameters and make a copy
@@ -362,7 +362,7 @@ class Fit:
 
         stats = []
         fit_results = []
-        with parameters.restore_values:
+        with parameters.restore_status():
             for value in values:
                 parameter.value = value
                 if reoptimize:
@@ -413,7 +413,7 @@ class Fit:
 
         stats = []
         fit_results = []
-        with parameters.restore_values:
+        with parameters.restore_status():
             for x_value, y_value in itertools.product(x_values, y_values):
                 # TODO: Remove log.info() and provide a nice progress bar
                 log.info(f"Processing: x={x_value}, y={y_value}")
@@ -476,7 +476,7 @@ class Fit:
         x = parameters[x]
         y = parameters[y]
 
-        with parameters.restore_values:
+        with parameters.restore_status():
             result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
 
         x_name = x.name

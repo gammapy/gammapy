@@ -4,7 +4,7 @@ from scipy.interpolate import interp1d
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
-from .irf_map import IRFMap
+from .core import IRFMap
 
 __all__ = ["EDispMap", "EDispKernelMap"]
 
@@ -77,14 +77,9 @@ class EDispMap(IRFMap):
     """
 
     _hdu_name = "edisp"
+    _axis_names = ["migra", "energy_true"]
 
     def __init__(self, edisp_map, exposure_map=None):
-        if edisp_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
-            raise ValueError("Incorrect energy axis position in input Map")
-
-        if edisp_map.geom.axes[0].name.upper() != "MIGRA":
-            raise ValueError("Incorrect migra axis position in input Map")
-
         super().__init__(irf_map=edisp_map, exposure_map=exposure_map)
 
     @property
@@ -332,14 +327,9 @@ class EDispKernelMap(IRFMap):
 
     tag = "edisp_kernel_map"
     _hdu_name = "edisp"
+    _axis_names = ["energy", "energy_true"]
 
-    def __init__(self, edisp_kernel_map, exposure_map):
-        if edisp_kernel_map.geom.axes[1].name.upper() != "ENERGY_TRUE":
-            raise ValueError("Incorrect energy axis position in input Map")
-
-        if edisp_kernel_map.geom.axes[0].name.upper() != "ENERGY":
-            raise ValueError("Incorrect migra axis position in input Map")
-
+    def __init__(self, edisp_kernel_map, exposure_map=None):
         super().__init__(irf_map=edisp_kernel_map, exposure_map=exposure_map)
 
     @property
@@ -366,14 +356,6 @@ class EDispKernelMap(IRFMap):
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        axis_names = [ax.name for ax in geom.axes]
-
-        if "energy_true" not in axis_names:
-            raise ValueError("EDispKernelMap requires true energy axis")
-
-        if "energy" not in axis_names:
-            raise ValueError("EDispKernelMap requires energy axis")
-
         geom_exposure = geom.squash(axis_name="energy")
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
@@ -482,8 +464,16 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        edisp : `~gammapy.irfs.EDispKernel`
-            the input 1D kernel.
+        energy_axis_true : `~astropy.units.Quantity`
+            Bin edges of true energy axis
+        energy_axis : `~astropy.units.Quantity`
+            Bin edges of reconstructed energy axis
+        bias : float or `~numpy.ndarray`
+            Center of Gaussian energy dispersion, bias
+        sigma : float or `~numpy.ndarray`
+            RMS width of Gaussian energy dispersion, resolution
+        pdf_threshold : float, optional
+            Zero suppression threshold
         geom : `~gammapy.maps.Geom`
             The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
 
@@ -493,8 +483,8 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         kernel = EDispKernel.from_gauss(
-            energy=energy_axis.edges,
-            energy_true=energy_axis_true.edges,
+            energy_axis=energy_axis,
+            energy_axis_true=energy_axis_true,
             sigma=sigma,
             bias=bias,
             pdf_threshold=pdf_threshold,

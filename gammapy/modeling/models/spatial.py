@@ -14,7 +14,7 @@ from regions import (
     PointSkyRegion,
     PolygonSkyRegion,
 )
-from gammapy.maps import Map, WcsGeom, RegionGeom
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
@@ -58,10 +58,6 @@ class SpatialModel(Model):
             kwargs["energy"] = energy
 
         return self.evaluate(lon, lat, **kwargs)
-
-    @property
-    def type(self):
-        return self._type
 
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
@@ -149,14 +145,15 @@ class SpatialModel(Model):
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
                 the integral value in each spatial bin.
         """
-        if isinstance(geom, RegionGeom):
+        if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
             mask = geom.contains(wcs_geom.get_coord())
             values = self.evaluate_geom(wcs_geom)
-            data = ((values* wcs_geom.solid_angle())[mask]).sum()
+            data = ((values * wcs_geom.solid_angle())[mask]).sum()
         else:
             values = self.evaluate_geom(geom)
             data = values * geom.solid_angle()
+
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
     def to_dict(self, full_output=False):
@@ -767,7 +764,7 @@ class TemplateSpatialModel(SpatialModel):
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
-        interp_kwargs.setdefault("interp", "linear")
+        interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
         self.filename = filename

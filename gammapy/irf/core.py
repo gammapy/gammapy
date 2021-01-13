@@ -6,10 +6,12 @@ from gammapy.maps import Map
 
 class IRFMap:
     """IRF map base class"""
+    _axis_names = []
 
     def __init__(self, irf_map, exposure_map):
         self._irf_map = irf_map
         self.exposure_map = exposure_map
+        irf_map.geom.axes.assert_names(self._axis_names)
 
     @classmethod
     def from_hdulist(
@@ -198,8 +200,10 @@ class IRFMap:
             Sliced irf map object.
         """
         irf_map = self._irf_map.slice_by_idx(slices=slices)
+
         if "energy_true" in slices:
             exposure_map = self.exposure_map.slice_by_idx(slices=slices)
         else:
             exposure_map = self.exposure_map
+
         return self.__class__(irf_map, exposure_map=exposure_map)

@@ -12,7 +12,7 @@ pytest.importorskip("iminuit")
 @pytest.fixture
 def crab_datasets_1d():
     filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
-    dataset = SpectrumDatasetOnOff.from_ogip_files(filename)
+    dataset = SpectrumDatasetOnOff.read(filename)
     datasets = Datasets([dataset])
     return datasets
 
@@ -61,6 +61,6 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
 
     assert not datasets[0].models.parameters["alpha"].frozen
     assert_allclose(datasets[0].models.parameters["alpha"].value, alpha_value)
-    assert_allclose(result["amplitude"], 0.018251, rtol=1e-4)
+    assert_allclose(result["amplitude"], 0.018251, rtol=1e-3)
     assert_allclose(result["amplitude_scan"].shape, 10)
     assert_allclose(result["amplitude_scan"][0], 0.017282, atol=1e-3)

@@ -272,7 +272,7 @@ class SkyModel(Model):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `Geom` or `~gammapy.maps.RegionGeom`
             Map geometry
         gti : `GTI`
             GIT table
@@ -287,9 +287,7 @@ class SkyModel(Model):
             (-1, 1, 1)
         )
 
-        if self.spatial_model and not isinstance(geom, RegionGeom):
-            # TODO: integrate spatial model over region to correct for
-            #  containment
+        if self.spatial_model:
             value = value * self.spatial_model.integrate_geom(geom).quantity
 
         if self.temporal_model:
@@ -444,6 +442,39 @@ class SkyModel(Model):
             **kwargs,
         )
 
+    def freeze(self, model_type=None):
+        """Freeze parameters depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral", "temporal"}
+           freeze all parameters or only or only spatial/spectral/temporal. 
+           Default is None so all parameters are frozen.
+        """
+        if model_type is None:
+            self.parameters.freeze_all()
+        else:
+            model = getattr(self, f"{model_type}_model")
+            model.freeze()
+
+    def unfreeze(self, model_type=None):
+        """Restore parameters frozen status to default depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral", "temporal"}
+           restore frozen status to default for all parameters or only spatial/spectral/temporal
+           Default is None so all parameters are restore to defaut frozen status.
+
+        """
+        if model_type is None:
+            for model_type in ["spectral", "spatial", "temporal"]:
+                self.unfreeze(model_type)
+        else:
+            model = getattr(self, f"{model_type}_model")
+            if model:
+                model.unfreeze()
+
 
 class FoVBackgroundModel(Model):
     """Field of view background model
@@ -520,6 +551,15 @@ class FoVBackgroundModel(Model):
         """Evaluate model"""
         return self.spectral_model(energy)
 
+    def copy(self, **kwargs):
+        """Copy SkyModel"""
+        kwargs.pop("name")
+        if "spectral_model" not in kwargs:
+            kwargs.setdefault("spectral_model", self.spectral_model.copy())
+        if "dataset_name" not in kwargs:
+            kwargs.setdefault("dataset_name", self.datasets_names[0])
+        return self.__class__(**kwargs)
+
     def to_dict(self, full_output=False):
         data = {}
         data["type"] = self.tag[0]
@@ -557,12 +597,18 @@ class FoVBackgroundModel(Model):
 
     def reset_to_default(self):
         """Reset parameter values to default"""
-        values = self.spectral_model.default_parameters.values
-        self.spectral_model.parameters.values = values
+        values = self.spectral_model.default_parameters.value
+        self.spectral_model.parameters.value = values
 
-    def copy(self, **kwargs):
-        """Copy SkyModel"""
-        return self.__class__(**kwargs)
+    def freeze(self, model_type="spectral"):
+        """Freeze model parameters"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.freeze()
+
+    def unfreeze(self, model_type="spectral"):
+        """Restore parameters frozen status to default"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.unfreeze()
 
 
 class BackgroundModel(Model):
@@ -769,6 +815,16 @@ class BackgroundModel(Model):
     def evaluation_radius(self):
         """`~astropy.coordinates.Angle`"""
         return np.max(self.map.geom.width) / 2.0
+
+    def freeze(self, model_type="spectral"):
+        """Freeze model parameters"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.freeze()
+
+    def unfreeze(self, model_type="spectral"):
+        """Restore parameters frozen status to default"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.unfreeze()
 
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):

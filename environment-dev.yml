@@ -12,47 +12,51 @@ channels:
   - sherpa
 
 dependencies:
+  # core dependencies
   - python==3.7
   - pip
+  - astropy
+  - click
+  - cython
+  - numpy
+  - pydantic
+  - pyyaml
+  - regions
+  - scipy
+  # test dependencies
+  - codecov
+  - pytest
+  - pytest-astropy
+  - pytest-cov
+  - pytest-xdist
+  # extra dependencies
+  - healpy
+  - iminuit<2.0
   - ipython
   - jupyter
   - jupyterlab
-  - cython
-  - numpy
-  - pandas
-  - astropy
-  - regions
-  - click
-  - pyyaml
-  - scipy
   - matplotlib
-  - healpy
+  - naima
+  - pandas
+  - parfive
   - reproject
+  - requests
   - sherpa
-  - iminuit
+  - tqdm
   # dev dependencies
-  - pytest
-  - pytest-cov
-  - pytest-xdist
-  - pytest-astropy
-  - sphinx==2.4.4
-  - pandoc
-  - pylint
-  - flake8
   - black
+  - flake8
   - isort
+  - nbsphinx
+  - numdifftools
+  - pandoc
+  - pydocstyle
+  - pylint
   - setuptools_scm
+  - sphinx==2.4.4
   - sphinx-astropy
+  - sphinx-click
   - sphinx-gallery
   - sphinx_rtd_theme
-  - nbsphinx
-  - sphinx-click
-  - pydocstyle
-  - naima
-  - numdifftools
   - twine
-  - parfive
-  - requests
-  - tqdm
   - yamllint
-  - pydantic

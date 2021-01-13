@@ -95,7 +95,8 @@ class FluxPointsDataset(Dataset):
         if models is None:
             self._models = None
         else:
-            self._models = DatasetModels(models).select(self.name)
+            models = DatasetModels(models)
+            self._models = models.select(datasets_names=self.name)
 
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
@@ -146,14 +147,6 @@ class FluxPointsDataset(Dataset):
             mask_fit=mask_fit,
             mask_safe=mask_safe,
         )
-
-    def to_dict(self, filename=""):
-        """Convert to dict for YAML serialization."""
-        return {
-            "name": self.name,
-            "type": self.tag,
-            "filename": str(filename),
-        }
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"

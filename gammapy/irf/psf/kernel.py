@@ -5,7 +5,7 @@ from astropy.coordinates import Angle
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
-from .psf_table import EnergyDependentTablePSF, TablePSF
+from .table import EnergyDependentTablePSF, TablePSF
 
 __all__ = ["PSFKernel"]
 

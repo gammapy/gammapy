@@ -3,7 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
+from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -21,6 +21,8 @@ class EffectiveAreaTable:
         Energy axis
     data : `~astropy.units.Quantity`
         Effective area
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -63,11 +65,10 @@ class EffectiveAreaTable:
     def __init__(self, energy_axis_true, data, meta=None):
         interp_kwargs = {"extrapolate": False, "bounds_error": False}
 
-        assert energy_axis_true.name == "energy_true"
-
         self.data = NDDataArray(
             axes=[energy_axis_true], data=data, interp_kwargs=interp_kwargs
         )
+        self.data.axes.assert_names(["energy_true"])
         self.meta = meta or {}
 
     @property
@@ -211,7 +212,7 @@ class EffectiveAreaTable:
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        table = Table()
+        table = self.energy.to_table(format="ogip-arf")
         table.meta = {
             "EXTNAME": "SPECRESP",
             "hduclass": "OGIP",
@@ -319,6 +320,8 @@ class EffectiveAreaTable2D:
         Field of view offset axis.
     data : `~astropy.units.Quantity`
         Effective area
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -358,15 +361,13 @@ class EffectiveAreaTable2D:
     def __init__(
         self, energy_axis_true, offset_axis, data, meta=None, interp_kwargs=None,
     ):
-        assert energy_axis_true.name == "energy_true"
-        assert offset_axis.name == "offset"
-
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
         self.data = NDDataArray(
             axes=[energy_axis_true, offset_axis], data=data, interp_kwargs=interp_kwargs
         )
+        self.data.axes.assert_names(["energy_true", "offset"])
         self.meta = meta or {}
 
     def __str__(self):
@@ -387,16 +388,13 @@ class EffectiveAreaTable2D:
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
-        energy_axis_true = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
+        axes = MapAxes.from_table(
+            table=table, column_prefixes=["ENERG", "THETA"], format="gadf-dl3"
         )
 
         return cls(
-            energy_axis_true=energy_axis_true,
-            offset_axis=offset_axis,
+            energy_axis_true=axes["energy_true"],
+            offset_axis=axes["offset"],
             data=table["EFFAREA"].quantity[0].transpose(),
             meta=table.meta,
         )
@@ -495,8 +493,8 @@ class EffectiveAreaTable2D:
 
         if energy is None:
             energy_axis = self.data.axes["energy_true"]
-            e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
-            energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
+            e_min, e_max = energy_axis.center[[0, -1]]
+            energy = np.geomspace(e_min, e_max, 4)
 
         if offset is None:
             offset = self.data.axes["offset"].center
