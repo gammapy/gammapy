@@ -437,7 +437,7 @@ class DatasetModels(collections.abc.Sequence):
         self._table_cached = table
         return  table
 
-    def set_parameters_from_table(self, t):
+    def update_parameters_from_table(self, t):
         """Update Models from an astropy Table."""
         parameters_dict = [dict(zip( t.colnames, row)) for row in t]      
         for k, data in enumerate(parameters_dict):
