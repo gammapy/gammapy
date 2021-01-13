@@ -18,7 +18,7 @@ class IRF:
         bounds_error=False, fill_value=None,
     )
 
-    def __init__(self, axes, data, unit="", meta=None):
+    def __init__(self, axes, data=0, unit="", meta=None):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
@@ -86,6 +86,12 @@ class IRF:
     def quantity(self):
         """`~astropy.units.Quantity`"""
         return u.Quantity(self.data, unit=self.unit, copy=False)
+
+    @quantity.setter
+    def quantity(self, val):
+        val = u.Quantity(val, copy=False)
+        self.data = val.value
+        self.unit = val.unit
 
     @property
     def axes(self):
