@@ -88,10 +88,34 @@ class SpectralModel(Model):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _evaluate_gradient(self, energy, eps):
+    def _propagate_error(self, eps, fct=None, energy=None, energy_min=None, energy_max=None):
+        """Evaluate error for a given function with uncertainty propagation.
+        
+        Parameters
+        ----------
+        fct : `~astropy.units.Quantity`
+            Function to estimate the error.
+        energy : `~astropy.units.Quantity`
+            Energy to evaluate fct
+        energy_min, energy_max : `~astropy.units.Quantity`
+            Array of lower and upper bound of integration range.
+        epsilon : float
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error.
+        
+        Returns
+        -------
+        f_cov : `~astropy.units.Quantity`
+            Error of the given function.
+        """
         n = len(self.parameters)
-        f = self(energy)
-        shape = (n, len(np.atleast_1d(energy)))
+        C = self.covariance
+
+        if energy_min:
+            shape = (n, len(np.atleast_1d(energy_min)))
+        else:
+            shape = (n, len(np.atleast_1d(energy)))
+
         df_dp = np.zeros(shape)
 
         for idx, parameter in enumerate(self.parameters):
@@ -99,13 +123,16 @@ class SpectralModel(Model):
                 continue
 
             parameter.value += eps[idx]
-            df = self(energy) - f
-            df_dp[idx] = df.value / eps[idx]
+            if energy_min:
+                df = self.energy_flux(energy_min, energy_max) - fct
+            else:
+                df = self(energy) - fct
 
-            # Reset model to original parameter
+            df_dp[idx] = df.value / eps[idx]
             parameter.value -= eps[idx]
 
-        return df_dp
+        f_cov = df_dp.T @ C @ df_dp
+        return np.sqrt(np.diagonal(f_cov))
 
     def evaluate_error(self, energy, epsilon=1e-4):
         """Evaluate spectral model with error propagation.
@@ -126,11 +153,8 @@ class SpectralModel(Model):
         p_cov = self.covariance
         eps = np.sqrt(np.diag(p_cov)) * epsilon
 
-        df_dp = self._evaluate_gradient(energy, eps)
-        f_cov = df_dp.T @ p_cov @ df_dp
-        f_err = np.sqrt(np.diagonal(f_cov))
-
         q = self(energy)
+        f_err = self._propagate_error(eps, fct=q, energy=energy)
         return u.Quantity([q.value, f_err], unit=q.unit)
 
     def integral(self, energy_min, energy_max, **kwargs):
@@ -174,44 +198,6 @@ class SpectralModel(Model):
         flux_err = flux * dnde_err / dnde
         return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
 
-    def _propagate_error(self, fct, energy_min, energy_max, eps):
-        """Evaluate error of a given function with uncertainty propagation.
-
-        Parameters
-        ----------
-        fct : `~astropy.units.Quantity`
-            Function to estimate the error.
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Array of lower and upper bound of integration range.
-        epsilon : float
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error.
-
-        Returns
-        -------
-        f_cov : `~astropy.units.Quantity`
-            Error of the given function.
-        """
-        n = len(self.parameters)
-        C = self.covariance
-        f = fct
-        shape = (n, len(np.atleast_1d(energy_min)))
-        df_dp = np.zeros(shape)
-
-        for idx, parameter in enumerate(self.parameters):
-            if parameter.frozen or eps[idx] == 0:
-                continue
-
-            parameter.value += eps[idx]
-            df = self.energy_flux(energy_min, energy_max) - f
-            df_dp[idx] = df.value / eps[idx]
-
-            # Reset model to original parameter
-            parameter.value -= eps[idx]
-
-        f_cov = df_dp.T @ C @ df_dp
-        return np.sqrt(np.diagonal(f_cov))
-
     def energy_flux(self, energy_min, energy_max, **kwargs):
         r"""Compute energy flux in given energy range.
 
@@ -253,7 +239,9 @@ class SpectralModel(Model):
         p_cov = self.covariance
         eps = np.sqrt(np.diag(p_cov)) * epsilon
         enrg_flux = self.energy_flux(energy_min, energy_max, **kwargs)
-        enrg_flux_err = self._propagate_error(enrg_flux, energy_min, energy_max, eps)
+        enrg_flux_err = self._propagate_error(eps=eps, fct=enrg_flux,
+                                              energy_min=energy_min,
+                                              energy_max=energy_max)
         return u.Quantity([enrg_flux.value, enrg_flux_err], unit=enrg_flux.unit)
 
     def plot(
