@@ -12,6 +12,7 @@ from .io import *
 from .psf import *
 
 
+# TODO: add EDispMap?
 IRF_REGISTRY = Registry(
     [
         EffectiveAreaTable2D,

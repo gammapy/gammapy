@@ -75,9 +75,8 @@ class EDispMap(IRFMap):
         # Write map to disk
         edisp_map.write("edisp_map.fits")
     """
-
-    _hdu_name = "edisp"
-    _axis_names = ["migra", "energy_true"]
+    tag = "edisp_map"
+    required_axes = ["migra", "energy_true"]
 
     def __init__(self, edisp_map, exposure_map=None):
         super().__init__(irf_map=edisp_map, exposure_map=exposure_map)
@@ -324,10 +323,8 @@ class EDispKernelMap(IRFMap):
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
-
     tag = "edisp_kernel_map"
-    _hdu_name = "edisp"
-    _axis_names = ["energy", "energy_true"]
+    required_axes = ["energy", "energy_true"]
 
     def __init__(self, edisp_kernel_map, exposure_map=None):
         super().__init__(irf_map=edisp_kernel_map, exposure_map=exposure_map)

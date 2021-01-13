@@ -9,11 +9,11 @@ from gammapy.maps import Map, MapAxes
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.scripts import make_path
-from .io import IRF_DL3_HDU_SPECIFICATION
+from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
 
 
 class IRF:
-    """IRF base class"""
+    """IRF base class for DL3 instrument response functions"""
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None,
     )
@@ -74,6 +74,14 @@ class IRF:
         self.__dict__.pop("_interpolate", None)
         self.__dict__.pop("_integrate_rad", None)
 
+    @lazyproperty
+    def _interpolate(self):
+        points = [a.center for a in self.axes]
+        points_scale = tuple([a.interp for a in self.axes])
+        return ScaledRegularGridInterpolator(
+            points, self.quantity, points_scale=points_scale, **self.default_interp_kwargs
+        )
+
     @property
     def quantity(self):
         """`~astropy.units.Quantity`"""
@@ -109,6 +117,7 @@ class IRF:
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
+        # TODO: change to coord dict?
         non_valid_axis = set(kwargs).difference(self.axes.names)
         if non_valid_axis:
             raise ValueError(
@@ -116,7 +125,6 @@ class IRF:
                 f" Choose from: {self.axes.names}"
             )
 
-        # TODO: change to coord dict?
         coords_default = self.axes.get_coord()
 
         for key, value in kwargs.items():
@@ -148,14 +156,6 @@ class IRF:
         data = self.evaluate(**kwargs, method=method)
         energy = kwargs["energy"]
         return trapz_loglog(data, energy, axis=axis)
-
-    @lazyproperty
-    def _interpolate(self):
-        points = [a.center for a in self.axes]
-        points_scale = tuple([a.interp for a in self.axes])
-        return ScaledRegularGridInterpolator(
-            points, self.quantity, points_scale=points_scale, **self.default_interp_kwargs
-        )
 
     # TODO: define a proper integration method
     @lazyproperty
@@ -255,13 +255,21 @@ class IRF:
 
 
 class IRFMap:
-    """IRF map base class"""
-    _axis_names = []
-
+    """IRF map base class for DL4 instrument response functions"""
     def __init__(self, irf_map, exposure_map):
         self._irf_map = irf_map
         self.exposure_map = exposure_map
-        irf_map.geom.axes.assert_names(self._axis_names)
+        irf_map.geom.axes.assert_names(self.required_axes)
+
+    @property
+    @abc.abstractmethod
+    def tag(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def required_axes(self):
+        pass
 
     @classmethod
     def from_hdulist(
@@ -293,12 +301,12 @@ class IRFMap:
             IRF map.
         """
         if hdu is None:
-            hdu = cls._hdu_name
+            hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
 
         irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
 
         if exposure_hdu is None:
-            exposure_hdu = cls._hdu_name + "_exposure"
+            exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
 
         if exposure_hdu in hdulist:
             exposure_map = Map.from_hdulist(
@@ -323,9 +331,9 @@ class IRFMap:
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list.
         """
-        hdulist = self._irf_map.to_hdulist(hdu=self._hdu_name)
-
-        exposure_hdu = self._hdu_name + "_exposure"
+        hdu = IRF_MAP_HDU_SPECIFICATION[self.tag]
+        hdulist = self._irf_map.to_hdulist(hdu=hdu)
+        exposure_hdu = hdu + "_exposure"
 
         if self.exposure_map is not None:
             new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu)

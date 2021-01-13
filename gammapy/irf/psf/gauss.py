@@ -54,7 +54,6 @@ class EnergyDependentMultiGaussPSF:
         psf.plot_containment(0.68)
         plt.show()
     """
-
     tag = "psf_3gauss"
 
     def __init__(

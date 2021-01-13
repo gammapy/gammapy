@@ -45,6 +45,13 @@ IRF_DL3_HDU_SPECIFICATION = {
 }
 
 
+IRF_MAP_HDU_SPECIFICATION = {
+    "edisp_kernel_map": "edisp",
+    "edisp_map": "edisp",
+    "psf_map": "psf"
+}
+
+
 def load_cta_irfs(filename):
     """load CTA instrument response function and return a dictionary container.
 

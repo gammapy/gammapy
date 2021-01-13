@@ -65,10 +65,8 @@ class PSFMap(IRFMap):
         # Write map to disk
         psf_map.write('psf_map.fits')
     """
-
     tag = "psf_map"
-    _hdu_name = "psf"
-    _axis_names = ["rad", "energy_true"]
+    required_axes = ["rad", "energy_true"]
 
     def __init__(self, psf_map, exposure_map=None):
         super().__init__(irf_map=psf_map, exposure_map=exposure_map)
