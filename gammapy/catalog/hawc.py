@@ -251,8 +251,6 @@ class SourceCatalog3HWC(SourceCatalog):
     The data is from tables 2 and 3 in the paper [1]_.
 
     The catalog table contains 65 rows / sources.
-    The difference is due to Geminga, which was detected as two "sources" by the algorithm
-    used to make the catalog, but then in the discussion considered as one source.
 
     References
     ----------
