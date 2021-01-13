@@ -5,8 +5,6 @@ from .core import *
 from .fermi import *
 from .gammacat import *
 from .hawc import *
-from .hawc import SourceCatalogObject2HWC
-from .hawc import SourceCatalogObject3HWC
 from .hess import *
 
 CATALOG_REGISTRY = Registry(
@@ -27,7 +25,6 @@ CATALOG_REGISTRY = Registry(
 __all__ = [
     "CATALOG_REGISTRY",
     "SourceCatalog",
-    "SourceCatalogObject",
     "SourceCatalogObjectHGPS",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FHL",

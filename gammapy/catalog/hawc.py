@@ -7,7 +7,7 @@ from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = ["SourceCatalog2HWC", "SourceCatalog3HWC"]
+__all__ = ["SourceCatalog2HWC", "SourceCatalog3HWC", "SourceCatalogObject2HWC", "SourceCatalogObject3HWC"]
 
 
 class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
