@@ -4,7 +4,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from gammapy.maps import MapAxis
-from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 from .core import IRF
 
@@ -46,7 +45,7 @@ class EDispKernel(IRF):
     """
     required_axes = ["energy_true", "energy"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
-    """Default Interpolation kwargs for `~NDDataArray`. Fill zeros and do not
+    """Default Interpolation kwargs for `~IRF`. Fill zeros and do not
     interpolate"""
 
     @property

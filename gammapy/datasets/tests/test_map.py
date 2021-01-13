@@ -227,8 +227,8 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset.background.geom.axes[0].nbin == 2
     assert spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert spectrum_dataset.exposure.unit == "m2s"
-    assert spectrum_dataset.edisp.get_edisp_kernel().energy_axis.nbin == 2
-    assert spectrum_dataset.edisp.get_edisp_kernel().energy_axis_true.nbin == 3
+    assert spectrum_dataset.edisp.get_edisp_kernel().axes["energy"].nbin == 2
+    assert spectrum_dataset.edisp.get_edisp_kernel().axes["energy_true"].nbin == 3
     assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.070884e09, rtol=1e-5)
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
