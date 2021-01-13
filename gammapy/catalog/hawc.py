@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HAWC catalogs (https://www.hawc-observatory.org)."""
+import abc
 import numpy as np
 from astropy.table import Table
 from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = ["SourceCatalog2HWC", "SourceCatalogObject2HWC"]
+__all__ = ["SourceCatalog2HWC", "SourceCatalog3HWC", "SourceCatalogObject2HWC", "SourceCatalogObject3HWC"]
 
 
-class SourceCatalogObject2HWC(SourceCatalogObject):
+class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
     """One source from the HAWC 2HWC catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog2HWC`.
@@ -100,33 +101,6 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         else:
             raise ValueError(f"Invalid which: {which!r}")
 
-    def spectral_model(self, which="point"):
-        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
-
-        * ``which="point"`` -- Spectral model under the point source assumption.
-        * ``which="extended"`` -- Spectral model under the extended source assumption.
-          Only available for some sources. Raise ValueError if not available.
-        """
-        idx = self._get_idx(which)
-
-        pars = {
-            "reference": "7 TeV",
-            "amplitude": self.data[f"spec{idx}_dnde"],
-            "index": -self.data[f"spec{idx}_index"],
-        }
-
-        errs = {
-            "amplitude": self.data[f"spec{idx}_dnde_err"],
-            "index": self.data[f"spec{idx}_index_err"],
-        }
-
-        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
-
-        for name, value in errs.items():
-            model.parameters[name].error = value
-
-        return model
-
     def spatial_model(self, which="point"):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
@@ -171,6 +145,36 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
             name=self.name,
         )
 
+class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
+
+
+    def spectral_model(self, which="point"):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+
+        * ``which="point"`` -- Spectral model under the point source assumption.
+        * ``which="extended"`` -- Spectral model under the extended source assumption.
+          Only available for some sources. Raise ValueError if not available.
+        """
+        idx = self._get_idx(which)
+
+        pars = {
+            "reference": "7 TeV",
+            "amplitude": self.data[f"spec{idx}_dnde"],
+            "index": -self.data[f"spec{idx}_index"],
+        }
+
+        errs = {
+            "amplitude": self.data[f"spec{idx}_dnde_err"],
+            "index": self.data[f"spec{idx}_index_err"],
+        }
+
+        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
+        return model
+
 
 class SourceCatalog2HWC(SourceCatalog):
     """HAWC 2HWC catalog.
@@ -204,3 +208,68 @@ class SourceCatalog2HWC(SourceCatalog):
         source_name_key = "source_name"
 
         super().__init__(table=table, source_name_key=source_name_key)
+
+
+
+
+
+class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
+
+
+    def spectral_model(self, which="point"):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+
+        * ``which="point"`` -- Spectral model under the point source assumption.
+        * ``which="extended"`` -- Spectral model under the extended source assumption.
+          Only available for some sources. Raise ValueError if not available.
+        """
+        idx = self._get_idx(which)
+
+        pars = {
+            "reference": "7 TeV",
+            "amplitude": self.data[f"spec{idx}_dnde"],
+            "index": -self.data[f"spec{idx}_index"],
+        }
+
+        errs = {
+             "index_err" : 0.5 * ( self.data[f"spec_{idx}_index_errp"] + self.data[f"spec_{idx}_index_errn"]),
+             "amplitude_err" : 0.5 * (self.data[f"spec_{idx}_dnde_errp"] + self.data[f"spec_{idx}_dnde_errp"])
+        }
+
+        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
+        return model
+
+class SourceCatalog3HWC(SourceCatalog):
+    """HAWC 3HWC catalog.
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject3HWC`.
+
+    The data is from tables 2 and 3 in the paper [1]_.
+
+    The catalog table contains 65 rows / sources.
+
+    References
+    ----------
+    .. [1] 3HWC: The Third HAWC Catalog of Very-High-Energy Gamma-ray Sources",
+       <https://data.hawc-observatory.org/datasets/3hwc-survey/index.php>`__
+    """
+
+    tag = "3hwc"
+    """Catalog name"""
+
+    description = "3HWC catalog from the HAWC observatory"
+    """Catalog description"""
+
+    source_object_class = SourceCatalogObject3HWC
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/3HWC.ecsv"):
+        table = Table.read(make_path(filename), format="ascii.ecsv")
+
+        source_name_key = "source_name"
+
+        super().__init__(table=table, source_name_key=source_name_key)
+

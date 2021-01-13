@@ -16,23 +16,26 @@ CATALOG_REGISTRY = Registry(
         SourceCatalog4FGL,
         SourceCatalog2FHL,
         SourceCatalog3FHL,
+        SourceCatalog3HWC,
     ]
 )
 """Registry of source catalogs in Gammapy."""
 
+
 __all__ = [
     "CATALOG_REGISTRY",
     "SourceCatalog",
-    "SourceCatalogObject",
     "SourceCatalogObjectHGPS",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FHL",
     "SourceCatalogObject3FGL",
     "SourceCatalogObject4FGL",
     "SourceCatalogObject2HWC",
+    "SourceCatalogObject3HWC",
     "SourceCatalogObjectGammaCat",
     "SourceCatalogObjectHGPSComponent",
     "SourceCatalogLargeScaleHGPS",
+    "SourceCatalogObject",
 ]
 
 __all__.extend(cls.__name__ for cls in CATALOG_REGISTRY)
