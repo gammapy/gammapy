@@ -115,7 +115,7 @@ class IRF:
         Returns
         -------
         array : `~astropy.units.Quantity`
-            Interpolated values, axis order is the same as for the NDData array
+            Interpolated values
         """
         # TODO: change to coord dict?
         non_valid_axis = set(kwargs).difference(self.axes.names)

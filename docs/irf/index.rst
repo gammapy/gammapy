@@ -25,9 +25,6 @@ Most users will not use `gammapy.irf` directly, but will instead use IRFs as
 part of their spectrum, image or cube analysis to compute exposure and effective
 EDISP and PSF for a given dataset.
 
-Most (at some point maybe all) classes in `gammapy.irf` have an
-`gammapy.utils.nddata.NDDataArray` as data attribute to support interpolation.
-
 
 IRF Axis naming
 ---------------

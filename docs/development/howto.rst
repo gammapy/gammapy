@@ -477,9 +477,6 @@ Interpolation and extrapolation
 In Gammapy, we use interpolation a lot, e.g. to evaluate instrument response functions (IRFs) on
 data grids, or to reproject diffuse models on data grids.
 
-Note: For some use cases that require interpolation the
-`~gammapy.utils.nddata.NDDataArray` base class might be useful.
-
 The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
 (more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
 across all of parameter space would be needed).
@@ -704,17 +701,6 @@ Example what to put as a test::
         assert p.info(add_location=True).endswith('Heidelberg')
 
 .. _use-nddata:
-
-Using the NDDataArray
----------------------
-
-Gammapy has a class for generic n-dimensional data arrays,
-`~gammapy.utils.nddata.NDDataArray`. Classes that represent such an array
-should use this class. The goal is to reuse code for interpolation
-and have an coherent I/O interface, mainly in `~gammapy.irf`.
-
-Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
-setup your interpolator.
 
 Coordinate and axis names
 -------------------------
