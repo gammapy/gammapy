@@ -75,9 +75,8 @@ class EDispMap(IRFMap):
         # Write map to disk
         edisp_map.write("edisp_map.fits")
     """
-
-    _hdu_name = "edisp"
-    _axis_names = ["migra", "energy_true"]
+    tag = "edisp_map"
+    required_axes = ["migra", "energy_true"]
 
     def __init__(self, edisp_map, exposure_map=None):
         super().__init__(irf_map=edisp_map, exposure_map=exposure_map)
@@ -150,7 +149,7 @@ class EDispMap(IRFMap):
             data.append(integral)
 
         return EDispKernel(
-            energy_axis_true=energy_axis_true, energy_axis=energy_axis, data=data
+            axes=[energy_axis_true, energy_axis], data=np.array(data)
         )
 
     @classmethod
@@ -298,7 +297,7 @@ class EDispMap(IRFMap):
         geom_image = self.edisp_map.geom.to_image()
         geom = geom_image.to_cube([energy_axis, energy_axis_true])
         edisp_kernel_map = Map.from_geom(geom=geom, data=data)
-        exposure_map = None
+
         if self.exposure_map is not None:
             exposure_map = Map.from_geom(
                 geom.squash(axis_name=energy_axis.name),
@@ -306,6 +305,8 @@ class EDispMap(IRFMap):
                 unit=self.exposure_map.unit,
                 meta=self.exposure_map.meta,
             )
+        else:
+            exposure_map = None
 
         return EDispKernelMap(
             edisp_kernel_map=edisp_kernel_map, exposure_map=exposure_map
@@ -324,10 +325,8 @@ class EDispKernelMap(IRFMap):
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
-
     tag = "edisp_kernel_map"
-    _hdu_name = "edisp"
-    _axis_names = ["energy", "energy_true"]
+    required_axes = ["energy", "energy_true"]
 
     def __init__(self, edisp_kernel_map, exposure_map=None):
         super().__init__(irf_map=edisp_kernel_map, exposure_map=exposure_map)
@@ -395,8 +394,7 @@ class EDispKernelMap(IRFMap):
             kernel_map = self.edisp_map.to_region_nd_map(region=position)
 
         return EDispKernel(
-            energy_axis_true=kernel_map.geom.axes["energy_true"],
-            energy_axis=kernel_map.geom.axes["energy"],
+            axes=kernel_map.geom.axes[["energy_true", "energy"]],
             data=kernel_map.data[..., 0, 0],
         )
 
@@ -446,7 +444,7 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         edisp_map = cls.from_diagonal_response(
-            edisp.energy_axis, edisp.energy_axis_true, geom=geom
+            edisp.axes["energy"], edisp.axes["energy_true"], geom=geom
         )
         edisp_map.edisp_map.data *= 0
         edisp_map.edisp_map.data[:, :, ...] = edisp.pdf_matrix[

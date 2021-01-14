@@ -16,36 +16,33 @@ def psf_3d():
 
 @requires_data()
 def test_psf_3d_basics(psf_3d):
-    assert_allclose(psf_3d.rad_axis.edges[-2].value, 0.659048, rtol=1e-5)
-    assert psf_3d.rad_axis.nbin == 144
-    assert psf_3d.rad_axis.unit == "deg"
+    rad_axis = psf_3d.axes["rad"]
+    assert_allclose(rad_axis.edges[-2].value, 0.659048, rtol=1e-5)
+    assert rad_axis.nbin == 144
+    assert rad_axis.unit == "deg"
 
-    assert_allclose(psf_3d.energy_axis_true.edges[0].value, 0.01)
-    assert psf_3d.energy_axis_true.nbin == 32
-    assert psf_3d.energy_axis_true.unit == "TeV"
+    energy_axis_true = psf_3d.axes["energy_true"]
+    assert_allclose(energy_axis_true.edges[0].value, 0.01)
+    assert energy_axis_true.nbin == 32
+    assert energy_axis_true.unit == "TeV"
 
-    assert psf_3d.data.data.shape == (32, 6, 144)
-    assert psf_3d.data.data.unit == "sr-1"
+    assert psf_3d.data.shape == (32, 6, 144)
+    assert psf_3d.unit == "sr-1"
 
     assert_allclose(psf_3d.energy_thresh_lo.value, 0.01)
 
     assert "PSF3D" in str(psf_3d)
 
     with pytest.raises(ValueError):
-        PSF3D(
-            energy_axis_true=psf_3d.energy_axis_true,
-            offset_axis=psf_3d.offset_axis,
-            rad_axis=psf_3d.rad_axis,
-            data=psf_3d.data.data.T,
-        )
+        PSF3D(axes=psf_3d.axes, data=psf_3d.data.T)
 
 
 @requires_data()
 def test_psf_3d_evaluate(psf_3d):
-    q = psf_3d.evaluate(energy="1 TeV", offset="0.3 deg", rad="0.1 deg")
+    q = psf_3d.evaluate(energy_true="1 TeV", offset="0.3 deg", rad="0.1 deg")
     assert_allclose(q.value, 25847.249548)
     # TODO: is this the shape we want here?
-    assert q.shape == (1, 1, 1)
+    assert q.shape == ()
     assert q.unit == "sr-1"
 
 
@@ -74,7 +71,7 @@ def test_psf_3d_write(psf_3d, tmp_path):
     psf_3d.write(tmp_path / "tmp.fits")
     psf_3d = PSF3D.read(tmp_path / "tmp.fits", hdu=1)
 
-    assert_allclose(psf_3d.energy_axis_true.edges[0].value, 0.01)
+    assert_allclose(psf_3d.axes["energy_true"].edges[0].value, 0.01)
 
 
 @requires_data()
@@ -188,10 +185,10 @@ class TestEnergyDependentTablePSF:
     def test_write(self, tmp_path):
         self.psf.write(tmp_path / "test.fits")
         new = EnergyDependentTablePSF.read(tmp_path / "test.fits")
-        assert_allclose(new.rad_axis.center, self.psf.rad_axis.center)
-        assert_allclose(new.energy_axis_true.center, self.psf.energy_axis_true.center)
-        assert_allclose(new.data.data, self.psf.data.data)
+        assert_allclose(new.axes["rad"].center, self.psf.axes["rad"].center)
+        assert_allclose(new.axes["energy_true"].center, self.psf.axes["energy_true"].center)
+        assert_allclose(new.quantity, self.psf.quantity)
 
     def test_repr(self):
         info = str(self.psf)
-        assert "Containment" in info
+        assert "EnergyDependentTablePSF" in info

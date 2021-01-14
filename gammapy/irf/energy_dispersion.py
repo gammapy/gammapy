@@ -3,18 +3,15 @@ import numpy as np
 import scipy.special
 from scipy.interpolate import interp1d
 from astropy.coordinates import Angle
-from astropy.io import fits
-from astropy.table import Table
 from astropy.units import Quantity
-from gammapy.maps import MapAxis, MapAxes
-from gammapy.utils.nddata import NDDataArray
-from gammapy.utils.scripts import make_path
+from gammapy.maps import MapAxis
 from .edisp_kernel import EDispKernel
+from .core import IRF
 
 __all__ = ["EnergyDispersion2D"]
 
 
-class EnergyDispersion2D:
+class EnergyDispersion2D(IRF):
     """Offset-dependent energy dispersion matrix.
 
     Data format specification: :ref:`gadf:edisp_2d`
@@ -51,31 +48,7 @@ class EnergyDispersion2D:
     """
 
     tag = "edisp_2d"
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
-    """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
-
-    def __init__(
-        self,
-        energy_axis_true,
-        migra_axis,
-        offset_axis,
-        data,
-        interp_kwargs=None,
-        meta=None,
-    ):
-        if interp_kwargs is None:
-            interp_kwargs = self.default_interp_kwargs
-
-        axes = [energy_axis_true, migra_axis, offset_axis]
-
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
-        self.data.axes.assert_names(["energy_true", "migra", "offset"])
-        self.meta = meta or {}
-
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += f"\n{self.data}"
-        return ss
+    required_axes = ["energy_true", "migra", "offset"]
 
     @classmethod
     def from_gauss(cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6):
@@ -120,65 +93,9 @@ class EnergyDispersion2D:
         data[data < pdf_threshold] = 0
 
         return cls(
-            energy_axis_true=energy_axis_true,
-            migra_axis=migra_axis,
-            offset_axis=offset_axis,
-            data=data,
+            axes=[energy_axis_true, migra_axis, offset_axis],
+            data=data.value,
         )
-
-    @classmethod
-    def from_table(cls, table):
-        """Create from `~astropy.table.Table`.
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-            Table with effective area.
-
-        Returns
-        -------
-        aeff : `EffectiveArea2D`
-            Effective area
-        """
-
-        if "ENERG_LO" in table.colnames:
-            column_prefixes = ["ENERG", "THETA", "MIGRA"]
-        elif "ETRUE_LO" in table.colnames:
-            column_prefixes = ["ETRUE", "THETA", "MIGRA"]
-        else:
-            raise ValueError(
-                'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
-            )
-
-        axes = MapAxes.from_table(
-            table, column_prefixes=column_prefixes, format="gadf-dl3"
-        )
-
-        data = table["MATRIX"].quantity[0].transpose()
-
-        return cls(
-            energy_axis_true=axes["energy_true"],
-            offset_axis=axes["offset"],
-            migra_axis=axes["migra"],
-            data=data,
-        )
-
-    @classmethod
-    def from_hdulist(cls, hdulist, hdu="edisp_2d"):
-        """Create from `~astropy.io.fits.HDUList`."""
-        return cls.from_table(Table.read(hdulist[hdu]))
-
-    @classmethod
-    def read(cls, filename, hdu="edisp_2d"):
-        """Read from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            File name
-        """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu)
 
     def to_edisp_kernel(self, offset, energy_true=None, energy=None):
         """Detector response R(Delta E_reco, Delta E_true)
@@ -204,12 +121,12 @@ class EnergyDispersion2D:
 
         # TODO: expect directly MapAxis here?
         if energy is None:
-            energy_axis = self.data.axes["energy_true"].copy(name="energy")
+            energy_axis = self.axes["energy_true"].copy(name="energy")
         else:
             energy_axis = MapAxis.from_energy_edges(energy)
 
         if energy_true is None:
-            energy_axis_true = self.data.axes["energy_true"]
+            energy_axis_true = self.axes["energy_true"]
         else:
             energy_axis_true = MapAxis.from_energy_edges(
                 energy_true, name="energy_true"
@@ -223,8 +140,7 @@ class EnergyDispersion2D:
             data.append(vec)
 
         return EDispKernel(
-            energy_axis=energy_axis,
-            energy_axis_true=energy_axis_true,
+            axes=[energy_axis_true, energy_axis],
             data=np.asarray(data),
         )
 
@@ -251,7 +167,7 @@ class EnergyDispersion2D:
         """
         energy_true = Quantity(energy_true)
 
-        migra_axis = self.data.axes["migra"]
+        migra_axis = self.axes["migra"]
 
         if energy is None:
             # Default: energy nodes = migra nodes * energy_true nodes
@@ -263,7 +179,7 @@ class EnergyDispersion2D:
         # migration value of energy bounds
         migra = energy / energy_true
 
-        values = self.data.evaluate(
+        values = self.evaluate(
             offset=offset, energy_true=energy_true, migra=migra_axis.center
         )
 
@@ -321,11 +237,11 @@ class EnergyDispersion2D:
         else:
             energy_true = np.atleast_1d(Quantity(energy_true))
 
-        migra = self.data.axes["migra"].center if migra is None else migra
+        migra = self.axes["migra"].center if migra is None else migra
 
         for ener in energy_true:
             for off in offset:
-                disp = self.data.evaluate(offset=off, energy_true=ener, migra=migra)
+                disp = self.evaluate(offset=off, energy_true=ener, migra=migra)
                 label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
                 ax.plot(migra, disp, label=label, **kwargs)
 
@@ -365,13 +281,13 @@ class EnergyDispersion2D:
         if offset is None:
             offset = Angle(1, "deg")
 
-        energy_true = self.data.axes["energy_true"]
-        migra = self.data.axes["migra"]
+        energy_true = self.axes["energy_true"]
+        migra = self.axes["migra"]
 
         x = energy_true.edges.value
         y = migra.edges.value
 
-        z = self.data.evaluate(
+        z = self.evaluate(
             offset=offset,
             energy_true=energy_true.center.reshape(1, -1, 1),
             migra=migra.center.reshape(1, 1, -1),
@@ -407,14 +323,3 @@ class EnergyDispersion2D:
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        table = self.data.axes.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
-        table["MATRIX"] = self.data.data.T[np.newaxis]
-        return table
-
-    def to_table_hdu(self, name="ENERGY DISPERSION"):
-        """Convert to `~astropy.io.fits.BinTable`."""
-        return fits.BinTableHDU(self.to_table(), name=name)

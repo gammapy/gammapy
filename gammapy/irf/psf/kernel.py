@@ -139,7 +139,7 @@ class PSFKernel:
         if isinstance(table_psf, EnergyDependentTablePSF):
             energy_axis = geom.axes["energy_true"]
             energy = energy_axis.center[:, np.newaxis, np.newaxis]
-            data = table_psf.evaluate(energy=energy, rad=rad).value
+            data = table_psf.evaluate(energy_true=energy, rad=rad).value
         else:
             try:
                 nbin = geom.axes[0].nbin

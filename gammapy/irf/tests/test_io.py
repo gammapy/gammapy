@@ -20,11 +20,11 @@ def test_cta_irf():
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")
 
-    val = irf["aeff"].data.evaluate(energy_true=energy, offset=offset)
+    val = irf["aeff"].evaluate(energy_true=energy, offset=offset)
     assert_allclose(val.value, 545269.4675, rtol=1e-5)
     assert val.unit == "m2"
 
-    val = irf["edisp"].data.evaluate(offset=offset, energy_true=energy, migra=1)
+    val = irf["edisp"].evaluate(offset=offset, energy_true=energy, migra=1)
     assert_allclose(val.value, 3183.6882, rtol=1e-5)
     assert val.unit == ""
 
@@ -32,7 +32,7 @@ def test_cta_irf():
     val = psf(Quantity(0.1, "deg"))
     assert_allclose(val, 3.56989, rtol=1e-5)
 
-    val = irf["bkg"].data.evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
+    val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 9.400071e-05, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
 
@@ -69,27 +69,22 @@ class TestIRFWrite:
         self.bkg_data = np.random.rand(9, 10, 10) / u.MeV / u.s / u.sr
 
         self.aeff = EffectiveAreaTable2D(
-            energy_axis_true=self.energy_axis_true,
-            offset_axis=self.offset_axis,
-            data=self.aeff_data,
+            axes=[self.energy_axis_true, self.offset_axis],
+            data=self.aeff_data.value,
+            unit=self.aeff_data.unit
         )
-        self.edisp = EnergyDispersion2D(
-            energy_axis_true=self.energy_axis_true,
-            offset_axis=self.offset_axis,
-            migra_axis=self.migra_axis,
+        self.edisp = EnergyDispersion2D(axes=[
+            self.energy_axis_true, self.migra_axis, self.offset_axis,
+            ],
             data=self.edisp_data,
         )
-        self.bkg = Background3D(
-            energy_axis=self.energy_axis_true.copy(name="energy"),
-            fov_lon_axis=self.fov_lon_axis,
-            fov_lat_axis=self.fov_lat_axis,
-            data=self.bkg_data,
-        )
+        axes = [self.energy_axis_true.copy(name="energy"), self.fov_lon_axis, self.fov_lat_axis]
+        self.bkg = Background3D(axes=axes, data=self.bkg_data.value, unit=self.bkg_data.unit)
 
     def test_array_to_container(self):
-        assert_allclose(self.aeff.data.data, self.aeff_data)
-        assert_allclose(self.edisp.data.data, self.edisp_data)
-        assert_allclose(self.bkg.data.data, self.bkg_data)
+        assert_allclose(self.aeff.quantity, self.aeff_data)
+        assert_allclose(self.edisp.quantity, self.edisp_data)
+        assert_allclose(self.bkg.quantity, self.bkg_data)
 
     def test_container_to_table(self):
         assert_allclose(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
@@ -110,30 +105,26 @@ class TestIRFWrite:
         assert self.edisp.to_table_hdu().header["EXTNAME"] == "ENERGY DISPERSION"
         assert self.bkg.to_table_hdu().header["EXTNAME"] == "BACKGROUND"
 
-        assert self.aeff.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
-        assert self.edisp.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
-        assert self.bkg.to_table_hdu(name="TEST").header["EXTNAME"] == "TEST"
-
         hdu = self.aeff.to_table_hdu()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0], self.aeff.data.axes[0].edges[:-1].value
+            hdu.data[hdu.header["TTYPE1"]][0], self.aeff.axes[0].edges[:-1].value
         )
         hdu = self.aeff.to_table_hdu()
-        assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data.data.value)
+        assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data)
 
         hdu = self.edisp.to_table_hdu()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0], self.edisp.data.axes[0].edges[:-1].value
+            hdu.data[hdu.header["TTYPE1"]][0], self.edisp.axes[0].edges[:-1].value
         )
         hdu = self.edisp.to_table_hdu()
-        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data.data.value)
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data)
 
         hdu = self.bkg.to_table_hdu()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0], self.bkg.data.axes[1].edges[:-1].value
+            hdu.data[hdu.header["TTYPE1"]][0], self.bkg.axes[0].edges[:-1].value
         )
         hdu = self.bkg.to_table_hdu()
-        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.bkg.data.data.value)
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.bkg.data)
 
     def test_writeread(self, tmp_path):
         path = tmp_path / "tmp.fits"
@@ -147,10 +138,10 @@ class TestIRFWrite:
         ).writeto(path)
 
         read_aeff = EffectiveAreaTable2D.read(path, hdu="EFFECTIVE AREA")
-        assert_allclose(read_aeff.data.data, self.aeff_data)
+        assert_allclose(read_aeff.quantity, self.aeff_data)
 
         read_edisp = EnergyDispersion2D.read(path, hdu="ENERGY DISPERSION")
-        assert_allclose(read_edisp.data.data, self.edisp_data)
+        assert_allclose(read_edisp.quantity, self.edisp_data)
 
         read_bkg = Background3D.read(path, hdu="BACKGROUND")
-        assert_allclose(read_bkg.data.data, self.bkg_data)
+        assert_allclose(read_bkg.quantity, self.bkg_data)

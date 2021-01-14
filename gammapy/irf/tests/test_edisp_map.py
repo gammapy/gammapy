@@ -24,11 +24,8 @@ def fake_aeff2d(area=1e6 * u.m ** 2):
     )
 
     offset_axis = MapAxis.from_edges(offsets, name="offset")
-
-    aeff_values = np.ones((4, 3)) * area
-
     return EffectiveAreaTable2D(
-        energy_axis_true=energy_axis_true, offset_axis=offset_axis, data=aeff_values,
+        axes=[energy_axis_true, offset_axis], data=area.value, unit=area.unit
     )
 
 
@@ -169,7 +166,7 @@ def test_edisp_from_diagonal_response(position):
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
     edisp_kernel = edisp_map.get_edisp_kernel(position, energy_axis=energy_axis)
 
-    sum_kernel = np.sum(edisp_kernel.data.data, axis=1).data
+    sum_kernel = np.sum(edisp_kernel.data, axis=1)
 
     # We exclude the first and last bin, where there is no
     # e_reco to contribute to

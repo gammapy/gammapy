@@ -115,6 +115,11 @@ class MapAxes(Sequence):
         self._axes = axes
 
     @property
+    def reverse(self):
+        """Reverse axes order"""
+        return MapAxes(self[::-1])
+
+    @property
     def iter_with_reshape(self):
         """Iterate by shape"""
         for idx, axis in enumerate(self):
@@ -330,6 +335,12 @@ class MapAxes(Sequence):
                 if ax.name == idx:
                     return ax
             raise KeyError(f"No axes: {idx!r}")
+        elif isinstance(idx, list):
+            axes = []
+            for name in idx:
+                axes.append(self[name])
+
+            return self.__class__(axes=axes)
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
@@ -547,26 +558,26 @@ class MapAxes(Sequence):
         return cls.from_table(table, format=format)
 
     @classmethod
-    def from_table(cls, table, format="gadf", column_prefixes=None):
+    def from_table(cls, table, format="gadf"):
         """Create MapAxes from BinTableHDU
 
         Parameters
         ----------
         table : `~astropy.table.Table`
             Bin table HDU
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube", "ogip-arf"}
             Format to use.
-        column_prefixes : list of str
-            Column name prefixes of the axes..
 
         Returns
         -------
         axes : `MapAxes`
             Map axes object
         """
+        from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
         axes = []
 
-        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
+        # Formats that support only one energy axis
+        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube", "ogip", "ogip-arf"]:
             axes.append(MapAxis.from_table(table, format=format))
         elif format == "gadf":
             # This limits the max number of axes to 5
@@ -578,8 +589,11 @@ class MapAxes(Sequence):
                 axis = MapAxis.from_table(table, format=format, idx=idx)
                 axes.append(axis)
         elif format == "gadf-dl3":
-            for column_prefix in column_prefixes:
-                axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
+            for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
+                try:
+                    axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
+                except KeyError:
+                    continue
                 axes.append(axis)
         else:
             raise ValueError(f"Unsupported format: '{format}'")
@@ -779,6 +793,14 @@ class MapAxis:
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+
+    @property
+    def as_xerr(self):
+        """Return tuple of xerr to be used with plt.errorbar()"""
+        return (
+            self.center - self.edges[:-1],
+            self.edges[1:] - self.center,
+        )
 
     @lazyproperty
     def center(self):
@@ -1636,6 +1658,13 @@ class MapAxis:
             else:
                 edges = edges_from_lo_hi(edges_lo, edges_hi)
                 axis = MapAxis.from_edges(edges, interp=interp, name=name)
+        elif format == "gtpsf":
+            try:
+                energy = table["Energy"].data * u.MeV
+                axis = MapAxis.from_nodes(energy, name="energy_true", interp="log")
+            except KeyError:
+                rad = table["Theta"].data * u.deg
+                axis = MapAxis.from_nodes(rad, name="rad")
         else:
             raise ValueError(f"Format '{format}' not supported")
 

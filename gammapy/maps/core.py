@@ -1111,7 +1111,7 @@ class Map(abc.ABC):
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
-            energy_axis = edisp.energy_axis.copy(name="energy")
+            energy_axis = edisp.axes["energy"].copy(name="energy")
         else:
             data = self.data
             energy_axis = self.geom.axes["energy_true"].copy(name="energy")

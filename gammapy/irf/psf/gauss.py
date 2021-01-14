@@ -54,7 +54,6 @@ class EnergyDependentMultiGaussPSF:
         psf.plot_containment(0.68)
         plt.show()
     """
-
     tag = "psf_3gauss"
 
     def __init__(
@@ -454,10 +453,10 @@ class EnergyDependentMultiGaussPSF:
             psf_value[idx] = u.Quantity(psf_gauss(rad), "deg^-2")
 
         return EnergyDependentTablePSF(
-            energy_axis_true=self.energy_axis_true,
-            rad_axis=rad_axis,
+            axes=[self.energy_axis_true, rad_axis],
             exposure=exposure,
-            data=psf_value,
+            data=psf_value.value,
+            unit=psf_value.unit
         )
 
     def to_psf3d(self, rad=None):
@@ -473,6 +472,7 @@ class EnergyDependentMultiGaussPSF:
         psf3d : `~gammapy.irf.PSF3D`
             the PSF3D. It will be defined on the same energy and offset values than the input psf.
         """
+
         offsets = self.offset_axis.center
         energy = self.energy_axis_true.center
 
@@ -486,12 +486,13 @@ class EnergyDependentMultiGaussPSF:
 
         for idx, offset in enumerate(offsets):
             table_psf = self.to_energy_dependent_table_psf(offset)
-            psf_value[:, idx, :] = table_psf.evaluate(energy, rad_axis.center)
+            psf_value[:, idx, :] = table_psf.evaluate(
+                energy_true=energy[:, np.newaxis], rad=rad_axis.center
+            )
 
         return PSF3D(
-            energy_axis_true=self.energy_axis_true,
-            rad_axis=rad_axis,
-            offset_axis=self.offset_axis,
-            data=psf_value,
+            axes=[self.energy_axis_true, self.offset_axis, rad_axis],
+            data=psf_value.value,
+            unit=psf_value.unit,
             meta=self.meta.copy()
         )

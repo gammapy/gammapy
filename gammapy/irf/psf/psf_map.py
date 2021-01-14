@@ -65,10 +65,8 @@ class PSFMap(IRFMap):
         # Write map to disk
         psf_map.write('psf_map.fits')
     """
-
     tag = "psf_map"
-    _hdu_name = "psf"
-    _axis_names = ["rad", "energy_true"]
+    required_axes = ["rad", "energy_true"]
 
     def __init__(self, psf_map, exposure_map=None):
         super().__init__(irf_map=psf_map, exposure_map=exposure_map)
@@ -129,9 +127,9 @@ class PSFMap(IRFMap):
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
-            energy_axis_true=self.psf_map.geom.axes["energy_true"],
-            rad_axis=self.psf_map.geom.axes["rad"],
-            data=psf_values,
+            axes=self.psf_map.geom.axes[["energy_true", "rad"]],
+            data=psf_values.value,
+            unit=psf_values.unit,
             exposure=exposure,
         )
 
@@ -162,7 +160,7 @@ class PSFMap(IRFMap):
         table_psf = self.get_energy_dependent_table_psf(position)
 
         if max_radius is None:
-            max_radius = np.max(table_psf.rad_axis.center)
+            max_radius = np.max(table_psf.axes["rad"].center)
             min_radius_geom = np.min(geom.width) / 2.0
             max_radius = min(max_radius, min_radius_geom)
 
@@ -279,20 +277,21 @@ class PSFMap(IRFMap):
                 npix=(2, 1),
                 proj="CAR",
                 binsz=180,
-                axes=[table_psf.rad_axis, table_psf.energy_axis_true],
+                axes=table_psf.axes.reverse,
             )
         coords = geom.get_coord()
 
         # TODO: support broadcasting in .evaluate()
-        data = table_psf.data._interpolate((coords["energy_true"], coords["rad"]))
+        data = table_psf.evaluate(
+            energy_true=coords["energy_true"], rad=coords["rad"]
+        )
         psf_map = Map.from_geom(geom, data=data.to_value("sr-1"), unit="sr-1")
 
         geom_exposure = geom.squash(axis_name="rad")
 
-        data = table_psf.exposure.reshape((-1, 1, 1, 1))
-
-        exposure_map = Map.from_geom(geom_exposure, unit="cm2 s")
-        exposure_map.quantity += data
+        exposure_map = Map.from_geom(geom_exposure, unit="cm2 s", data=1)
+        data = table_psf.exposure
+        exposure_map.quantity = exposure_map.data * data.reshape((-1, 1, 1, 1))
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     @classmethod
@@ -333,24 +332,24 @@ class PSFMap(IRFMap):
         if np.size(sigma) == 1:
             # same width for all energies
             table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
-            data = np.tile(table_psf.data.data, (shape[0], 1))
+            data = np.tile(table_psf.quantity, (shape[0], 1))
         elif np.size(sigma) == np.size(energy):
             # one width per energy
             data = np.zeros(shape) * u.sr ** -1
             for idx in range(energy_axis_true.nbin):
                 data[idx, :] = TablePSF.from_shape(
                     shape="gauss", width=sigma[idx], rad=rad
-                ).data.data
+                ).quantity
         else:
             raise AssertionError(
                 "There need to be the same number of sigma values as energies"
             )
 
         table_psf = EnergyDependentTablePSF(
-            energy_axis_true=energy_axis_true,
-            rad_axis=rad_axis,
+            axes=[energy_axis_true, rad_axis],
             exposure=None,
-            data=data,
+            data=data.value,
+            unit=data.unit
         )
         return cls.from_energy_dependent_table_psf(table_psf)
 
