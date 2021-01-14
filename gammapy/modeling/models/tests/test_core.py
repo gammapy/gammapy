@@ -184,7 +184,7 @@ def test_set_parameters_from_table():
     tab['name'][0]='index2'
     tab['frozen'][1]=True
 
-    models.set_parameters_from_table(tab)
+    models.update_parameters_from_table(tab)
 
     d=models.parameters.to_dict()
     assert d[0]['value'] == 3.0
