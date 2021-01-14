@@ -98,7 +98,7 @@ class TablePSF(IRF):
             PSF integral
         """
         rad_max = np.atleast_1d(rad_max)
-        return self._integrate_rad((rad_max,))
+        return np.clip(self.integral(axis_name="rad", rad=rad_max), 0, 1)
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -352,7 +352,7 @@ class EnergyDependentTablePSF(IRF):
         """
         energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
         rad_max = np.atleast_1d(u.Quantity(rad_max))
-        return self._integrate_rad((energy, rad_max))
+        return np.clip(self.integral(axis_name="rad", energy_true=energy, rad=rad_max), 0, 1)
 
     def info(self):
         """Print basic info"""
@@ -399,11 +399,12 @@ class EnergyDependentTablePSF(IRF):
 
         ax = plt.gca() if ax is None else ax
 
+        energy_true = self.axes["energy_true"].center
         for fraction in fractions:
-            rad = self.containment_radius(self.axes["energy_true"].center, fraction)
+            rad = self.containment_radius(energy_true, fraction)
             label = f"{100 * fraction:.1f}% Containment"
             ax.plot(
-                self.axes["energy_true"].center,
+                energy_true,
                 rad,
                 label=label,
                 **kwargs,

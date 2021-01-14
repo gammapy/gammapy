@@ -107,10 +107,11 @@ def test_background_3d_integrate(bkg_3d):
     # Example has bkg rate = 4 s-1 MeV-1 sr-1 at this node:
     # fov_lon=1.5 deg, fov_lat=1.5 deg, energy=100 TeV
 
-    rate = bkg_3d.integrate_energy(
+    rate = bkg_3d.integrate_log_log(
         fov_lon=[1.5, 1.5] * u.deg,
         fov_lat=[1.5, 1.5] * u.deg,
         energy=[100, 100 + 2e-6] * u.TeV,
+        axis_name="energy"
     )
     assert rate.shape == (1,)
 
@@ -118,15 +119,16 @@ def test_background_3d_integrate(bkg_3d):
     # with `rate = 4 s-1 sr-1 MeV-1` and `de = 2 MeV`
     assert_allclose(rate.to("s-1 sr-1").value, 0.2, rtol=1e-5)
 
-    rate = bkg_3d.integrate_energy(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=[1, 100] * u.TeV
+    rate = bkg_3d.integrate_log_log(
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
     )
     assert_allclose(rate.to("s-1 sr-1").value, 99000)
 
-    rate = bkg_3d.integrate_energy(
+    rate = bkg_3d.integrate_log_log(
         fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
         fov_lat=[[1, 1], [0.5, 0.5]] * u.deg,
         energy=[[1, 1], [100, 100]] * u.TeV,
+        axis_name="energy"
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.to("s-1 sr-1").value, [[99000.0, 99000.0]], rtol=1e-5)
@@ -236,21 +238,22 @@ def test_background_2d_integrate(bkg_2d):
     # TODO: change test case to something better (with known answer)
     # e.g. constant spectrum or power-law.
 
-    rate = bkg_2d.integrate_energy(
-        offset=[1, 0.5] * u.deg,  energy=[0.1, 0.5] * u.TeV
+    rate = bkg_2d.integrate_log_log(
+        offset=[1, 0.5] * u.deg,  energy=[0.1, 0.5] * u.TeV, axis_name="energy"
     )
 
     assert rate.shape == (1,)
     assert_allclose(rate.to("s-1 sr-1").value[0], [0, 0])
 
-    rate = bkg_2d.integrate_energy(
-        offset=[1, 0.5] * u.deg, energy=[1, 100] * u.TeV
+    rate = bkg_2d.integrate_log_log(
+        offset=[1, 0.5] * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
     )
     assert_allclose(rate.to("s-1 sr-1").value, 0)
 
-    rate = bkg_2d.integrate_energy(
+    rate = bkg_2d.integrate_log_log(
         offset=[[1, 0.5], [1, 0.5]] * u.deg,
         energy=[1, 100] * u.TeV,
+        axis_name = "energy"
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.value, [[0, 198]])

@@ -13,33 +13,32 @@ IRF_DL3_AXES_SPECIFICATION = {
 }
 
 
-# The key is the class tag. The hdu name is not strictly declared in the GADF
-# format
-# TODO: extend the info here
+# The key is the class tag.
+# TODO: extend the info here with the minimal header info
 IRF_DL3_HDU_SPECIFICATION = {
     "bkg_3d": {
-        "hdu": "BACKGROUND",
-        "column": "BKG",
+        "extname": "BACKGROUND",
+        "column_name": "BKG",
         "hduclas2": "BKG",
     },
     "bkg_2d": {
-        "hdu": "BACKGROUND",
-        "column": "BKG",
+        "extname": "BACKGROUND",
+        "column_name": "BKG",
         "hduclas2": "BKG",
     },
     "edisp_2d": {
-        "hdu": "ENERGY DISPERSION",
-        "column": "MATRIX",
+        "extname": "ENERGY DISPERSION",
+        "column_name": "MATRIX",
         "hduclas2": "EDISP",
     },
     "psf_table": {
-        "hdu": "PSF_2D_TABLE",
-        "column": "RPSF",
+        "extname": "PSF_2D_TABLE",
+        "column_name": "RPSF",
         "hduclas2": "PSF",
     },
     "aeff_2d": {
-        "hdu": "EFFECTIVE AREA",
-        "column": "EFFAREA",
+        "extname": "EFFECTIVE AREA",
+        "column_name": "EFFAREA",
         "hduclas2": "EFF_AREA",
     }
 }

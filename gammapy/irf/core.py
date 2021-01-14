@@ -142,45 +142,64 @@ class IRF:
 
         return self._interpolate(coords_default.values(), method=method)
 
-    # TODO: define a proper integration method
-    def integrate_energy(self, method="linear", **kwargs):
-        """Integrate in a given energy band.
+    def integrate_log_log(self, axis_name, **kwargs):
+        """Integrate along a given axis.
 
         This method uses log-log trapezoidal integration.
 
         Parameters
         ----------
+        axis_name : str
+            Along which axis to integrate.
         **kwargs : dict
             Coordinates at which to evaluate the IRF
-        method : {'linear', 'nearest'}, optional
-            Interpolation method
 
         Returns
         -------
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        axis = self.axes.index("energy")
-        data = self.evaluate(**kwargs, method=method)
-        energy = kwargs["energy"]
-        return trapz_loglog(data, energy, axis=axis)
+        axis = self.axes.index(axis_name)
+        data = self.evaluate(**kwargs, method="linear")
+        values = kwargs[axis_name]
+        return trapz_loglog(data, values, axis=axis)
 
-    # TODO: define a proper integration method
-    @lazyproperty
-    def _integrate_rad(self):
-        rad_axis = self.axes["rad"]
-        rad_drad = (
-                2 * np.pi * rad_axis.center * self.quantity * rad_axis.bin_width
-        )
-        idx_rad = self.axes.index("rad")
-        values = rad_drad.cumsum(axis=idx_rad).to_value("")
-        values = np.insert(values, 0, 0, axis=idx_rad)
+    def integral(self, axis_name, **kwargs):
+        """Compute integral along a given axis
 
+        This method uses interpolation of the cumulative sum.
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to integrate.
+        **kwargs : dict
+            Coordinates at which to evaluate the IRF
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Returns 2D array with axes offset
+
+        """
+        axis = self.axes[axis_name]
+        axis_idx = self.axes.index(axis_name)
+
+        values = self.quantity * axis.bin_width
+
+        if axis_name == "rad":
+            # take Jacobian into account
+            values = 2 * np.pi * axis.center * values
+
+        values = values.cumsum(axis=axis_idx).to_value("")
         points = [ax.center for ax in self.axes]
-        points[idx_rad] = rad_axis.edges
-        return ScaledRegularGridInterpolator(
-            points=points, values=values, fill_value=1,
+        points[axis_idx] = axis.edges[1:]
+
+        f_integrate = ScaledRegularGridInterpolator(
+            points=points, values=values,
         )
+        coords = tuple(kwargs[name] for name in self.axes.names)
+        return f_integrate(coords)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None):
@@ -199,7 +218,7 @@ class IRF:
             IRF class
         """
         if hdu is None:
-            hdu = IRF_DL3_HDU_SPECIFICATION[cls.tag]["hdu"]
+            hdu = IRF_DL3_HDU_SPECIFICATION[cls.tag]["extname"]
 
         return cls.from_table(Table.read(hdulist[hdu]))
 
@@ -237,9 +256,8 @@ class IRF:
             IRF class.
         """
         axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
-        column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column"]
+        column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
-
         return cls(
             axes=axes,
             data=data.value,
@@ -254,13 +272,13 @@ class IRF:
 
         spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
         table.meta["HDUCLAS2"] = spec["hduclas2"]
-        table[spec["column"]] = self.quantity.T[np.newaxis]
+        table[spec["column_name"]] = self.quantity.T[np.newaxis]
         return table
 
     def to_table_hdu(self):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
-        hdu = IRF_DL3_HDU_SPECIFICATION[self.tag]["hdu"]
-        return fits.BinTableHDU(self.to_table(), name=hdu)
+        name = IRF_DL3_HDU_SPECIFICATION[self.tag]["extname"]
+        return fits.BinTableHDU(self.to_table(), name=name)
 
 
 class IRFMap:

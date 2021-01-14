@@ -297,7 +297,7 @@ class EDispMap(IRFMap):
         geom_image = self.edisp_map.geom.to_image()
         geom = geom_image.to_cube([energy_axis, energy_axis_true])
         edisp_kernel_map = Map.from_geom(geom=geom, data=data)
-        exposure_map = None
+
         if self.exposure_map is not None:
             exposure_map = Map.from_geom(
                 geom.squash(axis_name=energy_axis.name),
@@ -305,6 +305,8 @@ class EDispMap(IRFMap):
                 unit=self.exposure_map.unit,
                 meta=self.exposure_map.meta,
             )
+        else:
+            exposure_map = None
 
         return EDispKernelMap(
             edisp_kernel_map=edisp_kernel_map, exposure_map=exposure_map

@@ -9,6 +9,7 @@ from gammapy.irf import EDispKernelMap
 from gammapy.maps import RegionNDMap
 from .core import Maker
 
+
 __all__ = ["SpectrumDatasetMaker"]
 
 log = logging.getLogger(__name__)
@@ -82,8 +83,8 @@ class SpectrumDatasetMaker(Maker):
 
         bkg = observation.bkg
 
-        data = bkg.integrate_energy(
-            fov_lon=0 * u.deg, fov_lat=offset, energy=e_reco
+        data = bkg.integrate_log_log(
+            fov_lon=0 * u.deg, fov_lat=offset, energy=e_reco, axis_name="energy"
         )
 
         data *= geom.solid_angle()
