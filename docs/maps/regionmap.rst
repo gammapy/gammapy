@@ -219,53 +219,52 @@ Plotting a RegionGeom
 It can be useful to plot the region that defines a `~RegionGeom`, on its own or on top
 of an existing `~Map`. This is done via `~RegionGeom.plot_region()`:
 
-.. code-block:: python
-
-    from gammapy.maps import RegionGeom
-    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
-    geom.plot_region()
 
 .. plot::
+	:include-source:
 
-    from gammapy.maps import RegionGeom
-    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
-    geom.plot_region()
+	from gammapy.maps import RegionGeom
+	geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+	geom.plot_region()
+
 
 One can also plot the region on top of an existing map, and change the properties of the
 different regions by passing keyword arguments forwarded to `~regions.PixelRegion.as_artist`.
 
 
 .. plot::
-    :include-source:
-    from gammapy.maps import RegionGeom, Map
-    import numpy as np
+	:include-source:
 
-    m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
-    m.data = np.add(*np.indices((100, 100)))
+	from gammapy.maps import RegionGeom, Map
+	import numpy as np
 
-    # A circle centered in the Crab position
-    circle = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
+	m = Map.create(npix=100,binsz=3/100, skydir=(83.63, 22.01), frame='icrs')
+	m.data = np.add(*np.indices((100, 100)))
 
-    # A box centered in the same position
-    box = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
+	# A circle centered in the Crab position
+	circle = RegionGeom.create("icrs;circle(83.63, 22.01, 0.5)")
 
-    # An ellipse in a different location
-    ellipse = RegionGeom.create("icrs;ellipse(84.63, 21.01, 0.3,0.6,-45)")
+	# A box centered in the same position
+	box = RegionGeom.create("icrs;box(83.63, 22.01, 1,2,45)")
 
-    # An annulus in a different location
-    annulus = RegionGeom.create("icrs;annulus(82.8, 22.91, 0.1,0.3)")
+	# An ellipse in a different location
+	ellipse = RegionGeom.create("icrs;ellipse(84.63, 21.01, 0.3,0.6,-45)")
 
-    m.plot(add_cbar=True)
+	# An annulus in a different location
+	annulus = RegionGeom.create("icrs;annulus(82.8, 22.91, 0.1,0.3)")
 
-    # Default plotting settings
-    circle.plot_region()
+	m.plot(add_cbar=True)
 
-    # Different line styles, widths and colors
-    box.plot_region(lw=2, linestyle='--', ec='k')
-    ellipse.plot_region(lw=2, linestyle=':', ec='white')
+	# Default plotting settings
+	circle.plot_region()
 
-    # Filling the region with a color
-    annulus.plot_region(lw=2, ec='purple', fc='purple')
+	# Different line styles, widths and colors
+	box.plot_region(lw=2, linestyle='--', ec='k')
+	ellipse.plot_region(lw=2, linestyle=':', ec='white')
+
+	# Filling the region with a color
+	annulus.plot_region(lw=2, ec='purple', fc='purple')
+
 
 RegionNDMap
 ===========
@@ -282,36 +281,36 @@ A region map can be created either from a DS9 region string, an `regions.SkyRegi
 
 .. code-block:: python
 
-    from gammapy.maps import RegionGeom, RegionNDMap
-    from astropy.coordinates import SkyCoord
-    from regions import CircleSkyRegion
-    import astropy.units as u
+	from gammapy.maps import RegionGeom, RegionNDMap
+	from astropy.coordinates import SkyCoord
+	from regions import CircleSkyRegion
+	import astropy.units as u
 
-    # Create a map of a circular region with radius 0.5 deg centered around
-    # the Crab Nebula
+	# Create a map of a circular region with radius 0.5 deg centered around
+	# the Crab Nebula
 
-    # from DS9 string
-    region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)")
+	# from DS9 string
+	region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)")
 
-    # using the regions package
-    center = SkyCoord("83.63 deg", "22.01 deg", frame="icrs")
-    region =  CircleSkyRegion(center=center, radius=0.5*u.deg)
-    region_map = RegionNDMap.create(region)
+	# using the regions package
+	center = SkyCoord("83.63 deg", "22.01 deg", frame="icrs")
+	region =  CircleSkyRegion(center=center, radius=0.5*u.deg)
+	region_map = RegionNDMap.create(region)
 
-    # from an existing RegionGeom, perhaps the one corresponding
-    # to another, existing RegionNDMap
-    geom = region_map.geom
-    region_map_2 = RegionNDMap.from_geom(geom)
+	# from an existing RegionGeom, perhaps the one corresponding
+	# to another, existing RegionNDMap
+	geom = region_map.geom
+	region_map_2 = RegionNDMap.from_geom(geom)
 
 Higher dimensional region map objects (cubes and hypercubes) 
 can be constructed by passing a list of `~MapAxis` objects for non-spatial dimensions with the axes parameter:
 
 .. code-block:: python
 
-    from gammapy.maps import MapAxis, RegionNDMap
+	from gammapy.maps import MapAxis, RegionNDMap
 
-    energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-    region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
 
 
 Filling a RegionNDMap
@@ -323,24 +322,24 @@ created from an existing `~RegionGeom`, this can be done in the same step:
 
 .. code-block:: python
 
-    from gammapy.maps import MapAxis, RegionNDMap
-    import numpy as np  
+	from gammapy.maps import MapAxis, RegionNDMap
+	import numpy as np
 
-    # Create a RegionNDMap with 12 energy bins
-    energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
-    region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+	# Create a RegionNDMap with 12 energy bins
+	energy_axis = MapAxis.from_bounds(100., 1e5, 12, interp='log', name='energy', unit='GeV')
+	region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
 
-    # Fill the region map
-    # with an entry for each of the 12 energy bins
-    region_map.data = np.logspace(-2,3,12) 
+	# Fill the region map
+	# with an entry for each of the 12 energy bins
+	region_map.data = np.logspace(-2,3,12)
 
-    # Create another region map with the same RegionGeom but different data,
-    # with the same value for each of the 12 energy bins
-    geom = region_map.geom
-    region_map_2 = RegionNDMap.from_geom(geom, data = 1)
+	# Create another region map with the same RegionGeom but different data,
+	# with the same value for each of the 12 energy bins
+	geom = region_map.geom
+	region_map_2 = RegionNDMap.from_geom(geom, data = 1)
 
-    # Access the data
-    print(region_map_1.data)
+	# Access the data
+	print(region_map_1.data)
 
 The data contained in a region map is a `~numpy.ndarray` with shape defined by the underlying
 `~RegionGeom.data_shape`. In the case of only spatial dimensions, the shape is just (1,1), one single
@@ -359,7 +358,8 @@ Plotting the underlying region
 This is equivalent to the `~RegionGeom.plot_region()` described above, and, in fact, the `~RegionNDMap` method simply calls it on the associated
 region geometry, `~RegionNDMap.geom`. Consequently, the use of this method is already described by the section above.
 
-.. code-block:: python
+.. plot::
+	:include-source:
 
 	from gammapy.maps import RegionNDMap
 	region_map = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)")
@@ -371,7 +371,6 @@ Plotting the map content
 This is only possible if the region map has a non-spatial axis.
 
 .. plot::
-
 	:include-source:
 
 	from gammapy.maps import MapAxis, RegionNDMap
