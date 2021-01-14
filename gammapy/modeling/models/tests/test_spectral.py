@@ -798,31 +798,32 @@ class TestSpectralModelErrorPropagation:
         assert out.shape == (2,)
         assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
 
-    def test_ecpl_model(self):
-        # Regression test for ECPL model
-        # https://github.com/gammapy/gammapy/issues/2007
-        model = ExpCutoffPowerLawSpectralModel(
-            amplitude=2.076183759227292e-12 * u.Unit("cm-2 s-1 TeV-1"),
-            index=1.8763343736076483,
-            lambda_=0.08703226432146616 * u.Unit("TeV-1"),
-            reference=1 * u.TeV,
-        )
-        model.covariance = [
-            [0.00204191498, -1.507724e-14, 0.0, -0.001834819, 0.0],
-            [-1.507724e-14, 1.6864740e-25, 0.0, 1.854251e-14, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-            [-0.001834819175, 1.8542517e-14, 0.0, 0.0032559101, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-        ]
 
-        out = model.evaluate_error(1 * u.TeV)
-        assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
+def test_dnde_error_ecpl_model():
+    # Regression test for ECPL model
+    # https://github.com/gammapy/gammapy/issues/2007
+    model = ExpCutoffPowerLawSpectralModel(
+        amplitude=2.076183759227292e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        index=1.8763343736076483,
+        lambda_=0.08703226432146616 * u.Unit("TeV-1"),
+        reference=1 * u.TeV,
+    )
+    model.covariance = [
+        [0.00204191498, -1.507724e-14, 0.0, -0.001834819, 0.0],
+        [-1.507724e-14, 1.6864740e-25, 0.0, 1.854251e-14, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0],
+        [-0.001834819175, 1.8542517e-14, 0.0, 0.0032559101, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0],
+    ]
 
-        out = model.evaluate_error(0.1 * u.TeV)
-        assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
+    out = model.evaluate_error(1 * u.TeV)
+    assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
+
+    out = model.evaluate_error(0.1 * u.TeV)
+    assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
 
 
-def test_integral_error_PowerLaw():
+def test_integral_error_power_law():
     energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
     energy_min = energy[:-1]
     energy_max = energy[1:]
@@ -837,7 +838,7 @@ def test_integral_error_PowerLaw():
     assert_allclose(flux_error.value[0] / 1e-14, 7.915984, rtol=1e-3)
 
 
-def test_integral_error_ExpCutOffPowerLaw():
+def test_integral_error_exp_cut_off_power_law():
     energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
     energy_min = energy[:-1]
     energy_max = energy[1:]
@@ -853,7 +854,7 @@ def test_integral_error_ExpCutOffPowerLaw():
     assert_allclose(flux_error.value[0] / 1e-14, 8.552617, rtol=0.01)
 
 
-def test_energy_flux_error_power_Law():
+def test_energy_flux_error_power_law():
     energy_min = 1 * u.TeV
     energy_max = 10 * u.TeV
 
