@@ -17,7 +17,6 @@ def wcs_flux_map(reference_model):
     energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit='TeV')
 
     map_dict = {}
-    map_dict["ref_model"] = reference_model
 
     map_dict["dnde_ref"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='cm-2 s-1 TeV-1')
     map_dict["dnde_ref"].quantity += reference_model.spectral_model(energy_axis.center)[:,np.newaxis, np.newaxis]
@@ -40,8 +39,8 @@ def wcs_flux_map(reference_model):
     return map_dict
 
 
-def test_flux_map_properties(wcs_flux_map):
-    fluxmap = FluxMap(**wcs_flux_map)
+def test_flux_map_properties(wcs_flux_map, reference_model):
+    fluxmap = FluxMap(wcs_flux_map, reference_model)
 
     assert_allclose(fluxmap.dnde.data[:,0,0],[1e-11, 1e-13])
     assert_allclose(fluxmap.dnde_err.data[:,0,0],[1e-12, 1e-14])
@@ -69,8 +68,8 @@ def test_flux_map_properties(wcs_flux_map):
     assert_allclose(fluxmap.e2dnde_ul.data[:, 0, 0], [2e-12, 2e-12])
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
-def test_flux_map_read_write(tmp_path, wcs_flux_map, sed_type):
-    fluxmap = FluxMap(**wcs_flux_map)
+def test_flux_map_read_write(tmp_path, wcs_flux_map, reference_model, sed_type):
+    fluxmap = FluxMap(wcs_flux_map, reference_model)
 
     fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
     new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
@@ -80,8 +79,8 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, sed_type):
     assert_allclose(new_fluxmap.norm_errn.data[:,0,0], [0.2, 0.2])
     assert_allclose(new_fluxmap.norm_ul.data[:,0,0], [2, 2])
 
-def test_get_flux_point(wcs_flux_map):
-    fluxmap = FluxMap(**wcs_flux_map)
+def test_get_flux_point(wcs_flux_map, reference_model):
+    fluxmap = FluxMap(wcs_flux_map, reference_model)
 
     coord = SkyCoord(0., 0., unit="deg", frame="galactic")
     fp = fluxmap.get_flux_points(coord)
@@ -92,3 +91,18 @@ def test_get_flux_point(wcs_flux_map):
     assert_allclose(fp.table["norm_errn"], [0.2, 0.2] )
     assert_allclose(fp.table["norm_errp"], [0.2, 0.2])
     assert_allclose(fp.table["norm_ul"], [2, 2])
+
+def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
+    other_data = wcs_flux_map.copy()
+    other_data.pop("norm_errn")
+    other_data.pop("norm_errp")
+    fluxmap = FluxMap(other_data, reference_model)
+
+    coord = SkyCoord(0., 0., unit="deg", frame="galactic")
+    fp = fluxmap.get_flux_points(coord)
+
+    assert_allclose(fp.table["e_min"], [0.1, 1.0])
+    assert_allclose(fp.table["norm"], [1, 1] )
+    assert_allclose(fp.table["norm_err"], [0.1, 0.1] )
+    assert_allclose(fp.table["norm_ul"], [2, 2])
+    assert "norm_errn" not in fp.table.columns

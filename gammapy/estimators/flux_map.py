@@ -5,9 +5,9 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-
 from gammapy.maps import MapCoord, Map
-from gammapy.estimators import FluxPoints
+from gammapy.estimators.flux_point import FluxPoints
+from gammapy.estimators.flux_estimate import FluxEstimate
 from gammapy.utils.table import table_from_row_data
 from gammapy.modeling.models import (
     SkyModel,
@@ -39,7 +39,7 @@ OPTIONAL_MAPS = {
     "likelihood": ["norm_err", "norm_errn", "norm_errp","norm_ul", "norm_scan", "stat_scan"],
 }
 
-class FluxMap:
+class FluxMap(FluxEstimate):
     """A flux map container.
 
     It contains a set of `~gammapy.maps.Map` objects that store the estimated flux as a function of energy as well as
@@ -56,60 +56,30 @@ class FluxMap:
 
     Parameters
     ----------
-    dnde_ref : `~gammapy.maps.Map`
-        the reference spectrum value
-    norm : `~gammapy.maps.Map`
-        the norm factor
-    norm_err : `~gammapy.maps.Map`, optional
-        the error on the norm factor. Default is None.
-    norm_errn : `~gammapy.maps.Map`, optional
-        the negative error on the norm factor. Default is None.
-    norm_errp : `~gammapy.maps.Map`, optional
-        the positive error on the norm factor. Default is None.
-    norm_ul : `~gammapy.maps.Map`, optional
-        the upper limit on the norm factor. Default is None.
-    norm_scan : `~gammapy.maps.Map`, optional
-        the norm values of the test statistic scan. Default is None.
-    stat_scan : `~gammapy.maps.Map`, optional
-        the test statistic scan values. Default is None.
-    ts : `~gammapy.maps.Map`, optional
-        the delta TS associated with the flux value. Default is None.
-    counts : `~gammapy.maps.Map`, optional
-        the number counts value. Default is None.
-    ref_model : `~gammapy.modeling.models.SkyModel`, optional
+    data : dict of `~gammapy.maps.Map`
+        the maps dictionary. Expected entries are the following:
+        * norm : the norm factor
+        * norm_err : optional, the error on the norm factor.
+        * norm_errn : optional, the negative error on the norm factor.
+        * norm_errp : optional, the positive error on the norm factor.
+        * norm_ul : optional, the upper limit on the norm factor.
+        * norm_scan : optional, the norm values of the test statistic scan.
+        * stat_scan : optional, the test statistic scan values.
+        * ts : optional, the delta TS associated with the flux value.
+        * counts : optional, the number counts value.
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
         the reference model to use for conversions. Default in None.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
 
     """
-    def __init__(
-        self,
-        dnde_ref,
-        norm,
-        norm_err=None,
-        norm_errn=None,
-        norm_errp=None,
-        norm_ul=None,
-        norm_scan=None,
-        stat_scan=None,
-        ts=None,
-        counts=None,
-        ref_model=None,
-    ):
-        self.geom = norm.geom
-        self.dnde_ref = dnde_ref
-        self.norm = norm
-        self.norm_err = norm_err
-        self.norm_errn = norm_errn
-        self.norm_errp = norm_errp
-        self.norm_ul = norm_ul
-        self.norm_scan = norm_scan
-        self.stat_scan = stat_scan
-        self.ts = ts
-        self.counts = counts
+    def __init__(self, data, reference_model=None):
+        self.geom = data['norm'].geom
 
-        if ref_model is None:
-            ref_model = self._default_model()
-        self.ref_model = ref_model
+        if reference_model == None:
+            reference_model = self._default_model()
+        self.reference_model = reference_model
+
+        super().__init__(data, spectral_model=reference_model.spectral_model)
 
     @staticmethod
     def _default_model():
@@ -129,109 +99,6 @@ class FluxMap:
     def e_max(self):
         axis = self.geom.axes["energy"]
         return axis.edges[1:]
-
-    @property
-    def dnde(self):
-        return self.dnde_ref * self.norm
-
-    @property
-    def dnde_err(self):
-        return self.dnde_ref * self.norm_err
-
-    @property
-    def dnde_errn(self):
-        return self.dnde_ref * self.norm_errn
-
-    @property
-    def dnde_errp(self):
-        return self.dnde_ref * self.norm_errp
-
-    @property
-    def dnde_ul(self):
-        return self.dnde_ref * self.norm_ul
-
-    def _to_flux(self):
-        """Conversion factor to apply to dnde-like quantities to obtain fluxes."""
-        ref_flux = self.ref_model.spectral_model.integral(
-            self.e_min, self.e_max
-        )
-        ref_dnde = self.ref_model.spectral_model(self.e_ref)
-        factor = ref_flux / ref_dnde
-        return factor[:, np.newaxis, np.newaxis]
-
-    @property
-    def flux(self):
-        return self.dnde * self._to_flux()
-
-    @property
-    def flux_err(self):
-        return self.dnde_err * self._to_flux()
-
-    @property
-    def flux_errn(self):
-        return self.dnde_errn * self._to_flux()
-
-    @property
-    def flux_errp(self):
-        return self.dnde_errp * self._to_flux()
-
-    @property
-    def flux_ul(self):
-        return self.dnde_ul * self._to_flux()
-
-    def _to_eflux(self):
-        """Conversion factor to apply to dnde-like quantities to obtain fluxes."""
-        ref_eflux = self.ref_model.spectral_model.energy_flux(
-            self.e_min, self.e_max
-        )
-        ref_dnde = self.ref_model.spectral_model(self.e_ref)
-        factor = ref_eflux / ref_dnde
-        return factor[:, np.newaxis, np.newaxis]
-
-    @property
-    def eflux(self):
-        return self.dnde * self._to_eflux()
-
-    @property
-    def eflux_err(self):
-        return self.dnde_err * self._to_eflux()
-
-    @property
-    def eflux_errn(self):
-        return self.dnde_errn * self._to_eflux()
-
-    @property
-    def eflux_errp(self):
-        return self.dnde_errp * self._to_eflux()
-
-    @property
-    def eflux_ul(self):
-        return self.dnde_ul * self._to_eflux()
-
-    def _to_e2dnde(self):
-        """Conversion factor to apply to dnde-like quantities to obtain e2dnde."""
-        factor = self.e_ref ** 2
-        return factor[:, np.newaxis, np.newaxis]
-
-    @property
-    def e2dnde(self):
-        return self.dnde * self._to_e2dnde()
-
-    @property
-    def e2dnde_err(self):
-        return self.dnde_err * self._to_e2dnde()
-
-    @property
-    def e2dnde_errn(self):
-        return self.dnde_errn * self._to_e2dnde()
-
-    @property
-    def e2dnde_errp(self):
-        return self.dnde_errp * self._to_e2dnde()
-
-    @property
-    def e2dnde_ul(self):
-        return self.dnde_ul * self._to_e2dnde()
 
     def get_flux_points(self, coord=None):
         """Extract flux point at a given position.
@@ -254,24 +121,17 @@ class FluxMap:
         energies = self.e_ref
         coords = MapCoord.create(dict(skycoord=coord, energy=energies))
 
-        ref = self.dnde_ref.get_by_coord(coords) * self.dnde_ref.unit
-        norm = self.norm.get_by_coord(coords) * self.norm.unit
-        norm_err, norm_errn, norm_errp, norm_ul = None, None, None, None
-        norm_scan, stat_scan = None, None
-        if self.norm_err is not None:
-            norm_err = self.norm_err.get_by_coord(coords) * self.norm_err.unit
-        if self.norm_errn is not None:
-            norm_errn = (
-                self.norm_errn.get_by_coord(coords) * self.norm_errn.unit
-            )
-        if self.norm_errp is not None:
-            norm_errp = (
-                self.norm_errp.get_by_coord(coords) * self.norm_errp.unit
-            )
-        if self.norm_ul is not None:
-            norm_ul = (
-                self.norm_ul.get_by_coord(coords) * self.norm_ul.unit
-            )
+        ref = self.dnde_ref
+
+        fp = dict()
+        fp["norm"] = self.norm.get_by_coord(coords) * self.norm.unit
+
+        for quantity in self._available_quantities:
+            norm_quantity = f"norm_{quantity}"
+            res = self.__getattribute__(norm_quantity).get_by_coord(coords)
+            res *= self.__getattribute__(norm_quantity).unit
+            fp[norm_quantity] = res
+
         # TODO: add support of norm and stat scan
 
         rows = []
@@ -281,18 +141,10 @@ class FluxMap:
             result["e_min"] = self.e_min[idx]
             result["e_max"] = self.e_max[idx]
             result["ref_dnde"] = ref[idx]
-            result["norm"] = norm[idx]
-            if norm_err is not None:
-                result["norm_err"] = norm_err[idx]
-            if norm_errn is not None:
-                result["norm_errn"] = norm_errn[idx]
-            if norm_errp is not None:
-                result["norm_errp"] = norm_errp[idx]
-            if norm_ul is not None:
-                result["norm_ul"] = norm_ul[idx]
-            if norm_scan is not None:
-                result["norm_scan"] = norm_scan[idx]
-                result["stat_scan"] = stat_scan[idx]
+            result["norm"] = fp["norm"][idx]
+            for quantity in self._available_quantities:
+                norm_quantity = f"norm_{quantity}"
+                result[norm_quantity] = fp[norm_quantity][idx]
             rows.append(result)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table)
@@ -310,14 +162,17 @@ class FluxMap:
         map_dict : dict
             dictionary containing the requested maps.
         """
-        result = {}
-        for entry in REQUIRED_MAPS[sed_type]:
-            result[entry] = self.__getattribute__(entry)
+        if sed_type == "likelihood":
+            result = self.data
+        else:
+            result = {}
+            for entry in REQUIRED_MAPS[sed_type]:
+                result[entry] = self.__getattribute__(entry)
 
-        for entry in OPTIONAL_MAPS[sed_type]:
-            res = self.__getattribute__(entry)
-            if res is not None:
-                result[entry] = res
+            for entry in OPTIONAL_MAPS[sed_type]:
+                res = self.__getattribute__(entry)
+                if res is not None:
+                    result[entry] = res
 
         return result
 
@@ -430,7 +285,7 @@ class FluxMap:
 
 
     @classmethod
-    def from_dict(cls, maps, sed_type='likelihood', ref_model=None):
+    def from_dict(cls, maps, sed_type='likelihood', reference_model=None):
         """Create FluxMap from a dictionary of maps.
 
         Parameters
@@ -439,7 +294,7 @@ class FluxMap:
             dictionary containing the requested maps.
         sed_type : str
             sed type to convert to. Default is `Likelihood`
-        ref_model : `~gammapy.modeling.models.SkyModel`, optional
+        reference_model : `~gammapy.modeling.models.SkyModel`, optional
             the reference model to use for conversions. Default in None.
             If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
 
@@ -450,31 +305,28 @@ class FluxMap:
         """
         cls._validate_type(maps, sed_type)
 
-        kwargs = {}
-        kwargs["ref_model"] = ref_model
-
         if sed_type == 'likelihood':
-            kwargs.update(maps)
-            return cls(**kwargs)
+            return cls(maps, reference_model)
 
         e_ref = maps[sed_type].geom.axes["energy"].center
         e_edges = maps[sed_type].geom.axes["energy"].edges
-        ref_dnde = ref_model.spectral_model(e_ref)
+        ref_dnde = reference_model.spectral_model(e_ref)
 
         if sed_type == "dnde":
             factor = ref_dnde
         elif sed_type == "flux":
-            factor = ref_model.spectral_model.integral(e_edges[:-1], e_edges[1:])
+            factor = reference_model.spectral_model.integral(e_edges[:-1], e_edges[1:])
         elif sed_type == "eflux":
-            factor = ref_model.spectral_model.energy_flux(e_edges[:-1], e_edges[1:])
+            factor = reference_model.spectral_model.energy_flux(e_edges[:-1], e_edges[1:])
         elif sed_type == "e2dnde":
             factor = e_ref ** 2 * ref_dnde
 
-        kwargs["norm"] = maps[sed_type]/factor[:,np.newaxis, np.newaxis]
+        data = dict()
+        data["norm"] = maps[sed_type]/factor[:,np.newaxis, np.newaxis]
 
         for map_type in OPTIONAL_MAPS[sed_type]:
             if map_type in maps:
                 norm_type = map_type.replace(sed_type, "norm")
-                kwargs[norm_type] = maps[map_type]/factor[:,np.newaxis, np.newaxis]
+                data[norm_type] = maps[map_type]/factor[:,np.newaxis, np.newaxis]
 
-        return cls(**kwargs)
+        return cls(data, reference_model)
