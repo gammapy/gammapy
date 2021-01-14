@@ -126,7 +126,7 @@ class TestSourceCatalog3HWC:
 
 @requires_data()
 class TestSourceCatalogObject3HWC:
-    @staticmethod
+    @staticmethod 
     def test_data(cat):
         assert cat[0].data["source_name"] == "3HWC J1739+099"
         assert cat[0].n_models == 0
