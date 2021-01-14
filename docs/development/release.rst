@@ -59,16 +59,12 @@ Make release
 Steps for the day of the release:
 
 #. Mention release on the front page and on the news page of the Gammapy webpage
-   (update `index.html` and `news.html` in the `gammapy webpage repo <https://github.com/gammapy/gammapy-webpage>`__).
-#. Follow the instructions how to release an Astropy affiliated package
-   `here <https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
-#. Checkout the git tag v0.14 and build the release documentation and publish it in `gammapy-docs` `Github repository <https://github.com/gammapy/gammapy-docs>`__
-   Adapt `stable/index.html` to point to v0.14 in the gammapy docs repo.
-#. Copy the environment file from the last release to `gammapy-0.14-environment.yml` in the
-   `gammapy-webpage repository <https://github.com/gammapy/gammapy-webpage>`__ master branch
-   and adapt dependency versions as required.
-#. Create a notebooks tar file with `gammapy jupyter tar` and copy it in the
-   `gammapy-webpage repository <https://github.com/gammapy/gammapy-webpage>`__ master branch.
+   (update `index.html` and `news.html` in the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__).
+#. Follow the instructions how to release an Astropy affiliated package `<https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
+#. Build an updated version of the dev docs using Github action in `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__
+#. Copy the `docs/dev` folder as a new `docs/0.14` folder in the gammapy docs repo.
+#. Edit `0.14/docs/_static/gammapy-environment.yml` file and adapt conda env name and dependency versions as required.
+#. Edit `stable/index.html` to point to 0.14 in the gammapy docs repo.
 #. Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock
 #. Encourage the Gammapy developers to try out the new stable version (update and run tests)
    via the Github issue for the release and wait a day or two for feedback.
