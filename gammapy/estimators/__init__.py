@@ -5,7 +5,6 @@ from .asmooth_map import *
 from .core import *
 from .excess_map import *
 from .excess_profile import *
-from .flux_estimate import *
 from .flux_map import *
 from .flux_point import *
 from .lightcurve import *

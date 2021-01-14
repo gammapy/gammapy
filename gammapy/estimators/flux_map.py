@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from astropy.io import fits
 from gammapy.maps import MapCoord, Map
+from gammapy.estimators.core import FluxEstimate
 from gammapy.estimators.flux_point import FluxPoints
-from gammapy.estimators.flux_estimate import FluxEstimate
 from gammapy.utils.table import table_from_row_data
 from gammapy.modeling.models import (
     SkyModel,
@@ -73,7 +73,7 @@ class FluxMap(FluxEstimate):
         if reference_model == None:
             log.warning("No reference model set for FluxMap. Assuming point source with E^-2 spectrum.")
             reference_model = self._default_model()
-            
+
         self.reference_model = reference_model
 
         super().__init__(data, spectral_model=reference_model.spectral_model)
