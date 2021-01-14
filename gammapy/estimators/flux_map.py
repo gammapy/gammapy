@@ -1,9 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy import units as u
-from astropy.table import Table
-from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.maps import MapCoord, Map
 from gammapy.estimators.flux_point import FluxPoints
@@ -19,16 +16,12 @@ from gammapy.utils.scripts import make_path
 __all__ = ["FluxMap"]
 
 
-#TODO replace by ref_dnde in all code
 REQUIRED_MAPS = {
     "dnde": ["dnde"],
     "e2dnde": ["e2dnde"],
     "flux": ["flux"],
     "eflux": ["eflux"],
-    "likelihood": [
-        "dnde_ref",
-        "norm",
-    ],
+    "likelihood": ["norm"],
 }
 
 OPTIONAL_MAPS = {
@@ -38,6 +31,8 @@ OPTIONAL_MAPS = {
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
     "likelihood": ["norm_err", "norm_errn", "norm_errp","norm_ul", "norm_scan", "stat_scan"],
 }
+
+log = logging.getLogger(__name__)
 
 class FluxMap(FluxEstimate):
     """A flux map container.
@@ -76,7 +71,9 @@ class FluxMap(FluxEstimate):
         self.geom = data['norm'].geom
 
         if reference_model == None:
+            log.warning("No reference model set for FluxMap. Assuming point source with E^-2 spectrum.")
             reference_model = self._default_model()
+            
         self.reference_model = reference_model
 
         super().__init__(data, spectral_model=reference_model.spectral_model)
