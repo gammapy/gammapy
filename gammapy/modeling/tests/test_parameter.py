@@ -152,7 +152,7 @@ def test_parameters_to_table(pars):
     pars["ham"].error = 1e-10
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 7
+    assert len(table.columns) == 8
 
 
 def test_parameters_set_parameter_factors(pars):
@@ -172,7 +172,7 @@ def test_parameters_autoscale():
 def test_update_from_dict():
     par = Parameter("test", value=1e-10, min="nan", max="nan", frozen=False, unit="TeV")
     par.autoscale()
-    data={"name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
+    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
     par.update_from_dict(data)
     assert par.name == "test"
     assert par.factor == 3
@@ -180,4 +180,7 @@ def test_update_from_dict():
     assert par.unit == "GeV"
     assert par.min == 0
     assert par.max is np.nan    
+    assert par.frozen == True
+    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":'True', "unit":"GeV"}
+    par.update_from_dict(data)
     assert par.frozen == True

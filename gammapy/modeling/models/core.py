@@ -428,6 +428,21 @@ class DatasetModels(collections.abc.Sequence):
         else:
             return {"components": models_data}
 
+    def to_parameters_table(self):
+        """Convert Models parameters to an astropy Table."""
+        table = self.parameters.to_table()
+        #Warning: splitting of parameters will break is source name has a "." in its name.
+        model_name = [name.split(".")[0] for name in self.parameters_unique_names]
+        table.add_column(model_name, name='model', index=0)
+        self._table_cached = table
+        return  table
+
+    def update_parameters_from_table(self, t):
+        """Update Models from an astropy Table."""
+        parameters_dict = [dict(zip( t.colnames, row)) for row in t]      
+        for k, data in enumerate(parameters_dict):
+            self.parameters[k].update_from_dict(data)
+
     def read_covariance(self, path, filename="_covariance.dat", **kwargs):
         """Read covariance data from file
 

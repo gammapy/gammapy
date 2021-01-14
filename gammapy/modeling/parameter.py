@@ -168,7 +168,11 @@ class Parameter:
 
     @min.setter
     def min(self, val):
-        self._min = float(val)
+        "Astropy Table has masked values for NaN. Replacing with np.nan."
+        if isinstance(val, np.ma.core.MaskedConstant):
+            self._min = np.nan
+        else:
+            self._min = float(val)
 
     @property
     def factor_min(self):
@@ -185,7 +189,11 @@ class Parameter:
 
     @max.setter
     def max(self, val):
-        self._max = float(val)
+        "Astropy Table has masked values for NaN. Replacing with np.nan."
+        if isinstance(val, np.ma.core.MaskedConstant):
+            self._max = np.nan
+        else:
+            self._max = float(val)
 
     @property
     def factor_max(self):
@@ -202,7 +210,9 @@ class Parameter:
 
     @frozen.setter
     def frozen(self, val):
-        if not isinstance(val, bool):
+        if val in ['True', 'False']:
+            val=bool(val)
+        if not isinstance(val, bool) and not isinstance(val, np.bool_):
             raise TypeError(f"Invalid type: {val}, {type(val)}")
         self._frozen = val
 
@@ -249,10 +259,9 @@ class Parameter:
 
     def update_from_dict(self, data):
         """Update parameters from a dict.
-           Protection against changing parameter name."""
-        data.pop("name")
-        for k in data.keys():
-            setattr(self, k, data[k])
+           Protection against changing parameter model, type, name."""
+        keys=["value", "unit", "min", "max", "frozen"]
+        for k in keys: setattr(self, k, data[k])
 
     def to_dict(self):
         """Convert to dict."""
@@ -450,7 +459,10 @@ class Parameters(collections.abc.Sequence):
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        rows = [p.to_dict() for p in self._parameters]
+        rows=[]
+        for p in self._parameters:
+            d = p.to_dict()
+            rows.append({**dict(type=p.type), **d})
         table = table_from_row_data(rows)
 
         table["value"].format = ".4e"
