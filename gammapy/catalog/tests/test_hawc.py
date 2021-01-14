@@ -107,10 +107,6 @@ class TestSourceCatalogObject2HWC:
         assert_allclose(model.position.b.value, pos_err.center.b.value)
 
 
-
-
-
-
 @pytest.fixture(scope="session")
 def cat():
     return SourceCatalog3HWC()
@@ -138,4 +134,3 @@ class TestSourceCatalogObject3HWC:
         assert cat[1].data["source_name"] == "3HWC J2043+443"
         assert cat[1].n_models == 0.5
 
-    
