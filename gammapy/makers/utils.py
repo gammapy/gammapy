@@ -128,31 +128,34 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     if oversampling is not None:
         geom = geom.upsample(factor=oversampling, axis_name="energy")
 
-    map_coord = geom.to_image().get_coord()
-    sky_coord = map_coord.skycoord
+    coords = {
+        "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
+    }
 
-    if isinstance(pointing, FixedPointingInfo):
-        altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
-
-        # Compute FOV coordinates of map relative to pointing
-        fov_lon, fov_lat = sky_to_fov(
-            altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
-        )
+    if bkg.is_offset_dependent:
+        coords["offset"] = geom.separation(pointing)
     else:
-        # Create OffsetFrame
-        frame = SkyOffsetFrame(origin=pointing)
-        pseudo_fov_coord = sky_coord.transform_to(frame)
-        fov_lon = pseudo_fov_coord.lon
-        fov_lat = pseudo_fov_coord.lat
+        map_coord = geom.to_image().get_coord()
+        sky_coord = map_coord.skycoord
 
-    energies = geom.axes["energy"].edges
+        if isinstance(pointing, FixedPointingInfo):
+            altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 
-    bkg_de = bkg.integrate_log_log(
-        fov_lon=fov_lon,
-        fov_lat=fov_lat,
-        energy=energies[:, np.newaxis, np.newaxis],
-        axis_name="energy"
-    )
+            # Compute FOV coordinates of map relative to pointing
+            fov_lon, fov_lat = sky_to_fov(
+                altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
+            )
+        else:
+            # Create OffsetFrame
+            frame = SkyOffsetFrame(origin=pointing)
+            pseudo_fov_coord = sky_coord.transform_to(frame)
+            fov_lon = pseudo_fov_coord.lon
+            fov_lat = pseudo_fov_coord.lat
+
+        coords["fov_lon"] = fov_lon
+        coords["fov_lat"] = fov_lat
+
+    bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
 
     d_omega = geom.to_image().solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
