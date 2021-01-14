@@ -153,10 +153,6 @@ Reference/API
     :no-inheritance-diagram:
     :include-all-objects:
 
-.. automodapi:: gammapy.utils.nddata
-    :no-inheritance-diagram:
-    :include-all-objects:
-
 .. automodapi:: gammapy.utils.time
     :no-inheritance-diagram:
     :include-all-objects:

@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HAWC catalogs (https://www.hawc-observatory.org)."""
+import abc
 import numpy as np
 from astropy.table import Table
 from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = ["SourceCatalog2HWC", "SourceCatalogObjectHWC"]
+__all__ = ["SourceCatalog2HWC", "SourceCatalog3HWC", "SourceCatalogObject2HWC", "SourceCatalogObject3HWC"]
 
 
-class SourceCatalogObjectHWC(SourceCatalogObject):
+class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
     """One source from the HAWC 2HWC catalog.
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog2HWC`.
@@ -144,44 +145,7 @@ class SourceCatalogObjectHWC(SourceCatalogObject):
             name=self.name,
         )
 
-
-class SourceCatalog2HWC(SourceCatalog):
-    """HAWC 2HWC catalog.
-
-    One source is represented by `~gammapy.catalog.SourceCatalogObject2HWC`.
-
-    The data is from tables 2 and 3 in the paper [1]_.
-
-    The catalog table contains 40 rows / sources.
-    The paper mentions 39 sources e.g. in the abstract.
-    The difference is due to Geminga, which was detected as two "sources" by the algorithm
-    used to make the catalog, but then in the discussion considered as one source.
-
-    References
-    ----------
-    .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
-       On ADS: `2017ApJ...843...40A <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
-    """
-
-    tag = "2hwc"
-    """Catalog name"""
-
-    description = "2HWC catalog from the HAWC observatory"
-    """Catalog description"""
-
-    source_object_class = SourceCatalogObjectHWC
-
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/2HWC.ecsv"):
-        table = Table.read(make_path(filename), format="ascii.ecsv")
-
-        source_name_key = "source_name"
-
-        super().__init__(table=table, source_name_key=source_name_key)
-
-
-
-
-class SourceCatalogObject2HWC(SourceCatalogObjectHWC):
+class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
 
 
     def spectral_model(self, which="point"):
@@ -212,7 +176,44 @@ class SourceCatalogObject2HWC(SourceCatalogObjectHWC):
         return model
 
 
-class SourceCatalogObject3HWC(SourceCatalogObjectHWC):
+class SourceCatalog2HWC(SourceCatalog):
+    """HAWC 2HWC catalog.
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject2HWC`.
+
+    The data is from tables 2 and 3 in the paper [1]_.
+
+    The catalog table contains 40 rows / sources.
+    The paper mentions 39 sources e.g. in the abstract.
+    The difference is due to Geminga, which was detected as two "sources" by the algorithm
+    used to make the catalog, but then in the discussion considered as one source.
+
+    References
+    ----------
+    .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
+       On ADS: `2017ApJ...843...40A <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
+    """
+
+    tag = "2hwc"
+    """Catalog name"""
+
+    description = "2HWC catalog from the HAWC observatory"
+    """Catalog description"""
+
+    source_object_class = SourceCatalogObject2HWC
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/2HWC.ecsv"):
+        table = Table.read(make_path(filename), format="ascii.ecsv")
+
+        source_name_key = "source_name"
+
+        super().__init__(table=table, source_name_key=source_name_key)
+
+
+
+
+
+class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
 
     def spectral_model(self, which="point"):
@@ -222,16 +223,6 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWC):
         * ``which="extended"`` -- Spectral model under the extended source assumption.
           Only available for some sources. Raise ValueError if not available.
         """
-        # index_errp = self.data["spec_{idx}_index_errp"]
-        # index_errn = self.data["spec_{idx}_index_errn"]
-        # index_err = 0.5 * (index_errn + index_errp)
-        #
-        #
-        #
-        # amplitude_errp = self.data["spec_{idx}_dnde_errp"]
-        # amplitude_errn = self.data["spec_{idx}_dnde_errp"]
-        # amplitude_err = 0.5 * (index_errn + index_errp)
-
         idx = self._get_idx(which)
 
         pars = {
@@ -252,22 +243,19 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWC):
 
         return model
 
-class SourceCatalog3HWC():
+class SourceCatalog3HWC(SourceCatalog):
     """HAWC 3HWC catalog.
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3HWC`.
 
     The data is from tables 2 and 3 in the paper [1]_.
 
-    The catalog table contains 40 rows / sources.
-    The paper mentions 39 sources e.g. in the abstract.
-    The difference is due to Geminga, which was detected as two "sources" by the algorithm
-    used to make the catalog, but then in the discussion considered as one source.
+    The catalog table contains 65 rows / sources.
 
     References
     ----------
-    .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
-       On ADS: `2017ApJ...843...40A <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
+    .. [1] 3HWC: The Third HAWC Catalog of Very-High-Energy Gamma-ray Sources",
+       <https://data.hawc-observatory.org/datasets/3hwc-survey/index.php>`__
     """
 
     tag = "3hwc"
@@ -276,11 +264,12 @@ class SourceCatalog3HWC():
     description = "3HWC catalog from the HAWC observatory"
     """Catalog description"""
 
-    source_object_class = SourceCatalogObjectHWC
+    source_object_class = SourceCatalogObject3HWC
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/2HWC.ecsv"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/3HWC.ecsv"):
         table = Table.read(make_path(filename), format="ascii.ecsv")
 
         source_name_key = "source_name"
 
         super().__init__(table=table, source_name_key=source_name_key)
+

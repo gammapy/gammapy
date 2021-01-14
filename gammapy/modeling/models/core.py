@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import collections.abc
 import copy
 from os.path import split
@@ -9,6 +10,7 @@ import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
 
+log = logging.getLogger(__name__)
 
 def _set_link(shared_register, model):
     for param in model.parameters:
@@ -138,9 +140,15 @@ class Model:
 
         par_data = []
 
-        for par, par_yaml in zip(cls.default_parameters, data["parameters"]):
+        input_names = [_["name"] for _ in data["parameters"]]
+
+        for par in cls.default_parameters:
             par_dict = par.to_dict()
-            par_dict.update(par_yaml)
+            try:
+                index = input_names.index(par_dict["name"])
+                par_dict.update(data["parameters"][index])
+            except ValueError:
+                log.warning(f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}")
             par_data.append(par_dict)
 
         parameters = Parameters.from_dict(par_data)
@@ -199,6 +207,35 @@ class Model:
         """Restore parameters frozen status to default"""
         for p, default in zip(self.parameters, self.default_parameters):
             p.frozen = default.frozen
+
+    def reassign(self, datasets_names, new_datasets_names):
+        """Reassign a model from one dataset to another
+        
+        Parameters
+        ----------
+        datasets_names : str or list
+            Name of the datasets where the model is currently defined
+        new_datasets_names : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
+        """
+        model = self.copy(name=self.name)
+        if not isinstance(datasets_names, list):
+            datasets_names = [datasets_names]
+        if not isinstance(new_datasets_names, list):
+            new_datasets_names = [new_datasets_names]
+
+        if model.datasets_names is not None:
+            if not isinstance(model.datasets_names, list):
+                model.datasets_names = [model.datasets_names]
+            for dataset_name, new_dataset_name in zip(
+                datasets_names, new_datasets_names
+            ):
+                for k, name in enumerate(model.datasets_names):
+                    if name == dataset_name:
+                        model.datasets_names[k] = new_dataset_name
+        return model
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -391,6 +428,21 @@ class DatasetModels(collections.abc.Sequence):
         else:
             return {"components": models_data}
 
+    def to_parameters_table(self):
+        """Convert Models parameters to an astropy Table."""
+        table = self.parameters.to_table()
+        #Warning: splitting of parameters will break is source name has a "." in its name.
+        model_name = [name.split(".")[0] for name in self.parameters_unique_names]
+        table.add_column(model_name, name='model', index=0)
+        self._table_cached = table
+        return  table
+
+    def update_parameters_from_table(self, t):
+        """Update Models from an astropy Table."""
+        parameters_dict = [dict(zip( t.colnames, row)) for row in t]      
+        for k, data in enumerate(parameters_dict):
+            self.parameters[k].update_from_dict(data)
+
     def read_covariance(self, path, filename="_covariance.dat", **kwargs):
         """Read covariance data from file
 
@@ -506,7 +558,9 @@ class DatasetModels(collections.abc.Sequence):
         models : `DatasetModels`
             Selected models
         """
-        mask = self.selection_mask(name_substring, datasets_names, tag, model_type, frozen)
+        mask = self.selection_mask(
+            name_substring, datasets_names, tag, model_type, frozen
+        )
         return self[mask]
 
     def selection_mask(
@@ -650,6 +704,21 @@ class DatasetModels(collections.abc.Sequence):
     def frozen(self):
         """Boolean mask, True if all parameters of a given model are frozen"""
         return np.all([m.frozen for m in self])
+
+    def reassign(self, dataset_name, new_dataset_name):
+        """Reassign a model from one dataset to another
+    
+        Parameters
+        ----------
+        dataset_name : str or list
+            Name of the datasets where the model is currently defined
+        new_dataset_name : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
+        """
+        models = [m.reassign(dataset_name, new_dataset_name) for m in self]
+        return self.__class__(models)
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):

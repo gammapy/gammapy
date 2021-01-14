@@ -4,7 +4,7 @@ from collections import OrderedDict
 import warnings
 import numpy as np
 import scipy.interpolate
-import scipy.ndimage
+import scipy.ndimage as ndi
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
@@ -17,12 +17,36 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
 from .regionnd import RegionGeom, RegionNDMap
-from .utils import INVALID_INDEX, interp_to_order
+from .utils import INVALID_INDEX
 from .wcsmap import WcsGeom, WcsMap
 
 __all__ = ["WcsNDMap"]
 
 log = logging.getLogger(__name__)
+
+
+def _apply_binary_operations(map_, width, func):
+    """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
+
+    if not map_.is_mask:
+        raise ValueError("Binary operations only supported for boolean masks")
+
+    if not isinstance(width, tuple):
+        width = (width, width)
+
+    shape = tuple(
+        [
+            int(np.ceil(x / scale).value * 2 + 1)
+            for x, scale in zip(width, map_.geom.pixel_scales)
+        ]
+    )
+
+    mask_data = np.empty(map_.data.shape, dtype=bool)
+
+    for img, idx in map_.iter_by_image():
+        mask_data[idx] = func(img, structure=np.ones(shape))
+
+    return mask_data
 
 
 class WcsNDMap(WcsMap):
@@ -122,37 +146,17 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self.data.T[idx]
 
-    def interp_by_coord(self, coords, interp=None, fill_value=None):
+    def interp_by_coord(self, coords, method="nearest", fill_value=None):
 
         if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
-            return self.interp_by_pix(pix, interp=interp, fill_value=fill_value)
+            return self.interp_by_pix(pix, method=method, fill_value=fill_value)
         else:
-            return self._interp_by_coord_griddata(coords, interp=interp)
+            return self._interp_by_coord_griddata(coords, method=method)
 
-    def interp_by_pix(self, pix, interp=None, fill_value=None):
-        """Interpolate map values at the given pixel coordinates.
-        """
+    def interp_by_pix(self, pix, method="nearest", fill_value=None):
         if not self.geom.is_regular:
             raise ValueError("interp_by_pix only supported for regular geom.")
-
-        order = interp_to_order(interp)
-        if order == 0 or order == 1:
-            return self._interp_by_pix_linear_grid(
-                pix, order=order, fill_value=fill_value
-            )
-        elif order == 2 or order == 3:
-            return self._interp_by_pix_map_coordinates(pix, order=order)
-        else:
-            raise ValueError(f"Invalid interpolation order: {order!r}")
-
-    def _interp_by_pix_linear_grid(self, pix, order=1, fill_value=None):
-        # TODO: Cache interpolator
-        method_lookup = {0: "nearest", 1: "linear"}
-        try:
-            method = method_lookup[order]
-        except KeyError:
-            raise ValueError(f"Invalid interpolation order: {order!r}")
 
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
@@ -167,36 +171,18 @@ class WcsNDMap(WcsMap):
         )
         return fn(tuple(pix), clip=False)
 
-    def _interp_by_pix_map_coordinates(self, pix, order=1):
-        pix = tuple(
-            [
-                np.array(x, ndmin=1)
-                if not isinstance(x, np.ndarray) or x.ndim == 0
-                else x
-                for x in pix
-            ]
-        )
-        return scipy.ndimage.map_coordinates(
-            self.data.T, pix, order=order, mode="nearest"
-        )
+    def _interp_by_coord_griddata(self, coords, method="linear"):
+        grid_coords = self.geom.get_coord()
 
-    def _interp_by_coord_griddata(self, coords, interp=None):
-        order = interp_to_order(interp)
-        method_lookup = {0: "nearest", 1: "linear", 3: "cubic"}
-        method = method_lookup.get(order, None)
-        if method is None:
-            raise ValueError(f"Invalid interp: {interp!r}")
-
-        grid_coords = tuple(self.geom.get_coord(flat=True))
         data = self.data[np.isfinite(self.data)]
         vals = scipy.interpolate.griddata(
-            grid_coords, data, tuple(coords), method=method
+           tuple(grid_coords.flat), data, tuple(coords), method=method
         )
 
         m = ~np.isfinite(vals)
         if np.any(m):
             vals_fill = scipy.interpolate.griddata(
-                grid_coords, data, tuple([c[m] for c in coords]), method="nearest"
+                tuple(grid_coords.flat), data, tuple([c[m] for c in coords]), method="nearest"
             )
             vals[m] = vals_fill
 
@@ -221,7 +207,7 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def pad(self, pad_width, mode="constant", cval=0, order=1):
+    def pad(self, pad_width, mode="constant", cval=0, method="linear"):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
 
@@ -232,7 +218,7 @@ class WcsNDMap(WcsMap):
         if self.geom.is_regular and mode != "interp":
             return self._pad_np(geom, pad_width, mode, cval)
         else:
-            return self._pad_coadd(geom, pad_width, mode, cval, order)
+            return self._pad_coadd(geom, pad_width, mode, cval, method)
 
     def _pad_np(self, geom, pad_width, mode, cval):
         """Pad a map using ``numpy.pad``.
@@ -248,7 +234,7 @@ class WcsNDMap(WcsMap):
         data = np.pad(self.data, pad_width[::-1], mode, **kwargs)
         return self._init_copy(geom=geom, data=data)
 
-    def _pad_coadd(self, geom, pad_width, mode, cval, order):
+    def _pad_coadd(self, geom, pad_width, mode, cval, method):
         """Pad a map manually by coadding the original map with the new map."""
         idx_in = self.geom.get_idx(flat=True)
         idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
@@ -265,7 +251,7 @@ class WcsNDMap(WcsMap):
             coords = geom.pix_to_coord(idx_out[::-1])
             m = self.geom.contains(coords)
             coords = tuple([c[~m] for c in coords])
-            vals = self.interp_by_coord(coords, interp=order)
+            vals = self.interp_by_coord(coords, method=method)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError(f"Invalid mode: {mode!r}")
@@ -312,9 +298,7 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data
 
-        data = scipy.ndimage.map_coordinates(
-            data.T, tuple(pix), order=order, mode="nearest"
-        )
+        data = ndi.map_coordinates(data.T, tuple(pix), order=order, mode="nearest")
 
         if preserve_counts:
             data *= geom.bin_volume().value
@@ -473,9 +457,9 @@ class WcsNDMap(WcsMap):
         kernel : {'gauss', 'disk', 'box'}
             Kernel shape
         kwargs : dict
-            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
-            ('box'), `~scipy.ndimage.gaussian_filter` ('gauss') or
-            `~scipy.ndimage.convolve` ('disk').
+            Keyword arguments passed to `~ndi.uniform_filter`
+            ('box'), `~ndi.gaussian_filter` ('gauss') or
+            `~ndi.convolve` ('disk').
 
         Returns
         -------
@@ -491,13 +475,13 @@ class WcsNDMap(WcsMap):
         for img, idx in self.iter_by_image():
             img = img.astype(float)
             if kernel == "gauss":
-                data = scipy.ndimage.gaussian_filter(img, width, **kwargs)
+                data = ndi.gaussian_filter(img, width, **kwargs)
             elif kernel == "disk":
                 disk = Tophat2DKernel(width)
                 disk.normalize("integral")
-                data = scipy.ndimage.convolve(img, disk.array, **kwargs)
+                data = ndi.convolve(img, disk.array, **kwargs)
             elif kernel == "box":
-                data = scipy.ndimage.uniform_filter(img, width, **kwargs)
+                data = ndi.uniform_filter(img, width, **kwargs)
             else:
                 raise ValueError(f"Invalid kernel: {kernel!r}")
             smoothed_data[idx] = data
@@ -552,7 +536,7 @@ class WcsNDMap(WcsMap):
                 )
                 cutout.data *= weights_cutout.data
 
-            mask = cutout.geom.to_image().region_mask([region])
+            mask = cutout.geom.to_image().region_mask([region]).data
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
@@ -580,14 +564,46 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
-        has_energy_axis = ("energy" in self.geom.axes.names) ^ (
-            "energy_true" in self.geom.axes.names
-        )
-
-        if not has_energy_axis:
+        if not self.geom.has_energy_axis:
             raise ValueError("Energy axis required")
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
+
+    def binary_erode(self, width):
+        """Binary erosion of boolean mask removing a given margin
+
+        Parameters
+        ----------
+        width : tuple of `~astropy.units.Quantity`
+            Angular sizes of the margin in (lon, lat) in that specific order.
+            If only one value is passed, the same margin is applied in (lon, lat).
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Eroded mask map
+
+        """
+        mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
+        return self._init_copy(data=mask_data)
+
+    def binary_dilate(self, width):
+        """Binary dilation of boolean mask addding a given margin
+
+        Parameters
+        ----------
+        width : tuple of `~astropy.units.Quantity`
+            Angular sizes of the margin in (lon, lat) in that specific order.
+            If only one value is passed, the same margin is applied in (lon, lat).
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Dilated mask map
+
+        """
+        mask_data = _apply_binary_operations(self, width, ndi.binary_dilation)
+        return self._init_copy(data=mask_data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
@@ -602,10 +618,10 @@ class WcsNDMap(WcsMap):
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
-            Use `scipy.signal.fftconvolve` or `scipy.ndimage.convolve`.
+            Use `scipy.signal.fftconvolve` or `ndi.convolve`.
         kwargs : dict
             Keyword arguments passed to `scipy.signal.fftconvolve` or
-            `scipy.ndimage.convolve`.
+            `ndi.convolve`.
 
         Returns
         -------
@@ -614,7 +630,7 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.irf import PSFKernel
 
-        conv_function = scipy.signal.fftconvolve if use_fft else scipy.ndimage.convolve
+        conv_function = scipy.signal.fftconvolve if use_fft else ndi.convolve
 
         if use_fft:
             kwargs.setdefault("mode", "same")

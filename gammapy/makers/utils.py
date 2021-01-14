@@ -42,20 +42,15 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         Exposure map
     """
     offset = geom.separation(pointing)
-    energy = geom.axes["energy_true"].center
+    energy_true = geom.axes["energy_true"].center
 
-    exposure = aeff.data.evaluate(
-        offset=offset, energy_true=energy[:, np.newaxis, np.newaxis]
+    exposure = aeff.evaluate(
+        offset=offset, energy_true=energy_true[:, np.newaxis, np.newaxis]
     )
-    # TODO: Improve IRF evaluate to preserve energy axis if length 1
-    # For now, we handle that case via this hack:
-    if len(exposure.shape) < 3:
-        exposure = np.expand_dims(exposure.value, 0) * exposure.unit
 
     exposure = (exposure * livetime).to("m2 s")
-
     return Map.from_geom(
-        geom=geom, data=exposure.value.reshape(geom.data_shape), unit=exposure.unit,
+        geom=geom, data=exposure.value, unit=exposure.unit,
     )
 
 
@@ -133,30 +128,34 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     if oversampling is not None:
         geom = geom.upsample(factor=oversampling, axis_name="energy")
 
-    map_coord = geom.to_image().get_coord()
-    sky_coord = map_coord.skycoord
+    coords = {
+        "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
+    }
 
-    if isinstance(pointing, FixedPointingInfo):
-        altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
-
-        # Compute FOV coordinates of map relative to pointing
-        fov_lon, fov_lat = sky_to_fov(
-            altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
-        )
+    if bkg.is_offset_dependent:
+        coords["offset"] = geom.separation(pointing)
     else:
-        # Create OffsetFrame
-        frame = SkyOffsetFrame(origin=pointing)
-        pseudo_fov_coord = sky_coord.transform_to(frame)
-        fov_lon = pseudo_fov_coord.lon
-        fov_lat = pseudo_fov_coord.lat
+        map_coord = geom.to_image().get_coord()
+        sky_coord = map_coord.skycoord
 
-    energies = geom.axes["energy"].edges
+        if isinstance(pointing, FixedPointingInfo):
+            altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 
-    bkg_de = bkg.evaluate_integrate(
-        fov_lon=fov_lon,
-        fov_lat=fov_lat,
-        energy_reco=energies[:, np.newaxis, np.newaxis],
-    )
+            # Compute FOV coordinates of map relative to pointing
+            fov_lon, fov_lat = sky_to_fov(
+                altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
+            )
+        else:
+            # Create OffsetFrame
+            frame = SkyOffsetFrame(origin=pointing)
+            pseudo_fov_coord = sky_coord.transform_to(frame)
+            fov_lon = pseudo_fov_coord.lon
+            fov_lat = pseudo_fov_coord.lat
+
+        coords["fov_lon"] = fov_lon
+        coords["fov_lat"] = fov_lat
+
+    bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
 
     d_omega = geom.to_image().solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
@@ -192,23 +191,17 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap : `~gammapy.irf.PSFMap`
         the resulting PSF map
     """
-    energy_axis = geom.axes["energy_true"]
-    energy = energy_axis.center
-
-    rad_axis = geom.axes["rad"]
-    rad = rad_axis.center
+    energy_true = geom.axes["energy_true"].center
+    rad = geom.axes["rad"].center
 
     # Compute separations with pointing position
     offset = geom.separation(pointing)
 
     # Compute PSF values
-    # TODO: allow broadcasting in PSF3D.evaluate()
-    psf_values = psf._interpolate(
-        (
-            energy[:, np.newaxis, np.newaxis, np.newaxis],
-            offset,
-            rad[:, np.newaxis, np.newaxis],
-        )
+    psf_values = psf.evaluate(
+            energy_true=energy_true[:, np.newaxis, np.newaxis, np.newaxis],
+            offset=offset,
+            rad=rad[:, np.newaxis, np.newaxis],
     )
 
     # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
@@ -242,19 +235,16 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     edispmap : `~gammapy.irf.EDispMap`
         the resulting EDisp map
     """
-    energy_axis = geom.axes["energy_true"]
-    energy = energy_axis.center
-
-    migra_axis = geom.axes["migra"]
-    migra = migra_axis.center
+    energy_true = geom.axes["energy_true"].center
+    migra = geom.axes["migra"].center
 
     # Compute separations with pointing position
     offset = geom.separation(pointing)
 
     # Compute EDisp values
-    edisp_values = edisp.data.evaluate(
+    edisp_values = edisp.evaluate(
         offset=offset,
-        energy_true=energy[:, np.newaxis, np.newaxis, np.newaxis],
+        energy_true=energy_true[:, np.newaxis, np.newaxis, np.newaxis],
         migra=migra[:, np.newaxis, np.newaxis],
     )
 
@@ -290,7 +280,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
         the resulting EDispKernel map
     """
     # Use EnergyDispersion2D migra axis.
-    migra_axis = edisp.data.axes["migra"]
+    migra_axis = edisp.axes["migra"]
 
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])

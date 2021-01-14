@@ -64,8 +64,14 @@ class MapDatasetEventSampler:
         events : `~gammapy.data.EventList`
             Event list
         """
+
         events_all = []
         for idx, evaluator in enumerate(dataset.evaluators.values()):
+            if evaluator.needs_update:
+                evaluator.update(
+                    dataset.exposure, dataset.psf, dataset.edisp, dataset._geom
+                )
+
             flux = evaluator.compute_flux()
             npred = evaluator.apply_exposure(flux)
 

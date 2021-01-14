@@ -31,7 +31,7 @@ dependencies:
   - pytest-xdist
   # extra dependencies
   - healpy
-  - iminuit
+  - iminuit<2.0
   - ipython
   - jupyter
   - jupyterlab

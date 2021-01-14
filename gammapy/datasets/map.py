@@ -9,9 +9,7 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf.edisp_map import EDispKernelMap, EDispMap
-from gammapy.irf.psf_kernel import PSFKernel
-from gammapy.irf.psf_map import PSFMap
+from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel,  PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
@@ -297,8 +295,6 @@ class MapDataset(Dataset):
                         gti=self.gti,
                         use_cache=USE_NPRED_CACHE,
                     )
-                    # TODO: do we need the update here?
-                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
                     self._evaluators[model.name] = evaluator
 
         self._models = models
@@ -418,9 +414,9 @@ class MapDataset(Dataset):
     def from_geoms(
         cls,
         geom,
-        geom_exposure,
-        geom_psf,
-        geom_edisp,
+        geom_exposure=None,
+        geom_psf=None,
+        geom_edisp=None,
         reference_time="2000-01-01",
         name=None,
         **kwargs,
@@ -462,7 +458,7 @@ class MapDataset(Dataset):
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
         # TODO: allow PSF as well...
-        if not geom_psf.is_region:
+        if geom_psf and not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
@@ -547,6 +543,9 @@ class MapDataset(Dataset):
         if self.mask_safe is None:
             return None
 
+        if self.mask_safe.geom.is_region:
+            return self.mask_safe
+
         geom = self.edisp.edisp_map.geom.squash("energy_true")
 
         if "migra" in geom.axes.names:
@@ -556,27 +555,22 @@ class MapDataset(Dataset):
 
         return self.mask_safe.interp_to_geom(geom)
 
-    def apply_mask_safe(self):
-        """Apply mask safe to the dataset"""
-        if self.mask_safe is None:
-            return
+    def to_masked(self, name=None):
+        """Return masked dataset
 
-        if self.counts:
-            self.counts *= self.mask_safe
+        Parameters
+        ----------
+        name : str
+            Name of the masked dataset.
 
-        if self.exposure:
-            self.exposure *= self.mask_safe_image.data
-
-        if self.stat_type == "cash" and self.background:
-            self.background *= self.mask_safe
-
-        if self.psf:
-            self.psf.psf_map *= self.mask_safe_psf.data
-            self.psf.exposure_map *= self.mask_safe_psf.data
-
-        if self.edisp:
-            self.edisp.edisp_map *= self.mask_safe_edisp.data
-            # self.edisp.exposure_map *= self.mask_safe_edisp.data
+        Returns
+        -------
+        dataset : `MapDataset` or `SpectrumDataset`
+            Masked dataset
+        """
+        dataset = self.__class__.from_geoms(**self.geoms, name=name)
+        dataset.stack(self)
+        return dataset
 
     def stack(self, other):
         r"""Stack another dataset in place.
@@ -618,8 +612,6 @@ class MapDataset(Dataset):
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
         """
-        self.apply_mask_safe()
-
         if self.counts and other.counts:
             self.counts.stack(other.counts, weights=other.mask_safe)
 
@@ -930,14 +922,10 @@ class MapDataset(Dataset):
                 ]
 
         if self.mask_safe is not None:
-            mask_safe_int = self.mask_safe.copy()
-            mask_safe_int.data = mask_safe_int.data.astype(int)
-            hdulist += mask_safe_int.to_hdulist(hdu="mask_safe")[exclude_primary]
+            hdulist += self.mask_safe.to_hdulist(hdu="mask_safe")[exclude_primary]
 
         if self.mask_fit is not None:
-            mask_fit_int = self.mask_fit.copy()
-            mask_fit_int.data = mask_fit_int.data.astype(int)
-            hdulist += mask_fit_int.to_hdulist(hdu="mask_fit")[exclude_primary]
+            hdulist += self.mask_fit.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         if self.gti is not None:
             hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
@@ -1735,7 +1723,9 @@ class MapDatasetOnOff(MapDataset):
         alpha : `Map`
             Alpha map
         """
-        alpha = self.acceptance / self.acceptance_off
+        with np.errstate(invalid="ignore", divide="ignore"):
+            alpha = self.acceptance / self.acceptance_off
+
         alpha.data = np.nan_to_num(alpha.data)
         return alpha
 
@@ -1799,8 +1789,8 @@ class MapDatasetOnOff(MapDataset):
         cls,
         geom,
         geom_exposure,
-        geom_psf,
-        geom_edisp,
+        geom_psf=None,
+        geom_edisp=None,
         reference_time="2000-01-01",
         name=None,
         **kwargs,
@@ -1843,7 +1833,7 @@ class MapDatasetOnOff(MapDataset):
         else:
             kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
-        if not geom_psf.is_region:
+        if geom_psf and not geom_psf.is_region:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)

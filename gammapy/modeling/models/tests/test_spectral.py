@@ -401,6 +401,9 @@ def test_to_from_dict():
     model = spectrum["model"]
 
     model_dict = model.to_dict()
+    # Here we reverse the order of parameters list to ensure assignment is correct
+    model_dict['parameters'].reverse()
+
     model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
 
@@ -409,6 +412,32 @@ def test_to_from_dict():
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
+
+    actual = [par.frozen for par in new_model.parameters]
+    desired = [par.frozen for par in model.parameters]
+    assert_allclose(actual, desired)
+
+def test_to_from_dict_partial_input():
+    spectrum = TEST_MODELS[0]
+    model = spectrum["model"]
+
+    model_dict = model.to_dict()
+    # Here we remove the reference energy
+    model_dict['parameters'].remove(model_dict['parameters'][2])
+    print(model_dict['parameters'][0])
+
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    new_model = model_class.from_dict(model_dict)
+
+    assert isinstance(new_model, PowerLawSpectralModel)
+
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+
+    actual = [par.frozen for par in new_model.parameters]
+    desired = [par.frozen for par in model.parameters]
+    assert_allclose(actual, desired)
 
 
 def test_to_from_dict_compound():
@@ -757,45 +786,44 @@ class TestSpectralModelErrorPropagation:
         assert out.unit == "cm-2 s-1 TeV-1"
         assert_allclose(out.data, [3.760e-11, 3.6193e-12], rtol=1e-3)
 
-    @pytest.mark.xfail(reason="FIXME, do we need this method?")
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
         assert out.shape == (2,)
         assert_allclose(out.data, [2.197e-11, 2.796e-12], rtol=1e-3)
 
-    @pytest.mark.xfail(reason="FIXME, do we need this method?")
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
         assert out.shape == (2,)
         assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
 
-    def test_ecpl_model(self):
-        # Regression test for ECPL model
-        # https://github.com/gammapy/gammapy/issues/2007
-        model = ExpCutoffPowerLawSpectralModel(
-            amplitude=2.076183759227292e-12 * u.Unit("cm-2 s-1 TeV-1"),
-            index=1.8763343736076483,
-            lambda_=0.08703226432146616 * u.Unit("TeV-1"),
-            reference=1 * u.TeV,
-        )
-        model.covariance = [
-            [0.00204191498, -1.507724e-14, 0.0, -0.001834819, 0.0],
-            [-1.507724e-14, 1.6864740e-25, 0.0, 1.854251e-14, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-            [-0.001834819175, 1.8542517e-14, 0.0, 0.0032559101, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0],
-        ]
 
-        out = model.evaluate_error(1 * u.TeV)
-        assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
+def test_dnde_error_ecpl_model():
+    # Regression test for ECPL model
+    # https://github.com/gammapy/gammapy/issues/2007
+    model = ExpCutoffPowerLawSpectralModel(
+        amplitude=2.076183759227292e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        index=1.8763343736076483,
+        lambda_=0.08703226432146616 * u.Unit("TeV-1"),
+        reference=1 * u.TeV,
+    )
+    model.covariance = [
+        [0.00204191498, -1.507724e-14, 0.0, -0.001834819, 0.0],
+        [-1.507724e-14, 1.6864740e-25, 0.0, 1.854251e-14, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0],
+        [-0.001834819175, 1.8542517e-14, 0.0, 0.0032559101, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0],
+    ]
 
-        out = model.evaluate_error(0.1 * u.TeV)
-        assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
+    out = model.evaluate_error(1 * u.TeV)
+    assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
+
+    out = model.evaluate_error(0.1 * u.TeV)
+    assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
 
 
-def test_integral_error_PowerLaw():
+def test_integral_error_power_law():
     energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
     energy_min = energy[:-1]
     energy_max = energy[1:]
@@ -806,11 +834,11 @@ def test_integral_error_PowerLaw():
 
     flux, flux_error = powerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=0.1)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.546615432273905, rtol=0.01)
+    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=1e-3)
+    assert_allclose(flux_error.value[0] / 1e-14, 7.915984, rtol=1e-3)
 
 
-def test_integral_error_ExpCutOffPowerLaw():
+def test_integral_error_exp_cut_off_power_law():
     energy = np.linspace(1 * u.TeV, 10 * u.TeV, 10)
     energy_min = energy[:-1]
     energy_max = energy[1:]
@@ -823,10 +851,10 @@ def test_integral_error_ExpCutOffPowerLaw():
     flux, flux_error = exppowerlaw.integral_error(energy_min, energy_max)
 
     assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.9598, rtol=0.01)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.552617, rtol=0.01)
 
 
-def test_energy_flux_error_power_Law():
+def test_energy_flux_error_power_law():
     energy_min = 1 * u.TeV
     energy_max = 10 * u.TeV
 

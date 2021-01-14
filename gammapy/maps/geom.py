@@ -106,12 +106,58 @@ class MapAxes(Sequence):
 
     def __init__(self, axes):
         unique_names = []
+
         for ax in axes:
             if ax.name in unique_names:
-                raise (ValueError("Axis names must be unique"))
+                raise (ValueError(f"Axis names must be unique, got: '{ax.name}' twice."))
             unique_names.append(ax.name)
 
         self._axes = axes
+
+    @property
+    def reverse(self):
+        """Reverse axes order"""
+        return MapAxes(self[::-1])
+
+    @property
+    def iter_with_reshape(self):
+        """Iterate by shape"""
+        for idx, axis in enumerate(self):
+            # Extract values for each axis, default: nodes
+            shape = [1] * len(self)
+            shape[idx] = -1
+            yield tuple(shape), axis
+
+    def get_coord(self):
+        """Get axes coordinates
+
+        Returns
+        -------
+        coords : dict of `~astropy.units.Quanity`
+            Map coordinates
+        """
+        coords = {}
+
+        for shape, axis in self.iter_with_reshape:
+            coord = axis.center.reshape(shape)
+            coords[axis.name] = coord
+
+        return coords
+
+    def bin_volume(self):
+        """Bin axes volume
+
+        Returns
+        -------
+        bin_volume : `~astropy.units.Quantity`
+            Bin volume
+        """
+        bin_volume = np.array(1)
+
+        for shape, axis in self.iter_with_reshape:
+            bin_volume = bin_volume * axis.bin_width.reshape(shape)
+
+        return bin_volume
 
     @property
     def shape(self):
@@ -289,6 +335,12 @@ class MapAxes(Sequence):
                 if ax.name == idx:
                     return ax
             raise KeyError(f"No axes: {idx!r}")
+        elif isinstance(idx, list):
+            axes = []
+            for name in idx:
+                axes.append(self[name])
+
+            return self.__class__(axes=axes)
         else:
             raise TypeError(f"Invalid type: {type(idx)!r}")
 
@@ -337,6 +389,30 @@ class MapAxes(Sequence):
         """
         return tuple([ax.pix_to_coord(p) for ax, p in zip(self, pix)])
 
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : tuple of `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : tuple `~numpy.ndarray`
+            Pixel indices.
+        """
+        idx = []
+
+        for pix_array, ax in zip(pix, self):
+            idx.append(ax.pix_to_idx(pix_array, clip=clip))
+
+        return tuple(idx)
+
     def slice_by_idx(self, slices):
         """Create a new geometry by slicing the non-spatial axes.
 
@@ -364,39 +440,25 @@ class MapAxes(Sequence):
 
         return self.__class__(axes=axes)
 
-    def to_header(self, header=None):
+    def to_header(self, format="gadf"):
         """Convert axes to FITS header
 
         Parameters
         ----------
-        header : `~astropy.io.fits.Header`
-            If a header is provided it is extended with the information.
-            Otherwise a new one is created.
+        format : {"gadf"}
+            Header format
 
         Returns
         -------
         header : `~astropy.io.fits.Header`
             FITS header.
         """
-        if header is None:
-            header = fits.Header()
+        header = fits.Header()
 
         for idx, ax in enumerate(self, start=1):
-            key = f"AXCOLS{idx}"
-            name = ax.name.upper()
-            if ax.name == "energy" and ax.node_type == "edges":
-                header[key] = "E_MIN,E_MAX"
-            elif ax.name == "energy" and ax.node_type == "center":
-                header[key] = "ENERGY"
-            elif ax.node_type == "edges":
-                header[key] = f"{name}_MIN,{name}_MAX"
-            elif ax.node_type == "center":
-                header[key] = name
-            else:
-                raise ValueError(f"Invalid node type {ax.node_type!r}")
+            header_ax = ax.to_header(format=format, idx=idx)
+            header.update(header_ax)
 
-            key_interp = f"INTERP{idx}"
-            header[key_interp] = ax.interp
         return header
 
     def to_table(self, format=None):
@@ -475,23 +537,66 @@ class MapAxes(Sequence):
         return fits.BinTableHDU.from_columns(cols, name=hdu, header=header)
 
     @classmethod
-    def from_table_hdu(cls, hdu, format=None):
+    def from_table_hdu(cls, hdu, format="gadf"):
         """Create MapAxes from BinTableHDU
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Bin table HDU
+
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes object
         """
         if hdu is None:
             return cls([])
 
-        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube"]:
-            axes = [MapAxis.from_table_hdu(hdu, format=format)]
-        else:
-            axes = []
+        table = Table.read(hdu)
+        return cls.from_table(table, format=format)
 
+    @classmethod
+    def from_table(cls, table, format="gadf"):
+        """Create MapAxes from BinTableHDU
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Bin table HDU
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube", "ogip-arf"}
+            Format to use.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes object
+        """
+        from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+        axes = []
+
+        # Formats that support only one energy axis
+        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube", "ogip", "ogip-arf"]:
+            axes.append(MapAxis.from_table(table, format=format))
+        elif format == "gadf":
+            # This limits the max number of axes to 5
             for idx in range(5):
+                axcols = table.meta.get("AXCOLS{}".format(idx + 1))
+                if axcols is None:
+                    break
+
+                axis = MapAxis.from_table(table, format=format, idx=idx)
+                axes.append(axis)
+        elif format == "gadf-dl3":
+            for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
                 try:
-                    axis = MapAxis.from_table_hdu(hdu, format="gadf", idx=idx)
-                    axes.append(axis)
-                except AttributeError:
+                    axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
+                except KeyError:
                     continue
+                axes.append(axis)
+        else:
+            raise ValueError(f"Unsupported format: '{format}'")
 
         return cls(axes)
 
@@ -562,7 +667,6 @@ class MapAxis:
         String specifying the data units.
     """
 
-    # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
         self._name = name
@@ -689,6 +793,14 @@ class MapAxis:
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+
+    @property
+    def as_xerr(self):
+        """Return tuple of xerr to be used with plt.errorbar()"""
+        return (
+            self.center - self.edges[:-1],
+            self.edges[1:] - self.center,
+        )
 
     @lazyproperty
     def center(self):
@@ -987,6 +1099,31 @@ class MapAxis:
         values = pix_to_coord(self._nodes, pix, interp=self._interp)
         return u.Quantity(values, unit=self.unit, copy=False)
 
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : `~numpy.ndarray`
+            Pixel indices.
+        """
+        if clip:
+            idx = np.clip(pix, 0, self.nbin - 1)
+        else:
+            condition = (pix < 0) | (pix >= self.nbin)
+            idx = np.where(condition, -1, pix)
+
+        return idx
+
     def coord_to_pix(self, coord):
         """Transform from axis to pixel coordinates.
 
@@ -1280,23 +1417,24 @@ class MapAxis:
             nodes = self.center[::factor]
             return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
-    def to_header(self, header, format="ogip"):
+    def to_header(self, format="ogip", idx=0):
         """Create FITS header
 
         Parameters
         ----------
-        header : `~astropy.io.fits.Header`
-            Header to extend.
         format : {"ogip"}
             Format specification
+        idx : int
+            Column index of the axis.
 
         Returns
         -------
         header : `~astropy.io.fits.Header`
             Header to extend.
         """
+        header = fits.Header()
 
-        if format == "ogip":
+        if format in ["ogip", "ogip-sherpa"]:
             header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
             header["TELESCOP"] = "DUMMY", "Mission/satellite name"
             header["INSTRUME"] = "DUMMY", "Instrument/detector"
@@ -1307,6 +1445,24 @@ class MapAxis:
             header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
             header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
             header["HDUVERS"] = "1.2.0", "Version of file format"
+        elif format == "gadf":
+            key = f"AXCOLS{idx}"
+            name = self.name.upper()
+
+            if self.name == "energy" and self.node_type == "edges":
+                header[key] = "E_MIN,E_MAX"
+            elif self.name == "energy" and self.node_type == "center":
+                header[key] = "ENERGY"
+            elif self.node_type == "edges":
+                header[key] = f"{name}_MIN,{name}_MAX"
+            elif self.node_type == "center":
+                header[key] = name
+            else:
+                raise ValueError(f"Invalid node type {self.node_type!r}")
+
+            key_interp = f"INTERP{idx}"
+            header[key_interp] = self.interp
+
         else:
             raise ValueError(f"Unknown format {format}")
 
@@ -1321,7 +1477,7 @@ class MapAxis:
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa", "gadf-dl3"}
+        format : {"ogip", "ogip-sherpa", "gadf-dl3", "gtpsf"}
             Format specification
 
         Returns
@@ -1330,12 +1486,10 @@ class MapAxis:
             Table HDU
         """
         table = Table()
+        edges = self.edges
 
         if format in ["ogip", "ogip-sherpa"]:
-            if "energy" not in self.name:
-                raise ValueError("Only energy axes can be converted to HDU")
-
-            edges = self.edges
+            self.assert_name("energy")
 
             if format == "ogip-sherpa":
                 edges = edges.to("keV")
@@ -1343,6 +1497,14 @@ class MapAxis:
             table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
             table["E_MIN"] = edges[:-1]
             table["E_MAX"] = edges[1:]
+        elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            self.assert_name("energy_true")
+
+            if format == "ogip-arf-sherpa":
+                edges = edges.to("keV")
+
+            table["ENERG_LO"] = edges[:-1]
+            table["ENERG_HI"] = edges[1:]
         elif format == "gadf-dl3":
             from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
 
@@ -1354,12 +1516,20 @@ class MapAxis:
                         break
 
             if self.node_type == "edges":
-                edges_hi, edges_lo = self.edges[:-1], self.edges[1:]
+                edges_hi, edges_lo = edges[:-1], edges[1:]
             else:
                 edges_hi, edges_lo = self.center, self.center
 
             table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
             table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
+        elif format == "gtpsf":
+            if self.name == "energy_true":
+                table["Energy"] = self.center.to("MeV")
+            elif self.name == "rad":
+                table["Theta"] = self.center.to("deg")
+            else:
+                raise ValueError("Can only convert true energy or rad axis to"
+                                 f"'gtpsf' format, got {self.name}")
         else:
             raise ValueError(f"{format} is not a valid format")
 
@@ -1374,7 +1544,7 @@ class MapAxis:
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"ogip", "ogip-sherpa", "gtpsf"}
             Format specification
 
         Returns
@@ -1383,9 +1553,17 @@ class MapAxis:
             Table HDU
         """
         table = self.to_table(format=format)
-        hdu = fits.BinTableHDU(table)
+
+        if format == "gtpsf":
+            name = "THETA"
+        else:
+            name = None
+
+        hdu = fits.BinTableHDU(table, name=name)
+
         if format in ["ogip", "ogip-sherpa"]:
-            hdu.header = self.to_header(hdu.header, format=format)
+            hdu.header.update(self.to_header(format=format))
+
         return hdu
 
     @classmethod
@@ -1401,7 +1579,7 @@ class MapAxis:
         idx : int
             Column index of the axis.
         column_prefix : str
-            Column name prefix of the axis, used for
+            Column name prefix of the axis, used for creating the axis.
 
         Returns
         -------
@@ -1480,6 +1658,13 @@ class MapAxis:
             else:
                 edges = edges_from_lo_hi(edges_lo, edges_hi)
                 axis = MapAxis.from_edges(edges, interp=interp, name=name)
+        elif format == "gtpsf":
+            try:
+                energy = table["Energy"].data * u.MeV
+                axis = MapAxis.from_nodes(energy, name="energy_true", interp="log")
+            except KeyError:
+                rad = table["Theta"].data * u.deg
+                axis = MapAxis.from_nodes(rad, name="rad")
         else:
             raise ValueError(f"Format '{format}' not supported")
 
@@ -1743,6 +1928,12 @@ class MapCoord:
         """
         data = {k: v[mask] for k, v in self._data.items()}
         return self.__class__(data, self.frame, self._match_by_name)
+
+    @property
+    def flat(self):
+        """Return flattened, valid coordinates"""
+        is_finite = np.isfinite(self[0])
+        return self.apply_mask(is_finite)
 
     def copy(self):
         """Copy `MapCoord` object."""
@@ -2035,6 +2226,13 @@ class Geom(abc.ABC):
         energy_axis = self.axes["energy"].copy(name="energy_true")
         return self.to_image().to_cube([energy_axis])
 
+    @property
+    def has_energy_axis(self):
+        """Whether geom has an energy axis"""
+        return ("energy" in self.axes.names) ^ (
+            "energy_true" in self.axes.names
+        )
+
     @abc.abstractmethod
     def to_image(self):
         """Create 2D image geometry (drop non-spatial dimensions).
@@ -2253,6 +2451,8 @@ class Geom(abc.ABC):
         mask : `~numpy.ndarray`
             Energy mask
         """
+        from . import Map
+
         # get energy axes and values
         energy_axis = self.axes["energy"]
 
@@ -2268,4 +2468,5 @@ class Geom(abc.ABC):
         energy_max = energy_max if energy_max is not None else energy_edges[-1]
 
         mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
-        return np.broadcast_to(mask, shape=self.data_shape)
+        data = np.broadcast_to(mask, shape=self.data_shape)
+        return Map.from_geom(geom=self, data=data)

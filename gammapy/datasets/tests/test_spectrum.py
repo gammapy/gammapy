@@ -256,10 +256,16 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
 
 
 def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
-    energy = spectrum_dataset.counts.geom.axes[0]
+    energy = spectrum_dataset.counts.geom.axes["energy"]
     geom = spectrum_dataset.counts.geom.to_image()
 
-    edisp1 = EDispKernelMap.from_gauss(energy, energy, 0.1, 0, geom=geom)
+    edisp1 = EDispKernelMap.from_gauss(
+        energy_axis=energy,
+        energy_axis_true=energy.copy(name="energy_true"),
+        sigma=0.1,
+        bias=0,
+        geom=geom
+    )
     edisp1.exposure_map.data += 1
 
     aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(
@@ -278,7 +284,13 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
         gti=gti.copy(),
     )
 
-    edisp2 = EDispKernelMap.from_gauss(energy, energy, 0.2, 0.0, geom=geom)
+    edisp2 = EDispKernelMap.from_gauss(
+        energy_axis=energy,
+        energy_axis_true=energy.copy(name="energy_true"),
+        sigma=0.2,
+        bias=0.0,
+        geom=geom
+    )
     edisp2.exposure_map.data += 1
 
     gti2 = GTI.create(start=100 * u.s, stop=200 * u.s)
@@ -505,6 +517,14 @@ class TestSpectrumOnOff:
         assert regions[0].center.is_equivalent_frame(expected_regions[0].center)
         assert_allclose(regions[1].angle, expected_regions[1].angle)
 
+    def test_to_from_ogip_files_no_mask(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.mask_safe = None
+        dataset.write(tmp_path / "test.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+
+        assert_allclose(newdataset.mask_safe.data, True)
+
     def test_to_from_ogip_files_zip(self, tmp_path):
         dataset = self.dataset.copy(name="test")
         dataset.write(tmp_path / "test.fits.gz")
@@ -542,15 +562,15 @@ class TestSpectrumOnOff:
             energy_min=0.3 * u.TeV, energy_max=6 * u.TeV
         )
         desired = [False, True, True, False]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
         mask = self.dataset.counts.geom.energy_mask(energy_max=6 * u.TeV)
         desired = [True, True, True, False]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
         mask = self.dataset.counts.geom.energy_mask(energy_min=1 * u.TeV)
         desired = [False, False, True, True]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
     def test_str(self):
         model = SkyModel(spectral_model=PowerLawSpectralModel())
@@ -796,7 +816,7 @@ def make_observation_list():
 
     aeff = RegionNDMap.from_geom(geom_true, data=1, unit="m2")
     edisp = EDispKernelMap.from_gauss(
-        energy_axis=axis, energy_axis_true=axis, sigma=0.2, bias=0, geom=geom
+        energy_axis=axis, energy_axis_true=axis_true, sigma=0.2, bias=0, geom=geom
     )
 
     time_ref = Time("2010-01-01")
@@ -840,13 +860,12 @@ class TestSpectrumDatasetOnOffStack:
         # Change threshold to make stuff more interesting
 
         geom = self.datasets[0]._geom
-        data = geom.energy_mask(energy_min=1.2 * u.TeV, energy_max=50 * u.TeV)
-        self.datasets[0].mask_safe = RegionNDMap.from_geom(geom=geom, data=data)
+        self.datasets[0].mask_safe = geom.energy_mask(energy_min=1.2 * u.TeV, energy_max=50 * u.TeV)
 
-        data = geom.energy_mask(energy_max=20 * u.TeV)
-        self.datasets[1].mask_safe.data &= data
+        mask = geom.energy_mask(energy_max=20 * u.TeV)
+        self.datasets[1].mask_safe &= mask
 
-        self.stacked_dataset = self.datasets[0].copy()
+        self.stacked_dataset = self.datasets[0].to_masked()
         self.stacked_dataset.stack(self.datasets[1])
 
     def test_basic(self):

@@ -163,14 +163,10 @@ class AdaptiveRingBackgroundMaker(Maker):
         background = dataset.npred_background()
         kernels = self.kernels(counts)
 
-        if self.exclusion_mask is not None:
-            # reproject exclusion mask
-            coords = counts.geom.get_coord()
-            data = self.exclusion_mask.get_by_coord(coords)
-            exclusion = Map.from_geom(geom=counts.geom, data=data)
+        if self.exclusion_mask:
+            exclusion = self.exclusion_mask.interp_to_geom(geom=counts.geom)
         else:
-            data = np.ones(counts.geom.data_shape, dtype=bool)
-            exclusion = Map.from_geom(geom=counts.geom, data=data)
+            exclusion = Map.from_geom(geom=counts.geom, data=True, dtype=bool)
 
         cubes = {}
         cubes["counts_off"] = scale_cube(

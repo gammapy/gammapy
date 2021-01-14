@@ -2,7 +2,6 @@
 """FoV background estimation."""
 import logging
 from gammapy.datasets import Datasets
-from gammapy.maps import Map
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Model
 from ..core import Maker
@@ -92,7 +91,10 @@ class FoVBackgroundMaker(Maker):
 
         """
         mask_fit = dataset.mask_fit
-        dataset.mask_fit = self._reproject_exclusion_mask(dataset)
+
+        if self.exclusion_mask:
+            geom = dataset.counts.geom
+            dataset.mask_fit = self.exclusion_mask.interp_to_geom(geom=geom)
 
         if dataset.background_model is None:
             dataset = self.make_default_fov_background_model(dataset)
@@ -105,18 +107,6 @@ class FoVBackgroundMaker(Maker):
 
         dataset.mask_fit = mask_fit
         return dataset
-
-    def _reproject_exclusion_mask(self, dataset):
-        """Reproject the exclusion on the dataset geometry"""
-        mask_map = Map.from_geom(dataset.counts.geom)
-        if self.exclusion_mask is not None:
-            coords = dataset.counts.geom.get_coord()
-            vals = self.exclusion_mask.get_by_coord(coords)
-            mask_map.data += vals
-        else:
-            mask_map.data[...] = 1
-
-        return mask_map.data.astype("bool")
 
     def _fit_bkg(self, dataset):
         """Fit the FoV background model on the dataset counts data"""
@@ -132,7 +122,10 @@ class FoVBackgroundMaker(Maker):
         fit = Fit(datasets)
         fit_result = fit.run()
         if not fit_result.success:
-            log.info(f"Fit did not converge for {dataset.name}.")
+            log.warning(
+                f"FoVBackgroundMaker failed: Fit did not converge for {dataset.name}. \
+                Background model parameters might be unphysical for {dataset.name}."
+            )
 
         # Unfreeze parameters
         for idx, par in enumerate(datasets.parameters):
@@ -145,11 +138,11 @@ class FoVBackgroundMaker(Maker):
         bkg_tot = dataset.npred_background().data[mask].sum()
 
         if count_tot <= 0.0:
-            log.info(
+            log.warning(
                 f"FoVBackgroundMaker failed. No counts found outside exclusion mask for {dataset.name}."
             )
         elif bkg_tot <= 0.0:
-            log.info(
+            log.warning(
                 f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}."
             )
         else:

@@ -58,6 +58,11 @@ class Map(abc.ABC):
         return self.from_geom(**kwargs)
 
     @property
+    def is_mask(self):
+        """Whether map is mask with bool dtype"""
+        return self.data.dtype == bool
+
+    @property
     def geom(self):
         """Map geometry (`~gammapy.maps.Geom`)"""
         return self._geom
@@ -722,7 +727,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def interp_by_coord(self, coords, interp=None, fill_value=None):
+    def interp_by_coord(self, coords, method="nearest", fill_value=None):
         """Interpolate map values at the given map coordinates.
 
         Parameters
@@ -731,16 +736,11 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
-            Method to interpolate data values.  By default no
+        method : {"nearest", "linear"}
+            Method to interpolate data values. By default no
             interpolation is performed and the return value will be
             the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
+            coordinate.
         fill_value : None or float value
             The value to use for points outside of the interpolation domain.
             If None, values outside the domain are extrapolated.
@@ -753,7 +753,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def interp_by_pix(self, pix, interp=None, fill_value=None):
+    def interp_by_pix(self, pix, method="nearest", fill_value=None):
         """Interpolate map values at the given pixel coordinates.
 
         Parameters
@@ -763,16 +763,11 @@ class Map(abc.ABC):
             map.  Tuple should be ordered as (p_lon, p_lat, p_0, ...,
             p_n) where p_i are pixel coordinates for non-spatial
             dimensions of the map.
-
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
+        method : {"nearest", "linear"}
             Method to interpolate data values.  By default no
             interpolation is performed and the return value will be
             the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
+            coordinate.
         fill_value : None or float value
             The value to use for points outside of the interpolation domain.
             If None, values outside the domain are extrapolated.
@@ -803,25 +798,22 @@ class Map(abc.ABC):
         interp_map : `Map`
             Interpolated Map
         """
-
         coords = geom.get_coord()
-
-        # set nearest neighbour interpolation for mask as default
-        if self.data.dtype == bool:
-            kwargs.setdefault("interp", 0)
+        map_copy = self.copy()
 
         if preserve_counts:
             if geom.ndim > 2:
                 assert self.geom.axes[0] == geom.axes[0]  # Energy axis has to match
-            old_map_copy = self.copy()
-            old_map_copy.data /= self.geom.solid_angle().to_value("deg2")
-            data = old_map_copy.interp_by_coord(coords, **kwargs)
-            data *= geom.solid_angle().to_value("deg2")
-        else:
-            data = self.interp_by_coord(coords, **kwargs)
+            map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
-        if self.data.dtype == bool:
-            data = data.astype(bool)
+        if map_copy.is_mask:
+            data = map_copy.get_by_coord(coords)
+        else:
+            data = map_copy.interp_by_coord(coords, **kwargs)
+
+        if preserve_counts:
+            data *= geom.solid_angle().to_value("deg2")
+
         return Map.from_geom(geom, data=data, unit=self.unit)
 
     def fill_events(self, events):
@@ -1119,7 +1111,7 @@ class Map(abc.ABC):
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
-            energy_axis = edisp.energy_axis.copy(name="energy")
+            energy_axis = edisp.axes["energy"].copy(name="energy")
         else:
             data = self.data
             energy_axis = self.geom.axes["energy_true"].copy(name="energy")

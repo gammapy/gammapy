@@ -3,14 +3,15 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
-from gammapy.utils.nddata import NDDataArray
+from astropy.visualization import quantity_support
+from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
 from gammapy.utils.scripts import make_path
+from .core import IRF
 
 __all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]
 
 
-class EffectiveAreaTable:
+class EffectiveAreaTable(IRF):
     """Effective area table.
 
     TODO: Document
@@ -21,6 +22,8 @@ class EffectiveAreaTable:
         Energy axis
     data : `~astropy.units.Quantity`
         Effective area
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -59,21 +62,9 @@ class EffectiveAreaTable:
     >>> print(energy_threshold)
     0.185368478744 TeV
     """
+    required_axes = ["energy_true"]
 
-    def __init__(self, energy_axis_true, data, meta=None):
-        interp_kwargs = {"extrapolate": False, "bounds_error": False}
-
-        self.data = NDDataArray(
-            axes=[energy_axis_true], data=data, interp_kwargs=interp_kwargs
-        )
-        self.data.axes.assert_names(["energy_true"])
-        self.meta = meta or {}
-
-    @property
-    def energy(self):
-        return self.data.axes["energy_true"]
-
-    def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
+    def plot(self, ax=None, show_energy=None, **kwargs):
         """Plot effective area.
 
         Parameters
@@ -96,24 +87,18 @@ class EffectiveAreaTable:
 
         kwargs.setdefault("lw", 2)
 
-        if energy is None:
-            energy = self.energy.center
+        energy_axis = self.axes["energy_true"]
 
-        eff_area = self.data.evaluate(energy_true=energy)
+        with quantity_support():
+            ax.errorbar(energy_axis.center, self.quantity, xerr=energy_axis.as_xerr, **kwargs)
 
-        xerr = (
-            (energy - self.energy.edges[:-1]).value,
-            (self.energy.edges[1:] - energy).value,
-        )
-
-        ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
-            ener_val = u.Quantity(show_energy).to_value(self.energy.unit)
-            ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles="dashed")
-        ax.set_xscale("log")
-        ax.set_xlabel(f"Energy [{self.energy.unit}]")
-        ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
+            ener_val = u.Quantity(show_energy).to_value(energy_axis.unit)
+            ax.vlines(ener_val, 0, 1.1 * self.max_area, linestyles="dashed")
 
+        ax.set_xscale("log")
+        ax.set_xlabel(f"Energy [{energy_axis.unit}]")
+        ax.set_ylabel(f"Effective Area [{self.unit}]")
         return ax
 
     @classmethod
@@ -157,10 +142,8 @@ class EffectiveAreaTable:
         g3 = -pars[instrument][2]
 
         energy = energy_axis_true.center.to_value("MeV")
-        value = g1 * energy ** (-g2) * np.exp(g3 / energy)
-        data = u.Quantity(value, "cm2", copy=False)
-
-        return cls(energy_axis_true=energy_axis_true, data=data)
+        data = g1 * energy ** (-g2) * np.exp(g3 / energy)
+        return cls(axes=[energy_axis_true], data=data, unit="cm2")
 
     @classmethod
     def from_constant(cls, energy, value):
@@ -173,9 +156,9 @@ class EffectiveAreaTable:
         value : `~astropy.units.Quantity`
             Effective area
         """
-        data = np.ones((len(energy) - 1)) * u.Quantity(value)
+        value = u.Quantity(value)
         energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
-        return cls(energy_axis_true=energy_axis_true, data=data)
+        return cls(axes=[energy_axis_true], data=value.value, unit=value.unit)
 
     @classmethod
     def from_table(cls, table):
@@ -183,9 +166,9 @@ class EffectiveAreaTable:
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        energy_axis_true = MapAxis.from_table(table, format="ogip-arf")
+        axes = MapAxes.from_table(table, format="ogip-arf")[cls.required_axes]
         data = table["SPECRESP"].quantity
-        return cls(energy_axis_true=energy_axis_true, data=data)
+        return cls(axes=axes, data=data.value, unit=data.unit)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu="SPECRESP"):
@@ -210,26 +193,21 @@ class EffectiveAreaTable:
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        table = Table()
+        table = self.axes.to_table(format="ogip-arf")
         table.meta = {
             "EXTNAME": "SPECRESP",
             "hduclass": "OGIP",
             "hduclas1": "RESPONSE",
             "hduclas2": "SPECRESP",
         }
-
-        energy = self.energy.edges
-        table["ENERG_LO"] = energy[:-1]
-        table["ENERG_HI"] = energy[1:]
         table["SPECRESP"] = self.evaluate_fill_nan()
         return table
 
     def to_region_map(self, region=None):
         """"""
-        axis = self.data.axes["energy_true"]
-        geom = RegionGeom(region=region, axes=[axis])
+        geom = RegionGeom(region=region, axes=self.axes)
         return RegionNDMap.from_geom(
-            geom=geom, data=self.data.data.value, unit=self.data.data.unit
+            geom=geom, data=self.data, unit=self.unit
         )
 
     def to_hdulist(self, name=None, use_sherpa=False):
@@ -251,14 +229,13 @@ class EffectiveAreaTable:
     def evaluate_fill_nan(self, **kwargs):
         """Modified evaluate function.
 
-        Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and replaces
-        possible nan values. Below the finite range the effective area is set
+        Replaces possible nan values. Below the finite range the effective area is set
         to zero and above to value of the last valid note. This is needed since
         other codes, e.g. sherpa, don't like nan values in FITS files. Make
         sure that the replacement happens outside of the energy range, where
         the `~gammapy.irf.EffectiveAreaTable` is used.
         """
-        retval = self.data.evaluate(**kwargs)
+        retval = self.evaluate(**kwargs)
         idx = np.where(np.isfinite(retval))[0]
         retval[np.arange(idx[0])] = 0
         retval[np.arange(idx[-1], len(retval))] = retval[idx[-1]]
@@ -267,7 +244,7 @@ class EffectiveAreaTable:
     @property
     def max_area(self):
         """Maximum effective area."""
-        cleaned_data = self.data.data[np.where(~np.isnan(self.data.data))]
+        cleaned_data = self.quantity[np.where(~np.isnan(self.quantity))]
         return cleaned_data.max()
 
     def find_energy(self, aeff, energy_min=None, energy_max=None):
@@ -293,7 +270,7 @@ class EffectiveAreaTable:
         """
         from gammapy.modeling.models import TemplateSpectralModel
 
-        energy = self.energy.center
+        energy = self.axes["energy_true"].center
 
         if energy_min is None:
             energy_min = energy[0]
@@ -301,11 +278,11 @@ class EffectiveAreaTable:
             # use the peak effective area as a default for the energy maximum
             energy_max = energy[np.argmax(self.data.data)]
 
-        aeff_spectrum = TemplateSpectralModel(energy, self.data.data)
+        aeff_spectrum = TemplateSpectralModel(energy, self.quantity)
         return aeff_spectrum.inverse(aeff, energy_min=energy_min, energy_max=energy_max)
 
 
-class EffectiveAreaTable2D:
+class EffectiveAreaTable2D(IRF):
     """2D effective area table.
 
     Data format specification: :ref:`gadf:aeff_2d`
@@ -318,6 +295,8 @@ class EffectiveAreaTable2D:
         Field of view offset axis.
     data : `~astropy.units.Quantity`
         Effective area
+    meta : dict
+        Meta data
 
     Examples
     --------
@@ -328,48 +307,35 @@ class EffectiveAreaTable2D:
     >>> aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
     >>> print(aeff)
     EffectiveAreaTable2D
-    NDDataArray summary info
-    energy         : size =    42, min =  0.014 TeV, max = 177.828 TeV
-    offset         : size =     6, min =  0.500 deg, max =  5.500 deg
-    Data           : size =   252, min =  0.000 m2, max = 5371581.000 m2
+    --------------------
+
+      axes  : ['energy_true', 'offset']
+      shape : (42, 6)
+      ndim  : 2
+      unit  : m2
+      dtype : >f4
 
     Here's another one, created from scratch, without reading a file:
 
     >>> from gammapy.irf import EffectiveAreaTable2D
-    >>> import astropy.units as u
-    >>> import numpy as np
-    >>> energy = np.logspace(0,1,11) * u.TeV
-    >>> offset = np.linspace(0,1,4) * u.deg
-    >>> data = np.ones(shape=(10,3)) * u.cm * u.cm
-    >>> aeff = EffectiveAreaTable2D(energy_lo=energy[:-1], energy_hi=energy[1:], offset_lo=offset[:-1],
-    >>>                             offset_hi=offset[1:], data= data)
+    >>> from gammapy.maps import MapAxis
+    >>> energy_axis_true = MapAxis.from_energy_bounds("0.1 TeV", "100 TeV", nbin=30, name="energy_true")
+    >>> offset_axis = MapAxis.from_bounds(0, 5, nbin=4, name="offset")
+    >>> aeff = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2")
     >>> print(aeff)
-    Data array summary info
-    energy         : size =    11, min =  1.000 TeV, max = 10.000 TeV
-    offset         : size =     4, min =  0.000 deg, max =  1.000 deg
-    Data           : size =    30, min =  1.000 cm2, max =  1.000 cm2
+    EffectiveAreaTable2D
+    --------------------
+
+      axes  : ['energy_true', 'offset']
+      shape : (30, 4)
+      ndim  : 2
+      unit  : cm2
+      dtype : float64
+
     """
 
     tag = "aeff_2d"
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
-    """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
-
-    def __init__(
-        self, energy_axis_true, offset_axis, data, meta=None, interp_kwargs=None,
-    ):
-        if interp_kwargs is None:
-            interp_kwargs = self.default_interp_kwargs
-
-        self.data = NDDataArray(
-            axes=[energy_axis_true, offset_axis], data=data, interp_kwargs=interp_kwargs
-        )
-        self.data.axes.assert_names(["energy_true", "offset"])
-        self.meta = meta or {}
-
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += f"\n{self.data}"
-        return ss
+    required_axes = ["energy_true", "offset"]
 
     @property
     def low_threshold(self):
@@ -380,34 +346,6 @@ class EffectiveAreaTable2D:
     def high_threshold(self):
         """High energy threshold"""
         return self.meta["HI_THRES"] * u.TeV
-
-    @classmethod
-    def from_table(cls, table):
-        """Read from `~astropy.table.Table`."""
-        energy_axis_true = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
-        )
-
-        return cls(
-            energy_axis_true=energy_axis_true,
-            offset_axis=offset_axis,
-            data=table["EFFAREA"].quantity[0].transpose(),
-            meta=table.meta,
-        )
-
-    @classmethod
-    def from_hdulist(cls, hdulist, hdu="EFFECTIVE AREA"):
-        """Create from `~astropy.io.fits.HDUList`."""
-        return cls.from_table(Table.read(hdulist[hdu]))
-
-    @classmethod
-    def read(cls, filename, hdu="EFFECTIVE AREA"):
-        """Read from file."""
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu=hdu)
 
     def to_effective_area_table(self, offset, energy=None):
         """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`.
@@ -420,15 +358,15 @@ class EffectiveAreaTable2D:
             Energy axis bin edges
         """
         if energy is None:
-            energy_axis_true = self.data.axes["energy_true"]
+            energy_axis_true = self.axes["energy_true"]
         else:
             energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
 
-        area = self.data.evaluate(offset=offset, energy_true=energy_axis_true.center)
+        area = self.evaluate(offset=offset, energy_true=energy_axis_true.center)
 
-        return EffectiveAreaTable(energy_axis_true=energy_axis_true, data=area)
+        return EffectiveAreaTable(axes=[energy_axis_true], data=area.value, unit=area.unit)
 
-    def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+    def plot_energy_dependence(self, ax=None, offset=None, **kwargs):
         """Plot effective area versus energy for a given offset.
 
         Parameters
@@ -437,8 +375,6 @@ class EffectiveAreaTable2D:
             Axis
         offset : `~astropy.coordinates.Angle`
             Offset
-        energy : `~astropy.units.Quantity`
-            Energy axis
         kwargs : dict
             Forwarded tp plt.plot()
 
@@ -452,20 +388,19 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.data.axes["offset"].center[[0, -1]]
+            off_min, off_max = self.axes["offset"].center[[0, -1]]
             offset = np.linspace(off_min.value, off_max.value, 4) * off_min.unit
 
-        if energy is None:
-            energy = self.data.axes["energy_true"].center
+        energy = self.axes["energy_true"].center
 
         for off in offset:
-            area = self.data.evaluate(offset=off, energy_true=energy)
+            area = self.evaluate(offset=off, energy_true=energy)
             kwargs.setdefault("label", f"offset = {off:.1f}")
             ax.plot(energy, area.value, **kwargs)
 
         ax.set_xscale("log")
         ax.set_xlabel(f"Energy [{energy.unit}]")
-        ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
+        ax.set_ylabel(f"Effective Area [{self.unit}]")
         ax.set_xlim(min(energy.value), max(energy.value))
         return ax
 
@@ -491,15 +426,15 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            energy_axis = self.data.axes["energy_true"]
-            e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
-            energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
+            energy_axis = self.axes["energy_true"]
+            e_min, e_max = energy_axis.center[[0, -1]]
+            energy = np.geomspace(e_min, e_max, 4)
 
         if offset is None:
-            offset = self.data.axes["offset"].center
+            offset = self.axes["offset"].center
 
         for ee in energy:
-            area = self.data.evaluate(offset=offset, energy_true=ee)
+            area = self.evaluate(offset=offset, energy_true=ee)
             area /= np.nanmax(area)
             if np.isnan(area).all():
                 continue
@@ -507,7 +442,7 @@ class EffectiveAreaTable2D:
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel(f"Offset ({self.data.axes['offset'].unit})")
+        ax.set_xlabel(f"Offset ({self.axes['offset'].unit})")
         ax.set_ylabel("Relative Effective Area")
         ax.legend(loc="best")
 
@@ -519,9 +454,9 @@ class EffectiveAreaTable2D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.data.axes["energy_true"].edges
-        offset = self.data.axes["offset"].edges
-        aeff = self.data.evaluate(offset=offset, energy_true=energy[:, np.newaxis])
+        energy = self.axes["energy_true"].edges
+        offset = self.axes["offset"].edges
+        aeff = self.evaluate(offset=offset, energy_true=energy[:, np.newaxis])
 
         vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
 
@@ -554,14 +489,3 @@ class EffectiveAreaTable2D:
         self.plot_energy_dependence(ax=axes[0])
         self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        table = self.data.axes.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
-        table["EFFAREA"] = self.data.data.T[np.newaxis]
-        return table
-
-    def to_table_hdu(self, name="EFFECTIVE AREA"):
-        """Convert to `~astropy.io.fits.BinTableHDU`."""
-        return fits.BinTableHDU(self.to_table(), name=name)

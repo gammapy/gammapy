@@ -88,7 +88,9 @@ def test_select(models):
         print(selected.names)
         assert selected.names == xp
 
-    mask = models.selection_mask(**conditions[4]) | models.selection_mask(**conditions[6])
+    mask = models.selection_mask(**conditions[4]) | models.selection_mask(
+        **conditions[6]
+    )
     selected = models[mask]
     assert selected.names == ["source-3", "bkg1", "bkg2"]
 
@@ -229,3 +231,15 @@ def test_fov_bkg_models():
     assert models["test-1-bkg"].spectral_model.norm.frozen
 
 
+
+
+def test_reassign_dataset(models):
+    ref = models.select(datasets_names="dataset-2")
+    models = models.reassign("dataset-2", "dataset-2-copy")
+    assert len(models.select(datasets_names="dataset-2")) == np.sum(
+        [m.datasets_names == None for m in models]
+    )
+    new = models.select(datasets_names="dataset-2-copy")
+    assert len(new) == len(ref)
+    assert new["source-1"].datasets_names == None
+    assert new["source-3"].datasets_names == ["dataset-2-copy"]
