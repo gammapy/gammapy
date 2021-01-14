@@ -14,6 +14,7 @@ from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
 
 log = logging.getLogger(__name__)
 
+
 class IRF:
     """IRF base class for DL3 instrument response functions"""
     default_interp_kwargs = dict(
@@ -202,7 +203,7 @@ class IRF:
         return f_integrate(coords)
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu=None):
+    def from_hdulist(cls, hdulist, hdu=None, format="gadf-dl3"):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -211,6 +212,8 @@ class IRF:
             HDU list
         hdu : str
             HDU name
+        format : {"gadf-dl3"}
+            Format specification
 
         Returns
         -------
@@ -220,10 +223,10 @@ class IRF:
         if hdu is None:
             hdu = IRF_DL3_HDU_SPECIFICATION[cls.tag]["extname"]
 
-        return cls.from_table(Table.read(hdulist[hdu]))
+        return cls.from_table(Table.read(hdulist[hdu]), format=format)
 
     @classmethod
-    def read(cls, filename, hdu=None):
+    def read(cls, filename, hdu=None, format="gadf-dl3"):
         """Read from file.
 
         Parameters
@@ -232,6 +235,8 @@ class IRF:
             Filename
         hdu : str
             HDU name
+        format : {"gadf-dl3"}
+            Format specification
 
         Returns
         -------
@@ -242,20 +247,22 @@ class IRF:
             return cls.from_hdulist(hdulist, hdu=hdu)
 
     @classmethod
-    def from_table(cls, table):
+    def from_table(cls, table, format="gadf-dl3"):
         """Read from `~astropy.table.Table`.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
             Table with irf data
+        format : {"gadf-dl3"}
+            Format specification
 
         Returns
         -------
         irf : `IRF`
             IRF class.
         """
-        axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
+        axes = MapAxes.from_table(table=table, format=format)[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
         return cls(
@@ -265,20 +272,46 @@ class IRF:
             unit=data.unit
         )
 
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        table = self.axes.to_table(format="gadf-dl3")
-        table.meta = self.meta.copy()
+    def to_table(self, format="gadf-dl3"):
+        """Convert to table
 
-        spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
-        table.meta["HDUCLAS2"] = spec["hduclas2"]
-        table[spec["column_name"]] = self.quantity.T[np.newaxis]
+        Parameters
+        ----------
+        format : {"gadf-dl3"}
+            Format specification
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            IRF data table
+        """
+        table = self.axes.to_table(format=format)
+
+        if format == "gadf-dl3":
+            table.meta = self.meta.copy()
+            spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
+            table.meta["HDUCLAS2"] = spec["hduclas2"]
+            table[spec["column_name"]] = self.quantity.T[np.newaxis]
+        else:
+            raise ValueError(f"Not a valid supported format: '{format}'")
+
         return table
 
-    def to_table_hdu(self):
-        """Convert to `~astropy.io.fits.BinTableHDU`."""
+    def to_table_hdu(self, format="gadf-dl3"):
+        """Convert to `~astropy.io.fits.BinTableHDU`.
+
+        Parameters
+        ----------
+        format : {"gadf-dl3"}
+            Format specification
+
+        Returns
+        -------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            IRF data table hdu
+        """
         name = IRF_DL3_HDU_SPECIFICATION[self.tag]["extname"]
-        return fits.BinTableHDU(self.to_table(), name=name)
+        return fits.BinTableHDU(self.to_table(format=format), name=name)
 
 
 class IRFMap:

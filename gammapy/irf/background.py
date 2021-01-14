@@ -19,21 +19,23 @@ class BackgroundIRF(IRF):
     """Default Interpolation kwargs to extrapolate."""
 
     @classmethod
-    def from_table(cls, table):
+    def from_table(cls, table, format="gadf-dl3"):
         """Read from `~astropy.table.Table`.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
             Table with background data
+        format : {"gadf-dl3"}
+            Format specification
 
         Returns
         -------
         bkg : `Background2D` or `Background2D`
             Background IRF class.
         """
-        axes = MapAxes.from_table(table, format="gadf-dl3")[cls.required_axes]
-
+        axes = MapAxes.from_table(table, format=format)[cls.required_axes]
+        
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
         if "BKG" in table.colnames:
