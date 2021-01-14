@@ -786,14 +786,12 @@ class TestSpectralModelErrorPropagation:
         assert out.unit == "cm-2 s-1 TeV-1"
         assert_allclose(out.data, [3.760e-11, 3.6193e-12], rtol=1e-3)
 
-    @pytest.mark.xfail(reason="FIXME, do we need this method?")
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
         assert out.shape == (2,)
         assert_allclose(out.data, [2.197e-11, 2.796e-12], rtol=1e-3)
 
-    @pytest.mark.xfail(reason="FIXME, do we need this method?")
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
@@ -835,8 +833,8 @@ def test_integral_error_PowerLaw():
 
     flux, flux_error = powerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=0.1)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.546615432273905, rtol=0.01)
+    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=1e-3)
+    assert_allclose(flux_error.value[0] / 1e-14, 7.915984, rtol=1e-3)
 
 
 def test_integral_error_ExpCutOffPowerLaw():
@@ -852,7 +850,7 @@ def test_integral_error_ExpCutOffPowerLaw():
     flux, flux_error = exppowerlaw.integral_error(energy_min, energy_max)
 
     assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.9598, rtol=0.01)
+    assert_allclose(flux_error.value[0] / 1e-14, 8.552617, rtol=0.01)
 
 
 def test_energy_flux_error_power_Law():
