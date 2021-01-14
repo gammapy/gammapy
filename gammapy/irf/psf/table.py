@@ -98,7 +98,8 @@ class TablePSF(IRF):
             PSF integral
         """
         rad_max = np.atleast_1d(rad_max)
-        return np.clip(self.integral(axis_name="rad", rad=rad_max), 0, 1)
+        containment = self.integral(axis_name="rad", rad=rad_max)
+        return np.clip(containment.to_value(""), 0, 1)
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -352,7 +353,8 @@ class EnergyDependentTablePSF(IRF):
         """
         energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
         rad_max = np.atleast_1d(u.Quantity(rad_max))
-        return np.clip(self.integral(axis_name="rad", energy_true=energy, rad=rad_max), 0, 1)
+        containment = self.integral(axis_name="rad", rad=rad_max, energy_true=energy)
+        return np.clip(containment.to_value(""), 0, 1)
 
     def info(self):
         """Print basic info"""

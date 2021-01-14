@@ -186,13 +186,17 @@ class IRF:
         axis = self.axes[axis_name]
         axis_idx = self.axes.index(axis_name)
 
-        values = self.quantity * axis.bin_width
+        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
+        shape = [1] * len(self.axes)
+        shape[axis_idx] = -1
+
+        values = self.quantity * axis.bin_width.reshape(shape)
 
         if axis_name == "rad":
             # take Jacobian into account
-            values = 2 * np.pi * axis.center * values
+            values = 2 * np.pi * axis.center.reshape(shape) * values
 
-        values = values.cumsum(axis=axis_idx).to_value("")
+        values = values.cumsum(axis=axis_idx)
         points = [ax.center for ax in self.axes]
         points[axis_idx] = axis.edges[1:]
 
