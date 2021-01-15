@@ -414,11 +414,11 @@ class WcsNDMap(WcsMap):
         ax.coords.frame.set_linewidth(0)
 
         # Set plot axis limits
-        xmin, _ = self.geom.coord_to_pix({"lon": 180, "lat": 0})
-        xmax, _ = self.geom.coord_to_pix({"lon": -180, "lat": 0})
+        xmin, _ = self.geom.to_image().coord_to_pix({"lon": 180, "lat": 0})
+        xmax, _ = self.geom.to_image().coord_to_pix({"lon": -180, "lat": 0})
 
-        _, ymin = self.geom.coord_to_pix({"lon": 0, "lat": -90})
-        _, ymax = self.geom.coord_to_pix({"lon": 0, "lat": 90})
+        _, ymin = self.geom.to_image().coord_to_pix({"lon": 0, "lat": -90})
+        _, ymax = self.geom.to_image().coord_to_pix({"lon": 0, "lat": 90})
 
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
