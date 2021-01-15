@@ -55,16 +55,6 @@ class PSFKing:
         self.meta = meta or {}
 
     @property
-    def energy_thresh_lo(self):
-        """Low energy threshold"""
-        return self.meta["LO_THRES"] * u.TeV
-
-    @property
-    def energy_thresh_hi(self):
-        """High energy threshold"""
-        return self.meta["HI_THRES"] * u.TeV
-
-    @property
     def energy_axis_true(self):
         return self._energy_axis_true
 

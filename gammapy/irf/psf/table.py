@@ -454,16 +454,6 @@ class PSF3D(IRF):
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
 
-    @property
-    def energy_thresh_lo(self):
-        """Low energy threshold"""
-        return self.meta["LO_THRES"] * u.TeV
-
-    @property
-    def energy_thresh_hi(self):
-        """High energy threshold"""
-        return self.meta["HI_THRES"] * u.TeV
-
     def to_energy_dependent_table_psf(self, theta="0 deg", rad=None, exposure=None):
         """
         Convert PSF3D in EnergyDependentTablePSF.
@@ -624,25 +614,11 @@ class PSF3D(IRF):
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
-        try:
-            self._plot_safe_energy_range(ax)
-        except KeyError:
-            pass
-
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
-
-    def _plot_safe_energy_range(self, ax):
-        """add safe energy range lines to the plot"""
-        esafe = self.energy_thresh_lo
-        omin = self.axes["offset"].center.value.min()
-        omax = self.axes["offset"].center.value.max()
-        ax.vlines(x=esafe.value, ymin=omin, ymax=omax)
-        label = f"Safe energy threshold: {esafe:3.2f}"
-        ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
@@ -653,9 +629,5 @@ class PSF3D(IRF):
         self.plot_containment(fraction=0.68, ax=axes[0])
         self.plot_containment(fraction=0.95, ax=axes[1])
         self.plot_containment_vs_energy(ax=axes[2])
-
-        # TODO: implement this plot
-        # psf = self.psf_at_energy_and_theta(energy='1 TeV', theta='1 deg')
-        # psf.plot_components(ax=axes[2])
 
         plt.tight_layout()

@@ -81,16 +81,6 @@ class EnergyDependentMultiGaussPSF:
         self._interp_sigmas = self._setup_interpolators(self.sigmas)
 
     @property
-    def energy_thresh_lo(self):
-        """Low energy threshold"""
-        return self.meta["LO_THRES"] * u.TeV
-
-    @property
-    def energy_thresh_hi(self):
-        """High energy threshold"""
-        return self.meta["HI_THRES"] * u.TeV
-
-    @property
     def energy_axis_true(self):
         return self._energy_axis_true
 
@@ -310,25 +300,11 @@ class EnergyDependentMultiGaussPSF:
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
-        try:
-            self._plot_safe_energy_range(ax)
-        except KeyError:
-            pass
-
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
-
-    def _plot_safe_energy_range(self, ax):
-        """add safe energy range lines to the plot"""
-        esafe = self.energy_thresh_lo
-        omin = self.offset_axis.center.min()
-        omax = self.offset_axis.center.max()
-        ax.vlines(x=esafe.value, ymin=omin.value, ymax=omax.value)
-        label = f"Safe energy threshold: {esafe:3.2f}"
-        ax.text(x=1.1 * esafe.value, y=0.3, s=label, va="top")
 
     def plot_containment_vs_energy(
         self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None, **kwargs
@@ -399,8 +375,6 @@ class EnergyDependentMultiGaussPSF:
         ss += array_stats_str(self.offset_axis.center.to("deg"), "Theta")
         ss += array_stats_str(self.energy_axis_true.edges[1:], "Energy hi")
         ss += array_stats_str(self.energy_axis_true.edges[:-1], "Energy lo")
-        ss += f"Safe energy threshold lo: {self.energy_thresh_lo:6.3f}\n"
-        ss += f"Safe energy threshold hi: {self.energy_thresh_hi:6.3f}\n"
 
         for fraction in fractions:
             containment = self.containment_radius(energies, thetas, fraction)
