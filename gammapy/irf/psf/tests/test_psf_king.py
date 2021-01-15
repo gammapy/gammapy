@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from astropy.coordinates import Angle
+from astropy import units as u
 from gammapy.irf import PSFKing
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
@@ -16,10 +17,10 @@ def test_psf_king_evaluate(psf_king):
     param_off1 = psf_king.evaluate(energy="1 TeV", offset="0 deg")
     param_off2 = psf_king.evaluate("1 TeV", "1 deg")
 
-    assert_quantity_allclose(param_off1["gamma"], psf_king.gamma[0, 8])
-    assert_quantity_allclose(param_off2["gamma"], psf_king.gamma[2, 8])
-    assert_quantity_allclose(param_off1["sigma"], psf_king.sigma[0, 8])
-    assert_quantity_allclose(param_off2["sigma"], psf_king.sigma[2, 8])
+    assert_quantity_allclose(param_off1["gamma"], psf_king.data["gamma"][8, 0])
+    assert_quantity_allclose(param_off2["gamma"], psf_king.data["gamma"][8, 2])
+    assert_quantity_allclose(param_off1["sigma"], psf_king.data["sigma"][8, 0] * u.deg)
+    assert_quantity_allclose(param_off2["sigma"], psf_king.data["sigma"][8, 2] * u.deg)
 
 
 @requires_data()
@@ -32,10 +33,10 @@ def test_psf_king_to_table(psf_king):
     # energy = Quantity(1, "TeV") match with bin number 8
     # offset equal 1 degre match with the bin 200 in the psf_table
     value_off1 = psf_king.evaluate_direct(
-        offset, psf_king.gamma[0, 8], psf_king.sigma[0, 8]
+        offset, psf_king.data["gamma"][8, 0], psf_king.data["sigma"][8, 0] * u.deg
     )
     value_off2 = psf_king.evaluate_direct(
-        offset, psf_king.gamma[2, 8], psf_king.sigma[2, 8]
+        offset, psf_king.data["gamma"][8, 2], psf_king.data["sigma"][8, 2] * u.deg
     )
     # Test that the value at 1 degree in the histogram for the energy 1 Tev and theta=0 or 1 degree is equal to the one
     # obtained from the self.evaluate_direct() method at 1 degree
@@ -61,8 +62,8 @@ def test_psf_king_write(psf_king, tmp_path):
     psf_king2 = PSFKing.read(tmp_path / "tmp.fits")
 
     assert_quantity_allclose(
-        psf_king2.energy_axis_true.edges, psf_king.energy_axis_true.edges
+        psf_king2.axes["energy_true"].edges, psf_king.axes["energy_true"].edges
     )
-    assert_quantity_allclose(psf_king2.offset_axis.center, psf_king.offset_axis.center)
-    assert_quantity_allclose(psf_king2.gamma, psf_king.gamma)
-    assert_quantity_allclose(psf_king2.sigma, psf_king.sigma)
+    assert_quantity_allclose(psf_king2.axes["offset"].center, psf_king.axes["offset"].center)
+    assert_quantity_allclose(psf_king2.data["gamma"], psf_king.data["gamma"])
+    assert_quantity_allclose(psf_king2.data["sigma"], psf_king.data["sigma"])

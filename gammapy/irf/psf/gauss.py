@@ -55,7 +55,7 @@ class EnergyDependentMultiGaussPSF(IRF):
     """
     tag = "psf_3gauss"
     required_axes = ["energy_true", "offset"]
-    par_names = ("SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3")
+    par_names = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
     par_units = ["deg", "deg", "deg", "", "", ""]
 
     @property

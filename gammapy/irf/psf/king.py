@@ -2,12 +2,10 @@
 import logging
 import numpy as np
 from astropy.coordinates import Angle
-from astropy.io import fits
-from astropy.table import Table
+from astropy import units as u
 from astropy.units import Quantity
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
-from gammapy.utils.scripts import make_path
 from .table import EnergyDependentTablePSF
 from ..core import IRF
 
@@ -37,31 +35,9 @@ class PSFKing(IRF):
     """
 
     tag = "psf_king"
-
-    def __init__(
-        self,
-        energy_axis_true,
-        offset_axis,
-        gamma,
-        sigma,
-        meta=None
-    ):
-        energy_axis_true.assert_name("energy_true")
-        offset_axis.assert_name("offset")
-        self._energy_axis_true = energy_axis_true
-        self._offset_axis = offset_axis
-
-        self.gamma = np.asanyarray(gamma)
-        self.sigma = Angle(sigma)
-        self.meta = meta or {}
-
-    @property
-    def energy_axis_true(self):
-        return self._energy_axis_true
-
-    @property
-    def offset_axis(self):
-        return self._offset_axis
+    required_axes = ["energy_true", "offset"]
+    par_names = ["gamma", "sigma"]
+    par_units = ["", "deg"]
 
     def info(self):
         """Print some basic info.
@@ -87,22 +63,19 @@ class PSFKing(IRF):
         table : `~astropy.table.Table`
             Table King PSF info.
         """
-        energy_axis_true = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
-        )
+        axes = MapAxes.from_table(table, format=format)[cls.required_axes]
 
-        gamma = table["GAMMA"].quantity[0]
-        sigma = table["SIGMA"].quantity[0]
+        dtype = {"names": cls.par_names, "formats": len(cls.par_names) * (np.float32,)}
+
+        data = np.empty(axes.shape, dtype=dtype)
+
+        for name in cls.par_names:
+            data[name] = table[name.upper()].quantity[0].T
 
         return cls(
-            energy_axis_true=energy_axis_true,
-            offset_axis=offset_axis,
-            gamma=gamma,
-            sigma=sigma,
-            meta=table.meta
+            axes=axes,
+            data=data,
+            meta=table.meta.copy(),
         )
 
     def to_table(self, format="gadf-dl3"):
@@ -119,21 +92,13 @@ class PSFKing(IRF):
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        axes = MapAxes([self.energy_axis_true, self.offset_axis])
-        table = axes.to_table(format="gadf-dl3")
+        table = self.axes.to_table(format="gadf-dl3")
 
-        # Set up data
-        names = ["SIGMA", "GAMMA"]
-        units = ["deg", ""]
-        data = [
-            self.sigma,
-            self.gamma,
-        ]
+        for name, unit in zip(self.par_names, self.par_units):
+            table[name.upper()] = self.data[name].T[np.newaxis]
+            table[name.upper()].unit = unit
 
-        for name_, data_, unit_ in zip(names, data, units):
-            table[name_] = [data_]
-            table[name_].unit = unit_
-
+        # Create hdu and hdu list
         return table
 
     @staticmethod
@@ -190,21 +155,21 @@ class PSFKing(IRF):
         # Find nearest energy value
 
         # Find nearest energy value
-        i = np.argmin(np.abs(self.energy_axis_true.center - energy))
-        j = np.argmin(np.abs(self.offset_axis.center - offset))
+        i = np.argmin(np.abs(self.axes["energy_true"].center - energy))
+        j = np.argmin(np.abs(self.axes["offset"].center - offset))
 
         # TODO: Use some kind of interpolation to get PSF
         # parameters for every energy and theta
 
         # Select correct gauss parameters for given energy and theta
-        sigma = self.sigma[j][i]
-        gamma = self.gamma[j][i]
+        sigma = self.data["sigma"][i][j] * u.deg
+        gamma = self.data["gamma"][i][j]
 
         param["sigma"] = sigma
         param["gamma"] = gamma
         return param
 
-    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta=None, rad=None):
         """Convert to energy-dependent table PSF.
 
         Parameters
@@ -224,7 +189,7 @@ class PSFKing(IRF):
             Energy-dependent PSF
         """
         # self.energy is already the logcenter
-        energies = self.energy_axis_true.center
+        energy_axis_true = self.axes["energy_true"]
 
         # Defaults
         theta = theta if theta is not None else Angle(0, "deg")
@@ -234,15 +199,15 @@ class PSFKing(IRF):
 
         rad_axis = MapAxis.from_nodes(rad, name="rad")
 
-        psf_value = Quantity(np.empty((len(energies), len(rad))), "deg^-2")
+        psf_value = Quantity(np.empty((energy_axis_true.nbin, len(rad))), "deg^-2")
 
-        for idx, energy in enumerate(energies):
+        for idx, energy in enumerate(energy_axis_true.center):
             param_king = self.evaluate(energy, theta)
             val = self.evaluate_direct(rad, param_king["gamma"], param_king["sigma"])
             psf_value[idx] = Quantity(val, "deg^-2")
 
         return EnergyDependentTablePSF(
-            axes=[self.energy_axis_true, rad_axis],
+            axes=[energy_axis_true, rad_axis],
             data=psf_value.value,
             unit=psf_value.unit
         )
