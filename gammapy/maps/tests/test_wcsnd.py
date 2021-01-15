@@ -586,7 +586,8 @@ def test_plot_grid():
 
 @requires_dependency("matplotlib")
 def test_plot_allsky():
-    m = WcsNDMap.create(binsz=10 * u.deg)
+    axis = MapAxis([0, 1], node_type="edges")
+    m = WcsNDMap.create(binsz=10 * u.deg, axes=[axis])
     with mpl_plot_check():
         m.plot()
 
