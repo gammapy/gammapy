@@ -4,9 +4,10 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from gammapy.maps import MapAxis
-from gammapy.utils.gauss import MultiGauss2D
+from gammapy.utils.gauss import MultiGauss2D, Gauss2DPDF
 from .table import PSF3D, EnergyDependentTablePSF
 from .core import ParametricPSF
+
 
 
 __all__ = ["EnergyDependentMultiGaussPSF"]
@@ -56,7 +57,41 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     par_names = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
     par_units = ["deg", "deg", "deg", "", "", ""]
 
-    def psf_at_energy_and_theta(self, energy, theta):
+    def evaluate(self, energy, offset):
+        """"""
+        energy = u.Quantity(energy)
+        offset = u.Quantity(offset)
+
+        sigmas, norms = [], []
+
+        pars = {"AMPL_1": 1}
+
+        for name in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
+            interp = self._interpolators[name]
+            sigmas.append(interp((energy, offset)))
+
+        for name in ["SCALE", "AMPL_2", "AMPL_3"]:
+            interp = self._interpolators[name]
+            pars[name] = interp((energy, offset))
+
+        for idx, sigma in enumerate(sigmas):
+            a = pars[f"AMPL_{idx + 1}"]
+            norm = pars["SCALE"] * 2 * a * sigma ** 2
+            norms.append(norm)
+
+        return {"norms": norms, "sigmas": sigmas}
+
+    @staticmethod
+    def evaluate_direct(rad, norms, sigmas):
+        """Evaluate psf model"""
+        total = np.zeros_like(rad * norms)
+        components = [Gauss2DPDF(sigma) for sigma in sigmas]
+        for norm, component in zip(norms, components):
+            total += norm * component(rad)
+
+        return total
+
+    def psf_at_energy_and_theta(self, energy, offset):
         """
         Get `~gammapy.modeling.models.MultiGauss2D` model for given energy and theta.
 
@@ -74,27 +109,8 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
         psf : `~gammapy.utils.gauss.MultiGauss2D`
             Multigauss PSF object.
         """
-        energy = u.Quantity(energy)
-        theta = u.Quantity(theta)
-
-        sigmas, norms = [], []
-
-        pars = {"AMPL_1": 1}
-
-        for name in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
-            interp = self._interpolators[name]
-            sigmas.append(interp((energy, theta)))
-
-        for name in ["SCALE", "AMPL_2", "AMPL_3"]:
-            interp = self._interpolators[name]
-            pars[name] = interp((energy, theta))
-
-        for idx, sigma in enumerate(sigmas):
-            a = pars[f"AMPL_{idx + 1}"]
-            norm = pars["SCALE"] * 2 * a * sigma ** 2
-            norms.append(norm)
-
-        m = MultiGauss2D(sigmas, norms)
+        pars = self.evaluate(energy=energy, offset=offset)
+        m = MultiGauss2D(pars["sigmas"], pars["norms"])
         m.normalize()
         return m
 
@@ -121,88 +137,6 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
                     log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
                     radius[jdx, idx] = np.nan
         return Angle(radius, "deg")
-
-    def plot_containment(self, fraction=0.68, ax=None, add_cbar=True, **kwargs):
-        """
-        Plot containment image with energy and theta axes.
-
-        Parameters
-        ----------
-        fraction : float
-            Containment fraction between 0 and 1.
-        add_cbar : bool
-            Add a colorbar
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        energy = self.axes["energy_true"].center
-        offset = self.axes["offset"].center
-
-        # Set up and compute data
-        containment = self.containment_radius(energy, offset, fraction)
-
-        # plotting defaults
-        kwargs.setdefault("cmap", "GnBu")
-        kwargs.setdefault("vmin", np.nanmin(containment.value))
-        kwargs.setdefault("vmax", np.nanmax(containment.value))
-
-        # Plotting
-        x = energy.value
-        y = offset.value
-        caxes = ax.pcolormesh(x, y, containment.value, **kwargs)
-
-        # Axes labels and ticks, colobar
-        ax.semilogx()
-        ax.set_ylabel(f"Offset ({offset.unit})")
-        ax.set_xlabel(f"Energy ({energy.unit})")
-        ax.set_xlim(x.min(), x.max())
-        ax.set_ylim(y.min(), y.max())
-
-        if add_cbar:
-            label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
-
-        return ax
-
-    def plot_containment_vs_energy(
-        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None, **kwargs
-    ):
-        """Plot containment fraction as a function of energy.
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        energy = self.axes["energy_true"].center
-
-        for theta in thetas:
-            for fraction in fractions:
-                radius = self.containment_radius(energy, theta, fraction).squeeze()
-                kwargs.setdefault("label", f"{theta.deg} deg, {100 * fraction:.1f}%")
-                ax.plot(energy.value, radius.value, **kwargs)
-
-        ax.semilogx()
-        ax.legend(loc="best")
-        ax.set_xlabel("Energy (TeV)")
-        ax.set_ylabel("Containment radius (deg)")
-
-    def peek(self, figsize=(15, 5)):
-        """Quick-look summary plots."""
-        import matplotlib.pyplot as plt
-
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
-
-        self.plot_containment(fraction=0.68, ax=axes[0])
-        self.plot_containment(fraction=0.95, ax=axes[1])
-        self.plot_containment_vs_energy(ax=axes[2])
-
-        # TODO: implement this plot
-        # psf = self.psf_at_energy_and_theta(energy='1 TeV', theta='1 deg')
-        # psf.plot_components(ax=axes[2])
-
-        plt.tight_layout()
 
     def to_energy_dependent_table_psf(self, theta=None, rad=None):
         """Convert triple Gaussian PSF ot table PSF.

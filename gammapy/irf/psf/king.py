@@ -40,7 +40,7 @@ class PSFKing(ParametricPSF):
     par_units = ["", "deg"]
 
     @staticmethod
-    def evaluate_direct(r, gamma, sigma):
+    def evaluate_direct(rad, gamma, sigma):
         """Evaluate the PSF model.
 
         Formula is given here: :ref:`gadf:psf_king`.
@@ -59,13 +59,12 @@ class PSFKing(ParametricPSF):
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        r2 = r * r
         sigma2 = sigma * sigma
 
         with np.errstate(divide="ignore"):
             term1 = 1 / (2 * np.pi * sigma2)
             term2 = 1 - 1 / gamma
-            term3 = (1 + r2 / (2 * gamma * sigma2)) ** (-gamma)
+            term3 = (1 + rad ** 2 / (2 * gamma * sigma2)) ** (-gamma)
 
         return term1 * term2 * term3
 
