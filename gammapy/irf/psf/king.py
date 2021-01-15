@@ -7,14 +7,14 @@ from astropy.units import Quantity
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from .table import EnergyDependentTablePSF
-from ..core import IRF
+from .core import ParametricPSF
 
 __all__ = ["PSFKing"]
 
 log = logging.getLogger(__name__)
 
 
-class PSFKing(IRF):
+class PSFKing(ParametricPSF):
     """King profile analytical PSF depending on energy and offset.
 
     This PSF parametrisation and FITS data format is described here: :ref:`gadf:psf_king`.
@@ -38,68 +38,6 @@ class PSFKing(IRF):
     required_axes = ["energy_true", "offset"]
     par_names = ["gamma", "sigma"]
     par_units = ["", "deg"]
-
-    def info(self):
-        """Print some basic info.
-        """
-        ss = "\nSummary PSFKing info\n"
-        ss += "---------------------\n"
-        ss += array_stats_str(self.offset_axis.center, "offset")
-        ss += array_stats_str(self.energy_axis_true.center, "energy")
-        ss += array_stats_str(self.gamma, "gamma")
-        ss += array_stats_str(self.sigma, "sigma")
-
-        # TODO: should quote containment values also
-
-        return ss
-
-    @classmethod
-    def from_table(cls, table, format="gadf-dl3"):
-        """Create `PSFKing` from `~astropy.table.Table`.
-
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-            Table King PSF info.
-        """
-        axes = MapAxes.from_table(table, format=format)[cls.required_axes]
-
-        dtype = {"names": cls.par_names, "formats": len(cls.par_names) * (np.float32,)}
-
-        data = np.empty(axes.shape, dtype=dtype)
-
-        for name in cls.par_names:
-            data[name] = table[name.upper()].quantity[0].T
-
-        return cls(
-            axes=axes,
-            data=data,
-            meta=table.meta.copy(),
-        )
-
-    def to_table(self, format="gadf-dl3"):
-        """Convert PSF table data to table.
-
-        Parameters
-        ----------
-        format : {"gadf-dl3"}
-            Format specification
-
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-            PSF in HDU list format.
-        """
-        table = self.axes.to_table(format="gadf-dl3")
-
-        for name, unit in zip(self.par_names, self.par_units):
-            table[name.upper()] = self.data[name].T[np.newaxis]
-            table[name.upper()].unit = unit
-
-        # Create hdu and hdu list
-        return table
 
     @staticmethod
     def evaluate_direct(r, gamma, sigma):

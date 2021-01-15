@@ -3,12 +3,10 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
-from gammapy.maps import MapAxes, MapAxis
-from gammapy.utils.array import array_stats_str
+from gammapy.maps import MapAxis
 from gammapy.utils.gauss import MultiGauss2D
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from .table import PSF3D, EnergyDependentTablePSF
-from ..core import IRF
+from .core import ParametricPSF
 
 
 __all__ = ["EnergyDependentMultiGaussPSF"]
@@ -16,7 +14,7 @@ __all__ = ["EnergyDependentMultiGaussPSF"]
 log = logging.getLogger(__name__)
 
 
-class EnergyDependentMultiGaussPSF(IRF):
+class EnergyDependentMultiGaussPSF(ParametricPSF):
     """Triple Gauss analytical PSF depending on energy and theta.
 
     To evaluate the PSF call the ``to_energy_dependent_table_psf`` or ``psf_at_energy_and_theta`` methods.
@@ -57,78 +55,6 @@ class EnergyDependentMultiGaussPSF(IRF):
     required_axes = ["energy_true", "offset"]
     par_names = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
     par_units = ["deg", "deg", "deg", "", "", ""]
-
-    @property
-    def _interpolators(self):
-        interps = {}
-
-        for name in self.par_names:
-            points = [a.center for a in self.axes]
-            points_scale = tuple([a.interp for a in self.axes])
-            interps[name] = ScaledRegularGridInterpolator(
-                points, values=self.data[name], points_scale=points_scale
-            )
-
-        return interps
-
-    @classmethod
-    def from_table(cls, table, format="gadf-dl3"):
-        """Create `EnergyDependentMultiGaussPSF` from HDU list.
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-            Table with irf data
-        format : {"gadf-dl3"}
-            Format specification
-
-        Parameters
-        ----------
-        psf : `~EnergyDependentMultiGaussPSF`
-            Multi gauss psf
-        """
-        axes = MapAxes.from_table(table, format=format)[cls.required_axes]
-
-        dtype = {"names": cls.par_names, "formats": len(cls.par_names) * (np.float32,)}
-
-        data = np.empty(axes.shape, dtype=dtype)
-
-        for name in cls.par_names:
-            values = table[name].data[0].transpose()
-
-            # this fixes some files where sigma is written as zero
-            if "SIGMA" in name:
-                values[values == 0] = 1.
-
-            data[name] = values.reshape(axes.shape)
-
-        return cls(
-            axes=axes,
-            data=data,
-            meta=table.meta.copy(),
-        )
-
-    def to_table(self, format="gadf-dl3"):
-        """Convert psf table data table.
-
-        Parameters
-        ----------
-        format : {"gadf-dl3"}
-            Format specification
-
-        Returns
-        -------
-        table : `~astropy.table.Table`
-            Table with irf data
-        """
-        table = self.axes.to_table(format="gadf-dl3")
-
-        for name, unit in zip(self.par_names, self.par_units):
-            table[name] = [self.data[name]]
-            table[name].unit = unit
-
-        # Create hdu and hdu list
-        return table
 
     def psf_at_energy_and_theta(self, energy, theta):
         """
@@ -277,50 +203,6 @@ class EnergyDependentMultiGaussPSF(IRF):
         # psf.plot_components(ax=axes[2])
 
         plt.tight_layout()
-
-    def info(
-        self,
-        fractions=[0.68, 0.95],
-        energies=u.Quantity([1.0, 10.0], "TeV"),
-        thetas=u.Quantity([0.0], "deg"),
-    ):
-        """
-        Print PSF summary info.
-
-        The containment radius for given fraction, energies and thetas is
-        computed and printed on the command line.
-
-        Parameters
-        ----------
-        fractions : list
-            Containment fraction to compute containment radius for.
-        energies : `~astropy.units.u.Quantity`
-            Energies to compute containment radius for.
-        thetas : `~astropy.units.u.Quantity`
-            Thetas to compute containment radius for.
-
-        Returns
-        -------
-        ss : string
-            Formatted string containing the summary info.
-        """
-        ss = "\nSummary PSF info\n"
-        ss += "----------------\n"
-        ss += array_stats_str(self.axes["offset"].center.to("deg"), "Theta")
-        ss += array_stats_str(self.axes["energy_true"].edges[1:], "Energy hi")
-        ss += array_stats_str(self.axes["energy_true"].edges[:-1], "Energy lo")
-
-        for fraction in fractions:
-            containment = self.containment_radius(energies, thetas, fraction)
-            for i, energy in enumerate(energies):
-                for j, theta in enumerate(thetas):
-                    radius = containment[j, i]
-                    ss += (
-                        "{:2.0f}% containment radius at theta = {} and "
-                        "E = {:4.1f}: {:5.8f}\n"
-                        "".format(100 * fraction, theta, energy, radius)
-                    )
-        return ss
 
     def to_energy_dependent_table_psf(self, theta=None, rad=None):
         """Convert triple Gaussian PSF ot table PSF.
