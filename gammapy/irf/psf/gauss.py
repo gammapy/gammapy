@@ -11,13 +11,15 @@ from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .table import PSF3D, EnergyDependentTablePSF
+from ..core import IRF
+
 
 __all__ = ["EnergyDependentMultiGaussPSF"]
 
 log = logging.getLogger(__name__)
 
 
-class EnergyDependentMultiGaussPSF:
+class EnergyDependentMultiGaussPSF(IRF):
     """Triple Gauss analytical PSF depending on energy and theta.
 
     To evaluate the PSF call the ``to_energy_dependent_table_psf`` or ``psf_at_energy_and_theta`` methods.
@@ -55,6 +57,7 @@ class EnergyDependentMultiGaussPSF:
         plt.show()
     """
     tag = "psf_3gauss"
+    required_axes = ["energy_true", "offset"]
 
     def __init__(
         self,
@@ -99,28 +102,21 @@ class EnergyDependentMultiGaussPSF:
         return interps
 
     @classmethod
-    def read(cls, filename, hdu="PSF_2D_GAUSS"):
-        """Create `EnergyDependentMultiGaussPSF` from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            File name
-        """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_table_hdu(hdulist[hdu])
-
-    @classmethod
-    def from_table_hdu(cls, hdu):
+    def from_table(cls, table, format="gadf-dl3"):
         """Create `EnergyDependentMultiGaussPSF` from HDU list.
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
-            HDU
-        """
-        table = Table.read(hdu)
+        table : `~astropy.table.Table`
+            Table with irf data
+        format : {"gadf-dl3"}
+            Format specification
 
+        Parameters
+        ----------
+        psf : `~EnergyDependentMultiGaussPSF`
+            Multi gauss psf
+        """
         energy_axis_true = MapAxis.from_table(
             table, column_prefix="ENERG", format="gadf-dl3"
         )
@@ -132,13 +128,13 @@ class EnergyDependentMultiGaussPSF:
         shape = (offset_axis.nbin, energy_axis_true.nbin)
         sigmas = []
         for key in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
-            sigma = hdu.data[key].reshape(shape).copy()
+            sigma = table[key].reshape(shape).copy()
             sigmas.append(sigma)
 
         # Get amplitudes
         norms = []
         for key in ["SCALE", "AMPL_2", "AMPL_3"]:
-            norm = hdu.data[key].reshape(shape).copy()
+            norm = table[key].reshape(shape).copy()
             norms.append(norm)
 
         return cls(
@@ -146,17 +142,21 @@ class EnergyDependentMultiGaussPSF:
             offset_axis=offset_axis,
             sigmas=sigmas,
             norms=norms,
-            meta=dict(hdu.header)
+            meta=table.meta.copy()
         )
 
-    def to_hdulist(self):
-        """
-        Convert psf table data to FITS hdu list.
+    def to_table(self, format="gadf-dl3"):
+        """Convert psf table data table.
+
+        Parameters
+        ----------
+        format : {"gadf-dl3"}
+            Format specification
 
         Returns
         -------
-        hdu_list : `~astropy.io.fits.HDUList`
-            PSF in HDU list format.
+        table : `~astropy.table.Table`
+            Table with irf data
         """
         # Set up data
         names = [
@@ -186,16 +186,7 @@ class EnergyDependentMultiGaussPSF:
             table[name_].unit = unit_
 
         # Create hdu and hdu list
-        hdu = fits.BinTableHDU(table)
-        hdu.header.update(self.meta)
-        return fits.HDUList([fits.PrimaryHDU(), hdu])
-
-    def write(self, filename, *args, **kwargs):
-        """Write PSF to FITS file.
-
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
-        """
-        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
+        return table
 
     def psf_at_energy_and_theta(self, energy, theta):
         """

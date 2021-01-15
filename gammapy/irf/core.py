@@ -317,6 +317,18 @@ class IRF:
         name = IRF_DL3_HDU_SPECIFICATION[self.tag]["extname"]
         return fits.BinTableHDU(self.to_table(format=format), name=name)
 
+    def to_hdulist(self, format="gadf-dl3"):
+        """"""
+        hdu = self.to_table_hdu(format=format)
+        return fits.HDUList([fits.PrimaryHDU(), hdu])
+
+    def write(self, filename, *args, **kwargs):
+        """Write PSF to FITS file.
+
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        """
+        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
+
 
 class IRFMap:
     """IRF map base class for DL4 instrument response functions"""

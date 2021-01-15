@@ -9,13 +9,14 @@ from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.scripts import make_path
 from .table import EnergyDependentTablePSF
+from ..core import IRF
 
 __all__ = ["PSFKing"]
 
 log = logging.getLogger(__name__)
 
 
-class PSFKing:
+class PSFKing(IRF):
     """King profile analytical PSF depending on energy and offset.
 
     This PSF parametrisation and FITS data format is described here: :ref:`gadf:psf_king`.
@@ -77,23 +78,9 @@ class PSFKing:
         return ss
 
     @classmethod
-    def read(cls, filename, hdu=1):
-        """Create `PSFKing` from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            File name
-        """
-        # TODO: implement it so that HDUCLASS is used
-        # http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
-
-        table = Table.read(make_path(filename), hdu=hdu)
-        return cls.from_table(table)
-
-    @classmethod
-    def from_table(cls, table):
+    def from_table(cls, table, format="gadf-dl3"):
         """Create `PSFKing` from `~astropy.table.Table`.
+
 
         Parameters
         ----------
@@ -118,9 +105,14 @@ class PSFKing:
             meta=table.meta
         )
 
-    def to_hdulist(self):
-        """
-        Convert PSF table data to FITS HDU list.
+    def to_table(self, format="gadf-dl3"):
+        """Convert PSF table data to table.
+
+        Parameters
+        ----------
+        format : {"gadf-dl3"}
+            Format specification
+
 
         Returns
         -------
@@ -142,16 +134,7 @@ class PSFKing:
             table[name_] = [data_]
             table[name_].unit = unit_
 
-        hdu = fits.BinTableHDU(table)
-        hdu.header.update(self.meta)
-        return fits.HDUList([fits.PrimaryHDU(), hdu])
-
-    def write(self, filename, *args, **kwargs):
-        """Write PSF to FITS file.
-
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
-        """
-        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
+        return table
 
     @staticmethod
     def evaluate_direct(r, gamma, sigma):

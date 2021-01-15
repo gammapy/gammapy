@@ -36,6 +36,14 @@ IRF_DL3_HDU_SPECIFICATION = {
         "column_name": "RPSF",
         "hduclas2": "PSF",
     },
+    "psf_3gauss": {
+        "extname": "PSF_2D_GAUSS",
+        "hduclas2": "PSF",
+    },
+    "psf_king": {
+        "extname": "PSF_2D_KING",
+        "hduclas2": "PSF",
+    },
     "aeff_2d": {
         "extname": "EFFECTIVE AREA",
         "column_name": "EFFAREA",
