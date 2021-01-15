@@ -95,8 +95,8 @@ class EnergyDependentMultiGaussPSF(IRF):
         data = np.empty(axes.shape, dtype=dtype)
 
         for name in cls.par_names:
-            data[name] = table[name].reshape(axes.shape)
-        
+            data[name] = table[name].data[0].transpose()
+
         return cls(
             axes=axes,
             data=data,
