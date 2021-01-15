@@ -95,7 +95,13 @@ class EnergyDependentMultiGaussPSF(IRF):
         data = np.empty(axes.shape, dtype=dtype)
 
         for name in cls.par_names:
-            data[name] = table[name].data[0].transpose()
+            values = table[name].data[0].transpose()
+
+            # this fixes some files where sigma is written as zero
+            if "SIGMA" in name:
+                values[values == 0] = 1.
+
+            data[name] = values.reshape(axes.shape)
 
         return cls(
             axes=axes,
@@ -163,7 +169,6 @@ class EnergyDependentMultiGaussPSF(IRF):
             norm = pars["SCALE"] * 2 * a * sigma ** 2
             norms.append(norm)
 
-        print(sigmas, norms)
         m = MultiGauss2D(sigmas, norms)
         m.normalize()
         return m

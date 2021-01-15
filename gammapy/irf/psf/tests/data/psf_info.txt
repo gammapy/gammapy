@@ -4,7 +4,7 @@ Summary PSF info
 Theta          : size =    12, min =  0.000 deg, max =  2.200 deg
 Energy hi      : size =    15, min =  0.158 TeV, max = 100.000 TeV
 Energy lo      : size =    15, min =  0.100 TeV, max = 63.096 TeV
-68% containment radius at theta = 0.0 deg and E =  1.0 TeV: 0.13457222 deg
-68% containment radius at theta = 0.0 deg and E = 10.0 TeV: 0.12126335 deg
-95% containment radius at theta = 0.0 deg and E =  1.0 TeV: 0.28700509 deg
-95% containment radius at theta = 0.0 deg and E = 10.0 TeV: 0.25862096 deg
+68% containment radius at theta = 0.0 deg and E =  1.0 TeV: 0.14714091 deg
+68% containment radius at theta = 0.0 deg and E = 10.0 TeV: 0.16573000 deg
+95% containment radius at theta = 0.0 deg and E =  1.0 TeV: 0.31381060 deg
+95% containment radius at theta = 0.0 deg and E = 10.0 TeV: 0.35345595 deg
