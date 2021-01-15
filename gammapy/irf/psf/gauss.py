@@ -64,10 +64,9 @@ class EnergyDependentMultiGaussPSF(IRF):
 
         for name in self.par_names:
             points = [a.center for a in self.axes]
-            # TODO: activate scaling
-            #points_scale = tuple([a.interp for a in self.axes])
+            points_scale = tuple([a.interp for a in self.axes])
             interps[name] = ScaledRegularGridInterpolator(
-                points, values=self.data[name],
+                points, values=self.data[name], points_scale=points_scale
             )
 
         return interps
