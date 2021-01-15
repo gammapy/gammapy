@@ -3,13 +3,10 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
-from astropy.io import fits
-from astropy.table import Table
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.scripts import make_path
 from .table import PSF3D, EnergyDependentTablePSF
 from ..core import IRF
 
@@ -58,47 +55,21 @@ class EnergyDependentMultiGaussPSF(IRF):
     """
     tag = "psf_3gauss"
     required_axes = ["energy_true", "offset"]
-
-    def __init__(
-        self,
-        energy_axis_true,
-        offset_axis,
-        sigmas,
-        norms,
-        meta,
-    ):
-        energy_axis_true.assert_name("energy_true")
-        offset_axis.assert_name("offset")
-
-        self._energy_axis_true = energy_axis_true
-        self._offset_axis = offset_axis
-
-        sigmas[0][sigmas[0] == 0] = 1
-        sigmas[1][sigmas[1] == 0] = 1
-        sigmas[2][sigmas[2] == 0] = 1
-        self.sigmas = sigmas
-
-        self.norms = norms
-        self.meta = meta or {}
-        self._interp_norms = self._setup_interpolators(self.norms)
-        self._interp_sigmas = self._setup_interpolators(self.sigmas)
+    par_names = ("SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3")
+    par_units = ["deg", "deg", "deg", "", "", ""]
 
     @property
-    def energy_axis_true(self):
-        return self._energy_axis_true
+    def _interpolators(self):
+        interps = {}
 
-    @property
-    def offset_axis(self):
-        return self._offset_axis
-
-    def _setup_interpolators(self, values_list):
-        interps = []
-        for values in values_list:
-            interp = ScaledRegularGridInterpolator(
-                points=(self.offset_axis.center, self.energy_axis_true.center),
-                values=values,
+        for name in self.par_names:
+            points = [a.center for a in self.axes]
+            # TODO: activate scaling
+            #points_scale = tuple([a.interp for a in self.axes])
+            interps[name] = ScaledRegularGridInterpolator(
+                points, values=self.data[name],
             )
-            interps.append(interp)
+
         return interps
 
     @classmethod
@@ -117,32 +88,19 @@ class EnergyDependentMultiGaussPSF(IRF):
         psf : `~EnergyDependentMultiGaussPSF`
             Multi gauss psf
         """
-        energy_axis_true = MapAxis.from_table(
-            table, column_prefix="ENERG", format="gadf-dl3"
-        )
-        offset_axis = MapAxis.from_table(
-            table, column_prefix="THETA", format="gadf-dl3"
-        )
+        axes = MapAxes.from_table(table, format=format)[cls.required_axes]
 
-        # Get sigmas
-        shape = (offset_axis.nbin, energy_axis_true.nbin)
-        sigmas = []
-        for key in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
-            sigma = table[key].reshape(shape).copy()
-            sigmas.append(sigma)
+        dtype = {"names": cls.par_names, "formats": len(cls.par_names) * (np.float32,)}
 
-        # Get amplitudes
-        norms = []
-        for key in ["SCALE", "AMPL_2", "AMPL_3"]:
-            norm = table[key].reshape(shape).copy()
-            norms.append(norm)
+        data = np.empty(axes.shape, dtype=dtype)
 
+        for name in cls.par_names:
+            data[name] = table[name].reshape(axes.shape)
+        
         return cls(
-            energy_axis_true=energy_axis_true,
-            offset_axis=offset_axis,
-            sigmas=sigmas,
-            norms=norms,
-            meta=table.meta.copy()
+            axes=axes,
+            data=data,
+            meta=table.meta.copy(),
         )
 
     def to_table(self, format="gadf-dl3"):
@@ -158,32 +116,11 @@ class EnergyDependentMultiGaussPSF(IRF):
         table : `~astropy.table.Table`
             Table with irf data
         """
-        # Set up data
-        names = [
-            "SCALE",
-            "SIGMA_1",
-            "AMPL_2",
-            "SIGMA_2",
-            "AMPL_3",
-            "SIGMA_3",
-        ]
-        units = ["", "deg", "", "deg", "", "deg"]
+        table = self.axes.to_table(format="gadf-dl3")
 
-        data = [
-            self.norms[0],
-            self.sigmas[0],
-            self.norms[1],
-            self.sigmas[1],
-            self.norms[2],
-            self.sigmas[2],
-        ]
-
-        axes = MapAxes([self.energy_axis_true, self.offset_axis])
-        table = axes.to_table(format="gadf-dl3")
-
-        for name_, data_, unit_ in zip(names, data, units):
-            table[name_] = [data_]
-            table[name_].unit = unit_
+        for name, unit in zip(self.par_names, self.par_units):
+            table[name] = [self.data[name]]
+            table[name].unit = unit
 
         # Create hdu and hdu list
         return table
@@ -211,20 +148,22 @@ class EnergyDependentMultiGaussPSF(IRF):
 
         sigmas, norms = [], []
 
-        pars = {"A_1": 1}
+        pars = {"AMPL_1": 1}
 
-        for interp_sigma in self._interp_sigmas:
-            sigma = interp_sigma((theta, energy))
-            sigmas.append(sigma)
+        for name in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
+            interp = self._interpolators[name]
+            sigmas.append(interp((energy, theta)))
 
-        for name, interp_norm in zip(["scale", "A_2", "A_3"], self._interp_norms):
-            pars[name] = interp_norm((theta, energy))
+        for name in ["SCALE", "AMPL_2", "AMPL_3"]:
+            interp = self._interpolators[name]
+            pars[name] = interp((energy, theta))
 
         for idx, sigma in enumerate(sigmas):
-            a = pars[f"A_{idx + 1}"]
-            norm = pars["scale"] * 2 * a * sigma ** 2
+            a = pars[f"AMPL_{idx + 1}"]
+            norm = pars["SCALE"] * 2 * a * sigma ** 2
             norms.append(norm)
 
+        print(sigmas, norms)
         m = MultiGauss2D(sigmas, norms)
         m.normalize()
         return m
@@ -268,8 +207,8 @@ class EnergyDependentMultiGaussPSF(IRF):
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.energy_axis_true.center
-        offset = self.offset_axis.center
+        energy = self.axes["energy_true"].center
+        offset = self.axes["offset"].center
 
         # Set up and compute data
         containment = self.containment_radius(energy, offset, fraction)
@@ -306,7 +245,7 @@ class EnergyDependentMultiGaussPSF(IRF):
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.energy_axis_true.center
+        energy = self.axes["energy_true"].center
 
         for theta in thetas:
             for fraction in fractions:
@@ -363,9 +302,9 @@ class EnergyDependentMultiGaussPSF(IRF):
         """
         ss = "\nSummary PSF info\n"
         ss += "----------------\n"
-        ss += array_stats_str(self.offset_axis.center.to("deg"), "Theta")
-        ss += array_stats_str(self.energy_axis_true.edges[1:], "Energy hi")
-        ss += array_stats_str(self.energy_axis_true.edges[:-1], "Energy lo")
+        ss += array_stats_str(self.axes["offset"].center.to("deg"), "Theta")
+        ss += array_stats_str(self.axes["energy_true"].edges[1:], "Energy hi")
+        ss += array_stats_str(self.axes["energy_true"].edges[:-1], "Energy lo")
 
         for fraction in fractions:
             containment = self.containment_radius(energies, thetas, fraction)
@@ -379,7 +318,7 @@ class EnergyDependentMultiGaussPSF(IRF):
                     )
         return ss
 
-    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
+    def to_energy_dependent_table_psf(self, theta=None, rad=None):
         """Convert triple Gaussian PSF ot table PSF.
 
         Parameters
@@ -389,9 +328,6 @@ class EnergyDependentMultiGaussPSF(IRF):
         rad : `~astropy.coordinates.Angle`
             Offset from PSF center used for evaluating the PSF on a grid.
             Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
-        exposure : `~astropy.units.u.Quantity`
-            Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
-            Default exposure = 1.
 
         Returns
         -------
@@ -399,7 +335,8 @@ class EnergyDependentMultiGaussPSF(IRF):
             Instance of `EnergyDependentTablePSF`.
         """
         # Convert energies to log center
-        energies = self.energy_axis_true.center
+        energy_axis_true = self.axes["energy_true"]
+
         # Defaults and input handling
         if theta is None:
             theta = Angle(0, "deg")
@@ -411,15 +348,14 @@ class EnergyDependentMultiGaussPSF(IRF):
 
         rad_axis = MapAxis.from_nodes(rad, name="rad")
 
-        psf_value = u.Quantity(np.zeros((energies.size, rad.size)), "deg^-2")
+        psf_value = u.Quantity(np.zeros((energy_axis_true.nbin, rad.size)), "deg^-2")
 
-        for idx, energy in enumerate(energies):
+        for idx, energy in enumerate(energy_axis_true.center):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
             psf_value[idx] = u.Quantity(psf_gauss(rad), "deg^-2")
 
         return EnergyDependentTablePSF(
-            axes=[self.energy_axis_true, rad_axis],
-            exposure=exposure,
+            axes=[energy_axis_true, rad_axis],
             data=psf_value.value,
             unit=psf_value.unit
         )
@@ -437,26 +373,25 @@ class EnergyDependentMultiGaussPSF(IRF):
         psf3d : `~gammapy.irf.PSF3D`
             the PSF3D. It will be defined on the same energy and offset values than the input psf.
         """
-
-        offsets = self.offset_axis.center
-        energy = self.energy_axis_true.center
+        offset_axis = self.axes["offset"]
+        energy_axis_true = self.axes["energy_true"]
 
         if rad is None:
             rad = np.linspace(0, 0.66, 67) * u.deg
 
         rad_axis = MapAxis.from_edges(rad, name="rad")
 
-        shape = (self.energy_axis_true.nbin, self.offset_axis.nbin, rad_axis.nbin)
+        shape = (energy_axis_true.nbin, offset_axis.nbin, rad_axis.nbin)
         psf_value = np.zeros(shape) * u.Unit("sr-1")
 
-        for idx, offset in enumerate(offsets):
+        for idx, offset in enumerate(offset_axis.center):
             table_psf = self.to_energy_dependent_table_psf(offset)
             psf_value[:, idx, :] = table_psf.evaluate(
-                energy_true=energy[:, np.newaxis], rad=rad_axis.center
+                energy_true=energy_axis_true.center[:, np.newaxis], rad=rad_axis.center
             )
 
         return PSF3D(
-            axes=[self.energy_axis_true, self.offset_axis, rad_axis],
+            axes=[energy_axis_true, offset_axis, rad_axis],
             data=psf_value.value,
             unit=psf_value.unit,
             meta=self.meta.copy()
