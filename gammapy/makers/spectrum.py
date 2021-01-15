@@ -144,24 +144,14 @@ class SpectrumDatasetMaker(Maker):
         edisp : `~gammapy.irf.EDispKernelMap`
             Energy dispersion kernel map
         """
-        make_edisp_kernel_map(
-            
+        exposure = self.make_exposure(geom.squash(axis_name="energy"), observation)
+
+        return make_edisp_kernel_map(
+            edisp=observation.edisp,
+            pointing=observation.pointing_radec,
+            geom=geom,
+            exposure_map=exposure,
         )
-        position = geom.center_skydir
-        energy_axis = geom.axes["energy"]
-        energy_axis_true = geom.axes["energy_true"]
-
-        offset = observation.pointing_radec.separation(position)
-
-        kernel = observation.edisp.to_edisp_kernel(
-            offset, energy=energy_axis.edges, energy_true=energy_axis_true.edges
-        )
-
-        edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=geom.to_image())
-
-        exposure = self.make_exposure(geom.squash("energy"), observation)
-        edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
-        return edisp
 
     @staticmethod
     def make_meta_table(observation):

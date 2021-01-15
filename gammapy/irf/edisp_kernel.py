@@ -438,7 +438,10 @@ class EDispKernel(IRF):
         if energy_max is None:
             energy_max = energy_true[-1]
 
-        bias_spectrum = TemplateSpectralModel(energy_true, values)
+        bias_spectrum = TemplateSpectralModel(
+            energy=energy_true, values=values
+        )
+
         energy_true_bias = bias_spectrum.inverse(
             Quantity(bias), energy_min=energy_min, energy_max=energy_max
         )

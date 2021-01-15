@@ -110,7 +110,7 @@ def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_d
 @requires_data()
 def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
 
-    safe_mask_maker = SafeMaskMaker()
+    safe_mask_maker = SafeMaskMaker(bias_percent=20)
     maker = SpectrumDatasetMaker()
 
     obs = observations_hess_dl3[0]
@@ -123,7 +123,7 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert mask_safe.data.sum() == 4
 
     mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert mask_safe.data.sum() == 3
+    assert mask_safe.data.sum() == 2
 
     mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert mask_safe.data.sum() == 3
@@ -162,7 +162,7 @@ class TestSpectrumMakerChain:
             (
                 dict(containment_correction=False),
                 dict(
-                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.235864
+                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.23635
                 ),
             ),
             (
@@ -171,7 +171,7 @@ class TestSpectrumMakerChain:
                     n_on=125,
                     sigma=18.953014,
                     aeff=375314.356461 * u.m ** 2,
-                    edisp=0.235864,
+                    edisp=0.23635,
                 ),
             ),
         ],
