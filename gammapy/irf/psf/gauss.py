@@ -8,8 +8,6 @@ from gammapy.utils.gauss import MultiGauss2D, Gauss2DPDF
 from .table import PSF3D, EnergyDependentTablePSF
 from .core import ParametricPSF
 
-
-
 __all__ = ["EnergyDependentMultiGaussPSF"]
 
 log = logging.getLogger(__name__)
@@ -54,8 +52,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     """
     tag = "psf_3gauss"
     required_axes = ["energy_true", "offset"]
-    par_names = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
-    par_units = ["deg", "deg", "deg", "", "", ""]
+    required_parameters = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
 
     def evaluate(self, energy, offset):
         """"""
@@ -76,7 +73,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
         for idx, sigma in enumerate(sigmas):
             a = pars[f"AMPL_{idx + 1}"]
-            norm = pars["SCALE"] * 2 * a * sigma ** 2
+            norm = pars["SCALE"] * 2 * a * sigma ** 2 * u.Unit("deg-2")
             norms.append(norm)
 
         return {"norms": norms, "sigmas": sigmas}
@@ -84,12 +81,12 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     @staticmethod
     def evaluate_direct(rad, norms, sigmas):
         """Evaluate psf model"""
-        total = np.zeros_like(rad * norms)
-        components = [Gauss2DPDF(sigma) for sigma in sigmas]
-        for norm, component in zip(norms, components):
-            total += norm * component(rad)
+        value = np.zeros(rad.shape) * u.Unit("deg-2")
 
-        return total
+        for norm, sigma in zip(norms, sigmas):
+            value += norm / (2 * np.pi * sigma ** 2) * np.exp(-0.5 * (rad / sigma) ** 2)
+
+        return value
 
     def psf_at_energy_and_theta(self, energy, offset):
         """
@@ -137,48 +134,6 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
                     log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
                     radius[jdx, idx] = np.nan
         return Angle(radius, "deg")
-
-    def to_energy_dependent_table_psf(self, theta=None, rad=None):
-        """Convert triple Gaussian PSF ot table PSF.
-
-        Parameters
-        ----------
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
-        rad : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid.
-            Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
-
-        Returns
-        -------
-        tabe_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Instance of `EnergyDependentTablePSF`.
-        """
-        # Convert energies to log center
-        energy_axis_true = self.axes["energy_true"]
-
-        # Defaults and input handling
-        if theta is None:
-            theta = Angle(0, "deg")
-        else:
-            theta = Angle(theta)
-
-        if rad is None:
-            rad = Angle(np.arange(0, 1.5, 0.005), "deg")
-
-        rad_axis = MapAxis.from_nodes(rad, name="rad")
-
-        psf_value = u.Quantity(np.zeros((energy_axis_true.nbin, rad.size)), "deg^-2")
-
-        for idx, energy in enumerate(energy_axis_true.center):
-            psf_gauss = self.psf_at_energy_and_theta(energy, theta)
-            psf_value[idx] = u.Quantity(psf_gauss(rad), "deg^-2")
-
-        return EnergyDependentTablePSF(
-            axes=[energy_axis_true, rad_axis],
-            data=psf_value.value,
-            unit=psf_value.unit
-        )
 
     def to_psf3d(self, rad=None):
         """Create a PSF3D from an analytical PSF.

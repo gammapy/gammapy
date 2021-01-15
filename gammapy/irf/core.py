@@ -77,6 +77,15 @@ class IRF:
         self.__dict__.pop("_interpolate", None)
         self.__dict__.pop("_integrate_rad", None)
 
+    @property
+    def unit(self):
+        """Map unit (`~astropy.units.Unit`)"""
+        return self._unit
+
+    @unit.setter
+    def unit(self, val):
+        self._unit = u.Unit(val)
+
     @lazyproperty
     def _interpolate(self):
         points = [a.center for a in self.axes]

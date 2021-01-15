@@ -16,7 +16,7 @@ class Gauss2DPDF:
     """
 
     def __init__(self, sigma=1):
-        self.sigma = np.asarray(sigma, np.float64)
+        self.sigma = sigma
 
     @property
     def _sigma2(self):
@@ -43,9 +43,6 @@ class Gauss2DPDF:
         dpdxdy : `~numpy.ndarray`
             dp / (dx dy)
         """
-        x = np.asarray(x, dtype=np.float64)
-        y = np.asarray(y, dtype=np.float64)
-
         theta2 = x * x + y * y
         amplitude = 1 / (2 * np.pi * self._sigma2)
         exponent = -0.5 * theta2 / self._sigma2
@@ -64,8 +61,6 @@ class Gauss2DPDF:
         dpdtheta2 : `~numpy.ndarray`
             dp / dtheta2
         """
-        theta2 = np.asarray(theta2, dtype=np.float64)
-
         amplitude = 1 / (2 * self._sigma2)
         exponent = -0.5 * theta2 / self._sigma2
         return amplitude * np.exp(exponent)
@@ -148,7 +143,7 @@ class MultiGauss2D:
         if norms is None:
             self.norms = np.ones(len(self.components))
         else:
-            self.norms = np.asarray(norms, dtype=np.float64)
+            self.norms = norms
 
     def __call__(self, x, y=0):
         """dp / (dx dy) at position (x, y)
@@ -165,9 +160,6 @@ class MultiGauss2D:
         total : `~numpy.ndarray`
             dp / (dx dy)
         """
-        x = np.asarray(x, dtype=np.float64)
-        y = np.asarray(y, dtype=np.float64)
-
         total = np.zeros_like(x)
         for norm, component in zip(self.norms, self.components):
             total += norm * component(x, y)
@@ -228,8 +220,6 @@ class MultiGauss2D:
             dp / dtheta2
         """
         # Actually this is only a PDF if sum(norms) == 1
-        theta2 = np.asarray(theta2, dtype=np.float64)
-
         total = np.zeros_like(theta2)
         for norm, component in zip(self.norms, self.components):
             total += norm * component.dpdtheta2(theta2)

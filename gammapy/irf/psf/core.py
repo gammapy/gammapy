@@ -2,10 +2,10 @@
 import abc
 import numpy as np
 from astropy import units as u
-from gammapy.maps import MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-
+from .table import EnergyDependentTablePSF
 from ..core import IRF
 
 
@@ -13,23 +13,41 @@ class ParametricPSF(IRF):
     """Parametric PSF base class"""
     @property
     @abc.abstractmethod
-    def par_names(self):
+    def required_parameters(self):
+        pass
+
+    @abc.abstractmethod
+    def evaluate_direct(self):
         pass
 
     @property
-    @abc.abstractmethod
-    def par_units(self):
-        pass
+    def quantity(self):
+        """Quantity"""
+        quantity = {}
+
+        for name in self.required_parameters:
+            quantity[name] = self.data[name] * self.unit[name]
+
+        return quantity
+
+    @property
+    def unit(self):
+        """Map unit (`~astropy.units.Unit`)"""
+        return self._unit
+
+    @unit.setter
+    def unit(self, values):
+        self._unit = {key: u.Unit(val) for key, val in values.items()}
 
     @property
     def _interpolators(self):
         interps = {}
 
-        for name in self.par_names:
+        for name in self.required_parameters:
             points = [a.center for a in self.axes]
             points_scale = tuple([a.interp for a in self.axes])
             interps[name] = ScaledRegularGridInterpolator(
-                points, values=self.data[name], points_scale=points_scale
+                points, values=self.quantity[name], points_scale=points_scale
             )
 
         return interps
@@ -50,9 +68,9 @@ class ParametricPSF(IRF):
         """
         table = self.axes.to_table(format="gadf-dl3")
 
-        for name, unit in zip(self.par_names, self.par_units):
+        for name in self.required_parameters:
             table[name.upper()] = self.data[name].T[np.newaxis]
-            table[name.upper()].unit = unit
+            table[name.upper()].unit = self.unit[name]
 
         # Create hdu and hdu list
         return table
@@ -69,23 +87,27 @@ class ParametricPSF(IRF):
         """
         axes = MapAxes.from_table(table, format=format)[cls.required_axes]
 
-        dtype = {"names": cls.par_names, "formats": len(cls.par_names) * (np.float32,)}
+        dtype = {"names": cls.required_parameters, "formats": len(cls.required_parameters) * (np.float32,)}
 
         data = np.empty(axes.shape, dtype=dtype)
+        unit = {}
 
-        for name in cls.par_names:
-            values = table[name.upper()].data[0].transpose()
+        for name in cls.required_parameters:
+            column = table[name.upper()]
+            values = column.data[0].transpose()
 
             # this fixes some files where sigma is written as zero
             if "SIGMA" in name:
                 values[values == 0] = 1.
 
             data[name] = values.reshape(axes.shape)
+            unit[name] = column.unit or ""
 
         return cls(
             axes=axes,
             data=data,
             meta=table.meta.copy(),
+            unit=unit
         )
 
     def info(
@@ -175,6 +197,42 @@ class ParametricPSF(IRF):
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
+
+    def to_energy_dependent_table_psf(self, offset, rad=None):
+        """Convert to energy-dependent table PSF.
+
+        Parameters
+        ----------
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default theta = 0 deg
+        rad : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid.
+            Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
+
+        Returns
+        -------
+        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
+            Energy-dependent PSF
+        """
+        energy_axis_true = self.axes["energy_true"]
+
+        if rad is None:
+            rad = np.arange(0, 1.5, 0.005) * u.deg
+
+        rad_axis = MapAxis.from_nodes(rad, name="rad")
+
+        psf_value = u.Quantity(np.empty((energy_axis_true.nbin, len(rad))), "deg^-2")
+
+        for idx, energy in enumerate(energy_axis_true.center):
+            pars = self.evaluate(energy=energy, offset=offset)
+            val = self.evaluate_direct(rad=rad, **pars)
+            psf_value[idx] = u.Quantity(val, "deg^-2")
+
+        return EnergyDependentTablePSF(
+            axes=[energy_axis_true, rad_axis],
+            data=psf_value.value,
+            unit=psf_value.unit
+        )
 
     def plot_containment_vs_energy(
         self, fractions=[0.68, 0.95], thetas=[0, 1] * u.deg, ax=None, **kwargs

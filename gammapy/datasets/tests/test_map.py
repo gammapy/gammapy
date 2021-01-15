@@ -86,7 +86,7 @@ def get_psf():
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
-    table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
+    table_psf = psf.to_energy_dependent_table_psf(offset=0.5 * u.deg)
     psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
     return psf_map
 

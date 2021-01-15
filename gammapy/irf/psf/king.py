@@ -4,9 +4,7 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy import units as u
 from astropy.units import Quantity
-from gammapy.maps import MapAxes, MapAxis
-from gammapy.utils.array import array_stats_str
-from .table import EnergyDependentTablePSF
+from gammapy.maps import MapAxis
 from .core import ParametricPSF
 
 __all__ = ["PSFKing"]
@@ -36,8 +34,7 @@ class PSFKing(ParametricPSF):
 
     tag = "psf_king"
     required_axes = ["energy_true", "offset"]
-    par_names = ["gamma", "sigma"]
-    par_units = ["", "deg"]
+    required_parameters = ["gamma", "sigma"]
 
     @staticmethod
     def evaluate_direct(rad, gamma, sigma):
@@ -105,46 +102,3 @@ class PSFKing(ParametricPSF):
         param["sigma"] = sigma
         param["gamma"] = gamma
         return param
-
-    def to_energy_dependent_table_psf(self, theta=None, rad=None):
-        """Convert to energy-dependent table PSF.
-
-        Parameters
-        ----------
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
-        rad : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid.
-            Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
-        exposure : `~astropy.units.Quantity`
-            Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
-            Default exposure = 1.
-
-        Returns
-        -------
-        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Energy-dependent PSF
-        """
-        # self.energy is already the logcenter
-        energy_axis_true = self.axes["energy_true"]
-
-        # Defaults
-        theta = theta if theta is not None else Angle(0, "deg")
-
-        if rad is None:
-            rad = Angle(np.arange(0, 1.5, 0.005), "deg")
-
-        rad_axis = MapAxis.from_nodes(rad, name="rad")
-
-        psf_value = Quantity(np.empty((energy_axis_true.nbin, len(rad))), "deg^-2")
-
-        for idx, energy in enumerate(energy_axis_true.center):
-            param_king = self.evaluate(energy, theta)
-            val = self.evaluate_direct(rad, param_king["gamma"], param_king["sigma"])
-            psf_value[idx] = Quantity(val, "deg^-2")
-
-        return EnergyDependentTablePSF(
-            axes=[energy_axis_true, rad_axis],
-            data=psf_value.value,
-            unit=psf_value.unit
-        )
