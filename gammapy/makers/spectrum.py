@@ -1,12 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from astropy import units as u
-from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.datasets import SpectrumDataset
-from gammapy.maps import RegionNDMap
 from .map import MapDatasetMaker
-#from .utils import make_map_exposure_true_energy, make_edisp_kernel_map, make_map_background_irf
 
 
 __all__ = ["SpectrumDatasetMaker"]
