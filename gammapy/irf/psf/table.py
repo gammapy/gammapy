@@ -464,63 +464,6 @@ class PSF3D(IRF):
         """High energy threshold"""
         return self.meta["HI_THRES"] * u.TeV
 
-    @classmethod
-    def read(cls, filename, hdu="PSF_2D_TABLE"):
-        """Create `PSF3D` from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            File name
-        hdu : str
-            HDU name
-        """
-        table = Table.read(make_path(filename), hdu=hdu)
-        return cls.from_table(table)
-
-    @classmethod
-    def from_table(cls, table):
-        """Create `PSF3D` from `~astropy.table.Table`.
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-            Table Table-PSF info.
-        """
-        axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
-        data = table["RPSF"].quantity[0].transpose()
-        return cls(
-            axes=axes,
-            data=data.value,
-            meta=table.meta,
-            unit=data.unit
-        )
-
-    def to_hdulist(self):
-        """Convert PSF table data to FITS HDU list.
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-            PSF in HDU list format.
-        """
-        table = self.axes.to_table(format="gadf-dl3")
-
-        table["RPSF"] = self.quantity.T[np.newaxis]
-
-        hdu = fits.BinTableHDU(table)
-        hdu.header["LO_THRES"] = self.energy_thresh_lo.value
-        hdu.header["HI_THRES"] = self.energy_thresh_hi.value
-
-        return fits.HDUList([fits.PrimaryHDU(), hdu])
-
-    def write(self, filename, *args, **kwargs):
-        """Write PSF to FITS file.
-
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
-        """
-        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
-
     def to_energy_dependent_table_psf(self, theta="0 deg", rad=None, exposure=None):
         """
         Convert PSF3D in EnergyDependentTablePSF.

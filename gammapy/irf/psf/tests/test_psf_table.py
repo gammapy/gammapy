@@ -67,14 +67,6 @@ def test_psf_3d_containment_radius(psf_3d):
 
 
 @requires_data()
-def test_psf_3d_write(psf_3d, tmp_path):
-    psf_3d.write(tmp_path / "tmp.fits")
-    psf_3d = PSF3D.read(tmp_path / "tmp.fits", hdu=1)
-
-    assert_allclose(psf_3d.axes["energy_true"].edges[0].value, 0.01)
-
-
-@requires_data()
 @requires_dependency("matplotlib")
 def test_psf_3d_plot_vs_rad(psf_3d):
     with mpl_plot_check():
