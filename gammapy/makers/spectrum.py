@@ -1,14 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.datasets import SpectrumDataset
-from gammapy.irf import EDispKernelMap
 from gammapy.maps import RegionNDMap
 from .core import Maker
-from .utils import make_map_exposure_true_energy, make_edisp_kernel_map
+from .utils import make_map_exposure_true_energy, make_edisp_kernel_map, make_map_background_irf
 
 
 __all__ = ["SpectrumDatasetMaker"]
@@ -79,18 +77,12 @@ class SpectrumDatasetMaker(Maker):
         background : `~gammapy.maps.RegionNDMap`
             Background spectrum
         """
-        offset = observation.pointing_radec.separation(geom.center_skydir)
-        e_reco = geom.axes["energy"].edges
-
-        bkg = observation.bkg
-
-        data = bkg.integrate_log_log(
-            fov_lon=0 * u.deg, fov_lat=offset, energy=e_reco, axis_name="energy"
+        return make_map_background_irf(
+            pointing=observation.pointing_radec,
+            ontime=observation.observation_time_duration,
+            bkg=observation.bkg,
+            geom=geom,
         )
-
-        data *= geom.solid_angle()
-        data *= observation.observation_time_duration
-        return RegionNDMap.from_geom(geom=geom, data=data.to_value(""))
 
     def make_exposure(self, geom, observation):
         """Make exposure.

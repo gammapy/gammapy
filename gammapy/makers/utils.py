@@ -160,7 +160,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
 
     d_omega = geom.to_image().solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
-    bkg_map = WcsNDMap(geom, data=data)
+    bkg_map = Map.from_geom(geom, data=data)
 
     if oversampling is not None:
         bkg_map = bkg_map.downsample(factor=oversampling, axis_name="energy")
