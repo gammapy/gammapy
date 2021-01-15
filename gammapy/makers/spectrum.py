@@ -8,6 +8,7 @@ from gammapy.datasets import SpectrumDataset
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import RegionNDMap
 from .core import Maker
+from .utils import make_map_exposure_true_energy, make_edisp_kernel_map
 
 
 __all__ = ["SpectrumDatasetMaker"]
@@ -106,23 +107,27 @@ class SpectrumDatasetMaker(Maker):
         exposure : `~gammapy.irf.EffectiveAreaTable`
             Exposure map.
         """
-        offset = observation.pointing_radec.separation(geom.center_skydir)
-        energy = geom.axes["energy_true"]
-
-        data = observation.aeff.evaluate(offset=offset, energy_true=energy.center)
+        exposure = make_map_exposure_true_energy(
+            pointing=observation.pointing_radec,
+            livetime=observation.observation_live_time_duration,
+            aeff=observation.aeff,
+            geom=geom,
+        )
 
         if self.containment_correction:
             if not isinstance(geom.region, CircleSkyRegion):
                 raise TypeError(
                     "Containment correction only supported for circular regions."
                 )
+            offset = geom.separation(observation.pointing_radec)
             psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
-            containment = psf.containment(energy.center, geom.region.radius)
-            data *= containment.squeeze()
+            energy = geom.axes["energy_true"]
+            containment = psf.containment(
+                energy=energy.center, rad_max=geom.region.radius
+            )
+            exposure.data *= containment.reshape(geom.data_shape)
 
-        data = data * observation.observation_live_time_duration
-        meta = {"livetime": observation.observation_live_time_duration}
-        return RegionNDMap.from_geom(geom, data=data.value, unit=data.unit, meta=meta)
+        return exposure
 
     def make_edisp_kernel(self, geom, observation):
         """Make energy dispersion.
@@ -139,6 +144,9 @@ class SpectrumDatasetMaker(Maker):
         edisp : `~gammapy.irf.EDispKernelMap`
             Energy dispersion kernel map
         """
+        make_edisp_kernel_map(
+            
+        )
         position = geom.center_skydir
         energy_axis = geom.axes["energy"]
         energy_axis_true = geom.axes["energy_true"]
