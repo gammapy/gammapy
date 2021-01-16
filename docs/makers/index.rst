@@ -134,6 +134,27 @@ observations the safe mask is applied to the counts and predicted
 number of counts map during fitting. This correctly accounts for
 contributions (spill-over) by the PSF from outside the field of view.
 
+Background estimation
+=====================
+
+The background computed by the `MapDatasetMaker` gives the number of counts predicted
+by the background IRF of the observation. Because its actual normalization, or even its
+spectral shape, might be poorly constrained, it is necessary to correct it with the data
+themselves.
+
+Two strategies are possible with gammapy. The first one consists in creating a
+`FoVBackgroundModel` and adjust it on the data. The second extracts Off counts.
+
+FoV Background
+--------------
+
+Ring Background
+---------------
+
+Reflected Regions Background
+----------------------------
+
+
 
 Stacking of Datasets
 ====================
