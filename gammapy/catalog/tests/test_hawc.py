@@ -108,29 +108,29 @@ class TestSourceCatalogObject2HWC:
 
 
 @pytest.fixture(scope="session")
-def cat():
+def ca_3hwc():
     return SourceCatalog3HWC()
 
 
 @requires_data()
 class TestSourceCatalog3HWC:
     @staticmethod
-    def test_source_table(cat):
-        assert cat.tag == "3hwc"
-        assert len(cat.table) == 65
+    def test_source_table(ca_3hwc):
+        assert ca_3hwc.tag == "3hwc"
+        assert len(ca_3hwc.table) == 65
 
     @staticmethod
-    def test_positions(cat):
-        assert len(cat.positions) == 65
+    def test_positions(ca_3hwc):
+        assert len(ca_3hwc.positions) == 65
 
 
 @requires_data()
 class TestSourceCatalogObject3HWC:
     @staticmethod 
-    def test_data(cat):
-        assert cat[0].data["source_name"] == "3HWC J1739+099"
-        assert cat[0].n_models == 0
+    def test_data(ca_3hwc):
+        assert ca_3hwc[0].data["source_name"] == "3HWC J0534+220"
+        assert ca_3hwc[0].n_models == 2
 
-        assert cat[1].data["source_name"] == "3HWC J2043+443"
-        assert cat[1].n_models == 0.5
+        assert ca_3hwc[1].data["source_name"] == "3HWC J0540+228"
+        assert ca_3hwc[1].n_models == 1
 
