@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _region_reflected:
+.. _reflected_background:
 
 ****************************
 Reflected regions background
