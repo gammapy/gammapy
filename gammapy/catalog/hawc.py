@@ -93,8 +93,8 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         else:
             return 1
 
-        
-    def _get_idx(self, which):
+
+    def _get_idx(self,  which):
         if which == "point":
             return 0
         elif which == "extended":

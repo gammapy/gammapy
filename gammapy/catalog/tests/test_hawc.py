@@ -78,7 +78,7 @@ class TestSourceCatalogObject2HWC:
         m = cat[1].spatial_model()
         # p = m.parameters
 
-        assert isinstance(m, PointSpatialModel)
+        assert isinstance(m,  PointSpatialModel)
         assert m.lon_0.unit == "deg"
         assert_allclose(m.lon_0.value, 195.614, atol=1e-2)
         # TODO: add assert on position error
