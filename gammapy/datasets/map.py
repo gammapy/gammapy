@@ -1229,7 +1229,7 @@ class MapDataset(Dataset):
             )
 
         if self.stat_type == "cash" and self.background is not None:
-            kwargs["background"] = self.npred_background().get_spectrum(
+            kwargs["background"] = self.background.get_spectrum(
                 on_region, func=np.sum, weights=self.mask_safe
             )
 
@@ -1301,7 +1301,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background().cutout(**cutout_kwargs)
+            kwargs["background"] = self.background.cutout(**cutout_kwargs)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
@@ -1358,7 +1358,7 @@ class MapDataset(Dataset):
                 kwargs["exposure"] = self.exposure.copy()
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background().downsample(
+            kwargs["background"] = self.background.downsample(
                 factor=factor, axis_name=axis_name, weights=self.mask_safe
             )
 
@@ -1415,7 +1415,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
         if self.background is not None:
-            kwargs["background"] = self.npred_background().pad(
+            kwargs["background"] = self.background.pad(
                 pad_width=pad_width, mode=mode
             )
 
@@ -1463,7 +1463,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.slice_by_idx(slices=slices)
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background().slice_by_idx(slices=slices)
+            kwargs["background"] = self.background.slice_by_idx(slices=slices)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.slice_by_idx(slices=slices)
@@ -1530,7 +1530,7 @@ class MapDataset(Dataset):
         Returns
         -------
         dataset: `MapDataset` or `SpectrumDataset`
-            Resampled dataset .
+            Resampled dataset.
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
@@ -1557,7 +1557,7 @@ class MapDataset(Dataset):
             )
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.npred_background().resample_axis(
+            kwargs["background"] = self.background.resample_axis(
                 axis=energy_axis, weights=self.mask_safe
             )
 

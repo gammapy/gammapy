@@ -648,6 +648,9 @@ class BackgroundModel(Model):
 
         self.spectral_model = spectral_model
 
+        if isinstance(datasets_names, str):
+            datasets_names = [datasets_names]
+
         if isinstance(datasets_names, list):
             if len(datasets_names) != 1:
                 raise ValueError(

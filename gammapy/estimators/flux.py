@@ -161,12 +161,8 @@ class FluxEstimator(Estimator):
             energy_min=self.energy_min, energy_max=self.energy_max
         )
 
-        new_names = [name + "-sliced" for name in datasets.names]
-        models = datasets.models.reassign(datasets.names, new_names)
+        models = datasets.models.copy()
         datasets_sliced.models = models
-        for d in datasets_sliced:
-            if d.background_model:
-                d.background_model.reset_to_default()
 
         if len(datasets_sliced) > 0:
             # TODO: this relies on the energy binning of the first dataset

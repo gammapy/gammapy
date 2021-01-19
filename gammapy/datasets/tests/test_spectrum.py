@@ -163,8 +163,8 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0
     assert empty_spectrum_dataset.data_shape[0] == 2
-    assert empty_spectrum_dataset.npred_background().data.sum() == 0
-    assert empty_spectrum_dataset.npred_background().geom.axes[0].nbin == 2
+    assert empty_spectrum_dataset.background.data.sum() == 0
+    assert empty_spectrum_dataset.background.geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
     assert empty_spectrum_dataset.gti.time_sum.value == 0
@@ -195,7 +195,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     )
     edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
 
-    background = spectrum_dataset.npred_background().copy()
+    background = spectrum_dataset.background
 
     mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
     mask_safe.data += True
@@ -205,7 +205,7 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         counts=spectrum_dataset.counts.copy(),
         exposure=exposure.copy(),
         edisp=edisp.copy(),
-        background=background,
+        background=background.copy(),
         gti=gti.copy(),
         mask_safe=mask_safe
     )
@@ -240,9 +240,9 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     assert_allclose(spectrum_dataset1.counts.data[0], 141363)
     assert_allclose(spectrum_dataset1.exposure.data[0], 4.755644e09)
     assert_allclose(
-        spectrum_dataset1.npred_background().data[1:], 3 * background.data[1:]
+        spectrum_dataset1.background.data[1:], 3 * background.data[1:]
     )
-    assert_allclose(spectrum_dataset1.npred_background().data[0], background.data[0])
+    assert_allclose(spectrum_dataset1.background.data[0], background.data[0])
 
     assert_allclose(
         spectrum_dataset1.exposure.quantity.to_value("m2s"),
@@ -471,7 +471,7 @@ class TestSpectrumOnOff:
         ds = self.dataset.to_spectrum_dataset()
 
         assert isinstance(ds, SpectrumDataset)
-        assert_allclose(ds.npred_background().data.sum(), 4)
+        assert_allclose(ds.background.data.sum(), 4)
 
     @requires_dependency("matplotlib")
     def test_peek(self):
