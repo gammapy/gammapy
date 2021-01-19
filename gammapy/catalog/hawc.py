@@ -88,8 +88,12 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
     @property
     def n_models(self):
         """Number of models (1 or 2)."""
-        return 1 if np.isnan(self.data.spec1_dnde) else 2
+        if hasattr(self.data, "spec1_dnde"):
+            return 1 if np.isnan(self.data.spec1_dnde) else 2
+        else:
+            return 1
 
+        
     def _get_idx(self, which):
         if which == "point":
             return 0

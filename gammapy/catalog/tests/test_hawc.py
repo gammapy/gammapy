@@ -129,7 +129,7 @@ class TestSourceCatalogObject3HWC:
     @staticmethod 
     def test_data(ca_3hwc):
         assert ca_3hwc[0].data["source_name"] == "3HWC J0534+220"
-        assert ca_3hwc[0].n_models == 2
+        assert ca_3hwc[0].n_models == 1
 
         assert ca_3hwc[1].data["source_name"] == "3HWC J0540+228"
         assert ca_3hwc[1].n_models == 1
