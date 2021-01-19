@@ -3,8 +3,9 @@ import json
 import numpy as np
 from astropy.io import fits
 from .core import Map
-from .utils import find_bands_hdu, find_hdu
+from .utils import find_bands_hdu, find_hdu, JsonQuantityEncoder
 from .wcs import WcsGeom
+
 
 __all__ = ["WcsMap"]
 
@@ -203,9 +204,7 @@ class WcsMap(Map):
 
         hdu_out = self.to_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse)
 
-        # TODO: make this serialisable
-        self.meta.pop("livetime", None)
-        hdu_out.header["META"] = json.dumps(self.meta)
+        hdu_out.header["META"] = json.dumps(self.meta, cls=JsonQuantityEncoder)
 
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 

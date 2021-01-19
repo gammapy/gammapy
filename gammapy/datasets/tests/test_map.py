@@ -386,6 +386,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset.gti = gti
 
     hdulist = dataset.to_hdulist()
+
     actual = [hdu.name for hdu in hdulist]
 
     desired = [
@@ -431,6 +432,8 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
+
+    assert_allclose(dataset.exposure.meta["livetime"], 1 * u.h)
     assert dataset.npred_background().geom == dataset_new.npred_background().geom
     assert dataset.edisp.edisp_map.geom == dataset_new.edisp.edisp_map.geom
 
