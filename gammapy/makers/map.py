@@ -197,6 +197,7 @@ class MapDatasetMaker(Maker):
             exposure = None
             interp_map = observation.edisp.edisp_map.interp_to_geom(geom)
             return EDispKernelMap(edisp_kernel_map=interp_map, exposure_map=exposure)
+
         exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
 
         return make_edisp_kernel_map(

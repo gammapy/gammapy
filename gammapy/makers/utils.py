@@ -49,8 +49,9 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
     )
 
     exposure = (exposure * livetime).to("m2 s")
+    meta = {"livetime": livetime}
     return Map.from_geom(
-        geom=geom, data=exposure.value, unit=exposure.unit,
+        geom=geom, data=exposure.value, unit=exposure.unit, meta=meta
     )
 
 
@@ -159,7 +160,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
 
     d_omega = geom.to_image().solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
-    bkg_map = WcsNDMap(geom, data=data)
+    bkg_map = Map.from_geom(geom, data=data)
 
     if oversampling is not None:
         bkg_map = bkg_map.downsample(factor=oversampling, axis_name="energy")

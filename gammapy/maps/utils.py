@@ -2,7 +2,7 @@
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from gammapy.utils.random import get_random_state
+import json
 
 
 def coordsys_to_frame(coordsys):
@@ -129,3 +129,27 @@ def slice_to_str(slice_):
 def str_to_slice(slice_str):
     start, stop = slice_str.split(":")
     return slice(int(start), int(stop))
+
+
+class JsonQuantityEncoder(json.JSONEncoder):
+    """Support for quantities that JSON default encoder"""
+    def default(self, obj):
+        if isinstance(obj, u.Quantity):
+            return obj.to_string()
+
+        return json.JSONEncoder.default(self, obj)
+
+
+class JsonQuantityDecoder(json.JSONDecoder):
+    """Support for quantities that JSON default encoder"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    @staticmethod
+    def object_hook(data):
+        for key, value in data.items():
+            try:
+                data[key] = u.Quantity(value)
+            except TypeError:
+                continue
+        return data

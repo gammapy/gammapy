@@ -262,7 +262,7 @@ def test_analysis_1d_stacked():
     pars = analysis.fit_result.parameters
 
     assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
-    assert_allclose(pars["amplitude"].value, 5.410243e-11, rtol=1e-2)
+    assert_allclose(pars["amplitude"].value, 5.479729e-11, rtol=1e-2)
 
 
 @requires_data()

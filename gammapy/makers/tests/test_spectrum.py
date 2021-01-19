@@ -83,8 +83,8 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     assert_allclose(datasets[0].exposure.meta["livetime"].value, 1581.736758)
     assert_allclose(datasets[1].exposure.meta["livetime"].value, 1572.686724)
 
-    assert_allclose(datasets[0].npred_background().data.sum(), 7.74732, rtol=1e-5)
-    assert_allclose(datasets[1].npred_background().data.sum(), 6.118879, rtol=1e-5)
+    assert_allclose(datasets[0].npred_background().data.sum(), 7.747881, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.731624, rtol=1e-5)
 
 
 @requires_data()
@@ -103,14 +103,14 @@ def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_d
     assert_allclose(datasets[0].exposure.meta["livetime"].value, 1764.000034)
     assert_allclose(datasets[1].exposure.meta["livetime"].value, 1764.000034)
 
-    assert_allclose(datasets[0].npred_background().data.sum(), 2.238345, rtol=1e-5)
-    assert_allclose(datasets[1].npred_background().data.sum(), 2.164593, rtol=1e-5)
+    assert_allclose(datasets[0].npred_background().data.sum(), 2.238805, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 2.165188, rtol=1e-5)
 
 
 @requires_data()
 def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
 
-    safe_mask_maker = SafeMaskMaker()
+    safe_mask_maker = SafeMaskMaker(bias_percent=20)
     maker = SpectrumDatasetMaker()
 
     obs = observations_hess_dl3[0]
@@ -123,7 +123,7 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert mask_safe.data.sum() == 4
 
     mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert mask_safe.data.sum() == 3
+    assert mask_safe.data.sum() == 2
 
     mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert mask_safe.data.sum() == 3
@@ -162,7 +162,7 @@ class TestSpectrumMakerChain:
             (
                 dict(containment_correction=False),
                 dict(
-                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.235864
+                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.23635
                 ),
             ),
             (
@@ -171,7 +171,7 @@ class TestSpectrumMakerChain:
                     n_on=125,
                     sigma=18.953014,
                     aeff=375314.356461 * u.m ** 2,
-                    edisp=0.235864,
+                    edisp=0.23635,
                 ),
             ),
         ],

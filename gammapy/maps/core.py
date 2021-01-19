@@ -9,7 +9,7 @@ from astropy.io import fits
 from gammapy.maps.hpx import HpxGeom
 from gammapy.utils.scripts import make_path
 from .geom import MapAxis, MapCoord, pix_tuple_to_idx
-from .utils import INVALID_VALUE
+from .utils import INVALID_VALUE, JsonQuantityDecoder
 
 __all__ = ["Map"]
 
@@ -246,7 +246,7 @@ class Map(abc.ABC):
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
         if "META" in header:
-            return json.loads(header["META"])
+            return json.loads(header["META"], cls=JsonQuantityDecoder)
         else:
             return {}
 
