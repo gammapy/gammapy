@@ -38,12 +38,12 @@ class TestEnergyDependentMultiGaussPSF:
         psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
 
         containment = [0.68, 0.8, 0.9]
-        desired = [psf_at_energy.containment_radius(_) for _ in containment]
+        desired = u.Quantity([psf_at_energy.containment_radius(_) for _ in containment])
 
         table_psf_at_energy = table_psf.table_psf_at_energy(energy)
         actual = table_psf_at_energy.containment_radius(containment)
 
-        assert_allclose(desired, actual.degree, rtol=1e-2)
+        assert_allclose(desired, actual, rtol=1e-2)
 
     def test_to_psf3d(self, psf):
         rads = np.linspace(0.0, 1.0, 101) * u.deg
@@ -57,10 +57,10 @@ class TestEnergyDependentMultiGaussPSF:
         energy = 0.5 * u.TeV
 
         containment = [0.68, 0.8, 0.9]
-        desired = np.array(
+        desired = u.Quantity(
             [psf.containment_radius(energy, theta, _).value for _ in containment]
         )
-        actual = np.array(
+        actual = u.Quantity(
             [psf_3d.containment_radius(energy, theta, _).value for _ in containment]
         )
         assert_allclose(np.squeeze(desired), actual, atol=0.005)

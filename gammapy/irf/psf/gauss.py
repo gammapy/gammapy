@@ -61,19 +61,19 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
         sigmas, norms = [], []
 
-        pars = {"AMPL_1": 1}
+        pars = {"A_1": 1}
 
         for name in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
-            interp = self._interpolators[name]
-            sigmas.append(interp((energy, offset)))
+            sigma = self._interpolators[name]((energy, offset))
+            sigmas.append(sigma)
 
-        for name in ["SCALE", "AMPL_2", "AMPL_3"]:
-            interp = self._interpolators[name]
+        for name, interp_name in zip(["scale", "A_2", "A_3"], ["SCALE", "AMPL_2", "AMPL_3"]):
+            interp = self._interpolators[interp_name]
             pars[name] = interp((energy, offset))
 
         for idx, sigma in enumerate(sigmas):
-            a = pars[f"AMPL_{idx + 1}"]
-            norm = pars["SCALE"] * 2 * a * sigma ** 2 * u.Unit("deg-2")
+            a = pars[f"A_{idx + 1}"]
+            norm = (pars["scale"] * 2 * a * sigma ** 2).to_value(sigma.unit ** 2)
             norms.append(norm)
 
         return {"norms": norms, "sigmas": sigmas}
@@ -81,12 +81,9 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     @staticmethod
     def evaluate_direct(rad, norms, sigmas):
         """Evaluate psf model"""
-        value = np.zeros(rad.shape) * u.Unit("deg-2")
-
-        for norm, sigma in zip(norms, sigmas):
-            value += norm / (2 * np.pi * sigma ** 2) * np.exp(-0.5 * (rad / sigma) ** 2)
-
-        return value
+        m = MultiGauss2D(sigmas=sigmas, norms=norms)
+        m.normalize()
+        return m(rad)
 
     def psf_at_energy_and_theta(self, energy, offset):
         """
@@ -119,7 +116,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
             energy
         ).flatten()  # pylint:disable=assignment-from-no-return
         thetas = Angle(theta).flatten()
-        radius = np.empty((theta.size, energy.size))
+        radius = np.empty((theta.size, energy.size)) * u.deg
 
         for idx, energy in enumerate(energies):
             for jdx, theta in enumerate(thetas):
@@ -133,7 +130,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
                     )
                     log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
                     radius[jdx, idx] = np.nan
-        return Angle(radius, "deg")
+        return radius
 
     def to_psf3d(self, rad=None):
         """Create a PSF3D from an analytical PSF.

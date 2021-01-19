@@ -16,7 +16,19 @@ log = logging.getLogger(__name__)
 
 
 class IRF:
-    """IRF base class for DL3 instrument response functions"""
+    """IRF base class for DL3 instrument response functions
+
+    Parameters
+    -----------
+    axes : list of `MapAxis` or `MapAxes`
+        Axes
+    data : `~numpy.ndarray`
+        Data
+    unit : str or `~astropy.units.Unit`
+        Unit
+    meta : dict
+        Meta data
+    """
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None,
     )

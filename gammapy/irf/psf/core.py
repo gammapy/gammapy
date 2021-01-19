@@ -10,14 +10,26 @@ from ..core import IRF
 
 
 class ParametricPSF(IRF):
-    """Parametric PSF base class"""
+    """Parametric PSF base class
+
+    Parameters
+    -----------
+    axes : list of `MapAxis` or `MapAxes`
+        Axes
+    data : dict of `~numpy.ndarray`, or `~numpy.recarray`
+        Data
+    unit : dict of str or `~astropy.units.Unit`
+        Unit
+    meta : dict
+        Meta data
+    """
     @property
     @abc.abstractmethod
     def required_parameters(self):
         pass
 
     @abc.abstractmethod
-    def evaluate_direct(self):
+    def evaluate_direct(self, rad, ):
         pass
 
     @property
@@ -78,7 +90,6 @@ class ParametricPSF(IRF):
     @classmethod
     def from_table(cls, table, format="gadf-dl3"):
         """Create `PSFKing` from `~astropy.table.Table`.
-
 
         Parameters
         ----------
