@@ -28,8 +28,8 @@ def test_cta_irf():
     assert_allclose(val.value, 3183.6882, rtol=1e-5)
     assert val.unit == ""
 
-    psf = irf["psf"].psf_at_energy_and_theta(energy=energy, offset=offset)
-    val = psf(Quantity(0.1, "deg"))
+    pars = irf["psf"].evaluate(energy_true=energy, offset=offset)
+    val = irf["psf"].evaluate_direct(rad=Quantity(0.1, "deg"), **pars)
     assert_allclose(val, 3.56989 * u.Unit("deg-2"), rtol=1e-5)
 
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")

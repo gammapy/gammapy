@@ -15,8 +15,6 @@ log = logging.getLogger(__name__)
 class EnergyDependentMultiGaussPSF(ParametricPSF):
     """Triple Gauss analytical PSF depending on energy and theta.
 
-    To evaluate the PSF call the ``to_energy_dependent_table_psf`` or ``psf_at_energy_and_theta`` methods.
-
     Parameters
     ----------
     axes : list of `MapAxis`
@@ -82,26 +80,3 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
         m = MultiGauss2D(sigmas=sigmas, norms=norms)
         m.normalize()
         return m(rad)
-
-    def psf_at_energy_and_theta(self, energy, offset):
-        """
-        Get `~gammapy.modeling.models.MultiGauss2D` model for given energy and theta.
-
-        No interpolation is used.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.u.Quantity`
-            Energy at which a PSF is requested.
-        theta : `~astropy.coordinates.Angle`
-            Offset angle at which a PSF is requested.
-
-        Returns
-        -------
-        psf : `~gammapy.utils.gauss.MultiGauss2D`
-            Multigauss PSF object.
-        """
-        pars = self.evaluate(energy_true=energy, offset=offset)
-        m = MultiGauss2D(pars["sigmas"], pars["norms"])
-        m.normalize()
-        return m

@@ -35,10 +35,10 @@ class TestEnergyDependentMultiGaussPSF:
         rad = np.linspace(0, 2, 300) * u.deg
         table_psf = psf.to_energy_dependent_table_psf(theta, rad=rad)
 
-        psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
-
         containment = [0.68, 0.8, 0.9]
-        desired = u.Quantity([psf_at_energy.containment_radius(_) for _ in containment])
+        desired = psf.containment_radius(
+            energy_true=energy, offset=theta, fraction=containment
+        )
 
         table_psf_at_energy = table_psf.table_psf_at_energy(energy)
         actual = table_psf_at_energy.containment_radius(containment)
