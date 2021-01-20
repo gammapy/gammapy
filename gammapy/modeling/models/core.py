@@ -239,6 +239,9 @@ class Model:
         if not isinstance(new_datasets_names, list):
             new_datasets_names = [new_datasets_names]
 
+        if isinstance(model.datasets_names, str):
+            model.datasets_names = [model.datasets_names]
+
         if getattr(model, "datasets_names", None):
             for name, name_new in zip(datasets_names, new_datasets_names):
                 model.datasets_names = [
