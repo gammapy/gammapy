@@ -14,8 +14,8 @@ def psf_king():
 
 @requires_data()
 def test_psf_king_evaluate(psf_king):
-    param_off1 = psf_king.evaluate(energy_true="1 TeV", offset="0 deg")
-    param_off2 = psf_king.evaluate("1 TeV", "1 deg")
+    param_off1 = psf_king.evaluate_parameters(energy_true="1 TeV", offset="0 deg")
+    param_off2 = psf_king.evaluate_parameters("1 TeV", "1 deg")
 
     assert_quantity_allclose(param_off1["gamma"], psf_king.data["gamma"][8, 0])
     assert_quantity_allclose(param_off2["gamma"], psf_king.data["gamma"][8, 2])
@@ -29,14 +29,14 @@ def test_psf_king_to_table(psf_king):
     theta2 = Angle(1, "deg")
     psf_king_table_off1 = psf_king.to_energy_dependent_table_psf(offset=theta1)
     psf_king_table_off2 = psf_king.to_energy_dependent_table_psf(offset=theta2)
-    offset = Angle(1, "deg")
+    rad = Angle(1, "deg")
     # energy = Quantity(1, "TeV") match with bin number 8
     # offset equal 1 degre match with the bin 200 in the psf_table
-    value_off1 = psf_king.evaluate_direct(
-        offset, psf_king.data["gamma"][8, 0], psf_king.data["sigma"][8, 0] * u.deg
+    value_off1 = psf_king.evaluate(
+        rad=rad, energy_true=1 * u.TeV, offset=theta1
     )
-    value_off2 = psf_king.evaluate_direct(
-        offset, psf_king.data["gamma"][8, 2], psf_king.data["sigma"][8, 2] * u.deg
+    value_off2 = psf_king.evaluate(
+        rad=rad, energy_true=1 * u.TeV, offset=theta2
     )
     # Test that the value at 1 degree in the histogram for the energy 1 Tev and theta=0 or 1 degree is equal to the one
     # obtained from the self.evaluate_direct() method at 1 degree

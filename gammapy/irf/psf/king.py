@@ -36,43 +36,14 @@ class PSFKing(ParametricPSF):
     required_axes = ["energy_true", "offset"]
     required_parameters = ["gamma", "sigma"]
 
-    @staticmethod
-    def evaluate_direct(rad, gamma, sigma):
-        """Evaluate the PSF model.
-
-        Formula is given here: :ref:`gadf:psf_king`.
-
-        Parameters
-        ----------
-        r : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid
-        gamma : `~astropy.units.Quantity`
-            model parameter, no unit
-        sigma : `~astropy.coordinates.Angle`
-            model parameter
-
-        Returns
-        -------
-        psf_value : `~astropy.units.Quantity`
-            PSF value
-        """
-        sigma2 = sigma * sigma
-
-        with np.errstate(divide="ignore"):
-            term1 = 1 / (2 * np.pi * sigma2)
-            term2 = 1 - 1 / gamma
-            term3 = (1 + rad ** 2 / (2 * gamma * sigma2)) ** (-gamma)
-
-        return term1 * term2 * term3
-
-    def evaluate(self, energy_true, offset):
+    def evaluate_parameters(self, energy_true, offset):
         """Evaluate analytic PSF parameters at a given energy and offset.
 
         Uses nearest-neighbor interpolation.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             energy value
         offset : `~astropy.coordinates.Angle`
             Offset in the field of view
@@ -102,3 +73,35 @@ class PSFKing(ParametricPSF):
         param["sigma"] = sigma
         param["gamma"] = gamma
         return param
+
+    def evaluate(self, rad, energy_true, offset):
+        """Evaluate the PSF model.
+
+        Formula is given here: :ref:`gadf:psf_king`.
+
+        Parameters
+        ----------
+        rad : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid
+        gamma : `~astropy.units.Quantity`
+            model parameter, no unit
+        sigma : `~astropy.coordinates.Angle`
+            model parameter
+
+        Returns
+        -------
+        psf_value : `~astropy.units.Quantity`
+            PSF value
+        """
+        pars = self.evaluate_parameters(
+            energy_true=energy_true, offset=offset
+        )
+        sigma, gamma = pars["sigma"], pars["gamma"]
+
+        with np.errstate(divide="ignore"):
+            term1 = 1 / (2 * np.pi * sigma ** 2)
+            term2 = 1 - 1 / gamma
+            term3 = (1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** (-gamma)
+
+        return term1 * term2 * term3
+

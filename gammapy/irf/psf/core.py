@@ -347,8 +347,7 @@ class ParametricPSF(PSF):
         psf_value = u.Quantity(np.empty((energy_axis_true.nbin, len(rad))), "deg^-2")
 
         for idx, energy in enumerate(energy_axis_true.center):
-            pars = self.evaluate(energy_true=energy, offset=offset)
-            val = self.evaluate_direct(rad=rad, **pars)
+            val = self.evaluate(rad=rad, energy_true=energy, offset=offset)
             psf_value[idx] = u.Quantity(val, "deg^-2")
 
         return EnergyDependentTablePSF(

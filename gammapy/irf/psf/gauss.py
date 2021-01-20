@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from astropy import units as u
-from astropy.coordinates import Angle
 from gammapy.maps import MapAxis
 from gammapy.utils.gauss import MultiGauss2D
 from .core import ParametricPSF
@@ -44,13 +42,13 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
     def containment(self, rad, **kwargs):
         """"""
-        pars = self.evaluate(**kwargs)
-        m = MultiGauss2D(pars["sigmas"], pars["norms"])
+        pars = self.evaluate_parameters(**kwargs)
+        m = MultiGauss2D(**pars)
         m.normalize()
         containment = m.containment_fraction(rad)
         return containment
 
-    def evaluate(self, energy_true, offset):
+    def evaluate_parameters(self, energy_true, offset):
         """"""
         energy = u.Quantity(energy_true)
         offset = u.Quantity(offset)
@@ -74,9 +72,9 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
         return {"norms": norms, "sigmas": sigmas}
 
-    @staticmethod
-    def evaluate_direct(rad, norms, sigmas):
+    def evaluate(self, rad, energy_true, offset):
         """Evaluate psf model"""
-        m = MultiGauss2D(sigmas=sigmas, norms=norms)
+        pars = self.evaluate_parameters(energy_true=energy_true, offset=offset)
+        m = MultiGauss2D(**pars)
         m.normalize()
         return m(rad)
