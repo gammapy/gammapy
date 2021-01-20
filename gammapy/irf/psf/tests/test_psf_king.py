@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
+from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
 from astropy import units as u
 from gammapy.irf import PSFKing
@@ -14,13 +14,13 @@ def psf_king():
 
 @requires_data()
 def test_psf_king_evaluate(psf_king):
-    param_off1 = psf_king.evaluate_parameters(energy_true="1 TeV", offset="0 deg")
-    param_off2 = psf_king.evaluate_parameters("1 TeV", "1 deg")
+    param_off1 = psf_king.evaluate_parameters(energy_true=1 * u.TeV, offset=0 * u.deg)
+    param_off2 = psf_king.evaluate_parameters(energy_true=1 * u.TeV, offset=1 * u.deg)
 
-    assert_quantity_allclose(param_off1["gamma"], psf_king.data["gamma"][8, 0])
-    assert_quantity_allclose(param_off2["gamma"], psf_king.data["gamma"][8, 2])
-    assert_quantity_allclose(param_off1["sigma"], psf_king.data["sigma"][8, 0] * u.deg)
-    assert_quantity_allclose(param_off2["sigma"], psf_king.data["sigma"][8, 2] * u.deg)
+    assert_allclose(param_off1["gamma"].value, 1.733179, rtol=1e-5)
+    assert_allclose(param_off2["gamma"].value, 1.812795, rtol=1e-5)
+    assert_allclose(param_off1["sigma"], 0.040576 * u.deg, rtol=1e-5)
+    assert_allclose(param_off2["sigma"], 0.040765 * u.deg, rtol=1e-5)
 
 
 @requires_data()
@@ -28,7 +28,6 @@ def test_psf_king_to_table(psf_king):
     theta1 = Angle(0, "deg")
     theta2 = Angle(1, "deg")
     psf_king_table_off1 = psf_king.to_energy_dependent_table_psf(offset=theta1)
-    psf_king_table_off2 = psf_king.to_energy_dependent_table_psf(offset=theta2)
     rad = Angle(1, "deg")
     # energy = Quantity(1, "TeV") match with bin number 8
     # offset equal 1 degre match with the bin 200 in the psf_table
@@ -40,20 +39,12 @@ def test_psf_king_to_table(psf_king):
     )
     # Test that the value at 1 degree in the histogram for the energy 1 Tev and theta=0 or 1 degree is equal to the one
     # obtained from the self.evaluate_direct() method at 1 degree
-    assert_quantity_allclose(psf_king_table_off1.quantity[8, 200], value_off1)
-    assert_quantity_allclose(psf_king_table_off2.quantity[8, 200], value_off2)
+    assert_allclose(0.005234 * u.Unit("deg-2"), value_off1, rtol=1e-4)
+    assert_allclose(0.004015 * u.Unit("deg-2"), value_off2, rtol=1e-4)
 
     # Test that the integral value is close to one
-    bin_off = psf_king_table_off1.axes["rad"].bin_width[0]
-
-    integral = np.sum(
-        psf_king_table_off1.quantity[8]
-        * 2
-        * np.pi
-        * psf_king_table_off1.axes["rad"].center
-        * bin_off
-    )
-    assert_quantity_allclose(integral, 1, atol=0.03)
+    integral = psf_king_table_off1.containment(rad=1 *u.deg, energy_true=1 * u.TeV)
+    assert_allclose(integral, 1, atol=3e-2)
 
 
 @requires_data()

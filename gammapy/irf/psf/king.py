@@ -35,6 +35,9 @@ class PSFKing(ParametricPSF):
     tag = "psf_king"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["gamma", "sigma"]
+    default_interp_kwargs = dict(
+        bounds_error=False, fill_value=None
+    )
 
     def evaluate_parameters(self, energy_true, offset):
         """Evaluate analytic PSF parameters at a given energy and offset.
@@ -53,26 +56,12 @@ class PSFKing(ParametricPSF):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        param = dict()
-        energy = Quantity(energy_true)
-        offset = Angle(offset)
+        pars = {}
+        for name in self.required_parameters:
+            value = self._interpolators[name]((energy_true, offset))
+            pars[name] = value
 
-        # Find nearest energy value
-
-        # Find nearest energy value
-        i = np.argmin(np.abs(self.axes["energy_true"].center - energy))
-        j = np.argmin(np.abs(self.axes["offset"].center - offset))
-
-        # TODO: Use some kind of interpolation to get PSF
-        # parameters for every energy and theta
-
-        # Select correct gauss parameters for given energy and theta
-        sigma = self.data["sigma"][i][j] * u.deg
-        gamma = self.data["gamma"][i][j]
-
-        param["sigma"] = sigma
-        param["gamma"] = gamma
-        return param
+        return pars
 
     def evaluate(self, rad, energy_true, offset):
         """Evaluate the PSF model.
