@@ -173,7 +173,7 @@ class MultiGauss2D:
     @property
     def integral(self):
         """Integral as sum of norms (`~numpy.ndarray`)"""
-        return np.nansum(self.norms)
+        return np.nansum(self.norms, axis=0)
 
     @property
     def amplitude(self):
@@ -228,10 +228,8 @@ class MultiGauss2D:
         norm_multigauss : `~gammapy.modeling.models.MultiGauss2D`
            normalized function
         """
-        sum = self.integral
-        if sum != 0:
-            self.norms /= sum
-        return self
+        if not (self.integral == 0).any():
+            self.norms /= self.integral
 
     def containment_fraction(self, rad):
         """Containment fraction.

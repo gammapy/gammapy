@@ -224,7 +224,11 @@ class IRF:
         f_integrate = ScaledRegularGridInterpolator(
             points=points, values=values,
         )
-        coords = tuple(kwargs[name] for name in self.axes.names)
+        try:
+            coords = tuple(kwargs[name] for name in self.axes.names)
+        except KeyError as exc:
+            raise ValueError(f"Missing coordinate for axis: {str(exc)}")
+
         return f_integrate(coords)
 
     @classmethod

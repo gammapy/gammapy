@@ -4,8 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from gammapy.maps import MapAxis
-from gammapy.utils.gauss import MultiGauss2D, Gauss2DPDF
-from .table import PSF3D, EnergyDependentTablePSF
+from gammapy.utils.gauss import MultiGauss2D
 from .core import ParametricPSF
 
 __all__ = ["EnergyDependentMultiGaussPSF"]
@@ -45,9 +44,17 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     required_axes = ["energy_true", "offset"]
     required_parameters = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
 
-    def evaluate(self, energy, offset):
+    def containment(self, rad, **kwargs):
         """"""
-        energy = u.Quantity(energy)
+        pars = self.evaluate(**kwargs)
+        m = MultiGauss2D(pars["sigmas"], pars["norms"])
+        m.normalize()
+        containment = m.containment_fraction(rad)
+        return containment
+
+    def evaluate(self, energy_true, offset):
+        """"""
+        energy = u.Quantity(energy_true)
         offset = u.Quantity(offset)
 
         sigmas, norms = [], []
@@ -94,31 +101,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
         psf : `~gammapy.utils.gauss.MultiGauss2D`
             Multigauss PSF object.
         """
-        pars = self.evaluate(energy=energy, offset=offset)
+        pars = self.evaluate(energy_true=energy, offset=offset)
         m = MultiGauss2D(pars["sigmas"], pars["norms"])
         m.normalize()
         return m
-
-    def containment_radius(self, energy, theta, fraction=0.68):
-        """Compute containment for all energy and theta values"""
-        # This is a false positive from pylint
-        # See https://github.com/PyCQA/pylint/issues/2435
-        energies = u.Quantity(
-            energy
-        ).flatten()  # pylint:disable=assignment-from-no-return
-        thetas = Angle(theta).flatten()
-        radius = np.empty((theta.size, energy.size)) * u.deg
-
-        for idx, energy in enumerate(energies):
-            for jdx, theta in enumerate(thetas):
-                try:
-                    psf = self.psf_at_energy_and_theta(energy, theta)
-                    radius[jdx, idx] = psf.containment_radius(fraction)
-                except ValueError:
-                    log.debug(
-                        f"Computing containment failed for energy = {energy:.2f}"
-                        f" and theta={theta:.2f}"
-                    )
-                    log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
-                    radius[jdx, idx] = np.nan
-        return radius

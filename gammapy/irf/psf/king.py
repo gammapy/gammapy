@@ -65,7 +65,7 @@ class PSFKing(ParametricPSF):
 
         return term1 * term2 * term3
 
-    def evaluate(self, energy=None, offset=None):
+    def evaluate(self, energy_true, offset):
         """Evaluate analytic PSF parameters at a given energy and offset.
 
         Uses nearest-neighbor interpolation.
@@ -83,7 +83,7 @@ class PSFKing(ParametricPSF):
             Interpolated value
         """
         param = dict()
-        energy = Quantity(energy)
+        energy = Quantity(energy_true)
         offset = Angle(offset)
 
         # Find nearest energy value

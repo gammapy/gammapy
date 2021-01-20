@@ -111,13 +111,17 @@ def test_psfmap_to_table_psf():
 
     # Check that containment radius is consistent between psf_table and psf3d
     assert_allclose(
-        table_psf.containment_radius(1 * u.TeV, 0.9)[0],
-        psf.containment_radius(1 * u.TeV, theta=0 * u.deg, fraction=0.9),
+        table_psf.containment_radius(energy_true=1 * u.TeV, fraction=0.9),
+        psf.containment_radius(
+            energy_true=1 * u.TeV, offset=0 * u.deg, fraction=0.9
+        ),
         rtol=1e-2,
     )
     assert_allclose(
-        table_psf.containment_radius(1 * u.TeV, 0.5)[0],
-        psf.containment_radius(1 * u.TeV, theta=0 * u.deg, fraction=0.5),
+        table_psf.containment_radius(energy_true=1 * u.TeV, fraction=0.5),
+        psf.containment_radius(
+            energy_true=1 * u.TeV, offset=0 * u.deg, fraction=0.5
+        ),
         rtol=1e-2,
     )
 
@@ -170,7 +174,7 @@ def test_containment_radius_map():
     m = psfmap.containment_radius_map(1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
-    assert_allclose(val, 0.226477, rtol=1e-3)
+    assert_allclose(val, 0.226477, rtol=1e-2)
 
 
 def test_psfmap_stacking():
@@ -401,7 +405,9 @@ def test_psfmap_from_gauss():
     assert psfmap.psf_map.unit == Unit("sr-1")
     assert psfmap.psf_map.data.shape == (energy.shape[0], rad.shape[0], 1, 2)
     assert_allclose(
-        psfmap.get_energy_dependent_table_psf().containment_radius(1 * u.TeV)[0],
+        psfmap.get_energy_dependent_table_psf().containment_radius(
+            energy_true=1 * u.TeV, fraction=0.68
+        ),
         psfmap.containment_radius_map(1 * u.TeV).data[0][0] * u.deg,
     )
     assert_allclose(
@@ -422,7 +428,9 @@ def test_psfmap_from_gauss():
     assert psfmap1.psf_map.unit == Unit("sr-1")
     assert psfmap1.psf_map.data.shape == (energy.shape[0], rad.shape[0], 1, 2)
     assert_allclose(
-        psfmap1.get_energy_dependent_table_psf().containment_radius(1 * u.TeV)[0],
+        psfmap1.get_energy_dependent_table_psf().containment_radius(
+            energy_true=1 * u.TeV, fraction=0.68
+        ),
         psfmap1.containment_radius_map(1 * u.TeV).data[0][0] * u.deg,
     )
 

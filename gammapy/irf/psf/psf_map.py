@@ -186,8 +186,10 @@ class PSFMap(IRFMap):
 
         for coord in coords:
             psf_table = self.get_energy_dependent_table_psf(coord)
-            containment_radius = psf_table.containment_radius(energy, fraction)
-            m.fill_by_coord(coord, containment_radius)
+            containment_radius = psf_table.containment_radius(
+                energy_true=energy, fraction=fraction
+            )
+            m.fill_by_coord(coord, np.atleast_1d(containment_radius))
 
         return m
 

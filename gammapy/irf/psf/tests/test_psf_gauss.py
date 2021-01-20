@@ -57,11 +57,11 @@ class TestEnergyDependentMultiGaussPSF:
         energy = 0.5 * u.TeV
 
         containment = [0.68, 0.8, 0.9]
-        desired = u.Quantity(
-            [psf.containment_radius(energy, theta, _).value for _ in containment]
+        desired = psf.containment_radius(
+            energy_true=energy, offset=theta, fraction=containment
         )
-        actual = u.Quantity(
-            [psf_3d.containment_radius(energy, theta, _).value for _ in containment]
+        actual = psf_3d.containment_radius(
+            energy_true=energy, offset=theta, fraction=containment
         )
         assert_allclose(np.squeeze(desired), actual, atol=0.005)
 
@@ -88,4 +88,4 @@ def test_psf_cta_1dc():
     # Check that evaluation works for an energy / offset where an energy is available
     psf = psf_irf.to_energy_dependent_table_psf("2 deg")
     psf = psf.table_psf_at_energy("1 TeV")
-    assert_allclose(psf.containment_radius(0.68).deg, 0.052841, atol=1e-4)
+    assert_allclose(psf.containment_radius(0.68), 0.052841 * u.deg, atol=1e-4)

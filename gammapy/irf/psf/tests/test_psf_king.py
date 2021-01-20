@@ -14,7 +14,7 @@ def psf_king():
 
 @requires_data()
 def test_psf_king_evaluate(psf_king):
-    param_off1 = psf_king.evaluate(energy="1 TeV", offset="0 deg")
+    param_off1 = psf_king.evaluate(energy_true="1 TeV", offset="0 deg")
     param_off2 = psf_king.evaluate("1 TeV", "1 deg")
 
     assert_quantity_allclose(param_off1["gamma"], psf_king.data["gamma"][8, 0])
