@@ -69,14 +69,17 @@ def test_select_region(models):
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
     geom = WcsGeom.create(skydir=(3, 4), npix=(5, 4), frame="galactic", axes=[axis])
     mask = geom.region_mask([circle_sky_12])
-    inside, outside = models.contribute(mask, psf=None)
+    inside = models.contribute(mask, margin=None, inside=True)
+    outside = models.contribute(mask, margin=None, inside=False)
     assert models[outside].names == ["bkg1", "bkg2"]
     assert models[inside].names == ["source-1", "source-2"]
 
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
     geom = WcsGeom.create(skydir=(3, 4), npix=(15, 15), frame="galactic", axes=[axis])
     mask = geom.region_mask([circle_sky_12])
-    inside, outside = models.contribute(mask, psf=None)
+    inside = models.contribute(mask, margin=None, inside=True)
+    outside = models.contribute(mask, margin=None, inside=False)
+
     assert models[outside].names == ["source-3", "bkg1", "bkg2"]
     assert models[inside].names == ["source-1", "source-2"]
 

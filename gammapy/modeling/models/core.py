@@ -245,8 +245,8 @@ class Model:
 
         return model
 
-    def contribute(self, mask, psf=None):
-        """Check if a model contribute within a mask map
+    def contribute(self, mask, margin=None, inside=True):
+        """Check if a model contributes within a mask map
            Note that BackgroundModel are assumed to always contribute. 
 
         Parameters
@@ -256,31 +256,34 @@ class Model:
         psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
             PSF kernel
         
+        inside : bool
+            If True select models whose center is located inside
+            the region where mask==True
+        
         Returns
         -------
-        inside : bool
-            True if the model contributes within the mask geom
-            and its center is located inside the region where mask==True
-        outside : bool
-             True if the model contributes within the mask geom
-            but its center is located ouside the region where mask==True
+        selection : bool
+            Selected models contributing within the mask geom. 
+            and whose centers are inside, or outside the region where mask==True
+            depending if the inside parameter is True or False.
         """
 
         from gammapy.datasets.map import get_cutout_width
         from .cube import BackgroundModel, FoVBackgroundModel
+
+        if margin is None:
+            margin = 0 * u.deg
 
         if isinstance(self, BackgroundModel) or isinstance(self, FoVBackgroundModel):
             contributes = True  # just ignore the background models
         else:
             try:
                 _ = mask.cutout(
-                    position=self.position,
-                    width=get_cutout_width(self, psf),
+                    position=self.position, width=get_cutout_width(self, margin=margin),
                 )
                 contributes = True
             except (NoOverlapError, ValueError):
                 contributes = False
-
 
         ind = self.position.to_pixel(mask.geom.wcs)
         ind = tuple([int(round(idx.item())) for idx in ind])
@@ -289,13 +292,13 @@ class Model:
             mask_data = np.sum(mask.data, axis=0).astype(bool)
         try:
             inmask = mask_data[ind]
-        except(IndexError):
+        except (IndexError):
             inmask = False
 
-        inside = contributes and inmask
-        outside = contributes and ~inmask
-
-        return inside, outside
+        if inside:
+            return contributes and inmask
+        else:
+            return contributes and ~inmask
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -687,7 +690,7 @@ class DatasetModels(collections.abc.Sequence):
 
         return np.array(selection, dtype=bool)
 
-    def contribute(self, mask, psf=None):
+    def contribute(self, mask, margin=None, inside=True):
         """Check if a model contribute within a mask map.
            Note that BackgroundModel are assumed to always contribute. 
     
@@ -695,25 +698,25 @@ class DatasetModels(collections.abc.Sequence):
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
             Map containing a boolean mask
-        psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
+        marign : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
             PSF kernel
+        inside : bool
+            If True select models whose center is located inside
+            the region where mask==True
         
         Returns
         -------
-        inside : `numpy.array` of boolean type
-            True where models contribute within the mask geom
-            and its center is located inside the region where mask==True
-        outside : `numpy.array` of boolean type
-            True  where models contribute within the mask geom
-            but its center is located ouside the region where mask==True
+        selection : `numpy.array` of boolean type
+            Selected models contributing within the mask geom. 
+            and whose centers are inside, or outside the region where mask==True
+            depending if the inside parameter is True or False.
         """
 
         nmod = len(self)
-        inside = np.zeros(nmod, dtype=bool)
-        outside = np.zeros(nmod, dtype=bool)
+        selection = np.zeros(nmod, dtype=bool)
         for k, m in enumerate(self):
-            inside[k], outside[k] = m.contribute(mask, psf)
-        return inside, outside
+            selection[k] = m.contribute(mask, margin, inside=inside)
+        return selection
 
     def select_region(self, regions):
         """Select skymodels with center position contained within a given region
@@ -731,8 +734,8 @@ class DatasetModels(collections.abc.Sequence):
 
         models = self.select(tag="SkyModel")
 
-        if not isinstance(regions, list):
-            regions = [regions]
+        if isinstance(regions, list):
+            region = [regions]
 
         nmod = len(models)
         inside = np.zeros(nmod, dtype=bool)

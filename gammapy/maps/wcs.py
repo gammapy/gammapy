@@ -877,8 +877,8 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        regions : list of  `~regions.Region`
-            Python list of regions (pixel or sky regions accepted)
+        regions : list of `~regions.Region`
+            region or list of regions (pixel or sky regions accepted)
         inside : bool
             For ``inside=True``, pixels in the region to True (the default).
             For ``inside=False``, pixels in the region are False.
@@ -915,6 +915,9 @@ class WcsGeom(Geom):
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
 
+        if not isinstance(regions, list):
+            regions = [regions]
+    
         idx = self.get_idx()
         pixcoord = PixCoord(idx[0], idx[1])
 

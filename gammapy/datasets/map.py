@@ -47,14 +47,14 @@ EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
 
 
-def get_cutout_width(model, psf=None):
+def get_cutout_width(model, psf=None, margin=CUTOUT_MARGIN):
     """Cutout width for the model component"""
     if psf is not None:
         psf_width = np.max(psf.psf_kernel_map.geom.width)
     else:
         psf_width = 0 * u.deg
 
-    return psf_width + 2 * (model.evaluation_radius + CUTOUT_MARGIN)
+    return psf_width + 2 * (model.evaluation_radius + margin)
 
 
 def create_map_dataset_geoms(
@@ -2502,7 +2502,7 @@ class MapEvaluator:
     @property
     def cutout_width(self):
         """Cutout width for the model component"""
-        return get_cutout_width(self.model, self.psf)
+        return get_cutout_width(self.model, psf=self.psf)
 
     def update(self, exposure, psf, edisp, geom):
         """Update MapEvaluator, based on the current position of the model component.
