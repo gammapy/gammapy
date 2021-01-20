@@ -241,7 +241,9 @@ class Model:
 
         if getattr(model, "datasets_names", None):
             for name, name_new in zip(datasets_names, new_datasets_names):
-                model.datasets_names = [_.replace(name, name_new) for _ in model.datasets_names]
+                model.datasets_names = [
+                    _.replace(name, name_new) for _ in model.datasets_names
+                ]
 
         return model
 
@@ -494,15 +496,15 @@ class DatasetModels(collections.abc.Sequence):
     def to_parameters_table(self):
         """Convert Models parameters to an astropy Table."""
         table = self.parameters.to_table()
-        #Warning: splitting of parameters will break is source name has a "." in its name.
+        # Warning: splitting of parameters will break is source name has a "." in its name.
         model_name = [name.split(".")[0] for name in self.parameters_unique_names]
-        table.add_column(model_name, name='model', index=0)
+        table.add_column(model_name, name="model", index=0)
         self._table_cached = table
-        return  table
+        return table
 
     def update_parameters_from_table(self, t):
         """Update Models from an astropy Table."""
-        parameters_dict = [dict(zip( t.colnames, row)) for row in t]      
+        parameters_dict = [dict(zip(t.colnames, row)) for row in t]
         for k, data in enumerate(parameters_dict):
             self.parameters[k].update_from_dict(data)
 
