@@ -59,11 +59,9 @@ class SpectrumDatasetMaker(MapDatasetMaker):
                     "Containment correction only supported for circular regions."
                 )
             offset = geom.separation(observation.pointing_radec)
-            psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
-            energy = geom.axes["energy_true"]
-            containment = psf.containment(
-                energy=energy.center, rad_max=geom.region.radius
+            containment = observation.psf.containment(
+                rad=geom.region.radius, offset=offset, energy_true=geom.axes["energy_true"].center
             )
-            exposure.data *= containment.reshape(geom.data_shape)
+            exposure.quantity *= containment.reshape(geom.data_shape)
 
         return exposure
