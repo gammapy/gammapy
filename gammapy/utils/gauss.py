@@ -16,7 +16,7 @@ class Gauss2DPDF:
         Gaussian width.
     """
 
-    def __init__(self, sigma=1 * u.deg):
+    def __init__(self, sigma=1):
         self.sigma = sigma
 
     @property
@@ -157,7 +157,8 @@ class MultiGauss2D:
         values = []
         for norm, component in zip(self.norms, self.components):
             values.append(norm * component(x, y))
-        return np.sum(values, axis=0)
+
+        return np.stack(values).sum(axis=0)
 
     @property
     def n_components(self):

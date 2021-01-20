@@ -20,19 +20,10 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
     Parameters
     ----------
-    energy_axis_true : `MapAxis`
-        True energy axis
-    offset_axis : `MapAxis`
-        Offset axis.
-    sigmas : list of 'numpy.ndarray'
-        Triple Gauss sigma parameters, where every entry is
-        a two dimensional 'numpy.ndarray' containing the sigma
-        value for every given energy and theta.
-    norms : list of 'numpy.ndarray'
-        Triple Gauss norm parameters, where every entry is
-        a two dimensional 'numpy.ndarray' containing the norm
-        value for every given energy and theta. Norm corresponds
-        to the value of the Gaussian at theta = 0.
+    axes : list of `MapAxis`
+        Required axes are ["energy_true", "offset"]
+    data : `~numpy.recarray`
+        Data array
     meta : dict
         Meta data
 
@@ -131,40 +122,3 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
                     log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
                     radius[jdx, idx] = np.nan
         return radius
-
-    def to_psf3d(self, rad=None):
-        """Create a PSF3D from an analytical PSF.
-
-        Parameters
-        ----------
-        rad : `~astropy.units.u.Quantity` or `~astropy.coordinates.Angle`
-            the array of position errors (rad) on which the PSF3D will be defined
-
-        Returns
-        -------
-        psf3d : `~gammapy.irf.PSF3D`
-            the PSF3D. It will be defined on the same energy and offset values than the input psf.
-        """
-        offset_axis = self.axes["offset"]
-        energy_axis_true = self.axes["energy_true"]
-
-        if rad is None:
-            rad = np.linspace(0, 0.66, 67) * u.deg
-
-        rad_axis = MapAxis.from_edges(rad, name="rad")
-
-        shape = (energy_axis_true.nbin, offset_axis.nbin, rad_axis.nbin)
-        psf_value = np.zeros(shape) * u.Unit("sr-1")
-
-        for idx, offset in enumerate(offset_axis.center):
-            table_psf = self.to_energy_dependent_table_psf(offset)
-            psf_value[:, idx, :] = table_psf.evaluate(
-                energy_true=energy_axis_true.center[:, np.newaxis], rad=rad_axis.center
-            )
-
-        return PSF3D(
-            axes=[energy_axis_true, offset_axis, rad_axis],
-            data=psf_value.value,
-            unit=psf_value.unit,
-            meta=self.meta.copy()
-        )

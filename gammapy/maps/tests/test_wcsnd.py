@@ -529,7 +529,7 @@ def test_convolve_nd():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-    table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
+    table_psf = psf.to_energy_dependent_table_psf(offset=0.5 * u.deg)
 
     psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=1 * u.deg)
 
