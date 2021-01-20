@@ -359,34 +359,31 @@ class ParametricPSF(PSF):
     def to_psf3d(self, rad=None):
         """Create a PSF3D from an analytical PSF.
 
+        It will be defined on the same energy and offset values than the input psf.
+
         Parameters
         ----------
-        rad : `~astropy.units.u.Quantity` or `~astropy.coordinates.Angle`
-            the array of position errors (rad) on which the PSF3D will be defined
+        rad : `~astropy.units.Quantity`
+            Rad values
 
         Returns
         -------
         psf3d : `~gammapy.irf.PSF3D`
-            the PSF3D. It will be defined on the same energy and offset values than the input psf.
+            PSF3D.
         """
         from gammapy.irf import PSF3D
+        from gammapy.datasets.map import RAD_AXIS_DEFAULT
 
         offset_axis = self.axes["offset"]
         energy_axis_true = self.axes["energy_true"]
 
         if rad is None:
-            rad = np.linspace(0, 0.66, 67) * u.deg
+            rad_axis = RAD_AXIS_DEFAULT.center
+        else:
+            rad_axis = MapAxis.from_edges(rad, name="rad")
 
-        rad_axis = MapAxis.from_edges(rad, name="rad")
-
-        shape = (energy_axis_true.nbin, offset_axis.nbin, rad_axis.nbin)
-        psf_value = np.zeros(shape) * u.Unit("sr-1")
-
-        for idx, offset in enumerate(offset_axis.center):
-            table_psf = self.to_energy_dependent_table_psf(offset)
-            psf_value[:, idx, :] = table_psf.evaluate(
-                energy_true=energy_axis_true.center[:, np.newaxis], rad=rad_axis.center
-            )
+        axes = MapAxes([energy_axis_true, offset_axis, rad_axis])
+        psf_value = self.evaluate(**axes.get_coord())
 
         return PSF3D(
             axes=[energy_axis_true, offset_axis, rad_axis],
