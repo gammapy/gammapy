@@ -19,14 +19,8 @@ class PSFKing(ParametricPSF):
 
     Parameters
     ----------
-    energy_axis_true : `MapAxis`
-        True energy axis
-    offset_axis : `MapAxis`
-        Offset axis
-    gamma : `~numpy.ndarray`
-        PSF parameter (2D)
-    sigma : `~astropy.coordinates.Angle`
-        PSF parameter (2D)
+    axes : list of `MapAxis` or `MapAxes`
+        Data axes, required are ["energy_true", "offset"]
     meta : dict
         Meta data
 
@@ -48,10 +42,6 @@ class PSFKing(ParametricPSF):
         ----------
         rad : `~astropy.coordinates.Angle`
             Offset from PSF center used for evaluating the PSF on a grid
-        gamma : `~astropy.units.Quantity`
-            model parameter, no unit
-        sigma : `~astropy.coordinates.Angle`
-            model parameter
 
         Returns
         -------

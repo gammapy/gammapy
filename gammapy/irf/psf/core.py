@@ -154,31 +154,49 @@ class PSF(IRF):
         return info
 
     def plot_containment_vs_energy(
-            self, fractions=[0.68, 0.95], thetas=[0, 1] * u.deg, ax=None, **kwargs
+            self, ax=None, fraction=[0.68, 0.95], offset=[0, 1] * u.deg,  **kwargs
     ):
         """Plot containment fraction as a function of energy.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
+        fraction : list of float or `~numpy.ndarray`
+            Containment fraction between 0 and 1.
+        offset : `~astropy.units.Quantity`
+            Offset array
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.plot`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+             Axes to plot on.
+
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.axes["energy_true"].center
+        energy_true = self.axes["energy_true"].center
 
-        for theta in thetas:
-            for fraction in fractions:
+        for theta in offset:
+            for frac in fraction:
                 plot_kwargs = kwargs.copy()
                 radius = self.containment_radius(
-                    energy_true=energy, offset=theta, fraction=fraction
+                    energy_true=energy_true, offset=theta, fraction=frac
                 )
                 plot_kwargs.setdefault(
-                    "label", f"{theta}, {100 * fraction:.1f}%"
+                    "label", f"{theta}, {100 * frac:.1f}%"
                 )
-                ax.plot(energy.value, radius.value, **plot_kwargs)
+                ax.plot(energy_true, radius, **plot_kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")
-        ax.set_xlabel("Energy (TeV)")
-        ax.set_ylabel("Containment radius (deg)")
+        ax.set_xlabel(f"Energy ({energy_true.unit})")
+        ax.set_ylabel(f"Containment radius ({radius.unit})")
+        return ax
 
     def plot_containment(self, ax=None, fraction=0.68,  add_cbar=True, **kwargs):
         """Plot containment image with energy and theta axes.
@@ -266,7 +284,7 @@ class ParametricPSF(PSF):
         pass
 
     @abc.abstractmethod
-    def evaluate_direct(self, rad, ):
+    def evaluate(self, rad):
         pass
 
     @property
@@ -350,12 +368,17 @@ class ParametricPSF(PSF):
 
     @classmethod
     def from_table(cls, table, format="gadf-dl3"):
-        """Create `PSFKing` from `~astropy.table.Table`.
+        """Create parametric psf from `~astropy.table.Table`.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
-            Table King PSF info.
+            Table  info.
+
+        Returns
+        -------
+        psf : `~ParametricPSF`
+            PSF class
         """
         axes = MapAxes.from_table(table, format=format)[cls.required_axes]
 
@@ -371,11 +394,10 @@ class ParametricPSF(PSF):
             column = table[name.upper()]
             values = column.data[0].transpose()
 
-            # this fixes some files where sigma is written as zero
+            # TODO: this fixes some files where sigma is written as zero
             if "SIGMA" in name:
                 values[values == 0] = 1.
 
-            # this reshape relies on a correct convention
             data[name] = values.reshape(axes.shape)
             unit[name] = column.unit or ""
 
@@ -387,7 +409,7 @@ class ParametricPSF(PSF):
         )
 
     def to_psf3d(self, rad=None):
-        """Create a PSF3D from an analytical PSF.
+        """Create a PSF3D from a parametric PSF.
 
         It will be defined on the same energy and offset values than the input psf.
 

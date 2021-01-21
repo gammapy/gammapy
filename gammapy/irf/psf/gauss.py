@@ -41,7 +41,20 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     required_parameters = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
 
     def containment(self, rad, **kwargs):
-        """"""
+        """Containment of the PSF at given axes coordinates
+
+        Parameters
+        ----------
+        rad : `~astropy.units.Quantity`
+            Rad value
+        **kwargs : dict
+            Other coordinates
+
+        Returns
+        -------
+        containment : `~numpy.ndarray`
+            Containment
+        """
         pars = self.evaluate_parameters(**kwargs)
         m = MultiGauss2D(**pars)
         m.normalize()
