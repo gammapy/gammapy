@@ -361,41 +361,6 @@ class PSF3D(PSF):
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
 
-    def to_energy_dependent_table_psf(self, theta="0 deg", rad=None, exposure=None):
-        """
-        Convert PSF3D in EnergyDependentTablePSF.
-
-        Parameters
-        ----------
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view
-        rad : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid.
-            Default is the ``rad`` from this PSF.
-        exposure : `~astropy.units.Quantity`
-            Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
-            Default exposure = 1.
-
-        Returns
-        -------
-        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Energy-dependent PSF
-        """
-        theta = Angle(theta)
-
-        if rad is not None:
-            rad_axis = MapAxis.from_edges(rad, name="rad")
-        else:
-            rad_axis = self.axes["rad"]
-
-        data = self.evaluate(offset=theta, rad=rad_axis.center).squeeze()
-        return EnergyDependentTablePSF(
-            axes=self.axes[["energy_true", "rad"]],
-            exposure=exposure,
-            data=data.value,
-            unit=data.unit
-        )
-
     def to_table_psf(self, energy, theta="0 deg", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 

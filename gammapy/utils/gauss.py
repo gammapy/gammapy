@@ -228,8 +228,7 @@ class MultiGauss2D:
         norm_multigauss : `~gammapy.modeling.models.MultiGauss2D`
            normalized function
         """
-        if not (self.integral == 0).any():
-            self.norms /= self.integral
+        self.norms = np.nan_to_num(self.norms / self.integral)
 
     def containment_fraction(self, rad):
         """Containment fraction.
