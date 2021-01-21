@@ -4,6 +4,7 @@ from operator import le, lt
 import numpy as np
 from astropy.table import Table, vstack
 from astropy.time import Time
+from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import (
@@ -99,8 +100,16 @@ class GTI:
         return cls(table)
 
     def write(self, filename, **kwargs):
-        """Write to file."""
-        self.table.write(make_path(filename), **kwargs)
+        """Write to file.
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            File name to write to.
+        """
+        hdu = fits.BinTableHDU(self.table, name="GTI")
+        hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
+        hdulist.writeto(make_path(filename), **kwargs)
 
     def __str__(self):
         return (

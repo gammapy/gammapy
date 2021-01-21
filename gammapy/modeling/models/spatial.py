@@ -612,7 +612,7 @@ class ShellSpatialModel(SpatialModel):
             # np.where and np.select do not work with quantities, so we use the
             # workaround with indexing
             value = np.sqrt(radius_out ** 2 - sep ** 2)
-            mask = [sep < radius]
+            mask = sep < radius
             value[mask] = (value - np.sqrt(radius ** 2 - sep ** 2))[mask]
             value[sep > radius_out] = 0
 
