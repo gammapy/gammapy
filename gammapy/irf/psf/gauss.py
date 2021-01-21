@@ -75,6 +75,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     def evaluate(self, rad, energy_true, offset):
         """Evaluate psf model"""
         pars = self.evaluate_parameters(energy_true=energy_true, offset=offset)
+
         m = MultiGauss2D(**pars)
         m.normalize()
         return m(rad)

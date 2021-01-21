@@ -258,6 +258,30 @@ class ParametricPSF(PSF):
 
         return interps
 
+    def evaluate_parameters(self, energy_true, offset):
+        """Evaluate analytic PSF parameters at a given energy and offset.
+
+        Uses nearest-neighbor interpolation.
+
+        Parameters
+        ----------
+        energy_true : `~astropy.units.Quantity`
+            energy value
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view
+
+        Returns
+        -------
+        values : `~astropy.units.Quantity`
+            Interpolated value
+        """
+        pars = {}
+        for name in self.required_parameters:
+            value = self._interpolators[name]((energy_true, offset))
+            pars[name] = value
+
+        return pars
+
     def to_table(self, format="gadf-dl3"):
         """Convert PSF table data to table.
 
