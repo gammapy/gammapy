@@ -41,6 +41,10 @@ class ParametricPSF(PSF):
     def evaluate_containment(self, rad, **kwargs):
         pass
 
+    def normalize(self):
+        """Normalize parametric PSF"""
+        raise NotImplementedError
+
     @property
     def quantity(self):
         """Quantity"""
@@ -111,11 +115,15 @@ class ParametricPSF(PSF):
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
+        from gammapy.irf.io import IRF_DL3_HDU_SPECIFICATION
+
         table = self.axes.to_table(format="gadf-dl3")
+        spec = IRF_DL3_HDU_SPECIFICATION[self.tag]["column_name"]
 
         for name in self.required_parameters:
-            table[name.upper()] = self.data[name].T[np.newaxis]
-            table[name.upper()].unit = self.unit[name]
+            column_name = spec[name]
+            table[column_name] = self.data[name].T[np.newaxis]
+            table[column_name].unit = self.unit[name]
 
         # Create hdu and hdu list
         return table
@@ -134,6 +142,8 @@ class ParametricPSF(PSF):
         psf : `~ParametricPSF`
             PSF class
         """
+        from gammapy.irf.io import IRF_DL3_HDU_SPECIFICATION
+
         axes = MapAxes.from_table(table, format=format)[cls.required_axes]
 
         dtype = {
@@ -144,12 +154,14 @@ class ParametricPSF(PSF):
         data = np.empty(axes.shape, dtype=dtype)
         unit = {}
 
+        spec = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
+
         for name in cls.required_parameters:
-            column = table[name.upper()]
+            column = table[spec[name]]
             values = column.data[0].transpose()
 
             # TODO: this fixes some files where sigma is written as zero
-            if "SIGMA" in name:
+            if "sigma" in name:
                 values[values == 0] = 1.
 
             data[name] = values.reshape(axes.shape)
@@ -246,6 +258,17 @@ class ParametricPSF(PSF):
         return value
 
 
+def get_sigmas_and_norms(**kwargs):
+    """Convert scale and amplitude to norms"""
+    sigmas = u.Quantity([kwargs[f"sigma_{idx}"] for idx in [1, 2, 3]])
+
+    scale = kwargs["scale"]
+    ones = np.ones_like(scale)
+    amplitudes = u.Quantity([ones, kwargs["ampl_2"], kwargs["ampl_3"]])
+    norms = 2 * scale * amplitudes * sigmas ** 2
+    return sigmas, norms
+
+
 class EnergyDependentMultiGaussPSF(ParametricPSF):
     """Triple Gauss analytical PSF depending on energy and theta.
 
@@ -274,58 +297,47 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     """
     tag = "psf_3gauss"
     required_axes = ["energy_true", "offset"]
-    required_parameters = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
+    required_parameters = ["sigma_1", "sigma_2", "sigma_3", "scale", "ampl_2", "ampl_3"]
 
     @staticmethod
-    def evaluate_containment(rad, sigmas, norms):
+    def evaluate_containment(rad, **kwargs):
         """Containment of the PSF at given axes coordinates
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
             Rad value
-        sigmas : list of `~astropy.units.Quantity`
-            Sigma parameters
-        norms : list of `~astropy.units.Quantity`
-            Norm parameters
+        **kwargs : dict
+            Parameters, see `required_parameters`
 
         Returns
         -------
         containment : `~numpy.ndarray`
             Containment
         """
+        sigmas, norms = get_sigmas_and_norms(**kwargs)
         m = MultiGauss2D(sigmas=sigmas, norms=norms)
         m.normalize()
         containment = m.containment_fraction(rad)
         return containment
 
-    def evaluate_parameters(self, energy_true, offset):
-        """"""
-        energy = u.Quantity(energy_true)
-        offset = u.Quantity(offset)
-
-        sigmas, norms = [], []
-
-        pars = {"A_1": 1}
-
-        for name in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
-            sigma = self._interpolators[name]((energy, offset))
-            sigmas.append(sigma)
-
-        for name, interp_name in zip(["scale", "A_2", "A_3"], ["SCALE", "AMPL_2", "AMPL_3"]):
-            interp = self._interpolators[interp_name]
-            pars[name] = interp((energy, offset))
-
-        for idx, sigma in enumerate(sigmas):
-            a = pars[f"A_{idx + 1}"]
-            norm = (pars["scale"] * 2 * a * sigma ** 2).to_value(sigma.unit ** 2)
-            norms.append(norm)
-
-        return {"norms": norms, "sigmas": sigmas}
-
     @staticmethod
-    def evaluate_direct(rad, sigmas, norms):
-        """Evaluate psf model"""
+    def evaluate_direct(rad, **kwargs):
+        """Evaluate psf model
+
+        Parameters
+        ----------
+        rad : `~astropy.units.Quantity`
+            Rad value
+        **kwargs : dict
+            Parameters, see `required_parameters`
+
+        Returns
+        -------
+        value : `~numpy.ndarray`
+            PSF value
+        """
+        sigmas, norms = get_sigmas_and_norms(**kwargs)
         m = MultiGauss2D(sigmas=sigmas, norms=norms)
         m.normalize()
         return m(rad)

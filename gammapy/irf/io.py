@@ -39,10 +39,24 @@ IRF_DL3_HDU_SPECIFICATION = {
     "psf_3gauss": {
         "extname": "PSF_2D_GAUSS",
         "hduclas2": "PSF",
+        "column_name":
+            {
+                "sigma_1": "SIGMA_1",
+                "sigma_2": "SIGMA_2",
+                "sigma_3": "SIGMA_3",
+                "scale": "SCALE",
+                "ampl_2": "AMPL_2",
+                "ampl_3": "AMPL_3",
+            }
     },
     "psf_king": {
         "extname": "PSF_2D_KING",
         "hduclas2": "PSF",
+        "column_name":
+            {
+                "sigma": "SIGMA",
+                "gamma": "GAMMA",
+            }
     },
     "aeff_2d": {
         "extname": "EFFECTIVE AREA",
