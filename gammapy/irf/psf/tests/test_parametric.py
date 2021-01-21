@@ -109,6 +109,15 @@ def test_psf_king_evaluate(psf_king):
 
 
 @requires_data()
+def test_psf_king_containment_radius(psf_king):
+    radius = psf_king.containment_radius(
+        fraction=0.68, energy_true=1 * u.TeV, offset=0.* u.deg
+    )
+
+    assert_allclose(radius, 0.65975 * u.deg, rtol=1e-5)
+
+
+@requires_data()
 def test_psf_king_to_table(psf_king):
     theta1 = Angle(0, "deg")
     theta2 = Angle(1, "deg")

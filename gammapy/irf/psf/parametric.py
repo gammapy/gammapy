@@ -194,6 +194,15 @@ class ParametricPSF(PSF):
             meta=self.meta.copy()
         )
 
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n\n"
+        str_ += f"\taxes      : {self.axes.names}\n"
+        str_ += f"\tshape     : {self.data.shape}\n"
+        str_ += f"\tndim      : {len(self.axes)}\n"
+        str_ += f"\tparameters: {self.required_parameters}\n"
+        return str_.expandtabs(tabsize=2)
+
 
 class EnergyDependentMultiGaussPSF(ParametricPSF):
     """Triple Gauss analytical PSF depending on energy and theta.
@@ -299,6 +308,33 @@ class PSFKing(ParametricPSF):
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None
     )
+
+    def containment(self, rad, **kwargs):
+        """Containment of the PSF at given axes coordinates
+
+        Parameters
+        ----------
+        rad : `~astropy.units.Quantity`
+            Rad value
+        **kwargs : dict
+            Other coordinates
+
+        Returns
+        -------
+        containment : `~numpy.ndarray`
+            Containment
+        """
+        pars = self.evaluate_parameters(**kwargs)
+        sigma, gamma = pars["sigma"], pars["gamma"]
+
+        term_1 = -(1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** -gamma
+        term_2 = rad ** 2 + 2 * gamma * sigma ** 2
+        term_3 = 2 * gamma * sigma ** 2
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            containment = term_1 * term_2 / term_3
+
+        return containment
 
     def evaluate(self, rad, energy_true, offset):
         """Evaluate the PSF model.
