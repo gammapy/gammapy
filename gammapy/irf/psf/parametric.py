@@ -270,7 +270,7 @@ def get_sigmas_and_norms(**kwargs):
 
 
 class EnergyDependentMultiGaussPSF(ParametricPSF):
-    """Triple Gauss analytical PSF depending on energy and theta.
+    """Triple Gauss analytical PSF depending on true energy and offset.
 
     Parameters
     ----------
@@ -283,7 +283,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
     Examples
     --------
-    Plot R68 of the PSF vs. theta and energy:
+    Plot R68 of the PSF vs. offset and true energy:
 
     .. plot::
         :include-source:

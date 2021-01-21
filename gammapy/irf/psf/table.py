@@ -172,13 +172,13 @@ class EnergyDependentTablePSF(PSF):
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        theta_hdu = self.axes["rad"].to_table_hdu(format="gtpsf")
+        rad_hdu = self.axes["rad"].to_table_hdu(format="gtpsf")
         psf_table = self.axes["energy_true"].to_table(format="gtpsf")
 
         psf_table["Exposure"] = self.exposure.to("cm^2 s")
         psf_table["Psf"] = self.quantity.to("sr^-1")
         psf_hdu = fits.BinTableHDU(data=psf_table, name="PSF")
-        return fits.HDUList([fits.PrimaryHDU(), theta_hdu, psf_hdu])
+        return fits.HDUList([fits.PrimaryHDU(), rad_hdu, psf_hdu])
 
     @classmethod
     def read(cls, filename):
@@ -356,40 +356,36 @@ class PSF3D(PSF):
     meta : dict
         Meta dict
     """
-
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
 
-    def to_table_psf(self, energy, theta="0 deg", **kwargs):
+    def to_table_psf(self, energy_true, offset="0 deg", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default offset = 0 deg
 
         Returns
         -------
         psf : `~gammapy.irf.TablePSF`
             Table PSF
         """
-        energy = u.Quantity(energy)
-        theta = Angle(theta)
-        data = self.evaluate(energy_true=energy, offset=theta).squeeze()
+        data = self.evaluate(energy_true=energy_true, offset=offset).squeeze()
         return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
 
-    def plot_psf_vs_rad(self, theta="0 deg", energy=u.Quantity(1, "TeV")):
+    def plot_psf_vs_rad(self, offset="0 deg", energy_true="1 TeV"):
         """Plot PSF vs rad.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             Energy. Default energy = 1 TeV
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default offset = 0 deg
         """
-        theta = Angle(theta)
-        table = self.to_table_psf(energy=energy, theta=theta)
+        table = self.to_table_psf(energy_true=energy_true, offset=offset)
         return table.plot_psf_vs_rad()
