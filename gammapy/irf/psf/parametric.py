@@ -34,7 +34,11 @@ class ParametricPSF(PSF):
         pass
 
     @abc.abstractmethod
-    def evaluate(self, rad):
+    def evaluate_direct(self, rad, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def evaluate_containment(self, rad, **kwargs):
         pass
 
     @property
@@ -203,6 +207,44 @@ class ParametricPSF(PSF):
         str_ += f"\tparameters: {self.required_parameters}\n"
         return str_.expandtabs(tabsize=2)
 
+    def containment(self, rad, **kwargs):
+        """Containment of the PSF at given axes coordinates
+
+        Parameters
+        ----------
+        rad : `~astropy.units.Quantity`
+            Rad value
+        **kwargs : dict
+            Other coordinates
+
+        Returns
+        -------
+        containment : `~numpy.ndarray`
+            Containment
+        """
+        pars = self.evaluate_parameters(**kwargs)
+        containment = self.evaluate_containment(rad=rad, **pars)
+        return containment
+
+    def evaluate(self, rad, **kwargs):
+        """Evaluate the PSF model.
+
+        Parameters
+        ----------
+        rad : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid
+        **kwargs : dict
+            Other coordinates
+
+        Returns
+        -------
+        psf_value : `~astropy.units.Quantity`
+            PSF value
+        """
+        pars = self.evaluate_parameters(**kwargs)
+        value = self.evaluate_direct(rad=rad, **pars)
+        return value
+
 
 class EnergyDependentMultiGaussPSF(ParametricPSF):
     """Triple Gauss analytical PSF depending on energy and theta.
@@ -234,23 +276,25 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     required_axes = ["energy_true", "offset"]
     required_parameters = ["SIGMA_1", "SIGMA_2", "SIGMA_3", "SCALE", "AMPL_2", "AMPL_3"]
 
-    def containment(self, rad, **kwargs):
+    @staticmethod
+    def evaluate_containment(rad, sigmas, norms):
         """Containment of the PSF at given axes coordinates
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
             Rad value
-        **kwargs : dict
-            Other coordinates
+        sigmas : list of `~astropy.units.Quantity`
+            Sigma parameters
+        norms : list of `~astropy.units.Quantity`
+            Norm parameters
 
         Returns
         -------
         containment : `~numpy.ndarray`
             Containment
         """
-        pars = self.evaluate_parameters(**kwargs)
-        m = MultiGauss2D(**pars)
+        m = MultiGauss2D(sigmas=sigmas, norms=norms)
         m.normalize()
         containment = m.containment_fraction(rad)
         return containment
@@ -279,11 +323,10 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
         return {"norms": norms, "sigmas": sigmas}
 
-    def evaluate(self, rad, energy_true, offset):
+    @staticmethod
+    def evaluate_direct(rad, sigmas, norms):
         """Evaluate psf model"""
-        pars = self.evaluate_parameters(energy_true=energy_true, offset=offset)
-
-        m = MultiGauss2D(**pars)
+        m = MultiGauss2D(sigmas=sigmas, norms=norms)
         m.normalize()
         return m(rad)
 
@@ -301,7 +344,6 @@ class PSFKing(ParametricPSF):
         Meta data
 
     """
-
     tag = "psf_king"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["gamma", "sigma"]
@@ -309,34 +351,34 @@ class PSFKing(ParametricPSF):
         bounds_error=False, fill_value=None
     )
 
-    def containment(self, rad, **kwargs):
+    @staticmethod
+    def evaluate_containment(rad, gamma, sigma):
         """Containment of the PSF at given axes coordinates
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
             Rad value
-        **kwargs : dict
-            Other coordinates
+        gamma : `~astropy.units.Quantity`
+            Gamma parameter
+        sigma : `~astropy.units.Quantity`
+            Sigma parameter
 
         Returns
         -------
         containment : `~numpy.ndarray`
             Containment
         """
-        pars = self.evaluate_parameters(**kwargs)
-        sigma, gamma = pars["sigma"], pars["gamma"]
-
-        term_1 = -(1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** -gamma
-        term_2 = rad ** 2 + 2 * gamma * sigma ** 2
-        term_3 = 2 * gamma * sigma ** 2
-
         with np.errstate(divide="ignore", invalid="ignore"):
+            term_1 = -(1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** -gamma
+            term_2 = rad ** 2 + 2 * gamma * sigma ** 2
+            term_3 = 2 * gamma * sigma ** 2
             containment = term_1 * term_2 / term_3
 
         return containment
 
-    def evaluate(self, rad, energy_true, offset):
+    @staticmethod
+    def evaluate_direct(rad, gamma, sigma):
         """Evaluate the PSF model.
 
         Formula is given here: :ref:`gadf:psf_king`.
@@ -351,11 +393,6 @@ class PSFKing(ParametricPSF):
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        pars = self.evaluate_parameters(
-            energy_true=energy_true, offset=offset
-        )
-        sigma, gamma = pars["sigma"], pars["gamma"]
-
         with np.errstate(divide="ignore"):
             term1 = 1 / (2 * np.pi * sigma ** 2)
             term2 = 1 - 1 / gamma
