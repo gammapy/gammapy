@@ -2,8 +2,10 @@
 import os
 from pathlib import Path
 import pytest
+from astropy.io import fits
 from gammapy.data import DataStore
 from gammapy.utils.testing import requires_data
+from gammapy.utils.scripts import make_path
 
 
 @pytest.fixture(scope="session")
@@ -41,13 +43,23 @@ def test_datastore_from_dir():
 
 
 @requires_data()
-def test_datastore_from_file():
+def test_datastore_from_file(tmpdir):
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz"
+    index_hdu = fits.open(make_path(filename))["HDU_INDEX"]
+
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz"
+    obs_hdu = fits.open(make_path(filename))["OBS_INDEX"]
+
+    hdulist = fits.HDUList()
+    hdulist.append(index_hdu)
+    hdulist.append(obs_hdu)
+
+    filename = tmpdir / "test-index.fits"
+    hdulist.writeto(str(filename))
+
     data_store = DataStore.from_file(filename)
-    obs = data_store.obs(obs_id=23523)
-    # Check that things can be loaded:
-    obs.events
-    obs.bkg
+
+    assert data_store.obs_table["OBS_ID"][0] == 20136
 
 
 @requires_data()

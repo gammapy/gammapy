@@ -67,6 +67,11 @@ class DataStore:
             FITS HDU name or number for the HDU index table
         hdu_obs : str or int
             FITS HDU name or number for the observation index table
+
+        Returns
+        -------
+        data_store : `DataStore`
+            Data store
         """
         filename = make_path(filename)
 
