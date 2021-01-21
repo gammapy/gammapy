@@ -52,8 +52,8 @@ class PSF(IRF):
         radius : `~astropy.coordinates.Angle`
             Containment radius
         """
+        # TODO: this uses a lot of numpy broadcasting tricks, maybe simplify...
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
-        # TODO: this uses a lot of numpy broadcasting, maybe simplify
         output = np.broadcast(*kwargs.values(), fraction)
 
         try:
@@ -95,7 +95,7 @@ class PSF(IRF):
         if rad is None:
             rad_axis = RAD_AXIS_DEFAULT
         else:
-            rad_axis = MapAxis.from_nodes(rad, name="rad")
+            rad_axis = MapAxis.from_edges(rad, name="rad")
 
         axes = MapAxes([energy_axis_true, rad_axis])
         data = self.evaluate(**axes.get_coord(), offset=offset)
@@ -180,15 +180,24 @@ class PSF(IRF):
         ax.set_xlabel("Energy (TeV)")
         ax.set_ylabel("Containment radius (deg)")
 
-    def plot_containment(self, fraction=0.68, ax=None, add_cbar=True, **kwargs):
+    def plot_containment(self, ax=None, fraction=0.68,  add_cbar=True, **kwargs):
         """Plot containment image with energy and theta axes.
 
         Parameters
         ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
         fraction : float
             Containment fraction between 0 and 1.
         add_cbar : bool
             Add a colorbar
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+             Axes to plot on.
         """
         import matplotlib.pyplot as plt
 
@@ -404,11 +413,11 @@ class ParametricPSF(PSF):
             rad_axis = MapAxis.from_edges(rad, name="rad")
 
         axes = MapAxes([energy_axis_true, offset_axis, rad_axis])
-        psf_value = self.evaluate(**axes.get_coord())
+        data = self.evaluate(**axes.get_coord())
 
         return PSF3D(
-            axes=[energy_axis_true, offset_axis, rad_axis],
-            data=psf_value.value,
-            unit=psf_value.unit,
+            axes=axes,
+            data=data.value,
+            unit=data.unit,
             meta=self.meta.copy()
         )

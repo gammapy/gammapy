@@ -9,7 +9,6 @@ from gammapy.maps import MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
-from ..core import IRF
 from .core import PSF
 
 __all__ = ["TablePSF", "EnergyDependentTablePSF", "PSF3D"]

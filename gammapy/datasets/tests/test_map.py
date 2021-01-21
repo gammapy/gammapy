@@ -177,7 +177,7 @@ def test_fake(sky_model, geom, geom_etrue):
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
-    assert_allclose(dataset.counts.data.sum(), 9709)
+    assert_allclose(dataset.counts.data.sum(), 9711)
 
 
 @requires_data()
@@ -234,7 +234,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.035899e09, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.059559e+09, rtol=1e-5)
 
 
 @requires_data()
@@ -509,7 +509,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_2.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
 
     stat = fit.datasets.stat_sum()
-    assert_allclose(stat, 14823.579908, rtol=1e-5)
+    assert_allclose(stat, 14823.772744, rtol=1e-5)
 
     region = sky_model.spatial_model.to_region()
 
