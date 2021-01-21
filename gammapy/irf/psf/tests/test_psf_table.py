@@ -81,7 +81,7 @@ def test_psf_3d_plot_vs_rad(psf_3d):
 @requires_dependency("matplotlib")
 def test_psf_3d_plot_containment(psf_3d):
     with mpl_plot_check():
-        psf_3d.plot_containment()
+        psf_3d.plot_containment_radius()
 
 
 @requires_data()
