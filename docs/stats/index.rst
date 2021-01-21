@@ -148,7 +148,7 @@ Excess and Significance
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Assume one measured :math:`n_{on} = 13` counts in a region where one suspects a source might be present.
-if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=9.5`), one can use
+if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=5.5`), one can use
 the Cash statistic to estimate the signal or excess number, its statistical significance
 as well as the confidence interval on the true signal counts number value.
 
@@ -233,7 +233,7 @@ Here's how you compute the statistical significance of your detection:
 
 .. plot:: stats/plot_wstat_significance.py
 
-Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=9.5`, you can use
+Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=5.5`, you can use
 the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for known background:
 
 .. code-block:: python
