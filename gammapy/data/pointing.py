@@ -27,6 +27,29 @@ class FixedPointingInfo:
     >>> path = '$GAMMAPY_DATA/tests/pointing_table.fits.gz'
     >>> pointing_info = PointingInfo.read(path)
     >>> print(pointing_info)
+    Pointing info:
+    <BLANKLINE>
+    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>)
+    MJDREFI, MJDREFF, TIMESYS = (51910, 0.000742870370370241, 'TT')
+    Time ref:     2001-01-01T00:01:04.184
+    Time ref:     51910.00074287037 MJD (TT)
+    Duration:     1586.0000000000018 sec = 0.44055555555555603 hours
+    Table length: 100
+    <BLANKLINE>
+    START:
+    Time:  2004-01-21T19:50:02.184
+    Time:  53025.826414166666 MJD (TT)
+    RADEC: 83.6333 24.5144 deg
+    ALTAZ: 11.4575 41.3409 deg
+    <BLANKLINE>
+    <BLANKLINE>
+    END:
+    Time:  2004-01-21T20:16:28.184
+    Time:  53025.844770648146 MJD (TT)
+    RADEC: 83.6333 24.5144 deg
+    ALTAZ: 3.44573 42.1319 deg
+    <BLANKLINE>
+    <BLANKLINE>
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
@@ -124,6 +147,29 @@ class PointingInfo:
     >>> from gammapy.data import PointingInfo
     >>> pointing_info = PointingInfo.read('$GAMMAPY_DATA/tests/pointing_table.fits.gz')
     >>> print(pointing_info)
+    Pointing info:
+    <BLANKLINE>
+    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>)
+    MJDREFI, MJDREFF, TIMESYS = (51910, 0.000742870370370241, 'TT')
+    Time ref:     2001-01-01T00:01:04.184
+    Time ref:     51910.00074287037 MJD (TT)
+    Duration:     1586.0000000000018 sec = 0.44055555555555603 hours
+    Table length: 100
+    <BLANKLINE>
+    START:
+    Time:  2004-01-21T19:50:02.184
+    Time:  53025.826414166666 MJD (TT)
+    RADEC: 83.6333 24.5144 deg
+    ALTAZ: 11.4575 41.3409 deg
+    <BLANKLINE>
+    <BLANKLINE>
+    END:
+    Time:  2004-01-21T20:16:28.184
+    Time:  53025.844770648146 MJD (TT)
+    RADEC: 83.6333 24.5144 deg
+    ALTAZ: 3.44573 42.1319 deg
+    <BLANKLINE>
+    <BLANKLINE>
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
