@@ -63,7 +63,7 @@ def create_crab_spectral_model(reference="meyer"):
         >>> energy = 10 * u.TeV
         >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')
         >>> print(dnde_cu)
-        6.19699156377 %
+        6.196991563774588 %
 
     And the same for integral fluxes (between 1 and 10 TeV)::
 
@@ -71,7 +71,7 @@ def create_crab_spectral_model(reference="meyer"):
         >>> emin, emax = [1, 10] * u.TeV
         >>> flux_int_cu = (pwl.integral(emin, emax) / crab.integral(emin, emax)).to('%')
         >>> print(flux_int_cu)
-        3.5350582166 %
+        3.535058216604496 %
     """
     if reference == "meyer":
         return MeyerCrabSpectralModel()
