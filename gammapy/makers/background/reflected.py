@@ -60,9 +60,9 @@ class ReflectedRegionsFinder:
     >>> finder.run()
     >>> print(finder.reflected_regions[0])
     Region: CircleSkyRegion
-    center: <SkyCoord (Galactic): (l, b) in deg
-        ( 184.9367087, -8.37920222)>
-        radius: 0.400147197682 deg
+    center: <SkyCoord (ICRS): (ra, dec) in deg
+        (83.19879005, 25.57300957)>
+    radius: 0.39953342830427013 deg
     """
 
     def __init__(
