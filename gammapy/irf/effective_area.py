@@ -55,11 +55,11 @@ class EffectiveAreaTable(IRF):
     >>> import astropy.units as u
     >>> from gammapy.irf import EffectiveAreaTable
     >>> energy = np.logspace(-1, 2) * u.TeV
-    >>> aeff_max = aeff.max_area
-    >>> print(aeff_max).to('m2')
+    >>> aeff_max = aeff.max_area # doctest: +SKIP
+    >>> print(aeff_max).to('m2') # doctest: +SKIP
     156909.413371 m2
-    >>> energy_threshold = aeff.find_energy(0.1 * aeff_max)
-    >>> print(energy_threshold)
+    >>> energy_threshold = aeff.find_energy(0.1 * aeff_max) # doctest: +SKIP
+    >>> print(energy_threshold) # doctest: +SKIP
     0.185368478744 TeV
     """
     required_axes = ["energy_true"]
@@ -308,12 +308,13 @@ class EffectiveAreaTable2D(IRF):
     >>> print(aeff)
     EffectiveAreaTable2D
     --------------------
-
+    <BLANKLINE>
       axes  : ['energy_true', 'offset']
       shape : (42, 6)
       ndim  : 2
       unit  : m2
       dtype : >f4
+    <BLANKLINE>
 
     Here's another one, created from scratch, without reading a file:
 
@@ -325,12 +326,13 @@ class EffectiveAreaTable2D(IRF):
     >>> print(aeff)
     EffectiveAreaTable2D
     --------------------
-
+    <BLANKLINE>
       axes  : ['energy_true', 'offset']
       shape : (30, 4)
       ndim  : 2
       unit  : cm2
       dtype : float64
+    <BLANKLINE>
 
     """
 
