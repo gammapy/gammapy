@@ -78,11 +78,10 @@ def load_cta_irfs(filename):
     --------
     Access the CTA 1DC IRFs stored in the gammapy datasets
 
-    .. code-block:: python
+    >>> from gammapy.irf import load_cta_irfs
+    >>> cta_irf = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
+    >>> print(cta_irf['aeff'])
 
-        from gammapy.irf import load_cta_irfs
-        cta_irf = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
-        print(cta_irf['aeff'])
     """
     from .background import Background3D
     from .effective_area import EffectiveAreaTable2D
