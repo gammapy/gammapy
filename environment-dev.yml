@@ -28,6 +28,7 @@ dependencies:
   - pytest
   - pytest-astropy
   - pytest-cov
+  - pytest-sphinx
   - pytest-xdist
   # extra dependencies
   - healpy
