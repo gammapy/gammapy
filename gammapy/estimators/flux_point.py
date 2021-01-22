@@ -251,9 +251,9 @@ class FluxPoints:
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> print(flux_points)
-        FluxPoints(sed_type="flux", n_points=24)
+        FluxPoints(sed_type='flux', n_points=24)
         >>> print(flux_points.drop_ul())
-        FluxPoints(sed_type="flux", n_points=19)
+        FluxPoints(sed_type='flux', n_points=19)
 
         Note: In order to reproduce the example you need the tests datasets folder.
         You may download it with the command
