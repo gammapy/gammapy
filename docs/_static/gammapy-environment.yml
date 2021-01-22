@@ -11,7 +11,7 @@ channels:
 
 dependencies:
   - gammapy=0.18.2
-  - python=3.7.0
+  - python=3.7
   - ipython=7.10
   # Cython isn't really needed when installing binaries,
   # but it is convenient for users that build from source
@@ -33,6 +33,5 @@ dependencies:
   - pydantic=1.2
   - emcee=2.2.1
   - corner=2.0
-  - parfive=1.0
   - pip
   - requests
