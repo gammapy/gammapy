@@ -62,7 +62,7 @@ class ReflectedRegionsFinder:
     Region: CircleSkyRegion
     center: <SkyCoord (ICRS): (ra, dec) in deg
         (83.19879005, 25.57300957)>
-    radius: 0.39953342830427013 deg
+    radius: 0.39953342830756855 deg
     """
 
     def __init__(

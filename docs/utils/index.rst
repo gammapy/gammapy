@@ -70,7 +70,7 @@ used:
 .. testoutput::
 
     [51179.00000143 55197.        ]
-    [729755.00000143 733773.        ]
+    [10592.00000143 14610.        ]
 
 
 Converting to other time scales is also easy, see the :ref:`time scale section,
