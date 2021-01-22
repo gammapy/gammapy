@@ -231,9 +231,9 @@ class EventList:
         --------
         >>> from astropy.units import Quantity
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('events.fits')
+        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
         >>> energy_range = Quantity([1, 20], 'TeV')
-        >>> event_list = event_list.select_energy()
+        >>> event_list = event_list.select_energy() # doctest: +SKIP
         """
         energy = self.energy
         mask = energy_range[0] <= energy
@@ -296,9 +296,9 @@ class EventList:
         Examples
         --------
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('events.fits')
+        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
         >>> phase_region = (0.3, 0.5)
-        >>> event_list = event_list.select_parameter(parameter='PHASE', band=phase_region)
+        >>> event_list = event_list.select_parameter(parameter='PHASE', band=phase_region) # doctest: +SKIP
         """
         mask = band[0] <= self.table[parameter].quantity
         mask &= self.table[parameter].quantity < band[1]
@@ -404,6 +404,7 @@ class EventList:
         (this is a commonly used plot to check the background spatial distribution):
 
         >>> events.plot_offset2_distribution()
+        <AxesSubplot:xlabel='Offset^2 (deg^2)', ylabel='Counts'>
 
         Plot the offset^2 distribution wrt. the Crab pulsar position
         (this is commonly used to check both the gamma-ray signal and the background spatial distribution):
@@ -413,6 +414,7 @@ class EventList:
         >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
         >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30)
         >>> events.plot_offset2_distribution(center=center, bins=bins)
+        <AxesSubplot:xlabel='Offset^2 (deg^2)', ylabel='Counts'>
 
         Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
         in this case 30 bins ranging from 0 to (0.3 deg)^2.
