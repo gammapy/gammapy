@@ -16,7 +16,7 @@ Where should I import from?
 
 You should import from the "end-user namespaces", not the "implementation module".
 
-.. code-block:: python
+.. testcode::
 
    from gammapy.data import EventList  # good
    from gammapy.data.event_list import EventList # bad
@@ -61,7 +61,7 @@ In Gammapy we currently support Python 3.7 or later.
 Skip unit tests for some Astropy versions
 -----------------------------------------
 
-.. code-block:: python
+.. testcode::
 
    import astropy
    import pytest
@@ -111,7 +111,7 @@ In Gammapy we assume that
 `"we're all consenting adults" <https://mail.python.org/pipermail/tutor/2003-October/025932.html>`__,
 which means that when you write a function you should write it like this:
 
-.. code-block:: python
+.. testcode::
 
     def do_something(data, option):
         """Do something.
@@ -219,7 +219,7 @@ Assert convention
 When performing tests, the preferred numerical assert method is
 `numpy.testing.assert_allclose`. Use
 
-.. code-block:: python
+.. testcode::
 
     from numpy.testing import assert_allclose
 
@@ -235,7 +235,7 @@ places.
 For assertions on `~astropy.units.Quantity` objects, you can do this
 to assert on the unit and value separately:
 
-.. code-block:: python
+.. testcode::
 
     from numpy.testing import assert_allclose
     import astropy.units as u
@@ -268,7 +268,7 @@ take a ``random_state`` input parameter and call the
 (you can copy & paste the three docstring lines and the first code line
 to the function you're writing):
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.utils.random import get_random_state
 
@@ -348,7 +348,7 @@ Generating log messages
 
 To generate log messages from any file in Gammapy, include these two lines at the top:
 
-.. code-block:: python
+.. testcode::
 
     import logging
     log = logging.getLogger(__name__)
@@ -356,7 +356,7 @@ To generate log messages from any file in Gammapy, include these two lines at th
 This creates a module-level `logging.Logger` object called ``log``, and you can then create
 log messages like this from any function or method:
 
-.. code-block:: python
+.. testcode::
 
     def process_lots_of_data(infile, outfile):
 
@@ -375,26 +375,6 @@ and log things. For these you can optionally let the caller pass a logger when
 constructing the class to make it easier to configure the logging.
 See the `~gammapy.data.EventListDatasetChecker` as an example.
 
-Configuring logging from command line tools
-+++++++++++++++++++++++++++++++++++++++++++
-
-Every Gammapy command line tool should have a ``--loglevel`` option:
-
-.. code-block:: python
-
-    parser.add_argument("-l", "--loglevel", default='info',
-                        choices=['debug', 'info', 'warning', 'error', 'critical'],
-                        help="Set the logging level")
-
-This option is then processed at the end of ``main`` using this helper function:
-
-.. code-block:: python
-
-    set_up_logging_from_args(args)
-
-This sets up the root logger with the log level and format (the format isn't configurable
-for the command line scripts at the moment).
-
 
 Command line tools using click
 ------------------------------
@@ -402,7 +382,7 @@ Command line tools using click
 Command line tools that use the `click <http://click.pocoo.org/>`__ module should disable
 the unicode literals warnings to clean up the output of the tool:
 
-.. code-block:: python
+.. testcode::
 
     import click
     click.disable_unicode_literals_warning = True
@@ -526,13 +506,17 @@ Locate origin of warnings
 By default, warnings appear on the console, but often it's not clear where a given warning
 originates (e.g. when building the docs or running scripts or tests) or how to fix it.
 
-Sometimes putting this in ``gammapy/__init__.py`` can help::
+Sometimes putting this in ``gammapy/__init__.py`` can help:
+
+.. testcode::
 
     import numpy as np
     np.seterr(all='raise')
 
 Following the advice `here <http://stackoverflow.com/questions/22373927/get-traceback-of-warnings/22376126#22376126>`__,
-putting this in ``docs/conf.py`` can also help sometimes::
+putting this in ``docs/conf.py`` can also help sometimes:
+
+.. testcode::
 
     import traceback
     import warnings
@@ -770,7 +754,7 @@ allow users a quick look in the data. Those methods should be tested using the
 a new figure to plot on and writing the plot to a byte-stream to trigger the
 rendering of the plot, which can rasie errore as well. Here is a short example:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.utils.testing import mpl_plot_check
 
@@ -816,7 +800,7 @@ return variable name.
 See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
 as examples in the Astropy codebase. Here's a simple example:
 
-.. code-block:: python
+.. testcode::
 
     def circle_area(radius):
         """Circle area.
@@ -835,7 +819,7 @@ as examples in the Astropy codebase. Here's a simple example:
 
 In these cases, the following shorter format omitting the *Returns* section is recommended:
 
-.. code-block:: python
+.. testcode::
 
     def circle_area(radius):
         """Circle area (`~astropy.units.Quantity`).
@@ -854,7 +838,7 @@ A common case where the short format is appropriate are class properties,
 because they always return a single object.
 As an example see `gammapy.data.EventList.radec`, which is reproduced here:
 
-.. code-block:: python
+.. testcode::
 
     @property
     def radec(self):
