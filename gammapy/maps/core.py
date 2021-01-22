@@ -968,7 +968,7 @@ class Map(abc.ABC):
                 continue
 
             if image.geom.is_hpx:
-                image_wcs = (image.to_wcs(normalize=False, proj="AIT", oversample=2,),)
+                image_wcs = image.to_wcs(normalize=False, proj="AIT", oversample=2,)
             else:
                 image_wcs = image
 

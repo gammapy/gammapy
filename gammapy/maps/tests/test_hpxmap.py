@@ -308,6 +308,13 @@ def test_plot():
     with mpl_plot_check():
         m.plot()
 
+@requires_dependency("matplotlib")
+def test_plot_grid():
+    axis = MapAxis([0, 1, 2], node_type="edges")
+    m = HpxNDMap.create(binsz=0.1 * u.deg, width=1, axes=[axis])
+    with mpl_plot_check():
+        m.plot_grid()
+
 
 @requires_dependency("matplotlib")
 def test_plot_poly():
