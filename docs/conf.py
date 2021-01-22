@@ -64,6 +64,7 @@ extensions.extend(
         "IPython.sphinxext.ipython_console_highlighting",
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
+        "sphinx.ext.doctest",
     ]
 )
 nbsphinx_execute = "never"
