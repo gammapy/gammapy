@@ -69,19 +69,21 @@ def test_select_region(models):
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
     geom = WcsGeom.create(skydir=(3, 4), npix=(5, 4), frame="galactic", axes=[axis])
     mask = geom.region_mask([circle_sky_12])
-    inside = models.contribute(mask, margin=None, inside=True)
-    outside = models.contribute(mask, margin=None, inside=False)
-    assert models[outside].names == ["bkg1", "bkg2"]
-    assert models[inside].names == ["source-1", "source-2"]
+    contribute = models.select_mask(mask, margin=None, include_evaluation_radius=True)
+    inside = models.select_mask(mask, margin=None, include_evaluation_radius=False)
+    assert contribute.names == ["source-1", "source-2"]
+    assert inside.names == ["source-1", "source-2"]
 
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
-    geom = WcsGeom.create(skydir=(3, 4), npix=(15, 15), frame="galactic", axes=[axis])
+    geom = WcsGeom.create(
+        skydir=(3, 4), binsz=0.1, npix=(15, 15), frame="galactic", axes=[axis]
+    )
     mask = geom.region_mask([circle_sky_12])
-    inside = models.contribute(mask, margin=None, inside=True)
-    outside = models.contribute(mask, margin=None, inside=False)
+    contribute = models.select_mask(
+        mask, margin=4.1 * u.deg, include_evaluation_radius=True
+    )
 
-    assert models[outside].names == ["source-3", "bkg1", "bkg2"]
-    assert models[inside].names == ["source-1", "source-2"]
+    assert contribute.names == ["source-1", "source-2", "source-3"]
 
 
 def test_select(models):

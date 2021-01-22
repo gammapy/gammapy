@@ -5,8 +5,9 @@ import copy
 from os.path import split
 import numpy as np
 import astropy.units as u
-from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
+from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
@@ -249,61 +250,6 @@ class Model:
                 ]
 
         return model
-
-    def contribute(self, mask, margin=None, inside=True):
-        """Check if a model contributes within a mask map
-           Note that BackgroundModel are assumed to always contribute. 
-
-        Parameters
-        ----------
-        mask : `~gammapy.maps.WcsNDMap` of boolean type
-            Map containing a boolean mask
-        psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
-            PSF kernel
-        
-        inside : bool
-            If True select models whose center is located inside
-            the region where mask==True
-        
-        Returns
-        -------
-        selection : bool
-            Selected models contributing within the mask geom. 
-            and whose centers are inside, or outside the region where mask==True
-            depending if the inside parameter is True or False.
-        """
-
-        from gammapy.datasets.map import get_cutout_width
-        from .cube import BackgroundModel, FoVBackgroundModel
-
-        if margin is None:
-            margin = 0 * u.deg
-
-        if isinstance(self, BackgroundModel) or isinstance(self, FoVBackgroundModel):
-            contributes = True  # just ignore the background models
-        else:
-            try:
-                _ = mask.cutout(
-                    position=self.position, width=get_cutout_width(self, margin=margin),
-                )
-                contributes = True
-            except (NoOverlapError, ValueError):
-                contributes = False
-
-        ind = self.position.to_pixel(mask.geom.wcs)
-        ind = tuple([int(round(idx.item())) for idx in ind])
-        mask_data = mask.data
-        if len(mask_data.shape) == 3:
-            mask_data = np.sum(mask.data, axis=0).astype(bool)
-        try:
-            inmask = mask_data[ind]
-        except (IndexError):
-            inmask = False
-
-        if inside:
-            return contributes and inmask
-        else:
-            return contributes and ~inmask
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -695,33 +641,58 @@ class DatasetModels(collections.abc.Sequence):
 
         return np.array(selection, dtype=bool)
 
-    def contribute(self, mask, margin=None, inside=True):
-        """Check if a model contribute within a mask map.
-           Note that BackgroundModel are assumed to always contribute. 
+    def select_mask(self, mask, margin=None, include_evaluation_radius=True):
+        """Check if skymodels contribute within a mask map.
     
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
             Map containing a boolean mask
-        marign : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
-            PSF kernel
-        inside : bool
-            If True select models whose center is located inside
-            the region where mask==True
-        
+
+        marign : `~astropy.coordinates.Angle`
+            Add a margin in degree to the source evaluation radius.
+            The default is None. Used to take into account PSF width.
+
+        include_evaluation_radius : bool
+            Account for the extension of the model or not. The default is True.   
+
         Returns
         -------
-        selection : `numpy.array` of boolean type
-            Selected models contributing within the mask geom. 
-            and whose centers are inside, or outside the region where mask==True
-            depending if the inside parameter is True or False.
+        models : `DatasetModels`
+            Selected models contributing inside the region where mask==True
         """
 
-        nmod = len(self)
-        selection = np.zeros(nmod, dtype=bool)
-        for k, m in enumerate(self):
-            selection[k] = m.contribute(mask, margin, inside=inside)
-        return selection
+        models = self.select(tag="SkyModel")
+        contribute = np.zeros(len(models), dtype=bool)
+        mask = mask.sum_over_axes()
+        mask.data = mask.data.astype(bool)
+
+        for k, m in enumerate(models):
+            # check center only first
+            ind = m.position.to_pixel(mask.geom.wcs)
+            ind = tuple([int(round(idx.item())) for idx in ind])
+            try:
+                contribute[k] = mask.data.squeeze()[ind]
+            except (IndexError):  # if outside geom
+                pass
+
+            # account for extension or not
+            if not contribute[k]:
+                radius = 0 * u.deg
+                if margin is not None:
+                    radius += margin
+                if include_evaluation_radius and m.evaluation_radius is not None:
+                    radius += m.evaluation_radius
+                if radius == 0 * u.deg:
+                    continue
+                coords = mask.geom.get_coord()
+                coords_true = SkyCoord(
+                    coords["lon"][mask.data],
+                    coords["lat"][mask.data],
+                    frame=mask.geom.frame,
+                )
+                contribute[k] = np.min(m.position.separation(coords_true)) < radius
+        return models[contribute]
 
     def select_region(self, regions):
         """Select skymodels with center position contained within a given region
@@ -742,8 +713,7 @@ class DatasetModels(collections.abc.Sequence):
         if isinstance(regions, list):
             region = [regions]
 
-        nmod = len(models)
-        inside = np.zeros(nmod, dtype=bool)
+        inside = np.zeros(len(models), dtype=bool)
         for k, m in enumerate(models):
             pos = MapCoord.create(m.position)
             for region in regions:
