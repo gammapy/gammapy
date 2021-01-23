@@ -3,7 +3,8 @@
 import copy
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from astropy.coordinates import SkyCoord
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
@@ -214,6 +215,57 @@ class SkyModel(Model):
             f"spectral_model={self.spectral_model!r})"
             f"temporal_model={self.temporal_model!r})"
         )
+
+    def contributes(self, mask, margin=None, include_evaluation_radius=True):
+        """Check if a skymodel contributes within a mask map.
+    
+        Parameters
+        ----------
+        mask : `~gammapy.maps.WcsNDMap` of boolean type
+            Map containing a boolean mask
+
+        marign : `~astropy.coordinates.Angle`
+            Add a margin in degree to the source evaluation radius.
+            The default is None. Used to take into account PSF width.
+
+        include_evaluation_radius : bool
+            Account for the extension of the model or not. The default is True.   
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models contributing inside the region where mask==True
+        """
+
+        if len(mask.data.squeeze().shape)>2:
+            mask = mask.sum_over_axes()
+            mask.data = mask.data.astype(bool)
+
+        # check center only first
+        ind = self.position.to_pixel(mask.geom.wcs)
+        ind = tuple([int(round(idx.item())) for idx in ind])
+        try:
+            contributes = mask.data.squeeze()[ind]
+        except (IndexError):  # if outside geom
+            contributes = False
+
+        # account for extension or not
+        if not contributes:
+            radius = 0 * u.deg
+            if margin is not None:
+                radius += margin
+            if include_evaluation_radius and self.evaluation_radius is not None:
+                radius += self.evaluation_radius
+            if radius == 0 * u.deg:
+                return contributes
+            coords = mask.geom.get_coord()
+            coords_true = SkyCoord(
+                coords["lon"][mask.data],
+                coords["lat"][mask.data],
+                frame=mask.geom.frame,
+            )
+            contributes = np.min(self.position.separation(coords_true)) < radius
+        return contributes
 
     def evaluate(self, lon, lat, energy, time=None):
         """Evaluate the model at given points.
