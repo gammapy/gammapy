@@ -100,6 +100,7 @@ class SpatialModel(Model):
                 width=np.nan * u.deg,
                 angle=np.nan * u.deg,
             )
+
         pars = self.parameters
         sub_covar = self.covariance.get_subcovariance(["lon_0", "lat_0"]).data.copy()
         cos_lat = np.cos(self.lat_0.quantity.to_value("rad"))
@@ -111,7 +112,7 @@ class SpatialModel(Model):
         y_vec = eig_vecs[:, 0]
         phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg") + self.phi_0
         err = np.sort([lon_err, lat_err])
-        scale_r95 = Gauss2DPDF().containment_radius(0.95)
+        scale_r95 = Gauss2DPDF(sigma=1).containment_radius(0.95)
         err *= scale_r95
         if err[1] == lon_err * scale_r95:
             phi += 90 * u.deg
@@ -120,6 +121,7 @@ class SpatialModel(Model):
         else:
             height = 2 * err[1] * pars["lat_0"].unit
             width = 2 * err[0] * pars["lon_0"].unit
+
         return EllipseSkyRegion(
             center=self.position, height=height, width=width, angle=phi
         )

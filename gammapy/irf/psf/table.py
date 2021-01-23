@@ -5,18 +5,18 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxis
 from gammapy.utils.array import array_stats_str
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
-from ..core import IRF
+from .core import PSF
 
 __all__ = ["TablePSF", "EnergyDependentTablePSF", "PSF3D"]
 
 log = logging.getLogger(__name__)
 
 
-class TablePSF(IRF):
+class TablePSF(PSF):
     """Radially-symmetric table PSF.
 
     Parameters
@@ -80,62 +80,9 @@ class TablePSF(IRF):
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
-            ss += f"containment radius {radius.deg} deg for {containment}%\n"
+            ss += f"containment radius {radius} for {containment}%\n"
 
         return ss
-
-    def containment(self, rad_max):
-        """Compute PSF containment fraction.
-
-        Parameters
-        ----------
-        rad_max : `~astropy.units.Quantity`
-            Offset angle range
-
-        Returns
-        -------
-        integral : float
-            PSF integral
-        """
-        rad_max = np.atleast_1d(rad_max)
-        containment = self.integral(axis_name="rad", rad=rad_max)
-        return np.clip(containment.to_value(""), 0, 1)
-
-    def containment_radius(self, fraction):
-        """Containment radius.
-
-        Parameters
-        ----------
-        fraction : array_like
-            Containment fraction (range 0 .. 1)
-
-        Returns
-        -------
-        rad : `~astropy.coordinates.Angle`
-            Containment radius angle
-        """
-        rad = self.axes["rad"].center
-        # TODO: check whether starting
-        rad_max = Angle(
-            np.linspace(0 * u.deg, rad[-1], 10 * len(rad)),
-            "rad",
-        )
-
-        containment = self.containment(rad_max=rad_max)
-
-        fraction = np.atleast_1d(fraction)
-
-        fraction_idx = np.argmin(np.abs(containment - fraction[:, np.newaxis]), axis=1)
-        return rad_max[fraction_idx].to("deg")
-
-    def normalize(self):
-        """Normalize PSF to unit integral.
-
-        Computes the total PSF integral via the :math:`dP / dr` spline
-        and then divides the :math:`dP / dr` array.
-        """
-        integral = self.containment(self.axes["rad"].edges[-1])
-        self.data /= integral
 
     def plot_psf_vs_rad(self, ax=None, **kwargs):
         """Plot PSF vs radius.
@@ -161,7 +108,7 @@ class TablePSF(IRF):
         ax.set_ylabel("PSF (sr-1)")
 
 
-class EnergyDependentTablePSF(IRF):
+class EnergyDependentTablePSF(PSF):
     """Energy-dependent radially-symmetric table PSF (``gtpsf`` format).
 
     TODO: add references and explanations.
@@ -225,13 +172,13 @@ class EnergyDependentTablePSF(IRF):
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        theta_hdu = self.axes["rad"].to_table_hdu(format="gtpsf")
+        rad_hdu = self.axes["rad"].to_table_hdu(format="gtpsf")
         psf_table = self.axes["energy_true"].to_table(format="gtpsf")
 
         psf_table["Exposure"] = self.exposure.to("cm^2 s")
         psf_table["Psf"] = self.quantity.to("sr^-1")
         psf_hdu = fits.BinTableHDU(data=psf_table, name="PSF")
-        return fits.HDUList([fits.PrimaryHDU(), theta_hdu, psf_hdu])
+        return fits.HDUList([fits.PrimaryHDU(), rad_hdu, psf_hdu])
 
     @classmethod
     def read(cls, filename):
@@ -313,49 +260,6 @@ class EnergyDependentTablePSF(IRF):
         data = psf_value_weighted.sum(axis=0)
         return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
 
-    def containment_radius(self, energy, fraction=0.68):
-        """Containment radius.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy
-        fraction : float
-            Containment fraction.
-
-        Returns
-        -------
-        rad : `~astropy.units.Quantity`
-            Containment radius in deg
-        """
-        # upsamle for better precision
-        rad_max = Angle(self.axes["rad"].upsample(factor=10).center)
-        containment = self.containment(energy=energy, rad_max=rad_max)
-
-        # find nearest containment value
-        fraction_idx = np.argmin(np.abs(containment - fraction), axis=1)
-        return rad_max[fraction_idx].to("deg")
-
-    def containment(self, energy, rad_max):
-        """Compute containment of the PSF.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy
-        rad_max : `~astropy.coordinates.Angle`
-            Maximum offset angle.
-
-        Returns
-        -------
-        fraction : array_like
-            Containment fraction (in range 0 .. 1)
-        """
-        energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
-        rad_max = np.atleast_1d(u.Quantity(rad_max))
-        containment = self.integral(axis_name="rad", rad=rad_max, energy_true=energy)
-        return np.clip(containment.to_value(""), 0, 1)
-
     def info(self):
         """Print basic info"""
         print(str(self))
@@ -403,7 +307,9 @@ class EnergyDependentTablePSF(IRF):
 
         energy_true = self.axes["energy_true"].center
         for fraction in fractions:
-            rad = self.containment_radius(energy_true, fraction)
+            rad = self.containment_radius(
+                energy_true=energy_true, fraction=fraction
+            )
             label = f"{100 * fraction:.1f}% Containment"
             ax.plot(
                 energy_true,
@@ -432,7 +338,7 @@ class EnergyDependentTablePSF(IRF):
         plt.tight_layout()
 
 
-class PSF3D(IRF):
+class PSF3D(PSF):
     """PSF with axes: energy, offset, rad.
 
     Data format specification: :ref:`gadf:psf_table`
@@ -450,269 +356,36 @@ class PSF3D(IRF):
     meta : dict
         Meta dict
     """
-
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
 
-    @property
-    def energy_thresh_lo(self):
-        """Low energy threshold"""
-        return self.meta["LO_THRES"] * u.TeV
-
-    @property
-    def energy_thresh_hi(self):
-        """High energy threshold"""
-        return self.meta["HI_THRES"] * u.TeV
-
-    @classmethod
-    def read(cls, filename, hdu="PSF_2D_TABLE"):
-        """Create `PSF3D` from FITS file.
-
-        Parameters
-        ----------
-        filename : str
-            File name
-        hdu : str
-            HDU name
-        """
-        table = Table.read(make_path(filename), hdu=hdu)
-        return cls.from_table(table)
-
-    @classmethod
-    def from_table(cls, table):
-        """Create `PSF3D` from `~astropy.table.Table`.
-
-        Parameters
-        ----------
-        table : `~astropy.table.Table`
-            Table Table-PSF info.
-        """
-        axes = MapAxes.from_table(table=table, format="gadf-dl3")[cls.required_axes]
-        data = table["RPSF"].quantity[0].transpose()
-        return cls(
-            axes=axes,
-            data=data.value,
-            meta=table.meta,
-            unit=data.unit
-        )
-
-    def to_hdulist(self):
-        """Convert PSF table data to FITS HDU list.
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-            PSF in HDU list format.
-        """
-        table = self.axes.to_table(format="gadf-dl3")
-
-        table["RPSF"] = self.quantity.T[np.newaxis]
-
-        hdu = fits.BinTableHDU(table)
-        hdu.header["LO_THRES"] = self.energy_thresh_lo.value
-        hdu.header["HI_THRES"] = self.energy_thresh_hi.value
-
-        return fits.HDUList([fits.PrimaryHDU(), hdu])
-
-    def write(self, filename, *args, **kwargs):
-        """Write PSF to FITS file.
-
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
-        """
-        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
-
-    def to_energy_dependent_table_psf(self, theta="0 deg", rad=None, exposure=None):
-        """
-        Convert PSF3D in EnergyDependentTablePSF.
-
-        Parameters
-        ----------
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view
-        rad : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid.
-            Default is the ``rad`` from this PSF.
-        exposure : `~astropy.units.Quantity`
-            Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
-            Default exposure = 1.
-
-        Returns
-        -------
-        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Energy-dependent PSF
-        """
-        theta = Angle(theta)
-
-        if rad is not None:
-            rad_axis = MapAxis.from_edges(rad, name="rad")
-        else:
-            rad_axis = self.axes["rad"]
-
-        data = self.evaluate(offset=theta, rad=rad_axis.center).squeeze()
-        return EnergyDependentTablePSF(
-            axes=self.axes[["energy_true", "rad"]],
-            exposure=exposure,
-            data=data.value,
-            unit=data.unit
-        )
-
-    def to_table_psf(self, energy, theta="0 deg", **kwargs):
+    def to_table_psf(self, energy_true, offset="0 deg", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default offset = 0 deg
 
         Returns
         -------
         psf : `~gammapy.irf.TablePSF`
             Table PSF
         """
-        energy = u.Quantity(energy)
-        theta = Angle(theta)
-        data = self.evaluate(energy_true=energy, offset=theta).squeeze()
+        data = self.evaluate(energy_true=energy_true, offset=offset).squeeze()
         return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
 
-    def containment_radius(
-        self, energy, theta="0 deg", fraction=0.68
-    ):
-        """Containment radius.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
-        fraction : float
-            Containment fraction. Default fraction = 0.68
-
-        Returns
-        -------
-        radius : `~astropy.units.Quantity`
-            Containment radius in deg
-        """
-        energy = np.atleast_1d(u.Quantity(energy))
-        theta = np.atleast_1d(u.Quantity(theta))
-
-        radii = []
-        for t in theta:
-            psf = self.to_energy_dependent_table_psf(theta=t)
-            radii.append(psf.containment_radius(energy, fraction=fraction))
-
-        return u.Quantity(radii).T.squeeze()
-
-    def plot_containment_vs_energy(
-        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None, **kwargs
-    ):
-        """Plot containment fraction as a function of energy.
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        energy = self.axes["energy_true"].center
-
-        for theta in thetas:
-            for fraction in fractions:
-                plot_kwargs = kwargs.copy()
-                radius = self.containment_radius(energy, theta, fraction)
-                plot_kwargs.setdefault(
-                    "label", f"{theta.deg} deg, {100 * fraction:.1f}%"
-                )
-                ax.plot(energy.value, radius.value, **plot_kwargs)
-
-        ax.semilogx()
-        ax.legend(loc="best")
-        ax.set_xlabel("Energy (TeV)")
-        ax.set_ylabel("Containment radius (deg)")
-
-    def plot_psf_vs_rad(self, theta="0 deg", energy=u.Quantity(1, "TeV")):
+    def plot_psf_vs_rad(self, offset="0 deg", energy_true="1 TeV"):
         """Plot PSF vs rad.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             Energy. Default energy = 1 TeV
-        theta : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default offset = 0 deg
         """
-        theta = Angle(theta)
-        table = self.to_table_psf(energy=energy, theta=theta)
+        table = self.to_table_psf(energy_true=energy_true, offset=offset)
         return table.plot_psf_vs_rad()
-
-    def plot_containment(self, fraction=0.68, ax=None, add_cbar=True, **kwargs):
-        """Plot containment image with energy and theta axes.
-
-        Parameters
-        ----------
-        fraction : float
-            Containment fraction between 0 and 1.
-        add_cbar : bool
-            Add a colorbar
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        energy = self.axes["energy_true"].center
-        offset = self.axes["offset"].center
-
-        # Set up and compute data
-        containment = self.containment_radius(energy, offset, fraction)
-
-        # plotting defaults
-        kwargs.setdefault("cmap", "GnBu")
-        kwargs.setdefault("vmin", np.nanmin(containment.value))
-        kwargs.setdefault("vmax", np.nanmax(containment.value))
-
-        # Plotting
-        x = energy.value
-        y = offset.value
-        caxes = ax.pcolormesh(x, y, containment.value.T, **kwargs)
-
-        # Axes labels and ticks, colobar
-        ax.semilogx()
-        ax.set_ylabel(f"Offset ({offset.unit})")
-        ax.set_xlabel(f"Energy ({energy.unit})")
-        ax.set_xlim(x.min(), x.max())
-        ax.set_ylim(y.min(), y.max())
-
-        try:
-            self._plot_safe_energy_range(ax)
-        except KeyError:
-            pass
-
-        if add_cbar:
-            label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
-
-        return ax
-
-    def _plot_safe_energy_range(self, ax):
-        """add safe energy range lines to the plot"""
-        esafe = self.energy_thresh_lo
-        omin = self.axes["offset"].center.value.min()
-        omax = self.axes["offset"].center.value.max()
-        ax.vlines(x=esafe.value, ymin=omin, ymax=omax)
-        label = f"Safe energy threshold: {esafe:3.2f}"
-        ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
-
-    def peek(self, figsize=(15, 5)):
-        """Quick-look summary plots."""
-        import matplotlib.pyplot as plt
-
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
-
-        self.plot_containment(fraction=0.68, ax=axes[0])
-        self.plot_containment(fraction=0.95, ax=axes[1])
-        self.plot_containment_vs_energy(ax=axes[2])
-
-        # TODO: implement this plot
-        # psf = self.psf_at_energy_and_theta(energy='1 TeV', theta='1 deg')
-        # psf.plot_components(ax=axes[2])
-
-        plt.tight_layout()

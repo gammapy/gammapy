@@ -1249,9 +1249,12 @@ class MapDataset(Dataset):
                 raise ValueError("No PSFMap set. Containment correction impossible")
             else:
                 psf = self.psf.get_energy_dependent_table_psf(on_region.center)
-                energy = kwargs["exposure"].geom.axes["energy_true"].center
-                containment = psf.containment(energy, on_region.radius)
-                kwargs["exposure"].data *= containment[:, np.newaxis]
+                geom = kwargs["exposure"].geom
+                energy_true = geom.axes["energy_true"].center
+                containment = psf.containment(
+                    energy_true=energy_true, rad=on_region.radius
+                )
+                kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
 
         # TODO: Compute average edisp in region
         if self.edisp is not None:

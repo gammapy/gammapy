@@ -29,7 +29,7 @@ def test_psf_3d_basics(psf_3d):
     assert psf_3d.data.shape == (32, 6, 144)
     assert psf_3d.unit == "sr-1"
 
-    assert_allclose(psf_3d.energy_thresh_lo.value, 0.01)
+    assert_allclose(psf_3d.meta["LO_THRES"], 0.01)
 
     assert "PSF3D" in str(psf_3d)
 
@@ -48,30 +48,26 @@ def test_psf_3d_evaluate(psf_3d):
 
 @requires_data()
 def test_to_energy_dependent_table_psf(psf_3d):
-    psf = psf_3d.to_energy_dependent_table_psf()
-    assert psf.data.data.shape == (32, 144)
-    radius = psf.table_psf_at_energy("1 TeV").containment_radius(0.68).deg
-    assert_allclose(radius, 0.123352, atol=1e-2)
+    psf = psf_3d.to_energy_dependent_table_psf(offset=0 * u.deg)
+    assert psf.data.data.shape == (32, 66)
+    radius = psf.table_psf_at_energy("1 TeV").containment_radius(0.68)
+    assert_allclose(radius, 0.123352 * u.deg, atol=1e-2)
 
 
 @requires_data()
 def test_psf_3d_containment_radius(psf_3d):
-    q = psf_3d.containment_radius(energy="1 TeV")
+    q = psf_3d.containment_radius(
+        energy_true=1 * u.TeV, fraction=0.68, offset=0 * u.deg
+    )
     assert_allclose(q.value, 0.123352, rtol=1e-2)
     assert q.isscalar
     assert q.unit == "deg"
 
-    q = psf_3d.containment_radius(energy=[1, 3] * u.TeV)
+    q = psf_3d.containment_radius(
+        energy_true=[1, 3] * u.TeV, fraction=0.68, offset=0 * u.deg
+    )
     assert_allclose(q.value, [0.123261, 0.13131], rtol=1e-2)
     assert q.shape == (2,)
-
-
-@requires_data()
-def test_psf_3d_write(psf_3d, tmp_path):
-    psf_3d.write(tmp_path / "tmp.fits")
-    psf_3d = PSF3D.read(tmp_path / "tmp.fits", hdu=1)
-
-    assert_allclose(psf_3d.axes["energy_true"].edges[0].value, 0.01)
 
 
 @requires_data()
@@ -85,7 +81,7 @@ def test_psf_3d_plot_vs_rad(psf_3d):
 @requires_dependency("matplotlib")
 def test_psf_3d_plot_containment(psf_3d):
     with mpl_plot_check():
-        psf_3d.plot_containment()
+        psf_3d.plot_containment_radius()
 
 
 @requires_data()
@@ -126,8 +122,8 @@ class TestTablePSF:
         assert_allclose(actual, desired, rtol=1e-4)
 
         # test containment radius
-        actual = psf.containment_radius(0.25).deg
-        assert_allclose(actual, radius.deg, rtol=1e-4)
+        actual = psf.containment_radius(0.25)
+        assert_allclose(actual, radius, rtol=1e-4)
 
         # test info
         info = psf.info()
@@ -150,7 +146,7 @@ class TestEnergyDependentTablePSF:
         containment = np.linspace(0, 0.95, 3)
         actual = psf1.containment_radius(containment).to_value("deg")
         desired = [0., 0.251731, 0.967178]
-        assert_allclose(actual, desired, rtol=1e-5)
+        assert_allclose(actual, desired, rtol=1e-2)
 
         # TODO: test average_psf
         # TODO: test containment_radius

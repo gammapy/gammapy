@@ -16,7 +16,19 @@ log = logging.getLogger(__name__)
 
 
 class IRF:
-    """IRF base class for DL3 instrument response functions"""
+    """IRF base class for DL3 instrument response functions
+
+    Parameters
+    -----------
+    axes : list of `MapAxis` or `MapAxes`
+        Axes
+    data : `~numpy.ndarray`
+        Data
+    unit : str or `~astropy.units.Unit`
+        Unit
+    meta : dict
+        Meta data
+    """
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None,
     )
@@ -76,6 +88,15 @@ class IRF:
         # reset cached interpolators
         self.__dict__.pop("_interpolate", None)
         self.__dict__.pop("_integrate_rad", None)
+
+    @property
+    def unit(self):
+        """Map unit (`~astropy.units.Unit`)"""
+        return self._unit
+
+    @unit.setter
+    def unit(self, val):
+        self._unit = u.Unit(val)
 
     @lazyproperty
     def _interpolate(self):
@@ -203,7 +224,11 @@ class IRF:
         f_integrate = ScaledRegularGridInterpolator(
             points=points, values=values,
         )
-        coords = tuple(kwargs[name] for name in self.axes.names)
+        try:
+            coords = tuple(kwargs[name] for name in self.axes.names)
+        except KeyError as exc:
+            raise ValueError(f"Missing coordinate for axis: {str(exc)}")
+
         return f_integrate(coords)
 
     @classmethod
@@ -316,6 +341,18 @@ class IRF:
         """
         name = IRF_DL3_HDU_SPECIFICATION[self.tag]["extname"]
         return fits.BinTableHDU(self.to_table(format=format), name=name)
+
+    def to_hdulist(self, format="gadf-dl3"):
+        """"""
+        hdu = self.to_table_hdu(format=format)
+        return fits.HDUList([fits.PrimaryHDU(), hdu])
+
+    def write(self, filename, *args, **kwargs):
+        """Write PSF to FITS file.
+
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        """
+        self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
 
 class IRFMap:

@@ -301,7 +301,7 @@ class Observation:
         except AttributeError:
             logging.warning(f"No background model found for obs {self.obs_id}.")
 
-        self.psf.plot_containment_vs_energy(ax=ax_psf)
+        self.psf.plot_containment_radius_vs_energy(ax=ax_psf)
         self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
 
         ax_aeff.set_title("Effective area")

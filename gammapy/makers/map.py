@@ -223,12 +223,9 @@ class MapDatasetMaker(Maker):
             Psf map.
         """
         psf = observation.psf
+
         if isinstance(psf, PSFMap):
             return PSFMap(psf.psf_map.interp_to_geom(geom))
-
-        if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad_axis = geom.axes["rad"]
-            psf = psf.to_psf3d(rad=rad_axis.center)
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 
