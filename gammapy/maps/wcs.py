@@ -944,6 +944,36 @@ class WcsGeom(Geom):
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
         )
 
+    def to_odd_npix(self, max_radius=None):
+        """Create a new geom object with an odd number of pixel and a maximum size
+        This is useful for PSF kernel creation.
+
+        Parameters
+        ----------
+        max_radius : `~astropy.units.Quantity`
+            Max. radius of the geometry (half the width)
+
+        Returns
+        -------
+        geom : `WcsGeom`
+            Geom with odd number of pixels
+        """
+        if max_radius is None:
+            max_radius = self.width.max() / 2
+
+        binsz = self.pixel_scales.max()
+
+        radius_max_npix = (max_radius / binsz).to_value("")
+        npix = 2 * int(radius_max_npix) + 1
+        return WcsGeom.create(
+            skydir=self.center_skydir,
+            binsz=binsz,
+            npix=npix,
+            proj=self.projection,
+            frame=self.frame,
+            axes=self.axes,
+        )
+
     def is_aligned(self, other, tolerance=1e-6):
         """Check if WCS and extra axes are aligned.
 
