@@ -11,101 +11,9 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import PSF
 
-__all__ = ["TablePSF", "EnergyDependentTablePSF", "PSF3D"]
+__all__ = ["EnergyDependentTablePSF", "PSF3D"]
 
 log = logging.getLogger(__name__)
-
-
-class TablePSF(PSF):
-    """Radially-symmetric table PSF.
-
-    Parameters
-    ----------
-    rad_axis : `~astropy.units.Quantity` with angle units
-        Offset wrt source position
-    data : `~astropy.units.Quantity` with sr^-1 units
-        PSF value array
-    interp_kwargs : dict
-        Keyword arguments passed to `ScaledRegularGridInterpolator`
-    """
-    required_axes = ["rad"]
-
-    @classmethod
-    def from_shape(cls, shape, width, rad):
-        """Make TablePSF objects with commonly used shapes.
-
-        This function is mostly useful for examples and testing.
-
-        Parameters
-        ----------
-        shape : {'disk', 'gauss'}
-            PSF shape.
-        width : `~astropy.units.Quantity` with angle units
-            PSF width angle (radius for disk, sigma for Gauss).
-        rad : `~astropy.units.Quantity` with angle units
-            Offset angle
-
-        Returns
-        -------
-        psf : `TablePSF`
-            Table PSF
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from astropy.coordinates import Angle
-        >>> from gammapy.irf import TablePSF
-        >>> rad = Angle(np.linspace(0, 0.7, 100), 'deg')
-        >>> psf = TablePSF.from_shape(shape='gauss', width='0.2 deg', rad=rad)
-        """
-        width = Angle(width)
-        rad = Angle(rad)
-
-        if shape == "disk":
-            amplitude = 1 / (np.pi * width.radian ** 2)
-            data = np.where(rad < width, amplitude, 0)
-        elif shape == "gauss":
-            gauss2d_pdf = Gauss2DPDF(sigma=width.radian)
-            data = gauss2d_pdf(rad.radian)
-        else:
-            raise ValueError(f"Invalid shape: {shape}")
-
-        rad_axis = MapAxis.from_nodes(rad, name="rad")
-        return cls(axes=[rad_axis], data=data, unit="sr-1")
-
-    def info(self):
-        """Print basic info."""
-        ss = array_stats_str(self.axes["rad"].center, "offset")
-        ss += f"integral = {self.containment(self.axes['rad'].edges[-1])}\n"
-
-        for containment in [68, 80, 95]:
-            radius = self.containment_radius(0.01 * containment)
-            ss += f"containment radius {radius} for {containment}%\n"
-
-        return ss
-
-    def plot_psf_vs_rad(self, ax=None, **kwargs):
-        """Plot PSF vs radius.
-
-        Parameters
-        ----------
-        ax : ``
-
-        kwargs : dict
-            Keyword arguments passed to `matplotlib.pyplot.plot`
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        ax.plot(
-            self.axes["rad"].center.to_value("deg"),
-            self.quantity.to_value("sr-1"),
-            **kwargs,
-        )
-        ax.set_yscale("log")
-        ax.set_xlabel("Radius (deg)")
-        ax.set_ylabel("PSF (sr-1)")
 
 
 class EnergyDependentTablePSF(PSF):
@@ -199,24 +107,6 @@ class EnergyDependentTablePSF(PSF):
         """
         self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
-    def table_psf_at_energy(self, energy, method="linear"):
-        """Create `~gammapy.irf.TablePSF` at one given energy.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy
-        method : {"linear", "nearest"}
-            Linear or nearest neighbour interpolation.
-
-        Returns
-        -------
-        psf : `~gammapy.irf.TablePSF`
-            Table PSF
-        """
-        data = self.evaluate(energy_true=energy, method=method).squeeze()
-        return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit)
-
     def table_psf_in_energy_range(
         self, energy_range, spectrum=None, n_bins=11, **kwargs
     ):
@@ -238,7 +128,7 @@ class EnergyDependentTablePSF(PSF):
 
         Returns
         -------
-        psf : `TablePSF`
+        psf : `EnergyDependentTablePSF`
             Table PSF
         """
         from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
@@ -257,8 +147,12 @@ class EnergyDependentTablePSF(PSF):
         psf_value = self.evaluate(energy_true=energy)
         psf_value_weighted = weights * psf_value
 
+        energy_axis = MapAxis.from_edges(energy_range, name="energy_true")
+
         data = psf_value_weighted.sum(axis=0)
-        return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
+        return self.__class__(
+            axes=[energy_axis, self.axes["rad"]], data=data.value, unit=data.unit, **kwargs
+        )
 
     def info(self):
         """Print basic info"""
@@ -359,24 +253,6 @@ class PSF3D(PSF):
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
 
-    def to_table_psf(self, energy_true, offset="0 deg", **kwargs):
-        """Create `~gammapy.irf.TablePSF` at one given energy.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy
-        offset : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default offset = 0 deg
-
-        Returns
-        -------
-        psf : `~gammapy.irf.TablePSF`
-            Table PSF
-        """
-        data = self.evaluate(energy_true=energy_true, offset=offset).squeeze()
-        return TablePSF(axes=[self.axes["rad"]], data=data.value, unit=data.unit, **kwargs)
-
     def plot_psf_vs_rad(self, offset="0 deg", energy_true="1 TeV"):
         """Plot PSF vs rad.
 
@@ -387,5 +263,6 @@ class PSF3D(PSF):
         offset : `~astropy.coordinates.Angle`
             Offset in the field of view. Default offset = 0 deg
         """
-        table = self.to_table_psf(energy_true=energy_true, offset=offset)
-        return table.plot_psf_vs_rad()
+        energy_true = np.atleast_1d(u.Quantity(energy_true))
+        table = self.to_energy_dependent_table_psf(offset=offset)
+        return table.plot_psf_vs_rad(energy=energy_true)
