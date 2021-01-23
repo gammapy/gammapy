@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle
-from gammapy.irf import EnergyDependentTablePSF, TablePSF, PSF3D
+from gammapy.irf import EnergyDependentTablePSF, PSF3D
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -50,7 +50,8 @@ def test_psf_3d_evaluate(psf_3d):
 def test_to_energy_dependent_table_psf(psf_3d):
     psf = psf_3d.to_energy_dependent_table_psf(offset=0 * u.deg)
     assert psf.data.data.shape == (32, 66)
-    radius = psf.table_psf_at_energy("1 TeV").containment_radius(0.68)
+
+    radius = psf.containment_radius(fraction=0.68, energy_true=1 * u.TeV)
     assert_allclose(radius, 0.123352 * u.deg, atol=1e-2)
 
 
@@ -91,45 +92,6 @@ def test_psf_3d_peek(psf_3d):
         psf_3d.peek()
 
 
-class TestTablePSF:
-    @staticmethod
-    def test_gauss():
-        # Make an example PSF for testing
-        width = Angle(0.3, "deg")
-
-        # containment radius for 80% containment
-        radius = width * np.sqrt(2 * np.log(5))
-
-        rad = Angle(np.linspace(0, 2.3, 1000), "deg")
-        psf = TablePSF.from_shape(shape="gauss", width=width, rad=rad)
-
-        assert_allclose(psf.containment(radius), 0.8, rtol=1e-4)
-
-        desired = radius.to_value("deg")
-        actual = psf.containment_radius(0.8).to_value("deg")
-        assert_allclose(actual, desired, rtol=1e-4)
-
-    @staticmethod
-    def test_disk():
-        width = Angle(2, "deg")
-        rad = Angle(np.linspace(0, 2.3, 1000), "deg")
-        psf = TablePSF.from_shape(shape="disk", width=width, rad=rad)
-
-        # test containment
-        radius = Angle(1, "deg")
-        actual = psf.containment(radius)
-        desired = (radius / width).to_value("") ** 2
-        assert_allclose(actual, desired, rtol=1e-4)
-
-        # test containment radius
-        actual = psf.containment_radius(0.25)
-        assert_allclose(actual, radius, rtol=1e-4)
-
-        # test info
-        info = psf.info()
-        assert info.find("integral") == 66
-
-
 @requires_data()
 class TestEnergyDependentTablePSF:
     def setup(self):
@@ -138,15 +100,11 @@ class TestEnergyDependentTablePSF:
 
     def test(self):
         # TODO: test __init__
+        radius = self.psf.containment_radius(
+            energy_true=1 * u.GeV, fraction=np.linspace(0, 0.95, 3)
+        )
 
-        # Test cases
-        energy = u.Quantity(1, "GeV")
-
-        psf1 = self.psf.table_psf_at_energy(energy)
-        containment = np.linspace(0, 0.95, 3)
-        actual = psf1.containment_radius(containment).to_value("deg")
-        desired = [0., 0.251731, 0.967178]
-        assert_allclose(actual, desired, rtol=1e-2)
+        assert_allclose(radius, [0., 0.194156, 1.037939] * u.deg, rtol=1e-2)
 
         # TODO: test average_psf
         # TODO: test containment_radius
@@ -154,19 +112,10 @@ class TestEnergyDependentTablePSF:
         # TODO: test info
         # TODO: test plotting methods
 
-        energy_range = u.Quantity([10, 500], "GeV")
-        psf_band = self.psf.table_psf_in_energy_range(energy_range)
-        # TODO: add assert
-
     @requires_dependency("matplotlib")
     def test_plot(self):
         with mpl_plot_check():
             self.psf.plot_containment_vs_energy()
-
-        energy = u.Quantity(1, "GeV")
-        psf_1GeV = self.psf.table_psf_at_energy(energy)
-        with mpl_plot_check():
-            psf_1GeV.plot_psf_vs_rad()
 
     @requires_dependency("matplotlib")
     def test_plot2(self):
