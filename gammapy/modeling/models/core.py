@@ -662,36 +662,14 @@ class DatasetModels(collections.abc.Sequence):
             Selected models contributing inside the region where mask==True
         """
 
+        if len(mask.data.squeeze().shape) > 2:
+            mask = mask.sum_over_axes()
+            mask.data = mask.data.astype(bool)
+
         models = self.select(tag="SkyModel")
-        contribute = np.zeros(len(models), dtype=bool)
-        mask = mask.sum_over_axes()
-        mask.data = mask.data.astype(bool)
-
-        for k, m in enumerate(models):
-            # check center only first
-            ind = m.position.to_pixel(mask.geom.wcs)
-            ind = tuple([int(round(idx.item())) for idx in ind])
-            try:
-                contribute[k] = mask.data.squeeze()[ind]
-            except (IndexError):  # if outside geom
-                pass
-
-            # account for extension or not
-            if not contribute[k]:
-                radius = 0 * u.deg
-                if margin is not None:
-                    radius += margin
-                if include_evaluation_radius and m.evaluation_radius is not None:
-                    radius += m.evaluation_radius
-                if radius == 0 * u.deg:
-                    continue
-                coords = mask.geom.get_coord()
-                coords_true = SkyCoord(
-                    coords["lon"][mask.data],
-                    coords["lat"][mask.data],
-                    frame=mask.geom.frame,
-                )
-                contribute[k] = np.min(m.position.separation(coords_true)) < radius
+        contribute = np.array(
+            [m.contributes(mask, margin, include_evaluation_radius) for m in models]
+        )
         return models[contribute]
 
     def select_region(self, regions):

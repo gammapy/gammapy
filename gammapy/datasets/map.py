@@ -12,7 +12,12 @@ from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
-from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
+from gammapy.modeling.models import (
+    Models,
+    BackgroundModel,
+    DatasetModels,
+    FoVBackgroundModel,
+)
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
@@ -413,9 +418,7 @@ class MapDataset(Dataset):
                 return evaluator.compute_npred()
 
             if evaluator.needs_update:
-                evaluator.update(
-                    self.exposure, self.psf, self.edisp, self._geom, self.mask_safe_psf
-                )
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
@@ -2409,6 +2412,8 @@ class MapEvaluator:
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
+    mask : `~gammapy.maps.Map`
+        Mask to apply to the likelihood for fitting.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     evaluation_mode : {"local", "global"}
@@ -2428,6 +2433,7 @@ class MapEvaluator:
         psf=None,
         edisp=None,
         gti=None,
+        mask=None,
         evaluation_mode="local",
         use_cache=True,
     ):
@@ -2436,6 +2442,7 @@ class MapEvaluator:
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
+        self.mask = mask
         self.gti = gti
         self.contributes = True
         self.use_cache = use_cache
@@ -2504,7 +2511,7 @@ class MapEvaluator:
         """Cutout width for the model component"""
         return get_cutout_width(self.model, psf=self.psf)
 
-    def update(self, exposure, psf, edisp, geom):
+    def update(self, exposure, psf, edisp, mask, geom):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2515,6 +2522,8 @@ class MapEvaluator:
             PSF map.
         edisp : `gammapy.irf.EDispMap`
             Edisp map.
+        mask : `~gammapy.maps.Map`
+            Mask to apply to the likelihood for fitting.
         geom : `WcsGeom`
             Counts geom
         mask_safe_psf : `~gammapy.maps.Map`
@@ -2548,6 +2557,12 @@ class MapEvaluator:
                 self.irf_position, energy_axis=energy_axis
             )
 
+        if mask is None:
+            mask = exposure.copy()
+            mask.data = np.ones(mask.data.shape, dtype=bool)
+            mask.unit = ""
+        self.mask = mask
+
         # lookup psf
         if psf:
             if self.apply_psf_after_edisp:
@@ -2562,13 +2577,15 @@ class MapEvaluator:
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
+            self.contributes = self.model.contributes(
+                self.mask, margin=self.cutout_width, include_evaluation_radius=True
+            )
             try:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=self.cutout_width
                 )
-                self.contributes = True
             except (NoOverlapError, ValueError):
-                self.contributes = False
+                pass
         else:
             self.exposure = exposure
 
