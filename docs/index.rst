@@ -26,7 +26,6 @@ or request a feature, or need help with anything Gammapy-related.
     tutorials/index
     howto
     references
-    changelog
 
 .. _gammapy_package:
 .. toctree::
@@ -53,8 +52,10 @@ or request a feature, or need help with anything Gammapy-related.
 
 .. _gammapy_dev:
 .. toctree::
-    :caption: Developer Documentation
+    :caption: Additional Documentation
     :titlesonly:
     :maxdepth: 1
 
     development/index
+    List of releases <https://gammapy.org/news.html#releases>
+    changelog
