@@ -60,3 +60,5 @@ dependencies:
   - sphinx_rtd_theme
   - twine
   - yamllint
+  - pip:
+      - pytest-sphinx

@@ -168,7 +168,7 @@ class Model:
         >>> from gammapy.modeling.models import Model
         >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
         >>> type(spectral_model)
-        gammapy.modeling.models.spectral.PowerLaw2SpectralModel
+        <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
         from . import (
             MODEL_REGISTRY,

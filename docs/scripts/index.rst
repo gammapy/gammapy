@@ -166,7 +166,7 @@ just a one-line function call), and that you need to do this computation
 frequently, you will probably write a Python script that looks something like
 this:
 
-.. code-block:: python
+.. testcode::
 
     # Compute significance for a Poisson count observation
     from gammapy.stats import CashCountsStatistic
@@ -176,6 +176,10 @@ this:
 
     s = CashCountsStatistic(n_observed, mu_background).sqrt_ts
     print(s)
+
+.. testoutput::
+
+    2.397918129147546
 
 We have introduced variables that hold the parameters for the analysis and put
 them before the computation. Let's say this script is in a file called

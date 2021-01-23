@@ -122,19 +122,20 @@ jobs:
       - name: test build docs
         run: |
           make docs-sphinx
-      - name: test code in docs
+      - name: test code in docs and docstrings
         run: |
           pytest --doctest-glob="*.rst" docs/
+          pytest --doctest-modules --ignore-glob=*/tests gammapy
       - name: test without datasets
         run: |
           unset GAMMAPY_DATA
           make test
-      - name: test astropy dev
-        if: always()
-        run: |
-          conda remove astropy --force -y
-          pip install git+https://github.com/astropy/astropy.git#egg=astropy
-          make test
+#      - name: test astropy dev
+#        if: always()
+#        run: |
+#          conda remove astropy --force -y
+#          pip install git+https://github.com/astropy/astropy.git#egg=astropy
+#          make test
       - name: test conda build
         if: always()
         run: |

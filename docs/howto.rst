@@ -139,4 +139,4 @@ the accuracy of the IRF kernels used for model counts predictions.
 This axis is used to define the geometry of the `~gammapy.irf.PSFMap` and controls the distribution of error angles
 used to sample the PSF. This will reduce the quality of the PSF description.
 - If one or several IRFs are not required for the study at hand, it is possible not to build them
- by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
+by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.

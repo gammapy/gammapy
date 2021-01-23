@@ -98,12 +98,13 @@ class Background3D(BackgroundIRF):
     >>> print(bkg_3d)
     Background3D
     ------------
-
+    <BLANKLINE>
       axes  : ['energy', 'fov_lon', 'fov_lat']
       shape : (21, 36, 36)
       ndim  : 3
       unit  : 1 / (MeV s sr)
       dtype : >f4
+    <BLANKLINE>
 
     """
     tag = "bkg_3d"

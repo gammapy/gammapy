@@ -24,7 +24,7 @@ Getting Started
 
 The ``gammapy.astro`` namespace is empty. Use these import statements:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.astro import source
     from gammapy.astro import population

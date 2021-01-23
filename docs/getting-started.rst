@@ -108,12 +108,15 @@ Of course, you can also use the Gammapy online docs if you prefer, clicking in l
 As an example, here's how you can create `gammapy.data.DataStore` and
 `gammapy.data.EventList` objects and start exploring H.E.S.S. data:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
-    >>> events = data_store.obs(obs_id=23523).events
-    >>> print(events)
+    from gammapy.data import DataStore
+    data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
+    events = data_store.obs(obs_id=23523).events
+    print(events)
+
+.. testoutput::
+
     EventList
     ---------
     <BLANKLINE>
@@ -135,11 +138,11 @@ As an example, here's how you can create `gammapy.data.DataStore` and
 
 Try to make your first plot using the `gammapy.data.EventList.peek` helper method:
 
-.. code-block:: python
+.. testcode::
 
-    >>> import matplotlib.pyplot as plt
-    >>> events.peek()
-    >>> plt.savefig("events.png")
+    import matplotlib.pyplot as plt
+    events.peek()
+    plt.savefig("events.png")
 
 Python script
 +++++++++++++
@@ -147,13 +150,17 @@ Python script
 Another common way to use Gammapy is to write a Python script.
 Try it and put the following code into a file called ``example.py``:
 
-.. code-block:: python
+.. testcode::
 
     """Example Python script using Gammapy"""
     from gammapy.data import DataStore
     data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
     events = data_store.obs(obs_id=23523).events
     print(events.energy.mean())
+
+.. testoutput::
+
+    4.418007850646973 TeV
 
 You can run it with Python:
 

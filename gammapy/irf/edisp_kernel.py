@@ -39,8 +39,8 @@ class EDispKernel(IRF):
 
     Have a quick look:
 
-    >>> print(edisp)
-    >>> edisp.peek()
+    >>> print(edisp) # doctest: +SKIP
+    >>> edisp.peek() # doctest: +SKIP
 
     """
     required_axes = ["energy_true", "energy"]

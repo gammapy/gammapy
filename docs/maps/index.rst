@@ -53,7 +53,7 @@ The `~Map` class provides a `~Map.create` factory method to facilitate creating
 an empty map object from scratch. The ``map_type`` argument can be used to
 control the pixelization scheme (WCS or HPX).
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map
     from astropy.coordinates import SkyCoord
@@ -70,7 +70,7 @@ Higher dimensional map objects (cubes and hypercubes) can be constructed by
 passing a list of `~MapAxis` objects for non-spatial dimensions with the
 ``axes`` parameter:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map, MapAxis
     from astropy.coordinates import SkyCoord
@@ -125,7 +125,7 @@ returned sub-map use a `slice` object of length one. This behaviour is
 equivalent to regular numpy array indexing. The following example demonstrates
 the use of `~Map.slice_by_idx()` on a map with a time and energy axes:
 
-.. code-block:: python
+.. testcode::
 
     import numpy as np
     from gammapy.maps import Map, MapAxis
@@ -196,7 +196,7 @@ the suffix of the method name (e.g. `~Map.get_by_idx`).  The following
 demonstrates how one can access the same pixels of a WCS map using each of the
 three coordinate systems:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map
 
@@ -213,7 +213,7 @@ arguments can be used to perform an operation along a slice of the map at a
 fixed value along that dimension. Multi-dimensional arguments can be use to
 broadcast a given operation across a grid of coordinate values.
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map
 
@@ -254,7 +254,7 @@ The ``coord`` accessor methods accept `dict`, `~MapCoord`, and
 arrays.  The coordinate frame of the `~astropy.coordinates.SkyCoord` will be
 transformed to match the coordinate system of the map.
 
-.. code-block:: python
+.. testcode::
 
     import numpy as np
     from astropy.coordinates import SkyCoord
@@ -275,7 +275,7 @@ transformed to match the coordinate system of the map.
 A `~MapCoord` or `dict` argument can be used to interact with a map object
 without reference to the axis ordering of the map geometry:
 
-.. code-block:: python
+.. testcode::
 
     coord = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
     m.set_by_coord(coord, [0.5, 1.5])
@@ -318,7 +318,7 @@ Axes of a `MapCoord` can be accessed by index, name, or attribute.  A `MapCoord`
 without explicit axis names can be created by calling `MapCoord.create` with a
 `tuple` argument:
 
-.. code-block:: python
+.. testcode::
 
     import numpy as np
     from astropy.coordinates import SkyCoord
@@ -341,6 +341,16 @@ without explicit axis names can be created by calling `MapCoord.create` with a
     print(c[1], c['lat'], c.lat)
     print(c[2], c['axis0'])
 
+.. testoutput::
+    :hide:
+
+    [0. 1.] [0. 1.] [0. 1.]
+    [1. 2.] [1. 2.] [1. 2.]
+    [ 100 1000] [ 100 1000]
+    [0. 1.] [0. 1.] [0. 1.]
+    [1. 2.] [1. 2.] [1. 2.]
+    [ 100 1000] [ 100 1000]
+
 The first two elements of the tuple argument must contain longitude and
 latitude.  Non-spatial axes are assigned a default name ``axis{I}`` where
 ``{I}`` is the index of the non-spatial dimension. `MapCoord` objects created
@@ -348,7 +358,7 @@ without named axes must have the same axis ordering as the map geometry.
 
 A `MapCoord` with named axes can be created by calling `MapCoord.create` with a `dict`:
 
-.. code-block:: python
+.. testcode::
 
     c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
     print(c[0], c['lon'], c.lon)
@@ -364,6 +374,20 @@ A `MapCoord` with named axes can be created by calling `MapCoord.create` with a 
     print(c[0], c['lon'], c.lon)
     print(c[1], c['lat'], c.lat)
     print(c[2], c['energy'])
+
+.. testoutput::
+    :hide:
+
+    [0. 1.] [0. 1.] [0. 1.]
+    [1. 2.] [1. 2.] [1. 2.]
+    [ 100 1000] [ 100 1000]
+    [ 100 1000] [ 100 1000]
+    [0. 1.] [0. 1.] [0. 1.]
+    [1. 2.] [1. 2.] [1. 2.]
+    [0. 1.] [0. 1.] [0. 1.]
+    [1. 2.] [1. 2.] [1. 2.]
+    [ 100 1000] [ 100 1000]
+
 
 Spatial axes must be named ``lon`` and ``lat``. `MapCoord` objects created with
 named axes do not need to have the same axis ordering as the map geometry.
@@ -409,7 +433,7 @@ so that the data array can be indexed directly. Here is an example for an in-pla
 convolution of an image using `astropy.convolution.convolve` to interpolate NaN
 values:
 
-.. code-block:: python
+.. testcode::
 
     import numpy as np
     from astropy.convolution import convolve
@@ -431,12 +455,12 @@ FITS I/O
 Maps can be written to and read from a FITS file with the `~Map.write` and
 `~Map.read` methods:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
-    m.write('file.fits', hdu='IMAGE')
+    m.write('file.fits', hdu='IMAGE', overwrite=True)
     m = Map.read('file.fits', hdu='IMAGE')
 
 If ``map_type`` argument is not given when calling `~Map.read` a map
@@ -446,12 +470,12 @@ Maps can be serialized to a sparse data format by calling `~Map.write` with
 ``sparse=True``. This will write all non-zero pixels in the map to a data table
 appropriate to the pixelization scheme.
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
-    m.write('file.fits', hdu='IMAGE', sparse=True)
+    m.write('file.fits', hdu='IMAGE', sparse=True, overwrite=True)
     m = Map.read('file.fits', hdu='IMAGE', map_type='wcs')
 
 By default files will be written to the *gamma-astro-data-format* specification
@@ -480,14 +504,14 @@ All map objects provide a ``plot`` method for generating a visualization of a
 map.  This method returns figure, axes, and image objects that can be used to
 further tweak/customize the image.
 
-.. code-block:: python
+.. testcode::
 
     import matplotlib.pyplot as plt
     from gammapy.maps import Map
 
     m = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
     m.smooth("0.1 deg").plot(cmap="inferno", add_cbar=True, stretch="sqrt")
-    plt.show()
+    # plt.show()
 
 
 Examples
@@ -498,7 +522,7 @@ Creating counts cubes from event lists
 
 This example shows how to fill a counts cube from an event list:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.data import EventList
     from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
@@ -510,12 +534,12 @@ This example shows how to fill a counts cube from an event list:
     events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
 
     m.fill_by_coord({'skycoord': events.radec, 'energy': events.energy})
-    m.write('ccube.fits', format='fgst-ccube')
+    m.write('ccube.fits', format='fgst-ccube', overwrite=True)
 
 To make a counts map, create an empty map with a geometry of your choice
 and then fill it using this function
 
-.. code-block::
+.. testcode::
 
     from gammapy.maps import Map
     from gammapy.data import EventList
@@ -527,7 +551,7 @@ and then fill it using this function
 If you have a given map already, and want to make a counts image
 with the same geometry (not using the pixel data from the original map), do this
 
-.. code-block::
+.. testcode::
 
     from gammapy.maps import Map
     from gammapy.data import EventList

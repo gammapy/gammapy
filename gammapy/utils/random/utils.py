@@ -263,10 +263,10 @@ def sample_times(
     As expected the last event occurs after about 10 seconds.
 
     >>> from astropy.units import Quantity
-    >>> from gammapy.utils.random import random_times
+    >>> from gammapy.utils.random import random_times # doctest: +SKIP
     >>> rate = Quantity(10, 'Hz')
-    >>> times = random_times(size=100, rate=rate, random_state=0)
-    >>> times[-1]
+    >>> times = random_times(size=100, rate=rate, random_state=0) # doctest: +SKIP
+    >>> times[-1] # doctest: +SKIP
     <TimeDelta object: scale='None' format='sec' value=9.186484131475076>
     """
     random_state = get_random_state(random_state)

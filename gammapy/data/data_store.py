@@ -37,7 +37,7 @@ class DataStore:
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
-    >>> data_store.info()
+    >>> data_store.info() # doctest: +SKIP
     """
 
     DEFAULT_HDU_TABLE = "hdu-index.fits.gz"
