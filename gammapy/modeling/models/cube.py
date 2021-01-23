@@ -238,14 +238,14 @@ class SkyModel(Model):
         """
 
         mask_shape = len(mask.data.squeeze().shape)
-        if mask_shape>2:
+        if mask_shape > 2:
             mask = mask.sum_over_axes()
             mask.data = mask.data.astype(bool)
-        elif mask_shape<2:
+        elif mask_shape < 2:
             return True
         if not np.any(mask.data):
             return False
-            
+
         # check center only first
         ind = self.position.to_pixel(mask.geom.wcs)
         ind = tuple([int(round(idx.item())) for idx in ind])
