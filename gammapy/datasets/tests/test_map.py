@@ -30,6 +30,7 @@ from gammapy.modeling.models import (
     ConstantSpectralModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.gauss import Gauss2DPDF
 
 
 @pytest.fixture
@@ -1393,4 +1394,6 @@ def test_compute_flux_spatial():
     evaluator = MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
     flux = evaluator.compute_flux_spatial()
 
-    assert_allclose(flux.value, [0.39677402, 0.39677402], atol=0.001)
+    g = Gauss2DPDF(0.1)
+    reference = g.containment_fraction(0.1)
+    assert_allclose(flux.value, reference, rtol=0.003)

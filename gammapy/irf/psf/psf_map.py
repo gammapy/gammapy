@@ -328,7 +328,7 @@ class PSFMap(IRFMap):
         axes = MapAxes([energy_axis_true, rad_axis])
         coords = axes.get_coord()
 
-        sigma = np.broadcast_to(sigma, energy_axis_true.nbin, subok=True)
+        sigma = np.broadcast_to(u.Quantity(sigma), energy_axis_true.nbin, subok=True)
         gauss = Gauss2DPDF(sigma=sigma.reshape((-1, 1)))
         data = gauss(coords["rad"])
 

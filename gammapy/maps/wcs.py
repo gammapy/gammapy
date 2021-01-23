@@ -25,6 +25,8 @@ from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
 __all__ = ["WcsGeom"]
 
+def round_up_to_odd(f):
+    return int(np.ceil(f) // 2 * 2 + 1)
 
 def _check_width(width):
     """Check and normalise width argument.
@@ -959,12 +961,14 @@ class WcsGeom(Geom):
             Geom with odd number of pixels
         """
         if max_radius is None:
-            max_radius = self.width.max() / 2
+            width = self.width.max()
+        else:
+            width = 2 * max_radius
 
         binsz = self.pixel_scales.max()
 
-        radius_max_npix = (max_radius / binsz).to_value("")
-        npix = 2 * int(radius_max_npix) + 1
+        width_npix = (width / binsz).to_value("")
+        npix = round_up_to_odd(width_npix)
         return WcsGeom.create(
             skydir=self.center_skydir,
             binsz=binsz,

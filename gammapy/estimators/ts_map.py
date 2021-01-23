@@ -192,21 +192,12 @@ class TSMapEstimator(Estimator):
 
         """
         # TODO: further simplify the code below
-        geom = dataset.counts.geom
+        geom = dataset.exposure.geom
 
         model = self.model.copy()
         model.spatial_model.position = geom.center_skydir
 
-        binsz = np.mean(geom.pixel_scales)
-        width_pix = self.kernel_width / binsz
-
-        npix = round_up_to_odd(width_pix.to_value(""))
-
-        axis = dataset.exposure.geom.axes["energy_true"]
-
-        geom_kernel = WcsGeom.create(
-            skydir=model.position, proj="TAN", npix=npix, axes=[axis], binsz=binsz
-        )
+        geom_kernel = geom.to_odd_npix(max_radius=self.kernel_width / 2)
 
         exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
         exposure.data += 1.0
@@ -218,7 +209,7 @@ class TSMapEstimator(Estimator):
         kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()
 
-        if (self.kernel_width + binsz >= geom.width).any():
+        if (self.kernel_width >= geom.width).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
