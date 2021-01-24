@@ -80,6 +80,38 @@ class PSFMap(IRFMap):
     def psf_map(self, value):
         self._irf_map = value
 
+    def to_region_nd_map(self, region):
+        """Convert to region ND PSF map
+
+        If a region is given a mean PSF is computed.
+
+        Parameters
+        ----------
+        region : `SkyRegion` or `SkyCoord`
+            Region or position where to get the map.
+
+        Returns
+        -------
+        psf : `PSFMap`
+            PSF map with region geometry.
+        """
+        if region is None:
+            region = self.psf_map.geom.center_skydir
+
+        # TODO: compute an exposure weighted mean PSF here
+        kwargs = {"region": region, "func": np.nanmean}
+        psf_map = self.psf_map.to_region_nd_map(**kwargs)
+
+        if self.exposure_map:
+            exposure_map = self.exposure_map.to_region_nd_map(**kwargs)
+        else:
+            exposure_map = None
+
+        return self.__class__(
+            psf_map=psf_map,
+            exposure_map=exposure_map
+        )
+
     def get_energy_dependent_table_psf(self, position=None):
         """Get energy-dependent PSF at a given position.
 
