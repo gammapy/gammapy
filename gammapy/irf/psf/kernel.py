@@ -1,30 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.gauss import Gauss2DPDF
-from .table import EnergyDependentTablePSF, TablePSF
 
 __all__ = ["PSFKernel"]
-
-
-def _make_kernel_geom(geom, max_radius):
-    # Create a new geom object with an odd number of pixel and a maximum size
-    # This is useful for PSF kernel creation.
-    center = geom.center_skydir
-    binsz = Angle(np.abs(geom.wcs.wcs.cdelt[0]), "deg")
-    max_radius = Angle(max_radius)
-    npix = 2 * int(max_radius.deg / binsz.deg) + 1
-    return WcsGeom.create(
-        skydir=center,
-        binsz=binsz,
-        npix=npix,
-        proj=geom.projection,
-        frame=geom.frame,
-        axes=geom.axes,
-    )
 
 
 class PSFKernel:
@@ -131,30 +111,54 @@ class PSFKernel:
         """
         # TODO : use PSF containment radius if max_radius is None
         if max_radius is not None:
-            geom = _make_kernel_geom(geom, max_radius)
+            geom = geom.to_odd_npix(max_radius=max_radius)
 
         geom_upsampled = geom.upsample(factor=factor)
         rad = geom_upsampled.separation(geom.center_skydir)
 
-        if isinstance(table_psf, EnergyDependentTablePSF):
-            energy_axis = geom.axes["energy_true"]
-            energy = energy_axis.center[:, np.newaxis, np.newaxis]
-            data = table_psf.evaluate(energy_true=energy, rad=rad).value
-        else:
-            try:
-                nbin = geom.axes[0].nbin
-            except IndexError:
-                nbin = 1
-            data = table_psf.evaluate(rad=rad).value
-            data = data * np.ones(nbin).reshape((-1, 1, 1))
+        energy_axis = geom.axes["energy_true"]
+        energy = energy_axis.center[:, np.newaxis, np.newaxis]
+        data = table_psf.evaluate(energy_true=energy, rad=rad).value
 
         kernel_map = Map.from_geom(geom=geom_upsampled, data=data)
         kernel_map = kernel_map.downsample(factor, preserve_counts=True)
         return cls(kernel_map, normalize=True)
 
     @classmethod
+    def from_spatial_model(cls, model, geom, max_radius=None, factor=4):
+        """Create PSF kernel from spatial model
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom`
+            Map geometry
+        model : `~gammapy.modeling.models.SpatiaModel`
+            Gaussian width.
+        max_radius : `~astropy.coordinates.Angle`
+            Desired kernel map size.
+        factor : int
+            Oversample factor to compute the PSF
+
+        Returns
+        -------
+        kernel : `~gammapy.irf.PSFKernel`
+            the kernel Map with reduced geometry according to the max_radius
+        """
+        if max_radius is None:
+            max_radius = model.evaluation_radius
+
+        geom = geom.to_odd_npix(
+            max_radius=max_radius
+        )
+        model.position = geom.center_skydir
+
+        geom = geom.upsample(factor=factor)
+        map = model.integrate_geom(geom)
+        return cls(psf_kernel_map=map.downsample(factor=factor))
+
+    @classmethod
     def from_gauss(
-        cls, geom, sigma, max_radius=None, containment_fraction=0.99, factor=4
+        cls, geom, sigma, max_radius=None, factor=4
     ):
         """Create Gaussian PSF.
 
@@ -180,26 +184,13 @@ class PSFKernel:
         kernel : `~gammapy.irf.PSFKernel`
             the kernel Map with reduced geometry according to the max_radius
         """
-        sigma = Angle(sigma)
+        from gammapy.modeling.models import GaussianSpatialModel
 
-        if max_radius is None:
-            max_radius = (
-                Gauss2DPDF(sigma.deg).containment_radius(
-                    containment_fraction=containment_fraction
-                )
-                * u.deg
-            )
+        gauss = GaussianSpatialModel(sigma=sigma)
 
-        max_radius = Angle(max_radius)
-
-        # Create a new geom according to given input
-        geom = _make_kernel_geom(geom, max_radius)
-
-        rad = Angle(np.linspace(0.0, max_radius.deg, 200), "deg")
-
-        table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
-
-        return cls.from_table_psf(table_psf, geom=geom, factor=factor)
+        return cls.from_spatial_model(
+            model=gauss, geom=geom, max_radius=max_radius, factor=factor
+        )
 
     def write(self, *args, **kwargs):
         """Write the Map object which contains the PSF kernel to file."""

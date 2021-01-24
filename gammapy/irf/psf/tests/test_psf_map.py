@@ -440,5 +440,5 @@ def test_psfmap_from_gauss():
     assert_allclose(psfvalue, psfvalue1, atol=1e-7)
 
     # test that it won't work with different number of sigmas and energies
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         psfmap2 = PSFMap.from_gauss(energy_axis, rad_axis, sigma[:3])

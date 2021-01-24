@@ -282,6 +282,23 @@ class SpatialModel(Model):
         m = self._get_plot_map(geom)
         m.plot_grid(**kwargs)
 
+    @classmethod
+    def from_position(cls, position, **kwargs):
+        """Define the position of the model using a sky coord
+
+        Parameters
+        ----------
+        position : `SkyCoord`
+            Position
+
+        Returns
+        -------
+        model : `SpatialModel`
+            Spatial model
+        """
+        lon_0, lat_0 = position.data.lon, position.data.lat
+        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame, **kwargs)
+
 
 class PointSpatialModel(SpatialModel):
     r"""Point Source.

@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapCoord, WcsGeom
+from gammapy.maps import Map, MapCoord, WcsGeom, MapAxes
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+from gammapy.utils.gauss import Gauss2DPDF
 from .kernel import PSFKernel
-from .table import EnergyDependentTablePSF, TablePSF
+from .table import EnergyDependentTablePSF
 from ..core import IRFMap
 
 __all__ = ["PSFMap"]
@@ -283,7 +284,6 @@ class PSFMap(IRFMap):
             )
         coords = geom.get_coord()
 
-        # TODO: support broadcasting in .evaluate()
         data = table_psf.evaluate(
             energy_true=coords["energy_true"], rad=coords["rad"]
         )
@@ -325,33 +325,15 @@ class PSFMap(IRFMap):
         if rad_axis is None:
             rad_axis = RAD_AXIS_DEFAULT.copy()
 
-        # note: it would be straightforward to also have disk shape instead
-        # of gauss
-        energy = energy_axis_true.center
-        rad = rad_axis.center
-        shape = (energy.shape[0], rad.shape[0])
+        axes = MapAxes([energy_axis_true, rad_axis])
+        coords = axes.get_coord()
 
-        if np.size(sigma) == 1:
-            # same width for all energies
-            table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
-            data = np.tile(table_psf.quantity, (shape[0], 1))
-        elif np.size(sigma) == np.size(energy):
-            # one width per energy
-            data = np.zeros(shape) * u.sr ** -1
-            for idx in range(energy_axis_true.nbin):
-                data[idx, :] = TablePSF.from_shape(
-                    shape="gauss", width=sigma[idx], rad=rad
-                ).quantity
-        else:
-            raise AssertionError(
-                "There need to be the same number of sigma values as energies"
-            )
+        sigma = np.broadcast_to(u.Quantity(sigma), energy_axis_true.nbin, subok=True)
+        gauss = Gauss2DPDF(sigma=sigma.reshape((-1, 1)))
+        data = gauss(coords["rad"])
 
         table_psf = EnergyDependentTablePSF(
-            axes=[energy_axis_true, rad_axis],
-            exposure=None,
-            data=data.value,
-            unit=data.unit
+            axes=axes, unit=data.unit, data=data.value
         )
         return cls.from_energy_dependent_table_psf(table_psf)
 

@@ -25,6 +25,8 @@ from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
 __all__ = ["WcsGeom"]
 
+def round_up_to_odd(f):
+    return int(np.ceil(f) // 2 * 2 + 1)
 
 def _check_width(width):
     """Check and normalise width argument.
@@ -942,6 +944,38 @@ class WcsGeom(Geom):
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
+        )
+
+    def to_odd_npix(self, max_radius=None):
+        """Create a new geom object with an odd number of pixel and a maximum size
+        This is useful for PSF kernel creation.
+
+        Parameters
+        ----------
+        max_radius : `~astropy.units.Quantity`
+            Max. radius of the geometry (half the width)
+
+        Returns
+        -------
+        geom : `WcsGeom`
+            Geom with odd number of pixels
+        """
+        if max_radius is None:
+            width = self.width.max()
+        else:
+            width = 2 * u.Quantity(max_radius)
+
+        binsz = self.pixel_scales.max()
+
+        width_npix = (width / binsz).to_value("")
+        npix = round_up_to_odd(width_npix)
+        return WcsGeom.create(
+            skydir=self.center_skydir,
+            binsz=binsz,
+            npix=npix,
+            proj=self.projection,
+            frame=self.frame,
+            axes=self.axes,
         )
 
     def is_aligned(self, other, tolerance=1e-6):

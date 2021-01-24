@@ -33,18 +33,12 @@ class TestEnergyDependentMultiGaussPSF:
         energy = 1 * u.TeV
         theta = 0 * u.deg
 
-        rad = np.linspace(0, 2, 300) * u.deg
-        table_psf = psf.to_energy_dependent_table_psf(theta, rad=rad)
-
         containment = [0.68, 0.8, 0.9]
         desired = psf.containment_radius(
             energy_true=energy, offset=theta, fraction=containment
         )
 
-        table_psf_at_energy = table_psf.table_psf_at_energy(energy)
-        actual = table_psf_at_energy.containment_radius(containment)
-
-        assert_allclose(desired, actual, rtol=1e-2)
+        assert_allclose(desired, [0.14775, 0.18675, 0.25075] * u.deg, rtol=1e-3)
 
     def test_to_psf3d(self, psf):
         rads = np.linspace(0.0, 1.0, 101) * u.deg
@@ -82,14 +76,16 @@ def test_psf_cta_1dc():
     # Check that PSF is filled with 0 for energy / offset where no PSF info is given.
     # This is needed so that stacked PSF computation doesn't error out,
     # trying to interpolate for observations / energies where this occurs.
-    psf = psf_irf.to_energy_dependent_table_psf("4.5 deg")
-    psf = psf.table_psf_at_energy("0.05 TeV")
-    assert_allclose(psf.evaluate(rad="0.03 deg").value, 0)
+    value = psf_irf.evaluate(
+        energy_true=0.05 * u.TeV, rad=0.03 * u.deg, offset=4.5 * u.deg
+    )
+    assert_allclose(value, 0 * u.Unit("deg-2"))
 
     # Check that evaluation works for an energy / offset where an energy is available
-    psf = psf_irf.to_energy_dependent_table_psf("2 deg")
-    psf = psf.table_psf_at_energy("1 TeV")
-    assert_allclose(psf.containment_radius(0.68), 0.052841 * u.deg, atol=1e-4)
+    radius = psf_irf.containment_radius(
+        fraction=0.68, energy_true=1 * u.TeV, offset=2 * u.deg
+    )
+    assert_allclose(radius, 0.052841 * u.deg, atol=1e-4)
 
 
 @pytest.fixture(scope="session")
