@@ -963,7 +963,7 @@ class WcsGeom(Geom):
         if max_radius is None:
             width = self.width.max()
         else:
-            width = 2 * max_radius
+            width = 2 * u.Quantity(max_radius)
 
         binsz = self.pixel_scales.max()
 

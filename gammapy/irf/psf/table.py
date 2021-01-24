@@ -149,7 +149,7 @@ class EnergyDependentTablePSF(PSF):
 
         energy_axis = MapAxis.from_edges(energy_range, name="energy_true")
 
-        data = psf_value_weighted.sum(axis=0)
+        data = psf_value_weighted.sum(axis=0, keepdims=True)
         return self.__class__(
             axes=[energy_axis, self.axes["rad"]], data=data.value, unit=data.unit, **kwargs
         )
@@ -206,8 +206,8 @@ class EnergyDependentTablePSF(PSF):
             )
             label = f"{100 * fraction:.1f}% Containment"
             ax.plot(
-                energy_true,
-                rad,
+                energy_true.to_value("GeV"),
+                rad.to_value("deg"),
                 label=label,
                 **kwargs,
             )
