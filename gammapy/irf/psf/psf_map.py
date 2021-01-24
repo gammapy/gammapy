@@ -127,42 +127,20 @@ class PSFMap(IRFMap):
         psf_table : `~gammapy.irf.EnergyDependentTablePSF`
             the table PSF
         """
-        if position is None:
-            position = self.psf_map.geom.center_skydir
+        psf_map = self.to_region_nd_map(region=position)
 
-        if position.size != 1:
-            raise ValueError(
-                "EnergyDependentTablePSF can be extracted at one single position only."
-            )
+        data = psf_map.psf_map.quantity.squeeze()
 
-        energy = self.psf_map.geom.axes["energy_true"].center
-        rad = self.psf_map.geom.axes["rad"].center
-
-        coords = {
-            "skycoord": position,
-            "energy_true": energy.reshape((-1, 1, 1, 1)),
-            "rad": rad.reshape((1, -1, 1, 1)),
-        }
-
-        data = self.psf_map.interp_by_coord(coords)
-        psf_values = u.Quantity(data[:, :, 0, 0], unit=self.psf_map.unit, copy=False)
-
-        if self.exposure_map is not None:
-            coords = {
-                "skycoord": position,
-                "energy_true": energy.reshape((-1, 1, 1)),
-                "rad": 0 * u.deg,
-            }
-            data = self.exposure_map.interp_by_coord(coords).squeeze()
-            exposure = data * self.exposure_map.unit
+        if self.exposure_map:
+            exposure = psf_map.exposure_map.quantity.squeeze()
         else:
             exposure = None
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(
             axes=self.psf_map.geom.axes[["energy_true", "rad"]],
-            data=psf_values.value,
-            unit=psf_values.unit,
+            data=data.value,
+            unit=data.unit,
             exposure=exposure,
         )
 
