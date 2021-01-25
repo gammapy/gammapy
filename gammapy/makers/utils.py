@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 
-def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
+def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_region=False):
     """Compute exposure map.
 
     This map has a true energy axis, the exposure is not combined
@@ -35,14 +35,25 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         Effective area
     geom : `~gammapy.maps.WcsGeom`
         Map geometry (must have an energy axis)
+    average_over_region: Bool
+        If geom is a RegionGeom, whether to just
+        consider the values at the region center
+        or the average over the whole region
 
     Returns
     -------
     map : `~gammapy.maps.WcsNDMap`
         Exposure map
     """
-    offset = geom.separation(pointing)
+    if average_over_region:
+        wcs_geom = geom.to_wcs_geom().upsample(2)
+        mask = geom.contains(wcs_geom.get_coord())
+        offset = mask*wcs_geom.separation(pointing)
+    else:
+        offset = geom.separation(pointing)
+
     energy_true = geom.axes["energy_true"].center
+
 
     exposure = aeff.evaluate(
         offset=offset, energy_true=energy_true[:, np.newaxis, np.newaxis]
@@ -50,8 +61,13 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
 
     exposure = (exposure * livetime).to("m2 s")
     meta = {"livetime": livetime}
+
+    if average_over_region:
+        data = np.mean(exposure.value, axis=(1,2))
+    else:
+        data = exposure.value
     return Map.from_geom(
-        geom=geom, data=exposure.value, unit=exposure.unit, meta=meta
+        geom=geom, data=data, unit=exposure.unit, meta=meta
     )
 
 
