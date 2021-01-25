@@ -935,18 +935,10 @@ class MapDataset(Dataset):
             hdulist += self.background.to_hdulist(hdu="background")[exclude_primary]
 
         if self.edisp is not None:
-            hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-            if self.edisp.exposure_map is not None:
-                hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
-                    exclude_primary
-                ]
+            hdulist += self.edisp.to_hdulist()[exclude_primary]
 
         if self.psf is not None:
-            hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-            if self.psf.exposure_map is not None:
-                hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
-                    exclude_primary
-                ]
+            hdulist += self.psf.to_hdulist()[exclude_primary]
 
         if self.mask_safe is not None:
             hdulist += self.mask_safe.to_hdulist(hdu="mask_safe")[exclude_primary]
