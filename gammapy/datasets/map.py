@@ -2521,6 +2521,9 @@ class MapEvaluator:
             separation[exposure.sum_over_axes().data.squeeze() == 0] = np.inf
             ilon, ilat = np.where(separation == np.min(separation))
             irf_position = coords[ilon[0], ilat[0]]
+            log.warning(
+                f"Center position for {self.model.name} model is outside dataset geom, using nearest IRF defined within geom"
+            )
         else:
             irf_position = self.model.position
 
