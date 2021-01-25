@@ -70,7 +70,7 @@ class MapDatasetMaker(Maker):
         return counts
 
     @staticmethod
-    def make_exposure(geom, observation):
+    def make_exposure(geom, observation, average_over_region=False):
         """Make exposure map.
 
         Parameters
@@ -92,10 +92,11 @@ class MapDatasetMaker(Maker):
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
+            average_over_region=average_over_region,
         )
 
     @staticmethod
-    def make_exposure_irf(geom, observation):
+    def make_exposure_irf(geom, observation, average_over_region=False):
         """Make exposure map with irf geometry.
 
         Parameters
@@ -115,6 +116,7 @@ class MapDatasetMaker(Maker):
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
+            average_over_region=average_over_region,
         )
 
     def make_background(self, geom, observation):
