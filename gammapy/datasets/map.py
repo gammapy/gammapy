@@ -5,11 +5,12 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel,  PSFMap
+from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
@@ -1418,9 +1419,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
         if self.background is not None:
-            kwargs["background"] = self.background.pad(
-                pad_width=pad_width, mode=mode
-            )
+            kwargs["background"] = self.background.pad(pad_width=pad_width, mode=mode)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.copy()
@@ -2511,12 +2510,24 @@ class MapEvaluator:
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
+        geom2d = geom.to_image()
+        if not geom2d.contains(self.model.position)[0]:
+            coords = SkyCoord(
+                geom2d.get_coord()["lon"].squeeze(),
+                geom2d.get_coord()["lat"].squeeze(),
+                frame=geom2d.frame,
+            )
+            separation = coords.separation(self.model.position)
+            separation[exposure.sum_over_axes().data.squeeze() == 0] = np.inf
+            ilon, ilat = np.where(separation == np.min(separation))
+            irf_position = coords[ilon[0], ilat[0]]
+        else:
+            irf_position = self.model.position
+
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
-            self.edisp = edisp.get_edisp_kernel(
-                self.model.position, energy_axis=energy_axis
-            )
+            self.edisp = edisp.get_edisp_kernel(irf_position, energy_axis=energy_axis)
 
         # lookup psf
         if psf:
@@ -2528,13 +2539,13 @@ class MapEvaluator:
             if geom.is_region:
                 geom = geom.to_wcs_geom()
 
-            self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
+            self.psf = psf.get_psf_kernel(irf_position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
-            self._init_position = self.model.position
+            self._init_position = irf_position
             try:
                 self.exposure = exposure.cutout(
-                    position=self.model.position, width=self.cutout_width
+                    position=irf_position, width=self.cutout_width
                 )
                 self.contributes = True
             except (NoOverlapError, ValueError):

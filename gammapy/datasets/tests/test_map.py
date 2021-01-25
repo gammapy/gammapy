@@ -12,11 +12,13 @@ from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
+    EnergyDispersion2D,
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
     PSFKernel,
 )
+
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
 from gammapy.modeling import Fit
@@ -28,6 +30,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     ConstantSpectralModel,
+    DiskSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.gauss import Gauss2DPDF
@@ -90,6 +93,19 @@ def get_psf():
     table_psf = psf.to_energy_dependent_table_psf(offset=0.5 * u.deg)
     psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
     return psf_map
+
+
+@requires_data()
+def get_edisp(geom, geom_etrue):
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
+    energy = geom.axes["energy"].edges
+    energy_true = geom_etrue.axes["energy_true"].edges
+    edisp_kernel = edisp2d.to_edisp_kernel(
+        offset="1.2 deg", energy=energy, energy_true=energy_true
+    )
+    edisp = EDispKernelMap.from_edisp_kernel(edisp_kernel)
+    return edisp
 
 
 @pytest.fixture
@@ -235,7 +251,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.059559e+09, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.059559e09, rtol=1e-5)
 
 
 @requires_data()
@@ -1397,3 +1413,23 @@ def test_compute_flux_spatial():
     g = Gauss2DPDF(0.1)
     reference = g.containment_fraction(0.1)
     assert_allclose(flux.value, reference, rtol=0.003)
+
+
+@requires_data()
+def test_source_outside_geom(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue)
+    dataset.edisp = get_edisp(geom, geom_etrue)
+
+    models = dataset.models
+    model = SkyModel(
+        PowerLawSpectralModel(),
+        DiskSpatialModel(lon_0=276.4 * u.deg, lat_0=-28.9 * u.deg, r_0=10 * u.deg),
+    )
+
+    assert not geom.to_image().contains(model.position)[0]
+    dataset.models = models + [model]
+    dataset.npred()
+    model_npred = dataset.evaluators[model.name].compute_npred().data
+    assert np.sum(np.isnan(model_npred)) == 0
+    assert np.sum(~np.isfinite(model_npred)) == 0
+    assert np.sum(model_npred) > 0
