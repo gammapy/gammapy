@@ -99,8 +99,8 @@ def test_spectrum_dataset_maker_hess_dl3_average_region(spectrum_dataset_crab, o
     assert_allclose(datasets[0].counts.data.sum(), 100)
     assert_allclose(datasets[1].counts.data.sum(), 92)
 
-    assert_allclose(datasets[0].exposure.data[0][0][0], 25332019.3623254)
-    assert_allclose(datasets[1].exposure.data[0][0][0], 77227668.692825)
+    assert_allclose(datasets[0].exposure.data[0][0][0], 25371485.648743)
+    assert_allclose(datasets[1].exposure.data[0][0][0], 77100448.721858)
 
     assert_allclose(datasets[0].exposure.meta["livetime"].value, 1581.736758)
     assert_allclose(datasets[1].exposure.meta["livetime"].value, 1572.686724)

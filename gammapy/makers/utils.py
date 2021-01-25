@@ -64,7 +64,8 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_r
 
     if average_over_region:
         # TO DO: add weights
-        data = np.mean(exposure.value, axis=(1,2))
+        exposure[~mask] = np.nan
+        data = np.nanmean(exposure.value, axis=(1,2))
     else:
         data = exposure.value
 
