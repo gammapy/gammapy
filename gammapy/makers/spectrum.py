@@ -30,8 +30,9 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     tag = "SpectrumDatasetMaker"
     available_selection = ["counts", "background", "exposure", "edisp"]
 
-    def __init__(self, selection=None, containment_correction=False, background_oversampling=None):
+    def __init__(self, selection=None, containment_correction=False, background_oversampling=None, average_over_region=False):
         self.containment_correction = containment_correction
+        self.average_over_region = average_over_region
         super().__init__(
             selection=selection, background_oversampling=background_oversampling
         )
