@@ -1,15 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapCoord, WcsGeom, MapAxes
+from gammapy.maps import Map, MapCoord, WcsGeom, MapAxes, MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.gauss import Gauss2DPDF
 from .kernel import PSFKernel
 from .table import EnergyDependentTablePSF
+from .core import PSF
 from ..core import IRFMap
 
 __all__ = ["PSFMap"]
+
+
+class IRFLikePSF(PSF):
+    required_axes = ["energy_true", "rad", "lat_idx", "lon_idx", ]
 
 
 class PSFMap(IRFMap):
@@ -112,6 +117,38 @@ class PSFMap(IRFMap):
             exposure_map=exposure_map
         )
 
+    # TODO: this is a workaround, probably add Map.integral() or similar
+    @property
+    def _psf_irf(self):
+        geom = self.psf_map.geom
+        npix_x, npix_y = geom.npix
+        axis_lon = MapAxis.from_edges(np.arange(npix_x + 1) - 0.5, name="lon_idx")
+        axis_lat = MapAxis.from_edges(np.arange(npix_y + 1) - 0.5, name="lat_idx")
+        return IRFLikePSF(
+            axes=[geom.axes["energy_true"], geom.axes["rad"], axis_lat, axis_lon],
+            data=self.psf_map.data,
+            unit=self.psf_map.unit
+        )
+
+    def _get_irf_coords(self, coords):
+        coords = MapCoord.create(coords)
+
+        geom = self.psf_map.geom.to_image()
+        lon_pix, lat_pix = geom.coord_to_pix((coords.lon, coords.lat))
+
+        coords_irf = {
+            "lon_idx": lon_pix,
+            "lat_idx": lat_pix,
+            "energy_true": coords["energy_true"],
+        }
+
+        try:
+            coords_irf["rad"] = coords["rad"]
+        except KeyError:
+            pass
+
+        return coords_irf
+
     def containment(self, coords):
         """Containment at given coords
 
@@ -125,7 +162,26 @@ class PSFMap(IRFMap):
         containment : `~astropy.units.Quantity`
             Containment values
         """
-        pass
+        coords = self._get_irf_coords(coords)
+        return self._psf_irf.containment(**coords)
+
+    def containment_radius(self, fraction, coords):
+        """Containment at given coords
+
+        Parameters
+        ----------
+        fraction : float
+            Containment fraction
+        coords : `MapCoord` or dict
+            Coordinates
+
+        Returns
+        -------
+        containment : `~astropy.units.Quantity`
+            Containment values
+        """
+        coords = self._get_irf_coords(coords)
+        return self._psf_irf.containment_radius(fraction, **coords)
 
     def get_energy_dependent_table_psf(self, position=None):
         """Get energy-dependent PSF at a given position.
@@ -206,12 +262,12 @@ class PSFMap(IRFMap):
         kernel_map = kernel_map.downsample(factor, preserve_counts=True)
         return PSFKernel(kernel_map, normalize=True)
 
-    def containment_radius_map(self, energy, fraction=0.68):
+    def containment_radius_map(self, energy_true, fraction=0.68):
         """Containment radius map.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`
             Scalar energy at which to compute the containment radius
         fraction : float
             the containment fraction (range: 0 to 1)
@@ -221,17 +277,19 @@ class PSFMap(IRFMap):
         containment_radius_map : `~gammapy.maps.Map`
             Containment radius map
         """
-        coords = self.psf_map.geom.to_image().get_coord().skycoord.flatten()
-        m = Map.from_geom(self.psf_map.geom.to_image(), unit="deg")
-
-        for coord in coords:
-            psf_table = self.get_energy_dependent_table_psf(coord)
-            containment_radius = psf_table.containment_radius(
-                energy_true=energy, fraction=fraction
-            )
-            m.fill_by_coord(coord, np.atleast_1d(containment_radius))
-
-        return m
+        geom = self.psf_map.geom.to_image()
+        coords = {
+            "energy_true": energy_true,
+            "skycoord": geom.get_coord().skycoord
+        }
+        data = self.containment_radius(
+            fraction=fraction, coords=coords
+        )
+        return Map.from_geom(
+            geom=geom,
+            data=data.value,
+            unit=data.unit
+        )
 
     @classmethod
     def from_geom(cls, geom):
