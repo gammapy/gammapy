@@ -14,7 +14,7 @@ __all__ = ["PSFMap"]
 
 
 class IRFLikePSF(PSF):
-    required_axes = ["energy_true", "rad", "lat_idx", "lon_idx", ]
+    required_axes = ["energy_true", "rad", "lat_idx", "lon_idx"]
 
 
 class PSFMap(IRFMap):
@@ -32,7 +32,6 @@ class PSFMap(IRFMap):
     --------
     ::
 
-        import numpy as np
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.maps import Map, WcsGeom, MapAxis
@@ -40,36 +39,38 @@ class PSFMap(IRFMap):
         from gammapy.makers.utils import make_psf_map, PSFMap, make_map_exposure_true_energy
 
         # Define energy axis. Note that the name is fixed.
-        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+        energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
+
         # Define rad axis. Again note the axis name
-        rads = np.linspace(0., 0.5, 100) * u.deg
-        rad_axis = MapAxis.from_edges(rads, unit='deg', name='theta')
+        rad_axis = MapAxis.from_bounds(0, 0.5, nbin=100, name="rad", unit="deg")
 
         # Define parameters
         pointing = SkyCoord(0., 0., unit='deg')
         max_offset = 4 * u.deg
 
         # Create WcsGeom
-        geom = WcsGeom.create(binsz=0.25*u.deg, width=10*u.deg, skydir=pointing, axes=[rad_axis, energy_axis])
+        geom = WcsGeom.create(
+            binsz=0.25, width="5 deg", skydir=pointing, axes=[rad_axis, energy_axis]
+        )
 
         # Extract EnergyDependentTablePSF from CTA 1DC IRF
         filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
-        psf3d = psf.to_psf3d(rads)
         aeff2d = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
         # Create the exposure map
-        exposure_geom = geom.to_image().to_cube([energy_axis])
-        exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
+        exposure_geom = geom.squash("rad")
+        exposure = make_map_exposure_true_energy(pointing, "1 h", aeff2d, geom=exposure_geom)
 
         # create the PSFMap for the specified pointing
-        psf_map = make_psf_map(psf3d, pointing, geom, max_offset, exposure_map)
+        psf_map = make_psf_map(psf=psf, pointing=pointing, geom=geom, exposure_map=exposure)
 
-        # Get an EnergyDependentTablePSF at any position in the image
-        psf_table = psf_map.get_energy_dependent_table_psf(SkyCoord(2., 2.5, unit='deg'))
+        # Get a PSF kernel at any position in the image
+        geom=exposure_geom.upsample(factor=10).drop("rad")
 
-        # Write map to disk
-        psf_map.write('psf_map.fits')
+        psf_kernel = psf_map.get_psf_kernel(
+            SkyCoord(0, 0, unit='deg'), geom=geom
+        )
     """
     tag = "psf_map"
     required_axes = ["rad", "energy_true"]
@@ -182,38 +183,6 @@ class PSFMap(IRFMap):
         """
         coords = self._get_irf_coords(coords)
         return self._psf_irf.containment_radius(fraction, **coords)
-
-    def get_energy_dependent_table_psf(self, position=None):
-        """Get energy-dependent PSF at a given position.
-
-        By default the PSF at the center of the map is returned.
-
-        Parameters
-        ----------
-        position : `~astropy.coordinates.SkyCoord`
-            the target position. Should be a single coordinates
-
-        Returns
-        -------
-        psf_table : `~gammapy.irf.EnergyDependentTablePSF`
-            the table PSF
-        """
-        psf_map = self.to_region_nd_map(region=position)
-
-        data = psf_map.psf_map.quantity.squeeze()
-
-        if self.exposure_map:
-            exposure = psf_map.exposure_map.quantity.squeeze()
-        else:
-            exposure = None
-
-        # Beware. Need to revert rad and energies to follow the TablePSF scheme.
-        return EnergyDependentTablePSF(
-            axes=self.psf_map.geom.axes[["energy_true", "rad"]],
-            data=data.value,
-            unit=data.unit,
-            exposure=exposure,
-        )
 
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
         """Returns a PSF kernel at the given position.

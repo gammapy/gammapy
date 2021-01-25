@@ -1267,11 +1267,14 @@ class MapDataset(Dataset):
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
             else:
-                psf = self.psf.get_energy_dependent_table_psf(on_region.center)
                 geom = kwargs["exposure"].geom
                 energy_true = geom.axes["energy_true"].center
-                containment = psf.containment(
-                    energy_true=energy_true, rad=on_region.radius
+                containment = self.psf.containment(
+                    {
+                        "skycoord": on_region.center,
+                        "energy_true": energy_true,
+                        "rad": on_region.radius
+                    }
                 )
                 kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
 
