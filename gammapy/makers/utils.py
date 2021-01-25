@@ -66,6 +66,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_r
         data = np.mean(exposure.value, axis=(1,2))
     else:
         data = exposure.value
+        
     return Map.from_geom(
         geom=geom, data=data, unit=exposure.unit, meta=meta
     )

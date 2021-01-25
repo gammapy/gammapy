@@ -52,7 +52,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         exposure : `~gammapy.irf.EffectiveAreaTable`
             Exposure map.
         """
-        exposure = super().make_exposure(geom, observation)
+        exposure = super().make_exposure(geom, observation, average_over_region= self.average_over_region)
 
         if self.containment_correction:
             if not isinstance(geom.region, CircleSkyRegion):
