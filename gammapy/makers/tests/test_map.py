@@ -296,7 +296,7 @@ def test_interpolate_map_dataset():
         selection=["exposure", "counts", "background", "edisp", "psf"]
     )
     dataset = MapDataset.create(
-        geom=geom_target, energy_axis_true=energy_true, name="test"
+        geom=geom_target, energy_axis_true=energy_true, rad_axis=rad_axis, name="test"
     )
     dataset = maker.run(dataset, obs)
 

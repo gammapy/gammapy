@@ -168,14 +168,29 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
-        table_psf = self.get_energy_dependent_table_psf(position)
+        # TODO: compute an exposure weighted mean PSF here
+        kwargs = {"region": position, "func": np.nanmean}
+        psf = self.psf_map.to_region_nd_map(**kwargs)
 
         if max_radius is None:
-            max_radius = np.max(table_psf.axes["rad"].center)
+            max_radius = np.max(psf.geom.axes["rad"].center)
             min_radius_geom = np.min(geom.width) / 2.0
             max_radius = min(max_radius, min_radius_geom)
 
-        return PSFKernel.from_table_psf(table_psf, geom, max_radius, factor)
+        geom = geom.to_odd_npix(max_radius=max_radius)
+
+        geom_upsampled = geom.upsample(factor=factor)
+        rad = geom_upsampled.separation(geom.center_skydir)
+
+        energy_axis = geom.axes["energy_true"]
+        energy = energy_axis.center[:, np.newaxis, np.newaxis]
+        data = psf.interp_by_coord(
+            {"energy_true": energy, "rad": rad, "skycoord": position}, fill_value=0
+        )
+
+        kernel_map = Map.from_geom(geom=geom_upsampled, data=data)
+        kernel_map = kernel_map.downsample(factor, preserve_counts=True)
+        return PSFKernel(kernel_map, normalize=True)
 
     def containment_radius_map(self, energy, fraction=0.68):
         """Containment radius map.
