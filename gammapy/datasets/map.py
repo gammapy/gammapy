@@ -11,7 +11,7 @@ from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
-from gammapy.maps import Map, MapAxis, RegionGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
@@ -2509,9 +2509,12 @@ class MapEvaluator:
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
         # cache current position of the model component
-
         geom2d = geom.to_image()
-        if not geom2d.contains(self.model.position)[0]:
+        if (
+            self.model.position is not None
+            and isinstance(geom2d, WcsGeom)
+            and not geom2d.contains(self.model.position)[0]
+        ):
             coords = SkyCoord(
                 geom2d.get_coord()["lon"].squeeze(),
                 geom2d.get_coord()["lat"].squeeze(),
@@ -2545,10 +2548,10 @@ class MapEvaluator:
             self.psf = psf.get_psf_kernel(irf_position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
-            self._init_position = irf_position
+            self._init_position = self.model.position
             try:
                 self.exposure = exposure.cutout(
-                    position=irf_position, width=self.cutout_width
+                    position=self.model.position, width=self.cutout_width
                 )
                 self.contributes = True
             except (NoOverlapError, ValueError):
