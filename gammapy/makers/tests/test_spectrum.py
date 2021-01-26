@@ -105,8 +105,8 @@ def test_spectrum_dataset_maker_hess_dl3_average_region(spectrum_dataset_crab, o
     assert_allclose(datasets[0].exposure.meta["livetime"].value, 1581.736758)
     assert_allclose(datasets[1].exposure.meta["livetime"].value, 1572.686724)
 
-    assert_allclose(datasets[0].npred_background().data.sum(), 7.747881, rtol=1e-5)
-    assert_allclose(datasets[1].npred_background().data.sum(), 5.731624, rtol=1e-5)
+    assert_allclose(datasets[0].npred_background().data.sum(), 7.778688, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.7579151, rtol=1e-5)
 
 
 @requires_data()
