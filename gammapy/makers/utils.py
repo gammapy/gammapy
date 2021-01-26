@@ -48,11 +48,13 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_r
     if average_over_region:
         wcs_geom = geom.to_wcs_geom().upsample(2)
         mask = geom.contains(wcs_geom.get_coord())
-        offset = mask*wcs_geom.separation(pointing)
     else:
-        offset = geom.separation(pointing)
+        wcs_geom = geom
+        mask = 1
+        
+    offset = mask*wcs_geom.separation(pointing)
 
-    energy_true = geom.axes["energy_true"].center
+    energy_true = wcs_geom.axes["energy_true"].center
 
 
     exposure = aeff.evaluate(
