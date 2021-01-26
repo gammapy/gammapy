@@ -9,7 +9,7 @@ def config():
     return {
         "release": "0.18",
         "notebook": "astro_dark_matter",
-        "envfilename": "gammapy-environment.yml",
+        "envfilename": "environment_0.18.yml",
     }
 
 

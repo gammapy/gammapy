@@ -16,8 +16,8 @@ Gammapy and it's dependencies by executing these commands in a terminal:
 
 .. code-block:: bash
 
-    curl -O https://docs.gammapy.org/0.18.2/_static/gammapy-environment.yml
-    conda env create -f gammapy-environment.yml
+    curl -O https://docs.gammapy.org/0.19/_download/environment_0.19.yml
+    conda env create -f environment_0.19.yml
 
 .. note::
 
@@ -25,11 +25,11 @@ Gammapy and it's dependencies by executing these commands in a terminal:
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
-This creates a conda environment called ``gammapy-0.18.2`` which you can activate via:
+This creates a conda environment called ``gammapy-0.19`` which you can activate via:
 
 .. code-block:: bash
 
-    conda activate gammapy-0.18.2
+    conda activate gammapy-0.19
 
 Note that you have to execute that activation command (but not the environment
 creation command) every time you open a new terminal window, because the default

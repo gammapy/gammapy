@@ -1,5 +1,5 @@
 # Conda environment for Gammapy version dev
-# Install:    conda env create -f gammapy-dev-environment.yml
+# Install:    conda env create -f environment_dev.yml
 # Activate:   conda activate gammapy-dev
 # Deactivate: conda deactivate
 

@@ -223,14 +223,14 @@ class environment:
 @click.command(name="tar")
 @click.option(
     "--out",
-    default=".",
-    help="Path where the tar file will be create.",
+    default="notebooks.tar",
+    help="Path and filename for the tar file that will be created.",
     show_default=True,
 )
 def cli_jupyter_tar(out):
     """Create a tar file with the notebooks in docs."""
 
-    tar_name = Path(out) / f"notebooks.tar"
+    tar_name = Path(out)
     with tarfile.open(tar_name, "w:") as tar:
         for name in get_notebooks_paths():
             tar.add(name, arcname=Path(name).name)

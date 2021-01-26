@@ -67,7 +67,7 @@ def show_info_notebooks(outfolder, release):
         "*** Enter the following commands below to get started with this version of Gammapy"
     )
     print(f"cd {outfolder}")
-    print(f"conda env create -f gammapy-environment.yml")
+    print(f"conda env create -f environment_{release}.yml")
     print(f"conda activate gammapy-{release}")
     print("jupyter lab")
     print("")
@@ -92,11 +92,11 @@ def cli_download_notebooks(out, release):
     """Download notebooks"""
     release = get_release_number() if not release else release
     localfolder = Path(out) / release
-    url_file_env = f"{RELEASES_BASE_URL}/{release}/_static/gammapy-environment.yml"
-    yaml_destination_file = localfolder / f"gammapy-environment.yml"
+    url_file_env = f"{RELEASES_BASE_URL}/{release}/_downloads/environment_{release}.yml"
+    yaml_destination_file = localfolder / f"environment_{release}.yml"
     progress_download(url_file_env, yaml_destination_file)
-    url_tar_notebooks = f"{RELEASES_BASE_URL}/{release}/_static/notebooks.tar"
-    tar_destination_file = localfolder / f"notebooks-{release}.tar"
+    url_tar_notebooks = f"{RELEASES_BASE_URL}/{release}/_downloads/notebooks_{release}.tar"
+    tar_destination_file = localfolder / f"notebooks_{release}.tar"
     progress_download(url_tar_notebooks, tar_destination_file)
     extract_bundle(tar_destination_file, localfolder)
     show_info_notebooks(localfolder, release)
