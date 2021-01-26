@@ -12,7 +12,7 @@ class PSFKernel:
 
     This is a container class to store a PSF kernel
     that can be used to convolve `~gammapy.maps.WcsNDMap` objects.
-    It is usually computed from an `~gammapy.irf.EnergyDependentTablePSF`.
+    It is usually computed from an `~gammapy.irf.PSFMap`.
 
     Parameters
     ----------

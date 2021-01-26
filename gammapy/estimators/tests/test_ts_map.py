@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.estimators import TSMapEstimator
-from gammapy.irf import EDispKernelMap, EnergyDependentTablePSF, PSFMap
+from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,

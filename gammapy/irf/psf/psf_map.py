@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapCoord, WcsGeom, MapAxes, MapAxis
+from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.gauss import Gauss2DPDF
 from .kernel import PSFKernel
-from .table import EnergyDependentTablePSF
 from .core import PSF
 from ..core import IRFMap
 
