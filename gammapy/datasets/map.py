@@ -403,7 +403,9 @@ class MapDataset(Dataset):
                 return evaluator.compute_npred()
 
             if evaluator.needs_update:
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                evaluator.update(
+                    self.exposure, self.psf, self.edisp, self._geom, self.mask_safe_psf
+                )
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
@@ -531,7 +533,7 @@ class MapDataset(Dataset):
     @property
     def mask_safe_psf(self):
         """Mask safe for psf maps"""
-        if self.mask_safe is None:
+        if self.mask_safe is None or self.psf is None:
             return None
 
         geom = self.psf.exposure_map.geom.squash("energy_true")
@@ -541,7 +543,7 @@ class MapDataset(Dataset):
     @property
     def mask_safe_edisp(self):
         """Mask safe for edisp maps"""
-        if self.mask_safe is None:
+        if self.mask_safe is None or self.edisp is None:
             return None
 
         if self.mask_safe.geom.is_region:
@@ -2423,6 +2425,7 @@ class MapEvaluator:
         self.gti = gti
         self.contributes = True
         self.use_cache = use_cache
+        self.irf_position = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -2492,7 +2495,7 @@ class MapEvaluator:
 
         return psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
 
-    def update(self, exposure, psf, edisp, geom):
+    def update(self, exposure, psf, edisp, geom, mask_safe_psf):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2505,35 +2508,41 @@ class MapEvaluator:
             Edisp map.
         geom : `WcsGeom`
             Counts geom
+        mask_safe_psf : `~gammapy.maps.Map`
+            Mask safe map of boolean type.
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
         # cache current position of the model component
-        geom2d = geom.to_image()
+
+        if mask_safe_psf is None:
+            mask = exposure.copy()
+            mask.data = (exposure.data != 0) & np.isfinite(exposure.data)
+        else:
+            mask = mask_safe_psf
+        mask = mask.reduce_over_axes(func=np.logical_or)
+
         if (
             self.model.position is not None
-            and isinstance(geom2d, WcsGeom)
-            and not geom2d.contains(self.model.position)[0]
+            and not mask.geom.contains(self.model.position)[0]
         ):
-            coords = SkyCoord(
-                geom2d.get_coord()["lon"].squeeze(),
-                geom2d.get_coord()["lat"].squeeze(),
-                frame=geom2d.frame,
-            )
+            coords = mask.geom.get_coord().skycoord
             separation = coords.separation(self.model.position)
-            separation[exposure.sum_over_axes().data.squeeze() == 0] = np.inf
-            ilon, ilat = np.where(separation == np.min(separation))
-            irf_position = coords[ilon[0], ilat[0]]
+            separation[mask.data.squeeze()] = np.inf
+            ind = np.argmin(separation)
+            self.irf_position = coords.flatten()[ind]
             log.warning(
                 f"Center position for {self.model.name} model is outside dataset geom, using nearest IRF defined within geom"
             )
         else:
-            irf_position = self.model.position
+            self.irf_position = self.model.position
 
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
-            self.edisp = edisp.get_edisp_kernel(irf_position, energy_axis=energy_axis)
+            self.edisp = edisp.get_edisp_kernel(
+                self.irf_position, energy_axis=energy_axis
+            )
 
         # lookup psf
         if psf:
@@ -2545,7 +2554,7 @@ class MapEvaluator:
             if geom.is_region:
                 geom = geom.to_wcs_geom()
 
-            self.psf = psf.get_psf_kernel(irf_position, geom=geom)
+            self.psf = psf.get_psf_kernel(self.irf_position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
