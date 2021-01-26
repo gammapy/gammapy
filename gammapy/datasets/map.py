@@ -538,6 +538,8 @@ class MapDataset(Dataset):
 
         geom = self.psf.exposure_map.geom.squash("energy_true")
         mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
+        mask_safe_psf.data[np.isnan(mask_safe_psf)] = False
+        # TODO: fix interp_to_geom that create nan value ???
         return mask_safe_psf.to_cube(geom.axes)
 
     @property
@@ -554,6 +556,8 @@ class MapDataset(Dataset):
         if "migra" in geom.axes.names:
             geom = geom.squash("migra")
             mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
+            mask_safe_edisp.data[np.isnan(mask_safe_edisp)] = False
+            # TODO: fix interp_to_geom that create nan value ???
             return mask_safe_edisp.to_cube(geom.axes)
 
         return self.mask_safe.interp_to_geom(geom)
@@ -2514,26 +2518,20 @@ class MapEvaluator:
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
         # cache current position of the model component
-
-        if mask_safe_psf is None:
-            mask = exposure.copy()
-            mask.data = (exposure.data != 0) & np.isfinite(exposure.data)
-        else:
-            mask = mask_safe_psf
-        mask = mask.reduce_over_axes(func=np.logical_or)
-
         if (
             self.model.position is not None
-            and isinstance(mask.geom, WcsGeom)
-            and not mask.geom.contains(self.model.position)[0]
+            and mask_safe_psf is not None
+            and np.any(mask_safe_psf.data)
+            and isinstance(mask_safe_psf.geom, WcsGeom)
         ):
+            mask = mask_safe_psf.reduce_over_axes(func=np.logical_or)
             coords = mask.geom.get_coord().skycoord
             separation = coords.separation(self.model.position)
-            separation[mask.data.squeeze()] = np.inf
+            separation[~mask.data] = np.inf
             ind = np.argmin(separation)
             self.irf_position = coords.flatten()[ind]
             log.warning(
-                f"Center position for {self.model.name} model is outside dataset geom, using nearest IRF defined within geom"
+                f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
             )
         else:
             self.irf_position = self.model.position
