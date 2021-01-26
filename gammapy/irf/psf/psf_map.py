@@ -32,45 +32,35 @@ class PSFMap(IRFMap):
     --------
     ::
 
-        from astropy import units as u
         from astropy.coordinates import SkyCoord
-        from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.irf import EnergyDependentMultiGaussPSF, EffectiveAreaTable2D
-        from gammapy.makers.utils import make_psf_map, PSFMap, make_map_exposure_true_energy
+        from gammapy.maps import WcsGeom, MapAxis
+        from gammapy.data import Observation
+        from gammapy.irf import load_cta_irfs
+        from gammapy.makers import MapDatasetMaker
 
+        # Define observation
+        pointing = SkyCoord("0d", "0d")
+        irfs = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
+        obs = Observation.create(pointing=pointing, irfs=irfs, livetime="1h")
+
+        # Create WcsGeom
         # Define energy axis. Note that the name is fixed.
         energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
 
         # Define rad axis. Again note the axis name
         rad_axis = MapAxis.from_bounds(0, 0.5, nbin=100, name="rad", unit="deg")
 
-        # Define parameters
-        pointing = SkyCoord(0., 0., unit='deg')
-        max_offset = 4 * u.deg
-
-        # Create WcsGeom
         geom = WcsGeom.create(
             binsz=0.25, width="5 deg", skydir=pointing, axes=[rad_axis, energy_axis]
         )
 
-        # Extract EnergyDependentTablePSF from CTA 1DC IRF
-        filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
-        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
-        aeff2d = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+        maker = MapDatasetMaker()
 
-        # Create the exposure map
-        exposure_geom = geom.squash("rad")
-        exposure = make_map_exposure_true_energy(pointing, "1 h", aeff2d, geom=exposure_geom)
+        psf = maker.make_psf(geom=geom, observation=obs)
 
-        # create the PSFMap for the specified pointing
-        psf_map = make_psf_map(psf=psf, pointing=pointing, geom=geom, exposure_map=exposure)
-
-        # Get a PSF kernel at any position in the image
+        # Get a PSF kernel at the center of the image
         geom=exposure_geom.upsample(factor=10).drop("rad")
-
-        psf_kernel = psf_map.get_psf_kernel(
-            SkyCoord(0, 0, unit='deg'), geom=geom
-        )
+        psf_kernel = psf_map.get_psf_kernel(geom=geom)
     """
     tag = "psf_map"
     required_axes = ["rad", "energy_true"]
@@ -137,7 +127,7 @@ class PSFMap(IRFMap):
             exposure_map=exposure_map
         )
 
-    # TODO: this is a workaround, probably add Map.integral() or similar
+    # TODO: this is a workaround for now, probably add Map.integral() or similar
     @property
     def _psf_irf(self):
         geom = self.psf_map.geom
@@ -150,8 +140,8 @@ class PSFMap(IRFMap):
             unit=self.psf_map.unit
         )
 
-    def _get_irf_coords(self, coords):
-        coords = MapCoord.create(coords)
+    def _get_irf_coords(self, **kwargs):
+        coords = MapCoord.create(kwargs)
 
         geom = self.psf_map.geom.to_image()
         lon_pix, lat_pix = geom.coord_to_pix((coords.lon, coords.lat))
@@ -169,38 +159,55 @@ class PSFMap(IRFMap):
 
         return coords_irf
 
-    def containment(self, coords):
+    def containment(self, rad, energy_true, position=None):
         """Containment at given coords
 
         Parameters
         ----------
-        coords : `MapCoord` or dict
-            Coordinates
+        rad : `~astropy.units.Quantity`
+            Rad value
+        energy_true : `~astropy.units.Quantity`
+            Energy true value
+        position : `~astropy.coordinates.SkyCoord`
+            Sky position. By default the center of the map is chosen
 
         Returns
         -------
         containment : `~astropy.units.Quantity`
             Containment values
         """
-        coords = self._get_irf_coords(coords)
+        if position is None:
+            position = self.psf_map.geom.center_skydir
+
+        coords = self._get_irf_coords(
+            rad=rad, energy_true=energy_true, skycoord=position
+        )
         return self._psf_irf.containment(**coords)
 
-    def containment_radius(self, fraction, coords):
+    def containment_radius(self, fraction, energy_true, position=None):
         """Containment at given coords
 
         Parameters
         ----------
         fraction : float
             Containment fraction
-        coords : `MapCoord` or dict
-            Coordinates
+        energy_true : `~astropy.units.Quantity`
+            Energy true value
+        position : `~astropy.coordinates.SkyCoord`
+            Sky position. By default the center of the map is chosen
 
         Returns
         -------
         containment : `~astropy.units.Quantity`
             Containment values
         """
-        coords = self._get_irf_coords(coords)
+        if position is None:
+            position = self.psf_map.geom.center_skydir
+
+        coords = self._get_irf_coords(
+            energy_true=energy_true, skycoord=position
+        )
+
         return self._psf_irf.containment_radius(fraction, **coords)
 
     def containment_radius_map(self, energy_true, fraction=0.68):
@@ -209,7 +216,7 @@ class PSFMap(IRFMap):
         Parameters
         ----------
         energy_true : `~astropy.units.Quantity`
-            Scalar energy at which to compute the containment radius
+            Energy at which to compute the containment radius
         fraction : float
             the containment fraction (range: 0 to 1)
 
@@ -219,30 +226,33 @@ class PSFMap(IRFMap):
             Containment radius map
         """
         geom = self.psf_map.geom.to_image()
-        coords = {
-            "energy_true": energy_true,
-            "skycoord": geom.get_coord().skycoord
-        }
+
         data = self.containment_radius(
-            fraction=fraction, coords=coords
+            fraction=fraction,
+            energy_true=energy_true,
+            position=geom.get_coord().skycoord
+        )
+        energy_axis = MapAxis.from_nodes(
+            np.atleast_1d(energy_true), name="energy_true", interp="log"
         )
         return Map.from_geom(
-            geom=geom,
+            geom=geom.to_cube([energy_axis]),
             data=data.value,
             unit=data.unit
         )
 
-    def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
+    def get_psf_kernel(self,  geom, position=None, max_radius=None, factor=4):
         """Returns a PSF kernel at the given position.
 
         The PSF is returned in the form a WcsNDMap defined by the input Geom.
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
-            the target position. Should be a single coordinate
         geom : `~gammapy.maps.Geom`
-            the target geometry to use
+            Target geometry to use
+        position : `~astropy.coordinates.SkyCoord`
+            Target position. Should be a single coordinate. By default the
+            center position is used.
         max_radius : `~astropy.coordinates.Angle`
             maximum angular size of the kernel map
         factor : int
@@ -437,3 +447,93 @@ class PSFMap(IRFMap):
 
         psf = psf_map.sum_over_axes(axes_names=["energy_true"], keepdims=keepdims)
         return self.__class__(psf_map=psf, exposure_map=exposure)
+
+    def plot_containment_radius_vs_energy(
+            self, ax=None, fraction=[0.68, 0.95], **kwargs
+    ):
+        """Plot containment fraction as a function of energy.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
+        fraction : list of float or `~numpy.ndarray`
+            Containment fraction between 0 and 1.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.plot`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+             Axes to plot on.
+
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        position = self.psf_map.geom.center_skydir
+        energy_true = self.psf_map.geom.axes["energy_true"].center
+
+        for frac in fraction:
+            plot_kwargs = kwargs.copy()
+            radius = self.containment_radius(
+                energy_true=energy_true, position=position, fraction=frac
+            )
+            plot_kwargs.setdefault(
+                "label", f"Containemnt: {100 * frac:.1f}%"
+            )
+            ax.plot(energy_true, radius, **plot_kwargs)
+
+        ax.semilogx()
+        ax.legend(loc="best")
+        ax.set_xlabel(f"Energy ({energy_true.unit})")
+        ax.set_ylabel(f"Containment radius ({radius.unit})")
+        return ax
+
+    def plot_psf_vs_rad(self, ax=None, energy_true=None,  **kwargs):
+        """Plot PSF vs radius.
+
+        Parameters
+        ----------
+        energy_true : `~astropy.units.Quantity`
+            Energies where to plot the PSF.
+        **kwargs : dict
+            Keyword arguments pass to `~matplotlib.pyplot.plot`.
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+             Axes to plot on.
+
+        """
+        import matplotlib.pyplot as plt
+
+        if energy_true is None:
+            energy_true = [100, 1000, 10000] * u.GeV
+
+        ax = plt.gca() if ax is None else ax
+
+        rad = self.psf_map.geom.axes["rad"].center
+
+        for value in energy_true:
+            psf_value = self.psf_map.interp_by_coord(
+                {
+                    "skycoord": self.psf_map.geom.center_skydir,
+                    "energy_true": value,
+                    "rad": rad
+                }
+            )
+            label = f"{value:.0f}"
+            ax.plot(
+                rad.to_value("deg"),
+                psf_value,
+                label=label,
+                **kwargs,
+            )
+
+        ax.set_yscale("log")
+        ax.set_xlabel("Rad (deg)")
+        ax.set_ylabel("PSF (1 / sr)")
+        plt.legend()
+        return ax
