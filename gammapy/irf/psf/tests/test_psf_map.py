@@ -112,7 +112,8 @@ def test_psf_map_containment():
     # Check that containment radius is consistent between psf_table and psf3d
     assert_allclose(
         psf_map.containment_radius(
-            coords={"energy_true": 1 * u.TeV, "skycoord": position}, fraction=0.9),
+            energy_true=1 * u.TeV, position=position, fraction=0.9
+        ),
         psf.containment_radius(
             energy_true=1 * u.TeV, offset=0 * u.deg, fraction=0.9
         ),
@@ -120,7 +121,8 @@ def test_psf_map_containment():
     )
     assert_allclose(
         psf_map.containment_radius(
-            coords={"energy_true": 1 * u.TeV, "skycoord": position}, fraction=0.5),
+            energy_true=1 * u.TeV, position=position, fraction=0.5
+        ),
         psf.containment_radius(
             energy_true=1 * u.TeV, offset=0 * u.deg, fraction=0.5
         ),
@@ -135,7 +137,7 @@ def test_psfmap_to_psf_kernel():
     # create PSFKernel
     kern_geom = WcsGeom.create(binsz=0.02, width=5.0, axes=[energy_axis])
     psfkernel = psfmap.get_psf_kernel(
-        SkyCoord(1, 1, unit="deg"), kern_geom, max_radius=1 * u.deg
+        position=SkyCoord(1, 1, unit="deg"), geom=kern_geom, max_radius=1 * u.deg
     )
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
 
@@ -173,7 +175,7 @@ def test_containment_radius_map():
     )
 
     psfmap = make_psf_map(psf=psf, pointing=pointing, geom=geom)
-    m = psfmap.containment_radius_map(1 * u.TeV)
+    m = psfmap.containment_radius_map(energy_true=1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
     assert_allclose(val, 0.226477, rtol=1e-2)
@@ -409,8 +411,9 @@ def test_psf_map_from_gauss():
     assert psfmap.psf_map.unit == "sr-1"
     assert psfmap.psf_map.data.shape == (3, 100, 1, 2)
 
-    coords = {"energy_true": [1, 3, 10] * u.TeV, "skycoord": SkyCoord("0d", "0d")}
-    radius = psfmap.containment_radius(coords=coords, fraction=0.394)
+    radius = psfmap.containment_radius(
+        fraction=0.394, energy_true=[1, 3, 10] * u.TeV
+    )
     assert_allclose(radius, sigma, rtol=0.01)
 
     # test that it won't work with different number of sigmas and energies
@@ -432,6 +435,7 @@ def test_psf_map_from_gauss_const_sigma():
     assert psfmap.psf_map.unit == Unit("sr-1")
     assert psfmap.psf_map.data.shape == (3, 100, 1, 2)
 
-    coords = {"energy_true": [1, 3, 10] * u.TeV, "skycoord": SkyCoord("0d", "0d")}
-    radius = psfmap.containment_radius(coords=coords, fraction=0.394)
+    radius = psfmap.containment_radius(
+        energy_true=[1, 3, 10] * u.TeV, fraction=0.394
+    )
     assert_allclose(radius, 0.1 * u.deg, rtol=0.01)

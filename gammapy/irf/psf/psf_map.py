@@ -218,7 +218,7 @@ class PSFMap(IRFMap):
         energy_true : `~astropy.units.Quantity`
             Energy at which to compute the containment radius
         fraction : float
-            the containment fraction (range: 0 to 1)
+            Containment fraction (range: 0 to 1)
 
         Returns
         -------
@@ -232,11 +232,8 @@ class PSFMap(IRFMap):
             energy_true=energy_true,
             position=geom.get_coord().skycoord
         )
-        energy_axis = MapAxis.from_nodes(
-            np.atleast_1d(energy_true), name="energy_true", interp="log"
-        )
         return Map.from_geom(
-            geom=geom.to_cube([energy_axis]),
+            geom=geom,
             data=data.value,
             unit=data.unit
         )
