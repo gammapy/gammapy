@@ -466,28 +466,58 @@ class IRFMap:
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, hdu=hdu)
 
-    def to_hdulist(self):
+    def to_hdulist(self, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        format : {"gadf", "gtpsf"}
+            File format
 
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list.
         """
-        hdu = IRF_MAP_HDU_SPECIFICATION[self.tag]
-        hdulist = self._irf_map.to_hdulist(hdu=hdu)
-        exposure_hdu = hdu + "_exposure"
+        if format == "gadf":
+            hdu = IRF_MAP_HDU_SPECIFICATION[self.tag]
+            hdulist = self._irf_map.to_hdulist(hdu=hdu)
+            exposure_hdu = hdu + "_exposure"
 
-        if self.exposure_map is not None:
-            new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu)
-            hdulist.extend(new_hdulist[1:])
+            if self.exposure_map is not None:
+                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu)
+                hdulist.extend(new_hdulist[1:])
+
+        elif format == "gtpsf":
+            if not self._irf_map.geom.is_region:
+                raise ValueError("Format 'gtpsf' is only supported for region geometries")
+
+            rad_hdu = self._irf_map.geom.axes["rad"].to_table_hdu(format=format)
+            psf_table = self._irf_map.geom.axes["energy_true"].to_table(format=format)
+
+            psf_table["Exposure"] = self.exposure_map.quantity[..., 0, 0].to("cm^2 s")
+            psf_table["Psf"] = self._irf_map.quantity[..., 0, 0].to("sr^-1")
+            psf_hdu = fits.BinTableHDU(data=psf_table, name="PSF")
+            hdulist = fits.HDUList([fits.PrimaryHDU(), rad_hdu, psf_hdu])
+        else:
+            raise ValueError(f"Format {format} not supported")
 
         return hdulist
 
-    def write(self, filename, overwrite=False, **kwargs):
-        """Write IRF map to fits"""
-        hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(filename, overwrite=overwrite)
+    def write(self, filename, overwrite=False, format="gadf"):
+        """Write IRF map to fits
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            Filename to write to
+        overwrite : bool
+            Whether to overwrite
+        format : {"gadf", "gtpsf"}
+            File format
+        """
+        hdulist = self.to_hdulist(format=format)
+        hdulist.writeto(str(filename), overwrite=overwrite)
 
     def stack(self, other, weights=None):
         """Stack IRF map with another one in place.

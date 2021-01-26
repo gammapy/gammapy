@@ -6,9 +6,9 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.data import DataStore
-from gammapy.irf import PSF3D, EffectiveAreaTable2D, EnergyDependentTablePSF, PSFMap
+from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import MapAxis, MapCoord, WcsGeom
+from gammapy.maps import MapAxis, MapCoord, WcsGeom, RegionGeom, Map
 from gammapy.utils.testing import requires_data
 
 
@@ -379,6 +379,29 @@ def test_psf_map_read(position):
     )
 
     assert_allclose(value, 0.682032, rtol=1e-5)
+    assert psf.psf_map.unit == "sr-1"
+
+
+def test_psf_map_write_gtpsf(tmpdir):
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.1)")
+    psf = PSFMap.from_gauss(
+        energy_axis_true=energy_axis_true, sigma=[0.1, 0.2, 0.3] * u.deg, geom=geom
+    )
+    psf.exposure_map = Map.from_geom(geom.to_cube([energy_axis_true]), unit="cm2 s")
+
+    filename = tmpdir / "test_psf.fits"
+    psf.write(filename, format="gtpsf")
+
+    psf = PSFMap.read(filename, format="gtpsf")
+
+    value = psf.containment_radius(
+        energy_true=energy_axis_true.center, fraction=0.394
+    )
+
+    assert_allclose(value, [0.1, 0.2, 0.3] * u.deg, rtol=1e-5)
     assert psf.psf_map.unit == "sr-1"
 
 
