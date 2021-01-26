@@ -86,6 +86,25 @@ class PSFMap(IRFMap):
     def psf_map(self, value):
         self._irf_map = value
 
+    @classmethod
+    def from_geom(cls, geom):
+        """Create psf map from geom.
+
+        Parameters
+        ----------
+        geom : `Geom`
+            PSF map geometry.
+
+        Returns
+        -------
+        psf_map : `PSFMap`
+            Point spread function map.
+        """
+        geom_exposure = geom.squash(axis_name="rad")
+        exposure_psf = Map.from_geom(geom_exposure, unit="m2 s")
+        psf_map = Map.from_geom(geom, unit="sr-1")
+        return cls(psf_map, exposure_psf)
+
     def to_region_nd_map(self, region):
         """Convert to region ND PSF map
 
@@ -184,6 +203,35 @@ class PSFMap(IRFMap):
         coords = self._get_irf_coords(coords)
         return self._psf_irf.containment_radius(fraction, **coords)
 
+    def containment_radius_map(self, energy_true, fraction=0.68):
+        """Containment radius map.
+
+        Parameters
+        ----------
+        energy_true : `~astropy.units.Quantity`
+            Scalar energy at which to compute the containment radius
+        fraction : float
+            the containment fraction (range: 0 to 1)
+
+        Returns
+        -------
+        containment_radius_map : `~gammapy.maps.Map`
+            Containment radius map
+        """
+        geom = self.psf_map.geom.to_image()
+        coords = {
+            "energy_true": energy_true,
+            "skycoord": geom.get_coord().skycoord
+        }
+        data = self.containment_radius(
+            fraction=fraction, coords=coords
+        )
+        return Map.from_geom(
+            geom=geom,
+            data=data.value,
+            unit=data.unit
+        )
+
     def get_psf_kernel(self, position, geom, max_radius=None, factor=4):
         """Returns a PSF kernel at the given position.
 
@@ -230,54 +278,6 @@ class PSFMap(IRFMap):
         kernel_map = Map.from_geom(geom=geom_upsampled, data=np.clip(data, 0, np.inf))
         kernel_map = kernel_map.downsample(factor, preserve_counts=True)
         return PSFKernel(kernel_map, normalize=True)
-
-    def containment_radius_map(self, energy_true, fraction=0.68):
-        """Containment radius map.
-
-        Parameters
-        ----------
-        energy_true : `~astropy.units.Quantity`
-            Scalar energy at which to compute the containment radius
-        fraction : float
-            the containment fraction (range: 0 to 1)
-
-        Returns
-        -------
-        containment_radius_map : `~gammapy.maps.Map`
-            Containment radius map
-        """
-        geom = self.psf_map.geom.to_image()
-        coords = {
-            "energy_true": energy_true,
-            "skycoord": geom.get_coord().skycoord
-        }
-        data = self.containment_radius(
-            fraction=fraction, coords=coords
-        )
-        return Map.from_geom(
-            geom=geom,
-            data=data.value,
-            unit=data.unit
-        )
-
-    @classmethod
-    def from_geom(cls, geom):
-        """Create psf map from geom.
-
-        Parameters
-        ----------
-        geom : `Geom`
-            PSF map geometry.
-
-        Returns
-        -------
-        psf_map : `PSFMap`
-            Point spread function map.
-        """
-        geom_exposure_psf = geom.squash(axis_name="rad")
-        exposure_psf = Map.from_geom(geom_exposure_psf, unit="m2 s")
-        psf_map = Map.from_geom(geom, unit="sr-1")
-        return cls(psf_map, exposure_psf)
 
     def sample_coord(self, map_coord, random_state=0):
         """Apply PSF corrections on the coordinates of a set of simulated events.
