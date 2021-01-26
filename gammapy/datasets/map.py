@@ -2524,6 +2524,7 @@ class MapEvaluator:
 
         if (
             self.model.position is not None
+            and isinstance(mask.geom, WcsGeom)
             and not mask.geom.contains(self.model.position)[0]
         ):
             coords = mask.geom.get_coord().skycoord
