@@ -116,23 +116,25 @@ def create_map_dataset_geoms(
 class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
+    If an `HDULocation` is passed the map is loaded lazily.
+
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         Source sky models.
-    counts : `~gammapy.maps.WcsNDMap`
+    counts : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Counts cube
-    exposure : `~gammapy.maps.WcsNDMap`
+    exposure : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Exposure cube
-    background : `~gammapy.maps.WcsNDMap`
+    background : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Background cube
-    mask_fit : `~gammapy.maps.WcsNDMap`
+    mask_fit : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask to apply to the likelihood for fitting.
-    psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
+    psf : `~gammapy.irf.PSFMap` or `~gammapy.utils.fits.HDULocation`
         PSF kernel
-    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap`
+    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
         Energy dispersion kernel
-    mask_safe : `~gammapy.maps.WcsNDMap`
+    mask_safe : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
