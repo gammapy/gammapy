@@ -110,7 +110,7 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
+def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, average_over_region=False):
     """Compute background map from background IRFs.
 
     Parameters
@@ -129,6 +129,10 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
         Reference geometry
     oversampling: int
         Oversampling factor in energy, used for the background model evaluation.
+    average_over_region: Bool
+        If geom is a RegionGeom, whether to just
+        consider the values at the region center
+        or the average over the whole region
 
     Returns
     -------
@@ -151,11 +155,17 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     coords = {
         "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
     }
+    if average_over_region:
+        wcs_geom = geom.to_wcs_geom().upsample(2)
+        mask = geom.contains(wcs_geom.to_image().get_coord())
+    else:
+        wcs_geom = geom
+        mask = 1
 
     if bkg.is_offset_dependent:
-        coords["offset"] = geom.separation(pointing)
+        coords["offset"] = wcs_geom.separation(pointing)
     else:
-        map_coord = geom.to_image().get_coord()
+        map_coord = wcs_geom.to_image().get_coord()
         sky_coord = map_coord.skycoord
 
         if isinstance(pointing, FixedPointingInfo):
@@ -177,8 +187,14 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
 
-    d_omega = geom.to_image().solid_angle()
-    data = (bkg_de * d_omega * ontime).to_value("")
+    d_omega = mask*wcs_geom.to_image().solid_angle()
+    values = (bkg_de * d_omega * ontime).to_value("")
+
+    if average_over_region:
+        data = np.sum(values, axis=(1,2))
+    else:
+        data = values
+
     bkg_map = Map.from_geom(geom, data=data)
 
     if oversampling is not None:
