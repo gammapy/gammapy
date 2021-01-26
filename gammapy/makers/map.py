@@ -6,6 +6,7 @@ from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EnergyDependentMultiGaussPSF, PSFMap
 from gammapy.maps import Map
 from .core import Maker
+
 from .utils import (
     make_edisp_kernel_map,
     make_edisp_map,
@@ -148,12 +149,18 @@ class MapDatasetMaker(Maker):
                 "Options: ALTAZ, RADEC"
             )
 
+        try:
+            average_over_region = self.average_over_region
+        except AttributeError:
+            average_over_region = False
+
         return make_map_background_irf(
             pointing=pointing,
             ontime=observation.observation_time_duration,
             bkg=observation.bkg,
             geom=geom,
             oversampling=self.background_oversampling,
+            average_over_region=average_over_region,
         )
 
     def make_edisp(self, geom, observation):
