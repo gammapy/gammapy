@@ -332,45 +332,7 @@ class PSFMap(IRFMap):
         )
 
     @classmethod
-    def from_energy_dependent_table_psf(cls, table_psf, geom=None):
-        """Create PSF map from table PSF object.
-
-        Helper function to create an allsky PSF map from
-        table PSF, which does not depend on position.
-
-        Parameters
-        ----------
-        table_psf : `EnergyDependentTablePSF`
-            Table PSF
-
-        Returns
-        -------
-        psf_map : `PSFMap`
-            Point spread function map.
-        """
-        if geom is None:
-            geom = WcsGeom.create(
-                npix=(2, 1),
-                proj="CAR",
-                binsz=180,
-                axes=table_psf.axes.reverse,
-            )
-        coords = geom.get_coord()
-
-        data = table_psf.evaluate(
-            energy_true=coords["energy_true"], rad=coords["rad"]
-        )
-        psf_map = Map.from_geom(geom, data=data.to_value("sr-1"), unit="sr-1")
-
-        geom_exposure = geom.squash(axis_name="rad")
-
-        exposure_map = Map.from_geom(geom_exposure, unit="cm2 s", data=1)
-        data = table_psf.exposure
-        exposure_map.quantity = exposure_map.data * data.reshape((-1, 1, 1, 1))
-        return cls(psf_map=psf_map, exposure_map=exposure_map)
-
-    @classmethod
-    def from_gauss(cls, energy_axis_true, rad_axis=None, sigma=0.1 * u.deg):
+    def from_gauss(cls, energy_axis_true, rad_axis=None, sigma=0.1 * u.deg, geom=None):
         """Create all -sky PSF map from Gaussian width.
 
         This is used for testing and examples.
@@ -387,6 +349,8 @@ class PSFMap(IRFMap):
             Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
+        geom : `Geom`
+            Image geometry. By default an allsky geometry is created.
 
         Returns
         -------
@@ -398,17 +362,23 @@ class PSFMap(IRFMap):
         if rad_axis is None:
             rad_axis = RAD_AXIS_DEFAULT.copy()
 
-        axes = MapAxes([energy_axis_true, rad_axis])
-        coords = axes.get_coord()
+        if geom is None:
+            geom = WcsGeom.create(
+                npix=(2, 1),
+                proj="CAR",
+                binsz=180,
+            )
+
+        geom = geom.to_cube([rad_axis, energy_axis_true])
+
+        coords = geom.get_coord()
 
         sigma = np.broadcast_to(u.Quantity(sigma), energy_axis_true.nbin, subok=True)
-        gauss = Gauss2DPDF(sigma=sigma.reshape((-1, 1)))
+        gauss = Gauss2DPDF(sigma=sigma.reshape((-1, 1, 1, 1)))
         data = gauss(coords["rad"])
 
-        table_psf = EnergyDependentTablePSF(
-            axes=axes, unit=data.unit, data=data.value
-        )
-        return cls.from_energy_dependent_table_psf(table_psf)
+        psf_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
+        return cls(psf_map=psf_map)
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing

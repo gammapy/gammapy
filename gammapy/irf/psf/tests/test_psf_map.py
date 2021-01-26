@@ -369,19 +369,17 @@ def test_make_mean_psf(data_store):
 
 @requires_data()
 @pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])
-def test_psf_map_from_table_psf(position):
+def test_psf_map_read(position):
     position = SkyCoord(position)
     filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
-    table_psf = EnergyDependentTablePSF.read(filename)
-    psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
+    psf = PSFMap.read(filename, format="gtpsf")
 
-    table_psf_new = psf_map.to_region_nd_map(position)
+    value = psf.containment(
+        position=position, energy_true=100 * u.GeV, rad=0.1 * u.deg
+    )
 
-    assert_allclose(table_psf_new.psf_map.quantity.squeeze(), table_psf.quantity)
-    assert table_psf_new.psf_map.unit == "sr-1"
-
-    assert_allclose(table_psf_new.exposure_map.quantity.squeeze(), table_psf.exposure)
-    assert table_psf_new.exposure_map.unit == "cm2 s"
+    assert_allclose(value, 0.682032, rtol=1e-5)
+    assert psf.psf_map.unit == "sr-1"
 
 
 def test_to_image():
