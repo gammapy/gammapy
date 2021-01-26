@@ -56,7 +56,6 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_r
 
     energy_true = wcs_geom.axes["energy_true"].center
 
-
     exposure = aeff.evaluate(
         offset=offset, energy_true=energy_true[:, np.newaxis, np.newaxis]
     )

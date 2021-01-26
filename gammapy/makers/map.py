@@ -6,7 +6,6 @@ from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EnergyDependentMultiGaussPSF, PSFMap
 from gammapy.maps import Map
 from .core import Maker
-
 from .utils import (
     make_edisp_kernel_map,
     make_edisp_map,

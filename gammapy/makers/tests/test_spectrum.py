@@ -88,7 +88,7 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_dl3_average_region(spectrum_dataset_crab, observations_hess_dl3):
+def test_average_over_region_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
     datasets = []
     maker = SpectrumDatasetMaker(average_over_region=True)
 
@@ -96,17 +96,26 @@ def test_spectrum_dataset_maker_hess_dl3_average_region(spectrum_dataset_crab, o
         dataset = maker.run(spectrum_dataset_crab, obs)
         datasets.append(dataset)
 
-    assert_allclose(datasets[0].counts.data.sum(), 100)
-    assert_allclose(datasets[1].counts.data.sum(), 92)
-
     assert_allclose(datasets[0].exposure.data[0][0][0], 25371485.648743)
     assert_allclose(datasets[1].exposure.data[0][0][0], 77100448.721858)
 
-    assert_allclose(datasets[0].exposure.meta["livetime"].value, 1581.736758)
-    assert_allclose(datasets[1].exposure.meta["livetime"].value, 1572.686724)
-
     assert_allclose(datasets[0].npred_background().data.sum(), 7.778688, rtol=1e-5)
     assert_allclose(datasets[1].npred_background().data.sum(), 5.7579151, rtol=1e-5)
+
+    e_reco = datasets[0].background.geom.axes['energy']
+    e_true = datasets[0].exposure.geom.axes['energy_true']
+    geom_bigger = RegionGeom.create("icrs;circle(83.63, 22.01, 0.22)", axes=[e_reco])
+
+    bigger_region_dataset = SpectrumDataset.create(geom=geom_bigger, energy_axis_true=e_true)
+    for obs in observations_hess_dl3:
+        dataset = maker.run(bigger_region_dataset, obs)
+        datasets.append(dataset)
+
+    ratio_regions = datasets[0].counts.geom.solid_angle()/datasets[3].counts.geom.solid_angle()
+    ratio_bg_1 = datasets[0].npred_background().data.sum()/ datasets[2].npred_background().data.sum()
+    ratio_bg_2 = datasets[1].npred_background().data.sum()/ datasets[3].npred_background().data.sum()
+    assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2)
+    assert_allclose(ratio_bg_2, ratio_regions, rtol=1e-2)
 
 
 @requires_data()
