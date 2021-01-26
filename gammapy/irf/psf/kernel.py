@@ -85,46 +85,6 @@ class PSFKernel:
         return cls(psf_kernel_map)
 
     @classmethod
-    def from_table_psf(cls, table_psf, geom, max_radius=None, factor=4):
-        """Create a PSF kernel from a TablePSF or an EnergyDependentTablePSF on a given Geom.
-
-        If the Geom is not an image, the same kernel will be present on all axes.
-
-        The PSF is estimated by oversampling defined by a given factor.
-
-        Parameters
-        ----------
-        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Input table PSF
-        geom : `~gammapy.maps.WcsGeom`
-            Target geometry. The PSF kernel will be centered on the central pixel.
-            The geometry axes should contain an axis with name "energy"
-        max_radius : `~astropy.coordinates.Angle`
-            Maximum radius of the PSF kernel.
-        factor : int
-            Oversample factor to compute the PSF
-
-        Returns
-        -------
-        kernel : `~gammapy.irf.PSFKernel`
-            the kernel Map with reduced geometry according to the max_radius
-        """
-        # TODO : use PSF containment radius if max_radius is None
-        if max_radius is not None:
-            geom = geom.to_odd_npix(max_radius=max_radius)
-
-        geom_upsampled = geom.upsample(factor=factor)
-        rad = geom_upsampled.separation(geom.center_skydir)
-
-        energy_axis = geom.axes["energy_true"]
-        energy = energy_axis.center[:, np.newaxis, np.newaxis]
-        data = table_psf.evaluate(energy_true=energy, rad=rad).value
-
-        kernel_map = Map.from_geom(geom=geom_upsampled, data=data)
-        kernel_map = kernel_map.downsample(factor, preserve_counts=True)
-        return cls(kernel_map, normalize=True)
-
-    @classmethod
     def from_spatial_model(cls, model, geom, max_radius=None, factor=4):
         """Create PSF kernel from spatial model
 

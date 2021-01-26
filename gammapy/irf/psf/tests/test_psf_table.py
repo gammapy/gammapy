@@ -3,8 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import Angle
-from gammapy.irf import EnergyDependentTablePSF, PSF3D
+from gammapy.irf import PSF3D
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -47,15 +46,6 @@ def test_psf_3d_evaluate(psf_3d):
 
 
 @requires_data()
-def test_to_energy_dependent_table_psf(psf_3d):
-    psf = psf_3d.to_energy_dependent_table_psf(offset=0 * u.deg)
-    assert psf.data.data.shape == (32, 66)
-
-    radius = psf.containment_radius(fraction=0.68, energy_true=1 * u.TeV)
-    assert_allclose(radius, 0.123352 * u.deg, atol=1e-2)
-
-
-@requires_data()
 def test_psf_3d_containment_radius(psf_3d):
     q = psf_3d.containment_radius(
         energy_true=1 * u.TeV, fraction=0.68, offset=0 * u.deg
@@ -90,50 +80,3 @@ def test_psf_3d_plot_containment(psf_3d):
 def test_psf_3d_peek(psf_3d):
     with mpl_plot_check():
         psf_3d.peek()
-
-
-@requires_data()
-class TestEnergyDependentTablePSF:
-    def setup(self):
-        filename = "$GAMMAPY_DATA/tests/unbundled/fermi/psf.fits"
-        self.psf = EnergyDependentTablePSF.read(filename)
-
-    def test(self):
-        # TODO: test __init__
-        radius = self.psf.containment_radius(
-            energy_true=1 * u.GeV, fraction=np.linspace(0, 0.95, 3)
-        )
-
-        assert_allclose(radius, [0., 0.194156, 1.037939] * u.deg, rtol=1e-2)
-
-        # TODO: test average_psf
-        # TODO: test containment_radius
-        # TODO: test containment_fraction
-        # TODO: test info
-        # TODO: test plotting methods
-
-    @requires_dependency("matplotlib")
-    def test_plot(self):
-        with mpl_plot_check():
-            self.psf.plot_containment_vs_energy()
-
-    @requires_dependency("matplotlib")
-    def test_plot2(self):
-        with mpl_plot_check():
-            self.psf.plot_psf_vs_rad()
-
-    @requires_dependency("matplotlib")
-    def test_plot_exposure_vs_energy(self):
-        with mpl_plot_check():
-            self.psf.plot_exposure_vs_energy()
-
-    def test_write(self, tmp_path):
-        self.psf.write(tmp_path / "test.fits")
-        new = EnergyDependentTablePSF.read(tmp_path / "test.fits")
-        assert_allclose(new.axes["rad"].center, self.psf.axes["rad"].center)
-        assert_allclose(new.axes["energy_true"].center, self.psf.axes["energy_true"].center)
-        assert_allclose(new.quantity, self.psf.quantity)
-
-    def test_repr(self):
-        info = str(self.psf)
-        assert "EnergyDependentTablePSF" in info

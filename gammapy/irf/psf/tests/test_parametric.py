@@ -114,10 +114,9 @@ def test_psf_king_containment_radius(psf_king):
 
 
 @requires_data()
-def test_psf_king_to_table(psf_king):
+def test_psf_king_evaluate_2(psf_king):
     theta1 = Angle(0, "deg")
     theta2 = Angle(1, "deg")
-    psf_king_table_off1 = psf_king.to_energy_dependent_table_psf(offset=theta1)
     rad = Angle(1, "deg")
     # energy = Quantity(1, "TeV") match with bin number 8
     # offset equal 1 degre match with the bin 200 in the psf_table
@@ -131,10 +130,6 @@ def test_psf_king_to_table(psf_king):
     # obtained from the self.evaluate_direct() method at 1 degree
     assert_allclose(0.005234 * u.Unit("deg-2"), value_off1, rtol=1e-4)
     assert_allclose(0.004015 * u.Unit("deg-2"), value_off2, rtol=1e-4)
-
-    # Test that the integral value is close to one
-    integral = psf_king_table_off1.containment(rad=1 *u.deg, energy_true=1 * u.TeV)
-    assert_allclose(integral, 1, atol=3e-2)
 
 
 @requires_data()
