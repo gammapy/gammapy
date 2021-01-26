@@ -1272,11 +1272,9 @@ class MapDataset(Dataset):
                 geom = kwargs["exposure"].geom
                 energy_true = geom.axes["energy_true"].center
                 containment = self.psf.containment(
-                    {
-                        "skycoord": on_region.center,
-                        "energy_true": energy_true,
-                        "rad": on_region.radius
-                    }
+                        position=on_region.center,
+                        energy_true=energy_true,
+                        rad=on_region.radius
                 )
                 kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
 

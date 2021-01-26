@@ -333,9 +333,9 @@ def test_interpolate_map_dataset():
     # test psfmap
     geom_psf = geom_target.drop("energy").to_cube([energy_true])
     psfkernel_preinterp = psfMap.get_psf_kernel(
-        SkyCoord("0 deg", "0 deg"), geom_psf, max_radius=2 * u.deg
+        position=SkyCoord("0 deg", "0 deg"), geom=geom_psf, max_radius=2 * u.deg
     ).data
     psfkernel_postinterp = dataset.psf.get_psf_kernel(
-        SkyCoord("0 deg", "0 deg"), geom_psf, max_radius=2 * u.deg
+        position=SkyCoord("0 deg", "0 deg"), geom=geom_psf, max_radius=2 * u.deg
     ).data
     assert_allclose(psfkernel_preinterp, psfkernel_postinterp, atol=1e-4)
