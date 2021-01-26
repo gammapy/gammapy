@@ -139,6 +139,11 @@ class RegionGeom(Geom):
             xp, yp = self.wcs.wcs.crpix
             return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
 
+    @property
+    def npix(self):
+        """Number of spatial pixels"""
+        return (1, 1)
+
     def contains(self, coords):
         """Check if a given map coordinate is contained in the region.
         Requires the `.region` attribute to be set.

@@ -2542,12 +2542,11 @@ class MapEvaluator:
             and np.any(mask_safe_psf.data)
             and isinstance(mask_safe_psf.geom, WcsGeom)
         ):
-            mask = mask_safe_psf.reduce_over_axes(func=np.logical_or)
-            coords = mask.geom.get_coord().skycoord
+            coords = mask_safe_psf.geom.get_coord().skycoord
             separation = coords.separation(self.model.position)
-            separation[~mask.data] = np.inf
-            ind = np.argmin(separation)
-            self.irf_position = coords.flatten()[ind]
+            separation[~mask_safe_psf.data] = np.inf
+            idx = np.argmin(separation)
+            self.irf_position = coords.flatten()[idx]
             log.warning(
                 f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
             )
@@ -2574,7 +2573,7 @@ class MapEvaluator:
             if geom.is_region:
                 geom = geom.to_wcs_geom()
 
-            self.psf = psf.get_psf_kernel(self.irf_position, geom=geom)
+            self.psf = psf.get_psf_kernel(position=self.irf_position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position

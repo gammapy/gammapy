@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy import units as u
 from astropy.utils import lazyproperty
 from astropy.table import Table
-from gammapy.maps import Map, MapAxes
+from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.scripts import make_path
@@ -380,6 +380,7 @@ class IRFMap:
         hdu_bands=None,
         exposure_hdu=None,
         exposure_hdu_bands=None,
+        format="gadf",
     ):
         """Create from `~astropy.io.fits.HDUList`.
 
@@ -395,34 +396,75 @@ class IRFMap:
             Name or index of the HDU with the exposure map data.
         exposure_hdu_bands : str
             Name or index of the HDU with the exposure map BANDS table.
+        format : {"gadf", "gtpsf"}
+            File format
 
         Returns
         -------
         irf_map : `IRFMap`
             IRF map.
         """
-        if hdu is None:
-            hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
+        if format == "gadf":
+            if hdu is None:
+                hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
 
-        irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
 
-        if exposure_hdu is None:
-            exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
+            if exposure_hdu is None:
+                exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
 
-        if exposure_hdu in hdulist:
-            exposure_map = Map.from_hdulist(
-                hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands
+            if exposure_hdu in hdulist:
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands
+                )
+            else:
+                exposure_map = None
+        elif format == "gtpsf":
+            rad_axis = MapAxis.from_table_hdu(hdulist["THETA"], format=format)
+
+            table = Table.read(hdulist["PSF"])
+            energy_axis_true = MapAxis.from_table(table, format=format)
+
+            geom_psf = RegionGeom.create(
+                region=None, axes=[rad_axis, energy_axis_true]
             )
+
+            psf_map = Map.from_geom(
+                geom=geom_psf, data=table["Psf"].data, unit="sr-1"
+            )
+
+            geom_exposure = geom_psf.squash("rad")
+            exposure_map = Map.from_geom(
+                geom=geom_exposure, data=table["Exposure"].data, unit="cm2 s"
+            )
+            return cls(psf_map=psf_map, exposure_map=exposure_map)
         else:
-            exposure_map = None
+            raise ValueError(f"Format {format} not supported")
 
         return cls(irf_map, exposure_map)
 
     @classmethod
-    def read(cls, filename, hdu=None):
-        """Read an IRF_map from file and create corresponding object"""
+    def read(cls, filename, format="gadf", hdu=None):
+        """Read an IRF_map from file and create corresponding object"
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            File name
+        format : {"gadf", "gtpsf"}
+            File format
+        hdu : str or int
+            HDU location
+
+        Returns
+        -------
+        irf_map : `PSFMap`, `EDispMap` or `EDispKernelMap`
+            IRF map
+
+        """
+        filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu=hdu)
+            return cls.from_hdulist(hdulist, format=format, hdu=hdu)
 
     def to_hdulist(self):
         """Convert to `~astropy.io.fits.HDUList`.
