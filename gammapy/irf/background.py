@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 class BackgroundIRF(IRF):
     """Background IRF base class"""
+
     default_interp_kwargs = dict(
         bounds_error=False, fill_value=None, values_scale="log"
     )
@@ -35,7 +36,7 @@ class BackgroundIRF(IRF):
             Background IRF class.
         """
         axes = MapAxes.from_table(table, format=format)[cls.required_axes]
-        
+
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
         if "BKG" in table.colnames:
@@ -64,12 +65,7 @@ class BackgroundIRF(IRF):
             log.debug("Transposing background table on read")
             data = data.transpose()
 
-        return cls(
-            axes=axes,
-            data=data.value,
-            meta=table.meta,
-            unit=data.unit
-        )
+        return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
 
 
 class Background3D(BackgroundIRF):
@@ -107,6 +103,7 @@ class Background3D(BackgroundIRF):
     <BLANKLINE>
 
     """
+
     tag = "bkg_3d"
     required_axes = ["energy", "fov_lon", "fov_lat"]
 
@@ -249,8 +246,8 @@ class Background2D(BackgroundIRF):
 
         for off in offset:
             bkg = self.evaluate(offset=off, energy=energy)
-            kwargs.setdefault("label", f"offset = {off:.1f}")
-            ax.plot(energy, bkg.value, **kwargs)
+            label = f"offset = {off:.2f}"
+            ax.plot(energy, bkg.value, label=label, **kwargs)
 
         ax.set_xscale("log")
         ax.set_yscale("log")
