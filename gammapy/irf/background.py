@@ -241,7 +241,6 @@ class Background2D(BackgroundIRF):
             offset_axis = self.axes["offset"]
             off_min, off_max = offset_axis.center.value[[0, -1]]
             offset = np.linspace(off_min, off_max, 4) * offset_axis.unit
-            print(offset)
 
         energy = self.axes["energy"].center
 
