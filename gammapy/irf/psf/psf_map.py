@@ -502,3 +502,6 @@ class PSFMap(IRFMap):
         ax.set_ylabel(f"PSF ({self.psf_map.unit})")
         plt.legend()
         return ax
+
+    def __str__(self):
+        return str(self.psf_map)
