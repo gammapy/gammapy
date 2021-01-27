@@ -9,7 +9,7 @@ from gammapy.data import DataStore
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import MapAxis, MapCoord, WcsGeom, RegionGeom, Map
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
 
 
 @pytest.fixture(scope="session")
@@ -460,3 +460,24 @@ def test_psf_map_from_gauss_const_sigma():
         energy_true=[1, 3, 10] * u.TeV, fraction=0.394
     )
     assert_allclose(radius, 0.1 * u.deg, rtol=0.01)
+
+
+@requires_data()
+@requires_dependency("matplotlib")
+def test_psf_map_plot_containment_radius():
+    filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
+    psf = PSFMap.read(filename, format="gtpsf")
+
+    with mpl_plot_check():
+        psf.plot_containment_radius()
+
+
+@requires_data()
+@requires_dependency("matplotlib")
+def test_psf_map_plot_psf_vs_rad():
+    filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
+    psf = PSFMap.read(filename, format="gtpsf")
+
+    with mpl_plot_check():
+        psf.plot_psf_vs_rad()
+

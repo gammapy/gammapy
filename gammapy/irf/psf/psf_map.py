@@ -274,6 +274,7 @@ class PSFMap(IRFMap):
         rad = geom_upsampled.separation(geom.center_skydir)
 
         energy_axis = geom.axes["energy_true"]
+
         energy = energy_axis.center[:, np.newaxis, np.newaxis]
         coords = {"energy_true": energy, "rad": rad, "skycoord": position}
 
@@ -419,6 +420,8 @@ class PSFMap(IRFMap):
     ):
         """Plot containment fraction as a function of energy.
 
+        The method plots the containment radius at the center of the map.
+
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
@@ -447,7 +450,7 @@ class PSFMap(IRFMap):
                 energy_true=energy_true, position=position, fraction=frac
             )
             plot_kwargs.setdefault(
-                "label", f"Containemnt: {100 * frac:.1f}%"
+                "label", f"Containment: {100 * frac:.1f}%"
             )
             ax.plot(energy_true, radius, **plot_kwargs)
 
@@ -457,11 +460,15 @@ class PSFMap(IRFMap):
         ax.set_ylabel(f"Containment radius ({radius.unit})")
         return ax
 
-    def plot_psf_vs_rad(self, ax=None, energy_true=None,  **kwargs):
+    def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV,  **kwargs):
         """Plot PSF vs radius.
+
+        The method plots the profile at the center of the map.
 
         Parameters
         ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
         energy_true : `~astropy.units.Quantity`
             Energies where to plot the PSF.
         **kwargs : dict
@@ -474,9 +481,6 @@ class PSFMap(IRFMap):
 
         """
         import matplotlib.pyplot as plt
-
-        if energy_true is None:
-            energy_true = [100, 1000, 10000] * u.GeV
 
         ax = plt.gca() if ax is None else ax
 
@@ -491,15 +495,10 @@ class PSFMap(IRFMap):
                 }
             )
             label = f"{value:.0f}"
-            ax.plot(
-                rad.to_value("deg"),
-                psf_value,
-                label=label,
-                **kwargs,
-            )
+            ax.plot(rad.value, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
-        ax.set_xlabel("Rad (deg)")
-        ax.set_ylabel("PSF (1 / sr)")
+        ax.set_xlabel(f"Rad ({rad.unit})")
+        ax.set_ylabel(f"PSF ({self.psf_map.unit})")
         plt.legend()
         return ax

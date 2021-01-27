@@ -23,31 +23,30 @@ class PSFKernel:
     --------
     ::
 
-        import numpy as np
         from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
+        from gammapy.irf import PSFMap
         from astropy import units as u
 
         # Define energy axis
-        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+        energy_axis_true = MapAxis.from_edges(np.logspace(-1., 1., 4), unit="TeV", name="energy_true")
 
         # Create WcsGeom and map
-        geom = WcsGeom.create(binsz=0.02*u.deg, width=2.0*u.deg, axes=[energy_axis])
+        geom = WcsGeom.create(binsz=0.02 * u.deg, width=2.0 * u.deg, axes=[energy_axis_true])
         some_map = Map.from_geom(geom)
-        # Fill map at two positions
-        some_map.fill_by_coord([[0.2,0.4],[-0.1,0.6],[0.5,3.6]])
 
-        # Extract EnergyDependentTablePSF from CTA 1DC IRF
-        filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
-        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
-        table_psf = psf.to_energy_dependent_table_psf(theta=0.5*u.deg)
+        # Fill map at three positions
+        some_map.fill_by_coord([[0, 0, 0], [0, 0, 0], [0.3, 1, 3]])
 
-        psf_kernel = PSFKernel.from_table_psf(table_psf,geom, max_radius=1*u.deg)
+        psf = PSFMap.from_gauss(
+            energy_axis_true=energy_axis_true, sigma=[0.3, 0.2, 0.1] * u.deg
+        )
+
+        kernel = psf.get_psf_kernel(geom=geom, max_radius=1*u.deg)
 
         # Do the convolution
-        some_map_convolved = some_map.convolve(psf_kernel)
+        some_map_convolved = some_map.convolve(kernel)
 
-        some_map_convolved.get_image_by_coord(dict(energy=0.6*u.TeV)).plot()
+        some_map_convolved.plot_grid();
     """
 
     def __init__(self, psf_kernel_map, normalize=True):
