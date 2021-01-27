@@ -222,8 +222,8 @@ class DataStore:
         available_IRF = ["aeff", "edisp", "psf", "bkg"]
         if required_IRF is "all":
             required_IRF = available_IRF
-
-        required_IRF = required_IRF
+        if required_IRF is None:
+            required_IRF = []
 
         if not set(required_IRF).issubset(available_IRF):
             difference = set(required_IRF).difference(available_IRF)
@@ -236,7 +236,7 @@ class DataStore:
         for irf in required_IRF + ["events", "gti"]:
             hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=irf)
             if hdu is None:
-                log.warning(f"Skipping run with missing IRF obs_id: {_!r}")
+                log.warning(f"Skipping run with missing IRF obs_id: {obs_id!r}")
                 return None
             kwargs[irf] = hdu
 
