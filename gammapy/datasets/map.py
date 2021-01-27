@@ -560,8 +560,6 @@ class MapDataset(Dataset):
 
         geom = self.psf.psf_map.geom.squash("energy_true").squash("rad")
         mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
-        mask_safe_psf.data[np.isnan(mask_safe_psf)] = False
-        # TODO: fix interp_to_geom that create nan value ???
         return mask_safe_psf.to_cube(geom.axes)
 
     @property
@@ -578,8 +576,6 @@ class MapDataset(Dataset):
         if "migra" in geom.axes.names:
             geom = geom.squash("migra")
             mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
-            mask_safe_edisp.data[np.isnan(mask_safe_edisp)] = False
-            # TODO: fix interp_to_geom that create nan value ???
             return mask_safe_edisp.to_cube(geom.axes)
 
         return self.mask_safe.interp_to_geom(geom)

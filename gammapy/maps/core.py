@@ -807,7 +807,9 @@ class Map(abc.ABC):
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
         if map_copy.is_mask:
+            # TODO: check this NaN handling is needed
             data = map_copy.get_by_coord(coords)
+            data = np.nan_to_num(data).astype(bool)
         else:
             data = map_copy.interp_by_coord(coords, **kwargs)
 
