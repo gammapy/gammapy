@@ -270,6 +270,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region
         If geom is a RegionGeom, whether to just
         consider the values at the region center
         or the average over the whole region
+
     Returns
     -------
     edispmap : `~gammapy.irf.EDispMap`
@@ -280,7 +281,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region
 
     # Compute separations with pointing position
     if average_over_region:
-        wcs_geom = geom.to_wcs_geom().upsample(2)
+        wcs_geom = geom.to_wcs_geom()#.upsample(2)
         mask = geom.contains(wcs_geom.get_coord())
     else:
         wcs_geom = geom
@@ -306,7 +307,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region
     return EDispMap(edispmap, exposure_map)
 
 
-def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
+def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, average_over_region=False):
     """Make a edisp kernel map for a single observation
 
     Expected axes : (reco) energy and true energy in this specific order
@@ -325,6 +326,10 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
+    average_over_region: Bool
+        If geom is a RegionGeom, whether to just
+        consider the values at the region center
+        or the average over the whole region
 
     Returns
     -------
@@ -337,7 +342,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None):
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
-    edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map)
+    edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map, average_over_region)
 
     return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 
