@@ -216,6 +216,42 @@ class PSF(IRF):
 
         return ax
 
+    def plot_psf_vs_rad(self, ax=None, offset=[0] * u.deg, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
+        """Plot PSF vs rad.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default offset = 0 deg
+        energy_true : `~astropy.units.Quantity`
+            True energy at which to plot the profile
+
+        """
+        import matplotlib.pyplot as plt
+        from gammapy.datasets.map import RAD_AXIS_DEFAULT
+
+        ax = plt.gca() if ax is None else ax
+
+        try:
+            rad_axis = self.axes["rad"]
+        except KeyError:
+            rad_axis = RAD_AXIS_DEFAULT
+
+        rad = rad_axis.center
+        for theta in offset:
+            for energy in energy_true:
+                psf_value = self.evaluate(rad=rad, energy_true=energy, offset=theta)
+                label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
+                ax.plot(rad.value, psf_value.value, label=label, **kwargs)
+
+        ax.set_yscale("log")
+        ax.set_xlabel(f"Rad ({rad.unit})")
+        ax.set_ylabel(f"PSF ({psf_value.unit})")
+        plt.legend()
+        return ax
+
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt

@@ -469,7 +469,7 @@ def test_psf_map_plot_containment_radius():
     psf = PSFMap.read(filename, format="gtpsf")
 
     with mpl_plot_check():
-        psf.plot_containment_radius()
+        psf.plot_containment_radius_vs_energy()
 
 
 @requires_data()

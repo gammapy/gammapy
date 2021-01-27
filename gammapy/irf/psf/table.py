@@ -37,16 +37,3 @@ class PSF3D(PSF):
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
 
-    def plot_psf_vs_rad(self, offset="0 deg", energy_true="1 TeV"):
-        """Plot PSF vs rad.
-
-        Parameters
-        ----------
-        energy_true : `~astropy.units.Quantity`
-            Energy. Default energy = 1 TeV
-        offset : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default offset = 0 deg
-        """
-        energy_true = np.atleast_1d(u.Quantity(energy_true))
-        table = self.to_energy_dependent_table_psf(offset=offset)
-        return table.plot_psf_vs_rad(energy=energy_true)
