@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.data import GTI
+from gammapy.data import GTI, Observation
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.datasets.map import MapEvaluator, RAD_AXIS_DEFAULT
 from gammapy.irf import (

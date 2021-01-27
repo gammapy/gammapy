@@ -558,7 +558,7 @@ class MapDataset(Dataset):
         if self.mask_safe is None or self.psf is None:
             return None
 
-        geom = self.psf.exposure_map.geom.squash("energy_true")
+        geom = self.psf.psf_map.geom.squash("energy_true").squash("rad")
         mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
         mask_safe_psf.data[np.isnan(mask_safe_psf)] = False
         # TODO: fix interp_to_geom that create nan value ???
