@@ -176,11 +176,14 @@ class MapDatasetMaker(Maker):
         """
         exposure = self.make_exposure_irf(geom.squash(axis_name="migra"), observation)
 
+        average_over_region = getattr(self, "average_over_region", False)
+
         return make_edisp_map(
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
+            average_over_region=average_over_region,
         )
 
     def make_edisp_kernel(self, geom, observation):

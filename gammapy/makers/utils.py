@@ -248,7 +248,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     return PSFMap(psfmap, exposure_map)
 
 
-def make_edisp_map(edisp, pointing, geom, exposure_map=None):
+def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region=False):
     """Make a edisp map for a single observation
 
     Expected axes : migra and true energy in this specific order
@@ -266,7 +266,10 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
-
+    average_over_region: Bool
+        If geom is a RegionGeom, whether to just
+        consider the values at the region center
+        or the average over the whole region
     Returns
     -------
     edispmap : `~gammapy.irf.EDispMap`
@@ -276,17 +279,29 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None):
     migra = geom.axes["migra"].center
 
     # Compute separations with pointing position
-    offset = geom.separation(pointing)
+    if average_over_region:
+        wcs_geom = geom.to_wcs_geom().upsample(2)
+        mask = geom.contains(wcs_geom.get_coord())
+    else:
+        wcs_geom = geom
+
+    offset = wcs_geom.separation(pointing)
 
     # Compute EDisp values
     edisp_values = edisp.evaluate(
         offset=offset,
         energy_true=energy_true[:, np.newaxis, np.newaxis, np.newaxis],
         migra=migra[:, np.newaxis, np.newaxis],
-    )
+    ).to_value("")
+
+    if average_over_region:
+        # TO DO: add weights
+        edisp_values[~mask] = np.nan
+        data = np.nanmean(edisp_values, axis=(2,3))
+    else:
+        data = edisp_values
 
     # Create Map and fill relevant entries
-    data = edisp_values.to_value("")
     edispmap = Map.from_geom(geom, data=data, unit="")
     return EDispMap(edispmap, exposure_map)
 
