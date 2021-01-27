@@ -148,10 +148,7 @@ class MapDatasetMaker(Maker):
                 "Options: ALTAZ, RADEC"
             )
 
-        try:
-            average_over_region = self.average_over_region
-        except AttributeError:
-            average_over_region = False
+        average_over_region = getattr(self, "average_over_region", False)
 
         return make_map_background_irf(
             pointing=pointing,
