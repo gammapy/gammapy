@@ -1,0 +1,38 @@
+# Conda environment for Gammapy version 0.18.2
+# Install:    conda env create -f gammapy-0.18.2-environment.yml
+# Activate:   conda activate gammapy-0.18.2
+# Deactivate: conda deactivate
+
+name: gammapy-0.18.2
+
+channels:
+  - conda-forge
+  - sherpa
+
+dependencies:
+  - gammapy=0.18.2
+  - python=3.7.0
+  - ipython=7.10
+  # Cython isn't really needed when installing binaries,
+  # but it is convenient for users that build from source
+  - cython
+  - jupyter
+  - jupyterlab=2.0.1
+  - pyyaml=5.2
+  - click=7.0
+  - numpy=1.19.4
+  - scipy=1.4.1
+  - pandas=0.25
+  - matplotlib=3.2.1
+  - astropy=4.1
+  - regions=0.4
+  - iminuit=1.3.8
+  - sherpa=4.12.0
+  - healpy=1.13
+  - naima=0.9.1
+  - pydantic=1.2
+  - emcee=2.2.1
+  - corner=2.0
+  - parfive=1.0
+  - pip
+  - requests

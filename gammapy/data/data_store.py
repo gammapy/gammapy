@@ -189,13 +189,24 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id):
+    def obs(self, obs_id, required_IRF="all"):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
         ----------
         obs_id : int
             Observation ID.
+
+        required_IRF : list of str
+            Runs will be accessed only if the
+            required IRFs are present. Otherwise, the given run will be skipped
+            Available options are:
+                * `aeff` : Effective area
+                * `bkg` : Background
+                * `edisp`: Energy dispersion
+                * `psf` : Point Spread Function
+            By default, all the IRFs are required.
+
 
         Returns
         -------
@@ -208,28 +219,30 @@ class DataStore:
         if obs_id not in self.hdu_table["OBS_ID"]:
             raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
+        available_IRF = ["aeff", "edisp", "psf", "bkg"]
+        if required_IRF is "all":
+            required_IRF = available_IRF
+
+        required_IRF = required_IRF
+
+        if not set(required_IRF).issubset(available_IRF):
+            difference = set(required_IRF).difference(available_IRF)
+            raise ValueError(f"{difference} is not a valid method.")
+
         row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
-        obs_info = table_row_to_dict(row)
+        kwargs = {"obs_id": int(obs_id)}
+        kwargs["obs_info"] = table_row_to_dict(row)
 
-        aeff_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="aeff")
-        edisp_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="edisp")
-        bkg_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="bkg")
-        psf_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="psf")
-        events_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="events")
-        gti_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="gti")
+        for irf in required_IRF + ["events", "gti"]:
+            hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=irf)
+            if hdu is None:
+                log.warning(f"Skipping run with missing IRF obs_id: {_!r}")
+                return None
+            kwargs[irf] = hdu
 
-        return Observation(
-            obs_id=int(obs_id),
-            obs_info=obs_info,
-            bkg=bkg_hdu,
-            aeff=aeff_hdu,
-            edisp=edisp_hdu,
-            events=events_hdu,
-            gti=gti_hdu,
-            psf=psf_hdu,
-        )
+        return Observation(**kwargs)
 
-    def get_observations(self, obs_id=None, skip_missing=False):
+    def get_observations(self, obs_id=None, skip_missing=False, required_IRF="all"):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -238,6 +251,15 @@ class DataStore:
             Observation IDs (default of ``None`` means "all")
         skip_missing : bool, optional
             Skip missing observations, default: False
+        required_IRF : list of str
+            Runs will be added to the list of observations only if the
+            required IRFs are present. Otherwise, the given run will be skipped
+            Available options are:
+                * `aeff` : Effective area
+                * `bkg` : Background
+                * `edisp`: Energy dispersion
+                * `psf` : Point Spread Function
+            By default, all the IRFs are required.
 
         Returns
         -------
@@ -250,7 +272,7 @@ class DataStore:
         obs_list = []
         for _ in obs_id:
             try:
-                obs = self.obs(_)
+                obs = self.obs(_, required_IRF)
             except ValueError as err:
                 if skip_missing:
                     log.warning(f"Skipping missing obs_id: {_!r}")
@@ -258,6 +280,8 @@ class DataStore:
                 else:
                     raise err
             else:
+                if obs is None:
+                    continue
                 obs_list.append(obs)
         return Observations(obs_list)
 

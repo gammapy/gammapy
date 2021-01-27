@@ -88,6 +88,12 @@ def test_datastore_get_observations(data_store):
     observations = data_store.get_observations([11111, 23523], skip_missing=True)
     assert observations[0].obs_id == 23523
 
+    # Test that only desired IRFs are loaded
+    observations = data_store.get_observations([23523], required_IRF=["aeff"])
+    assert observations[0].bkg == None
+    with pytest.raises(ValueError):
+        observations = data_store.get_observations([23523], required_IRF=["xyz"])
+
 
 @requires_data()
 def test_datastore_copy_obs(tmp_path, data_store):
