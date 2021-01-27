@@ -204,7 +204,13 @@ class TSMapEstimator(Estimator):
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model, evaluation_mode="global")
-        evaluator.update(exposure, dataset.psf, dataset.edisp, dataset.counts.geom)
+        evaluator.update(
+            exposure,
+            dataset.psf,
+            dataset.edisp,
+            dataset.counts.geom,
+            dataset.mask_safe_psf,
+        )
 
         kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()

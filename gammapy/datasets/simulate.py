@@ -69,7 +69,11 @@ class MapDatasetEventSampler:
         for idx, evaluator in enumerate(dataset.evaluators.values()):
             if evaluator.needs_update:
                 evaluator.update(
-                    dataset.exposure, dataset.psf, dataset.edisp, dataset._geom
+                    dataset.exposure,
+                    dataset.psf,
+                    dataset.edisp,
+                    dataset._geom,
+                    dataset.mask_safe_psf,
                 )
 
             flux = evaluator.compute_flux()

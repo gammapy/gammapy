@@ -5,12 +5,13 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
-from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel,  PSFMap
-from gammapy.maps import Map, MapAxis, RegionGeom
+from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
@@ -402,7 +403,9 @@ class MapDataset(Dataset):
                 return evaluator.compute_npred()
 
             if evaluator.needs_update:
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                evaluator.update(
+                    self.exposure, self.psf, self.edisp, self._geom, self.mask_safe_psf
+                )
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
@@ -530,17 +533,19 @@ class MapDataset(Dataset):
     @property
     def mask_safe_psf(self):
         """Mask safe for psf maps"""
-        if self.mask_safe is None:
+        if self.mask_safe is None or self.psf is None:
             return None
 
         geom = self.psf.exposure_map.geom.squash("energy_true")
         mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
+        mask_safe_psf.data[np.isnan(mask_safe_psf)] = False
+        # TODO: fix interp_to_geom that create nan value ???
         return mask_safe_psf.to_cube(geom.axes)
 
     @property
     def mask_safe_edisp(self):
         """Mask safe for edisp maps"""
-        if self.mask_safe is None:
+        if self.mask_safe is None or self.edisp is None:
             return None
 
         if self.mask_safe.geom.is_region:
@@ -551,6 +556,8 @@ class MapDataset(Dataset):
         if "migra" in geom.axes.names:
             geom = geom.squash("migra")
             mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
+            mask_safe_edisp.data[np.isnan(mask_safe_edisp)] = False
+            # TODO: fix interp_to_geom that create nan value ???
             return mask_safe_edisp.to_cube(geom.axes)
 
         return self.mask_safe.interp_to_geom(geom)
@@ -1418,9 +1425,7 @@ class MapDataset(Dataset):
             kwargs["exposure"] = self.exposure.pad(pad_width=pad_width, mode=mode)
 
         if self.background is not None:
-            kwargs["background"] = self.background.pad(
-                pad_width=pad_width, mode=mode
-            )
+            kwargs["background"] = self.background.pad(pad_width=pad_width, mode=mode)
 
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.copy()
@@ -2424,6 +2429,7 @@ class MapEvaluator:
         self.gti = gti
         self.contributes = True
         self.use_cache = use_cache
+        self.irf_position = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -2493,7 +2499,7 @@ class MapEvaluator:
 
         return psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
 
-    def update(self, exposure, psf, edisp, geom):
+    def update(self, exposure, psf, edisp, geom, mask_safe_psf):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2506,16 +2512,35 @@ class MapEvaluator:
             Edisp map.
         geom : `WcsGeom`
             Counts geom
+        mask_safe_psf : `~gammapy.maps.Map`
+            Mask safe map of boolean type.
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
         # cache current position of the model component
+        if (
+            self.model.position is not None
+            and mask_safe_psf is not None
+            and np.any(mask_safe_psf.data)
+            and isinstance(mask_safe_psf.geom, WcsGeom)
+        ):
+            mask = mask_safe_psf.reduce_over_axes(func=np.logical_or)
+            coords = mask.geom.get_coord().skycoord
+            separation = coords.separation(self.model.position)
+            separation[~mask.data] = np.inf
+            ind = np.argmin(separation)
+            self.irf_position = coords.flatten()[ind]
+            log.warning(
+                f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
+            )
+        else:
+            self.irf_position = self.model.position
 
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
-                self.model.position, energy_axis=energy_axis
+                self.irf_position, energy_axis=energy_axis
             )
 
         # lookup psf
@@ -2528,7 +2553,7 @@ class MapEvaluator:
             if geom.is_region:
                 geom = geom.to_wcs_geom()
 
-            self.psf = psf.get_psf_kernel(self.model.position, geom=geom)
+            self.psf = psf.get_psf_kernel(self.irf_position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
