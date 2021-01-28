@@ -69,9 +69,9 @@ def reflected_regions_bkg_maker():
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
+def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
     datasets = []
-    maker = SpectrumDatasetMaker()
+    maker = SpectrumDatasetMaker(use_region_center=True)
 
     for obs in observations_hess_dl3:
         dataset = maker.run(spectrum_dataset_crab, obs)
@@ -88,9 +88,9 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
 
 
 @requires_data()
-def test_average_over_region_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
+def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
     datasets = []
-    maker = SpectrumDatasetMaker(average_over_region=True)
+    maker = SpectrumDatasetMaker(use_region_center=False)
 
     datasets = []
     for obs in observations_hess_dl3:
@@ -132,7 +132,7 @@ def test_average_over_region_spectrum_dataset_maker_hess_dl3(spectrum_dataset_cr
 
 @requires_data()
 def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_dc1):
-    maker = SpectrumDatasetMaker()
+    maker = SpectrumDatasetMaker(use_region_center=True)
 
     datasets = []
 

@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 
-def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_region=False):
+def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_center=True):
     """Compute exposure map.
 
     This map has a true energy axis, the exposure is not combined
@@ -35,17 +35,17 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_r
         Effective area
     geom : `~gammapy.maps.WcsGeom`
         Map geometry (must have an energy axis)
-    average_over_region: Bool
+    use_region_center: bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the average over the whole region
+        or the insted the average over the whole region
 
     Returns
     -------
     map : `~gammapy.maps.WcsNDMap`
         Exposure map
     """
-    if average_over_region:
+    if not use_region_center:
         wcs_geom = geom.to_wcs_geom().upsample(2)
         mask = geom.contains(wcs_geom.get_coord())
     else:
@@ -63,7 +63,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, average_over_r
     exposure = (exposure * livetime).to("m2 s")
     meta = {"livetime": livetime}
 
-    if average_over_region:
+    if not use_region_center:
         # TO DO: add weights
         exposure[~mask] = np.nan
         data = np.nanmean(exposure.value, axis=(1,2))
@@ -111,7 +111,7 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, average_over_region=False):
+def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_region_center=True):
     """Compute background map from background IRFs.
 
     Parameters
@@ -130,10 +130,10 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, aver
         Reference geometry
     oversampling: int
         Oversampling factor in energy, used for the background model evaluation.
-    average_over_region: Bool
+    use_region_center: bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the average over the whole region
+        or the insted the sum over the whole region
 
     Returns
     -------
@@ -156,7 +156,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, aver
     coords = {
         "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
     }
-    if average_over_region:
+    if not use_region_center:
         wcs_geom = geom.to_wcs_geom().upsample(2)
         mask = geom.contains(wcs_geom.to_image().get_coord())
     else:
@@ -191,7 +191,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, aver
     d_omega = mask*wcs_geom.to_image().solid_angle()
     values = (bkg_de * d_omega * ontime).to_value("")
 
-    if average_over_region:
+    if not use_region_center:
         data = np.sum(values, axis=(1,2))
     else:
         data = values
@@ -204,7 +204,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, aver
     return bkg_map
 
 
-def make_psf_map(psf, pointing, geom, exposure_map=None):
+def make_psf_map(psf, pointing, geom, exposure_map=None, use_region_center=True):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
@@ -222,6 +222,10 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
+    use_region_center: bool
+        If geom is a RegionGeom, whether to just
+        consider the values at the region center
+        or the insted the average over the whole region
 
     Returns
     -------
@@ -248,7 +252,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     return PSFMap(psfmap, exposure_map)
 
 
-def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region=False):
+def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):
     """Make a edisp map for a single observation
 
     Expected axes : migra and true energy in this specific order
@@ -266,10 +270,10 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
-    average_over_region: Bool
+    use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the average over the whole region
+        or the insted the average over the whole region
 
     Returns
     -------
@@ -280,7 +284,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region
     migra = geom.axes["migra"].center
 
     # Compute separations with pointing position
-    if average_over_region:
+    if not use_region_center:
         wcs_geom = geom.to_wcs_geom()#.upsample(2)
         mask = geom.contains(wcs_geom.get_coord())
     else:
@@ -295,7 +299,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region
         migra=migra[:, np.newaxis, np.newaxis],
     ).to_value("")
 
-    if average_over_region:
+    if not use_region_center:
         # TO DO: add weights
         edisp_values[~mask] = np.nan
         data = np.nanmean(edisp_values, axis=(2,3))
@@ -307,7 +311,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, average_over_region
     return EDispMap(edispmap, exposure_map)
 
 
-def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, average_over_region=False):
+def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):
     """Make a edisp kernel map for a single observation
 
     Expected axes : (reco) energy and true energy in this specific order
@@ -326,10 +330,10 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, average_over
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
-    average_over_region: Bool
+    use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the average over the whole region
+        or the insted the average over the whole region
 
     Returns
     -------
@@ -342,7 +346,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, average_over
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
-    edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map, average_over_region)
+    edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map, use_region_center)
 
     return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 

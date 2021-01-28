@@ -25,14 +25,16 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         Apply containment correction for point sources and circular on regions.
     background_oversampling : int
         Background evaluation oversampling factor in energy.
+    use_region_center : bool
+        Approximate the IRFs by the value at the center of the region
     """
 
     tag = "SpectrumDatasetMaker"
     available_selection = ["counts", "background", "exposure", "edisp"]
 
-    def __init__(self, selection=None, containment_correction=False, background_oversampling=None, average_over_region=False):
+    def __init__(self, selection=None, containment_correction=False, background_oversampling=None, use_region_center=True):
         self.containment_correction = containment_correction
-        self.average_over_region = average_over_region
+        self.use_region_center = use_region_center
         super().__init__(
             selection=selection, background_oversampling=background_oversampling
         )
@@ -52,7 +54,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         exposure : `~gammapy.irf.EffectiveAreaTable`
             Exposure map.
         """
-        exposure = super().make_exposure(geom, observation, average_over_region= self.average_over_region)
+        exposure = super().make_exposure(geom, observation, use_region_center=self.use_region_center)
 
         if self.containment_correction:
             if not isinstance(geom.region, CircleSkyRegion):

@@ -70,7 +70,7 @@ class MapDatasetMaker(Maker):
         return counts
 
     @staticmethod
-    def make_exposure(geom, observation, average_over_region=False):
+    def make_exposure(geom, observation, use_region_center=True):
         """Make exposure map.
 
         Parameters
@@ -92,11 +92,11 @@ class MapDatasetMaker(Maker):
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
-            average_over_region=average_over_region,
+            use_region_center=use_region_center,
         )
 
     @staticmethod
-    def make_exposure_irf(geom, observation, average_over_region=False):
+    def make_exposure_irf(geom, observation, use_region_center=True):
         """Make exposure map with irf geometry.
 
         Parameters
@@ -116,7 +116,7 @@ class MapDatasetMaker(Maker):
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
-            average_over_region=average_over_region,
+            use_region_center=use_region_center,
         )
 
     def make_background(self, geom, observation):
@@ -148,7 +148,7 @@ class MapDatasetMaker(Maker):
                 "Options: ALTAZ, RADEC"
             )
 
-        average_over_region = getattr(self, "average_over_region", False)
+        use_region_center = getattr(self, "use_region_center", True)
 
         return make_map_background_irf(
             pointing=pointing,
@@ -156,7 +156,7 @@ class MapDatasetMaker(Maker):
             bkg=observation.bkg,
             geom=geom,
             oversampling=self.background_oversampling,
-            average_over_region=average_over_region,
+            use_region_center=use_region_center,
         )
 
     def make_edisp(self, geom, observation):
@@ -176,14 +176,14 @@ class MapDatasetMaker(Maker):
         """
         exposure = self.make_exposure_irf(geom.squash(axis_name="migra"), observation)
 
-        average_over_region = getattr(self, "average_over_region", False)
+        use_region_center = getattr(self, "use_region_center", True)
 
         return make_edisp_map(
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
-            average_over_region=average_over_region,
+            use_region_center=use_region_center,
         )
 
     def make_edisp_kernel(self, geom, observation):
@@ -208,14 +208,14 @@ class MapDatasetMaker(Maker):
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
 
-        average_over_region = getattr(self, "average_over_region", False)
+        use_region_center = getattr(self, "use_region_center", True)
 
         return make_edisp_kernel_map(
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
-            average_over_region=average_over_region,
+            use_region_center=use_region_center,
 
         )
 
@@ -244,11 +244,14 @@ class MapDatasetMaker(Maker):
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 
+        use_region_center = getattr(self, "use_region_center", True)
+
         return make_psf_map(
             psf=psf,
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
+            use_region_center=use_region_center,
         )
 
     @staticmethod
