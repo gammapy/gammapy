@@ -1,4 +1,5 @@
 import copy
+from functools import lru_cache
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -61,6 +62,9 @@ class RegionGeom(Geom):
 
         self._wcs = wcs
         self.ndim = len(self.data_shape)
+
+        # define cached methods
+        self.get_wcs_weights = lru_cache()(self.get_wcs_weights)
 
     @property
     def frame(self):
@@ -290,6 +294,25 @@ class RegionGeom(Geom):
         common_coord = self.contains(wcs_geom.get_coord())
         region_coord = wcs_geom.get_coord().apply_mask(common_coord)
         return region_coord
+
+    def get_wcs_weights(self):
+        """Get an array of weights that represent the
+            fraction of each pixel from the minimal 
+            equivalent geometry contained in the region.
+
+        Returns
+        -------
+        weights : `~Map`
+        """
+        factor = 10
+        wcs_geom = self.to_wcs_geom()
+        wcs_geom_upsampled = wcs_geom.upsample(factor=factor)
+        data = self.contains(wcs_geom_upsampled.get_coord()).astype(float)
+
+        weights = Map.from_geom(wcs_geom_upsampled, data = data)
+        weights = weights.downsample(factor=factor)
+        weights.data /= weights.data.max()
+        return weights
 
     def to_binsz(self, binsz):
         """Returns self"""
