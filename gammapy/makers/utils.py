@@ -50,7 +50,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
         weights = geom.get_wcs_weights().data
     else:
         wcs_geom = geom
-        
+
     offset = wcs_geom.separation(pointing)
 
     energy_true = wcs_geom.axes["energy_true"].center

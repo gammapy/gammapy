@@ -80,7 +80,7 @@ class RegionGeom(Geom):
     @property
     def width(self):
         """Width of bounding box of the region.
-        
+
         Returns
         -------
         width : `~astropy.units.Quantity`
@@ -184,7 +184,7 @@ class RegionGeom(Geom):
     @property
     def _shape(self):
         """Number of bins in each dimension.
-        The spatial dimension is always (1, 1), as a 
+        The spatial dimension is always (1, 1), as a
         `RegionGeom` is not pixelized further
         """
         return tuple((1, 1) + self.axes.shape)
@@ -239,7 +239,7 @@ class RegionGeom(Geom):
 
     def bin_volume(self):
         """If the RegionGeom has a non-spatial axis, it
-        returns the volume of the region. If not, it 
+        returns the volume of the region. If not, it
         just retuns the solid angle size.
 
         Returns
@@ -264,7 +264,7 @@ class RegionGeom(Geom):
          ----------
         width_min : `~astropy.quantity.Quantity`
         Minimal width for the resulting geometry.
-        Can be a single number or two, for 
+        Can be a single number or two, for
         different minimum widths in each spatial dimension.
 
         Returns
@@ -297,7 +297,7 @@ class RegionGeom(Geom):
 
     def get_wcs_weights(self):
         """Get an array of weights that represent the
-            fraction of each pixel from the minimal 
+            fraction of each pixel from the minimal
             equivalent geometry contained in the region.
 
         Returns
@@ -306,11 +306,11 @@ class RegionGeom(Geom):
         """
         factor = 10
         wcs_geom = self.to_wcs_geom()
-        wcs_geom_upsampled = wcs_geom.to_image().upsample(factor=factor)
-        data = self.contains(wcs_geom_upsampled.get_coord()).astype(float)
 
         # if the region has non-spatial axis, this way is faster
         # create the spatial weights only
+        wcs_geom_upsampled = wcs_geom.to_image().upsample(factor=factor)
+        data = self.contains(wcs_geom_upsampled.get_coord()).astype(float)
         weights_no_axis = Map.from_geom(wcs_geom_upsampled, data=data)
         weights_no_axis = weights_no_axis.downsample(factor=factor)
         weights_no_axis.data /= weights_no_axis.data.max()
@@ -319,7 +319,7 @@ class RegionGeom(Geom):
         data = weights_no_axis.data
         for axis in self.axes:
             data = np.stack(axis.nbin*[data])
-            
+
         weights = Map.from_geom(wcs_geom, data=data)
 
         return weights
