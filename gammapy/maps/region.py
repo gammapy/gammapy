@@ -306,12 +306,22 @@ class RegionGeom(Geom):
         """
         factor = 10
         wcs_geom = self.to_wcs_geom()
-        wcs_geom_upsampled = wcs_geom.upsample(factor=factor)
+        wcs_geom_upsampled = wcs_geom.to_image().upsample(factor=factor)
         data = self.contains(wcs_geom_upsampled.get_coord()).astype(float)
 
-        weights = Map.from_geom(wcs_geom_upsampled, data = data)
-        weights = weights.downsample(factor=factor)
-        weights.data /= weights.data.max()
+        # if the region has non-spatial axis, this way is faster
+        # create the spatial weights only
+        weights_no_axis = Map.from_geom(wcs_geom_upsampled, data=data)
+        weights_no_axis = weights_no_axis.downsample(factor=factor)
+        weights_no_axis.data /= weights_no_axis.data.max()
+
+        # And then make the map with the right dimensions
+        data = weights_no_axis.data
+        for axis in self.axes:
+            data = np.stack(axis.nbin*[data])
+            
+        weights = Map.from_geom(wcs_geom, data=data)
+
         return weights
 
     def to_binsz(self, binsz):
