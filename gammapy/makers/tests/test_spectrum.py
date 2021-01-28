@@ -126,8 +126,6 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
     assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
 
-    
-
 @requires_data()
 def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_dc1):
     maker = SpectrumDatasetMaker(use_region_center=True)

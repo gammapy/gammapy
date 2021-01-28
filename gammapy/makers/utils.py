@@ -281,8 +281,8 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
     # Compute separations with pointing position
     if not use_region_center:
-        wcs_geom = geom.to_wcs_geom()#.upsample(2)
-        mask = geom.contains(wcs_geom.get_coord())
+        wcs_geom = geom.to_wcs_geom()
+        weights = geom.get_wcs_weights().data
     else:
         wcs_geom = geom
 
@@ -296,9 +296,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     ).to_value("")
 
     if not use_region_center:
-        # TO DO: add weights
-        edisp_values[~mask] = np.nan
-        data = np.nanmean(edisp_values, axis=(2,3))
+        data = np.average(edisp_values, axis=(2,3), weights=weights)
     else:
         data = edisp_values
 
