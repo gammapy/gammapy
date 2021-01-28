@@ -12,6 +12,7 @@ Overview
 --------
 This technique is used in classical Cherenkov astronomy for the 2D image
 computation.
+Details on the ring background method can be found in [Berge2007]_
 
 To include the classical ring background estimation into a data reduction
 chain, Gammapy provides the `RingBackgroundMaker` and `AdaptiveRingBackgroundMaker`
