@@ -291,6 +291,13 @@ def test_get_wcs_coord(region):
     assert geom.contains(region_coords.skycoord[0])
     assert not geom.contains(coord)
 
+def test_get_wcs_weights(region):
+    geom = RegionGeom(region)
+    weights = geom.get_wcs_weights()
+    wcs_geom = geom.to_wcs_geom()
+    area = (weights.data*wcs_geom.solid_angle()).sum()
+    assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
+
 @requires_dependency("matplotlib")
 def test_region_nd_map_plot(region):
     import matplotlib.pyplot as plt
