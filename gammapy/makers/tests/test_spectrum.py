@@ -98,12 +98,12 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
         datasets.append(dataset)
 
     # Exposure
-    assert_allclose(datasets[0].exposure.data.sum(), 7199758923.66730)
-    assert_allclose(datasets[1].exposure.data.sum(), 6532241208.61468)
+    assert_allclose(datasets[0].exposure.data.sum(), 7374718644.757894)
+    assert_allclose(datasets[1].exposure.data.sum(), 6691006466.659032)
 
     # Background
-    assert_allclose(datasets[0].npred_background().data.sum(), 7.778688, rtol=1e-5)
-    assert_allclose(datasets[1].npred_background().data.sum(), 5.7579151, rtol=1e-5)
+    assert_allclose(datasets[0].npred_background().data.sum(), 7.7429157, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.7314076, rtol=1e-5)
 
     # Compare background with using bigger region
     e_reco = datasets[0].background.geom.axes['energy']

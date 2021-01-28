@@ -48,12 +48,10 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
     if not use_region_center:
         wcs_geom = geom.to_wcs_geom()
         weights = geom.get_wcs_weights().data
-        mask = geom.contains(wcs_geom.get_coord())
     else:
         wcs_geom = geom
-        mask = 1
         
-    offset = mask*wcs_geom.separation(pointing)
+    offset = wcs_geom.separation(pointing)
 
     energy_true = wcs_geom.axes["energy_true"].center
 
@@ -65,9 +63,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
     meta = {"livetime": livetime}
 
     if not use_region_center:
-        # TO DO: add weights
-        exposure[~mask] = np.nan
-        data = np.nanmean(weights*exposure.value, axis=(1,2))
+        data = np.average(exposure.value, axis=(1,2), weights=weights)
     else:
         data = exposure.value
 
@@ -158,11 +154,10 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
         "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
     }
     if not use_region_center:
-        wcs_geom = geom.to_wcs_geom().upsample(2)
-        mask = geom.contains(wcs_geom.to_image().get_coord())
+        wcs_geom = geom.to_wcs_geom()
+        weights = geom.get_wcs_weights().data
     else:
         wcs_geom = geom
-        mask = 1
 
     if bkg.is_offset_dependent:
         coords["offset"] = wcs_geom.separation(pointing)
@@ -189,11 +184,11 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
 
-    d_omega = mask*wcs_geom.to_image().solid_angle()
+    d_omega = wcs_geom.to_image().solid_angle()
     values = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
-        data = np.sum(values, axis=(1,2))
+        data = np.sum(weights*values, axis=(1,2))
     else:
         data = values
 
