@@ -773,7 +773,7 @@ class MapDataset(Dataset):
         ----------
         ax : `~matplotlib.axes.Axes`
             Axes to plot on.
-        method : {"diff", "diff/model", "diff/sqrt(model)"}
+        method : {"diff", "diff/sqrt(model)"}
             Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
         region: `~regions.SkyRegion` (required)
             Target sky region.
@@ -787,18 +787,38 @@ class MapDataset(Dataset):
         """
         counts, npred = self.counts.copy(), self.npred()
 
-        if self.mask is not None:
-            counts *= self.mask
-            npred *= self.mask
+        if self.mask is None:
+            mask = self.counts.copy()
+            mask.data = 1
+        else:
+            mask = self.mask
+        counts *= mask
+        npred *= mask
 
         counts_spec = counts.get_spectrum(region)
         npred_spec = npred.get_spectrum(region)
         residuals = self._compute_residuals(counts_spec, npred_spec, method)
 
         if method == "diff":
-            yerr = np.sqrt((counts_spec.data + npred_spec.data).flatten())
-        else:
+            if self.stat_type == "wstat":
+                counts_off = (self.counts_off * mask).get_spectrum(region).data
+                norm = (self.background * mask).get_spectrum(region).data
+                mu_sig = (self.npred_signal() * mask).get_spectrum(region).data
+                stat = WStatCountsStatistic(
+                    n_on=counts_spec.data,
+                    n_off=counts_off,
+                    alpha=norm / counts_off,
+                    mu_sig=mu_sig,
+                )
+            elif self.stat_type == "cash":
+                stat = CashCountsStatistic(counts_spec.data, npred_spec.data)
+            yerr = stat.error.flatten()
+        elif method == "diff/sqrt(model)":
             yerr = np.ones_like(residuals.data.flatten())
+        else:
+            raise ValueError(
+                'Invalid method, choose between "diff" and "diff/sqrt(model)"'
+            )
 
         kwargs.setdefault("color", kwargs.pop("c", "black"))
         ax = residuals.plot(ax, yerr=yerr, **kwargs)

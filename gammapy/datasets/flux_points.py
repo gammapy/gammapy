@@ -216,13 +216,10 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        method: {"diff", "diff/model", "diff/sqrt(model)"}
+        method: {"diff", "diff/model"}
             Method used to compute the residuals. Available options are:
                 - `diff` (default): data - model
                 - `diff/model`: (data - model) / model
-                - `diff/sqrt(model)`: (data - model) / sqrt(model)
-                - `norm='sqrt_model'` for: (flux points - model)/sqrt(model)
-
 
         Returns
         -------
