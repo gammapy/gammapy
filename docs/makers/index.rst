@@ -172,24 +172,35 @@ themselves. This is the role of background estimation Makers.
 
 FoV Background
 --------------
-If the background energy dependent morphology is well reproduced by the 3D background model
-stored in the IRF, it might be that the normalization is incorrect and that some spectral
+
+If the background energy dependent morphology is well reproduced by the background model
+stored in the IRF, it might be that its normalization is incorrect and that some spectral
 corrections are necessary. This is made possible thanks to the `~gammapy.makers.FoVBackgroundMaker`.
+This technique is recommended in most 3D data reductions.
 
 For more details and usage, see :ref:`fov_background`.
 
 Ring Background
 ---------------
 
-If the 3D background model does not reproduce well the morphology, a classical approach consists
+If the background model does not reproduce well the morphology, a classical approach consists
 in applying local corrections by smoothing the data with a ring kernel. This allows to build a set
 of OFF counts taking into account the inperfect knowledge of the background. This is implemented
 in the `~gammapy.makers.RingBackgroundMaker` which transforms the Dataset in a `MapDatasetOnOff`.
+This technique is mostly used for imaging, and should not be applied for 3D modeling and fitting.
 
 For more details and usage, see :ref:`ring_background`.
 
 Reflected Regions Background
 ----------------------------
+
+In the absence of a solid background model, a classical technique in Cherenkov astronomy for 1D
+spectral analysis is to estimate the background in a number of OFF regions. When the background
+can be safely estimated as radially symmetric w.r.t. the pointing direction, one can apply the
+reflected regions background technique.
+This is implemented in the `~gammapy.makers.ReflectedRegionsBackgroundMaker` which transforms a
+ `SpectrumDataset` in a `SpectrumDatasetOnOff`. This technique is only used for 1D spectral
+analysis.
 
 For more details and usage, see :ref:`reflected_background`.
 
