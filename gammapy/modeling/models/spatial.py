@@ -158,6 +158,10 @@ class SpatialModel(Model):
 
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
+    def evaluation_radius(self):
+        """Evaluation radius (`~astropy.coordinates.Angle`)."""
+        return None
+
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
@@ -198,7 +202,9 @@ class SpatialModel(Model):
         """
         m = self._get_plot_map(geom)
         if not m.geom.is_flat:
-            raise TypeError("Use .plot_interactive() for Map dimension > 2")
+            raise TypeError(
+                "Use .plot_interactive() or .plot_grid() for Map dimension > 2"
+            )
         _, ax, _ = m.plot(ax=ax, **kwargs)
         return ax
 
