@@ -46,7 +46,8 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
         Exposure map
     """
     if not use_region_center:
-        wcs_geom = geom.to_wcs_geom().upsample(2)
+        wcs_geom = geom.to_wcs_geom()
+        weights = geom.get_wcs_weights().data
         mask = geom.contains(wcs_geom.get_coord())
     else:
         wcs_geom = geom
@@ -66,7 +67,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
     if not use_region_center:
         # TO DO: add weights
         exposure[~mask] = np.nan
-        data = np.nanmean(exposure.value, axis=(1,2))
+        data = np.nanmean(weights*exposure.value, axis=(1,2))
     else:
         data = exposure.value
 
@@ -204,7 +205,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     return bkg_map
 
 
-def make_psf_map(psf, pointing, geom, exposure_map=None, use_region_center=True):
+def make_psf_map(psf, pointing, geom, exposure_map=None):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order

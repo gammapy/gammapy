@@ -244,15 +244,12 @@ class MapDatasetMaker(Maker):
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 
-        use_region_center = getattr(self, "use_region_center", True)
-
         return make_psf_map(
             psf=psf,
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
-            use_region_center=use_region_center,
-        )
+       )
 
     @staticmethod
     def make_meta_table(observation):

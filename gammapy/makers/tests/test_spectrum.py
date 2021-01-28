@@ -98,8 +98,8 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
         datasets.append(dataset)
 
     # Exposure
-    assert_allclose(datasets[0].exposure.data.sum(), 7374687188.97554)
-    assert_allclose(datasets[1].exposure.data.sum(), 6690976487.54471)
+    assert_allclose(datasets[0].exposure.data.sum(), 7199758923.66730)
+    assert_allclose(datasets[1].exposure.data.sum(), 6532241208.61468)
 
     # Background
     assert_allclose(datasets[0].npred_background().data.sum(), 7.778688, rtol=1e-5)
@@ -122,12 +122,10 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2) #precision should be higher once weights are used?
     assert_allclose(ratio_bg_2, ratio_regions, rtol=1e-2)
 
-    #Edisp -> it isn't exactly 8, is that right?
+    #Edisp -> it isn't exactly 8, is that right? it also isn't without averaging
     assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
     assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
 
-    #PSF
-    
     
 
 @requires_data()
