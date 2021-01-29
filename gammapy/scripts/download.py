@@ -60,7 +60,7 @@ def show_info_notebooks(outfolder, release):
         "*** Enter the following commands below to get started with this version of Gammapy"
     )
     print(f"cd {outfolder}")
-    print(f"conda env create -f environment_{release}.yml")
+    print(f"conda env create -f gammapy-{release}-environment.yml")
     print(f"conda activate gammapy-{release}")
     print("jupyter lab")
     print("")
