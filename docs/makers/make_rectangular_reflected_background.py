@@ -1,5 +1,4 @@
 """Example how to compute and plot reflected regions."""
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import RectangleSkyRegion
@@ -7,7 +6,7 @@ import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.datasets import SpectrumDataset
 from gammapy.makers import ReflectedRegionsBackgroundMaker, SpectrumDatasetMaker
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
@@ -22,12 +21,12 @@ rectangle = RectangleSkyRegion(
     center=crab_position, width=0.5 * u.deg, height=0.4 * u.deg, angle=0 * u.deg
 )
 
-
 bkg_maker = ReflectedRegionsBackgroundMaker(min_distance=0.1 * u.rad)
 dataset_maker = SpectrumDatasetMaker(selection=["counts"])
 
-e_reco = MapAxis.from_energy_bounds(0.1, 100, 30, unit="TeV")
-dataset_empty = SpectrumDataset.create(e_reco=e_reco, region=rectangle)
+energy_axis = MapAxis.from_energy_bounds(0.1, 100, 30, unit="TeV")
+geom = RegionGeom.create(region=rectangle, axes=[energy_axis])
+dataset_empty = SpectrumDataset.create(geom=geom)
 
 datasets = []
 
