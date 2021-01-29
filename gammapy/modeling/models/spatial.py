@@ -10,6 +10,7 @@ from astropy.coordinates.angle_utilities import angular_separation, position_ang
 from astropy.utils import lazyproperty
 from regions import (
     CircleAnnulusSkyRegion,
+    CircleSkyRegion,
     EllipseSkyRegion,
     PointSkyRegion,
     PolygonSkyRegion,
@@ -58,6 +59,7 @@ class SpatialModel(Model):
             kwargs["energy"] = energy
 
         return self.evaluate(lon, lat, **kwargs)
+
 
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
@@ -299,6 +301,24 @@ class SpatialModel(Model):
         lon_0, lat_0 = position.data.lon, position.data.lat
         return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame, **kwargs)
 
+    @property
+    def evaluation_radius(self):
+        """Evaluation radius"""
+        return None
+
+    @property
+    def evaluation_region(self):
+        """Evaluation region"""
+
+        if hasattr(self, "to_region"):
+            return self.to_region()
+        elif self.evaluation_radius is not None:
+            return CircleSkyRegion(
+                center=self.position,
+                radius=self.evaluation_radius,
+            )
+        else:
+            return None
 
 class PointSpatialModel(SpatialModel):
     r"""Point Source.
@@ -430,6 +450,15 @@ class GaussianSpatialModel(SpatialModel):
             angle=self.phi.quantity,
             **kwargs,
         )
+
+    @property
+    def evaluation_region(self):
+        """Evaluation region"""
+        region = self.to_region()
+        region.height = 5*region.height # consistent with evaluation radius
+        region.width = 5*region.width
+        return region
+
 
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
