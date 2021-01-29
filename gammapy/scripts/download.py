@@ -9,7 +9,8 @@ from gammapy import __version__
 log = logging.getLogger(__name__)
 
 BUNDLESIZE = 152  # in MB
-RELEASES_BASE_URL = "https://docs.gammapy.org"
+ENVS_BASE_URL = "https://gammapy.org/download/install"
+NBTAR_BASE_URL = "https://docs.gammapy.org"
 TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"
 
 
@@ -92,11 +93,9 @@ def cli_download_notebooks(out, release):
     """Download notebooks"""
     release = get_release_number() if not release else release
     localfolder = Path(out) / release
-    url_file_env = f"{RELEASES_BASE_URL}/{release}/_downloads/environment_{release}.yml"
-    yaml_destination_file = localfolder / f"environment_{release}.yml"
+    url_file_env = f"{ENVS_BASE_URL}/gammapy-{release}-environment.yml"
     yaml_destination_file = localfolder / f"gammapy-{release}-environment.yml"
     progress_download(url_file_env, yaml_destination_file)
-    url_tar_notebooks = f"{RELEASES_BASE_URL}/{release}/_downloads/notebooks_{release}.tar"
     url_tar_notebooks = f"{NBTAR_BASE_URL}/{release}/_downloads/notebooks-{release}.tar"
     tar_destination_file = localfolder / f"notebooks_{release}.tar"
     progress_download(url_tar_notebooks, tar_destination_file)
