@@ -105,7 +105,7 @@ def add_box(nb_path):
 **This is a fixed-text formatted version of a Jupyter notebook**
 
 - Try online [![Binder]({BINDER_BADGE_URL})]({BINDER_URL}/{release_number_binder}?urlpath=lab/tree/{nb_filename})
-| [![download](../_static/download.png)](../_downloads/notebooks_{release_number_download}.tar)
+| [![download](../_static/download.png)](../_downloads/notebooks-{release_number_download}.tar)
 - You can contribute with your own notebooks in this
 [GitHub repository]({GITHUB_TUTOS_URL}).
 - **Source files:**

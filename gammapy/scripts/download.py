@@ -94,8 +94,10 @@ def cli_download_notebooks(out, release):
     localfolder = Path(out) / release
     url_file_env = f"{RELEASES_BASE_URL}/{release}/_downloads/environment_{release}.yml"
     yaml_destination_file = localfolder / f"environment_{release}.yml"
+    yaml_destination_file = localfolder / f"gammapy-{release}-environment.yml"
     progress_download(url_file_env, yaml_destination_file)
     url_tar_notebooks = f"{RELEASES_BASE_URL}/{release}/_downloads/notebooks_{release}.tar"
+    url_tar_notebooks = f"{NBTAR_BASE_URL}/{release}/_downloads/notebooks-{release}.tar"
     tar_destination_file = localfolder / f"notebooks_{release}.tar"
     progress_download(url_tar_notebooks, tar_destination_file)
     extract_bundle(tar_destination_file, localfolder)
