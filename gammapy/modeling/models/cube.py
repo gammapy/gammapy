@@ -216,7 +216,7 @@ class SkyModel(Model):
             f"temporal_model={self.temporal_model!r})"
         )
 
-    def contributes(self, mask, margin=None, include_evaluation_radius=True):
+    def contributes(self, mask, margin=None, use_evaluation_region=True):
         """Check if a skymodel contributes within a mask map.
     
         Parameters
@@ -228,7 +228,7 @@ class SkyModel(Model):
             Add a margin in degree to the source evaluation radius.
             The default is None. Used to take into account PSF width.
 
-        include_evaluation_radius : bool
+        use_evaluation_region : bool
             Account for the extension of the model or not. The default is True.   
 
         Returns
@@ -245,31 +245,19 @@ class SkyModel(Model):
             return True
         if not np.any(mask.data):
             return False
-
-        # check center only first
+        if margin is not None:
+            mask = mask.dilate(width=margin)
+        
+        # check center only first (faster)
         ind = self.position.to_pixel(mask.geom.wcs)
         ind = tuple([int(round(idx.item())) for idx in ind])
         try:
             contributes = mask.data.squeeze()[ind]
         except (IndexError):  # if outside geom
             contributes = False
-
         # account for extension or not
-        if not contributes:
-            radius = 0 * u.deg
-            if margin is not None:
-                radius += margin
-            if include_evaluation_radius and self.evaluation_radius is not None:
-                radius += self.evaluation_radius
-            if radius == 0 * u.deg:
-                return contributes
-            coords = mask.geom.get_coord()
-            coords_true = SkyCoord(
-                coords["lon"][mask.data],
-                coords["lat"][mask.data],
-                frame=mask.geom.frame,
-            )
-            contributes = np.min(self.position.separation(coords_true)) < radius
+        if not contributes and use_evaluation_region:
+            contributes = np.any(mask.mask_contains_region(self.evaluation_region))            
         return contributes
 
     def evaluate(self, lon, lat, energy, time=None):
