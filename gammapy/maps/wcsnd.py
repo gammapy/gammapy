@@ -25,7 +25,7 @@ __all__ = ["WcsNDMap"]
 log = logging.getLogger(__name__)
 
 
-def _apply_binary_operations(map_, width, func):
+def _apply_binary_operations(map_, width, func, output=None, mode="same"):
     """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
 
     if not map_.is_mask:
@@ -34,6 +34,9 @@ def _apply_binary_operations(map_, width, func):
     if not isinstance(width, tuple):
         width = (width, width)
 
+    if output is None:
+        output = map_
+
     shape = tuple(
         [
             int(np.ceil(x / scale).value * 2 + 1)
@@ -41,10 +44,13 @@ def _apply_binary_operations(map_, width, func):
         ]
     )
 
-    mask_data = np.empty(map_.data.shape, dtype=bool)
-
+    mask_data = np.empty(output.data.shape, dtype=bool)
+    structure = np.ones(shape)
     for img, idx in map_.iter_by_image():
-        mask_data[idx] = func(img, structure=np.ones(shape))
+        if func == scipy.signal.fftconvolve:
+            mask_data[idx] = func(img, structure, mode=mode)
+        else:
+            mask_data[idx] = func(img, structure)
 
     return mask_data
 
@@ -619,7 +625,7 @@ class WcsNDMap(WcsMap):
         mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
         return self._init_copy(data=mask_data)
 
-    def binary_dilate(self, width, mode="same"):
+    def binary_dilate(self, width, use_fft=True, mode="same"):
         """Binary dilation of boolean mask addding a given margin
 
         Parameters
@@ -632,19 +638,30 @@ class WcsNDMap(WcsMap):
         -------
         map : `WcsNDMap`
             Dilated mask map
-        mode : str {'full' 'same'}
-            A string indicating the size of the output:
-            - 'same' The output is the same size as input (Default).
-            - 'full' The output size is extended by the width
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` or `ndi.binary_dilation`.
+        mode : str {'same', 'full'}
+            A string indicating the size of the output (used only if use_fft=True).
+            - 'same': The output is the same size as input (Default).
+            - 'full': The output size is extended by the width
         """
-        if mode == "same":
-            map_ = self
+
+        if use_fft:
+            func = scipy.signal.fftconvolve
         else:
+            func = ndi.binary_dilation
+
+        if mode == "full":
             pad_width = u.Quantity(width) / (self.geom.pixel_scales)
             pad_width = list(np.ceil(pad_width.value).astype(int))
-            map_ = self.pad(pad_width, mode="constant", cval=False)
-        mask_data = _apply_binary_operations(map_, width, ndi.binary_dilation)
-        return self._init_copy(geom=map_.geom, data=mask_data)
+            mask = self.pad(pad_width)
+        else:
+            mask = self
+
+        mask_data = _apply_binary_operations(self, width, func, output=mask, mode=mode)
+        if use_fft:
+            mask_data = np.rint(mask_data).astype(bool)
+        return self._init_copy(geom=mask.geom, data=mask_data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
