@@ -612,10 +612,11 @@ class WcsNDMap(WcsMap):
             Eroded mask map
 
         """
+        
         mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
         return self._init_copy(data=mask_data)
 
-    def binary_dilate(self, width):
+    def binary_dilate(self, width, mode="same"):
         """Binary dilation of boolean mask addding a given margin
 
         Parameters
@@ -628,10 +629,18 @@ class WcsNDMap(WcsMap):
         -------
         map : `WcsNDMap`
             Dilated mask map
-
+        mode : str {'full' 'same'}
+            A string indicating the size of the output:
+            - 'same' The output is the same size as input (Default).
+            - 'full' The output size is extended by the width
         """
-        mask_data = _apply_binary_operations(self, width, ndi.binary_dilation)
-        return self._init_copy(data=mask_data)
+        if  mode == 'same':
+            map_ = self
+        else:
+            pad_width = u.Quantity(width)/(self.geom.pixel_scales)
+            map_ = self.pad(pad_width.value.astype(int), mode='constant', cval=False)
+        mask_data = _apply_binary_operations(map_, width, ndi.binary_dilation)
+        return self._init_copy(geom=map_.geom, data=mask_data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
