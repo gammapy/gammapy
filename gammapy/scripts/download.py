@@ -54,14 +54,6 @@ def extract_bundle(bundle, destination):
         tar.extractall(path=destination, members=members(tar))
     Path(bundle).unlink()
 
-
-def get_release_number():
-    if "dev" in __version__:
-        return "dev"
-    else:
-        return __version__
-
-
 def show_info_notebooks(outfolder, release):
     print("")
     print(
@@ -82,16 +74,15 @@ def show_info_datasets(outfolder):
 
 
 @click.command(name="notebooks")
+@click.option("--release", required=True, help="Number of stable release - ex: 0.18.2)")
 @click.option(
     "--out",
     default="gammapy-notebooks",
     help="Path where the versioned notebook files will be copied.",
     show_default=True,
 )
-@click.option("--release", default="", help="Number of release - ex: 0.18.2)")
-def cli_download_notebooks(out, release):
+def cli_download_notebooks(release, out):
     """Download notebooks"""
-    release = get_release_number() if not release else release
     localfolder = Path(out) / release
     url_file_env = f"{ENVS_BASE_URL}/gammapy-{release}-environment.yml"
     yaml_destination_file = localfolder / f"gammapy-{release}-environment.yml"
