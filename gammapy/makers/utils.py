@@ -45,25 +45,25 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
     map : `~gammapy.maps.WcsNDMap`
         Exposure map
     """
+    energy_true = geom.axes["energy_true"].center
+
     if not use_region_center:
-        wcs_geom = geom.to_wcs_geom()
-        weights = geom.get_wcs_weights().data
+        region_coord, weights = geom.get_wcs_coord_and_weights()
+        offset = region_coord.skycoord.separation(pointing)
+        energy_true_dim = energy_true[:, np.newaxis]
     else:
-        wcs_geom = geom
-
-    offset = wcs_geom.separation(pointing)
-
-    energy_true = wcs_geom.axes["energy_true"].center
+        offset = geom.separation(pointing)
+        energy_true_dim = energy_true[:, np.newaxis, np.newaxis]
 
     exposure = aeff.evaluate(
-        offset=offset, energy_true=energy_true[:, np.newaxis, np.newaxis]
+        offset=offset, energy_true=energy_true_dim
     )
 
     exposure = (exposure * livetime).to("m2 s")
     meta = {"livetime": livetime}
 
     if not use_region_center:
-        data = np.average(exposure.value, axis=(1,2), weights=weights)
+        data = np.average(exposure.value, axis=1, weights=weights)
     else:
         data = exposure.value
 
@@ -153,18 +153,22 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     coords = {
         "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
     }
+
     if not use_region_center:
-        wcs_geom = geom.to_wcs_geom()
-        weights = geom.get_wcs_weights().data
+        image_geom = geom.to_wcs_geom().to_image()
+        region_coord, weights = geom.get_wcs_coord_and_weights()
+        idx = image_geom.coord_to_idx(region_coord)
+        sky_coord = region_coord.skycoord
+        d_omega = image_geom.solid_angle().T[idx]
     else:
-        wcs_geom = geom
+        image_geom = geom.to_image()
+        map_coord = image_geom.get_coord()
+        sky_coord = map_coord.skycoord
+        d_omega = image_geom.solid_angle()
 
     if bkg.is_offset_dependent:
-        coords["offset"] = wcs_geom.separation(pointing)
+        coords["offset"] = sky_coord.separation(pointing)
     else:
-        map_coord = wcs_geom.to_image().get_coord()
-        sky_coord = map_coord.skycoord
-
         if isinstance(pointing, FixedPointingInfo):
             altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 
@@ -184,11 +188,10 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
 
-    d_omega = wcs_geom.to_image().solid_angle()
     values = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
-        data = np.sum(weights*values, axis=(1,2))
+        data = np.sum(weights*values, axis=2)
     else:
         data = values
 
@@ -281,22 +284,24 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
     # Compute separations with pointing position
     if not use_region_center:
-        wcs_geom = geom.to_wcs_geom()
-        weights = geom.get_wcs_weights().data
+        region_coord, weights = geom.get_wcs_coord_and_weights()
+        offset = region_coord.skycoord.separation(pointing)
+        energy_true_dim = energy_true[:, np.newaxis, np.newaxis]
+        migra_dim = migra[:, np.newaxis]
     else:
-        wcs_geom = geom
-
-    offset = wcs_geom.separation(pointing)
+        offset = geom.separation(pointing)
+        energy_true_dim = energy_true[:, np.newaxis, np.newaxis, np.newaxis]
+        migra_dim = migra[:, np.newaxis, np.newaxis]
 
     # Compute EDisp values
     edisp_values = edisp.evaluate(
         offset=offset,
-        energy_true=energy_true[:, np.newaxis, np.newaxis, np.newaxis],
-        migra=migra[:, np.newaxis, np.newaxis],
+        energy_true=energy_true_dim,
+        migra=migra_dim,
     ).to_value("")
 
     if not use_region_center:
-        data = np.average(edisp_values, axis=(2,3), weights=weights)
+        data = np.average(edisp_values, axis=2, weights=weights)
     else:
         data = edisp_values
 

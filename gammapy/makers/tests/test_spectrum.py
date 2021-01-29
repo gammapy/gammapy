@@ -119,7 +119,7 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     ratio_regions = datasets[0].counts.geom.solid_angle()/datasets_big_region[1].counts.geom.solid_angle()
     ratio_bg_1 = datasets[0].npred_background().data.sum()/ datasets_big_region[0].npred_background().data.sum()
     ratio_bg_2 = datasets[1].npred_background().data.sum()/ datasets_big_region[1].npred_background().data.sum()
-    assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2) #precision should be higher once weights are used?
+    assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2)
     assert_allclose(ratio_bg_2, ratio_regions, rtol=1e-2)
 
     #Edisp -> it isn't exactly 8, is that right? it also isn't without averaging

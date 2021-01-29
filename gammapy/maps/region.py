@@ -296,7 +296,7 @@ class RegionGeom(Geom):
             Weights representing the fraction of each pixel
             contained in the region.
         """
-        wcs_geom = self.to_wcs_geom()
+        wcs_geom = self.to_wcs_geom().to_image()
 
         # Get weights
         factor = 10
