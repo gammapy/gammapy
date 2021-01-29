@@ -84,11 +84,11 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
 
 
 @requires_data()
-def test_fov_bkg_maker_scale_nocountsnobackground(obs_dataset, exclusion_mask, caplog):
+def test_fov_bkg_maker_scale_nocounts(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
     test_dataset = obs_dataset.copy(name="test-fov")
     test_dataset.counts *= 0
-    test_dataset.background *= 0
+
     dataset = fov_bkg_maker.run(test_dataset)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
@@ -110,14 +110,15 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     assert_allclose(model.norm.value, 0.830789, rtol=1e-4)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
 
+
 @requires_data()
 @requires_dependency("iminuit")
-def test_fov_bkg_maker_fit_nocountsnobackground(obs_dataset, exclusion_mask, caplog):
+def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy(name="test-fov")
     test_dataset.counts *=0
-    test_dataset.background *=0
+
     dataset = fov_bkg_maker.run(test_dataset)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
@@ -179,7 +180,7 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
+def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy(name="test-fov")
@@ -190,10 +191,12 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 1, rtol=1e-4)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert "Fit did not converge for test-fov" in caplog.records[-1].message
 
 
 @requires_data()
-def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
+def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy()
@@ -203,3 +206,6 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 1, rtol=1e-4)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert "No positive background found outside exclusion mask for test-fov" in caplog.records[-1].message
+    assert "FoVBackgroundMaker failed" in caplog.records[-1].message
