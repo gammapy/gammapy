@@ -142,8 +142,7 @@ class FoVBackgroundMaker(Maker):
             fit = Fit([dataset])
             fit_result = fit.run()
             if not fit_result.success:
-                log.info(f"Fit did not converge for {dataset.name}.")
-
+                log.warning(f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}")
         return dataset
 
     @staticmethod
