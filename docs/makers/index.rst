@@ -199,7 +199,7 @@ spectral analysis is to estimate the background in a number of OFF regions. When
 can be safely estimated as radially symmetric w.r.t. the pointing direction, one can apply the
 reflected regions background technique.
 This is implemented in the `~gammapy.makers.ReflectedRegionsBackgroundMaker` which transforms a
- `SpectrumDataset` in a `SpectrumDatasetOnOff`. This technique is only used for 1D spectral
+`SpectrumDataset` in a `SpectrumDatasetOnOff`. This technique is only used for 1D spectral
 analysis.
 
 For more details and usage, see :ref:`reflected_background`.
