@@ -126,7 +126,7 @@ def test_fov_bkg_maker_fit_nocountsnobackground(obs_dataset, exclusion_mask, cap
 
     assert caplog.records[-1].levelname == "WARNING"
     assert "Fit did not converge for test-fov" in caplog.records[-1].message
-    #assert "Background model parameters might be unphysical for test-fov" in caplog.records[-1].message
+    
 
 
 @requires_data()
