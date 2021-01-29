@@ -633,17 +633,19 @@ class WcsNDMap(WcsMap):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `ndi.binary_dilation` otherwise.
+            
+        mode : str {'same', 'full'}
+            A string indicating the size of the output.
+            - 'same': The output is the same size as input (Default).
+            - 'full': The output size is extended by the width
 
         Returns
         -------
         map : `WcsNDMap`
             Dilated mask map
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` or `ndi.binary_dilation`.
-        mode : str {'same', 'full'}
-            A string indicating the size of the output (used only if use_fft=True).
-            - 'same': The output is the same size as input (Default).
-            - 'full': The output size is extended by the width
         """
 
         if use_fft:
@@ -676,7 +678,8 @@ class WcsNDMap(WcsMap):
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
-            Use `scipy.signal.fftconvolve` or `ndi.convolve`.
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `ndi.convolve` otherwise.
         kwargs : dict
             Keyword arguments passed to `scipy.signal.fftconvolve` or
             `ndi.convolve`.
