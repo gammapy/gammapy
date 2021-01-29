@@ -58,18 +58,21 @@ Make release
 
 Steps for the day of the release:
 
-#. Mention release on the front page and on the news page of the Gammapy webpage
-   (update `index.html` and `news.html` in the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__).
 #. Follow the instructions how to release an Astropy affiliated package `<https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
 
 In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
+#. Edit `docs/index.rst` and change the version numbers in the text.
 #. Build an updated version of the dev docs using the manual Github action.
 #. Copy the `docs/dev` folder as a new `docs/0.19` folder.
-#. Rename `0.19/docs/_downloads/notebooks_dev.tar` file to `0.19/docs/_downloads/notebooks_0.19.tar`.
-#. Rename `0.19/docs/_downloads/environment_dev.yml` to `0.19/docs/_downloads/environment_0.19.yml`.
-#. Adapt the dependency conda env name and versions as required in the `0.19/docs/_downloads/environment_0.19.yml`.
+#. Rename `0.19/docs/_downloads/notebooks-dev.tar` file to `0.19/docs/_downloads/notebooks-0.19.tar`.
 #. Edit `stable/index.html` to point to `0.19/index.html`.
+
+In the `gammapy-web repo <https://github.com/gammapy/gammapy-web>`__:
+
+#. Mention the release on the front page and on the news page.
+#. Copy the `download/install/gammapy-0.18.2-environment.yml` file as `download/install/gammapy-0.19-environment.yml`.
+#. Adapt the dependency conda env name and versions as required in this file.
 
 Finally:
 
