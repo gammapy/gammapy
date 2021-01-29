@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _region_reflected:
+.. _reflected_background:
 
 ****************************
 Reflected regions background
@@ -18,16 +18,51 @@ residual hadronic background, a classical method to estimate it is the so-called
 Reflected Region Background. The underlying assumption is that the background is
 approximately purely radial in the field-of-view. A set of OFF counts is found
 in the observation, by rotating the ON region selected around the pointing
-position. To avoid that the reflectd regions contain actual gamma-ray signal
+position. To avoid that the reflected regions contain actual gamma-ray signal
 from other objects, one has to remove the gamma-ray bright parts of the
 field-of-view with a exclusion mask. Details on the reflected regions method can
 be found in [Berge2007]_
 
-The extraction of the ON and OFF events from the `~gammapy.data.EventList` of a
-set of observations is performed by the
-`ReflectedRegionsBackgroundMaker`. The latter uses the
-`~gammapy.makers.ReflectedRegionsFinder` to create reflected regions for a
-given circular on region and exclusion mask.
+The extraction of the OFF events from the `~gammapy.data.EventList` of a
+set of observations is performed by the `ReflectedRegionsBackgroundMaker`.
+The latter uses the `~gammapy.makers.ReflectedRegionsFinder` to create reflected
+regions for a given circular on region and exclusion mask.
+
+.. code-block:: python
+
+    from gammapy.makers import SpectrumDatasetMaker, ReflectedRegionsBackgroundMaker, SafeMaskMaker
+    from gammapy.datasets import SpectrumDataset, Datasets
+    from gammapy.data import DataStore
+    from gammapy.maps import MapAxis, Map, WcsGeom, RegionGeom
+    from gammapy.utils.regions import make_region
+
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    observations = data_store.get_observations([23592, 23559])
+
+    on_region = make_region("icrs; circle(83.63,22.01,0.11)")
+
+    wcsgeom = WcsGeom.create(skydir=on_region.center, width=5, binsz=0.02)
+    exclusion_mask = wcsgeom.region_mask([on_region], inside=False)
+
+    energy_axis = MapAxis.from_energy_bounds("0.5 TeV", "10 TeV", nbin=15)
+    energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "20 TeV", nbin=40, name="energy_true")
+
+    geom = RegionGeom.create(region=on_region, axes=[energy_axis])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
+
+    maker = SpectrumDatasetMaker()
+    safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
+
+    bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
+
+    datasets = Datasets()
+    for obs in observations:
+        dataset = maker.run(dataset_empty.copy(), obs)
+        dataset = safe_mask_maker.run(dataset, obs)
+        dataset_on_off = bkg_maker.run(dataset, obs)
+        datasets.append(dataset)
+
+
 
 Using regions
 -------------

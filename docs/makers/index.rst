@@ -28,13 +28,20 @@ in the following example:
 
 .. code-block:: python
 
+    import astropy.units as u
     from gammapy.maps import MapAxis, WcsGeom
     from gammapy.datasets import MapDataset
 
     energy_axis = MapAxis.from_bounds(
         1, 10, nbin=11, name="energy", unit="TeV", interp="log"
     )
-    geom = WcsGeom.create(axes=[energy_axis])
+    geom = WcsGeom.create(
+            skydir=(0.,0),
+            frame='galactic',
+            binsz=0.05*u.deg,
+            width=5*u.deg,
+            axes=[energy_axis]
+    )
     dataset_empty = MapDataset.create(geom=geom)
     print(dataset_empty)
 
@@ -43,13 +50,20 @@ additional options, e.g. it is also possible to specify a true energy axis:
 
 .. code-block:: python
 
+    import astropy.units as u
     from gammapy.maps import MapAxis, WcsGeom
     from gammapy.datasets import MapDataset
 
     energy_axis = MapAxis.from_bounds(
         1, 10, nbin=11, name="energy", unit="TeV", interp="log"
     )
-    geom = WcsGeom.create(axes=[energy_axis])
+    geom = WcsGeom.create(
+            skydir=(0.,0),
+            frame='galactic',
+            binsz=0.05*u.deg,
+            width=5*u.deg,
+            axes=[energy_axis]
+    )
 
     energy_axis_true = MapAxis.from_bounds(
         0.3, 10, nbin=31, name="energy", unit="TeV", interp="log"
@@ -62,6 +76,7 @@ data using the `MapDatasetMaker`:
 
 .. code-block:: python
 
+    import astropy.units as u
     from gammapy.datasets import MapDataset
     from gammapy.makers import MapDatasetMaker
     from gammapy.data import DataStore
@@ -73,7 +88,13 @@ data using the `MapDatasetMaker`:
     energy_axis = MapAxis.from_bounds(
         1, 10, nbin=11, name="energy", unit="TeV", interp="log"
     )
-    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
+    geom = WcsGeom.create(
+                skydir=(83.63, 22.01),
+                axes=[energy_axis],
+                width=5*u.deg,
+                binsz=0.05*u.deg,
+                frame='icrs'
+    )
     dataset_empty = MapDataset.create(geom=geom)
 
     maker = MapDatasetMaker()
@@ -101,6 +122,7 @@ Here is an example how to use it:
 
 .. code-block:: python
 
+    import astropy.units as u
     from gammapy.datasets import  MapDataset
     from gammapy.makers import MapDatasetMaker, SafeMaskMaker
     from gammapy.data import DataStore
@@ -112,7 +134,13 @@ Here is an example how to use it:
     energy_axis = MapAxis.from_bounds(
         1, 10, nbin=11, name="energy", unit="TeV", interp="log"
     )
-    geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5)
+    geom = WcsGeom.create(
+                skydir=(83.63, 22.01),
+                axes=[energy_axis],
+                width=5*u.deg,
+                binsz=0.05*u.deg,
+                frame='icrs'
+    )
     dataset_empty = MapDataset.create(geom=geom)
 
     maker = MapDatasetMaker()
@@ -133,6 +161,48 @@ and stacking and fitting. For a joint-likelihood analysis of multiple
 observations the safe mask is applied to the counts and predicted
 number of counts map during fitting. This correctly accounts for
 contributions (spill-over) by the PSF from outside the field of view.
+
+Background estimation
+=====================
+
+The background computed by the `MapDatasetMaker` gives the number of counts predicted
+by the background IRF of the observation. Because its actual normalization, or even its
+spectral shape, might be poorly constrained, it is necessary to correct it with the data
+themselves. This is the role of background estimation Makers.
+
+FoV Background
+--------------
+
+If the background energy dependent morphology is well reproduced by the background model
+stored in the IRF, it might be that its normalization is incorrect and that some spectral
+corrections are necessary. This is made possible thanks to the `~gammapy.makers.FoVBackgroundMaker`.
+This technique is recommended in most 3D data reductions.
+
+For more details and usage, see :ref:`fov_background`.
+
+Ring Background
+---------------
+
+If the background model does not reproduce well the morphology, a classical approach consists
+in applying local corrections by smoothing the data with a ring kernel. This allows to build a set
+of OFF counts taking into account the inperfect knowledge of the background. This is implemented
+in the `~gammapy.makers.RingBackgroundMaker` which transforms the Dataset in a `MapDatasetOnOff`.
+This technique is mostly used for imaging, and should not be applied for 3D modeling and fitting.
+
+For more details and usage, see :ref:`ring_background`.
+
+Reflected Regions Background
+----------------------------
+
+In the absence of a solid background model, a classical technique in Cherenkov astronomy for 1D
+spectral analysis is to estimate the background in a number of OFF regions. When the background
+can be safely estimated as radially symmetric w.r.t. the pointing direction, one can apply the
+reflected regions background technique.
+This is implemented in the `~gammapy.makers.ReflectedRegionsBackgroundMaker` which transforms a
+`SpectrumDataset` in a `SpectrumDatasetOnOff`. This technique is only used for 1D spectral
+analysis.
+
+For more details and usage, see :ref:`reflected_background`.
 
 
 Stacking of Datasets
@@ -207,12 +277,6 @@ of the `MapDataset` as shown above. In case you want to increase the
 offset-cut later, you can also choose a larger width of the cutout
 than `2 * offset_max`.
 
-
-.. toctree::
-    :maxdepth: 1
-
-    reflected
-    ring
 
 
 
