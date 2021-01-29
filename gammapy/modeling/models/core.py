@@ -641,7 +641,7 @@ class DatasetModels(collections.abc.Sequence):
 
         return np.array(selection, dtype=bool)
 
-    def select_mask(self, mask, margin=None, include_evaluation_radius=True):
+    def select_mask(self, mask, margin=None, use_evaluation_region=True):
         """Check if skymodels contribute within a mask map.
     
         Parameters
@@ -653,7 +653,7 @@ class DatasetModels(collections.abc.Sequence):
             Add a margin in degree to the source evaluation radius.
             The default is None. Used to take into account PSF width.
 
-        include_evaluation_radius : bool
+        use_evaluation_region : bool
             Account for the extension of the model or not. The default is True.   
 
         Returns
@@ -668,7 +668,7 @@ class DatasetModels(collections.abc.Sequence):
 
         models = self.select(tag="SkyModel")
         contribute = np.array(
-            [m.contributes(mask, margin, include_evaluation_radius) for m in models]
+            [m.contributes(mask, margin, use_evaluation_region) for m in models]
         )
         return models[contribute]
 

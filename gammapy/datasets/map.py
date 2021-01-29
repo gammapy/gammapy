@@ -2578,7 +2578,7 @@ class MapEvaluator:
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
             self.contributes = self.model.contributes(
-                self.mask, margin=self.cutout_width, include_evaluation_radius=True
+                self.mask, margin=self.cutout_width, use_evaluation_region=True
             )
             try:
                 self.exposure = exposure.cutout(

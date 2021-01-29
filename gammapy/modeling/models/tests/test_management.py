@@ -69,8 +69,8 @@ def test_select_region(models):
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
     geom = WcsGeom.create(skydir=(3, 4), npix=(5, 4), frame="galactic", axes=[axis])
     mask = geom.region_mask([circle_sky_12])
-    contribute = models.select_mask(mask, margin=None, include_evaluation_radius=True)
-    inside = models.select_mask(mask, margin=None, include_evaluation_radius=False)
+    contribute = models.select_mask(mask, margin=None, use_evaluation_region=True)
+    inside = models.select_mask(mask, margin=None, use_evaluation_region=False)
     assert contribute.names == ["source-1", "source-2"]
     assert inside.names == ["source-1", "source-2"]
 
@@ -80,10 +80,20 @@ def test_select_region(models):
     )
     mask = geom.region_mask([circle_sky_12])
     contribute = models.select_mask(
-        mask, margin=4.1 * u.deg, include_evaluation_radius=True
+        mask, margin=4.1 * u.deg, use_evaluation_region=True
     )
-
     assert contribute.names == ["source-1", "source-2", "source-3"]
+
+    spatial_model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma="0.9 deg", frame="galactic"
+    )
+    assert spatial_model.evaluation_region.height == 2 * spatial_model.evaluation_radius
+    model4 = SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=PowerLawSpectralModel(),
+        name="source-4",
+    )
+    assert model4.contributes(mask, margin=None, use_evaluation_region=True)
 
 
 def test_select(models):

@@ -246,7 +246,7 @@ class SkyModel(Model):
         if not np.any(mask.data):
             return False
         if margin is not None:
-            mask = mask.dilate(width=margin)
+            mask = mask.binary_dilate(width=margin, mode="full")
 
         # check center only first (faster)
         ind = self.position.to_pixel(mask.geom.wcs)
@@ -256,8 +256,15 @@ class SkyModel(Model):
         except (IndexError):  # if outside geom
             contributes = False
         # account for extension or not
-        if not contributes and use_evaluation_region:
-            contributes = np.any(mask.mask_contains_region(self.evaluation_region))
+        if (
+            not contributes
+            and use_evaluation_region
+            and self.spatial_model is not None
+            and self.spatial_model.evaluation_region is not None
+        ):
+            contributes = np.any(
+                mask.mask_contains_region(self.spatial_model.evaluation_region)
+            )
         return contributes
 
     def evaluate(self, lon, lat, energy, time=None):

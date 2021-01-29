@@ -593,7 +593,7 @@ class WcsNDMap(WcsMap):
         pixcoords = PixCoord(pixcoords[0][self.data], pixcoords[1][self.data])
         if not isinstance(regions, list):
             regions = [regions]
-        overlap = np.zeros(len(regions), type=False)
+        overlap = np.zeros(len(regions), dtype=bool)
         for k, region in enumerate(regions):
             if isinstance(region, SkyRegion):
                 region = region.to_pixel(self.geom.wcs)
@@ -641,7 +641,8 @@ class WcsNDMap(WcsMap):
             map_ = self
         else:
             pad_width = u.Quantity(width) / (self.geom.pixel_scales)
-            map_ = self.pad(pad_width.value.astype(int), mode="constant", cval=False)
+            pad_width = list(np.ceil(pad_width.value).astype(int))
+            map_ = self.pad(pad_width, mode="constant", cval=False)
         mask_data = _apply_binary_operations(map_, width, ndi.binary_dilation)
         return self._init_copy(geom=map_.geom, data=mask_data)
 
