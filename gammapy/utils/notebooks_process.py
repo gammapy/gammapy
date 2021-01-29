@@ -121,6 +121,7 @@ def add_box(nb_path):
         nb_filename=nb_filename,
         py_filename=py_filename,
         release_number_binder=release_number_binder,
+        release_number_download=release_number_download,
         DOWN_NBS=DOWN_NBS,
         BINDER_BADGE_URL=BINDER_BADGE_URL,
         BINDER_URL=BINDER_URL,
