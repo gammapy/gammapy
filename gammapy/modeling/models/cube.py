@@ -247,7 +247,7 @@ class SkyModel(Model):
             return False
         if margin is not None:
             mask = mask.dilate(width=margin)
-        
+
         # check center only first (faster)
         ind = self.position.to_pixel(mask.geom.wcs)
         ind = tuple([int(round(idx.item())) for idx in ind])
@@ -257,7 +257,7 @@ class SkyModel(Model):
             contributes = False
         # account for extension or not
         if not contributes and use_evaluation_region:
-            contributes = np.any(mask.mask_contains_region(self.evaluation_region))            
+            contributes = np.any(mask.mask_contains_region(self.evaluation_region))
         return contributes
 
     def evaluate(self, lon, lat, energy, time=None):

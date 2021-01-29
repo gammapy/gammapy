@@ -176,13 +176,16 @@ class WcsNDMap(WcsMap):
 
         data = self.data[np.isfinite(self.data)]
         vals = scipy.interpolate.griddata(
-           tuple(grid_coords.flat), data, tuple(coords), method=method
+            tuple(grid_coords.flat), data, tuple(coords), method=method
         )
 
         m = ~np.isfinite(vals)
         if np.any(m):
             vals_fill = scipy.interpolate.griddata(
-                tuple(grid_coords.flat), data, tuple([c[m] for c in coords]), method="nearest"
+                tuple(grid_coords.flat),
+                data,
+                tuple([c[m] for c in coords]),
+                method="nearest",
             )
             vals[m] = vals_fill
 
@@ -582,7 +585,7 @@ class WcsNDMap(WcsMap):
         overlap : `numpy.array`
             Boolean array of same length than regions
         """
-        
+
         if not self.is_mask:
             raise ValueError("mask_contains_region is only supported for boolean masks")
 
@@ -590,10 +593,10 @@ class WcsNDMap(WcsMap):
         pixcoords = PixCoord(pixcoords[0][self.data], pixcoords[1][self.data])
         if not isinstance(regions, list):
             regions = [regions]
-        overlap = np.zeros(len(regions),type=False)
+        overlap = np.zeros(len(regions), type=False)
         for k, region in enumerate(regions):
             if isinstance(region, SkyRegion):
-                region = region.to_pixel(self.geom.wcs)    
+                region = region.to_pixel(self.geom.wcs)
             overlap[k] = np.any(region.contains(pixcoords))
         return overlap
 
@@ -612,7 +615,7 @@ class WcsNDMap(WcsMap):
             Eroded mask map
 
         """
-        
+
         mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
         return self._init_copy(data=mask_data)
 
@@ -634,11 +637,11 @@ class WcsNDMap(WcsMap):
             - 'same' The output is the same size as input (Default).
             - 'full' The output size is extended by the width
         """
-        if  mode == 'same':
+        if mode == "same":
             map_ = self
         else:
-            pad_width = u.Quantity(width)/(self.geom.pixel_scales)
-            map_ = self.pad(pad_width.value.astype(int), mode='constant', cval=False)
+            pad_width = u.Quantity(width) / (self.geom.pixel_scales)
+            map_ = self.pad(pad_width.value.astype(int), mode="constant", cval=False)
         mask_data = _apply_binary_operations(map_, width, ndi.binary_dilation)
         return self._init_copy(geom=map_.geom, data=mask_data)
 

@@ -60,7 +60,6 @@ class SpatialModel(Model):
 
         return self.evaluate(lon, lat, **kwargs)
 
-
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
     def is_energy_dependent(self):
@@ -313,12 +312,10 @@ class SpatialModel(Model):
         if hasattr(self, "to_region"):
             return self.to_region()
         elif self.evaluation_radius is not None:
-            return CircleSkyRegion(
-                center=self.position,
-                radius=self.evaluation_radius,
-            )
+            return CircleSkyRegion(center=self.position, radius=self.evaluation_radius,)
         else:
             return None
+
 
 class PointSpatialModel(SpatialModel):
     r"""Point Source.
@@ -455,10 +452,9 @@ class GaussianSpatialModel(SpatialModel):
     def evaluation_region(self):
         """Evaluation region"""
         region = self.to_region()
-        region.height = 5*region.height # consistent with evaluation radius
-        region.width = 5*region.width
+        region.height = 5 * region.height  # consistent with evaluation radius
+        region.width = 5 * region.width
         return region
-
 
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
