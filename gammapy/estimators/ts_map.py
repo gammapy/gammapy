@@ -209,6 +209,7 @@ class TSMapEstimator(Estimator):
             dataset.psf,
             dataset.edisp,
             dataset.counts.geom,
+            dataset.mask_fit,
             dataset.mask_safe_psf,
         )
 

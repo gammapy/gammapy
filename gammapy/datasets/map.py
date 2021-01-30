@@ -418,7 +418,14 @@ class MapDataset(Dataset):
                 return evaluator.compute_npred()
 
             if evaluator.needs_update:
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+                evaluator.update(
+                    self.exposure,
+                    self.psf,
+                    self.edisp,
+                    self._geom,
+                    self.mask_fit,
+                    self.mask_safe_psf,
+                )
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
@@ -2511,7 +2518,7 @@ class MapEvaluator:
         """Cutout width for the model component"""
         return get_cutout_width(self.model, psf=self.psf)
 
-    def update(self, exposure, psf, edisp, mask, geom):
+    def update(self, exposure, psf, edisp, geom, mask_fit, mask_safe_psf):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2522,10 +2529,10 @@ class MapEvaluator:
             PSF map.
         edisp : `gammapy.irf.EDispMap`
             Edisp map.
-        mask : `~gammapy.maps.Map`
-            Mask to apply to the likelihood for fitting.
         geom : `WcsGeom`
             Counts geom
+        mask_fit : `~gammapy.maps.Map`
+            Mask to apply to the likelihood for fitting.
         mask_safe_psf : `~gammapy.maps.Map`
             Mask safe map of boolean type.
         """
@@ -2557,11 +2564,8 @@ class MapEvaluator:
                 self.irf_position, energy_axis=energy_axis
             )
 
-        if mask is None:
-            mask = exposure.copy()
-            mask.data = np.ones(mask.data.shape, dtype=bool)
-            mask.unit = ""
-        self.mask = mask
+        if mask_fit is None:
+            mask_fit = Map.from_geom(geom, data=np.ones(geom.data_shape, dtype=bool))
 
         # lookup psf
         if psf:
@@ -2578,7 +2582,7 @@ class MapEvaluator:
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
             self.contributes = self.model.contributes(
-                self.mask, margin=self.cutout_width, use_evaluation_region=True
+                mask_fit, margin=self.cutout_width, use_evaluation_region=True
             )
             try:
                 self.exposure = exposure.cutout(
