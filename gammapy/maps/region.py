@@ -281,11 +281,17 @@ class RegionGeom(Geom):
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
 
-    def get_wcs_coord_and_weights(self):
-        """Get the array of spatial coordinates which are the center
-            of a pixel that intersects the region and the weights
-            that represent which fraction of the pixel
-            is contained in the region.
+    def get_wcs_coord_and_weights(self, factor=10):
+        """Get the array of spatial coordinates and corresponding weights
+
+        The coordinates are the center of a pixel that intersects the region and
+        the weights that represent which fraction of the pixel is contained
+        in the region.
+
+        Parameters
+        ----------
+        factor : int
+            Oversampling factor to computw the weights
 
         Returns
         -------
@@ -298,19 +304,16 @@ class RegionGeom(Geom):
         """
         wcs_geom = self.to_wcs_geom().to_image()
 
-        # Get weights
-        factor = 10
-        wcs_geom_upsampled = wcs_geom.upsample(factor=factor)
-        data = self.contains(wcs_geom_upsampled.get_coord()).astype(float)
-        weights = Map.from_geom(wcs_geom_upsampled, data = data)
-        weights = weights.downsample(factor=factor)
-        weights.data /= weights.data.max()
-        mask = (weights.data>0)
+        weights = wcs_geom.region_weights(
+            regions=[self.region], oversampling_factor=factor
+        )
+
+        mask = (weights.data > 0)
         weights = weights.data[mask]
 
         # Get coordinates
         region_coord = wcs_geom.get_coord().apply_mask(mask)
-
+        
         return region_coord, weights
 
     def to_binsz(self, binsz):
