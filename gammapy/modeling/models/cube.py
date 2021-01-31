@@ -3,7 +3,8 @@
 import copy
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from astropy.coordinates import SkyCoord
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
@@ -214,6 +215,57 @@ class SkyModel(Model):
             f"spectral_model={self.spectral_model!r})"
             f"temporal_model={self.temporal_model!r})"
         )
+
+    def contributes(self, mask, margin=None, use_evaluation_region=True):
+        """Check if a skymodel contributes within a mask map.
+    
+        Parameters
+        ----------
+        mask : `~gammapy.maps.WcsNDMap` of boolean type
+            Map containing a boolean mask
+
+        marign : `~astropy.coordinates.Angle`
+            Add a margin in degree to the source evaluation radius.
+            The default is None. Used to take into account PSF width.
+
+        use_evaluation_region : bool
+            Account for the extension of the model or not. The default is True.   
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models contributing inside the region where mask==True
+        """
+
+        mask_shape = len(mask.data.squeeze().shape)
+        if mask_shape > 2:
+            mask = mask.sum_over_axes()
+            mask.data = mask.data.astype(bool)
+        elif mask_shape < 2:
+            return True
+        if not np.any(mask.data):
+            return False
+        if margin is not None:
+            mask = mask.binary_dilate(width=margin, mode="full")
+
+        # check center only first (faster)
+        ind = self.position.to_pixel(mask.geom.wcs)
+        ind = tuple([int(round(idx.item())) for idx in ind])
+        try:
+            contributes = mask.data.squeeze()[ind]
+        except (IndexError):  # if outside geom
+            contributes = False
+        # account for extension or not
+        if (
+            not contributes
+            and use_evaluation_region
+            and self.spatial_model is not None
+            and self.spatial_model.evaluation_region is not None
+        ):
+            contributes = np.any(
+                mask.mask_contains_region(self.spatial_model.evaluation_region)
+            )
+        return contributes
 
     def evaluate(self, lon, lat, energy, time=None):
         """Evaluate the model at given points.

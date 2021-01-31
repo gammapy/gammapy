@@ -12,7 +12,12 @@ from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
-from gammapy.modeling.models import BackgroundModel, DatasetModels, FoVBackgroundModel
+from gammapy.modeling.models import (
+    Models,
+    BackgroundModel,
+    DatasetModels,
+    FoVBackgroundModel,
+)
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
@@ -45,6 +50,16 @@ BINSZ_IRF_DEFAULT = 0.2
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
+
+
+def get_cutout_width(model, psf=None, margin=CUTOUT_MARGIN):
+    """Cutout width for the model component"""
+    if psf is not None:
+        psf_width = np.max(psf.psf_kernel_map.geom.width)
+    else:
+        psf_width = 0 * u.deg
+
+    return psf_width + 2 * (model.evaluation_radius + margin)
 
 
 def create_map_dataset_geoms(
@@ -404,7 +419,12 @@ class MapDataset(Dataset):
 
             if evaluator.needs_update:
                 evaluator.update(
-                    self.exposure, self.psf, self.edisp, self._geom, self.mask_safe_psf
+                    self.exposure,
+                    self.psf,
+                    self.edisp,
+                    self._geom,
+                    self.mask_fit,
+                    self.mask_safe_psf,
                 )
 
             if evaluator.contributes:
@@ -2399,6 +2419,8 @@ class MapEvaluator:
         PSF kernel
     edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion
+    mask : `~gammapy.maps.Map`
+        Mask to apply to the likelihood for fitting.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     evaluation_mode : {"local", "global"}
@@ -2418,6 +2440,7 @@ class MapEvaluator:
         psf=None,
         edisp=None,
         gti=None,
+        mask=None,
         evaluation_mode="local",
         use_cache=True,
     ):
@@ -2426,6 +2449,7 @@ class MapEvaluator:
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
+        self.mask = mask
         self.gti = gti
         self.contributes = True
         self.use_cache = use_cache
@@ -2492,14 +2516,9 @@ class MapEvaluator:
     @property
     def cutout_width(self):
         """Cutout width for the model component"""
-        if self.psf is not None:
-            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
-        else:
-            psf_width = 0 * u.deg
+        return get_cutout_width(self.model, psf=self.psf)
 
-        return psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
-
-    def update(self, exposure, psf, edisp, geom, mask_safe_psf):
+    def update(self, exposure, psf, edisp, geom, mask_fit, mask_safe_psf):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2512,6 +2531,8 @@ class MapEvaluator:
             Edisp map.
         geom : `WcsGeom`
             Counts geom
+        mask_fit : `~gammapy.maps.Map`
+            Mask to apply to the likelihood for fitting.
         mask_safe_psf : `~gammapy.maps.Map`
             Mask safe map of boolean type.
         """
@@ -2543,6 +2564,9 @@ class MapEvaluator:
                 self.irf_position, energy_axis=energy_axis
             )
 
+        if mask_fit is None:
+            mask_fit = Map.from_geom(geom, data=np.ones(geom.data_shape, dtype=bool))
+
         # lookup psf
         if psf:
             if self.apply_psf_after_edisp:
@@ -2557,13 +2581,15 @@ class MapEvaluator:
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
+            self.contributes = self.model.contributes(
+                mask_fit, margin=self.cutout_width, use_evaluation_region=True
+            )
             try:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=self.cutout_width
                 )
-                self.contributes = True
             except (NoOverlapError, ValueError):
-                self.contributes = False
+                pass
         else:
             self.exposure = exposure
 

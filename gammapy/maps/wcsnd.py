@@ -10,7 +10,7 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from regions import PointSkyRegion, RectangleSkyRegion
+from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -25,7 +25,7 @@ __all__ = ["WcsNDMap"]
 log = logging.getLogger(__name__)
 
 
-def _apply_binary_operations(map_, width, func):
+def _apply_binary_operations(map_, width, func, output=None, mode="same"):
     """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
 
     if not map_.is_mask:
@@ -34,6 +34,9 @@ def _apply_binary_operations(map_, width, func):
     if not isinstance(width, tuple):
         width = (width, width)
 
+    if output is None:
+        output = map_
+
     shape = tuple(
         [
             int(np.ceil(x / scale).value * 2 + 1)
@@ -41,10 +44,13 @@ def _apply_binary_operations(map_, width, func):
         ]
     )
 
-    mask_data = np.empty(map_.data.shape, dtype=bool)
-
+    mask_data = np.empty(output.data.shape, dtype=bool)
+    structure = np.ones(shape)
     for img, idx in map_.iter_by_image():
-        mask_data[idx] = func(img, structure=np.ones(shape))
+        if func == scipy.signal.fftconvolve:
+            mask_data[idx] = func(img, structure, mode=mode)
+        else:
+            mask_data[idx] = func(img, structure)
 
     return mask_data
 
@@ -176,13 +182,16 @@ class WcsNDMap(WcsMap):
 
         data = self.data[np.isfinite(self.data)]
         vals = scipy.interpolate.griddata(
-           tuple(grid_coords.flat), data, tuple(coords), method=method
+            tuple(grid_coords.flat), data, tuple(coords), method=method
         )
 
         m = ~np.isfinite(vals)
         if np.any(m):
             vals_fill = scipy.interpolate.griddata(
-                tuple(grid_coords.flat), data, tuple([c[m] for c in coords]), method="nearest"
+                tuple(grid_coords.flat),
+                data,
+                tuple([c[m] for c in coords]),
+                method="nearest",
             )
             vals[m] = vals_fill
 
@@ -569,6 +578,34 @@ class WcsNDMap(WcsMap):
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
 
+    def mask_contains_region(self, regions):
+        """Check if input regions are overlaping with a boolean mask map.
+
+        Parameters
+        ----------
+        regions: `~regions.Region`
+             Region or list of Regions (pixel or sky regions accepted).
+
+        Returns
+        -------
+        overlap : `numpy.array`
+            Boolean array of same length than regions
+        """
+
+        if not self.is_mask:
+            raise ValueError("mask_contains_region is only supported for boolean masks")
+
+        pixcoords = self.geom.get_idx()
+        pixcoords = PixCoord(pixcoords[0][self.data], pixcoords[1][self.data])
+        if not isinstance(regions, list):
+            regions = [regions]
+        overlap = np.zeros(len(regions), dtype=bool)
+        for k, region in enumerate(regions):
+            if isinstance(region, SkyRegion):
+                region = region.to_pixel(self.geom.wcs)
+            overlap[k] = np.any(region.contains(pixcoords))
+        return overlap
+
     def binary_erode(self, width):
         """Binary erosion of boolean mask removing a given margin
 
@@ -584,10 +621,11 @@ class WcsNDMap(WcsMap):
             Eroded mask map
 
         """
+
         mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
         return self._init_copy(data=mask_data)
 
-    def binary_dilate(self, width):
+    def binary_dilate(self, width, use_fft=True, mode="same"):
         """Binary dilation of boolean mask addding a given margin
 
         Parameters
@@ -595,15 +633,37 @@ class WcsNDMap(WcsMap):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `ndi.binary_dilation` otherwise.
+            
+        mode : str {'same', 'full'}
+            A string indicating the size of the output.
+            - 'same': The output is the same size as input (Default).
+            - 'full': The output size is extended by the width
 
         Returns
         -------
         map : `WcsNDMap`
             Dilated mask map
-
         """
-        mask_data = _apply_binary_operations(self, width, ndi.binary_dilation)
-        return self._init_copy(data=mask_data)
+
+        if use_fft:
+            func = scipy.signal.fftconvolve
+        else:
+            func = ndi.binary_dilation
+
+        if mode == "full":
+            pad_width = u.Quantity(width) / (self.geom.pixel_scales)
+            pad_width = list(np.ceil(pad_width.value).astype(int))
+            mask = self.pad(pad_width)
+        else:
+            mask = self
+
+        mask_data = _apply_binary_operations(self, width, func, output=mask, mode=mode)
+        if use_fft:
+            mask_data = np.rint(mask_data).astype(bool)
+        return self._init_copy(geom=mask.geom, data=mask_data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
@@ -618,7 +678,8 @@ class WcsNDMap(WcsMap):
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
-            Use `scipy.signal.fftconvolve` or `ndi.convolve`.
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `ndi.convolve` otherwise.
         kwargs : dict
             Keyword arguments passed to `scipy.signal.fftconvolve` or
             `ndi.convolve`.

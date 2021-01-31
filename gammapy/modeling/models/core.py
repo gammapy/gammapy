@@ -6,11 +6,15 @@ from os.path import split
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
+from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.maps import MapCoord, RegionGeom
 
 log = logging.getLogger(__name__)
+
 
 def _set_link(shared_register, model):
     for param in model.parameters:
@@ -148,7 +152,9 @@ class Model:
                 index = input_names.index(par_dict["name"])
                 par_dict.update(data["parameters"][index])
             except ValueError:
-                log.warning(f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}")
+                log.warning(
+                    f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}"
+                )
             par_data.append(par_dict)
 
         parameters = Parameters.from_dict(par_data)
@@ -234,9 +240,14 @@ class Model:
         if not isinstance(new_datasets_names, list):
             new_datasets_names = [new_datasets_names]
 
+        if isinstance(model.datasets_names, str):
+            model.datasets_names = [model.datasets_names]
+
         if getattr(model, "datasets_names", None):
             for name, name_new in zip(datasets_names, new_datasets_names):
-                model.datasets_names = [_.replace(name, name_new) for _ in model.datasets_names]
+                model.datasets_names = [
+                    _.replace(name, name_new) for _ in model.datasets_names
+                ]
 
         return model
 
@@ -434,15 +445,15 @@ class DatasetModels(collections.abc.Sequence):
     def to_parameters_table(self):
         """Convert Models parameters to an astropy Table."""
         table = self.parameters.to_table()
-        #Warning: splitting of parameters will break is source name has a "." in its name.
+        # Warning: splitting of parameters will break is source name has a "." in its name.
         model_name = [name.split(".")[0] for name in self.parameters_unique_names]
-        table.add_column(model_name, name='model', index=0)
+        table.add_column(model_name, name="model", index=0)
         self._table_cached = table
-        return  table
+        return table
 
     def update_parameters_from_table(self, t):
         """Update Models from an astropy Table."""
-        parameters_dict = [dict(zip( t.colnames, row)) for row in t]      
+        parameters_dict = [dict(zip(t.colnames, row)) for row in t]
         for k, data in enumerate(parameters_dict):
             self.parameters[k].update_from_dict(data)
 
@@ -630,6 +641,63 @@ class DatasetModels(collections.abc.Sequence):
 
         return np.array(selection, dtype=bool)
 
+    def select_mask(self, mask, margin=None, use_evaluation_region=True):
+        """Check if skymodels contribute within a mask map.
+    
+        Parameters
+        ----------
+        mask : `~gammapy.maps.WcsNDMap` of boolean type
+            Map containing a boolean mask
+
+        marign : `~astropy.coordinates.Angle`
+            Add a margin in degree to the source evaluation radius.
+            The default is None. Used to take into account PSF width.
+
+        use_evaluation_region : bool
+            Account for the extension of the model or not. The default is True.   
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models contributing inside the region where mask==True
+        """
+
+        if len(mask.data.squeeze().shape) > 2:
+            mask = mask.sum_over_axes()
+            mask.data = mask.data.astype(bool)
+
+        models = self.select(tag="SkyModel")
+        contribute = np.array(
+            [m.contributes(mask, margin, use_evaluation_region) for m in models]
+        )
+        return models[contribute]
+
+    def select_region(self, regions):
+        """Select skymodels with center position contained within a given region
+
+        Parameters
+        ----------
+        regions : list of  `~regions.Region`
+            Sky region or list of sky regions
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models 
+        """
+
+        models = self.select(tag="SkyModel")
+
+        if isinstance(regions, list):
+            region = [regions]
+
+        inside = np.zeros(len(models), dtype=bool)
+        for k, m in enumerate(models):
+            pos = MapCoord.create(m.position)
+            for region in regions:
+                inside[k] |= np.all(RegionGeom(region).contains(pos))
+        return models[inside]
+
     def restore_status(self, restore_values=True):
         """Context manager to restore status.
 
@@ -667,9 +735,7 @@ class DatasetModels(collections.abc.Sequence):
         """
 
         models = self.select(tag=tag, model_type=model_type)
-        parameters = models.parameters.select(
-            name=parameters_names, type=model_type
-        )
+        parameters = models.parameters.select(name=parameters_names, type=model_type)
         n = len(parameters)
 
         if min is not None:

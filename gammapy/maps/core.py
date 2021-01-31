@@ -390,7 +390,7 @@ class Map(abc.ABC):
         cval : float
             Padding value when mode='consant'.
         order : int
-            Order of interpolation when mode='constant' (0 =
+            Order of interpolation when mode='interp' (0 =
             nearest-neighbor, 1 = linear, 2 = quadratic, 3 = cubic).
 
         Returns

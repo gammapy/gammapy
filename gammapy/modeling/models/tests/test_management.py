@@ -1,6 +1,9 @@
 import pytest
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import SkyCoord
+from astropy import units as u
+from regions import CircleSkyRegion
 from numpy.testing import assert_allclose
 from gammapy.modeling import Covariance
 from gammapy.modeling.models import (
@@ -10,7 +13,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    FoVBackgroundModel
+    FoVBackgroundModel,
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
 
@@ -42,11 +45,55 @@ def models(backgrounds):
     model2 = model1.copy(name="source-2")
     model2.datasets_names = ["dataset-1"]
     model3 = model1.copy(name="source-3")
-    model3.datasets_names = ["dataset-2"]
-    model3.spatial_model = PointSpatialModel()
+    model3.datasets_names = "dataset-2"
+    model3.spatial_model = PointSpatialModel(frame="galactic")
     model3.parameters.freeze_all()
     models = Models([model1, model2, model3] + backgrounds)
     return models
+
+
+def test_select_region(models):
+    center_sky = SkyCoord(3, 4, unit="deg", frame="galactic")
+    circle_sky_12 = CircleSkyRegion(center=center_sky, radius=1 * u.deg)
+    selected = models.select_region([circle_sky_12])
+    assert selected.names == ["source-1", "source-2"]
+
+    center_sky = SkyCoord(0, 0.5, unit="deg", frame="galactic")
+    circle_sky_3 = CircleSkyRegion(center=center_sky, radius=1 * u.deg)
+    selected = models.select_region([circle_sky_3])
+    assert selected.names == ["source-3"]
+
+    selected = models.select_region([circle_sky_3, circle_sky_12])
+    assert selected.names == ["source-1", "source-2", "source-3"]
+
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
+    geom = WcsGeom.create(skydir=(3, 4), npix=(5, 4), frame="galactic", axes=[axis])
+    mask = geom.region_mask([circle_sky_12])
+    contribute = models.select_mask(mask, margin=None, use_evaluation_region=True)
+    inside = models.select_mask(mask, margin=None, use_evaluation_region=False)
+    assert contribute.names == ["source-1", "source-2"]
+    assert inside.names == ["source-1", "source-2"]
+
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
+    geom = WcsGeom.create(
+        skydir=(3, 4), binsz=0.1, npix=(15, 15), frame="galactic", axes=[axis]
+    )
+    mask = geom.region_mask([circle_sky_12])
+    contribute = models.select_mask(
+        mask, margin=4.1 * u.deg, use_evaluation_region=True
+    )
+    assert contribute.names == ["source-1", "source-2", "source-3"]
+
+    spatial_model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma="0.9 deg", frame="galactic"
+    )
+    assert spatial_model.evaluation_region.height == 2 * spatial_model.evaluation_radius
+    model4 = SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=PowerLawSpectralModel(),
+        name="source-4",
+    )
+    assert model4.contributes(mask, margin=None, use_evaluation_region=True)
 
 
 def test_select(models):
@@ -216,7 +263,9 @@ def test_parameters(models):
 
 
 def test_fov_bkg_models():
-    models = Models([FoVBackgroundModel(dataset_name=name) for name in ["test-1", "test-2"]])
+    models = Models(
+        [FoVBackgroundModel(dataset_name=name) for name in ["test-1", "test-2"]]
+    )
     models.freeze()
     assert models.frozen
 

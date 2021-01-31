@@ -295,7 +295,7 @@ def test_wcsndmap_interp_by_coord(npix, binsz, frame, proj, skydir, axes):
     assert_allclose(coords[1].value, m.interp_by_coord(coords, method="linear"))
     assert_allclose(coords[1].value, m.interp_by_coord(coords, method="linear"))
 
-    #if geom.is_regular and not geom.is_allsky:
+    # if geom.is_regular and not geom.is_allsky:
     #    assert_allclose(
     #        coords[1].to_value("deg"), m.interp_by_coord(coords, interp="cubic")
     #    )
@@ -817,5 +817,7 @@ def test_mask_fit_modifications():
     mask_fit = mask_fit & geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
     assert np.sum(mask_fit.data[0, :, :]) == 6300
     assert np.sum(mask_fit.data[1, :, :]) == 6300
-    mask_fit = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))
+    mask_fit_fft = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))
+    mask_fit = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg), use_fft=False)
+    assert np.sum(mask_fit_fft.data) == np.prod(mask_fit_fft.data.shape)
     assert np.sum(mask_fit.data) == np.prod(mask_fit.data.shape)
