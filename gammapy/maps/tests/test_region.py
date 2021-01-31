@@ -275,21 +275,30 @@ def test_to_wcs_geom(region):
     assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
     assert_allclose(wcs_geom.width, [[2], [3]]*u.deg, rtol=1, atol=0)
 
-def test_get_wcs_coord(region):
+def test_get_wcs_coord_and_weights(region):
     # test on circular region
     geom = RegionGeom(region)
-    region_coords = geom.get_wcs_coord()
-    sep = geom.region.center.separation(region_coords.skycoord).value
-    assert max(sep) <= geom.region.radius.value
+    region_coord, weights = geom.get_wcs_coord_and_weights()
+
+    wcs_geom = geom.to_wcs_geom()
+    solid_angles = wcs_geom.solid_angle().T[wcs_geom.coord_to_idx(region_coord)]
+    area = (weights*solid_angles).sum()
+    assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
+
+    assert  region_coord.shape  == weights.shape
 
     # test on rectangular region (assymetric)
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
-    region = RectangleSkyRegion(center=center, width = 1 * u.deg, height=2 * u.deg)
+    region = RectangleSkyRegion(center=center, width = 1 * u.deg, height=2 * u.deg, angle=15*u.deg)
     geom = RegionGeom(region)
-    region_coords = geom.get_wcs_coord()
-    coord = SkyCoord("100d", "30d")
-    assert geom.contains(region_coords.skycoord[0])
-    assert not geom.contains(coord)
+
+    wcs_geom = geom.to_wcs_geom()
+    region_coord, weights = geom.get_wcs_coord_and_weights()
+    solid_angles = wcs_geom.solid_angle().T[wcs_geom.coord_to_idx(region_coord)]
+    area = (weights*solid_angles).sum()
+    assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
+    assert  region_coord.shape  == weights.shape
+
 
 @requires_dependency("matplotlib")
 def test_region_nd_map_plot(region):

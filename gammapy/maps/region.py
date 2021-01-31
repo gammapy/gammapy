@@ -1,4 +1,5 @@
 import copy
+from functools import lru_cache
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -62,6 +63,9 @@ class RegionGeom(Geom):
         self._wcs = wcs
         self.ndim = len(self.data_shape)
 
+        # define cached methods
+        self.get_wcs_coord_and_weights = lru_cache()(self.get_wcs_coord_and_weights)
+
     @property
     def frame(self):
         """Coordinate system, either Galactic ("galactic") or Equatorial
@@ -76,7 +80,7 @@ class RegionGeom(Geom):
     @property
     def width(self):
         """Width of bounding box of the region.
-        
+
         Returns
         -------
         width : `~astropy.units.Quantity`
@@ -180,7 +184,7 @@ class RegionGeom(Geom):
     @property
     def _shape(self):
         """Number of bins in each dimension.
-        The spatial dimension is always (1, 1), as a 
+        The spatial dimension is always (1, 1), as a
         `RegionGeom` is not pixelized further
         """
         return tuple((1, 1) + self.axes.shape)
@@ -235,7 +239,7 @@ class RegionGeom(Geom):
 
     def bin_volume(self):
         """If the RegionGeom has a non-spatial axis, it
-        returns the volume of the region. If not, it 
+        returns the volume of the region. If not, it
         just retuns the solid angle size.
 
         Returns
@@ -260,7 +264,7 @@ class RegionGeom(Geom):
          ----------
         width_min : `~astropy.quantity.Quantity`
         Minimal width for the resulting geometry.
-        Can be a single number or two, for 
+        Can be a single number or two, for
         different minimum widths in each spatial dimension.
 
         Returns
@@ -277,19 +281,40 @@ class RegionGeom(Geom):
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
 
-    def get_wcs_coord(self):
-        """Get the array of coordinates that define the region.
+    def get_wcs_coord_and_weights(self, factor=10):
+        """Get the array of spatial coordinates and corresponding weights
+
+        The coordinates are the center of a pixel that intersects the region and
+        the weights that represent which fraction of the pixel is contained
+        in the region.
+
+        Parameters
+        ----------
+        factor : int
+            Oversampling factor to compute the weights
 
         Returns
         -------
         region_coord : `~MapCoord`
             MapCoord object with the coordinates inside
             the region.
+        weights : `~np.array`
+            Weights representing the fraction of each pixel
+            contained in the region.
         """
-        wcs_geom = self.to_wcs_geom()
-        common_coord = self.contains(wcs_geom.get_coord())
-        region_coord = wcs_geom.get_coord().apply_mask(common_coord)
-        return region_coord
+        wcs_geom = self.to_wcs_geom().to_image()
+
+        weights = wcs_geom.region_weights(
+            regions=[self.region], oversampling_factor=factor
+        )
+
+        mask = (weights.data > 0)
+        weights = weights.data[mask]
+
+        # Get coordinates
+        region_coord = wcs_geom.get_coord().apply_mask(mask)
+        
+        return region_coord, weights
 
     def to_binsz(self, binsz):
         """Returns self"""
@@ -568,7 +593,6 @@ class RegionGeom(Geom):
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         kwargs.setdefault("fc", "None")
-        kwargs.setdefault("ec", "b")
 
         patches = PatchCollection(artists, **kwargs)
         ax.add_collection(patches)

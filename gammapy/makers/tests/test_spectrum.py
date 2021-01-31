@@ -69,9 +69,9 @@ def reflected_regions_bkg_maker():
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
+def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
     datasets = []
-    maker = SpectrumDatasetMaker()
+    maker = SpectrumDatasetMaker(use_region_center=True)
 
     for obs in observations_hess_dl3:
         dataset = maker.run(spectrum_dataset_crab, obs)
@@ -88,8 +88,47 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
 
 
 @requires_data()
+def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
+    datasets = []
+    maker = SpectrumDatasetMaker(use_region_center=False)
+
+    datasets = []
+    for obs in observations_hess_dl3:
+        dataset = maker.run(spectrum_dataset_crab, obs)
+        datasets.append(dataset)
+
+    # Exposure
+    assert_allclose(datasets[0].exposure.data.sum(), 7374718644.757894)
+    assert_allclose(datasets[1].exposure.data.sum(), 6691006466.659032)
+
+    # Background
+    assert_allclose(datasets[0].npred_background().data.sum(), 7.7429157, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.7314076, rtol=1e-5)
+
+    # Compare background with using bigger region
+    e_reco = datasets[0].background.geom.axes['energy']
+    e_true = datasets[0].exposure.geom.axes['energy_true']
+    geom_bigger = RegionGeom.create("icrs;circle(83.63, 22.01, 0.22)", axes=[e_reco])
+
+    datasets_big_region = []
+    bigger_region_dataset = SpectrumDataset.create(geom=geom_bigger, energy_axis_true=e_true)
+    for obs in observations_hess_dl3:
+        dataset = maker.run(bigger_region_dataset, obs)
+        datasets_big_region.append(dataset)
+
+    ratio_regions = datasets[0].counts.geom.solid_angle()/datasets_big_region[1].counts.geom.solid_angle()
+    ratio_bg_1 = datasets[0].npred_background().data.sum()/ datasets_big_region[0].npred_background().data.sum()
+    ratio_bg_2 = datasets[1].npred_background().data.sum()/ datasets_big_region[1].npred_background().data.sum()
+    assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2)
+    assert_allclose(ratio_bg_2, ratio_regions, rtol=1e-2)
+
+    #Edisp -> it isn't exactly 8, is that right? it also isn't without averaging
+    assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
+    assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
+
+@requires_data()
 def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_dc1):
-    maker = SpectrumDatasetMaker()
+    maker = SpectrumDatasetMaker(use_region_center=True)
 
     datasets = []
 
