@@ -291,7 +291,7 @@ class RegionGeom(Geom):
         Parameters
         ----------
         factor : int
-            Oversampling factor to computw the weights
+            Oversampling factor to compute the weights
 
         Returns
         -------
@@ -593,7 +593,6 @@ class RegionGeom(Geom):
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         kwargs.setdefault("fc", "None")
-        kwargs.setdefault("ec", "b")
 
         patches = PatchCollection(artists, **kwargs)
         ax.add_collection(patches)
