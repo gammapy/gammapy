@@ -94,8 +94,10 @@ def add_box(nb_path):
     nb_path = Path(nb_path)
     log.info(f"Adding box in {nb_path}")
     release_number_binder = f"v{__version__}"
+    release_number_download = __version__
     if "dev" in __version__:
         release_number_binder = "master"
+        release_number_download = "dev"
 
     DOWNLOAD_CELL = """
 <div class="alert alert-info">
@@ -103,8 +105,7 @@ def add_box(nb_path):
 **This is a fixed-text formatted version of a Jupyter notebook**
 
 - Try online [![Binder]({BINDER_BADGE_URL})]({BINDER_URL}/{release_number_binder}?urlpath=lab/tree/{nb_filename})
-- You can contribute with your own notebooks in this
-[GitHub repository]({GITHUB_TUTOS_URL}).
+- You may download all the notebooks in the documentation as a [tar file](../_downloads/notebooks-{release_number_download}.tar).
 - **Source files:**
 [{nb_filename}](../{DOWN_NBS}/{nb_filename}) |
 [{py_filename}](../{DOWN_NBS}/{py_filename})
@@ -118,6 +119,7 @@ def add_box(nb_path):
         nb_filename=nb_filename,
         py_filename=py_filename,
         release_number_binder=release_number_binder,
+        release_number_download=release_number_download,
         DOWN_NBS=DOWN_NBS,
         BINDER_BADGE_URL=BINDER_BADGE_URL,
         BINDER_URL=BINDER_URL,

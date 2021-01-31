@@ -47,7 +47,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install astropy click cython numpy pydantic pyyaml regions scipy
-          pip install pytest pytest-astropy
+          pip install pytest pytest-astropy requests tqdm
       - name: create and activate env
         if: matrix.name!='Windows python 3.7 all'
         uses: conda-incubator/setup-miniconda@v2

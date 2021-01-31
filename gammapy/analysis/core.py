@@ -133,7 +133,7 @@ class Analysis:
     def set_models(self, models):
         """Set models on datasets.
 
-        Adds `FoVVackgroundModel` if not present already
+        Adds `FoVBackgroundModel` if not present already
 
         Parameters
         ----------

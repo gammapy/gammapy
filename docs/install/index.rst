@@ -63,9 +63,9 @@ the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
-    gammapy download tutorials --release 0.18.2
-    cd gammapy-tutorials
-    export GAMMAPY_DATA=$PWD/datasets
+    gammapy download notebooks
+    gammapy download datasets
+    export GAMMAPY_DATA=$PWD/gammapy-datasets
 
 You might want to put the definition of the ``$GAMMAPY_DATA`` environment
 variable in your shell profile setup file that is executed when you open a new

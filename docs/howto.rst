@@ -115,14 +115,14 @@ H.E.S.S. or Fermi-LAT data).
 Implement a custom model
 ++++++++++++++++++++++++
 Gammapy allows the flexibility of using user-defined models for analysis.
-For an example, see ` Implementing a Custom Model
+For an example, see `Implementing a Custom Model
 <tutorials/models.html#Implementing-a-Custom-Model>`__.
 
 Energy Dependent Spatial Models
 +++++++++++++++++++++++++++++++
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.
-For an example, see ` here
+For an example, see `here
 <tutorials/models.html#Models-with-Energy-dependent-morphologyl>`__.
 
 Reduce memory budget for large datasets

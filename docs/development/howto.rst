@@ -102,8 +102,6 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ git status
     $ cd astropy_helpers && git checkout -- . && cd ..
 
-.. _dev-check_html_links:
-
 What checks and conversions should I do for inputs?
 ---------------------------------------------------
 
@@ -966,11 +964,22 @@ to the ``dev`` version of the on-line Gammapy documentation will be transformed 
 HTML formatted notebooks and to absolute links pointing to that specific released version of the on-line docs
 in the downloadable ``.ipynb`` files.
 
+Include images in the notebooks
+-------------------------------
 
-Include images from gammapy-extra into the docs
------------------------------------------------
+You may include static images in notebooks using the following markdown directive:
 
-Gammapy has a ``gp-image`` directive to include an image from ``gammapy-extra/figures/``,
+.. code-block:: rst
+
+    ![](images/my_static_image.png)
+
+Please note that your images should be placed inside an `images` folder, accessed with that relative
+path from your notebook.
+
+Include images from gammapy-data into the docs
+----------------------------------------------
+
+Gammapy has a ``gp-image`` directive to include an image from ``$GAMMAPY_DATA/figures/``,
 use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive like this:
 
 .. code-block:: rst
@@ -979,6 +988,8 @@ use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive l
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+
+.. _dev-check_html_links:
 
 Check broken links
 ------------------

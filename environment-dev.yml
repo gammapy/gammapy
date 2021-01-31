@@ -29,6 +29,8 @@ dependencies:
   - pytest-astropy
   - pytest-cov
   - pytest-xdist
+  - requests
+  - tqdm
   # extra dependencies
   - healpy
   - iminuit<2.0
@@ -38,11 +40,8 @@ dependencies:
   - matplotlib
   - naima
   - pandas
-  - parfive
   - reproject
-  - requests
   - sherpa
-  - tqdm
   # dev dependencies
   - black
   - flake8
@@ -60,5 +59,6 @@ dependencies:
   - sphinx_rtd_theme
   - twine
   - yamllint
+  - nbformat=5.0.8
   - pip:
       - pytest-sphinx
