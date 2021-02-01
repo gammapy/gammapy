@@ -38,7 +38,8 @@ class RegionGeom(Geom):
     binsz_wcs : `float`
         Angular bin size of the underlying `~WcsGeom` used to evaluate
         quantities in the region. Default size is 0.01 deg. This default
-        value is adequate for the majority of use cases.
+        value is adequate for the majority of use cases. If a wcs object
+        is provided, the input of binsz_wcs is overridden.
     """
 
     is_image = False
