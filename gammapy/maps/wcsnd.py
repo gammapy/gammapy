@@ -10,7 +10,7 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord
+from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord, PointPixelRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -596,11 +596,18 @@ class WcsNDMap(WcsMap):
         if not self.is_mask:
             raise ValueError("mask_contains_region is only supported for boolean masks")
 
+        if not self.geom.is_image:
+            raise ValueError("Method only supported for 2D images")
+
         idx = self.geom.get_idx()
         coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
 
         if isinstance(region, SkyRegion):
             region = region.to_pixel(self.geom.wcs)
+
+        if isinstance(region, PointPixelRegion):
+            lon, lat = region.center.x, region.center.y
+            return self.get_by_pix((lon, lat))[0]
 
         return np.any(region.contains(coords_pix))
 

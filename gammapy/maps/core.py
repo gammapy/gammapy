@@ -1121,6 +1121,30 @@ class Map(abc.ABC):
         geom = self.geom.to_image().to_cube(axes=[energy_axis])
         return self._init_copy(geom=geom, data=data)
 
+    def mask_nearest_position(self, position):
+        """Given a sky coordinate return nearest valid position in the mask
+
+        If the mask contains additional axes, the mask is reduced over those.
+
+        Parameters
+        ----------
+        position : `SkyCoord`
+            Test position
+
+        Returns
+        -------
+        position : `SkyCoord`
+            Nearest position in the mask
+        """
+        if not self.geom.is_image:
+            raise ValueError("Method only supported for 2D images")
+
+        coords = self.geom.to_image().get_coord().skycoord
+        separation = coords.separation(position)
+        separation[~self.data] = np.inf
+        idx = np.argmin(separation)
+        return coords.flatten()[idx]
+
     def sum_over_axes(self, axes_names=None, keepdims=True, weights=None):
         """To sum map values over all non-spatial axes.
 

@@ -2533,20 +2533,13 @@ class MapEvaluator:
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
         # cache current position of the model component
-        if (
-            self.model.position is not None
-            and mask_safe_psf is not None
-            and np.any(mask_safe_psf.data)
-            and isinstance(mask_safe_psf.geom, WcsGeom)
-        ):
-            coords = mask_safe_psf.geom.get_coord().skycoord
-            separation = coords.separation(self.model.position)
-            separation[~mask_safe_psf.data] = np.inf
-            idx = np.argmin(separation)
-            self.irf_position = coords.flatten()[idx]
-            log.warning(
-                f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
-            )
+        if mask_safe_psf:
+            if not self.model.contributes(mask_safe_psf, use_evaluation_region=False):
+                mask = mask_safe_psf.reduce_over_axes(func=np.logical_or)
+                self.irf_position = mask.mask_nearest_position(self.model.position)
+                log.warning(
+                    f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
+                )
         else:
             self.irf_position = self.model.position
 
