@@ -497,7 +497,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def to_region_nd_map(self, region=None, func=np.nansum, weights=None):
+    def to_region_nd_map(self, region=None, func=np.nansum, weights=None, method="nearest"):
         """Get region ND map in a given region.
 
         By default the whole map region is considered.
@@ -511,6 +511,8 @@ class WcsNDMap(WcsMap):
             For boolean Map, use np.any or np.all.
         weights : `WcsNDMap`
             Array to be used as weights. The geometry must be equivalent.
+        method : {"nearest", "linear"}
+            How to interpolate if a position is given.
 
         Returns
         -------
@@ -533,9 +535,9 @@ class WcsNDMap(WcsMap):
 
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
-            data = self.get_by_coord(coords=coords)
+            data = self.interp_by_coord(coords=coords, method=method)
             if weights is not None:
-                data *= weights.get_by_coord(coords=coords)
+                data *= weights.interp_by_coord(coords=coords, method=method)
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
 

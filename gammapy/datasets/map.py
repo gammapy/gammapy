@@ -116,23 +116,28 @@ def create_map_dataset_geoms(
 class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
+    If an `HDULocation` is passed the map is loaded lazily. This means the
+    map data is only loaded in memeory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accesed once it is cached for
+    the next time.
+
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         Source sky models.
-    counts : `~gammapy.maps.WcsNDMap`
+    counts : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Counts cube
-    exposure : `~gammapy.maps.WcsNDMap`
+    exposure : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Exposure cube
-    background : `~gammapy.maps.WcsNDMap`
+    background : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Background cube
-    mask_fit : `~gammapy.maps.WcsNDMap`
+    mask_fit : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask to apply to the likelihood for fitting.
-    psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
+    psf : `~gammapy.irf.PSFMap` or `~gammapy.utils.fits.HDULocation`
         PSF kernel
-    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap`
+    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
         Energy dispersion kernel
-    mask_safe : `~gammapy.maps.WcsNDMap`
+    mask_safe : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
@@ -556,10 +561,8 @@ class MapDataset(Dataset):
         if self.mask_safe is None or self.psf is None:
             return None
 
-        geom = self.psf.exposure_map.geom.squash("energy_true")
+        geom = self.psf.psf_map.geom.squash("energy_true").squash("rad")
         mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
-        mask_safe_psf.data[np.isnan(mask_safe_psf)] = False
-        # TODO: fix interp_to_geom that create nan value ???
         return mask_safe_psf.to_cube(geom.axes)
 
     @property
@@ -576,8 +579,6 @@ class MapDataset(Dataset):
         if "migra" in geom.axes.names:
             geom = geom.squash("migra")
             mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
-            mask_safe_edisp.data[np.isnan(mask_safe_edisp)] = False
-            # TODO: fix interp_to_geom that create nan value ???
             return mask_safe_edisp.to_cube(geom.axes)
 
         return self.mask_safe.interp_to_geom(geom)
@@ -935,18 +936,10 @@ class MapDataset(Dataset):
             hdulist += self.background.to_hdulist(hdu="background")[exclude_primary]
 
         if self.edisp is not None:
-            hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-            if self.edisp.exposure_map is not None:
-                hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
-                    exclude_primary
-                ]
+            hdulist += self.edisp.to_hdulist()[exclude_primary]
 
         if self.psf is not None:
-            hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-            if self.psf.exposure_map is not None:
-                hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
-                    exclude_primary
-                ]
+            hdulist += self.psf.to_hdulist()[exclude_primary]
 
         if self.mask_safe is not None:
             hdulist += self.mask_safe.to_hdulist(hdu="mask_safe")[exclude_primary]
@@ -1275,11 +1268,12 @@ class MapDataset(Dataset):
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
             else:
-                psf = self.psf.get_energy_dependent_table_psf(on_region.center)
                 geom = kwargs["exposure"].geom
                 energy_true = geom.axes["energy_true"].center
-                containment = psf.containment(
-                    energy_true=energy_true, rad=on_region.radius
+                containment = self.psf.containment(
+                        position=on_region.center,
+                        energy_true=energy_true,
+                        rad=on_region.radius
                 )
                 kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
 
@@ -2545,12 +2539,11 @@ class MapEvaluator:
             and np.any(mask_safe_psf.data)
             and isinstance(mask_safe_psf.geom, WcsGeom)
         ):
-            mask = mask_safe_psf.reduce_over_axes(func=np.logical_or)
-            coords = mask.geom.get_coord().skycoord
+            coords = mask_safe_psf.geom.get_coord().skycoord
             separation = coords.separation(self.model.position)
-            separation[~mask.data] = np.inf
-            ind = np.argmin(separation)
-            self.irf_position = coords.flatten()[ind]
+            separation[~mask_safe_psf.data] = np.inf
+            idx = np.argmin(separation)
+            self.irf_position = coords.flatten()[idx]
             log.warning(
                 f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
             )
@@ -2577,7 +2570,7 @@ class MapEvaluator:
             if geom.is_region:
                 geom = geom.to_wcs_geom()
 
-            self.psf = psf.get_psf_kernel(self.irf_position, geom=geom)
+            self.psf = psf.get_psf_kernel(position=self.irf_position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position

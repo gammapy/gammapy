@@ -34,8 +34,7 @@ Energy dispersion RMF                  `~gammapy.irf.EDispKernel`               
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 PSF               PSF_2D_GAUSS         `~gammapy.irf.EnergyDependentMultiGaussPSF`       `GCTAPsf2D`_
 PSF               PSF_2D_KING          `~gammapy.irf.PSFKing`                            `GCTAPsfKing`_
-PSF               no spec available    `~gammapy.irf.TablePSF`                           `GCTAPsfVector`_
-PSF               gtpsf_ output        `~gammapy.irf.EnergyDependentTablePSF`            N/A
+PSF               gtpsf_ output        `~gammapy.irf.PSFMap`                             N/A
 PSF               psf_table            `~gammapy.irf.PSF3D`                              `GCTAPsfTable`_
 PSF               no spec available    N/A                                               `GCTACubePsf`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
@@ -48,7 +47,7 @@ Exposure          EXPOSURE_3D          `~gammapy.maps.Map`                      
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 Counts            3D                   `~gammapy.maps.Map`                               `GCTAEventCube`_
 Counts            Image                `~gammapy.maps.Map`                               `GSkyMap`_
-Counts            PHA                  `~gammapy.maps.RegionNDMap`                       `GPha`_
+Counts            PHA                  `~gammapy.maps.Map`                               `GPha`_
 ================= ==================== ================================================= ============================
 
 .. _GEventList: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGEventList.html

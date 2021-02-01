@@ -6,9 +6,9 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.data import GTI
+from gammapy.data import GTI, Observation
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.datasets.map import MapEvaluator
+from gammapy.datasets.map import MapEvaluator, RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -19,7 +19,7 @@ from gammapy.irf import (
     PSFKernel,
 )
 
-from gammapy.makers.utils import make_map_exposure_true_energy
+from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -90,9 +90,20 @@ def get_psf():
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
-    table_psf = psf.to_energy_dependent_table_psf(offset=0.5 * u.deg)
-    psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
-    return psf_map
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        frame="galactic",
+        binsz=2,
+        width=(2, 2),
+        axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]]
+    )
+
+    return make_psf_map(
+        psf=psf,
+        pointing=SkyCoord(0, 0.5, unit="deg", frame="galactic"),
+        geom=geom,
+        exposure_map=Map.from_geom(geom.squash("rad"), unit="cm2 s")
+    )
 
 
 @requires_data()

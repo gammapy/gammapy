@@ -543,12 +543,3 @@ class ObservationChecker(Checker):
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return
-
-        # TODO: implement some basic check
-        # The following doesn't work, because EnergyDependentMultiGaussPSF
-        # has no attribute `data`
-        # Check that data isn't all null
-        # if np.max(psf.data.data) <= 0:
-        #     yield self._record(
-        #         level="error", msg="maximum entry of psf is <= 0"
-        #     )

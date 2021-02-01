@@ -6,10 +6,10 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.data import DataStore
-from gammapy.irf import PSF3D, EffectiveAreaTable2D, EnergyDependentTablePSF, PSFMap
+from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import MapAxis, MapCoord, WcsGeom
-from gammapy.utils.testing import requires_data
+from gammapy.maps import MapAxis, MapCoord, WcsGeom, RegionGeom, Map
+from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
 
 
 @pytest.fixture(scope="session")
@@ -103,22 +103,26 @@ def make_test_psfmap(size, shape="gauss"):
     return make_psf_map(psf, pointing, geom, exposure_map)
 
 
-def test_psfmap_to_table_psf():
-    psfmap = make_test_psfmap(0.15 * u.deg)
+def test_psf_map_containment():
+    psf_map = make_test_psfmap(0.15 * u.deg)
     psf = fake_psf3d(0.15 * u.deg)
-    # Extract EnergyDependentTablePSF
-    table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(0, 0, unit="deg"))
+
+    position = SkyCoord(0, 0, unit="deg")
 
     # Check that containment radius is consistent between psf_table and psf3d
     assert_allclose(
-        table_psf.containment_radius(energy_true=1 * u.TeV, fraction=0.9),
+        psf_map.containment_radius(
+            energy_true=1 * u.TeV, position=position, fraction=0.9
+        ),
         psf.containment_radius(
             energy_true=1 * u.TeV, offset=0 * u.deg, fraction=0.9
         ),
         rtol=1e-2,
     )
     assert_allclose(
-        table_psf.containment_radius(energy_true=1 * u.TeV, fraction=0.5),
+        psf_map.containment_radius(
+            energy_true=1 * u.TeV, position=position, fraction=0.5
+        ),
         psf.containment_radius(
             energy_true=1 * u.TeV, offset=0 * u.deg, fraction=0.5
         ),
@@ -133,7 +137,7 @@ def test_psfmap_to_psf_kernel():
     # create PSFKernel
     kern_geom = WcsGeom.create(binsz=0.02, width=5.0, axes=[energy_axis])
     psfkernel = psfmap.get_psf_kernel(
-        SkyCoord(1, 1, unit="deg"), kern_geom, max_radius=1 * u.deg
+        position=SkyCoord(1, 1, unit="deg"), geom=kern_geom, max_radius=1 * u.deg
     )
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
 
@@ -171,7 +175,7 @@ def test_containment_radius_map():
     )
 
     psfmap = make_psf_map(psf=psf, pointing=pointing, geom=geom)
-    m = psfmap.containment_radius_map(1 * u.TeV)
+    m = psfmap.containment_radius_map(energy_true=1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
     assert_allclose(val, 0.226477, rtol=1e-2)
@@ -254,9 +258,9 @@ def make_psf_map_obs(geom, obs):
             "psf_energy": 0.8659643,
             "rad_shape": 144,
             "psf_rad": 0.0015362848,
-            "psf_exposure": 3.14711e12,
+            "psf_exposure": 3.14711e12 * u.Unit("cm2 s"),
             "psf_value_shape": (32, 144),
-            "psf_value": 4369.96391,
+            "psf_value": 4369.96391 * u.Unit("sr-1"),
         },
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
@@ -265,9 +269,9 @@ def make_psf_map_obs(geom, obs):
             "psf_energy": 1.428893959,
             "rad_shape": 144,
             "psf_rad": 0.0015362848,
-            "psf_exposure": 4.723409e12,
+            "psf_exposure": 4.723409e12 * u.Unit("cm2 s"),
             "psf_value_shape": (100, 144),
-            "psf_value": 3714.303683,
+            "psf_value": 3714.303683 * u.Unit("sr-1"),
         },
         {
             "energy": None,
@@ -276,9 +280,9 @@ def make_psf_map_obs(geom, obs):
             "psf_energy": 0.8659643,
             "rad_shape": 1000,
             "psf_rad": 0.000524,
-            "psf_exposure": 3.14711e12,
+            "psf_exposure": 3.14711e12 * u.Unit("cm2 s"),
             "psf_value_shape": (32, 1000),
-            "psf_value": 25888.5047,
+            "psf_value": 25888.5047 * u.Unit("sr-1"),
         },
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
@@ -287,9 +291,9 @@ def make_psf_map_obs(geom, obs):
             "psf_energy": 1.428893959,
             "rad_shape": 1000,
             "psf_rad": 0.000524,
-            "psf_exposure": 4.723409e12,
+            "psf_exposure": 4.723409e12 * u.Unit("cm2 s"),
             "psf_value_shape": (100, 1000),
-            "psf_value": 22453.412121,
+            "psf_value": 22453.412121 * u.Unit("sr-1"),
         },
     ],
 )
@@ -314,25 +318,27 @@ def test_make_psf(pars, data_store):
     )
 
     psf_map = make_psf_map_obs(geom, obs)
-    psf = psf_map.get_energy_dependent_table_psf(position)
+    psf = psf_map.to_region_nd_map(position)
 
-    axis = psf.axes["energy_true"]
+    axis = psf.psf_map.geom.axes["energy_true"]
     assert axis.unit == "TeV"
     assert axis.nbin == pars["energy_shape"]
     assert_allclose(axis.center.value[15], pars["psf_energy"], rtol=1e-3)
 
-    rad_axis = psf.axes["rad"]
+    rad_axis = psf.psf_map.geom.axes["rad"]
     assert rad_axis.unit == "deg"
     assert rad_axis.nbin == pars["rad_shape"]
     assert_allclose(rad_axis.center.to_value("rad")[15], pars["psf_rad"], rtol=1e-3)
 
-    assert psf.exposure.unit == "cm2 s"
-    assert psf.exposure.shape == (pars["energy_shape"],)
-    assert_allclose(psf.exposure.value[15], pars["psf_exposure"], rtol=1e-3)
+    exposure = psf.exposure_map.quantity.squeeze()
+    assert exposure.unit == "m2 s"
+    assert exposure.shape == (pars["energy_shape"],)
+    assert_allclose(exposure[15], pars["psf_exposure"], rtol=1e-3)
 
-    assert psf.unit == "sr-1"
-    assert psf.data.shape == pars["psf_value_shape"]
-    assert_allclose(psf.data[15, 50], pars["psf_value"], rtol=1e-3)
+    data = psf.psf_map.quantity.squeeze()
+    assert data.unit == "sr-1"
+    assert data.shape == pars["psf_value_shape"]
+    assert_allclose(data[15, 50], pars["psf_value"], rtol=1e-3)
 
 
 @requires_data()
@@ -355,27 +361,48 @@ def test_make_mean_psf(data_store):
     stacked_psf = psf_map_1.copy()
     stacked_psf.stack(psf_map_2)
 
-    psf = stacked_psf.get_energy_dependent_table_psf(position)
+    psf = stacked_psf.to_region_nd_map(position).psf_map
 
-    assert not np.isnan(psf.quantity).any()
-    assert_allclose(psf.quantity[22, 22], 12206.1665 / u.sr, rtol=1e-3)
+    assert not np.isnan(psf.quantity.squeeze()).any()
+    assert_allclose(psf.quantity.squeeze()[22, 22], 12206.1665 / u.sr, rtol=1e-3)
 
 
 @requires_data()
 @pytest.mark.parametrize("position", ["0d 0d", "180d 0d", "0d 90d", "180d -90d"])
-def test_psf_map_from_table_psf(position):
+def test_psf_map_read(position):
     position = SkyCoord(position)
     filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
-    table_psf = EnergyDependentTablePSF.read(filename)
-    psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
+    psf = PSFMap.read(filename, format="gtpsf")
 
-    table_psf_new = psf_map.get_energy_dependent_table_psf(position)
+    value = psf.containment(
+        position=position, energy_true=100 * u.GeV, rad=0.1 * u.deg
+    )
 
-    assert_allclose(table_psf_new.quantity, table_psf.quantity)
-    assert table_psf_new.unit == "sr-1"
+    assert_allclose(value, 0.682032, rtol=1e-5)
+    assert psf.psf_map.unit == "sr-1"
 
-    assert_allclose(table_psf_new.exposure.value, table_psf.exposure.value)
-    assert table_psf_new.exposure.unit == "cm2 s"
+
+def test_psf_map_write_gtpsf(tmpdir):
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.1)")
+    psf = PSFMap.from_gauss(
+        energy_axis_true=energy_axis_true, sigma=[0.1, 0.2, 0.3] * u.deg, geom=geom
+    )
+    psf.exposure_map = Map.from_geom(geom.to_cube([energy_axis_true]), unit="cm2 s")
+
+    filename = tmpdir / "test_psf.fits"
+    psf.write(filename, format="gtpsf")
+
+    psf = PSFMap.read(filename, format="gtpsf")
+
+    value = psf.containment_radius(
+        energy_true=energy_axis_true.center, fraction=0.394
+    )
+
+    assert_allclose(value, [0.1, 0.2, 0.3] * u.deg, rtol=1e-5)
+    assert psf.psf_map.unit == "sr-1"
 
 
 def test_to_image():
@@ -387,58 +414,70 @@ def test_to_image():
     assert_allclose(psf2D.psf_map.data[0][0][12][12], 23255.41204827, rtol=1e-2)
 
 
-def test_psfmap_from_gauss():
-    rad = np.linspace(0, 1.5, 100) * u.deg
-    energy = np.logspace(-1, 2, 10) * u.TeV
+def test_psf_map_from_gauss():
     energy_axis = MapAxis.from_nodes(
-        energy, name="energy_true", interp="log", unit="TeV"
+        [1, 3, 10], name="energy_true", interp="log", unit="TeV"
     )
+    rad = np.linspace(0, 1.5, 100) * u.deg
     rad_axis = MapAxis.from_nodes(rad, name="rad", unit="deg")
 
     # define sigmas starting at 0.1 in steps of 0.1 deg
-    sigma = (np.arange(energy.shape[0]) * 0.1 + 0.1) * u.deg
+    sigma = [0.1, 0.2, 0.4] * u.deg
 
     # with energy-dependent sigma
     psfmap = PSFMap.from_gauss(energy_axis, rad_axis, sigma)
+
     assert psfmap.psf_map.geom.axes[0] == rad_axis
     assert psfmap.psf_map.geom.axes[1] == energy_axis
-    assert psfmap.psf_map.unit == Unit("sr-1")
-    assert psfmap.psf_map.data.shape == (energy.shape[0], rad.shape[0], 1, 2)
-    assert_allclose(
-        psfmap.get_energy_dependent_table_psf().containment_radius(
-            energy_true=1 * u.TeV, fraction=0.68
-        ),
-        psfmap.containment_radius_map(1 * u.TeV).data[0][0] * u.deg,
-    )
-    assert_allclose(
-        psfmap.containment_radius_map(energy[3], 0.68).data[0][0] / sigma[3].value,
-        1.51,
-        atol=1e-2,
-    )
-    assert_allclose(
-        psfmap.containment_radius_map(energy[3], 0.95).data[0][0] / sigma[3].value,
-        2.45,
-        atol=1e-2,
-    )
+    assert psfmap.psf_map.unit == "sr-1"
+    assert psfmap.psf_map.data.shape == (3, 100, 1, 2)
 
-    # with constant sigma
-    psfmap1 = PSFMap.from_gauss(energy_axis, rad_axis, sigma[0])
-    assert psfmap1.psf_map.geom.axes[0] == rad_axis
-    assert psfmap1.psf_map.geom.axes[1] == energy_axis
-    assert psfmap1.psf_map.unit == Unit("sr-1")
-    assert psfmap1.psf_map.data.shape == (energy.shape[0], rad.shape[0], 1, 2)
-    assert_allclose(
-        psfmap1.get_energy_dependent_table_psf().containment_radius(
-            energy_true=1 * u.TeV, fraction=0.68
-        ),
-        psfmap1.containment_radius_map(1 * u.TeV).data[0][0] * u.deg,
+    radius = psfmap.containment_radius(
+        fraction=0.394, energy_true=[1, 3, 10] * u.TeV
     )
-
-    # check that the PSF with the same sigma is the same
-    psfvalue = psfmap.get_energy_dependent_table_psf().quantity[0]
-    psfvalue1 = psfmap1.get_energy_dependent_table_psf().quantity[0]
-    assert_allclose(psfvalue, psfvalue1, atol=1e-7)
+    assert_allclose(radius, sigma, rtol=0.01)
 
     # test that it won't work with different number of sigmas and energies
     with pytest.raises(ValueError):
-        psfmap2 = PSFMap.from_gauss(energy_axis, rad_axis, sigma[:3])
+        PSFMap.from_gauss(energy_axis, rad_axis, sigma=[1, 2] * u.deg)
+
+
+def test_psf_map_from_gauss_const_sigma():
+    energy_axis = MapAxis.from_nodes(
+        [1, 3, 10], name="energy_true", interp="log", unit="TeV"
+    )
+    rad = np.linspace(0, 1.5, 100) * u.deg
+    rad_axis = MapAxis.from_nodes(rad, name="rad", unit="deg")
+
+    # with constant sigma
+    psfmap = PSFMap.from_gauss(energy_axis, rad_axis, sigma=0.1 * u.deg)
+    assert psfmap.psf_map.geom.axes[0] == rad_axis
+    assert psfmap.psf_map.geom.axes[1] == energy_axis
+    assert psfmap.psf_map.unit == Unit("sr-1")
+    assert psfmap.psf_map.data.shape == (3, 100, 1, 2)
+
+    radius = psfmap.containment_radius(
+        energy_true=[1, 3, 10] * u.TeV, fraction=0.394
+    )
+    assert_allclose(radius, 0.1 * u.deg, rtol=0.01)
+
+
+@requires_data()
+@requires_dependency("matplotlib")
+def test_psf_map_plot_containment_radius():
+    filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
+    psf = PSFMap.read(filename, format="gtpsf")
+
+    with mpl_plot_check():
+        psf.plot_containment_radius_vs_energy()
+
+
+@requires_data()
+@requires_dependency("matplotlib")
+def test_psf_map_plot_psf_vs_rad():
+    filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
+    psf = PSFMap.read(filename, format="gtpsf")
+
+    with mpl_plot_check():
+        psf.plot_psf_vs_rad()
+

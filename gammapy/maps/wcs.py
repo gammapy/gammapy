@@ -970,7 +970,8 @@ class WcsGeom(Geom):
         )
 
     def to_odd_npix(self, max_radius=None):
-        """Create a new geom object with an odd number of pixel and a maximum size
+        """Create a new geom object with an odd number of pixel and a maximum size.
+
         This is useful for PSF kernel creation.
 
         Parameters

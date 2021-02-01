@@ -272,15 +272,9 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords, interp=1):
+    def interp_by_coord(self, coords, method="linear", fill_value=None):
         pix = self.geom.coord_to_pix(coords)
-        if interp == 1:
-            method = "linear"
-        elif interp == 0:
-            method = "nearest"
-        else:
-            raise ValueError(f"Not a valid interp order {interp}")
-        return self.interp_by_pix(pix, method=method)
+        return self.interp_by_pix(pix, method=method, fill_value=fill_value)
 
     def interp_by_pix(self, pix, method="linear", fill_value=None):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
