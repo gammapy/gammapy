@@ -10,7 +10,7 @@ This page gives an overview of the technical infrastructure we have set up to
 develop and maintain Gammapy.
 
 If you just want to make contribution to the Gammapy code or documentation, you
-don't need to know about most of the things mentioned on this page!
+don't need to know about most of the things mentioned on this page.
 
 But for Gammapy maintainers it's helpful to have a reference that explains what
 we have and how things work.
@@ -28,35 +28,34 @@ Package and docs
 The two main folders of interest for developers are the ``gammapy`` folder and
 the ``docs`` folder. In ``gammapy`` you find the Gammapy package, i.e. all code,
 but also tests are included there in sub-folders called ``tests``. The ``docs``
-folder contains the documentation pages in restructured text (RST) format. The
+folder contains the documentation pages mostly in restructured text (RST) format. The
 Sphinx documentation generator is used to convert those RST files to the HTML
 documentation.
 
-Tutorials
+Notebooks
 ---------
 
-The ``tutorials`` folder contains Jupyter notebooks that are part of the user
-documentation for Gammapy. They are copied to a ``docs/notebooks`` folder during
-the process of documentation building and converted to the Sphinx-formatted HTML
-files that you find in the :ref:`tutorials` section. Raw Jupyter notebooks files and
-``.py`` scripts versions are placed in the ``docs/_static/notebooks`` folder
-generated during the documentation building process.
+The ``docs/tutorials`` folder contains Jupyter notebooks that are part of the user
+documentation for Gammapy, though there may be also notebooks in other parts of the
+documentation. Most of the notebooks present in the documentation are executed during
+the process of the documentation building and converted to the Sphinx-formatted HTML
+files. Clean output stripped ``.ipynb`` notebooks files and ``.py`` scripts versions are also
+generated during the documentation building process and placed in the
+``docs/_static/notebooks`` folder.
 
-We do have automated testing for notebooks set up (just check that they run
-and don't raise an exception) in Travis CI (see below) which runs
-``python -m gammapy.utils.notebooks_test`` and looks at the ``notebooks.yaml``
-file for which notebooks to test or not to test. It is also possible to perform
-tests locally on notebooks  with the ``gammapy jupyter`` command. This command provides
-functionalities for testing, code formatting, stripping output cells and execution. See
-``gammapy jupyter -h`` for more info on this.
+We do perform automated testing for notebooks set up (just check that they run
+and don't raise an exception) during the CI process (see below). It is also possible to
+perform tests locally on notebooks  with the ``gammapy jupyter`` command. This
+command provides functionalities for testing, code formatting, stripping output cells
+and execution. See ``gammapy jupyter -h`` for more info on this.
 
-The ``gammapy download`` command allows to download notebooks published as tutorials
-as well as the related datasets needed to execute them. For stable releases, the list of
-tutorials to download, their locations and datasets used are declared in YAML files
-placed in the ``download/tutorials`` folder of the `gammapy-webpage`_ Github repository.
-The same happens for conda working environments of stable releases declared
-in ``download/install`` folder of that repository. The datasets are not versioned and
-are similarly declared in the ``download/data`` folder.
+The ``gammapy download`` command allows to download notebooks published in the documentation
+as well as the related datasets needed to execute them. The set of notebooks is versioned
+for each stable release as tar bundles published within the versioned documentation in the
+`gammapy-docs <https://github.com/gammapy/gammapy-docs>`__ Github repository.
+The same happens for conda working environments of stable releases. The datasets are not
+versioned and they are placed in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__
+repository.
 
 .. _dev_build:
 
@@ -70,23 +69,20 @@ The ``environment-dev.yml`` file contains the conda environment specification
 that allows one to quickly set up a conda environment for Gammapy development,
 see :ref:`dev_setup`.
 
-The ``astropy_helpers`` folder is a git submodule pointing to
-https://github.com/astropy/astropy-helpers It is used from ``setup.py`` (also
-using ``ah_bootstrap.py``) and provides helpers related to Python build,
+The ``astropy_helpers`` folder is a git submodule used within ``setup.py`` (also
+using ``ah_bootstrap.py``) which provides helpers related to Python build,
 installation and packaging, including a robust way to build C and Cython code
 from ``setup.py``, as well as pytest extensions for testing and Sphinx
 extensions for the documentation build. If you look into those Python files, you
 will find that they are highly complex, and full of workarounds for old versions
 of Python, setuptools, Sphinx etc. Note that this is not code that we develop
-and maintain in Gammapy. Gammapy was started from
-https://github.com/astropy/package-template and there are besides the
-``astropy_helpers`` folder a few files (``ah_bootstrap.py``, ``setup.py``
+and maintain in Gammapy. Gammapy was started from the
+`astropy package template <https://github.com/astropy/package-template>`__ and there
+are besides the ``astropy_helpers`` folder a few files (``ah_bootstrap.py``, ``setup.py``
 ``setup.cfg`` and ``gammapy/_astropy_init.py``) that are needed, but rarely
 need to be looked at or updated. The Astropy team has set up a bot that from time to time makes pull
 requests to update the affiliated packages (including Gammapy) as new versions
 of ``astropy_helpers`` and the extra files are released.
-
-The ``Dockerfile`` and ``binder.py`` files are used for Binder, see below.
 
 Version
 -------
@@ -124,8 +120,8 @@ and your C compiler when you build the Gammapy package, as explained in
 Other
 -----
 
-There are two more folders in the ``gammapy`` repo: ``examples`` and ``dev``. We
-started with the ``examples`` folder with the idea to have Gammapy usage
+There are two more folders in the ``gammapy`` repository: ``examples`` and ``dev``.
+We started with the ``examples`` folder with the idea to have Gammapy usage
 examples there and have them be part of the user documentation. But this is not
 the case at the moment, rather ``examples`` is a collection of scripts that have
 mostly been used by developers to develop and debug Gammapy code. Most can
@@ -135,10 +131,8 @@ where, could move all content to notebooks) or automated tests. The idea for the
 Gammapy developers. Like for ``examples``, it's mostly outdated cruft and should
 probably be cleaned out.
 
-The files ``azure-pipelines.yml``, ``.travis.yml``, ``appveyor.yml`` and
-``lgtm.yml`` are the configuration files for the continuous
-integration (CI) and documentation build / hosting cloud services we use. They
-are described in sections further down on this page.
+The file in ``github/workflows/ci.yml`` is the configuration file for the continuous
+integration (CI) we use with Github actions.
 
 Finally, there are some folders that are generated and filled by various build
 steps:
@@ -164,13 +158,13 @@ a few other things:
 
     https://github.com/gammapy/gammapy-extra
 
-Example data
-------------
+Old example data
+----------------
 
-The ``datasets`` and ``datasets/tests`` folders contain example datasets that are
-used by the Gammapy documentation and tests. Note that here is a lot of old
-cruft, because Gammapy was developed since 2013 in parallel with the development
-of data formats for gamma-ray astronomy (see below).
+The ``datasets`` and ``datasets/tests`` folders contain example datasets that were
+used by the Gammapy documentation and tests. Note that here is a lot of old cruft,
+because Gammapy was developed since 2013 in parallel with the development of data
+formats for gamma-ray astronomy (see below).
 
 Many old files in those folders can just be deleted; in some cases where
 documentation or tests access the old files, they should be changed to access
@@ -178,6 +172,10 @@ newer files or generate test datasets from scratch. Doing this "cleanup" and
 improvement of curated example datasets will be an ongoing task in Gammapy for
 the coming years, that has to proceed in parallel with code, test and
 documentation improvements.
+
+The datasets needed were moved to the `gammapy-data <https://github.com/gammapy/gammapy-data>`__
+repository, which is the dataset repository that is used now to perform the CI tests, build
+the documentation and check notebooks and tutorials.
 
 Other
 -----
@@ -199,6 +197,10 @@ Other
 
 Other repositories
 ==================
+
+Datasets repository:
+
+* https://github.com/gammapy/gammapy-data
 
 Performance benchmarks for Gammapy:
 
@@ -243,34 +245,33 @@ Gammapy Binder
 --------------
 
 We have set up https://mybinder.org/ for Gammapy, which allows users to execute
-the tutorial Jupyter notebooks in the web browser, without having to install
+the notebooks present in the docs within the web browser, without having to install
 software or download data to their local machine. This can be useful for people
-to get started, and for tutorials. Every HTML-fixed version of the tutorial notebooks
+to get started, and for tutorials. Every HTML-fixed version of the notebooks
 that you can find in the :ref:`tutorials` section has a link to Binder that allows
 you to execute the tutorial in the myBinder cloud infrastructure.
 
-myBinder provides versioned virtual environments coupled with every Github commit
-of the `gammapy`
-`Github repository <https://github.com/gammapy/gammapy>`__. The Binder docker image
-is created using the ``Dockerfile`` and ``binder.py`` files. The Dockerfile makes
-the Docker image used by Binder running some linux commands to install base-packages
-and copy the tutorials and datasets neeeded. It executes ``binder.py`` to conda
-install Gammapy dependencies listed in the environment YAML file placed in the
-``download/install`` folder of the `gammapy-webpage`_ Github repository.
+myBinder provides versioned virtual environments coupled with every release and
+the master branch of the `gammapy Github repository <https://github.com/gammapy/gammapy>`__ .
+The myBinder docker image is created using the ``Dockerfile`` and ``binder.py`` files placed
+in the master branch of the `gammapy-webpage Github repository <https://github.com/gammapy/gammapy-webpage>`__.
+The Dockerfile makes the Docker image used by Binder running some linux commands to install base-packages
+and copy the notebooks and datasets needed. It executes ``binder.py`` to conda
+install Gammapy dependencies listed in the environment YAML published within the versioned
+documentation.
 
 Continuous integration
 ======================
 
-We are running various builds on the following two CI platforms:
-
-* https://dev.azure.com/gammapy/gammapy
-* https://travis-ci.org/gammapy/gammapy
+We are running various builds as Github actions workflows for CI.
 
 Code quality
 ============
 
 * Code quality: https://landscape.io/github/gammapy/gammapy/master
 * Code coverage: https://coveralls.io/r/gammapy/gammapy
+* Codacy: https://app.codacy.com/manual/cdeil/gammapy/dashboard
+* LGTM: https://lgtm.com/projects/g/gammapy/gammapy/alerts/?mode=list
 
 Releases
 ========

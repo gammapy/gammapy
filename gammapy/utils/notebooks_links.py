@@ -4,12 +4,10 @@ import argparse
 import logging
 import re
 import shutil
-import sys
 from configparser import ConfigParser
-from distutils.util import strtobool
 from pathlib import Path
 from gammapy import __version__
-from gammapy.utils.notebooks_test import get_notebooks
+from gammapy.utils.scripts import get_notebooks_paths
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -18,13 +16,11 @@ PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
 conf = ConfigParser()
 conf.read(PATH_CFG / "setup.cfg")
 setup_cfg = dict(conf.items("metadata"))
-URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 URL_DOCS = setup_cfg["url_docs"]
 build_docs_cfg = dict(conf.items("build_docs"))
-upload_docs_cfg = dict(conf.items("upload_docs"))
 SOURCE_DIR = Path(build_docs_cfg["source-dir"])
 PATH_NBS = SOURCE_DIR / build_docs_cfg["downloadable-notebooks"]
-PATH_DOC = Path(upload_docs_cfg["upload-dir"])
+PATH_DOC = Path(build_docs_cfg["build-dir"]) / "html"
 
 # release number in absolute links
 release_number_docs = __version__
@@ -121,31 +117,19 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook to process")
-    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
     args = parser.parse_args()
-
-    if not args.nbs:
-        args.nbs = "True"
-    try:
-        args.nbs = strtobool(args.nbs)
-    except Exception as ex:
-        log.error(ex)
-        sys.exit()
 
     logging.basicConfig(level=logging.INFO)
     log.info("Building API links in .ipynb and Sphinx formatted notebooks.")
     log.info("Bring back stripped and clean notebooks.")
 
-    for notebook in get_notebooks():
-        nb_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
-        if args.src and args.src != nb_path:
+    for nb_path in get_notebooks_paths():
+        if args.src and Path(args.src).resolve() != nb_path:
             continue
-        downloadable_path = Path(nb_path)
-        downloadable_path = PATH_NBS / downloadable_path.absolute().name
-        if args.nbs:
-            shutil.copyfile(downloadable_path, nb_path)
-            make_api_links(downloadable_path, file_type="ipynb")
-        html_path = nb_path.replace(str(SOURCE_DIR), str(PATH_DOC))
+        downloadable_path = PATH_NBS / nb_path.absolute().name
+        shutil.copyfile(downloadable_path, nb_path)
+        make_api_links(downloadable_path, file_type="ipynb")
+        html_path = str(nb_path).replace(str(SOURCE_DIR), str(PATH_DOC))
         html_path = html_path.replace("ipynb", "html")
         make_api_links(Path(html_path), file_type="html")
 

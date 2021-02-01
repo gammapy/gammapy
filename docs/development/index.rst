@@ -8,8 +8,8 @@ Developer documentation
 
 The developer documentation is a collection of notes for Gammapy developers and maintainers.
 
-If something is not covered here, have a look at the very extensive Astropy developer documentation
-`here <http://docs.astropy.org/en/latest/#developer-documentation>`__,
+If something is not covered here, have a look at the very extensive
+`Astropy developer documentation <http://docs.astropy.org/en/latest/#developer-documentation>`__,
 we do most things the same way.
 
 But you don't have to read all this stuff if you want to contribute something to Gammapy.
@@ -23,7 +23,7 @@ Contact points
 
 If you want to talk about Gammapy, what are the options?
 
-* You can always post on the `Gammapy mailing list`_!
+* You can always post on the `Gammapy mailing list`_.
   E.g. if you have an issue with Gammapy installation, analysis, a feature request or found a possible issue.
 * You can also file and issue or pull request on the `Gammapy Github page`_.
   Making an account on Github takes only a minute and is free.
@@ -36,7 +36,6 @@ If you want to talk about Gammapy, what are the options?
   web browser at `Gammapy on Slack`_. If you need help with git, Github, Python or have questions about
   Github development (e.g. how to run tests, build the docs, ...), i.e. chat that isn't directly related
   to an issue or pull request on Github, you can use Slack.
-* If you want to have a non-public conversation about Gammapy, or added to the Gammapy slack, please email `Christoph Deil`_.
 
 
 Pages

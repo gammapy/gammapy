@@ -20,7 +20,7 @@ The core of any estimator algorithm is hypothesis testing: a reference
 model or counts excess is tested against a null hypothesis. From the
 best fit reference model a flux is derived and a corresponding :math:`\sqrt{\Delta TS}`
 value from the difference in fit statistics to the null hypothesis,
-assuming one degree of freedom (:ref:`Estimating Delta TS`). In this case
+assuming one degree of freedom. In this case
 :math:`\sqrt{\Delta TS}` represents an approximation of the
 "classical significance".
 
