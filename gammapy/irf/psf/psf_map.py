@@ -95,9 +95,10 @@ class PSFMap(IRFMap):
         return cls(psf_map, exposure_psf)
 
     def to_region_nd_map(self, region):
-        """Convert to region ND PSF map
+        """Extract PSFMap in a given region or position
 
-        If a region is given a mean PSF is computed.
+        If a region is given a mean PSF is computed, if a position is given the
+        PSF is interpolated.
 
         Parameters
         ----------

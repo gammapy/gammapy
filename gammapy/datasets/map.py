@@ -116,7 +116,10 @@ def create_map_dataset_geoms(
 class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
-    If an `HDULocation` is passed the map is loaded lazily.
+    If an `HDULocation` is passed the map is loaded lazily. This means the
+    map data is only loaded in memeory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accesed once it is cached for
+    the next time.
 
     Parameters
     ----------
