@@ -158,6 +158,7 @@ class SpatialModel(Model):
 
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
+    @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`)."""
         return None
