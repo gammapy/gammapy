@@ -33,7 +33,7 @@ def test_create(region):
     assert not geom.is_allsky
 
 def test_binsz(region):
-    geom = RegionGeom.create(region, binsz=0.05)
+    geom = RegionGeom.create(region, binsz_wcs=0.05)
     wcs_geom = geom.to_wcs_geom()
     assert wcs_geom.pixel_scales.deg[0] == 0.05
 
