@@ -35,6 +35,10 @@ class RegionGeom(Geom):
         Non-spatial data axes.
     wcs : `~astropy.wcs.WCS`
         Optional wcs object to project the region if needed.
+    binsz : `float`
+        Angular bin size of the underlying `~WcsGeom` used to evaluate
+        quantities in the region. Default size is 0.01 deg. This default
+        value is adequate for the majority of use cases.
     """
 
     is_image = False
@@ -46,16 +50,16 @@ class RegionGeom(Geom):
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
-    binsz = 0.01
 
-    def __init__(self, region, axes=None, wcs=None):
+    def __init__(self, region, axes=None, wcs=None, binsz=0.01):
         self._region = region
         self._axes = MapAxes.from_default(axes)
+        self._binsz = binsz
 
         if wcs is None and region is not None:
             wcs = WcsGeom.create(
                 skydir=region.center,
-                binsz=self.binsz,
+                binsz=binsz,
                 proj=self.projection,
                 frame=self.frame,
             ).wcs
