@@ -428,7 +428,7 @@ class MapDataset(Dataset):
                     self.psf,
                     self.edisp,
                     self._geom,
-                    self.mask_fit,
+                    self.mask,
                     self.mask_safe_psf,
                 )
 
@@ -2512,7 +2512,7 @@ class MapEvaluator:
         """Cutout width for the model component"""
         return get_cutout_width(self.model, psf=self.psf)
 
-    def update(self, exposure, psf, edisp, geom, mask_fit, mask_safe_psf):
+    def update(self, exposure, psf, edisp, geom, mask, mask_safe_psf):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2525,7 +2525,7 @@ class MapEvaluator:
             Edisp map.
         geom : `WcsGeom`
             Counts geom
-        mask_fit : `~gammapy.maps.Map`
+        mask : `~gammapy.maps.Map`
             Mask to apply to the likelihood for fitting.
         mask_safe_psf : `~gammapy.maps.Map`
             Mask safe map of boolean type.
@@ -2557,9 +2557,6 @@ class MapEvaluator:
                 self.irf_position, energy_axis=energy_axis
             )
 
-        if mask_fit is None:
-            mask_fit = Map.from_geom(geom, data=np.ones(geom.data_shape, dtype=bool))
-
         # lookup psf
         if psf:
             if self.apply_psf_after_edisp:
@@ -2575,7 +2572,7 @@ class MapEvaluator:
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
             self.contributes = self.model.contributes(
-                mask_fit, margin=self.cutout_width, use_evaluation_region=True
+                mask=mask, margin=self.cutout_width, use_evaluation_region=True
             )
             try:
                 self.exposure = exposure.cutout(
