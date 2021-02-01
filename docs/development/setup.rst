@@ -272,6 +272,10 @@ Code quality
 * Code quality: https://landscape.io/github/gammapy/gammapy/master
 * Code coverage: https://coveralls.io/r/gammapy/gammapy
 
+To run all tests and measure coverage, type the command ``make test-cov``::
+
+    $ make test-cov
+
 Releases
 ========
 
