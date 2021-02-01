@@ -273,6 +273,10 @@ Code quality
 * Codacy: https://app.codacy.com/manual/cdeil/gammapy/dashboard
 * LGTM: https://lgtm.com/projects/g/gammapy/gammapy/alerts/?mode=list
 
+To run all tests and measure coverage, type the command ``make test-cov``::
+
+    $ make test-cov
+
 Releases
 ========
 
