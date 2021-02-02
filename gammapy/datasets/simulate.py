@@ -73,8 +73,7 @@ class MapDatasetEventSampler:
                     dataset.psf,
                     dataset.edisp,
                     dataset._geom,
-                    dataset.mask_fit,
-                    dataset.mask_safe_psf,
+                    dataset.mask,
                 )
 
             flux = evaluator.compute_flux()

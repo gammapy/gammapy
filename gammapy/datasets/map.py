@@ -5,7 +5,6 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
-from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
@@ -13,7 +12,6 @@ from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import (
-    Models,
     BackgroundModel,
     DatasetModels,
     FoVBackgroundModel,
@@ -50,16 +48,6 @@ BINSZ_IRF_DEFAULT = 0.2
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
-
-
-def get_cutout_width(model, psf=None, margin=CUTOUT_MARGIN):
-    """Cutout width for the model component"""
-    if psf is not None:
-        psf_width = np.max(psf.psf_kernel_map.geom.width)
-    else:
-        psf_width = 0 * u.deg
-
-    return psf_width + 2 * (model.evaluation_radius + margin)
 
 
 def create_map_dataset_geoms(
@@ -429,7 +417,6 @@ class MapDataset(Dataset):
                     self.edisp,
                     self._geom,
                     self.mask,
-                    self.mask_safe_psf,
                 )
 
             if evaluator.contributes:
@@ -2508,11 +2495,20 @@ class MapEvaluator:
         return update
 
     @property
+    def psf_width(self):
+        if self.psf is not None:
+            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
+        else:
+            psf_width = 0 * u.deg
+        return psf_width
+
+    @property
     def cutout_width(self):
         """Cutout width for the model component"""
-        return get_cutout_width(self.model, psf=self.psf)
 
-    def update(self, exposure, psf, edisp, geom, mask, mask_safe_psf):
+        return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
+
+    def update(self, exposure, psf, edisp, geom, mask):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2527,27 +2523,15 @@ class MapEvaluator:
             Counts geom
         mask : `~gammapy.maps.Map`
             Mask to apply to the likelihood for fitting.
-        mask_safe_psf : `~gammapy.maps.Map`
-            Mask safe map of boolean type.
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
-        # cache current position of the model component
-        if mask_safe_psf:
-            if not self.model.contributes(mask_safe_psf, use_evaluation_region=False):
-                mask = mask_safe_psf.reduce_over_axes(func=np.logical_or)
-                self.irf_position = mask.mask_nearest_position(self.model.position)
-                log.warning(
-                    f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
-                )
-        else:
-            self.irf_position = self.model.position
 
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
-                self.irf_position, energy_axis=energy_axis
+                self.model.position, energy_axis=energy_axis
             )
 
         # lookup psf
@@ -2560,12 +2544,12 @@ class MapEvaluator:
             if geom.is_region:
                 geom = geom.to_wcs_geom()
 
-            self.psf = psf.get_psf_kernel(position=self.irf_position, geom=geom)
+            self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
             self._init_position = self.model.position
             self.contributes = self.model.contributes(
-                mask=mask, margin=self.cutout_width, use_evaluation_region=True
+                mask=mask, margin=self.psf_width, use_evaluation_region=True
             )
             try:
                 self.exposure = exposure.cutout(

@@ -210,7 +210,6 @@ class TSMapEstimator(Estimator):
             dataset.edisp,
             dataset.counts.geom,
             dataset.mask_fit,
-            dataset.mask_safe_psf,
         )
 
         kernel = evaluator.compute_npred()

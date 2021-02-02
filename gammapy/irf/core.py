@@ -372,6 +372,26 @@ class IRFMap:
     def required_axes(self):
         pass
 
+    # TODO: add mask safe to IRFMap as a regular attribute and don't derive it from the data
+    @property
+    def mask_safe_image(self):
+        """Mask safe for the map"""
+        mask = self._irf_map > (0 * self._irf_map.unit)
+        return mask.reduce_over_axes(func=np.logical_or)
+
+    def _get_nearest_valid_position(self, position):
+        """Get nearest valid position"""
+        is_valid = np.nan_to_num(self.mask_safe_image.get_by_coord(position))[0]
+
+        if not is_valid:
+            position = self.mask_safe_image.mask_nearest_position(position)
+            log.warning(
+                f"Position {position} is outside "
+                "valid IRF map range, using nearest IRF defined within"
+            )
+
+        return position
+
     @classmethod
     def from_hdulist(
         cls,
