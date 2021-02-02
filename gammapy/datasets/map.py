@@ -2432,9 +2432,9 @@ class MapEvaluator:
         self.edisp = edisp
         self.mask = mask
         self.gti = gti
-        self.contributes = True
         self.use_cache = use_cache
-        self.irf_position = None
+        self._init_position = None
+        self.contributes = True
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -2442,7 +2442,7 @@ class MapEvaluator:
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None:
+        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None or self.model.evaluation_radius is None:
             self.evaluation_mode = "global"
 
         # define cached computations
@@ -2527,6 +2527,9 @@ class MapEvaluator:
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
 
+        if mask is None:
+            mask = Map.from_geom(geom.to_image(), data=True, dtype=bool)
+
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
@@ -2546,11 +2549,12 @@ class MapEvaluator:
 
             self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
-        if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
+        if self.evaluation_mode == "local":
             self._init_position = self.model.position
             self.contributes = self.model.contributes(
                 mask=mask, margin=self.psf_width, use_evaluation_region=True
             )
+
             try:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=self.cutout_width
