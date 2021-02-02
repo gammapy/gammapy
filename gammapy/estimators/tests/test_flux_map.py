@@ -2,15 +2,21 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from gammapy.maps import MapAxis, WcsNDMap
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel
+from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel, LogParabolaSpectralModel
 from gammapy.estimators import FluxMap
 
 
 @pytest.fixture(scope="session")
 def reference_model():
     return SkyModel(spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2))
+
+@pytest.fixture(scope="session")
+def logpar_reference_model():
+    logpar = LogParabolaSpectralModel(amplitude="2e-12 cm-2s-1TeV-1", alpha=1.5, beta=0.5)
+    return SkyModel(spatial_model=PointSpatialModel(), spectral_model=logpar)
 
 @pytest.fixture(scope="session")
 def wcs_flux_map(reference_model):
@@ -68,8 +74,8 @@ def test_flux_map_properties(wcs_flux_map, reference_model):
     assert_allclose(fluxmap.e2dnde_ul.data[:, 0, 0], [2e-12, 2e-12])
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
-def test_flux_map_read_write(tmp_path, wcs_flux_map, reference_model, sed_type):
-    fluxmap = FluxMap(wcs_flux_map, reference_model)
+def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed_type):
+    fluxmap = FluxMap(wcs_flux_map, logpar_reference_model)
 
     fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
     new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
@@ -78,6 +84,41 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, reference_model, sed_type):
     assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
     assert_allclose(new_fluxmap.norm_errn.data[:,0,0], [0.2, 0.2])
     assert_allclose(new_fluxmap.norm_ul.data[:,0,0], [2, 2])
+    assert new_fluxmap.reference_model.spectral_model.tag[0] == "LogParabolaSpectralModel"
+    assert new_fluxmap.reference_model.spectral_model.alpha.value == 1.5
+    assert new_fluxmap.reference_model.spectral_model.beta.value == 0.5
+    assert new_fluxmap.reference_model.spectral_model.amplitude.value == 2e-12
+
+def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
+    fluxmap = FluxMap(wcs_flux_map)
+
+    fluxmap.write(tmp_path / "tmp.fits")
+    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
+
+    assert new_fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
+    assert caplog.records[-1].levelname == "WARNING"
+    assert f"No reference model set for FluxMap." in caplog.records[-1].message
+
+def test_flux_map_read_write_missing_reference_model(tmp_path, wcs_flux_map, reference_model, caplog):
+    fluxmap = FluxMap(wcs_flux_map, reference_model)
+    fluxmap.write(tmp_path / "tmp.fits")
+
+    hdulist = fits.open(tmp_path / "tmp.fits")
+    hdulist[0].header["MODEL"] = "non_existent"
+
+    with pytest.raises(FileNotFoundError):
+        new_fluxmap = FluxMap.from_hdulist(hdulist)
+
+def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
+    fluxmap = FluxMap(wcs_flux_map)
+
+    assert fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
+    assert fluxmap.reference_model.spatial_model.tag[0] == "PointSpatialModel"
+    assert fluxmap.reference_model.spectral_model.index.value == 2
+
+    assert caplog.records[-1].levelname == "WARNING"
+    assert f"No reference model set for FluxMap." in caplog.records[-1].message
+
 
 def test_get_flux_point(wcs_flux_map, reference_model):
     fluxmap = FluxMap(wcs_flux_map, reference_model)

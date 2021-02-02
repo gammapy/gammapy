@@ -203,7 +203,7 @@ class FluxMap(FluxEstimate):
 
         models = Models(self.reference_model)
         models.write(filename_model, overwrite=overwrite)
-        hdulist[1].header['MODEL'] = filename_model.as_posix()
+        hdulist[0].header['MODEL'] = filename_model.as_posix()
 
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
@@ -285,9 +285,13 @@ class FluxMap(FluxEstimate):
                 result[map_type] = Map.from_hdulist(hdulist, hdu=map_type)
 
         model_filename = hdulist[0].header.get("MODEL", None)
+
         reference_model = None
         if model_filename:
-            reference_model = Models.read(model_filename)[0]
+            try:
+                reference_model = Models.read(model_filename)[0]
+            except FileNotFoundError:
+                raise FileNotFoundError(f"Cannot find {model_filename} model file. Check MODEL keyword.")
 
         return cls.from_dict(result, sed_type, reference_model)
 
