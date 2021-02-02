@@ -203,7 +203,7 @@ class FluxMap(FluxEstimate):
 
         models = Models(self.reference_model)
         models.write(filename_model, overwrite=overwrite)
-        hdulist[1].header['MODEL'] = filename_model.as_uri()
+        hdulist[1].header['MODEL'] = filename_model.as_posix()
 
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
@@ -284,8 +284,12 @@ class FluxMap(FluxEstimate):
             if map_type.upper() in hdulist:
                 result[map_type] = Map.from_hdulist(hdulist, hdu=map_type)
 
-        hdulist[0].header["MODELFIL"]
-        return cls.from_dict(result, sed_type)
+        model_filename = hdulist[0].header.get("MODEL", None)
+        reference_model = None
+        if model_filename:
+            reference_model = Models.read(model_filename)[0]
+
+        return cls.from_dict(result, sed_type, reference_model)
 
     @staticmethod
     def _validate_type(maps, sed_type):
@@ -328,6 +332,11 @@ class FluxMap(FluxEstimate):
 
         e_ref = maps[sed_type].geom.axes["energy"].center
         e_edges = maps[sed_type].geom.axes["energy"].edges
+
+        if reference_model is None:
+            log.warning("No reference model set for FluxMap. Assuming point source with E^-2 spectrum.")
+            reference_model = cls._default_model()
+
         ref_dnde = reference_model.spectral_model(e_ref)
 
         if sed_type == "dnde":
