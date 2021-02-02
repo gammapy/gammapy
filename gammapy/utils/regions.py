@@ -123,20 +123,21 @@ def make_pixel_region(region, wcs=None):
 
 
 def compound_region_center(compound_region):
-    """Get geometric mean of a set of sky coordinates
+    """Compute center for a CompoundRegion
 
-    The geometric meamn is defined as the point the minimises
-    the distance to all other points
+    The center of the compound region is defined here as the geometric median
+    of the individual centers of the regions. The geometric median is defined
+    as the point the minimises the distance to all other points.
 
     Parameters
     ----------
-    region : `CompoundRegion`
-        Positions in the sky
+    compound_region : `CompoundRegion`
+        Compound region
 
     Returns
     -------
     center : `SkyCoord`
-        Geometric median of the positions
+        Geometric median of the positions of the individual regions
     """
     regions = compound_region_to_list(compound_region)
     positions = SkyCoord([region.center for region in regions])
