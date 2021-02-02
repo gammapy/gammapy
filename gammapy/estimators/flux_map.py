@@ -10,6 +10,7 @@ from gammapy.modeling.models import (
     SkyModel,
     PowerLawSpectralModel,
     PointSpatialModel,
+    Models,
 )
 from gammapy.utils.scripts import make_path
 
@@ -24,11 +25,12 @@ REQUIRED_MAPS = {
     "likelihood": ["norm"],
 }
 
+#TODO: add an entry for is_ul?
 OPTIONAL_MAPS = {
-    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul", "is_ul"],
-    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"],
-    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
-    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
+    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
+    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
+    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul"],
+    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
     "likelihood": ["norm_err", "norm_errn", "norm_errp","norm_ul", "norm_scan", "stat_scan"],
 }
 
@@ -160,32 +162,50 @@ class FluxMap(FluxEstimate):
             dictionary containing the requested maps.
         """
         if sed_type == "likelihood":
-            result = self.data
+            map_dict = self.data
         else:
-            result = {}
+            map_dict = {}
             for entry in REQUIRED_MAPS[sed_type]:
-                result[entry] = self.__getattribute__(entry)
+                map_dict[entry] = self.__getattribute__(entry)
 
             for entry in OPTIONAL_MAPS[sed_type]:
                 res = self.__getattribute__(entry)
                 if res is not None:
-                    result[entry] = res
+                    map_dict[entry] = res
 
-        return result
+        return map_dict
 
-    def write(self, filename, overwrite=False, sed_type="likelihood"):
+    def write(self, filename, filename_model=None, overwrite=False, sed_type="likelihood"):
         """Write flux map to file.
 
         Parameters
         ----------
         filename : str
             Filename to write to.
+        filename_model : str
+            Filename of the model (yaml format).
+            If None, keep string before '.' and add '_model.yaml' suffix
         overwrite : bool
             Overwrite file if it exists.
         sed_type : str
             sed type to convert to. Default is `Lielihood`
         """
-        self.to_hdulist().writeto(str(make_path(filename)), overwrite=overwrite)
+        filename = make_path(filename)
+
+        if filename_model is None:
+            name_string = filename.as_posix()
+            for suffix in filename.suffixes:
+                name_string.replace(suffix,'')
+            filename_model = name_string + '_model.yaml'
+        filename_model=make_path(filename_model)
+
+        hdulist = self.to_hdulist(sed_type)
+
+        models = Models(self.reference_model)
+        models.write(filename_model, overwrite=overwrite)
+        hdulist[1].header['MODEL'] = filename_model.as_uri()
+
+        hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
     def to_hdulist(self, sed_type="likelihood"):
         """Convert flux map to list of HDUs.
@@ -264,6 +284,7 @@ class FluxMap(FluxEstimate):
             if map_type.upper() in hdulist:
                 result[map_type] = Map.from_hdulist(hdulist, hdu=map_type)
 
+        hdulist[0].header["MODELFIL"]
         return cls.from_dict(result, sed_type)
 
     @staticmethod

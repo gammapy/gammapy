@@ -372,7 +372,7 @@ class Datasets(collections.abc.MutableSequence):
         filename : str or `Path`
             File path or name of datasets yaml file
         filename_models : str or `Path`
-            File path or name of models fyaml ile
+            File path or name of models yaml file
         overwrite : bool
             overwrite datasets FITS files
         write_covariance : bool
