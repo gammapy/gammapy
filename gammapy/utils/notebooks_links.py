@@ -129,7 +129,7 @@ def main():
         downloadable_path = PATH_NBS / nb_path.absolute().name
         shutil.copyfile(downloadable_path, nb_path)
         make_api_links(downloadable_path, file_type="ipynb")
-        html_path = str(nb_path).replace(str(SOURCE_DIR), str(PATH_DOC))
+        html_path = str(nb_path).replace(f"/{SOURCE_DIR}", f"/{PATH_DOC}")
         html_path = html_path.replace("ipynb", "html")
         make_api_links(Path(html_path), file_type="html")
 
