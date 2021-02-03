@@ -30,6 +30,29 @@ def bkg_3d():
         unit="s-1 GeV-1 sr-1"
     )
 
+@pytest.fixture(scope="session")
+def bkg_3d_interp():
+    """Example with simple values to test evaluate"""
+    energy = np.logspace(-1,3,6) * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
+    fov_lon = [0, 1, 2, 3] * u.deg
+    fov_lon_axis = MapAxis.from_edges(fov_lon, name="fov_lon")
+
+    fov_lat = [0, 1, 2, 3] * u.deg
+    fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
+
+    data = np.ones((5, 3, 3))
+
+    data[-2,:,:] = 0.
+    # clipping of value before last will cause extrapolation problems
+    # as found with CTA background IRF
+
+    return Background3D(
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis],
+        data=data,
+        unit="s-1 GeV-1 sr-1"
+    )
 
 @requires_data()
 def test_background_3d_basics(bkg_3d):
@@ -102,6 +125,17 @@ def test_background_3d_evaluate(bkg_3d):
     assert_allclose(res.value, [[1, 1], [3.162278, 1]], rtol=1e-5)
     assert res.shape == (2, 2)
 
+def test_background_3d_missing_values(bkg_3d_interp):
+    
+    assert np.all(bkg_3d_interp.data!=0)
+    # without missing values interpolation
+    # extrolation would give too high value (1e33 here) 
+    res = bkg_3d_interp.evaluate(
+        fov_lon=0.5 * u.deg,
+        fov_lat=0.5 * u.deg,
+        energy=2000 * u.TeV,
+    )
+    assert res.value < 1e10
 
 def test_background_3d_integrate(bkg_3d):
     # Example has bkg rate = 4 s-1 MeV-1 sr-1 at this node:
