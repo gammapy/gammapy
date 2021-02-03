@@ -86,7 +86,7 @@ def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, ob
     assert_allclose(datasets[1].exposure.meta["livetime"].value, 1572.686724)
 
     assert_allclose(datasets[0].npred_background().data.sum(), 7.747881, rtol=1e-5)
-    assert_allclose(datasets[1].npred_background().data.sum(), 5.731624, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.736333, rtol=1e-5)
 
 
 @requires_data()
@@ -105,7 +105,7 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
 
     # Background
     assert_allclose(datasets[0].npred_background().data.sum(), 7.7429157, rtol=1e-5)
-    assert_allclose(datasets[1].npred_background().data.sum(), 5.7314076, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.736333, rtol=1e-5)
 
     # Compare background with using bigger region
     e_reco = datasets[0].background.geom.axes['energy']
