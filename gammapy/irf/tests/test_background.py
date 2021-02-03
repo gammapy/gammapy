@@ -25,15 +25,14 @@ def bkg_3d():
     # data.value[1, 0, 0] = 1
     data[1, 1, 1] = 100
     return Background3D(
-        axes=[energy_axis, fov_lon_axis, fov_lat_axis],
-        data=data,
-        unit="s-1 GeV-1 sr-1"
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, unit="s-1 GeV-1 sr-1"
     )
+
 
 @pytest.fixture(scope="session")
 def bkg_3d_interp():
     """Example with simple values to test evaluate"""
-    energy = np.logspace(-1,3,6) * u.TeV
+    energy = np.logspace(-1, 3, 6) * u.TeV
     energy_axis = MapAxis.from_energy_edges(energy)
 
     fov_lon = [0, 1, 2, 3] * u.deg
@@ -44,15 +43,14 @@ def bkg_3d_interp():
 
     data = np.ones((5, 3, 3))
 
-    data[-2,:,:] = 0.
+    data[-2, :, :] = 0.0
     # clipping of value before last will cause extrapolation problems
     # as found with CTA background IRF
 
     return Background3D(
-        axes=[energy_axis, fov_lon_axis, fov_lat_axis],
-        data=data,
-        unit="s-1 GeV-1 sr-1"
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, unit="s-1 GeV-1 sr-1"
     )
+
 
 @requires_data()
 def test_background_3d_basics(bkg_3d):
@@ -111,9 +109,7 @@ def test_background_3d_evaluate(bkg_3d):
     assert res.unit == "s-1 GeV-1 sr-1"
 
     res = bkg_3d.evaluate(
-        fov_lon=[1, 0.5] * u.deg,
-        fov_lat=[1, 0.5] * u.deg,
-        energy=[100, 100] * u.TeV,
+        fov_lon=[1, 0.5] * u.deg, fov_lat=[1, 0.5] * u.deg, energy=[100, 100] * u.TeV,
     )
     assert_allclose(res.value, [3.162278, 1], rtol=1e-5)
 
@@ -125,17 +121,17 @@ def test_background_3d_evaluate(bkg_3d):
     assert_allclose(res.value, [[1, 1], [3.162278, 1]], rtol=1e-5)
     assert res.shape == (2, 2)
 
+
 def test_background_3d_missing_values(bkg_3d_interp):
-    
-    assert np.all(bkg_3d_interp.data!=0)
+
+    assert np.all(bkg_3d_interp.data != 0)
     # without missing values interpolation
-    # extrolation would give too high value (1e33 here) 
+    # extrolation would give too high value (1e33 here)
     res = bkg_3d_interp.evaluate(
-        fov_lon=0.5 * u.deg,
-        fov_lat=0.5 * u.deg,
-        energy=2000 * u.TeV,
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
     )
     assert res.value < 1e10
+
 
 def test_background_3d_integrate(bkg_3d):
     # Example has bkg rate = 4 s-1 MeV-1 sr-1 at this node:
@@ -145,7 +141,7 @@ def test_background_3d_integrate(bkg_3d):
         fov_lon=[1.5, 1.5] * u.deg,
         fov_lat=[1.5, 1.5] * u.deg,
         energy=[100, 100 + 2e-6] * u.TeV,
-        axis_name="energy"
+        axis_name="energy",
     )
     assert rate.shape == (1,)
 
@@ -154,7 +150,10 @@ def test_background_3d_integrate(bkg_3d):
     assert_allclose(rate.to("s-1 sr-1").value, 0.2, rtol=1e-5)
 
     rate = bkg_3d.integrate_log_log(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
+        fov_lon=0.5 * u.deg,
+        fov_lat=0.5 * u.deg,
+        energy=[1, 100] * u.TeV,
+        axis_name="energy",
     )
     assert_allclose(rate.to("s-1 sr-1").value, 99000)
 
@@ -162,7 +161,7 @@ def test_background_3d_integrate(bkg_3d):
         fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
         fov_lat=[[1, 1], [0.5, 0.5]] * u.deg,
         energy=[[1, 1], [100, 100]] * u.TeV,
-        axis_name="energy"
+        axis_name="energy",
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.to("s-1 sr-1").value, [[99000.0, 99000.0]], rtol=1e-5)
@@ -224,7 +223,9 @@ def bkg_2d():
     data = np.zeros((2, 3))
     data[1, 0] = 2
     data[1, 1] = 4
-    return Background2D(axes=[energy_axis, offset_axis], data=data, unit="s-1 MeV-1 sr-1")
+    return Background2D(
+        axes=[energy_axis, offset_axis], data=data, unit="s-1 MeV-1 sr-1"
+    )
 
 
 def test_background_2d_evaluate(bkg_2d):
@@ -232,28 +233,21 @@ def test_background_2d_evaluate(bkg_2d):
     # There's some redundancy, and no case exactly at a node in energy
 
     # Evaluate at log center between nodes in energy
-    res = bkg_2d.evaluate(
-        offset=[1, 0.5] * u.deg, energy=[1, 1] * u.TeV
-    )
+    res = bkg_2d.evaluate(offset=[1, 0.5] * u.deg, energy=[1, 1] * u.TeV)
     assert_allclose(res.value, [0, 0])
     assert res.shape == (2,)
     assert res.unit == "s-1 MeV-1 sr-1"
 
-    res = bkg_2d.evaluate(
-        offset=[1, 0.5] * u.deg, energy=[100, 100] * u.TeV
-    )
+    res = bkg_2d.evaluate(offset=[1, 0.5] * u.deg, energy=[100, 100] * u.TeV)
     assert_allclose(res.value, [3, 2])
     res = bkg_2d.evaluate(
-        offset=[[1, 0.5], [1, 0.5]] * u.deg,
-        energy=[[1, 1], [100, 100]] * u.TeV,
+        offset=[[1, 0.5], [1, 0.5]] * u.deg, energy=[[1, 1], [100, 100]] * u.TeV,
     )
 
     assert_allclose(res.value, [[0, 0], [3, 2]])
     assert res.shape == (2, 2)
 
-    res = bkg_2d.evaluate(
-        offset=[1, 1] * u.deg, energy=[1, 100] * u.TeV
-    )
+    res = bkg_2d.evaluate(offset=[1, 1] * u.deg, energy=[1, 100] * u.TeV)
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
 
@@ -290,7 +284,7 @@ def test_background_2d_integrate(bkg_2d):
     # e.g. constant spectrum or power-law.
 
     rate = bkg_2d.integrate_log_log(
-        offset=[1, 0.5] * u.deg,  energy=[0.1, 0.5] * u.TeV, axis_name="energy"
+        offset=[1, 0.5] * u.deg, energy=[0.1, 0.5] * u.TeV, axis_name="energy"
     )
 
     assert rate.shape == (1,)
@@ -302,9 +296,7 @@ def test_background_2d_integrate(bkg_2d):
     assert_allclose(rate.to("s-1 sr-1").value, 0)
 
     rate = bkg_2d.integrate_log_log(
-        offset=[[1, 0.5], [1, 0.5]] * u.deg,
-        energy=[1, 100] * u.TeV,
-        axis_name = "energy"
+        offset=[[1, 0.5], [1, 0.5]] * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.value, [[0, 198]])

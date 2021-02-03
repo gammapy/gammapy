@@ -10,9 +10,7 @@ __all__ = [
     "interpolate_profile",
 ]
 
-INTERPOLATION_ORDER = {
-    None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3
-}
+INTERPOLATION_ORDER = {None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3}
 
 
 class ScaledRegularGridInterpolator:
@@ -238,16 +236,16 @@ def interpolate_invalid_data_3d(data, axis_0):
     if np.any(mask):
         for il in range(data.shape[1]):
             for ib in range(data.shape[2]):
-                mask1d = mask[:,il,ib]
+                mask1d = mask[:, il, ib]
                 if np.any(mask1d) and not np.all(mask1d):
                     invalid = np.where(mask1d)[0]
                     valid = np.where(~mask1d)[0]
                     finterp = scipy.interpolate.interp1d(
                         axis_0[~mask1d],
-                        data_masked[valid,il,ib],
+                        data_masked[valid, il, ib],
                         axis=0,
                         kind="linear",
                         fill_value="extrapolate",
                     )
-                    data_masked[invalid,il,ib] = finterp(axis_0[mask1d])
-    return data_masked             
+                    data_masked[invalid, il, ib] = finterp(axis_0[mask1d])
+    return data_masked
