@@ -4,6 +4,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
+from gammapy.utils.imperpolation import interpolate_invalid_data_3d
 from .core import IRF
 
 __all__ = ["Background3D", "Background2D"]
@@ -114,6 +115,13 @@ class Background3D(BackgroundIRF):
 
     tag = "bkg_3d"
     required_axes = ["energy", "fov_lon", "fov_lat"]
+
+    def __init__(self, axes, data=0, unit="", meta=None):
+        super().__init__(axes, data, unit, meta)    
+        log_energy = np.log(axes["energy"].center.value)
+        log_data = np.ma.masked_invalid(np.log(self.data.value))
+        log_data = interpolate_invalid_data_3d(log_data, log_energy)
+        self.data = 10**log_data.data
 
     def to_2d(self):
         """Convert to `Background2D`.
