@@ -2,10 +2,10 @@ import copy
 from functools import lru_cache
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
-from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
+from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
 from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion
 from gammapy.utils.regions import (
     compound_region_to_list,
@@ -36,6 +36,11 @@ class RegionGeom(Geom):
         Non-spatial data axes.
     wcs : `~astropy.wcs.WCS`
         Optional wcs object to project the region if needed.
+    binsz_wcs : `float`
+        Angular bin size of the underlying `~WcsGeom` used to evaluate
+        quantities in the region. Default size is 0.01 deg. This default
+        value is adequate for the majority of use cases. If a wcs object
+        is provided, the input of binsz_wcs is overridden.
     """
 
     is_image = False
@@ -47,11 +52,11 @@ class RegionGeom(Geom):
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
-    binsz = 0.01
 
-    def __init__(self, region, axes=None, wcs=None):
+    def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.01 deg"):
         self._region = region
         self._axes = MapAxes.from_default(axes)
+        self._binsz_wcs = binsz_wcs
 
         if wcs is None and region is not None:
             if isinstance(region, CompoundSkyRegion):
@@ -60,8 +65,8 @@ class RegionGeom(Geom):
                 center = region.center
 
             wcs = WcsGeom.create(
+                binsz=binsz_wcs,
                 skydir=center,
-                binsz=self.binsz,
                 proj=self.projection,
                 frame=center.frame.name,
             ).wcs
@@ -82,6 +87,16 @@ class RegionGeom(Geom):
             return self.region.center.frame.name
         except AttributeError:
             return wcs_to_celestial_frame(self.wcs).name
+
+    @property
+    def binsz_wcs(self):
+        """Angular bin size of the underlying `~WcsGeom`
+
+        Returns
+        -------
+        binsz_wcs: `~astropy.coordinates.Angle`
+        """
+        return Angle(proj_plane_pixel_scales(self.wcs), unit="deg")
 
     @property
     def width(self):

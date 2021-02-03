@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion, RectangleSkyRegion
-from gammapy.maps import MapAxis, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 
@@ -32,6 +32,20 @@ def test_create(region):
     assert not geom.is_image
     assert not geom.is_allsky
 
+def test_binsz(region):
+    geom = RegionGeom.create(region, binsz_wcs=0.05)
+    wcs_geom = geom.to_wcs_geom()
+    assert geom.binsz_wcs[0].deg == 0.05
+    assert_allclose(wcs_geom.pixel_scales, geom.binsz_wcs)
+
+def test_defined_wcs(region):
+    wcs = WcsGeom.create(
+        skydir=(0,0),
+        frame="galactic",
+        width="1.5deg",
+        binsz="0.1deg").wcs
+    geom = RegionGeom.create(region, wcs=wcs)
+    assert geom.binsz_wcs[0].deg == 0.1
 
 def test_centers(region):
     geom = RegionGeom.create(region)
