@@ -18,6 +18,7 @@ Options: keep as-is, hide from the docs, or to remove it completely
 """
 import operator
 import numpy as np
+from scipy.optimize import minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import (
@@ -119,6 +120,36 @@ def make_pixel_region(region, wcs=None):
         return region
     else:
         raise TypeError(f"Invalid type: {region!r}")
+
+
+def compound_region_center(compound_region):
+    """Compute center for a CompoundRegion
+
+    The center of the compound region is defined here as the geometric median
+    of the individual centers of the regions. The geometric median is defined
+    as the point the minimises the distance to all other points.
+
+    Parameters
+    ----------
+    compound_region : `CompoundRegion`
+        Compound region
+
+    Returns
+    -------
+    center : `SkyCoord`
+        Geometric median of the positions of the individual regions
+    """
+    regions = compound_region_to_list(compound_region)
+    positions = SkyCoord([region.center for region in regions])
+
+    def f(x, coords):
+        """Function to minimize"""
+        lon, lat = x
+        center = SkyCoord(lon * u.deg, lat * u.deg)
+        return np.sum(center.separation(coords).deg)
+
+    result = minimize(f, x0=[0, 0], args=(positions,), bounds=[(-180, 180), (-90, 90)])
+    return SkyCoord(result.x[0], result.x[1], frame="icrs", unit="deg")
 
 
 def compound_region_to_list(region):

@@ -6,11 +6,12 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
-from regions import FITSRegionParser, fits_region_objects_to_table
+from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion
 from gammapy.utils.regions import (
     compound_region_to_list,
     list_to_compound_region,
     make_region,
+    compound_region_center
 )
 from gammapy.maps.wcs import _check_width
 from .core import MapCoord, Map
@@ -58,11 +59,16 @@ class RegionGeom(Geom):
         self._binsz_wcs = binsz_wcs
 
         if wcs is None and region is not None:
+            if isinstance(region, CompoundSkyRegion):
+                center = compound_region_center(region)
+            else:
+                center = region.center
+
             wcs = WcsGeom.create(
-                skydir=region.center,
                 binsz=binsz_wcs,
+                skydir=center,
                 proj=self.projection,
-                frame=self.frame,
+                frame=center.frame.name,
             ).wcs
 
         self._wcs = wcs
@@ -153,6 +159,11 @@ class RegionGeom(Geom):
         except AttributeError:
             xp, yp = self.wcs.wcs.crpix
             return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
+
+    @property
+    def npix(self):
+        """Number of spatial pixels"""
+        return (1, 1)
 
     def contains(self, coords):
         """Check if a given map coordinate is contained in the region.
@@ -528,6 +539,28 @@ class RegionGeom(Geom):
             hdulist.append(region_hdu)
 
         return hdulist
+
+    @classmethod
+    def from_regions(cls, regions, **kwargs):
+        """Create region geom from list of regions
+
+        The regions are combined to a compound region.
+
+        Parameters
+        ----------
+        regions : list of  `~regions.SkyRegion`
+            Regions
+
+        Returns
+        -------
+        geom : `RegionGeom`
+            Region map geometry
+        """
+        if isinstance(regions, SkyRegion):
+            regions = [regions]
+
+        region = list_to_compound_region(regions)
+        return cls(region, **kwargs)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip"):

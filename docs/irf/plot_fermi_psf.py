@@ -1,15 +1,14 @@
 """Plot Fermi PSF."""
-import matplotlib.pyplot as plt
-from gammapy.irf import EnergyDependentTablePSF, PSFKernel
-from gammapy.maps import WcsGeom
+from gammapy.irf import PSFMap
+from gammapy.maps import WcsGeom, MapAxis
 
-filename = "$GAMMAPY_DATA/tests/unbundled/fermi/psf.fits"
-fermi_psf = EnergyDependentTablePSF.read(filename)
+filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
+psf = PSFMap.read(filename, format="gtpsf")
 
-psf = fermi_psf.table_psf_at_energy(energy="1 GeV")
-geom = WcsGeom.create(npix=100, binsz=0.01)
-kernel = PSFKernel.from_table_psf(psf, geom)
+axis = MapAxis.from_energy_bounds("10 GeV", "2 TeV", nbin=20, name="energy_true")
+geom = WcsGeom.create(npix=50, binsz=0.01, axes=[axis])
 
-plt.imshow(kernel.data)
-plt.colorbar()
-plt.show()
+# .to_image() computes the exposure weighted mean PSF
+kernel = psf.get_psf_kernel(geom=geom).to_image()
+
+kernel.psf_kernel_map.plot();

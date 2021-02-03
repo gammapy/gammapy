@@ -69,40 +69,6 @@ class PSF(IRF):
         fraction_idx = np.argmin(np.abs(containment - fraction), axis=0)
         return rad[fraction_idx].reshape(output.shape)
 
-    def to_energy_dependent_table_psf(self, offset, rad=None):
-        """Convert to energy-dependent table PSF.
-
-        Parameters
-        ----------
-        offset : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default theta = 0 deg
-        rad : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid.
-            Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
-
-        Returns
-        -------
-        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Energy-dependent PSF
-        """
-        from gammapy.irf import EnergyDependentTablePSF
-        from gammapy.datasets.map import RAD_AXIS_DEFAULT
-
-        energy_axis_true = self.axes["energy_true"]
-
-        if rad is None:
-            rad_axis = RAD_AXIS_DEFAULT
-        else:
-            rad_axis = MapAxis.from_edges(rad, name="rad")
-
-        axes = MapAxes([energy_axis_true, rad_axis])
-        data = self.evaluate(**axes.get_coord(), offset=offset)
-        return EnergyDependentTablePSF(
-            axes=axes,
-            data=data.value,
-            unit=data.unit
-        )
-
     def info(
         self,
         fraction=[0.68, 0.95],
@@ -248,6 +214,42 @@ class PSF(IRF):
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
+        return ax
+
+    def plot_psf_vs_rad(self, ax=None, offset=[0] * u.deg, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
+        """Plot PSF vs rad.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
+        offset : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default offset = 0 deg
+        energy_true : `~astropy.units.Quantity`
+            True energy at which to plot the profile
+
+        """
+        import matplotlib.pyplot as plt
+        from gammapy.datasets.map import RAD_AXIS_DEFAULT
+
+        ax = plt.gca() if ax is None else ax
+
+        try:
+            rad_axis = self.axes["rad"]
+        except KeyError:
+            rad_axis = RAD_AXIS_DEFAULT
+
+        rad = rad_axis.center
+        for theta in offset:
+            for energy in energy_true:
+                psf_value = self.evaluate(rad=rad, energy_true=energy, offset=theta)
+                label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
+                ax.plot(rad.value, psf_value.value, label=label, **kwargs)
+
+        ax.set_yscale("log")
+        ax.set_xlabel(f"Rad ({rad.unit})")
+        ax.set_ylabel(f"PSF ({psf_value.unit})")
+        plt.legend()
         return ax
 
     def peek(self, figsize=(15, 5)):

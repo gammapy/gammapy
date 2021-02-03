@@ -7,6 +7,7 @@ import scipy.special
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
+from astropy.utils.decorators import classproperty
 from gammapy.maps import MapAxis
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
@@ -51,10 +52,10 @@ class SpectralModel(Model):
         kwargs = self._convert_evaluate_unit(kwargs, energy)
         return self.evaluate(energy, **kwargs)
 
-    @property
-    def is_norm_spectral_model(self):
+    @classproperty
+    def is_norm_spectral_model(cls):
         """Whether model is a norm spectral model"""
-        return "Norm" in self.__class__.__name__
+        return "Norm" in cls.__name__
 
     @staticmethod
     def _convert_evaluate_unit(kwargs_ref, energy):
@@ -141,9 +142,7 @@ class SpectralModel(Model):
         dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
-        return self._propagate_error(
-            epsilon=epsilon, fct=self, energy=energy
-        )
+        return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
 
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
@@ -189,7 +188,7 @@ class SpectralModel(Model):
             fct=self.integral,
             energy_min=energy_min,
             energy_max=energy_max,
-            **kwargs
+            **kwargs,
         )
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
@@ -239,7 +238,7 @@ class SpectralModel(Model):
             fct=self.energy_flux,
             energy_min=energy_min,
             energy_max=energy_max,
-            **kwargs
+            **kwargs,
         )
 
     def plot(

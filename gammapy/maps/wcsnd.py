@@ -10,7 +10,7 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord
+from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord, PointPixelRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -497,7 +497,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def to_region_nd_map(self, region=None, func=np.nansum, weights=None):
+    def to_region_nd_map(self, region=None, func=np.nansum, weights=None, method="nearest"):
         """Get region ND map in a given region.
 
         By default the whole map region is considered.
@@ -511,6 +511,8 @@ class WcsNDMap(WcsMap):
             For boolean Map, use np.any or np.all.
         weights : `WcsNDMap`
             Array to be used as weights. The geometry must be equivalent.
+        method : {"nearest", "linear"}
+            How to interpolate if a position is given.
 
         Returns
         -------
@@ -533,9 +535,9 @@ class WcsNDMap(WcsMap):
 
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
-            data = self.get_by_coord(coords=coords)
+            data = self.interp_by_coord(coords=coords, method=method)
             if weights is not None:
-                data *= weights.get_by_coord(coords=coords)
+                data *= weights.interp_by_coord(coords=coords, method=method)
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
 
@@ -578,33 +580,36 @@ class WcsNDMap(WcsMap):
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
 
-    def mask_contains_region(self, regions):
-        """Check if input regions are overlaping with a boolean mask map.
+    def mask_contains_region(self, region):
+        """Check if input region is contained in a boolean mask map.
 
         Parameters
         ----------
-        regions: `~regions.Region`
+        region: `~regions.SkyRegion` or `~regions.PixRegion`
              Region or list of Regions (pixel or sky regions accepted).
 
         Returns
         -------
-        overlap : `numpy.array`
-            Boolean array of same length than regions
+        contained : bool
+            Whether region is contained in the mask
         """
-
         if not self.is_mask:
             raise ValueError("mask_contains_region is only supported for boolean masks")
 
-        pixcoords = self.geom.get_idx()
-        pixcoords = PixCoord(pixcoords[0][self.data], pixcoords[1][self.data])
-        if not isinstance(regions, list):
-            regions = [regions]
-        overlap = np.zeros(len(regions), dtype=bool)
-        for k, region in enumerate(regions):
-            if isinstance(region, SkyRegion):
-                region = region.to_pixel(self.geom.wcs)
-            overlap[k] = np.any(region.contains(pixcoords))
-        return overlap
+        if not self.geom.is_image:
+            raise ValueError("Method only supported for 2D images")
+
+        idx = self.geom.get_idx()
+        coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
+
+        if isinstance(region, SkyRegion):
+            region = region.to_pixel(self.geom.wcs)
+
+        if isinstance(region, PointPixelRegion):
+            lon, lat = region.center.x, region.center.y
+            return self.get_by_pix((lon, lat))[0]
+
+        return np.any(region.contains(coords_pix))
 
     def binary_erode(self, width):
         """Binary erosion of boolean mask removing a given margin

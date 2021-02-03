@@ -673,6 +673,7 @@ class MapAxis:
 
         if len(nodes) != len(np.unique(nodes)):
             raise ValueError("MapAxis: node values must be unique")
+
         if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
             raise ValueError("MapAxis: node values must be sorted")
 

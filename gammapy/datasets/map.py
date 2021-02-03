@@ -5,7 +5,6 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
-from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
@@ -13,7 +12,6 @@ from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import (
-    Models,
     BackgroundModel,
     DatasetModels,
     FoVBackgroundModel,
@@ -50,16 +48,6 @@ BINSZ_IRF_DEFAULT = 0.2
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
-
-
-def get_cutout_width(model, psf=None, margin=CUTOUT_MARGIN):
-    """Cutout width for the model component"""
-    if psf is not None:
-        psf_width = np.max(psf.psf_kernel_map.geom.width)
-    else:
-        psf_width = 0 * u.deg
-
-    return psf_width + 2 * (model.evaluation_radius + margin)
 
 
 def create_map_dataset_geoms(
@@ -116,23 +104,28 @@ def create_map_dataset_geoms(
 class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
+    If an `HDULocation` is passed the map is loaded lazily. This means the
+    map data is only loaded in memeory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accesed once it is cached for
+    the next time.
+
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         Source sky models.
-    counts : `~gammapy.maps.WcsNDMap`
+    counts : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Counts cube
-    exposure : `~gammapy.maps.WcsNDMap`
+    exposure : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Exposure cube
-    background : `~gammapy.maps.WcsNDMap`
+    background : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Background cube
-    mask_fit : `~gammapy.maps.WcsNDMap`
+    mask_fit : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask to apply to the likelihood for fitting.
-    psf : `~gammapy.irf.PSFKernel` or `~gammapy.irf.PSFMap`
+    psf : `~gammapy.irf.PSFMap` or `~gammapy.utils.fits.HDULocation`
         PSF kernel
-    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap`
+    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
         Energy dispersion kernel
-    mask_safe : `~gammapy.maps.WcsNDMap`
+    mask_safe : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
@@ -423,8 +416,7 @@ class MapDataset(Dataset):
                     self.psf,
                     self.edisp,
                     self._geom,
-                    self.mask_fit,
-                    self.mask_safe_psf,
+                    self.mask,
                 )
 
             if evaluator.contributes:
@@ -556,10 +548,8 @@ class MapDataset(Dataset):
         if self.mask_safe is None or self.psf is None:
             return None
 
-        geom = self.psf.exposure_map.geom.squash("energy_true")
+        geom = self.psf.psf_map.geom.squash("energy_true").squash("rad")
         mask_safe_psf = self.mask_safe_image.interp_to_geom(geom.to_image())
-        mask_safe_psf.data[np.isnan(mask_safe_psf)] = False
-        # TODO: fix interp_to_geom that create nan value ???
         return mask_safe_psf.to_cube(geom.axes)
 
     @property
@@ -576,8 +566,6 @@ class MapDataset(Dataset):
         if "migra" in geom.axes.names:
             geom = geom.squash("migra")
             mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
-            mask_safe_edisp.data[np.isnan(mask_safe_edisp)] = False
-            # TODO: fix interp_to_geom that create nan value ???
             return mask_safe_edisp.to_cube(geom.axes)
 
         return self.mask_safe.interp_to_geom(geom)
@@ -935,18 +923,10 @@ class MapDataset(Dataset):
             hdulist += self.background.to_hdulist(hdu="background")[exclude_primary]
 
         if self.edisp is not None:
-            hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")[exclude_primary]
-            if self.edisp.exposure_map is not None:
-                hdulist += self.edisp.exposure_map.to_hdulist(hdu="edisp_exposure")[
-                    exclude_primary
-                ]
+            hdulist += self.edisp.to_hdulist()[exclude_primary]
 
         if self.psf is not None:
-            hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
-            if self.psf.exposure_map is not None:
-                hdulist += self.psf.exposure_map.to_hdulist(hdu="psf_exposure")[
-                    exclude_primary
-                ]
+            hdulist += self.psf.to_hdulist()[exclude_primary]
 
         if self.mask_safe is not None:
             hdulist += self.mask_safe.to_hdulist(hdu="mask_safe")[exclude_primary]
@@ -1275,11 +1255,12 @@ class MapDataset(Dataset):
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
             else:
-                psf = self.psf.get_energy_dependent_table_psf(on_region.center)
                 geom = kwargs["exposure"].geom
                 energy_true = geom.axes["energy_true"].center
-                containment = psf.containment(
-                    energy_true=energy_true, rad=on_region.radius
+                containment = self.psf.containment(
+                        position=on_region.center,
+                        energy_true=energy_true,
+                        rad=on_region.radius
                 )
                 kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
 
@@ -2451,9 +2432,9 @@ class MapEvaluator:
         self.edisp = edisp
         self.mask = mask
         self.gti = gti
-        self.contributes = True
         self.use_cache = use_cache
-        self.irf_position = None
+        self._init_position = None
+        self.contributes = True
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -2461,7 +2442,7 @@ class MapEvaluator:
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None:
+        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None or self.model.evaluation_radius is None:
             self.evaluation_mode = "global"
 
         # define cached computations
@@ -2514,11 +2495,20 @@ class MapEvaluator:
         return update
 
     @property
+    def psf_width(self):
+        if self.psf is not None:
+            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
+        else:
+            psf_width = 0 * u.deg
+        return psf_width
+
+    @property
     def cutout_width(self):
         """Cutout width for the model component"""
-        return get_cutout_width(self.model, psf=self.psf)
 
-    def update(self, exposure, psf, edisp, geom, mask_fit, mask_safe_psf):
+        return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
+
+    def update(self, exposure, psf, edisp, geom, mask):
         """Update MapEvaluator, based on the current position of the model component.
 
         Parameters
@@ -2531,41 +2521,22 @@ class MapEvaluator:
             Edisp map.
         geom : `WcsGeom`
             Counts geom
-        mask_fit : `~gammapy.maps.Map`
+        mask : `~gammapy.maps.Map`
             Mask to apply to the likelihood for fitting.
-        mask_safe_psf : `~gammapy.maps.Map`
-            Mask safe map of boolean type.
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
-        # cache current position of the model component
-        if (
-            self.model.position is not None
-            and mask_safe_psf is not None
-            and np.any(mask_safe_psf.data)
-            and isinstance(mask_safe_psf.geom, WcsGeom)
-        ):
-            mask = mask_safe_psf.reduce_over_axes(func=np.logical_or)
-            coords = mask.geom.get_coord().skycoord
-            separation = coords.separation(self.model.position)
-            separation[~mask.data] = np.inf
-            ind = np.argmin(separation)
-            self.irf_position = coords.flatten()[ind]
-            log.warning(
-                f"Center position for {self.model.name} model is outside dataset mask safe, using nearest IRF defined within"
-            )
-        else:
-            self.irf_position = self.model.position
+
+        if mask is None:
+            mask = Map.from_geom(geom.to_image(), dtype=bool)
+            mask.data |= True
 
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
-                self.irf_position, energy_axis=energy_axis
+                self.model.position, energy_axis=energy_axis
             )
-
-        if mask_fit is None:
-            mask_fit = Map.from_geom(geom, data=np.ones(geom.data_shape, dtype=bool))
 
         # lookup psf
         if psf:
@@ -2577,13 +2548,14 @@ class MapEvaluator:
             if geom.is_region:
                 geom = geom.to_wcs_geom()
 
-            self.psf = psf.get_psf_kernel(self.irf_position, geom=geom)
+            self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
-        if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
+        if self.evaluation_mode == "local":
             self._init_position = self.model.position
             self.contributes = self.model.contributes(
-                mask_fit, margin=self.cutout_width, use_evaluation_region=True
+                mask=mask, margin=self.psf_width, use_evaluation_region=True
             )
+
             try:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=self.cutout_width

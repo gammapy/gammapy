@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
-from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
+from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -524,14 +524,8 @@ def test_convolve_nd():
     m = Map.from_geom(geom)
     m.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
 
-    # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
-    filename = (
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-    table_psf = psf.to_energy_dependent_table_psf(offset=0.5 * u.deg)
-
-    psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=1 * u.deg)
+    psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
+    psf_kernel = psf.get_psf_kernel(geom=geom, max_radius=1 * u.deg)
 
     assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
 

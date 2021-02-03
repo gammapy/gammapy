@@ -12,7 +12,7 @@ class PSFKernel:
 
     This is a container class to store a PSF kernel
     that can be used to convolve `~gammapy.maps.WcsNDMap` objects.
-    It is usually computed from an `~gammapy.irf.EnergyDependentTablePSF`.
+    It is usually computed from an `~gammapy.irf.PSFMap`.
 
     Parameters
     ----------
@@ -23,31 +23,30 @@ class PSFKernel:
     --------
     ::
 
-        import numpy as np
         from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
+        from gammapy.irf import PSFMap
         from astropy import units as u
 
         # Define energy axis
-        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+        energy_axis_true = MapAxis.from_edges(np.logspace(-1., 1., 4), unit="TeV", name="energy_true")
 
         # Create WcsGeom and map
-        geom = WcsGeom.create(binsz=0.02*u.deg, width=2.0*u.deg, axes=[energy_axis])
+        geom = WcsGeom.create(binsz=0.02 * u.deg, width=2.0 * u.deg, axes=[energy_axis_true])
         some_map = Map.from_geom(geom)
-        # Fill map at two positions
-        some_map.fill_by_coord([[0.2,0.4],[-0.1,0.6],[0.5,3.6]])
 
-        # Extract EnergyDependentTablePSF from CTA 1DC IRF
-        filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
-        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
-        table_psf = psf.to_energy_dependent_table_psf(theta=0.5*u.deg)
+        # Fill map at three positions
+        some_map.fill_by_coord([[0, 0, 0], [0, 0, 0], [0.3, 1, 3]])
 
-        psf_kernel = PSFKernel.from_table_psf(table_psf,geom, max_radius=1*u.deg)
+        psf = PSFMap.from_gauss(
+            energy_axis_true=energy_axis_true, sigma=[0.3, 0.2, 0.1] * u.deg
+        )
+
+        kernel = psf.get_psf_kernel(geom=geom, max_radius=1*u.deg)
 
         # Do the convolution
-        some_map_convolved = some_map.convolve(psf_kernel)
+        some_map_convolved = some_map.convolve(kernel)
 
-        some_map_convolved.get_image_by_coord(dict(energy=0.6*u.TeV)).plot()
+        some_map_convolved.plot_grid();
     """
 
     def __init__(self, psf_kernel_map, normalize=True):
@@ -83,46 +82,6 @@ class PSFKernel:
         """Read kernel Map from file."""
         psf_kernel_map = Map.read(*args, **kwargs)
         return cls(psf_kernel_map)
-
-    @classmethod
-    def from_table_psf(cls, table_psf, geom, max_radius=None, factor=4):
-        """Create a PSF kernel from a TablePSF or an EnergyDependentTablePSF on a given Geom.
-
-        If the Geom is not an image, the same kernel will be present on all axes.
-
-        The PSF is estimated by oversampling defined by a given factor.
-
-        Parameters
-        ----------
-        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Input table PSF
-        geom : `~gammapy.maps.WcsGeom`
-            Target geometry. The PSF kernel will be centered on the central pixel.
-            The geometry axes should contain an axis with name "energy"
-        max_radius : `~astropy.coordinates.Angle`
-            Maximum radius of the PSF kernel.
-        factor : int
-            Oversample factor to compute the PSF
-
-        Returns
-        -------
-        kernel : `~gammapy.irf.PSFKernel`
-            the kernel Map with reduced geometry according to the max_radius
-        """
-        # TODO : use PSF containment radius if max_radius is None
-        if max_radius is not None:
-            geom = geom.to_odd_npix(max_radius=max_radius)
-
-        geom_upsampled = geom.upsample(factor=factor)
-        rad = geom_upsampled.separation(geom.center_skydir)
-
-        energy_axis = geom.axes["energy_true"]
-        energy = energy_axis.center[:, np.newaxis, np.newaxis]
-        data = table_psf.evaluate(energy_true=energy, rad=rad).value
-
-        kernel_map = Map.from_geom(geom=geom_upsampled, data=data)
-        kernel_map = kernel_map.downsample(factor, preserve_counts=True)
-        return cls(kernel_map, normalize=True)
 
     @classmethod
     def from_spatial_model(cls, model, geom, max_radius=None, factor=4):
