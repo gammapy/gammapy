@@ -2528,7 +2528,8 @@ class MapEvaluator:
         log.debug("Updating model evaluator")
 
         if mask is None:
-            mask = Map.from_geom(geom.to_image(), data=True, dtype=bool)
+            mask = Map.from_geom(geom.to_image(), dtype=bool)
+            mask.data |= True
 
         # lookup edisp
         if edisp:
