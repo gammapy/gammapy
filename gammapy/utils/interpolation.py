@@ -219,3 +219,35 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
     return ScaledRegularGridInterpolator(
         points=(x,), values=sign * y, values_scale=interp_scale
     )
+
+
+def interpolate_invalid_data_3d(data, axis_0):
+    """Interpolate invalid data in 3d array along axis zero
+    
+    Parameters
+    ----------
+    data : `~numpy.ndarray`
+        Data values
+    axis_0 : `~numpy.ndarray`
+       Center value of axis 0
+
+    """
+
+    data_masked = np.ma.masked_invalid(data)
+    mask = data_masked.mask
+    if np.any(mask):
+        for il in range(data.shape[1]):
+            for ib in range(data.shape[2]):
+                mask1d = mask[:,il,ib]
+                if np.any(mask1d) and not np.all(mask1d):
+                    invalid = np.where(mask1d)[0]
+                    valid = np.where(~mask1d)[0]
+                    finterp = scipy.interpolate.interp1d(
+                        axis_0[~mask1d],
+                        data_masked[valid,il,ib],
+                        axis=0,
+                        kind="linear",
+                        fill_value="extrapolate",
+                    )
+                    data_masked[invalid,il,ib] = finterp(axis_0[mask1d])
+    return data_masked             
