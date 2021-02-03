@@ -169,9 +169,13 @@ class FluxMap(FluxEstimate):
                 map_dict[entry] = self.__getattribute__(entry)
 
             for entry in OPTIONAL_MAPS[sed_type]:
-                res = self.__getattribute__(entry)
-                if res is not None:
-                    map_dict[entry] = res
+                try:
+                    map_dict[entry] = self.__getattribute__(entry)
+                except KeyError:
+                    pass
+
+            for key in self.data.keys() - (REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"]):
+                map_dict[key] = self.data[key]
 
         return map_dict
 
@@ -207,7 +211,7 @@ class FluxMap(FluxEstimate):
 
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
-    def to_hdulist(self, sed_type="likelihood"):
+    def to_hdulist(self, sed_type="likelihood", hdu_bands=None):
         """Convert flux map to list of HDUs.
 
         For now, one cannot export the reference model.
@@ -216,6 +220,9 @@ class FluxMap(FluxEstimate):
         ----------
         sed_type : str
             sed type to convert to. Default is `Likelihood`
+        hdu_bands : str
+            Name of the HDU with the BANDS table. Default is 'BANDS'
+            If set to None, each map will have its own hdu_band
 
         Returns
         -------
@@ -232,7 +239,7 @@ class FluxMap(FluxEstimate):
         map_dict = self.to_dict(sed_type)
 
         for key in map_dict:
-            hdulist += map_dict[key].to_hdulist(hdu=key)[exclude_primary]
+            hdulist += map_dict[key].to_hdulist(hdu=key, hdu_bands=hdu_bands)[exclude_primary]
 
         return hdulist
 
@@ -255,13 +262,16 @@ class FluxMap(FluxEstimate):
 
 
     @classmethod
-    def from_hdulist(cls, hdulist):
+    def from_hdulist(cls, hdulist, hdu_bands=None):
         """Create flux map dataset from list of HDUs.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
+        hdu_bands : str
+            Name of the HDU with the BANDS table. Default is 'BANDS'
+            If set to None, each map should have its own hdu_band
 
         Returns
         -------
@@ -276,13 +286,19 @@ class FluxMap(FluxEstimate):
         result = {}
         for map_type in REQUIRED_MAPS[sed_type]:
             if map_type.upper() in hdulist:
-                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type)
+                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type, hdu_bands=hdu_bands)
             else:
                 raise ValueError(f"Cannot find required map {map_type} for SED type {sed_type}.")
 
         for map_type in OPTIONAL_MAPS[sed_type]:
             if map_type.upper() in hdulist:
-                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type)
+                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type, hdu_bands=hdu_bands)
+
+        # Read additional image hdus
+        for hdu in hdulist[1:]:
+            if hdu.is_image:
+                if hdu.name.lower() not in (REQUIRED_MAPS[sed_type]+OPTIONAL_MAPS[sed_type]):
+                    result[hdu.name.lower()] = Map.from_hdulist(hdulist, hdu=hdu.name, hdu_bands=hdu_bands)
 
         model_filename = hdulist[0].header.get("MODEL", None)
 
@@ -359,5 +375,9 @@ class FluxMap(FluxEstimate):
             if map_type in maps:
                 norm_type = map_type.replace(sed_type, "norm")
                 data[norm_type] = maps[map_type]/factor[:,np.newaxis, np.newaxis]
+
+        # We add the remaining maps
+        for key in maps.keys() - (REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type]):
+            data[key] = maps[key]
 
         return cls(data, reference_model)

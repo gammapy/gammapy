@@ -24,9 +24,6 @@ def wcs_flux_map(reference_model):
 
     map_dict = {}
 
-    map_dict["dnde_ref"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='cm-2 s-1 TeV-1')
-    map_dict["dnde_ref"].quantity += reference_model.spectral_model(energy_axis.center)[:,np.newaxis, np.newaxis]
-
     map_dict["norm"]= WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
     map_dict["norm"].data += 1.0
 
@@ -42,8 +39,29 @@ def wcs_flux_map(reference_model):
     map_dict["norm_ul"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
     map_dict["norm_ul"].data += 2.0
 
+    # Add another map
+    map_dict["sqrt_ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["sqrt_ts"].data += 1.0
+
     return map_dict
 
+@pytest.fixture(scope="session")
+def partial_wcs_flux_map(reference_model):
+    energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit='TeV')
+
+    map_dict = {}
+
+    map_dict["norm"]= WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm"].data += 1.0
+
+    map_dict["norm_err"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm_err"].data += 0.1
+
+    # Add another map
+    map_dict["sqrt_ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["sqrt_ts"].data += 1.0
+
+    return map_dict
 
 def test_flux_map_properties(wcs_flux_map, reference_model):
     fluxmap = FluxMap(wcs_flux_map, reference_model)
@@ -84,10 +102,33 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed
     assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
     assert_allclose(new_fluxmap.norm_errn.data[:,0,0], [0.2, 0.2])
     assert_allclose(new_fluxmap.norm_ul.data[:,0,0], [2, 2])
+
+    # check model
     assert new_fluxmap.reference_model.spectral_model.tag[0] == "LogParabolaSpectralModel"
     assert new_fluxmap.reference_model.spectral_model.alpha.value == 1.5
     assert new_fluxmap.reference_model.spectral_model.beta.value == 0.5
     assert new_fluxmap.reference_model.spectral_model.amplitude.value == 2e-12
+
+    # check existence and content of additional map
+    assert_allclose(new_fluxmap.data["sqrt_ts"].data, 1.0)
+
+@pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
+def test_partial_flux_map_read_write(tmp_path, partial_wcs_flux_map, reference_model, sed_type):
+    fluxmap = FluxMap(partial_wcs_flux_map, reference_model)
+
+    fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
+    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
+
+    assert_allclose(new_fluxmap.norm.data[:,0,0], [1, 1])
+    assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
+
+    # check model
+    assert new_fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
+    assert new_fluxmap.reference_model.spectral_model.index.value == 2
+
+    # check existence and content of additional map
+    assert_allclose(new_fluxmap.data["sqrt_ts"].data, 1.0)
+
 
 def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
     fluxmap = FluxMap(wcs_flux_map)
