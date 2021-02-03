@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.maps.wcs import _check_width
+from gammapy.maps.wcs import _check_width, _check_binsz
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
@@ -412,6 +412,26 @@ def test_check_width(width, out):
 
     geom = WcsGeom.create(width=width, binsz=1.0)
     assert tuple(geom.npix) == out
+
+def test_check_binsz():
+    # float
+    binsz = _check_binsz(0.1)
+    assert isinstance(binsz, float)
+    # string and other units
+    binsz = _check_binsz("0.1deg")
+    assert isinstance(binsz, float)
+    binsz = _check_binsz("3.141592653589793 rad")
+    assert_allclose(binsz, 180)
+    # tuple
+    binsz = _check_binsz(("0.1deg", "0.2deg"))
+    assert isinstance(binsz, tuple)
+    assert isinstance(binsz[0], float)
+    assert isinstance(binsz[1], float)
+    # list
+    binsz = _check_binsz(["0.1deg", "0.2deg"])
+    assert isinstance(binsz, list)
+    assert isinstance(binsz[0], float)
+    assert isinstance(binsz[1], float)
 
 
 def test_check_width_bad_input():
