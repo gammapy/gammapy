@@ -264,6 +264,8 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
+        position = self._get_nearest_valid_position(position)
+
         if max_radius is None:
             max_radius = np.max(self.psf_map.geom.axes["rad"].center)
             min_radius_geom = np.min(geom.width) / 2.0
@@ -370,7 +372,7 @@ class PSFMap(IRFMap):
                 binsz=180,
             )
 
-        geom = geom.to_cube([rad_axis, energy_axis_true])
+        geom = geom.to_image().to_cube([rad_axis, energy_axis_true])
 
         coords = geom.get_coord()
 

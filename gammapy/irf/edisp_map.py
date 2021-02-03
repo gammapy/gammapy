@@ -112,6 +112,8 @@ class EDispMap(IRFMap):
                 "EnergyDispersion can be extracted at one single position only."
             )
 
+        position = self._get_nearest_valid_position(position)
+
         energy_axis_true = self.edisp_map.geom.axes["energy_true"]
         migra_axis = self.edisp_map.geom.axes["migra"]
 
@@ -390,6 +392,7 @@ class EDispKernelMap(IRFMap):
         else:
             if position is None:
                 position = self.edisp_map.geom.center_skydir
+            position = self._get_nearest_valid_position(position)
 
             kernel_map = self.edisp_map.to_region_nd_map(region=position)
 
