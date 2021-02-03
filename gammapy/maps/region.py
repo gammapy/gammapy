@@ -2,10 +2,10 @@ import copy
 from functools import lru_cache
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
-from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
+from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
 from regions import FITSRegionParser, fits_region_objects_to_table
 from gammapy.utils.regions import (
     compound_region_to_list,
@@ -52,7 +52,7 @@ class RegionGeom(Geom):
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
 
-    def __init__(self, region, axes=None, wcs=None, binsz_wcs=0.01):
+    def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.01 deg"):
         self._region = region
         self._axes = MapAxes.from_default(axes)
         self._binsz_wcs = binsz_wcs
@@ -81,6 +81,16 @@ class RegionGeom(Geom):
             return self.region.center.frame.name
         except AttributeError:
             return wcs_to_celestial_frame(self.wcs).name
+
+    @property
+    def binsz_wcs(self):
+        """Angular bin size of the underlying `~WcsGeom`
+
+        Returns
+        -------
+        binsz_wcs: `~astropy.coordinates.Angle`
+        """
+        return Angle(proj_plane_pixel_scales(self.wcs), unit="deg")
 
     @property
     def width(self):

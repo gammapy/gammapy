@@ -44,6 +44,20 @@ def _check_width(width):
         else:
             return tuple(angle)
 
+def _check_binsz(binsz):
+    """Check and normalise bin size argument.
+
+    Always returns an `~astropy.coordinates.Angle` object
+    in place of the spatial coordinates.
+    """
+    if isinstance(binsz, tuple):
+        lon_sz = Angle(binsz[0], "deg").deg
+        lat_sz = Angle(binsz[1], "deg").deg
+        return lon_sz, lat_sz
+    elif isinstance(binsz, list):
+        binsz[:2] = Angle(binsz[:2], unit="deg").deg
+        return binsz
+    return Angle(binsz, unit="deg").deg
 
 def cast_to_shape(param, shape, dtype):
     """Cast a tuple of parameter arrays to a given shape."""
@@ -322,7 +336,7 @@ class WcsGeom(Geom):
             non-spatial dimensions, list input can be used to define a
             different map width in each image plane.  This option
             supersedes width.
-        width : float or tuple or list
+        width : float or tuple or list or string
             Width of the map in degrees.  A tuple will be interpreted
             as parameters for longitude and latitude axes.  For maps
             with non-spatial dimensions, list input can be used to
@@ -357,7 +371,9 @@ class WcsGeom(Geom):
         >>> from gammapy.maps import MapAxis
         >>> axis = MapAxis.from_bounds(0,1,2)
         >>> geom = WcsGeom.create(npix=(100,100), binsz=0.1)
+        >>> geom = WcsGeom.create(npix=(100,100), binsz="0.1deg")
         >>> geom = WcsGeom.create(npix=[100,200], binsz=[0.1,0.05], axes=[axis])
+        >>> geom = WcsGeom.create(npix=[100,200], binsz=["0.1deg","0.05deg"], axes=[axis])
         >>> geom = WcsGeom.create(width=[5.0,8.0], binsz=[0.1,0.05], axes=[axis])
         >>> geom = WcsGeom.create(npix=([100,200],[100,200]), binsz=0.1, axes=[axis])
         """
@@ -373,6 +389,8 @@ class WcsGeom(Geom):
 
         if width is not None:
             width = _check_width(width)
+
+        binsz = _check_binsz(binsz)
 
         shape = max([get_shape(t) for t in [npix, binsz, width]])
         binsz = cast_to_shape(binsz, shape, float)
@@ -917,7 +935,7 @@ class WcsGeom(Geom):
 
         if not isinstance(regions, list):
             regions = [regions]
-    
+
         idx = self.get_idx()
         pixcoord = PixCoord(idx[0], idx[1])
 
