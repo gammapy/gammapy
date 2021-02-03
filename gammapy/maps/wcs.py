@@ -47,8 +47,9 @@ def _check_width(width):
 def _check_binsz(binsz):
     """Check and normalise bin size argument.
 
-    Always returns an `~astropy.coordinates.Angle` object
-    in place of the spatial coordinates.
+    Always returns an object with the same shape
+    as the input where the spatial coordinates
+    are a float in degrees.
     """
     if isinstance(binsz, tuple):
         lon_sz = Angle(binsz[0], "deg").deg
