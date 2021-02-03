@@ -4,6 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+import astropy.units as u
+from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel, LogParabolaSpectralModel
 from gammapy.estimators import FluxMap
@@ -19,7 +21,7 @@ def logpar_reference_model():
     return SkyModel(spatial_model=PointSpatialModel(), spectral_model=logpar)
 
 @pytest.fixture(scope="session")
-def wcs_flux_map(reference_model):
+def wcs_flux_map():
     energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit='TeV')
 
     map_dict = {}
@@ -46,7 +48,7 @@ def wcs_flux_map(reference_model):
     return map_dict
 
 @pytest.fixture(scope="session")
-def partial_wcs_flux_map(reference_model):
+def partial_wcs_flux_map():
     energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit='TeV')
 
     map_dict = {}
@@ -129,6 +131,18 @@ def test_partial_flux_map_read_write(tmp_path, partial_wcs_flux_map, reference_m
     # check existence and content of additional map
     assert_allclose(new_fluxmap.data["sqrt_ts"].data, 1.0)
 
+def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model):
+    start = u.Quantity([1, 2], "min")
+    stop = u.Quantity([1.5, 2.5], "min")
+    gti = GTI.create(start, stop)
+
+    fluxmap = FluxMap(partial_wcs_flux_map, reference_model, gti)
+
+    fluxmap.write(tmp_path / "tmp.fits", sed_type='dnde')
+    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
+
+    assert len(new_fluxmap.gti.table) == 2
+    assert_allclose(gti.table["START"], start.to_value("s"))
 
 def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
     fluxmap = FluxMap(wcs_flux_map)

@@ -2,6 +2,8 @@
 import logging
 import numpy as np
 from astropy.io import fits
+from astropy.table import Table
+from gammapy.data import GTI
 from gammapy.maps import MapCoord, Map
 from gammapy.estimators.core import FluxEstimate
 from gammapy.estimators.flux_point import FluxPoints
@@ -67,9 +69,10 @@ class FluxMap(FluxEstimate):
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         the reference model to use for conversions. Default in None.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
-
+    gti : `~gammapy.data.GTI`
+        the maps GTI information. Default is None.
     """
-    def __init__(self, data, reference_model=None):
+    def __init__(self, data, reference_model=None, gti=None):
         self.geom = data['norm'].geom
 
         if reference_model == None:
@@ -77,6 +80,8 @@ class FluxMap(FluxEstimate):
             reference_model = self._default_model()
 
         self.reference_model = reference_model
+
+        self.gti = gti
 
         super().__init__(data, spectral_model=reference_model.spectral_model)
 
@@ -241,6 +246,10 @@ class FluxMap(FluxEstimate):
         for key in map_dict:
             hdulist += map_dict[key].to_hdulist(hdu=key, hdu_bands=hdu_bands)[exclude_primary]
 
+        if self.gti:
+            hdu = fits.BinTableHDU(self.gti.table, name="GTI")
+            hdulist.append(hdu)
+
         return hdulist
 
     @classmethod
@@ -309,7 +318,12 @@ class FluxMap(FluxEstimate):
             except FileNotFoundError:
                 raise FileNotFoundError(f"Cannot find {model_filename} model file. Check MODEL keyword.")
 
-        return cls.from_dict(result, sed_type, reference_model)
+        if "GTI" in hdulist:
+            gti = GTI(Table.read(hdulist["GTI"]))
+        else:
+            gti = None
+
+        return cls.from_dict(result, sed_type, reference_model, gti)
 
     @staticmethod
     def _validate_type(maps, sed_type):
@@ -327,7 +341,7 @@ class FluxMap(FluxEstimate):
 
 
     @classmethod
-    def from_dict(cls, maps, sed_type='likelihood', reference_model=None):
+    def from_dict(cls, maps, sed_type='likelihood', reference_model=None, gti=None):
         """Create FluxMap from a dictionary of maps.
 
         Parameters
@@ -339,6 +353,8 @@ class FluxMap(FluxEstimate):
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
             the reference model to use for conversions. Default in None.
             If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
+        gti : `~gammapy.data.GTI`
+            the maps GTI information. Default is None.
 
         Returns
         -------
@@ -380,4 +396,4 @@ class FluxMap(FluxEstimate):
         for key in maps.keys() - (REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type]):
             data[key] = maps[key]
 
-        return cls(data, reference_model)
+        return cls(data, reference_model, gti)
