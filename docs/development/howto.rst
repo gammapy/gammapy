@@ -112,9 +112,43 @@ In order to perform tests of these snippets of code present in RST files, you ma
 .. code-block:: bash
 
     pytest --doctest-glob="*.rst" docs/
+
+Check Python code present in docstrings of Python files
+-------------------------------------------------------
+
+It is also advisable to add code snippets within the docstrings of the classes and functions present in Python files.
+These snippets show how to use the function or class that is documented, and are written in the docstrings using the
+following syntax.
+
+.. code-block:: text
+
+        Examples
+        --------
+        >>> from astropy.units import Quantity
+        >>> from gammapy.data import EventList
+        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
+
+In the case above, we could check the execution of the first two lines importing the ``Quantity`` and ``EventList``
+modules, whilst the third line will be skipped. On the contrary, in the example below we could check the execution of
+the code as well as the output value produced.
+
+.. code-block:: text
+
+        Examples
+        --------
+        >>> from gammapy.maps import WcsGeom
+        >>> from gammapy.utils.regions import make_pixel_region
+        >>> wcs = WcsGeom.create().wcs
+        >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
+        >>> region
+        <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
+
+In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
+following command.
+
 .. code-block:: bash
 
-    pytest --doctest-glob="*.rst" docs/
+    pytest --doctest-modules --ignore-glob=*/tests gammapy
 
 Making a pull request with new or modified datasets
 ---------------------------------------------------
