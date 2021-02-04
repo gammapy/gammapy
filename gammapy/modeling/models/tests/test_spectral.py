@@ -416,30 +416,6 @@ def test_to_from_dict():
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
 
-def test_to_from_dict_partial_input(caplog):
-    spectrum = TEST_MODELS[0]
-    model = spectrum["model"]
-
-    model_dict = model.to_dict()
-    # Here we remove the reference energy
-    model_dict['parameters'].remove(model_dict['parameters'][0])
-    print(model_dict['parameters'][0])
-
-    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
-    new_model = model_class.from_dict(model_dict)
-
-    assert isinstance(new_model, PowerLawSpectralModel)
-
-    actual = [par.value for par in new_model.parameters]
-    desired = [par.value for par in model.parameters]
-    assert_quantity_allclose(actual, desired)
-
-    actual = [par.frozen for par in new_model.parameters]
-    desired = [par.frozen for par in model.parameters]
-    assert_allclose(actual, desired)
-
-
-
 
 def test_to_from_dict():
     spectrum = TEST_MODELS[0]
