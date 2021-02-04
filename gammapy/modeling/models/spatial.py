@@ -159,11 +159,6 @@ class SpatialModel(Model):
 
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    @property
-    def evaluation_radius(self):
-        """Evaluation radius (`~astropy.coordinates.Angle`)."""
-        return None
-
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
@@ -635,6 +630,9 @@ class ShellSpatialModel(SpatialModel):
         Shell width
     frame : {"icrs", "galactic"}
         Center position coordinate frame
+    See Also
+    --------
+    ShellSpatialModel
     """
 
     tag = ["ShellSpatialModel", "shell"]
@@ -679,6 +677,72 @@ class ShellSpatialModel(SpatialModel):
         )
 
 
+class Shell2SpatialModel(SpatialModel):
+    r"""Shell model with outer radius and relative width parametrization
+
+    For more information see :ref:`shell-spatial-model`.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    r_0 : `~astropy.coordinates.Angle`
+        Outer radius, :math:`r_{out}`
+    eta : float
+        Shell width relative to outer radius, r_0, should be within (0,1]
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
+
+    See Also
+    --------
+    ShellSpatialModel
+    """
+
+    tag = "Shell2SpatialModel"
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    r_0 = Parameter("r_0", "1 deg")
+    eta = Parameter("eta", 0.2, min=0.02, max=1)
+
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set to :math:`r_\text{out}`.
+        """
+        return self.r_0.quantity
+
+    @property
+    def r_in(self):
+        return (1 - self.eta.quantity) * self.r_0.quantity
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, eta):
+        """Evaluate model."""
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+        r_in = (1 - eta) * r_0
+
+        norm = 3 / (2 * np.pi * (r_0 ** 3 - r_in ** 3))
+
+        with np.errstate(invalid="ignore"):
+            # np.where and np.select do not work with quantities, so we use the
+            # workaround with indexing
+            value = np.sqrt(r_0 ** 2 - sep ** 2)
+            mask = sep < r_in
+            value[mask] = (value - np.sqrt(r_in ** 2 - sep ** 2))[mask]
+            value[sep > r_0] = 0
+
+        return norm * value
+
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
+        return CircleAnnulusSkyRegion(
+            center=self.position,
+            inner_radius=self.r_in,
+            outer_radius=self.r_0.quantity,
+            **kwargs,
+        )
+        
 class ConstantSpatialModel(SpatialModel):
     """Spatially constant (isotropic) spatial model.
 
