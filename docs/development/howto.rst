@@ -56,21 +56,6 @@ For up to three things, if callers usually will want access to several things,
 using a ``tuple`` or ``collections.namedtuple`` is OK.
 For three or more things, using a Python ``dict`` instead should be preferred.
 
-.. _dev-skip_tests:
-
-Skip unit tests for some Astropy versions
------------------------------------------
-
-.. testcode::
-
-   import astropy
-   import pytest
-
-   ASTROPY_VERSION = (astropy.version.major, astropy.version.minor)
-   @pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")
-   def test_something():
-      ...
-
 Check Python code present in RST files
 --------------------------------------
 
@@ -150,6 +135,87 @@ following command.
 
     pytest --doctest-modules --ignore-glob=*/tests gammapy
 
+.. _dev-skip_tests:
+
+Skip unit tests for some Astropy versions
+-----------------------------------------
+
+.. testcode::
+
+   import astropy
+   import pytest
+
+   ASTROPY_VERSION = (astropy.version.major, astropy.version.minor)
+   @pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")
+   def test_something():
+      ...
+
+Assert convention
+-----------------
+
+When performing tests, the preferred numerical assert method is
+`numpy.testing.assert_allclose`. Use
+
+.. testcode::
+
+    from numpy.testing import assert_allclose
+
+at the top of the file and then just use ``assert_allclose`` for
+the tests. This makes the lines shorter, i.e. there is more space
+for the arguments.
+
+``assert_allclose`` covers all use cases for numerical asserts, so
+it should be used consistently everywhere instead of using the
+dozens of other available asserts from pytest or numpy in various
+places.
+
+For assertions on `~astropy.units.Quantity` objects, you can do this
+to assert on the unit and value separately:
+
+.. testcode::
+
+    from numpy.testing import assert_allclose
+    import astropy.units as u
+
+    actual = 1 / 3 * u.deg
+    assert actual.unit == 'deg'
+    assert_allclose(actual.value, 0.33333333)
+
+Note that  `~astropy.units.Quantity` can be compared to unit strings directly.
+Also note that the default for ``assert_allclose`` is ``atol=0`` and ``rtol=1e-7``,
+so when using it, you have to give the reference value with a precision of
+``rtol ~ 1e-8``, i.e. 8 digits to be on the safe side (or pass a lower ``rtol`` or set an ``atol``).
+
+The use of `~astropy.tests.helper.assert_quantity_allclose` is discouraged,
+because it only requires that the values match after unit conversions.
+This is not so bad, but units in test cases should not change randomly,
+so asserting on unit and value separately establishes more behaviour.
+
+If you don't like the two separate lines, you can use `gammapy.utils.testing.assert_quantity_allclose`,
+which does assert that units are equal, and calls `numpy.testing.assert_equal` for the values.
+
+Testing of plotting functions
+-----------------------------
+
+Many of the data classes in Gammapy implement ``.plot()`` or ``.peek()`` methods to
+allow users a quick look in the data. Those methods should be tested using the
+`mpl_check_plot()` context manager. The context manager will take care of creating
+a new figure to plot on and writing the plot to a byte-stream to trigger the
+rendering of the plot, which can raise errors as well. Here is a short example:
+
+.. testcode::
+
+    from gammapy.utils.testing import mpl_plot_check
+
+    def test_plot():
+        with mpl_plot_check():
+            plt.plot([1., 2., 3., 4., 5.])
+
+With this approach we make sure that the plotting code is at least executed once
+and runs completely (up to saving the plot to file) without errors. In future we
+will maybe change to something like https://github.com/matplotlib/pytest-mpl
+to ensure that correct plots are produced.
+
 Making a pull request with new or modified datasets
 ---------------------------------------------------
 
@@ -157,7 +223,6 @@ Datasets used in tests are hosted in the `gammapy-data <https://github.com/gamma
 repository. It is recommended that developers have `$GAMMAPY_DATA` environment variable pointing to the local folder
 where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  Github repository,
 so they can push and pull eventual modification of its content.
-
 
 Fix non-Unix line endings
 -------------------------
@@ -282,50 +347,6 @@ to name a few. Also, parallelism can be introduced for different tasks and at di
 e.g. during data reduction, or at the dataset or model component or at the function level.
 This is planned for 2020, but really prototyping and pull requests on performance are welcome
 any time.
-
-Assert convention
------------------
-
-When performing tests, the preferred numerical assert method is
-`numpy.testing.assert_allclose`. Use
-
-.. testcode::
-
-    from numpy.testing import assert_allclose
-
-at the top of the file and then just use ``assert_allclose`` for
-the tests. This makes the lines shorter, i.e. there is more space
-for the arguments.
-
-``assert_allclose`` covers all use cases for numerical asserts, so
-it should be used consistently everywhere instead of using the
-dozens of other available asserts from pytest or numpy in various
-places.
-
-For assertions on `~astropy.units.Quantity` objects, you can do this
-to assert on the unit and value separately:
-
-.. testcode::
-
-    from numpy.testing import assert_allclose
-    import astropy.units as u
-
-    actual = 1 / 3 * u.deg
-    assert actual.unit == 'deg'
-    assert_allclose(actual.value, 0.33333333)
-
-Note that  `~astropy.units.Quantity` can be compared to unit strings directly.
-Also note that the default for ``assert_allclose`` is ``atol=0`` and ``rtol=1e-7``,
-so when using it, you have to give the reference value with a precision of
-``rtol ~ 1e-8``, i.e. 8 digits to be on the safe side (or pass a lower ``rtol`` or set an ``atol``).
-
-The use of `~astropy.tests.helper.assert_quantity_allclose` is discouraged,
-because it only requires that the values match after unit conversions.
-This is not so bad, but units in test cases should not change randomly,
-so asserting on unit and value separately establishes more behaviour.
-
-If you don't like the two separate lines, you can use `gammapy.utils.testing.assert_quantity_allclose`,
-which does assert that units are equal, and calls `numpy.testing.assert_equal` for the values.
 
 .. _dev_random:
 
@@ -814,28 +835,6 @@ Notes:
 * Finally, we realise that eventually probably CTA will define this, and Gammapy
   is only a prototype. So if CTA chooses something else, probably we will follow
   suite and do one more backward-incompatible change at some point to align with CTA.
-
-Testing of plotting functions
------------------------------
-
-Many of the data classes in Gammapy implement ``.plot()`` or ``.peek()`` methods to
-allow users a quick look in the data. Those methods should be tested using the
-`mpl_check_plot()` context manager. The context manager will take care of creating
-a new figure to plot on and writing the plot to a byte-stream to trigger the
-rendering of the plot, which can rasie errore as well. Here is a short example:
-
-.. testcode::
-
-    from gammapy.utils.testing import mpl_plot_check
-
-    def test_plot():
-        with mpl_plot_check():
-            plt.plot([1., 2., 3., 4., 5.])
-
-With this approach we make sure that the plotting code is at least executed once
-and runs completely (up to saving the plot to file) without errors. In future we
-will maybe change to something like https://github.com/matplotlib/pytest-mpl
-to ensure that correct plots are produced.
 
 Documentation guidelines
 ------------------------
