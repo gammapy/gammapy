@@ -3,11 +3,18 @@
 .. _dev_howto:
 
 ***************
-Developer HOWTO
+Developer HowTo
 ***************
 
 This page is a collection of notes for Gammapy contributors and maintainers,
-in the form of short "How to" or "Q & A" entries.
+in the form of short "HowTo" or "Q&A" entries.
+
+.. _dev-python2and3:
+
+Python version support
+----------------------
+
+In Gammapy we currently support Python 3.7 or later.
 
 .. _dev_import:
 
@@ -49,13 +56,6 @@ For up to three things, if callers usually will want access to several things,
 using a ``tuple`` or ``collections.namedtuple`` is OK.
 For three or more things, using a Python ``dict`` instead should be preferred.
 
-.. _dev-python2and3:
-
-Python version support
-----------------------
-
-In Gammapy we currently support Python 3.7 or later.
-
 .. _dev-skip_tests:
 
 Skip unit tests for some Astropy versions
@@ -74,6 +74,44 @@ Skip unit tests for some Astropy versions
 Check Python code present in RST files
 --------------------------------------
 
+Most of the documentation of Gammapy is present in RST files that are converted into HTML pages with
+Sphinx during the build documentation process. You may include snippets of Python code in these RST files
+within blocks labelled with ``.. code-block:: python`` Sphinx directive. However this code could not be
+tested and it will not be possible to know if it fails in following versions of Gammapy. That's why we
+recommend to use the ``.. testcode::`` directive to enclose code that will be tested against the results
+present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::` directive is provided,
+only execution tests will be performed.
+
+For example, we could check that the code below does not fail, since it does not provide any output.
+
+.. code-block:: text
+
+    .. testcode::
+
+        from gammapy.astro import source
+        from gammapy.astro import population
+        from gammapy.astro import darkmatter
+
+On the contrary, we could check the execution of the following code as well as the output values produced.
+
+.. code-block:: text
+
+    .. testcode::
+
+        from astropy.time import Time
+        time = Time(['1999-01-01T00:00:00.123456789', '2010-01-01T00:00:00'])
+        print(time.mjd)
+        print(time.plot_date)
+
+    .. testoutput::
+
+        [51179.00000143 55197.        ]
+
+In order to perform tests of these snippets of code present in RST files, you may run the following command.
+
+.. code-block:: bash
+
+    pytest --doctest-glob="*.rst" docs/
 .. code-block:: bash
 
     pytest --doctest-glob="*.rst" docs/
