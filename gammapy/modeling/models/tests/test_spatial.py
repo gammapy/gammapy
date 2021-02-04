@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
     GeneralizedGaussianSpatialModel,
     PointSpatialModel,
     ShellSpatialModel,
+    Shell2SpatialModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -222,6 +223,16 @@ def test_sky_shell():
     radius = model.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.value, rad.value + width.value)
+    assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
+
+    model = Shell2SpatialModel(lon_0="1 deg", lat_0="45 deg", r_0=rad+width, eta=0.5)
+    val = model(lon, lat)
+    assert val.unit == "deg-2"
+    assert_allclose(val.to_value("sr-1"), desired)
+    radius = model.evaluation_radius
+    assert radius.unit == "deg"
+    assert_allclose(radius.value, rad.value + width.value)
+    assert_allclose(model.r_in.value, rad.value)
     assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
 
 
