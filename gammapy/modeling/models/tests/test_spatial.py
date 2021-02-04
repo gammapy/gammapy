@@ -127,11 +127,13 @@ def test_generalized_gaussian(eta, r_0, e):
 
 
 def test_generalized_gaussian_io():
-    model = GeneralizedGaussianSpatialModel()
+    model = GeneralizedGaussianSpatialModel(e=0.5)
 
-    assert isinstance(model.to_region(), EllipseSkyRegion)
+    reg = model.to_region()
+    assert isinstance(reg, EllipseSkyRegion)
+    assert_allclose(reg.width.value, 1.73205, rtol=1e-5)
+    
     new_model = GeneralizedGaussianSpatialModel.from_dict(model.to_dict())
-
     assert isinstance(new_model, GeneralizedGaussianSpatialModel)
 
 
