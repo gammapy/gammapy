@@ -992,6 +992,23 @@ the following code to the notebook metadata:
     "skip_run": true
   }
 
+Choose a thumbnail and tooltip for the tutorials gallery
+--------------------------------------------------------
+The Gammapy :ref:`tutorials` are Jupyter notebooks that are displayed as a gallery with picture thumbnails and tooltips.
+You can choose the thumbnail for the tutorial and add the tooltip editing the metadata of the code cell that produces
+the picture that you've chosen. You can open the notebook in a text editor, and edit the internal code there. It may
+sound risky, but it is much simpler. Then, find the code cell that produces the figure that you would like for the
+gallery, and then replace the ``"metadata": {},`` bit above the code cell with the snippet below:
+
+.. code-block:: javascript
+
+    "metadata": {
+     "nbsphinx-thumbnail": {
+      "tooltip": "Learn how to do perform a Fit in gammapy."
+     },
+
+Note that you may write whatever you like after "tooltip".
+
 Dealing with links and notebooks
 --------------------------------
 
@@ -1047,8 +1064,8 @@ to the ``dev`` version of the on-line Gammapy documentation will be transformed 
 HTML formatted notebooks and to absolute links pointing to that specific released version of the on-line docs
 in the downloadable ``.ipynb`` files.
 
-Include images in the notebooks
--------------------------------
+Include png files as images in the notebooks
+--------------------------------------------
 
 You may include static images in notebooks using the following markdown directive:
 
@@ -1070,7 +1087,7 @@ use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive l
     .. gp-image:: detect/fermi_ts_image.png
         :scale: 100%
 
-More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+More info on the `image directive <http://www.sphinx-doc.org/en/stable/rest.html#images>`__.
 
 .. _dev-check_html_links:
 
