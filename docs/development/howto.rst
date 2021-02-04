@@ -86,7 +86,6 @@ On the contrary, we could check the execution of the following code as well as t
         from astropy.time import Time
         time = Time(['1999-01-01T00:00:00.123456789', '2010-01-01T00:00:00'])
         print(time.mjd)
-        print(time.plot_date)
 
     .. testoutput::
 
@@ -979,6 +978,22 @@ The documentation built-in process uses the `sphinx-gallery <https://sphinx-gall
 extension to build galleries of illustrated examples on how to use Gammapy (i.e.
 :ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
 ``examples/models`` and the configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
+
+Add a notebook in a folder different than tutorials folder
+----------------------------------------------------------
+Most of the Gammapy notebooks are placed in the ``tutorials`` folder, and are are displayed in a
+:ref:`tutorials` Gallery. However, we can choose to place a notebook in a different folder of the
+documentation folder structure. In this way we can write some parts of the documentation as notebooks
+instead of RST files. Once we have placed the notebook in the folder we choose we can link it from the
+``index.rst`` file using the name of the notebook filename **without the extension** and the Sphinx
+``toctree`` directive as shown below.
+
+.. code-block:: text
+
+    .. toctree::
+
+        mynotebook
+
 
 Skip notebooks from being executed
 ----------------------------------
