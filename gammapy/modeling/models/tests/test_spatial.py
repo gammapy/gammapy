@@ -225,9 +225,16 @@ def test_sky_shell():
     assert_allclose(radius.value, rad.value + width.value)
     assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
 
+
+def test_sky_shell2():
+    width = 2 * u.deg
+    rad = 2 * u.deg
     model = Shell2SpatialModel(lon_0="1 deg", lat_0="45 deg", r_0=rad + width, eta=0.5)
+    lon = [1, 2, 4] * u.deg
+    lat = 45 * u.deg
     val = model(lon, lat)
     assert val.unit == "deg-2"
+    desired = [55.979449, 57.831651, 94.919895]
     assert_allclose(val.to_value("sr-1"), desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"

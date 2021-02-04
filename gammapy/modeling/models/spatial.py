@@ -680,7 +680,7 @@ class ShellSpatialModel(SpatialModel):
 class Shell2SpatialModel(SpatialModel):
     r"""Shell model with outer radius and relative width parametrization
 
-    For more information see :ref:`shell-spatial-model`.
+    For more information see :ref:`shell2-spatial-model`.
 
     Parameters
     ----------

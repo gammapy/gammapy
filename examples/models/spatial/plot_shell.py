@@ -28,43 +28,20 @@ although that approximation is still very good even for 10 deg radius shells.
 # %%
 # Example plot
 # ------------
-# Here is an example plot of the model for the parametrization using inner radius and width:
-import matplotlib.pyplot as plt
+# Here is an example plot of the model:
 
 from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
     ShellSpatialModel,
-    Shell2SpatialModel,
     SkyModel,
 )
 
-# 
 model = ShellSpatialModel(
     lon_0="10 deg", lat_0="20 deg", radius="2 deg", width="0.5 deg", frame="galactic",
 )
+
 model.plot(add_cbar=True)
-
-# %%
-# Here is an example plot of the model for the alternative parametrization using outer radius and relative width
-# In this case the relative width, eta, acts as a shape parameter.
-
-tags = [r"Disk-like, $\eta \rightarrow 0$", r"Shell, $\eta=0.25$",  r"Peaked, $\eta\rightarrow 1$"]
-eta_range = [0.001, 0.25, 1]
-fig, axes = plt.subplots(1, 3, figsize=(9, 6))
-for ax, eta, tag in zip(axes, eta_range, tags):
-    model = Shell2SpatialModel(
-        lon_0="10 deg",
-        lat_0="20 deg",
-        r_0= "2 deg",
-        eta=eta,
-        frame="galactic",
-    )
-    model.plot(ax=ax)
-    ax.set_title(tag)
-    ax.set_xticks([])
-    ax.set_yticks([])
-plt.tight_layout()
 
 # %%
 # YAML representation
@@ -73,11 +50,8 @@ plt.tight_layout()
 
 pwl = PowerLawSpectralModel()
 shell = ShellSpatialModel()
-shell2= Shell2SpatialModel()
 
 model = SkyModel(spectral_model=pwl, spatial_model=shell, name="pwl-shell-model")
-model2 = SkyModel(spectral_model=pwl, spatial_model=shell2, name="pwl-shell2-model")
-
-models = Models([model, model2])
+models = Models([model])
 
 print(models.to_yaml())
