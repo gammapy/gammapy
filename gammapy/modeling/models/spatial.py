@@ -698,7 +698,7 @@ class Shell2SpatialModel(SpatialModel):
     ShellSpatialModel
     """
 
-    tag = "Shell2SpatialModel"
+    tag = ["Shell2SpatialModel", "shell2"]
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     r_0 = Parameter("r_0", "1 deg")
@@ -742,7 +742,8 @@ class Shell2SpatialModel(SpatialModel):
             outer_radius=self.r_0.quantity,
             **kwargs,
         )
-        
+
+
 class ConstantSpatialModel(SpatialModel):
     """Spatially constant (isotropic) spatial model.
 
