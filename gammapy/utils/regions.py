@@ -147,8 +147,8 @@ def compound_region_center(compound_region):
         lon, lat = x
         center = SkyCoord(lon * u.deg, lat * u.deg)
         return np.sum(center.separation(coords).deg)
-
-    result = minimize(f, x0=[0, 0], args=(positions,), bounds=[(-180, 180), (-90, 90)])
+    eps=1e-5
+    result = minimize(f, x0=[0, 0], args=(positions,), bounds=[(-180+eps, 180-eps), (-90+eps, 90-eps)], method="L-BFGS-B")
     return SkyCoord(result.x[0], result.x[1], frame="icrs", unit="deg")
 
 
