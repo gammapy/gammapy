@@ -513,7 +513,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.r_0.quantity * (1 - self.e.quantity))
+        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * self.r_0.quantity,
