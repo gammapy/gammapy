@@ -395,6 +395,51 @@ def test_model_plot():
     with mpl_plot_check():
         pwl.plot_error((1 * u.TeV, 10 * u.TeV))
 
+def test_to_from_dict():
+    spectrum = TEST_MODELS[0]
+    model = spectrum["model"]
+
+    model_dict = model.to_dict()
+    # Here we reverse the order of parameters list to ensure assignment is correct
+    model_dict['parameters'].reverse()
+
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"][2])
+    new_model = model_class.from_dict(model_dict)
+
+    assert isinstance(new_model, PowerLawSpectralModel)
+
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+
+    actual = [par.frozen for par in new_model.parameters]
+    desired = [par.frozen for par in model.parameters]
+    assert_allclose(actual, desired)
+
+def test_to_from_dict_partial_input(caplog):
+    spectrum = TEST_MODELS[0]
+    model = spectrum["model"]
+
+    model_dict = model.to_dict()
+    # Here we remove the reference energy
+    model_dict['parameters'].remove(model_dict['parameters'][0])
+    print(model_dict['parameters'][0])
+
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    new_model = model_class.from_dict(model_dict)
+
+    assert isinstance(new_model, PowerLawSpectralModel)
+
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+
+    actual = [par.frozen for par in new_model.parameters]
+    desired = [par.frozen for par in model.parameters]
+    assert_allclose(actual, desired)
+
+
+
 
 def test_to_from_dict():
     spectrum = TEST_MODELS[0]
@@ -417,6 +462,8 @@ def test_to_from_dict():
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
 
+
+
 def test_to_from_dict_partial_input():
     spectrum = TEST_MODELS[0]
     model = spectrum["model"]
@@ -438,6 +485,32 @@ def test_to_from_dict_partial_input():
     actual = [par.frozen for par in new_model.parameters]
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
+
+
+def test_to_from_dict_partial_input_wrong_parameters(caplog):
+    spectrum = TEST_MODELS[0]
+    model = spectrum["model"]
+
+    model_dict = model.to_dict()
+    # Here we remove the reference energy
+    model_dict['parameters'].remove(model_dict['parameters'][0])
+    print(model_dict['parameters'][0])
+
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    new_model = model_class.from_dict(model_dict)
+
+    assert isinstance(new_model, PowerLawSpectralModel)
+
+    # actual = [par.value for par in new_model.parameters]
+    # desired = [par.value for par in model.parameters]
+    # assert_quantity_allclose(actual, desired)
+    #
+    # actual = [par.frozen for par in new_model.parameters]
+    # desired = [par.frozen for par in model.parameters]
+    # assert_allclose(actual, desired)
+
+    assert "gammapy.modeling.models.core:core.py:151 Parameter index not defined. Using default value: 2.0" in caplog.text
+    print(caplog.text)
 
 
 def test_to_from_dict_compound():
