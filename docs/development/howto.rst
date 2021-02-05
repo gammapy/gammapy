@@ -267,31 +267,19 @@ Caplog fixture
 Inside tests, we have the possibility to change the log level for the captured log messages using the ``caplog`` fixture which allow you to access and control log capturing.
 When logging is part of your function and you want to verify the right message is logged with the expected logging level:
 
-
 .. testcode::
 
     import pytest
-    import logging
 
-    @pytest.fixture
-    def my_caplog(caplog):
-    yield caplog
-    assert len(caplog.get_records(when='call')) > 0  # passes
+    def test_something(..., caplog):
+        """Test something.
 
-
-    def test_nowarn(my_caplog):
-    logging.getLogger().warning('Hello gammapy user')
-    assert len(my_caplog.records) > 0  # passes
-
-    def test_something(caplog):
-    assert caplog.records[-1].levelname == "WARNING"
-    assert "warning message" in caplog.records[-1].message
-
-
-
-
-
-
+        Parameters
+        ----------
+        caplog : caplog fixture that give you access to the log level, the logger, etc.,
+         """
+        assert caplog.records[-1].levelname == "WARNING"
+        assert "warning message" in caplog.records[-1].message
 
 Random numbers
 --------------
