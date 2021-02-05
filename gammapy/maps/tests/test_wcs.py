@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
+from regions import CircleSkyRegion
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.maps.wcs import _check_width, _check_binsz
 
@@ -350,8 +351,6 @@ def test_geom_refpix():
 
 
 def test_region_mask():
-    from regions import CircleSkyRegion
-
     geom = WcsGeom.create(npix=(3, 3), binsz=2, proj="CAR")
 
     r1 = CircleSkyRegion(SkyCoord(0, 0, unit="deg"), 1 * u.deg)
@@ -362,8 +361,8 @@ def test_region_mask():
     assert mask.dtype == bool
     assert np.sum(mask) == 1
 
-    mask = geom.region_mask(regions, inside=False).data
-    assert np.sum(mask) == 8
+    mask = ~geom.region_mask(regions)
+    assert np.sum(mask.data) == 8
 
 
 def test_energy_mask():

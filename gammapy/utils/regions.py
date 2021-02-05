@@ -192,10 +192,9 @@ def list_to_compound_region(regions):
 
     Returns
     -------
-    compound : `~regions.CompoundSkyRegion`
+    compound : `~regions.CompoundSkyRegion` or `~regions.CompoundPixelRegion`
         Compound sky region
     """
-
     region_union = regions[0]
 
     for region in regions[1:]:

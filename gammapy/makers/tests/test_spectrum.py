@@ -61,7 +61,7 @@ def reflected_regions_bkg_maker():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
-    exclusion_mask = geom.region_mask([exclusion_region], inside=False)
+    exclusion_mask = ~geom.region_mask([exclusion_region])
 
     return ReflectedRegionsBackgroundMaker(
         exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
