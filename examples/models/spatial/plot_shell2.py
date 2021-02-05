@@ -23,6 +23,7 @@ and  :math:`r_{\text{in}}` is the inner radius.
 
 For Shell2SpatialModel, the radius parameter  r_0 correspond to :math:`r_{\text{out}}`
 and the relative width parameter is given as eta = :math:`(r_{\text{out}} - r_{\text{in}})/r_{\text{out}}`
+so we have :math:`r_{\text{in}} = (1-eta) r_{\text{out}}`.
 
 Note that the normalization is a small angle approximation,
 although that approximation is still very good even for 10 deg radius shells.
