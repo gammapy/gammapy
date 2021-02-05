@@ -14,7 +14,7 @@ By default, the Generalized Gaussian is defined as :
 the normalization is expressed as:
 
 .. math::
-    N = \frac{1}{ 2 \pi (1-e) r_{\rm eff}^2 \eta \Gamma(2\eta)}\,
+    N = \frac{1}{ 2 \pi \sqrt(1-e^2) r_{\rm eff}^2 \eta \Gamma(2\eta)}\,
 
 where :math:`\Gamma` is the gamma function.
 This analytical norm is approximated so it may not integrate to unity in extremal cases
