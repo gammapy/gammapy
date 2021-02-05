@@ -262,20 +262,22 @@ which does assert that units are equal, and calls `numpy.testing.assert_equal` f
 Caplog fixture
 --------------
 
-Inside tests, we have the possibility to change the log level for the captured log messages using the ``caplog`` fixture which allow you to access and control log capturing.
-When logging is part of your function and you want to verify the right message is logged with the expected logging level:
+Inside tests, we have the possibility to change the log level for the captured 
+log messages using the ``caplog`` fixture which allow you to access and control log capturing.
+When logging is part of your function and you want to verify the right message is logged 
+with the expected logging level:
 
 .. testcode::
 
     import pytest
 
-    def test_something(..., caplog):
+    def test_something(caplog):
         """Test something.
 
         Parameters
         ----------
         caplog : caplog fixture that give you access to the log level, the logger, etc.,
-         """
+        """
         assert caplog.records[-1].levelname == "WARNING"
         assert "warning message" in caplog.records[-1].message
 
