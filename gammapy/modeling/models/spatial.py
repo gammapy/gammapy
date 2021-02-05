@@ -632,7 +632,7 @@ class ShellSpatialModel(SpatialModel):
         Center position coordinate frame
     See Also
     --------
-    ShellSpatialModel
+    Shell2SpatialModel
     """
 
     tag = ["ShellSpatialModel", "shell"]
