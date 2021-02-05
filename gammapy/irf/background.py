@@ -131,7 +131,7 @@ class Background3D(BackgroundIRF):
         else:
             axis = self.axes["energy"]
         log_energy = np.log(axis.center.value)
-        with np.errstate(invalid='ignore'):
+        with np.errstate(divide='ignore', invalid='ignore'):
             log_data = np.ma.masked_invalid(np.log(self.data))
         log_data = interpolate_invalid_data_3d(log_data, log_energy)
         self.data = np.exp(log_data.data)
