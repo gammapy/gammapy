@@ -48,7 +48,10 @@ def bkg_3d_interp():
     # as found with CTA background IRF
 
     return Background3D(
-        axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, unit="s-1 GeV-1 sr-1"
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis],
+        data=data,
+        unit="s-1 GeV-1 sr-1",
+        interp_missing_values=True,
     )
 
 

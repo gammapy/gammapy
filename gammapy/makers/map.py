@@ -30,14 +30,19 @@ class MapDatasetMaker(Maker):
         By default, all maps are made.
     background_oversampling : int
         Background evaluation oversampling factor in energy.
+    fix_background: bool
+        Interpolate missing values in background 3d map.
+        Default is True, have to be set to True for CTA IRF.
     """
 
     tag = "MapDatasetMaker"
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
-    def __init__(self, selection=None, background_oversampling=None):
+    def __init__(
+        self, selection=None, background_oversampling=None, fix_background=True
+    ):
         self.background_oversampling = background_oversampling
-
+        self.fix_background = fix_background
         if selection is None:
             selection = self.available_selection
 
@@ -134,10 +139,13 @@ class MapDatasetMaker(Maker):
         background : `~gammapy.maps.Map`
             Background map.
         """
-        if isinstance(observation.bkg, Map):
-            return observation.bkg.interp_to_geom(geom=geom, preserve_counts=True)
-        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
 
+        bkg = observation.bkg
+
+        if isinstance(bkg, Map):
+            return bkg.interp_to_geom(geom=geom, preserve_counts=True)
+
+        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
         if bkg_coordsys == "ALTAZ":
             pointing = observation.fixed_pointing_info
         elif bkg_coordsys == "RADEC":
@@ -147,13 +155,15 @@ class MapDatasetMaker(Maker):
                 f"Invalid background coordinate system: {bkg_coordsys!r}\n"
                 "Options: ALTAZ, RADEC"
             )
-
         use_region_center = getattr(self, "use_region_center", True)
+
+        if self.fix_background:
+            bkg.interp_missing_values()
 
         return make_map_background_irf(
             pointing=pointing,
             ontime=observation.observation_time_duration,
-            bkg=observation.bkg,
+            bkg=bkg,
             geom=geom,
             oversampling=self.background_oversampling,
             use_region_center=use_region_center,
@@ -216,7 +226,6 @@ class MapDatasetMaker(Maker):
             geom=geom,
             exposure_map=exposure,
             use_region_center=use_region_center,
-
         )
 
     def make_psf(self, geom, observation):
@@ -246,7 +255,7 @@ class MapDatasetMaker(Maker):
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
-       )
+        )
 
     @staticmethod
     def make_meta_table(observation):
