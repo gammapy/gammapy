@@ -900,8 +900,10 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        regions : list of `~regions.Region`
-            region or list of regions (pixel or sky regions accepted)
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
 
         Returns
         -------
@@ -924,7 +926,9 @@ class WcsGeom(Geom):
                 SkyCoord(3, 2, unit='deg'),
                 Angle(1, 'deg'),
             )
-            mask = geom.region_mask([region])
+
+            # the Gammapy convention for exclusion regions is to take the inverse
+            mask = ~geom.region_mask([region])
 
         Note how we made a list with a single region,
         since this method expects a list of regions.
@@ -944,8 +948,10 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        regions : list of  `~regions.Region`
-            Python list of regions (pixel or sky regions accepted)
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
         oversampling_factor : int
             Over-sampling factor to compute the region weigths
 

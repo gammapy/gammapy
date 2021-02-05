@@ -263,8 +263,10 @@ class EventList:
 
         Parameters
         ----------
-        regions : list of `~regions.SkyRegion` or str
-            Sky region or string defining a sky region
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
         wcs : `~astropy.wcs.WCS`
             World coordinate system transformation
 
