@@ -2,12 +2,12 @@
 
 .. _dev_howto:
 
-***************
-Developer HowTo
-***************
+****************
+Developer How To
+****************
 
 This page is a collection of notes for Gammapy contributors and maintainers,
-in the form of short "HowTo" or "Q&A" entries.
+in the form of short "How To" or "Q&A" entries.
 
 .. _dev-python2and3:
 
