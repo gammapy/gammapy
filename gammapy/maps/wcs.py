@@ -12,8 +12,6 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from regions import SkyRegion, PixCoord, CompoundSkyRegion
-from gammapy.utils.regions import list_to_compound_region
 from .geom import (
     Geom,
     MapAxes,
@@ -869,7 +867,7 @@ class WcsGeom(Geom):
             wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info
         )
 
-    def boundary_mask(self, width, inside=True):
+    def boundary_mask(self, width):
         """Create a mask applying binary erosion with a given width from geom edges
 
         Parameters
@@ -877,9 +875,6 @@ class WcsGeom(Geom):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
-        inside : bool
-            For ``inside=True``, pixels in the region to True (the default).
-            For ``inside=False``, pixels in the region are False.
 
         Returns
         -------
@@ -889,14 +884,14 @@ class WcsGeom(Geom):
         """
         from . import Map
         data = np.ones(self.data_shape, dtype=bool)
-
-        if inside is False:
-            data = ~data
-
         return Map.from_geom(self, data=data).binary_erode(width)
 
     def region_mask(self, regions):
         """Create a mask from a given list of regions
+
+        The mask is filled such that a pixel inside the region is filled with
+        "True". To invert the mask, e.g. to create a mask with exclusion regions
+        the tilde (~) operator can be used (see examnple below).
 
         Parameters
         ----------

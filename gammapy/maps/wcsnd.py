@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from collections import OrderedDict
-import warnings
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
@@ -631,7 +630,7 @@ class WcsNDMap(WcsMap):
         return self._init_copy(data=mask_data)
 
     def binary_dilate(self, width, use_fft=True, mode="same"):
-        """Binary dilation of boolean mask addding a given margin
+        """Binary dilation of boolean mask adding a given margin
 
         Parameters
         ----------
@@ -641,7 +640,6 @@ class WcsNDMap(WcsMap):
         use_fft : bool
             Use `scipy.signal.fftconvolve` if True (default)
             and `ndi.binary_dilation` otherwise.
-            
         mode : str {'same', 'full'}
             A string indicating the size of the output.
             - 'same': The output is the same size as input (Default).
@@ -659,7 +657,7 @@ class WcsNDMap(WcsMap):
             func = ndi.binary_dilation
 
         if mode == "full":
-            pad_width = u.Quantity(width) / (self.geom.pixel_scales)
+            pad_width = u.Quantity(width) / self.geom.pixel_scales
             pad_width = list(np.ceil(pad_width.value).astype(int))
             mask = self.pad(pad_width)
         else:
