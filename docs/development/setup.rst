@@ -35,15 +35,14 @@ documentation.
 Notebooks
 ---------
 
-The ``docs/tutorials`` folder contains Jupyter notebooks that are part of the user
-documentation for Gammapy, though there may be also notebooks in other parts of the
-documentation. Most of the notebooks present in the documentation are executed during
-the process of the documentation building and converted to the Sphinx-formatted HTML
-files. Clean output stripped ``.ipynb`` notebooks files and ``.py`` scripts versions are also
-generated during the documentation building process and placed in the
-``docs/_static/notebooks`` folder.
+The ``docs/tutorials`` folder contains tutorials that are part of the user
+documentation for Gammapy in the form of Jupyter notebooks. There may be also notebooks in
+other parts of the documentation. Except those specifically declared (see :ref:`skip-nb-execution`), all
+the notebooks present in the documentation are executed during the doc building process. They are all
+converted to the Sphinx-formatted HTML files, where clean output stripped ``.ipynb`` notebooks files
+and ``.py`` scripts versions are generated and placed in the ``docs/_static/notebooks`` folder.
 
-We do perform automated testing for notebooks set up (just check that they run
+We perform automated set-up testing for all notebooks (just check that they run
 and don't raise an exception) during the CI process (see below). It is also possible to
 perform tests locally on notebooks  with the ``gammapy jupyter`` command. This
 command provides functionalities for testing, code formatting, stripping output cells
@@ -52,8 +51,9 @@ and execution. See ``gammapy jupyter -h`` for more info on this.
 The ``gammapy download`` command allows to download notebooks published in the documentation
 as well as the related datasets needed to execute them. The set of notebooks is versioned
 for each stable release as tar bundles published within the versioned documentation in the
-`gammapy-docs <https://github.com/gammapy/gammapy-docs>`__ Github repository.
-The same happens for conda working environments of stable releases. The datasets are not
+`gammapy-docs <https://github.com/gammapy/gammapy-docs>`__ repository.
+The same happens for conda working environments of stable releases, whose yaml files are published
+in the `gammapy-web <https://github.com/gammapy/gammapy-web>`__ repository. The datasets are not
 versioned and they are placed in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__
 repository.
 
@@ -218,7 +218,7 @@ Information from meetings is here:
 Gammapy webpages
 ================
 
-There are two webpages for Gammapy: gammapy.org and docs.gammapy.org.
+There are two webpages for Gammapy: http://gammapy.org and http://docs.gammapy.org.
 
 In addition we have Binder set up to allow users to try Gammapy in the browser.
 
@@ -237,9 +237,13 @@ docs.gammapy.org
 ----------------
 
 https://docs.gammapy.org/ contains most of the documentation for Gammapy,
-including information about Gammapy, the changelog, tutorials, ...
+including information about Gammapy, the changelog, tutorials,...
 
-TODO: describe how to update.
+The dev version of the docs may be built and updated with a manual github action. All
+the docs are versioned, and each version of the docs is placed in its dedicated
+version-labelled folder. It is recommended to build the docs locally before each release
+to identify and fix possible Sphinx warnings from badly formatted RST files or failing
+Python scripts used to display figures.
 
 Gammapy Binder
 --------------
@@ -292,11 +296,3 @@ will try to update as soon as they get the announcement email).
 * Source distribution releases: https://pypi.org/project/gammapy/
 * Binary conda packages for Linux, Mac and Windows:
   https://github.com/conda-forge/gammapy-feedstock
-
-Data formats
-============
-
-Data formats should be defined here, and then linked to from the Gammapy docs:
-
-* https://github.com/open-gamma-ray-astro/gamma-astro-data-formats
-* http://gamma-astro-data-formats.readthedocs.io
