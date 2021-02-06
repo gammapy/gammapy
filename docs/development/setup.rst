@@ -51,8 +51,9 @@ and execution. See ``gammapy jupyter -h`` for more info on this.
 The ``gammapy download`` command allows to download notebooks published in the documentation
 as well as the related datasets needed to execute them. The set of notebooks is versioned
 for each stable release as tar bundles published within the versioned documentation in the
-`gammapy-docs <https://github.com/gammapy/gammapy-docs>`__ Github repository.
-The same happens for conda working environments of stable releases. The datasets are not
+`gammapy-docs <https://github.com/gammapy/gammapy-docs>`__ repository.
+The same happens for conda working environments of stable releases, whose yaml files are published
+in the `gammapy-web <https://github.com/gammapy/gammapy-web>`__ repository. The datasets are not
 versioned and they are placed in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__
 repository.
 
@@ -295,11 +296,3 @@ will try to update as soon as they get the announcement email).
 * Source distribution releases: https://pypi.org/project/gammapy/
 * Binary conda packages for Linux, Mac and Windows:
   https://github.com/conda-forge/gammapy-feedstock
-
-Data formats
-============
-
-Data formats should be defined here, and then linked to from the Gammapy docs:
-
-* https://github.com/open-gamma-ray-astro/gamma-astro-data-formats
-* http://gamma-astro-data-formats.readthedocs.io
