@@ -35,15 +35,14 @@ documentation.
 Notebooks
 ---------
 
-The ``docs/tutorials`` folder contains Jupyter notebooks that are part of the user
-documentation for Gammapy, though there may be also notebooks in other parts of the
-documentation. Most of the notebooks present in the documentation are executed during
-the process of the documentation building and converted to the Sphinx-formatted HTML
-files. Clean output stripped ``.ipynb`` notebooks files and ``.py`` scripts versions are also
-generated during the documentation building process and placed in the
-``docs/_static/notebooks`` folder.
+The ``docs/tutorials`` folder contains tutorials that are part of the user
+documentation for Gammapy in the form of Jupyter notebooks. There may be also notebooks in
+other parts of the documentation. Except those specifically declared (see :ref:`skip-nb-execution`), all
+the notebooks present in the documentation are executed during the doc building process. They are all
+converted to the Sphinx-formatted HTML files, where clean output stripped ``.ipynb`` notebooks files
+and ``.py`` scripts versions are generated and placed in the ``docs/_static/notebooks`` folder.
 
-We do perform automated testing for notebooks set up (just check that they run
+We perform automated set-up testing for all notebooks (just check that they run
 and don't raise an exception) during the CI process (see below). It is also possible to
 perform tests locally on notebooks  with the ``gammapy jupyter`` command. This
 command provides functionalities for testing, code formatting, stripping output cells
@@ -218,7 +217,7 @@ Information from meetings is here:
 Gammapy webpages
 ================
 
-There are two webpages for Gammapy: gammapy.org and docs.gammapy.org.
+There are two webpages for Gammapy: http://gammapy.org and http://docs.gammapy.org.
 
 In addition we have Binder set up to allow users to try Gammapy in the browser.
 
@@ -237,9 +236,13 @@ docs.gammapy.org
 ----------------
 
 https://docs.gammapy.org/ contains most of the documentation for Gammapy,
-including information about Gammapy, the changelog, tutorials, ...
+including information about Gammapy, the changelog, tutorials,...
 
-TODO: describe how to update.
+The dev version of the docs may be built and updated with a manual github action. All
+the docs are versioned, and each version of the docs is placed in its dedicated
+version-labelled folder. It is recommended to build the docs locally before each release
+to identify and fix possible Sphinx warnings from badly formatted RST files or failing
+Python scripts used to display figures.
 
 Gammapy Binder
 --------------

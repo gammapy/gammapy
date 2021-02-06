@@ -995,6 +995,8 @@ instead of RST files. Once we have placed the notebook in the folder we choose w
         mynotebook
 
 
+.. _skip-nb-execution:
+
 Skip notebooks from being executed
 ----------------------------------
 You may choose if a notebook is not executed during the documentation building process, and hence
