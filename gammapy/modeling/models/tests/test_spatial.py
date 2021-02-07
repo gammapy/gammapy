@@ -239,12 +239,15 @@ def test_sky_diffuse_constant():
 
 @requires_dependency("matplotlib")
 @requires_data()
-def test_sky_diffuse_map():
+def test_sky_diffuse_map(caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
     val = model(lon, lat)
+
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message =="Mising spatial template unit, assuming sr^⁻1"
 
     assert val.unit == "sr-1"
     desired = [3269.178107, 0]
@@ -306,6 +309,16 @@ def test_sky_diffuse_map_normalize():
     assert vals.unit == ""
     integral = vals.sum()
     assert_allclose(integral.value, 1, rtol=1e-4)
+
+def test_sky_diffuse_map_negative_values(caplog):
+    # define model map with a constant value of 1
+    model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5)
+    model_map.data -= 1.0
+    model_map.unit = "sr-1"
+    model = TemplateSpatialModel(model_map)
+
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message == "Diffuse map has negative values. Check and fix this!"
 
 
 def test_evaluate_on_fk5_map():
