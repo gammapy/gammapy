@@ -90,17 +90,17 @@ class FluxMaps(FluxEstimate):
         return SkyModel(spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2))
 
     @property
-    def e_ref(self):
+    def energy_ref(self):
         axis = self.geom.axes["energy"]
         return axis.center
 
     @property
-    def e_min(self):
+    def energy_min(self):
         axis = self.geom.axes["energy"]
         return axis.edges[:-1]
 
     @property
-    def e_max(self):
+    def energy_max(self):
         axis = self.geom.axes["energy"]
         return axis.edges[1:]
 
@@ -122,7 +122,7 @@ class FluxMaps(FluxEstimate):
         """
         if coord is None:
             coord = self.geom.center_skydir
-        energies = self.e_ref
+        energies = self.energy_ref
         coords = MapCoord.create(dict(skycoord=coord, energy=energies))
 
         ref = self.dnde_ref
@@ -132,18 +132,18 @@ class FluxMaps(FluxEstimate):
 
         for quantity in self._available_quantities:
             norm_quantity = f"norm_{quantity}"
-            res = self.__getattribute__(norm_quantity).get_by_coord(coords)
-            res *= self.__getattribute__(norm_quantity).unit
+            res = getattr(self, norm_quantity).get_by_coord(coords)
+            res *= getattr(self, norm_quantity).unit
             fp[norm_quantity] = res
 
         # TODO: add support of norm and stat scan
 
         rows = []
-        for idx, energy in enumerate(self.e_ref):
+        for idx, energy in enumerate(self.energy_ref):
             result = dict()
             result["e_ref"] = energy
-            result["e_min"] = self.e_min[idx]
-            result["e_max"] = self.e_max[idx]
+            result["e_min"] = self.energy_min[idx]
+            result["e_max"] = self.energy_max[idx]
             result["ref_dnde"] = ref[idx]
             result["norm"] = fp["norm"][idx]
             for quantity in self._available_quantities:
@@ -171,11 +171,11 @@ class FluxMaps(FluxEstimate):
         else:
             map_dict = {}
             for entry in REQUIRED_MAPS[sed_type]:
-                map_dict[entry] = self.__getattribute__(entry)
+                map_dict[entry] = getattr(self, entry)
 
             for entry in OPTIONAL_MAPS[sed_type]:
                 try:
-                    map_dict[entry] = self.__getattribute__(entry)
+                    map_dict[entry] = getattr(self, entry)
                 except KeyError:
                     pass
 
