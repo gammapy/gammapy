@@ -818,5 +818,7 @@ def test_mask_fit_modifications():
 
 
 def test_memory_usage():
-    assert WcsGeom.create().data_nbytes(dtype='float32') == 1036800
-    assert WcsGeom.create().data_nbytes(dtype='b') == 259200
+    geom = WcsGeom.create()
+    assert geom.data_nbytes().unit == u.MB
+    assert_allclose(geom.data_nbytes(dtype="float32").value, 1.0368)
+    assert_allclose(geom.data_nbytes(dtype="b").value, 0.2592)

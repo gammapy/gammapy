@@ -1991,7 +1991,7 @@ class Geom(abc.ABC):
         memory : `~astropy.units.Quantity`
             Estimated memory usage in megabytes (MB)
         """
-        return (np.empty(self.data_shape, dtype).nbytes * u.byte).to_("MB")
+        return (np.empty(self.data_shape, dtype).nbytes * u.byte).to("MB")
 
     @property
     @abc.abstractmethod
