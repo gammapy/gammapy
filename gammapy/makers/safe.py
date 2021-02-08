@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from regions import PointSkyRegion
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable
 from gammapy.maps import Map
+from gammapy.modeling.models import TemplateSpectralModel
 from .core import Maker
 
 __all__ = ["SafeMaskMaker"]
@@ -131,17 +132,11 @@ class SafeMaskMaker(Maker):
         else:
             position = PointSkyRegion(self.position)
 
-        exposure = dataset.exposure.get_spectrum(position)
+        aeff = dataset.aeff.get_spectrum(position)
+        model = TemplateSpectralModel.from_region_map(aeff)
 
-        energy_axis = exposure.geom.axes["energy_true"]
-        data = (exposure.quantity / dataset.gti.time_sum).squeeze()
-        aeff = EffectiveAreaTable(
-            axes=[energy_axis],
-            data=data.value,
-            unit=data.unit
-        )
-        aeff_thres = (self.aeff_percent / 100) * aeff.max_area
-        energy_min = aeff.find_energy(aeff_thres)
+        aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
+        energy_min = model.inverse(aeff_thres)
         return geom.energy_mask(energy_min=energy_min)
 
     def make_mask_energy_edisp_bias(self, dataset):

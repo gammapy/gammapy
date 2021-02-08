@@ -1391,6 +1391,13 @@ class TemplateSpectralModel(SpectralModel):
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
         return cls(energy=energy, values=values)
 
+    @classmethod
+    def from_region_map(cls, map, **kwargs):
+        """Create model from region map"""
+        energy = map.geom.axes["energy_true"].center
+        values = map.quantity[:, 0, 0]
+        return cls(energy=energy, values=values, **kwargs)
+
 
 class ScaleSpectralModel(SpectralModel):
     """Wrapper to scale another spectral model by a norm factor.

@@ -287,6 +287,11 @@ class MapDataset(Dataset):
         """Excess"""
         return self.counts - self.background
 
+    @property
+    def aeff(self):
+        """Effective area"""
+        return self.exposure / self.exposure.meta["livetime"]
+
     @models.setter
     def models(self, models):
         """Models setter"""
