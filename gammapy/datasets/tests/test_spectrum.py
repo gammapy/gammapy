@@ -1031,11 +1031,7 @@ class TestFit:
         geom = RegionGeom(region=None, axes=[axis])
 
         self.src = RegionNDMap.from_geom(geom=geom, data=source_counts)
-
-        self.livetime = 1 * u.s
-        self.aeff = EffectiveAreaTable.from_constant(energy, "1 cm2").to_region_map(
-            region=None
-        )
+        self.exposure = RegionNDMap.from_geom(geom.as_energy_true, data=1, unit="cm2 s")
 
         npred_bkg = bkg_model.integral(energy[:-1], energy[1:]).value
 
@@ -1049,7 +1045,7 @@ class TestFit:
         dataset = SpectrumDataset(
             models=self.source_model,
             counts=self.src,
-            exposure=self.aeff * self.livetime,
+            exposure=self.exposure,
         )
 
         npred = dataset.npred().data
@@ -1075,7 +1071,7 @@ class TestFit:
         dataset = SpectrumDatasetOnOff(
             counts=on_vector,
             counts_off=self.off,
-            exposure=self.aeff * self.livetime,
+            exposure=self.exposure,
             acceptance=1,
             acceptance_off=1 / self.alpha,
         )
@@ -1112,7 +1108,7 @@ class TestFit:
 
         dataset = SpectrumDataset(
             models=self.source_model,
-            exposure=self.aeff * self.livetime,
+            exposure=self.exposure,
             counts=self.src,
             mask_safe=mask_safe,
         )

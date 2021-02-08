@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from regions import PointSkyRegion
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable
+from gammapy.irf import EDispKernelMap
 from gammapy.maps import Map
 from gammapy.modeling.models import TemplateSpectralModel
 from .core import Maker
