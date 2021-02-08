@@ -7,7 +7,8 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
+from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -181,14 +182,20 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         "0.1 TeV", "10 TeV", nbin=30, name="energy_true"
     )
 
-    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(
-        geom.region
+    aeff = EffectiveAreaTable2D.from_parametrization(
+        energy_axis_true=energy_true, instrument="HESS"
     )
 
     livetime = 100 * u.s
     gti = GTI.create(start=0 * u.s, stop=livetime)
 
-    exposure = aeff * livetime
+    geom_true = geom.as_energy_true
+    exposure = make_map_exposure_true_energy(
+        geom=geom_true,
+        livetime=livetime,
+        pointing=geom_true.center_skydir,
+        aeff=aeff
+    )
 
     edisp = EDispKernelMap.from_diagonal_response(
         energy, energy_true, geom=geom.to_image()
@@ -212,14 +219,13 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
 
     livetime2 = 0.5 * livetime
     gti2 = GTI.create(start=200 * u.s, stop=200 * u.s + livetime2)
-    aeff2 = aeff * 2
     bkg2 = RegionNDMap.from_geom(geom=geom, data=2 * background.data)
 
     geom = spectrum_dataset.counts.geom
     data = np.ones(spectrum_dataset.data_shape, dtype="bool")
     data[0] = False
     safe_mask2 = RegionNDMap.from_geom(geom=geom, data=data)
-    exposure2 = aeff2 * livetime2
+    exposure2 = exposure.copy()
 
     edisp = edisp.copy()
     edisp.exposure_map.data = exposure2.data[:, :, np.newaxis, :]
@@ -238,16 +244,12 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     reference = spectrum_dataset.counts.data
     assert_allclose(spectrum_dataset1.counts.data[1:], reference[1:] * 2)
     assert_allclose(spectrum_dataset1.counts.data[0], 141363)
-    assert_allclose(spectrum_dataset1.exposure.data[0], 4.755644e09)
+    assert_allclose(spectrum_dataset1.exposure.quantity[0], 4.755644e09 * u.Unit("cm2 s"))
     assert_allclose(
         spectrum_dataset1.background.data[1:], 3 * background.data[1:]
     )
     assert_allclose(spectrum_dataset1.background.data[0], background.data[0])
 
-    assert_allclose(
-        spectrum_dataset1.exposure.quantity.to_value("m2s"),
-        2 * (aeff * livetime).quantity.to_value("m2s"),
-    )
     kernel = edisp.get_edisp_kernel()
     kernel_stacked = spectrum_dataset1.edisp.get_edisp_kernel()
 
@@ -257,28 +259,38 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
 
 def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     energy = spectrum_dataset.counts.geom.axes["energy"]
-    geom = spectrum_dataset.counts.geom.to_image()
+    geom = spectrum_dataset.counts.geom
 
     edisp1 = EDispKernelMap.from_gauss(
         energy_axis=energy,
         energy_axis_true=energy.copy(name="energy_true"),
         sigma=0.1,
         bias=0,
-        geom=geom
+        geom=geom.to_image()
     )
     edisp1.exposure_map.data += 1
 
-    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(
-        geom.region
+    aeff = EffectiveAreaTable2D.from_parametrization(
+        energy_axis_true=energy.copy(name="energy_true"), instrument="HESS"
+    )
+
+    livetime = 100 * u.s
+
+    geom_true = geom.as_energy_true
+    exposure = make_map_exposure_true_energy(
+        geom=geom_true,
+        livetime=livetime,
+        pointing=geom_true.center_skydir,
+        aeff=aeff
     )
 
     geom = spectrum_dataset.counts.geom
     counts = RegionNDMap.from_geom(geom=geom)
 
-    gti = GTI.create(start=0 * u.s, stop=100 * u.s)
+    gti = GTI.create(start=0 * u.s, stop=livetime)
     spectrum_dataset1 = SpectrumDataset(
         counts=counts,
-        exposure=aeff * gti.time_sum,
+        exposure=exposure,
         edisp=edisp1,
         meta_table=Table({"OBS_ID": [0]}),
         gti=gti.copy(),
@@ -297,7 +309,7 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
 
     spectrum_dataset2 = SpectrumDataset(
         counts=counts,
-        exposure=aeff * gti2.time_sum,
+        exposure=exposure.copy(),
         edisp=edisp2,
         meta_table=Table({"OBS_ID": [1]}),
         gti=gti2,

@@ -102,50 +102,6 @@ class EffectiveAreaTable(IRF):
         return ax
 
     @classmethod
-    def from_parametrization(cls, energy, instrument="HESS"):
-        r"""Create parametrized effective area.
-
-        Parametrizations of the effective areas of different Cherenkov
-        telescopes taken from Appendix B of Abramowski et al. (2010), see
-        https://ui.adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
-
-        .. math::
-            A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy binning, analytic function is evaluated at log centers
-        instrument : {'HESS', 'HESS2', 'CTA'}
-            Instrument name
-        """
-        energy = u.Quantity(energy)
-        # Put the parameters g in a dictionary.
-        # Units: g1 (cm^2), g2 (), g3 (MeV)
-        # Note that whereas in the paper the parameter index is 1-based,
-        # here it is 0-based
-        pars = {
-            "HESS": [6.85e9, 0.0891, 5e5],
-            "HESS2": [2.05e9, 0.0891, 1e5],
-            "CTA": [1.71e11, 0.0891, 1e5],
-        }
-
-        if instrument not in pars.keys():
-            ss = f"Unknown instrument: {instrument}\n"
-            ss += "Valid instruments: HESS, HESS2, CTA"
-            raise ValueError(ss)
-
-        energy_axis_true = MapAxis.from_edges(energy, interp="log", name="energy_true")
-
-        g1 = pars[instrument][0]
-        g2 = pars[instrument][1]
-        g3 = -pars[instrument][2]
-
-        energy = energy_axis_true.center.to_value("MeV")
-        data = g1 * energy ** (-g2) * np.exp(g3 / energy)
-        return cls(axes=[energy_axis_true], data=data, unit="cm2")
-
-    @classmethod
     def from_constant(cls, energy, value):
         """Create constant value effective area.
 
@@ -349,25 +305,6 @@ class EffectiveAreaTable2D(IRF):
         """High energy threshold"""
         return self.meta["HI_THRES"] * u.TeV
 
-    def to_effective_area_table(self, offset, energy=None):
-        """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable`.
-
-        Parameters
-        ----------
-        offset : `~astropy.coordinates.Angle`
-            Offset
-        energy : `~astropy.units.Quantity`
-            Energy axis bin edges
-        """
-        if energy is None:
-            energy_axis_true = self.axes["energy_true"]
-        else:
-            energy_axis_true = MapAxis.from_energy_edges(energy, name="energy_true")
-
-        area = self.evaluate(offset=offset, energy_true=energy_axis_true.center)
-
-        return EffectiveAreaTable(axes=[energy_axis_true], data=area.value, unit=area.unit)
-
     def plot_energy_dependence(self, ax=None, offset=None, **kwargs):
         """Plot effective area versus energy for a given offset.
 
@@ -491,3 +428,53 @@ class EffectiveAreaTable2D(IRF):
         self.plot_energy_dependence(ax=axes[0])
         self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
+
+    @classmethod
+    def from_parametrization(cls, energy_axis_true=None, instrument="HESS"):
+        r"""Create parametrized effective area.
+
+        Parametrizations of the effective areas of different Cherenkov
+        telescopes taken from Appendix B of Abramowski et al. (2010), see
+        https://ui.adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
+
+        .. math::
+            A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}
+
+        Parameters
+        ----------
+        energy_axis_true : `MapAxis`
+            Energy binning, analytic function is evaluated at log centers
+        instrument : {'HESS', 'HESS2', 'CTA'}
+            Instrument name
+
+        Returns
+        -------
+        aeff : `EffectiveAreaTable2D`
+            Effective area table
+        """
+        # Put the parameters g in a dictionary.
+        # Units: g1 (cm^2), g2 (), g3 (MeV)
+        pars = {
+            "HESS": [6.85e9, 0.0891, 5e5],
+            "HESS2": [2.05e9, 0.0891, 1e5],
+            "CTA": [1.71e11, 0.0891, 1e5],
+        }
+
+        if instrument not in pars.keys():
+            ss = f"Unknown instrument: {instrument}\n"
+            ss += f"Valid instruments: {list(pars.keys())}"
+            raise ValueError(ss)
+
+        if energy_axis_true is None:
+            energy_axis_true = MapAxis.from_energy_bounds(
+                "20 GeV", "200 TeV", nbin=20, per_decade=True, name="energy_true"
+            )
+
+        g1, g2, g3 = pars[instrument]
+
+        energy = energy_axis_true.center.to_value("MeV")
+        data = g1 * energy ** (-g2) * np.exp(-g3 / energy)
+
+        # TODO: fake offset dependence?
+        offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
+        return cls(axes=[energy_axis_true, offset_axis], data=data[:, np.newaxis], unit="cm2")
