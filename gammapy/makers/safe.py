@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 from astropy.coordinates import Angle
+from astropy import units as u
 from regions import PointSkyRegion
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import Map
@@ -102,10 +103,10 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         try:
-            energy_max = observation.aeff.high_threshold
-            energy_min = observation.aeff.low_threshold
+            energy_max = observation.aeff.meta["HI_THRES"] * u.TeV
+            energy_min = observation.aeff.meta["LO_THRES"] * u.TeV
         except KeyError:
-            log.warning(f"No thresholds defined for obs {observation.obs_id}")
+            log.warning(f"No default thresholds defined for obs {observation.obs_id}")
             energy_min, energy_max = None, None
 
         return dataset.counts.geom.energy_mask(

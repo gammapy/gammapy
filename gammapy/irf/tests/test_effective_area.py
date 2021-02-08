@@ -33,8 +33,8 @@ class TestEffectiveAreaTable2D:
         assert aeff.axes["offset"].unit == "deg"
         assert aeff.unit == "m2"
 
-        assert_quantity_allclose(aeff.high_threshold, 100 * u.TeV, rtol=1e-3)
-        assert_quantity_allclose(aeff.low_threshold, 0.870964 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(aeff.meta["HI_THRES"], 100, rtol=1e-3)
+        assert_quantity_allclose(aeff.meta["LO_THRES"], 0.870964, rtol=1e-3)
 
         test_val = aeff.evaluate(energy_true="14 TeV", offset="0.2 deg")
         assert_allclose(test_val.value, 683177.5, rtol=1e-3)

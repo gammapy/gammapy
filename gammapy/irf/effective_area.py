@@ -68,16 +68,6 @@ class EffectiveAreaTable2D(IRF):
     tag = "aeff_2d"
     required_axes = ["energy_true", "offset"]
 
-    @property
-    def low_threshold(self):
-        """Low energy threshold"""
-        return self.meta["LO_THRES"] * u.TeV
-
-    @property
-    def high_threshold(self):
-        """High energy threshold"""
-        return self.meta["HI_THRES"] * u.TeV
-
     def plot_energy_dependence(self, ax=None, offset=None, **kwargs):
         """Plot effective area versus energy for a given offset.
 
