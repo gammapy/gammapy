@@ -65,7 +65,7 @@ class FluxMaps(FluxEstimate):
         * norm_scan : optional, the norm values of the test statistic scan.
         * stat_scan : optional, the test statistic scan values.
         * ts : optional, the delta TS associated with the flux value.
-        * counts : optional, the number counts value.
+        * sqrt_ts : optional, the square root of the TS, when relevant.
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         the reference model to use for conversions. Default in None.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
@@ -103,6 +103,35 @@ class FluxMaps(FluxEstimate):
     def energy_max(self):
         axis = self.geom.axes["energy"]
         return axis.edges[1:]
+
+    @property
+    def ts(self):
+        if not "ts" in self.data:
+            raise KeyError("No ts map present in FluxMaps.")
+        return self.data["ts"]
+
+    @property
+    def sqrt_ts(self):
+        if not "sqrt_ts" in self.data:
+            raise KeyError("No sqrt_ts map present in FluxMaps.")
+        return self.data["sqrt_ts"]
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "\t"+ "\t\n".join(str(self.norm.geom).split("\n")[:1])
+        str_ += "\n\t"+"\n\t".join(str(self.norm.geom).split("\n")[2:])
+
+        str_ += f"\n\tAvailable quantities : {self._available_quantities}\n\n"
+
+        additional_maps = self.data.keys() - (REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"])
+        str_ += f"\tAdditional maps : {additional_maps}\n\n"
+
+        str_ += "\tReference model:\n"
+        if self.reference_model is not None:
+            str_ += "\t" + "\n\t".join(str(self.reference_model).split("\n")[2:])
+
+        return str_.expandtabs(tabsize=2)
+
 
     def get_flux_points(self, coord=None):
         """Extract flux point at a given position.
@@ -197,7 +226,7 @@ class FluxMaps(FluxEstimate):
         overwrite : bool
             Overwrite file if it exists.
         sed_type : str
-            sed type to convert to. Default is `Lielihood`
+            sed type to convert to. Default is `likelihood`
         """
         filename = make_path(filename)
 
@@ -383,6 +412,9 @@ class FluxMaps(FluxEstimate):
             factor = reference_model.spectral_model.energy_flux(e_edges[:-1], e_edges[1:])
         elif sed_type == "e2dnde":
             factor = e_ref ** 2 * ref_dnde
+
+        # to ensure the units are similar
+        factor = factor.to(maps[sed_type].unit)
 
         data = dict()
         data["norm"] = maps[sed_type]/factor[:,np.newaxis, np.newaxis]

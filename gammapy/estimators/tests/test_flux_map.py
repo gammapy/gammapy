@@ -44,6 +44,10 @@ def wcs_flux_map():
     map_dict["sqrt_ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
     map_dict["sqrt_ts"].data += 1.0
 
+    # Add another map
+    map_dict["ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["ts"].data += 1.0
+
     return map_dict
 
 @pytest.fixture(scope="session")
@@ -92,6 +96,19 @@ def test_flux_map_properties(wcs_flux_map, reference_model):
     assert_allclose(fluxmap.e2dnde_errp.data[:, 0, 0], [2e-13, 2e-13])
     assert_allclose(fluxmap.e2dnde_ul.data[:, 0, 0], [2e-12, 2e-12])
 
+    assert_allclose(fluxmap.sqrt_ts.data, 1)
+    assert_allclose(fluxmap.ts.data, 1)
+
+def test_flux_map_str(wcs_flux_map, reference_model):
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
+
+    fm_str = fluxmap.__str__()
+
+    assert "WcsGeom" in fm_str
+    assert "errn" in fm_str
+    assert "sqrt_ts" in fm_str
+    assert "PowerLawSpectralModel" in fm_str
+
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
 def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed_type):
     fluxmap = FluxMaps(wcs_flux_map, logpar_reference_model)
@@ -130,6 +147,10 @@ def test_partial_flux_map_read_write(tmp_path, partial_wcs_flux_map, reference_m
     # check existence and content of additional map
     assert_allclose(new_fluxmap.data["sqrt_ts"].data, 1.0)
 
+    # the TS map shouldn't exist
+    with pytest.raises(KeyError):
+        new_fluxmap.data["ts"]
+
 def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model):
     start = u.Quantity([1, 2], "min")
     stop = u.Quantity([1.5, 2.5], "min")
@@ -153,7 +174,7 @@ def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
     assert caplog.records[-1].levelname == "WARNING"
     assert f"No reference model set for FluxMaps." in caplog.records[-1].message
 
-def test_flux_map_read_write_missing_reference_model(tmp_path, wcs_flux_map, reference_model, caplog):
+def test_flux_map_read_write_missing_reference_model(tmp_path, wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
     fluxmap.write(tmp_path / "tmp.fits")
 
@@ -201,3 +222,19 @@ def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     assert_allclose(fp.table["norm_err"], [0.1, 0.1] )
     assert_allclose(fp.table["norm_ul"], [2, 2])
     assert "norm_errn" not in fp.table.columns
+
+def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
+    ref_map = FluxMaps(wcs_flux_map, reference_model)
+    map_dict = dict()
+    map_dict["eflux"] = ref_map.eflux
+    map_dict["eflux"].quantity = map_dict["eflux"].quantity.to("keV/m2/s")
+    map_dict["eflux_err"] = ref_map.eflux_err
+    map_dict["eflux_err"].quantity = map_dict["eflux_err"].quantity.to("keV/m2/s")
+
+    flux_map = FluxMaps.from_dict(map_dict, "eflux", reference_model)
+
+    assert_allclose(flux_map.norm.data, 1)
+    assert flux_map.norm.unit == ""
+    assert_allclose(flux_map.norm_err.data, 0.1)
+    assert flux_map.norm_err.unit == ""
+
