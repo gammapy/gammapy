@@ -46,7 +46,7 @@ def wcs_flux_map():
 
     # Add another map
     map_dict["ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
-    map_dict["ts"].data += 1.0
+    map_dict["ts"].data[1] += 3.0
 
     return map_dict
 
@@ -97,7 +97,7 @@ def test_flux_map_properties(wcs_flux_map, reference_model):
     assert_allclose(fluxmap.e2dnde_ul.data[:, 0, 0], [2e-12, 2e-12])
 
     assert_allclose(fluxmap.sqrt_ts.data, 1)
-    assert_allclose(fluxmap.ts.data, 1)
+    assert_allclose(fluxmap.ts.data[:,0,0], [0, 3])
 
 def test_flux_map_str(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
@@ -207,6 +207,9 @@ def test_get_flux_point(wcs_flux_map, reference_model):
     assert_allclose(fp.table["norm_errn"], [0.2, 0.2] )
     assert_allclose(fp.table["norm_errp"], [0.2, 0.2])
     assert_allclose(fp.table["norm_ul"], [2, 2])
+    assert_allclose(fp.table["sqrt_ts"], [1, 1])
+    assert_allclose(fp.table["ts"], [0, 3])
+
 
 def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     other_data = wcs_flux_map.copy()

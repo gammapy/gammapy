@@ -90,6 +90,10 @@ class FluxMaps(FluxEstimate):
         return SkyModel(spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2))
 
     @property
+    def _additional_maps(self):
+        return self.data.keys() - (REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"])
+
+    @property
     def energy_ref(self):
         axis = self.geom.axes["energy"]
         return axis.center
@@ -123,8 +127,7 @@ class FluxMaps(FluxEstimate):
 
         str_ += f"\n\tAvailable quantities : {self._available_quantities}\n\n"
 
-        additional_maps = self.data.keys() - (REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"])
-        str_ += f"\tAdditional maps : {additional_maps}\n\n"
+        str_ += f"\tAdditional maps : {self._additional_maps}\n\n"
 
         str_ += "\tReference model:\n"
         if self.reference_model is not None:
@@ -165,6 +168,11 @@ class FluxMaps(FluxEstimate):
             res *= getattr(self, norm_quantity).unit
             fp[norm_quantity] = res
 
+        for additional_quantity in self._additional_maps:
+            res = self.data[additional_quantity].get_by_coord(coords)
+            res *= self.data[additional_quantity].unit
+            fp[additional_quantity] = res
+
         # TODO: add support of norm and stat scan
 
         rows = []
@@ -178,6 +186,8 @@ class FluxMaps(FluxEstimate):
             for quantity in self._available_quantities:
                 norm_quantity = f"norm_{quantity}"
                 result[norm_quantity] = fp[norm_quantity][idx]
+            for key in self._additional_maps:
+                result[key] = fp[key][idx]
             rows.append(result)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table)
@@ -208,7 +218,7 @@ class FluxMaps(FluxEstimate):
                 except KeyError:
                     pass
 
-            for key in self.data.keys() - (REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"]):
+            for key in self._additional_maps:
                 map_dict[key] = self.data[key]
 
         return map_dict
