@@ -1978,15 +1978,20 @@ class Geom(abc.ABC):
         pass
 
     def data_nbytes(self, dtype="float32"):
-        """Estimate memory usage in bytes of the Numpy data array
+        """Estimate memory usage in megabytes of the Numpy data array
         matching this geometry depending on the given type.
 
         Parameters
         ----------
         dtype : data-type
             The desired data-type for the array. Default is "float32"
+            
+        Returns
+        -------
+        memory : `~astropy.units.Quantity`
+            Estimated memory usage in megabytes (MB)
         """
-        return np.empty(self.data_shape, dtype).nbytes
+        return (np.empty(self.data_shape, dtype).nbytes * u.byte).to_("MB")
 
     @property
     @abc.abstractmethod
