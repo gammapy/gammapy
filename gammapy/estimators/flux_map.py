@@ -16,7 +16,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 
-__all__ = ["FluxMap"]
+__all__ = ["FluxMaps"]
 
 
 REQUIRED_MAPS = {
@@ -38,7 +38,7 @@ OPTIONAL_MAPS = {
 
 log = logging.getLogger(__name__)
 
-class FluxMap(FluxEstimate):
+class FluxMaps(FluxEstimate):
     """A flux map container.
 
     It contains a set of `~gammapy.maps.Map` objects that store the estimated flux as a function of energy as well as
@@ -76,7 +76,7 @@ class FluxMap(FluxEstimate):
         self.geom = data['norm'].geom
 
         if reference_model == None:
-            log.warning("No reference model set for FluxMap. Assuming point source with E^-2 spectrum.")
+            log.warning("No reference model set for FluxMaps. Assuming point source with E^-2 spectrum.")
             reference_model = self._default_model()
 
         self.reference_model = reference_model
@@ -263,7 +263,7 @@ class FluxMap(FluxEstimate):
 
         Returns
         -------
-        flux_map : `~gammapy.estimators.FluxMap`
+        flux_map : `~gammapy.estimators.FluxMaps`
             Flux map.
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
@@ -284,7 +284,7 @@ class FluxMap(FluxEstimate):
 
         Returns
         -------
-        fluxmap : `~gammapy.estimators.FluxMap`
+        fluxmaps : `~gammapy.estimators.FluxMaps`
             the flux map.
         """
         try:
@@ -342,7 +342,7 @@ class FluxMap(FluxEstimate):
 
     @classmethod
     def from_dict(cls, maps, sed_type='likelihood', reference_model=None, gti=None):
-        """Create FluxMap from a dictionary of maps.
+        """Create FluxMaps from a dictionary of maps.
 
         Parameters
         ----------
@@ -358,7 +358,7 @@ class FluxMap(FluxEstimate):
 
         Returns
         -------
-        fluxmap : `~gammapy.estimators.FluxMap`
+        fluxmaps : `~gammapy.estimators.FluxMaps`
             the flux map.
         """
         cls._validate_type(maps, sed_type)
@@ -370,7 +370,7 @@ class FluxMap(FluxEstimate):
         e_edges = maps[sed_type].geom.axes["energy"].edges
 
         if reference_model is None:
-            log.warning("No reference model set for FluxMap. Assuming point source with E^-2 spectrum.")
+            log.warning("No reference model set for FluxMaps. Assuming point source with E^-2 spectrum.")
             reference_model = cls._default_model()
 
         ref_dnde = reference_model.spectral_model(e_ref)

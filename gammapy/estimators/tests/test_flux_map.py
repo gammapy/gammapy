@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
@@ -8,7 +7,7 @@ import astropy.units as u
 from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel, LogParabolaSpectralModel
-from gammapy.estimators import FluxMap
+from gammapy.estimators import FluxMaps
 
 
 @pytest.fixture(scope="session")
@@ -66,7 +65,7 @@ def partial_wcs_flux_map():
     return map_dict
 
 def test_flux_map_properties(wcs_flux_map, reference_model):
-    fluxmap = FluxMap(wcs_flux_map, reference_model)
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
 
     assert_allclose(fluxmap.dnde.data[:,0,0],[1e-11, 1e-13])
     assert_allclose(fluxmap.dnde_err.data[:,0,0],[1e-12, 1e-14])
@@ -95,10 +94,10 @@ def test_flux_map_properties(wcs_flux_map, reference_model):
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
 def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed_type):
-    fluxmap = FluxMap(wcs_flux_map, logpar_reference_model)
+    fluxmap = FluxMaps(wcs_flux_map, logpar_reference_model)
 
     fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
-    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
+    new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert_allclose(new_fluxmap.norm.data[:,0,0], [1, 1])
     assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
@@ -116,10 +115,10 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
 def test_partial_flux_map_read_write(tmp_path, partial_wcs_flux_map, reference_model, sed_type):
-    fluxmap = FluxMap(partial_wcs_flux_map, reference_model)
+    fluxmap = FluxMaps(partial_wcs_flux_map, reference_model)
 
     fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
-    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
+    new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert_allclose(new_fluxmap.norm.data[:,0,0], [1, 1])
     assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
@@ -136,47 +135,47 @@ def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model
     stop = u.Quantity([1.5, 2.5], "min")
     gti = GTI.create(start, stop)
 
-    fluxmap = FluxMap(partial_wcs_flux_map, reference_model, gti)
+    fluxmap = FluxMaps(partial_wcs_flux_map, reference_model, gti)
 
     fluxmap.write(tmp_path / "tmp.fits", sed_type='dnde')
-    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
+    new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert len(new_fluxmap.gti.table) == 2
     assert_allclose(gti.table["START"], start.to_value("s"))
 
 def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
-    fluxmap = FluxMap(wcs_flux_map)
+    fluxmap = FluxMaps(wcs_flux_map)
 
     fluxmap.write(tmp_path / "tmp.fits")
-    new_fluxmap = FluxMap.read(tmp_path / "tmp.fits")
+    new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert new_fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
     assert caplog.records[-1].levelname == "WARNING"
-    assert f"No reference model set for FluxMap." in caplog.records[-1].message
+    assert f"No reference model set for FluxMaps." in caplog.records[-1].message
 
 def test_flux_map_read_write_missing_reference_model(tmp_path, wcs_flux_map, reference_model, caplog):
-    fluxmap = FluxMap(wcs_flux_map, reference_model)
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
     fluxmap.write(tmp_path / "tmp.fits")
 
     hdulist = fits.open(tmp_path / "tmp.fits")
     hdulist[0].header["MODEL"] = "non_existent"
 
     with pytest.raises(FileNotFoundError):
-        new_fluxmap = FluxMap.from_hdulist(hdulist)
+        new_fluxmap = FluxMaps.from_hdulist(hdulist)
 
 def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
-    fluxmap = FluxMap(wcs_flux_map)
+    fluxmap = FluxMaps(wcs_flux_map)
 
     assert fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
     assert fluxmap.reference_model.spatial_model.tag[0] == "PointSpatialModel"
     assert fluxmap.reference_model.spectral_model.index.value == 2
 
     assert caplog.records[-1].levelname == "WARNING"
-    assert f"No reference model set for FluxMap." in caplog.records[-1].message
+    assert f"No reference model set for FluxMaps." in caplog.records[-1].message
 
 
 def test_get_flux_point(wcs_flux_map, reference_model):
-    fluxmap = FluxMap(wcs_flux_map, reference_model)
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
 
     coord = SkyCoord(0., 0., unit="deg", frame="galactic")
     fp = fluxmap.get_flux_points(coord)
@@ -192,7 +191,7 @@ def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     other_data = wcs_flux_map.copy()
     other_data.pop("norm_errn")
     other_data.pop("norm_errp")
-    fluxmap = FluxMap(other_data, reference_model)
+    fluxmap = FluxMaps(other_data, reference_model)
 
     coord = SkyCoord(0., 0., unit="deg", frame="galactic")
     fp = fluxmap.get_flux_points(coord)
