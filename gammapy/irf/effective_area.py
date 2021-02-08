@@ -240,7 +240,7 @@ class EffectiveAreaTable2D(IRF):
 
         if energy_axis_true is None:
             energy_axis_true = MapAxis.from_energy_bounds(
-                "20 GeV", "200 TeV", nbin=20, per_decade=True, name="energy_true"
+                "2 GeV", "200 TeV", nbin=20, per_decade=True, name="energy_true"
             )
 
         g1, g2, g3 = pars[instrument]

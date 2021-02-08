@@ -51,7 +51,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
 
         Returns
         -------
-        exposure : `~gammapy.irf.EffectiveAreaTable`
+        exposure : `~gammapy.maps.RegionNDMap`
             Exposure map.
         """
         exposure = super().make_exposure(geom, observation, use_region_center=self.use_region_center)
