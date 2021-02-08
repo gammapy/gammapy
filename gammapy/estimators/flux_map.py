@@ -157,7 +157,7 @@ class FluxMaps(FluxEstimate):
         energies = self.energy_ref
         coords = MapCoord.create(dict(skycoord=coord, energy=energies))
 
-        ref = self.dnde_ref
+        ref = self.dnde_ref.squeeze()
 
         fp = dict()
         fp["norm"] = self.norm.get_by_coord(coords) * self.norm.unit
@@ -190,7 +190,7 @@ class FluxMaps(FluxEstimate):
                 result[key] = fp[key][idx]
             rows.append(result)
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        return FluxPoints(table)
+        return FluxPoints(table).to_sed_type('dnde')
 
     def to_dict(self, sed_type="likelihood"):
         """Return maps in a given SED type in the form of a dictionary.

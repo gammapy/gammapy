@@ -8,7 +8,7 @@ from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel, LogParabolaSpectralModel
 from gammapy.estimators import FluxMaps
-
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 @pytest.fixture(scope="session")
 def reference_model():
@@ -194,7 +194,7 @@ def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
     assert caplog.records[-1].levelname == "WARNING"
     assert f"No reference model set for FluxMaps." in caplog.records[-1].message
 
-
+@requires_dependency("matplotlib")
 def test_get_flux_point(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
 
@@ -210,6 +210,8 @@ def test_get_flux_point(wcs_flux_map, reference_model):
     assert_allclose(fp.table["sqrt_ts"], [1, 1])
     assert_allclose(fp.table["ts"], [0, 3])
 
+    with mpl_plot_check():
+        fp.plot()
 
 def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     other_data = wcs_flux_map.copy()
