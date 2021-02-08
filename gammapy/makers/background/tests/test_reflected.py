@@ -33,7 +33,7 @@ def exclusion_mask():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
-    return geom.region_mask([exclusion_region], inside=False)
+    return ~geom.region_mask([exclusion_region])
 
 
 @pytest.fixture(scope="session")

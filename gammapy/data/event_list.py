@@ -258,13 +258,15 @@ class EventList:
         mask &= time < time_interval[1]
         return self.select_row_subset(mask)
 
-    def select_region(self, region, wcs=None):
+    def select_region(self, regions, wcs=None):
         """Select events in given region.
 
         Parameters
         ----------
-        region : `~regions.SkyRegion` or str
-            Sky region or string defining a sky region
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
         wcs : `~astropy.wcs.WCS`
             World coordinate system transformation
 
@@ -273,7 +275,7 @@ class EventList:
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-        geom = RegionGeom.create(region, wcs=wcs)
+        geom = RegionGeom.from_regions(regions, wcs=wcs)
         mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
@@ -495,7 +497,7 @@ class EventList:
 
         return MapCoord.create(coord)
 
-    def select_map_mask(self, mask):
+    def select_mask(self, mask):
         """Select events inside a mask (`EventList`).
 
         Parameters

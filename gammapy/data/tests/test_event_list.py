@@ -192,8 +192,8 @@ class TestEventSelection:
             skydir=(0, 0), binsz=0.2, width=4.0 * u.deg, proj="TAN", axes=[axis]
         )
 
-        mask = geom.region_mask(regions=[self.on_regions[0]], inside=True)
-        new_list = self.events.select_map_mask(mask)
+        mask = geom.region_mask(regions=[self.on_regions[0]])
+        new_list = self.events.select_mask(mask)
         assert len(new_list.table) == 2
 
     def test_select_energy(self):

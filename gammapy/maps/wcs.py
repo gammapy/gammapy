@@ -12,7 +12,6 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from regions import SkyRegion
 from .geom import (
     Geom,
     MapAxes,
@@ -25,8 +24,10 @@ from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
 __all__ = ["WcsGeom"]
 
+
 def round_up_to_odd(f):
     return int(np.ceil(f) // 2 * 2 + 1)
+
 
 def _check_width(width):
     """Check and normalise width argument.
@@ -43,6 +44,7 @@ def _check_width(width):
             return angle, angle
         else:
             return tuple(angle)
+
 
 def _check_binsz(binsz):
     """Check and normalise bin size argument.
@@ -865,7 +867,7 @@ class WcsGeom(Geom):
             wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info
         )
 
-    def boundary_mask(self, width, inside=True):
+    def boundary_mask(self, width):
         """Create a mask applying binary erosion with a given width from geom edges
 
         Parameters
@@ -873,9 +875,6 @@ class WcsGeom(Geom):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
-        inside : bool
-            For ``inside=True``, pixels in the region to True (the default).
-            For ``inside=False``, pixels in the region are False.
 
         Returns
         -------
@@ -885,19 +884,21 @@ class WcsGeom(Geom):
         """
         from . import Map
         data = np.ones(self.data_shape, dtype=bool)
-
-        if inside is False:
-            data = ~data
-
         return Map.from_geom(self, data=data).binary_erode(width)
 
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions
 
+        The mask is filled such that a pixel inside the region is filled with
+        "True". To invert the mask, e.g. to create a mask with exclusion regions
+        the tilde (~) operator can be used (see example below).
+
         Parameters
         ----------
-        regions : list of `~regions.Region`
-            region or list of regions (pixel or sky regions accepted)
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
         inside : bool
             For ``inside=True``, pixels in the region to True (the default).
             For ``inside=False``, pixels in the region are False.
@@ -923,31 +924,23 @@ class WcsGeom(Geom):
                 SkyCoord(3, 2, unit='deg'),
                 Angle(1, 'deg'),
             )
-            mask = geom.region_mask([region], inside=False)
+
+            # the Gammapy convention for exclusion regions is to take the inverse
+            mask = ~geom.region_mask([region])
 
         Note how we made a list with a single region,
         since this method expects a list of regions.
         """
-        from regions import PixCoord
-        from . import Map
+        from . import Map, RegionGeom
 
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
 
-        if not isinstance(regions, list):
-            regions = [regions]
-
+        geom = RegionGeom.from_regions(regions, wcs=self.wcs)
         idx = self.get_idx()
-        pixcoord = PixCoord(idx[0], idx[1])
+        mask = geom.contains_wcs_pix(idx)
 
-        mask = np.zeros(self.data_shape, dtype=bool)
-
-        for region in regions:
-            if isinstance(region, SkyRegion):
-                region = region.to_pixel(self.wcs)
-            mask += region.contains(pixcoord)
-
-        if inside is False:
+        if not inside:
             np.logical_not(mask, out=mask)
 
         return Map.from_geom(self, data=mask)
@@ -957,8 +950,10 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        regions : list of  `~regions.Region`
-            Python list of regions (pixel or sky regions accepted)
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
         oversampling_factor : int
             Over-sampling factor to compute the region weigths
 
@@ -968,7 +963,7 @@ class WcsGeom(Geom):
             Weights region mask
         """
         geom = self.upsample(factor=oversampling_factor)
-        m = geom.region_mask(regions=regions, inside=True)
+        m = geom.region_mask(regions=regions)
         m.data = m.data.astype(float)
         return m.downsample(factor=oversampling_factor, preserve_counts=False)
 
