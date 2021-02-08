@@ -41,31 +41,12 @@ class SpatialModel(Model):
     """Spatial model base class."""
 
     _type = "spatial"
-    norm = Parameter("norm", 1, min=0, frozen=True)
-
     def __init__(self, **kwargs):
         frame = kwargs.pop("frame", "icrs")
-        update_norm = kwargs.pop("update_norm", True)
         super().__init__(**kwargs)
         if not hasattr(self, "frame"):
             self.frame = frame
 
-        if update_norm:
-            self.compute_norm = self.compute_norm_analytic * self.norm.value
-        else:
-            self.compute_norm = self.norm.value / u.sr
-            self.renormalize()
-
-    def __init_subclass__(cls, **kwargs):
-        # Add parameters list on the model sub-class (not instances)
-        cls.default_parameters = Parameters(
-            [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
-            + [
-                _
-                for _ in cls.__bases__[0].__dict__.values()
-                if isinstance(_, Parameter)
-            ]
-        )
 
     def __call__(self, lon, lat, energy=None):
         """Call evaluate method"""
@@ -79,23 +60,6 @@ class SpatialModel(Model):
 
         return self.evaluate(lon, lat, **kwargs)
 
-    @property
-    def compute_norm_analytic(self):
-        return self.compute_norm_contant
-
-    @property
-    def norm_correction(self):
-        """Norm correction to be multiplied with spectral model amplitude"""
-        geom = WcsGeom.create(
-            skydir=self.position,
-            width=2 * self.evaluation_radius,
-            binsz=self.evaluation_radius / 50.0,
-            frame=self.frame,
-        )
-        return np.sum(self.evaluate_geom(geom) * geom.solid_angle()).value
-
-    def renormalize(self):
-        self.norm.value /= self.norm_correction
 
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
@@ -356,6 +320,59 @@ class SpatialModel(Model):
             return None
 
 
+class SpatialModelRenorm(SpatialModel):
+    """Base class for spatial models that support re-normalization a posteriori"""
+
+    norm = Parameter("norm", 1, min=0, frozen=True)
+    def __init__(self, **kwargs):
+        frame = kwargs.pop("frame", "icrs")
+        update_norm = kwargs.pop("update_norm", True)
+        super().__init__(**kwargs)
+        if not hasattr(self, "frame"):
+            self.frame = frame
+
+        if update_norm:
+            self.compute_norm = self.compute_norm_analytic * self.norm.value
+        else:
+            self.compute_norm = self.norm.value / u.sr
+            self.renormalize()
+
+    def __init_subclass__(cls, **kwargs):
+        # Add parameters list on the model sub-class (not instances)
+        cls.default_parameters = Parameters(
+            [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
+            + [
+                _
+                for _ in cls.__bases__[0].__dict__.values()
+                if isinstance(_, Parameter)
+            ]
+        )
+        
+    @property
+    def compute_norm_analytic(self):
+        return 1. / u.sr
+
+    @property
+    def norm_correction(self):
+        """Norm correction to be multiplied with spectral model amplitude"""
+        if self.evaluation_radius == 0*u.deg:
+            radius = 0.1 * u.deg
+        elif self.evaluation_radius is None:
+            radius = 180 * u.deg 
+        else:
+            radius = self.evaluation_radius
+        geom = WcsGeom.create(
+                skydir=self.position,
+                width=(2 * radius),
+                binsz=radius / 50.0,
+                frame=self.frame,
+            )
+        return np.sum(self.evaluate_geom(geom) * geom.solid_angle()).value
+
+    def renormalize(self):
+        self.norm.value /= self.norm_correction
+
+
 class PointSpatialModel(SpatialModel):
     r"""Point Source.
 
@@ -422,7 +439,7 @@ class PointSpatialModel(SpatialModel):
         return PointSkyRegion(center=self.position, **kwargs)
 
 
-class GaussianSpatialModel(SpatialModel):
+class GaussianSpatialModel(SpatialModelRenorm):
     r"""Two-dimensional Gaussian model.
 
     For more information see :ref:`gaussian-spatial-model`.
@@ -458,8 +475,8 @@ class GaussianSpatialModel(SpatialModel):
         """
         return 5 * self.parameters["sigma"].quantity
 
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, sigma, e, phi):
+
+    def evaluate(self, lon, lat, lon_0, lat_0, sigma, e, phi):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
@@ -474,7 +491,7 @@ class GaussianSpatialModel(SpatialModel):
             norm = (1 / (2 * np.pi * sigma * minor_axis)).to_value("sr-1")
 
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
-        return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
+        return self.compute_norm * norm * np.exp(exponent).value
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
@@ -496,7 +513,7 @@ class GaussianSpatialModel(SpatialModel):
         return region
 
 
-class GeneralizedGaussianSpatialModel(SpatialModel):
+class GeneralizedGaussianSpatialModel(SpatialModelRenorm):
     r"""Two-dimensional Generealized Gaussian model.
 
     For more information see :ref:`generalized-gaussian-spatial-model`.
@@ -568,7 +585,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         )
 
 
-class DiskSpatialModel(SpatialModel):
+class DiskSpatialModel(SpatialModelRenorm):
     r"""Constant disk model.
 
     For more information see :ref:`disk-spatial-model`.
@@ -627,14 +644,13 @@ class DiskSpatialModel(SpatialModel):
             )[0]
         ) ** -1
 
-    @staticmethod
     def _evaluate_smooth_edge(x, width):
         value = (x / width).to_value("")
         edge_width_95 = 2.326174307353347
         return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
 
     @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_0, e, phi, edge):
+    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
@@ -643,11 +659,14 @@ class DiskSpatialModel(SpatialModel):
         else:
             sigma_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)[1]
 
-        norm = DiskSpatialModel._evaluate_norm_factor(r_0, e)
 
         in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, edge)
-        return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
+        return u.Quantity(self.compute_norm_analytic * in_ellipse, "sr-1", copy=False)
 
+    @property
+    def compute_norm_analytic(self):
+        return self._evaluate_norm_factor(self.r_0.qunatity, self.e.quantity)
+        
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
