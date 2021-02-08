@@ -109,7 +109,9 @@ class MapAxes(Sequence):
 
         for ax in axes:
             if ax.name in unique_names:
-                raise (ValueError(f"Axis names must be unique, got: '{ax.name}' twice."))
+                raise (
+                    ValueError(f"Axis names must be unique, got: '{ax.name}' twice.")
+                )
             unique_names.append(ax.name)
 
         self._axes = axes
@@ -574,10 +576,17 @@ class MapAxes(Sequence):
             Map axes object
         """
         from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+
         axes = []
 
         # Formats that support only one energy axis
-        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube", "ogip", "ogip-arf"]:
+        if format in [
+            "fgst-ccube",
+            "fgst-template",
+            "fgst-bexpcube",
+            "ogip",
+            "ogip-arf",
+        ]:
             axes.append(MapAxis.from_table(table, format=format))
         elif format == "gadf":
             # This limits the max number of axes to 5
@@ -591,7 +600,9 @@ class MapAxes(Sequence):
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
                 try:
-                    axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
+                    axis = MapAxis.from_table(
+                        table, format=format, column_prefix=column_prefix
+                    )
                 except KeyError:
                     continue
                 axes.append(axis)
@@ -630,8 +641,10 @@ class MapAxes(Sequence):
             for ax, required_name in zip(self, required_names):
                 ax.assert_name(required_name)
         except ValueError:
-            raise ValueError("Incorrect axis order or names. Expected axis "
-                             f"order: {required_names}, got: {self.names}.")
+            raise ValueError(
+                "Incorrect axis order or names. Expected axis "
+                f"order: {required_names}, got: {self.names}."
+            )
 
 
 class MapAxis:
@@ -1529,8 +1542,10 @@ class MapAxis:
             elif self.name == "rad":
                 table["Theta"] = self.center.to("deg")
             else:
-                raise ValueError("Can only convert true energy or rad axis to"
-                                 f"'gtpsf' format, got {self.name}")
+                raise ValueError(
+                    "Can only convert true energy or rad axis to"
+                    f"'gtpsf' format, got {self.name}"
+                )
         else:
             raise ValueError(f"{format} is not a valid format")
 
@@ -1962,6 +1977,17 @@ class Geom(abc.ABC):
         """Shape of the Numpy data array matching this geometry."""
         pass
 
+    def data_nbytes(self, dtype="float32"):
+        """Estimate memory usage in bytes of the Numpy data array
+        matching this geometry depending on the given type.
+
+        Parameters
+        ----------
+        dtype : data-type
+            The desired data-type for the array. Default is "float32"
+        """
+        return np.empty(self.data_shape, dtype).nbytes
+
     @property
     @abc.abstractmethod
     def is_allsky(self):
@@ -2230,9 +2256,7 @@ class Geom(abc.ABC):
     @property
     def has_energy_axis(self):
         """Whether geom has an energy axis"""
-        return ("energy" in self.axes.names) ^ (
-            "energy_true" in self.axes.names
-        )
+        return ("energy" in self.axes.names) ^ ("energy_true" in self.axes.names)
 
     @abc.abstractmethod
     def to_image(self):
