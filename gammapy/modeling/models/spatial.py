@@ -16,7 +16,7 @@ from regions import (
     PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Parameter
+from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import Model
@@ -41,16 +41,35 @@ class SpatialModel(Model):
     """Spatial model base class."""
 
     _type = "spatial"
+    norm = Parameter("norm", 1, min=0, frozen=True)
 
     def __init__(self, **kwargs):
         frame = kwargs.pop("frame", "icrs")
+        update_norm = kwargs.pop("update_norm", True)
         super().__init__(**kwargs)
         if not hasattr(self, "frame"):
             self.frame = frame
 
+        if update_norm:
+            self.compute_norm = self.compute_norm_analytic * self.norm.value
+        else:
+            self.compute_norm = self.norm.value / u.sr
+            self.renormalize()
+
+    def __init_subclass__(cls, **kwargs):
+        # Add parameters list on the model sub-class (not instances)
+        cls.default_parameters = Parameters(
+            [_ for _ in cls.__dict__.values() if isinstance(_, Parameter)]
+            + [
+                _
+                for _ in cls.__bases__[0].__dict__.values()
+                if isinstance(_, Parameter)
+            ]
+        )
+
     def __call__(self, lon, lat, energy=None):
         """Call evaluate method"""
-        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = {par.name: par.quantity for par in self.parameters if par.name != "norm"}
 
         if energy is None and self.is_energy_dependent:
             raise ValueError("Missing energy value for evaluation")
@@ -59,6 +78,24 @@ class SpatialModel(Model):
             kwargs["energy"] = energy
 
         return self.evaluate(lon, lat, **kwargs)
+
+    @property
+    def compute_norm_analytic(self):
+        return self.compute_norm_contant
+
+    @property
+    def norm_correction(self):
+        """Norm correction to be multiplied with spectral model amplitude"""
+        geom = WcsGeom.create(
+            skydir=self.position,
+            width=2 * self.evaluation_radius,
+            binsz=self.evaluation_radius / 50.0,
+            frame=self.frame,
+        )
+        return np.sum(self.evaluate_geom(geom) * geom.solid_angle()).value
+
+    def renormalize(self):
+        self.norm.value /= self.norm_correction
 
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
@@ -489,15 +526,23 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
 
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_0, eta, e, phi):
+    def evaluate(self, lon, lat, lon_0, lat_0, r_0, eta, e, phi):
         sep = angular_separation(lon, lat, lon_0, lat_0)
         if isinstance(eta, u.Quantity):
             eta = eta.value  # gamma function does not allow quantities
         minor_axis, r_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)
         z = sep / r_eff
+        return (self.compute_norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
+
+    @property
+    def compute_norm_analytic(self):
+        r_0 = self.r_0.quantity
+        eta = self.eta.quantity
+        if isinstance(eta, u.Quantity):
+            eta = eta.value  # gamma function does not allow quantities
+        minor_axis = Angle(r_0 * np.sqrt(1 - self.e.quantity ** 2))
         norm = 1 / (2 * np.pi * minor_axis * r_0 * eta * scipy.special.gamma(2 * eta))
-        return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
+        return norm.to("sr-1")
 
     @property
     def evaluation_radius(self):
