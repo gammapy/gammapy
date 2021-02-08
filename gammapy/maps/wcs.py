@@ -886,12 +886,12 @@ class WcsGeom(Geom):
         data = np.ones(self.data_shape, dtype=bool)
         return Map.from_geom(self, data=data).binary_erode(width)
 
-    def region_mask(self, regions):
+    def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions
 
         The mask is filled such that a pixel inside the region is filled with
         "True". To invert the mask, e.g. to create a mask with exclusion regions
-        the tilde (~) operator can be used (see examnple below).
+        the tilde (~) operator can be used (see example below).
 
         Parameters
         ----------
@@ -899,6 +899,9 @@ class WcsGeom(Geom):
             Region or list of regions (pixel or sky regions accepted).
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
+        inside : bool
+            For ``inside=True``, pixels in the region to True (the default).
+            For ``inside=False``, pixels in the region are False.
 
         Returns
         -------
@@ -936,6 +939,10 @@ class WcsGeom(Geom):
         geom = RegionGeom.from_regions(regions, wcs=self.wcs)
         idx = self.get_idx()
         mask = geom.contains_wcs_pix(idx)
+
+        if not inside:
+            np.logical_not(mask, out=mask)
+
         return Map.from_geom(self, data=mask)
 
     def region_weights(self, regions, oversampling_factor=10):

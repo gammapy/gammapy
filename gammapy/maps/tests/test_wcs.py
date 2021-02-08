@@ -361,7 +361,7 @@ def test_region_mask():
     assert mask.data.dtype == bool
     assert np.sum(mask.data) == 1
 
-    mask = ~geom.region_mask(regions)
+    mask = geom.region_mask(regions, inside=False)
     assert np.sum(mask.data) == 8
 
 
