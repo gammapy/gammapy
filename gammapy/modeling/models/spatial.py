@@ -737,7 +737,7 @@ class ShellSpatialModel(SpatialModelRenorm):
             value[mask] = (value - np.sqrt(radius ** 2 - sep ** 2))[mask]
             value[sep > radius_out] = 0
 
-        return self.compute_norm * norm * value
+        return self.compute_norm() * (norm * value).to_value("sr-1")
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
@@ -749,7 +749,7 @@ class ShellSpatialModel(SpatialModelRenorm):
         )
 
 
-class Shell2SpatialModel(SpatialModel):
+class Shell2SpatialModel(SpatialModelRenorm):
     r"""Shell model with outer radius and relative width parametrization
 
     For more information see :ref:`shell2-spatial-model`.
@@ -803,7 +803,7 @@ class Shell2SpatialModel(SpatialModel):
             value[mask] = (value - np.sqrt(r_in ** 2 - sep ** 2))[mask]
             value[sep > r_0] = 0
 
-        return self.compute_norm * norm * value
+        return self.compute_norm() * (norm * value).to_value("sr-1")
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
