@@ -133,7 +133,7 @@ class SafeMaskMaker(Maker):
         else:
             position = PointSkyRegion(self.position)
 
-        aeff = dataset.aeff.get_spectrum(position)
+        aeff = dataset.exposure.get_spectrum(position) / dataset.exposure.meta["livetime"]
         model = TemplateSpectralModel.from_region_map(aeff)
 
         aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()

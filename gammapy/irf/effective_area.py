@@ -203,6 +203,9 @@ class EffectiveAreaTable2D(IRF):
         .. math::
             A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}
 
+        This method does not model the offset dependence of the effective area,
+        but just assumes that it is constant.
+
         Parameters
         ----------
         energy_axis_true : `MapAxis`
