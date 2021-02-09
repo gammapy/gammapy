@@ -318,7 +318,7 @@ class SpectralModel(Model):
 
         .. note::
 
-            This method calls ``ax.set_yscale("log", nonposy='clip')`` and
+            This method calls ``ax.set_yscale("log", nonpositive='clip')`` and
             ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
             The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
             when the error band extends to negative values (see also
@@ -327,8 +327,8 @@ class SpectralModel(Model):
             When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
             plotting code and the error band extends to negative values, it is not
             shown correctly. To circumvent this issue also use
-            ``plt.loglog(nonposx='clip', nonposy='clip')``
-            or ``plt.semilogy(nonposy='clip')``.
+            ``plt.loglog(nonposx='clip', nonpositive='clip')``
+            or ``plt.semilogy(nonpositive='clip')``.
 
         Parameters
         ----------
@@ -383,8 +383,8 @@ class SpectralModel(Model):
         else:
             ax.set_ylabel(f"Flux [{y.unit}]")
 
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
 
         if "norm" in self.__class__.__name__.lower():
             ax.set_ylabel(f"Norm [A.U.]")
