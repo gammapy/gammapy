@@ -491,7 +491,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf-dl3"}
+        format : {"gadf", "gadf-dl3", "ogip", "ogip-sherpa"}
             Format to use.
 
         Returns
@@ -524,7 +524,9 @@ class MapAxes(Sequence):
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
                     table[colname] = np.ravel(v[idx]).astype(np.float32)
-
+        elif format in ["ogip", "ogip-sherpa"]:
+            energy_axis = self["energy"]
+            table = energy_axis.to_table(format=format)
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 
@@ -548,7 +550,7 @@ class MapAxes(Sequence):
         # FIXME: Check whether convention is compatible with
         #  dimensionality of geometry and simplify!!!
 
-        if format == "fgst-ccube":
+        if format in ["fgst-ccube", "ogip", "ogip-sherpa"]:
             hdu = "EBOUNDS"
         elif format == "fgst-template":
             hdu = "ENERGIES"
@@ -561,7 +563,7 @@ class MapAxes(Sequence):
             raise ValueError(f"Unknown format {format}")
 
         table = self.to_table(format=format)
-        header = self.to_header()
+        header = self.to_header(format=format)
         return fits.BinTableHDU(table, name=hdu, header=header)
 
     @classmethod

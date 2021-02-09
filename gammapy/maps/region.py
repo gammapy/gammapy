@@ -544,13 +544,15 @@ class RegionGeom(Geom):
         table.meta.update(header)
         return table
 
-    def to_hdulist(self, format="ogip"):
+    def to_hdulist(self, format="ogip", hdu=None):
         """Convert geom to hdulist
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"gadf", "ogip", "ogip-sherpa"}
             HDU format
+        hdu : str
+            Name of the HDU with the map data.
 
         Returns
         -------
@@ -560,14 +562,17 @@ class RegionGeom(Geom):
         """
         hdulist = fits.HDUList()
 
-        # energy bounds HDU
-        energy_axis = self.axes["energy"]
-        hdulist.append(energy_axis.to_table_hdu(format=format))
+        hdulist.append(self.axes.to_table_hdu(prefix=hdu, format=format))
 
         # region HDU
         if self.region:
             region_table = self._to_region_table()
-            region_hdu = fits.BinTableHDU(region_table, name="REGION")
+
+            name = "REGION"
+            if hdu and format == "gadf":
+                name = hdu + "_" + name
+
+            region_hdu = fits.BinTableHDU(region_table, name=name)
             hdulist.append(region_hdu)
 
         return hdulist
@@ -597,14 +602,14 @@ class RegionGeom(Geom):
         return cls(region, **kwargs)
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip"):
+    def from_hdulist(cls, hdulist, format="ogip", hdu=None):
         """Read region table and convert it to region list.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list
-        format : {"ogip", "ogip-arf"}
+        format : {"ogip", "ogip-arf", "gadf"}
             HDU format
 
         Returns
@@ -613,8 +618,13 @@ class RegionGeom(Geom):
             Region map geometry
 
         """
-        if "REGION" in hdulist:
-            region_table = Table.read(hdulist["REGION"])
+        region_hdu = "REGION"
+
+        if format == "gadf" and hdu:
+            region_hdu = hdu + "_" + region_hdu
+
+        if region_hdu in hdulist:
+            region_table = Table.read(hdulist[region_hdu])
             parser = FITSRegionParser(region_table)
             pix_region = parser.shapes.to_regions()
             wcs = WcsGeom.from_header(region_table.meta).wcs
@@ -630,11 +640,13 @@ class RegionGeom(Geom):
             hdu = "EBOUNDS"
         elif format == "ogip-arf":
             hdu = "SPECRESP"
+        elif format == "gadf":
+            hdu = hdu + "_BANDS"
         else:
             raise ValueError(f"Unknown format {format}")
 
-        axis = MapAxis.from_table_hdu(hdulist[hdu], format=format)
-        return cls(region=region, wcs=wcs, axes=[axis])
+        axes = MapAxes.from_table_hdu(hdulist[hdu], format=format)
+        return cls(region=region, wcs=wcs, axes=axes)
 
     def union(self, other):
         """Stack a RegionGeom by making the union"""

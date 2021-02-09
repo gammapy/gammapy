@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -6,10 +7,11 @@ from astropy.visualization import quantity_support
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
+from gammapy.utils.units import unit_from_fits_image_hdu
 from .core import Map
 from .geom import pix_tuple_to_idx
 from .region import RegionGeom
-from .utils import INVALID_INDEX
+from .utils import INVALID_INDEX, JsonQuantityEncoder
 
 __all__ = ["RegionNDMap"]
 
@@ -328,17 +330,19 @@ class RegionNDMap(Map):
             Overwrite existing files?
         """
         filename = make_path(filename)
-        self.to_hdulist(format=format).writeto(
+        self.to_hdulist(format=format, hdu="PRIMARY").writeto(
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="ogip"):
+    def to_hdulist(self, format="ogip", hdu="PRIMARY"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
+        hdu : str
+            Name of the HDU with the map data, used for "gadf" format.
 
         Returns
         -------
@@ -347,18 +351,32 @@ class RegionNDMap(Map):
         """
         hdulist = fits.HDUList()
 
-        # add data hdu
-        table = self.to_table(format=format)
-        hdulist.append(fits.BinTableHDU(table))
+        if format in ["ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"]:
+            table = self.to_table(format=format)
+            hdu_out = fits.BinTableHDU(table)
+        elif format == "gadf":
+            header = fits.Header()
+            header["META"] = json.dumps(self.meta, cls=JsonQuantityEncoder)
+            header["BUNIT"] = self.unit.to_string("fits")
 
-        if format in ["ogip", "ogip-sherpa"]:
-            hdulist_geom = self.geom.to_hdulist(format=format)[1:]
+            if hdu == "PRIMARY":
+                hdu_out = fits.PrimaryHDU(self.data)
+            else:
+                hdu_out = fits.ImageHDU(self.data, name=hdu)
+            hdu_out.header.update(header)
+        else:
+            raise ValueError(f"Unsupported format '{format}'")
+
+        hdulist.append(hdu_out)
+
+        if format in ["ogip", "ogip-sherpa", "gadf"]:
+            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)[1:]
             hdulist.extend(hdulist_geom)
 
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
+    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS", hdu="PRIMARY"):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -377,23 +395,29 @@ class RegionNDMap(Map):
         """
         if format == "ogip":
             hdu = "SPECTRUM"
+
         elif format == "ogip-arf":
             hdu = "SPECRESP"
             ogip_column = "SPECRESP"
-        else:
-            raise ValueError(f"Unknown format: {format}")
 
-        table = Table.read(hdulist[hdu])
-        geom = RegionGeom.from_hdulist(hdulist, format=format)
+        geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu)
 
-        quantity = table[ogip_column].quantity
+        if format in ["ogip", "ogip-arf"]:
+            table = Table.read(hdulist[hdu])
+            quantity = table[ogip_column].quantity
+            meta = table.meta
+        elif format == "gadf":
+            data = hdulist[hdu].data
+            unit = unit_from_fits_image_hdu(hdulist[hdu].header)
+            meta = {}
+            quantity = u.Quantity(data, unit=unit, copy=False)
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
+        return cls(geom=geom, data=data, meta=meta, unit=unit)
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
