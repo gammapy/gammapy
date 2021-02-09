@@ -44,7 +44,7 @@ def spectrum_dataset_gc():
 def spectrum_dataset_crab():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
-    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco])
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco], binsz_wcs="0.01deg")
     return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
