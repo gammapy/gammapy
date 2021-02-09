@@ -380,8 +380,8 @@ def test_integrate_geom():
     circle_small = CircleSkyRegion(center, radius_small)
 
     geom_large, geom_small = (
-        RegionGeom(region=circle_large),
-        RegionGeom(region=circle_small),
+        RegionGeom(region=circle_large, binsz_wcs="0.01deg"),
+        RegionGeom(region=circle_small, binsz_wcs="0.01deg"),
     )
 
     integral_large, integral_small = (
@@ -401,7 +401,7 @@ def test_integrate_geom_energy_axis():
     square = RectangleSkyRegion(center, radius, radius)
 
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
-    geom = RegionGeom(region=square, axes=[axis])
+    geom = RegionGeom(region=square, axes=[axis], binsz_wcs="0.01deg")
 
     integral = model.integrate_geom(geom).data
 
