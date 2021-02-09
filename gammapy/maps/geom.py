@@ -491,7 +491,8 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "ogip", "ogip-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template",
+                  "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -524,7 +525,7 @@ class MapAxes(Sequence):
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
                     table[colname] = np.ravel(v[idx]).astype(np.float32)
-        elif format in ["ogip", "ogip-sherpa"]:
+        elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
             energy_axis = self["energy"]
             table = energy_axis.to_table(format=format)
         else:
