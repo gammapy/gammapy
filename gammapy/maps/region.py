@@ -53,7 +53,7 @@ class RegionGeom(Geom):
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
 
-    def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.01 deg"):
+    def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.1 deg"):
         self._region = region
         self._axes = MapAxes.from_default(axes)
         self._binsz_wcs = binsz_wcs
@@ -323,6 +323,22 @@ class RegionGeom(Geom):
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
 
+    def to_binsz_wcs(self, binsz):
+        """Change the bin size of the underlying WCS geometry.
+
+        Parameters
+         ----------
+        binzs : float, string or `~astropy.quantity.Quantity`
+.
+        Returns
+        -------
+        `~RegionGeom`
+            A RegionGeom with the same axes and region as the input,
+            but different wcs pixelization.
+        """
+        new_geom = RegionGeom(self.region, axes=self.axes, binsz_wcs=binsz)
+        return new_geom
+
     def get_wcs_coord_and_weights(self, factor=10):
         """Get the array of spatial coordinates and corresponding weights
 
@@ -355,7 +371,7 @@ class RegionGeom(Geom):
 
         # Get coordinates
         region_coord = wcs_geom.get_coord().apply_mask(mask)
-        
+
         return region_coord, weights
 
     def to_binsz(self, binsz):
