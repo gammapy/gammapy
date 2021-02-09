@@ -815,3 +815,10 @@ def test_mask_fit_modifications():
     mask_fit = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg), use_fft=False)
     assert np.sum(mask_fit_fft.data) == np.prod(mask_fit_fft.data.shape)
     assert np.sum(mask_fit.data) == np.prod(mask_fit.data.shape)
+
+
+def test_memory_usage():
+    geom = WcsGeom.create()
+    assert geom.data_nbytes().unit == u.MB
+    assert_allclose(geom.data_nbytes(dtype="float32").value, 1.0368)
+    assert_allclose(geom.data_nbytes(dtype="b").value, 0.2592)

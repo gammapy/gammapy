@@ -45,8 +45,8 @@ Pages
   :maxdepth: 1
 
   intro
+  release
   setup
   howto
-  release
   pigs/index
   dataformats

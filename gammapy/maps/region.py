@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
-from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion
+from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion, PixCoord
 from gammapy.utils.regions import (
     compound_region_to_list,
     list_to_compound_region,
@@ -186,6 +186,22 @@ class RegionGeom(Geom):
 
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
         return self.region.contains(coords.skycoord, self.wcs)
+
+    def contains_wcs_pix(self, pix):
+        """Check if a given wcs pixel coordinate is contained in the region.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel coordinates.
+
+        Returns
+        -------
+        containment : `~numpy.ndarray`
+            Bool array.
+        """
+        region_pix = self.region.to_pixel(self.wcs)
+        return region_pix.contains(PixCoord(pix[0], pix[1]))
 
     def separation(self, position):
         """Angular distance between the center of the region and the given position.
@@ -544,20 +560,22 @@ class RegionGeom(Geom):
     def from_regions(cls, regions, **kwargs):
         """Create region geom from list of regions
 
-        The regions are combined to a compound region.
+        The regions are combined with union to a compound region.
 
         Parameters
         ----------
-        regions : list of  `~regions.SkyRegion`
+        regions : `~regions.SkyRegion`
             Regions
+        **kwargs: dict
+            Keyword arguments forwarded to `RegionGeom`
 
         Returns
         -------
         geom : `RegionGeom`
             Region map geometry
         """
-        if isinstance(regions, SkyRegion):
-            regions = [regions]
+        if isinstance(regions, (SkyRegion, str)):
+            regions = [make_region(regions)]
 
         region = list_to_compound_region(regions)
         return cls(region, **kwargs)

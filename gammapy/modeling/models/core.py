@@ -672,26 +672,29 @@ class DatasetModels(collections.abc.Sequence):
 
         return self.__class__(models=models)
 
-    def select_region(self, regions):
+    def select_region(self, regions, wcs=None):
         """Select sky models with center position contained within a given region
 
         Parameters
         ----------
-        regions : `~regions.SkyRegion` or list of `~regions.SkyRegion`
-            Sky region or list of sky regions
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
+        wcs : `~astropy.wcs.WCS`
+            World coordinate system transformation
 
         Returns
         -------
         models : `DatasetModels`
             Selected models 
         """
-        geom = RegionGeom.from_regions(regions)
+        geom = RegionGeom.from_regions(regions, wcs=wcs)
 
         models = []
 
         for model in self.select(tag="sky-model"):
-            position = getattr(model, "position", None)
-            if position is None or geom.contains(position):
+            if geom.contains(model.position):
                 models.append(model)
 
         return self.__class__(models=models)

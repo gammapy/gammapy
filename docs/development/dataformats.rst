@@ -6,9 +6,10 @@
 Data Formats
 ************
 
-.. note:: Since November 2015 there is the :ref:`gadf:main-page` project.
-    This page contains extra information about which formats we support in
-    Gammapy and which class corresponds to which format.
+.. note:: Since November 2015 there is the
+    `Data formats for gamma-ray astronomy <https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html>`__
+    project. This page contains extra information about which formats we support in Gammapy and which class corresponds
+    to which format.
 
 Where available and useful existing standards are used, e.g. for spectral data
 the X-ray community has developed the ``PHA``, ``ARF`` and ``RMF`` file formats
