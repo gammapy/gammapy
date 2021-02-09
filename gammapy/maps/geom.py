@@ -1491,7 +1491,7 @@ class MapAxis:
             header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
             header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
             header["HDUVERS"] = "1.2.0", "Version of file format"
-        elif format == "gadf":
+        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
             key = f"AXCOLS{idx}"
             name = self.name.upper()
 
