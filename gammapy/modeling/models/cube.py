@@ -10,7 +10,7 @@ from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, Models
-from .spatial import ConstantSpatialModel, SpatialModel
+from .spatial import ConstantSpatialModel, SpatialModel, SpatialModelRenorm
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
 
@@ -144,6 +144,15 @@ class SkyModel(Model):
             parameters.append(self.temporal_model.parameters)
 
         return Parameters.from_stack(parameters)
+
+    def renorm(self, geom=None):
+        """Renormalize spatial and spectral models if compatibles"""
+        if isinstance(self.spatial, SpatialModelRenorm) and hasattr(
+            self.spectral, "amplitude"
+        ):
+            correction = self.spatial.norm_correction(geom)
+            self.spatial.nom.value /= correction
+            self.spectral.amplitude.value *= correction
 
     @property
     def spatial_model(self):

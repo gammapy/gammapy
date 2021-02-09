@@ -320,6 +320,11 @@ class DatasetModels(collections.abc.Sequence):
 
         return names
 
+    def renorm(self, geom=None):
+        """Renormalize spatial and spectral models if compatibles"""
+        for m in self._models:
+            m.renorm(geom)
+
     @property
     def names(self):
         return [m.name for m in self._models]
@@ -664,9 +669,7 @@ class DatasetModels(collections.abc.Sequence):
 
         for model in self.select(tag="sky-model"):
             if model.contributes(
-                    mask=mask,
-                    margin=margin,
-                    use_evaluation_region=use_evaluation_region
+                mask=mask, margin=margin, use_evaluation_region=use_evaluation_region
             ):
                 models.append(model)
 
