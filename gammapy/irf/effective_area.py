@@ -156,9 +156,11 @@ class EffectiveAreaTable2D(IRF):
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.axes["energy_true"].edges
-        offset = self.axes["offset"].edges
-        aeff = self.evaluate(offset=offset, energy_true=energy[:, np.newaxis])
+        energy = self.axes["energy_true"]
+        offset = self.axes["offset"]
+        aeff = self.evaluate(
+            offset=offset.center, energy_true=energy.center[:, np.newaxis]
+        )
 
         vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
 
@@ -167,6 +169,8 @@ class EffectiveAreaTable2D(IRF):
         kwargs.setdefault("vmin", vmin)
         kwargs.setdefault("vmax", vmax)
 
+        energy = self.axes["energy_true"].edges
+        offset = self.axes["offset"].edges
         caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
 
         ax.set_xscale("log")
