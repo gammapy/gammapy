@@ -7,8 +7,9 @@ from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable, load_cta_irfs
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
+from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
@@ -24,8 +25,12 @@ from gammapy.utils.testing import requires_data, requires_dependency
 def simulate_spectrum_dataset(model, random_state=0):
     energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
     energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
+    energy_axis_true = energy_axis.copy(name="energy_true")
 
-    aeff = EffectiveAreaTable.from_parametrization(energy=energy_edges).to_region_map()
+    aeff = EffectiveAreaTable2D.from_parametrization(
+        energy_axis_true=energy_axis_true
+    )
+
     bkg_model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
@@ -35,16 +40,18 @@ def simulate_spectrum_dataset(model, random_state=0):
     bkg_model.spectral_model.amplitude.frozen = True
     bkg_model.spectral_model.index.frozen = True
 
-    geom = RegionGeom(region=None, axes=[energy_axis])
+    geom = RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis])
     acceptance = RegionNDMap.from_geom(geom=geom, data=1)
     edisp = EDispKernelMap.from_diagonal_response(
         energy_axis=energy_axis,
-        energy_axis_true=energy_axis.copy(name="energy_true"),
+        energy_axis_true=energy_axis_true,
         geom=geom,
     )
 
-    livetime = 100 * u.h
-    exposure = aeff * livetime
+    geom_true= RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis_true])
+    exposure = make_map_exposure_true_energy(
+        pointing=SkyCoord("0d", "0d"), aeff=aeff, livetime=100 *u.h, geom=geom_true
+    )
 
     mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
     mask_safe.data += True

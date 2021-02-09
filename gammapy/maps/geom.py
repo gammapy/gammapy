@@ -637,15 +637,18 @@ class MapAxes(Sequence):
         required_names : list of str
             Required
         """
+        message = ("Incorrect axis order or names. Expected axis "
+                   f"order: {required_names}, got: {self.names}.")
+
+        if not len(self) == len(required_names):
+            raise ValueError(message)
+
         try:
             for ax, required_name in zip(self, required_names):
                 ax.assert_name(required_name)
-        except ValueError:
-            raise ValueError(
-                "Incorrect axis order or names. Expected axis "
-                f"order: {required_names}, got: {self.names}."
-            )
 
+        except ValueError:
+            raise ValueError(message)
 
 class MapAxis:
     """Class representing an axis of a map.
