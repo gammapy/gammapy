@@ -266,8 +266,10 @@ class Map(abc.ABC):
 
         if ("PIXTYPE" in header) and (header["PIXTYPE"] == "HEALPIX"):
             return "hpx"
-        else:
+        elif "CTYPE1" in header:
             return "wcs"
+        else:
+            return "region"
 
     @staticmethod
     def _get_map_cls(map_type):

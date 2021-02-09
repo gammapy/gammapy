@@ -503,11 +503,11 @@ class IRFMap:
         """
         if format == "gadf":
             hdu = IRF_MAP_HDU_SPECIFICATION[self.tag]
-            hdulist = self._irf_map.to_hdulist(hdu=hdu)
+            hdulist = self._irf_map.to_hdulist(hdu=hdu, format=format)
             exposure_hdu = hdu + "_exposure"
 
             if self.exposure_map is not None:
-                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu)
+                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu, format=format)
                 hdulist.extend(new_hdulist[1:])
 
         elif format == "gtpsf":

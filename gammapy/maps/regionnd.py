@@ -317,7 +317,7 @@ class RegionNDMap(Map):
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
 
-    def write(self, filename, overwrite=False, format="ogip-arf"):
+    def write(self, filename, overwrite=False, format="ogip-arf", hdu=None):
         """Write map to file
 
         Parameters
@@ -330,11 +330,11 @@ class RegionNDMap(Map):
             Overwrite existing files?
         """
         filename = make_path(filename)
-        self.to_hdulist(format=format, hdu="PRIMARY").writeto(
+        self.to_hdulist(format=format, hdu=hdu).writeto(
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="ogip", hdu="PRIMARY"):
+    def to_hdulist(self, format="ogip", hdu=None):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -363,11 +363,15 @@ class RegionNDMap(Map):
                 hdu_out = fits.PrimaryHDU(self.data)
             else:
                 hdu_out = fits.ImageHDU(self.data, name=hdu)
+
             hdu_out.header.update(header)
         else:
             raise ValueError(f"Unsupported format '{format}'")
 
-        hdulist.append(hdu_out)
+        if hdu == "PRIMARY":
+            hdulist += [hdu_out]
+        else:
+            hdulist += [fits.PrimaryHDU(), hdu_out]
 
         if format in ["ogip", "ogip-sherpa", "gadf"]:
             hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)[1:]
@@ -376,7 +380,7 @@ class RegionNDMap(Map):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS", hdu="PRIMARY"):
+    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS", hdu=None, hdu_bands=None):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -395,21 +399,22 @@ class RegionNDMap(Map):
         """
         if format == "ogip":
             hdu = "SPECTRUM"
-
         elif format == "ogip-arf":
             hdu = "SPECRESP"
             ogip_column = "SPECRESP"
+        elif format is None:
+            format = "gadf"
 
-        geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu)
+        geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu, hdu_bands=hdu_bands)
 
         if format in ["ogip", "ogip-arf"]:
             table = Table.read(hdulist[hdu])
             quantity = table[ogip_column].quantity
             meta = table.meta
         elif format == "gadf":
-            data = hdulist[hdu].data
-            unit = unit_from_fits_image_hdu(hdulist[hdu].header)
-            meta = {}
+            data, header = hdulist[hdu].data, hdulist[hdu].header
+            unit = unit_from_fits_image_hdu(header)
+            meta = cls._get_meta_from_header(header)
             quantity = u.Quantity(data, unit=unit, copy=False)
 
         if ogip_column == "QUALITY":
