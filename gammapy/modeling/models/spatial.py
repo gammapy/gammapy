@@ -41,16 +41,18 @@ class SpatialModel(Model):
     """Spatial model base class."""
 
     _type = "spatial"
+
     def __init__(self, **kwargs):
         frame = kwargs.pop("frame", "icrs")
         super().__init__(**kwargs)
         if not hasattr(self, "frame"):
             self.frame = frame
 
-
     def __call__(self, lon, lat, energy=None):
         """Call evaluate method"""
-        kwargs = {par.name: par.quantity for par in self.parameters if par.name != "norm"}
+        kwargs = {
+            par.name: par.quantity for par in self.parameters if par.name != "norm"
+        }
 
         if energy is None and self.is_energy_dependent:
             raise ValueError("Missing energy value for evaluation")
@@ -59,7 +61,6 @@ class SpatialModel(Model):
             kwargs["energy"] = energy
 
         return self.evaluate(lon, lat, **kwargs)
-
 
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
@@ -324,18 +325,14 @@ class SpatialModelRenorm(SpatialModel):
     """Base class for spatial models that support re-normalization a posteriori"""
 
     norm = Parameter("norm", 1, min=0, frozen=True)
+
     def __init__(self, **kwargs):
         frame = kwargs.pop("frame", "icrs")
         update_norm = kwargs.pop("update_norm", True)
         super().__init__(**kwargs)
         if not hasattr(self, "frame"):
             self.frame = frame
-
-        if update_norm:
-            self.compute_norm = self.compute_norm_analytic * self.norm.value
-        else:
-            self.compute_norm = self.norm.value / u.sr
-            self.renormalize()
+        self.set_norm_method(update_norm)
 
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)
@@ -347,30 +344,44 @@ class SpatialModelRenorm(SpatialModel):
                 if isinstance(_, Parameter)
             ]
         )
-        
-    @property
-    def compute_norm_analytic(self):
-        return 1. / u.sr
+
+    def set_norm_method(self, update_norm):
+        "update norm or not on model evaluation"
+        if update_norm:
+            self.compute_norm = self._get_norm_updated
+        else:
+            self.compute_norm = self._get_norm_constant
+            self.renormalize()
+
+    def _get_norm_updated(self):
+        return self.compute_norm_default * self.norm.value
+
+    def _get_norm_constant(self):
+        return self.norm.value / u.sr
 
     @property
-    def norm_correction(self):
+    def compute_norm_default(self):
+        return 1.0 / u.sr
+
+    def norm_correction(self, geom=None):
         """Norm correction to be multiplied with spectral model amplitude"""
-        if self.evaluation_radius == 0*u.deg:
-            radius = 0.1 * u.deg
-        elif self.evaluation_radius is None:
-            radius = 180 * u.deg 
-        else:
-            radius = self.evaluation_radius
-        geom = WcsGeom.create(
+        if geom is None:
+            if self.evaluation_radius == 0 * u.deg:
+                radius = 0.1 * u.deg
+            elif self.evaluation_radius is None:
+                radius = 180 * u.deg
+            else:
+                radius = self.evaluation_radius
+            geom = WcsGeom.create(
                 skydir=self.position,
                 width=(2 * radius),
-                binsz=radius / 50.0,
+                binsz=radius / 100.0,
                 frame=self.frame,
             )
         return np.sum(self.evaluate_geom(geom) * geom.solid_angle()).value
 
-    def renormalize(self):
-        self.norm.value /= self.norm_correction
+    def renormalize(self, geom=None):
+        self.norm.value /= self.norm_correction(geom)
 
 
 class PointSpatialModel(SpatialModel):
@@ -475,7 +486,6 @@ class GaussianSpatialModel(SpatialModelRenorm):
         """
         return 5 * self.parameters["sigma"].quantity
 
-
     def evaluate(self, lon, lat, lon_0, lat_0, sigma, e, phi):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
@@ -491,7 +501,7 @@ class GaussianSpatialModel(SpatialModelRenorm):
             norm = (1 / (2 * np.pi * sigma * minor_axis)).to_value("sr-1")
 
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
-        return self.compute_norm * norm * np.exp(exponent).value
+        return self.compute_norm() * norm * np.exp(exponent).value
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
@@ -549,10 +559,10 @@ class GeneralizedGaussianSpatialModel(SpatialModelRenorm):
             eta = eta.value  # gamma function does not allow quantities
         minor_axis, r_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)
         z = sep / r_eff
-        return (self.compute_norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
+        return self.compute_norm() * np.exp(-(z ** (1 / eta)))
 
     @property
-    def compute_norm_analytic(self):
+    def compute_norm_default(self):
         r_0 = self.r_0.quantity
         eta = self.eta.quantity
         if isinstance(eta, u.Quantity):
@@ -625,8 +635,29 @@ class DiskSpatialModel(SpatialModelRenorm):
         return self.r_0.quantity
 
     @staticmethod
-    def _evaluate_norm_factor(r_0, e):
+    def _evaluate_smooth_edge(x, width):
+        value = (x / width).to_value("")
+        edge_width_95 = 2.326174307353347
+        return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
+
+    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge):
+        """Evaluate model."""
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+
+        if e == 0:
+            sigma_eff = r_0
+        else:
+            sigma_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)[1]
+
+        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, edge)
+        return self.compute_norm() * in_ellipse
+
+    @property
+    def compute_norm_default(self):
         """Compute the normalization factor."""
+        r_0 = self.r_0.quantity
+        e = self.e.quantity
+
         semi_minor = r_0 * np.sqrt(1 - e ** 2)
 
         def integral_fcn(x, a, b):
@@ -637,36 +668,14 @@ class DiskSpatialModel(SpatialModelRenorm):
 
             return 1 - np.sqrt(1 - 1 / (B + C * cs2))
 
-        return (
+        norm = (
             2
             * scipy.integrate.quad(
                 lambda x: integral_fcn(x, r_0, semi_minor), 0, np.pi
             )[0]
         ) ** -1
+        return norm / u.sr
 
-    def _evaluate_smooth_edge(x, width):
-        value = (x / width).to_value("")
-        edge_width_95 = 2.326174307353347
-        return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
-
-    @staticmethod
-    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge):
-        """Evaluate model."""
-        sep = angular_separation(lon, lat, lon_0, lat_0)
-
-        if e == 0:
-            sigma_eff = r_0
-        else:
-            sigma_eff = compute_sigma_eff(lon_0, lat_0, lon, lat, phi, r_0, e)[1]
-
-
-        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, edge)
-        return u.Quantity(self.compute_norm_analytic * in_ellipse, "sr-1", copy=False)
-
-    @property
-    def compute_norm_analytic(self):
-        return self._evaluate_norm_factor(self.r_0.qunatity, self.e.quantity)
-        
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
@@ -679,7 +688,7 @@ class DiskSpatialModel(SpatialModelRenorm):
         )
 
 
-class ShellSpatialModel(SpatialModel):
+class ShellSpatialModel(SpatialModelRenorm):
     r"""Shell model.
 
     For more information see :ref:`shell-spatial-model`.
@@ -713,8 +722,7 @@ class ShellSpatialModel(SpatialModel):
         """
         return self.radius.quantity + self.width.quantity
 
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, radius, width):
+    def evaluate(self, lon, lat, lon_0, lat_0, radius, width):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         radius_out = radius + width
@@ -729,7 +737,7 @@ class ShellSpatialModel(SpatialModel):
             value[mask] = (value - np.sqrt(radius ** 2 - sep ** 2))[mask]
             value[sep > radius_out] = 0
 
-        return norm * value
+        return self.compute_norm * norm * value
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
@@ -780,8 +788,7 @@ class Shell2SpatialModel(SpatialModel):
     def r_in(self):
         return (1 - self.eta.quantity) * self.r_0.quantity
 
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_0, eta):
+    def evaluate(self, lon, lat, lon_0, lat_0, r_0, eta):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         r_in = (1 - eta) * r_0
@@ -796,7 +803,7 @@ class Shell2SpatialModel(SpatialModel):
             value[mask] = (value - np.sqrt(r_in ** 2 - sep ** 2))[mask]
             value[sep > r_0] = 0
 
-        return norm * value
+        return self.compute_norm * norm * value
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
