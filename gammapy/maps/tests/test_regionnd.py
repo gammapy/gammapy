@@ -189,7 +189,7 @@ def test_regionndmap_resample_axis():
 
 def test_region_nd_io_ogip(tmpdir):
     energy_axis = MapAxis.from_energy_bounds(0.1, 10, 12, unit="TeV")
-    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis], binsz_wcs="0.01deg")
     m.write(tmpdir / "test.fits", format="ogip")
 
     m_new = RegionNDMap.read(tmpdir / "test.fits", format="ogip")
