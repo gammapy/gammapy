@@ -1242,9 +1242,10 @@ class MapDataset(Dataset):
 
         if self.exposure is not None:
             kwargs["exposure"] = self.exposure.get_spectrum(on_region, np.mean)
-            if self.gti:
-                # TODO: this is mising the deadtime correction
-                kwargs["exposure"].meta["livetime"] = self.gti.time_sum
+            try:
+                kwargs["exposure"].meta["livetime"] = self.exposure.meta["livetime"].copy()
+            except KeyError:
+                kwargs["exposure"].meta["livetime"] = u.Quantity(np.nan, "s")
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
