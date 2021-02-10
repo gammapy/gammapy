@@ -17,9 +17,11 @@ from gammapy.maps import RegionNDMap
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
+
 @pytest.fixture(scope="session")
 def norm_values():
-    return ScanValuesMaker(bounds=(0.2,5), n_values=3, scaling="log")
+    return ScanValuesMaker(bounds=(0.2, 5), n_values=3, scaling="log")
+
 
 @pytest.fixture(scope="session")
 def lc():
@@ -402,7 +404,9 @@ def test_lightcurve_estimator_spectrum_datasets_default(norm_values):
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        energy_edges=[1, 30] * u.TeV, norm_values=norm_values, selection_optional=selection
+        energy_edges=[1, 30] * u.TeV,
+        norm_values=norm_values,
+        selection_optional=selection,
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -471,7 +475,9 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped(norm_values):
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
     with pytest.raises(ValueError) as excinfo:
-        estimator = LightCurveEstimator(norm_values=norm_values, time_intervals=time_intervals)
+        estimator = LightCurveEstimator(
+            norm_values=norm_values, time_intervals=time_intervals
+        )
         estimator.run(datasets)
 
     msg = "Overlapping time bins"
@@ -480,7 +486,9 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped(norm_values):
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_intervals(norm_values):
+def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_intervals(
+    norm_values,
+):
     # Check that it returns a ValueError if the time intervals are smaller than the dataset GTI.
     datasets = get_spectrum_datasets()
     time_intervals = [

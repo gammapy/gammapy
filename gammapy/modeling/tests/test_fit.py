@@ -7,6 +7,8 @@ from gammapy.datasets import Dataset
 from gammapy.modeling import Fit, Parameter
 from gammapy.modeling.models import Model, Models
 from gammapy.utils.testing import requires_dependency
+from gammapy.estimators.parameter import ScanValuesMaker
+
 
 pytest.importorskip("iminuit")
 
@@ -150,7 +152,9 @@ def test_stat_profile():
     dataset = MyDataset()
     fit = Fit([dataset])
     fit.run()
-    result = fit.stat_profile("x", nvalues=3)
+    parameter = dataset.models.parameters["x"]
+    values = ScanValuesMaker(bounds=2, n_values=3)(parameter)
+    result = fit.stat_profile("x", values=values)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -166,7 +170,9 @@ def test_stat_profile_reoptimize():
     fit.run()
 
     dataset.models.parameters["y"].value = 0
-    result = fit.stat_profile("x", nvalues=3, reoptimize=True)
+    parameter = dataset.models.parameters["x"]
+    values = ScanValuesMaker(bounds=2, n_values=3)(parameter)
+    result = fit.stat_profile("x", values=values, reoptimize=True)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)

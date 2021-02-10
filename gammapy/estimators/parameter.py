@@ -32,13 +32,14 @@ class ScanValuesMaker:
     scaling: {'lin', 'log', 'sqrt'}
         Choose values scaling. Defauld is linear ('lin')
 
-    """    
+    """
+
     def __init__(self, bounds=3, n_values=30, err_rel_min=0.05, scaling="lin"):
         self.bounds = bounds
         self.n_values = n_values
         self.err_rel_min = err_rel_min
         self.scaling = scaling
-    
+
     def __call__(self, parameter=None):
         """Generate scan values for a given parameter
 
@@ -51,7 +52,7 @@ class ScanValuesMaker:
         -------
         results : numpy.array
             Paramter scan values
-    """    
+    """
         if isinstance(self.bounds, tuple):
             parmin, parmax = self.bounds
         else:

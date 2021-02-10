@@ -79,8 +79,8 @@ def create_fpe(model):
     dataset = simulate_spectrum_dataset(model)
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
-    
-    norm_values = ScanValuesMaker(bounds=(0.2,5), n_values=11, scaling="log")
+
+    norm_values = ScanValuesMaker(bounds=(0.2, 5), n_values=11, scaling="log")
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
         norm_n_values=11,
@@ -134,7 +134,7 @@ def fpe_map_pwl():
 
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
-    norm_values = ScanValuesMaker(bounds=(0.2,5), n_values=3, scaling="log")
+    norm_values = ScanValuesMaker(bounds=(0.2, 5), n_values=3, scaling="log")
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
         norm_n_values=3,
@@ -154,7 +154,12 @@ def fpe_map_pwl_reoptimize():
     dataset.models.parameters["sigma"].frozen = True
     datasets = [dataset]
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_min=-1e5, norm_max=1e5, norm_values=[1], reoptimize=True, source="source"
+        energy_edges=energy_edges,
+        norm_min=-1e5,
+        norm_max=1e5,
+        norm_values=[1],
+        reoptimize=True,
+        source="source",
     )
     return datasets, fpe
 

@@ -37,14 +37,14 @@ def hess_datasets():
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
-    norm_values = ScanValuesMaker(bounds=(0.5,2), n_values=5)
+    norm_values = ScanValuesMaker(bounds=(0.5, 2), n_values=5)
     estimator = FluxEstimator(
         0,
         energy_min="1 GeV",
         energy_max="100 GeV",
-        norm_min = -1e5,
-        norm_max = 1e5,
-        norm_values = norm_values,
+        norm_min=-1e5,
+        norm_max=1e5,
+        norm_values=norm_values,
         reoptimize=False,
         selection_optional="all"
     )
@@ -56,6 +56,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
     assert_allclose(result["norm_errn"], 0.0199, atol=1e-3)
     assert_allclose(result["norm_errp"], 0.0199, atol=1e-3)
+    assert_allclose(result["norm_ul"], 1.052905, atol=1e-3)
     assert len(result["norm_scan"]) == 5
     assert_allclose(result["norm_scan"][0], 0.5)
     assert_allclose(result["norm_scan"][-1], 2)

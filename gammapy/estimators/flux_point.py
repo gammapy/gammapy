@@ -782,7 +782,6 @@ class FluxPointsEstimator(Estimator):
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
-        self.ul_method = ul_method
 
     def _flux_estimator(self, energy_min, energy_max):
         return FluxEstimator(
