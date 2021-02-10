@@ -417,7 +417,8 @@ def test_to_from_dict():
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
 
-def test_to_from_dict_partial_input():
+
+def test_to_from_dict_partial_input(caplog):
     spectrum = TEST_MODELS[0]
     model = spectrum["model"]
 
@@ -438,6 +439,8 @@ def test_to_from_dict_partial_input():
     actual = [par.frozen for par in new_model.parameters]
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message =="Parameter reference not defined. Using default value: 1.0 TeV"
 
 
 def test_to_from_dict_compound():

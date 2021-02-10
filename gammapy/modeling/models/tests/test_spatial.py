@@ -259,12 +259,15 @@ def test_sky_diffuse_constant():
 
 @requires_dependency("matplotlib")
 @requires_data()
-def test_sky_diffuse_map():
+def test_sky_diffuse_map(caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
     val = model(lon, lat)
+
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message =="Missing spatial template unit, assuming sr^-1"
 
     assert val.unit == "sr-1"
     desired = [3269.178107, 0]
