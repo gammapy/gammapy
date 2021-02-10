@@ -323,13 +323,12 @@ class LightCurveEstimator(Estimator):
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
+        Minimum value for the norm used for the fit.
     norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
+        Maximum value for the norm used for the fit.
+    norm_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+        Array of norm values to be used for the fit statistic profile
+        or `ScanValuesMaker` generator instance.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
@@ -362,9 +361,8 @@ class LightCurveEstimator(Estimator):
         source=0,
         energy_edges=None,
         atol="1e-6 s",
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
+        norm_min=1e-8,
+        norm_max=1e8,
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
@@ -384,7 +382,6 @@ class LightCurveEstimator(Estimator):
 
         self.norm_min = norm_min
         self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
         self.norm_values = norm_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -491,7 +488,17 @@ class LightCurveEstimator(Estimator):
         else:
             energy_edges = self.energy_edges
 
-        fe = self._flux_poins_estimator(energy_edges)
+        fe = FluxPointsEstimator(
+            source=self.source,
+            energy_edges=energy_edges,
+            norm_min=self.norm_min,
+            norm_max=self.norm_max,
+            norm_values=self.norm_values,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            reoptimize=self.reoptimize,
+            selection_optional=self.selection_optional,
+        )
         fp = fe.run(datasets)
 
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row

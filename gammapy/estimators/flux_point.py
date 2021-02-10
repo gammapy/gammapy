@@ -717,8 +717,9 @@ class FluxPointsEstimator(Estimator):
         Minimum value for the norm used for the fit.
     norm_max : float
         Maximum value for the norm used for the fit.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
+    norm_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+        Array of norm values to be used for the fit statistic profile
+        or `ScanValuesMaker` generator instance.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int

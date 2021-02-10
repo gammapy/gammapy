@@ -2,27 +2,26 @@
 import logging
 import numpy as np
 from gammapy.datasets import Datasets
-from gammapy.modeling import Fit, stat_profile_ul_scipy
+from gammapy.modeling import Fit
+from gammapy.modeling.scipy import stat_profile_ul_scipy
 from .core import Estimator
 from gammapy.utils.interpolation import interpolation_scale
 
 log = logging.getLogger(__name__)
 
 
-def make_scan_values(parameter, bounds=3, nvalues=30, err_rel_min=0.05, scaling="lin"):
-    """Prepare values scan
+class ScanValuesMaker:
+    """Scan values generator
 
     Parameters
     ----------
-    parameter : `Parameter`
-        For which parameter to get the values
     bounds : int or tuple of float
         When an `int` is passed the bounds are computed from `bounds * sigma`
         from the best fit value of the parameter, where `sigma` corresponds to
         the one sigma error on the parameter. If a tuple of floats is given
-        those are taken as the min and max values and ``nvalues`` are generated
+        those are taken as the min and max values and ``n_values`` are generated
         between those.
-    nvalues : int
+    n_values : int
         Number of parameter grid points to use.
     err_rel_min : float
        Minimun relative error allowed (default is 5%).
@@ -32,21 +31,37 @@ def make_scan_values(parameter, bounds=3, nvalues=30, err_rel_min=0.05, scaling=
        Used only when an `int` is passed as `bounds`.
     scaling: {'lin', 'log', 'sqrt'}
         Choose values scaling. Defauld is linear ('lin')
-    
-    Returns
-    -------
-    results : np.array
-        values
-    """
 
-    if isinstance(bounds, tuple):
-        parmin, parmax = bounds
-    else:
-        parmin, parmax = make_scan_bounds(parameter, bounds, err_rel_min)
-    scaler = interpolation_scale(scaling)
-    parmin, parmax = scaler(parmin, parmax)
-    values = np.linspace(parmin, parmax, nvalues)
-    return scaler.inverse(values)
+    """    
+    def __init__(self, bounds=3, n_values=30, err_rel_min=0.05, scaling="lin"):
+        self.bounds = bounds
+        self.n_values = n_values
+        self.err_rel_min = err_rel_min
+        self.scaling = scaling
+    
+    def __call__(self, parameter=None):
+        """Generate scan values for a given parameter
+
+        Parameters
+        ----------
+        parameter : `Parameter`
+            For which parameter to get the values.
+
+        Returns
+        -------
+        results : numpy.array
+            Paramter scan values
+    """    
+        if isinstance(self.bounds, tuple):
+            parmin, parmax = self.bounds
+        else:
+            if parameter is None:
+                raise ValueError("Parameter have to be define if bounds is not tupple")
+            parmin, parmax = make_scan_bounds(parameter, self.bounds, self.err_rel_min)
+        scaler = interpolation_scale(self.scaling)
+        parmin, parmax = scaler([parmin, parmax])
+        values = np.linspace(parmin, parmax, self.n_values)
+        return scaler.inverse(values)
 
 
 def make_scan_bounds(
@@ -98,8 +113,9 @@ class ParameterEstimator(Estimator):
         Sigma to use for upper limit computation. Default is 2.
     null_value : float
         Which null value to use for the parameter
-    scan_values : `~numpy.ndarray`
-        Values to use for the scan.
+    scan_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+        Array of values to be used for the fit statistic profile
+        or `ScanValuesMaker` generator instance.
     ul_method : {"confidence", "profile"}
         Select upper-limit computation method using confidence or stat profile.
         Default is confidence".
@@ -133,6 +149,7 @@ class ParameterEstimator(Estimator):
         n_sigma_ul=2,
         null_value=1e-150,
         scan_values=None,
+        ul_method="confidence",
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
@@ -145,8 +162,11 @@ class ParameterEstimator(Estimator):
         self.null_value = null_value
 
         # scan parameters
+        if scan_values is None:
+            scan_values = ScanValuesMaker()
         self.scan_values = scan_values
 
+        self.ul_method = ul_method
         self.backend = backend
         if optimize_opts is None:
             optimize_opts = {}
@@ -271,10 +291,12 @@ class ParameterEstimator(Estimator):
         self.fit(datasets)
         self._fit.optimize(**self.optimize_opts)
 
-        if self.scan_values is None:
-            self.scan_values = make_scan_values(parameter)
+        if isinstance(self.scan_values, ScanValuesMaker):
+            scan_values = self.scan_values(parameter)
+        else:
+            scan_values = self.scan_values
         profile = self._fit.stat_profile(
-            parameter=parameter, values=self.scan_values, reoptimize=self.reoptimize,
+            parameter=parameter, values=scan_values, reoptimize=self.reoptimize,
         )
         self._profile = {
             f"{parameter.name}_scan": profile[f"{parameter.name}_scan"],
@@ -306,12 +328,14 @@ class ParameterEstimator(Estimator):
             res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
             ul = {f"{parameter.name}_ul": res["errp"] + parameter.value}
         elif self.ul_method == "profile":
-            if self.scan_values is None:
-                self.scan_values = make_scan_values(parameter)
+            if isinstance(self.scan_values, ScanValuesMaker):
+                scan_values = self.scan_values(parameter)
+            else:
+                scan_values = self.scan_values
             if self._profile is None:
                 profile = self.estimate_scan(self, datasets, parameter)
             ul = stat_profile_ul_scipy(
-                self.scan_values, profile["stat_scan"], delta_ts=4, interp_scale="sqrt"
+                scan_values, profile["stat_scan"], delta_ts=4, interp_scale="sqrt"
             )
         return ul
 

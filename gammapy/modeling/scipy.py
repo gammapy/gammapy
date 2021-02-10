@@ -3,7 +3,6 @@ import numpy as np
 import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from .likelihood import Likelihood
-from gammapy.estimators.parameter import make_scan_bounds
 
 __all__ = [
     "optimize_scipy",
@@ -63,6 +62,7 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
+    from gammapy.estimators.parameter import make_scan_bounds
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
     )

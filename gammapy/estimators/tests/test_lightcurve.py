@@ -8,6 +8,7 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.estimators import LightCurve, LightCurveEstimator
+from gammapy.estimators.parameter import ScanValuesMaker
 from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -16,6 +17,9 @@ from gammapy.maps import RegionNDMap
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
+@pytest.fixture(scope="session")
+def norm_values():
+    return ScanValuesMaker(bounds=(0.2,5), n_values=3, scaling="log")
 
 @pytest.fixture(scope="session")
 def lc():
@@ -284,7 +288,7 @@ def test_lightcurve_estimator_spectrum_datasets():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
+def test_lightcurve_estimator_spectrum_datasets_2_energy_bins(norm_values):
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -361,7 +365,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
+def test_lightcurve_estimator_spectrum_datasets_withmaskfit(norm_values):
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -380,7 +384,7 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
     selection = ["scan"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
+        norm_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=selection,
     )
@@ -393,12 +397,12 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_default():
+def test_lightcurve_estimator_spectrum_datasets_default(norm_values):
     # Test default time interval: each time interval is equal to the gti of each dataset, here one hour
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        energy_edges=[1, 30] * u.TeV, norm_n_values=3, selection_optional=selection
+        energy_edges=[1, 30] * u.TeV, norm_values=norm_values, selection_optional=selection
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -408,7 +412,7 @@ def test_lightcurve_estimator_spectrum_datasets_default():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_notordered():
+def test_lightcurve_estimator_spectrum_datasets_notordered(norm_values):
     # Test that if the time intervals given are not ordered in time, it is first ordered correctly and then
     # compute as expected
     datasets = get_spectrum_datasets()
@@ -418,7 +422,7 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 100] * u.TeV,
-        norm_n_values=3,
+        norm_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
@@ -430,13 +434,13 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_largerbin():
+def test_lightcurve_estimator_spectrum_datasets_largerbin(norm_values):
     # Test all dataset in a single LC bin, here two hours
     datasets = get_spectrum_datasets()
     time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
+        norm_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
@@ -452,14 +456,14 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(lightcurve.table["ref_eflux"][0], [3.453878e-12], rtol=1e-5)
     assert_allclose(lightcurve.table["ref_e2dnde"][0], [1e-12], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"][0], [34.219808], rtol=1e-5)
-    assert_allclose(lightcurve.table["norm"][0], [0.909646], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm"][0], [0.909646], rtol=1e-3)
     assert_allclose(lightcurve.table["norm_err"][0], [0.040874], rtol=1e-3)
     assert_allclose(lightcurve.table["ts"][0], [742.939324], rtol=1e-4)
 
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
+def test_lightcurve_estimator_spectrum_datasets_timeoverlaped(norm_values):
     # Check that it returns a ValueError if the time intervals overlapped
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -467,7 +471,7 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
     with pytest.raises(ValueError) as excinfo:
-        estimator = LightCurveEstimator(norm_n_values=3, time_intervals=time_intervals)
+        estimator = LightCurveEstimator(norm_values=norm_values, time_intervals=time_intervals)
         estimator.run(datasets)
 
     msg = "Overlapping time bins"
@@ -476,7 +480,7 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_intervals():
+def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_intervals(norm_values):
     # Check that it returns a ValueError if the time intervals are smaller than the dataset GTI.
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -485,7 +489,7 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
+        norm_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )

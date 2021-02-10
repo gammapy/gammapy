@@ -30,8 +30,9 @@ class FluxEstimator(Estimator):
         Minimum value for the norm used for the fit.
     norm_max : float
         Maximum value for the norm used for the fit.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
+    norm_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+        Array of norm values to be used for the fit statistic profile
+        or `ScanValuesMaker` generator instance.
     n_sigma : int
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
@@ -78,7 +79,8 @@ class FluxEstimator(Estimator):
         reoptimize=True,
         selection_optional=None,
     ):
-
+        self.norm_min = norm_min
+        self.norm_max = norm_max
         self.norm_values = norm_values
         self.source = source
         self.energy_min = u.Quantity(energy_min)
@@ -236,7 +238,7 @@ class FluxEstimator(Estimator):
             result.update({"norm_ul": np.nan})
 
         if "scan" in self.selection_optional:
-            nans = np.nan * np.empty_like(self.norm_values)
+            nans = np.nan
             result.update({"norm_scan": nans, "stat_scan": nans})
 
         return result
