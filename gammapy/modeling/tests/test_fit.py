@@ -53,6 +53,19 @@ class MyDataset(Dataset):
         """Statistic array, one value per data point."""
 
 
+
+@requires_dependency("sherpa")
+@pytest.mark.parametrize("backend", ["sherpa", "scipy"])
+def test_warning_no_covariance(backend, caplog):
+   dataset = MyDataset()
+   fit = Fit([dataset])
+   result = fit.run(backend=backend)
+   assert caplog.records[-1].levelname == "WARNING"
+   assert caplog.records[-1].message == "No covariance estimate - not supported by this backend."
+
+
+
+
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
     dataset = MyDataset()
@@ -145,6 +158,11 @@ def test_stat_profile():
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.models.parameters["x"].value, 2)
+
+
+
+
+
 
 
 def test_stat_profile_reoptimize():
