@@ -296,7 +296,7 @@ class RegionNDMap(Map):
         self.data[idx[::-1]] = value
 
     @classmethod
-    def read(cls, filename, format="ogip", ogip_column="COUNTS"):
+    def read(cls, filename, format="ogip", ogip_column="COUNTS", hdu=None):
         """Read from file.
 
         Parameters
@@ -307,6 +307,8 @@ class RegionNDMap(Map):
             Which format to use.
         ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
             If format 'ogip' is chosen which table hdu column to read.
+        hdu : str
+            Name or index of the HDU with the map data.
 
         Returns
         -------
@@ -315,7 +317,7 @@ class RegionNDMap(Map):
         """
         filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
+            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
 
     def write(self, filename, overwrite=False, format="ogip-arf", hdu=None):
         """Write map to file
@@ -391,6 +393,12 @@ class RegionNDMap(Map):
             Format specification
         ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
             If format 'ogip' is chosen which table hdu column to read.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.  If not
+            defined this will be inferred from the FITS header of the
+            map HDU.
 
         Returns
         -------
