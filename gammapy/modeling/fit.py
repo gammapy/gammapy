@@ -317,9 +317,7 @@ class Fit:
     def stat_profile(
         self,
         parameter,
-        values=None,
-        bounds=2,
-        nvalues=11,
+        values,
         reoptimize=False,
         optimize_opts=None,
     ):
@@ -336,17 +334,11 @@ class Fit:
             Parameter of interest
         values : `~astropy.units.Quantity` (optional)
             Parameter values to evaluate the fit statistic for.
-        bounds : int or tuple of float
-            When an `int` is passed the bounds are computed from `bounds * sigma`
-            from the best fit value of the parameter, where `sigma` corresponds to
-            the one sigma error on the parameter. If a tuple of floats is given
-            those are taken as the min and max values and ``nvalues`` are linearly
-            spaced between those.
         nvalues : int
             Number of parameter grid points to use.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
-
+            
         Returns
         -------
         results : dict
@@ -357,18 +349,6 @@ class Fit:
         parameter = parameters[parameter]
 
         optimize_opts = optimize_opts or {}
-
-        if values is None:
-            if isinstance(bounds, tuple):
-                parmin, parmax = bounds
-            else:
-                if np.isnan(parameter.error):
-                    raise ValueError("Parameter error is not properly set.")
-                parerr = parameter.error
-                parval = parameter.value
-                parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
-
-            values = np.linspace(parmin, parmax, nvalues)
 
         stats = []
         fit_results = []
