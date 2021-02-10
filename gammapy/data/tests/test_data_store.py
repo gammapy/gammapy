@@ -2,13 +2,14 @@
 import os
 from pathlib import Path
 import pytest
+import numpy as np
 from astropy.io import fits
 from gammapy.data import DataStore
 from gammapy.utils.testing import requires_data
 from gammapy.utils.scripts import make_path
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def data_store():
     return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
@@ -88,11 +89,23 @@ def test_datastore_get_observations(data_store):
     observations = data_store.get_observations([11111, 23523], skip_missing=True)
     assert observations[0].obs_id == 23523
 
-    # Test that only desired IRFs are loaded
-    observations = data_store.get_observations([23523], required_IRF=["aeff"])
-    assert observations[0].bkg == None
+
+@requires_data()
+def test_broken_links_datastore(data_store):
+    # Test that datastore without complete IRFs are properly loaded
+    hdu_table = data_store.hdu_table
+    index = np.where(data_store.hdu_table["OBS_ID"] == 23526)[0][0]
+    data_store.hdu_table.remove_row(index)
+    data_store.hdu_table._hdu_type_stripped = np.array(
+        [_.strip() for _ in data_store.hdu_table["HDU_TYPE"]]
+    )
+    observations = data_store.get_observations(
+        [23523, 23526], required_irf=["aeff", "bkg"]
+    )
+    assert len(observations) == 1
+
     with pytest.raises(ValueError):
-        observations = data_store.get_observations([23523], required_IRF=["xyz"])
+        observations = data_store.get_observations([23523], required_irf=["xyz"])
 
 
 @requires_data()
