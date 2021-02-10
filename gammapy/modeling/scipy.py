@@ -4,6 +4,7 @@ import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from .likelihood import Likelihood
 from gammapy.estimators.parameter import make_scan_bounds
+
 __all__ = [
     "optimize_scipy",
     "covariance_scipy",
@@ -71,7 +72,7 @@ def _confidence_scipy_brentq(
     bound = parameter.factor_max if upper else parameter.factor_min
 
     if np.isnan(bound):
-        bounds = make_scan_bounds(parameter, scan_n_sigma=1e2) 
+        bounds = make_scan_bounds(parameter, scan_n_sigma=1e2)
         bound = bounds[int(upper)] / parameter.scale
 
     kwargs.setdefault("b", bound)

@@ -107,6 +107,7 @@ class FluxEstimator(Estimator):
             scan_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
+            ul_method=self.ul_method,
             ul_method = self.ul_method,
             backend=self.backend,
             optimize_opts=self.optimize_opts,

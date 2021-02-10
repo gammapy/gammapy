@@ -8,13 +8,8 @@ from gammapy.utils.interpolation import interpolation_scale
 
 log = logging.getLogger(__name__)
 
-def make_scan_values(
-    parameter,
-    bounds=3,
-    nvalues=30,
-    err_rel_min=0.05,
-    scaling='lin'
-):
+
+def make_scan_values(parameter, bounds=3, nvalues=30, err_rel_min=0.05, scaling="lin"):
     """Prepare values scan
 
     Parameters
@@ -49,14 +44,13 @@ def make_scan_values(
     else:
         parmin, parmax = make_scan_bounds(parameter, bounds, err_rel_min)
     scaler = interpolation_scale(scaling)
-    parmin, parmax = scaler(parmin, parmax )
+    parmin, parmax = scaler(parmin, parmax)
     values = np.linspace(parmin, parmax, nvalues)
     return scaler.inverse(values)
 
+
 def make_scan_bounds(
-    parameter,
-    scan_n_sigma=3,
-    err_rel_min=0.05,
+    parameter, scan_n_sigma=3, err_rel_min=0.05,
 ):
     """Prepare values scan bounds
 
@@ -82,10 +76,11 @@ def make_scan_bounds(
     """
     parval = parameter.value
     parerr = parameter.error
-    err_rel = np.abs(parameter.error/parameter.value)
+    err_rel = np.abs(parameter.error / parameter.value)
     if np.isnan(parerr) or (err_rel < err_rel_min):
         parerr = np.abs(parval)
     return [parval - scan_n_sigma * parerr, np.abs(parval) + scan_n_sigma * parerr]
+
 
 class ParameterEstimator(Estimator):
     """Model parameter estimator.
@@ -144,7 +139,7 @@ class ParameterEstimator(Estimator):
         reoptimize=True,
         selection_optional=None,
     ):
-        
+
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.null_value = null_value
@@ -279,9 +274,7 @@ class ParameterEstimator(Estimator):
         if self.scan_values is None:
             self.scan_values = make_scan_values(parameter)
         profile = self._fit.stat_profile(
-            parameter=parameter,
-            values=self.scan_values,
-            reoptimize=self.reoptimize,
+            parameter=parameter, values=self.scan_values, reoptimize=self.reoptimize,
         )
         self._profile = {
             f"{parameter.name}_scan": profile[f"{parameter.name}_scan"],
@@ -317,7 +310,9 @@ class ParameterEstimator(Estimator):
                 self.scan_values = make_scan_values(parameter)
             if self._profile is None:
                 profile = self.estimate_scan(self, datasets, parameter)
-            ul = stat_profile_ul_scipy(self.scan_values, profile["stat_scan"], delta_ts=4, interp_scale="sqrt")
+            ul = stat_profile_ul_scipy(
+                self.scan_values, profile["stat_scan"], delta_ts=4, interp_scale="sqrt"
+            )
         return ul
 
     def run(self, datasets, parameter):

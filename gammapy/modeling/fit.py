@@ -315,11 +315,7 @@ class Fit:
         return result
 
     def stat_profile(
-        self,
-        parameter,
-        values,
-        reoptimize=False,
-        optimize_opts=None,
+        self, parameter, values, reoptimize=False, optimize_opts=None,
     ):
         """Compute fit statistic profile.
 
