@@ -27,17 +27,18 @@ class FluxEstimator(Estimator):
     energy_min, energy_max: `~astropy.units.Quantity`
         The energy interval on which to compute the flux
     norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
+        Minimum value for the norm used for the fit.
     norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
+        Maximum value for the norm used for the fit.
     norm_values : `numpy.ndarray`
         Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
         Sigma to use for upper limit computation.
+    ul_method : {"confidence", "profile"}
+        Select upper-limit computation method using confidence or stat profile.
+        Default is confidence".
     backend : str
         Backend used for fitting, default : minuit
     optimize_opts : dict
@@ -65,12 +66,12 @@ class FluxEstimator(Estimator):
         source,
         energy_min,
         energy_max,
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
+        norm_min=1e-8,
+        norm_max=1e8,
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=3,
+        ul_method="confidence",
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
@@ -78,10 +79,6 @@ class FluxEstimator(Estimator):
         selection_optional=None,
     ):
 
-        if norm_values is None:
-            norm_values = np.logspace(
-                np.log10(norm_min), np.log10(norm_max), norm_n_values
-            )
         self.norm_values = norm_values
         self.source = source
         self.energy_min = u.Quantity(energy_min)
@@ -100,6 +97,7 @@ class FluxEstimator(Estimator):
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
+        self.ul_method = ul_method
         self.selection_optional = selection_optional
 
     @property
@@ -109,6 +107,7 @@ class FluxEstimator(Estimator):
             scan_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
+            ul_method = self.ul_method,
             backend=self.backend,
             optimize_opts=self.optimize_opts,
             covariance_opts=self.covariance_opts,
@@ -158,8 +157,8 @@ class FluxEstimator(Estimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
-        scale_model.norm.min = -1e5
-        scale_model.norm.max = 1e5
+        scale_model.norm.min = self.norm_min
+        scale_model.norm.max = self.norm_max
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
         return scale_model

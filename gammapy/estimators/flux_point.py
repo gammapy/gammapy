@@ -714,17 +714,18 @@ class FluxPointsEstimator(Estimator):
     source : str or int
         For which source in the model to compute the flux points.
     norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
+        Minimum value for the norm used for the fit.
     norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
+        Maximum value for the norm used for the fit.
     norm_values : `numpy.ndarray`
         Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
+    ul_method : {"confidence", "profile"}
+        Select upper-limit computation method using confidence or stat profile.
+        Default is confidence".
     backend : str
         Backend used for fitting, default : minuit
     optimize_opts : dict
@@ -751,23 +752,23 @@ class FluxPointsEstimator(Estimator):
         self,
         energy_edges=[1, 10] * u.TeV,
         source=0,
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
+        norm_min=1e-8,
+        norm_max=1e8,
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
+        ul_method="confidence",
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
     ):
+
         self.energy_edges = energy_edges
         self.source = source
         self.norm_min = norm_min
         self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
         self.norm_values = norm_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -780,6 +781,7 @@ class FluxPointsEstimator(Estimator):
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
+        self.ul_method = ul_method
 
     def _flux_estimator(self, energy_min, energy_max):
         return FluxEstimator(
@@ -788,7 +790,6 @@ class FluxPointsEstimator(Estimator):
             energy_max=energy_max,
             norm_min=self.norm_min,
             norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
             norm_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
