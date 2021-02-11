@@ -37,8 +37,11 @@ class BackgroundIRF(IRF):
         """
         # TODO: some of the existing background files have missing HDUCLAS keywords
         #  which are required to define the correct Gammapy axis names
-        table = table.copy()
-        table.meta.setdefault("HDUCLAS2", "BKG")
+
+        if "HDUCLAS2" not in table.meta:
+            log.warning("Missing 'HDUCLAS2' keyword assuming 'BKG'")
+            table = table.copy()
+            table.meta["HDUCLAS2"] = "BKG"
 
         axes = MapAxes.from_table(table, format=format)[cls.required_axes]
 
