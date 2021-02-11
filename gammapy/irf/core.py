@@ -319,6 +319,7 @@ class IRF:
         if format == "gadf-dl3":
             table.meta = self.meta.copy()
             spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
+            # TODO: add missing required meta data!
             table.meta["HDUCLAS2"] = spec["hduclas2"]
             table[spec["column_name"]] = self.quantity.T[np.newaxis]
         else:

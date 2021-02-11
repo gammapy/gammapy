@@ -35,16 +35,21 @@ class BackgroundIRF(IRF):
         bkg : `Background2D` or `Background2D`
             Background IRF class.
         """
+        # TODO: some of the existing background files have missing HDUCLAS keywords
+        #  which are required to define the correct Gammapy axis names
+        table = table.copy()
+        table.meta.setdefault("HDUCLAS2", "BKG")
+
         axes = MapAxes.from_table(table, format=format)[cls.required_axes]
 
-        # Spec says key should be "BKG", but there are files around
-        # (e.g. CTA 1DC) that use "BGD". For now we support both
+        # TODO: spec says key should be "BKG", but there are files around
+        #  (e.g. CTA 1DC) that use "BGD". For now we support both
         if "BKG" in table.colnames:
             bkg_name = "BKG"
         elif "BGD" in table.colnames:
             bkg_name = "BGD"
         else:
-            raise ValueError('Invalid column names. Need "BKG" or "BGD".')
+            raise ValueError("Invalid column names. Need 'BKG' or 'BGD'.")
 
         data = table[bkg_name].quantity[0].T
 
@@ -54,7 +59,7 @@ class BackgroundIRF(IRF):
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
 
-        # TODO: The present HESS and CTA backgroundfits files
+        # TODO: The present HESS and CTA background fits files
         #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
         #  For now, we suport both.
 
