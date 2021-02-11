@@ -1,4 +1,3 @@
-import json
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -7,11 +6,10 @@ from astropy.visualization import quantity_support
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
-from gammapy.utils.units import unit_from_fits_image_hdu
 from .core import Map
 from .geom import pix_tuple_to_idx
 from .region import RegionGeom
-from .utils import INVALID_INDEX, JsonQuantityEncoder
+from .utils import INVALID_INDEX
 
 __all__ = ["RegionNDMap"]
 
@@ -374,7 +372,7 @@ class RegionNDMap(Map):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None):
+    def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -447,7 +445,7 @@ class RegionNDMap(Map):
 
         self.data += data
 
-    def to_table(self, format="ogip"):
+    def to_table(self, format="gadf"):
         """Convert to `~astropy.table.Table`.
 
         Data format specification: :ref:`gadf:ogip-pha`
