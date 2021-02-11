@@ -44,11 +44,15 @@ def test_lnprob(dataset):
     assert ln_uniform_prior(dataset) == -np.inf
 
 
+
+
 @requires_dependency("emcee")
 @requires_data()
-def test_runmcmc(dataset):
+def test_runmcmc(dataset, caplog):
     # Running a small MCMC on pregenerated datasets
     import emcee
 
     sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
     assert isinstance(sampler, emcee.ensemble.EnsembleSampler)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message == "HDU 'MASK_FIT' not found"
