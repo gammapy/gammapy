@@ -317,7 +317,7 @@ class RegionNDMap(Map):
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
 
-    def write(self, filename, overwrite=False, format="gadf", hdu=None):
+    def write(self, filename, overwrite=False, format="gadf", hdu="REGIONMAP"):
         """Write map to file
 
         Parameters
@@ -334,7 +334,7 @@ class RegionNDMap(Map):
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="gadf", hdu="REGIONMAP"):
+    def to_hdulist(self, format="gadf", hdu=None):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters

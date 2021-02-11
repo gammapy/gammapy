@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from regions import CircleSkyRegion
+from astropy import units as u
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap
@@ -216,4 +217,48 @@ def test_region_nd_io_ogip_arf(tmpdir):
         m.write(tmpdir / "test.fits", format="ogip")
 
 
+def test_region_nd_io_gadf(tmpdir):
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+    m.write(tmpdir / "test.fits", format="gadf")
 
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="gadf")
+
+    assert isinstance(m_new.geom.region, CircleSkyRegion)
+    assert m_new.geom.axes[0].name == "energy"
+    assert m_new.data.shape == (2, 1, 1)
+    assert_allclose(m_new.geom.axes["energy"].edges, [1, 3, 10] * u.TeV)
+
+
+def test_region_nd_io_gadf_no_region(tmpdir):
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    m = RegionNDMap.create(region=None, axes=[energy_axis])
+    m.write(tmpdir / "test.fits", format="gadf", hdu="TEST")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="gadf", hdu="TEST")
+
+    assert m_new.geom.region is None
+    assert m_new.geom.axes[0].name == "energy"
+    assert m_new.data.shape == (2, 1, 1)
+    assert_allclose(m_new.geom.axes["energy"].edges, [1, 3, 10] * u.TeV)
+
+
+def test_region_nd_io_gadf_rad_axis(tmpdir):
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    rad_axis = MapAxis.from_nodes([0, 0.1, 0.2] * u.deg, name="rad")
+    m = RegionNDMap.create(
+        "icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis, rad_axis], unit="sr-1"
+    )
+    m.data = np.arange(np.prod(m.data.shape)).reshape(m.data.shape)
+
+    m.write(tmpdir / "test.fits", format="gadf")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="gadf")
+
+    assert isinstance(m_new.geom.region, CircleSkyRegion)
+    assert m_new.geom.axes.names == ["energy", "rad"]
+    assert m_new.unit == "sr-1"
+
+    # check that the data is not re-shuffled
+    assert_allclose(m_new.data, m.data)
+    assert m_new.data.shape == (3, 2, 1, 1)
