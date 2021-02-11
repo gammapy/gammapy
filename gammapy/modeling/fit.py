@@ -315,7 +315,7 @@ class Fit:
         return result
 
     def stat_profile(
-        self, parameter, values, reoptimize=False, optimize_opts=None,
+        self, parameter, values=None, reoptimize=False, optimize_opts=None,
     ):
         """Compute fit statistic profile.
 
@@ -328,10 +328,9 @@ class Fit:
         ----------
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
-        values : `~astropy.units.Quantity` (optional)
-            Parameter values to evaluate the fit statistic for.
-        nvalues : int
-            Number of parameter grid points to use.
+        values : `~astropy.units.Quantity` or `~gammapy.estimators.parameter.ScanValuesMaker`
+            Parameter values to evaluate the fit statistic for
+            or `ScanValuesMaker` generator instance (optional).
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
             
@@ -341,8 +340,14 @@ class Fit:
             Dictionary with keys "values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
+        from gammapy.estimators.parameter import ScanValuesMaker
         parameters = self._parameters
         parameter = parameters[parameter]
+
+        if values is None:
+            values = ScanValuesMaker()(parameter)
+        elif isinstance(values, ScanValuesMaker):
+            values = values(parameter)
 
         optimize_opts = optimize_opts or {}
 
