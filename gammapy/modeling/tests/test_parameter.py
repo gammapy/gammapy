@@ -32,8 +32,8 @@ def test_parameter_outside_limit(caplog):
     par = Parameter("spam", 50, min=0, max=40)
     par.check_limits()
     assert caplog.records[-1].levelname == "WARNING"
-    #assert caplog.records[-1].message == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
-    print(caplog.messages)
+    assert caplog.records[-1].message == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
+
 
 def test_parameter_scale():
     # Basic check how scale is used for value, min, max
