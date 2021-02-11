@@ -2,7 +2,7 @@ import json
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, hstack
 from astropy.visualization import quantity_support
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -296,16 +296,16 @@ class RegionNDMap(Map):
         self.data[idx[::-1]] = value
 
     @classmethod
-    def read(cls, filename, format="ogip", ogip_column="COUNTS", hdu=None):
+    def read(cls, filename, format="gadf", ogip_column=None, hdu=None):
         """Read from file.
 
         Parameters
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"ogip", "ogip-arf"}
+        format : {"gadf", "ogip", "ogip-arf"}
             Which format to use.
-        ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
+        ogip_column : {None, "COUNTS", "QUALITY", "BACKSCAL"}
             If format 'ogip' is chosen which table hdu column to read.
         hdu : str
             Name or index of the HDU with the map data.
@@ -319,14 +319,14 @@ class RegionNDMap(Map):
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
 
-    def write(self, filename, overwrite=False, format="ogip-arf", hdu=None):
+    def write(self, filename, overwrite=False, format="gadf", hdu=None):
         """Write map to file
 
         Parameters
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Which format to use.
         overwrite : bool
             Overwrite existing files?
@@ -336,7 +336,7 @@ class RegionNDMap(Map):
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="ogip", hdu=None):
+    def to_hdulist(self, format="gadf", hdu="REGIONMAP"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -352,78 +352,64 @@ class RegionNDMap(Map):
             HDU list
         """
         hdulist = fits.HDUList()
+        table = self.to_table(format=format)
 
         if format in ["ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"]:
-            table = self.to_table(format=format)
-            hdu_out = fits.BinTableHDU(table)
+            hdulist.append(fits.BinTableHDU(table))
         elif format == "gadf":
-            header = fits.Header()
-            header["META"] = json.dumps(self.meta, cls=JsonQuantityEncoder)
-            header["BUNIT"] = self.unit.to_string("fits")
-
-            if hdu == "PRIMARY":
-                hdu_out = fits.PrimaryHDU(self.data)
-            else:
-                hdu_out = fits.ImageHDU(self.data, name=hdu)
-
-            hdu_out.header.update(header)
+            table.meta.update(self.geom.axes.to_header())
+            hdulist.append(fits.BinTableHDU(table, name=hdu))
         else:
             raise ValueError(f"Unsupported format '{format}'")
 
-        if hdu == "PRIMARY":
-            hdulist += [hdu_out]
-        else:
-            hdulist += [fits.PrimaryHDU(), hdu_out]
+        if format in ["ogip", "ogip-sherpa"]:
+            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
+            hdulist.extend(hdulist_geom[1:])
 
-        if format in ["ogip", "ogip-sherpa", "gadf"]:
-            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)[1:]
-            hdulist.extend(hdulist_geom)
+        # only add region info for gadf
+        if format == "gadf":
+            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
+            hdulist.extend(hdulist_geom[2:])
 
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS", hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list.
-        format : {"ogip", "ogip-arf"}
+        format : {"gadf", "ogip", "ogip-arf"}
             Format specification
         ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
             If format 'ogip' is chosen which table hdu column to read.
         hdu : str
             Name or index of the HDU with the map data.
-        hdu_bands : str
-            Name or index of the HDU with the BANDS table.  If not
-            defined this will be inferred from the FITS header of the
-            map HDU.
 
         Returns
         -------
         region_nd_map : `RegionNDMap`
             Region map.
         """
-        if format == "ogip":
-            hdu = "SPECTRUM"
-        elif format == "ogip-arf":
-            hdu = "SPECRESP"
-            ogip_column = "SPECRESP"
-        elif format is None:
-            format = "gadf"
+        defaults = {
+            "ogip": {"hdu": "SPECTRUM", "column": "COUNTS"},
+            "ogip-arf": {"hdu": "SPECRESP", "column": "SPECRESP"},
+            "gadf": {"hdu": "REGIONMAP", "column": "DATA"},
+        }
 
-        geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu, hdu_bands=hdu_bands)
+        if hdu is None:
+            hdu = defaults[format]["hdu"]
 
-        if format in ["ogip", "ogip-arf"]:
-            table = Table.read(hdulist[hdu])
-            quantity = table[ogip_column].quantity
-            meta = table.meta
-        elif format == "gadf":
-            data, header = hdulist[hdu].data, hdulist[hdu].header
-            unit = unit_from_fits_image_hdu(header)
-            meta = cls._get_meta_from_header(header)
-            quantity = u.Quantity(data, unit=unit, copy=False)
+        if ogip_column is None:
+            ogip_column = defaults[format]["column"]
+
+        geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu)
+
+        table = Table.read(hdulist[hdu])
+        quantity = table[ogip_column].quantity
+        meta = table.meta
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""
@@ -468,7 +454,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "ogip", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
 
         Returns
@@ -476,14 +462,14 @@ class RegionNDMap(Map):
         table : `~astropy.table.Table`
             Table
         """
-        if len(self.geom.axes) > 1:
-            raise ValueError(f"Writing to format '{format}' only supports a "
-                             f"single energy axis. Got {self.geom.axes.names}")
-
         data = np.nan_to_num(self.quantity[:, 0, 0])
-        energy_axis = self.geom.axes[0]
 
         if format == "ogip":
+            if len(self.geom.axes) > 1:
+                raise ValueError(f"Writing to format '{format}' only supports a "
+                                 f"single energy axis. Got {self.geom.axes.names}")
+
+            energy_axis = self.geom.axes[0]
             energy_axis.assert_name("energy")
             table = Table()
             table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
@@ -512,6 +498,11 @@ class RegionNDMap(Map):
             }
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            if len(self.geom.axes) > 1:
+                raise ValueError(f"Writing to format '{format}' only supports a "
+                                 f"single energy axis. Got {self.geom.axes.names}")
+
+            energy_axis = self.geom.axes[0]
             table = energy_axis.to_table(format=format)
             table.meta = {
                 "EXTNAME": "SPECRESP",
@@ -528,6 +519,10 @@ class RegionNDMap(Map):
                 data = data.to("cm2")
 
             table["SPECRESP"] = data
+
+        elif format == "gadf":
+            table = self.geom.axes.to_table(format=format)
+            table["DATA"] = self.quantity.flatten()
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 

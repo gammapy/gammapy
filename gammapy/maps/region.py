@@ -602,7 +602,7 @@ class RegionGeom(Geom):
         return cls(region, **kwargs)
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip", hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdulist, format="ogip", hdu=None):
         """Read region table and convert it to region list.
 
         Parameters
@@ -641,8 +641,7 @@ class RegionGeom(Geom):
         elif format == "ogip-arf":
             hdu_bands = "SPECRESP"
         elif format == "gadf":
-            if hdu_bands is None:
-                hdu_bands = hdu + "_BANDS"
+            hdu_bands = hdu
         else:
             raise ValueError(f"Unknown format {format}")
 
