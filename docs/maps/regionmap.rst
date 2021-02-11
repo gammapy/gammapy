@@ -433,11 +433,15 @@ Similarly, the map contents can also be plotted as a histogram:
 Writing and reading a RegionNDMap to/from a FITS file
 -----------------------------------------------------
 Region maps can be written to and read from a FITS file with the
-`~RegionNDMap.write()` and `~RegionNDMap.read()` methods. The
-format specification depends on which type of axis the region has:
- 
-Region maps with a reconstructed energy axis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+`~RegionNDMap.write()` and `~RegionNDMap.read()` methods. Currently
+the following formats are supported:
+
+- "gadf": a generic serialisation format with support for ND axes
+- "ogip" / "ogip-sherpa": an ogip-like counts spectrum with reconstructed energy axis
+- "ogip-arf" / "ogip-sherpa": an ogip-like effective area with true energy axis
+
+The "sherpa" format is equivalent, except energies are stored in "keV" and "cm2".
+
 For data with an `energy` axis, so reconstructed energy, the formats `ogip` and
 `ogip-sherpa` store the data along with the `REGION` and `EBOUNDS HDU`.
 
@@ -449,10 +453,6 @@ For data with an `energy` axis, so reconstructed energy, the formats `ogip` and
     m.write("file.fits", overwrite=True, format="ogip")
     m = RegionNDMap.read("file.fits", format="ogip")
 
-The "sherpa" format is equivalent, except energies are stored in "keV".
-
-Region maps with a true energy axis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For data with an `energy_true` axis, so true energy, the formats `ogip-arf` and `ogip-arf-sherpa`
 store the data in true energy, with the definition of the energy bins. The region information is
 however lost.
@@ -465,7 +465,21 @@ however lost.
     m.write("file.fits", overwrite=True, format="ogip-arf")
     m = RegionNDMap.read("file.fits", format="ogip-arf")
 
-The "sherpa" format is equivalent, except energies are stored in "keV".
+Again the "sherpa" format is equivalent, except energies are stored in "keV" and areas in "cm2".
+
+The "gadf" allows to serialise a region map with arbitrary extra axis as well:
+
+.. testcode::
+
+    from gammapy.maps import RegionNDMap, MapAxis
+
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "100 TeV", nbin=12)
+    time_axis = MapAxis.from_bounds(0., 12, nbin=12, interp='lin', unit='h', name='time')
+
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis, time_axis])
+    m.write("file.fits", overwrite=True, format="gadf")
+    m = RegionNDMap.read("file.fits", format="gadf")
+
 
 Relevant tutorials
 ------------------

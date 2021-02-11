@@ -687,6 +687,7 @@ class RegionGeom(Geom):
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         kwargs.setdefault("fc", "None")
+        kwargs.setdefault("ec", "tab:blue")
 
         patches = PatchCollection(artists, **kwargs)
         ax.add_collection(patches)
