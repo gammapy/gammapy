@@ -129,8 +129,8 @@ class EnergyDispersion2D(IRF):
         if energy_true is None:
             energy_axis_true = self.axes["energy_true"]
         else:
-            energy_axis_true = MapAxis.from_energy_edges(
-                energy_true, name="energy_true"
+            energy_axis_true = MapAxis.from_nodes(
+                energy_true, name="energy_true", interp="log"
             )
 
         # migration value of energy bounds
