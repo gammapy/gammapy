@@ -30,7 +30,7 @@ class PSF(IRF):
             Containment
         """
         containment = self.integral(axis_name="rad", rad=rad, **kwargs)
-        return np.clip(containment.to(""), 0, 1)
+        return containment.to("")
 
     def containment_radius(self, fraction, factor=20, **kwargs):
         """Containment radius at given axes coordinates

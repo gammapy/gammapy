@@ -218,6 +218,7 @@ class IRF:
             values = 2 * np.pi * axis.center.reshape(shape) * values
 
         values = values.cumsum(axis=axis_idx)
+
         points = [ax.center for ax in self.axes]
         points[axis_idx] = axis.edges[1:]
 

@@ -87,6 +87,7 @@ class EnergyDispersion2D(IRF):
         t1 = (migra2d_hi - 1 - bias) / s
         t2 = (migra2d_lo - 1 - bias) / s
         pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
+        pdf = pdf / (migra2d_hi - migra2d_lo)
 
         data = pdf.T[:, :, np.newaxis] * np.ones(offset_axis.nbin)
 
@@ -132,75 +133,29 @@ class EnergyDispersion2D(IRF):
                 energy_true, name="energy_true"
             )
 
-        data = []
-        for value in energy_axis_true.center:
-            vec = self.get_response(
-                offset=offset, energy_true=value, energy=energy_axis.edges
-            )
-            data.append(vec)
+        # migration value of energy bounds
+        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+
+        values = self.integral(
+            axis_name="migra",
+            offset=offset,
+            energy_true=energy_axis_true.center[:, np.newaxis],
+            migra=migra,
+        )
+
+        data = np.diff(values)
 
         return EDispKernel(
             axes=[energy_axis_true, energy_axis],
-            data=np.asarray(data),
+            data=data.to_value(""),
         )
 
-    def get_response(self, offset, energy_true, energy=None):
-        """Detector response R(Delta E_reco, E_true)
-
-        Probability to reconstruct a given true energy in a given reconstructed
-        energy band. In each reco bin, you integrate with a riemann sum over
-        the default migra bin of your analysis.
-
-        Parameters
-        ----------
-        energy_true : `~astropy.units.Quantity`
-            True energy
-        energy : `~astropy.units.Quantity`, None
-            Reconstructed energy axis
-        offset : `~astropy.coordinates.Angle`
-            Offset
-
-        Returns
-        -------
-        rv : `~numpy.ndarray`
-            Redistribution vector
-        """
-        energy_true = Quantity(energy_true)
-
-        migra_axis = self.axes["migra"]
-
-        if energy is None:
-            # Default: energy nodes = migra nodes * energy_true nodes
-            energy = migra_axis.edges * energy_true
-        else:
-            # Translate given energy binning to migra at bin center
-            energy = Quantity(energy)
-
-        # migration value of energy bounds
-        migra = energy / energy_true
-
-        values = self.evaluate(
-            offset=offset, energy_true=energy_true, migra=migra_axis.center
-        )
-
-        cumsum = np.insert(values, 0, 0).cumsum()
-
-        with np.errstate(invalid="ignore"):
-            cumsum = np.nan_to_num(cumsum / cumsum[-1])
-
-        f = interp1d(
-            migra_axis.edges.value,
-            cumsum,
-            kind="linear",
-            bounds_error=False,
-            fill_value=(0, 1),
-        )
-
-        # We compute the difference between 2 successive bounds in energy
-        # to get integral over reco energy bin
-        integral = np.diff(np.clip(f(migra), a_min=0, a_max=1))
-
-        return integral
+    def normalize(self):
+        """Normalise energy dispersion"""
+        coords = self.axes.get_coord()
+        coords["migra"] = self.axes["migra"].edges[-1]
+        integral = self.integral(axis_name="migra", **coords)
+        self.data /= integral.to_value(self.unit)
 
     def plot_migration(
         self, ax=None, offset=None, energy_true=None, migra=None, **kwargs

@@ -155,7 +155,7 @@ class TestEnergyDispersion2D:
     def test_get_response(self):
         pdf = self.edisp2.get_response(offset=0.7 * u.deg, energy_true=1 * u.TeV)
         assert_allclose(pdf.sum(), 1)
-        assert_allclose(pdf.max(), 0.010421, rtol=1e-4)
+        assert_allclose(pdf.max(), 0.010416, rtol=1e-4)
 
     def test_exporter(self):
         # Check RMF exporter
