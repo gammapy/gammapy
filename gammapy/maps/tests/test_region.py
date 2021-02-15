@@ -47,6 +47,14 @@ def test_defined_wcs(region):
     geom = RegionGeom.create(region, wcs=wcs)
     assert geom.binsz_wcs[0].deg == 0.1
 
+def test_to_binsz_wcs(region):
+    binsz = 0.05*u.deg
+    geom = RegionGeom.create(region, binsz_wcs=0.01)
+    new_geom = geom.to_binsz_wcs(binsz)
+    assert geom.binsz_wcs[0].deg == 0.01
+    assert new_geom.binsz_wcs[0].deg == binsz.value
+
+
 def test_centers(region):
     geom = RegionGeom.create(region)
     assert_allclose(geom.center_skydir.l.deg, 0)
@@ -58,7 +66,7 @@ def test_centers(region):
 
 
 def test_width(region):
-    geom = RegionGeom.create(region)
+    geom = RegionGeom.create(region, binsz_wcs=0.01)
     assert_allclose(geom.width.value, [2.02, 2.02])
 
 

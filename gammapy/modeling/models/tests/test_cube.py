@@ -640,7 +640,7 @@ def test_integrate_geom():
     square = CircleSkyRegion(center, radius)
 
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name='energy_true')
-    geom = RegionGeom(region=square, axes=[axis])
+    geom = RegionGeom(region=square, axes=[axis], binsz_wcs="0.01deg")
 
     integral = sky_model.integrate_geom(geom).data
 

@@ -1411,11 +1411,11 @@ def test_compute_flux_spatial():
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = Models(models)
 
-    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true])
+    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
     exposure_region.data += 1.0
     exposure_region.unit = "m2 s"
 
-    geom = RegionGeom(region, axes=[energy_axis_true])
+    geom = RegionGeom(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
     psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
 
     evaluator = MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)

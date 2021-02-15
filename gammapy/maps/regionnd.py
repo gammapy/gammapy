@@ -155,7 +155,7 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None):
+    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg"):
         """Create an empty region map object.
 
         Parameters
@@ -178,7 +178,7 @@ class RegionNDMap(Map):
         map : `RegionNDMap`
             Region map
         """
-        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
+        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs,binsz_wcs=binsz_wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
     def downsample(
