@@ -42,9 +42,9 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         0,
         energy_min="1 GeV",
         energy_max="100 GeV",
-        norm_min=-1e5,
-        norm_max=1e5,
-        norm_values=norm_values,
+        norm_fit_min=-1e5,
+        norm_fit_max=1e5,
+        norm_scan_values=norm_values,
         reoptimize=False,
         selection_optional="all"
     )

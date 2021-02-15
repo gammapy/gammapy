@@ -83,7 +83,9 @@ def create_fpe(model):
     norm_values = ScanValuesGenerator(bounds=(0.2, 5), n_values=11, scaling="log")
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=11,
+        norm_fit_min=-1e5,
+        norm_fit_max=1e5,
+        norm_scan_values=norm_values,
         source="source",
         selection_optional=["all"],
         backend="minuit",
@@ -137,9 +139,10 @@ def fpe_map_pwl():
     norm_values = ScanValuesGenerator(bounds=(0.2, 5), n_values=3, scaling="log")
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
+        norm_fit_min=-1e5,
+        norm_fit_max=1e5,
+        norm_scan_values=norm_values,
         source="source",
-        selection_optional=["all"],
     )
     return datasets, fpe
 
@@ -155,9 +158,9 @@ def fpe_map_pwl_reoptimize():
     datasets = [dataset]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_min=-1e5,
-        norm_max=1e5,
-        norm_values=[1],
+        norm_fit_min=-1e5,
+        norm_fit_max=1e5,
+        norm_scan_values=[1],
         reoptimize=True,
         source="source",
     )

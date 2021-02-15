@@ -250,7 +250,7 @@ def test_lightcurve_estimator_spectrum_datasets():
 
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
+        norm_scan_values=norm_values,
         time_intervals=time_intervals,
         selection_optional="all",
     )
@@ -300,7 +300,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins(norm_values):
 
     estimator = LightCurveEstimator(
         energy_edges=[1, 5, 30] * u.TeV,
-        norm_n_values=3,
+        norm_scan_values=norm_values,
         time_intervals=time_intervals,
         selection_optional="all",
     )
@@ -386,7 +386,7 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit(norm_values):
     selection = ["scan"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_values=norm_values,
+        norm_scan_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=selection,
     )
@@ -405,7 +405,7 @@ def test_lightcurve_estimator_spectrum_datasets_default(norm_values):
     selection = ["scan"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_values=norm_values,
+        norm_scan_values=norm_values,
         selection_optional=selection,
     )
     lightcurve = estimator.run(datasets)
@@ -426,7 +426,7 @@ def test_lightcurve_estimator_spectrum_datasets_notordered(norm_values):
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 100] * u.TeV,
-        norm_values=norm_values,
+        norm_scan_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
@@ -444,7 +444,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin(norm_values):
     time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_values=norm_values,
+        norm_scan_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
@@ -476,7 +476,7 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped(norm_values):
     ]
     with pytest.raises(ValueError) as excinfo:
         estimator = LightCurveEstimator(
-            norm_values=norm_values, time_intervals=time_intervals
+            norm_scan_values=norm_values, time_intervals=time_intervals
         )
         estimator.run(datasets)
 
@@ -497,7 +497,7 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_values=norm_values,
+        norm_scan_values=norm_values,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
