@@ -317,7 +317,7 @@ class RegionNDMap(Map):
         with fits.open(filename, memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
 
-    def write(self, filename, overwrite=False, format="gadf", hdu="REGIONMAP"):
+    def write(self, filename, overwrite=False, format="gadf", hdu="SKYMAP"):
         """Write map to file
 
         Parameters
@@ -334,7 +334,7 @@ class RegionNDMap(Map):
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="gadf", hdu=None):
+    def to_hdulist(self, format="gadf", hdu="SKYMAP"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -360,14 +360,9 @@ class RegionNDMap(Map):
         else:
             raise ValueError(f"Unsupported format '{format}'")
 
-        if format in ["ogip", "ogip-sherpa"]:
+        if format in ["ogip", "ogip-sherpa", "gadf"]:
             hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
             hdulist.extend(hdulist_geom[1:])
-
-        # only add region info for gadf
-        if format == "gadf":
-            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
-            hdulist.extend(hdulist_geom[2:])
 
         return hdulist
 
@@ -394,7 +389,7 @@ class RegionNDMap(Map):
         defaults = {
             "ogip": {"hdu": "SPECTRUM", "column": "COUNTS"},
             "ogip-arf": {"hdu": "SPECRESP", "column": "SPECRESP"},
-            "gadf": {"hdu": "REGIONMAP", "column": "DATA"},
+            "gadf": {"hdu": "SKYMAP", "column": "DATA"},
         }
 
         if hdu is None:
@@ -519,8 +514,10 @@ class RegionNDMap(Map):
             table["SPECRESP"] = data
 
         elif format == "gadf":
-            table = self.geom.axes.to_table(format=format)
-            table["DATA"] = self.quantity.flatten()
+            table = Table()
+            data = self.quantity.flatten()
+            table["CHANNEL"] = np.arange(len(data), dtype=np.int16)
+            table["DATA"] = data
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 

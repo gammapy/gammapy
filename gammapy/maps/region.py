@@ -641,7 +641,7 @@ class RegionGeom(Geom):
         elif format == "ogip-arf":
             hdu_bands = "SPECRESP"
         elif format == "gadf":
-            hdu_bands = hdu
+            hdu_bands = hdu + "_BANDS"
         else:
             raise ValueError(f"Unknown format {format}")
 

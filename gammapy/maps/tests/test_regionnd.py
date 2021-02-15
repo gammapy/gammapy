@@ -262,3 +262,14 @@ def test_region_nd_io_gadf_rad_axis(tmpdir):
     # check that the data is not re-shuffled
     assert_allclose(m_new.data, m.data)
     assert m_new.data.shape == (3, 2, 1, 1)
+
+
+def test_region_nd_hdulist():
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    m = RegionNDMap.create(region="icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+
+    hdulist = m.to_hdulist()
+    assert hdulist[0].name == "PRIMARY"
+    assert hdulist[1].name == "SKYMAP"
+    assert hdulist[2].name == "SKYMAP_BANDS"
+    assert hdulist[3].name == "SKYMAP_REGION"
