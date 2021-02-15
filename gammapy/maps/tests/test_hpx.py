@@ -666,7 +666,7 @@ def test_hpxgeom_from_header():
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_read_write(tmp_path, nside, nested, frame, region, axes):
     geom0 = HpxGeom(nside, nested, frame, region=region, axes=axes)
-    hdu_bands = geom0.to_bands_hdu(hdu="BANDS")
+    hdu_bands = geom0.to_bands_hdu(hdu_skymap="TEST")
     hdu_prim = fits.PrimaryHDU()
     hdu_prim.header.update(geom0.to_header())
 
@@ -674,7 +674,7 @@ def test_hpxgeom_read_write(tmp_path, nside, nested, frame, region, axes):
     hdulist.writeto(tmp_path / "tmp.fits")
 
     with fits.open(tmp_path / "tmp.fits", memmap=False) as hdulist:
-        geom1 = HpxGeom.from_header(hdulist[0].header, hdulist["BANDS"])
+        geom1 = HpxGeom.from_header(hdulist[0].header, hdulist["TEST_BANDS"])
 
     assert_allclose(geom0.nside, geom1.nside)
     assert_allclose(geom0.npix, geom1.npix)

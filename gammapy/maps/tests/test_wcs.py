@@ -93,7 +93,7 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, frame, proj, skydir, axes):
 def test_wcsgeom_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     geom0 = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
 
-    hdu_bands = geom0.to_bands_hdu(hdu="BANDS")
+    hdu_bands = geom0.to_bands_hdu(hdu_skymap="TEST")
     hdu_prim = fits.PrimaryHDU()
     hdu_prim.header.update(geom0.to_header())
 
@@ -101,7 +101,7 @@ def test_wcsgeom_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     hdulist.writeto(tmp_path / "tmp.fits")
 
     with fits.open(tmp_path / "tmp.fits", memmap=False) as hdulist:
-        geom1 = WcsGeom.from_header(hdulist[0].header, hdulist["BANDS"])
+        geom1 = WcsGeom.from_header(hdulist[0].header, hdulist["TEST_BANDS"])
 
     assert_allclose(geom0.npix, geom1.npix)
     assert geom0.frame == geom1.frame
@@ -111,7 +111,7 @@ def test_wcsgeom_to_hdulist():
     npix, binsz, frame, proj, skydir, axes = wcs_test_geoms[3]
     geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
 
-    hdu = geom.to_bands_hdu(hdu="TEST")
+    hdu = geom.to_bands_hdu(hdu_skymap="TEST")
     assert hdu.header["AXCOLS1"] == "E_MIN,E_MAX"
     assert hdu.header["AXCOLS2"] == "AXIS1_MIN,AXIS1_MAX"
 
