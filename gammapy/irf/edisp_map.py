@@ -113,45 +113,25 @@ class EDispMap(IRFMap):
             )
 
         position = self._get_nearest_valid_position(position)
-
         energy_axis_true = self.edisp_map.geom.axes["energy_true"]
-        migra_axis = self.edisp_map.geom.axes["migra"]
+
+        # migration value of energy bounds
+        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
 
         coords = {
             "skycoord": position,
-            "migra": migra_axis.center.reshape((-1, 1, 1, 1)),
-            "energy_true": energy_axis_true.center.reshape((1, -1, 1, 1)),
+            "energy_true": energy_axis_true.center[:, np.newaxis],
+            "migra": migra,
         }
 
-        # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
-        values = self.edisp_map.interp_by_coord(coords) * self.edisp_map.unit
-        edisp_values = values[:, :, 0, 0]
+        values = self.edisp_map.integral(
+            axis_name="migra", coords=coords, normalize=True
+        )
 
-        data = []
-
-        for idx, energy_true in enumerate(energy_axis_true.center):
-            # migration value of energy bounds
-            migra = energy_axis.edges / energy_true
-
-            cumsum = np.insert(edisp_values[:, idx], 0, 0).cumsum()
-            with np.errstate(invalid="ignore", divide="ignore"):
-                cumsum = np.nan_to_num(cumsum / cumsum[-1])
-
-            f = interp1d(
-                migra_axis.edges.value,
-                cumsum,
-                kind="linear",
-                bounds_error=False,
-                fill_value=(0, 1),
-            )
-
-            # We compute the difference between 2 successive bounds in energy
-            # to get integral over reco energy bin
-            integral = np.diff(np.clip(f(migra), a_min=0, a_max=1))
-            data.append(integral)
+        data = np.diff(np.clip(values, 0, 1))
 
         return EDispKernel(
-            axes=[energy_axis_true, energy_axis], data=np.array(data)
+            axes=[energy_axis_true, energy_axis], data=data.to_value("")
         )
 
     @classmethod

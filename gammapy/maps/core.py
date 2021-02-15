@@ -1236,13 +1236,15 @@ class Map(abc.ABC):
         data = func.reduce(data, axis=idx, keepdims=keepdims, where=~np.isnan(data))
         return self._init_copy(geom=geom, data=data)
 
-    def cumsum(self, axis_name):
+    def cumsum(self, axis_name, normalize=False):
         """Compute cumulative sum along a given axis
 
         Parameters
         ----------
         axis_name : str
             Along which axis to integrate.
+        normalize : bool
+            Normalize cum sum to unity.
 
         Returns
         -------
@@ -1264,6 +1266,9 @@ class Map(abc.ABC):
 
         data = values.cumsum(axis=axis_idx)
 
+        if normalize:
+            data /= np.sum(values, axis=axis_idx, keepdims=True)
+
         axis_shifted = MapAxis.from_nodes(
             axis.edges[1:], name=axis.name, interp=axis.interp
         )
@@ -1271,7 +1276,7 @@ class Map(abc.ABC):
         geom = self.geom.to_image().to_cube(axes)
         return self.__class__(geom=geom, data=data.value, unit=data.unit)
 
-    def integral(self, axis_name, coords, **kwargs):
+    def integral(self, axis_name, coords, normalize=False, **kwargs):
         """Compute integral along a given axis
 
         This method uses interpolation of the cumulative sum.
@@ -1282,6 +1287,9 @@ class Map(abc.ABC):
             Along which axis to integrate.
         coords : dict or `MapCoord`
             Map coordinates
+        normalize : bool
+            Normalize cum sum to unity.
+
         **kwargs : dict
             Coordinates at which to evaluate the IRF
 
@@ -1290,7 +1298,7 @@ class Map(abc.ABC):
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        cumsum = self.cumsum(axis_name=axis_name)
+        cumsum = self.cumsum(axis_name=axis_name, normalize=normalize)
         return u.Quantity(cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False)
 
     @classmethod
