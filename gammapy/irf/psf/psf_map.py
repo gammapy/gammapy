@@ -179,10 +179,13 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
-        coords = self._get_irf_coords(
-            rad=rad, energy_true=energy_true, skycoord=position
-        )
-        return self._psf_irf.containment(**coords)
+        coords = {
+            "skycoord": position,
+            "rad": rad,
+            "energy_true": energy_true
+        }
+
+        return self.psf_map.integral(axis_name="rad", coords=coords).to("")
 
     def containment_radius(self, fraction, energy_true, position=None):
         """Containment at given coords

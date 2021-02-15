@@ -152,11 +152,6 @@ class TestEnergyDispersion2D:
         )
         assert_equal(actual, desired)
 
-    def test_get_response(self):
-        pdf = self.edisp2.get_response(offset=0.7 * u.deg, energy_true=1 * u.TeV)
-        assert_allclose(pdf.sum(), 1)
-        assert_allclose(pdf.max(), 0.010421, rtol=1e-4)
-
     def test_exporter(self):
         # Check RMF exporter
         offset = Angle(0.612, "deg")
@@ -164,10 +159,6 @@ class TestEnergyDispersion2D:
         e_true = MapAxis.from_energy_bounds(0.8, 5, 5, "TeV").edges
         rmf = self.edisp.to_edisp_kernel(offset, energy_true=e_true, energy=e_reco)
         assert_allclose(rmf.data.data[2, 3], 0.08, atol=5e-2)  # same tolerance as above
-        actual = rmf.pdf_matrix[2]
-        e_val = np.sqrt(e_true[2] * e_true[3])
-        desired = self.edisp.get_response(offset, e_val, e_reco)
-        assert_equal(actual, desired)
 
     def test_write(self):
         energy_axis_true = MapAxis.from_energy_bounds(

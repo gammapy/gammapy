@@ -191,7 +191,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     values = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
-        data = np.sum(weights*values, axis=2)
+        data = np.sum(weights * values, axis=2)
     else:
         data = values
 

@@ -222,6 +222,29 @@ class MapAxes(Sequence):
 
         return self.__class__(axes=axes)
 
+    def replace(self, axis):
+        """Replace a give axis
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            Map axis
+
+        Returns
+        -------
+        axes : MapAxes
+            Map axe
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis.name:
+                ax = axis
+
+            axes.append(ax)
+
+        return self.__class__(axes=axes)
+
     def resample(self, axis):
         """Resample axis binning.
 
