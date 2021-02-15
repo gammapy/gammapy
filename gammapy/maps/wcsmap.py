@@ -194,9 +194,12 @@ class WcsMap(Map):
                     "All 'fgst' formats don't support extra axes except for energy."
                 )
 
+        if hdu_bands is None:
+            hdu_bands = f"{hdu.upper()}_BANDS"
+
         if self.geom.axes:
             hdu_bands_out = self.geom.to_bands_hdu(
-                hdu_skymap=hdu_bands, format=format
+                extname=hdu_bands, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
