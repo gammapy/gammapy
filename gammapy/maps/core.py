@@ -1236,6 +1236,63 @@ class Map(abc.ABC):
         data = func.reduce(data, axis=idx, keepdims=keepdims, where=~np.isnan(data))
         return self._init_copy(geom=geom, data=data)
 
+    def cumsum(self, axis_name):
+        """Compute cumulative sum along a given axis
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to integrate.
+
+        Returns
+        -------
+        cumsum : `Map`
+            Map with cumulative sum
+        """
+        axis = self.geom.axes[axis_name]
+        axis_idx = self.geom.axes.index_data(axis_name)
+
+        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
+        shape = [1] * len(self.data.shape)
+        shape[axis_idx] = -1
+
+        values = self.quantity * axis.bin_width.reshape(shape)
+
+        if axis_name == "rad":
+            # take Jacobian into account
+            values = 2 * np.pi * axis.center.reshape(shape) * values
+
+        data = values.cumsum(axis=axis_idx)
+
+        axis_shifted = MapAxis.from_nodes(
+            axis.edges[1:], name=axis.name, interp=axis.interp
+        )
+        axes = self.geom.axes.replace(axis_shifted)
+        geom = self.geom.to_image().to_cube(axes)
+        return self.__class__(geom=geom, data=data.value, unit=data.unit)
+
+    def integral(self, axis_name, coords, **kwargs):
+        """Compute integral along a given axis
+
+        This method uses interpolation of the cumulative sum.
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to integrate.
+        coords : dict or `MapCoord`
+            Map coordinates
+        **kwargs : dict
+            Coordinates at which to evaluate the IRF
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Returns 2D array with axes offset
+        """
+        cumsum = self.cumsum(axis_name=axis_name)
+        return u.Quantity(cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False)
+
     @classmethod
     def from_images(cls, images, axis=None):
         """Create Map from list of images and a non-spatial axis.

@@ -378,7 +378,7 @@ def test_psf_map_read(position):
         position=position, energy_true=100 * u.GeV, rad=0.1 * u.deg
     )
 
-    assert_allclose(value, 0.682032, rtol=1e-5)
+    assert_allclose(value, 0.682022, rtol=1e-5)
     assert psf.psf_map.unit == "sr-1"
 
 
