@@ -8,7 +8,7 @@ from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.estimators import LightCurve, LightCurveEstimator
-from gammapy.estimators.parameter import ScanValuesMaker
+from gammapy.estimators.parameter import ScanValuesGenerator
 from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -20,7 +20,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 
 @pytest.fixture(scope="session")
 def norm_values():
-    return ScanValuesMaker(bounds=(0.2, 5), n_values=3, scaling="log")
+    return ScanValuesGenerator(bounds=(0.2, 5), n_values=3, scaling="log")
 
 
 @pytest.fixture(scope="session")

@@ -328,9 +328,9 @@ class Fit:
         ----------
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
-        values : `~astropy.units.Quantity` or `~gammapy.estimators.parameter.ScanValuesMaker`
+        values : `~astropy.units.Quantity` or `~gammapy.estimators.parameter.ScanValuesGenerator`
             Parameter values to evaluate the fit statistic for
-            or `ScanValuesMaker` generator instance (optional).
+            or `ScanValuesGenerator` generator instance (optional).
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
             
@@ -340,13 +340,14 @@ class Fit:
             Dictionary with keys "values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
-        from gammapy.estimators.parameter import ScanValuesMaker
+        from gammapy.estimators.parameter import ScanValuesGenerator
+
         parameters = self._parameters
         parameter = parameters[parameter]
 
         if values is None:
-            values = ScanValuesMaker()(parameter)
-        elif isinstance(values, ScanValuesMaker):
+            values = ScanValuesGenerator()(parameter)
+        elif isinstance(values, ScanValuesGenerator):
             values = values(parameter)
 
         optimize_opts = optimize_opts or {}

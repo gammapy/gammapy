@@ -713,13 +713,14 @@ class FluxPointsEstimator(Estimator):
         Energy edges of the flux point bins.
     source : str or int
         For which source in the model to compute the flux points.
-    norm_min : float
+    norm_fit_min : float
         Minimum value for the norm used for the fit.
-    norm_max : float
+        To follow Fermi-LAT science tools convention `norm_fit_min` must be set to 0.
+    norm_fit_max : float
         Maximum value for the norm used for the fit.
-    norm_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+    norm_scan_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesGenerator`
         Array of norm values to be used for the fit statistic profile
-        or `ScanValuesMaker` generator instance.
+        or `ScanValuesGenerator` generator instance.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
@@ -753,9 +754,9 @@ class FluxPointsEstimator(Estimator):
         self,
         energy_edges=[1, 10] * u.TeV,
         source=0,
-        norm_min=1e-8,
-        norm_max=1e8,
-        norm_values=None,
+        norm_fit_min=-1e5,
+        norm_fit_max=1e5,
+        norm_scan_values=None,
         n_sigma=1,
         n_sigma_ul=2,
         ul_method="confidence",
@@ -768,9 +769,9 @@ class FluxPointsEstimator(Estimator):
 
         self.energy_edges = energy_edges
         self.source = source
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_values = norm_values
+        self.norm_fit_min = norm_fit_min
+        self.norm_fit_max = norm_fit_max
+        self.norm_scan_values = norm_scan_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.backend = backend
@@ -788,9 +789,9 @@ class FluxPointsEstimator(Estimator):
             source=self.source,
             energy_min=energy_min,
             energy_max=energy_max,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_values=self.norm_values,
+            norm_fit_min=self.norm_fit_min,
+            norm_fit_max=self.norm_fit_max,
+            norm_scan_values=self.norm_scan_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             backend=self.backend,

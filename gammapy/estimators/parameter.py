@@ -10,7 +10,7 @@ from gammapy.utils.interpolation import interpolation_scale
 log = logging.getLogger(__name__)
 
 
-class ScanValuesMaker:
+class ScanValuesGenerator:
     """Scan values generator
 
     Parameters
@@ -58,44 +58,11 @@ class ScanValuesMaker:
         else:
             if parameter is None:
                 raise ValueError("Parameter have to be define if bounds is not tupple")
-            parmin, parmax = make_scan_bounds(parameter, self.bounds, self.err_rel_min)
+            parmin, parmax = parameter.get_scan_bounds(self.bounds, self.err_rel_min)
         scaler = interpolation_scale(self.scaling)
         parmin, parmax = scaler([parmin, parmax])
         values = np.linspace(parmin, parmax, self.n_values)
         return scaler.inverse(values)
-
-
-def make_scan_bounds(
-    parameter, scan_n_sigma=3, err_rel_min=0.05,
-):
-    """Prepare values scan bounds
-
-    Parameters
-    ----------
-    parameter : `Parameter`
-        For which parameter to get the values
-    scan_n_sigma : int
-        The bounds are computed from `scan_n_sigma * sigma`
-        from the best fit value of the parameter, where `sigma` corresponds to
-        the one sigma error on the parameter.
-    err_rel_min : float
-       Minimun relative error allowed (default is 5%).
-       If the relative error if lower than `err_rel_min` or 
-       if the parameter error is not defined, then the parameter
-       error is condider to be the parameter value.
-       Used only when an `int` is passed as `bounds`.
-    
-    Returns
-    -------
-    results : np.array
-        values
-    """
-    parval = parameter.value
-    parerr = parameter.error
-    err_rel = np.abs(parameter.error / parameter.value)
-    if np.isnan(parerr) or (err_rel < err_rel_min):
-        parerr = np.abs(parval)
-    return [parval - scan_n_sigma * parerr, np.abs(parval) + scan_n_sigma * parerr]
 
 
 class ParameterEstimator(Estimator):
@@ -114,7 +81,7 @@ class ParameterEstimator(Estimator):
         Sigma to use for upper limit computation. Default is 2.
     null_value : float
         Which null value to use for the parameter
-    scan_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+    scan_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesGenerator`
         Array of values to be used for the fit statistic profile
         or `ScanValuesMaker` generator instance.
     ul_method : {"confidence", "profile"}
@@ -164,7 +131,7 @@ class ParameterEstimator(Estimator):
 
         # scan parameters
         if scan_values is None:
-            scan_values = ScanValuesMaker()
+            scan_values = ScanValuesGenerator()
         self.scan_values = scan_values
 
         self.ul_method = ul_method
@@ -292,7 +259,7 @@ class ParameterEstimator(Estimator):
         self.fit(datasets)
         self._fit.optimize(**self.optimize_opts)
 
-        if isinstance(self.scan_values, ScanValuesMaker):
+        if isinstance(self.scan_values, ScanValuesGenerator):
             scan_values = self.scan_values(parameter)
         else:
             scan_values = self.scan_values

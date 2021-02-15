@@ -8,7 +8,7 @@ from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-from gammapy.estimators.parameter import ScanValuesMaker
+from gammapy.estimators.parameter import ScanValuesGenerator
 
 
 @pytest.fixture()
@@ -112,7 +112,7 @@ class TestFluxPointFit:
         result = fit.run()
 
         parameter = fit._parameters["amplitude"]
-        values = ScanValuesMaker(bounds=1, n_values=3)(parameter)
+        values = ScanValuesGenerator(bounds=1, n_values=3)(parameter)
         profile = fit.stat_profile("amplitude", values)
 
         ts_diff = profile["stat_scan"] - result.total_stat

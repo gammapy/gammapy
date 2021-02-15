@@ -62,7 +62,6 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
-    from gammapy.estimators.parameter import make_scan_bounds
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
     )
@@ -72,7 +71,7 @@ def _confidence_scipy_brentq(
     bound = parameter.factor_max if upper else parameter.factor_min
 
     if np.isnan(bound):
-        bounds = make_scan_bounds(parameter, scan_n_sigma=1e2)
+        bounds = parameter.get_scan_bounds(scan_n_sigma=1e2)
         bound = bounds[int(upper)] / parameter.scale
 
     kwargs.setdefault("b", bound)

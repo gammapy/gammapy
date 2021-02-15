@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.estimators.parameter import ScanValuesMaker
+from gammapy.estimators.parameter import ScanValuesGenerator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
@@ -80,7 +80,7 @@ def create_fpe(model):
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
 
-    norm_values = ScanValuesMaker(bounds=(0.2, 5), n_values=11, scaling="log")
+    norm_values = ScanValuesGenerator(bounds=(0.2, 5), n_values=11, scaling="log")
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
         norm_n_values=11,
@@ -134,7 +134,7 @@ def fpe_map_pwl():
 
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
-    norm_values = ScanValuesMaker(bounds=(0.2, 5), n_values=3, scaling="log")
+    norm_values = ScanValuesGenerator(bounds=(0.2, 5), n_values=3, scaling="log")
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
         norm_n_values=3,

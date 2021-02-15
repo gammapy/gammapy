@@ -26,13 +26,13 @@ class FluxEstimator(Estimator):
         For which source in the model to compute the flux.
     energy_min, energy_max: `~astropy.units.Quantity`
         The energy interval on which to compute the flux
-    norm_min : float
+    norm_fit_min : float
         Minimum value for the norm used for the fit.
-    norm_max : float
+    norm_fit_max : float
         Maximum value for the norm used for the fit.
-    norm_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+    norm_scan_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesGenerator`
         Array of norm values to be used for the fit statistic profile
-        or `ScanValuesMaker` generator instance.
+        or `ScanValuesGenerator` generator instance.
     n_sigma : int
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
@@ -67,9 +67,9 @@ class FluxEstimator(Estimator):
         source,
         energy_min,
         energy_max,
-        norm_min=1e-8,
-        norm_max=1e8,
-        norm_values=None,
+        norm_fit_min=-1e5,
+        norm_fit_max=1e5,
+        norm_scan_values=None,
         n_sigma=1,
         n_sigma_ul=3,
         ul_method="confidence",
@@ -79,9 +79,9 @@ class FluxEstimator(Estimator):
         reoptimize=True,
         selection_optional=None,
     ):
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_values = norm_values
+        self.norm_fit_min = norm_fit_min
+        self.norm_fit_max = norm_fit_max
+        self.norm_scan_values = norm_scan_values
         self.source = source
         self.energy_min = u.Quantity(energy_min)
         self.energy_max = u.Quantity(energy_max)
@@ -106,7 +106,7 @@ class FluxEstimator(Estimator):
     def _parameter_estimator(self):
         return ParameterEstimator(
             null_value=0,
-            scan_values=self.norm_values,
+            scan_values=self.norm_scan_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             ul_method=self.ul_method,
@@ -160,8 +160,8 @@ class FluxEstimator(Estimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
-        scale_model.norm.min = self.norm_min
-        scale_model.norm.max = self.norm_max
+        scale_model.norm.min = self.norm_fit_min
+        scale_model.norm.max = self.norm_fit_max
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
         return scale_model

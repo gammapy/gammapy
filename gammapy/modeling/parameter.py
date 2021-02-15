@@ -210,8 +210,8 @@ class Parameter:
 
     @frozen.setter
     def frozen(self, val):
-        if val in ['True', 'False']:
-            val=bool(val)
+        if val in ["True", "False"]:
+            val = bool(val)
         if not isinstance(val, bool) and not isinstance(val, np.bool_):
             raise TypeError(f"Invalid type: {val}, {type(val)}")
         self._frozen = val
@@ -264,8 +264,9 @@ class Parameter:
     def update_from_dict(self, data):
         """Update parameters from a dict.
            Protection against changing parameter model, type, name."""
-        keys=["value", "unit", "min", "max", "frozen"]
-        for k in keys: setattr(self, k, data[k])
+        keys = ["value", "unit", "min", "max", "frozen"]
+        for k in keys:
+            setattr(self, k, data[k])
 
     def to_dict(self):
         """Convert to dict."""
@@ -313,6 +314,36 @@ class Parameter:
             self.factor, self.scale = 1, self.value
         else:
             raise ValueError(f"Invalid method: {method}")
+
+    def get_scan_bounds(
+        self, scan_n_sigma=3, err_rel_min=0.05,
+    ):
+        """Prepare values scan bounds
+    
+        Parameters
+        ----------
+        scan_n_sigma : int
+            The bounds are computed from `scan_n_sigma * sigma`
+            from the best fit value of the parameter, where `sigma` corresponds to
+            the one sigma error on the parameter.
+        err_rel_min : float
+           Minimun relative error allowed (default is 5%).
+           If the relative error if lower than `err_rel_min` or 
+           if the parameter error is not defined, then the parameter
+           error is condider to be the parameter value.
+           Used only when an `int` is passed as `bounds`.
+        
+        Returns
+        -------
+        results : np.array
+            values
+        """
+        parval = self.value
+        parerr = self.error
+        err_rel = np.abs(self.error / self.value)
+        if np.isnan(parerr) or (err_rel < err_rel_min):
+            parerr = np.abs(parval)
+        return [parval - scan_n_sigma * parerr, np.abs(parval) + scan_n_sigma * parerr]
 
 
 class Parameters(collections.abc.Sequence):
@@ -463,7 +494,7 @@ class Parameters(collections.abc.Sequence):
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        rows=[]
+        rows = []
         for p in self._parameters:
             d = p.to_dict()
             rows.append({**dict(type=p.type), **d})

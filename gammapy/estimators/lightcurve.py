@@ -322,13 +322,13 @@ class LightCurveEstimator(Estimator):
         Energy edges of the light curve.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
-    norm_min : float
+    norm_fit_min : float
         Minimum value for the norm used for the fit.
-    norm_max : float
+    norm_fit_max : float
         Maximum value for the norm used for the fit.
-    norm_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesMaker`
+    norm_scan_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesGenerator`
         Array of norm values to be used for the fit statistic profile
-        or `ScanValuesMaker` generator instance.
+        or `ScanValuesGenerator` generator instance.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
@@ -361,9 +361,9 @@ class LightCurveEstimator(Estimator):
         source=0,
         energy_edges=None,
         atol="1e-6 s",
-        norm_min=1e-8,
-        norm_max=1e8,
-        norm_values=None,
+        norm_fit_min=-1e5,
+        norm_fit_max=1e5,
+        norm_scan_values=None,
         n_sigma=1,
         n_sigma_ul=2,
         backend="minuit",
@@ -380,9 +380,9 @@ class LightCurveEstimator(Estimator):
 
         self.energy_edges = energy_edges
 
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_values = norm_values
+        self.norm_fit_min = norm_fit_min
+        self.norm_fit_max = norm_fit_max
+        self.norm_scan_values = norm_scan_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.backend = backend
@@ -491,9 +491,9 @@ class LightCurveEstimator(Estimator):
         fe = FluxPointsEstimator(
             source=self.source,
             energy_edges=energy_edges,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_values=self.norm_values,
+            norm_fit_min=self.norm_fit_min,
+            norm_fit_max=self.norm_fit_max,
+            norm_scan_values=self.norm_scan_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,

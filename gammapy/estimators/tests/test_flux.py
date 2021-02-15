@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.estimators.parameter import ScanValuesMaker
+from gammapy.estimators.parameter import ScanValuesGenerator
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -37,7 +37,7 @@ def hess_datasets():
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
-    norm_values = ScanValuesMaker(bounds=(0.5, 2), n_values=5)
+    norm_values = ScanValuesGenerator(bounds=(0.5, 2), n_values=5)
     estimator = FluxEstimator(
         0,
         energy_min="1 GeV",
