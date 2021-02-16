@@ -463,13 +463,31 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return u.Quantity(values, unit)
 
     @property
-    def lightcurve(self):
-        """Lightcurve (`~gammapy.estimators.LightCurve`)."""
-        flux = self.data["Flux_History"]
+    def lightcurve(self, interval="1-year"):
+        """Lightcurve (`~gammapy.estimators.LightCurve`).
 
+        Parameters
+        ----------
+        interval : {'1-year', '2-month'}
+            Time interval of the lightcurve. Default is '1-year'. 
+            Note that '2-month' is not available for all catalogue version.
+        """
+
+        if interval == "1-year":
+            tag = "Flux_History"
+        elif interval == "2-month":
+            tag = "Flux2_History"
+            if tag not in self.data:
+                raise ValueError(
+                    "Only '1-year' interval is available for this catalogue version"
+                )
+        else:
+            raise ValueError("Time intervals available are '1-year' or '2-month'")
+
+        flux = self.data[tag]
         # Flux error is given as asymmetric high/low
-        flux_errn = -self.data["Unc_Flux_History"][:, 0]
-        flux_errp = self.data["Unc_Flux_History"][:, 1]
+        flux_errn = -self.data[f"Unc_{tag}"][:, 0]
+        flux_errp = self.data[f"Unc_{tag}"][:, 1]
 
         # Really the time binning is stored in a separate HDU in the FITS
         # catalog file called `Hist_Start`, with a single column `Hist_Start`
@@ -482,8 +500,11 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         # equally-spaced time intervals. This is roughly correct,
         # for plotting the difference doesn't matter, only for analysis
         time_start = Time("2008-08-04T15:43:36.0000")
-        time_end = Time("2016-08-02T05:44:11.9999")
         n_points = len(flux)
+        if len(n_points) in [8, 48]:
+            time_end = Time("2016-08-02T05:44:11.9999")
+        else:
+            time_end = Time("2018-08-02T05:44:11.9999")
         time_step = (time_end - time_start) / n_points
         time_bounds = time_start + np.arange(n_points + 1) * time_step
 
