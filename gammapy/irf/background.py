@@ -92,9 +92,6 @@ class Background3D(BackgroundIRF):
         Data unit usuually ``s^-1 MeV^-1 sr^-1``
     meta : dict
         Meta data
-    interp_missing_values: bool
-        Interpolate missing values in background 3d map.
-        Default is True, have to be set to True for CTA IRF.
 
     Examples
     --------
@@ -119,21 +116,13 @@ class Background3D(BackgroundIRF):
     tag = "bkg_3d"
     required_axes = ["energy", "fov_lon", "fov_lat"]
 
-    def __init__(self, axes, data=0, unit="", meta=None, interp_missing_values=False):
-        super().__init__(axes, data, unit, meta)
-        if interp_missing_values:
-            self.interp_missing_values()
-
-    def interp_missing_values(self):
+    def interp_missing_data(self):
         """Interpolate missing values in bakcground 3d"""
-        if isinstance(self.axes, list):
-            axis = [a for a in self.axes if a.name == "energy"][0]
-        else:
-            axis = self.axes["energy"]
+        axis = self.axes["energy"]
         log_energy = np.log(axis.center.value)
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             log_data = np.ma.masked_invalid(np.log(self.data))
-        log_data = interpolate_invalid_data_3d(log_data, log_energy)
+        log_data = interpolate_invalid_data_3d(log_data, log_energy, fill_value=-np.inf)
         self.data = np.exp(log_data.data)
 
     def to_2d(self):

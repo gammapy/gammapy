@@ -219,7 +219,7 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
     )
 
 
-def interpolate_invalid_data_3d(data, axis_0):
+def interpolate_invalid_data_3d(data, axis_0, fill_value="extrapolate"):
     """Interpolate invalid data in 3d array along axis zero
     
     Parameters
@@ -228,7 +228,9 @@ def interpolate_invalid_data_3d(data, axis_0):
         Data values
     axis_0 : `~numpy.ndarray`
        Center value of axis 0
-
+    fill_value : float or “extrapolate”
+        Value to fill in for requested points outside of the valid range.
+        If “extrapolate”, then points outside the valid range will be extrapolated.
     """
 
     data_masked = np.ma.masked_invalid(data)
@@ -237,6 +239,7 @@ def interpolate_invalid_data_3d(data, axis_0):
         for il in range(data.shape[1]):
             for ib in range(data.shape[2]):
                 mask1d = mask[:, il, ib]
+
                 if np.any(mask1d) and not np.all(mask1d):
                     invalid = np.where(mask1d)[0]
                     valid = np.where(~mask1d)[0]
@@ -245,7 +248,7 @@ def interpolate_invalid_data_3d(data, axis_0):
                         data_masked[valid, il, ib],
                         axis=0,
                         kind="linear",
-                        fill_value="extrapolate",
+                        fill_value=fill_value,
                     )
                     data_masked[invalid, il, ib] = finterp(axis_0[mask1d])
     return data_masked

@@ -47,12 +47,12 @@ def bkg_3d_interp():
     # clipping of value before last will cause extrapolation problems
     # as found with CTA background IRF
 
-    return Background3D(
+    bkg = Background3D(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
         unit="s-1 GeV-1 sr-1",
-        interp_missing_values=True,
     )
+    return bkg
 
 
 @requires_data()
@@ -127,13 +127,23 @@ def test_background_3d_evaluate(bkg_3d):
 
 def test_background_3d_missing_values(bkg_3d_interp):
 
-    assert np.all(bkg_3d_interp.data != 0)
-    # without missing values interpolation
-    # extrolation would give too high value (1e33 here)
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
     )
-    assert res.value < 1e10
+    assert res.value != 1
+    assert_allclose(res.value, 1.727394e33, atol=1e-1)
+    # without missing values interpolation
+    # extrolation would give too high value (1e33 here)
+
+    bkg_3d_interp.interp_missing_data()
+    assert np.all(bkg_3d_interp.data != 0)
+
+    bkg_3d_interp.interp_missing_data()
+
+    res = bkg_3d_interp.evaluate(
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
+    )
+    assert_allclose(res.value, 1.0)
 
 
 def test_background_3d_integrate(bkg_3d):

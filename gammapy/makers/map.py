@@ -30,7 +30,7 @@ class MapDatasetMaker(Maker):
         By default, all maps are made.
     background_oversampling : int
         Background evaluation oversampling factor in energy.
-    fix_background: bool
+    background_interp_missing_data: bool
         Interpolate missing values in background 3d map.
         Default is True, have to be set to True for CTA IRF.
     """
@@ -39,10 +39,13 @@ class MapDatasetMaker(Maker):
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
 
     def __init__(
-        self, selection=None, background_oversampling=None, fix_background=True
+        self,
+        selection=None,
+        background_oversampling=None,
+        background_interp_missing_data=True,
     ):
         self.background_oversampling = background_oversampling
-        self.fix_background = fix_background
+        self.background_interp_missing_data = background_interp_missing_data
         if selection is None:
             selection = self.available_selection
 
@@ -157,8 +160,8 @@ class MapDatasetMaker(Maker):
             )
         use_region_center = getattr(self, "use_region_center", True)
 
-        if self.fix_background:
-            bkg.interp_missing_values()
+        if self.background_interp_missing_data:
+            bkg.interp_missing_data()
 
         return make_map_background_irf(
             pointing=pointing,
