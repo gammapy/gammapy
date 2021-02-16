@@ -137,7 +137,7 @@ SOURCES_3FHL = [
 class TestFermi4FGLObject:
     @classmethod
     def setup_class(cls):
-        cls.cat = SourceCatalog4FGL()
+        cls.cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
         cls.source_name = "4FGL J0534.5+2200"
         cls.source = cls.cat[cls.source_name]
 
