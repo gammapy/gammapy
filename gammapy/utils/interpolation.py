@@ -248,6 +248,7 @@ def interpolate_invalid_data_3d(data, axis_0, fill_value="extrapolate"):
                         data_masked[valid, il, ib],
                         axis=0,
                         kind="linear",
+                        bounds_error=False,
                         fill_value=fill_value,
                     )
                     data_masked[invalid, il, ib] = finterp(axis_0[mask1d])
