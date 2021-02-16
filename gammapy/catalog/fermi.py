@@ -501,7 +501,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         # for plotting the difference doesn't matter, only for analysis
         time_start = Time("2008-08-04T15:43:36.0000")
         n_points = len(flux)
-        if len(n_points) in [8, 48]:
+        if n_points in [8, 48]:
             time_end = Time("2016-08-02T05:44:11.9999")
         else:
             time_end = Time("2018-08-02T05:44:11.9999")
