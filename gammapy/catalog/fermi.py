@@ -1209,10 +1209,11 @@ class SourceCatalog3FGL(SourceCatalog):
 
 
 class SourceCatalog4FGL(SourceCatalog):
-    """Fermi-LAT 4FGL source catalog.
+    """Fermi-LAT 4FGL-DR2 source catalog.
 
-    - https://arxiv.org/abs/1902.10045
-    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/8yr_catalog/
+    - https://arxiv.org/abs/1902.10045 (4FGL paper)
+    - https://arxiv.org/abs/2005.11208 (DR2 document)
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/10yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
@@ -1221,7 +1222,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)
