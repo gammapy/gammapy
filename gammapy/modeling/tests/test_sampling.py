@@ -48,11 +48,25 @@ def test_lnprob(dataset):
 
 @requires_dependency("emcee")
 @requires_data()
-def test_runmcmc(dataset, caplog):
+def test_runmcmc(dataset):
     # Running a small MCMC on pregenerated datasets
     import emcee
 
     sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
     assert isinstance(sampler, emcee.ensemble.EnsembleSampler)
-    assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "HDU 'MASK_FIT' not found"
+
+
+
+
+
+
+@requires_dependency("emcee")
+@requires_data()
+def test_runmcmc_noprior(dataset, caplog):
+   # Running a small MCMC on pregenerated datasets
+   import emcee
+   dataset.models.parameters["lon_0"].min = np.nan
+   sampler = run_mcmc(dataset, nwalkers=6, nrun=10)
+   for record in caplog.records:
+        assert record.levelname == "WARNING"
+        assert record.message == "Missing prior for parameter: lon_0."
