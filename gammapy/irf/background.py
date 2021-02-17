@@ -118,12 +118,15 @@ class Background3D(BackgroundIRF):
 
     def interp_missing_data(self):
         """Interpolate missing values in bakcground 3d"""
-        axis = self.axes["energy"]
-        log_energy = np.log(axis.center.value)
         with np.errstate(divide="ignore", invalid="ignore"):
-            log_data = np.ma.masked_invalid(np.log(self.data))
-        log_data = interpolate_invalid_data_3d(log_data, log_energy, fill_value=-np.inf)
-        self.data = np.exp(log_data.data)
+            data = interpolate_invalid_data_3d(
+                self.axes["energy"].center.value,
+                self.data,
+                points_scale="log",
+                values_scale="log",
+                fill_value=-np.inf,
+            )
+        self.data = data
 
     def to_2d(self):
         """Convert to `Background2D`.
