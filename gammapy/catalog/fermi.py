@@ -462,7 +462,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         values = self.data[prefix]
         return u.Quantity(values, unit)
 
-    @property
     def lightcurve(self, interval="1-year"):
         """Lightcurve (`~gammapy.estimators.LightCurve`).
 
@@ -502,6 +501,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         time_start = Time("2008-08-04T15:43:36.0000")
         n_points = len(flux)
         if n_points in [8, 48]:
+            # 8 = 1/years * 8 years
+            # 48 = (12 month/year / 2month) * 8 years
             time_end = Time("2016-08-02T05:44:11.9999")
         else:
             time_end = Time("2018-08-02T05:44:11.9999")
