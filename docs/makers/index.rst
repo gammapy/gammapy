@@ -290,6 +290,15 @@ Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
 * `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
 * `spectrum_simulation.html <../tutorials/spectrum_simulation.html>`__
 
+
+.. toctree::
+    :maxdepth: 1
+
+    fov
+    reflected
+    ring
+
+
 Reference/API
 =============
 
