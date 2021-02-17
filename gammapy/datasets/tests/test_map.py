@@ -1444,3 +1444,22 @@ def test_source_outside_geom(sky_model, geom, geom_etrue):
     assert np.sum(np.isnan(model_npred)) == 0
     assert np.sum(~np.isfinite(model_npred)) == 0
     assert np.sum(model_npred) > 0
+
+
+def test_region_geom_io(tmpdir):
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.2)", axes=[axis])
+
+    dataset = MapDataset.create(geom)
+
+    filename = tmpdir / "test.fits"
+    dataset.write(filename)
+
+    dataset = MapDataset.read(filename)
+
+    assert isinstance(dataset.counts.geom, RegionGeom)
+    assert isinstance(dataset.edisp.edisp_map.geom, RegionGeom)
+    assert dataset.psf is None
+    
+
+
