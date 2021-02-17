@@ -330,8 +330,7 @@ class SpatialModelRenorm(SpatialModel):
         frame = kwargs.pop("frame", "icrs")
         update_norm = kwargs.pop("update_norm", True)
         super().__init__(**kwargs)
-        if not hasattr(self, "frame"):
-            self.frame = frame
+        self.frame = frame
         self.set_norm_method(update_norm)
 
     def __init_subclass__(cls, **kwargs):
@@ -363,6 +362,12 @@ class SpatialModelRenorm(SpatialModel):
     def compute_norm_default(self):
         return 1.0 / u.sr
 
+    @property
+    def evaluation_binsz(self):
+        """Evaluation bin size (`~astropy.coordinates.Angle`)."""
+        oversampling_factor = 100.0
+        return self.evaluation_radius / oversampling_factor
+
     def norm_correction(self, geom=None):
         """Norm correction to be multiplied with spectral model amplitude"""
         if geom is None:
@@ -375,7 +380,7 @@ class SpatialModelRenorm(SpatialModel):
             geom = WcsGeom.create(
                 skydir=self.position,
                 width=(2 * radius),
-                binsz=radius / 100.0,
+                binsz=self.evaluation_binsz,
                 frame=self.frame,
             )
         return np.sum(self.evaluate_geom(geom) * geom.solid_angle()).value
@@ -486,6 +491,16 @@ class GaussianSpatialModel(SpatialModelRenorm):
         """
         return 5 * self.parameters["sigma"].quantity
 
+    @property
+    def evaluation_binsz(self):
+        """Evaluation bin size (`~astropy.coordinates.Angle`)."""
+        oversampling_factor = 3.0
+        return (self.minor_axis / 2.0) / oversampling_factor
+
+    @property
+    def minor_axis(self):
+        return Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
+
     def evaluate(self, lon, lat, lon_0, lat_0, sigma, e, phi):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
@@ -505,11 +520,10 @@ class GaussianSpatialModel(SpatialModelRenorm):
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * self.sigma.quantity,
-            width=2 * minor_axis,
+            width=2 * self.minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -572,24 +586,32 @@ class GeneralizedGaussianSpatialModel(SpatialModelRenorm):
         return norm.to("sr-1")
 
     @property
+    def minor_axis(self):
+        return Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
+
+    @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
-
-        Set as :math:`5 r_{\rm eff}`.
+        The evaluation radius, r_eval is defined such as:
+            r_eval -> r_0 if eta -> 0 
+            r_eval = 5*r_0 = 5*sigma_gauss if eta=0.5
+            r_eval = 9*r_0 > 5*sigma_laplace = 5*sqrt(2)*r_0 ~ 7*r_0 if eta = 1
+            r_eval -> inf if if eta -> inf
         """
-        # TODO: the evaluation radius is defined empirically and tested
-        #  maybe one can find a better semi-analytical definition
-        #  for eta -> 0 it has to approach r_0 for eta -> inf it has to
-        #  approach inf as well, for eta=0.5 it approaches 5 * sigma
-        return self.r_0.quantity + 8 * u.deg * self.eta.value
+        return self.r_0.quantity * (1 + 8 * self.eta.value)
+
+    @property
+    def evaluation_binsz(self):
+        """Evaluation bin size (`~astropy.coordinates.Angle`)."""
+        oversampling_factor = 3.0
+        return (self.minor_axis / 2.0) / oversampling_factor
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            width=2 * self.minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -632,7 +654,7 @@ class DiskSpatialModel(SpatialModelRenorm):
 
         Set to the length of the semi-major axis.
         """
-        return self.r_0.quantity
+        return self.r_0.quantity + self.edge.quantity / 2.0
 
     @staticmethod
     def _evaluate_smooth_edge(x, width):
@@ -653,9 +675,19 @@ class DiskSpatialModel(SpatialModelRenorm):
         return self.compute_norm() * in_ellipse
 
     @property
+    def minor_axis(self):
+        return Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
+
+    @property
+    def evaluation_binsz(self):
+        """Evaluation bin size (`~astropy.coordinates.Angle`)."""
+        oversampling_factor = 3.0
+        return (self.minor_axis / 2.0) / oversampling_factor
+
+    @property
     def compute_norm_default(self):
         """Compute the normalization factor."""
-        r_0 = self.r_0.quantity
+        r_0 = self.r_0.quantity + self.edge / 2.0
         e = self.e.quantity
 
         semi_minor = r_0 * np.sqrt(1 - e ** 2)
@@ -678,11 +710,10 @@ class DiskSpatialModel(SpatialModelRenorm):
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            width=2 * self.minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -721,6 +752,12 @@ class ShellSpatialModel(SpatialModelRenorm):
         Set to :math:`r_\text{out}`.
         """
         return self.radius.quantity + self.width.quantity
+
+    @property
+    def evaluation_binsz(self):
+        """Evaluation bin size (`~astropy.coordinates.Angle`)."""
+        oversampling_factor = 3.0
+        return self.width.quantity / oversampling_factor
 
     def evaluate(self, lon, lat, lon_0, lat_0, radius, width):
         """Evaluate model."""
