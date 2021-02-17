@@ -180,7 +180,7 @@ class Map(abc.ABC):
             Name or index of the HDU with the BANDS table.  If not
             defined this will be inferred from the FITS header of the
             map HDU.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto', 'region'}
             Map type.  Selects the class that will be used to
             instantiate the map.  The map type should be consistent
             with the format of the input file.  If map_type is 'auto'
@@ -266,8 +266,10 @@ class Map(abc.ABC):
 
         if ("PIXTYPE" in header) and (header["PIXTYPE"] == "HEALPIX"):
             return "hpx"
-        else:
+        elif "CTYPE1" in header:
             return "wcs"
+        else:
+            return "region"
 
     @staticmethod
     def _get_map_cls(map_type):

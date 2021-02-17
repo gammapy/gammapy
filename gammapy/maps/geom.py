@@ -486,12 +486,13 @@ class MapAxes(Sequence):
 
         return header
 
-    def to_table(self, format=None):
+    def to_table(self, format="gadf"):
         """Convert axes to table
 
         Parameters
         ----------
-        format : {"gadf-dl3"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template",
+                  "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -499,15 +500,40 @@ class MapAxes(Sequence):
         table : `~astropy.table.Table`
             Table with axis data
         """
+        if format == "gadf-dl3":
+            tables = []
 
-        tables = []
+            for ax in self:
+                tables.append(ax.to_table(format=format))
 
-        for ax in self:
-            tables.append(ax.to_table(format=format))
+            table = hstack(tables)
+        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
+            table = Table()
+            table["CHANNEL"] = np.arange(np.prod(self.shape))
 
-        return hstack(tables)
+            axes_ctr = np.meshgrid(*[ax.center for ax in self])
+            axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
+            axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
 
-    def to_table_hdu(self, format=None, prefix=None):
+            for idx, ax in enumerate(self):
+                name = ax.name.upper()
+
+                if name == "ENERGY":
+                    colnames = ["ENERGY", "E_MIN", "E_MAX"]
+                else:
+                    colnames = [name, name + "_MIN", name + "_MAX"]
+
+                for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
+                    table[colname] = np.ravel(v[idx]).astype(np.float32)
+        elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
+            energy_axis = self["energy"]
+            table = energy_axis.to_table(format=format)
+        else:
+            raise ValueError(f"Unsupported format: '{format}'")
+
+        return table
+
+    def to_table_hdu(self, format="gadf", prefix=None):
         """Make FITS table columns for map axes.
 
         Parameters
@@ -525,7 +551,7 @@ class MapAxes(Sequence):
         # FIXME: Check whether convention is compatible with
         #  dimensionality of geometry and simplify!!!
 
-        if format == "fgst-ccube":
+        if format in ["fgst-ccube", "ogip", "ogip-sherpa"]:
             hdu = "EBOUNDS"
         elif format == "fgst-template":
             hdu = "ENERGIES"
@@ -537,29 +563,9 @@ class MapAxes(Sequence):
         else:
             raise ValueError(f"Unknown format {format}")
 
-        size = np.prod([ax.nbin for ax in self])
-        chan = np.arange(0, size)
-        cols = [fits.Column("CHANNEL", "I", array=chan)]
-
-        axes_ctr = np.meshgrid(*[ax.center for ax in self])
-        axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
-        axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
-
-        for idx, ax in enumerate(self):
-            name = ax.name.upper()
-
-            if name == "ENERGY":
-                colnames = ["ENERGY", "E_MIN", "E_MAX"]
-            else:
-                colnames = [name, name + "_MIN", name + "_MAX"]
-
-            for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-                array = np.ravel(v[idx])
-                unit = ax.unit.to_string("fits")
-                cols.append(fits.Column(colname, "E", array=array, unit=unit))
-
-        header = self.to_header()
-        return fits.BinTableHDU.from_columns(cols, name=hdu, header=header)
+        table = self.to_table(format=format)
+        header = self.to_header(format=format)
+        return fits.BinTableHDU(table, name=hdu, header=header)
 
     @classmethod
     def from_table_hdu(cls, hdu, format="gadf"):
@@ -1485,7 +1491,7 @@ class MapAxis:
             header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
             header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
             header["HDUVERS"] = "1.2.0", "Version of file format"
-        elif format == "gadf":
+        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
             key = f"AXCOLS{idx}"
             name = self.name.upper()
 
@@ -2072,7 +2078,7 @@ class Geom(abc.ABC):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def to_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
+    def to_bands_hdu(self, hdu=None, hdu_skymap=None, format="gadf"):
         table_hdu = self.axes.to_table_hdu(format=format, prefix=hdu_skymap)
         cols = table_hdu.columns.columns
         cols.extend(self._make_bands_cols())

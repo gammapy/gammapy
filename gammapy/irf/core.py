@@ -430,14 +430,14 @@ class IRFMap:
             if hdu is None:
                 hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
 
-            irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
 
             if exposure_hdu is None:
                 exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
 
             if exposure_hdu in hdulist:
                 exposure_map = Map.from_hdulist(
-                    hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands
+                    hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands, format=format
                 )
             else:
                 exposure_map = None
@@ -503,11 +503,11 @@ class IRFMap:
         """
         if format == "gadf":
             hdu = IRF_MAP_HDU_SPECIFICATION[self.tag]
-            hdulist = self._irf_map.to_hdulist(hdu=hdu)
+            hdulist = self._irf_map.to_hdulist(hdu=hdu, format=format)
             exposure_hdu = hdu + "_exposure"
 
             if self.exposure_map is not None:
-                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu)
+                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu, format=format)
                 hdulist.extend(new_hdulist[1:])
 
         elif format == "gtpsf":
