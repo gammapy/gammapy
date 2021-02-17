@@ -386,12 +386,12 @@ class IRFMap:
         is_valid = np.nan_to_num(self.mask_safe_image.get_by_coord(position))[0]
 
         if not is_valid:
-            position = self.mask_safe_image.mask_nearest_position(position)
             log.warning(
                 f"Position {position} is outside "
                 "valid IRF map range, using nearest IRF defined within"
             )
 
+            position = self.mask_safe_image.mask_nearest_position(position)
         return position
 
     @classmethod
