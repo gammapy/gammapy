@@ -7,7 +7,12 @@ from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = ["SourceCatalog2HWC", "SourceCatalog3HWC", "SourceCatalogObject2HWC", "SourceCatalogObject3HWC"]
+__all__ = [
+    "SourceCatalog2HWC",
+    "SourceCatalog3HWC",
+    "SourceCatalogObject2HWC",
+    "SourceCatalogObject3HWC",
+]
 
 
 class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
@@ -93,8 +98,7 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         else:
             return 1
 
-
-    def _get_idx(self,  which):
+    def _get_idx(self, which):
         if which == "point":
             return 0
         elif which == "extended":
@@ -149,9 +153,8 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
             name=self.name,
         )
 
+
 class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
-
-
     def spectral_model(self, which="point"):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
 
@@ -214,12 +217,7 @@ class SourceCatalog2HWC(SourceCatalog):
         super().__init__(table=table, source_name_key=source_name_key)
 
 
-
-
-
 class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
-
-
     def spectral_model(self, which="point"):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
 
@@ -236,8 +234,13 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
         }
 
         errs = {
-             "index_err" : 0.5 * ( self.data[f"spec_{idx}_index_errp"] + self.data[f"spec_{idx}_index_errn"]),
-             "amplitude_err" : 0.5 * (self.data[f"spec_{idx}_dnde_errp"] + self.data[f"spec_{idx}_dnde_errp"])
+            "index_err": 0.5
+            * (
+                self.data[f"spec_{idx}_index_errp"]
+                + self.data[f"spec_{idx}_index_errn"]
+            ),
+            "amplitude_err": 0.5
+            * (self.data[f"spec_{idx}_dnde_errp"] + self.data[f"spec_{idx}_dnde_errp"]),
         }
 
         model = Model.create("PowerLawSpectralModel", "spectral", **pars)
@@ -246,6 +249,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
             model.parameters[name].error = value
 
         return model
+
 
 class SourceCatalog3HWC(SourceCatalog):
     """HAWC 3HWC catalog.
@@ -276,4 +280,3 @@ class SourceCatalog3HWC(SourceCatalog):
         source_name_key = "source_name"
 
         super().__init__(table=table, source_name_key=source_name_key)
-

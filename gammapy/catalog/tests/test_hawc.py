@@ -78,7 +78,7 @@ class TestSourceCatalogObject2HWC:
         m = cat[1].spatial_model()
         # p = m.parameters
 
-        assert isinstance(m,  PointSpatialModel)
+        assert isinstance(m, PointSpatialModel)
         assert m.lon_0.unit == "deg"
         assert_allclose(m.lon_0.value, 195.614, atol=1e-2)
         # TODO: add assert on position error
@@ -126,11 +126,10 @@ class TestSourceCatalog3HWC:
 
 @requires_data()
 class TestSourceCatalogObject3HWC:
-    @staticmethod 
+    @staticmethod
     def test_data(ca_3hwc):
         assert ca_3hwc[0].data["source_name"] == "3HWC J0534+220"
         assert ca_3hwc[0].n_models == 1
 
         assert ca_3hwc[1].data["source_name"] == "3HWC J0540+228"
         assert ca_3hwc[1].n_models == 1
-
