@@ -789,7 +789,6 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         values = [self.data[prefix + _] for _ in self._energy_edges_suffix]
         return u.Quantity(values, unit)
 
-    @property
     def lightcurve(self):
         """Lightcurve (`~gammapy.estimators.LightCurve`)."""
         flux = self.data["Flux_History"]

@@ -391,7 +391,7 @@ class TestFermi3FGLObject:
         assert_allclose(flux_points.table["flux_ul"].data, desired, rtol=1e-5)
 
     def test_lightcurve(self):
-        lc = self.source.lightcurve
+        lc = self.source.lightcurve()
         table = lc.table
 
         assert len(table) == 48
