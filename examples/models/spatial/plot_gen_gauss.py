@@ -44,7 +44,7 @@ geom = WcsGeom.create(
     skydir=(lon_0, lat_0), binsz=dr, width=(2 * reval, 2 * reval), frame="galactic",
 )
 
-tags = [r"Disk, $\eta=0.01$", r"Gaussian, $\eta=0.5$", r"Laplacian, $\eta=1$"]
+tags = [r"Disk, $\eta=0.01$", r"Gaussian, $\eta=0.5$", r"Laplace, $\eta=1$"]
 eta_range = [0.01, 0.5, 1]
 r_0 = 1
 e = 0.5

@@ -132,7 +132,7 @@ def test_generalized_gaussian_io():
     reg = model.to_region()
     assert isinstance(reg, EllipseSkyRegion)
     assert_allclose(reg.width.value, 1.73205, rtol=1e-5)
-    
+
     new_model = GeneralizedGaussianSpatialModel.from_dict(model.to_dict())
     assert isinstance(new_model, GeneralizedGaussianSpatialModel)
 
@@ -149,7 +149,7 @@ def test_sky_disk():
     assert_allclose(val.value, desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, r_0.value)
+    assert_allclose(radius.value, r_0.value + model.edge.value)
 
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
@@ -169,7 +169,7 @@ def test_sky_disk():
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, r_0.value)
+    assert_allclose(radius.value, r_0.value + model.edge.value)
     # test rotation
     r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
@@ -267,7 +267,7 @@ def test_sky_diffuse_map(caplog):
     val = model(lon, lat)
 
     assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message =="Missing spatial template unit, assuming sr^-1"
+    assert caplog.records[-1].message == "Missing spatial template unit, assuming sr^-1"
 
     assert val.unit == "sr-1"
     desired = [3269.178107, 0]
