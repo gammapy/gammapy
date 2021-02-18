@@ -797,24 +797,46 @@ def test_stack_unit_handling():
     assert_allclose(m.data, 1.0001)
 
 
-def test_mask_fit_modifications():
+def test_binary_erode():
+    geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
+    mask = geom.region_mask("icrs;circle(0, 0, 1)")
+
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="disk")
+    assert_allclose(mask.data.sum(), 4832)
+
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="box")
+    assert_allclose(mask.data.sum(), 3372)
+
+
+def test_binary_dilate():
+    geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
+    mask = geom.region_mask("icrs;circle(0, 0, 0.8)")
+
+    mask = mask.binary_dilate(width=0.2 * u.deg, kernel="disk")
+    assert_allclose(mask.data.sum(), 8048)
+
+    mask = mask.binary_dilate(width=(10, 10), kernel="box")
+    assert_allclose(mask.data.sum(), 9260)
+
+
+def test_binary_dilate_erode_3d():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
         binsz=0.02,
         width=(2, 2),
         frame="icrs",
         axes=[axis],
     )
-    mask_fit = Map.from_geom(geom)
-    mask_fit.data = np.ones(mask_fit.data.shape, dtype=bool)
-    mask_fit = mask_fit & geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
-    assert np.sum(mask_fit.data[0, :, :]) == 6300
-    assert np.sum(mask_fit.data[1, :, :]) == 6300
-    mask_fit_fft = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))
-    mask_fit = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg), use_fft=False)
-    assert np.sum(mask_fit_fft.data) == np.prod(mask_fit_fft.data.shape)
-    assert np.sum(mask_fit.data) == np.prod(mask_fit.data.shape)
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data |= True
+
+    mask_fit = mask.binary_erode(width=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(mask_fit.data) == 9800
+
+    mask = geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
+    mask = mask.binary_dilate(width=(0.6 * u.deg, 0.2 * u.deg))
+    assert np.sum(mask.data) == np.prod(mask.data.shape)
 
 
 def test_memory_usage():
