@@ -14,6 +14,7 @@ from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
+from gammapy.utils.array import round_up_to_odd
 from .geom import MapCoord, pix_tuple_to_idx
 from .regionnd import RegionGeom, RegionNDMap
 from .utils import INVALID_INDEX
@@ -22,36 +23,6 @@ from .wcsmap import WcsGeom, WcsMap
 __all__ = ["WcsNDMap"]
 
 log = logging.getLogger(__name__)
-
-
-def _apply_binary_operations(map_, width, func, output=None, mode="same"):
-    """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
-
-    if not map_.is_mask:
-        raise ValueError("Binary operations only supported for boolean masks")
-
-    if not isinstance(width, tuple):
-        width = (width, width)
-
-    if output is None:
-        output = map_
-
-    shape = tuple(
-        [
-            int(np.ceil(x / scale).value * 2 + 1)
-            for x, scale in zip(width, map_.geom.pixel_scales)
-        ]
-    )
-
-    mask_data = np.empty(output.data.shape, dtype=bool)
-    structure = np.ones(shape)
-    for img, idx in map_.iter_by_image():
-        if func == scipy.signal.fftconvolve:
-            mask_data[idx] = func(img, structure, mode=mode)
-        else:
-            mask_data[idx] = func(img, structure)
-
-    return mask_data
 
 
 class WcsNDMap(WcsMap):
@@ -610,14 +581,53 @@ class WcsNDMap(WcsMap):
 
         return np.any(region.contains(coords_pix))
 
-    def binary_erode(self, width):
+    def _binary_operation(self, kernel, width, func, mode):
+        if not self.is_mask:
+            raise ValueError("Binary operations only supported for boolean masks")
+
+        width = u.Quantity(width)
+
+        if width.unit.is_equivalent("deg"):
+            width = width / self.geom.pixel_scales
+
+        width = round_up_to_odd(width.to_value(""))
+
+        if kernel == "disk":
+            disk = Tophat2DKernel(width[0])
+            disk.normalize("peak")
+            structure = disk.array
+        elif kernel == "box":
+            structure = np.ones(width)
+        else:
+            raise ValueError(f"Invalid kernel: {kernel!r}")
+
+        if mode == "full":
+            geom = self.geom.pad(width // 2)
+        else:
+            geom = self.geom
+
+        shape = (1,) * len(self.geom.axes) + structure.shape
+        data = func(self.data, structure.reshape(shape))
+        return self._init_copy(data=data, geom=geom)
+
+    def binary_erode(self, width, kernel="disk", mode="same"):
         """Binary erosion of boolean mask removing a given margin
 
         Parameters
         ----------
-        width : tuple of `~astropy.units.Quantity`
-            Angular sizes of the margin in (lon, lat) in that specific order.
-            If only one value is passed, the same margin is applied in (lon, lat).
+        width : `~astropy.units.Quantity`, str or float
+            If a float is given it interpreted as width in pixels. If an (angular)
+            quantity
+            is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            The width corresponds to radius in case of a disk kernel, and
+            the side length in case of a box kernel.
+        kernel : {'disk', 'box'}
+            Kernel shape
+        mode : str {'same', 'full'}
+            A string indicating the size of the output.
+            - 'same': The output is the same size as input (Default).
+            - 'full': The output size is extended by the width
+
 
         Returns
         -------
@@ -625,11 +635,11 @@ class WcsNDMap(WcsMap):
             Eroded mask map
 
         """
+        return self._binary_operation(
+            width=width, kernel=kernel, mode=mode, func=ndi.binary_erosion
+        )
 
-        mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
-        return self._init_copy(data=mask_data)
-
-    def binary_dilate(self, width, use_fft=True, mode="same"):
+    def binary_dilate(self, width, kernel="disk", mode="same"):
         """Binary dilation of boolean mask adding a given margin
 
         Parameters
@@ -637,9 +647,8 @@ class WcsNDMap(WcsMap):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `ndi.binary_dilation` otherwise.
+        kernel : {'disk', 'box'}
+            Kernel shape
         mode : str {'same', 'full'}
             A string indicating the size of the output.
             - 'same': The output is the same size as input (Default).
@@ -650,23 +659,9 @@ class WcsNDMap(WcsMap):
         map : `WcsNDMap`
             Dilated mask map
         """
-
-        if use_fft:
-            func = scipy.signal.fftconvolve
-        else:
-            func = ndi.binary_dilation
-
-        if mode == "full":
-            pad_width = u.Quantity(width) / self.geom.pixel_scales
-            pad_width = list(np.ceil(pad_width.value).astype(int))
-            mask = self.pad(pad_width)
-        else:
-            mask = self
-
-        mask_data = _apply_binary_operations(self, width, func, output=mask, mode=mode)
-        if use_fft:
-            mask_data = np.rint(mask_data).astype(bool)
-        return self._init_copy(geom=mask.geom, data=mask_data)
+        return self._binary_operation(
+            width=width, kernel=kernel, mode=mode, func=ndi.binary_dilation
+        )
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
