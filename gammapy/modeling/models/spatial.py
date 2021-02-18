@@ -520,16 +520,17 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
             angle=self.phi.quantity,
             **kwargs,
         )
-        
+
     @property
     def evaluation_region(self):
         """Evaluation region"""
         region = self.to_region()
         scale = self.evaluation_radius / self.r_0.quantity
         # scale to be consistent with evaluation radius
-        region.height = scale * region.height  
+        region.height = scale * region.height
         region.width = scale * region.width
         return region
+
 
 class DiskSpatialModel(SpatialModel):
     r"""Constant disk model.
