@@ -77,8 +77,7 @@ def create_map_dataset_geoms(
     rad_axis = rad_axis or RAD_AXIS_DEFAULT
 
     if energy_axis_true is not None:
-        if energy_axis_true.name != "energy_true":
-            raise ValueError("True enery axis name must be 'energy_true'")
+        energy_axis_true.assert_name("energy_true")
     else:
         energy_axis_true = geom.axes["energy"].copy(name="energy_true")
 
@@ -92,6 +91,10 @@ def create_map_dataset_geoms(
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
     else:
         geom_edisp = geom_irf.to_cube([geom.axes["energy"], energy_axis_true])
+
+    # TODO: allow PSF as well...
+    if geom.is_region:
+        geom_psf = None
 
     return {
         "geom": geom,
@@ -465,22 +468,23 @@ class MapDataset(Dataset):
         kwargs["name"] = name
         kwargs["counts"] = Map.from_geom(geom, unit="")
         kwargs["background"] = Map.from_geom(geom, unit="")
-        kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
 
-        if geom_edisp.axes[0].name.lower() == "energy":
-            kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
-        else:
-            kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+        if geom_exposure:
+            kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
 
-        # TODO: allow PSF as well...
-        if geom_psf and not geom_psf.is_region:
+        if geom_edisp:
+            if "energy" in geom_edisp.axes.names:
+                kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
+            else:
+                kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+
+        if geom_psf:
             kwargs["psf"] = PSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
             "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
         )
         kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
-
         return cls(**kwargs)
 
     @classmethod
@@ -1835,28 +1839,23 @@ class MapDatasetOnOff(MapDataset):
         empty_maps : `MapDatasetOnOff`
             A MapDatasetOnOff containing zero filled maps
         """
-        kwargs = kwargs.copy()
-        kwargs["name"] = name
-
-        for key in ["counts", "counts_off", "acceptance", "acceptance_off"]:
-            kwargs[key] = Map.from_geom(geom, unit="")
-
-        kwargs["exposure"] = Map.from_geom(
-            geom_exposure, unit="m2 s", meta={"livetime": 0 * u.s}
+        #  TODO: it seems the super() pattern does not work here?
+        dataset = MapDataset.from_geoms(
+            geom=geom,
+            geom_exposure=geom_exposure,
+            geom_psf=geom_psf,
+            geom_edisp=geom_edisp,
+            name=name,
+            reference_time=reference_time,
+            **kwargs
         )
 
-        if geom_edisp.axes[0].name.lower() == "energy":
-            kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
-        else:
-            kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+        off_maps = {}
 
-        if geom_psf and not geom_psf.is_region:
-            kwargs["psf"] = PSFMap.from_geom(geom_psf)
+        for key in ["counts_off", "acceptance", "acceptance_off"]:
+            off_maps[key] = Map.from_geom(geom, unit="")
 
-        kwargs["gti"] = GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
-        kwargs["mask_safe"] = Map.from_geom(geom, dtype=bool)
-
-        return cls(**kwargs)
+        return cls.from_map_dataset(dataset, **off_maps)
 
     @classmethod
     def from_map_dataset(
@@ -1895,6 +1894,7 @@ class MapDatasetOnOff(MapDataset):
             exposure=dataset.exposure,
             counts_off=counts_off,
             edisp=dataset.edisp,
+            psf=dataset.psf,
             mask_safe=dataset.mask_safe,
             mask_fit=dataset.mask_fit,
             acceptance=acceptance,
