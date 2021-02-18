@@ -471,7 +471,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     r_0 : `~astropy.coordinates.Angle`
         Length of the major semiaxis, in angular units.
     eta : `float`
-        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplacian:1
+        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplace:1
     e : `float`
         Eccentricity (:math:`0< e< 1`).
     phi : `~astropy.coordinates.Angle`
@@ -502,14 +502,13 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
-
-        Set as :math:`5 r_{\rm eff}`.
+        The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
+            r_eval -> r_0 if eta -> 0 
+            r_eval = 5*r_0 = 5*sigma_gauss if eta=0.5
+            r_eval = 9*r_0 > 5*sigma_laplace = 5*sqrt(2)*r_0 ~ 7*r_0 if eta = 1
+            r_eval -> inf if eta -> inf
         """
-        # TODO: the evaluation radius is defined empirically and tested
-        #  maybe one can find a better semi-analytical definition
-        #  for eta -> 0 it has to approach r_0 for eta -> inf it has to
-        #  approach inf as well, for eta=0.5 it approaches 5 * sigma
-        return self.r_0.quantity + 8 * u.deg * self.eta.value
+        return self.r_0.quantity * (1 + 8 * self.eta.value)
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
@@ -521,7 +520,16 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
             angle=self.phi.quantity,
             **kwargs,
         )
-
+        
+    @property
+    def evaluation_region(self):
+        """Evaluation region"""
+        region = self.to_region()
+        scale = self.evaluation_radius / self.r_0.quantity
+        # scale to be consistent with evaluation radius
+        region.height = scale * region.height  
+        region.width = scale * region.width
+        return region
 
 class DiskSpatialModel(SpatialModel):
     r"""Constant disk model.
@@ -557,10 +565,10 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
-
+    
         Set to the length of the semi-major axis.
         """
-        return self.r_0.quantity
+        return self.r_0.quantity + self.edge.quantity
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
