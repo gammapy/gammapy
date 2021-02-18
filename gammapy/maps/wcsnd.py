@@ -606,7 +606,7 @@ class WcsNDMap(WcsMap):
 
         if isinstance(region, PointPixelRegion):
             lon, lat = region.center.x, region.center.y
-            return self.get_by_pix((lon, lat))[0]
+            return bool(np.nan_to_num(self.get_by_pix((lon, lat))[0]))
 
         return np.any(region.contains(coords_pix))
 

@@ -30,6 +30,7 @@ class HDULocation:
         file_name=None,
         hdu_name=None,
         cache=True,
+        format=None
     ):
         self.hdu_class = hdu_class
         self.base_dir = base_dir
@@ -37,6 +38,7 @@ class HDULocation:
         self.file_name = file_name
         self.hdu_name = hdu_name
         self.cache = cache
+        self.format = format
 
     def info(self, file=None):
         """Print some summary info to stdout."""
@@ -90,7 +92,7 @@ class HDULocation:
         elif hdu_class == "map":
             from gammapy.maps import Map
 
-            return Map.read(filename, hdu=hdu)
+            return Map.read(filename, hdu=hdu, format=self.format)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)
 

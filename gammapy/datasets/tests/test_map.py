@@ -1444,3 +1444,61 @@ def test_source_outside_geom(sky_model, geom, geom_etrue):
     assert np.sum(np.isnan(model_npred)) == 0
     assert np.sum(~np.isfinite(model_npred)) == 0
     assert np.sum(model_npred) > 0
+
+
+def test_region_geom_io(tmpdir):
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.2)", axes=[axis])
+
+    dataset = MapDataset.create(geom)
+
+    filename = tmpdir / "test.fits"
+    dataset.write(filename)
+
+    dataset = MapDataset.read(filename, format="gadf")
+
+    assert isinstance(dataset.counts.geom, RegionGeom)
+    assert isinstance(dataset.edisp.edisp_map.geom, RegionGeom)
+    assert dataset.psf is None
+
+
+def test_dataset_mixed_geom(tmpdir):
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=7, name="energy_true"
+    )
+
+    rad_axis = MapAxis.from_bounds(
+        0, 1, nbin=10, name="rad", unit="deg"
+    )
+
+    geom = WcsGeom.create(npix=5, axes=[energy_axis])
+    geom_exposure = WcsGeom.create(npix=5, axes=[energy_axis_true])
+
+    geom_psf = RegionGeom.create(
+        "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis_true]
+    )
+
+    geom_edisp = RegionGeom.create(
+        "icrs;circle(0, 0, 0.2)", axes=[energy_axis, energy_axis_true]
+    )
+
+    dataset = MapDataset.from_geoms(
+        geom=geom,
+        geom_exposure=geom_exposure,
+        geom_psf=geom_psf,
+        geom_edisp=geom_edisp
+    )
+
+    filename = tmpdir / "test.fits"
+    dataset.write(filename)
+
+    dataset = MapDataset.read(filename, format="gadf")
+
+    assert isinstance(dataset.counts.geom, WcsGeom)
+    assert isinstance(dataset.exposure.geom, WcsGeom)
+    assert isinstance(dataset.background.geom, WcsGeom)
+
+    assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
+    assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
+
