@@ -2568,14 +2568,9 @@ class MapEvaluator:
 
         if self.evaluation_mode == "local":
             self._init_position = self.model.position
-
-            try:
-                mask_cutout = mask.cutout(
-                    position=self.model.position, width=self.cutout_width
-                )
-                self.contributes = np.any(mask_cutout.data)
-            except (NoOverlapError, ValueError):
-                self.contributes = False
+            self.contributes = self.model.contributes(
+                mask=mask, margin=self.psf_width
+            )
 
             if self.contributes:
                 self.exposure = exposure.cutout(
