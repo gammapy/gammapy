@@ -884,7 +884,9 @@ class WcsGeom(Geom):
         """
         from . import Map
         data = np.ones(self.data_shape, dtype=bool)
-        return Map.from_geom(self, data=data).binary_erode(width)
+        return Map.from_geom(self, data=data).binary_erode(
+            width=2 * u.Quantity(width), kernel="box"
+        )
 
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions
