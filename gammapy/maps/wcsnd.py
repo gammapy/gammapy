@@ -603,8 +603,10 @@ class WcsNDMap(WcsMap):
 
         if mode == "full":
             geom = self.geom.pad(width // 2)
-        else:
+        elif mode == "same":
             geom = self.geom
+        else:
+            raise ValueError(f"Not a valid mode '{mode}', choose from: ['same', 'full']")
 
         shape = (1,) * len(self.geom.axes) + structure.shape
         data = func(self.data, structure.reshape(shape))
