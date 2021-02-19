@@ -354,9 +354,16 @@ class ReflectedRegionsBackgroundMaker(Maker):
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
 
-        return SpectrumDatasetOnOff.from_spectrum_dataset(
+        dataset_onoff = SpectrumDatasetOnOff.from_spectrum_dataset(
             dataset=dataset,
             acceptance=1,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
         )
+
+        if dataset_onoff.counts_off is None:
+            dataset_onoff.mask_safe.data[...] = False
+            log.warning(
+                f"ReflectedRegionsBackgroundMaker failed. Setting {dataset_onoff.name} mask to False."
+            )
+        return dataset_onoff

@@ -187,7 +187,7 @@ def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
 
 
 @requires_data()
-def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
+def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations, caplog):
     pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
@@ -208,3 +208,14 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
 
     assert datasets[0].counts_off is None
     assert_allclose(datasets[0].acceptance_off, 0)
+    assert_allclose(datasets[0].mask_safe.data, False)
+
+    assert "WARNING" in [record.levelname for record in caplog.records]
+
+    message1 = f"ReflectedRegionsBackgroundMaker failed. " \
+              f"No OFF region found outside exclusion mask for {datasets[0].name}."
+    message2 = f"ReflectedRegionsBackgroundMaker failed. " \
+              f"Setting {datasets[0].name} mask to False."
+
+    assert message1 in [record.message for record in caplog.records]
+    assert message2 in [record.message for record in caplog.records]
