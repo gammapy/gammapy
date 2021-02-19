@@ -520,9 +520,6 @@ class WcsNDMap(WcsMap):
         if not self.geom.is_image:
             raise ValueError("Method only supported for 2D images")
 
-        idx = self.geom.get_idx()
-        coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
-
         if isinstance(region, SkyRegion):
             region = region.to_pixel(self.geom.wcs)
 
@@ -530,6 +527,9 @@ class WcsNDMap(WcsMap):
             lon, lat = region.center.x, region.center.y
             return self.get_by_pix((lon, lat))[0]
 
+        idx = self.geom.get_idx()
+        coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
+        
         return np.any(region.contains(coords_pix))
 
     def binary_erode(self, width, kernel="disk", use_fft=True):
