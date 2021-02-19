@@ -801,10 +801,10 @@ def test_binary_erode():
     geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
     mask = geom.region_mask("icrs;circle(0, 0, 1)")
 
-    mask = mask.binary_erode(width=0.2 * u.deg, kernel="disk")
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="disk", use_fft=False)
     assert_allclose(mask.data.sum(), 4832)
 
-    mask = mask.binary_erode(width=0.2 * u.deg, kernel="box")
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="box", use_fft=True)
     assert_allclose(mask.data.sum(), 3372)
 
 
@@ -812,11 +812,11 @@ def test_binary_dilate():
     geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
     mask = geom.region_mask("icrs;circle(0, 0, 0.8)")
 
-    mask = mask.binary_dilate(width=0.2 * u.deg, kernel="disk")
+    mask = mask.binary_dilate(width=0.2 * u.deg, kernel="disk", use_fft=False)
     assert_allclose(mask.data.sum(), 8048)
 
     mask = mask.binary_dilate(width=(10, 10), kernel="box")
-    assert_allclose(mask.data.sum(), 9260)
+    assert_allclose(mask.data.sum(), 9203)
 
 
 def test_binary_dilate_erode_3d():

@@ -418,54 +418,6 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
-    def smooth(self, width, kernel="gauss", **kwargs):
-        """Smooth the map.
-
-        Iterates over 2D image planes, processing one at a time.
-
-        Parameters
-        ----------
-        width : `~astropy.units.Quantity`, str or float
-            Smoothing width given as quantity or float. If a float is given it
-            interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
-            It corresponds to the standard deviation in case of a Gaussian kernel,
-            the radius in case of a disk kernel, and the side length in case
-            of a box kernel.
-        kernel : {'gauss', 'disk', 'box'}
-            Kernel shape
-        kwargs : dict
-            Keyword arguments passed to `~ndi.uniform_filter`
-            ('box'), `~ndi.gaussian_filter` ('gauss') or
-            `~ndi.convolve` ('disk').
-
-        Returns
-        -------
-        image : `WcsNDMap`
-            Smoothed image (a copy, the original object is unchanged).
-        """
-        if isinstance(width, (u.Quantity, str)):
-            width = u.Quantity(width) / self.geom.pixel_scales.mean()
-            width = width.to_value("")
-
-        smoothed_data = np.empty(self.data.shape, dtype=float)
-
-        for img, idx in self.iter_by_image():
-            img = img.astype(float)
-            if kernel == "gauss":
-                data = ndi.gaussian_filter(img, width, **kwargs)
-            elif kernel == "disk":
-                disk = Tophat2DKernel(width)
-                disk.normalize("integral")
-                data = ndi.convolve(img, disk.array, **kwargs)
-            elif kernel == "box":
-                data = ndi.uniform_filter(img, width, **kwargs)
-            else:
-                raise ValueError(f"Invalid kernel: {kernel!r}")
-            smoothed_data[idx] = data
-
-        return self._init_copy(data=smoothed_data)
-
     def to_region_nd_map(self, region=None, func=np.nansum, weights=None, method="nearest"):
         """Get region ND map in a given region.
 
@@ -580,7 +532,7 @@ class WcsNDMap(WcsMap):
 
         return np.any(region.contains(coords_pix))
 
-    def binary_erode(self, width, kernel="disk"):
+    def binary_erode(self, width, kernel="disk", use_fft=True):
         """Binary erosion of boolean mask removing a given margin
 
         Parameters
@@ -592,6 +544,9 @@ class WcsNDMap(WcsMap):
             the side length in case of a box kernel.
         kernel : {'disk', 'box'}
             Kernel shape
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `scipy.ndimage.binary_erosion` otherwise.
 
 
         Returns
@@ -604,10 +559,14 @@ class WcsNDMap(WcsMap):
             raise ValueError("Binary operations only supported for boolean masks")
 
         structure = self.geom.binary_structure(width=width, kernel=kernel)
-        data = ndi.binary_erosion(self.data, structure)
+
+        if use_fft:
+            return self.convolve(structure, use_fft=use_fft) > (structure.sum() - 1)
+
+        data = ndi.binary_erosion(self.data, structure=structure)
         return self._init_copy(data=data)
 
-    def binary_dilate(self, width, kernel="disk"):
+    def binary_dilate(self, width, kernel="disk", use_fft=True):
         """Binary dilation of boolean mask adding a given margin
 
         Parameters
@@ -617,6 +576,9 @@ class WcsNDMap(WcsMap):
             If only one value is passed, the same margin is applied in (lon, lat).
         kernel : {'disk', 'box'}
             Kernel shape
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `scipy.ndimage.binary_dilation` otherwise.
 
         Returns
         -------
@@ -627,7 +589,11 @@ class WcsNDMap(WcsMap):
             raise ValueError("Binary operations only supported for boolean masks")
 
         structure = self.geom.binary_structure(width=width, kernel=kernel)
-        data = ndi.binary_dilation(self.data, structure)
+
+        if use_fft:
+            return self.convolve(structure, use_fft=use_fft) > 1
+
+        data = ndi.binary_dilation(self.data, structure=structure)
         return self._init_copy(data=data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
@@ -701,6 +667,54 @@ class WcsNDMap(WcsMap):
                     img.astype(np.float32), kernel[ikern], **kwargs
                 )
         return self._init_copy(data=convolved_data, geom=geom)
+
+    def smooth(self, width, kernel="gauss", **kwargs):
+        """Smooth the map.
+
+        Iterates over 2D image planes, processing one at a time.
+
+        Parameters
+        ----------
+        width : `~astropy.units.Quantity`, str or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            It corresponds to the standard deviation in case of a Gaussian kernel,
+            the radius in case of a disk kernel, and the side length in case
+            of a box kernel.
+        kernel : {'gauss', 'disk', 'box'}
+            Kernel shape
+        kwargs : dict
+            Keyword arguments passed to `~ndi.uniform_filter`
+            ('box'), `~ndi.gaussian_filter` ('gauss') or
+            `~ndi.convolve` ('disk').
+
+        Returns
+        -------
+        image : `WcsNDMap`
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        if isinstance(width, (u.Quantity, str)):
+            width = u.Quantity(width) / self.geom.pixel_scales.mean()
+            width = width.to_value("")
+
+        smoothed_data = np.empty(self.data.shape, dtype=float)
+
+        for img, idx in self.iter_by_image():
+            img = img.astype(float)
+            if kernel == "gauss":
+                data = ndi.gaussian_filter(img, width, **kwargs)
+            elif kernel == "disk":
+                disk = Tophat2DKernel(width)
+                disk.normalize("integral")
+                data = ndi.convolve(img, disk.array, **kwargs)
+            elif kernel == "box":
+                data = ndi.uniform_filter(img, width, **kwargs)
+            else:
+                raise ValueError(f"Invalid kernel: {kernel!r}")
+            smoothed_data[idx] = data
+
+        return self._init_copy(data=smoothed_data)
 
     def cutout(self, position, width, mode="trim"):
         """
