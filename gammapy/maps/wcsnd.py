@@ -622,7 +622,7 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.irf import PSFKernel
 
-        conv_function = scipy.signal.fftconvolve if use_fft else ndi.convolve
+        convolve = scipy.signal.fftconvolve if use_fft else ndi.convolve
 
         if use_fft:
             kwargs.setdefault("mode", "same")
@@ -643,9 +643,9 @@ class WcsNDMap(WcsMap):
                 raise ValueError("Pixel size of kernel and map not compatible.")
             kernel = kmap.data.astype(np.float32)
             if self.geom.is_image:
-                geom = geom.to_cube([kmap.geom.axes[0]])
+                geom = geom.to_cube(kmap.geom.axes)
 
-        convolved_data = np.empty(geom.data_shape, dtype=np.float32)
+        data = np.empty(geom.data_shape, dtype=np.float32)
 
         shape_axes_kernel = kernel.shape[slice(0, -2)]
 
@@ -657,16 +657,16 @@ class WcsNDMap(WcsMap):
 
         if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
-                convolved_data[idx] = conv_function(
+                data[idx] = convolve(
                     self.data.astype(np.float32), kernel[idx], **kwargs
                 )
         else:
             for img, idx in self.iter_by_image():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
-                convolved_data[idx] = conv_function(
+                data[idx] = convolve(
                     img.astype(np.float32), kernel[ikern], **kwargs
                 )
-        return self._init_copy(data=convolved_data, geom=geom)
+        return self._init_copy(data=data, geom=geom)
 
     def smooth(self, width, kernel="gauss", **kwargs):
         """Smooth the map.
