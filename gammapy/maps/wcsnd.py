@@ -561,7 +561,7 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure, use_fft=use_fft) > (structure.sum() - 1)
+            return self.convolve(structure.squeeze(), use_fft=use_fft) > (structure.sum() - 1)
 
         data = ndi.binary_erosion(self.data, structure=structure)
         return self._init_copy(data=data)
@@ -591,7 +591,7 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure, use_fft=use_fft) > 1
+            return self.convolve(structure.squeeze(), use_fft=use_fft) > 1
 
         data = ndi.binary_dilation(self.data, structure=structure)
         return self._init_copy(data=data)
