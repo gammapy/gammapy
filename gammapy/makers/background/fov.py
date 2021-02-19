@@ -142,7 +142,10 @@ class FoVBackgroundMaker(Maker):
             fit = Fit([dataset])
             fit_result = fit.run()
             if not fit_result.success:
-                log.warning(f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}")
+                log.warning(f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "\
+                            f"Setting mask to False.")
+                dataset.mask_safe.data[...] = False
+
         return dataset
 
     @staticmethod
@@ -166,12 +169,16 @@ class FoVBackgroundMaker(Maker):
 
         if count_tot <= 0.0:
             log.warning(
-                f"FoVBackgroundMaker failed. No counts found outside exclusion mask for {dataset.name}."
+                f"FoVBackgroundMaker failed. No counts found outside exclusion mask for {dataset.name}. "\
+                f"Setting mask to False."
             )
+            dataset.mask_safe.data[...] = False
         elif bkg_tot <= 0.0:
             log.warning(
-                f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}."
+                f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}. "\
+                f"Setting mask to False."
             )
+            dataset.mask_safe.data[...] = False
         else:
             value = count_tot / bkg_tot
             dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = value
