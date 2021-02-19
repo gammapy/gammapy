@@ -251,7 +251,7 @@ class SkyModel(Model):
             mask = geom.region_mask([mask.geom.region])
 
         if margin is not None:
-            mask = mask.binary_dilate(width=margin, mode="full")
+            mask = mask.binary_dilate(width=margin)
 
         # check center only first (faster)
         if np.nan_to_num(mask.get_by_coord(self.position)[0]):

@@ -13,6 +13,7 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
+from gammapy.utils.array import round_up_to_odd
 from .geom import (
     Geom,
     MapAxes,
@@ -24,10 +25,6 @@ from .geom import (
 from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
 __all__ = ["WcsGeom"]
-
-
-def round_up_to_odd(f):
-    return int(np.ceil(f) // 2 * 2 + 1)
 
 
 def _check_width(width):
@@ -62,6 +59,7 @@ def _check_binsz(binsz):
         binsz[:2] = Angle(binsz[:2], unit="deg").deg
         return binsz
     return Angle(binsz, unit="deg").deg
+
 
 def cast_to_shape(param, shape, dtype):
     """Cast a tuple of parameter arrays to a given shape."""

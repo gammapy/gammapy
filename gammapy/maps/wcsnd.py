@@ -14,7 +14,6 @@ from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
-from gammapy.utils.array import round_up_to_odd
 from .geom import MapCoord, pix_tuple_to_idx
 from .regionnd import RegionGeom, RegionNDMap
 from .utils import INVALID_INDEX
@@ -628,7 +627,7 @@ class WcsNDMap(WcsMap):
             raise ValueError("Binary operations only supported for boolean masks")
 
         structure = self.geom.binary_structure(width=width, kernel=kernel)
-        data = ndi.binary_dilate(self.data, structure)
+        data = ndi.binary_dilation(self.data, structure)
         return self._init_copy(data=data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
