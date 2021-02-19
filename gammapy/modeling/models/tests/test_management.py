@@ -100,7 +100,7 @@ def test_select_mask(models_gauss):
     inside = models_gauss.select_mask(mask, margin=None, use_evaluation_region=False)
     assert inside.names == ["source-1"]
 
-    contribute_margin = models_gauss    .select_mask(mask, margin=0.1 * u.deg, use_evaluation_region=True)
+    contribute_margin = models_gauss.select_mask(mask, margin=0.5 * u.deg, use_evaluation_region=True)
     assert contribute_margin.names == ["source-1", "source-2", "source-3"]
 
 

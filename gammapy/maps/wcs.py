@@ -6,12 +6,14 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
+from astropy.convolution import Tophat2DKernel
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     celestial_frame_to_wcs,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
+from gammapy.utils.array import round_up_to_odd
 from .geom import (
     Geom,
     MapAxes,
@@ -23,10 +25,6 @@ from .geom import (
 from .utils import INVALID_INDEX, slice_to_str, str_to_slice
 
 __all__ = ["WcsGeom"]
-
-
-def round_up_to_odd(f):
-    return int(np.ceil(f) // 2 * 2 + 1)
 
 
 def _check_width(width):
@@ -61,6 +59,7 @@ def _check_binsz(binsz):
         binsz[:2] = Angle(binsz[:2], unit="deg").deg
         return binsz
     return Angle(binsz, unit="deg").deg
+
 
 def cast_to_shape(param, shape, dtype):
     """Cast a tuple of parameter arrays to a given shape."""
@@ -884,7 +883,9 @@ class WcsGeom(Geom):
         """
         from . import Map
         data = np.ones(self.data_shape, dtype=bool)
-        return Map.from_geom(self, data=data).binary_erode(width)
+        return Map.from_geom(self, data=data).binary_erode(
+            width=2 * u.Quantity(width), kernel="box"
+        )
 
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions
@@ -966,6 +967,43 @@ class WcsGeom(Geom):
         m = geom.region_mask(regions=regions)
         m.data = m.data.astype(float)
         return m.downsample(factor=oversampling_factor, preserve_counts=False)
+
+    def binary_structure(self, width, kernel="disk"):
+        """Get binary structure
+
+        Parameters
+        ----------
+        width : `~astropy.units.Quantity`, str or float
+            If a float is given it interpreted as width in pixels. If an (angular)
+            quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            The width corresponds to radius in case of a disk kernel, and
+            the side length in case of a box kernel.
+        kernel : {'disk', 'box'}
+            Kernel shape
+
+        Returns
+        -------
+        structure : `~numoy.ndarray`
+            Binary structure
+        """
+        width = u.Quantity(width)
+
+        if width.unit.is_equivalent("deg"):
+            width = width / self.pixel_scales
+
+        width = round_up_to_odd(width.to_value(""))
+
+        if kernel == "disk":
+            disk = Tophat2DKernel(width[0])
+            disk.normalize("peak")
+            structure = disk.array
+        elif kernel == "box":
+            structure = np.ones(width)
+        else:
+            raise ValueError(f"Invalid kernel: {kernel!r}")
+
+        shape = (1,) * len(self.axes) + structure.shape
+        return structure.reshape(shape)
 
     def __repr__(self):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]

@@ -24,36 +24,6 @@ __all__ = ["WcsNDMap"]
 log = logging.getLogger(__name__)
 
 
-def _apply_binary_operations(map_, width, func, output=None, mode="same"):
-    """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
-
-    if not map_.is_mask:
-        raise ValueError("Binary operations only supported for boolean masks")
-
-    if not isinstance(width, tuple):
-        width = (width, width)
-
-    if output is None:
-        output = map_
-
-    shape = tuple(
-        [
-            int(np.ceil(x / scale).value * 2 + 1)
-            for x, scale in zip(width, map_.geom.pixel_scales)
-        ]
-    )
-
-    mask_data = np.empty(output.data.shape, dtype=bool)
-    structure = np.ones(shape)
-    for img, idx in map_.iter_by_image():
-        if func == scipy.signal.fftconvolve:
-            mask_data[idx] = func(img, structure, mode=mode)
-        else:
-            mask_data[idx] = func(img, structure)
-
-    return mask_data
-
-
 class WcsNDMap(WcsMap):
     """WCS map with any number of non-spatial dimensions.
 
@@ -448,54 +418,6 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
-    def smooth(self, width, kernel="gauss", **kwargs):
-        """Smooth the map.
-
-        Iterates over 2D image planes, processing one at a time.
-
-        Parameters
-        ----------
-        width : `~astropy.units.Quantity`, str or float
-            Smoothing width given as quantity or float. If a float is given it
-            interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
-            It corresponds to the standard deviation in case of a Gaussian kernel,
-            the radius in case of a disk kernel, and the side length in case
-            of a box kernel.
-        kernel : {'gauss', 'disk', 'box'}
-            Kernel shape
-        kwargs : dict
-            Keyword arguments passed to `~ndi.uniform_filter`
-            ('box'), `~ndi.gaussian_filter` ('gauss') or
-            `~ndi.convolve` ('disk').
-
-        Returns
-        -------
-        image : `WcsNDMap`
-            Smoothed image (a copy, the original object is unchanged).
-        """
-        if isinstance(width, (u.Quantity, str)):
-            width = u.Quantity(width) / self.geom.pixel_scales.mean()
-            width = width.to_value("")
-
-        smoothed_data = np.empty(self.data.shape, dtype=float)
-
-        for img, idx in self.iter_by_image():
-            img = img.astype(float)
-            if kernel == "gauss":
-                data = ndi.gaussian_filter(img, width, **kwargs)
-            elif kernel == "disk":
-                disk = Tophat2DKernel(width)
-                disk.normalize("integral")
-                data = ndi.convolve(img, disk.array, **kwargs)
-            elif kernel == "box":
-                data = ndi.uniform_filter(img, width, **kwargs)
-            else:
-                raise ValueError(f"Invalid kernel: {kernel!r}")
-            smoothed_data[idx] = data
-
-        return self._init_copy(data=smoothed_data)
-
     def to_region_nd_map(self, region=None, func=np.nansum, weights=None, method="nearest"):
         """Get region ND map in a given region.
 
@@ -598,9 +520,6 @@ class WcsNDMap(WcsMap):
         if not self.geom.is_image:
             raise ValueError("Method only supported for 2D images")
 
-        idx = self.geom.get_idx()
-        coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
-
         if isinstance(region, SkyRegion):
             region = region.to_pixel(self.geom.wcs)
 
@@ -608,16 +527,27 @@ class WcsNDMap(WcsMap):
             lon, lat = region.center.x, region.center.y
             return bool(np.nan_to_num(self.get_by_pix((lon, lat))[0]))
 
+        idx = self.geom.get_idx()
+        coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
+        
         return np.any(region.contains(coords_pix))
 
-    def binary_erode(self, width):
+    def binary_erode(self, width, kernel="disk", use_fft=True):
         """Binary erosion of boolean mask removing a given margin
 
         Parameters
         ----------
-        width : tuple of `~astropy.units.Quantity`
-            Angular sizes of the margin in (lon, lat) in that specific order.
-            If only one value is passed, the same margin is applied in (lon, lat).
+        width : `~astropy.units.Quantity`, str or float
+            If a float is given it interpreted as width in pixels. If an (angular)
+            quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            The width corresponds to radius in case of a disk kernel, and
+            the side length in case of a box kernel.
+        kernel : {'disk', 'box'}
+            Kernel shape
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `scipy.ndimage.binary_erosion` otherwise.
+
 
         Returns
         -------
@@ -625,11 +555,18 @@ class WcsNDMap(WcsMap):
             Eroded mask map
 
         """
+        if not self.is_mask:
+            raise ValueError("Binary operations only supported for boolean masks")
 
-        mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
-        return self._init_copy(data=mask_data)
+        structure = self.geom.binary_structure(width=width, kernel=kernel)
 
-    def binary_dilate(self, width, use_fft=True, mode="same"):
+        if use_fft:
+            return self.convolve(structure.squeeze(), use_fft=use_fft) > (structure.sum() - 1)
+
+        data = ndi.binary_erosion(self.data, structure=structure)
+        return self._init_copy(data=data)
+
+    def binary_dilate(self, width, kernel="disk", use_fft=True):
         """Binary dilation of boolean mask adding a given margin
 
         Parameters
@@ -637,36 +574,27 @@ class WcsNDMap(WcsMap):
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
+        kernel : {'disk', 'box'}
+            Kernel shape
         use_fft : bool
             Use `scipy.signal.fftconvolve` if True (default)
-            and `ndi.binary_dilation` otherwise.
-        mode : str {'same', 'full'}
-            A string indicating the size of the output.
-            - 'same': The output is the same size as input (Default).
-            - 'full': The output size is extended by the width
+            and `scipy.ndimage.binary_dilation` otherwise.
 
         Returns
         -------
         map : `WcsNDMap`
             Dilated mask map
         """
+        if not self.is_mask:
+            raise ValueError("Binary operations only supported for boolean masks")
+
+        structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            func = scipy.signal.fftconvolve
-        else:
-            func = ndi.binary_dilation
+            return self.convolve(structure.squeeze(), use_fft=use_fft) > 1
 
-        if mode == "full":
-            pad_width = u.Quantity(width) / self.geom.pixel_scales
-            pad_width = list(np.ceil(pad_width.value).astype(int))
-            mask = self.pad(pad_width)
-        else:
-            mask = self
-
-        mask_data = _apply_binary_operations(self, width, func, output=mask, mode=mode)
-        if use_fft:
-            mask_data = np.rint(mask_data).astype(bool)
-        return self._init_copy(geom=mask.geom, data=mask_data)
+        data = ndi.binary_dilation(self.data, structure=structure)
+        return self._init_copy(data=data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
@@ -694,7 +622,7 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.irf import PSFKernel
 
-        conv_function = scipy.signal.fftconvolve if use_fft else ndi.convolve
+        convolve = scipy.signal.fftconvolve if use_fft else ndi.convolve
 
         if use_fft:
             kwargs.setdefault("mode", "same")
@@ -715,9 +643,9 @@ class WcsNDMap(WcsMap):
                 raise ValueError("Pixel size of kernel and map not compatible.")
             kernel = kmap.data.astype(np.float32)
             if self.geom.is_image:
-                geom = geom.to_cube([kmap.geom.axes[0]])
+                geom = geom.to_cube(kmap.geom.axes)
 
-        convolved_data = np.empty(geom.data_shape, dtype=np.float32)
+        data = np.empty(geom.data_shape, dtype=np.float32)
 
         shape_axes_kernel = kernel.shape[slice(0, -2)]
 
@@ -729,16 +657,64 @@ class WcsNDMap(WcsMap):
 
         if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
-                convolved_data[idx] = conv_function(
+                data[idx] = convolve(
                     self.data.astype(np.float32), kernel[idx], **kwargs
                 )
         else:
             for img, idx in self.iter_by_image():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
-                convolved_data[idx] = conv_function(
+                data[idx] = convolve(
                     img.astype(np.float32), kernel[ikern], **kwargs
                 )
-        return self._init_copy(data=convolved_data, geom=geom)
+        return self._init_copy(data=data, geom=geom)
+
+    def smooth(self, width, kernel="gauss", **kwargs):
+        """Smooth the map.
+
+        Iterates over 2D image planes, processing one at a time.
+
+        Parameters
+        ----------
+        width : `~astropy.units.Quantity`, str or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            It corresponds to the standard deviation in case of a Gaussian kernel,
+            the radius in case of a disk kernel, and the side length in case
+            of a box kernel.
+        kernel : {'gauss', 'disk', 'box'}
+            Kernel shape
+        kwargs : dict
+            Keyword arguments passed to `~ndi.uniform_filter`
+            ('box'), `~ndi.gaussian_filter` ('gauss') or
+            `~ndi.convolve` ('disk').
+
+        Returns
+        -------
+        image : `WcsNDMap`
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        if isinstance(width, (u.Quantity, str)):
+            width = u.Quantity(width) / self.geom.pixel_scales.mean()
+            width = width.to_value("")
+
+        smoothed_data = np.empty(self.data.shape, dtype=float)
+
+        for img, idx in self.iter_by_image():
+            img = img.astype(float)
+            if kernel == "gauss":
+                data = ndi.gaussian_filter(img, width, **kwargs)
+            elif kernel == "disk":
+                disk = Tophat2DKernel(width)
+                disk.normalize("integral")
+                data = ndi.convolve(img, disk.array, **kwargs)
+            elif kernel == "box":
+                data = ndi.uniform_filter(img, width, **kwargs)
+            else:
+                raise ValueError(f"Invalid kernel: {kernel!r}")
+            smoothed_data[idx] = data
+
+        return self._init_copy(data=smoothed_data)
 
     def cutout(self, position, width, mode="trim"):
         """

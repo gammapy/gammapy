@@ -387,6 +387,20 @@ def test_energy_mask():
     assert mask[1, 0, 0]
 
 
+def test_boundary_mask():
+    axis = MapAxis.from_edges([1, 10, 100])
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        binsz=0.02,
+        width=(2, 2),
+        axes=[axis],
+    )
+
+    mask = geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(mask.data[0, :, :]) == 6300
+    assert np.sum(mask.data[1, :, :]) == 6300
+
+
 @pytest.mark.parametrize(
     ("width", "out"),
     [
