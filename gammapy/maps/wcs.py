@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
+from astropy.convolution import Tophat2DKernel
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     celestial_frame_to_wcs,
@@ -968,6 +969,43 @@ class WcsGeom(Geom):
         m = geom.region_mask(regions=regions)
         m.data = m.data.astype(float)
         return m.downsample(factor=oversampling_factor, preserve_counts=False)
+
+    def binary_structure(self, width, kernel="disk"):
+        """Get binary structure
+
+        Parameters
+        ----------
+        width : `~astropy.units.Quantity`, str or float
+            If a float is given it interpreted as width in pixels. If an (angular)
+            quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            The width corresponds to radius in case of a disk kernel, and
+            the side length in case of a box kernel.
+        kernel : {'disk', 'box'}
+            Kernel shape
+
+        Returns
+        -------
+        structure : `~numoy.ndarray`
+            Binary structure
+        """
+        width = u.Quantity(width)
+
+        if width.unit.is_equivalent("deg"):
+            width = width / self.pixel_scales
+
+        width = round_up_to_odd(width.to_value(""))
+
+        if kernel == "disk":
+            disk = Tophat2DKernel(width[0])
+            disk.normalize("peak")
+            structure = disk.array
+        elif kernel == "box":
+            structure = np.ones(width)
+        else:
+            raise ValueError(f"Invalid kernel: {kernel!r}")
+
+        shape = (1,) * len(self.axes) + structure.shape
+        return structure.reshape(shape)
 
     def __repr__(self):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]

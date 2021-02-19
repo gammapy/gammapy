@@ -581,54 +581,18 @@ class WcsNDMap(WcsMap):
 
         return np.any(region.contains(coords_pix))
 
-    def _binary_operation(self, kernel, width, func, mode):
-        if not self.is_mask:
-            raise ValueError("Binary operations only supported for boolean masks")
-
-        width = u.Quantity(width)
-
-        if width.unit.is_equivalent("deg"):
-            width = width / self.geom.pixel_scales
-
-        width = round_up_to_odd(width.to_value(""))
-
-        if kernel == "disk":
-            disk = Tophat2DKernel(width[0])
-            disk.normalize("peak")
-            structure = disk.array
-        elif kernel == "box":
-            structure = np.ones(width)
-        else:
-            raise ValueError(f"Invalid kernel: {kernel!r}")
-
-        if mode == "full":
-            geom = self.geom.pad(width // 2)
-        elif mode == "same":
-            geom = self.geom
-        else:
-            raise ValueError(f"Not a valid mode '{mode}', choose from: ['same', 'full']")
-
-        shape = (1,) * len(self.geom.axes) + structure.shape
-        data = func(self.data, structure.reshape(shape))
-        return self._init_copy(data=data, geom=geom)
-
-    def binary_erode(self, width, kernel="disk", mode="same"):
+    def binary_erode(self, width, kernel="disk"):
         """Binary erosion of boolean mask removing a given margin
 
         Parameters
         ----------
         width : `~astropy.units.Quantity`, str or float
             If a float is given it interpreted as width in pixels. If an (angular)
-            quantity
-            is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
             The width corresponds to radius in case of a disk kernel, and
             the side length in case of a box kernel.
         kernel : {'disk', 'box'}
             Kernel shape
-        mode : str {'same', 'full'}
-            A string indicating the size of the output.
-            - 'same': The output is the same size as input (Default).
-            - 'full': The output size is extended by the width
 
 
         Returns
@@ -637,11 +601,14 @@ class WcsNDMap(WcsMap):
             Eroded mask map
 
         """
-        return self._binary_operation(
-            width=width, kernel=kernel, mode=mode, func=ndi.binary_erosion
-        )
+        if not self.is_mask:
+            raise ValueError("Binary operations only supported for boolean masks")
 
-    def binary_dilate(self, width, kernel="disk", mode="same"):
+        structure = self.geom.binary_structure(width=width, kernel=kernel)
+        data = ndi.binary_erosion(self.data, structure)
+        return self._init_copy(data=data)
+
+    def binary_dilate(self, width, kernel="disk"):
         """Binary dilation of boolean mask adding a given margin
 
         Parameters
@@ -651,19 +618,18 @@ class WcsNDMap(WcsMap):
             If only one value is passed, the same margin is applied in (lon, lat).
         kernel : {'disk', 'box'}
             Kernel shape
-        mode : str {'same', 'full'}
-            A string indicating the size of the output.
-            - 'same': The output is the same size as input (Default).
-            - 'full': The output size is extended by the width
 
         Returns
         -------
         map : `WcsNDMap`
             Dilated mask map
         """
-        return self._binary_operation(
-            width=width, kernel=kernel, mode=mode, func=ndi.binary_dilation
-        )
+        if not self.is_mask:
+            raise ValueError("Binary operations only supported for boolean masks")
+
+        structure = self.geom.binary_structure(width=width, kernel=kernel)
+        data = ndi.binary_dilate(self.data, structure)
+        return self._init_copy(data=data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
