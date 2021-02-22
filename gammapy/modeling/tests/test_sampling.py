@@ -67,6 +67,13 @@ def test_runmcmc_noprior(dataset, caplog):
    import emcee
    dataset.models.parameters["lon_0"].min = np.nan
    sampler = run_mcmc(dataset, nwalkers=6, nrun=10)
+   #for record in caplog.records:
+        #assert record.levelname == "WARNING"
+        #assert record.message == "Missing prior for parameter: lon_0."
+   assert "WARNING" in [_.levelname for _ in caplog.records]
+   #assert caplog.records[-1].message == "Missing prior for parameter: lon_0."
+   assert "Missing prior for parameter: lon_0." in [_.message for _ in caplog.records]
    for record in caplog.records:
-        assert record.levelname == "WARNING"
-        assert record.message == "Missing prior for parameter: lon_0."
+   # assert record.levelname == "WARNING"
+       if record.levelname=="WARNING":
+           print(record.message)
