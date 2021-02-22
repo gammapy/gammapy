@@ -50,7 +50,6 @@ def test_safe_mask_maker(observations, caplog):
     assert_allclose(mask_edisp_bias.data.sum(), 1815)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert_allclose(mask_bkg_peak.data.sum(), 1815)
-    #assert "No default thresholds defined for obs"
+    assert_allclose(mask_bkg_peak.data.sum(), 1815)      
     assert caplog.records[-1].levelname == "WARNING"
     assert caplog.records[-1].message == "No default thresholds defined for obs 110380"
