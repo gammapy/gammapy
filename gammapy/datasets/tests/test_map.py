@@ -1457,8 +1457,9 @@ def test_source_outside_geom_fermi():
     source = catalog["3FHL J1637.8-3448"]
 
     dataset.models = source.sky_model()
-
     npred = dataset.npred()
+
+    assert_allclose(npred.data.sum(), 28548.63, rtol=1e-4)
 
 
 def test_region_geom_io(tmpdir):
