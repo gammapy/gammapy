@@ -1448,6 +1448,7 @@ def test_source_outside_geom(sky_model, geom, geom_etrue):
 
 
 # this is a regression test for an issue found, where the model selection fails
+@requires_data()
 def test_source_outside_geom_fermi():
     dataset = MapDataset.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", format="gadf"
