@@ -655,7 +655,7 @@ class Map(abc.ABC):
         data = self.data[idx[::-1]]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
-    def get_by_coord(self, coords):
+    def get_by_coord(self, coords, fill_value=np.nan):
         """Return map values at the given map coordinates.
 
         Parameters
@@ -664,6 +664,9 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
+        fill_value : float
+            Value which is returned if the position is outside of the projection
+            footprint
 
         Returns
         -------
@@ -675,10 +678,10 @@ class Map(abc.ABC):
             coords, frame=self.geom.frame, axis_names=self.geom.axes.names
         )
         pix = self.geom.coord_to_pix(coords)
-        vals = self.get_by_pix(pix)
+        vals = self.get_by_pix(pix, fill_value=fill_value)
         return vals
 
-    def get_by_pix(self, pix):
+    def get_by_pix(self, pix, fill_value=np.nan):
         """Return map values at the given pixel coordinates.
 
         Parameters
@@ -688,6 +691,9 @@ class Map(abc.ABC):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.
+        fill_value : float
+            Value which is returned if the position is outside of the projection
+            footprint
 
         Returns
         -------
@@ -703,9 +709,8 @@ class Map(abc.ABC):
         mask = self.geom.contains_pix(pix)
 
         if not mask.all():
-            invalid = INVALID_VALUE[self.data.dtype]
-            vals = vals.astype(type(invalid))
-            vals[~mask] = invalid
+            vals = vals.astype(type(fill_value))
+            vals[~mask] = fill_value
 
         return vals
 

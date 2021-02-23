@@ -3,7 +3,7 @@
 import copy
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.nddata import NoOverlapError
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
@@ -221,46 +221,44 @@ class SkyModel(Model):
             f"temporal_model={self.temporal_model!r})"
         )
 
-    def contributes(self, mask, margin=None, use_evaluation_region=True):
+    def contributes(self, mask, margin="0 deg"):
         """Check if a skymodel contributes within a mask map.
     
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
             Map containing a boolean mask
-        margin : `~astropy.coordinates.Angle`
+        margin : `~astropy.units.Quantity`
             Add a margin in degree to the source evaluation radius.
-            The default is None. Used to take into account PSF width.
-        use_evaluation_region : bool
-            Account for the extension of the model or not. The default is True.   
+            Used to take into account PSF width.
+
 
         Returns
         -------
         models : `DatasetModels`
             Selected models contributing inside the region where mask==True
         """
-        # TODO: there is a lot of computation done here maybe simplify
+        from gammapy.datasets.map import CUTOUT_MARGIN
+
+        margin = u.Quantity(margin)
+
         if not mask.geom.is_image:
             mask = mask.reduce_over_axes(func=np.logical_or)
 
-        if mask.geom.is_region:
-            if mask.geom.region is None:
-                return True
-
+        if mask.geom.is_region and mask.geom.region is not None:
             geom = mask.geom.to_wcs_geom()
             mask = geom.region_mask([mask.geom.region])
 
-        if margin is not None:
-            mask = mask.binary_dilate(width=margin)
+        try:
+            mask_cutout = mask.cutout(
+                position=self.position,
+                width=(2 * self.evaluation_radius + CUTOUT_MARGIN) + margin
+            )
+            contributes = np.any(mask_cutout.data)
+        except (NoOverlapError, ValueError):
+            contributes = False
 
-        # check center only first (faster)
-        if np.nan_to_num(mask.get_by_coord(self.position)[0]):
-            return True
-
-        if use_evaluation_region:
-            return mask.mask_contains_region(self.evaluation_region)
-
-        return False
+        return contributes
 
     def evaluate(self, lon, lat, energy, time=None):
         """Evaluate the model at given points.

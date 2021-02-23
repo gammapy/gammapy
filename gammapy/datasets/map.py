@@ -419,7 +419,7 @@ class MapDataset(Dataset):
                     self.psf,
                     self.edisp,
                     self._geom,
-                    self.mask,
+                    self.mask_image,
                 )
 
             if evaluator.contributes:
@@ -545,6 +545,16 @@ class MapDataset(Dataset):
         if self.mask_safe is None:
             return None
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
+
+    @property
+    def mask_image(self):
+        """Reduced mask"""
+        if self.mask is None:
+            mask = Map.from_geom(self._geom.to_image(), dtype=bool)
+            mask.data |= True
+            return mask
+
+        return self.mask.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_safe_psf(self):
@@ -2537,10 +2547,6 @@ class MapEvaluator:
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
 
-        if mask is None:
-            mask = Map.from_geom(geom.to_image(), dtype=bool)
-            mask.data |= True
-
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
@@ -2563,15 +2569,13 @@ class MapEvaluator:
         if self.evaluation_mode == "local":
             self._init_position = self.model.position
             self.contributes = self.model.contributes(
-                mask=mask, margin=self.psf_width, use_evaluation_region=True
+                mask=mask, margin=self.psf_width
             )
 
-            try:
+            if self.contributes:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=self.cutout_width
                 )
-            except (NoOverlapError, ValueError):
-                pass
         else:
             self.exposure = exposure
 

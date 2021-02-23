@@ -6,7 +6,8 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.data import GTI, Observation
+from gammapy.catalog import SourceCatalog3FHL
+from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.datasets.map import MapEvaluator, RAD_AXIS_DEFAULT
 from gammapy.irf import (
@@ -1444,6 +1445,22 @@ def test_source_outside_geom(sky_model, geom, geom_etrue):
     assert np.sum(np.isnan(model_npred)) == 0
     assert np.sum(~np.isfinite(model_npred)) == 0
     assert np.sum(model_npred) > 0
+
+
+# this is a regression test for an issue found, where the model selection fails
+@requires_data()
+def test_source_outside_geom_fermi():
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", format="gadf"
+    )
+
+    catalog = SourceCatalog3FHL()
+    source = catalog["3FHL J1637.8-3448"]
+
+    dataset.models = source.sky_model()
+    npred = dataset.npred()
+
+    assert_allclose(npred.data.sum(), 28548.63, rtol=1e-4)
 
 
 def test_region_geom_io(tmpdir):

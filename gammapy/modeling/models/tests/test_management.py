@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 from regions import CircleSkyRegion
@@ -94,13 +93,13 @@ def test_select_mask(models_gauss):
 
     mask = geom.region_mask([circle])
 
-    contribute = models_gauss.select_mask(mask, margin=None, use_evaluation_region=True)
+    contribute = models_gauss.select_mask(mask, use_evaluation_region=True)
     assert contribute.names == ["source-1", "source-2"]
 
-    inside = models_gauss.select_mask(mask, margin=None, use_evaluation_region=False)
+    inside = models_gauss.select_mask(mask, use_evaluation_region=False)
     assert inside.names == ["source-1"]
 
-    contribute_margin = models_gauss.select_mask(mask, margin=0.5 * u.deg, use_evaluation_region=True)
+    contribute_margin = models_gauss.select_mask(mask, margin=0.6 * u.deg, use_evaluation_region=True)
     assert contribute_margin.names == ["source-1", "source-2", "source-3"]
 
 
@@ -120,7 +119,7 @@ def test_contributes(models):
         spectral_model=PowerLawSpectralModel(),
         name="source-4",
     )
-    assert model4.contributes(mask, margin=None, use_evaluation_region=True)
+    assert model4.contributes(mask, margin=0*u.deg)
 
 
 def test_select(models):

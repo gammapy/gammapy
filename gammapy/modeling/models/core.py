@@ -639,7 +639,7 @@ class DatasetModels(collections.abc.Sequence):
 
         return np.array(selection, dtype=bool)
 
-    def select_mask(self, mask, margin=None, use_evaluation_region=True):
+    def select_mask(self, mask, margin="0 deg", use_evaluation_region=True):
         """Check if sky models contribute within a mask map.
     
         Parameters
@@ -648,7 +648,7 @@ class DatasetModels(collections.abc.Sequence):
             Map containing a boolean mask
         margin : `~astropy.unit.Quantity`
             Add a margin in degree to the source evaluation radius.
-            The default is None. Used to take into account PSF width.
+            Used to take into account PSF width.
         use_evaluation_region : bool
             Account for the extension of the model or not. The default is True.   
 
@@ -663,11 +663,12 @@ class DatasetModels(collections.abc.Sequence):
             mask = mask.reduce_over_axes(func=np.logical_or)
 
         for model in self.select(tag="sky-model"):
-            if model.contributes(
-                    mask=mask,
-                    margin=margin,
-                    use_evaluation_region=use_evaluation_region
-            ):
+            if use_evaluation_region:
+                contributes = model.contributes(mask=mask, margin=margin)
+            else:
+                contributes = mask.get_by_coord(model.position, fill_value=0)
+
+            if np.any(contributes):
                 models.append(model)
 
         return self.__class__(models=models)
