@@ -663,11 +663,12 @@ class DatasetModels(collections.abc.Sequence):
             mask = mask.reduce_over_axes(func=np.logical_or)
 
         for model in self.select(tag="sky-model"):
-            if model.contributes(
-                    mask=mask,
-                    margin=margin,
-                    use_evaluation_region=use_evaluation_region
-            ):
+            if use_evaluation_region:
+                contributes = model.contributes(mask=mask, margin=margin)
+            else:
+                contributes = mask.get_by_coord(model.position, fill_value=0)
+
+            if np.any(contributes):
                 models.append(model)
 
         return self.__class__(models=models)

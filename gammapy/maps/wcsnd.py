@@ -525,12 +525,13 @@ class WcsNDMap(WcsMap):
 
         if isinstance(region, PointPixelRegion):
             lon, lat = region.center.x, region.center.y
-            return bool(np.nan_to_num(self.get_by_pix((lon, lat))[0]))
+            contains = self.get_by_pix((lon, lat))
+        else:
+            idx = self.geom.get_idx()
+            coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
+            contains = region.contains(coords_pix)
 
-        idx = self.geom.get_idx()
-        coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
-        
-        return np.any(region.contains(coords_pix))
+        return np.any(contains)
 
     def binary_erode(self, width, kernel="disk", use_fft=True):
         """Binary erosion of boolean mask removing a given margin

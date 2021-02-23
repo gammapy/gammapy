@@ -221,7 +221,7 @@ class SkyModel(Model):
             f"temporal_model={self.temporal_model!r})"
         )
 
-    def contributes(self, mask, margin="0 deg", use_evaluation_region=True):
+    def contributes(self, mask, margin="0 deg"):
         """Check if a skymodel contributes within a mask map.
     
         Parameters
@@ -231,8 +231,6 @@ class SkyModel(Model):
         margin : `~astropy.units.Quantity`
             Add a margin in degree to the source evaluation radius.
             Used to take into account PSF width.
-        use_evaluation_region : bool
-            Account for the extension of the model or not. The default is True.
 
 
         Returns
@@ -240,33 +238,25 @@ class SkyModel(Model):
         models : `DatasetModels`
             Selected models contributing inside the region where mask==True
         """
-        from gammapy.datasets.map import MapEvaluator
+        from gammapy.datasets.map import CUTOUT_MARGIN
 
         margin = u.Quantity(margin)
 
         if not mask.geom.is_image:
             mask = mask.reduce_over_axes(func=np.logical_or)
 
-        if mask.geom.is_region:
-            if mask.geom.region is None:
-                return True
-
+        if mask.geom.is_region and mask.geom.region is not None:
             geom = mask.geom.to_wcs_geom()
             mask = geom.region_mask([mask.geom.region])
 
-        eva = MapEvaluator(model=self)
-
-        if use_evaluation_region:
-            try:
-                mask_cutout = mask.cutout(
-                    position=self.position, width=eva.cutout_width + margin
-                )
-                contributes = np.any(mask_cutout.data)
-            except (NoOverlapError, ValueError):
-                contributes = False
-        else:
-            mask = mask.binary_dilate(margin, mode="full")
-            contributes = bool(np.nan_to_num(mask.get_by_coord(self.position)[0]))
+        try:
+            mask_cutout = mask.cutout(
+                position=self.position,
+                width=(2 * self.evaluation_radius + CUTOUT_MARGIN) + margin
+            )
+            contributes = np.any(mask_cutout.data)
+        except (NoOverlapError, ValueError):
+            contributes = False
 
         return contributes
 
