@@ -152,10 +152,12 @@ class EnergyDispersion2D(IRF):
 
     def normalize(self):
         """Normalise energy dispersion"""
-        coords = self.axes.get_coord()
-        coords["migra"] = self.axes["migra"].edges[-1]
-        integral = self.integral(axis_name="migra", **coords)
-        self.data /= integral.to_value(self.unit)
+        cumsum = self.cumsum(axis_name="migra").quantity
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            normed = self.quantity / cumsum.max(axis=1, keepdims=True)
+
+        self.data = np.nan_to_num(normed)
 
     def plot_migration(
         self, ax=None, offset=None, energy_true=None, migra=None, **kwargs
