@@ -648,7 +648,7 @@ def test_create_with_migra(tmp_path):
     assert isinstance(empty_dataset.edisp, EDispMap)
     assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 5000)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
@@ -969,7 +969,7 @@ def test_create_onoff(geom):
     assert empty_dataset.edisp.edisp_map.data.shape == (2, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (2, 1, 10, 10)
 
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 200)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 3333.333333)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 

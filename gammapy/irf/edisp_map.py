@@ -125,7 +125,7 @@ class EDispMap(IRFMap):
         }
 
         values = self.edisp_map.integral(
-            axis_name="migra", coords=coords, normalize=True
+            axis_name="migra", coords=coords
         )
 
         data = np.diff(np.clip(values, 0, 1))
@@ -164,7 +164,7 @@ class EDispMap(IRFMap):
         migra = geom.get_idx()[2]
         data = np.abs(migra - migra_0)
         data = np.where(data < 1, 1 - data, 0)
-        edisp_map.quantity = data
+        edisp_map.quantity = data / migra_axis.bin_width.reshape((1, -1, 1, 1))
         return cls(edisp_map, exposure_edisp)
 
     def sample_coord(self, map_coord, random_state=0):

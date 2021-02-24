@@ -257,7 +257,7 @@ class IRF:
             axis = self.axes.index(axis_name=axis_name)
             normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
 
-        self.data = np.nan_to_num(normed)
+        self.quantity = np.nan_to_num(normed)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, format="gadf-dl3"):
