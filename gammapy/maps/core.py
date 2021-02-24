@@ -1260,7 +1260,7 @@ class Map(abc.ABC):
         axis_idx = self.geom.axes.index_data(axis_name)
 
         # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
-        shape = [1] * len(self.data.shape)
+        shape = [1] * self.geom.ndim
         shape[axis_idx] = -1
 
         values = self.quantity * axis.bin_width.reshape(shape)
@@ -1299,7 +1299,11 @@ class Map(abc.ABC):
             Returns 2D array with axes offset
         """
         cumsum = self.cumsum(axis_name=axis_name)
-        return u.Quantity(cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False)
+        return u.Quantity(
+            cumsum.interp_by_coord(coords, **kwargs),
+            cumsum.unit,
+            copy=False
+        )
 
     def normalize(self, axis_name=None):
         """Normalise data in place along a given axis.

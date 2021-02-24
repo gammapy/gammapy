@@ -75,6 +75,10 @@ class PSFMap(IRFMap):
     def psf_map(self, value):
         self._irf_map = value
 
+    def normalize(self):
+        """Normalize PSF map"""
+        self.psf_map.normalize(axis_name="rad")
+
     @classmethod
     def from_geom(cls, geom):
         """Create psf map from geom.
