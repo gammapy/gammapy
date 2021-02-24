@@ -76,7 +76,7 @@ def test_make_psf_map():
 
     assert psfmap.psf_map.geom.axes[0] == rad_axis
     assert psfmap.psf_map.geom.axes[1] == energy_axis
-    assert psfmap.psf_map.unit == Unit("sr-1")
+    assert psfmap.psf_map.unit == "deg-2"
     assert psfmap.psf_map.data.shape == (4, 50, 25, 25)
 
 
@@ -197,8 +197,8 @@ def test_psfmap_stacking():
     psfmap_stack.stack(psfmap3)
 
     assert_allclose(psfmap_stack.psf_map.data[0, 40, 20, 20], 0.0)
-    assert_allclose(psfmap_stack.psf_map.data[0, 20, 20, 20], 5805.28955078125)
-    assert_allclose(psfmap_stack.psf_map.data[0, 0, 20, 20], 58052.78955078125)
+    assert_allclose(psfmap_stack.psf_map.data[0, 20, 20, 20], 1.768388, rtol=1e-6)
+    assert_allclose(psfmap_stack.psf_map.data[0, 0, 20, 20], 17.683883, rtol=1e-6)
 
 
 # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations
@@ -282,7 +282,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.000524,
             "psf_exposure": 3.14711e12 * u.Unit("cm2 s"),
             "psf_value_shape": (32, 1000),
-            "psf_value": 25888.5047 * u.Unit("sr-1"),
+            "psf_value": 2.619861 * u.Unit("deg-2"),
         },
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
@@ -293,7 +293,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.000524,
             "psf_exposure": 4.723409e12 * u.Unit("cm2 s"),
             "psf_value_shape": (100, 1000),
-            "psf_value": 22453.412121 * u.Unit("sr-1"),
+            "psf_value": 2.238232 * u.Unit("deg-2"),
         },
     ],
 )
@@ -336,7 +336,7 @@ def test_make_psf(pars, data_store):
     assert_allclose(exposure[15], pars["psf_exposure"], rtol=1e-3)
 
     data = psf.psf_map.quantity.squeeze()
-    assert data.unit == "sr-1"
+    assert data.unit == "deg-2"
     assert data.shape == pars["psf_value_shape"]
     assert_allclose(data[15, 50], pars["psf_value"], rtol=1e-3)
 
@@ -411,7 +411,7 @@ def test_to_image():
     psf2D = psfmap.to_image()
     assert_allclose(psf2D.psf_map.geom.data_shape, (1, 100, 25, 25))
     assert_allclose(psf2D.exposure_map.geom.data_shape, (1, 1, 25, 25))
-    assert_allclose(psf2D.psf_map.data[0][0][12][12], 23255.41204827, rtol=1e-2)
+    assert_allclose(psf2D.psf_map.data[0][0][12][12], 7.068315, rtol=1e-2)
 
 
 def test_psf_map_from_gauss():
