@@ -242,6 +242,23 @@ class IRF:
         cumsum = self.cumsum(axis_name=axis_name)
         return cumsum.evaluate(**kwargs)
 
+    def normalize(self, axis_name):
+        """Normalise data in place along a given axis.
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to normalize.
+
+        """
+        cumsum = self.cumsum(axis_name=axis_name).quantity
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            axis = self.axes.index(axis_name=axis_name)
+            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
+
+        self.data = np.nan_to_num(normed)
+
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, format="gadf-dl3"):
         """Create from `~astropy.io.fits.HDUList`.
