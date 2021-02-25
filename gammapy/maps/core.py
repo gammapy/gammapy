@@ -1243,15 +1243,13 @@ class Map(abc.ABC):
         data = func.reduce(data, axis=idx, keepdims=keepdims, where=~np.isnan(data))
         return self._init_copy(geom=geom, data=data)
 
-    def cumsum(self, axis_name, normalize=False):
+    def cumsum(self, axis_name):
         """Compute cumulative sum along a given axis
 
         Parameters
         ----------
         axis_name : str
             Along which axis to integrate.
-        normalize : bool
-            Normalize cum sum to unity.
 
         Returns
         -------
@@ -1262,7 +1260,7 @@ class Map(abc.ABC):
         axis_idx = self.geom.axes.index_data(axis_name)
 
         # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
-        shape = [1] * len(self.data.shape)
+        shape = [1] * self.geom.ndim
         shape[axis_idx] = -1
 
         values = self.quantity * axis.bin_width.reshape(shape)
@@ -1273,9 +1271,6 @@ class Map(abc.ABC):
 
         data = values.cumsum(axis=axis_idx)
 
-        if normalize:
-            data /= np.sum(values, axis=axis_idx, keepdims=True)
-
         axis_shifted = MapAxis.from_nodes(
             axis.edges[1:], name=axis.name, interp=axis.interp
         )
@@ -1283,7 +1278,7 @@ class Map(abc.ABC):
         geom = self.geom.to_image().to_cube(axes)
         return self.__class__(geom=geom, data=data.value, unit=data.unit)
 
-    def integral(self, axis_name, coords, normalize=False, **kwargs):
+    def integral(self, axis_name, coords, **kwargs):
         """Compute integral along a given axis
 
         This method uses interpolation of the cumulative sum.
@@ -1294,8 +1289,6 @@ class Map(abc.ABC):
             Along which axis to integrate.
         coords : dict or `MapCoord`
             Map coordinates
-        normalize : bool
-            Normalize cum sum to unity.
 
         **kwargs : dict
             Coordinates at which to evaluate the IRF
@@ -1305,8 +1298,29 @@ class Map(abc.ABC):
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        cumsum = self.cumsum(axis_name=axis_name, normalize=normalize)
-        return u.Quantity(cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False)
+        cumsum = self.cumsum(axis_name=axis_name)
+        return u.Quantity(
+            cumsum.interp_by_coord(coords, **kwargs),
+            cumsum.unit,
+            copy=False
+        )
+
+    def normalize(self, axis_name=None):
+        """Normalise data in place along a given axis.
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to normalize.
+
+        """
+        cumsum = self.cumsum(axis_name=axis_name).quantity
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            axis = self.geom.axes.index_data(axis_name=axis_name)
+            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
+
+        self.quantity = np.nan_to_num(normed)
 
     @classmethod
     def from_images(cls, images, axis=None):

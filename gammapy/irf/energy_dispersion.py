@@ -152,10 +152,7 @@ class EnergyDispersion2D(IRF):
 
     def normalize(self):
         """Normalise energy dispersion"""
-        coords = self.axes.get_coord()
-        coords["migra"] = self.axes["migra"].edges[-1]
-        integral = self.integral(axis_name="migra", **coords)
-        self.data /= integral.to_value(self.unit)
+        super().normalize(axis_name="migra")
 
     def plot_migration(
         self, ax=None, offset=None, energy_true=None, migra=None, **kwargs

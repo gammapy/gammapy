@@ -263,7 +263,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.059559e09, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e+09, rtol=1e-5)
 
 
 @requires_data()
@@ -648,7 +648,7 @@ def test_create_with_migra(tmp_path):
     assert isinstance(empty_dataset.edisp, EDispMap)
     assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 5000)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
@@ -969,7 +969,7 @@ def test_create_onoff(geom):
     assert empty_dataset.edisp.edisp_map.data.shape == (2, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (2, 1, 10, 10)
 
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 200)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 3333.333333)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 

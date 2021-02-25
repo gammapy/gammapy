@@ -10,9 +10,8 @@ class PSF(IRF):
     """PSF base class"""
 
     def normalize(self):
-        """Normalize PSF to integrate to unity"""
-        rad_max = self.axes["rad"].edges.max()
-        self.data /= self.containment(rad=rad_max)
+        """Normalise psf"""
+        super().normalize(axis_name="rad")
 
     def containment(self, rad, **kwargs):
         """Containment tof the PSF at given axes coordinates

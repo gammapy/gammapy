@@ -186,6 +186,41 @@ class IRF:
         values = kwargs[axis_name]
         return trapz_loglog(data, values, axis=axis)
 
+    def cumsum(self, axis_name):
+        """Compute cumsum along a given axis
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to integrate.
+
+        Returns
+        -------
+        irf : `~IRF`
+            Cumsum IRF
+
+        """
+        axis = self.axes[axis_name]
+        axis_idx = self.axes.index(axis_name)
+
+        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
+        shape = [1] * len(self.axes)
+        shape[axis_idx] = -1
+
+        values = self.quantity * axis.bin_width.reshape(shape)
+
+        if axis_name == "rad":
+            # take Jacobian into account
+            values = 2 * np.pi * axis.center.reshape(shape) * values
+
+        data = values.cumsum(axis=axis_idx)
+
+        axis_shifted = MapAxis.from_nodes(
+            axis.edges[1:], name=axis.name, interp=axis.interp
+        )
+        axes = self.axes.replace(axis_shifted)
+        return self.__class__(axes=axes, data=data.value, unit=data.unit)
+
     def integral(self, axis_name, **kwargs):
         """Compute integral along a given axis
 
@@ -204,33 +239,25 @@ class IRF:
             Returns 2D array with axes offset
 
         """
-        axis = self.axes[axis_name]
-        axis_idx = self.axes.index(axis_name)
+        cumsum = self.cumsum(axis_name=axis_name)
+        return cumsum.evaluate(**kwargs)
 
-        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
-        shape = [1] * len(self.axes)
-        shape[axis_idx] = -1
+    def normalize(self, axis_name):
+        """Normalise data in place along a given axis.
 
-        values = self.quantity * axis.bin_width.reshape(shape)
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to normalize.
 
-        if axis_name == "rad":
-            # take Jacobian into account
-            values = 2 * np.pi * axis.center.reshape(shape) * values
+        """
+        cumsum = self.cumsum(axis_name=axis_name).quantity
 
-        values = values.cumsum(axis=axis_idx)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            axis = self.axes.index(axis_name=axis_name)
+            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
 
-        points = [ax.center for ax in self.axes]
-        points[axis_idx] = axis.edges[1:]
-
-        f_integrate = ScaledRegularGridInterpolator(
-            points=points, values=values,
-        )
-        try:
-            coords = tuple(kwargs[name] for name in self.axes.names)
-        except KeyError as exc:
-            raise ValueError(f"Missing coordinate for axis: {str(exc)}")
-
-        return f_integrate(coords)
+        self.quantity = np.nan_to_num(normed)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, format="gadf-dl3"):
