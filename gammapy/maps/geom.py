@@ -1104,6 +1104,34 @@ class MapAxis:
             nodes = np.append(self.center, axis.center)
             return self.from_nodes(nodes=nodes, interp=self.interp, name=self.name)
 
+    def pad(self, pad_width):
+        """Pad axis by a given number of pixels
+
+        Parameters
+        ----------
+        pad_width : int or tuple of int
+            A single int pads in both direction of the axis, a tuple specifies,
+            which number of bins to pad at the low and high edge of the axis.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Padded axis
+        """
+        if isinstance(pad_width, tuple):
+            pad_low, pad_high = pad_width
+        else:
+            pad_low, pad_high = pad_width, pad_width
+
+        if self.node_type == "edges":
+            pix = np.arange(-pad_low, self.nbin + pad_high + 1) - 0.5
+            edges = self.pix_to_coord(pix)
+            return self.from_edges(edges=edges, interp=self.interp, name=self.name)
+        else:
+            pix = np.arange(-pad_low, self.nbin + pad_high)
+            nodes = self.pix_to_coord(pix)
+            return self.from_nodes(nodes=nodes, interp=self.interp, name=self.name)
+
     @classmethod
     def from_stack(cls, axes):
         """Create a map axis by merging a list of other map axes.
