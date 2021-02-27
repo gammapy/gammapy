@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from gammapy.maps import MapAxis, MapCoord
+from gammapy.maps import MapAxis, MapCoord, MapAxes
 
 mapaxis_geoms = [
     (np.array([0.25, 0.75, 1.0, 2.0]), "lin"),
@@ -442,3 +442,13 @@ def test_map_axis_pad():
     padded = axis.pad(pad_width=1)
     assert_allclose(padded.edges, [0.1, 1, 10, 100] * u.TeV)
 
+
+def test_map_axes_pad():
+    axis_1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    axis_2 = MapAxis.from_bounds(0, 1, nbin=2, unit="deg", name="rad")
+
+    axes = MapAxes([axis_1, axis_2])
+
+    axes = axes.pad(axis_name="energy", pad_width=1)
+
+    assert_allclose(axes["energy"].edges, [0.1, 1, 10, 100] * u.TeV)
