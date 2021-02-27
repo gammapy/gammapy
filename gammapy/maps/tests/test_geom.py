@@ -428,3 +428,17 @@ def test_map_axis_aligned():
     ax1 = MapAxis([1, 2, 3], interp="lin", node_type="edges")
     ax2 = MapAxis([1.5, 2.5], interp="log", node_type="center")
     assert not ax1.is_aligned(ax2)
+
+
+def test_map_axis_pad():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+
+    padded = axis.pad(pad_width=(0, 1))
+    assert_allclose(padded.edges, [1, 10, 100] * u.TeV)
+
+    padded = axis.pad(pad_width=(1, 0))
+    assert_allclose(padded.edges, [0.1, 1, 10] * u.TeV)
+
+    padded = axis.pad(pad_width=1)
+    assert_allclose(padded.edges, [0.1, 1, 10, 100] * u.TeV)
+
