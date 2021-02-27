@@ -506,6 +506,14 @@ def test_irregular_geom_equality():
         geom0 == geom1
 
 
+def test_wcs_geom_pad():
+    axis = MapAxis.from_bounds(0, 1, nbin=1, name="axis", unit="")
+    geom = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.1, axes=[axis])
+
+    geom_pad = geom.pad(axis_name="axis", pad_width=1)
+    assert_allclose(geom_pad.axes["axis"].edges, [-1, 0, 1, 2])
+
+
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
 def test_read_write(tmp_path, node_type, interp):
