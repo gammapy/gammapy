@@ -688,15 +688,19 @@ class WcsGeom(Geom):
             cutout_info=self.cutout_info,
         )
 
-    def pad(self, pad_width):
-        if np.isscalar(pad_width):
-            pad_width = (pad_width, pad_width)
+    def pad(self, pad_width, axis_name=None):
+        if axis_name is None:
+            if np.isscalar(pad_width):
+                pad_width = (pad_width, pad_width)
 
-        npix = (self.npix[0] + 2 * pad_width[0], self.npix[1] + 2 * pad_width[1])
-        wcs = self._wcs.deepcopy()
-        wcs.wcs.crpix += np.array(pad_width)
-        cdelt = copy.deepcopy(self._cdelt)
-        return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
+            npix = (self.npix[0] + 2 * pad_width[0], self.npix[1] + 2 * pad_width[1])
+            wcs = self._wcs.deepcopy()
+            wcs.wcs.crpix += np.array(pad_width)
+            cdelt = copy.deepcopy(self._cdelt)
+            return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
+        else:
+            axes = self.axes.pad(axis_name=axis_name, pad_width=pad_width)
+            return self.to_image().to_cube(axes)
 
     def crop(self, crop_width):
         if np.isscalar(crop_width):

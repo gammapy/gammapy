@@ -2412,7 +2412,7 @@ class Geom(abc.ABC):
         return self.to_image().to_cube(axes=axes)
 
     @abc.abstractmethod
-    def pad(self, pad_width):
+    def pad(self, pad_width, axis_name):
         """
         Pad the geometry at the edges.
 
@@ -2420,6 +2420,8 @@ class Geom(abc.ABC):
         ----------
         pad_width : {sequence, array_like, int}
             Number of values padded to the edges of each axis.
+        axis_name : str
+            Name of the axis to pad.
 
         Returns
         -------
