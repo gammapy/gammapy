@@ -257,8 +257,24 @@ class RegionGeom(Geom):
 
         return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
-    def pad(self):
-        raise NotImplementedError("Padding of `RegionGeom` not supported")
+    def pad(self, pad_width, axis_name):
+        """
+        Pad the geometry at the edges.
+
+        Parameters
+        ----------
+        pad_width : {sequence, array_like, int}
+            Number of values padded to the edges of each axis.
+        axis_name : str
+            Name of the axis to pad.
+
+        Returns
+        -------
+        geom : `~Geom`
+            Padded geometry.
+        """
+        axes = self.axes.pad(pad_width=pad_width, axis_name=axis_name)
+        return self._init_copy(axes=axes)
 
     def crop(self):
         raise NotImplementedError("Cropping of `RegionGeom` not supported")
