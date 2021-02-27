@@ -331,6 +331,31 @@ class MapAxes(Sequence):
 
         return self.__class__(axes=axes)
 
+    def pad(self, axis_name, pad_width):
+        """Pad axes
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis to pad.
+        pad_width : int or tuple of int
+            Pad width
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes with squashed axis.
+
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.pad(pad_width=pad_width)
+            axes.append(ax)
+
+        return self.__class__(axes=axes)
+
     def drop(self, axis_name):
         """Drop an axis.
 
