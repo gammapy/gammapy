@@ -411,11 +411,11 @@ class RegionNDMap(Map):
 
         return cls(geom=geom, data=data, meta=meta, unit=unit)
 
+    def _pad_spatial(self, *args, **kwargs):
+        raise NotImplementedError("Spatial padding is not supported by RegionNDMap")
+
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
-
-    def pad(self):
-        raise NotImplementedError("Pad is not supported by RegionNDMap")
 
     def stack(self, other, weights=None):
         """Stack other region map into map.

@@ -185,7 +185,7 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def pad(self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"):
+    def _pad_spatial(self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"):
         if axis_name is None:
             if np.isscalar(pad_width):
                 pad_width = (pad_width, pad_width)
@@ -193,15 +193,11 @@ class WcsNDMap(WcsMap):
             if len(pad_width) == 2:
                 pad_width += (0,) * (self.geom.ndim - 2)
 
-            geom = self.geom.pad(pad_width[:2])
+            geom = self.geom._pad_spatial(pad_width[:2])
             if self.geom.is_regular and mode != "interp":
                 return self._pad_np(geom, pad_width, mode, cval)
             else:
                 return self._pad_coadd(geom, pad_width, mode, cval, method)
-        else:
-            return super().pad(
-                pad_width=pad_width, axis_name=axis_name, mode=mode, cval=cval
-            )
 
     def _pad_np(self, geom, pad_width, mode, cval):
         """Pad a map using ``numpy.pad``.

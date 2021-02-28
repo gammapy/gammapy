@@ -2411,7 +2411,6 @@ class Geom(abc.ABC):
         axes = self.axes.drop(axis_name=axis_name)
         return self.to_image().to_cube(axes=axes)
 
-    @abc.abstractmethod
     def pad(self, pad_width, axis_name):
         """
         Pad the geometry at the edges.
@@ -2428,6 +2427,14 @@ class Geom(abc.ABC):
         geom : `~Geom`
             Padded geometry.
         """
+        if axis_name is None:
+            return self._pad_spatial(pad_width)
+        else:
+            axes = self.axes.pad(axis_name=axis_name, pad_width=pad_width)
+            return self.to_image().to_cube(axes)
+
+    @abc.abstractmethod
+    def _pad_spatial(self, pad_width):
         pass
 
     @abc.abstractmethod

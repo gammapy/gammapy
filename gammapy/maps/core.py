@@ -377,23 +377,21 @@ class Map(abc.ABC):
         vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
-    @abc.abstractmethod
-    def pad(self, pad_width, mode="constant", cval=0, order=1):
+    def pad(self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"):
         """Pad the spatial dimensions of the map.
 
         Parameters
         ----------
         pad_width : {sequence, array_like, int}
             Number of pixels padded to the edges of each axis.
+        axis_name : str
+            Which axis to downsample. By default spatial axes are padded.
         mode : {'edge', 'constant', 'interp'}
             Padding mode.  'edge' pads with the closest edge value.
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value.
         cval : float
             Padding value when mode='consant'.
-        order : int
-            Order of interpolation when mode='interp' (0 =
-            nearest-neighbor, 1 = linear, 2 = quadratic, 3 = cubic).
 
         Returns
         -------
@@ -401,6 +399,26 @@ class Map(abc.ABC):
             Padded map.
 
         """
+        if axis_name:
+            if np.isscalar(pad_width):
+                pad_width = (pad_width, pad_width)
+
+            geom = self.geom.pad(pad_width=pad_width, axis_name=axis_name)
+            idx = self.geom.axes.index_data(axis_name)
+            pad_width_np = [(0, 0)] * self.data.ndim
+            pad_width_np[idx] = pad_width
+
+            kwargs = {}
+            if mode == "constant":
+                kwargs["constant_values"] = cval
+
+            data = np.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
+            return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
+
+        return self._pad_spatial(pad_width, mode="constant", cval=cval)
+
+    @abc.abstractmethod
+    def _pad_spatial(self, pad_width, mode="constant", cval=0, order=1):
         pass
 
     @abc.abstractmethod
@@ -421,7 +439,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor, preserve_counts=True, axis=None):
+    def downsample(self, factor, preserve_counts=True, axis_name=None):
         """Downsample the spatial dimension by a given factor.
 
         Parameters
@@ -432,7 +450,7 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
-        axis : str
+        axis_name : str
             Which axis to downsample. By default spatial axes are downsampled.
 
         Returns

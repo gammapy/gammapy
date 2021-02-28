@@ -171,7 +171,7 @@ class HpxNDMap(HpxMap):
         hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data, unit=self.unit)
 
-    def pad(self, pad_width, mode="constant", cval=0, order=1):
+    def _pad_spatial(self, pad_width, mode="constant", cval=0):
         geom = self.geom.pad(pad_width)
         map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
@@ -182,10 +182,7 @@ class HpxNDMap(HpxMap):
         if mode == "constant":
             map_out.set_by_coord(coords, cval)
         elif mode == "interp":
-            # FIXME: These modes don't work at present because
-            # interp_by_coord doesn't support extrapolation
-            vals = self.interp_by_coord(coords, interp=order)
-            map_out.set_by_coord(coords, vals)
+            raise ValueError("Method 'interp' not supported for HpxMap")
         else:
             raise ValueError(f"Unrecognized pad mode: {mode!r}")
 
