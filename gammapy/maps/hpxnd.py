@@ -172,7 +172,7 @@ class HpxNDMap(HpxMap):
         return WcsNDMap(wcs, wcs_data, unit=self.unit)
 
     def _pad_spatial(self, pad_width, mode="constant", cval=0):
-        geom = self.geom.pad(pad_width)
+        geom = self.geom._pad_spatial(pad_width=pad_width)
         map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
         coords = geom.get_coord(flat=True)
