@@ -157,11 +157,12 @@ class EDispMap(IRFMap):
         if "energy_true" not in [ax.name for ax in geom.axes]:
             raise ValueError("EDispMap requires true energy axis")
 
-        geom_exposure_edisp = geom.squash(axis_name="migra")
-        exposure_edisp = Map.from_geom(geom_exposure_edisp, unit="m2 s")
+        exposure_map = Map.from_geom(
+            geom=geom.squash(axis_name="migra"), unit="m2 s"
+        )
 
-        migra_axis = geom.axes["migra"]
         edisp_map = Map.from_geom(geom, unit="")
+        migra_axis = geom.axes["migra"]
         migra_0 = migra_axis.coord_to_pix(1)
 
         # distribute over two pixels
@@ -169,7 +170,7 @@ class EDispMap(IRFMap):
         data = np.abs(migra - migra_0)
         data = np.where(data < 1, 1 - data, 0)
         edisp_map.quantity = data / migra_axis.bin_width.reshape((1, -1, 1, 1))
-        return cls(edisp_map, exposure_edisp)
+        return cls(edisp_map, exposure_map)
 
     def sample_coord(self, map_coord, random_state=0):
         """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
@@ -240,57 +241,37 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy : `~gammapy.maps.MapAxis`
-            Reconstructed enrgy axis.
+        energy_axis : `~gammapy.maps.MapAxis`
+            Reconstructed energy axis.
 
         Returns
         -------
         edisp : `~gammapy.maps.EDispKernelMap`
             Energy dispersion kernel map.
         """
-        axis = 0
         energy_axis_true = self.edisp_map.geom.axes["energy_true"]
-        migra_axis = self.edisp_map.geom.axes["migra"]
-
-        data = []
-
-        for idx, energy_true in enumerate(energy_axis_true.center):
-            # migration value of energy bounds
-            migra = energy_axis.edges / energy_true
-
-            edisp_energy_true = self.edisp_map.slice_by_idx({"energy_true": idx})
-
-            cumsum = np.insert(edisp_energy_true.data, 0, 0, axis=axis).cumsum(
-                axis=axis
-            )
-            with np.errstate(invalid="ignore", divide="ignore"):
-                cumsum = np.nan_to_num(cumsum / cumsum[slice(-2, -1)])
-
-            f = interp1d(
-                migra_axis.edges.value,
-                cumsum,
-                kind="linear",
-                bounds_error=False,
-                fill_value=(0, 1),
-                axis=axis,
-            )
-
-            integral = np.diff(np.clip(f(migra), a_min=0, a_max=1), axis=axis)
-            data.append(integral)
-
-        data = np.stack(data)
-
         geom_image = self.edisp_map.geom.to_image()
-        geom = geom_image.to_cube([energy_axis, energy_axis_true])
-        edisp_kernel_map = Map.from_geom(geom=geom, data=data)
 
-        if self.exposure_map is not None:
-            exposure_map = Map.from_geom(
-                geom.squash(axis_name=energy_axis.name),
-                data=self.exposure_map.data,
-                unit=self.exposure_map.unit,
-                meta=self.exposure_map.meta,
-            )
+        # migration value of energy bounds
+        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+
+        coords = {
+            "energy_true": energy_axis_true.center[:, np.newaxis, np.newaxis, np.newaxis],
+            "migra": migra[:, :, np.newaxis, np.newaxis],
+            "skycoord": geom_image.get_coord().skycoord
+        }
+
+        values = self.edisp_map.integral(axis_name="migra", coords=coords)
+
+        axis = self.edisp_map.geom.axes.index_data("migra")
+        data = np.clip(np.diff(values, axis=axis), 0, np.inf)
+
+        geom = geom_image.to_cube([energy_axis, energy_axis_true])
+        edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(""), unit="")
+
+        if self.exposure_map:
+            geom = geom.squash(axis_name=energy_axis.name)
+            exposure_map = self.exposure_map.copy(geom=geom)
         else:
             exposure_map = None
 

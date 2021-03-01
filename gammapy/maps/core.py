@@ -1116,7 +1116,12 @@ class Map(abc.ABC):
             Copied Map.
         """
         if "geom" in kwargs:
-            raise ValueError("Can't copy and change geometry of the map.")
+            geom = kwargs["geom"]
+            if not geom.data_shape == self.geom.data_shape:
+                raise ValueError("Can't copy and change data size of the map. "
+                                 f" Current shape {self.geom.data_shape},"
+                                 f" requested shape {geom.data_shape}")
+
         return self._init_copy(**kwargs)
 
     def apply_edisp(self, edisp):
@@ -1287,10 +1292,10 @@ class Map(abc.ABC):
             # take Jacobian into account
             values = 2 * np.pi * axis.center.reshape(shape) * values
 
-        data = values.cumsum(axis=axis_idx)
+        data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
 
         axis_shifted = MapAxis.from_nodes(
-            axis.edges[1:], name=axis.name, interp=axis.interp
+            axis.edges, name=axis.name, interp=axis.interp
         )
         axes = self.geom.axes.replace(axis_shifted)
         geom = self.geom.to_image().to_cube(axes)
@@ -1317,6 +1322,7 @@ class Map(abc.ABC):
             Returns 2D array with axes offset
         """
         cumsum = self.cumsum(axis_name=axis_name)
+        cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
         return u.Quantity(
             cumsum.interp_by_coord(coords, **kwargs),
             cumsum.unit,
