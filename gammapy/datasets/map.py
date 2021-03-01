@@ -4,7 +4,6 @@ from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
-from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
@@ -15,6 +14,7 @@ from gammapy.modeling.models import (
     BackgroundModel,
     DatasetModels,
     FoVBackgroundModel,
+    PointSpatialModel
 )
 from gammapy.stats import (
     CashCountsStatistic,
@@ -91,10 +91,6 @@ def create_map_dataset_geoms(
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
     else:
         geom_edisp = geom_irf.to_cube([geom.axes["energy"], energy_axis_true])
-
-    # TODO: allow PSF as well...
-    if geom.is_region:
-        geom_psf = None
 
     return {
         "geom": geom,
@@ -2455,6 +2451,7 @@ class MapEvaluator:
         self.use_cache = use_cache
         self._init_position = None
         self.contributes = True
+        self.psf_containment = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -2505,6 +2502,8 @@ class MapEvaluator:
             return False
         elif self.exposure is None:
             return True
+        elif self.geom.is_region:
+            return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
@@ -2521,6 +2520,18 @@ class MapEvaluator:
         else:
             psf_width = 0 * u.deg
         return psf_width
+
+    def use_psf_containment(self, geom=None):
+        """Use psf containment for point sources and circular regions"""
+        if geom is None:
+            geom = self.geom
+
+        if not geom.is_region:
+            return False
+
+        is_point_model = isinstance(self.model.spatial_model, PointSpatialModel)
+        is_circle_region = isinstance(geom.region, CircleSkyRegion)
+        return is_point_model & is_circle_region
 
     @property
     def cutout_width(self):
@@ -2555,16 +2566,22 @@ class MapEvaluator:
             )
 
         # lookup psf
-        if psf:
+        if psf and self.model.spatial_model:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
                 geom = exposure.geom
 
-            if geom.is_region:
-                geom = geom.to_wcs_geom()
+            if self.use_psf_containment(geom=geom):
+                energy_true = geom.axes["energy_true"].center.reshape((-1, 1, 1))
+                self.psf_containment = psf.containment(
+                    energy_true=energy_true, rad=geom.region.radius
+                )
+            else:
+                if geom.is_region:
+                    geom = geom.to_wcs_geom(width_min="15 deg")
 
-            self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
+                self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local":
             self._init_position = self.model.position
@@ -2602,12 +2619,7 @@ class MapEvaluator:
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
-        if self.geom.is_region:
-            evaluate_spatial_model = self.geom.region is not None and self.psf
-        else:
-            evaluate_spatial_model = True
-
-        if self.model.spatial_model and evaluate_spatial_model:
+        if self.model.spatial_model:
             value = value * self.compute_flux_spatial()
 
         if self.model.temporal_model:
@@ -2624,13 +2636,17 @@ class MapEvaluator:
             Psf-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
-            wcs_geom = self.geom.to_wcs_geom()
-            mask = self.geom.contains(wcs_geom.get_coord())
+            if self.use_psf_containment():
+                return self.psf_containment
+
+            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
             values = self.model.spatial_model.integrate_geom(wcs_geom)
 
             if self.psf and self.model.apply_irf["psf"]:
                 values = self.apply_psf(values)
-            value = (values.quantity * mask).sum(axis=(1, 2))
+
+            weights = wcs_geom.region_weights(regions=[self.geom.region])
+            value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
 
         else:
             value = self.model.spatial_model.integrate_geom(self.geom)
