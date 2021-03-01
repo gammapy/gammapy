@@ -32,14 +32,14 @@ def test_lightcurve_fvar(lc):
     flux = lc.table["flux"].astype("float64")
     flux_err = lc.table["flux_err"].astype("float64")
     fvar, fvar_err = compute_fvar(flux, flux_err)
-    assert_allclose(fvar, 0.6982120021884471)
+    assert_allclose(fvar, 0.69821, rtol=1e-5)
     # Note: the following tolerance is very low in the next assert,
     # because results differ by ~ 1e-3 between different machines
-    assert_allclose(fvar_err, 0.07905694150420949, rtol=1e-2)
+    assert_allclose(fvar_err, 0.07956, rtol=1e-3)
 
 
 def test_lightcurve_chisq(lc):
     flux = lc.table["flux"].astype("float64")
     chi2, pval = compute_chisq(flux)
-    assert_quantity_allclose(chi2, 1.0000000000000001e-11)
+    assert_quantity_allclose(chi2, 1e-11)
     assert_quantity_allclose(pval, 0.999997476867478)
