@@ -369,6 +369,18 @@ def test_wcsndmap_pad_cval():
     assert_allclose(m_padded.data[0, 0], cval)
 
 
+def test_wcs_nd_map_pad_axis():
+    axis = MapAxis.from_nodes([0, 1], unit="deg", name="axis")
+
+    m = WcsNDMap.create(npix=3, axes=[axis])
+    m.data += np.array([1, 2]).reshape((-1, 1, 1))
+
+    m_pad = m.pad(axis_name="axis", pad_width=1, mode="edge")
+    m_pad.data
+
+    assert_allclose(m_pad.data[:, 1, 1], [1, 1, 2, 2])
+
+
 @pytest.mark.parametrize(
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )

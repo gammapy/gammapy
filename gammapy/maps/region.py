@@ -257,8 +257,8 @@ class RegionGeom(Geom):
 
         return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
-    def pad(self):
-        raise NotImplementedError("Padding of `RegionGeom` not supported")
+    def _pad_spatial(self, pad_width):
+        raise NotImplementedError("Spatial padding of `RegionGeom` not supported")
 
     def crop(self):
         raise NotImplementedError("Cropping of `RegionGeom` not supported")

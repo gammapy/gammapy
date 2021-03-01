@@ -688,7 +688,7 @@ class WcsGeom(Geom):
             cutout_info=self.cutout_info,
         )
 
-    def pad(self, pad_width):
+    def _pad_spatial(self, pad_width):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
 

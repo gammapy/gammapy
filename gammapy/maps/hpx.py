@@ -932,7 +932,7 @@ class HpxGeom(Geom):
 
         return idx_nb
 
-    def pad(self, pad_width):
+    def _pad_spatial(self, pad_width):
         if self.is_allsky:
             raise ValueError("Cannot pad an all-sky map.")
 
