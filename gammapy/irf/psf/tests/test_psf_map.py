@@ -103,7 +103,7 @@ def make_test_psfmap(size, shape="gauss"):
     return make_psf_map(psf, pointing, geom, exposure_map)
 
 
-def test_psf_map_containment():
+def test_psf_map_containment_radius():
     psf_map = make_test_psfmap(0.15 * u.deg)
     psf = fake_psf3d(0.15 * u.deg)
 
@@ -127,6 +127,13 @@ def test_psf_map_containment():
             energy_true=1 * u.TeV, offset=0 * u.deg, fraction=0.5
         ),
         rtol=1e-2,
+    )
+
+
+def test_psf_map_containment():
+    psf_map = make_test_psfmap(0.15 * u.deg)
+    assert_allclose(
+        psf_map.containment(rad=10 * u.deg, energy_true=[10] * u.TeV), 1
     )
 
 
