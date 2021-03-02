@@ -205,8 +205,9 @@ Integrate the code in Gammapy
 Contribute with Jupyter notebooks
 =================================
 
-* check tests with user tutorials environment: `gammapy jupyter test --tutor`
-* strip the output cells and format code: `gammapy jupyter strip` `gammapy jupyter black`
+* check tests with user tutorials environment: `gammapy jupyter --src mynotebook.ipynb test --tutor`
+* strip the output cells: `gammapy jupyter --src mynotebook.ipynb strip`
+* clean format code cells: `gammapy jupyter --src mynotebook.ipynb  black`
 * diff stripped notebooks: `git diff mynotbeook.pynb`
 
 Make a pull request

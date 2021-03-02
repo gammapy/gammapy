@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy import units as u
 from astropy.utils import lazyproperty
 from astropy.table import Table
-from gammapy.maps import Map, MapAxes
+from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.scripts import make_path
@@ -186,6 +186,41 @@ class IRF:
         values = kwargs[axis_name]
         return trapz_loglog(data, values, axis=axis)
 
+    def cumsum(self, axis_name):
+        """Compute cumsum along a given axis
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to integrate.
+
+        Returns
+        -------
+        irf : `~IRF`
+            Cumsum IRF
+
+        """
+        axis = self.axes[axis_name]
+        axis_idx = self.axes.index(axis_name)
+
+        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
+        shape = [1] * len(self.axes)
+        shape[axis_idx] = -1
+
+        values = self.quantity * axis.bin_width.reshape(shape)
+
+        if axis_name == "rad":
+            # take Jacobian into account
+            values = 2 * np.pi * axis.center.reshape(shape) * values
+
+        data = values.cumsum(axis=axis_idx)
+
+        axis_shifted = MapAxis.from_nodes(
+            axis.edges[1:], name=axis.name, interp=axis.interp
+        )
+        axes = self.axes.replace(axis_shifted)
+        return self.__class__(axes=axes, data=data.value, unit=data.unit)
+
     def integral(self, axis_name, **kwargs):
         """Compute integral along a given axis
 
@@ -204,32 +239,25 @@ class IRF:
             Returns 2D array with axes offset
 
         """
-        axis = self.axes[axis_name]
-        axis_idx = self.axes.index(axis_name)
+        cumsum = self.cumsum(axis_name=axis_name)
+        return cumsum.evaluate(**kwargs)
 
-        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
-        shape = [1] * len(self.axes)
-        shape[axis_idx] = -1
+    def normalize(self, axis_name):
+        """Normalise data in place along a given axis.
 
-        values = self.quantity * axis.bin_width.reshape(shape)
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to normalize.
 
-        if axis_name == "rad":
-            # take Jacobian into account
-            values = 2 * np.pi * axis.center.reshape(shape) * values
+        """
+        cumsum = self.cumsum(axis_name=axis_name).quantity
 
-        values = values.cumsum(axis=axis_idx)
-        points = [ax.center for ax in self.axes]
-        points[axis_idx] = axis.edges[1:]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            axis = self.axes.index(axis_name=axis_name)
+            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
 
-        f_integrate = ScaledRegularGridInterpolator(
-            points=points, values=values,
-        )
-        try:
-            coords = tuple(kwargs[name] for name in self.axes.names)
-        except KeyError as exc:
-            raise ValueError(f"Missing coordinate for axis: {str(exc)}")
-
-        return f_integrate(coords)
+        self.quantity = np.nan_to_num(normed)
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, format="gadf-dl3"):
@@ -319,6 +347,7 @@ class IRF:
         if format == "gadf-dl3":
             table.meta = self.meta.copy()
             spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
+            # TODO: add missing required meta data!
             table.meta["HDUCLAS2"] = spec["hduclas2"]
             table[spec["column_name"]] = self.quantity.T[np.newaxis]
         else:
@@ -372,6 +401,26 @@ class IRFMap:
     def required_axes(self):
         pass
 
+    # TODO: add mask safe to IRFMap as a regular attribute and don't derive it from the data
+    @property
+    def mask_safe_image(self):
+        """Mask safe for the map"""
+        mask = self._irf_map > (0 * self._irf_map.unit)
+        return mask.reduce_over_axes(func=np.logical_or)
+
+    def _get_nearest_valid_position(self, position):
+        """Get nearest valid position"""
+        is_valid = np.nan_to_num(self.mask_safe_image.get_by_coord(position))[0]
+
+        if not is_valid:
+            log.warning(
+                f"Position {position} is outside "
+                "valid IRF map range, using nearest IRF defined within"
+            )
+
+            position = self.mask_safe_image.mask_nearest_position(position)
+        return position
+
     @classmethod
     def from_hdulist(
         cls,
@@ -380,6 +429,7 @@ class IRFMap:
         hdu_bands=None,
         exposure_hdu=None,
         exposure_hdu_bands=None,
+        format="gadf",
     ):
         """Create from `~astropy.io.fits.HDUList`.
 
@@ -395,57 +445,128 @@ class IRFMap:
             Name or index of the HDU with the exposure map data.
         exposure_hdu_bands : str
             Name or index of the HDU with the exposure map BANDS table.
+        format : {"gadf", "gtpsf"}
+            File format
 
         Returns
         -------
         irf_map : `IRFMap`
             IRF map.
         """
-        if hdu is None:
-            hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
+        if format == "gadf":
+            if hdu is None:
+                hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
 
-        irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+            irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
 
-        if exposure_hdu is None:
-            exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
+            if exposure_hdu is None:
+                exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
 
-        if exposure_hdu in hdulist:
-            exposure_map = Map.from_hdulist(
-                hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands
+            if exposure_hdu in hdulist:
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands, format=format
+                )
+            else:
+                exposure_map = None
+        elif format == "gtpsf":
+            rad_axis = MapAxis.from_table_hdu(hdulist["THETA"], format=format)
+
+            table = Table.read(hdulist["PSF"])
+            energy_axis_true = MapAxis.from_table(table, format=format)
+
+            geom_psf = RegionGeom.create(
+                region=None, axes=[rad_axis, energy_axis_true]
             )
+
+            psf_map = Map.from_geom(
+                geom=geom_psf, data=table["Psf"].data, unit="sr-1"
+            )
+
+            geom_exposure = geom_psf.squash("rad")
+            exposure_map = Map.from_geom(
+                geom=geom_exposure, data=table["Exposure"].data, unit="cm2 s"
+            )
+            return cls(psf_map=psf_map, exposure_map=exposure_map)
         else:
-            exposure_map = None
+            raise ValueError(f"Format {format} not supported")
 
         return cls(irf_map, exposure_map)
 
     @classmethod
-    def read(cls, filename, hdu=None):
-        """Read an IRF_map from file and create corresponding object"""
-        with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, hdu=hdu)
+    def read(cls, filename, format="gadf", hdu=None):
+        """Read an IRF_map from file and create corresponding object"
 
-    def to_hdulist(self):
+        Parameters
+        ----------
+        filename : str or `Path`
+            File name
+        format : {"gadf", "gtpsf"}
+            File format
+        hdu : str or int
+            HDU location
+
+        Returns
+        -------
+        irf_map : `PSFMap`, `EDispMap` or `EDispKernelMap`
+            IRF map
+
+        """
+        filename = make_path(filename)
+        with fits.open(filename, memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, format=format, hdu=hdu)
+
+    def to_hdulist(self, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        format : {"gadf", "gtpsf"}
+            File format
 
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list.
         """
-        hdu = IRF_MAP_HDU_SPECIFICATION[self.tag]
-        hdulist = self._irf_map.to_hdulist(hdu=hdu)
-        exposure_hdu = hdu + "_exposure"
+        if format == "gadf":
+            hdu = IRF_MAP_HDU_SPECIFICATION[self.tag]
+            hdulist = self._irf_map.to_hdulist(hdu=hdu, format=format)
+            exposure_hdu = hdu + "_exposure"
 
-        if self.exposure_map is not None:
-            new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu)
-            hdulist.extend(new_hdulist[1:])
+            if self.exposure_map is not None:
+                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu, format=format)
+                hdulist.extend(new_hdulist[1:])
+
+        elif format == "gtpsf":
+            if not self._irf_map.geom.is_region:
+                raise ValueError("Format 'gtpsf' is only supported for region geometries")
+
+            rad_hdu = self._irf_map.geom.axes["rad"].to_table_hdu(format=format)
+            psf_table = self._irf_map.geom.axes["energy_true"].to_table(format=format)
+
+            psf_table["Exposure"] = self.exposure_map.quantity[..., 0, 0].to("cm^2 s")
+            psf_table["Psf"] = self._irf_map.quantity[..., 0, 0].to("sr^-1")
+            psf_hdu = fits.BinTableHDU(data=psf_table, name="PSF")
+            hdulist = fits.HDUList([fits.PrimaryHDU(), rad_hdu, psf_hdu])
+        else:
+            raise ValueError(f"Format {format} not supported")
 
         return hdulist
 
-    def write(self, filename, overwrite=False, **kwargs):
-        """Write IRF map to fits"""
-        hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(filename, overwrite=overwrite)
+    def write(self, filename, overwrite=False, format="gadf"):
+        """Write IRF map to fits
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            Filename to write to
+        overwrite : bool
+            Whether to overwrite
+        format : {"gadf", "gtpsf"}
+            File format
+        """
+        hdulist = self.to_hdulist(format=format)
+        hdulist.writeto(str(filename), overwrite=overwrite)
 
     def stack(self, other, weights=None):
         """Stack IRF map with another one in place.

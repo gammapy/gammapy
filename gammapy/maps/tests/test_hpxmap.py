@@ -235,6 +235,16 @@ def test_hpxmap_pad(nside, nested, frame, region, axes):
     assert_allclose(m_pad.get_by_coord(coords_in), np.ones_like(coords_in[0]))
 
 
+def test_hpx_nd_map_pad_axis():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
+
+    m = HpxNDMap.create(nside=2, frame="galactic", axes=[axis])
+    m.data += [[1], [2]]
+
+    m_pad = m.pad(axis_name="energy", pad_width=(1, 1), mode="constant", cval=3)
+    assert_allclose(m_pad.data[:, 0], [3, 1, 2, 3])
+
+
 @pytest.mark.parametrize(
     ("nside", "nested", "frame", "region", "axes"), hpx_test_partialsky_geoms
 )

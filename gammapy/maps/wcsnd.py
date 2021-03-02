@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from collections import OrderedDict
-import warnings
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
@@ -10,7 +9,7 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord
+from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord, PointPixelRegion
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -23,36 +22,6 @@ from .wcsmap import WcsGeom, WcsMap
 __all__ = ["WcsNDMap"]
 
 log = logging.getLogger(__name__)
-
-
-def _apply_binary_operations(map_, width, func, output=None, mode="same"):
-    """ Apply ndi.binary_dilation or ndi.binary_erosion to a boolean-mask map"""
-
-    if not map_.is_mask:
-        raise ValueError("Binary operations only supported for boolean masks")
-
-    if not isinstance(width, tuple):
-        width = (width, width)
-
-    if output is None:
-        output = map_
-
-    shape = tuple(
-        [
-            int(np.ceil(x / scale).value * 2 + 1)
-            for x, scale in zip(width, map_.geom.pixel_scales)
-        ]
-    )
-
-    mask_data = np.empty(output.data.shape, dtype=bool)
-    structure = np.ones(shape)
-    for img, idx in map_.iter_by_image():
-        if func == scipy.signal.fftconvolve:
-            mask_data[idx] = func(img, structure, mode=mode)
-        else:
-            mask_data[idx] = func(img, structure)
-
-    return mask_data
 
 
 class WcsNDMap(WcsMap):
@@ -216,18 +185,19 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def pad(self, pad_width, mode="constant", cval=0, method="linear"):
-        if np.isscalar(pad_width):
-            pad_width = (pad_width, pad_width)
+    def _pad_spatial(self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"):
+        if axis_name is None:
+            if np.isscalar(pad_width):
+                pad_width = (pad_width, pad_width)
 
-        if len(pad_width) == 2:
-            pad_width += (0,) * (self.geom.ndim - 2)
+            if len(pad_width) == 2:
+                pad_width += (0,) * (self.geom.ndim - 2)
 
-        geom = self.geom.pad(pad_width[:2])
-        if self.geom.is_regular and mode != "interp":
-            return self._pad_np(geom, pad_width, mode, cval)
-        else:
-            return self._pad_coadd(geom, pad_width, mode, cval, method)
+            geom = self.geom._pad_spatial(pad_width[:2])
+            if self.geom.is_regular and mode != "interp":
+                return self._pad_np(geom, pad_width, mode, cval)
+            else:
+                return self._pad_coadd(geom, pad_width, mode, cval, method)
 
     def _pad_np(self, geom, pad_width, mode, cval):
         """Pad a map using ``numpy.pad``.
@@ -449,6 +419,257 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
+    def to_region_nd_map(self, region=None, func=np.nansum, weights=None, method="nearest"):
+        """Get region ND map in a given region.
+
+        By default the whole map region is considered.
+
+        Parameters
+        ----------
+        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
+             Region.
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
+        method : {"nearest", "linear"}
+            How to interpolate if a position is given.
+
+        Returns
+        -------
+        spectrum : `~gammapy.maps.RegionNDMap`
+            Spectrum in the given region.
+        """
+        if isinstance(region, SkyCoord):
+            region = PointSkyRegion(region)
+        elif region is None:
+            width, height = self.geom.width
+            region = RectangleSkyRegion(
+                center=self.geom.center_skydir, width=width[0], height=height[0]
+            )
+
+        if weights is not None:
+            if not self.geom == weights.geom:
+                raise ValueError("Incompatible spatial geoms between map and weights")
+
+        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
+
+        if isinstance(region, PointSkyRegion):
+            coords = geom.get_coord()
+            data = self.interp_by_coord(coords=coords, method=method)
+            if weights is not None:
+                data *= weights.interp_by_coord(coords=coords, method=method)
+        else:
+            cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+
+            if weights is not None:
+                weights_cutout = weights.cutout(
+                    position=geom.center_skydir, width=geom.width
+                )
+                cutout.data *= weights_cutout.data
+
+            mask = cutout.geom.to_image().region_mask([region]).data
+            idx_y, idx_x = np.where(mask)
+            data = func(cutout.data[..., idx_y, idx_x], axis=-1)
+
+        return RegionNDMap(geom=geom, data=data, unit=self.unit)
+
+    def get_spectrum(self, region=None, func=np.nansum, weights=None):
+        """Extract spectrum in a given region.
+
+        The spectrum can be computed by summing (or, more generally, applying ``func``)
+        along the spatial axes in each energy bin. This occurs only inside the ``region``,
+        which by default is assumed to be the whole spatial extension of the map.
+
+        Parameters
+        ----------
+        region: `~regions.Region`
+             Region (pixel or sky regions accepted).
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For a boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
+
+        Returns
+        -------
+        spectrum : `~gammapy.maps.RegionNDMap`
+            Spectrum in the given region.
+        """
+        if not self.geom.has_energy_axis:
+            raise ValueError("Energy axis required")
+
+        return self.to_region_nd_map(region=region, func=func, weights=weights)
+
+    def mask_contains_region(self, region):
+        """Check if input region is contained in a boolean mask map.
+
+        Parameters
+        ----------
+        region: `~regions.SkyRegion` or `~regions.PixRegion`
+             Region or list of Regions (pixel or sky regions accepted).
+
+        Returns
+        -------
+        contained : bool
+            Whether region is contained in the mask
+        """
+        if not self.is_mask:
+            raise ValueError("mask_contains_region is only supported for boolean masks")
+
+        if not self.geom.is_image:
+            raise ValueError("Method only supported for 2D images")
+
+        if isinstance(region, SkyRegion):
+            region = region.to_pixel(self.geom.wcs)
+
+        if isinstance(region, PointPixelRegion):
+            lon, lat = region.center.x, region.center.y
+            contains = self.get_by_pix((lon, lat))
+        else:
+            idx = self.geom.get_idx()
+            coords_pix = PixCoord(idx[0][self.data], idx[1][self.data])
+            contains = region.contains(coords_pix)
+
+        return np.any(contains)
+
+    def binary_erode(self, width, kernel="disk", use_fft=True):
+        """Binary erosion of boolean mask removing a given margin
+
+        Parameters
+        ----------
+        width : `~astropy.units.Quantity`, str or float
+            If a float is given it interpreted as width in pixels. If an (angular)
+            quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            The width corresponds to radius in case of a disk kernel, and
+            the side length in case of a box kernel.
+        kernel : {'disk', 'box'}
+            Kernel shape
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `scipy.ndimage.binary_erosion` otherwise.
+
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Eroded mask map
+
+        """
+        if not self.is_mask:
+            raise ValueError("Binary operations only supported for boolean masks")
+
+        structure = self.geom.binary_structure(width=width, kernel=kernel)
+
+        if use_fft:
+            return self.convolve(structure.squeeze(), use_fft=use_fft) > (structure.sum() - 1)
+
+        data = ndi.binary_erosion(self.data, structure=structure)
+        return self._init_copy(data=data)
+
+    def binary_dilate(self, width, kernel="disk", use_fft=True):
+        """Binary dilation of boolean mask adding a given margin
+
+        Parameters
+        ----------
+        width : tuple of `~astropy.units.Quantity`
+            Angular sizes of the margin in (lon, lat) in that specific order.
+            If only one value is passed, the same margin is applied in (lon, lat).
+        kernel : {'disk', 'box'}
+            Kernel shape
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `scipy.ndimage.binary_dilation` otherwise.
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Dilated mask map
+        """
+        if not self.is_mask:
+            raise ValueError("Binary operations only supported for boolean masks")
+
+        structure = self.geom.binary_structure(width=width, kernel=kernel)
+
+        if use_fft:
+            return self.convolve(structure.squeeze(), use_fft=use_fft) > 1
+
+        data = ndi.binary_dilation(self.data, structure=structure)
+        return self._init_copy(data=data)
+
+    def convolve(self, kernel, use_fft=True, **kwargs):
+        """
+        Convolve map with a kernel.
+
+        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is higher dimensional it must match the map in the number of
+        dimensions and the corresponding kernel is selected for every image plane.
+
+        Parameters
+        ----------
+        kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
+            Convolution kernel.
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `ndi.convolve` otherwise.
+        kwargs : dict
+            Keyword arguments passed to `scipy.signal.fftconvolve` or
+            `ndi.convolve`.
+
+        Returns
+        -------
+        map : `WcsNDMap`
+            Convolved map.
+        """
+        from gammapy.irf import PSFKernel
+
+        convolve = scipy.signal.fftconvolve if use_fft else ndi.convolve
+
+        if use_fft:
+            kwargs.setdefault("mode", "same")
+
+        if self.geom.is_image and not isinstance(kernel, PSFKernel):
+            if kernel.ndim > 2:
+                raise ValueError(
+                    "Image convolution with 3D kernel requires a PSFKernel object"
+                )
+
+        geom = self.geom.copy()
+
+        if isinstance(kernel, PSFKernel):
+            kmap = kernel.psf_kernel_map
+            if not np.allclose(
+                self.geom.pixel_scales.deg, kmap.geom.pixel_scales.deg, rtol=1e-5
+            ):
+                raise ValueError("Pixel size of kernel and map not compatible.")
+            kernel = kmap.data.astype(np.float32)
+            if self.geom.is_image:
+                geom = geom.to_cube(kmap.geom.axes)
+
+        data = np.empty(geom.data_shape, dtype=np.float32)
+
+        shape_axes_kernel = kernel.shape[slice(0, -2)]
+
+        if len(shape_axes_kernel) > 0:
+            if not geom.shape_axes == shape_axes_kernel:
+                raise ValueError(
+                    f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}"
+                )
+
+        if self.geom.is_image and kernel.ndim == 3:
+            for idx in range(kernel.shape[0]):
+                data[idx] = convolve(
+                    self.data.astype(np.float32), kernel[idx], **kwargs
+                )
+        else:
+            for img, idx in self.iter_by_image():
+                ikern = Ellipsis if kernel.ndim == 2 else idx
+                data[idx] = convolve(
+                    img.astype(np.float32), kernel[ikern], **kwargs
+                )
+        return self._init_copy(data=data, geom=geom)
+
     def smooth(self, width, kernel="gauss", **kwargs):
         """Smooth the map.
 
@@ -496,246 +717,6 @@ class WcsNDMap(WcsMap):
             smoothed_data[idx] = data
 
         return self._init_copy(data=smoothed_data)
-
-    def to_region_nd_map(self, region=None, func=np.nansum, weights=None):
-        """Get region ND map in a given region.
-
-        By default the whole map region is considered.
-
-        Parameters
-        ----------
-        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
-             Region.
-        func : numpy.func
-            Function to reduce the data. Default is np.nansum.
-            For boolean Map, use np.any or np.all.
-        weights : `WcsNDMap`
-            Array to be used as weights. The geometry must be equivalent.
-
-        Returns
-        -------
-        spectrum : `~gammapy.maps.RegionNDMap`
-            Spectrum in the given region.
-        """
-        if isinstance(region, SkyCoord):
-            region = PointSkyRegion(region)
-        elif region is None:
-            width, height = self.geom.width
-            region = RectangleSkyRegion(
-                center=self.geom.center_skydir, width=width[0], height=height[0]
-            )
-
-        if weights is not None:
-            if not self.geom == weights.geom:
-                raise ValueError("Incompatible spatial geoms between map and weights")
-
-        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
-
-        if isinstance(region, PointSkyRegion):
-            coords = geom.get_coord()
-            data = self.get_by_coord(coords=coords)
-            if weights is not None:
-                data *= weights.get_by_coord(coords=coords)
-        else:
-            cutout = self.cutout(position=geom.center_skydir, width=geom.width)
-
-            if weights is not None:
-                weights_cutout = weights.cutout(
-                    position=geom.center_skydir, width=geom.width
-                )
-                cutout.data *= weights_cutout.data
-
-            mask = cutout.geom.to_image().region_mask([region]).data
-            idx_y, idx_x = np.where(mask)
-            data = func(cutout.data[..., idx_y, idx_x], axis=-1)
-
-        return RegionNDMap(geom=geom, data=data, unit=self.unit)
-
-    def get_spectrum(self, region=None, func=np.nansum, weights=None):
-        """Extract spectrum in a given region.
-
-        The spectrum can be computed by summing (or, more generally, applying ``func``)
-        along the spatial axes in each energy bin. This occurs only inside the ``region``,
-        which by default is assumed to be the whole spatial extension of the map.
-
-        Parameters
-        ----------
-        region: `~regions.Region`
-             Region (pixel or sky regions accepted).
-        func : numpy.func
-            Function to reduce the data. Default is np.nansum.
-            For a boolean Map, use np.any or np.all.
-        weights : `WcsNDMap`
-            Array to be used as weights. The geometry must be equivalent.
-
-        Returns
-        -------
-        spectrum : `~gammapy.maps.RegionNDMap`
-            Spectrum in the given region.
-        """
-        if not self.geom.has_energy_axis:
-            raise ValueError("Energy axis required")
-
-        return self.to_region_nd_map(region=region, func=func, weights=weights)
-
-    def mask_contains_region(self, regions):
-        """Check if input regions are overlaping with a boolean mask map.
-
-        Parameters
-        ----------
-        regions: `~regions.Region`
-             Region or list of Regions (pixel or sky regions accepted).
-
-        Returns
-        -------
-        overlap : `numpy.array`
-            Boolean array of same length than regions
-        """
-
-        if not self.is_mask:
-            raise ValueError("mask_contains_region is only supported for boolean masks")
-
-        pixcoords = self.geom.get_idx()
-        pixcoords = PixCoord(pixcoords[0][self.data], pixcoords[1][self.data])
-        if not isinstance(regions, list):
-            regions = [regions]
-        overlap = np.zeros(len(regions), dtype=bool)
-        for k, region in enumerate(regions):
-            if isinstance(region, SkyRegion):
-                region = region.to_pixel(self.geom.wcs)
-            overlap[k] = np.any(region.contains(pixcoords))
-        return overlap
-
-    def binary_erode(self, width):
-        """Binary erosion of boolean mask removing a given margin
-
-        Parameters
-        ----------
-        width : tuple of `~astropy.units.Quantity`
-            Angular sizes of the margin in (lon, lat) in that specific order.
-            If only one value is passed, the same margin is applied in (lon, lat).
-
-        Returns
-        -------
-        map : `WcsNDMap`
-            Eroded mask map
-
-        """
-
-        mask_data = _apply_binary_operations(self, width, ndi.binary_erosion)
-        return self._init_copy(data=mask_data)
-
-    def binary_dilate(self, width, use_fft=True, mode="same"):
-        """Binary dilation of boolean mask addding a given margin
-
-        Parameters
-        ----------
-        width : tuple of `~astropy.units.Quantity`
-            Angular sizes of the margin in (lon, lat) in that specific order.
-            If only one value is passed, the same margin is applied in (lon, lat).
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `ndi.binary_dilation` otherwise.
-            
-        mode : str {'same', 'full'}
-            A string indicating the size of the output.
-            - 'same': The output is the same size as input (Default).
-            - 'full': The output size is extended by the width
-
-        Returns
-        -------
-        map : `WcsNDMap`
-            Dilated mask map
-        """
-
-        if use_fft:
-            func = scipy.signal.fftconvolve
-        else:
-            func = ndi.binary_dilation
-
-        if mode == "full":
-            pad_width = u.Quantity(width) / (self.geom.pixel_scales)
-            pad_width = list(np.ceil(pad_width.value).astype(int))
-            mask = self.pad(pad_width)
-        else:
-            mask = self
-
-        mask_data = _apply_binary_operations(self, width, func, output=mask, mode=mode)
-        if use_fft:
-            mask_data = np.rint(mask_data).astype(bool)
-        return self._init_copy(geom=mask.geom, data=mask_data)
-
-    def convolve(self, kernel, use_fft=True, **kwargs):
-        """
-        Convolve map with a kernel.
-
-        If the kernel is two dimensional, it is applied to all image planes likewise.
-        If the kernel is higher dimensional it must match the map in the number of
-        dimensions and the corresponding kernel is selected for every image plane.
-
-        Parameters
-        ----------
-        kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
-            Convolution kernel.
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `ndi.convolve` otherwise.
-        kwargs : dict
-            Keyword arguments passed to `scipy.signal.fftconvolve` or
-            `ndi.convolve`.
-
-        Returns
-        -------
-        map : `WcsNDMap`
-            Convolved map.
-        """
-        from gammapy.irf import PSFKernel
-
-        conv_function = scipy.signal.fftconvolve if use_fft else ndi.convolve
-
-        if use_fft:
-            kwargs.setdefault("mode", "same")
-
-        if self.geom.is_image and not isinstance(kernel, PSFKernel):
-            if kernel.ndim > 2:
-                raise ValueError(
-                    "Image convolution with 3D kernel requires a PSFKernel object"
-                )
-
-        geom = self.geom.copy()
-
-        if isinstance(kernel, PSFKernel):
-            kmap = kernel.psf_kernel_map
-            if not np.allclose(
-                self.geom.pixel_scales.deg, kmap.geom.pixel_scales.deg, rtol=1e-5
-            ):
-                raise ValueError("Pixel size of kernel and map not compatible.")
-            kernel = kmap.data.astype(np.float32)
-            if self.geom.is_image:
-                geom = geom.to_cube([kmap.geom.axes[0]])
-
-        convolved_data = np.empty(geom.data_shape, dtype=np.float32)
-
-        shape_axes_kernel = kernel.shape[slice(0, -2)]
-
-        if len(shape_axes_kernel) > 0:
-            if not geom.shape_axes == shape_axes_kernel:
-                raise ValueError(
-                    f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}"
-                )
-
-        if self.geom.is_image and kernel.ndim == 3:
-            for idx in range(kernel.shape[0]):
-                convolved_data[idx] = conv_function(
-                    self.data.astype(np.float32), kernel[idx], **kwargs
-                )
-        else:
-            for img, idx in self.iter_by_image():
-                ikern = Ellipsis if kernel.ndim == 2 else idx
-                convolved_data[idx] = conv_function(
-                    img.astype(np.float32), kernel[ikern], **kwargs
-                )
-        return self._init_copy(data=convolved_data, geom=geom)
 
     def cutout(self, position, width, mode="trim"):
         """

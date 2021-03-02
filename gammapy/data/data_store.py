@@ -209,27 +209,16 @@ class DataStore:
             raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
         row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
-        obs_info = table_row_to_dict(row)
+        kwargs = {"obs_id": int(obs_id)}
+        kwargs["obs_info"] = table_row_to_dict(row)
 
-        aeff_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="aeff")
-        edisp_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="edisp")
-        bkg_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="bkg")
-        psf_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="psf")
-        events_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="events")
-        gti_hdu = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type="gti")
+        hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+        for hdu in hdu_list:
+            kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 
-        return Observation(
-            obs_id=int(obs_id),
-            obs_info=obs_info,
-            bkg=bkg_hdu,
-            aeff=aeff_hdu,
-            edisp=edisp_hdu,
-            events=events_hdu,
-            gti=gti_hdu,
-            psf=psf_hdu,
-        )
+        return Observation(**kwargs)
 
-    def get_observations(self, obs_id=None, skip_missing=False):
+    def get_observations(self, obs_id=None, skip_missing=False, required_irf="all"):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -238,12 +227,31 @@ class DataStore:
             Observation IDs (default of ``None`` means "all")
         skip_missing : bool, optional
             Skip missing observations, default: False
+        required_irf : list of str
+            Runs will be added to the list of observations only if the
+            required IRFs are present. Otherwise, the given run will be skipped
+            Available options are:
+                * `aeff` : Effective area
+                * `bkg` : Background
+                * `edisp`: Energy dispersion
+                * `psf` : Point Spread Function
+            By default, all the IRFs are required.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`
         """
+        available_irf = ["aeff", "edisp", "psf", "bkg"]
+        if required_irf is "all":
+            required_irf = available_irf
+        if required_irf is None:
+            required_irf = []
+
+        if not set(required_irf).issubset(available_irf):
+            difference = set(required_irf).difference(available_irf)
+            raise ValueError(f"{difference} is not a valid method.")
+
         if obs_id is None:
             obs_id = self.obs_table["OBS_ID"].data
 
@@ -258,7 +266,15 @@ class DataStore:
                 else:
                     raise err
             else:
-                obs_list.append(obs)
+                flag = True
+                for irf in required_irf:
+                    if obs.__dict__.get(irf, False) is None:
+                        flag = False
+                        continue
+                if flag is False:
+                    log.warning(f"Skipping run with missing IRFs; obs_id: {_!r}")
+                else:
+                    obs_list.append(obs)
         return Observations(obs_list)
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):

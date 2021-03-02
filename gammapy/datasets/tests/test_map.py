@@ -6,9 +6,10 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
+from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.datasets.map import MapEvaluator
+from gammapy.datasets.map import MapEvaluator, RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -19,7 +20,7 @@ from gammapy.irf import (
     PSFKernel,
 )
 
-from gammapy.makers.utils import make_map_exposure_true_energy
+from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -90,9 +91,20 @@ def get_psf():
     )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
-    table_psf = psf.to_energy_dependent_table_psf(offset=0.5 * u.deg)
-    psf_map = PSFMap.from_energy_dependent_table_psf(table_psf)
-    return psf_map
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        frame="galactic",
+        binsz=2,
+        width=(2, 2),
+        axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]]
+    )
+
+    return make_psf_map(
+        psf=psf,
+        pointing=SkyCoord(0, 0.5, unit="deg", frame="galactic"),
+        geom=geom,
+        exposure_map=Map.from_geom(geom.squash("rad"), unit="cm2 s")
+    )
 
 
 @requires_data()
@@ -251,7 +263,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.059559e09, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e+09, rtol=1e-5)
 
 
 @requires_data()
@@ -636,7 +648,7 @@ def test_create_with_migra(tmp_path):
     assert isinstance(empty_dataset.edisp, EDispMap)
     assert empty_dataset.edisp.edisp_map.data.shape == (3, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (3, 1, 10, 10)
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 5000)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
@@ -957,7 +969,7 @@ def test_create_onoff(geom):
     assert empty_dataset.edisp.edisp_map.data.shape == (2, 50, 10, 10)
     assert empty_dataset.edisp.exposure_map.data.shape == (2, 1, 10, 10)
 
-    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 200)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 3333.333333)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
@@ -1400,11 +1412,11 @@ def test_compute_flux_spatial():
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = Models(models)
 
-    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true])
+    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
     exposure_region.data += 1.0
     exposure_region.unit = "m2 s"
 
-    geom = RegionGeom(region, axes=[energy_axis_true])
+    geom = RegionGeom(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
     psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
 
     evaluator = MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
@@ -1433,3 +1445,77 @@ def test_source_outside_geom(sky_model, geom, geom_etrue):
     assert np.sum(np.isnan(model_npred)) == 0
     assert np.sum(~np.isfinite(model_npred)) == 0
     assert np.sum(model_npred) > 0
+
+
+# this is a regression test for an issue found, where the model selection fails
+@requires_data()
+def test_source_outside_geom_fermi():
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", format="gadf"
+    )
+
+    catalog = SourceCatalog3FHL()
+    source = catalog["3FHL J1637.8-3448"]
+
+    dataset.models = source.sky_model()
+    npred = dataset.npred()
+
+    assert_allclose(npred.data.sum(), 28548.63, rtol=1e-4)
+
+
+def test_region_geom_io(tmpdir):
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.2)", axes=[axis])
+
+    dataset = MapDataset.create(geom)
+
+    filename = tmpdir / "test.fits"
+    dataset.write(filename)
+
+    dataset = MapDataset.read(filename, format="gadf")
+
+    assert isinstance(dataset.counts.geom, RegionGeom)
+    assert isinstance(dataset.edisp.edisp_map.geom, RegionGeom)
+    assert dataset.psf is None
+
+
+def test_dataset_mixed_geom(tmpdir):
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=7, name="energy_true"
+    )
+
+    rad_axis = MapAxis.from_bounds(
+        0, 1, nbin=10, name="rad", unit="deg"
+    )
+
+    geom = WcsGeom.create(npix=5, axes=[energy_axis])
+    geom_exposure = WcsGeom.create(npix=5, axes=[energy_axis_true])
+
+    geom_psf = RegionGeom.create(
+        "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis_true]
+    )
+
+    geom_edisp = RegionGeom.create(
+        "icrs;circle(0, 0, 0.2)", axes=[energy_axis, energy_axis_true]
+    )
+
+    dataset = MapDataset.from_geoms(
+        geom=geom,
+        geom_exposure=geom_exposure,
+        geom_psf=geom_psf,
+        geom_edisp=geom_edisp
+    )
+
+    filename = tmpdir / "test.fits"
+    dataset.write(filename)
+
+    dataset = MapDataset.read(filename, format="gadf")
+
+    assert isinstance(dataset.counts.geom, WcsGeom)
+    assert isinstance(dataset.exposure.geom, WcsGeom)
+    assert isinstance(dataset.background.geom, WcsGeom)
+
+    assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
+    assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
+

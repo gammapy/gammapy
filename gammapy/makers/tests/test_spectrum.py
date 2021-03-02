@@ -44,7 +44,7 @@ def spectrum_dataset_gc():
 def spectrum_dataset_crab():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
-    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco])
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco], binsz_wcs="0.01deg")
     return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
@@ -61,7 +61,7 @@ def reflected_regions_bkg_maker():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
-    exclusion_mask = geom.region_mask([exclusion_region], inside=False)
+    exclusion_mask = ~geom.region_mask([exclusion_region])
 
     return ReflectedRegionsBackgroundMaker(
         exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
@@ -274,4 +274,4 @@ class TestSpectrumMakerChain:
         dataset = safe_mask_maker.run(dataset, obs)
 
         actual = dataset.energy_range[0]
-        assert_quantity_allclose(actual, 0.8799225 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(actual, 0.774264 * u.TeV, rtol=1e-3)

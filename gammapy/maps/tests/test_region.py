@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion, RectangleSkyRegion
-from gammapy.maps import MapAxis, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 
@@ -32,6 +32,28 @@ def test_create(region):
     assert not geom.is_image
     assert not geom.is_allsky
 
+def test_binsz(region):
+    geom = RegionGeom.create(region, binsz_wcs=0.05)
+    wcs_geom = geom.to_wcs_geom()
+    assert geom.binsz_wcs[0].deg == 0.05
+    assert_allclose(wcs_geom.pixel_scales, geom.binsz_wcs)
+
+def test_defined_wcs(region):
+    wcs = WcsGeom.create(
+        skydir=(0,0),
+        frame="galactic",
+        width="1.5deg",
+        binsz="0.1deg").wcs
+    geom = RegionGeom.create(region, wcs=wcs)
+    assert geom.binsz_wcs[0].deg == 0.1
+
+def test_to_binsz_wcs(region):
+    binsz = 0.05*u.deg
+    geom = RegionGeom.create(region, binsz_wcs=0.01)
+    new_geom = geom.to_binsz_wcs(binsz)
+    assert geom.binsz_wcs[0].deg == 0.01
+    assert new_geom.binsz_wcs[0].deg == binsz.value
+
 
 def test_centers(region):
     geom = RegionGeom.create(region)
@@ -44,7 +66,7 @@ def test_centers(region):
 
 
 def test_width(region):
-    geom = RegionGeom.create(region)
+    geom = RegionGeom.create(region, binsz_wcs=0.01)
     assert_allclose(geom.width.value, [2.02, 2.02])
 
 
@@ -250,11 +272,25 @@ def test_squash(region):
     assert geom_squashed.axes[1] == axis2
     assert_allclose(geom_squashed.axes[0].edges.to_value("TeV"), (1, 100))
 
+
+def test_pad(region):
+    axis1 = MapAxis.from_edges([1, 10] * u.TeV, name="energy", interp="log")
+    axis2 = MapAxis.from_nodes([1, 2, 3, 4] * u.deg, name="angle", interp="lin")
+
+    geom = RegionGeom(region, axes=[axis1, axis2])
+
+    geom_pad = geom.pad(axis_name="energy", pad_width=1)
+    assert_allclose(geom_pad.axes["energy"].nbin, 3)
+
+    geom_pad = geom.pad(axis_name="angle", pad_width=1)
+    assert_allclose(geom_pad.axes["angle"].nbin, 6)
+
+
 def test_to_wcs_geom(region):
     geom = RegionGeom(region)
     wcs_geom = geom.to_wcs_geom()
     assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
-    assert_allclose(wcs_geom.width[0], 360*u.deg, rtol=1, atol=0)
+    assert_allclose(wcs_geom.width[0], 360 * u.deg, rtol=1, atol=0)
     assert wcs_geom.wcs.wcs.ctype[1] == 'GLAT-TAN'
 
     # test with an extra axis
@@ -265,15 +301,16 @@ def test_to_wcs_geom(region):
     assert wcs_geom_cube.axes[0] == axis
 
     # test with minimum widths
-    width_min = 3*u.deg
+    width_min = 3 * u.deg
     wcs_geom = geom.to_wcs_geom(width_min=width_min)
     assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
-    assert_allclose(wcs_geom.width, [[3], [3]]*u.deg, rtol=1, atol=0)
+    assert_allclose(wcs_geom.width, [[3], [3]] * u.deg, rtol=1, atol=0)
 
-    width_min = [1,3]*u.deg
+    width_min = [1, 3] * u.deg
     wcs_geom = geom.to_wcs_geom(width_min=width_min)
     assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
-    assert_allclose(wcs_geom.width, [[2], [3]]*u.deg, rtol=1, atol=0)
+    assert_allclose(wcs_geom.width, [[2], [3]] * u.deg, rtol=1, atol=0)
+
 
 def test_get_wcs_coord_and_weights(region):
     # test on circular region
@@ -285,19 +322,19 @@ def test_get_wcs_coord_and_weights(region):
     area = (weights*solid_angles).sum()
     assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
 
-    assert  region_coord.shape  == weights.shape
+    assert region_coord.shape == weights.shape
 
     # test on rectangular region (assymetric)
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
-    region = RectangleSkyRegion(center=center, width = 1 * u.deg, height=2 * u.deg, angle=15*u.deg)
+    region = RectangleSkyRegion(center=center, width=1 * u.deg, height=2 * u.deg, angle=15*u.deg)
     geom = RegionGeom(region)
 
     wcs_geom = geom.to_wcs_geom()
     region_coord, weights = geom.get_wcs_coord_and_weights()
     solid_angles = wcs_geom.solid_angle().T[wcs_geom.coord_to_idx(region_coord)]
-    area = (weights*solid_angles).sum()
+    area = (weights * solid_angles).sum()
     assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
-    assert  region_coord.shape  == weights.shape
+    assert region_coord.shape == weights.shape
 
 
 @requires_dependency("matplotlib")

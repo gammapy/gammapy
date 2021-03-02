@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
 from gammapy.estimators import TSMapEstimator
-from gammapy.irf import EDispKernelMap, EnergyDependentTablePSF, PSFMap
+from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -86,10 +86,9 @@ def fermi_dataset():
     exposure = exposure.cutout(exposure.geom.center_skydir, size)
     exposure.unit = "cm2 s"
 
-    psf = EnergyDependentTablePSF.read(
-        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz"
+    psfmap = PSFMap.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz", format="gtpsf"
     )
-    psfmap = PSFMap.from_energy_dependent_table_psf(psf)
     edisp = EDispKernelMap.from_diagonal_response(
         energy_axis=counts.geom.axes["energy"],
         energy_axis_true=exposure.geom.axes["energy_true"],

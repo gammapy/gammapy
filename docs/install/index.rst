@@ -63,7 +63,7 @@ the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
-    gammapy download notebooks
+    gammapy download notebooks --release 0.18.2
     gammapy download datasets
     export GAMMAPY_DATA=$PWD/gammapy-datasets
 

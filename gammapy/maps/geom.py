@@ -109,7 +109,9 @@ class MapAxes(Sequence):
 
         for ax in axes:
             if ax.name in unique_names:
-                raise (ValueError(f"Axis names must be unique, got: '{ax.name}' twice."))
+                raise (
+                    ValueError(f"Axis names must be unique, got: '{ax.name}' twice.")
+                )
             unique_names.append(ax.name)
 
         self._axes = axes
@@ -220,6 +222,29 @@ class MapAxes(Sequence):
 
         return self.__class__(axes=axes)
 
+    def replace(self, axis):
+        """Replace a give axis
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            Map axis
+
+        Returns
+        -------
+        axes : MapAxes
+            Map axe
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis.name:
+                ax = axis
+
+            axes.append(ax)
+
+        return self.__class__(axes=axes)
+
     def resample(self, axis):
         """Resample axis binning.
 
@@ -303,6 +328,31 @@ class MapAxes(Sequence):
             if ax.name == axis_name:
                 ax = ax.squash()
             axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def pad(self, axis_name, pad_width):
+        """Pad axes
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis to pad.
+        pad_width : int or tuple of int
+            Pad width
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes with squashed axis.
+
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.pad(pad_width=pad_width)
+            axes.append(ax)
 
         return self.__class__(axes=axes)
 
@@ -461,12 +511,13 @@ class MapAxes(Sequence):
 
         return header
 
-    def to_table(self, format=None):
+    def to_table(self, format="gadf"):
         """Convert axes to table
 
         Parameters
         ----------
-        format : {"gadf-dl3"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template",
+                  "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -474,15 +525,40 @@ class MapAxes(Sequence):
         table : `~astropy.table.Table`
             Table with axis data
         """
+        if format == "gadf-dl3":
+            tables = []
 
-        tables = []
+            for ax in self:
+                tables.append(ax.to_table(format=format))
 
-        for ax in self:
-            tables.append(ax.to_table(format=format))
+            table = hstack(tables)
+        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
+            table = Table()
+            table["CHANNEL"] = np.arange(np.prod(self.shape))
 
-        return hstack(tables)
+            axes_ctr = np.meshgrid(*[ax.center for ax in self])
+            axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
+            axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
 
-    def to_table_hdu(self, format=None, prefix=None):
+            for idx, ax in enumerate(self):
+                name = ax.name.upper()
+
+                if name == "ENERGY":
+                    colnames = ["ENERGY", "E_MIN", "E_MAX"]
+                else:
+                    colnames = [name, name + "_MIN", name + "_MAX"]
+
+                for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
+                    table[colname] = np.ravel(v[idx]).astype(np.float32)
+        elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
+            energy_axis = self["energy"]
+            table = energy_axis.to_table(format=format)
+        else:
+            raise ValueError(f"Unsupported format: '{format}'")
+
+        return table
+
+    def to_table_hdu(self, format="gadf", prefix=None):
         """Make FITS table columns for map axes.
 
         Parameters
@@ -500,7 +576,7 @@ class MapAxes(Sequence):
         # FIXME: Check whether convention is compatible with
         #  dimensionality of geometry and simplify!!!
 
-        if format == "fgst-ccube":
+        if format in ["fgst-ccube", "ogip", "ogip-sherpa"]:
             hdu = "EBOUNDS"
         elif format == "fgst-template":
             hdu = "ENERGIES"
@@ -512,29 +588,9 @@ class MapAxes(Sequence):
         else:
             raise ValueError(f"Unknown format {format}")
 
-        size = np.prod([ax.nbin for ax in self])
-        chan = np.arange(0, size)
-        cols = [fits.Column("CHANNEL", "I", array=chan)]
-
-        axes_ctr = np.meshgrid(*[ax.center for ax in self])
-        axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
-        axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
-
-        for idx, ax in enumerate(self):
-            name = ax.name.upper()
-
-            if name == "ENERGY":
-                colnames = ["ENERGY", "E_MIN", "E_MAX"]
-            else:
-                colnames = [name, name + "_MIN", name + "_MAX"]
-
-            for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-                array = np.ravel(v[idx])
-                unit = ax.unit.to_string("fits")
-                cols.append(fits.Column(colname, "E", array=array, unit=unit))
-
-        header = self.to_header()
-        return fits.BinTableHDU.from_columns(cols, name=hdu, header=header)
+        table = self.to_table(format=format)
+        header = self.to_header(format=format)
+        return fits.BinTableHDU(table, name=hdu, header=header)
 
     @classmethod
     def from_table_hdu(cls, hdu, format="gadf"):
@@ -574,10 +630,17 @@ class MapAxes(Sequence):
             Map axes object
         """
         from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+
         axes = []
 
         # Formats that support only one energy axis
-        if format in ["fgst-ccube", "fgst-template", "fgst-bexpcube", "ogip", "ogip-arf"]:
+        if format in [
+            "fgst-ccube",
+            "fgst-template",
+            "fgst-bexpcube",
+            "ogip",
+            "ogip-arf",
+        ]:
             axes.append(MapAxis.from_table(table, format=format))
         elif format == "gadf":
             # This limits the max number of axes to 5
@@ -591,7 +654,9 @@ class MapAxes(Sequence):
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
                 try:
-                    axis = MapAxis.from_table(table, format=format, column_prefix=column_prefix)
+                    axis = MapAxis.from_table(
+                        table, format=format, column_prefix=column_prefix
+                    )
                 except KeyError:
                     continue
                 axes.append(axis)
@@ -626,13 +691,18 @@ class MapAxes(Sequence):
         required_names : list of str
             Required
         """
+        message = ("Incorrect axis order or names. Expected axis "
+                   f"order: {required_names}, got: {self.names}.")
+
+        if not len(self) == len(required_names):
+            raise ValueError(message)
+
         try:
             for ax, required_name in zip(self, required_names):
                 ax.assert_name(required_name)
-        except ValueError:
-            raise ValueError("Incorrect axis order or names. Expected axis "
-                             f"order: {required_names}, got: {self.names}.")
 
+        except ValueError:
+            raise ValueError(message)
 
 class MapAxis:
     """Class representing an axis of a map.
@@ -673,6 +743,7 @@ class MapAxis:
 
         if len(nodes) != len(np.unique(nodes)):
             raise ValueError("MapAxis: node values must be unique")
+
         if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
             raise ValueError("MapAxis: node values must be sorted")
 
@@ -1056,6 +1127,34 @@ class MapAxis:
             return self.from_edges(edges=edges, interp=self.interp, name=self.name)
         else:
             nodes = np.append(self.center, axis.center)
+            return self.from_nodes(nodes=nodes, interp=self.interp, name=self.name)
+
+    def pad(self, pad_width):
+        """Pad axis by a given number of pixels
+
+        Parameters
+        ----------
+        pad_width : int or tuple of int
+            A single int pads in both direction of the axis, a tuple specifies,
+            which number of bins to pad at the low and high edge of the axis.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Padded axis
+        """
+        if isinstance(pad_width, tuple):
+            pad_low, pad_high = pad_width
+        else:
+            pad_low, pad_high = pad_width, pad_width
+
+        if self.node_type == "edges":
+            pix = np.arange(-pad_low, self.nbin + pad_high + 1) - 0.5
+            edges = self.pix_to_coord(pix)
+            return self.from_edges(edges=edges, interp=self.interp, name=self.name)
+        else:
+            pix = np.arange(-pad_low, self.nbin + pad_high)
+            nodes = self.pix_to_coord(pix)
             return self.from_nodes(nodes=nodes, interp=self.interp, name=self.name)
 
     @classmethod
@@ -1445,7 +1544,7 @@ class MapAxis:
             header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
             header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
             header["HDUVERS"] = "1.2.0", "Version of file format"
-        elif format == "gadf":
+        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
             key = f"AXCOLS{idx}"
             name = self.name.upper()
 
@@ -1528,8 +1627,10 @@ class MapAxis:
             elif self.name == "rad":
                 table["Theta"] = self.center.to("deg")
             else:
-                raise ValueError("Can only convert true energy or rad axis to"
-                                 f"'gtpsf' format, got {self.name}")
+                raise ValueError(
+                    "Can only convert true energy or rad axis to"
+                    f"'gtpsf' format, got {self.name}"
+                )
         else:
             raise ValueError(f"{format} is not a valid format")
 
@@ -1961,6 +2062,22 @@ class Geom(abc.ABC):
         """Shape of the Numpy data array matching this geometry."""
         pass
 
+    def data_nbytes(self, dtype="float32"):
+        """Estimate memory usage in megabytes of the Numpy data array
+        matching this geometry depending on the given type.
+
+        Parameters
+        ----------
+        dtype : data-type
+            The desired data-type for the array. Default is "float32"
+            
+        Returns
+        -------
+        memory : `~astropy.units.Quantity`
+            Estimated memory usage in megabytes (MB)
+        """
+        return (np.empty(self.data_shape, dtype).nbytes * u.byte).to("MB")
+
     @property
     @abc.abstractmethod
     def is_allsky(self):
@@ -2014,7 +2131,7 @@ class Geom(abc.ABC):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def to_bands_hdu(self, hdu=None, hdu_skymap=None, format=None):
+    def to_bands_hdu(self, hdu=None, hdu_skymap=None, format="gadf"):
         table_hdu = self.axes.to_table_hdu(format=format, prefix=hdu_skymap)
         cols = table_hdu.columns.columns
         cols.extend(self._make_bands_cols())
@@ -2229,9 +2346,7 @@ class Geom(abc.ABC):
     @property
     def has_energy_axis(self):
         """Whether geom has an energy axis"""
-        return ("energy" in self.axes.names) ^ (
-            "energy_true" in self.axes.names
-        )
+        return ("energy" in self.axes.names) ^ ("energy_true" in self.axes.names)
 
     @abc.abstractmethod
     def to_image(self):
@@ -2296,8 +2411,7 @@ class Geom(abc.ABC):
         axes = self.axes.drop(axis_name=axis_name)
         return self.to_image().to_cube(axes=axes)
 
-    @abc.abstractmethod
-    def pad(self, pad_width):
+    def pad(self, pad_width, axis_name):
         """
         Pad the geometry at the edges.
 
@@ -2305,12 +2419,22 @@ class Geom(abc.ABC):
         ----------
         pad_width : {sequence, array_like, int}
             Number of values padded to the edges of each axis.
+        axis_name : str
+            Name of the axis to pad.
 
         Returns
         -------
         geom : `~Geom`
             Padded geometry.
         """
+        if axis_name is None:
+            return self._pad_spatial(pad_width)
+        else:
+            axes = self.axes.pad(axis_name=axis_name, pad_width=pad_width)
+            return self.to_image().to_cube(axes)
+
+    @abc.abstractmethod
+    def _pad_spatial(self, pad_width):
         pass
 
     @abc.abstractmethod

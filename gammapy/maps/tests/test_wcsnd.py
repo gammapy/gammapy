@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
-from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
+from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -369,6 +369,18 @@ def test_wcsndmap_pad_cval():
     assert_allclose(m_padded.data[0, 0], cval)
 
 
+def test_wcs_nd_map_pad_axis():
+    axis = MapAxis.from_nodes([0, 1], unit="deg", name="axis")
+
+    m = WcsNDMap.create(npix=3, axes=[axis])
+    m.data += np.array([1, 2]).reshape((-1, 1, 1))
+
+    m_pad = m.pad(axis_name="axis", pad_width=1, mode="edge")
+    m_pad.data
+
+    assert_allclose(m_pad.data[:, 1, 1], [1, 1, 2, 2])
+
+
 @pytest.mark.parametrize(
     ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
 )
@@ -524,14 +536,8 @@ def test_convolve_nd():
     m = Map.from_geom(geom)
     m.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
 
-    # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
-    filename = (
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-    table_psf = psf.to_energy_dependent_table_psf(offset=0.5 * u.deg)
-
-    psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=1 * u.deg)
+    psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
+    psf_kernel = psf.get_psf_kernel(geom=geom, max_radius=1 * u.deg)
 
     assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
 
@@ -803,21 +809,50 @@ def test_stack_unit_handling():
     assert_allclose(m.data, 1.0001)
 
 
-def test_mask_fit_modifications():
+def test_binary_erode():
+    geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
+    mask = geom.region_mask("icrs;circle(0, 0, 1)")
+
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="disk", use_fft=False)
+    assert_allclose(mask.data.sum(), 4832)
+
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="box", use_fft=True)
+    assert_allclose(mask.data.sum(), 3372)
+
+
+def test_binary_dilate():
+    geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
+    mask = geom.region_mask("icrs;circle(0, 0, 0.8)")
+
+    mask = mask.binary_dilate(width=0.2 * u.deg, kernel="disk", use_fft=False)
+    assert_allclose(mask.data.sum(), 8048)
+
+    mask = mask.binary_dilate(width=(10, 10), kernel="box")
+    assert_allclose(mask.data.sum(), 9203)
+
+
+def test_binary_dilate_erode_3d():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
         binsz=0.02,
         width=(2, 2),
         frame="icrs",
         axes=[axis],
     )
-    mask_fit = Map.from_geom(geom)
-    mask_fit.data = np.ones(mask_fit.data.shape, dtype=bool)
-    mask_fit = mask_fit & geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
-    assert np.sum(mask_fit.data[0, :, :]) == 6300
-    assert np.sum(mask_fit.data[1, :, :]) == 6300
-    mask_fit_fft = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg))
-    mask_fit = mask_fit.binary_dilate(width=(0.3 * u.deg, 0.1 * u.deg), use_fft=False)
-    assert np.sum(mask_fit_fft.data) == np.prod(mask_fit_fft.data.shape)
-    assert np.sum(mask_fit.data) == np.prod(mask_fit.data.shape)
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data |= True
+
+    mask_fit = mask.binary_erode(width=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(mask_fit.data) == 9800
+
+    mask = geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
+    mask = mask.binary_dilate(width=(0.6 * u.deg, 0.2 * u.deg))
+    assert np.sum(mask.data) == np.prod(mask.data.shape)
+
+
+def test_memory_usage():
+    geom = WcsGeom.create()
+    assert geom.data_nbytes().unit == u.MB
+    assert_allclose(geom.data_nbytes(dtype="float32").value, 1.0368)
+    assert_allclose(geom.data_nbytes(dtype="b").value, 0.2592)

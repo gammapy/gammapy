@@ -2,15 +2,16 @@ import copy
 from functools import lru_cache
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
-from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame
-from regions import FITSRegionParser, fits_region_objects_to_table
+from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
+from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion, PixCoord
 from gammapy.utils.regions import (
     compound_region_to_list,
     list_to_compound_region,
     make_region,
+    compound_region_center
 )
 from gammapy.maps.wcs import _check_width
 from .core import MapCoord, Map
@@ -35,6 +36,11 @@ class RegionGeom(Geom):
         Non-spatial data axes.
     wcs : `~astropy.wcs.WCS`
         Optional wcs object to project the region if needed.
+    binsz_wcs : `float`
+        Angular bin size of the underlying `~WcsGeom` used to evaluate
+        quantities in the region. Default size is 0.01 deg. This default
+        value is adequate for the majority of use cases. If a wcs object
+        is provided, the input of binsz_wcs is overridden.
     """
 
     is_image = False
@@ -46,18 +52,23 @@ class RegionGeom(Geom):
     _slice_spatial_axes = slice(0, 2)
     _slice_non_spatial_axes = slice(2, None)
     projection = "TAN"
-    binsz = 0.01
 
-    def __init__(self, region, axes=None, wcs=None):
+    def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.1 deg"):
         self._region = region
         self._axes = MapAxes.from_default(axes)
+        self._binsz_wcs = binsz_wcs
 
         if wcs is None and region is not None:
+            if isinstance(region, CompoundSkyRegion):
+                center = compound_region_center(region)
+            else:
+                center = region.center
+
             wcs = WcsGeom.create(
-                skydir=region.center,
-                binsz=self.binsz,
+                binsz=binsz_wcs,
+                skydir=center,
                 proj=self.projection,
-                frame=self.frame,
+                frame=center.frame.name,
             ).wcs
 
         self._wcs = wcs
@@ -76,6 +87,16 @@ class RegionGeom(Geom):
             return self.region.center.frame.name
         except AttributeError:
             return wcs_to_celestial_frame(self.wcs).name
+
+    @property
+    def binsz_wcs(self):
+        """Angular bin size of the underlying `~WcsGeom`
+
+        Returns
+        -------
+        binsz_wcs: `~astropy.coordinates.Angle`
+        """
+        return Angle(proj_plane_pixel_scales(self.wcs), unit="deg")
 
     @property
     def width(self):
@@ -139,6 +160,11 @@ class RegionGeom(Geom):
             xp, yp = self.wcs.wcs.crpix
             return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
 
+    @property
+    def npix(self):
+        """Number of spatial pixels"""
+        return (1, 1)
+
     def contains(self, coords):
         """Check if a given map coordinate is contained in the region.
         Requires the `.region` attribute to be set.
@@ -160,6 +186,22 @@ class RegionGeom(Geom):
 
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
         return self.region.contains(coords.skycoord, self.wcs)
+
+    def contains_wcs_pix(self, pix):
+        """Check if a given wcs pixel coordinate is contained in the region.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel coordinates.
+
+        Returns
+        -------
+        containment : `~numpy.ndarray`
+            Bool array.
+        """
+        region_pix = self.region.to_pixel(self.wcs)
+        return region_pix.contains(PixCoord(pix[0], pix[1]))
 
     def separation(self, position):
         """Angular distance between the center of the region and the given position.
@@ -215,8 +257,8 @@ class RegionGeom(Geom):
 
         return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
 
-    def pad(self):
-        raise NotImplementedError("Padding of `RegionGeom` not supported")
+    def _pad_spatial(self, pad_width):
+        raise NotImplementedError("Spatial padding of `RegionGeom` not supported")
 
     def crop(self):
         raise NotImplementedError("Cropping of `RegionGeom` not supported")
@@ -281,6 +323,22 @@ class RegionGeom(Geom):
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
 
+    def to_binsz_wcs(self, binsz):
+        """Change the bin size of the underlying WCS geometry.
+
+        Parameters
+         ----------
+        binzs : float, string or `~astropy.quantity.Quantity`
+.
+        Returns
+        -------
+        `~RegionGeom`
+            A RegionGeom with the same axes and region as the input,
+            but different wcs pixelization.
+        """
+        new_geom = RegionGeom(self.region, axes=self.axes, binsz_wcs=binsz)
+        return new_geom
+
     def get_wcs_coord_and_weights(self, factor=10):
         """Get the array of spatial coordinates and corresponding weights
 
@@ -313,7 +371,7 @@ class RegionGeom(Geom):
 
         # Get coordinates
         region_coord = wcs_geom.get_coord().apply_mask(mask)
-        
+
         return region_coord, weights
 
     def to_binsz(self, binsz):
@@ -486,13 +544,15 @@ class RegionGeom(Geom):
         table.meta.update(header)
         return table
 
-    def to_hdulist(self, format="ogip"):
+    def to_hdulist(self, format="ogip", hdu=None):
         """Convert geom to hdulist
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"gadf", "ogip", "ogip-sherpa"}
             HDU format
+        hdu : str
+            Name of the HDU with the map data.
 
         Returns
         -------
@@ -502,27 +562,54 @@ class RegionGeom(Geom):
         """
         hdulist = fits.HDUList()
 
-        # energy bounds HDU
-        energy_axis = self.axes["energy"]
-        hdulist.append(energy_axis.to_table_hdu(format=format))
+        hdulist.append(self.axes.to_table_hdu(prefix=hdu, format=format))
 
         # region HDU
         if self.region:
             region_table = self._to_region_table()
-            region_hdu = fits.BinTableHDU(region_table, name="REGION")
+
+            name = "REGION"
+            if hdu and format == "gadf":
+                name = hdu + "_" + name
+
+            region_hdu = fits.BinTableHDU(region_table, name=name)
             hdulist.append(region_hdu)
 
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip"):
+    def from_regions(cls, regions, **kwargs):
+        """Create region geom from list of regions
+
+        The regions are combined with union to a compound region.
+
+        Parameters
+        ----------
+        regions : `~regions.SkyRegion`
+            Regions
+        **kwargs: dict
+            Keyword arguments forwarded to `RegionGeom`
+
+        Returns
+        -------
+        geom : `RegionGeom`
+            Region map geometry
+        """
+        if isinstance(regions, (SkyRegion, str)):
+            regions = [make_region(regions)]
+
+        region = list_to_compound_region(regions)
+        return cls(region, **kwargs)
+
+    @classmethod
+    def from_hdulist(cls, hdulist, format="ogip", hdu=None):
         """Read region table and convert it to region list.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list
-        format : {"ogip", "ogip-arf"}
+        format : {"ogip", "ogip-arf", "gadf"}
             HDU format
 
         Returns
@@ -531,8 +618,13 @@ class RegionGeom(Geom):
             Region map geometry
 
         """
-        if "REGION" in hdulist:
-            region_table = Table.read(hdulist["REGION"])
+        region_hdu = "REGION"
+
+        if format == "gadf" and hdu:
+            region_hdu = hdu + "_" + region_hdu
+
+        if region_hdu in hdulist:
+            region_table = Table.read(hdulist[region_hdu])
             parser = FITSRegionParser(region_table)
             pix_region = parser.shapes.to_regions()
             wcs = WcsGeom.from_header(region_table.meta).wcs
@@ -545,14 +637,16 @@ class RegionGeom(Geom):
             region, wcs = None, None
 
         if format == "ogip":
-            hdu = "EBOUNDS"
+            hdu_bands = "EBOUNDS"
         elif format == "ogip-arf":
-            hdu = "SPECRESP"
+            hdu_bands = "SPECRESP"
+        elif format == "gadf":
+            hdu_bands = hdu + "_BANDS"
         else:
             raise ValueError(f"Unknown format {format}")
 
-        axis = MapAxis.from_table_hdu(hdulist[hdu], format=format)
-        return cls(region=region, wcs=wcs, axes=[axis])
+        axes = MapAxes.from_table_hdu(hdulist[hdu_bands], format=format)
+        return cls(region=region, wcs=wcs, axes=axes)
 
     def union(self, other):
         """Stack a RegionGeom by making the union"""
@@ -593,6 +687,7 @@ class RegionGeom(Geom):
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         kwargs.setdefault("fc", "None")
+        kwargs.setdefault("ec", "tab:blue")
 
         patches = PatchCollection(artists, **kwargs)
         ax.add_collection(patches)

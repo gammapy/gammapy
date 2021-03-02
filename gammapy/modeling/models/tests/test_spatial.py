@@ -11,7 +11,7 @@ from regions import (
     PointSkyRegion,
     PolygonSkyRegion,
     CircleSkyRegion,
-    RectangleSkyRegion
+    RectangleSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom, RegionGeom, MapAxis
 from gammapy.modeling.models import (
@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
     GeneralizedGaussianSpatialModel,
     PointSpatialModel,
     ShellSpatialModel,
+    Shell2SpatialModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -126,11 +127,13 @@ def test_generalized_gaussian(eta, r_0, e):
 
 
 def test_generalized_gaussian_io():
-    model = GeneralizedGaussianSpatialModel()
+    model = GeneralizedGaussianSpatialModel(e=0.5)
 
-    assert isinstance(model.to_region(), EllipseSkyRegion)
+    reg = model.to_region()
+    assert isinstance(reg, EllipseSkyRegion)
+    assert_allclose(reg.width.value, 1.73205, rtol=1e-5)
+
     new_model = GeneralizedGaussianSpatialModel.from_dict(model.to_dict())
-
     assert isinstance(new_model, GeneralizedGaussianSpatialModel)
 
 
@@ -146,7 +149,7 @@ def test_sky_disk():
     assert_allclose(val.value, desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, r_0.value)
+    assert_allclose(radius.value, r_0.value + model.edge.value)
 
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
@@ -166,7 +169,7 @@ def test_sky_disk():
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, r_0.value)
+    assert_allclose(radius.value, r_0.value + model.edge.value)
     # test rotation
     r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
@@ -225,6 +228,23 @@ def test_sky_shell():
     assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
 
 
+def test_sky_shell2():
+    width = 2 * u.deg
+    rad = 2 * u.deg
+    model = Shell2SpatialModel(lon_0="1 deg", lat_0="45 deg", r_0=rad + width, eta=0.5)
+    lon = [1, 2, 4] * u.deg
+    lat = 45 * u.deg
+    val = model(lon, lat)
+    assert val.unit == "deg-2"
+    desired = [55.979449, 57.831651, 94.919895]
+    assert_allclose(val.to_value("sr-1"), desired)
+    radius = model.evaluation_radius
+    assert radius.unit == "deg"
+    assert_allclose(radius.value, rad.value + width.value)
+    assert_allclose(model.r_in.value, rad.value)
+    assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
+
+
 def test_sky_diffuse_constant():
     model = ConstantSpatialModel(value="42 sr-1")
     lon = [1, 2] * u.deg
@@ -239,12 +259,15 @@ def test_sky_diffuse_constant():
 
 @requires_dependency("matplotlib")
 @requires_data()
-def test_sky_diffuse_map():
+def test_sky_diffuse_map(caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
     val = model(lon, lat)
+
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message == "Missing spatial template unit, assuming sr^-1"
 
     assert val.unit == "sr-1"
     desired = [3269.178107, 0]
@@ -351,36 +374,38 @@ def test_spatial_model_plot():
 
 
 def test_integrate_geom():
-    center = SkyCoord("0d", "0d", frame='icrs')
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1*u.deg, frame='icrs')
+    center = SkyCoord("0d", "0d", frame="icrs")
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
 
     radius_large = 1 * u.deg
     circle_large = CircleSkyRegion(center, radius_large)
     radius_small = 0.1 * u.deg
     circle_small = CircleSkyRegion(center, radius_small)
 
-    geom_large, geom_small = RegionGeom(region=circle_large), RegionGeom(region=circle_small)
+    geom_large, geom_small = (
+        RegionGeom(region=circle_large, binsz_wcs="0.01deg"),
+        RegionGeom(region=circle_small, binsz_wcs="0.01deg"),
+    )
 
-    integral_large, integral_small = model.integrate_geom(geom_large).data, model.integrate_geom(geom_small).data
+    integral_large, integral_small = (
+        model.integrate_geom(geom_large).data,
+        model.integrate_geom(geom_small).data,
+    )
 
     assert_allclose(integral_large[0], 1, rtol=0.01)
     assert_allclose(integral_small[0], 0.3953, rtol=0.01)
 
 
 def test_integrate_geom_energy_axis():
-    center = SkyCoord("0d", "0d", frame='icrs')
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1*u.deg, frame='icrs')
-    
+    center = SkyCoord("0d", "0d", frame="icrs")
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+
     radius = 1 * u.deg
     square = RectangleSkyRegion(center, radius, radius)
-    
+
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
-    geom = RegionGeom(region=square, axes=[axis])
-    
+    geom = RegionGeom(region=square, axes=[axis], binsz_wcs="0.01deg")
+
     integral = model.integrate_geom(geom).data
-    
+
     assert_allclose(integral, 1, rtol=0.01)
-
-
-
-

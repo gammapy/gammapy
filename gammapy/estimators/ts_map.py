@@ -12,20 +12,16 @@ from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
-from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.utils.array import shape_2N, symmetric_crop_pad_width, round_up_to_odd
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
 __all__ = ["TSMapEstimator"]
 
 log = logging.getLogger(__name__)
-
-
-def round_up_to_odd(f):
-    return int(np.ceil(f) // 2 * 2 + 1)
 
 
 def _extract_array(array, shape, position):
@@ -210,7 +206,6 @@ class TSMapEstimator(Estimator):
             dataset.edisp,
             dataset.counts.geom,
             dataset.mask_fit,
-            dataset.mask_safe_psf,
         )
 
         kernel = evaluator.compute_npred()

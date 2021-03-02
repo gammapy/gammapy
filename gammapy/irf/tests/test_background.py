@@ -135,7 +135,7 @@ def test_background_3d_integrate(bkg_3d):
 
 
 @requires_data()
-def test_background_3D_read():
+def test_background_3d_read():
     filename = (
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -147,13 +147,30 @@ def test_background_3D_read():
 
 
 @requires_data()
-def test_background_3D_read_gadf():
+def test_background_3d_read_gadf():
     filename = "$GAMMAPY_DATA/tests/irf/bkg_3d_full_example.fits"
     bkg = Background3D.read(filename)
     data = bkg.quantity
     assert bkg.axes.names == ["energy", "fov_lon", "fov_lat"]
     assert data.shape == (20, 15, 15)
     assert data.unit == "s-1 MeV-1 sr-1"
+
+
+def test_background_2d_read_missing_hducls():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    offset_axis = MapAxis.from_edges([0, 1, 2], unit="deg", name="offset")
+
+    bkg = Background2D(
+        axes=[energy_axis, offset_axis],
+        unit="s-1 MeV-1 sr-1"
+    )
+
+    table = bkg.to_table()
+    table.meta.pop("HDUCLAS2")
+
+    bkg = Background2D.from_table(table)
+
+    assert bkg.axes[0].name == "energy"
 
 
 @requires_dependency("matplotlib")

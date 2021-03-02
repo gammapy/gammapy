@@ -1,7 +1,7 @@
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, hstack
 from astropy.visualization import quantity_support
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -155,7 +155,7 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None):
+    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg"):
         """Create an empty region map object.
 
         Parameters
@@ -178,7 +178,7 @@ class RegionNDMap(Map):
         map : `RegionNDMap`
             Region map
         """
-        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
+        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs,binsz_wcs=binsz_wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
     def downsample(
@@ -272,15 +272,9 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords, interp=1):
+    def interp_by_coord(self, coords, method="linear", fill_value=None):
         pix = self.geom.coord_to_pix(coords)
-        if interp == 1:
-            method = "linear"
-        elif interp == 0:
-            method = "nearest"
-        else:
-            raise ValueError(f"Not a valid interp order {interp}")
-        return self.interp_by_pix(pix, method=method)
+        return self.interp_by_pix(pix, method=method, fill_value=fill_value)
 
     def interp_by_pix(self, pix, method="linear", fill_value=None):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
@@ -300,17 +294,19 @@ class RegionNDMap(Map):
         self.data[idx[::-1]] = value
 
     @classmethod
-    def read(cls, filename, format="ogip", ogip_column="COUNTS"):
+    def read(cls, filename, format="gadf", ogip_column=None, hdu=None):
         """Read from file.
 
         Parameters
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"ogip", "ogip-arf"}
+        format : {"gadf", "ogip", "ogip-arf"}
             Which format to use.
-        ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
+        ogip_column : {None, "COUNTS", "QUALITY", "BACKSCAL"}
             If format 'ogip' is chosen which table hdu column to read.
+        hdu : str
+            Name or index of the HDU with the map data.
 
         Returns
         -------
@@ -319,32 +315,34 @@ class RegionNDMap(Map):
         """
         filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
+            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
 
-    def write(self, filename, overwrite=False, format="ogip-arf"):
+    def write(self, filename, overwrite=False, format="gadf", hdu="SKYMAP"):
         """Write map to file
 
         Parameters
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Which format to use.
         overwrite : bool
             Overwrite existing files?
         """
         filename = make_path(filename)
-        self.to_hdulist(format=format).writeto(
+        self.to_hdulist(format=format, hdu=hdu).writeto(
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="ogip"):
+    def to_hdulist(self, format="gadf", hdu="SKYMAP"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
+        hdu : str
+            Name of the HDU with the map data, used for "gadf" format.
 
         Returns
         -------
@@ -352,60 +350,72 @@ class RegionNDMap(Map):
             HDU list
         """
         hdulist = fits.HDUList()
-
-        # add data hdu
         table = self.to_table(format=format)
-        hdulist.append(fits.BinTableHDU(table))
 
-        if format in ["ogip", "ogip-sherpa"]:
-            hdulist_geom = self.geom.to_hdulist(format=format)[1:]
-            hdulist.extend(hdulist_geom)
+        if format in ["ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"]:
+            hdulist.append(fits.BinTableHDU(table))
+        elif format == "gadf":
+            table.meta.update(self.geom.axes.to_header())
+            hdulist.append(fits.BinTableHDU(table, name=hdu))
+        else:
+            raise ValueError(f"Unsupported format '{format}'")
+
+        if format in ["ogip", "ogip-sherpa", "gadf"]:
+            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
+            hdulist.extend(hdulist_geom[1:])
 
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
+    def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list.
-        format : {"ogip", "ogip-arf"}
+        format : {"gadf", "ogip", "ogip-arf"}
             Format specification
         ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
             If format 'ogip' is chosen which table hdu column to read.
+        hdu : str
+            Name or index of the HDU with the map data.
 
         Returns
         -------
         region_nd_map : `RegionNDMap`
             Region map.
         """
-        if format == "ogip":
-            hdu = "SPECTRUM"
-        elif format == "ogip-arf":
-            hdu = "SPECRESP"
-            ogip_column = "SPECRESP"
-        else:
-            raise ValueError(f"Unknown format: {format}")
+        defaults = {
+            "ogip": {"hdu": "SPECTRUM", "column": "COUNTS"},
+            "ogip-arf": {"hdu": "SPECRESP", "column": "SPECRESP"},
+            "gadf": {"hdu": "SKYMAP", "column": "DATA"},
+        }
+
+        if hdu is None:
+            hdu = defaults[format]["hdu"]
+
+        if ogip_column is None:
+            ogip_column = defaults[format]["column"]
+
+        geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu)
 
         table = Table.read(hdulist[hdu])
-        geom = RegionGeom.from_hdulist(hdulist, format=format)
-
         quantity = table[ogip_column].quantity
+        meta = table.meta
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
+        return cls(geom=geom, data=data, meta=meta, unit=unit)
+
+    def _pad_spatial(self, *args, **kwargs):
+        raise NotImplementedError("Spatial padding is not supported by RegionNDMap")
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
-
-    def pad(self):
-        raise NotImplementedError("Pad is not supported by RegionNDMap")
 
     def stack(self, other, weights=None):
         """Stack other region map into map.
@@ -430,14 +440,14 @@ class RegionNDMap(Map):
 
         self.data += data
 
-    def to_table(self, format="ogip"):
+    def to_table(self, format="gadf"):
         """Convert to `~astropy.table.Table`.
 
         Data format specification: :ref:`gadf:ogip-pha`
 
         Parameters
         ----------
-        format : {"ogip", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "ogip", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
 
         Returns
@@ -445,14 +455,14 @@ class RegionNDMap(Map):
         table : `~astropy.table.Table`
             Table
         """
-        if len(self.geom.axes) > 1:
-            raise ValueError(f"Writing to format '{format}' only supports a "
-                             f"single energy axis. Got {self.geom.axes.names}")
-
         data = np.nan_to_num(self.quantity[:, 0, 0])
-        energy_axis = self.geom.axes[0]
 
         if format == "ogip":
+            if len(self.geom.axes) > 1:
+                raise ValueError(f"Writing to format '{format}' only supports a "
+                                 f"single energy axis. Got {self.geom.axes.names}")
+
+            energy_axis = self.geom.axes[0]
             energy_axis.assert_name("energy")
             table = Table()
             table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
@@ -481,6 +491,11 @@ class RegionNDMap(Map):
             }
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            if len(self.geom.axes) > 1:
+                raise ValueError(f"Writing to format '{format}' only supports a "
+                                 f"single energy axis. Got {self.geom.axes.names}")
+
+            energy_axis = self.geom.axes[0]
             table = energy_axis.to_table(format=format)
             table.meta = {
                 "EXTNAME": "SPECRESP",
@@ -497,6 +512,12 @@ class RegionNDMap(Map):
                 data = data.to("cm2")
 
             table["SPECRESP"] = data
+
+        elif format == "gadf":
+            table = Table()
+            data = self.quantity.flatten()
+            table["CHANNEL"] = np.arange(len(data), dtype=np.int16)
+            table["DATA"] = data
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 

@@ -6,12 +6,10 @@ from os.path import split
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import MapCoord, RegionGeom
+from gammapy.maps import RegionGeom
 
 log = logging.getLogger(__name__)
 
@@ -641,18 +639,16 @@ class DatasetModels(collections.abc.Sequence):
 
         return np.array(selection, dtype=bool)
 
-    def select_mask(self, mask, margin=None, use_evaluation_region=True):
-        """Check if skymodels contribute within a mask map.
+    def select_mask(self, mask, margin="0 deg", use_evaluation_region=True):
+        """Check if sky models contribute within a mask map.
     
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
             Map containing a boolean mask
-
-        marign : `~astropy.coordinates.Angle`
+        margin : `~astropy.unit.Quantity`
             Add a margin in degree to the source evaluation radius.
-            The default is None. Used to take into account PSF width.
-
+            Used to take into account PSF width.
         use_evaluation_region : bool
             Account for the extension of the model or not. The default is True.   
 
@@ -661,42 +657,48 @@ class DatasetModels(collections.abc.Sequence):
         models : `DatasetModels`
             Selected models contributing inside the region where mask==True
         """
+        models = []
 
-        if len(mask.data.squeeze().shape) > 2:
-            mask = mask.sum_over_axes()
-            mask.data = mask.data.astype(bool)
+        if not mask.geom.is_image:
+            mask = mask.reduce_over_axes(func=np.logical_or)
 
-        models = self.select(tag="SkyModel")
-        contribute = np.array(
-            [m.contributes(mask, margin, use_evaluation_region) for m in models]
-        )
-        return models[contribute]
+        for model in self.select(tag="sky-model"):
+            if use_evaluation_region:
+                contributes = model.contributes(mask=mask, margin=margin)
+            else:
+                contributes = mask.get_by_coord(model.position, fill_value=0)
 
-    def select_region(self, regions):
-        """Select skymodels with center position contained within a given region
+            if np.any(contributes):
+                models.append(model)
+
+        return self.__class__(models=models)
+
+    def select_region(self, regions, wcs=None):
+        """Select sky models with center position contained within a given region
 
         Parameters
         ----------
-        regions : list of  `~regions.Region`
-            Sky region or list of sky regions
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
+        wcs : `~astropy.wcs.WCS`
+            World coordinate system transformation
 
         Returns
         -------
         models : `DatasetModels`
             Selected models 
         """
+        geom = RegionGeom.from_regions(regions, wcs=wcs)
 
-        models = self.select(tag="SkyModel")
+        models = []
 
-        if isinstance(regions, list):
-            region = [regions]
+        for model in self.select(tag="sky-model"):
+            if geom.contains(model.position):
+                models.append(model)
 
-        inside = np.zeros(len(models), dtype=bool)
-        for k, m in enumerate(models):
-            pos = MapCoord.create(m.position)
-            for region in regions:
-                inside[k] |= np.all(RegionGeom(region).contains(pos))
-        return models[inside]
+        return self.__class__(models=models)
 
     def restore_status(self, restore_values=True):
         """Context manager to restore status.

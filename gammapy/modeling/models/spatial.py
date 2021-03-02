@@ -199,7 +199,9 @@ class SpatialModel(Model):
         """
         m = self._get_plot_map(geom)
         if not m.geom.is_flat:
-            raise TypeError("Use .plot_interactive() for Map dimension > 2")
+            raise TypeError(
+                "Use .plot_interactive() or .plot_grid() for Map dimension > 2"
+            )
         _, ax, _ = m.plot(ax=ax, **kwargs)
         return ax
 
@@ -469,7 +471,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     r_0 : `~astropy.coordinates.Angle`
         Length of the major semiaxis, in angular units.
     eta : `float`
-        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplacian:1
+        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplace:1
     e : `float`
         Eccentricity (:math:`0< e< 1`).
     phi : `~astropy.coordinates.Angle`
@@ -500,18 +502,17 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
-
-        Set as :math:`5 r_{\rm eff}`.
+        The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
+            r_eval -> r_0 if eta -> 0 
+            r_eval = 5*r_0 = 5*sigma_gauss if eta=0.5
+            r_eval = 9*r_0 > 5*sigma_laplace = 5*sqrt(2)*r_0 ~ 7*r_0 if eta = 1
+            r_eval -> inf if eta -> inf
         """
-        # TODO: the evaluation radius is defined empirically and tested
-        #  maybe one can find a better semi-analytical definition
-        #  for eta -> 0 it has to approach r_0 for eta -> inf it has to
-        #  approach inf as well, for eta=0.5 it approaches 5 * sigma
-        return self.r_0.quantity + 8 * u.deg * self.eta.value
+        return self.r_0.quantity * (1 + 8 * self.eta.value)
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.r_0.quantity * (1 - self.e.quantity))
+        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * self.r_0.quantity,
@@ -519,6 +520,16 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
             angle=self.phi.quantity,
             **kwargs,
         )
+
+    @property
+    def evaluation_region(self):
+        """Evaluation region"""
+        region = self.to_region()
+        scale = self.evaluation_radius / self.r_0.quantity
+        # scale to be consistent with evaluation radius
+        region.height = scale * region.height
+        region.width = scale * region.width
+        return region
 
 
 class DiskSpatialModel(SpatialModel):
@@ -555,10 +566,10 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
-
+    
         Set to the length of the semi-major axis.
         """
-        return self.r_0.quantity
+        return self.r_0.quantity + self.edge.quantity
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
@@ -628,6 +639,9 @@ class ShellSpatialModel(SpatialModel):
         Shell width
     frame : {"icrs", "galactic"}
         Center position coordinate frame
+    See Also
+    --------
+    Shell2SpatialModel
     """
 
     tag = ["ShellSpatialModel", "shell"]
@@ -668,6 +682,73 @@ class ShellSpatialModel(SpatialModel):
             center=self.position,
             inner_radius=self.radius.quantity,
             outer_radius=self.radius.quantity + self.width.quantity,
+            **kwargs,
+        )
+
+
+class Shell2SpatialModel(SpatialModel):
+    r"""Shell model with outer radius and relative width parametrization
+
+    For more information see :ref:`shell2-spatial-model`.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    r_0 : `~astropy.coordinates.Angle`
+        Outer radius, :math:`r_{out}`
+    eta : float
+        Shell width relative to outer radius, r_0, should be within (0,1]
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
+
+    See Also
+    --------
+    ShellSpatialModel
+    """
+
+    tag = ["Shell2SpatialModel", "shell2"]
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    r_0 = Parameter("r_0", "1 deg")
+    eta = Parameter("eta", 0.2, min=0.02, max=1)
+
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set to :math:`r_\text{out}`.
+        """
+        return self.r_0.quantity
+
+    @property
+    def r_in(self):
+        return (1 - self.eta.quantity) * self.r_0.quantity
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, eta):
+        """Evaluate model."""
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+        r_in = (1 - eta) * r_0
+
+        norm = 3 / (2 * np.pi * (r_0 ** 3 - r_in ** 3))
+
+        with np.errstate(invalid="ignore"):
+            # np.where and np.select do not work with quantities, so we use the
+            # workaround with indexing
+            value = np.sqrt(r_0 ** 2 - sep ** 2)
+            mask = sep < r_in
+            value[mask] = (value - np.sqrt(r_in ** 2 - sep ** 2))[mask]
+            value[sep > r_0] = 0
+
+        return norm * value
+
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
+        return CircleAnnulusSkyRegion(
+            center=self.position,
+            inner_radius=self.r_in,
+            outer_radius=self.r_0.quantity,
             **kwargs,
         )
 

@@ -2,9 +2,11 @@
 import logging
 import numpy as np
 from astropy.coordinates import Angle
+from astropy import units as u
 from regions import PointSkyRegion
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable
+from gammapy.irf import EDispKernelMap
 from gammapy.maps import Map
+from gammapy.modeling.models import TemplateSpectralModel
 from .core import Maker
 
 __all__ = ["SafeMaskMaker"]
@@ -101,10 +103,10 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         try:
-            energy_max = observation.aeff.high_threshold
-            energy_min = observation.aeff.low_threshold
+            energy_max = observation.aeff.meta["HI_THRES"] * u.TeV
+            energy_min = observation.aeff.meta["LO_THRES"] * u.TeV
         except KeyError:
-            log.warning(f"No thresholds defined for obs {observation.obs_id}")
+            log.warning(f"No default thresholds defined for obs {observation.obs_id}")
             energy_min, energy_max = None, None
 
         return dataset.counts.geom.energy_mask(
@@ -131,17 +133,11 @@ class SafeMaskMaker(Maker):
         else:
             position = PointSkyRegion(self.position)
 
-        exposure = dataset.exposure.get_spectrum(position)
+        aeff = dataset.exposure.get_spectrum(position) / dataset.exposure.meta["livetime"]
+        model = TemplateSpectralModel.from_region_map(aeff)
 
-        energy_axis = exposure.geom.axes["energy_true"]
-        data = (exposure.quantity / dataset.gti.time_sum).squeeze()
-        aeff = EffectiveAreaTable(
-            axes=[energy_axis],
-            data=data.value,
-            unit=data.unit
-        )
-        aeff_thres = (self.aeff_percent / 100) * aeff.max_area
-        energy_min = aeff.find_energy(aeff_thres)
+        aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
+        energy_min = model.inverse(aeff_thres)
         return geom.energy_mask(energy_min=energy_min)
 
     def make_mask_energy_edisp_bias(self, dataset):

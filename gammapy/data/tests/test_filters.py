@@ -44,7 +44,7 @@ def test_filter_events(observation):
     target_position = SkyCoord(ra=229.2, dec=-58.3, unit="deg", frame="icrs")
     region_radius = Angle("0.2 deg")
     region = SphericalCircleSkyRegion(center=target_position, radius=region_radius)
-    region_filter = {"type": "sky_region", "opts": {"region": region}}
+    region_filter = {"type": "sky_region", "opts": {"regions": region}}
 
     time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
 

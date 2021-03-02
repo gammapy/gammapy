@@ -191,7 +191,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     values = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
-        data = np.sum(weights*values, axis=2)
+        data = np.sum(weights * values, axis=2)
     else:
         data = values
 
@@ -238,17 +238,16 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     offset = geom.separation(pointing)
 
     # Compute PSF values
-    psf_values = psf.evaluate(
+    data = psf.evaluate(
             energy_true=energy_true[:, np.newaxis, np.newaxis, np.newaxis],
             offset=offset,
             rad=rad[:, np.newaxis, np.newaxis],
     )
 
-    # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
     # Create Map and fill relevant entries
-    data = psf_values.to_value("sr-1")
-    psfmap = Map.from_geom(geom, data=data, unit="sr-1")
-    return PSFMap(psfmap, exposure_map)
+    psf_map = Map.from_geom(geom, data=data.value, unit=data.unit)
+    psf_map.normalize(axis_name="rad")
+    return PSFMap(psf_map, exposure_map)
 
 
 def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):
@@ -306,8 +305,9 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
         data = edisp_values
 
     # Create Map and fill relevant entries
-    edispmap = Map.from_geom(geom, data=data, unit="")
-    return EDispMap(edispmap, exposure_map)
+    edisp_map = Map.from_geom(geom, data=data, unit="")
+    edisp_map.normalize(axis_name="migra")
+    return EDispMap(edisp_map, exposure_map)
 
 
 def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):

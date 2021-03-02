@@ -7,13 +7,12 @@ import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
-from distutils.util import strtobool
 from pathlib import Path
 import nbformat
 from nbformat.v4 import new_markdown_cell
 from gammapy import __version__
-from gammapy.scripts.jupyter import notebook_test
-from gammapy.utils.notebooks_test import get_notebooks
+from gammapy.scripts.jupyter import notebook_run
+from gammapy.utils.scripts import get_notebooks_paths
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -23,57 +22,22 @@ SETUP_FILE = "setup.cfg"
 conf = ConfigParser()
 conf.read(PATH_CFG / SETUP_FILE)
 setup_cfg = dict(conf.items("metadata"))
-URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 build_docs_cfg = dict(conf.items("build_docs"))
 DOWN_NBS = build_docs_cfg["downloadable-notebooks"]
 PATH_NBS = Path(build_docs_cfg["source-dir"]) / DOWN_NBS
-PATH_SOURCE_IMAGES = Path(build_docs_cfg["source-dir"]) / "tutorials" / "images"
-PATH_DEST_IMAGES = Path(build_docs_cfg["source-dir"]) / DOWN_NBS / "images"
 GITHUB_TUTOS_URL = "https://github.com/gammapy/gammapy/tree/master/docs/tutorials"
 BINDER_BADGE_URL = "https://static.mybinder.org/badge.svg"
 BINDER_URL = "https://mybinder.org/v2/gh/gammapy/gammapy-webpage"
 
 
-def setup_sphinx_params(args):
-    """Set Sphinx params in config file setup.cfg"""
+def copy_clean_notebook(nb_path):
+    """Strip output, copy file and convert to script."""
 
-    flagnotebooks = "True"
-    if not args.nbs:
-        flagnotebooks = "False"
-    build_notebooks_line = f"build_notebooks = {flagnotebooks}\n"
-
-    file_str = ""
-    with open(SETUP_FILE) as f:
-        for line in f:
-            if line.startswith("build_notebooks ="):
-                line = build_notebooks_line
-            file_str += line
-
-    with open(SETUP_FILE, "w") as f:
-        f.write(file_str)
-
-
-def fill_notebook(nb_path, args):
-    """Code formatting, strip output, file copy, execution and script conversion."""
-
-    if not Path(nb_path).exists():
-        log.info(f"File {nb_path} does not exist.")
-        return
-
-    if args.fmt:
-        subprocess.run(
-            [sys.executable, "-m", "gammapy", "jupyter", "--src", nb_path, "black"]
-        )
     subprocess.run(
         [sys.executable, "-m", "gammapy", "jupyter", "--src", nb_path, "strip"]
     )
-
     log.info(f"Copying notebook {nb_path} to {PATH_NBS}")
     shutil.copy(nb_path, PATH_NBS)
-
-    # execute notebook
-    notebook_test(nb_path)
-
     static_nb_path = PATH_NBS / Path(nb_path).absolute().name
     subprocess.run(
         [
@@ -155,14 +119,16 @@ def build_notebooks(args):
 
     PATH_NBS.mkdir(parents=True, exist_ok=True)
 
-    if args.src:
-        pathsrc = Path(args.src)
-        fill_notebook(pathsrc, args)
-        add_box(pathsrc)
-    else:
-        for notebook in get_notebooks():
-            nb_path = notebook["url"].replace(URL_GAMMAPY_MASTER, "")
-            fill_notebook(nb_path, args)
+    for nb_path in get_notebooks_paths():
+        if args.src and Path(args.src).resolve() != nb_path:
+            continue
+        skip = False
+        copy_clean_notebook(nb_path)
+        rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
+        if "gammapy" in rawnb.metadata and "skip_run" in rawnb.metadata["gammapy"]:
+            skip = rawnb.metadata["gammapy"]["skip_run"]
+        if not skip:
+            notebook_run(nb_path)
             add_box(nb_path)
 
 
@@ -171,28 +137,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook to process")
-    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
-    parser.add_argument("--fmt", help="Black format notebooks")
     args = parser.parse_args()
-
-    if not args.nbs:
-        args.nbs = "True"
-    if not args.fmt:
-        args.fmt = "True"
-
-    try:
-        args.nbs = strtobool(args.nbs)
-        args.fmt = strtobool(args.fmt)
-    except Exception as ex:
-        log.error(ex)
-        sys.exit()
-
-    setup_sphinx_params(args)
-
-    if args.nbs:
-        build_notebooks(args)
-        shutil.rmtree(PATH_DEST_IMAGES, ignore_errors=True)
-        shutil.copytree(PATH_SOURCE_IMAGES, PATH_DEST_IMAGES)
+    build_notebooks(args)
 
 
 if __name__ == "__main__":

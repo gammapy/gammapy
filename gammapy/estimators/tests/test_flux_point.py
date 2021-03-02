@@ -141,9 +141,9 @@ def test_compute_flux_points_dnde_exp(method):
 
 @requires_data()
 def test_fermi_to_dnde():
-    from gammapy.catalog import CATALOG_REGISTRY
+    from gammapy.catalog import SourceCatalog4FGL
 
-    catalog_4fgl = CATALOG_REGISTRY.get_cls("4fgl")()
+    catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
     src = catalog_4fgl["FGES J1553.8-5325"]
     fp_dnde = src.flux_points.to_sed_type("dnde", model=src.spectral_model())
 

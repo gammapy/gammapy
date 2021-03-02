@@ -7,6 +7,7 @@ import scipy.special
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
+from astropy.utils.decorators import classproperty
 from gammapy.maps import MapAxis
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
@@ -51,10 +52,10 @@ class SpectralModel(Model):
         kwargs = self._convert_evaluate_unit(kwargs, energy)
         return self.evaluate(energy, **kwargs)
 
-    @property
-    def is_norm_spectral_model(self):
+    @classproperty
+    def is_norm_spectral_model(cls):
         """Whether model is a norm spectral model"""
-        return "Norm" in self.__class__.__name__
+        return "Norm" in cls.__name__
 
     @staticmethod
     def _convert_evaluate_unit(kwargs_ref, energy):
@@ -141,9 +142,7 @@ class SpectralModel(Model):
         dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
-        return self._propagate_error(
-            epsilon=epsilon, fct=self, energy=energy
-        )
+        return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
 
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
@@ -189,7 +188,7 @@ class SpectralModel(Model):
             fct=self.integral,
             energy_min=energy_min,
             energy_max=energy_max,
-            **kwargs
+            **kwargs,
         )
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
@@ -239,7 +238,7 @@ class SpectralModel(Model):
             fct=self.energy_flux,
             energy_min=energy_min,
             energy_max=energy_max,
-            **kwargs
+            **kwargs,
         )
 
     def plot(
@@ -319,7 +318,7 @@ class SpectralModel(Model):
 
         .. note::
 
-            This method calls ``ax.set_yscale("log", nonposy='clip')`` and
+            This method calls ``ax.set_yscale("log", nonpositive='clip')`` and
             ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
             The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
             when the error band extends to negative values (see also
@@ -328,8 +327,8 @@ class SpectralModel(Model):
             When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
             plotting code and the error band extends to negative values, it is not
             shown correctly. To circumvent this issue also use
-            ``plt.loglog(nonposx='clip', nonposy='clip')``
-            or ``plt.semilogy(nonposy='clip')``.
+            ``plt.loglog(nonposx='clip', nonpositive='clip')``
+            or ``plt.semilogy(nonpositive='clip')``.
 
         Parameters
         ----------
@@ -384,8 +383,8 @@ class SpectralModel(Model):
         else:
             ax.set_ylabel(f"Flux [{y.unit}]")
 
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
 
         if "norm" in self.__class__.__name__.lower():
             ax.set_ylabel(f"Norm [A.U.]")
@@ -1391,6 +1390,13 @@ class TemplateSpectralModel(SpectralModel):
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
         return cls(energy=energy, values=values)
+
+    @classmethod
+    def from_region_map(cls, map, **kwargs):
+        """Create model from region map"""
+        energy = map.geom.axes["energy_true"].center
+        values = map.quantity[:, 0, 0]
+        return cls(energy=energy, values=values, **kwargs)
 
 
 class ScaleSpectralModel(SpectralModel):

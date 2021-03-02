@@ -140,3 +140,12 @@ This axis is used to define the geometry of the `~gammapy.irf.PSFMap` and contro
 used to sample the PSF. This will reduce the quality of the PSF description.
 - If one or several IRFs are not required for the study at hand, it is possible not to build them
 by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
+
+Copy part of a datastore
+++++++++++++++++++++++++
+
+To share specific data from a database, it might be necessary to create a new data storage with
+a limited set of observations and summary files following the scheme described in gadf_.
+This is possible with the method `~gammapy.data.DataStore.copy_obs` provided by the
+`~gammapy.data.DataStore`. It allows to copy individual observations files in a given directory
+and build the associated observation and HDU tables.

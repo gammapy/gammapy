@@ -194,7 +194,7 @@ class OGIPDatasetWriter(DatasetWriter):
         counts = dataset.counts_off if is_bkg else dataset.counts
         acceptance = dataset.acceptance_off if is_bkg else dataset.acceptance
 
-        hdulist = counts.to_hdulist()
+        hdulist = counts.to_hdulist(format=self.format)
 
         table = Table.read(hdulist["SPECTRUM"])
         meta = self.get_ogip_meta(dataset, is_bkg=is_bkg)
@@ -368,7 +368,7 @@ class OGIPDatasetReader(DatasetReader):
         with fits.open(filename, memmap=False) as hdulist:
             counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
             acceptance_off = RegionNDMap.from_hdulist(
-                hdulist, ogip_column="BACKSCAL"
+                hdulist, ogip_column="BACKSCAL", format="ogip"
             )
         return {"counts_off": counts_off, "acceptance_off": acceptance_off}
 

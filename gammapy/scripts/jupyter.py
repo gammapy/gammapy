@@ -31,7 +31,7 @@ def cli_jupyter_run(ctx, tutor, kernel):
     """Execute Jupyter notebooks."""
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
-            notebook_test(path, kernel)
+            notebook_run(path, kernel)
 
 
 def execute_notebook(path, kernel="python3", loglevel=30):
@@ -154,10 +154,10 @@ def cli_jupyter_test(ctx, tutor, kernel):
     """Check if Jupyter notebooks are broken."""
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
-            notebook_test(path, kernel)
+            notebook_run(path, kernel)
 
 
-def notebook_test(path, kernel="python3"):
+def notebook_run(path, kernel="python3"):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 
