@@ -1895,8 +1895,11 @@ class MapDatasetOnOff(MapDataset):
 
         """
         if counts_off is None and dataset.background is not None:
-            alpha = acceptance / acceptance_off
-            counts_off = dataset.npred_background() / alpha
+            try:
+                alpha = acceptance / acceptance_off
+                counts_off = dataset.npred_background() / alpha
+            except ZeroDivisionError:
+                counts_off = dataset.npred_background() * np.nan
 
         return cls(
             models=dataset.models,
