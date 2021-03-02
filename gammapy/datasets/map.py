@@ -1276,9 +1276,9 @@ class MapDataset(Dataset):
                 geom = kwargs["exposure"].geom
                 energy_true = geom.axes["energy_true"].center
                 containment = self.psf.containment(
-                        position=on_region.center,
-                        energy_true=energy_true,
-                        rad=on_region.radius
+                    position=on_region.center,
+                    energy_true=energy_true,
+                    rad=on_region.radius
                 )
                 kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
 
@@ -2529,6 +2529,9 @@ class MapEvaluator:
         if not geom.is_region:
             return False
 
+        if self.psf:
+            return False
+
         is_point_model = isinstance(self.model.spatial_model, PointSpatialModel)
         is_circle_region = isinstance(geom.region, CircleSkyRegion)
         return is_point_model & is_circle_region
@@ -2536,7 +2539,6 @@ class MapEvaluator:
     @property
     def cutout_width(self):
         """Cutout width for the model component"""
-
         return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
 
     def update(self, exposure, psf, edisp, geom, mask):
@@ -2579,6 +2581,7 @@ class MapEvaluator:
                 )
             else:
                 if geom.is_region:
+                    # here we just need to choose a large value, the size will be the rad max
                     geom = geom.to_wcs_geom(width_min="15 deg")
 
                 self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
@@ -2620,7 +2623,10 @@ class MapEvaluator:
         value = self.compute_flux_spectral()
 
         if self.model.spatial_model:
-            value = value * self.compute_flux_spatial()
+            if self.use_psf_containment():
+                value = value * self.psf_containment
+            else:
+                value = value * self.compute_flux_spatial()
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
@@ -2636,8 +2642,8 @@ class MapEvaluator:
             Psf-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
-            if self.use_psf_containment():
-                return self.psf_containment
+            if self.geom.region is None:
+                return 1
 
             wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
             values = self.model.spatial_model.integrate_geom(wcs_geom)

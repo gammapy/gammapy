@@ -42,8 +42,6 @@ class RegionGeom(Geom):
         value is adequate for the majority of use cases. If a wcs object
         is provided, the input of binsz_wcs is overridden.
     """
-
-    is_image = False
     is_regular = True
     is_allsky = False
     is_hpx = False

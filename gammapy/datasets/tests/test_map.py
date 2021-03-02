@@ -1476,7 +1476,7 @@ def test_region_geom_io(tmpdir):
 
     assert isinstance(dataset.counts.geom, RegionGeom)
     assert isinstance(dataset.edisp.edisp_map.geom, RegionGeom)
-    assert dataset.psf is None
+    assert isinstance(dataset.psf.psf_map.geom, RegionGeom)
 
 
 def test_dataset_mixed_geom(tmpdir):
