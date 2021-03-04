@@ -116,6 +116,7 @@ Package
    models.ipynb
    modeling.ipynb
    maps.ipynb
+   mask_maps.ipynb
    astro_dark_matter.ipynb
 
 Specific use cases
@@ -123,7 +124,6 @@ Specific use cases
 
 .. nbgallery::
 
-   exclusion_mask.ipynb
    event_sampling.ipynb
    background_model.ipynb
 
