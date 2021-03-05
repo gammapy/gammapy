@@ -98,39 +98,6 @@ class PSFMap(IRFMap):
         psf_map = Map.from_geom(geom, unit="sr-1")
         return cls(psf_map, exposure_psf)
 
-    def to_region_nd_map(self, region):
-        """Extract PSFMap in a given region or position
-
-        If a region is given a mean PSF is computed, if a position is given the
-        PSF is interpolated.
-
-        Parameters
-        ----------
-        region : `SkyRegion` or `SkyCoord`
-            Region or position where to get the map.
-
-        Returns
-        -------
-        psf : `PSFMap`
-            PSF map with region geometry.
-        """
-        if region is None:
-            region = self.psf_map.geom.center_skydir
-
-        # TODO: compute an exposure weighted mean PSF here
-        kwargs = {"region": region, "func": np.nanmean}
-        psf_map = self.psf_map.to_region_nd_map(**kwargs)
-
-        if self.exposure_map:
-            exposure_map = self.exposure_map.to_region_nd_map(**kwargs)
-        else:
-            exposure_map = None
-
-        return self.__class__(
-            psf_map=psf_map,
-            exposure_map=exposure_map
-        )
-
     # TODO: this is a workaround for now, probably add Map.integral() or similar
     @property
     def _psf_irf(self):

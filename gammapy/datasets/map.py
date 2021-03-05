@@ -1299,6 +1299,53 @@ class MapDataset(Dataset):
 
         return SpectrumDataset(**kwargs)
 
+    def to_spectrum(self, region, name=None):
+        """Return a ~gammapy.datasets.SpectrumDataset from on_region.
+
+        The model is not exported to the ~gammapy.datasets.SpectrumDataset.
+        It must be set after the dataset extraction.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`
+            Region from which to extract the spectrum
+        name : str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.MapDataset`
+            the resulting reduced dataset
+        """
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
+
+        if self.mask_safe:
+            kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
+
+        if self.counts:
+            kwargs["counts"] = self.counts.to_region_nd_map(
+                region, np.sum, weights=self.mask_safe
+            )
+
+        if self.stat_type == "cash" and self.background:
+            kwargs["background"] = self.background.to_region_nd_map(
+                region, func=np.sum, weights=self.mask_safe
+            )
+
+        if self.exposure:
+            kwargs["exposure"] = self.exposure.to_region_nd_map(region, func=np.mean)
+
+        # TODO: Compute average psf in region
+        if self.psf:
+            kwargs["psf"] = self.psf.to_region_nd_map(region.center)
+
+        # TODO: Compute average edisp in region
+        if self.edisp is not None:
+            kwargs["edisp"] = self.edisp.to_region_nd_map(region.center)
+
+        return self.__class__(**kwargs)
+
     def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
 
