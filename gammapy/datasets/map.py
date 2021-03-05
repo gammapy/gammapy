@@ -1214,10 +1214,8 @@ class MapDataset(Dataset):
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.datasets.SpectrumDataset from on_region.
 
-        Counts and background are summed in the on_region.
-
-        Effective area is taken from the average exposure divided by the livetime.
-        Here we assume it is the sum of the GTIs.
+        Counts and background are summed in the on_region. Exposure is taken
+        from the average exposure.
 
         The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
@@ -1241,61 +1239,33 @@ class MapDataset(Dataset):
         """
         from .spectrum import SpectrumDataset
 
-        name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
-
-        if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.get_spectrum(on_region, func=np.any)
-
-        if self.counts is not None:
-            kwargs["counts"] = self.counts.get_spectrum(
-                on_region, np.sum, weights=self.mask_safe
-            )
-
-        if self.stat_type == "cash" and self.background is not None:
-            kwargs["background"] = self.background.get_spectrum(
-                on_region, func=np.sum, weights=self.mask_safe
-            )
-
-        if self.exposure is not None:
-            kwargs["exposure"] = self.exposure.get_spectrum(on_region, np.mean)
-            try:
-                kwargs["exposure"].meta["livetime"] = self.exposure.meta["livetime"].copy()
-            except KeyError:
-                kwargs["exposure"].meta["livetime"] = u.Quantity(np.nan, "s")
+        dataset = self.to_spectrum(region=on_region, name=name)
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containement correction is only supported for"
+                    "Containment correction is only supported for"
                     " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
             else:
-                geom = kwargs["exposure"].geom
+                geom = dataset.exposure.geom
                 energy_true = geom.axes["energy_true"].center
                 containment = self.psf.containment(
                     position=on_region.center,
                     energy_true=energy_true,
                     rad=on_region.radius
                 )
-                kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
+                dataset.exposure.quantity *= containment.reshape(geom.data_shape)
 
-        # TODO: Compute average edisp in region
-        if self.edisp is not None:
-            energy_axis = self._geom.axes["energy"]
+        kwargs = {}
 
-            position = None if on_region is None else on_region.center
-            edisp = self.edisp.get_edisp_kernel(
-                position=position, energy_axis=energy_axis
-            )
+        for name in ["counts", "edisp", "mask_safe", "mask_fit", "exposure", "gti", "meta_table"]:
+            kwargs[name] = getattr(dataset, name)
 
-            edisp = EDispKernelMap.from_edisp_kernel(
-                edisp=edisp, geom=RegionGeom(on_region)
-            )
-            edisp.exposure_map.data = kwargs["exposure"].data.copy()
-            kwargs["edisp"] = edisp
+        if self.stat_type == "cash":
+            kwargs["background"] = dataset.background
 
         return SpectrumDataset(**kwargs)
 
@@ -1322,6 +1292,9 @@ class MapDataset(Dataset):
 
         if self.mask_safe:
             kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
+
+        if self.mask_fit:
+            kwargs["mask_fit"] = self.mask_fit.to_region_nd_map(region, func=np.any)
 
         if self.counts:
             kwargs["counts"] = self.counts.to_region_nd_map(

@@ -154,6 +154,7 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     else:
         edisp = None
 
+    edisp.exposure_map = exposure.copy()
     # define fit mask
     center = SkyCoord("0.2 deg", "0.1 deg", frame="galactic")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
@@ -256,12 +257,18 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset.background.geom.axes[0].nbin == 2
     assert spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert spectrum_dataset.exposure.unit == "m2s"
-    assert spectrum_dataset.edisp.get_edisp_kernel().axes["energy"].nbin == 2
-    assert spectrum_dataset.edisp.get_edisp_kernel().axes["energy_true"].nbin == 3
-    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.070884e09, rtol=1e-5)
+
+    energy_axis = geom.axes["energy"]
+    assert spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis).axes["energy"].nbin == 2
+    assert spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis).axes["energy_true"].nbin == 3
+
+    assert_allclose(
+        spectrum_dataset.edisp.exposure_map.data[1], 3.070917e+09, rtol=1e-5
+    )
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
+
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
     assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e+09, rtol=1e-5)
 
