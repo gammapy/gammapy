@@ -147,14 +147,17 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
 
     if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
+        data = exposure.get_spectrum(geom.center_skydir).data
+        edisp.exposure_map.data = np.repeat(data, 2, axis=-1)
     elif edisp == "edispkernelmap":
         edisp = EDispKernelMap.from_diagonal_response(
             energy_axis=e_reco, energy_axis_true=e_true
         )
+        data = exposure.get_spectrum(geom.center_skydir).data
+        edisp.exposure_map.data = np.repeat(data, 2, axis=-1)
     else:
         edisp = None
 
-    edisp.exposure_map = exposure.copy()
     # define fit mask
     center = SkyCoord("0.2 deg", "0.1 deg", frame="galactic")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
@@ -1526,3 +1529,27 @@ def test_dataset_mixed_geom(tmpdir):
     assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
     assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
 
+
+@requires_data()
+def test_map_dataset_region_geom_npred():
+    dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+
+    pwl = PowerLawSpectralModel()
+    point = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    model_1 = SkyModel(pwl, point, name="model-1")
+
+    pwl = PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
+    gauss = GaussianSpatialModel(lon_0="0.3 deg", lat_0="0.3 deg", sigma="0.5 deg", frame="galactic")
+    model_2 = SkyModel(pwl, gauss, name="model-2")
+
+    dataset.models = [model_1, model_2]
+
+    region = RegionGeom.create("galactic;circle(0, 0, 0.4)").region
+    npred_ref = dataset.npred().to_region_nd_map(region)
+
+    dataset_spec = dataset.to_spectrum(region)
+    dataset_spec.models = [model_1, model_2]
+
+    npred = dataset_spec.npred()
+
+    assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
