@@ -56,7 +56,7 @@ Differential and integral maps
 differential values at specific coordinates, or integral values within bins.
 This is achieved by specifying the ``node_type`` of a ``MapAxis``. Quantities
 defined at bin centers should have a node_type of "center", and quantities
-integrated in bins should have node_type of "edges". Interpolation is defined
+integrated in bins should have node_type of ``edges``. Interpolation is defined
 only for differential quantities.
 
 For the specific case of the energy axis, conventionally, true energies are have
@@ -131,6 +131,7 @@ broadcast a given operation across a grid of coordinate values.
 
 .. testcode::
 
+    import numpy as np
     from gammapy.maps import Map
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
