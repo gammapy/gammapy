@@ -1309,14 +1309,14 @@ class MapDataset(Dataset):
         if self.exposure:
             kwargs["exposure"] = self.exposure.to_region_nd_map(region, func=np.mean)
 
+        region = region.center if region else None
+
         # TODO: Compute average psf in region
         if self.psf:
-            region = region.center if region else None
             kwargs["psf"] = self.psf.to_region_nd_map(region)
 
         # TODO: Compute average edisp in region
         if self.edisp is not None:
-            region = region.center if region else None
             kwargs["edisp"] = self.edisp.to_region_nd_map(region)
 
         return self.__class__(**kwargs)
