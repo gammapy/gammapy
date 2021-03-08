@@ -2662,7 +2662,7 @@ class MapEvaluator:
             if self.geom.region is None:
                 return 1
 
-            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width)
+            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
             values = self.model.spatial_model.integrate_geom(wcs_geom)
 
             if self.psf and self.model.apply_irf["psf"]:
