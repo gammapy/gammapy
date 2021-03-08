@@ -68,6 +68,13 @@ def test_runmcmc_noprior(dataset, caplog):
    dataset.models.parameters["lon_0"].min = np.nan
    dataset.models.parameters["lon_0"].max = np.nan
    sampler = run_mcmc(dataset, nwalkers=6, nrun=10)
-   assert "WARNING" in [_.levelname for _ in caplog.records]
-   assert "Missing prior for parameter: lon_0." in [_.message for _ in caplog.records]
+   #assert "WARNING" in [_.levelname for _ in caplog.records]
+   #assert "MCMC will likely fail!" in [_.message for _ in caplog.records]
+   #assert "gammapy.modeling.models.core:core.py:151 Parameter index not defined. Using default value: 2.0" in caplog.text
+   assert "WARNING" in caplog.text.levelname 
+   #assert "WARNING" in [_.levelname for _ in caplog.records]
+   #assert "MCMC will likely fail!" in caplog.text
+   #assert 1==0
+
+
 
