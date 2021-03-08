@@ -2544,15 +2544,9 @@ class MapEvaluator:
             psf_width = 0 * u.deg
         return psf_width
 
-    def use_psf_containment(self, geom=None):
+    def use_psf_containment(self, geom):
         """Use psf containment for point sources and circular regions"""
-        if geom is None:
-            geom = self.geom
-
         if not geom.is_region:
-            return False
-
-        if self.psf:
             return False
 
         is_point_model = isinstance(self.model.spatial_model, PointSpatialModel)
@@ -2646,7 +2640,7 @@ class MapEvaluator:
         value = self.compute_flux_spectral()
 
         if self.model.spatial_model:
-            if self.use_psf_containment():
+            if self.psf_containment is not None:
                 value = value * self.psf_containment
             else:
                 value = value * self.compute_flux_spatial()
@@ -2668,7 +2662,7 @@ class MapEvaluator:
             if self.geom.region is None:
                 return 1
 
-            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
+            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width)
             values = self.model.spatial_model.integrate_geom(wcs_geom)
 
             if self.psf and self.model.apply_irf["psf"]:
