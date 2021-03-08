@@ -114,7 +114,8 @@ Package
 
    catalog.ipynb
    models.ipynb
-   modeling.ipynb
+   model_management.ipynb
+   fitting.ipynb
    maps.ipynb
    astro_dark_matter.ipynb
 
