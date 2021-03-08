@@ -77,6 +77,8 @@ def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, ob
         dataset = maker.run(spectrum_dataset_crab, obs)
         datasets.append(dataset)
 
+    assert isinstance(datasets[0], SpectrumDataset)
+
     assert_allclose(datasets[0].counts.data.sum(), 100)
     assert_allclose(datasets[1].counts.data.sum(), 92)
 
@@ -125,6 +127,7 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     #Edisp -> it isn't exactly 8, is that right? it also isn't without averaging
     assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
     assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
+
 
 @requires_data()
 def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_dc1):

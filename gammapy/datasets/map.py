@@ -2506,7 +2506,7 @@ class MapEvaluator:
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["_compute_npred", "_compute_flux_spatial"]:
+            if key in ["_compute_npred", "_compute_flux_spatial", "_compute_npred_psf_after_edisp"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -2537,6 +2537,7 @@ class MapEvaluator:
 
     @property
     def psf_width(self):
+        """Width of the PSF"""
         if self.psf is not None:
             psf_width = np.max(self.psf.psf_kernel_map.geom.width)
         else:

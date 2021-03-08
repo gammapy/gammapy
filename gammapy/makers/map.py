@@ -286,8 +286,9 @@ class MapDatasetMaker(Maker):
         """
         kwargs = {"gti": observation.gti}
         kwargs["meta_table"] = self.make_meta_table(observation)
+
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
-        mask_safe.data |= True
+        mask_safe.data[...] = True
 
         kwargs["mask_safe"] = mask_safe
 
@@ -318,4 +319,4 @@ class MapDatasetMaker(Maker):
 
             kwargs["edisp"] = edisp
 
-        return MapDataset(name=dataset.name, **kwargs)
+        return dataset.__class__(name=dataset.name, **kwargs)
