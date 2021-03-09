@@ -73,21 +73,21 @@ def test_datastore_from_events():
     assert len(data_store.hdu_table) == 6
 
 
-@requires_data()
-def test_datastore_get_observations(data_store):
-    """Test loading data and IRF files via the DataStore"""
-    observations = data_store.get_observations([23523, 23592])
-    assert observations[0].obs_id == 23523
+    @requires_data()
+    def test_datastore_get_observations(data_store, caplog):
+        """Test loading data and IRF files via the DataStore"""
+        observations = data_store.get_observations([23523, 23592])
+        assert observations[0].obs_id == 23523
+        observations = data_store.get_observations()
+        assert len(observations) == 105
 
-    # Test that default is all observations
-    observations = data_store.get_observations()
-    assert len(observations) == 105
+        with pytest.raises(ValueError):
+            data_store.get_observations([11111, 23592])
 
-    with pytest.raises(ValueError):
-        data_store.get_observations([11111, 23592])
-
-    observations = data_store.get_observations([11111, 23523], skip_missing=True)
-    assert observations[0].obs_id == 23523
+        observations = data_store.get_observations([11111, 23523], skip_missing=True)
+        assert observations[0].obs_id == 23523
+        assert "WARNING" in [_.levelname for _ in caplog.records]
+        assert "Skipping missing obs_id: 11111" in [_.message for _ in caplog.records]
 
 
 @requires_data()
