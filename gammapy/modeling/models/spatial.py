@@ -14,6 +14,7 @@ from regions import (
     EllipseSkyRegion,
     PointSkyRegion,
     PolygonSkyRegion,
+    CompoundSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
@@ -975,3 +976,61 @@ class TemplateSpatialModel(SpatialModel):
         if geom is None:
             geom = self.map.geom
         super().plot_interative(ax=ax, geom=geom, **kwargs)
+
+
+class CompoundSpatialModel(SpatialModel):
+    """Arithmetic combination of any two spatial models.
+
+    Used to combine two spatial models sharing the same spectral model.
+
+    Works analogously to the :ref:`compound-spectral-model`.
+    """
+
+    tag = ["CompoundSpatialModel", "compound"]
+
+    def __init__(self, model1, model2, operator):
+        self.model1 = model1
+        self.model2 = model2
+        self.operator = operator
+        super().__init__()
+
+    @property
+    def parameters(self):
+        return self.model1.parameters + self.model2.parameters
+
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__}\n"
+            f"    Component 1 : {self.model1}\n"
+            f"    Component 2 : {self.model2}\n"
+            f"    Operator : {self.operator.__name__}\n"
+        )
+
+    def __call__(self, lon, lat):
+        val1 = self.model1(lon, lat)
+        val2 = self.model2(lon, lat)
+        return self.operator(val1, val2)
+
+    def to_dict(self, full_output=False):
+        return {
+            "type": self.tag[0],
+            "model1": self.model1.to_dict(full_output),
+            "model2": self.model2.to_dict(full_output),
+            "operator": self.operator.__name__,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
+
+        model1_cls = SPATIAL_MODEL_REGISTRY.get_cls(data["model1"]["type"])
+        model1 = model1_cls.from_dict(data["model1"])
+        model2_cls = SPATIAL_MODEL_REGISTRY.get_cls(data["model2"]["type"])
+        model2 = model2_cls.from_dict(data["model2"])
+        op = getattr(operator, data["operator"])
+        return cls(model1, model2, op)
+
+    def to_region(self):
+        reg1 = self.model1.to_region()
+        reg2 = self.model2.to_region()
+        return CompoundSkyRegion(reg1, reg2, self.operator)

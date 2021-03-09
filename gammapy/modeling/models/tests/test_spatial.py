@@ -23,6 +23,7 @@ from gammapy.modeling.models import (
     ShellSpatialModel,
     Shell2SpatialModel,
     TemplateSpatialModel,
+    CompoundSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -409,3 +410,20 @@ def test_integrate_geom_energy_axis():
     integral = model.integrate_geom(geom).data
 
     assert_allclose(integral, 1, rtol=0.01)
+
+
+def test_compound_model():
+    model1 = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.3 * u.deg, frame="icrs")
+    model2 = GaussianSpatialModel(
+        lon="0.3d", lat="0.3d", sigma=0.1 * u.deg, frame="icrs"
+    )
+    model_compound = CompoundSpatialModel(model1, model2, np.add)
+    lon = [0.3, 0.5] * u.deg
+    lat = 0.3 * u.deg
+    val1 = model1(lon, lat)
+    val2 = model2(lon, lat)
+    val = model_compound(lon, lat)
+    assert val.unit == "sr-1"
+    assert_allclose(val.value, val1.value + val2.value)
+    radius = model_compound.evaluation_radius
+    assert radius is None
