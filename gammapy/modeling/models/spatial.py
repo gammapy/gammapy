@@ -440,7 +440,7 @@ class GaussianSpatialModel(SpatialModel):
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
     def to_region(self, **kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
+        """Model outline at :math:`1\sigma` (`~regions.EllipseSkyRegion`)."""
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -452,9 +452,9 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_region(self):
-        """Evaluation region"""
+        """Evaluation region consistent with evaluation radius """
         region = self.to_region()
-        region.height = 5 * region.height  # consistent with evaluation radius
+        region.height = 5 * region.height
         region.width = 5 * region.width
         return region
 
@@ -511,7 +511,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
     def to_region(self, **kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
+        """Model outline at :math:`1 r_0`(`~regions.EllipseSkyRegion`)."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
@@ -523,7 +523,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_region(self):
-        """Evaluation region"""
+        """Evaluation region consistent with evaluation radius"""
         region = self.to_region()
         scale = self.evaluation_radius / self.r_0.quantity
         # scale to be consistent with evaluation radius
@@ -960,7 +960,7 @@ class TemplateSpatialModel(SpatialModel):
         return data
 
     def to_region(self, **kwargs):
-        """Model outline (`~regions.PolygonSkyRegion`)."""
+        """Model outline from template map boundary (`~regions.PolygonSkyRegion`)."""
         footprint = self.map.geom.wcs.calc_footprint()
         return PolygonSkyRegion(
             vertices=SkyCoord(footprint, unit="deg", frame=self.frame, **kwargs)
