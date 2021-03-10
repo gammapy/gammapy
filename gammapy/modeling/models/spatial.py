@@ -578,7 +578,7 @@ class DiskSpatialModel(SpatialModel):
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
     
-        Set to the length of the semi-major axis.
+        Set to the length of the semi-major axis plus the edge width.
         """
         return self.r_0.quantity + self.edge.quantity
 
