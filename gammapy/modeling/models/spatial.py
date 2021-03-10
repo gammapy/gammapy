@@ -128,6 +128,17 @@ class SpatialModel(Model):
         )
 
     def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom` 
+
+        Returns
+        ---------
+        `~gammapy.maps.Map`
+
+        """
         coords = geom.to_image().get_coord(frame=self.frame)
 
         if self.is_energy_dependent:
@@ -639,6 +650,7 @@ class ShellSpatialModel(SpatialModel):
         Shell width
     frame : {"icrs", "galactic"}
         Center position coordinate frame
+
     See Also
     --------
     Shell2SpatialModel
