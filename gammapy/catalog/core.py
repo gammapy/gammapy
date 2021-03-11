@@ -5,6 +5,7 @@ import numbers
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from gammapy.modeling.models import Models
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
@@ -16,10 +17,10 @@ class Bunch(dict):
         self.__dict__.update(kw)
 
 
-class SourceCatalogObject:
+class SourceCatalogObject(abc.ABC):
     """Source catalog object.
 
-    This class can be used directly, but it's mostly used as a
+    This class can't be used directly, it's used as a
     base class for the other source catalog classes.
 
     The catalog data on this source is stored in the `source.data`
@@ -56,11 +57,16 @@ class SourceCatalogObject:
         table = table_from_row_data([self.data])
         return _skycoord_from_table(table)[0]
 
+    @abc.abstractmethod
+    def sky_model(self):
+        """Source sky model."""
+        pass
+    
 
 class SourceCatalog(abc.ABC):
     """Generic source catalog.
 
-    This class can be used directly, but it's mostly used as a
+    This class can't be used directly, it's used as a
     base class for the other source catalog classes.
 
     This is a thin wrapper around `~astropy.table.Table`,
@@ -214,6 +220,10 @@ class SourceCatalog(abc.ABC):
     def positions(self):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return _skycoord_from_table(self.table)
+
+    def to_models(self):
+        """ Create Models object from catalogue"""
+        return Models([_.sky_model() for _ in self])
 
 
 def _skycoord_from_table(table):
