@@ -2,6 +2,8 @@
 """Source catalog and object base classes."""
 import abc
 import numbers
+import numpy as np
+from copy import deepcopy
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
@@ -174,6 +176,10 @@ class SourceCatalog(abc.ABC):
             index = self.row_index(key)
         elif isinstance(key, numbers.Integral):
             index = key
+        elif isinstance(key, np.ndarray) and key.dtype == bool:
+            new = deepcopy(self)
+            new.table = self.table[key]
+            return new
         else:
             raise TypeError(f"Invalid key: {key!r}, {type(key)}\n")
 
