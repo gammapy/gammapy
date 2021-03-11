@@ -9,7 +9,7 @@ from astropy.table import Table
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import RegionGeom, Map, WcsGeom
+from gammapy.maps import RegionGeom, Map
 
 log = logging.getLogger(__name__)
 
@@ -810,7 +810,10 @@ class DatasetModels(collections.abc.Sequence):
         spatial_model = TemplateSpatialModel(map_)
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
-        return SkyModel(spectral_model=spectral_model, spatial_model=spatial_model, name=name)
+        return SkyModel(
+            spectral_model=spectral_model, spatial_model=spatial_model, name=name
+        )
+
 
 class Models(DatasetModels, collections.abc.MutableSequence):
     """Sky model collection.

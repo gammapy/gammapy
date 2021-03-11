@@ -5,9 +5,11 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
+from gammapy.maps import WcsGeom, MapAxis
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import Model, Models, SkyModel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.regions import list_to_compound_region, compound_region_center
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict
 from .core import SourceCatalog, SourceCatalogObject
@@ -559,7 +561,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 )
                 models.append(model)
             if components_status == "merged":
-                return models.to_template_spatial_model(name=self.name)
+                geom = self._get_components_geom(models)
+                return models.to_template_spatial_model(geom=geom, name=self.name)
             else:
                 return Models(models)
         else:
@@ -568,6 +571,23 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 spectral_model=self.spectral_model(which=which),
                 name=self.name,
             )
+
+    @staticmethod
+    def _get_components_geom(models):
+        energy_axis = MapAxis.from_nodes(
+            10 ** np.arange(-1, 2.01, 0.1), interp="log", name="energy_true", unit="TeV"
+        )
+        region = list_to_compound_region([m.spatial_model.to_region() for m in models])
+        center = compound_region_center(region)
+        sep = models[0].position.separation([m.position for m in models])
+        width = 2 * np.max([m.evaluation_radius for m in models]) + np.max(sep)
+        return WcsGeom.create(
+            skydir=center.galactic,
+            binsz=0.02,
+            width=width,
+            frame="galactic",
+            axes=[energy_axis],
+        )
 
     @property
     def flux_points(self):
