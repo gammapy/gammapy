@@ -546,10 +546,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 spec_component = spectral_model.copy()
                 weight = component.data["Flux_Map"] / self.data["Flux_Map"]
                 spec_component.parameters["amplitude"].value *= weight
-                if components_status == 'linked':
-                    for name in spec_component.parameters.names: 
-                         if name not in ["norm", "amplitude"]:
-                             spec_component.__dict__[name] = spectral_model.parameters[name]
+                if components_status == "linked":
+                    for name in spec_component.parameters.names:
+                        if name not in ["norm", "amplitude"]:
+                            spec_component.__dict__[name] = spectral_model.parameters[
+                                name
+                            ]
                 model = SkyModel(
                     spatial_model=component.spatial_model(),
                     spectral_model=spec_component,

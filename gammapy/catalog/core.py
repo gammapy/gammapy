@@ -63,7 +63,7 @@ class SourceCatalogObject(abc.ABC):
     def sky_model(self):
         """Source sky model."""
         pass
-    
+
 
 class SourceCatalog(abc.ABC):
     """Generic source catalog.
