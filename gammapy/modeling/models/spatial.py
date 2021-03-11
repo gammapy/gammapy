@@ -450,13 +450,25 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
-    def to_region(self, **kwargs):
-        """Model outline at :math:`1\sigma` (`~regions.EllipseSkyRegion`)."""
+    def to_region(self, n_sigma=1, **kwargs):
+        """Model outline at a given number of :math:`\sigma`.
+        
+        Parameters
+        ----------
+        n_sigma : float
+            Number of :math:`\sigma` (Default is 1). 
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model outline.
+        """
+
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.sigma.quantity,
-            width=2 * minor_axis,
+            height=2 * n_sigma * self.sigma.quantity,
+            width=2 * n_sigma * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -521,13 +533,25 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    def to_region(self, **kwargs):
-        """Model outline at :math:`1 r_0`(`~regions.EllipseSkyRegion`)."""
+    def to_region(self, n_r_0=1, **kwargs):
+        """Model outline at a given number of r_0.
+        
+        Parameters
+        ----------
+        n_r_0 : float
+            Number of r_0 (Default is 1).
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model outline.
+        """
+
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            height=2 * n_r_0 * self.r_0.quantity,
+            width=2 * n_r_0 * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
