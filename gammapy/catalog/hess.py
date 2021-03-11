@@ -559,7 +559,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 )
                 models.append(model)
             if components_status == "merged":
-                return models.to_template_spatial_model()
+                return models.to_template_spatial_model(name=self.name)
             else:
                 return Models(models)
         else:

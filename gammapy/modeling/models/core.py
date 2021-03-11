@@ -9,7 +9,7 @@ from astropy.table import Table
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import RegionGeom
+from gammapy.maps import RegionGeom, Map, WcsGeom
 
 log = logging.getLogger(__name__)
 
@@ -791,6 +791,26 @@ class DatasetModels(collections.abc.Sequence):
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
 
+    def to_template_spatial_model(self, geom, spectral_model=None, name=None):
+        """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`
+    
+        Parameters
+        ----------
+        spectral_model : `~gammapy.modeling.models.SpectralModel`
+            One of the NormSpectralMdel 
+        name : str
+            Name of the new model
+                           
+        """
+        from . import SkyModel, TemplateSpatialModel, PowerLawNormSpectralModel
+
+        map_ = Map.from_geom(geom)
+        for m in self:
+            map_ += m.evaluate_geom(geom)
+        spatial_model = TemplateSpatialModel(map_)
+        if spectral_model is None:
+            spectral_model = PowerLawNormSpectralModel()
+        return SkyModel(spectral_model=spectral_model, spatial_model=spatial_model, name=name)
 
 class Models(DatasetModels, collections.abc.MutableSequence):
     """Sky model collection.

@@ -222,9 +222,9 @@ class SourceCatalog(abc.ABC):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return _skycoord_from_table(self.table)
 
-    def to_models(self):
+    def to_models(self, **kwargs):
         """ Create Models object from catalogue"""
-        return Models([_.sky_model() for _ in self])
+        return Models([_.sky_model(**kwargs) for _ in self])
 
 
 def _skycoord_from_table(table):
