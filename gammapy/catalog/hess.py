@@ -512,34 +512,54 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             model.parameters[name].error = value
         return model
 
-    def sky_model(self, which="best"):
+    def sky_model(self, which="best", components_status="independent"):
         """Source sky model.
 
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
-
+            
+        components_status : {'independent', 'linked', 'merged'}
+            Relation between the sources components:
+                'independent' : each sub-component of a source is given as 
+                                a diffrent `SkyModel` (Default)
+                'linked' : each sub-component of a source is given as 
+                           a diffrent `SkyModel` but the spectral parameters
+                           except the mormalisation are linked.
+                'merged' : the sub-components are merged into a single `SkyModel`
+                           given as a `~gammapy.modeling.models.TemplateSpatialModel`
+                           with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
+                           In that case the relave weigths between the components
+                           cannot be adjusted.
         Returns
         -------
-        sky_model : `~gammapy.modeling.models.SkyModel`
-            Sky model of the catalog object.
+        sky_model : `~gammapy.modeling.models.Models`
+           Models of the catalog object.
         """
+
         spatial_type = self.data["Spatial_Model"]
         if spatial_type in {"2-Gaussian", "3-Gaussian"}:
             models = []
+            spectral_model = self.spectral_model(which=which)
             for component in self.components:
-                spectral_model = self.spectral_model(which=which)
+                spec_component = spectral_model.copy()
                 weight = component.data["Flux_Map"] / self.data["Flux_Map"]
-                spectral_model.parameters["amplitude"].value *= weight
+                spec_component.parameters["amplitude"].value *= weight
+                if components_status == 'linked':
+                    for name in spec_component.parameters.names: 
+                         if name not in ["norm", "amplitude"]:
+                             spec_component.__dict__[name] = spectral_model.parameters[name]
                 model = SkyModel(
                     spatial_model=component.spatial_model(),
-                    spectral_model=spectral_model,
+                    spectral_model=spec_component,
                     name=component.name,
                 )
                 models.append(model)
-
-            return Models(models)
+            if components_status == "merged":
+                return models.to_template_spatial_model()
+            else:
+                return Models(models)
         else:
             return SkyModel(
                 spatial_model=self.spatial_model(),
@@ -692,6 +712,41 @@ class SourceCatalogHGPS(SourceCatalog):
         data = table_row_to_dict(self.table_components[row_idx])
         data[SourceCatalogObject._row_index_key] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
+
+    def to_models(self, which="best", components_status="independent"):
+        """ Create Models object from catalogue
+
+        Parameters
+        ----------
+        which : {'best', 'pl', 'ecpl'}
+            Which spectral model
+            
+        components_status : {'independent', 'linked', 'merged'}
+            Relation between the sources components:
+                'independent' : each sub-component of a source is given as 
+                                a diffrent `SkyModel` (Default)
+                'linked' : each sub-component of a source is given as 
+                           a diffrent `SkyModel` but the spectral parameters
+                           except the mormalisation are linked.
+                'merged' : the sub-components are merged into a single `SkyModel`
+                           given as a `~gammapy.modeling.models.TemplateSpatialModel`
+                           with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
+                           In that case the relave weigths between the components
+                           cannot be adjusted.
+
+        Returns
+        -------
+        models : `~gammapy.modeling.models.Models`
+            Models of the catalog.
+        """
+
+        models = []
+        for _ in self:
+            m = _.sky_model(which, components_status)
+            if isinstance(m, SkyModel):
+                m = [m]
+            models.extend(m)
+        return Models(models)
 
 
 class SourceCatalogLargeScaleHGPS:
