@@ -19,10 +19,10 @@ class Bunch(dict):
         self.__dict__.update(kw)
 
 
-class SourceCatalogObject(abc.ABC):
+class SourceCatalogObject:
     """Source catalog object.
 
-    This class can't be used directly, it's used as a
+    This class can be used directly, but it is mostly used as a
     base class for the other source catalog classes.
 
     The catalog data on this source is stored in the `source.data`
@@ -59,16 +59,11 @@ class SourceCatalogObject(abc.ABC):
         table = table_from_row_data([self.data])
         return _skycoord_from_table(table)[0]
 
-    @abc.abstractmethod
-    def sky_model(self):
-        """Source sky model."""
-        pass
-
 
 class SourceCatalog(abc.ABC):
     """Generic source catalog.
 
-    This class can't be used directly, it's used as a
+    This class can be used directly, but it is mostly used as a
     base class for the other source catalog classes.
 
     This is a thin wrapper around `~astropy.table.Table`,
