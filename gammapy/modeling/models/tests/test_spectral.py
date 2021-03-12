@@ -402,7 +402,7 @@ def test_to_from_dict():
 
     model_dict = model.to_dict()
     # Here we reverse the order of parameters list to ensure assignment is correct
-    model_dict['parameters'].reverse()
+    model_dict["parameters"].reverse()
 
     model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
@@ -424,8 +424,8 @@ def test_to_from_dict_partial_input(caplog):
 
     model_dict = model.to_dict()
     # Here we remove the reference energy
-    model_dict['parameters'].remove(model_dict['parameters'][2])
-    print(model_dict['parameters'][0])
+    model_dict["parameters"].remove(model_dict["parameters"][2])
+    print(model_dict["parameters"][0])
 
     model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
@@ -440,7 +440,10 @@ def test_to_from_dict_partial_input(caplog):
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
     assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message =="Parameter reference not defined. Using default value: 1.0 TeV"
+    assert (
+        caplog.records[-1].message
+        == "Parameter reference not defined. Using default value: 1.0 TeV"
+    )
 
 
 def test_to_from_dict_compound():
