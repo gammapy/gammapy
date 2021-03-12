@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.maps import WcsGeom, MapAxis
+from gammapy.maps import WcsGeom, MapAxis, RegionGeom
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import Model, Models, SkyModel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
@@ -514,7 +514,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             model.parameters[name].error = value
         return model
 
-    def sky_model(self, which="best", components_status="independent"):
+    def sky_model(self, which="best"):
         """Source sky model.
 
         Parameters
@@ -522,18 +522,32 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
             
-        components_status : {'independent', 'linked', 'merged'}
-            Relation between the sources components:
-                'independent' : each sub-component of a source is given as 
-                                a diffrent `SkyModel` (Default)
-                'linked' : each sub-component of a source is given as 
-                           a diffrent `SkyModel` but the spectral parameters
-                           except the mormalisation are linked.
-                'merged' : the sub-components are merged into a single `SkyModel`
-                           given as a `~gammapy.modeling.models.TemplateSpatialModel`
-                           with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
-                           In that case the relave weigths between the components
-                           cannot be adjusted.
+        Returns
+        -------
+        sky_model : `~gammapy.modeling.models.Models`
+           Models of the catalog object.
+        """
+
+        models = self.components_models(which=which)
+        if len(models) > 1:
+            geom = self._get_components_geom(models)
+            return models.to_template_sky_model(geom=geom, name=self.name)
+        else:
+            return models[0]
+
+    def components_models(self, which="best", linked=False):
+        """Models of the source components.
+
+        Parameters
+        ----------
+        which : {'best', 'pl', 'ecpl'}
+            Which spectral model
+            
+        linked : bool
+             Each sub-component of a source is given as a diffrent `SkyModel`
+             If True the spectral parameters except the mormalisation are linked.
+             Default is False
+
         Returns
         -------
         sky_model : `~gammapy.modeling.models.Models`
@@ -548,7 +562,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 spec_component = spectral_model.copy()
                 weight = component.data["Flux_Map"] / self.data["Flux_Map"]
                 spec_component.parameters["amplitude"].value *= weight
-                if components_status == "linked":
+                if linked:
                     for name in spec_component.parameters.names:
                         if name not in ["norm", "amplitude"]:
                             spec_component.__dict__[name] = spectral_model.parameters[
@@ -560,40 +574,26 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                     name=component.name,
                 )
                 models.append(model)
-
-            models = Models(models)
-            if components_status == "merged":
-                geom = self._get_components_geom(models)
-                return models.to_template_spatial_model(geom=geom, name=self.name)
-            else:
-                return models
         else:
-            return SkyModel(
-                spatial_model=self.spatial_model(),
-                spectral_model=self.spectral_model(which=which),
-                name=self.name,
-            )
+            models = [
+                SkyModel(
+                    spatial_model=self.spatial_model(),
+                    spectral_model=self.spectral_model(which=which),
+                    name=self.name,
+                )
+            ]
+        return Models(models)
 
     @staticmethod
     def _get_components_geom(models):
-        energy_axis = MapAxis.from_nodes(
-            10 ** np.arange(-0.95, 1.951, 0.1),
-            interp="log",
-            name="energy_true",
-            unit="TeV",
+        energy_axis = MapAxis.from_energy_bounds(
+            "100 GeV", "100 TeV", nbin=10, per_decade=True, name="energy_true"
         )
-        region = list_to_compound_region([m.spatial_model.to_region() for m in models])
-        center = compound_region_center(region)
-        sep = models[0].position.separation(SkyCoord([m.position for m in models]))
-        r_eval = u.Quantity([m.evaluation_radius for m in models])
-        width = 2 * np.max(r_eval) + np.max(sep)
-        return WcsGeom.create(
-            skydir=center.galactic,
-            binsz=0.02,
-            width=width,
-            frame="galactic",
-            axes=[energy_axis],
+        regions = [m.spatial_model.evaluation_region for m in models]
+        geom = RegionGeom.from_regions(
+            regions, binsz_wcs="0.02 deg", axes=[energy_axis]
         )
+        return geom.to_wcs_geom()
 
     @property
     def flux_points(self):
@@ -769,10 +769,13 @@ class SourceCatalogHGPS(SourceCatalog):
         """
 
         models = []
-        for _ in self:
-            m = _.sky_model(which, components_status)
-            if isinstance(m, SkyModel):
-                m = [m]
+        for source in self:
+            if components_status == "merged":
+                m = [source.sky_model(which=which)]
+            else:
+                m = source.components_models(
+                    which=which, linked=components_status == "linked"
+                )
             models.extend(m)
         return Models(models)
 

@@ -791,7 +791,7 @@ class DatasetModels(collections.abc.Sequence):
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
 
-    def to_template_spatial_model(self, geom, spectral_model=None, name=None):
+    def to_template_sky_model(self, geom, spectral_model=None, name=None):
         """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`
     
         Parameters
