@@ -450,13 +450,15 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
-    def to_region(self, n_sigma=1, **kwargs):
+    def to_region(self, x_sigma=1.5, **kwargs):
         """Model outline at a given number of :math:`\sigma`.
         
         Parameters
         ----------
-        n_sigma : float
-            Number of :math:`\sigma` (Default is 1). 
+        x_sigma : float
+            Number of :math:`\sigma`
+            Default is :math:`1.5\sigma` which corresonds to about 68%
+            containment for a 2D symetric Gaussian. 
 
         Returns
         -------
@@ -467,8 +469,8 @@ class GaussianSpatialModel(SpatialModel):
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * n_sigma * self.sigma.quantity,
-            width=2 * n_sigma * minor_axis,
+            height=2 * x_sigma * self.sigma.quantity,
+            width=2 * x_sigma * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -476,10 +478,7 @@ class GaussianSpatialModel(SpatialModel):
     @property
     def evaluation_region(self):
         """Evaluation region consistent with evaluation radius """
-        region = self.to_region()
-        region.height = 5 * region.height
-        region.width = 5 * region.width
-        return region
+        return self.to_region(x_sigma=5)
 
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
@@ -533,12 +532,12 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    def to_region(self, n_r_0=1, **kwargs):
+    def to_region(self, x_r_0=1, **kwargs):
         """Model outline at a given number of r_0.
         
         Parameters
         ----------
-        n_r_0 : float
+        x_r_0 : float
             Number of r_0 (Default is 1).
 
         Returns
@@ -550,8 +549,8 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * n_r_0 * self.r_0.quantity,
-            width=2 * n_r_0 * minor_axis,
+            height=2 * x_r_0 * self.r_0.quantity,
+            width=2 * x_r_0 * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -559,12 +558,8 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     @property
     def evaluation_region(self):
         """Evaluation region consistent with evaluation radius"""
-        region = self.to_region()
         scale = self.evaluation_radius / self.r_0.quantity
-        # scale to be consistent with evaluation radius
-        region.height = scale * region.height
-        region.width = scale * region.width
-        return region
+        return self.to_region(x_r_0=scale)
 
 
 class DiskSpatialModel(SpatialModel):
