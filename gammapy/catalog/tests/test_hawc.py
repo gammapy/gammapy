@@ -30,6 +30,11 @@ class TestSourceCatalog2HWC:
     def test_positions(cat):
         assert len(cat.positions) == 40
 
+    @staticmethod
+    def test_to_models(cat):
+        models = cat.to_models(which="point")
+        assert len(models) == 40
+
 
 @requires_data()
 class TestSourceCatalogObject2HWC:
@@ -122,6 +127,13 @@ class TestSourceCatalog3HWC:
     @staticmethod
     def test_positions(ca_3hwc):
         assert len(ca_3hwc.positions) == 65
+
+
+#    TODO : add tests for SourceCatalogObject3HWC.sky_model() and fix it
+#    @staticmethod
+#    def test_to_models(ca_3hwc):
+#        models = ca_3hwc.to_models(which="point")
+#        assert len(models)==65
 
 
 @requires_data()

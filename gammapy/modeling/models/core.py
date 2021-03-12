@@ -804,10 +804,11 @@ class DatasetModels(collections.abc.Sequence):
         """
         from . import SkyModel, TemplateSpatialModel, PowerLawNormSpectralModel
 
-        map_ = Map.from_geom(geom)
+        unit = u.Unit("1 / (cm2 s sr TeV)")
+        map_ = Map.from_geom(geom, unit=unit)
         for m in self:
-            map_ += m.evaluate_geom(geom)
-        spatial_model = TemplateSpatialModel(map_)
+            map_ += m.evaluate_geom(geom).to(unit)
+        spatial_model = TemplateSpatialModel(map_, normalize=False)
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
         return SkyModel(

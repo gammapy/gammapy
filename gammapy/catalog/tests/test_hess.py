@@ -60,6 +60,15 @@ class TestSourceCatalogHGPS:
     def test_large_scale_component(cat):
         assert isinstance(cat.large_scale_component, SourceCatalogLargeScaleHGPS)
 
+    @staticmethod
+    def test_to_models(cat):
+        models = cat.to_models(components_status="independent")
+        assert len(models) == 96
+        models = cat.to_models(components_status="linked")
+        assert len(models) == 96
+        models = cat.to_models(components_status="merged")
+        assert len(models) == 78
+
 
 @requires_data()
 class TestSourceCatalogObjectHGPS:

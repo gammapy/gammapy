@@ -624,3 +624,9 @@ class TestSourceCatalog3FHL:
     def test_extended_sources(self):
         table = self.cat.extended_sources_table
         assert len(table) == 55
+
+    def test_to_models(self):
+        mask = self.cat.table["GLAT"].data.data > 80
+        subcat = self.cat[mask]
+        models = subcat.to_models()
+        assert len(models) == 17

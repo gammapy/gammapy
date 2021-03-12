@@ -2,7 +2,7 @@
 """HESS Galactic plane survey (HGPS) catalog."""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from gammapy.maps import WcsGeom, MapAxis
@@ -560,11 +560,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                     name=component.name,
                 )
                 models.append(model)
+
+            models = Models(models)
             if components_status == "merged":
                 geom = self._get_components_geom(models)
                 return models.to_template_spatial_model(geom=geom, name=self.name)
             else:
-                return Models(models)
+                return models
         else:
             return SkyModel(
                 spatial_model=self.spatial_model(),
@@ -575,12 +577,16 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @staticmethod
     def _get_components_geom(models):
         energy_axis = MapAxis.from_nodes(
-            10 ** np.arange(-1, 2.01, 0.1), interp="log", name="energy_true", unit="TeV"
+            10 ** np.arange(-0.95, 1.951, 0.1),
+            interp="log",
+            name="energy_true",
+            unit="TeV",
         )
         region = list_to_compound_region([m.spatial_model.to_region() for m in models])
         center = compound_region_center(region)
-        sep = models[0].position.separation([m.position for m in models])
-        width = 2 * np.max([m.evaluation_radius for m in models]) + np.max(sep)
+        sep = models[0].position.separation(SkyCoord([m.position for m in models]))
+        r_eval = u.Quantity([m.evaluation_radius for m in models])
+        width = 2 * np.max(r_eval) + np.max(sep)
         return WcsGeom.create(
             skydir=center.galactic,
             binsz=0.02,
