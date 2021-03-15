@@ -93,7 +93,7 @@ class EDispMap(IRFMap):
         """Normalize PSF map"""
         self.edisp_map.normalize(axis_name="migra")
 
-    def get_edisp_kernel(self, position, energy_axis):
+    def get_edisp_kernel(self, position=None, energy_axis=None):
         """Get energy dispersion at a given position.
 
         Parameters

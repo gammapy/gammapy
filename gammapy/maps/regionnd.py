@@ -529,6 +529,9 @@ class RegionNDMap(Map):
         """Return self"""
         return self
 
+    def to_region_nd_map(self, *args, **kwargs):
+        return self
+
     def cutout(self, *args, **kwargs):
         """Return self"""
         return self

@@ -4,7 +4,6 @@ from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
-from astropy.nddata.utils import NoOverlapError
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
@@ -15,6 +14,7 @@ from gammapy.modeling.models import (
     BackgroundModel,
     DatasetModels,
     FoVBackgroundModel,
+    PointSpatialModel
 )
 from gammapy.stats import (
     CashCountsStatistic,
@@ -91,10 +91,6 @@ def create_map_dataset_geoms(
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
     else:
         geom_edisp = geom_irf.to_cube([geom.axes["energy"], energy_axis_true])
-
-    # TODO: allow PSF as well...
-    if geom.is_region:
-        geom_psf = None
 
     return {
         "geom": geom,
@@ -1218,10 +1214,8 @@ class MapDataset(Dataset):
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
         """Return a ~gammapy.datasets.SpectrumDataset from on_region.
 
-        Counts and background are summed in the on_region.
-
-        Effective area is taken from the average exposure divided by the livetime.
-        Here we assume it is the sum of the GTIs.
+        Counts and background are summed in the on_region. Exposure is taken
+        from the average exposure.
 
         The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
@@ -1245,63 +1239,87 @@ class MapDataset(Dataset):
         """
         from .spectrum import SpectrumDataset
 
-        name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
-
-        if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.get_spectrum(on_region, func=np.any)
-
-        if self.counts is not None:
-            kwargs["counts"] = self.counts.get_spectrum(
-                on_region, np.sum, weights=self.mask_safe
-            )
-
-        if self.stat_type == "cash" and self.background is not None:
-            kwargs["background"] = self.background.get_spectrum(
-                on_region, func=np.sum, weights=self.mask_safe
-            )
-
-        if self.exposure is not None:
-            kwargs["exposure"] = self.exposure.get_spectrum(on_region, np.mean)
-            try:
-                kwargs["exposure"].meta["livetime"] = self.exposure.meta["livetime"].copy()
-            except KeyError:
-                kwargs["exposure"].meta["livetime"] = u.Quantity(np.nan, "s")
+        dataset = self.to_spectrum(region=on_region, name=name)
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containement correction is only supported for"
+                    "Containment correction is only supported for"
                     " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
             else:
-                geom = kwargs["exposure"].geom
+                geom = dataset.exposure.geom
                 energy_true = geom.axes["energy_true"].center
                 containment = self.psf.containment(
-                        position=on_region.center,
-                        energy_true=energy_true,
-                        rad=on_region.radius
+                    position=on_region.center,
+                    energy_true=energy_true,
+                    rad=on_region.radius
                 )
-                kwargs["exposure"].quantity *= containment.reshape(geom.data_shape)
+                dataset.exposure.quantity *= containment.reshape(geom.data_shape)
+
+        kwargs = {}
+
+        for name in ["counts", "edisp", "mask_safe", "mask_fit", "exposure", "gti", "meta_table"]:
+            kwargs[name] = getattr(dataset, name)
+
+        if self.stat_type == "cash":
+            kwargs["background"] = dataset.background
+
+        return SpectrumDataset(**kwargs)
+
+    def to_spectrum(self, region, name=None):
+        """Return a ~gammapy.datasets.SpectrumDataset from on_region.
+
+        The model is not exported to the ~gammapy.datasets.SpectrumDataset.
+        It must be set after the dataset extraction.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`
+            Region from which to extract the spectrum
+        name : str
+            Name of the new dataset.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.MapDataset`
+            the resulting reduced dataset
+        """
+        name = make_name(name)
+        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
+
+        if self.mask_safe:
+            kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
+
+        if self.mask_fit:
+            kwargs["mask_fit"] = self.mask_fit.to_region_nd_map(region, func=np.any)
+
+        if self.counts:
+            kwargs["counts"] = self.counts.to_region_nd_map(
+                region, np.sum, weights=self.mask_safe
+            )
+
+        if self.stat_type == "cash" and self.background:
+            kwargs["background"] = self.background.to_region_nd_map(
+                region, func=np.sum, weights=self.mask_safe
+            )
+
+        if self.exposure:
+            kwargs["exposure"] = self.exposure.to_region_nd_map(region, func=np.mean)
+
+        region = region.center if region else None
+
+        # TODO: Compute average psf in region
+        if self.psf:
+            kwargs["psf"] = self.psf.to_region_nd_map(region)
 
         # TODO: Compute average edisp in region
         if self.edisp is not None:
-            energy_axis = self._geom.axes["energy"]
+            kwargs["edisp"] = self.edisp.to_region_nd_map(region)
 
-            position = None if on_region is None else on_region.center
-            edisp = self.edisp.get_edisp_kernel(
-                position=position, energy_axis=energy_axis
-            )
-
-            edisp = EDispKernelMap.from_edisp_kernel(
-                edisp=edisp, geom=RegionGeom(on_region)
-            )
-            edisp.exposure_map.data = kwargs["exposure"].data.copy()
-            kwargs["edisp"] = edisp
-
-        return SpectrumDataset(**kwargs)
+        return self.__class__(**kwargs)
 
     def cutout(self, position, width, mode="trim", name=None):
         """Cutout map dataset.
@@ -2455,6 +2473,7 @@ class MapEvaluator:
         self.use_cache = use_cache
         self._init_position = None
         self.contributes = True
+        self.psf_containment = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -2487,7 +2506,7 @@ class MapEvaluator:
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["_compute_npred", "_compute_flux_spatial"]:
+            if key in ["_compute_npred", "_compute_flux_spatial", "_compute_npred_psf_after_edisp"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -2505,6 +2524,8 @@ class MapEvaluator:
             return False
         elif self.exposure is None:
             return True
+        elif self.geom.is_region:
+            return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
@@ -2516,16 +2537,25 @@ class MapEvaluator:
 
     @property
     def psf_width(self):
+        """Width of the PSF"""
         if self.psf is not None:
             psf_width = np.max(self.psf.psf_kernel_map.geom.width)
         else:
             psf_width = 0 * u.deg
         return psf_width
 
+    def use_psf_containment(self, geom):
+        """Use psf containment for point sources and circular regions"""
+        if not geom.is_region:
+            return False
+
+        is_point_model = isinstance(self.model.spatial_model, PointSpatialModel)
+        is_circle_region = isinstance(geom.region, CircleSkyRegion)
+        return is_point_model & is_circle_region
+
     @property
     def cutout_width(self):
         """Cutout width for the model component"""
-
         return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
 
     def update(self, exposure, psf, edisp, geom, mask):
@@ -2555,16 +2585,23 @@ class MapEvaluator:
             )
 
         # lookup psf
-        if psf:
+        if psf and self.model.spatial_model:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
                 geom = exposure.geom
 
-            if geom.is_region:
-                geom = geom.to_wcs_geom()
+            if self.use_psf_containment(geom=geom):
+                energy_true = geom.axes["energy_true"].center.reshape((-1, 1, 1))
+                self.psf_containment = psf.containment(
+                    energy_true=energy_true, rad=geom.region.radius
+                )
+            else:
+                if geom.is_region:
+                    # here we just need to choose a large value, the size will be the rad max
+                    geom = geom.to_wcs_geom(width_min="15 deg")
 
-            self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
+                self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local":
             self._init_position = self.model.position
@@ -2602,13 +2639,11 @@ class MapEvaluator:
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
-        if self.geom.is_region:
-            evaluate_spatial_model = self.geom.region is not None and self.psf
-        else:
-            evaluate_spatial_model = True
-
-        if self.model.spatial_model and evaluate_spatial_model:
-            value = value * self.compute_flux_spatial()
+        if self.model.spatial_model:
+            if self.psf_containment is not None:
+                value = value * self.psf_containment
+            else:
+                value = value * self.compute_flux_spatial()
 
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
@@ -2624,13 +2659,17 @@ class MapEvaluator:
             Psf-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
-            wcs_geom = self.geom.to_wcs_geom()
-            mask = self.geom.contains(wcs_geom.get_coord())
+            if self.geom.region is None:
+                return 1
+
+            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
             values = self.model.spatial_model.integrate_geom(wcs_geom)
 
             if self.psf and self.model.apply_irf["psf"]:
                 values = self.apply_psf(values)
-            value = (values.quantity * mask).sum(axis=(1, 2))
+
+            weights = wcs_geom.region_weights(regions=[self.geom.region])
+            value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
 
         else:
             value = self.model.spatial_model.integrate_geom(self.geom)

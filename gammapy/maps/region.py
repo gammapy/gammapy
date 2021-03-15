@@ -42,8 +42,6 @@ class RegionGeom(Geom):
         value is adequate for the majority of use cases. If a wcs object
         is provided, the input of binsz_wcs is overridden.
     """
-
-    is_image = False
     is_regular = True
     is_allsky = False
     is_hpx = False
@@ -303,11 +301,11 @@ class RegionGeom(Geom):
         which contains the region.
 
         Parameters
-         ----------
+        ----------
         width_min : `~astropy.quantity.Quantity`
-        Minimal width for the resulting geometry.
-        Can be a single number or two, for
-        different minimum widths in each spatial dimension.
+            Minimal width for the resulting geometry.
+            Can be a single number or two, for
+            different minimum widths in each spatial dimension.
 
         Returns
         -------
@@ -315,7 +313,7 @@ class RegionGeom(Geom):
             A WCS geometry object.
         """
         if width_min is not None:
-            width = np.min([self.width.to_value("deg"), _check_width(width_min)], axis=0)
+            width = np.max([self.width.to_value("deg"), _check_width(width_min)], axis=0)
         else:
             width = self.width
         wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)

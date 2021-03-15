@@ -19,7 +19,7 @@ def fermi_datasets():
 
 @pytest.fixture(scope="session")
 def hess_datasets():
-    datasets = Datasets([])
+    datasets = Datasets()
     pwl = PowerLawSpectralModel(amplitude="3.5e-11 cm-2s-1TeV-1", index=2.7)
     model = SkyModel(spectral_model=pwl, name="Crab")
 

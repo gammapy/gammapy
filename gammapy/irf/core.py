@@ -408,6 +408,40 @@ class IRFMap:
         mask = self._irf_map > (0 * self._irf_map.unit)
         return mask.reduce_over_axes(func=np.logical_or)
 
+    def to_region_nd_map(self, region):
+        """Extract IRFMap in a given region or position
+
+        If a region is given a mean IRF is computed, if a position is given the
+        IRF is interpolated.
+
+        Parameters
+        ----------
+        region : `SkyRegion` or `SkyCoord`
+            Region or position where to get the map.
+
+        Returns
+        -------
+        irf : `IRFMap`
+            IRF map with region geometry.
+        """
+        if region is None:
+            region = self._irf_map.geom.center_skydir
+
+        # TODO: compute an exposure weighted mean PSF here
+        kwargs = {"region": region, "func": np.nanmean}
+
+        if "energy" in self._irf_map.geom.axes.names:
+            kwargs["method"] = "nearest"
+
+        irf_map = self._irf_map.to_region_nd_map(**kwargs)
+
+        if self.exposure_map:
+            exposure_map = self.exposure_map.to_region_nd_map(**kwargs)
+        else:
+            exposure_map = None
+
+        return self.__class__(irf_map, exposure_map=exposure_map)
+
     def _get_nearest_valid_position(self, position):
         """Get nearest valid position"""
         is_valid = np.nan_to_num(self.mask_safe_image.get_by_coord(position))[0]

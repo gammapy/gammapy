@@ -29,14 +29,16 @@ def test_create(region):
     geom = RegionGeom.create(region)
     assert geom.frame == "galactic"
     assert geom.projection == "TAN"
-    assert not geom.is_image
+    assert geom.is_image
     assert not geom.is_allsky
+
 
 def test_binsz(region):
     geom = RegionGeom.create(region, binsz_wcs=0.05)
     wcs_geom = geom.to_wcs_geom()
     assert geom.binsz_wcs[0].deg == 0.05
     assert_allclose(wcs_geom.pixel_scales, geom.binsz_wcs)
+
 
 def test_defined_wcs(region):
     wcs = WcsGeom.create(
@@ -46,6 +48,7 @@ def test_defined_wcs(region):
         binsz="0.1deg").wcs
     geom = RegionGeom.create(region, wcs=wcs)
     assert geom.binsz_wcs[0].deg == 0.1
+
 
 def test_to_binsz_wcs(region):
     binsz = 0.05*u.deg

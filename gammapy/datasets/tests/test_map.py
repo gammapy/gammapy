@@ -147,10 +147,14 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
 
     if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
+        data = exposure.get_spectrum(geom.center_skydir).data
+        edisp.exposure_map.data = np.repeat(data, 2, axis=-1)
     elif edisp == "edispkernelmap":
         edisp = EDispKernelMap.from_diagonal_response(
             energy_axis=e_reco, energy_axis_true=e_true
         )
+        data = exposure.get_spectrum(geom.center_skydir).data
+        edisp.exposure_map.data = np.repeat(data, 2, axis=-1)
     else:
         edisp = None
 
@@ -256,12 +260,18 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset.background.geom.axes[0].nbin == 2
     assert spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert spectrum_dataset.exposure.unit == "m2s"
-    assert spectrum_dataset.edisp.get_edisp_kernel().axes["energy"].nbin == 2
-    assert spectrum_dataset.edisp.get_edisp_kernel().axes["energy_true"].nbin == 3
-    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.070884e09, rtol=1e-5)
+
+    energy_axis = geom.axes["energy"]
+    assert spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis).axes["energy"].nbin == 2
+    assert spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis).axes["energy_true"].nbin == 3
+
+    assert_allclose(
+        spectrum_dataset.edisp.exposure_map.data[1], 3.070917e+09, rtol=1e-5
+    )
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
+
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
     assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e+09, rtol=1e-5)
 
@@ -1476,7 +1486,7 @@ def test_region_geom_io(tmpdir):
 
     assert isinstance(dataset.counts.geom, RegionGeom)
     assert isinstance(dataset.edisp.edisp_map.geom, RegionGeom)
-    assert dataset.psf is None
+    assert isinstance(dataset.psf.psf_map.geom, RegionGeom)
 
 
 def test_dataset_mixed_geom(tmpdir):
@@ -1519,3 +1529,27 @@ def test_dataset_mixed_geom(tmpdir):
     assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
     assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
 
+
+@requires_data()
+def test_map_dataset_region_geom_npred():
+    dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+
+    pwl = PowerLawSpectralModel()
+    point = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    model_1 = SkyModel(pwl, point, name="model-1")
+
+    pwl = PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
+    gauss = GaussianSpatialModel(lon_0="0.3 deg", lat_0="0.3 deg", sigma="0.5 deg", frame="galactic")
+    model_2 = SkyModel(pwl, gauss, name="model-2")
+
+    dataset.models = [model_1, model_2]
+
+    region = RegionGeom.create("galactic;circle(0, 0, 0.4)").region
+    npred_ref = dataset.npred().to_region_nd_map(region)
+
+    dataset_spec = dataset.to_spectrum(region)
+    dataset_spec.models = [model_1, model_2]
+
+    npred = dataset_spec.npred()
+
+    assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
