@@ -47,8 +47,9 @@ Tutorials
 
 :ref:`tutorials` that show examples using ``gammapy.modeling``:
 
-- `Models Tutorial <../tutorials/models.html>`__
-- `Modeling and Fitting <../tutorials/modeling.html>`__
+- `Introduction to models API <../tutorials/models.html>`__
+- `Modeling and Fitting <../tutorials/fitting.html>`__
+- `Interation between models and datasets <../tutorials/model_management.html>`__
 - `analysis_3d.html <../tutorials/analysis_3d.html>`__
 - `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
 
