@@ -128,6 +128,17 @@ class SpatialModel(Model):
         )
 
     def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom` 
+
+        Returns
+        ---------
+        `~gammapy.maps.Map`
+
+        """
         coords = geom.to_image().get_coord(frame=self.frame)
 
         if self.is_energy_dependent:
@@ -439,24 +450,35 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
-    def to_region(self, **kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
+    def to_region(self, x_sigma=1.5, **kwargs):
+        """Model outline at a given number of :math:`\sigma`.
+        
+        Parameters
+        ----------
+        x_sigma : float
+            Number of :math:`\sigma`
+            Default is :math:`1.5\sigma` which corresonds to about 68%
+            containment for a 2D symetric Gaussian. 
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model outline.
+        """
+
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.sigma.quantity,
-            width=2 * minor_axis,
+            height=2 * x_sigma * self.sigma.quantity,
+            width=2 * x_sigma * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
 
     @property
     def evaluation_region(self):
-        """Evaluation region"""
-        region = self.to_region()
-        region.height = 5 * region.height  # consistent with evaluation radius
-        region.width = 5 * region.width
-        return region
+        """Evaluation region consistent with evaluation radius """
+        return self.to_region(x_sigma=5)
 
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
@@ -504,32 +526,40 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
         The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
             r_eval -> r_0 if eta -> 0 
-            r_eval = 5*r_0 = 5*sigma_gauss if eta=0.5
+            r_eval = 5*r_0 > 5*sigma_gauss = 5*r_0/sqrt(2) ~ 3.5*r_0 if eta=0.5
             r_eval = 9*r_0 > 5*sigma_laplace = 5*sqrt(2)*r_0 ~ 7*r_0 if eta = 1
             r_eval -> inf if eta -> inf
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    def to_region(self, **kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
+    def to_region(self, x_r_0=1, **kwargs):
+        """Model outline at a given number of r_0.
+        
+        Parameters
+        ----------
+        x_r_0 : float
+            Number of r_0 (Default is 1).
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model outline.
+        """
+
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            height=2 * x_r_0 * self.r_0.quantity,
+            width=2 * x_r_0 * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
 
     @property
     def evaluation_region(self):
-        """Evaluation region"""
-        region = self.to_region()
+        """Evaluation region consistent with evaluation radius"""
         scale = self.evaluation_radius / self.r_0.quantity
-        # scale to be consistent with evaluation radius
-        region.height = scale * region.height
-        region.width = scale * region.width
-        return region
+        return self.to_region(x_r_0=scale)
 
 
 class DiskSpatialModel(SpatialModel):
@@ -567,7 +597,7 @@ class DiskSpatialModel(SpatialModel):
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
     
-        Set to the length of the semi-major axis.
+        Set to the length of the semi-major axis plus the edge width.
         """
         return self.r_0.quantity + self.edge.quantity
 
@@ -639,6 +669,7 @@ class ShellSpatialModel(SpatialModel):
         Shell width
     frame : {"icrs", "galactic"}
         Center position coordinate frame
+
     See Also
     --------
     Shell2SpatialModel
@@ -960,7 +991,7 @@ class TemplateSpatialModel(SpatialModel):
         return data
 
     def to_region(self, **kwargs):
-        """Model outline (`~regions.PolygonSkyRegion`)."""
+        """Model outline from template map boundary (`~regions.PolygonSkyRegion`)."""
         footprint = self.map.geom.wcs.calc_footprint()
         return PolygonSkyRegion(
             vertices=SkyCoord(footprint, unit="deg", frame=self.frame, **kwargs)
