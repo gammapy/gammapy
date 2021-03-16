@@ -126,7 +126,6 @@ Specific use cases
 .. nbgallery::
 
    event_sampling.ipynb
-   background_model.ipynb
 
 
 .. _tutorials_scripts:
