@@ -104,8 +104,7 @@ class Dataset(abc.ABC):
                 residuals = (data - model) / np.sqrt(model)
             else:
                 raise AttributeError(
-                    f"Invalid method: {method!r}. Choose between 'diff',"
-                    " 'diff/model' and 'diff/sqrt(model)'"
+                    f"Invalid method: {method!r} for computing residuals"
                 )
         return residuals
 
@@ -257,9 +256,7 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             try:
                 dataset_sliced = dataset.slice_by_energy(
-                    energy_min=energy_min,
-                    energy_max=energy_max,
-                    name=dataset.name,
+                    energy_min=energy_min, energy_max=energy_max, name=dataset.name,
                 )
             except ValueError:
                 log.info(

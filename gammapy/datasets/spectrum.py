@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 
 class PlotMixin:
     """Plot mixin for the spectral datasets"""
+
     def plot_fit(
         self,
         ax_spectrum=None,
@@ -218,6 +219,9 @@ class SpectrumDataset(PlotMixin, MapDataset):
     def plot_residuals_spatial(self, *args, **kwargs):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
+    def to_spectrum_dataset(self, *args, **kwargs):
+        raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
+
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     stat_type = "wstat"
@@ -250,6 +254,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             OGIP PHA file to read
         """
         from .io import OGIPDatasetReader
+
         reader = OGIPDatasetReader(filename=filename)
         return reader.read()
 
@@ -270,7 +275,10 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             Format to use.
         """
         from .io import OGIPDatasetWriter
-        writer = OGIPDatasetWriter(filename=filename, format=format, overwrite=overwrite)
+
+        writer = OGIPDatasetWriter(
+            filename=filename, format=format, overwrite=overwrite
+        )
         writer.write(self)
 
     @classmethod
@@ -300,9 +308,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         return {"name": self.name, "type": self.tag, "filename": filename}
 
     @classmethod
-    def from_spectrum_dataset(
-        cls, **kwargs
-    ):
+    def from_spectrum_dataset(cls, **kwargs):
         """Create spectrum dataseton off from another dataset.
 
         Parameters
