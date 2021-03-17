@@ -27,7 +27,8 @@ REQUIRED_MAPS = {
     "likelihood": ["norm"],
 }
 
-#TODO: add an entry for is_ul?
+
+# TODO: add an entry for is_ul?
 OPTIONAL_MAPS = {
     "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
@@ -37,6 +38,7 @@ OPTIONAL_MAPS = {
 }
 
 log = logging.getLogger(__name__)
+
 
 class FluxMaps(FluxEstimate):
     """A flux map container.
@@ -75,7 +77,7 @@ class FluxMaps(FluxEstimate):
     def __init__(self, data, reference_model=None, gti=None):
         self.geom = data['norm'].geom
 
-        if reference_model == None:
+        if reference_model is None:
             log.warning("No reference model set for FluxMaps. Assuming point source with E^-2 spectrum.")
             reference_model = self._default_model()
 
@@ -87,7 +89,10 @@ class FluxMaps(FluxEstimate):
 
     @staticmethod
     def _default_model():
-        return SkyModel(spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2))
+        return SkyModel(
+            spatial_model=PointSpatialModel(),
+            spectral_model=PowerLawSpectralModel(index=2)
+        )
 
     @property
     def _additional_maps(self):
@@ -110,14 +115,12 @@ class FluxMaps(FluxEstimate):
 
     @property
     def ts(self):
-        if not "ts" in self.data:
-            raise KeyError("No ts map present in FluxMaps.")
+        """TS maps"""
         return self.data["ts"]
 
     @property
     def sqrt_ts(self):
-        if not "sqrt_ts" in self.data:
-            raise KeyError("No sqrt_ts map present in FluxMaps.")
+        """sqrt(TS) map"""
         return self.data["sqrt_ts"]
 
     def __str__(self):
@@ -135,8 +138,7 @@ class FluxMaps(FluxEstimate):
 
         return str_.expandtabs(tabsize=2)
 
-
-    def get_flux_points(self, coord=None):
+    def get_flux_points(self, position=None):
         """Extract flux point at a given position.
 
         The flux points are returned in the the form of a `~gammapy.estimators.FluxPoints` object
@@ -144,18 +146,18 @@ class FluxMaps(FluxEstimate):
 
         Parameters
         ---------
-        coord : `~astropy.coordinates.SkyCoord`
-            the coordinate where the flux points are extracted.
+        position : `~astropy.coordinates.SkyCoord`
+            Position where the flux points are extracted.
 
         Returns
         -------
         fluxpoints : `~gammapy.estimators.FluxPoints`
             the flux points object
         """
-        if coord is None:
-            coord = self.geom.center_skydir
-        energies = self.energy_ref
-        coords = MapCoord.create(dict(skycoord=coord, energy=energies))
+        if position is None:
+            position = self.geom.center_skydir
+
+        coords = MapCoord.create(dict(skycoord=position, energy=self.energy_ref))
 
         ref = self.dnde_ref.squeeze()
 
@@ -183,12 +185,16 @@ class FluxMaps(FluxEstimate):
             result["e_max"] = self.energy_max[idx]
             result["ref_dnde"] = ref[idx]
             result["norm"] = fp["norm"][idx]
+
             for quantity in self._available_quantities:
                 norm_quantity = f"norm_{quantity}"
                 result[norm_quantity] = fp[norm_quantity][idx]
+
             for key in self._additional_maps:
                 result[key] = fp[key][idx]
+
             rows.append(result)
+
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table).to_sed_type('dnde')
 
@@ -245,6 +251,7 @@ class FluxMaps(FluxEstimate):
             for suffix in filename.suffixes:
                 name_string.replace(suffix,'')
             filename_model = name_string + '_model.yaml'
+
         filename_model=make_path(filename_model)
 
         hdulist = self.to_hdulist(sed_type)
@@ -308,7 +315,6 @@ class FluxMaps(FluxEstimate):
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)
 
-
     @classmethod
     def from_hdulist(cls, hdulist, hdu_bands=None):
         """Create flux map dataset from list of HDUs.
@@ -332,6 +338,7 @@ class FluxMaps(FluxEstimate):
             raise ValueError(f"Cannot determine SED type of flux map from primary header.")
 
         result = {}
+
         for map_type in REQUIRED_MAPS[sed_type]:
             if map_type.upper() in hdulist:
                 result[map_type] = Map.from_hdulist(hdulist, hdu=map_type, hdu_bands=hdu_bands)
@@ -351,6 +358,7 @@ class FluxMaps(FluxEstimate):
         model_filename = hdulist[0].header.get("MODEL", None)
 
         reference_model = None
+
         if model_filename:
             try:
                 reference_model = Models.read(model_filename)[0]
@@ -369,7 +377,7 @@ class FluxMaps(FluxEstimate):
         """Check that map input is valid and correspond to one of the SED type."""
         try:
             required = set(REQUIRED_MAPS[sed_type])
-        except:
+        except KeyError:
             raise ValueError(f"Unknown SED type.")
 
         if not required.issubset(maps.keys()):
@@ -377,7 +385,6 @@ class FluxMaps(FluxEstimate):
             raise ValueError(
                 "Missing maps for sed type '{}':" " {}".format(sed_type, missing)
             )
-
 
     @classmethod
     def from_dict(cls, maps, sed_type='likelihood', reference_model=None, gti=None):
