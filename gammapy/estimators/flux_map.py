@@ -44,6 +44,9 @@ OPTIONAL_MAPS = {
     ],
 }
 
+COMMON_MAPS = ["ts", "sqrt_ts"]
+
+
 log = logging.getLogger(__name__)
 
 
@@ -83,8 +86,6 @@ class FluxMaps(FluxEstimate):
     """
 
     def __init__(self, data, reference_model=None, gti=None):
-        self.geom = data["norm"].geom
-
         if reference_model is None:
             log.warning(
                 "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
@@ -92,23 +93,24 @@ class FluxMaps(FluxEstimate):
             reference_model = self._default_model()
 
         self.reference_model = reference_model
-
         self.gti = gti
 
         super().__init__(data, spectral_model=reference_model.spectral_model)
 
     @staticmethod
     def _default_model():
-        return SkyModel(
-            spatial_model=PointSpatialModel(),
-            spectral_model=PowerLawSpectralModel(index=2),
-        )
+        return SkyModel.create("pl", "point")
 
     @property
     def _additional_maps(self):
         return self.data.keys() - (
             REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"]
         )
+
+    @property
+    def geom(self):
+        """Reference map geometry (`Geom`)"""
+        return self.data["norm"].geom
 
     @property
     def energy_ref(self):
@@ -127,12 +129,12 @@ class FluxMaps(FluxEstimate):
 
     @property
     def ts(self):
-        """TS maps"""
+        """ts map (`Map`)"""
         return self.data["ts"]
 
     @property
     def sqrt_ts(self):
-        """sqrt(TS) map"""
+        """sqrt(TS) map (`Map`)"""
         return self.data["sqrt_ts"]
 
     def __str__(self):
@@ -153,9 +155,6 @@ class FluxMaps(FluxEstimate):
     def get_flux_points(self, position=None):
         """Extract flux point at a given position.
 
-        The flux points are returned in the the form of a `~gammapy.estimators.FluxPoints` object
-        (which stores the flux points in an `~astropy.table.Table`)
-
         Parameters
         ---------
         position : `~astropy.coordinates.SkyCoord`
@@ -163,51 +162,28 @@ class FluxMaps(FluxEstimate):
 
         Returns
         -------
-        fluxpoints : `~gammapy.estimators.FluxPoints`
-            the flux points object
+        flux_points : `~gammapy.estimators.FluxPoints`
+            Flux points object
         """
         if position is None:
             position = self.geom.center_skydir
 
+        table = Table()
+        table.meta["SED_TYPE"] = "likelihood"
+        table["e_ref"] = self.energy_ref
+        table["e_min"] = self.energy_min
+        table["e_max"] = self.energy_max
+        table["ref_dnde"] = self.dnde_ref[:, 0, 0]
+        table["ref_flux"] = self.flux_ref[:, 0, 0]
+        table["ref_eflux"] = self.eflux_ref[:, 0, 0]
+        table["ref_e2dnde"] = self.e2dnde_ref[:, 0, 0]
+
         coords = MapCoord.create(dict(skycoord=position, energy=self.energy_ref))
 
-        ref = self.dnde_ref.squeeze()
-
-        fp = dict()
-        fp["norm"] = self.norm.get_by_coord(coords) * self.norm.unit
-
-        for quantity in self._available_quantities:
-            norm_quantity = f"norm_{quantity}"
-            res = getattr(self, norm_quantity).get_by_coord(coords)
-            res *= getattr(self, norm_quantity).unit
-            fp[norm_quantity] = res
-
-        for additional_quantity in self._additional_maps:
-            res = self.data[additional_quantity].get_by_coord(coords)
-            res *= self.data[additional_quantity].unit
-            fp[additional_quantity] = res
-
         # TODO: add support of norm and stat scan
+        for name, m in self.data.items():
+            table[name] = m.get_by_coord(coords) * m.unit
 
-        rows = []
-        for idx, energy in enumerate(self.energy_ref):
-            result = dict()
-            result["e_ref"] = energy
-            result["e_min"] = self.energy_min[idx]
-            result["e_max"] = self.energy_max[idx]
-            result["ref_dnde"] = ref[idx]
-            result["norm"] = fp["norm"][idx]
-
-            for quantity in self._available_quantities:
-                norm_quantity = f"norm_{quantity}"
-                result[norm_quantity] = fp[norm_quantity][idx]
-
-            for key in self._additional_maps:
-                result[key] = fp[key][idx]
-
-            rows.append(result)
-
-        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table).to_sed_type("dnde")
 
     def to_dict(self, sed_type="likelihood"):
@@ -221,25 +197,21 @@ class FluxMaps(FluxEstimate):
         Returns
         -------
         map_dict : dict
-            dictionary containing the requested maps.
+            Dictionary containing the requested maps.
         """
         if sed_type == "likelihood":
-            map_dict = self.data
+            data = self.data
         else:
-            map_dict = {}
-            for entry in REQUIRED_MAPS[sed_type]:
-                map_dict[entry] = getattr(self, entry)
+            data = {}
+            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + COMMON_MAPS
 
-            for entry in OPTIONAL_MAPS[sed_type]:
+            for quantity in all_maps:
                 try:
-                    map_dict[entry] = getattr(self, entry)
+                    data[quantity] = getattr(self, quantity)
                 except KeyError:
                     pass
 
-            for key in self._additional_maps:
-                map_dict[key] = self.data[key]
-
-        return map_dict
+        return data
 
     def write(
         self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
@@ -274,7 +246,7 @@ class FluxMaps(FluxEstimate):
         models.write(filename_model, overwrite=overwrite)
         hdulist[0].header["MODEL"] = filename_model.as_posix()
 
-        hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite)
 
     def to_hdulist(self, sed_type="likelihood", hdu_bands=None):
         """Convert flux map to list of HDUs.
@@ -297,14 +269,13 @@ class FluxMaps(FluxEstimate):
         exclude_primary = slice(1, None)
 
         hdu_primary = fits.PrimaryHDU()
+        hdu_primary.header["SED_TYPE"] = sed_type
         hdulist = fits.HDUList([hdu_primary])
 
-        hdu_primary.header["SED_TYPE"] = sed_type
+        data = self.to_dict(sed_type)
 
-        map_dict = self.to_dict(sed_type)
-
-        for key in map_dict:
-            hdulist += map_dict[key].to_hdulist(hdu=key, hdu_bands=hdu_bands)[
+        for key, m in data.items():
+            hdulist += m.to_hdulist(hdu=key, hdu_bands=hdu_bands)[
                 exclude_primary
             ]
 
@@ -346,7 +317,7 @@ class FluxMaps(FluxEstimate):
         Returns
         -------
         fluxmaps : `~gammapy.estimators.FluxMaps`
-            the flux map.
+            Flux maps object.
         """
         try:
             sed_type = hdulist[0].header["SED_TYPE"]
@@ -358,42 +329,22 @@ class FluxMaps(FluxEstimate):
         result = {}
 
         for map_type in REQUIRED_MAPS[sed_type]:
-            if map_type.upper() in hdulist:
-                result[map_type] = Map.from_hdulist(
-                    hdulist, hdu=map_type, hdu_bands=hdu_bands
-                )
-            else:
-                raise ValueError(
-                    f"Cannot find required map {map_type} for SED type {sed_type}."
-                )
+            result[map_type] = Map.from_hdulist(
+                hdulist, hdu=map_type, hdu_bands=hdu_bands
+            )
 
-        for map_type in OPTIONAL_MAPS[sed_type]:
+        for map_type in OPTIONAL_MAPS[sed_type] + COMMON_MAPS:
             if map_type.upper() in hdulist:
                 result[map_type] = Map.from_hdulist(
                     hdulist, hdu=map_type, hdu_bands=hdu_bands
                 )
 
-        # Read additional image hdus
-        for hdu in hdulist[1:]:
-            if hdu.is_image:
-                if hdu.name.lower() not in (
-                    REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type]
-                ):
-                    result[hdu.name.lower()] = Map.from_hdulist(
-                        hdulist, hdu=hdu.name, hdu_bands=hdu_bands
-                    )
+        filename = hdulist[0].header.get("MODEL", None)
 
-        model_filename = hdulist[0].header.get("MODEL", None)
-
-        reference_model = None
-
-        if model_filename:
-            try:
-                reference_model = Models.read(model_filename)[0]
-            except FileNotFoundError:
-                raise FileNotFoundError(
-                    f"Cannot find {model_filename} model file. Check MODEL keyword."
-                )
+        if filename:
+            reference_model = Models.read(filename)[0]
+        else:
+            reference_model = None
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist["GTI"]))
