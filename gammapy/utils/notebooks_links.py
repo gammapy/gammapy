@@ -31,14 +31,15 @@ if "dev" in __version__:
 def make_api_links(file_path, file_type):
     """Build links to automodapi documentation."""
 
-    path_tail = str(file_path).split(str(PATH_DOC))[1]
-    level_depth = path_tail.count("/")-1
-    start_link = level_depth*"../"
-
     re_api = re.compile(r'<span class="pre">~gammapy\.(.*?)</span>')
     if file_type == "ipynb":
         start_link = URL_DOCS
         re_api = re.compile(r"`~gammapy\.(.*?)`")
+    else:
+        path_tail = str(file_path).split(str(PATH_DOC))[1]
+        level_depth = path_tail.count("/") - 1
+        start_link = level_depth * "../"
+
     txt = file_path.read_text(encoding="utf-8")
 
     for module in re_api.findall(txt):
