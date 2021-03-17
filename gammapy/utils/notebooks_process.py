@@ -57,38 +57,45 @@ def add_box(nb_path):
 
     nb_path = Path(nb_path)
     log.info(f"Adding box in {nb_path}")
+
+    # add binder cell
+    path_tail = str(nb_path).split(str(Path(build_docs_cfg["source-dir"])))[1]
+    level_depth = path_tail.count("/") - 1
+    start_link = level_depth * "../"
+    nb_filename = nb_path.absolute().name
+    py_filename = nb_filename.replace("ipynb", "py")
     release_number_binder = f"v{__version__}"
     release_number_download = __version__
+    BINDER_LINK = f"- Try online[![Binder]({BINDER_BADGE_URL})]({BINDER_URL} " \
+                  f"/ {release_number_binder}?urlpath=lab / tree{path_tail})"
     if "dev" in __version__:
-        release_number_binder = "master"
+        BINDER_LINK = ""
         release_number_download = "dev"
 
-    DOWNLOAD_CELL = """
+    ctx = dict(
+        path_tail=path_tail,
+        nb_filename=nb_filename,
+        py_filename=py_filename,
+        release_number_download=release_number_download,
+        BINDER_LINK=BINDER_LINK,
+        DOWN_NBS=DOWN_NBS,
+        GITHUB_TUTOS_URL=GITHUB_TUTOS_URL,
+        start_link=start_link,
+    )
+
+    DOWNLOAD_CELL = f"""
 <div class="alert alert-info">
 
 **This is a fixed-text formatted version of a Jupyter notebook**
 
-- Try online [![Binder]({BINDER_BADGE_URL})]({BINDER_URL}/{release_number_binder}?urlpath=lab/tree/{nb_filename})
-- You may download all the notebooks in the documentation as a [tar file](../_downloads/notebooks-{release_number_download}.tar).
+{BINDER_LINK}
+- You may download all the notebooks in the documentation as a [tar file]({start_link}_downloads/notebooks-{release_number_download}.tar).
 - **Source files:**
-[{nb_filename}](../{DOWN_NBS}/{nb_filename}) |
-[{py_filename}](../{DOWN_NBS}/{py_filename})
+[{nb_filename}]({start_link}{DOWN_NBS}/{nb_filename}) |
+[{py_filename}]({start_link}{DOWN_NBS}/{py_filename})
 </div>
 """
 
-    # add binder cell
-    nb_filename = nb_path.absolute().name
-    py_filename = nb_filename.replace("ipynb", "py")
-    ctx = dict(
-        nb_filename=nb_filename,
-        py_filename=py_filename,
-        release_number_binder=release_number_binder,
-        release_number_download=release_number_download,
-        DOWN_NBS=DOWN_NBS,
-        BINDER_BADGE_URL=BINDER_BADGE_URL,
-        BINDER_URL=BINDER_URL,
-        GITHUB_TUTOS_URL=GITHUB_TUTOS_URL,
-    )
     strcell = DOWNLOAD_CELL.format(**ctx)
     rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
 
