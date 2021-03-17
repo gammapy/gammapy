@@ -374,27 +374,24 @@ class FluxMaps(FluxEstimate):
         Parameters
         ----------
         maps : dict
-            dictionary containing the requested maps.
+            Dictionary containing the input maps.
         sed_type : str
-            sed type to convert to. Default is `Likelihood`
+            SED type of the input maps. Default is `Likelihood`
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            the reference model to use for conversions. Default in None.
+            Reference model to use for conversions. Default in None.
             If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
         gti : `~gammapy.data.GTI`
-            the maps GTI information. Default is None.
+            Maps GTI information. Default is None.
 
         Returns
         -------
-        fluxmaps : `~gammapy.estimators.FluxMaps`
-            the flux map.
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
         """
         cls._validate_type(maps, sed_type)
 
         if sed_type == "likelihood":
             return cls(maps, reference_model)
-
-        e_ref = maps[sed_type].geom.axes["energy"].center
-        e_edges = maps[sed_type].geom.axes["energy"].edges
 
         if reference_model is None:
             log.warning(
@@ -402,32 +399,22 @@ class FluxMaps(FluxEstimate):
             )
             reference_model = cls._default_model()
 
-        ref_dnde = reference_model.spectral_model(e_ref)
-
-        if sed_type == "dnde":
-            factor = ref_dnde
-        elif sed_type == "flux":
-            factor = reference_model.spectral_model.integral(e_edges[:-1], e_edges[1:])
-        elif sed_type == "eflux":
-            factor = reference_model.spectral_model.energy_flux(
-                e_edges[:-1], e_edges[1:]
-            )
-        elif sed_type == "e2dnde":
-            factor = e_ref ** 2 * ref_dnde
-
-        # to ensure the units are similar
-        factor = factor.to(maps[sed_type].unit)
+        map_ref = maps[sed_type]
+        energy_axis = map_ref.geom.axes["energy"]
+        factor = reference_model.spectral_model.reference_flux(sed_type=sed_type, energy_axis=energy_axis)
+        factor = factor[:, np.newaxis, np.newaxis].to(map_ref.unit)
 
         data = dict()
-        data["norm"] = maps[sed_type] / factor[:, np.newaxis, np.newaxis]
+        data["norm"] = map_ref / factor
 
-        for map_type in OPTIONAL_MAPS[sed_type]:
-            if map_type in maps:
-                norm_type = map_type.replace(sed_type, "norm")
-                data[norm_type] = maps[map_type] / factor[:, np.newaxis, np.newaxis]
+        for key in OPTIONAL_MAPS[sed_type]:
+            if key in maps:
+                norm_type = key.replace(sed_type, "norm")
+                data[norm_type] = maps[key] / factor
 
         # We add the remaining maps
-        for key in maps.keys() - (REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type]):
-            data[key] = maps[key]
+        for key in COMMON_MAPS:
+            if key in maps:
+                data[key] = maps[key]
 
-        return cls(data, reference_model, gti)
+        return cls(data=data, reference_model=reference_model, gti=gti)

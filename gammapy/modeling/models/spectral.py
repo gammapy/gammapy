@@ -241,6 +241,35 @@ class SpectralModel(Model):
             **kwargs,
         )
 
+    def reference_flux(self,  energy_axis, sed_type):
+        """Get reference flux for a given SED type
+
+        Parameters
+        ----------
+        energy_axis : `MapAxis`
+            Energy axis
+        sed_type : {"dnde", "e2dnde", "flux", "eflux"}
+            SED type
+
+        Returns
+        -------
+        flux : `~astropy.units.Quantity`
+            Reference flux
+        """
+        if sed_type == "dnde":
+            return self(energy_axis.center)
+        elif sed_type == "flux":
+            edges = energy_axis.edges
+            return self.integral(edges[:-1], edges[1:])
+        elif sed_type == "eflux":
+            edges = energy_axis.edges
+            return self.energy_flux(edges[:-1], edges[1:])
+        elif sed_type == "e2dnde":
+            energy = energy_axis.center
+            return energy ** 2 * self(energy)
+        else:
+            raise ValueError(f"Not a supported SED type {sed_type}")
+
     def plot(
         self,
         energy_range,
