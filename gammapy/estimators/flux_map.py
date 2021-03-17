@@ -3,17 +3,12 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import MapCoord, Map
 from gammapy.estimators.core import FluxEstimate
 from gammapy.estimators.flux_point import FluxPoints
-from gammapy.utils.table import table_from_row_data
-from gammapy.modeling.models import (
-    SkyModel,
-    PowerLawSpectralModel,
-    PointSpatialModel,
-    Models,
-)
+from gammapy.modeling.models import SkyModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["FluxMaps"]
@@ -90,22 +85,16 @@ class FluxMaps(FluxEstimate):
             log.warning(
                 "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
             )
-            reference_model = self._default_model()
+            reference_model = self.default_model
 
         self.reference_model = reference_model
         self.gti = gti
 
         super().__init__(data, spectral_model=reference_model.spectral_model)
 
-    @staticmethod
-    def _default_model():
+    @classproperty
+    def default_model(cls):
         return SkyModel.create("pl", "point")
-
-    @property
-    def _additional_maps(self):
-        return self.data.keys() - (
-            REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"]
-        )
 
     @property
     def geom(self):
@@ -143,8 +132,6 @@ class FluxMaps(FluxEstimate):
         str_ += "\n\t" + "\n\t".join(str(self.norm.geom).split("\n")[2:])
 
         str_ += f"\n\tAvailable quantities : {self._available_quantities}\n\n"
-
-        str_ += f"\tAdditional maps : {self._additional_maps}\n\n"
 
         str_ += "\tReference model:\n"
         if self.reference_model is not None:
@@ -296,8 +283,8 @@ class FluxMaps(FluxEstimate):
 
         Returns
         -------
-        flux_map : `~gammapy.estimators.FluxMaps`
-            Flux map.
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)
@@ -316,7 +303,7 @@ class FluxMaps(FluxEstimate):
 
         Returns
         -------
-        fluxmaps : `~gammapy.estimators.FluxMaps`
+        flux_maps : `~gammapy.estimators.FluxMaps`
             Flux maps object.
         """
         try:
@@ -397,7 +384,7 @@ class FluxMaps(FluxEstimate):
             log.warning(
                 "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
             )
-            reference_model = cls._default_model()
+            reference_model = cls.default_model
 
         map_ref = maps[sed_type]
         energy_axis = map_ref.geom.axes["energy"]
