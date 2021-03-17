@@ -33,9 +33,9 @@ basic data structures like event lists, source catalogs, sky maps, spectral mode
 
 .. nbgallery::
 
-   analysis_1.ipynb
-   analysis_2.ipynb
-   overview.ipynb
+   starting/analysis_1.ipynb
+   starting/analysis_2.ipynb
+   starting/overview.ipynb
 
 Data exploration
 ----------------
@@ -46,9 +46,9 @@ event lists according to different criteria, as well as to get a quick look of t
 
 .. nbgallery::
 
-   cta.ipynb
-   hess.ipynb
-   fermi_lat.ipynb
+   data/cta.ipynb
+   data/hess.ipynb
+   data/fermi_lat.ipynb
 
 
 Data analysis
@@ -63,20 +63,20 @@ time-dependent analysis with light-curves.
 
 .. nbgallery::
 
-   spectrum_analysis.ipynb
-   sed_fitting.ipynb
-   extended_source_spectral_analysis.ipynb
-   spectrum_simulation.ipynb
-   cta_sensitivity.ipynb
+   analysis/1D/spectral_analysis.ipynb
+   analysis/1D/sed_fitting.ipynb
+   analysis/1D/extended_source_spectral_analysis.ipynb
+   analysis/1D/spectrum_simulation.ipynb
+   analysis/1D/cta_sensitivity.ipynb
 
 2D Image
 ~~~~~~~~
 
 .. nbgallery::
 
-   ring_background.ipynb
-   modeling_2D.ipynb
-   detect.ipynb
+   analysis/2D/ring_background.ipynb
+   analysis/2D/modeling_2D.ipynb
+   analysis/2D/detect.ipynb
 
 
 3D Cube
@@ -84,48 +84,38 @@ time-dependent analysis with light-curves.
 
 .. nbgallery::
 
-   cta_data_analysis.ipynb
-   analysis_3d.ipynb
-   simulate_3d.ipynb
-   mcmc_sampling.ipynb
-   analysis_mwl.ipynb
-
+   analysis/3D/cta_data_analysis.ipynb
+   analysis/3D/analysis_3d.ipynb
+   analysis/3D/simulate_3d.ipynb
+   analysis/3D/mcmc_sampling.ipynb
+   analysis/3D/analysis_mwl.ipynb
+   analysis/3D/event_sampling.ipynb
 
 Time
 ~~~~
 
 .. nbgallery::
 
-   light_curve_simulation.ipynb
-   light_curve.ipynb
-   light_curve_flare.ipynb
-   pulsar_analysis.ipynb
+   analysis/time/light_curve_simulation.ipynb
+   analysis/time/light_curve.ipynb
+   analysis/time/light_curve_flare.ipynb
+   analysis/time/pulsar_analysis.ipynb
 
-Advanced
---------
+Package / API
+-------------
 
 The following tutorials demonstrate different dimensions of the Gammapy API or
 expose how to perform more specific use cases.
 
-Package
-~~~~~~~
-
 .. nbgallery::
 
-   catalog.ipynb
-   models.ipynb
-   model_management.ipynb
-   fitting.ipynb
-   maps.ipynb
-   mask_maps.ipynb
-   astro_dark_matter.ipynb
-
-Specific use cases
-~~~~~~~~~~~~~~~~~~
-
-.. nbgallery::
-
-   event_sampling.ipynb
+   api/catalog.ipynb
+   api/models.ipynb
+   api/model_management.ipynb
+   api/fitting.ipynb
+   api/maps.ipynb
+   api/mask_maps.ipynb
+   api/astro_dark_matter.ipynb
 
 
 .. _tutorials_scripts:
