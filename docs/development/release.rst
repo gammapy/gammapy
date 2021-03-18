@@ -62,15 +62,13 @@ Make release
 Steps for the day of the release:
 
 #. Follow the instructions how to release an Astropy affiliated package `<https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
+#. Edit `docs/index.rst` and change the version numbers in the text in the `gammapy` code repository.
 #. Draft the release in the `gammapy` code repository.
 
 At this moment a set of Github actions will automate the following steps:
-
-- The `docs/index.rst` is modified with the right release version numbers in `gammapy` repo.
 - The dev docs and the new release docs are built in `gammapy-docs` repo.
 - The new release is mentioned on the news page in `gammapy-web` repo.
 - The `download/install/gammapy-release-environment.yml` file is created in `gammapy-web` repo.
-
 
 Finally:
 #. If necessary, adapt the conda env name and versions required in `download/install/gammapy-release-environment.yml`.
