@@ -80,7 +80,7 @@ def create_fpe(model):
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_n_values=11, source="source"
+        energy_edges=energy_edges, norm_n_values=11, source="source", selection_optional="all"
     )
     datasets = [dataset]
     return datasets, fpe
@@ -128,7 +128,7 @@ def fpe_map_pwl():
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_n_values=3, source="source"
+        energy_edges=energy_edges, norm_n_values=3, source="source", selection_optional="allgi"
     )
     return datasets, fpe
 
@@ -304,7 +304,7 @@ def test_run_map_pwl(fpe_map_pwl):
 def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     datasets, fpe = fpe_map_pwl_reoptimize
     fpe = fpe.copy()
-    fpe.selection = ["scan"]
+    fpe.selection_optional = ["scan"]
 
     fp = fpe.run(datasets)
 
@@ -350,8 +350,6 @@ def test_no_likelihood_contribution():
 
     assert np.isnan(fp.table["norm"]).all()
     assert np.isnan(fp.table["norm_err"]).all()
-    assert np.isnan(fp.table["norm_ul"]).all()
-    assert np.isnan(fp.table["norm_scan"]).all()
     assert_allclose(fp.table["counts"], 0)
 
 

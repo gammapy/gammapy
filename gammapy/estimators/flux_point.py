@@ -813,7 +813,7 @@ class FluxPointsEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
-        selection_optional="all",
+        selection_optional=None,
     ):
         self.energy_edges = energy_edges
         self.source = source
