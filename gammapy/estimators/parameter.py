@@ -59,7 +59,7 @@ class ParameterEstimator(Estimator):
         scan_n_values=30,
         scan_values=None,
         reoptimize=True,
-        selection_optional="all",
+        selection_optional=None,
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
