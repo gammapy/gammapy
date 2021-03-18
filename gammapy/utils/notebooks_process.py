@@ -58,7 +58,7 @@ def add_box(nb_path):
     log.info(f"Adding box in {nb_path}")
 
     # add binder cell
-    path_tail = str(nb_path).split(str(Path(build_docs_cfg["source-dir"])))[1]
+    path_tail = str(nb_path).split(f"/{build_docs_cfg['source-dir']}")[1]
     level_depth = path_tail.count("/") - 1
     start_link = level_depth * "../"
     nb_filename = nb_path.absolute().name
