@@ -463,7 +463,7 @@ class LightCurveEstimator(Estimator):
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row
         result = {}
         for colname in fp.table.colnames:
-            if colname is not "counts":
+            if colname != "counts":
                 result[colname] = fp.table[colname].quantity
             else:
                 result[colname] = np.atleast_1d(fp.table[colname].quantity.sum(axis=1))
