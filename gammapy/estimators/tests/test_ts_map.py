@@ -132,7 +132,7 @@ def test_compute_ts_map(input_dataset):
 
 @requires_data()
 def test_compute_ts_map_psf(fermi_dataset):
-    estimator = TSMapEstimator(kernel_width="1 deg")
+    estimator = TSMapEstimator(kernel_width="1 deg", selection_optional="all")
     result = estimator.run(fermi_dataset)
 
     assert_allclose(result["ts"].data[0, 29, 29], 835.140605, rtol=1e-2)
@@ -178,7 +178,7 @@ def test_compute_ts_map_downsampled(input_dataset):
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     ts_estimator = TSMapEstimator(
-        model=model, downsampling_factor=2, kernel_width="1 deg",
+        model=model, downsampling_factor=2, kernel_width="1 deg", selection_optional=["ul"]
     )
     result = ts_estimator.run(input_dataset)
 
