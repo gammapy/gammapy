@@ -525,10 +525,10 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
         The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
-            r_eval -> r_0 if eta -> 0 
-            r_eval = 5*r_0 > 5*sigma_gauss = 5*r_0/sqrt(2) ~ 3.5*r_0 if eta=0.5
-            r_eval = 9*r_0 > 5*sigma_laplace = 5*sqrt(2)*r_0 ~ 7*r_0 if eta = 1
-            r_eval -> inf if eta -> inf
+        r_eval -> r_0 if eta -> 0
+        r_eval = 5*r_0 > 5*sigma_gauss = 5*r_0/sqrt(2) ~ 3.5*r_0 if eta=0.5
+        r_eval = 9*r_0 > 5*sigma_laplace = 5*sqrt(2)*r_0 ~ 7*r_0 if eta = 1
+        r_eval -> inf if eta -> inf
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 

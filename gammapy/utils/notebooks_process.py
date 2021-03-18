@@ -25,9 +25,8 @@ setup_cfg = dict(conf.items("metadata"))
 build_docs_cfg = dict(conf.items("build_docs"))
 DOWN_NBS = build_docs_cfg["downloadable-notebooks"]
 PATH_NBS = Path(build_docs_cfg["source-dir"]) / DOWN_NBS
-GITHUB_TUTOS_URL = "https://github.com/gammapy/gammapy/tree/master/docs/tutorials"
-BINDER_BADGE_URL = "https://static.mybinder.org/badge.svg"
 BINDER_URL = "https://mybinder.org/v2/gh/gammapy/gammapy-webpage"
+BINDER_BADGE = "https://static.mybinder.org/badge.svg"
 
 
 def copy_clean_notebook(nb_path):
@@ -57,44 +56,38 @@ def add_box(nb_path):
 
     nb_path = Path(nb_path)
     log.info(f"Adding box in {nb_path}")
-    release_number_binder = f"v{__version__}"
-    release_number_download = __version__
-    if "dev" in __version__:
-        release_number_binder = "master"
-        release_number_download = "dev"
 
-    DOWNLOAD_CELL = """
+    # add binder cell
+    path_tail = str(nb_path).split(str(Path(build_docs_cfg["source-dir"])))[1]
+    level_depth = path_tail.count("/") - 1
+    start_link = level_depth * "../"
+    nb_filename = nb_path.absolute().name
+    py_filename = nb_filename.replace("ipynb", "py")
+    release_number = __version__
+    BINDER_LINK = f"- Try online[![Binder]({BINDER_BADGE})]({BINDER_URL}/v{__version__}?urlpath=lab/tree{path_tail})"
+    if "dev" in __version__:
+        BINDER_LINK = ""
+        release_number = "dev"
+
+    BOX_CELL = f"""
 <div class="alert alert-info">
 
 **This is a fixed-text formatted version of a Jupyter notebook**
 
-- Try online [![Binder]({BINDER_BADGE_URL})]({BINDER_URL}/{release_number_binder}?urlpath=lab/tree/{nb_filename})
-- You may download all the notebooks in the documentation as a [tar file](../_downloads/notebooks-{release_number_download}.tar).
+{BINDER_LINK}
+- You may download all the notebooks in the documentation as a 
+[tar file]({start_link}_downloads/notebooks-{release_number}.tar).
 - **Source files:**
-[{nb_filename}](../{DOWN_NBS}/{nb_filename}) |
-[{py_filename}](../{DOWN_NBS}/{py_filename})
+[{nb_filename}]({start_link}{DOWN_NBS}/{nb_filename}) |
+[{py_filename}]({start_link}{DOWN_NBS}/{py_filename})
 </div>
 """
 
-    # add binder cell
-    nb_filename = nb_path.absolute().name
-    py_filename = nb_filename.replace("ipynb", "py")
-    ctx = dict(
-        nb_filename=nb_filename,
-        py_filename=py_filename,
-        release_number_binder=release_number_binder,
-        release_number_download=release_number_download,
-        DOWN_NBS=DOWN_NBS,
-        BINDER_BADGE_URL=BINDER_BADGE_URL,
-        BINDER_URL=BINDER_URL,
-        GITHUB_TUTOS_URL=GITHUB_TUTOS_URL,
-    )
-    strcell = DOWNLOAD_CELL.format(**ctx)
     rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
 
     if "nbsphinx" not in rawnb.metadata:
         rawnb.metadata["nbsphinx"] = {"orphan": bool("true")}
-        rawnb.cells.insert(0, new_markdown_cell(strcell))
+        rawnb.cells.insert(0, new_markdown_cell(BOX_CELL))
 
         # add latex format
         for cell in rawnb.cells:

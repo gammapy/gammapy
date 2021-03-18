@@ -231,10 +231,10 @@ class DataStore:
             Runs will be added to the list of observations only if the
             required IRFs are present. Otherwise, the given run will be skipped
             Available options are:
-                * `aeff` : Effective area
-                * `bkg` : Background
-                * `edisp`: Energy dispersion
-                * `psf` : Point Spread Function
+            * `aeff` : Effective area
+            * `bkg` : Background
+            * `edisp`: Energy dispersion
+            * `psf` : Point Spread Function
             By default, all the IRFs are required.
 
         Returns

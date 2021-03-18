@@ -347,7 +347,7 @@ class Map(abc.ABC):
         and ``idx`` is a tuple of int, the index of the image plane.
 
         The image plane index is in data order, so that the data array can be
-        indexed directly. See :ref:`mapiter` for further information.
+        indexed directly.
         """
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
@@ -538,8 +538,6 @@ class Map(abc.ABC):
         self, slices,
     ):
         """Slice sub map from map object.
-
-        For usage examples, see :ref:`mapslicing`.
 
         Parameters
         ----------
