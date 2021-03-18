@@ -128,7 +128,7 @@ def fpe_map_pwl():
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_n_values=3, source="source", selection_optional="allgi"
+        energy_edges=energy_edges, norm_n_values=3, source="source", selection_optional="all"
     )
     return datasets, fpe
 
