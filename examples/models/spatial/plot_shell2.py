@@ -2,7 +2,7 @@ r"""
 .. _shell2-spatial-model:
 
 Shell2 Spatial Model
-===================
+====================
 
 This is a spatial model parametrizing a projected radiating shell.
 

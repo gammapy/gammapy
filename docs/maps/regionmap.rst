@@ -134,7 +134,7 @@ If there are no non-spatial axes, both return the same quantity.
     bin_volume = geom.bin_volume()
 
 Coordinates defined by the `~RegionGeom`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Given a map coordinate or `~MapCoord` object, the method `~RegionGeom.contains()` checks if they are contained in the region geometry. One can also retrieve the coordinates of the region geometry with
 `~RegionGeom.get_coord()` and `~RegionGeom.get_idx()`, which return the sky coordinates and indexes respectively. Note that the spatial coordinate will always be a single entry, namely the center, while any non-spatial
 axes can have as many bins as desired.

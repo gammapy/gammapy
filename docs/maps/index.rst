@@ -78,7 +78,7 @@ methods are provided:
 * ``get`` : Return the value of the map at the pixel containing the
   given coordinate (`~Map.get_by_idx`, `~Map.get_by_pix`, `~Map.get_by_coord`).
 * ``interp`` : Interpolate or extrapolate the value of the map at an arbitrary
-  coordinate (see also `Interpolation`_).
+  coordinate.
 * ``set`` : Set the value of the map at the pixel containing the
   given coordinate (`~Map.set_by_idx`, `~Map.set_by_pix`, `~Map.set_by_coord`).
 * ``fill`` : Increment the value of the map at the pixel containing
