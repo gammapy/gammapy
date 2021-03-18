@@ -101,37 +101,14 @@ class FluxMaps(FluxEstimate):
         """Reference map geometry (`Geom`)"""
         return self.data["norm"].geom
 
-    @property
-    def energy_ref(self):
-        axis = self.geom.axes["energy"]
-        return axis.center
-
-    @property
-    def energy_min(self):
-        axis = self.geom.axes["energy"]
-        return axis.edges[:-1]
-
-    @property
-    def energy_max(self):
-        axis = self.geom.axes["energy"]
-        return axis.edges[1:]
-
-    @property
-    def ts(self):
-        """ts map (`Map`)"""
-        return self.data["ts"]
-
-    @property
-    def sqrt_ts(self):
-        """sqrt(TS) map (`Map`)"""
-        return self.data["sqrt_ts"]
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__)
+        str_ += "\n\n"
         str_ += "\t" + "\t\n".join(str(self.norm.geom).split("\n")[:1])
         str_ += "\n\t" + "\n\t".join(str(self.norm.geom).split("\n")[2:])
 
-        str_ += f"\n\tAvailable quantities : {self._available_quantities}\n\n"
+        str_ += f"\n\tAvailable quantities : {list(self.data.keys())}\n\n"
 
         str_ += "\tReference model:\n"
         if self.reference_model is not None:
@@ -155,17 +132,15 @@ class FluxMaps(FluxEstimate):
         if position is None:
             position = self.geom.center_skydir
 
-        table = Table()
-        table.meta["SED_TYPE"] = "likelihood"
-        table["e_ref"] = self.energy_ref
-        table["e_min"] = self.energy_min
-        table["e_max"] = self.energy_max
-        table["ref_dnde"] = self.dnde_ref[:, 0, 0]
-        table["ref_flux"] = self.flux_ref[:, 0, 0]
-        table["ref_eflux"] = self.eflux_ref[:, 0, 0]
-        table["ref_e2dnde"] = self.e2dnde_ref[:, 0, 0]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            ref_fluxes = self.spectral_model.reference_fluxes(self.energy_axis)
 
-        coords = MapCoord.create(dict(skycoord=position, energy=self.energy_ref))
+        table = Table(ref_fluxes)
+        table.meta["SED_TYPE"] = "likelihood"
+
+        coords = MapCoord.create(
+            {"skycoord": position, "energy": self.energy_ref}
+        )
 
         # TODO: add support of norm and stat scan
         for name, m in self.data.items():
@@ -313,16 +288,16 @@ class FluxMaps(FluxEstimate):
                 f"Cannot determine SED type of flux map from primary header."
             )
 
-        result = {}
+        maps = {}
 
         for map_type in REQUIRED_MAPS[sed_type]:
-            result[map_type] = Map.from_hdulist(
+            maps[map_type] = Map.from_hdulist(
                 hdulist, hdu=map_type, hdu_bands=hdu_bands
             )
 
         for map_type in OPTIONAL_MAPS[sed_type] + COMMON_MAPS:
             if map_type.upper() in hdulist:
-                result[map_type] = Map.from_hdulist(
+                maps[map_type] = Map.from_hdulist(
                     hdulist, hdu=map_type, hdu_bands=hdu_bands
                 )
 
@@ -338,7 +313,9 @@ class FluxMaps(FluxEstimate):
         else:
             gti = None
 
-        return cls.from_dict(result, sed_type, reference_model, gti)
+        return cls.from_dict(
+            maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
+        )
 
     @staticmethod
     def _validate_type(maps, sed_type):
@@ -378,7 +355,7 @@ class FluxMaps(FluxEstimate):
         cls._validate_type(maps, sed_type)
 
         if sed_type == "likelihood":
-            return cls(maps, reference_model)
+            return cls(data=maps, reference_model=reference_model)
 
         if reference_model is None:
             log.warning(
@@ -387,9 +364,14 @@ class FluxMaps(FluxEstimate):
             reference_model = cls.default_model
 
         map_ref = maps[sed_type]
+
         energy_axis = map_ref.geom.axes["energy"]
-        factor = reference_model.spectral_model.reference_flux(sed_type=sed_type, energy_axis=energy_axis)
-        factor = factor[:, np.newaxis, np.newaxis].to(map_ref.unit)
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            fluxes = reference_model.spectral_model.reference_fluxes(energy_axis=energy_axis)
+
+        # TODO: handle reshaping in MapAxis
+        factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[:, np.newaxis, np.newaxis]
 
         data = dict()
         data["norm"] = map_ref / factor

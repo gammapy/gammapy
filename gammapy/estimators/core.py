@@ -141,14 +141,14 @@ class FluxEstimate:
 
         if hasattr(self.data["norm"], "geom"):
             self.energy_axis = self.data["norm"].geom.axes["energy"]
-            self._keys = self.data.keys()
+            keys = self.data.keys()
             self._expand_slice = (slice(None), np.newaxis, np.newaxis)
         else:
             # Here we assume there is only one row per energy
             e_edges = self.data["e_min"].quantity
             e_edges = e_edges.insert(len(self.data), self.data["e_max"].quantity[-1])
             self.energy_axis = MapAxis.from_energy_edges(e_edges)
-            self._keys = self.data.columns
+            keys = self.data.columns
             self._expand_slice = slice(None)
 
         # Note that here we could use the specification from dnde_ref to build piecewise PL
@@ -159,48 +159,79 @@ class FluxEstimate:
 
         for quantity in OPTIONAL_QUANTITIES:
             norm_quantity = f"norm_{quantity}"
-            if norm_quantity in self._keys:
+            if norm_quantity in keys:
                 self._available_quantities.append(quantity)
 
     # TODO: add support for scan
-
     def _check_norm_quantity(self, quantity):
-        if not quantity in self._available_quantities:
+        if quantity not in self._available_quantities:
             raise KeyError(
                 f"Cannot compute required flux quantity. {quantity} is not defined on current flux estimate."
             )
 
     @property
+    def energy_ref(self):
+        """Reference energy"""
+        return self.energy_axis.center
+
+    @property
+    def energy_min(self):
+        """Energy min"""
+        return self.energy_axis.edges[:-1]
+
+    @property
+    def energy_max(self):
+        """Energy max"""
+        return self.energy_axis.edges[1:]
+
+    @property
+    def ts(self):
+        """ts map (`Map`)"""
+        return self.data["ts"]
+
+    @property
+    def sqrt_ts(self):
+        """sqrt(TS) map (`Map`)"""
+        return self.data["sqrt_ts"]
+
+    @property
     def norm(self):
+        """Norm values"""
         return self.data["norm"]
 
     @property
     def norm_err(self):
+        """Norm error"""
         self._check_norm_quantity("err")
         return self.data["norm_err"]
 
     @property
     def norm_errn(self):
+        """Negative norm error"""
         self._check_norm_quantity("errn")
         return self.data["norm_errn"]
 
     @property
     def norm_errp(self):
+        """Positive norm error"""
         self._check_norm_quantity("errp")
         return self.data["norm_errp"]
 
     @property
     def norm_ul(self):
+        """Norm upper limit"""
         self._check_norm_quantity("ul")
         return self.data["norm_ul"]
 
     @property
     def dnde_ref(self):
+        """Reference differential flux"""
         result = self.spectral_model(self.energy_axis.center)
         return result[self._expand_slice]
 
     @property
     def e2dnde_ref(self):
+        """Reference differential flux * energy ** 2"""
         result = (
             self.spectral_model(self.energy_axis.center) * self.energy_axis.center ** 2
         )
@@ -208,6 +239,7 @@ class FluxEstimate:
 
     @property
     def flux_ref(self):
+        """Reference integral flux"""
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.spectral_model.integral(energy_min, energy_max)
@@ -215,6 +247,7 @@ class FluxEstimate:
 
     @property
     def eflux_ref(self):
+        """Reference energy flux"""
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.spectral_model.energy_flux(energy_min, energy_max)

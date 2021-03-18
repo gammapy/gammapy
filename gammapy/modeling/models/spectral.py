@@ -241,34 +241,30 @@ class SpectralModel(Model):
             **kwargs,
         )
 
-    def reference_flux(self,  energy_axis, sed_type):
-        """Get reference flux for a given SED type
+    def reference_fluxes(self,  energy_axis):
+        """Get reference fluxes for a given energy axis.
 
         Parameters
         ----------
         energy_axis : `MapAxis`
             Energy axis
-        sed_type : {"dnde", "e2dnde", "flux", "eflux"}
-            SED type
 
         Returns
         -------
-        flux : `~astropy.units.Quantity`
-            Reference flux
+        fluxes : dict of `~astropy.units.Quantity`
+            Reference fluxes
         """
-        if sed_type == "dnde":
-            return self(energy_axis.center)
-        elif sed_type == "flux":
-            edges = energy_axis.edges
-            return self.integral(edges[:-1], edges[1:])
-        elif sed_type == "eflux":
-            edges = energy_axis.edges
-            return self.energy_flux(edges[:-1], edges[1:])
-        elif sed_type == "e2dnde":
-            energy = energy_axis.center
-            return energy ** 2 * self(energy)
-        else:
-            raise ValueError(f"Not a supported SED type {sed_type}")
+        energy = energy_axis.center
+        energy_min, energy_max = energy_axis.edges[:-1], energy_axis.edges[1:]
+        return {
+            "e_ref": energy,
+            "e_min": energy_min,
+            "e_max": energy_max,
+            "ref_dnde": self(energy),
+            "ref_flux": self.integral(energy_min, energy_max),
+            "ref_eflux": self.energy_flux(energy_min, energy_max),
+            "ref_e2dnde": self(energy) * energy ** 2,
+        }
 
     def plot(
         self,
