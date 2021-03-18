@@ -235,5 +235,5 @@ def cli_jupyter_tar(out):
             path_tail = str(name).split(str(PATH_DOCS.resolve()))[1]
             tar.add(name, arcname=Path(path_tail))
         for img in get_images_paths():
-            tar.add(name, arcname=Path("tutorials/images") / Path(img).name)
+            tar.add(img, arcname=Path("tutorials/images") / Path(img).name)
     log.info(f"{tar_name} file has been created.")
