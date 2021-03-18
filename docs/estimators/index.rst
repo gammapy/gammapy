@@ -55,6 +55,11 @@ norm_err		  Symmetric rrror on the norm derived from the Hessian matrix
 ts				  Difference in fit statistics (`stat_sum - null_value` )
 sqrt_ts			  Square root of TS, corresponds to significance (Wilk's theorem)
 ================= =================================================
+npred		  	  Predicted counts
+npred_signal	  Predicted counts from the signal
+npred_background  Predicted counts from the background
+================= =================================================
+
 
 In addition the following optional quantities can be computed:
 
@@ -85,6 +90,7 @@ Quantity          Definition
 dnde 		      Differential flux at ``e_ref``
 flux 			  Integrated flux between ``e_min`` and ``e_max``
 eflux			  Integrated energy flux between ``e_min`` and ``e_max``
+e2dnde			  Differential energy flux between ``e_ref``
 ================= =================================================
 
 The same can be applied for the error and upper limit information.
