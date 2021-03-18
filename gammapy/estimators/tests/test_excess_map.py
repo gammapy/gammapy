@@ -58,7 +58,7 @@ def test_compute_lima_image():
     background = image_to_cube(background, "1 GeV", "100 GeV")
     dataset = MapDataset(counts=counts, background=background)
 
-    estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
+    estimator = ExcessMapEstimator("0.1 deg")
     result_lima = estimator.run(dataset)
 
     assert_allclose(result_lima["sqrt_ts"].data[:, 100, 100], 30.814916, atol=1e-3)
@@ -88,7 +88,7 @@ def test_compute_lima_on_off_image():
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, "1 TeV", "10 TeV")
-    estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
+    estimator = ExcessMapEstimator("0.1 deg")
     results = estimator.run(dataset)
 
     # Reproduce safe significance threshold from HESS software
@@ -107,7 +107,7 @@ def test_compute_lima_on_off_image():
 
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = ExcessMapEstimator(0.1 * u.deg)
+    estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional="all")
     result = estimator.run(simple_dataset)
 
     assert_allclose(result["counts"].data[0, 10, 10], 162)
@@ -145,7 +145,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(simple_d
     simple_dataset_on_off.exposure = None
 
     estimator = ExcessMapEstimator(
-        0.11 * u.deg, selection_optional=None, energy_edges=[0.1, 1, 10] * u.TeV, correlate_off=True
+        0.11 * u.deg, energy_edges=[0.1, 1, 10] * u.TeV, correlate_off=True
     )
     result = estimator.run(simple_dataset_on_off)
 
