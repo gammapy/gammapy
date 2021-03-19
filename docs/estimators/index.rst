@@ -18,11 +18,13 @@ energy.
 
 The core of any estimator algorithm is hypothesis testing: a reference
 model or counts excess is tested against a null hypothesis. From the
-best fit reference model a flux is derived and a corresponding :math:`\sqrt{\Delta TS}`
+best fit reference model a flux is derived and a corresponding :math:`\Delta TS`
 value from the difference in fit statistics to the null hypothesis.
 Assuming one degree of freedom, :math:`\sqrt{\Delta TS}` represents an
 approximation (`Wilk's theorem <https://en.wikipedia.org/wiki/Wilks%27_theorem>`_)
-of the "classical significance".
+of the "classical significance". In case of a negative best fit flux,
+e.g. when the background is overestimated, the significance is defined
+as :math:`-\sqrt{\Delta TS}` by convention.
 
 In general the flux can be estimated using methods:
 
@@ -53,7 +55,7 @@ e_max             Maximum energy
 norm              Best fit norm with respect to the reference spectral model
 norm_err          Symmetric error on the norm derived from the Hessian matrix
 ts                Difference in fit statistics (`stat - stat_null` )
-sqrt_ts           Square root of ts, in case of one degree of freedom, corresponds to significance (Wilk's theorem)
+sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
 ================= =================================================
 
 
@@ -70,7 +72,7 @@ stat_null         Fit statistics value of the null hypothesis
 ================= =================================================
 npred             Predicted counts of the best fit hypothesis
 npred_null        Predicted counts of the null hypothesis
-npred_signal      Predicted counts of the signal over `npred_null`, equivalent to (`npred - npred_null`)
+npred_excess      Predicted counts of the excess over `npred_null`, equivalent to (`npred - npred_null`)
 ================= =================================================
 norm_scan         Norm scan
 stat_scan         Fit statistics scan
