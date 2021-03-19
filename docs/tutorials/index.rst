@@ -101,6 +101,13 @@ Time
    analysis/time/light_curve_flare.ipynb
    analysis/time/pulsar_analysis.ipynb
 
+Built-in models
+---------------
+
+Gammapy provides a series of spatial, spectral and temporal models.
+You may check out the whole list of built-in models in the :ref:`model-gallery`.
+
+
 Package / API
 -------------
 
