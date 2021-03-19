@@ -130,7 +130,9 @@ Modeling and Fitting
 Beyond `Dataset` objects, Gammapy provides numerous functionalities related
 to data modeling and fitting, as well as data simulation.
 This includes spectral, spatial and temporal model classes to describe the gamma-ray sky.
-Gammapy also contains a complete API for model parameter handling and model fitting.
+Gammapy also contains a complete API for model parameter handling and model fitting,
+with a series of spatial, spectral and temporal models. You may check out the whole list
+of built-in models in the :ref:`model-gallery`.
 
 To learn more about modeling and fitting, see  :ref:`gammapy.modeling
 <modeling>`.
