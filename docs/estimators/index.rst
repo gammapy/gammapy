@@ -76,9 +76,9 @@ norm_scan         Norm scan
 stat_scan         Fit statistics scan
 ================= =================================================
 
-To compute the assymetric errors as well as upper limits one can
+To compute the error, assymetric errors as well as upper limits one can
 specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
-arguments are translated into a TS value assuming ``ts = sigma ** 2``.
+arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
 
 In addition to the norm values a reference spectral model is given.
 Using this reference spectral model the norm values can be converted
@@ -108,14 +108,13 @@ Getting Started
 Tutorials
 =========
 
-The main tutorial that demonstrates how to extract light curves from 1D and 3D datasets:
+The main tutorial that demonstrates how to use Estimator classes are:
 
-* `Light Curve tutorial <../tutorials/light_curve.html>`__
-
-Light curve extraction on small time bins (i.e. smaller than the observation scale) for flares
-is demonstrated in the following tutorial:
-
-* `Flare tutorial <../tutorials/light_curve_flare.html>`__
+* `Light Curve tutorial (LightCurveEstimator) <../tutorials/analysis/time/light_curve.html>`__
+* `Flare tutorial (LightCurveEstimator) <../tutorials/analysis/time/light_curve_flare.html>`__
+* `Source detection (TSMapEstimator) <../tutorials/analysis/2D/detect.html>`__
+* `Spectral analysis (FluxPointEstimator) <../tutorials/analysis/1D/spectral_analysis.html>`__
+* `Detailed 3D analysis (ExcessMapEstimator) <../tutorials/analysis/3D/analysis_3d.html>`__
 
 
 Reference/API
