@@ -50,14 +50,10 @@ Quantity          Definition
 e_ref			  Reference energy
 e_min			  Minimum energy
 e_max			  Maximum energy
-norm			  Norm with respect to the reference spectral model
-norm_err		  Symmetric rrror on the norm derived from the Hessian matrix
-ts				  Difference in fit statistics (`stat_sum - null_value` )
-sqrt_ts			  Square root of TS, corresponds to significance (Wilk's theorem)
-================= =================================================
-npred		  	  Predicted counts
-npred_signal	  Predicted counts from the signal
-npred_background  Predicted counts from the background
+norm			  Best fit norm with respect to the reference spectral model
+norm_err		  Symmetric error on the norm derived from the Hessian matrix
+ts				  Difference in fit statistics (`stat - stat_null` )
+sqrt_ts			  Square root of ts, in case of one degree of freedom, corresponds to significance (Wilk's theorem)
 ================= =================================================
 
 
@@ -69,12 +65,16 @@ Quantity          Definition
 norm_errp		  Positive error of the norm
 norm_errn	      Negative error of the norm
 norm_ul			  Upper limit of the norm
+stat			  Fit statistics value of the best fit hypothesis
+stat_null		  Fit statistics value of the null hypothesis
+================= =================================================
+npred		  	  Predicted counts of the best fit hypothesis
+npred_null        Predicted counts of the null hypothesis
+npred_signal      Predicted counts of the signal over `npred_null`, equivalent to (`npred - npred_null`)
+================= =================================================
 norm_scan		  Norm scan
 stat_scan		  Fit statistics scan
-stat			  Fit statistics value of the best fit model
-null_value		  Fit statistics value of the null hypothesis
 ================= =================================================
-
 
 To compute the assymetric errors as well as upper limits one can
 specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
