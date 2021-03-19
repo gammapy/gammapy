@@ -161,7 +161,7 @@ class MapDatasetMaker(Maker):
         use_region_center = getattr(self, "use_region_center", True)
 
         if self.background_interp_missing_data:
-            bkg.interp_missing_data()
+            bkg.interp_missing_data(axis_name="energy")
 
         return make_map_background_irf(
             pointing=pointing,

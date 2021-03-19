@@ -7,7 +7,10 @@ from astropy import units as u
 from astropy.utils import lazyproperty
 from astropy.table import Table
 from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.interpolation import (
+    ScaledRegularGridInterpolator,
+    interpolation_scale,
+)
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.scripts import make_path
 from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
@@ -29,9 +32,8 @@ class IRF:
     meta : dict
         Meta data
     """
-    default_interp_kwargs = dict(
-        bounds_error=False, fill_value=None,
-    )
+
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None,)
 
     def __init__(self, axes, data=0, unit="", meta=None):
         axes = MapAxes(axes)
@@ -89,6 +91,36 @@ class IRF:
         self.__dict__.pop("_interpolate", None)
         self.__dict__.pop("_integrate_rad", None)
 
+    def interp_missing_data(self, axis_name):
+        """Interpolate missing data along a given axis"""
+        data = self.data.copy()
+        values_scale = self.default_interp_kwargs.get("values_scale", "lin")
+        scale = interpolation_scale(values_scale)
+
+        axis = self.axes.index(axis_name)
+        mask = ~np.isfinite(data) | (data == 0.0)
+
+        coords = np.where(mask)
+        xp = np.arange(data.shape[axis])
+
+        for coord in zip(*coords):
+            idx = list(coord)
+            idx[axis] = slice(None)
+            fp = data[tuple(idx)]
+            valid = ~mask[tuple(idx)]
+
+            if np.any(valid):
+                value = np.interp(
+                    x=coord[axis],
+                    xp=xp[valid],
+                    fp=scale(fp[valid]),
+                    left=np.nan,
+                    right=np.nan,
+                )
+                if not np.isnan(value):
+                    data[coord] = scale.inverse(value)
+        self.data = data  # reset cached values
+
     @property
     def unit(self):
         """Map unit (`~astropy.units.Unit`)"""
@@ -103,7 +135,10 @@ class IRF:
         points = [a.center for a in self.axes]
         points_scale = tuple([a.interp for a in self.axes])
         return ScaledRegularGridInterpolator(
-            points, self.quantity, points_scale=points_scale, **self.default_interp_kwargs
+            points,
+            self.quantity,
+            points_scale=points_scale,
+            **self.default_interp_kwargs,
         )
 
     @property
@@ -322,12 +357,7 @@ class IRF:
         axes = MapAxes.from_table(table=table, format=format)[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
-        return cls(
-            axes=axes,
-            data=data.value,
-            meta=table.meta,
-            unit=data.unit
-        )
+        return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
 
     def to_table(self, format="gadf-dl3"):
         """Convert to table
@@ -386,6 +416,7 @@ class IRF:
 
 class IRFMap:
     """IRF map base class for DL4 instrument response functions"""
+
     def __init__(self, irf_map, exposure_map):
         self._irf_map = irf_map
         self.exposure_map = exposure_map
@@ -508,13 +539,9 @@ class IRFMap:
             table = Table.read(hdulist["PSF"])
             energy_axis_true = MapAxis.from_table(table, format=format)
 
-            geom_psf = RegionGeom.create(
-                region=None, axes=[rad_axis, energy_axis_true]
-            )
+            geom_psf = RegionGeom.create(region=None, axes=[rad_axis, energy_axis_true])
 
-            psf_map = Map.from_geom(
-                geom=geom_psf, data=table["Psf"].data, unit="sr-1"
-            )
+            psf_map = Map.from_geom(geom=geom_psf, data=table["Psf"].data, unit="sr-1")
 
             geom_exposure = geom_psf.squash("rad")
             exposure_map = Map.from_geom(
@@ -573,7 +600,9 @@ class IRFMap:
 
         elif format == "gtpsf":
             if not self._irf_map.geom.is_region:
-                raise ValueError("Format 'gtpsf' is only supported for region geometries")
+                raise ValueError(
+                    "Format 'gtpsf' is only supported for region geometries"
+                )
 
             rad_hdu = self._irf_map.geom.axes["rad"].to_table_hdu(format=format)
             psf_table = self._irf_map.geom.axes["energy_true"].to_table(format=format)

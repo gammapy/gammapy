@@ -135,10 +135,10 @@ def test_background_3d_missing_values(bkg_3d_interp):
     # without missing values interpolation
     # extrolation would give too high value (1e33 here)
 
-    bkg_3d_interp.interp_missing_data()
+    bkg_3d_interp.interp_missing_data(axis_name="energy")
     assert np.all(bkg_3d_interp.data != 0)
 
-    bkg_3d_interp.interp_missing_data()
+    bkg_3d_interp.interp_missing_data(axis_name="energy")
 
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
@@ -206,10 +206,7 @@ def test_background_2d_read_missing_hducls():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
     offset_axis = MapAxis.from_edges([0, 1, 2], unit="deg", name="offset")
 
-    bkg = Background2D(
-        axes=[energy_axis, offset_axis],
-        unit="s-1 MeV-1 sr-1"
-    )
+    bkg = Background2D(axes=[energy_axis, offset_axis], unit="s-1 MeV-1 sr-1")
 
     table = bkg.to_table()
     table.meta.pop("HDUCLAS2")

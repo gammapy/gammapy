@@ -4,7 +4,6 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
-from gammapy.utils.interpolation import interpolate_invalid_data_3d
 from .core import IRF
 
 __all__ = ["Background3D", "Background2D"]
@@ -115,18 +114,6 @@ class Background3D(BackgroundIRF):
 
     tag = "bkg_3d"
     required_axes = ["energy", "fov_lon", "fov_lat"]
-
-    def interp_missing_data(self):
-        """Interpolate missing values in bakcground 3d"""
-        with np.errstate(divide="ignore", invalid="ignore"):
-            data = interpolate_invalid_data_3d(
-                self.axes["energy"].center.value,
-                self.data,
-                points_scale="log",
-                values_scale="log",
-                fill_value=-np.inf,
-            )
-        self.data = data
 
     def to_2d(self):
         """Convert to `Background2D`.
