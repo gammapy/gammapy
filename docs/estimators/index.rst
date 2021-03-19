@@ -19,10 +19,10 @@ energy.
 The core of any estimator algorithm is hypothesis testing: a reference
 model or counts excess is tested against a null hypothesis. From the
 best fit reference model a flux is derived and a corresponding :math:`\sqrt{\Delta TS}`
-value from the difference in fit statistics to the null hypothesis,
-assuming one degree of freedom. In this case
-:math:`\sqrt{\Delta TS}` represents an approximation of the
-"classical significance".
+value from the difference in fit statistics to the null hypothesis.
+Assuming one degree of freedom, :math:`\sqrt{\Delta TS}` represents an
+approximation (`Wilk's theorem <https://en.wikipedia.org/wiki/Wilks%27_theorem>`_)
+of the "classical significance".
 
 In general the flux can be estimated using methods:
 
@@ -47,13 +47,13 @@ Based on this algorithm most estimators compute the same basic quantities:
 ================= =================================================
 Quantity          Definition
 ================= =================================================
-e_ref			  Reference energy
-e_min			  Minimum energy
-e_max			  Maximum energy
-norm			  Best fit norm with respect to the reference spectral model
-norm_err		  Symmetric error on the norm derived from the Hessian matrix
-ts				  Difference in fit statistics (`stat - stat_null` )
-sqrt_ts			  Square root of ts, in case of one degree of freedom, corresponds to significance (Wilk's theorem)
+e_ref             Reference energy
+e_min             Minimum energy
+e_max             Maximum energy
+norm              Best fit norm with respect to the reference spectral model
+norm_err          Symmetric error on the norm derived from the Hessian matrix
+ts                Difference in fit statistics (`stat - stat_null` )
+sqrt_ts           Square root of ts, in case of one degree of freedom, corresponds to significance (Wilk's theorem)
 ================= =================================================
 
 
@@ -62,18 +62,18 @@ In addition the following optional quantities can be computed:
 ================= =================================================
 Quantity          Definition
 ================= =================================================
-norm_errp		  Positive error of the norm
-norm_errn	      Negative error of the norm
-norm_ul			  Upper limit of the norm
-stat			  Fit statistics value of the best fit hypothesis
-stat_null		  Fit statistics value of the null hypothesis
+norm_errp         Positive error of the norm
+norm_errn         Negative error of the norm
+norm_ul           Upper limit of the norm
+stat              Fit statistics value of the best fit hypothesis
+stat_null         Fit statistics value of the null hypothesis
 ================= =================================================
-npred		  	  Predicted counts of the best fit hypothesis
+npred             Predicted counts of the best fit hypothesis
 npred_null        Predicted counts of the null hypothesis
 npred_signal      Predicted counts of the signal over `npred_null`, equivalent to (`npred - npred_null`)
 ================= =================================================
-norm_scan		  Norm scan
-stat_scan		  Fit statistics scan
+norm_scan         Norm scan
+stat_scan         Fit statistics scan
 ================= =================================================
 
 To compute the assymetric errors as well as upper limits one can
@@ -87,10 +87,10 @@ to the following different SED types:
 ================= =================================================
 Quantity          Definition
 ================= =================================================
-dnde 		      Differential flux at ``e_ref``
-flux 			  Integrated flux between ``e_min`` and ``e_max``
-eflux			  Integrated energy flux between ``e_min`` and ``e_max``
-e2dnde			  Differential energy flux between ``e_ref``
+dnde              Differential flux at ``e_ref``
+flux              Integrated flux between ``e_min`` and ``e_max``
+eflux             Integrated energy flux between ``e_min`` and ``e_max``
+e2dnde            Differential energy flux between ``e_ref``
 ================= =================================================
 
 The same can be applied for the error and upper limit information.
