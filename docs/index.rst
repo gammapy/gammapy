@@ -25,6 +25,7 @@ Gammapy-related.
     install/index
     getting-started
     tutorials/index
+    modeling/gallery/index
     howto
     references
 
