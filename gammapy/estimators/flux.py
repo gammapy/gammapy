@@ -65,7 +65,7 @@ class FluxEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=3,
         reoptimize=True,
-        selection_optional="all",
+        selection_optional=None,
     ):
 
         if norm_values is None:

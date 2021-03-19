@@ -125,7 +125,7 @@ class TSMapEstimator(Estimator):
         n_sigma_ul=2,
         threshold=None,
         rtol=0.01,
-        selection_optional="all",
+        selection_optional=None,
         energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,

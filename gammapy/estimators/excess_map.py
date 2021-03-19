@@ -99,7 +99,7 @@ class ExcessMapEstimator(Estimator):
         correlation_radius="0.1 deg",
         n_sigma=1,
         n_sigma_ul=3,
-        selection_optional="all",
+        selection_optional=None,
         energy_edges=None,
         apply_mask_fit=False,
         correlate_off=False

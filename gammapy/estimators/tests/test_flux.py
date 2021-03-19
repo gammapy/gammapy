@@ -44,6 +44,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         norm_min=0.5,
         norm_max=2,
         reoptimize=False,
+        selection_optional="all"
     )
 
     result = estimator.run(fermi_datasets)

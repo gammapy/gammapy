@@ -47,7 +47,9 @@ def test_profile_content():
     wcs = mapdataset_onoff.counts.geom.wcs
     boxes = make_horizontal_boxes(wcs)
 
-    prof_maker = ExcessProfileEstimator(boxes, energy_edges=[0.1, 1, 10] * u.TeV)
+    prof_maker = ExcessProfileEstimator(
+        boxes, energy_edges=[0.1, 1, 10] * u.TeV, selection_optional="all"
+    )
     imp_prof = prof_maker.run(mapdataset_onoff)
 
     assert_allclose(imp_prof[7]["x_min"], 0.1462, atol=1e-4)
@@ -67,7 +69,9 @@ def test_radial_profile():
         center=geom.center_skydir, radius_max=0.2 * u.deg,
     )
 
-    prof_maker = ExcessProfileEstimator(regions, energy_edges=[0.1, 1, 10] * u.TeV)
+    prof_maker = ExcessProfileEstimator(
+        regions, energy_edges=[0.1, 1, 10] * u.TeV, selection_optional="all"
+    )
     imp_prof = prof_maker.run(dataset)
 
     assert_allclose(imp_prof[7]["x_min"], 0.14, atol=1e-4)
@@ -88,7 +92,7 @@ def test_radial_profile_one_interval():
         center=geom.center_skydir, radius_max=0.2 * u.deg,
     )
 
-    prof_maker = ExcessProfileEstimator(regions)
+    prof_maker = ExcessProfileEstimator(regions, selection_optional="all")
     imp_prof = prof_maker.run(dataset)
 
     assert_allclose(imp_prof[7]["counts"], [1960], atol=1e-5)
