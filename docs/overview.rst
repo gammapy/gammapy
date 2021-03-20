@@ -23,6 +23,8 @@ are involved in a data analysis with Gammapy.
 Gammapy is organised in sub-packages. Figure :numref:`data_flow` illustrates
 the data flow and sub-package structure of Gammapy.
 
+.. _overview_data:
+
 Data access (DL3)
 -----------------
 
@@ -50,10 +52,9 @@ IRFs see :ref:`irf` and other relevant informations).
 Once some observation selection has been selected, the user can build a list of observations:
 a `~gammapy.data.Observations` object, which will be used for the data reduction process.
 
-
 See :ref:`gammapy.data <data>` and :ref:`gammapy.irf <irf>`
 
-.. _overview_data:
+.. _overview_data_reduction:
 
 Data reduction (DL3 -> DL4)
 ---------------------------
@@ -67,7 +68,7 @@ runs, the data reduction can take a while. So typically you write the output
 datasets to file after data reduction, allowing you to read them back at any
 time later for modeling and fitting.
 
-:ref:`gammapy.makers <makers>`
+See :ref:`gammapy.makers <makers>`.
 
 .. _overview_datasets:
 
@@ -89,10 +90,17 @@ The `Datasets` are used to perform joint-likelihood fitting allowing to combine
 different measurements, e.g. from different observations but also from different
 instruments.
 
-To learn more about datasets, see :ref:`gammapy.datasets <datasets>`.
+To learn more about datasets, see :ref:`gammapy.datasets <datasets>` and
+:ref:`gammapy.maps <maps>`.
 
 Gammapy supports binned simulation, i.e. Poisson fluctuation of predicted
 counts maps or spectra, as well as event sampling to simulate DL3 events data.
+
+Note that in Gammapy, 2D image analyses are partly done with actual 2D images
+that don't have an energy axis, and partly with 3D cubes with a single energy bin,
+e.g. for modeling and fitting,
+see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
+
 
 .. _overview_modeling:
 
@@ -110,6 +118,19 @@ To learn more about modeling and fitting, see  :ref:`gammapy.modeling <modeling>
 and :ref:`gammapy.estimators <estimators`. To compute light curves, use the
 `~gammapy.estimators.LightCurveEstimator`.
 
+For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are
+used, to provide uniformity within Gammapy, and to allow in future versions of
+Gammapy for advanced use cases where a sky region based analysis is used
+resulting in 1D counts spetra, but the modeling is done with a spatial model
+assumption, allowing for treatment of overlapping emission components, such as
+e.g. a gamma-ray binary with underlying emission from a pulsar wind nebula, to
+apply proper treatment of containment and contamination corrections. Note that
+the spatial model on a `~gammapy.modeling.models.SkyModel` is optional, you can
+only pass a `~gammapy.modeling.models.SpectralModel`, as shown in the `First
+analysis tutorial notebook <./tutorials/analysis_1.html>`__ and other tutorials.
+
+
+.. _overview_hli:
 
 High Level Analysis Interface
 -----------------------------
@@ -121,28 +142,10 @@ see :ref:`gammapy.analysis <analysis>`.
 Other topics
 ------------
 
-this overview we only mentioned the most important concepts and parts to get
-started. To learn more, see the following sub packages and documentation pages:
-:ref:`gammapy.data <data>`, :ref:`gammapy.irf <irf>`, :ref:`gammapy.maps
-<maps>`, :ref:`gammapy.catalog <catalog>`, :ref:`gammapy.astro <astro>`,
+See :ref:`gammapy.catalog <catalog>`, :ref:`gammapy.astro <astro>`,
 :ref:`gammapy.stats <stats>`,
 :ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool).
 
-Note that in Gammapy, 2D image analyses are partly done with actual 2D images
-that don't have an energy axis, and partly with 3D cubes with a single energy bin,
-e.g. for modeling and fitting,
-see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
-
-For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are
-used, to provide uniformity within Gammapy, and to allow in future versions of
-Gammapy for advanced use cases where a sky region based analysis is used
-resulting in 1D counts spetra, but the modeling is done with a spatial model
-assumption, allowing for treatment of overlapping emission components, such as
-e.g. a gamma-ray binary with underlying emission from a pulsar wind nebula, to
-apply proper treatment of containment and contamination corrections. Note that
-the spatial model on a `~gammapy.modeling.models.SkyModel` is optional, you can
-only pass a `~gammapy.modeling.models.SpectralModel`, as shown in the `First
-analysis tutorial notebook <./tutorials/analysis_1.html>`__ and other tutorials.
 
 .. _overview_next:
 
