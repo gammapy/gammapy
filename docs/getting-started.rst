@@ -61,6 +61,13 @@ lists the common commands to install packages and work with environments.
 
 Use Gammapy
 -----------
+To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
+matplotlib for plotting. Many standard gamma-ray analyses can be done with few
+lines of configuration and code, so you can get pretty far by copy and pasting
+and adapting the working examples from the Gammapy documentation. But
+eventually, if you want to script more complex analyses, or inspect analysis
+results or intermediate analysis products, you need to acquire a basic to
+intermediate Python skill level.
 
 Python
 ++++++
