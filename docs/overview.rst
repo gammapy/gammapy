@@ -29,8 +29,8 @@ the data flow and sub-package structure of Gammapy.
 Data access (DL3)
 -----------------
 
-The data analysis starts with :ref:`data level 3 <overview_DL3>`
-(DL3) FITS files consisting of event lists, instrument response information
+The data analysis starts with data level 3 FITS files consisting of event lists,
+instrument response information
 (effective area, point spread function, energy dispersion, background) and
 extra information concerning the observation (pointing direction, time),
 as well as two index tables that list the observations and declare which
@@ -128,13 +128,13 @@ with a large choice of spatial, spectral and temporal models. You may check out 
 of built-in models in the :ref:`model-gallery`.
 
 To learn more about modeling and fitting, see  :ref:`gammapy.modeling <modeling>`
-and :ref:`gammapy.estimators <estimators`. To compute light curves, use the
+and :ref:`gammapy.estimators <estimators>`. To compute light curves, use the
 `~gammapy.estimators.LightCurveEstimator`.
 
 For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are
 used, to provide uniformity within Gammapy, and to allow in future versions of
 Gammapy for advanced use cases where a sky region based analysis is used
-resulting in 1D counts spetra, but the modeling is done with a spatial model
+resulting in 1D counts spectra, but the modeling is done with a spatial model
 assumption, allowing for treatment of overlapping emission components, such as
 e.g. a gamma-ray binary with underlying emission from a pulsar wind nebula, to
 apply proper treatment of containment and contamination corrections. Note that
