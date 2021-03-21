@@ -7,7 +7,9 @@ Overview
 
 This page gives an overview of the main concepts in Gammapy. It is a theoretical
 introduction to Gammapy, explaining which data, sub-packages, classes and methods
-are involved in a data analysis with Gammapy.
+are involved in a data analysis with Gammapy. Figure :numref:`data_flow` illustrates
+the data flow and corresponding sub-package structure of Gammapy. The different data
+levels and data reduction steps are are explained in more detail in the following sections.
 
 .. _data_flow:
 
@@ -20,8 +22,7 @@ are involved in a data analysis with Gammapy.
     shows the data levels as defined by `CTA`_.
 
 
-Gammapy is organised in sub-packages. Figure :numref:`data_flow` illustrates
-the data flow and sub-package structure of Gammapy.
+
 
 .. _overview_data:
 
@@ -29,17 +30,17 @@ the data flow and sub-package structure of Gammapy.
 Data access (DL3)
 -----------------
 
-The data analysis starts with data level 3 FITS files consisting of event lists,
-instrument response information
-(effective area, point spread function, energy dispersion, background) and
-extra information concerning the observation (pointing direction, time),
-as well as two index tables that list the observations and declare which
-response should be used with which event data.
+The data analysis starts with data level 3 FITS files consisting of lists of
+gamma-like events and correspoding instrument response functions (IRFs).
+The instrument response includes effective area, point spread function (PSF),
+energy dispersion and residual hadronic background. In addition there is
+associated meta data including informatiom on the observation such as pointing
+direction, observation time, and conditions.
 
-For each observation, instrument response functions (namely effective area, point spread function, energy
-dispersion, background) are distributed. Some details about the origin of these functions are given
-in :ref:`irf-theory`. The functions are stored in the form of multidimensional tables giving the IRF
-value as a function of position in the field-of-view and energy of the incident photon.
+Typically the IRFs are stored in the form of multidimensional tables giving the
+probability distribution of for the gamma like detection, the reconstructed
+position, and energy of the incident photon. A more detailed description is
+given in :ref:`irf-theory`.
 
 The formats used are discussed and described in `gadf`_. This format is still a prototype. In the coming
 years CTA will develop and define it's release data format, and Gammapy  will adapt to that.
@@ -60,6 +61,8 @@ See :ref:`gammapy.data <data>` and :ref:`gammapy.irf <irf>`
 Data reduction (DL3 -> DL4)
 ---------------------------
 
+In the next stage of the analysis the event are binned into multidimensional data
+structures (maps).
 There are many data reduction options, but the main ones are whether to do a 3D
 cube analysis or a 1D spectral analysis, and whether to keep individual
 observations as separate datasets for a joint likelihood fit or whether to group
@@ -201,8 +204,3 @@ You now have an overview of Gammapy. We suggest you continue by tring it out,
 following the instructions in :ref:`install`, :ref:`getting-started` and then
 the first and second analysis tutorials at :ref:`tutorials`.
 
-.. toctree::
-    :caption: Overview Subsections
-    :maxdepth: 1
-
-    overview/DL3
