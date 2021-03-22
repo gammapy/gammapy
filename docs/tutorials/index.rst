@@ -104,7 +104,7 @@ Time
 Built-in models
 ---------------
 
-Gammapy provides a series of spatial, spectral and temporal models.
+Gammapy provides a large choice of spatial, spectral and temporal models.
 You may check out the whole list of built-in models in the :ref:`model-gallery`.
 
 
