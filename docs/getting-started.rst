@@ -2,8 +2,8 @@
 
 .. _getting-started:
 
-Getting Started
-===============
+Quickstart guide
+================
 
 The best way to learn about Gammapy is to read and play with the examples in the
 Gammapy :ref:`tutorials`.

@@ -42,6 +42,13 @@ datasets and thus provide links, allowing e.g. to do a joint fit to multiple
 IACT datasets, or to a joint IACT and Fermi-LAT dataset. Many examples are given
 in the tutorials.
 
+Built-in models
+===============
+
+Gammapy provides a large choice of spatial, spectral and temporal models.
+You may check out the whole list of built-in models in the :ref:`model-gallery`.
+
+
 Tutorials
 =========
 
