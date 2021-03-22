@@ -21,7 +21,12 @@ in the observation, by rotating the ON region selected around the pointing
 position. To avoid that the reflected regions contain actual gamma-ray signal
 from other objects, one has to remove the gamma-ray bright parts of the
 field-of-view with a exclusion mask. Details on the reflected regions method can
-be found in [Berge2007]_
+be found in [Berge2007]_.
+
+.. figure:: ../_static/hgps_spectrum_background_estimation.png
+    :width: 50%
+
+    Illustration of the reflected regions background estimation method, taken from [Abdalla2018]_.
 
 The extraction of the OFF events from the `~gammapy.data.EventList` of a
 set of observations is performed by the `ReflectedRegionsBackgroundMaker`.
