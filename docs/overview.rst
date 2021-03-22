@@ -9,7 +9,7 @@ This page gives an overview of the main concepts in Gammapy. It is a theoretical
 introduction to Gammapy, explaining which data, sub-packages, classes and methods
 are involved in a data analysis with Gammapy. Figure :numref:`data_flow` illustrates
 the data flow and corresponding sub-package structure of Gammapy. The different data
-levels and data reduction steps are are explained in more detail in the following sections.
+levels and data reduction steps are explained in more detail in the following sections.
 
 .. _data_flow:
 
