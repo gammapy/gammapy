@@ -278,8 +278,6 @@ offset-cut later, you can also choose a larger width of the cutout
 than `2 * offset_max`.
 
 
-
-
 Using `gammapy.makers`
 ======================
 

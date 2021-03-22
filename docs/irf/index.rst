@@ -8,7 +8,11 @@ irf - Instrument response functions
 
 Introduction
 ============
-For a definition of the response function you are invited to read 
+Typically the IRFs are stored in the form of multidimensional tables giving the
+probability distribution for the total number of gamma like events as well as
+the reconstructed position and energy.
+
+For a more detailed definition of the response function you are invited to read
 :ref:`irf-theory`.
 
 `gammapy.irf` handles the following instrument response functions (IRFs):
