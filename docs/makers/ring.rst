@@ -11,8 +11,12 @@ Ring background
 Overview
 --------
 This technique is used in classical Cherenkov astronomy for the 2D image
-computation.
-Details on the ring background method can be found in [Berge2007]_
+computation. Details on the ring background method can be found in [Berge2007]_.
+
+.. figure:: ../_static/hgps_map_background_estimation.png
+    :width: 50%
+
+    Illustration of the ring background estimation method, taken from [Abdalla2018]_.
 
 To include the classical ring background estimation into a data reduction
 chain, Gammapy provides the `RingBackgroundMaker` and `AdaptiveRingBackgroundMaker`
