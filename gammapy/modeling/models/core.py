@@ -9,7 +9,7 @@ from astropy.table import Table
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import RegionGeom, Map
+from gammapy.maps import RegionGeom, Map, WcsGeom
 
 log = logging.getLogger(__name__)
 
@@ -791,6 +791,7 @@ class DatasetModels(collections.abc.Sequence):
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
 
+
     def to_template_sky_model(self, geom, spectral_model=None, name=None):
         """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`
     
@@ -814,6 +815,57 @@ class DatasetModels(collections.abc.Sequence):
         return SkyModel(
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
+
+    def plot_spatial(self, ax=None, wcs=None, plot_extent=True, **kwargs):
+        """"Plot spatial models on a given geom
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        wcs: `~astropy.wcs.WCS`
+            World coordinate system transformation to plot the models on.
+            By default, an all-sky wcs is chosen using a CAR projection
+        plot_extent : Bool
+            Whether to plot the extent (if True) or the positions (if False) of the extended sources
+            By default, the centers of the point sources and the extent of extended sources is plotted
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.patches.Patch`
+
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+        """
+        import matplotlib.pyplot as plt
+        from gammapy.modeling.models import PointSpatialModel
+
+        wcs = WcsGeom.create().wcs if wcs is None else wcs
+        ax = plt.gca(projection=wcs) if ax is None else ax
+
+        kwargs.setdefault("color", "black")
+        kwargs.setdefault("linewidth", "2")
+
+        for model in self:
+            if plot_extent is False:
+                ax.plot(
+                    model.position.to_pixel(wcs=wcs)[0],
+                    model.position.to_pixel(wcs=wcs)[1],
+                    **kwargs,
+                    marker="o",
+                )
+            else:
+                if isinstance(model.spatial_model, PointSpatialModel):
+                    ax.plot(
+                        model.position.to_pixel(wcs=wcs)[0],
+                        model.position.to_pixel(wcs=wcs)[1],
+                        **kwargs,
+                        marker="o",
+                    )
+                else:
+                    model.spatial_model.to_region().to_pixel(wcs=wcs).plot(
+                        ax=ax, **kwargs
+                    )
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
