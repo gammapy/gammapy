@@ -10,9 +10,23 @@ data - DL3 data access and observations
 
 Introduction
 ============
+IACT data is typically structured in "observations", which define a given
+time interval during with the instrument response is considered stable.
+
 
 `gammapy.data` currently contains the `~gammapy.data.EventList` class,
 as well as classes for IACT data and observation handling.
+
+
+The main classes in Gammapy to access the DL3 data library are the
+`~gammapy.data.DataStore` and `~gammapy.data.Observation`.
+They are used to store and retrieve dynamically the datasets
+relevant to any observation (event list in the form of an `~gammapy.data.EventList`,
+IRFs see :ref:`irf` and other relevant informations).
+
+Once some observation selection has been selected, the user can build a list of observations:
+a `~gammapy.data.Observations` object, which will be used for the data reduction process.
+
 
 Getting Started
 ===============

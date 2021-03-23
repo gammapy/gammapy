@@ -24,6 +24,7 @@ setup_cfg = dict(conf.items("metadata"))
 
 plot_html_show_source_link = False
 
+numfig = False
 
 # -- General configuration ----------------------------------------------------
 
