@@ -8,9 +8,9 @@ irf - Instrument response functions
 
 Introduction
 ============
-Typically the IRFs are stored in the form of multidimensional tables giving the
-probability distribution for the total number of gamma like events as well as
-the reconstructed position and energy.
+Typically the IRFs are stored in the form of multidimensional tables giving
+the response functions such as the distribution of gamma-like events or the
+probability density functions of the reconstructed energy and position.
 
 For a more detailed definition of the response function you are invited to read
 :ref:`irf-theory`.

@@ -48,9 +48,8 @@ the ``wstat`` fit statistic. The `~gammapy.datasets.FluxPointsDataset` contains
 `~gammapy.estimatorsFluxPoints` and a spectral model, the fit statistic used is
 ``chi2``.
 
-Note that in Gammapy, 2D image analyses are partly done with actual 2D images
-that don't have an energy axis, and partly with 3D cubes with a single energy bin,
-e.g. for modeling and fitting,
+Note that in Gammapy, 2D image analyses are done with 3D cubes with a single
+energy bin, e.g. for modeling and fitting,
 see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
 

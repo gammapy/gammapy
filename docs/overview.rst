@@ -114,8 +114,8 @@ Other
 Gammapy offers additional functionality in sub-packages not related to the
 standard analysis work flow described above. This includes:
 
-* Access to a variety of GeV-TeV gamma-ra catalogs in :ref:`gammapy.catalog <catalog>`
-* Support for simualation of TeV source populations and dark matter models in :ref:`gammapy.astro <astro>`
+* Access to a variety of GeV-TeV gamma-ray catalogs in :ref:`gammapy.catalog <catalog>`
+* Support for simulation of TeV source populations and dark matter models in :ref:`gammapy.astro <astro>`
 * Statistical utility functions in :ref:`gammapy.stats <stats>`
 * Command line tools in :ref:`gammapy.scripts <CLI>`
 
@@ -125,7 +125,7 @@ standard analysis work flow described above. This includes:
 What next?
 ----------
 
-You now have an overview of the Gammapy package. We suggest you continue by tring it out,
+After this overview of the Gammapy package, we suggest to continue by trying it out,
 following the instructions in :ref:`install`, :ref:`getting-started` and then
 the first and second analysis tutorials at :ref:`tutorials`.
 
