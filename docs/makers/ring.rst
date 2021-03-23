@@ -19,7 +19,7 @@ the off events. A variation of this methods is given by the "adaptive" ring.
 In some regions (e.g. in the Galactic plane) a lot of gamma-ray emission
 has to be excluded and there are not many regions left to estimate the background
 from. To improve the off statistics in this case, the ring is adaptively
-enlarged to achieve a defined minimal background efficiency ratio (see :ref:`stats_notation`_).
+enlarged to achieve a defined minimal background efficiency ratio (see :ref:`stats_notation`).
 More details on the ring background method can be found in [Berge2007]_.
 
 .. _figure_ring_background:

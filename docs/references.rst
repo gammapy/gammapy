@@ -134,6 +134,10 @@ referenced from the Gammapy docs.
 .. [Stewart2009] `Stewart (2009) <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S>`_,
    "Maximum-likelihood detection of sources among Poissonian noise"
 
+.. [Abdalla2018] `H.E.S.S. Collaboration (2018) <https://www.aanda.org/articles/aa/abs/2018/04/aa32098-17/aa32098-17.html>`_,
+    "The H.E.S.S. Galactic plane survey"
+
+
 Software references:
 
 .. [Raue2012] `Raue (2012) <https://ui.adsabs.harvard.edu/abs/2012AIPC.1505..789R>`_,
