@@ -11,7 +11,13 @@ __all__ = ["Estimator", "FluxEstimate"]
 
 SED_TYPES = ["dnde", "e2dnde", "flux", "eflux"]
 
-OPTIONAL_QUANTITIES = ["err", "errn", "errp", "ul", "scan"]
+OPTIONAL_QUANTITIES = [
+    "err", "errn", "errp", "ul", "scan"
+]
+
+OPTIONAL_QUANTITIES_COMMON = [
+    "ts", "sqrt_ts", "npred", "npred_excess", "npred_null", "stat", "stat_null"
+]
 
 
 class Estimator(abc.ABC):
@@ -137,36 +143,53 @@ class FluxEstimate:
 
     def __init__(self, data, spectral_model):
         # TODO: Check data
-        self.data = data
+        self._data = data
 
-        if hasattr(self.data["norm"], "geom"):
+        if hasattr(self._data["norm"], "geom"):
             self.energy_axis = self.data["norm"].geom.axes["energy"]
-            keys = self.data.keys()
             self._expand_slice = (slice(None), np.newaxis, np.newaxis)
         else:
             # Here we assume there is only one row per energy
-            e_edges = self.data["e_min"].quantity
-            e_edges = e_edges.insert(len(self.data), self.data["e_max"].quantity[-1])
+            e_edges = self._data["e_min"].quantity
+            e_edges = e_edges.insert(len(self._data), self._data["e_max"].quantity[-1])
             self.energy_axis = MapAxis.from_energy_edges(e_edges)
-            keys = self.data.columns
             self._expand_slice = slice(None)
 
         # Note that here we could use the specification from dnde_ref to build piecewise PL
         # But does it work beyond min and max centers?
         self.spectral_model = spectral_model
 
-        self._available_quantities = []
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def available_quantities(self):
+        """Available quantities"""
+        try:
+            keys = self.data.keys()
+        except AttributeError:
+            keys = self.data.columns
+
+        available_quantities = []
 
         for quantity in OPTIONAL_QUANTITIES:
             norm_quantity = f"norm_{quantity}"
             if norm_quantity in keys:
-                self._available_quantities.append(quantity)
+                available_quantities.append(quantity)
+
+        for quantity in OPTIONAL_QUANTITIES_COMMON:
+            if quantity in keys:
+                available_quantities.append(quantity)
+
+        return available_quantities
 
     # TODO: add support for scan
     def _check_norm_quantity(self, quantity):
-        if quantity not in self._available_quantities:
+        if quantity not in self.available_quantities:
             raise KeyError(
-                f"Cannot compute required flux quantity. {quantity} is not defined on current flux estimate."
+                f"Cannot compute required flux quantity. {quantity} "
+                "is not defined on current flux estimate."
             )
 
     @property
@@ -185,13 +208,46 @@ class FluxEstimate:
         return self.energy_axis.edges[1:]
 
     @property
+    def npred(self):
+        """Predicted counts"""
+        self._check_norm_quantity("npred")
+        return self.data["npred"]
+
+    @property
+    def npred_null(self):
+        """Predicted counts null hypothesis"""
+        self._check_norm_quantity("npred_null")
+        return self.data["npred_null"]
+
+    @property
+    def npred_excess(self):
+        """Predicted excess counts"""
+        self._check_norm_quantity("npred_excess")
+        return self.data["npred_excess"]
+
+    @property
+    def stat(self):
+        """Fit statistic value"""
+        self._check_norm_quantity("stat")
+        return self.data["stat"]
+
+    @property
+    def stat_null(self):
+        """Fit statistic value for thenull hypothesis"""
+        self._check_norm_quantity("stat_null")
+        return self.data["stat_null"]
+
+    @property
     def ts(self):
         """ts map (`Map`)"""
+        self._check_norm_quantity("ts")
         return self.data["ts"]
 
+    # TODO: just derive from ts?
     @property
     def sqrt_ts(self):
         """sqrt(TS) map (`Map`)"""
+        self._check_norm_quantity("sqrt_ts")
         return self.data["sqrt_ts"]
 
     @property
