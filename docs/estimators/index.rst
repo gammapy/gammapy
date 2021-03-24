@@ -11,10 +11,10 @@ estimators - High level estimators
 Introduction
 ============
 The `gammapy.estimators` submodule contains algorithms and classes
-for high level flux and significance estimation such as flux maps,
-flux points, flux profiles and flux light curves. All estimators
-feature a common API and allow to estimate fluxes in bands of reconstructed
-energy.
+for high level flux and significance estimation. This includes
+estimation flux points, flux maps, flux points, flux profiles and
+flux light curves. All estimators feature a common API and allow
+to estimate fluxes in bands of reconstructed energy.
 
 The core of any estimator algorithm is hypothesis testing: a reference
 model or counts excess is tested against a null hypothesis. From the
@@ -26,25 +26,22 @@ of the "classical significance". In case of a negative best fit flux,
 e.g. when the background is overestimated, the significance is defined
 as :math:`-\sqrt{\Delta TS}` by convention.
 
-In general the flux can be estimated using methods:
+In general the flux can be estimated using two methods:
 
-1. Based on model fitting: given a (global) best fit model with multiple model components,
+#. **Based on model fitting:** given a (global) best fit model with multiple model components,
 the flux of the component of interest is re-fitted in the chosen energy, time or spatial
 region. The new flux is given as a ``norm`` with respect to the global reference model.
-Optionally other component parameters in the global model can be re-optimised.
+Optionally other component parameters in the global model can be re-optimised. This method
+is also named **forward folding**.
 
-2. Based on excess: in the case of having one energy bin, neglecting the PSF and not re-optimising
-other parameters, once can estimate the flux based on excess and derive the significance
-analytically from the classical Li & Ma solution.
+#. ***Based on excess:** in the case of having one energy bin, neglecting the PSF and
+not re-optimising other parameters, one can estimate the significance based on the
+analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
+are given by the excess over the null hypothesis. This method is also named
+**backward folding**.
 
 
-The technical implementation follows the concept of a reference
-best fit model. Given a global best fit model, the source of interest
-(for which flux points are computed) is scaled in amplitude by fitting a ``norm``
-parameter. The fitting is done by grouping the data in time
-and reconstructed energy bins (reference?).
-
-Based on this algorithm most estimators compute the same basic quantities:
+Uniformly for both methods most estimators compute the same basic quantities:
 
 ================= =================================================
 Quantity          Definition
@@ -57,6 +54,13 @@ norm_err          Symmetric error on the norm derived from the Hessian matrix
 ts                Difference in fit statistics (`stat - stat_null` )
 sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
 ================= =================================================
+stat              Fit statistics value of the best fit hypothesis
+stat_null         Fit statistics value of the null hypothesis
+================= =================================================
+npred             Predicted counts of the best fit hypothesis, equivalent to correlated counts for backward folding
+npred_null        Predicted counts of the null hypothesis
+npred_excess      Predicted counts of the excess over `npred_null`, equivalent to (`npred - npred_null`)
+================= =================================================
 
 
 In addition the following optional quantities can be computed:
@@ -67,12 +71,6 @@ Quantity          Definition
 norm_errp         Positive error of the norm
 norm_errn         Negative error of the norm
 norm_ul           Upper limit of the norm
-stat              Fit statistics value of the best fit hypothesis
-stat_null         Fit statistics value of the null hypothesis
-================= =================================================
-npred             Predicted counts of the best fit hypothesis
-npred_null        Predicted counts of the null hypothesis
-npred_excess      Predicted counts of the excess over `npred_null`, equivalent to (`npred - npred_null`)
 ================= =================================================
 norm_scan         Norm scan
 stat_scan         Fit statistics scan
