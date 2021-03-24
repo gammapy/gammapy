@@ -241,6 +241,31 @@ class SpectralModel(Model):
             **kwargs,
         )
 
+    def reference_fluxes(self,  energy_axis):
+        """Get reference fluxes for a given energy axis.
+
+        Parameters
+        ----------
+        energy_axis : `MapAxis`
+            Energy axis
+
+        Returns
+        -------
+        fluxes : dict of `~astropy.units.Quantity`
+            Reference fluxes
+        """
+        energy = energy_axis.center
+        energy_min, energy_max = energy_axis.edges[:-1], energy_axis.edges[1:]
+        return {
+            "e_ref": energy,
+            "e_min": energy_min,
+            "e_max": energy_max,
+            "ref_dnde": self(energy),
+            "ref_flux": self.integral(energy_min, energy_max),
+            "ref_eflux": self.energy_flux(energy_min, energy_max),
+            "ref_e2dnde": self(energy) * energy ** 2,
+        }
+
     def plot(
         self,
         energy_range,
