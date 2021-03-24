@@ -7,8 +7,8 @@ import scipy.special
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
+from astropy.utils.decorators import classproperty
 from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -52,14 +52,10 @@ class SpectralModel(Model):
         kwargs = self._convert_evaluate_unit(kwargs, energy)
         return self.evaluate(energy, **kwargs)
 
-    @property
-    def type(self):
-        return self._type
-
-    @property
-    def is_norm_spectral_model(self):
+    @classproperty
+    def is_norm_spectral_model(cls):
         """Whether model is a norm spectral model"""
-        return "Norm" in self.__class__.__name__
+        return "Norm" in cls.__name__
 
     @staticmethod
     def _convert_evaluate_unit(kwargs_ref, energy):
@@ -92,10 +88,28 @@ class SpectralModel(Model):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _evaluate_gradient(self, energy, eps):
-        n = len(self.parameters)
-        f = self(energy)
-        shape = (n, len(np.atleast_1d(energy)))
+    def _propagate_error(self, epsilon, fct, **kwargs):
+        """Evaluate error for a given function with uncertainty propagation.
+        
+        Parameters
+        ----------
+        fct : `~astropy.units.Quantity`
+            Function to estimate the error.
+        epsilon : float
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error.
+        **kwargs : dict
+            Keyword argument
+        
+        Returns
+        -------
+        f_cov : `~astropy.units.Quantity`
+            Error of the given function.
+        """
+        eps = np.sqrt(np.diag(self.covariance)) * epsilon
+
+        n, f_0 = len(self.parameters), fct(**kwargs)
+        shape = (n, len(np.atleast_1d(f_0)))
         df_dp = np.zeros(shape)
 
         for idx, parameter in enumerate(self.parameters):
@@ -103,13 +117,14 @@ class SpectralModel(Model):
                 continue
 
             parameter.value += eps[idx]
-            df = self(energy) - f
-            df_dp[idx] = df.value / eps[idx]
+            df = fct(**kwargs) - f_0
 
-            # Reset model to original parameter
+            df_dp[idx] = df.value / eps[idx]
             parameter.value -= eps[idx]
 
-        return df_dp
+        f_cov = df_dp.T @ self.covariance @ df_dp
+        f_err = np.sqrt(np.diagonal(f_cov))
+        return u.Quantity([f_0.value, f_err], unit=f_0.unit)
 
     def evaluate_error(self, energy, epsilon=1e-4):
         """Evaluate spectral model with error propagation.
@@ -127,15 +142,7 @@ class SpectralModel(Model):
         dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
-        p_cov = self.covariance
-        eps = np.sqrt(np.diag(p_cov)) * epsilon
-
-        df_dp = self._evaluate_gradient(energy, eps)
-        f_cov = df_dp.T @ p_cov @ df_dp
-        f_err = np.sqrt(np.diagonal(f_cov))
-
-        q = self(energy)
-        return u.Quantity([q.value, f_err], unit=q.unit)
+        return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
 
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
@@ -158,7 +165,7 @@ class SpectralModel(Model):
         else:
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
-    def integral_error(self, energy_min, energy_max):
+    def integral_error(self, energy_min, energy_max, epsilon=1e-4, **kwargs):
         """Evaluate the error of the integral flux of a given spectrum in
         a given energy range.
 
@@ -166,55 +173,23 @@ class SpectralModel(Model):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
+        epsilon : float
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error.
+
 
         Returns
         -------
         flux, flux_err : tuple of `~astropy.units.Quantity`
             Integral flux and flux error betwen energy_min and energy_max.
         """
-        energy = np.sqrt(energy_min * energy_max)
-        flux = self.integral(energy_min, energy_max)
-        dnde, dnde_err = self.evaluate_error(energy, epsilon=1e-4)
-        flux_err = flux * dnde_err / dnde
-        return u.Quantity([flux.value, flux_err.value], unit=flux.unit)
-
-    def _propagate_error(self, fct, energy_min, energy_max, eps):
-        """Evaluate error of a given function with uncertainty propagation.
-
-        Parameters
-        ----------
-        fct : `~astropy.units.Quantity`
-            Function to estimate the error.
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Array of lower and upper bound of integration range.
-        epsilon : float
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error.
-
-        Returns
-        -------
-        f_cov : `~astropy.units.Quantity`
-            Error of the given function.
-        """
-        n = len(self.parameters)
-        C = self.covariance
-        f = fct
-        shape = (n, len(np.atleast_1d(energy_min)))
-        df_dp = np.zeros(shape)
-
-        for idx, parameter in enumerate(self.parameters):
-            if parameter.frozen or eps[idx] == 0:
-                continue
-
-            parameter.value += eps[idx]
-            df = self.energy_flux(energy_min, energy_max) - f
-            df_dp[idx] = df.value / eps[idx]
-
-            # Reset model to original parameter
-            parameter.value -= eps[idx]
-
-        f_cov = df_dp.T @ C @ df_dp
-        return np.sqrt(np.diagonal(f_cov))
+        return self._propagate_error(
+            epsilon=epsilon,
+            fct=self.integral,
+            energy_min=energy_min,
+            energy_max=energy_max,
+            **kwargs,
+        )
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
         r"""Compute energy flux in given energy range.
@@ -248,17 +223,23 @@ class SpectralModel(Model):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
+        epsilon : float
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error.
+
 
         Returns
         -------
         energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
             Energy flux and energy flux error betwen energy_min and energy_max.
         """
-        p_cov = self.covariance
-        eps = np.sqrt(np.diag(p_cov)) * epsilon
-        enrg_flux = self.energy_flux(energy_min, energy_max, **kwargs)
-        enrg_flux_err = self._propagate_error(enrg_flux, energy_min, energy_max, eps)
-        return u.Quantity([enrg_flux.value, enrg_flux_err], unit=enrg_flux.unit)
+        return self._propagate_error(
+            epsilon=epsilon,
+            fct=self.energy_flux,
+            energy_min=energy_min,
+            energy_max=energy_max,
+            **kwargs,
+        )
 
     def plot(
         self,
@@ -337,7 +318,7 @@ class SpectralModel(Model):
 
         .. note::
 
-            This method calls ``ax.set_yscale("log", nonposy='clip')`` and
+            This method calls ``ax.set_yscale("log", nonpositive='clip')`` and
             ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
             The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
             when the error band extends to negative values (see also
@@ -346,8 +327,8 @@ class SpectralModel(Model):
             When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
             plotting code and the error band extends to negative values, it is not
             shown correctly. To circumvent this issue also use
-            ``plt.loglog(nonposx='clip', nonposy='clip')``
-            or ``plt.semilogy(nonposy='clip')``.
+            ``plt.loglog(nonposx='clip', nonpositive='clip')``
+            or ``plt.semilogy(nonpositive='clip')``.
 
         Parameters
         ----------
@@ -402,8 +383,8 @@ class SpectralModel(Model):
         else:
             ax.set_ylabel(f"Flux [{y.unit}]")
 
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
 
         if "norm" in self.__class__.__name__.lower():
             ax.set_ylabel(f"Norm [A.U.]")
@@ -968,7 +949,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     @property
     def norms(self):
         """Norm values"""
-        return u.Quantity(self.parameters.values)
+        return u.Quantity(self.parameters.value)
 
     def evaluate(self, energy, **norms):
         scale = interpolation_scale(scale=self._interp)
@@ -1409,6 +1390,13 @@ class TemplateSpectralModel(SpectralModel):
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
         return cls(energy=energy, values=values)
+
+    @classmethod
+    def from_region_map(cls, map, **kwargs):
+        """Create model from region map"""
+        energy = map.geom.axes["energy_true"].center
+        values = map.quantity[:, 0, 0]
+        return cls(energy=energy, values=values, **kwargs)
 
 
 class ScaleSpectralModel(SpectralModel):

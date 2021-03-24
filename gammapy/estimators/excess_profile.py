@@ -88,7 +88,7 @@ class ExcessProfileEstimator(Estimator):
         spectrum=None,
         n_sigma=1.0,
         n_sigma_ul=3.0,
-        selection_optional="all",
+        selection_optional=None,
     ):
         self.regions = regions
         self.n_sigma = n_sigma

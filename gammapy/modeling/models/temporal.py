@@ -273,20 +273,21 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     Show basic information about the lightcurve:
 
     >>> print(light_curve)
-    LightCurve model summary:
+    LightCurveTemplateTemporalModel model summary:
     Start time: 59000.5 MJD
     End time: 61862.5 MJD
     Norm min: 0.01551196351647377
     Norm max: 1.0
+    <BLANKLINE>
 
     Compute ``norm`` at a given time:
 
-    >>> light_curve.evaluate(46300)
+    >>> light_curve.evaluate(46300) # doctest: +SKIP
     0.49059393580053845
 
     Compute mean ``norm`` in a given time interval:
 
-    >>> light_curve.mean_norm_in_time_interval(46300, 46301)
+    >>> light_curve.mean_norm_in_time_interval(46300, 46301) # doctest: +SKIP
     """
 
     tag = ["LightCurveTemplateTemporalModel", "template"]

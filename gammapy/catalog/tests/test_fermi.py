@@ -137,7 +137,7 @@ SOURCES_3FHL = [
 class TestFermi4FGLObject:
     @classmethod
     def setup_class(cls):
-        cls.cat = SourceCatalog4FGL()
+        cls.cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
         cls.source_name = "4FGL J0534.5+2200"
         cls.source = cls.cat[cls.source_name]
 
@@ -235,8 +235,8 @@ class TestFermi4FGLObject:
         ]
         assert_allclose(flux_points.table["flux_ul"].data, desired, rtol=1e-5)
 
-    def test_lightcurve(self):
-        lc = self.source.lightcurve
+    def test_lightcurve_dr1(self):
+        lc = self.source.lightcurve(interval="1-year")
         table = lc.table
 
         assert len(table) == 8
@@ -262,6 +262,35 @@ class TestFermi4FGLObject:
 
         assert table["flux_errn"].unit == "cm-2 s-1"
         assert_allclose(table["flux_errn"][0], 2.3099371e-08, rtol=1e-3)
+
+        table = self.source.lightcurve(interval="2-month").table
+        assert len(table) == 48  # (12 month/year / 2month) * 8 years
+
+        assert table["flux"].unit == "cm-2 s-1"
+        assert_allclose(table["flux"][0], 2.238483e-6, rtol=1e-3)
+
+        assert table["flux_errp"].unit == "cm-2 s-1"
+        assert_allclose(table["flux_errp"][0], 4.437058e-8, rtol=1e-3)
+
+        assert table["flux_errn"].unit == "cm-2 s-1"
+        assert_allclose(table["flux_errn"][0], 4.437058e-8, rtol=1e-3)
+
+    def test_lightcurve_dr2(self):
+        dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz")
+        source_dr2 = dr2[self.source_name]
+        table = source_dr2.lightcurve(interval="1-year").table
+
+        assert table["flux"].unit == "cm-2 s-1"
+        assert_allclose(table["flux"][0], 2.196788e-6, rtol=1e-3)
+
+        assert table["flux_errp"].unit == "cm-2 s-1"
+        assert_allclose(table["flux_errp"][0], 2.312938e-8, rtol=1e-3)
+
+        assert table["flux_errn"].unit == "cm-2 s-1"
+        assert_allclose(table["flux_errn"][0], 2.312938e-8, rtol=1e-3)
+
+        with pytest.raises(ValueError):
+            source_dr2.lightcurve(interval="2-month")
 
 
 @requires_data()
@@ -362,7 +391,7 @@ class TestFermi3FGLObject:
         assert_allclose(flux_points.table["flux_ul"].data, desired, rtol=1e-5)
 
     def test_lightcurve(self):
-        lc = self.source.lightcurve
+        lc = self.source.lightcurve()
         table = lc.table
 
         assert len(table) == 48

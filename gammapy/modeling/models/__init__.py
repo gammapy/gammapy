@@ -18,6 +18,7 @@ SPATIAL_MODEL_REGISTRY = Registry(
         GeneralizedGaussianSpatialModel,
         PointSpatialModel,
         ShellSpatialModel,
+        Shell2SpatialModel,
     ]
 )
 """Registry of spatial model classes."""

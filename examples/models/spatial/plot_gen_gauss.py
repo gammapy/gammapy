@@ -14,7 +14,7 @@ By default, the Generalized Gaussian is defined as :
 the normalization is expressed as:
 
 .. math::
-    N = \frac{1}{ 2 \pi (1-e) r_{\rm eff}^2 \eta \Gamma(2\eta)}\,
+    N = \frac{1}{ 2 \pi \sqrt(1-e^2) r_{\rm eff}^2 \eta \Gamma(2\eta)}\,
 
 where :math:`\Gamma` is the gamma function.
 This analytical norm is approximated so it may not integrate to unity in extremal cases
@@ -44,7 +44,7 @@ geom = WcsGeom.create(
     skydir=(lon_0, lat_0), binsz=dr, width=(2 * reval, 2 * reval), frame="galactic",
 )
 
-tags = [r"Disk, $\eta=0.01$", r"Gaussian, $\eta=0.5$", r"Laplacian, $\eta=1$"]
+tags = [r"Disk, $\eta=0.01$", r"Gaussian, $\eta=0.5$", r"Laplace, $\eta=1$"]
 eta_range = [0.01, 0.5, 1]
 r_0 = 1
 e = 0.5

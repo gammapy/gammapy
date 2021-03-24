@@ -153,8 +153,6 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        datasets = Datasets([dataset])
-
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
             energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
@@ -164,21 +162,21 @@ class ASmoothMapEstimator(Estimator):
         results = []
 
         for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
-            result = self.estimate_maps(dataset)
+            dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
+            dataset_sliced.models = dataset.models
+            result = self.estimate_maps(dataset_sliced)
             results.append(result)
 
         result_all = {}
 
-        for name in result.keys():
+        for name in results[0].keys():
             map_all = Map.from_images(images=[_[name] for _ in results])
             result_all[name] = map_all
 
         return result_all
 
     def estimate_maps(self, dataset):
-        """
-        Run adaptive smoothing on input Maps.
+        """Run adaptive smoothing on input Maps.
 
         Parameters
         ----------
@@ -195,21 +193,22 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        dataset = dataset.to_image()
+        dataset_image = dataset.to_image(name=dataset.name)
+        dataset_image.models = dataset.models
 
         # extract 2d arrays
-        counts = dataset.counts.data[0].astype(float)
-        background = dataset.npred_background().data[0]
+        counts = dataset_image.counts.data[0].astype(float)
+        background = dataset_image.npred_background().data[0]
 
-        if isinstance(dataset, MapDatasetOnOff):
-            background = dataset.background.data[0]
+        if isinstance(dataset_image, MapDatasetOnOff):
+            background = dataset_image.background.data[0]
 
-        if dataset.exposure is not None:
-            exposure = estimate_exposure_reco_energy(dataset, self.spectrum)
+        if dataset_image.exposure is not None:
+            exposure = estimate_exposure_reco_energy(dataset_image, self.spectrum)
         else:
             exposure = None
 
-        pixel_scale = dataset.counts.geom.pixel_scales.mean()
+        pixel_scale = dataset_image.counts.geom.pixel_scales.mean()
         kernels = self.get_kernels(pixel_scale)
 
         cubes = {}
@@ -217,7 +216,7 @@ class ASmoothMapEstimator(Estimator):
         cubes["background"] = scale_cube(background, kernels)
 
         if exposure is not None:
-            flux = (dataset.counts - background) / exposure
+            flux = (dataset_image.counts - background) / exposure
             cubes["flux"] = scale_cube(flux.data[0], kernels)
 
         cubes["sqrt_ts"] = self._sqrt_ts_cube(cubes, method=self.method)
@@ -226,7 +225,7 @@ class ASmoothMapEstimator(Estimator):
 
         result = {}
 
-        geom = dataset.counts.geom
+        geom = dataset_image.counts.geom
 
         for name, data in smoothed.items():
             # set remaining pixels with sqrt_ts < threshold to mean value

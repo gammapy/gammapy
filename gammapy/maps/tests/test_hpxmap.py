@@ -6,7 +6,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
-from gammapy.maps.utils import fill_poisson
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("healpy")
@@ -67,7 +66,6 @@ def test_hpxmap_read_write(tmp_path, nside, nested, frame, region, axes):
     path = tmp_path / "tmp.fits"
 
     m = create_map(nside, nested, frame, region, axes)
-    fill_poisson(m, mu=0.5, random_state=0)
     m.write(path, sparse=True, overwrite=True)
 
     m2 = HpxNDMap.read(path)
@@ -164,7 +162,7 @@ def test_hpxmap_interp_by_coord(nside, nested, frame, region, axes):
     )
     coords = m.geom.get_coord(flat=True)
     m.set_by_coord(coords, coords[1])
-    assert_allclose(m.get_by_coord(coords), m.interp_by_coord(coords, interp="linear"))
+    assert_allclose(m.get_by_coord(coords), m.interp_by_coord(coords, method="linear"))
 
 
 def test_hpxmap_interp_by_coord_quantities():
@@ -205,7 +203,7 @@ def test_hpxmap_swap_scheme(nside, nested, frame, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
     )
-    fill_poisson(m, mu=1.0, random_state=0)
+    m.data = np.arange(m.data.size).reshape(m.geom.data_shape)
     m2 = m.to_swapped()
     coords = m.geom.get_coord(flat=True)
     assert_allclose(m.get_by_coord(coords), m2.get_by_coord(coords))
@@ -235,6 +233,16 @@ def test_hpxmap_pad(nside, nested, frame, region, axes):
     assert_allclose(m_pad.get_by_coord(coords_out), cval * np.ones_like(coords_out[0]))
     coords_in = tuple([c[msk] for c in coords_pad])
     assert_allclose(m_pad.get_by_coord(coords_in), np.ones_like(coords_in[0]))
+
+
+def test_hpx_nd_map_pad_axis():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
+
+    m = HpxNDMap.create(nside=2, frame="galactic", axes=[axis])
+    m.data += [[1], [2]]
+
+    m_pad = m.pad(axis_name="energy", pad_width=(1, 1), mode="constant", cval=3)
+    assert_allclose(m_pad.data[:, 0], [3, 1, 2, 3])
 
 
 @pytest.mark.parametrize(
@@ -309,6 +317,13 @@ def test_plot():
     m = HpxNDMap.create(binsz=10)
     with mpl_plot_check():
         m.plot()
+
+@requires_dependency("matplotlib")
+def test_plot_grid():
+    axis = MapAxis([0, 1, 2], node_type="edges")
+    m = HpxNDMap.create(binsz=0.1 * u.deg, width=1, axes=[axis])
+    with mpl_plot_check():
+        m.plot_grid()
 
 
 @requires_dependency("matplotlib")

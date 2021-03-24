@@ -148,24 +148,28 @@ Excess and Significance
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Assume one measured :math:`n_{on} = 13` counts in a region where one suspects a source might be present.
-if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=9.5`), one can use
+if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=5.5`), one can use
 the Cash statistic to estimate the signal or excess number, its statistical significance
 as well as the confidence interval on the true signal counts number value.
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.excess
+    from gammapy.stats import CashCountsStatistic
+    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    print(stat.n_sig)
+    print(stat.error)
+    print(stat.ts)
+    print(stat.sqrt_ts)
+    print(stat.p_value)
+
+.. testoutput::
+
     7.5
-    >>> stat.error
     3.605551275463989
-    >>> stat.ts
     7.365232895800901
-    >>> stat.sqrt_ts
     2.7138962573762653
-    >>> stat.p_value
     0.006649698694909719
+
 
 The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{on}}`.
 The significance is the square root of the :math:`TS`, multiplied by the sign of the excess,
@@ -182,17 +186,27 @@ Excess errors
 You can also compute the confidence interval for the true excess based on the statistic value:
 If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confidence ranges:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> errn = count_statistic.compute_errn(1.)
-    >>> errp = count_statistic.compute_errp(1.)
-    >>> print(f"68% confidence range: {excess+errn} < mu < {excess+errp}")
+    from gammapy.stats import CashCountsStatistic
+    count_statistic = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    excess = count_statistic.n_sig
+    errn = count_statistic.compute_errn(1.)
+    errp = count_statistic.compute_errp(1.)
+    print(f"68% confidence range: {excess+errn} < mu < {excess+errp}")
+
+.. testoutput::
+
     68% confidence range: 4.219788441647667 < mu < 11.446309124623102
-    >>> errn_2sigma = count_statistic.compute_errn(2.)
-    >>> errp_2sigma = count_statistic.compute_errp(2.)
-    >>> print(f"95% confidence range: {excess+errn_2sigma} < mu < {excess+errp_2sigma}")
+
+.. testcode::
+
+    errn_2sigma = count_statistic.compute_errn(2.)
+    errp_2sigma = count_statistic.compute_errp(2.)
+    print(f"95% confidence range: {excess+errn_2sigma} < mu < {excess+errp_2sigma}")
+
+.. testoutput::
+
     95% confidence range: 1.5559091942635206 < mu < 16.10168631791818
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
@@ -221,24 +235,34 @@ background control region where you assume no source is present and that is
 
 Here's how you compute the statistical significance of your detection:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import WStatCountsStatistic
-    >>> stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
-    >>> stat.excess
-    >>> stat.sqrt_ts
+    from gammapy.stats import WStatCountsStatistic
+    stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
+    print(stat.n_sig)
+    print(stat.sqrt_ts)
+
+.. testoutput::
+
+    7.5
+    2.09283236849328
 
 .. plot:: stats/plot_wstat_significance.py
 
-Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=9.5`, you can use
+Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=5.5`, you can use
 the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for known background:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.excess
-    >>> stat.sqrt_ts
+    from gammapy.stats import CashCountsStatistic
+    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    print(stat.n_sig)
+    print(stat.sqrt_ts)
+
+.. testoutput::
+
+    7.5
+    2.7138962573762653
 
 .. plot:: stats/plot_cash_significance.py
 
@@ -249,18 +273,21 @@ You can also compute the confidence interval for the true excess based on the st
 
 If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confidence errors:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.compute_errn(1.)
-    -3.91606323
-    >>> stat.compute_errp(1.)
-    4.5823187389960225
-    >>> stat.compute_errn(2.)
-    -3.91606323
-    >>> stat.compute_errp(2.)
-    4.5823187389960225
+    from gammapy.stats import CashCountsStatistic
+    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    print(stat.compute_errn(1.))
+    print(stat.compute_errp(1.))
+    print(stat.compute_errn(2.))
+    print(stat.compute_errp(2.))
+
+.. testoutput::
+
+    -3.280211558352333
+    3.9463091246231023
+    -5.944090805736479
+    8.60168631791818
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values

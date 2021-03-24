@@ -60,9 +60,9 @@ class ReflectedRegionsFinder:
     >>> finder.run()
     >>> print(finder.reflected_regions[0])
     Region: CircleSkyRegion
-    center: <SkyCoord (Galactic): (l, b) in deg
-        ( 184.9367087, -8.37920222)>
-        radius: 0.400147197682 deg
+    center: <SkyCoord (ICRS): (ra, dec) in deg
+        (83.19879005, 25.57300957)>
+    radius: 0.39953342830756855 deg
     """
 
     def __init__(
@@ -97,7 +97,7 @@ class ReflectedRegionsFinder:
         self.reference_map = self.make_reference_map(
             self.region, self.center, self.binsz
         )
-        if self.exclusion_mask is not None:
+        if self.exclusion_mask:
             coords = self.reference_map.geom.get_coord()
             vals = self.exclusion_mask.get_by_coord(coords)
             self.reference_map.data += vals
@@ -187,7 +187,7 @@ class ReflectedRegionsFinder:
         self._pix_center = PixCoord.from_sky(self.center, geom.wcs)
 
         # Make the ON reference map
-        mask = geom.region_mask([self.region], inside=True)
+        mask = geom.region_mask([self.region]).data
         # on_reference_map = WcsNDMap(geom=geom, data=mask)
 
         # Extract all pixcoords in the geom
@@ -329,6 +329,10 @@ class ReflectedRegionsBackgroundMaker(Maker):
             acceptance_off = len(finder.reflected_regions)
         else:
             # if no OFF regions are found, off is set to None and acceptance_off to zero
+            log.warning(
+                f"ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for {dataset.name}."
+            )
+
             counts_off = None
             acceptance_off = 0
         return counts_off, acceptance_off

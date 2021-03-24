@@ -362,7 +362,7 @@ class LightCurveEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
-        selection_optional="all",
+        selection_optional=None,
     ):
 
         self.source = source
@@ -419,6 +419,7 @@ class LightCurveEstimator(Estimator):
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
             row.update(self.estimate_time_bin_flux(datasets_to_fit))
             rows.append(row)
+
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
@@ -462,7 +463,7 @@ class LightCurveEstimator(Estimator):
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row
         result = {}
         for colname in fp.table.colnames:
-            if colname is not "counts":
+            if colname != "counts":
                 result[colname] = fp.table[colname].quantity
             else:
                 result[colname] = np.atleast_1d(fp.table[colname].quantity.sum(axis=1))

@@ -52,3 +52,14 @@ def test_runmcmc(dataset):
 
     sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
     assert isinstance(sampler, emcee.ensemble.EnsembleSampler)
+
+
+@requires_dependency("emcee")
+@requires_data()
+def test_runmcmc_noprior(dataset, caplog):
+   # Running a small MCMC on pregenerated datasets
+   dataset.models.parameters["lon_0"].max = np.nan
+   dataset.models.parameters["lon_0"].min = np.nan
+   sampler = run_mcmc(dataset, nwalkers=6, nrun=10)
+   assert "WARNING" in [_.levelname for _ in caplog.records]
+   assert "Missing prior for parameter: lon_0.\nMCMC will likely fail!" in [_.message for _ in caplog.records]

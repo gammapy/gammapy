@@ -112,7 +112,7 @@ def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **
     if len(parameters.free_parameters) <= 1:
         reoptimize = False
 
-    with parameters.restore_values:
+    with parameters.restore_status():
         result = _confidence_scipy_brentq(
             parameters=parameters,
             parameter=parameter,
@@ -123,7 +123,7 @@ def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **
             **kwargs
         )
 
-    with parameters.restore_values:
+    with parameters.restore_status():
         result_errp = _confidence_scipy_brentq(
             parameters=parameters,
             parameter=parameter,

@@ -1,11 +1,10 @@
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, hstack
 from astropy.visualization import quantity_support
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
@@ -16,7 +15,12 @@ __all__ = ["RegionNDMap"]
 
 
 class RegionNDMap(Map):
-    """Region ND map
+    """N-dimensional region map.
+    A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array
+    containing the values associated to that region in the sky along the non-spatial
+    axis, usually an energy axis. The spatial dimensions of a `~RegionNDMap`
+    are reduced to a single spatial bin with an arbitrary shape,
+    and any extra dimensions are described by an arbitrary number of non-spatial axes.
 
     Parameters
     ----------
@@ -45,7 +49,7 @@ class RegionNDMap(Map):
         self.unit = u.Unit(unit)
 
     def plot(self, ax=None, **kwargs):
-        """Plot region map.
+        """Plot the data contained in region map along the non-spatial axis.
 
         Parameters
         ----------
@@ -78,8 +82,7 @@ class RegionNDMap(Map):
         kwargs.setdefault("lw", 1)
 
         with quantity_support():
-            xerr = (axis.center - axis.edges[:-1], axis.edges[1:] - axis.center)
-            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=xerr, **kwargs)
+            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=axis.as_xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
@@ -142,26 +145,18 @@ class RegionNDMap(Map):
         Parameters
         ----------
         ax : `~astropy.vizualisation.WCSAxes`
-            Axes to plot on.
+            Axes to plot on. If no axes are given,
+            the region is shown using the minimal
+            equivalent WCS geometry.
         **kwargs : dict
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.collections import PatchCollection
-
-        if ax is None:
-            ax = plt.gca()
-
-        regions = compound_region_to_list(self.geom.region)
-        artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
-
-        patches = PatchCollection(artists, **kwargs)
-        ax.add_collection(patches)
+        ax = self.geom.plot_region(ax, **kwargs)
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None):
-        """
+    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg"):
+        """Create an empty region map object.
 
         Parameters
         ----------
@@ -183,12 +178,33 @@ class RegionNDMap(Map):
         map : `RegionNDMap`
             Region map
         """
-        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs)
+        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs,binsz_wcs=binsz_wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
 
     def downsample(
         self, factor, preserve_counts=True, axis_name="energy", weights=None
     ):
+        """Downsample the non-spatial dimension by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity).
+        axis_name : str
+            Which axis to downsample. Default is "energy".
+        weights : `RegionNDMap`
+            Contains the weights to apply to the axis to reduce. Default 
+            is just weighs of one.
+
+        Returns
+        -------
+        map : `RegionNDMap`
+            Downsampled region map.
+        """
         if axis_name is None:
             return self.copy()
 
@@ -204,11 +220,31 @@ class RegionNDMap(Map):
             weights = weights.data
 
         func = np.nansum if preserve_counts else np.nanmean
+        if self.is_mask:
+            func = np.all
         data = block_reduce(self.data * weights, tuple(block_size), func=func)
 
         return self._init_copy(geom=geom, data=data)
 
     def upsample(self, factor, preserve_counts=True, axis_name="energy"):
+        """Upsample the non-spatial dimension by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the RegionNDMap is an integral quantity (e.g. counts) and false if
+            the RegionNDMap is a differential quantity (e.g. intensity).
+        axis_name : str
+            Which axis to upsample. Default is "energy".
+
+        Returns
+        -------
+        map : `RegionNDMap`
+            Upsampled region map.
+        """
         geom = self.geom.upsample(factor=factor, axis_name=axis_name)
         data = self.interp_by_coord(geom.get_coord())
 
@@ -236,15 +272,9 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords, interp=1):
+    def interp_by_coord(self, coords, method="linear", fill_value=None):
         pix = self.geom.coord_to_pix(coords)
-        if interp == 1:
-            method = "linear"
-        elif interp == 0:
-            method = "nearest"
-        else:
-            raise ValueError(f"Not a valid interp order {interp}")
-        return self.interp_by_pix(pix, method=method)
+        return self.interp_by_pix(pix, method=method, fill_value=fill_value)
 
     def interp_by_pix(self, pix, method="linear", fill_value=None):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
@@ -264,77 +294,128 @@ class RegionNDMap(Map):
         self.data[idx[::-1]] = value
 
     @classmethod
-    def read(cls, filename, format="ogip", ogip_column="COUNTS"):
-        """Read from file."""
+    def read(cls, filename, format="gadf", ogip_column=None, hdu=None):
+        """Read from file.
+
+        Parameters
+        ----------
+        filename : `pathlib.Path` or str
+            Filename.
+        format : {"gadf", "ogip", "ogip-arf"}
+            Which format to use.
+        ogip_column : {None, "COUNTS", "QUALITY", "BACKSCAL"}
+            If format 'ogip' is chosen which table hdu column to read.
+        hdu : str
+            Name or index of the HDU with the map data.
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region nd map
+        """
         filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column)
+            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
 
-    def write(self, filename, overwrite=False, format="ogip", ogip_column="COUNTS"):
-        """"""
+    def write(self, filename, overwrite=False, format="gadf", hdu="SKYMAP"):
+        """Write map to file
+
+        Parameters
+        ----------
+        filename : `pathlib.Path` or str
+            Filename.
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+            Which format to use.
+        overwrite : bool
+            Overwrite existing files?
+        """
         filename = make_path(filename)
-        self.to_hdulist(format=format, ogip_column=ogip_column).writeto(
+        self.to_hdulist(format=format, hdu=hdu).writeto(
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="ogip", ogip_column="COUNTS"):
+    def to_hdulist(self, format="gadf", hdu="SKYMAP"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
-        ogip_column : {"COUNTS", "SPECRESP"}
-            Ogip column format
+        hdu : str
+            Name of the HDU with the map data, used for "gadf" format.
 
         Returns
         -------
         hdulist : `~astropy.fits.HDUList`
             HDU list
         """
-        table = self.to_table(format=format, ogip_column=ogip_column)
-        return fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(table, name=ogip_column)]
-        )
+        hdulist = fits.HDUList()
+        table = self.to_table(format=format)
+
+        if format in ["ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"]:
+            hdulist.append(fits.BinTableHDU(table))
+        elif format == "gadf":
+            table.meta.update(self.geom.axes.to_header())
+            hdulist.append(fits.BinTableHDU(table, name=hdu))
+        else:
+            raise ValueError(f"Unsupported format '{format}'")
+
+        if format in ["ogip", "ogip-sherpa", "gadf"]:
+            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
+            hdulist.extend(hdulist_geom[1:])
+
+        return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, format="ogip", ogip_column="COUNTS"):
+    def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
         """Create from `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list.
-        format : {"ogip", "ogip-arf"}
+        format : {"gadf", "ogip", "ogip-arf"}
             Format specification
-        ogip_column : {"COUNTS"}
-            OGIP data format column
+        ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
+            If format 'ogip' is chosen which table hdu column to read.
+        hdu : str
+            Name or index of the HDU with the map data.
 
         Returns
         -------
         region_nd_map : `RegionNDMap`
             Region map.
         """
-        if format == "ogip":
-            hdu = "SPECTRUM"
-        elif format == "ogip-arf":
-            hdu = "SPECRESP"
-            ogip_column = "SPECRESP"
-        else:
-            raise ValueError(f"Unknown format: {format}")
+        defaults = {
+            "ogip": {"hdu": "SPECTRUM", "column": "COUNTS"},
+            "ogip-arf": {"hdu": "SPECRESP", "column": "SPECRESP"},
+            "gadf": {"hdu": "SKYMAP", "column": "DATA"},
+        }
+
+        if hdu is None:
+            hdu = defaults[format]["hdu"]
+
+        if ogip_column is None:
+            ogip_column = defaults[format]["column"]
+
+        geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu)
 
         table = Table.read(hdulist[hdu])
-        geom = RegionGeom.from_hdulist(hdulist, format=format)
+        quantity = table[ogip_column].quantity
+        meta = table.meta
 
-        data = table[ogip_column].quantity
+        if ogip_column == "QUALITY":
+            data, unit = np.logical_not(quantity.value.astype(bool)), ""
+        else:
+            data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data.value, meta=table.meta, unit=data.unit)
+        return cls(geom=geom, data=data, meta=meta, unit=unit)
+
+    def _pad_spatial(self, *args, **kwargs):
+        raise NotImplementedError("Spatial padding is not supported by RegionNDMap")
 
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
-
-    def pad(self):
-        raise NotImplementedError("Pad is not supported by RegionNDMap")
 
     def stack(self, other, weights=None):
         """Stack other region map into map.
@@ -347,7 +428,7 @@ class RegionNDMap(Map):
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
         """
-        data = other.quantity.to_value(self.unit)
+        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
@@ -359,55 +440,96 @@ class RegionNDMap(Map):
 
         self.data += data
 
-    def to_table(self, format="ogip", ogip_column="COUNTS"):
+    def to_table(self, format="gadf"):
         """Convert to `~astropy.table.Table`.
 
         Data format specification: :ref:`gadf:ogip-pha`
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"gadf", "ogip", "ogip-arf", "ogip-arf-sherpa"}
             Format specification
-        ogip_column : {"COUNTS", "SPECRESP"}
-            Ogip column format
 
         Returns
         -------
         table : `~astropy.table.Table`
             Table
         """
-        table = Table()
-
-        edges = self.geom.axes[0].edges
         data = np.nan_to_num(self.quantity[:, 0, 0])
 
-        if ogip_column == "COUNTS":
-            table["CHANNEL"] = np.arange(len(edges) - 1, dtype=np.int16)
-            table["COUNTS"] = np.array(data, dtype=np.int32)
-            table.meta = {"name": "COUNTS"}
+        if format == "ogip":
+            if len(self.geom.axes) > 1:
+                raise ValueError(f"Writing to format '{format}' only supports a "
+                                 f"single energy axis. Got {self.geom.axes.names}")
 
-        elif ogip_column == "SPECRESP":
+            energy_axis = self.geom.axes[0]
+            energy_axis.assert_name("energy")
+            table = Table()
+            table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
+            table["COUNTS"] = np.array(data, dtype=np.int32)
+
+            # see https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node6.html
+            table.meta = {
+                "EXTNAME": "SPECTRUM",
+                "telescop": "unknown",
+                "instrume": "unknown",
+                "filter": "None",
+                "exposure": 0,
+                "corrfile": "",
+                "corrscal": "",
+                "ancrfile": "",
+                "hduclass": "OGIP",
+                "hduclas1": "SPECTRUM",
+                "hduvers": "1.2.1",
+                "poisserr": True,
+                "chantype": "PHA",
+                "detchans": energy_axis.nbin,
+                "quality": 0,
+                "backscal": 0,
+                "grouping": 0,
+                "areascal": 1,
+            }
+
+        elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            if len(self.geom.axes) > 1:
+                raise ValueError(f"Writing to format '{format}' only supports a "
+                                 f"single energy axis. Got {self.geom.axes.names}")
+
+            energy_axis = self.geom.axes[0]
+            table = energy_axis.to_table(format=format)
             table.meta = {
                 "EXTNAME": "SPECRESP",
+                "telescop": "unknown",
+                "instrume": "unknown",
+                "filter": "None",
                 "hduclass": "OGIP",
                 "hduclas1": "RESPONSE",
                 "hduclas2": "SPECRESP",
+                "hduvers": "1.1.0"
             }
 
-            if format == "ogip-sherpa":
-                edges = edges.to("keV")
+            if format == "ogip-arf-sherpa":
                 data = data.to("cm2")
 
-            table["ENERG_LO"] = edges[:-1]
-            table["ENERG_HI"] = edges[1:]
             table["SPECRESP"] = data
-        else:
-            raise ValueError(f"Unsupported ogip column: '{ogip_column}'")
 
+        elif format == "gadf":
+            table = Table()
+            data = self.quantity.flatten()
+            table["CHANNEL"] = np.arange(len(data), dtype=np.int16)
+            table["DATA"] = data
+        else:
+            raise ValueError(f"Unsupported format: '{format}'")
+
+        meta = {k: self.meta.get(k, v) for k, v in table.meta.items()}
+        table.meta.update(meta)
         return table
 
     def get_spectrum(self, *args, **kwargs):
         """Return self"""
+        return self
+
+    def to_region_nd_map(self, *args, **kwargs):
         return self
 
     def cutout(self, *args, **kwargs):

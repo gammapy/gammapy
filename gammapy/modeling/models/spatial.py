@@ -10,11 +10,12 @@ from astropy.coordinates.angle_utilities import angular_separation, position_ang
 from astropy.utils import lazyproperty
 from regions import (
     CircleAnnulusSkyRegion,
+    CircleSkyRegion,
     EllipseSkyRegion,
     PointSkyRegion,
     PolygonSkyRegion,
 )
-from gammapy.maps import Map, WcsGeom, RegionGeom
+from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
@@ -59,10 +60,6 @@ class SpatialModel(Model):
 
         return self.evaluate(lon, lat, **kwargs)
 
-    @property
-    def type(self):
-        return self._type
-
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
     def is_energy_dependent(self):
@@ -104,6 +101,7 @@ class SpatialModel(Model):
                 width=np.nan * u.deg,
                 angle=np.nan * u.deg,
             )
+
         pars = self.parameters
         sub_covar = self.covariance.get_subcovariance(["lon_0", "lat_0"]).data.copy()
         cos_lat = np.cos(self.lat_0.quantity.to_value("rad"))
@@ -115,7 +113,7 @@ class SpatialModel(Model):
         y_vec = eig_vecs[:, 0]
         phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg") + self.phi_0
         err = np.sort([lon_err, lat_err])
-        scale_r95 = Gauss2DPDF().containment_radius(0.95)
+        scale_r95 = Gauss2DPDF(sigma=1).containment_radius(0.95)
         err *= scale_r95
         if err[1] == lon_err * scale_r95:
             phi += 90 * u.deg
@@ -124,11 +122,23 @@ class SpatialModel(Model):
         else:
             height = 2 * err[1] * pars["lat_0"].unit
             width = 2 * err[0] * pars["lon_0"].unit
+
         return EllipseSkyRegion(
             center=self.position, height=height, width=width, angle=phi
         )
 
     def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom` 
+
+        Returns
+        ---------
+        `~gammapy.maps.Map`
+
+        """
         coords = geom.to_image().get_coord(frame=self.frame)
 
         if self.is_energy_dependent:
@@ -149,14 +159,15 @@ class SpatialModel(Model):
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
                 the integral value in each spatial bin.
         """
-        if isinstance(geom, RegionGeom):
+        if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
             mask = geom.contains(wcs_geom.get_coord())
             values = self.evaluate_geom(wcs_geom)
-            data = ((values* wcs_geom.solid_angle())[mask]).sum()
+            data = ((values * wcs_geom.solid_angle())[mask]).sum()
         else:
             values = self.evaluate_geom(geom)
             data = values * geom.solid_angle()
+
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
     def to_dict(self, full_output=False):
@@ -199,7 +210,9 @@ class SpatialModel(Model):
         """
         m = self._get_plot_map(geom)
         if not m.geom.is_flat:
-            raise TypeError("Use .plot_interactive() for Map dimension > 2")
+            raise TypeError(
+                "Use .plot_interactive() or .plot_grid() for Map dimension > 2"
+            )
         _, ax, _ = m.plot(ax=ax, **kwargs)
         return ax
 
@@ -282,6 +295,39 @@ class SpatialModel(Model):
             raise TypeError("Use .plot() for 2D Maps")
         m = self._get_plot_map(geom)
         m.plot_grid(**kwargs)
+
+    @classmethod
+    def from_position(cls, position, **kwargs):
+        """Define the position of the model using a sky coord
+
+        Parameters
+        ----------
+        position : `SkyCoord`
+            Position
+
+        Returns
+        -------
+        model : `SpatialModel`
+            Spatial model
+        """
+        lon_0, lat_0 = position.data.lon, position.data.lat
+        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame, **kwargs)
+
+    @property
+    def evaluation_radius(self):
+        """Evaluation radius"""
+        return None
+
+    @property
+    def evaluation_region(self):
+        """Evaluation region"""
+
+        if hasattr(self, "to_region"):
+            return self.to_region()
+        elif self.evaluation_radius is not None:
+            return CircleSkyRegion(center=self.position, radius=self.evaluation_radius,)
+        else:
+            return None
 
 
 class PointSpatialModel(SpatialModel):
@@ -404,16 +450,35 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
-    def to_region(self, **kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
+    def to_region(self, x_sigma=1.5, **kwargs):
+        """Model outline at a given number of :math:`\sigma`.
+        
+        Parameters
+        ----------
+        x_sigma : float
+            Number of :math:`\sigma`
+            Default is :math:`1.5\sigma` which corresonds to about 68%
+            containment for a 2D symetric Gaussian. 
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model outline.
+        """
+
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.sigma.quantity,
-            width=2 * minor_axis,
+            height=2 * x_sigma * self.sigma.quantity,
+            width=2 * x_sigma * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
+
+    @property
+    def evaluation_region(self):
+        """Evaluation region consistent with evaluation radius """
+        return self.to_region(x_sigma=5)
 
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
@@ -428,7 +493,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     r_0 : `~astropy.coordinates.Angle`
         Length of the major semiaxis, in angular units.
     eta : `float`
-        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplacian:1
+        Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplace:1
     e : `float`
         Eccentricity (:math:`0< e< 1`).
     phi : `~astropy.coordinates.Angle`
@@ -459,25 +524,42 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
-
-        Set as :math:`5 r_{\rm eff}`.
+        The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
+        r_eval -> r_0 if eta -> 0
+        r_eval = 5*r_0 > 5*sigma_gauss = 5*r_0/sqrt(2) ~ 3.5*r_0 if eta=0.5
+        r_eval = 9*r_0 > 5*sigma_laplace = 5*sqrt(2)*r_0 ~ 7*r_0 if eta = 1
+        r_eval -> inf if eta -> inf
         """
-        # TODO: the evaluation radius is defined empirically and tested
-        #  maybe one can find a better semi-analytical definition
-        #  for eta -> 0 it has to approach r_0 for eta -> inf it has to
-        #  approach inf as well, for eta=0.5 it approaches 5 * sigma
-        return self.r_0.quantity + 8 * u.deg * self.eta.value
+        return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    def to_region(self, **kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.r_0.quantity * (1 - self.e.quantity))
+    def to_region(self, x_r_0=1, **kwargs):
+        """Model outline at a given number of r_0.
+        
+        Parameters
+        ----------
+        x_r_0 : float
+            Number of r_0 (Default is 1).
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model outline.
+        """
+
+        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            height=2 * x_r_0 * self.r_0.quantity,
+            width=2 * x_r_0 * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
+
+    @property
+    def evaluation_region(self):
+        """Evaluation region consistent with evaluation radius"""
+        scale = self.evaluation_radius / self.r_0.quantity
+        return self.to_region(x_r_0=scale)
 
 
 class DiskSpatialModel(SpatialModel):
@@ -514,10 +596,10 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
-
-        Set to the length of the semi-major axis.
+    
+        Set to the length of the semi-major axis plus the edge width.
         """
-        return self.r_0.quantity
+        return self.r_0.quantity + self.edge.quantity
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
@@ -587,6 +669,10 @@ class ShellSpatialModel(SpatialModel):
         Shell width
     frame : {"icrs", "galactic"}
         Center position coordinate frame
+
+    See Also
+    --------
+    Shell2SpatialModel
     """
 
     tag = ["ShellSpatialModel", "shell"]
@@ -615,7 +701,7 @@ class ShellSpatialModel(SpatialModel):
             # np.where and np.select do not work with quantities, so we use the
             # workaround with indexing
             value = np.sqrt(radius_out ** 2 - sep ** 2)
-            mask = [sep < radius]
+            mask = sep < radius
             value[mask] = (value - np.sqrt(radius ** 2 - sep ** 2))[mask]
             value[sep > radius_out] = 0
 
@@ -627,6 +713,73 @@ class ShellSpatialModel(SpatialModel):
             center=self.position,
             inner_radius=self.radius.quantity,
             outer_radius=self.radius.quantity + self.width.quantity,
+            **kwargs,
+        )
+
+
+class Shell2SpatialModel(SpatialModel):
+    r"""Shell model with outer radius and relative width parametrization
+
+    For more information see :ref:`shell2-spatial-model`.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    r_0 : `~astropy.coordinates.Angle`
+        Outer radius, :math:`r_{out}`
+    eta : float
+        Shell width relative to outer radius, r_0, should be within (0,1]
+    frame : {"icrs", "galactic"}
+        Center position coordinate frame
+
+    See Also
+    --------
+    ShellSpatialModel
+    """
+
+    tag = ["Shell2SpatialModel", "shell2"]
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+    r_0 = Parameter("r_0", "1 deg")
+    eta = Parameter("eta", 0.2, min=0.02, max=1)
+
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set to :math:`r_\text{out}`.
+        """
+        return self.r_0.quantity
+
+    @property
+    def r_in(self):
+        return (1 - self.eta.quantity) * self.r_0.quantity
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, eta):
+        """Evaluate model."""
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+        r_in = (1 - eta) * r_0
+
+        norm = 3 / (2 * np.pi * (r_0 ** 3 - r_in ** 3))
+
+        with np.errstate(invalid="ignore"):
+            # np.where and np.select do not work with quantities, so we use the
+            # workaround with indexing
+            value = np.sqrt(r_0 ** 2 - sep ** 2)
+            mask = sep < r_in
+            value[mask] = (value - np.sqrt(r_in ** 2 - sep ** 2))[mask]
+            value[sep > r_0] = 0
+
+        return norm * value
+
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.CircleAnnulusSkyRegion`)."""
+        return CircleAnnulusSkyRegion(
+            center=self.position,
+            inner_radius=self.r_in,
+            outer_radius=self.r_0.quantity,
             **kwargs,
         )
 
@@ -767,7 +920,7 @@ class TemplateSpatialModel(SpatialModel):
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
-        interp_kwargs.setdefault("interp", "linear")
+        interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
         self.filename = filename
@@ -838,7 +991,7 @@ class TemplateSpatialModel(SpatialModel):
         return data
 
     def to_region(self, **kwargs):
-        """Model outline (`~regions.PolygonSkyRegion`)."""
+        """Model outline from template map boundary (`~regions.PolygonSkyRegion`)."""
         footprint = self.map.geom.wcs.calc_footprint()
         return PolygonSkyRegion(
             vertices=SkyCoord(footprint, unit="deg", frame=self.frame, **kwargs)

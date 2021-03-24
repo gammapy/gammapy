@@ -7,7 +7,8 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
+from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -92,14 +93,6 @@ def test_info_dict(spectrum_dataset):
     assert info_dict["name"] == "test"
 
 
-def test_incorrect_mask(spectrum_dataset):
-    mask_fit = np.ones(30, dtype=np.dtype("float"))
-    with pytest.raises(ValueError):
-        SpectrumDataset(
-            counts=spectrum_dataset.counts.copy(), mask_fit=mask_fit,
-        )
-
-
 def test_set_model(spectrum_dataset):
     spectrum_dataset = spectrum_dataset.copy()
     spectral_model = PowerLawSpectralModel()
@@ -114,7 +107,10 @@ def test_set_model(spectrum_dataset):
 
 def test_npred_models():
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
-    spectrum_dataset = SpectrumDataset.create(e_reco=e_reco)
+
+    geom = RegionGeom(region=None, axes=[e_reco])
+
+    spectrum_dataset = SpectrumDataset.create(geom=geom)
     spectrum_dataset.exposure.quantity = 1e10 * u.Unit("cm2 h")
 
     pwl_1 = PowerLawSpectralModel(index=2)
@@ -160,13 +156,16 @@ def test_spectrum_dataset_create():
     e_true = MapAxis.from_edges(
         u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true"
     )
-    empty_spectrum_dataset = SpectrumDataset.create(e_reco, e_true, name="test")
+    geom = RegionGeom(region=None, axes=[e_reco])
+    empty_spectrum_dataset = SpectrumDataset.create(
+        geom, energy_axis_true=e_true, name="test"
+    )
 
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0
     assert empty_spectrum_dataset.data_shape[0] == 2
-    assert empty_spectrum_dataset.npred_background().data.sum() == 0
-    assert empty_spectrum_dataset.npred_background().geom.axes[0].nbin == 2
+    assert empty_spectrum_dataset.background.data.sum() == 0
+    assert empty_spectrum_dataset.background.geom.axes[0].nbin == 2
     assert empty_spectrum_dataset.exposure.geom.axes[0].nbin == 3
     assert empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
     assert empty_spectrum_dataset.gti.time_sum.value == 0
@@ -183,41 +182,50 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
         "0.1 TeV", "10 TeV", nbin=30, name="energy_true"
     )
 
-    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(
-        geom.region
+    aeff = EffectiveAreaTable2D.from_parametrization(
+        energy_axis_true=energy_true, instrument="HESS"
     )
 
     livetime = 100 * u.s
     gti = GTI.create(start=0 * u.s, stop=livetime)
 
-    exposure = aeff * livetime
+    geom_true = geom.as_energy_true
+    exposure = make_map_exposure_true_energy(
+        geom=geom_true,
+        livetime=livetime,
+        pointing=geom_true.center_skydir,
+        aeff=aeff
+    )
 
     edisp = EDispKernelMap.from_diagonal_response(
         energy, energy_true, geom=geom.to_image()
     )
     edisp.exposure_map.data = exposure.data[:, :, np.newaxis, :]
 
-    background = spectrum_dataset.npred_background().copy()
+    background = spectrum_dataset.background
+
+    mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
+    mask_safe.data += True
 
     spectrum_dataset1 = SpectrumDataset(
         name="ds1",
         counts=spectrum_dataset.counts.copy(),
         exposure=exposure.copy(),
         edisp=edisp.copy(),
-        background=background,
+        background=background.copy(),
         gti=gti.copy(),
+        mask_safe=mask_safe
     )
 
     livetime2 = 0.5 * livetime
     gti2 = GTI.create(start=200 * u.s, stop=200 * u.s + livetime2)
-    aeff2 = aeff * 2
     bkg2 = RegionNDMap.from_geom(geom=geom, data=2 * background.data)
 
     geom = spectrum_dataset.counts.geom
     data = np.ones(spectrum_dataset.data_shape, dtype="bool")
     data[0] = False
     safe_mask2 = RegionNDMap.from_geom(geom=geom, data=data)
-    exposure2 = aeff2 * livetime2
+    exposure2 = exposure.copy()
 
     edisp = edisp.copy()
     edisp.exposure_map.data = exposure2.data[:, :, np.newaxis, :]
@@ -236,16 +244,12 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
     reference = spectrum_dataset.counts.data
     assert_allclose(spectrum_dataset1.counts.data[1:], reference[1:] * 2)
     assert_allclose(spectrum_dataset1.counts.data[0], 141363)
-    assert_allclose(spectrum_dataset1.exposure.data[0], 4.755644e09)
+    assert_allclose(spectrum_dataset1.exposure.quantity[0], 4.755644e09 * u.Unit("cm2 s"))
     assert_allclose(
-        spectrum_dataset1.npred_background().data[1:], 3 * background.data[1:]
+        spectrum_dataset1.background.data[1:], 3 * background.data[1:]
     )
-    assert_allclose(spectrum_dataset1.npred_background().data[0], background.data[0])
+    assert_allclose(spectrum_dataset1.background.data[0], background.data[0])
 
-    assert_allclose(
-        spectrum_dataset1.exposure.quantity.to_value("m2s"),
-        2 * (aeff * livetime).quantity.to_value("m2s"),
-    )
     kernel = edisp.get_edisp_kernel()
     kernel_stacked = spectrum_dataset1.edisp.get_edisp_kernel()
 
@@ -254,36 +258,58 @@ def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
 
 
 def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
-    energy = spectrum_dataset.counts.geom.axes[0]
-    geom = spectrum_dataset.counts.geom.to_image()
+    energy = spectrum_dataset.counts.geom.axes["energy"]
+    geom = spectrum_dataset.counts.geom
 
-    edisp1 = EDispKernelMap.from_gauss(energy, energy, 0.1, 0, geom=geom)
+    edisp1 = EDispKernelMap.from_gauss(
+        energy_axis=energy,
+        energy_axis_true=energy.copy(name="energy_true"),
+        sigma=0.1,
+        bias=0,
+        geom=geom.to_image()
+    )
     edisp1.exposure_map.data += 1
 
-    aeff = EffectiveAreaTable.from_parametrization(energy.edges, "HESS").to_region_map(
-        geom.region
+    aeff = EffectiveAreaTable2D.from_parametrization(
+        energy_axis_true=energy.copy(name="energy_true"), instrument="HESS"
+    )
+
+    livetime = 100 * u.s
+
+    geom_true = geom.as_energy_true
+    exposure = make_map_exposure_true_energy(
+        geom=geom_true,
+        livetime=livetime,
+        pointing=geom_true.center_skydir,
+        aeff=aeff
     )
 
     geom = spectrum_dataset.counts.geom
     counts = RegionNDMap.from_geom(geom=geom)
 
-    gti = GTI.create(start=0 * u.s, stop=100 * u.s)
+    gti = GTI.create(start=0 * u.s, stop=livetime)
     spectrum_dataset1 = SpectrumDataset(
         counts=counts,
-        exposure=aeff * gti.time_sum,
+        exposure=exposure,
         edisp=edisp1,
         meta_table=Table({"OBS_ID": [0]}),
         gti=gti.copy(),
     )
 
-    edisp2 = EDispKernelMap.from_gauss(energy, energy, 0.2, 0.0, geom=geom)
+    edisp2 = EDispKernelMap.from_gauss(
+        energy_axis=energy,
+        energy_axis_true=energy.copy(name="energy_true"),
+        sigma=0.2,
+        bias=0.0,
+        geom=geom
+    )
     edisp2.exposure_map.data += 1
 
     gti2 = GTI.create(start=100 * u.s, stop=200 * u.s)
 
     spectrum_dataset2 = SpectrumDataset(
         counts=counts,
-        exposure=aeff * gti2.time_sum,
+        exposure=exposure.copy(),
         edisp=edisp2,
         meta_table=Table({"OBS_ID": [1]}),
         gti=gti2,
@@ -378,6 +404,9 @@ class TestSpectrumOnOff:
         exposure = self.aeff * self.livetime
         exposure.meta["livetime"] = self.livetime
 
+        mask_safe = RegionNDMap.from_geom(self.on_counts.geom, dtype=bool)
+        mask_safe.data += True
+
         self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
@@ -387,6 +416,7 @@ class TestSpectrumOnOff:
             acceptance_off=acceptance_off,
             name="test",
             gti=self.gti,
+            mask_safe=mask_safe
         )
 
     def test_spectrum_dataset_on_off_create(self):
@@ -394,14 +424,17 @@ class TestSpectrumOnOff:
         e_true = MapAxis.from_edges(
             u.Quantity([0.05, 0.5, 5, 20.0], "TeV"), name="energy_true"
         )
-        empty_dataset = SpectrumDatasetOnOff.create(e_reco, e_true)
+        geom = RegionGeom(region=None, axes=[e_reco])
+        empty_dataset = SpectrumDatasetOnOff.create(
+            geom=geom, energy_axis_true=e_true
+        )
 
         assert empty_dataset.counts.data.sum() == 0
         assert empty_dataset.data_shape[0] == 2
         assert empty_dataset.counts_off.data.sum() == 0
         assert empty_dataset.counts_off.geom.axes[0].nbin == 2
-        assert_allclose(empty_dataset.acceptance_off, 1)
-        assert_allclose(empty_dataset.acceptance, 1)
+        assert_allclose(empty_dataset.acceptance_off, 0)
+        assert_allclose(empty_dataset.acceptance, 0)
         assert empty_dataset.acceptance.data.shape[0] == 2
         assert empty_dataset.acceptance_off.data.shape[0] == 2
         assert empty_dataset.gti.time_sum.value == 0
@@ -409,7 +442,12 @@ class TestSpectrumOnOff:
         assert empty_dataset.energy_range[0] is None
 
     def test_create_stack(self):
-        stacked = SpectrumDatasetOnOff.create(self.e_reco, self.e_true)
+        geom = RegionGeom(region=None, axes=[self.e_reco])
+
+        stacked = SpectrumDatasetOnOff.create(
+            geom=geom, energy_axis_true=self.e_true
+        )
+        stacked.mask_safe.data += True
 
         stacked.stack(self.dataset)
         assert_allclose(stacked.energy_range.value, self.dataset.energy_range.value)
@@ -445,7 +483,7 @@ class TestSpectrumOnOff:
         ds = self.dataset.to_spectrum_dataset()
 
         assert isinstance(ds, SpectrumDataset)
-        assert_allclose(ds.npred_background().data.sum(), 4)
+        assert_allclose(ds.background.data.sum(), 4)
 
     @requires_dependency("matplotlib")
     def test_peek(self):
@@ -472,11 +510,15 @@ class TestSpectrumOnOff:
 
     def test_to_from_ogip_files(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.to_ogip_files(outdir=tmp_path)
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
+        dataset.write(tmp_path / "test.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
 
         expected_regions = compound_region_to_list(self.off_counts.geom.region)
         regions = compound_region_to_list(newdataset.counts_off.geom.region)
+
+        assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits"
+        assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits"
+        assert newdataset.counts.meta["ANCRFILE"] == "test_arf.fits"
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert_allclose(self.off_counts.data, newdataset.counts_off.data)
@@ -486,6 +528,23 @@ class TestSpectrumOnOff:
         assert len(regions) == len(expected_regions)
         assert regions[0].center.is_equivalent_frame(expected_regions[0].center)
         assert_allclose(regions[1].angle, expected_regions[1].angle)
+
+    def test_to_from_ogip_files_no_mask(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.mask_safe = None
+        dataset.write(tmp_path / "test.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+
+        assert_allclose(newdataset.mask_safe.data, True)
+
+    def test_to_from_ogip_files_zip(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits.gz")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits.gz")
+
+        assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits.gz"
+        assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits.gz"
+        assert newdataset.counts.meta["ANCRFILE"] == "test_arf.fits.gz"
 
     def test_to_from_ogip_files_no_edisp(self, tmp_path):
 
@@ -502,8 +561,8 @@ class TestSpectrumOnOff:
             acceptance=1,
             name="test",
         )
-        dataset.to_ogip_files(outdir=tmp_path)
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(tmp_path / "pha_obstest.fits")
+        dataset.write(tmp_path / "pha_obstest.fits")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "pha_obstest.fits")
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None
@@ -515,15 +574,15 @@ class TestSpectrumOnOff:
             energy_min=0.3 * u.TeV, energy_max=6 * u.TeV
         )
         desired = [False, True, True, False]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
         mask = self.dataset.counts.geom.energy_mask(energy_max=6 * u.TeV)
         desired = [True, True, True, False]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
         mask = self.dataset.counts.geom.energy_mask(energy_min=1 * u.TeV)
         desired = [False, False, True, True]
-        assert_allclose(mask[:, 0, 0], desired)
+        assert_allclose(mask.data[:, 0, 0], desired)
 
     def test_str(self):
         model = SkyModel(spectral_model=PowerLawSpectralModel())
@@ -613,8 +672,8 @@ class TestSpectralFit:
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
         self.datasets = Datasets(
             [
-                SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits"),
-                SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits"),
+                SpectrumDatasetOnOff.read(path + "pha_obs23523.fits"),
+                SpectrumDatasetOnOff.read(path + "pha_obs23592.fits"),
             ]
         )
 
@@ -732,8 +791,8 @@ class TestSpectralFit:
 
 def _read_hess_obs():
     path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-    obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
-    obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
+    obs1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+    obs2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
     return [obs1, obs2]
 
 
@@ -769,7 +828,7 @@ def make_observation_list():
 
     aeff = RegionNDMap.from_geom(geom_true, data=1, unit="m2")
     edisp = EDispKernelMap.from_gauss(
-        energy_axis=axis, energy_axis_true=axis, sigma=0.2, bias=0, geom=geom
+        energy_axis=axis, energy_axis_true=axis_true, sigma=0.2, bias=0, geom=geom
     )
 
     time_ref = Time("2010-01-01")
@@ -813,13 +872,12 @@ class TestSpectrumDatasetOnOffStack:
         # Change threshold to make stuff more interesting
 
         geom = self.datasets[0]._geom
-        data = geom.energy_mask(energy_min=1.2 * u.TeV, energy_max=50 * u.TeV)
-        self.datasets[0].mask_safe = RegionNDMap.from_geom(geom=geom, data=data)
+        self.datasets[0].mask_safe = geom.energy_mask(energy_min=1.2 * u.TeV, energy_max=50 * u.TeV)
 
-        data = geom.energy_mask(energy_max=20 * u.TeV)
-        self.datasets[1].mask_safe.data &= data
+        mask = geom.energy_mask(energy_max=20 * u.TeV)
+        self.datasets[1].mask_safe &= mask
 
-        self.stacked_dataset = self.datasets[0].copy()
+        self.stacked_dataset = self.datasets[0].to_masked()
         self.stacked_dataset.stack(self.datasets[1])
 
     def test_basic(self):
@@ -894,7 +952,7 @@ def test_datasets_stack_reduce():
 
     for obs_id in obs_ids:
         filename = f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
-        ds = SpectrumDatasetOnOff.from_ogip_files(filename)
+        ds = SpectrumDatasetOnOff.read(filename)
         datasets.append(ds)
 
     stacked = datasets.stack_reduce(name="stacked")
@@ -911,14 +969,18 @@ def test_datasets_stack_reduce():
 
 @requires_data("gammapy-data")
 def test_stack_livetime():
-    dataset_ref = SpectrumDatasetOnOff.from_ogip_files(
+    dataset_ref = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )
 
     energy_axis = dataset_ref.counts.geom.axes["energy"]
     energy_axis_true = dataset_ref.exposure.geom.axes["energy_true"]
 
-    dataset = SpectrumDatasetOnOff.create(e_reco=energy_axis, e_true=energy_axis_true)
+    geom = RegionGeom(region=None, axes=[energy_axis])
+
+    dataset = SpectrumDatasetOnOff.create(
+        geom=geom, energy_axis_true=energy_axis_true
+    )
 
     dataset.stack(dataset_ref)
     assert_allclose(dataset.exposure.meta["livetime"], 1581.736758 * u.s)
@@ -969,11 +1031,7 @@ class TestFit:
         geom = RegionGeom(region=None, axes=[axis])
 
         self.src = RegionNDMap.from_geom(geom=geom, data=source_counts)
-
-        self.livetime = 1 * u.s
-        self.aeff = EffectiveAreaTable.from_constant(energy, "1 cm2").to_region_map(
-            region=None
-        )
+        self.exposure = RegionNDMap.from_geom(geom.as_energy_true, data=1, unit="cm2 s")
 
         npred_bkg = bkg_model.integral(energy[:-1], energy[1:]).value
 
@@ -987,7 +1045,7 @@ class TestFit:
         dataset = SpectrumDataset(
             models=self.source_model,
             counts=self.src,
-            exposure=self.aeff * self.livetime,
+            exposure=self.exposure,
         )
 
         npred = dataset.npred().data
@@ -1013,7 +1071,7 @@ class TestFit:
         dataset = SpectrumDatasetOnOff(
             counts=on_vector,
             counts_off=self.off,
-            exposure=self.aeff * self.livetime,
+            exposure=self.exposure,
             acceptance=1,
             acceptance_off=1 / self.alpha,
         )
@@ -1050,7 +1108,7 @@ class TestFit:
 
         dataset = SpectrumDataset(
             models=self.source_model,
-            exposure=self.aeff * self.livetime,
+            exposure=self.exposure,
             counts=self.src,
             mask_safe=mask_safe,
         )

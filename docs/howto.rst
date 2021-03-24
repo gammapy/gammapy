@@ -115,12 +115,37 @@ H.E.S.S. or Fermi-LAT data).
 Implement a custom model
 ++++++++++++++++++++++++
 Gammapy allows the flexibility of using user-defined models for analysis.
-For an example, see ` Implementing a Custom Model
+For an example, see `Implementing a Custom Model
 <tutorials/models.html#Implementing-a-Custom-Model>`__.
 
 Energy Dependent Spatial Models
 +++++++++++++++++++++++++++++++
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.
-For an example, see ` here
+For an example, see `here
 <tutorials/models.html#Models-with-Energy-dependent-morphologyl>`__.
+
+Reduce memory budget for large datasets
++++++++++++++++++++++++++++++++++++++++
+
+When dealing with surveys and large sky regions, the amount of memory required might become
+problematic, in particular because of the default settings of the IRF maps stored in the
+`~gammapy.datasets.MapDataset` used for the data reduction. Several options can be used to reduce
+the required memory:
+- Reduce the spatial sampling of the `~gammapy.irf.PSFMap` and the `~gammapy.irf.EDispKernelMap`
+using the `binsz_irf` argument of the `~gammapy.datasets.MapDataset.create` method. This will reduce
+the accuracy of the IRF kernels used for model counts predictions.
+- Change the default IRFMap axes, in particular the `rad_axis` argument of `~gammapy.datasets.MapDataset.create`
+This axis is used to define the geometry of the `~gammapy.irf.PSFMap` and controls the distribution of error angles
+used to sample the PSF. This will reduce the quality of the PSF description.
+- If one or several IRFs are not required for the study at hand, it is possible not to build them
+by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
+
+Copy part of a datastore
+++++++++++++++++++++++++
+
+To share specific data from a database, it might be necessary to create a new data storage with
+a limited set of observations and summary files following the scheme described in gadf_.
+This is possible with the method `~gammapy.data.DataStore.copy_obs` provided by the
+`~gammapy.data.DataStore`. It allows to copy individual observations files in a given directory
+and build the associated observation and HDU tables.

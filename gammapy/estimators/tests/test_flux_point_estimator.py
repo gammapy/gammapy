@@ -7,8 +7,9 @@ from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable, load_cta_irfs
+from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
+from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
@@ -24,8 +25,12 @@ from gammapy.utils.testing import requires_data, requires_dependency
 def simulate_spectrum_dataset(model, random_state=0):
     energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
     energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
+    energy_axis_true = energy_axis.copy(name="energy_true")
 
-    aeff = EffectiveAreaTable.from_parametrization(energy=energy_edges).to_region_map()
+    aeff = EffectiveAreaTable2D.from_parametrization(
+        energy_axis_true=energy_axis_true
+    )
+
     bkg_model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
@@ -35,16 +40,21 @@ def simulate_spectrum_dataset(model, random_state=0):
     bkg_model.spectral_model.amplitude.frozen = True
     bkg_model.spectral_model.index.frozen = True
 
-    geom = RegionGeom(region=None, axes=[energy_axis])
+    geom = RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis])
     acceptance = RegionNDMap.from_geom(geom=geom, data=1)
     edisp = EDispKernelMap.from_diagonal_response(
         energy_axis=energy_axis,
-        energy_axis_true=energy_axis.copy(name="energy_true"),
+        energy_axis_true=energy_axis_true,
         geom=geom,
     )
 
-    livetime = 100 * u.h
-    exposure = aeff * livetime
+    geom_true= RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis_true])
+    exposure = make_map_exposure_true_energy(
+        pointing=SkyCoord("0d", "0d"), aeff=aeff, livetime=100 *u.h, geom=geom_true
+    )
+
+    mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
+    mask_safe.data += True
 
     dataset = SpectrumDatasetOnOff(
         name="test_onoff",
@@ -52,6 +62,7 @@ def simulate_spectrum_dataset(model, random_state=0):
         acceptance=acceptance,
         acceptance_off=5,
         edisp=edisp,
+        mask_safe=mask_safe
     )
     dataset.models = bkg_model
     bkg_npred = dataset.npred_signal()
@@ -69,7 +80,7 @@ def create_fpe(model):
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_n_values=11, source="source"
+        energy_edges=energy_edges, norm_n_values=11, source="source", selection_optional="all"
     )
     datasets = [dataset]
     return datasets, fpe
@@ -117,7 +128,7 @@ def fpe_map_pwl():
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_n_values=3, source="source"
+        energy_edges=energy_edges, norm_n_values=3, source="source", selection_optional="all"
     )
     return datasets, fpe
 
@@ -285,7 +296,7 @@ def test_run_map_pwl(fpe_map_pwl):
     assert_allclose(actual, [0.2, 1, 5])
 
     actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-    assert_allclose(actual, [1.628530e02, 1.436323e-01, 2.007461e03], rtol=1e-2)
+    assert_allclose(actual, [1.628398e+02, 1.452456e-01, 2.008018e+03], rtol=1e-2)
 
 
 @requires_dependency("iminuit")
@@ -293,7 +304,7 @@ def test_run_map_pwl(fpe_map_pwl):
 def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     datasets, fpe = fpe_map_pwl_reoptimize
     fpe = fpe.copy()
-    fpe.selection = ["scan"]
+    fpe.selection_optional = ["scan"]
 
     fp = fpe.run(datasets)
 
@@ -301,16 +312,16 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, 0.962368, rtol=1e-2)
 
     actual = fp.table["norm_err"].data
-    assert_allclose(actual, 0.051955, rtol=1e-2)
+    assert_allclose(actual, 0.053878, rtol=1e-2)
 
     actual = fp.table["sqrt_ts"].data
-    assert_allclose(actual, 28.408426, rtol=1e-2)
+    assert_allclose(actual, 25.196585, rtol=1e-2)
 
     actual = fp.table["norm_scan"][0]
     assert_allclose(actual, 1)
 
     actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-    assert_allclose(actual, 0.489359, rtol=1e-2)
+    assert_allclose(actual, 0.483593, rtol=1e-2)
 
 
 @requires_dependency("iminuit")
@@ -339,8 +350,6 @@ def test_no_likelihood_contribution():
 
     assert np.isnan(fp.table["norm"]).all()
     assert np.isnan(fp.table["norm_err"]).all()
-    assert np.isnan(fp.table["norm_ul"]).all()
-    assert np.isnan(fp.table["norm_scan"]).all()
     assert_allclose(fp.table["counts"], 0)
 
 

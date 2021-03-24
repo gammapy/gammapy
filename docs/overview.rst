@@ -5,199 +5,127 @@
 Overview
 ========
 
-This page gives an overview of the main concepts in Gammapy. It is a theoretical
-introduction to Gammapy, explaining what data, packages, classes and methods are
-involved in a data analysis with Gammapy, proviging many links to other
-documentation pages and tutorials, but not giving code examples here. For a
-hands-on introduction how to use Gammapy, see :ref:`install`,
-:ref:`getting-started` and the many :ref:`tutorials`.
+This page gives an overview of the main concepts in Gammapy. :ref:`Fig. 1 <data_flow>`
+illustrates the general data flow and corresponding sub-package structure of Gammapy.
+Gammapy can be typically used with the configuration based high level analysis
+API or as a standard Python library by importing the functionality from sub-packages.
+The different data levels and data reduction steps and how they map to the Gammapy API
+are explained in more detail in the following sections.
 
-Gammapy is an open-source Python package for gamma-ray astronomy built on Numpy
-and Astropy. It is a prototype for the Cherenkov Telescope Array (CTA) science
-tools, and can also be used to analyse data from existing gamma-ray telescopes,
-if their data is available in the standard FITS format (gadf_). There is good
-support for CTA and existing imaging atmospheric Cherenkov telescopes (IACTs,
-e.g. H.E.S.S., MAGIC, VERITAS), and some analysis capabilities for Fermi-LAT and
-HAWC and multi-mission joint likelihood analysis.
+.. _data_flow:
 
-.. _overview_workflow:
+.. figure:: _static/data-flow-gammapy.png
+    :width: 100%
 
-Workflow
---------
+    Fig. 1 Data flow and sub-package structure of Gammapy. The folder icons
+    represent the corresponding sub-packages. The direction of the
+    the data flow is illustrated with shaded arrows. The top section
+    shows the data levels as defined by `CTA`_.
 
-To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
-matplotlib for plotting. Many standard gamma-ray analyses can be done with few
-lines of configuration and code, so you can get pretty far by copy and pasting
-and adapting the working examples from the Gammapy documentation. But
-eventually, if you want to script more complex analyses, or inspect analysis
-results or intermediate analysis products, you need to acquire a basic to
-intermediate Python skill level.
-
-To analyse data from CTA or existing IACTs, the usual workflow is to use the
-high-level interface in :ref:`gammapy.analysis <analysis>` as shown in the
-example `First analysis tutorial notebook <./tutorials/analysis_1.html>`__, i.e.
-to write a YAML config file, and then to use `~gammapy.analysis.AnalysisConfig`
-and `~gammapy.analysis.Analysis` to perform the data reduction from event lists
-and instrument response functions (IRFs) to a reduced data format called
-datasets, using either 3D cube analysis or 1D region-based spectral analysis.
-The IACT data distributed by instruments is called "data level 3" (DL3) and is
-given as FITS files, as shown in the `CTA with Gammapy <./tutorials/cta.html>`__
-and `H.E.S.S. with Gammapy <./tutorials/hess.html>`__ notebooks and explained in
-more detail in :ref:`overview_data` below. Then `~gammapy.analysis.Analysis`
-class is then used to compute intermediate reduced analysis files like counts
-and exposure maps or spectra, and reduced point spread function (PSF) or energy
-dispersion (EDISP) information, combined in container objects called datasets
-(see below).
-
-The second step is then typically to model and fit the datasets, either
-individually, or in a joint likelihood analysis, using the
-`~gammapy.datasets.Dataset`, `~gammapy.datasets.Datasets`,
-`~gammapy.modeling.Fit` and model classes (see :ref:`overview_modeling` below).
-You can specify your model using a YAML model specification, or write Python
-code to specify which spectral and spatial models to use and what their rough
-parameters are to start the fit (such as sky position and source extension, or
-approximate flux level). Methods to run global model fits are available, as well
-as methods to compute flux points or light curves, or run simple source
-detection algorithms.
-
-The analysis config file and `~gammapy.analysis.Analysis` class currently mostly
-scripts the data reduction up to the datasets level for the most common analysis
-cases. It might be extended in the future to become the "manager" or "driver"
-class for modeling or fitting as well, or that might remain the responsibility
-of the datasets, models and fit classes. Advanced users that need to run
-specialises analyses such as e.g. complex background modeling, or grouping of
-observations, have a second-level API available via dataset makers, that offer
-more flexibility. An example of this is shown in the `Second analysis tutorial
-notebook <./tutorials/analysis_2.html>`__.
-
-Gammapy ships with a ``gammapy`` command line tool, that can be used to check
-your installation and show version information via ``gammapy info``, to download
-example datasets and tutorials via ``gammapy download`` or to bootstrap an
-analysis by creating a default config file via ``gammapy analysis``. To learn
-about the Gammapy command line tool, see :ref:`gammapy.scripts <CLI>`.
 
 .. _overview_data:
 
-Data reduction
---------------
 
-As already mentioned in the :ref:`overview_workflow` section above, IACT
-analysis starts with :ref:`data level 3 <overview_DL3>` (DL3) FITS files
-consisting of event lists, instrument response information (effective area,
-point spread function, energy dispersion, background) and extra information
-concerning the observation (pointing direction, time), as well as two index
-tables that list the observations and declare which response should be used
-with which event data.
+Data access and selection (DL3)
+-------------------------------
+
+The analysis of gamma-ray data with Gammapy starts at the "data level 3" (DL3, ref?).
+At this level the data is stored as lists of gamma-like events and the corresponding
+instrument response functions (IRFs). The instrument response includes effective
+area, point spread function (PSF), energy dispersion and residual hadronic background.
+In addition there is associated meta data including information on the observation such
+as pointing] direction, observation time and obervation conditions. The main FITS format
+supported by Gammapy is documented on the `Gamma astro data formats page <gadf>`_.
+
+The access to the data and instrument response is implemented in
+:ref:`gammapy.data <data>` and :ref:`gammapy.irf <irf>`.
 
 
+.. _overview_data_reduction:
 
-There are many data reduction options, but the main ones are whether to do a 3D
-cube analysis or a 1D spectral analysis, and whether to keep individual
-observations as separate datasets for a joint likelihood fit or whether to group
-and stack them. Partly background modeling choices are also already made at this
-data reduction stage. If you have a deep IACT observation, e.g. 100 observation
-runs, the data reduction can take a while. So typically you write the output
-datasets to file after data reduction, allowing you to read them back at any
-time later for modeling and fitting.
+Data reduction (from DL3 to DL4)
+--------------------------------
+
+In the next stage of the analysis the user selects a coordinates system, region or
+energy binning and events are binned into multidimensional data structures (maps)
+with the selected geometry. The instrument response is projected onto the
+same geometry as well. At this stage users can select additional background
+estimation methods, such as ring background or reflected regions and
+exclude parts of the data with high associated IRF systematics by defining
+a "safe" data range. The counts data and the reduced IRFs are bundled into
+datasets. Those datasets can be optionally grouped and stacked and are
+typically writen to disk to allow users to read them back at any time later
+for modeling and fitting.
+
+The data reduction and background estimation methods are implemented in
+:ref:`gammapy.makers <makers>`.
 
 .. _overview_datasets:
 
-Datasets
---------
+Datasets (DL4)
+--------------
 
-The `gammapy.datasets` sub-package contains classes to handle reduced
-gamma-ray data for modeling and fitting.
+The datasets classes bundle reduced data in form of maps, reduced IRFs, models and
+fit statistics. Different sub-classes support different analysis methods
+and fit statistics (e.g. Poisson statistics with known background or
+with OFF background measurements). The datasets are used to perform joint-likelihood
+fitting allowing to combine different measurements, e.g. from different observations
+but also from different instruments or event classes. They can also be used for binned
+simulation as well as event sampling to simulate DL3 events data.
 
-The `Dataset` objects are the result of the data reduction step. They contain the various
-products (`counts`, `exposure`, `energy dispersion` etc) with their geometries. They also
-serve as the basis for modeling and fitting.
+To learn more about datasets, see :ref:`gammapy.datasets <datasets>` and
+:ref:`gammapy.maps <maps>`.
 
-The `Dataset` class bundles reduced data, reduced IRFs and models.
-Different sub-classes support different analysis methods and fit statistics
-(e.g. Poisson statistics with known background or with OFF background measurements).
-
-The `Datasets` are used to perform joint-likelihood fitting allowing to combine
-different measurements, e.g. from different observations but also from different
-instruments.
-
-To learn more about datasets, see :ref:`gammapy.datasets <datasets>` and :ref:`gammapy.modeling <modeling>`.
 
 .. _overview_modeling:
 
-Modeling and Fitting
---------------------
+Modeling and Fitting (from DL4 to DL5)
+--------------------------------------
 
-Beyond `Dataset` objects, Gammapy provides numerous functionalities related
-to data modeling and fitting, as well as data simulation.
-This includes spectral, spatial and temporal model classes to describe the gamma-ray sky.
-Gammapy also contains a complete API for model parameter handling and model fitting.
+The next step is then typically to model and fit the datasets, either
+individually, or in a joint likelihood analysis. For this purpose Gammapy
+provides a uniform interface to multiple fitting backends. It also provides
+a variety of :ref:`built in models <model-gallery>`. This includes spectral,
+spatial and temporal model classes to describe the gamma-ray emission in the sky.
+Independently or subsequently to the global modelling, the data can be
+re-grouped to compute flux points, light curves and flux as well as significance
+maps in energy bands.
 
-To learn more about modeling and fitting, see  :ref:`gammapy.modeling
-<modeling>`.
+To learn more about modeling and fitting, see  :ref:`gammapy.modeling <modeling>`
+and :ref:`gammapy.estimators <estimators>`.
 
-.. _overview_time:
 
-Time analysis
--------------
+.. _overview_hli:
 
-Light curves are represented as `~gammapy.estimators.LightCurve` objects, a wrapper
-class around `~astropy.table.Table`. To compute light curves, use the
-`~gammapy.estimators.LightCurveEstimator`.
+High Level Analysis Interface
+-----------------------------
+To define and execute a full data analysis process from a YAML configuration file,
+Gammapy implements a high-level analysis interface. It exposes a subset of
+the functionality that is available in the sub-packages to support
+standard analysis use case in a convenient way.
 
-.. _overview_simulation:
-
-Simulation
-----------
-
-Gammapy supports binned simulation, i.e. Poisson fluctuation of predicted
-counts maps or spectra, as well as event sampling to simulate DL3 events data.
-The following tutorials illustrate how to use that to predict
-observability, significance and sensitivity, using CTA examples: `3D map
-simulation <./tutorials/simulate_3d.html>`__, `1D spectrum simulation
-<./tutorials/spectrum_simulation.html>`__, and `Point source sensitivity
-<./tutorials/cta_sensitivity.html>`__. Event sampling is demonstrated in
-`a dedicated notebook <./tutorials/event_sampling.html>`__.
+The high level analysis interface can be found in :ref:`gammapy.analysis <analysis>`.
 
 .. _overview_other:
 
-Other topics
-------------
+Other
+-----
 
-Gammapy is organised in sub-packages, containing many classes and functions. In
-this overview we only mentioned the most important concepts and parts to get
-started. To learn more, see the following sub packages and documentation pages:
-:ref:`gammapy.data <data>`, :ref:`gammapy.irf <irf>`, :ref:`gammapy.maps
-<maps>`, :ref:`gammapy.catalog <catalog>`, :ref:`gammapy.astro <astro>`,
-:ref:`gammapy.stats <stats>`,
-:ref:`gammapy.scripts <CLI>` (``gammapy`` command line tool).
+Gammapy offers additional functionality in sub-packages not related to the
+standard analysis work flow described above. This includes:
 
-Note that in Gammapy, 2D image analyses are partly done with actual 2D images
-that don't have an energy axis, and partly with 3D cubes with a single energy bin,
-e.g. for modeling and fitting,
-see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
+* Access to a variety of GeV-TeV gamma-ray catalogs in :ref:`gammapy.catalog <catalog>`
+* Support for simulation of TeV source populations and dark matter models in :ref:`gammapy.astro <astro>`
+* Statistical utility functions in :ref:`gammapy.stats <stats>`
+* Command line tools in :ref:`gammapy.scripts <CLI>`
 
-For 1D spectral modeling and fitting, `~gammapy.modeling.models.Models` are
-used, to provide uniformity within Gammapy, and to allow in future versions of
-Gammapy for advanced use cases where a sky region based analysis is used
-resulting in 1D counts spetra, but the modeling is done with a spatial model
-assumption, allowing for treatment of overlapping emission components, such as
-e.g. a gamma-ray binary with underlying emission from a pulsar wind nebula, to
-apply proper treatment of containment and contamination corrections. Note that
-the spatial model on a `~gammapy.modeling.models.SkyModel` is optional, you can
-only pass a `~gammapy.modeling.models.SpectralModel`, as shown in the `First
-analysis tutorial notebook <./tutorials/analysis_1.html>`__ and other tutorials.
 
 .. _overview_next:
 
 What next?
 ----------
 
-You now have an overview of Gammapy. We suggest you continue by tring it out,
+After this overview of the Gammapy package, we suggest to continue by trying it out,
 following the instructions in :ref:`install`, :ref:`getting-started` and then
 the first and second analysis tutorials at :ref:`tutorials`.
 
-.. toctree::
-    :caption: Overview Subsections
-    :maxdepth: 1
-
-    overview/DL3

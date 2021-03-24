@@ -9,9 +9,8 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
-from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel
+from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
-from gammapy.maps.utils import fill_poisson
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -65,7 +64,6 @@ def test_wcsndmap_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     path = tmp_path / "tmp.fits"
 
     m0 = WcsNDMap(geom)
-    fill_poisson(m0, mu=0.5)
     m0.write(path, overwrite=True)
     m1 = WcsNDMap.read(path)
     m2 = Map.read(path)
@@ -291,15 +289,16 @@ def test_wcsndmap_interp_by_coord(npix, binsz, frame, proj, skydir, axes):
         npix=npix, binsz=binsz, skydir=skydir, proj=proj, frame=frame, axes=axes
     )
     m = WcsNDMap(geom)
-    coords = m.geom.get_coord(flat=True)
+    coords = m.geom.get_coord().flat
     m.set_by_coord(coords, coords[1].value)
-    assert_allclose(coords[1].value, m.interp_by_coord(coords, interp="nearest"))
-    assert_allclose(coords[1].value, m.interp_by_coord(coords, interp="linear"))
-    assert_allclose(coords[1].value, m.interp_by_coord(coords, interp=1))
-    if geom.is_regular and not geom.is_allsky:
-        assert_allclose(
-            coords[1].to_value("deg"), m.interp_by_coord(coords, interp="cubic")
-        )
+    assert_allclose(coords[1].value, m.interp_by_coord(coords, method="nearest"))
+    assert_allclose(coords[1].value, m.interp_by_coord(coords, method="linear"))
+    assert_allclose(coords[1].value, m.interp_by_coord(coords, method="linear"))
+
+    # if geom.is_regular and not geom.is_allsky:
+    #    assert_allclose(
+    #        coords[1].to_value("deg"), m.interp_by_coord(coords, interp="cubic")
+    #    )
 
 
 def test_interp_by_coord_quantities():
@@ -317,7 +316,7 @@ def test_interp_by_coord_quantities():
     m.set_by_coord(coords_dict, 42)
 
     coords_dict["energy"] = 1 * u.TeV
-    assert_allclose(42.0, m.interp_by_coord(coords_dict, interp="nearest"))
+    assert_allclose(42.0, m.interp_by_coord(coords_dict, method="nearest"))
 
 
 def test_wcsndmap_interp_by_coord_fill_value():
@@ -357,7 +356,7 @@ def test_wcsndmap_pad(npix, binsz, frame, proj, skydir, axes):
         msk = m2.geom.contains(coords)
         coords = tuple([c[~msk] for c in coords])
         assert_allclose(m2.get_by_coord(coords), 2.2)
-    m.pad(1, mode="interp", order=0)
+    m.pad(1, mode="interp", method="nearest")
     m.pad(1, mode="interp")
 
 
@@ -368,6 +367,18 @@ def test_wcsndmap_pad_cval():
     cval = 1.1
     m_padded = m.pad(1, mode="constant", cval=cval)
     assert_allclose(m_padded.data[0, 0], cval)
+
+
+def test_wcs_nd_map_pad_axis():
+    axis = MapAxis.from_nodes([0, 1], unit="deg", name="axis")
+
+    m = WcsNDMap.create(npix=3, axes=[axis])
+    m.data += np.array([1, 2]).reshape((-1, 1, 1))
+
+    m_pad = m.pad(axis_name="axis", pad_width=1, mode="edge")
+    m_pad.data
+
+    assert_allclose(m_pad.data[:, 1, 1], [1, 1, 2, 2])
 
 
 @pytest.mark.parametrize(
@@ -525,14 +536,8 @@ def test_convolve_nd():
     m = Map.from_geom(geom)
     m.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
 
-    # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
-    filename = (
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-    table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
-
-    psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=1 * u.deg)
+    psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
+    psf_kernel = psf.get_psf_kernel(geom=geom, max_radius=1 * u.deg)
 
     assert psf_kernel.psf_kernel_map.data.shape == (3, 101, 101)
 
@@ -587,9 +592,18 @@ def test_plot_grid():
 
 @requires_dependency("matplotlib")
 def test_plot_allsky():
-    m = WcsNDMap.create(binsz=10 * u.deg)
+    axis = MapAxis([0, 1], node_type="edges")
+    m = WcsNDMap.create(binsz=10 * u.deg, axes=[axis])
     with mpl_plot_check():
         m.plot()
+
+
+@requires_dependency("matplotlib")
+def test_plot_nan():
+    m = Map.create(width=10, binsz=1)
+    m.data += np.nan
+    with mpl_plot_check():
+        m.plot(add_cbar=False)
 
 
 def test_get_spectrum():
@@ -793,3 +807,52 @@ def test_stack_unit_handling():
     m.stack(m_other)
 
     assert_allclose(m.data, 1.0001)
+
+
+def test_binary_erode():
+    geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
+    mask = geom.region_mask("icrs;circle(0, 0, 1)")
+
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="disk", use_fft=False)
+    assert_allclose(mask.data.sum(), 4832)
+
+    mask = mask.binary_erode(width=0.2 * u.deg, kernel="box", use_fft=True)
+    assert_allclose(mask.data.sum(), 3372)
+
+
+def test_binary_dilate():
+    geom = WcsGeom.create(binsz=0.02, width=2 * u.deg)
+    mask = geom.region_mask("icrs;circle(0, 0, 0.8)")
+
+    mask = mask.binary_dilate(width=0.2 * u.deg, kernel="disk", use_fft=False)
+    assert_allclose(mask.data.sum(), 8048)
+
+    mask = mask.binary_dilate(width=(10, 10), kernel="box")
+    assert_allclose(mask.data.sum(), 9203)
+
+
+def test_binary_dilate_erode_3d():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data |= True
+
+    mask_fit = mask.binary_erode(width=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(mask_fit.data) == 9800
+
+    mask = geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
+    mask = mask.binary_dilate(width=(0.6 * u.deg, 0.2 * u.deg))
+    assert np.sum(mask.data) == np.prod(mask.data.shape)
+
+
+def test_memory_usage():
+    geom = WcsGeom.create()
+    assert geom.data_nbytes().unit == u.MB
+    assert_allclose(geom.data_nbytes(dtype="float32").value, 1.0368)
+    assert_allclose(geom.data_nbytes(dtype="b").value, 0.2592)

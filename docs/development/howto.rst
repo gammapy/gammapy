@@ -2,12 +2,19 @@
 
 .. _dev_howto:
 
-***************
-Developer HOWTO
-***************
+****************
+Developer How To
+****************
 
 This page is a collection of notes for Gammapy contributors and maintainers,
-in the form of short "How to" or "Q & A" entries.
+in the form of short "How To" or "Q&A" entries.
+
+.. _dev-python2and3:
+
+Python version support
+----------------------
+
+In Gammapy we currently support Python 3.7 or later.
 
 .. _dev_import:
 
@@ -16,7 +23,7 @@ Where should I import from?
 
 You should import from the "end-user namespaces", not the "implementation module".
 
-.. code-block:: python
+.. testcode::
 
    from gammapy.data import EventList  # good
    from gammapy.data.event_list import EventList # bad
@@ -49,19 +56,90 @@ For up to three things, if callers usually will want access to several things,
 using a ``tuple`` or ``collections.namedtuple`` is OK.
 For three or more things, using a Python ``dict`` instead should be preferred.
 
-.. _dev-python2and3:
+Check Python code present in RST files
+--------------------------------------
 
-Python version support
-----------------------
+Most of the documentation of Gammapy is present in RST files that are converted into HTML pages with
+Sphinx during the build documentation process. You may include snippets of Python code in these RST files
+within blocks labelled with ``.. code-block:: python`` Sphinx directive. However this code could not be
+tested and it will not be possible to know if it fails in following versions of Gammapy. That's why we
+recommend to use the ``.. testcode::`` directive to enclose code that will be tested against the results
+present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::` directive is provided,
+only execution tests will be performed.
 
-In Gammapy we currently support Python 3.7 or later.
+For example, we could check that the code below does not fail, since it does not provide any output.
+
+.. code-block:: text
+
+    .. testcode::
+
+        from gammapy.astro import source
+        from gammapy.astro import population
+        from gammapy.astro import darkmatter
+
+On the contrary, we could check the execution of the following code as well as the output values produced.
+
+.. code-block:: text
+
+    .. testcode::
+
+        from astropy.time import Time
+        time = Time(['1999-01-01T00:00:00.123456789', '2010-01-01T00:00:00'])
+        print(time.mjd)
+
+    .. testoutput::
+
+        [51179.00000143 55197.        ]
+
+In order to perform tests of these snippets of code present in RST files, you may run the following command.
+
+.. code-block:: bash
+
+    pytest --doctest-glob="*.rst" docs/
+
+Check Python code present in docstrings of Python files
+-------------------------------------------------------
+
+It is also advisable to add code snippets within the docstrings of the classes and functions present in Python files.
+These snippets show how to use the function or class that is documented, and are written in the docstrings using the
+following syntax.
+
+.. code-block:: text
+
+        Examples
+        --------
+        >>> from astropy.units import Quantity
+        >>> from gammapy.data import EventList
+        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
+
+In the case above, we could check the execution of the first two lines importing the ``Quantity`` and ``EventList``
+modules, whilst the third line will be skipped. On the contrary, in the example below we could check the execution of
+the code as well as the output value produced.
+
+.. code-block:: text
+
+        Examples
+        --------
+        >>> from gammapy.maps import WcsGeom
+        >>> from gammapy.utils.regions import make_pixel_region
+        >>> wcs = WcsGeom.create().wcs
+        >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
+        >>> region
+        <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
+
+In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
+following command.
+
+.. code-block:: bash
+
+    pytest --doctest-modules --ignore-glob=*/tests gammapy
 
 .. _dev-skip_tests:
 
 Skip unit tests for some Astropy versions
 -----------------------------------------
 
-.. code-block:: python
+.. testcode::
 
    import astropy
    import pytest
@@ -71,21 +149,79 @@ Skip unit tests for some Astropy versions
    def test_something():
       ...
 
+Assert convention
+-----------------
+
+When performing tests, the preferred numerical assert method is
+`numpy.testing.assert_allclose`. Use
+
+.. testcode::
+
+    from numpy.testing import assert_allclose
+
+at the top of the file and then just use ``assert_allclose`` for
+the tests. This makes the lines shorter, i.e. there is more space
+for the arguments.
+
+``assert_allclose`` covers all use cases for numerical asserts, so
+it should be used consistently everywhere instead of using the
+dozens of other available asserts from pytest or numpy in various
+places.
+
+For assertions on `~astropy.units.Quantity` objects, you can do this
+to assert on the unit and value separately:
+
+.. testcode::
+
+    from numpy.testing import assert_allclose
+    import astropy.units as u
+
+    actual = 1 / 3 * u.deg
+    assert actual.unit == 'deg'
+    assert_allclose(actual.value, 0.33333333)
+
+Note that  `~astropy.units.Quantity` can be compared to unit strings directly.
+Also note that the default for ``assert_allclose`` is ``atol=0`` and ``rtol=1e-7``,
+so when using it, you have to give the reference value with a precision of
+``rtol ~ 1e-8``, i.e. 8 digits to be on the safe side (or pass a lower ``rtol`` or set an ``atol``).
+
+The use of `~astropy.tests.helper.assert_quantity_allclose` is discouraged,
+because it only requires that the values match after unit conversions.
+This is not so bad, but units in test cases should not change randomly,
+so asserting on unit and value separately establishes more behaviour.
+
+If you don't like the two separate lines, you can use `gammapy.utils.testing.assert_quantity_allclose`,
+which does assert that units are equal, and calls `numpy.testing.assert_equal` for the values.
+
+Testing of plotting functions
+-----------------------------
+
+Many of the data classes in Gammapy implement ``.plot()`` or ``.peek()`` methods to
+allow users a quick look in the data. Those methods should be tested using the
+`mpl_check_plot()` context manager. The context manager will take care of creating
+a new figure to plot on and writing the plot to a byte-stream to trigger the
+rendering of the plot, which can raise errors as well. Here is a short example:
+
+.. testcode::
+
+    from gammapy.utils.testing import mpl_plot_check
+
+    def test_plot():
+        with mpl_plot_check():
+            plt.plot([1., 2., 3., 4., 5.])
+
+With this approach we make sure that the plotting code is at least executed once
+and runs completely (up to saving the plot to file) without errors. In future we
+will maybe change to something like https://github.com/matplotlib/pytest-mpl
+to ensure that correct plots are produced.
+
 Making a pull request with new or modified datasets
 ---------------------------------------------------
 
-Datasets used in tests and tutorials are hosted in the
-`gammapy-data Github repository <https://github.com/gammapy/gammapy-data>`__. It is recommended that developers
-have `$GAMMAPY_DATA` environment variable pointing to the local folder where they have fetched the `gammapy-data` Github
-repository, so they can push and pull eventual modification of its content. In the cases they want to make a pull
-request with new or modified datasets, these are the steps to follow:
-
-#. Update the content of the remote specific dataset repository (i.e. `gammapy-extra`, `gammapy-fermi-lat-data`,
-   `gamma-cat`).
-#. Update the content of your local `gammapy-data` repository and JSON index file by running
-   `python make_datasets_index.py` in the `dev/datasets/` folder.
-#. Push eventual changes to remote `gammapy-data` Github repository.
-
+Datasets used in tests are hosted in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ Github
+repository. It is recommended that developers have `$GAMMAPY_DATA` environment variable pointing to the local folder
+where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  Github repository,
+so they can push and pull eventual modification of its content.
 
 Fix non-Unix line endings
 -------------------------
@@ -102,8 +238,6 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ git status
     $ cd astropy_helpers && git checkout -- . && cd ..
 
-.. _dev-check_html_links:
-
 What checks and conversions should I do for inputs?
 ---------------------------------------------------
 
@@ -111,7 +245,7 @@ In Gammapy we assume that
 `"we're all consenting adults" <https://mail.python.org/pipermail/tutor/2003-October/025932.html>`__,
 which means that when you write a function you should write it like this:
 
-.. code-block:: python
+.. testcode::
 
     def do_something(data, option):
         """Do something.
@@ -213,51 +347,31 @@ e.g. during data reduction, or at the dataset or model component or at the funct
 This is planned for 2020, but really prototyping and pull requests on performance are welcome
 any time.
 
-Assert convention
------------------
-
-When performing tests, the preferred numerical assert method is
-`numpy.testing.assert_allclose`. Use
-
-.. code-block:: python
-
-    from numpy.testing import assert_allclose
-
-at the top of the file and then just use ``assert_allclose`` for
-the tests. This makes the lines shorter, i.e. there is more space
-for the arguments.
-
-``assert_allclose`` covers all use cases for numerical asserts, so
-it should be used consistently everywhere instead of using the
-dozens of other available asserts from pytest or numpy in various
-places.
-
-For assertions on `~astropy.units.Quantity` objects, you can do this
-to assert on the unit and value separately:
-
-.. code-block:: python
-
-    from numpy.testing import assert_allclose
-    import astropy.units as u
-
-    actual = 1 / 3 * u.deg
-    assert actual.unit == 'deg'
-    assert_allclose(actual.value, 0.33333333)
-
-Note that  `~astropy.units.Quantity` can be compared to unit strings directly.
-Also note that the default for ``assert_allclose`` is ``atol=0`` and ``rtol=1e-7``,
-so when using it, you have to give the reference value with a precision of
-``rtol ~ 1e-8``, i.e. 8 digits to be on the safe side (or pass a lower ``rtol`` or set an ``atol``).
-
-The use of `~astropy.tests.helper.assert_quantity_allclose` is discouraged,
-because it only requires that the values match after unit conversions.
-This is not so bad, but units in test cases should not change randomly,
-so asserting on unit and value separately establishes more behaviour.
-
-If you don't like the two separate lines, you can use `gammapy.utils.testing.assert_quantity_allclose`,
-which does assert that units are equal, and calls `numpy.testing.assert_equal` for the values.
-
 .. _dev_random:
+
+
+
+Caplog fixture
+--------------
+
+Inside tests, we have the possibility to change the log level for the captured 
+log messages using the ``caplog`` fixture which allow you to access and control log capturing.
+When logging is part of your function and you want to verify the right message is logged 
+with the expected logging level:
+
+.. testcode::
+
+    import pytest
+
+    def test_something(caplog):
+        """Test something.
+
+        Parameters
+        ----------
+        caplog : caplog fixture that give you access to the log level, the logger, etc.,
+        """
+        assert caplog.records[-1].levelname == "WARNING"
+        assert "warning message" in caplog.records[-1].message
 
 Random numbers
 --------------
@@ -268,7 +382,7 @@ take a ``random_state`` input parameter and call the
 (you can copy & paste the three docstring lines and the first code line
 to the function you're writing):
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.utils.random import get_random_state
 
@@ -343,12 +457,14 @@ informing the user about what they are doing.
 Gammapy uses the Python standard library `logging` module. This module is extremely flexible,
 but also quite complex. But our logging needs are very modest, so it's actually quite simple ...
 
+It is worth mentioning that important logs returned to the user should be captured and tested using caplog fixture, see the section Caplog fixture above
+
 Generating log messages
 +++++++++++++++++++++++
 
 To generate log messages from any file in Gammapy, include these two lines at the top:
 
-.. code-block:: python
+.. testcode::
 
     import logging
     log = logging.getLogger(__name__)
@@ -356,7 +472,7 @@ To generate log messages from any file in Gammapy, include these two lines at th
 This creates a module-level `logging.Logger` object called ``log``, and you can then create
 log messages like this from any function or method:
 
-.. code-block:: python
+.. testcode::
 
     def process_lots_of_data(infile, outfile):
 
@@ -375,26 +491,6 @@ and log things. For these you can optionally let the caller pass a logger when
 constructing the class to make it easier to configure the logging.
 See the `~gammapy.data.EventListDatasetChecker` as an example.
 
-Configuring logging from command line tools
-+++++++++++++++++++++++++++++++++++++++++++
-
-Every Gammapy command line tool should have a ``--loglevel`` option:
-
-.. code-block:: python
-
-    parser.add_argument("-l", "--loglevel", default='info',
-                        choices=['debug', 'info', 'warning', 'error', 'critical'],
-                        help="Set the logging level")
-
-This option is then processed at the end of ``main`` using this helper function:
-
-.. code-block:: python
-
-    set_up_logging_from_args(args)
-
-This sets up the root logger with the log level and format (the format isn't configurable
-for the command line scripts at the moment).
-
 
 Command line tools using click
 ------------------------------
@@ -402,7 +498,7 @@ Command line tools using click
 Command line tools that use the `click <http://click.pocoo.org/>`__ module should disable
 the unicode literals warnings to clean up the output of the tool:
 
-.. code-block:: python
+.. testcode::
 
     import click
     click.disable_unicode_literals_warning = True
@@ -477,9 +573,6 @@ Interpolation and extrapolation
 In Gammapy, we use interpolation a lot, e.g. to evaluate instrument response functions (IRFs) on
 data grids, or to reproject diffuse models on data grids.
 
-Note: For some use cases that require interpolation the
-`~gammapy.utils.nddata.NDDataArray` base class might be useful.
-
 The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
 (more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
 across all of parameter space would be needed).
@@ -529,13 +622,17 @@ Locate origin of warnings
 By default, warnings appear on the console, but often it's not clear where a given warning
 originates (e.g. when building the docs or running scripts or tests) or how to fix it.
 
-Sometimes putting this in ``gammapy/__init__.py`` can help::
+Sometimes putting this in ``gammapy/__init__.py`` can help:
+
+.. testcode::
 
     import numpy as np
     np.seterr(all='raise')
 
 Following the advice `here <http://stackoverflow.com/questions/22373927/get-traceback-of-warnings/22376126#22376126>`__,
-putting this in ``docs/conf.py`` can also help sometimes::
+putting this in ``docs/conf.py`` can also help sometimes:
+
+.. testcode::
 
     import traceback
     import warnings
@@ -564,22 +661,22 @@ Let's use this as an example::
 
 The default ``repr`` and ``str`` are this::
 
-    >>> repr(p)
+    p = Person()
+    repr(p)
     '<__main__.Person object at 0x105fe3b70>'
-    >>> p.__repr__()
+    p.__repr__()
     '<__main__.Person object at 0x105fe3b70>'
-    >>> str(p)
+    str(p)
     '<__main__.Person object at 0x105fe3b70>'
-    >>> p.__str__()
+    p.__str__()
 
 Users will see that. If they just give an object in the Python REPL, the
 ``repr`` is shown. If they print the object, the ``str`` is shown. In both cases
 without the quotes seen above.
 
-    >>> p = Person()
-    >>> p
+    p
     <__main__.Person at 0x105fd0cf8>
-    >>> print(p)
+    print(p)
     <__main__.Person object at 0x105fe3b70>
 
 There are ways to make this better and avoid writing boilerplate code,
@@ -593,7 +690,7 @@ don't have to do that, it's mainly useful for objects users interact with a lot.
 For classes that are mainly used internally, developers can e.g. just do this to
 see the attributes printed nicely::
 
-    >>> p.__dict__
+    p.__dict__
     {'name': 'Anna', 'age': 8}
 
 
@@ -612,10 +709,10 @@ repr is inherited).
 This will give a nice string representation. The same one for ``repr`` and
 ``str``, you don't have to write ``__str__``::
 
-    >>> p = Person(name='Anna', age=8)
-    >>> p
+    p = Person(name='Anna', age=8)
+    p
     Person(name='Anna', age=8)
-    >>> print(p)
+    print(p)
     Person(name='Anna', age=8)
 
 The string representation is usually used for more informal or longer printout.
@@ -657,10 +754,10 @@ it with other text, or store it in a list and write it to file later.
 The main con is that users have to call ``print(p.info())`` to see a
 nice printed version of the string instead of ``\n``::
 
-    >>> p = Person()
-    >>> p.info()
+    p = Person()
+    p.info()
     "Hi, my name is Anna and I'm 8 years old.\nI live in Heidelberg"
-    >>> print(p.info())
+    print(p.info())
     Hi, my name is Anna and I'm 8 years old.
     I live in Heidelberg
 
@@ -704,17 +801,6 @@ Example what to put as a test::
         assert p.info(add_location=True).endswith('Heidelberg')
 
 .. _use-nddata:
-
-Using the NDDataArray
----------------------
-
-Gammapy has a class for generic n-dimensional data arrays,
-`~gammapy.utils.nddata.NDDataArray`. Classes that represent such an array
-should use this class. The goal is to reuse code for interpolation
-and have an coherent I/O interface, mainly in `~gammapy.irf`.
-
-Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
-setup your interpolator.
 
 Coordinate and axis names
 -------------------------
@@ -775,28 +861,6 @@ Notes:
   is only a prototype. So if CTA chooses something else, probably we will follow
   suite and do one more backward-incompatible change at some point to align with CTA.
 
-Testing of plotting functions
------------------------------
-
-Many of the data classes in Gammapy implement ``.plot()`` or ``.peek()`` methods to
-allow users a quick look in the data. Those methods should be tested using the
-`mpl_check_plot()` context manager. The context manager will take care of creating
-a new figure to plot on and writing the plot to a byte-stream to trigger the
-rendering of the plot, which can rasie errore as well. Here is a short example:
-
-.. code-block:: python
-
-    from gammapy.utils.testing import mpl_plot_check
-
-    def test_plot():
-        with mpl_plot_check():
-            plt.plot([1., 2., 3., 4., 5.])
-
-With this approach we make sure that the plotting code is at least executed once
-and runs completely (up to saving the plot to file) without errors. In future we
-will maybe change to something like https://github.com/matplotlib/pytest-mpl
-to ensure that correct plots are produced.
-
 Documentation guidelines
 ------------------------
 
@@ -830,7 +894,7 @@ return variable name.
 See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
 as examples in the Astropy codebase. Here's a simple example:
 
-.. code-block:: python
+.. testcode::
 
     def circle_area(radius):
         """Circle area.
@@ -849,7 +913,7 @@ as examples in the Astropy codebase. Here's a simple example:
 
 In these cases, the following shorter format omitting the *Returns* section is recommended:
 
-.. code-block:: python
+.. testcode::
 
     def circle_area(radius):
         """Circle area (`~astropy.units.Quantity`).
@@ -868,7 +932,7 @@ A common case where the short format is appropriate are class properties,
 because they always return a single object.
 As an example see `gammapy.data.EventList.radec`, which is reproduced here:
 
-.. code-block:: python
+.. testcode::
 
     @property
     def radec(self):
@@ -913,20 +977,20 @@ This should work::
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
 Jupyter notebooks present in Gammapy documentation have stripped output cells.
-All notebooks declared in the ``notebooks.yaml`` index file are code formatted, tested,
-and filled during the process of documentation building. They are also converted to Sphinx
-formatted HTML files and ``.py`` scripts.
+All notebooks are code clean formatted, tested, and filled during the process of documentation
+building. They are also converted to Sphinx formatted HTML files and ``.py`` scripts.
 
 The Sphinx formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter
 files and ``.py`` script versions stored in ``docs/_static/notebooks`` folder, as well as
-a link pointing to its specific Binder space in the ``gammapy-webpage`` repository.
+a link pointing to its specific Binder space in the
+`gammapy-webpage <https://github.com/gammapy/gammapy-webpage>`__ repository.
 Since notebooks are evolving with Gammapy features and documentation, the different
 versions of the notebooks are linked to versioned Binder environments.
 
 Once the documentation is built you can optimize the speed of eventual re-building,
 for example in case you are modifying or creating new docs and you would like to check
 these changes are displayed nicely. For that purpose, if your modified RST file
-does not contain links to notebooks, you may run ``make docs-all nbs=False`` so
+does not contain links to notebooks, you may run ``make docs-sphinx`` so
 that notebooks are not executed during the docs build.
 
 In the case one single notebook is modified or added to the documentation, you can
@@ -940,6 +1004,53 @@ The documentation built-in process uses the `sphinx-gallery <https://sphinx-gall
 extension to build galleries of illustrated examples on how to use Gammapy (i.e.
 :ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
 ``examples/models`` and the configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
+
+Add a notebook in a folder different than tutorials folder
+----------------------------------------------------------
+Most of the Gammapy notebooks are placed in the ``tutorials`` folder, and are are displayed in a
+:ref:`tutorials` Gallery. However, we can choose to place a notebook in a different folder of the
+documentation folder structure. In this way we can write some parts of the documentation as notebooks
+instead of RST files. Once we have placed the notebook in the folder we choose we can link it from the
+``index.rst`` file using the name of the notebook filename **without the extension** and the Sphinx
+``toctree`` directive as shown below.
+
+.. code-block:: text
+
+    .. toctree::
+
+        mynotebook
+
+
+.. _skip-nb-execution:
+
+Skip notebooks from being executed
+----------------------------------
+You may choose if a notebook is not executed during the documentation building process, and hence
+it will be published without the output cells in its static HTML version. To do this you may add
+the following code to the notebook metadata:
+
+.. code-block:: javascript
+
+  "gammapy": {
+    "skip_run": true
+  }
+
+Choose a thumbnail and tooltip for the tutorials gallery
+--------------------------------------------------------
+The Gammapy :ref:`tutorials` are Jupyter notebooks that are displayed as a gallery with picture thumbnails and tooltips.
+You can choose the thumbnail for the tutorial and add the tooltip editing the metadata of the code cell that produces
+the picture that you've chosen. You can open the notebook in a text editor, and edit the internal code there. It may
+sound risky, but it is much simpler. Then, find the code cell that produces the figure that you would like for the
+gallery, and then replace the ``"metadata": {},`` bit above the code cell with the snippet below:
+
+.. code-block:: javascript
+
+    "metadata": {
+     "nbsphinx-thumbnail": {
+      "tooltip": "Learn how to do perform a Fit in gammapy."
+     },
+
+Note that you may write whatever you like after "tooltip".
 
 Dealing with links and notebooks
 --------------------------------
@@ -996,11 +1107,22 @@ to the ``dev`` version of the on-line Gammapy documentation will be transformed 
 HTML formatted notebooks and to absolute links pointing to that specific released version of the on-line docs
 in the downloadable ``.ipynb`` files.
 
+Include png files as images in the notebooks
+--------------------------------------------
 
-Include images from gammapy-extra into the docs
------------------------------------------------
+You may include static images in notebooks using the following markdown directive:
 
-Gammapy has a ``gp-image`` directive to include an image from ``gammapy-extra/figures/``,
+.. code-block:: rst
+
+    ![](images/my_static_image.png)
+
+Please note that your images should be placed inside an `images` folder, accessed with that relative
+path from your notebook.
+
+Include images from gammapy-data into the docs
+----------------------------------------------
+
+Gammapy has a ``gp-image`` directive to include an image from ``$GAMMAPY_DATA/figures/``,
 use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive like this:
 
 .. code-block:: rst
@@ -1008,7 +1130,9 @@ use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive l
     .. gp-image:: detect/fermi_ts_image.png
         :scale: 100%
 
-More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+More info on the `image directive <http://www.sphinx-doc.org/en/stable/rest.html#images>`__.
+
+.. _dev-check_html_links:
 
 Check broken links
 ------------------
@@ -1019,3 +1143,10 @@ To check for broken external links from the Sphinx documentation:
 
    $ python setup.py install
    $ cd docs; make linkcheck
+
+You may also use `brök <https://github.com/smallhadroncollider/brok>`__ software, which will also check
+the links present in the notebooks files.
+
+.. code-block:: bash
+
+   $ brok docs/tutorials/*.ipynb | grep "Failed|Could"

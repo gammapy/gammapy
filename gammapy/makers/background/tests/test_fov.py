@@ -6,7 +6,7 @@ from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     FoVBackgroundModel,
     GaussianSpatialModel,
@@ -47,9 +47,7 @@ def exclusion_mask(geom):
     """Example mask for testing."""
     pos = SkyCoord(83.633, 22.014, unit="deg", frame="icrs")
     region = CircleSkyRegion(pos, Angle(0.3, "deg"))
-    exclusion = WcsNDMap.from_geom(geom)
-    exclusion.data = geom.region_mask([region], inside=False)
-    return exclusion
+    return ~geom.region_mask([region])
 
 
 @pytest.fixture(scope="session")
@@ -71,10 +69,10 @@ def test_fov_bkg_maker_incorrect_method():
     with pytest.raises(ValueError):
         FoVBackgroundMaker(method="bad")
 
-
 @requires_data()
-def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
-    fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
+@requires_dependency("iminuit")
+def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
+    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy(name="test-fov")
     dataset = fov_bkg_maker.run(test_dataset)
@@ -83,6 +81,22 @@ def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     assert_allclose(model.norm.value, 0.830789, rtol=1e-4)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
 
+
+
+@requires_data()
+def test_fov_bkg_maker_scale_nocounts(obs_dataset, exclusion_mask, caplog):
+    fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
+    test_dataset = obs_dataset.copy(name="test-fov")
+    test_dataset.counts *= 0
+
+    dataset = fov_bkg_maker.run(test_dataset)
+
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 1, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert "No counts found outside exclusion mask for test-fov" in caplog.records[-1].message
+    assert "FoVBackgroundMaker failed" in caplog.records[-1].message
 
 @requires_data()
 @requires_dependency("iminuit")
@@ -95,6 +109,27 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 0.830789, rtol=1e-4)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
+
+
+@pytest.mark.xfail
+@requires_data()
+@requires_dependency("iminuit")
+def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
+    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
+
+    test_dataset = obs_dataset.copy(name="test-fov")
+    test_dataset.counts *=0
+
+    dataset = fov_bkg_maker.run(test_dataset)
+
+    # This should be solved along with issue https://github.com/gammapy/gammapy/issues/3175
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 1, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
+
+    assert caplog.records[-1].levelname == "WARNING"
+    assert f"Fit did not converge for {dataset.name}" in caplog.records[-1].message
+    
 
 
 @requires_data()
@@ -147,7 +182,7 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
+def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy(name="test-fov")
@@ -158,10 +193,12 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask):
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 1, rtol=1e-4)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert f"Fit did not converge for {dataset.name}" in caplog.records[-1].message
 
 
 @requires_data()
-def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
+def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy()
@@ -171,3 +208,6 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask):
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 1, rtol=1e-4)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert f"No positive background found outside exclusion mask for {dataset.name}" in caplog.records[-1].message
+    assert "FoVBackgroundMaker failed" in caplog.records[-1].message

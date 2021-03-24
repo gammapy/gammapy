@@ -46,10 +46,9 @@ Optional dependencies
 
 The optional dependencies listed here are the packages listed in the conda
 environment specification (see :ref:`install`). This is a mix of packages that
-make it convenient to use Gammapy (e.g. ``ipython`` or ``jupyter``), that add
+make it convenient to use Gammapy (e.g. ``ipython`` or ``jupyter``), or that add
 extra functionality (e.g. ``matplotlib`` to make plots, ``naima`` for physical
-SED modeling), and partly packages that aren't used within Gammapy, only for
-example data download (``parfive``) or in one of the tutorials (``sherpa``).
+SED modeling).
 
 * ipython_, jupyter_ and jupyterlab_ for interactive analysis
 * matplotlib_ for plotting
@@ -60,5 +59,4 @@ example data download (``parfive``) or in one of the tutorials (``sherpa``).
 * naima_ for SED modeling
 * emcee_ for fitting by MCMC sampling
 * corner_ for MCMC corner plots
-* parfive_ for example data and tutorial notebook download
 

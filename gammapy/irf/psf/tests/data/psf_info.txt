@@ -1,0 +1,10 @@
+
+Summary PSF info
+----------------
+Theta          : size =    12, min =  0.000 deg, max =  2.200 deg
+Energy hi      : size =    15, min =  0.158 TeV, max = 100.000 TeV
+Energy lo      : size =    15, min =  0.100 TeV, max = 63.096 TeV
+68.00 containment radius at offset = 0.0 deg and energy_true =  1.0 TeV: 0.148 deg
+95.00 containment radius at offset = 0.0 deg and energy_true =  1.0 TeV: 0.315 deg
+68.00 containment radius at offset = 0.0 deg and energy_true = 10.0 TeV: 0.167 deg
+95.00 containment radius at offset = 0.0 deg and energy_true = 10.0 TeV: 0.355 deg

@@ -24,6 +24,7 @@ setup_cfg = dict(conf.items("metadata"))
 
 plot_html_show_source_link = False
 
+numfig = False
 
 # -- General configuration ----------------------------------------------------
 
@@ -64,6 +65,7 @@ extensions.extend(
         "IPython.sphinxext.ipython_console_highlighting",
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
+        "sphinx.ext.doctest",
     ]
 )
 nbsphinx_execute = "never"
@@ -109,7 +111,7 @@ html_theme_options = {
     # Toc options
     "collapse_navigation": False,
     "sticky_navigation": True,
-    "navigation_depth": 4,
+    "navigation_depth": 3,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

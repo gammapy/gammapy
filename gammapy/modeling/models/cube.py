@@ -3,7 +3,8 @@
 import copy
 import numpy as np
 import astropy.units as u
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from astropy.nddata import NoOverlapError
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
@@ -190,6 +191,11 @@ class SkyModel(Model):
         return self.spatial_model.evaluation_radius
 
     @property
+    def evaluation_region(self):
+        """`~astropy.coordinates.Angle`"""
+        return self.spatial_model.evaluation_region
+
+    @property
     def frame(self):
         return self.spatial_model.frame
 
@@ -214,6 +220,45 @@ class SkyModel(Model):
             f"spectral_model={self.spectral_model!r})"
             f"temporal_model={self.temporal_model!r})"
         )
+
+    def contributes(self, mask, margin="0 deg"):
+        """Check if a skymodel contributes within a mask map.
+    
+        Parameters
+        ----------
+        mask : `~gammapy.maps.WcsNDMap` of boolean type
+            Map containing a boolean mask
+        margin : `~astropy.units.Quantity`
+            Add a margin in degree to the source evaluation radius.
+            Used to take into account PSF width.
+
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models contributing inside the region where mask==True
+        """
+        from gammapy.datasets.map import CUTOUT_MARGIN
+
+        margin = u.Quantity(margin)
+
+        if not mask.geom.is_image:
+            mask = mask.reduce_over_axes(func=np.logical_or)
+
+        if mask.geom.is_region and mask.geom.region is not None:
+            geom = mask.geom.to_wcs_geom()
+            mask = geom.region_mask([mask.geom.region])
+
+        try:
+            mask_cutout = mask.cutout(
+                position=self.position,
+                width=(2 * self.evaluation_radius + CUTOUT_MARGIN) + margin
+            )
+            contributes = np.any(mask_cutout.data)
+        except (NoOverlapError, ValueError):
+            contributes = False
+
+        return contributes
 
     def evaluate(self, lon, lat, energy, time=None):
         """Evaluate the model at given points.
@@ -272,7 +317,7 @@ class SkyModel(Model):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `Geom` or `~gammapy.maps.RegionGeom`
             Map geometry
         gti : `GTI`
             GIT table
@@ -287,9 +332,7 @@ class SkyModel(Model):
             (-1, 1, 1)
         )
 
-        if self.spatial_model and not isinstance(geom, RegionGeom):
-            # TODO: integrate spatial model over region to correct for
-            #  containment
+        if self.spatial_model:
             value = value * self.spatial_model.integrate_geom(geom).quantity
 
         if self.temporal_model:
@@ -324,6 +367,13 @@ class SkyModel(Model):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag[0]
+
+        if self.apply_irf != self._apply_irf_default:
+            data["apply_irf"] = self.apply_irf
+
+        if self.datasets_names is not None:
+            data["datasets_names"] = self.datasets_names
+
         data["spectral"] = self.spectral_model.to_dict(full_output)
 
         if self.spatial_model is not None:
@@ -331,12 +381,6 @@ class SkyModel(Model):
 
         if self.temporal_model is not None:
             data["temporal"] = self.temporal_model.to_dict(full_output)
-
-        if self.apply_irf != self._apply_irf_default:
-            data["apply_irf"] = self.apply_irf
-
-        if self.datasets_names is not None:
-            data["datasets_names"] = self.datasets_names
 
         return data
 
@@ -443,6 +487,39 @@ class SkyModel(Model):
             **kwargs,
         )
 
+    def freeze(self, model_type=None):
+        """Freeze parameters depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral", "temporal"}
+           freeze all parameters or only or only spatial/spectral/temporal. 
+           Default is None so all parameters are frozen.
+        """
+        if model_type is None:
+            self.parameters.freeze_all()
+        else:
+            model = getattr(self, f"{model_type}_model")
+            model.freeze()
+
+    def unfreeze(self, model_type=None):
+        """Restore parameters frozen status to default depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral", "temporal"}
+           restore frozen status to default for all parameters or only spatial/spectral/temporal
+           Default is None so all parameters are restore to defaut frozen status.
+
+        """
+        if model_type is None:
+            for model_type in ["spectral", "spatial", "temporal"]:
+                self.unfreeze(model_type)
+        else:
+            model = getattr(self, f"{model_type}_model")
+            if model:
+                model.unfreeze()
+
 
 class FoVBackgroundModel(Model):
     """Field of view background model
@@ -476,6 +553,10 @@ class FoVBackgroundModel(Model):
 
         self._spectral_model = spectral_model
         super().__init__()
+
+    def contributes(self, *args, **kwargs):
+        """FoV background models always contribute"""
+        return True
 
     @property
     def spectral_model(self):
@@ -519,6 +600,15 @@ class FoVBackgroundModel(Model):
         """Evaluate model"""
         return self.spectral_model(energy)
 
+    def copy(self, **kwargs):
+        """Copy SkyModel"""
+        kwargs.pop("name")
+        if "spectral_model" not in kwargs:
+            kwargs.setdefault("spectral_model", self.spectral_model.copy())
+        if "dataset_name" not in kwargs:
+            kwargs.setdefault("dataset_name", self.datasets_names[0])
+        return self.__class__(**kwargs)
+
     def to_dict(self, full_output=False):
         data = {}
         data["type"] = self.tag[0]
@@ -556,12 +646,18 @@ class FoVBackgroundModel(Model):
 
     def reset_to_default(self):
         """Reset parameter values to default"""
-        values = self.spectral_model.default_parameters.values
-        self.spectral_model.parameters.values = values
+        values = self.spectral_model.default_parameters.value
+        self.spectral_model.parameters.value = values
 
-    def copy(self, **kwargs):
-        """Copy SkyModel"""
-        return self.__class__(**kwargs)
+    def freeze(self, model_type="spectral"):
+        """Freeze model parameters"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.freeze()
+
+    def unfreeze(self, model_type="spectral"):
+        """Restore parameters frozen status to default"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.unfreeze()
 
 
 class BackgroundModel(Model):
@@ -600,6 +696,9 @@ class BackgroundModel(Model):
             spectral_model.tilt.frozen = True
 
         self.spectral_model = spectral_model
+
+        if isinstance(datasets_names, str):
+            datasets_names = [datasets_names]
 
         if isinstance(datasets_names, list):
             if len(datasets_names) != 1:
@@ -768,6 +867,16 @@ class BackgroundModel(Model):
     def evaluation_radius(self):
         """`~astropy.coordinates.Angle`"""
         return np.max(self.map.geom.width) / 2.0
+
+    def freeze(self, model_type="spectral"):
+        """Freeze model parameters"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.freeze()
+
+    def unfreeze(self, model_type="spectral"):
+        """Restore parameters frozen status to default"""
+        if model_type is None or model_type == "spectral":
+            self._spectral_model.unfreeze()
 
 
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):

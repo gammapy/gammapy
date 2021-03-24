@@ -15,7 +15,6 @@ help:
 	@echo '     test               Run pytest'
 	@echo '     test-cov           Run pytest with coverage'
 	@echo '     test-nb            Test tutorial notebooks'
-	@echo '     test-scripts       Test example scripts'
 	@echo ''
 	@echo '     docs-sphinx        Build docs (Sphinx only)'
 	@echo '     docs-all           Build docs (including Jupyter notebooks)'
@@ -31,7 +30,6 @@ help:
 	@echo '     pylint             Run pylint static code analysis'
 	@echo '     pydocstyle         Run docstring checks'
 	@echo '     dataset-index      Create download dataset index json file'
-	@echo '     dataset-download   Download the latest data to the $GAMMAPY_DATA folder'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
@@ -69,9 +67,10 @@ help:
 	@echo ''
 
 clean:
-	rm -rf build dist docs/_build docs/api temp/ docs/notebooks docs/_static/notebooks \
+	rm -rf build dist docs/_build docs/api temp/ docs/_static/notebooks \
 	  htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache .pytest_cache \
-	  tutorials/.ipynb_checkpoints docs/modeling/gallery
+	  docs/modeling/gallery
+	find . -name ".ipynb_checkpoints" -prune -exec rm -rf {} \;
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
@@ -89,9 +88,6 @@ test-cov:
 test-nb:
 	python -m gammapy.utils.notebooks_test
 
-test-scripts:
-	python -m gammapy.utils.scripts_test
-
 clean-nb:
 	python -m gammapy jupyter --src=docs --r black
 	python -m gammapy jupyter --src=docs --r strip
@@ -100,9 +96,10 @@ docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html
 
 docs-all:
-	python -m gammapy.utils.notebooks_process --src="$(src)" --nbs="$(nbs)" --fmt="$(fmt)"
+	python -m gammapy jupyter tar --out docs/_downloads/notebooks-dev.tar
+	python -m gammapy.utils.notebooks_process --src="$(src)"
 	cd docs && python -m sphinx . _build/html -b html
-	python -m gammapy.utils.notebooks_links --src="$(src)" --nbs="$(nbs)"
+	python -m gammapy.utils.notebooks_links --src="$(src)"
 
 docs-show:
 	open docs/_build/html/index.html
@@ -150,8 +147,5 @@ pydocstyle:
 
 dataset-index:
 	python dev/datasets/make_dataset_index.py dataset-index
-
-dataset-download:
-	gammapy download datasets --out=$(GAMMAPY_DATA) --tests
 
 # TODO: add test and code quality checks for `examples`

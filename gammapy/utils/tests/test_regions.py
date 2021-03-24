@@ -17,6 +17,7 @@ from gammapy.utils.regions import (
     SphericalCircleSkyRegion,
     make_pixel_region,
     make_region,
+    compound_region_center
 )
 
 
@@ -60,6 +61,21 @@ def test_make_pixel_region():
 
     with pytest.raises(TypeError):
         make_pixel_region(99)
+
+
+def test_compound_region_center():
+    region_1 = make_region("galactic;circle(1,1,0.1)")
+    region_2 = make_region("galactic;circle(-1,1,0.1)")
+    region_3 = make_region("galactic;circle(1,-1,0.1)")
+    region_4 = make_region("galactic;circle(-1,-1,0.1)")
+
+    for region in [region_2, region_3, region_4]:
+        region_1 = region_1.union(region)
+
+    center = compound_region_center(region_1)
+
+    assert_allclose(center.galactic.l.wrap_at("180d"), 0 * u.deg, atol=1e-6)
+    assert_allclose(center.galactic.b, 0 * u.deg, atol=1e-6)
 
 
 class TestSphericalCircleSkyRegion:

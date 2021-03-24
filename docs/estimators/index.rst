@@ -20,7 +20,7 @@ The core of any estimator algorithm is hypothesis testing: a reference
 model or counts excess is tested against a null hypothesis. From the
 best fit reference model a flux is derived and a corresponding :math:`\sqrt{\Delta TS}`
 value from the difference in fit statistics to the null hypothesis,
-assuming one degree of freedom (:ref:`Estimating Delta TS`). In this case
+assuming one degree of freedom. In this case
 :math:`\sqrt{\Delta TS}` represents an approximation of the
 "classical significance".
 
@@ -93,14 +93,23 @@ More information can be found on the `likelihood SED type page`_.
 
 Getting Started
 ===============
-An `Estimator` takes a reduced dataset and model definition as input.
-
 
 .. toctree::
     :maxdepth: 1
 
     detect
-    lightcurve
+
+Tutorials
+=========
+
+The main tutorial that demonstrates how to extract light curves from 1D and 3D datasets:
+
+* `Light Curve tutorial <../tutorials/light_curve.html>`__
+
+Light curve extraction on small time bins (i.e. smaller than the observation scale) for flares
+is demonstrated in the following tutorial:
+
+* `Flare tutorial <../tutorials/light_curve_flare.html>`__
 
 
 Reference/API

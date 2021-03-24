@@ -34,7 +34,10 @@ def trapz_loglog(y, x, axis=-1):
 
     # log scale has the build-in zero clipping
     log = LogScale()
-    index = -log(vals_energy_min / vals_energy_max) / log(energy_min / energy_max)
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        index = -log(vals_energy_min / vals_energy_max) / log(energy_min / energy_max)
+
     index[np.isnan(index)] = np.inf
 
     return pl.evaluate_integral(

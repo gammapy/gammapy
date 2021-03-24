@@ -458,6 +458,7 @@ class HpxGeom(Geom):
     """
 
     is_hpx = True
+    is_region = False
 
     def __init__(
         self, nside, nest=True, frame="icrs", region=None, axes=None, sparse=False
@@ -931,7 +932,7 @@ class HpxGeom(Geom):
 
         return idx_nb
 
-    def pad(self, pad_width):
+    def _pad_spatial(self, pad_width):
         if self.is_allsky:
             raise ValueError("Cannot pad an all-sky map.")
 

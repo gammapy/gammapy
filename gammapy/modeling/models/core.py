@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import collections.abc
 import copy
 from os.path import split
@@ -8,6 +9,9 @@ from astropy.table import Table
 import yaml
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.maps import RegionGeom
+
+log = logging.getLogger(__name__)
 
 
 def _set_link(shared_register, model):
@@ -29,6 +33,8 @@ __all__ = ["Model", "Models", "DatasetModels"]
 class Model:
     """Model base class."""
 
+    _type = None
+
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
@@ -42,8 +48,11 @@ class Model:
                 par = value
 
             setattr(self, par.name, par)
-
         self._covariance = Covariance(self.parameters)
+
+    @property
+    def type(self):
+        return self._type
 
     def __init_subclass__(cls, **kwargs):
         # Add parameters list on the model sub-class (not instances)
@@ -133,9 +142,17 @@ class Model:
 
         par_data = []
 
-        for par, par_yaml in zip(cls.default_parameters, data["parameters"]):
+        input_names = [_["name"] for _ in data["parameters"]]
+
+        for par in cls.default_parameters:
             par_dict = par.to_dict()
-            par_dict.update(par_yaml)
+            try:
+                index = input_names.index(par_dict["name"])
+                par_dict.update(data["parameters"][index])
+            except ValueError:
+                log.warning(
+                    f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}"
+                )
             par_data.append(par_dict)
 
         parameters = Parameters.from_dict(par_data)
@@ -155,7 +172,7 @@ class Model:
         >>> from gammapy.modeling.models import Model
         >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
         >>> type(spectral_model)
-        gammapy.modeling.models.spectral.PowerLaw2SpectralModel
+        <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
         from . import (
             MODEL_REGISTRY,
@@ -180,6 +197,57 @@ class Model:
         if len(self.parameters) > 0:
             string += f"\n{self.parameters.to_table()}"
         return string
+
+    @property
+    def frozen(self):
+        """Frozen status of a model, True if all parameters are frozen """
+        return np.all([p.frozen for p in self.parameters])
+
+    def freeze(self):
+        """Freeze all parameters"""
+        self.parameters.freeze_all()
+
+    def unfreeze(self):
+        """Restore parameters frozen status to default"""
+        for p, default in zip(self.parameters, self.default_parameters):
+            p.frozen = default.frozen
+
+    def reassign(self, datasets_names, new_datasets_names):
+        """Reassign a model from one dataset to another
+        
+        Parameters
+        ----------
+        datasets_names : str or list
+            Name of the datasets where the model is currently defined
+        new_datasets_names : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
+
+        Returns
+        -------
+        model : `Model`
+            Reassigned model.
+
+        """
+        model = self.copy(name=self.name)
+
+        if not isinstance(datasets_names, list):
+            datasets_names = [datasets_names]
+
+        if not isinstance(new_datasets_names, list):
+            new_datasets_names = [new_datasets_names]
+
+        if isinstance(model.datasets_names, str):
+            model.datasets_names = [model.datasets_names]
+
+        if getattr(model, "datasets_names", None):
+            for name, name_new in zip(datasets_names, new_datasets_names):
+                model.datasets_names = [
+                    _.replace(name, name_new) for _ in model.datasets_names
+                ]
+
+        return model
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -372,6 +440,21 @@ class DatasetModels(collections.abc.Sequence):
         else:
             return {"components": models_data}
 
+    def to_parameters_table(self):
+        """Convert Models parameters to an astropy Table."""
+        table = self.parameters.to_table()
+        # Warning: splitting of parameters will break is source name has a "." in its name.
+        model_name = [name.split(".")[0] for name in self.parameters_unique_names]
+        table.add_column(model_name, name="model", index=0)
+        self._table_cached = table
+        return table
+
+    def update_parameters_from_table(self, t):
+        """Update Models from an astropy Table."""
+        parameters_dict = [dict(zip(t.colnames, row)) for row in t]
+        for k, data in enumerate(parameters_dict):
+            self.parameters[k].update_from_dict(data)
+
     def read_covariance(self, path, filename="_covariance.dat", **kwargs):
         """Read covariance data from file
 
@@ -433,7 +516,10 @@ class DatasetModels(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {other!r}")
 
     def __getitem__(self, key):
-        return self._models[self.index(key)]
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return self.__class__(list(np.array(self._models)[key]))
+        else:
+            return self._models[self.index(key)]
 
     def index(self, key):
         if isinstance(key, (int, slice)):
@@ -455,42 +541,254 @@ class DatasetModels(collections.abc.Sequence):
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def select(self, dataset_name=None, tag=None, name_substring=None):
-        """Select subset of models correspondiog to a given dataset
+    def select(
+        self,
+        name_substring=None,
+        datasets_names=None,
+        tag=None,
+        model_type=None,
+        frozen=None,
+    ):
+        """Select models that meet all specified conditions
 
         Parameters
         ----------
-        dataset_name : str
-            Name of the dataset
-        tag : str
-            Model tag
+
         name_substring : str
             Substring contained in the model name
+        datasets_names : str or list
+            Name of the dataset
+        tag : str or list
+            Model tag
+        model_type : {None, spatial, spectral}
+           Type of model, used together with "tag", if the tag is not unique.
+        frozen : bool
+            Select models with all parameters frozen if True, exclude them if False.
 
         Returns
         -------
-        dataset_model : `DatasetModels`
-            Dataset models
+        models : `DatasetModels`
+            Selected models
         """
-        models = []
+        mask = self.selection_mask(
+            name_substring, datasets_names, tag, model_type, frozen
+        )
+        return self[mask]
 
-        for model in self:
-            selection = True
+    def selection_mask(
+        self,
+        name_substring=None,
+        datasets_names=None,
+        tag=None,
+        model_type=None,
+        frozen=None,
+    ):
+        """Create a mask of models, that meet all specified conditions
 
-            if dataset_name:
-                selection &= (
-                    model.datasets_names is None or dataset_name in model.datasets_names
+        Parameters
+        ----------
+        name_substring : str
+            Substring contained in the model name
+        datasets_names : str or list of str
+            Name of the dataset
+        tag : str or list of str
+            Model tag
+        model_type : {None, spatial, spectral}
+           Type of model, used together with "tag", if the tag is not unique.
+        frozen : bool
+            Select models with all parameters frozen if True, exclude them if False.
+ 
+        Returns
+        -------
+        mask : `numpy.array`
+            Boolean mask, True for selected models 
+        """
+        selection = np.ones(len(self), dtype=bool)
+
+        if tag and not isinstance(tag, list):
+            tag = [tag]
+
+        if datasets_names and not isinstance(datasets_names, list):
+            datasets_names = [datasets_names]
+
+        for idx, model in enumerate(self):
+            if name_substring:
+                selection[idx] &= name_substring in model.name
+
+            if datasets_names:
+                selection[idx] &= model.datasets_names is None or np.any(
+                    [name in model.datasets_names for name in datasets_names]
                 )
 
             if tag:
-                selection &= tag in model.tag
+                if model_type is None:
+                    sub_model = model
+                else:
+                    sub_model = getattr(model, f"{model_type}_model", None)
 
-            if name_substring:
-                selection &= name_substring in model.name
+                if sub_model:
+                    selection[idx] &= np.any([t in sub_model.tag for t in tag])
+                else:
+                    selection[idx] &= False
 
-            if selection:
+            if frozen is not None:
+                if frozen:
+                    selection[idx] &= model.frozen
+                else:
+                    selection[idx] &= ~model.frozen
+
+        return np.array(selection, dtype=bool)
+
+    def select_mask(self, mask, margin="0 deg", use_evaluation_region=True):
+        """Check if sky models contribute within a mask map.
+    
+        Parameters
+        ----------
+        mask : `~gammapy.maps.WcsNDMap` of boolean type
+            Map containing a boolean mask
+        margin : `~astropy.unit.Quantity`
+            Add a margin in degree to the source evaluation radius.
+            Used to take into account PSF width.
+        use_evaluation_region : bool
+            Account for the extension of the model or not. The default is True.   
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models contributing inside the region where mask==True
+        """
+        models = []
+
+        if not mask.geom.is_image:
+            mask = mask.reduce_over_axes(func=np.logical_or)
+
+        for model in self.select(tag="sky-model"):
+            if use_evaluation_region:
+                contributes = model.contributes(mask=mask, margin=margin)
+            else:
+                contributes = mask.get_by_coord(model.position, fill_value=0)
+
+            if np.any(contributes):
                 models.append(model)
 
+        return self.__class__(models=models)
+
+    def select_region(self, regions, wcs=None):
+        """Select sky models with center position contained within a given region
+
+        Parameters
+        ----------
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
+        wcs : `~astropy.wcs.WCS`
+            World coordinate system transformation
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models 
+        """
+        geom = RegionGeom.from_regions(regions, wcs=wcs)
+
+        models = []
+
+        for model in self.select(tag="sky-model"):
+            if geom.contains(model.position):
+                models.append(model)
+
+        return self.__class__(models=models)
+
+    def restore_status(self, restore_values=True):
+        """Context manager to restore status.
+
+        A copy of the values is made on enter,
+        and those values are restored on exit.
+
+        Parameters
+        ----------
+        restore_values : bool
+            Restore values if True,
+            otherwise restore only frozen status and covariance matrix.
+
+        """
+        return restore_models_status(self, restore_values)
+
+    def set_parameters_bounds(
+        self, tag, model_type, parameters_names, min=None, max=None, value=None
+    ):
+        """Set bounds for the selected models types and parameters names
+    
+        Parameters
+        ----------
+        tag : str or list
+            tag of the models
+        model_type : {"spatial", "spectral"}
+            type of models
+        parameters_names : str or list
+            parameters names
+        min : float
+            min value
+        max : float
+            max value
+        value : float
+            init value
+        """
+
+        models = self.select(tag=tag, model_type=model_type)
+        parameters = models.parameters.select(name=parameters_names, type=model_type)
+        n = len(parameters)
+
+        if min is not None:
+            parameters.min = np.ones(n) * min
+        if max is not None:
+            parameters.max = np.ones(n) * max
+        if value is not None:
+            parameters.value = np.ones(n) * value
+
+    def freeze(self, model_type=None):
+        """Freeze parameters depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           freeze all parameters or only spatial or only spectral 
+        """
+
+        for m in self:
+            m.freeze(model_type)
+
+    def unfreeze(self, model_type=None):
+        """Restore parameters frozen status to default depending on model type
+        
+        Parameters
+        ----------
+        model_type : {None, "spatial", "spectral"}
+           restore frozen status to default for all parameters or only spatial or only spectral
+        """
+
+        for m in self:
+            m.unfreeze(model_type)
+
+    @property
+    def frozen(self):
+        """Boolean mask, True if all parameters of a given model are frozen"""
+        return np.all([m.frozen for m in self])
+
+    def reassign(self, dataset_name, new_dataset_name):
+        """Reassign a model from one dataset to another
+    
+        Parameters
+        ----------
+        dataset_name : str or list
+            Name of the datasets where the model is currently defined
+        new_dataset_name : str or list
+            Name of the datasets where the model should be defined instead.
+            If multiple names are given the two list must have the save lenght,
+            as the reassignment is element-wise.
+        """
+        models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
 
 
@@ -519,3 +817,22 @@ class Models(DatasetModels, collections.abc.MutableSequence):
             raise (ValueError("Model names must be unique"))
 
         self._models.insert(idx, model)
+
+
+class restore_models_status:
+    def __init__(self, models, restore_values=True):
+        self.restore_values = restore_values
+        self.models = models
+        self.values = [_.value for _ in models.parameters]
+        self.frozen = [_.frozen for _ in models.parameters]
+        self.covariance_data = models.covariance.data
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        for value, par, frozen in zip(self.values, self.models.parameters, self.frozen):
+            if self.restore_values:
+                par.value = value
+            par.frozen = frozen
+        self.models.covariance = self.covariance_data

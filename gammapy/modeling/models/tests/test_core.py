@@ -2,8 +2,8 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import Model, Parameter, Parameters
-
+from gammapy.modeling.models import Model, Models, Parameter, Parameters
+from gammapy.utils.testing import requires_data
 
 class MyModel(Model):
     """Simple model example"""
@@ -149,7 +149,7 @@ def test_compound_model():
     m = CoModel(m1, m2)
     assert len(m.parameters) == 5
     assert m.parameters.names == ["norm", "x", "y", "x", "y"]
-    assert_allclose(m.parameters.values, [42, 1, 2, 10, 20])
+    assert_allclose(m.parameters.value, [42, 1, 2, 10, 20])
 
 
 def test_parameter_link_init():
@@ -170,3 +170,26 @@ def test_parameter_link():
 
     m1.y.value = 100
     assert_allclose(m2.y.value, 100)
+
+@requires_data()
+def test_set_parameters_from_table():
+    #read gammapy models
+    models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
+
+    tab=models.to_parameters_table()
+    tab['value'][0]=3.0
+    tab['min'][0]=-10
+    tab['max'][0]=10
+    tab['frozen'][0]=True
+    tab['name'][0]='index2'
+    tab['frozen'][1]=True
+
+    models.update_parameters_from_table(tab)
+
+    d=models.parameters.to_dict()
+    assert d[0]['value'] == 3.0
+    assert d[0]['min'] == -10
+    assert d[0]['max'] == 10
+    assert d[0]['frozen'] == True
+    assert d[0]['name'] == 'index'
+    assert d[1]['frozen'] == True    

@@ -86,6 +86,22 @@ def shape_divisible_by(shape, factor):
     return tuple(new_shape)
 
 
+def round_up_to_odd(f):
+    """Round float to odd integer
+
+    Parameters
+    ----------
+    f : float
+        Float value
+
+    Returns
+    -------
+    int : int
+        Odd integer
+    """
+    return (np.ceil(f) // 2 * 2 + 1).astype(int)
+
+
 def symmetric_crop_pad_width(shape, new_shape):
     """
     Compute symmetric crop or pad width.

@@ -28,6 +28,13 @@ def test_parameter_init():
         Parameter(1, 2)
 
 
+def test_parameter_outside_limit(caplog):
+    par = Parameter("spam", 50, min=0, max=40)
+    par.check_limits()
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
+
+
 def test_parameter_scale():
     # Basic check how scale is used for value, min, max
     par = Parameter("spam", 42, "deg", 10, 400, 500)
@@ -152,7 +159,7 @@ def test_parameters_to_table(pars):
     pars["ham"].error = 1e-10
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 7
+    assert len(table.columns) == 8
 
 
 def test_parameters_set_parameter_factors(pars):
@@ -172,7 +179,7 @@ def test_parameters_autoscale():
 def test_update_from_dict():
     par = Parameter("test", value=1e-10, min="nan", max="nan", frozen=False, unit="TeV")
     par.autoscale()
-    data={"name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
+    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
     par.update_from_dict(data)
     assert par.name == "test"
     assert par.factor == 3
@@ -180,4 +187,7 @@ def test_update_from_dict():
     assert par.unit == "GeV"
     assert par.min == 0
     assert par.max is np.nan    
+    assert par.frozen == True
+    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":'True', "unit":"GeV"}
+    par.update_from_dict(data)
     assert par.frozen == True

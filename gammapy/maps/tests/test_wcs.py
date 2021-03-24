@@ -5,8 +5,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
+from regions import CircleSkyRegion
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.maps.wcs import _check_width
+from gammapy.maps.wcs import _check_width, _check_binsz
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
@@ -350,20 +351,18 @@ def test_geom_refpix():
 
 
 def test_region_mask():
-    from regions import CircleSkyRegion
-
     geom = WcsGeom.create(npix=(3, 3), binsz=2, proj="CAR")
 
     r1 = CircleSkyRegion(SkyCoord(0, 0, unit="deg"), 1 * u.deg)
     r2 = CircleSkyRegion(SkyCoord(20, 20, unit="deg"), 1 * u.deg)
     regions = [r1, r2]
 
-    mask = geom.region_mask(regions)  # default inside=True
-    assert mask.dtype == bool
-    assert np.sum(mask) == 1
+    mask = geom.region_mask(regions)
+    assert mask.data.dtype == bool
+    assert np.sum(mask.data) == 1
 
     mask = geom.region_mask(regions, inside=False)
-    assert np.sum(mask) == 8
+    assert np.sum(mask.data) == 8
 
 
 def test_energy_mask():
@@ -372,20 +371,34 @@ def test_energy_mask():
     )
     geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
 
-    mask = geom.energy_mask(energy_min=3 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV).data
     assert not mask[0, 0, 0]
     assert mask[1, 0, 0]
     assert mask[2, 0, 0]
 
-    mask = geom.energy_mask(energy_max=30 * u.TeV)
+    mask = geom.energy_mask(energy_max=30 * u.TeV).data
     assert mask[0, 0, 0]
     assert not mask[1, 0, 0]
     assert not mask[2, 0, 0]
 
-    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV)
+    mask = geom.energy_mask(energy_min=3 * u.TeV, energy_max=40 * u.TeV).data
     assert not mask[0, 0, 0]
     assert not mask[2, 0, 0]
     assert mask[1, 0, 0]
+
+
+def test_boundary_mask():
+    axis = MapAxis.from_edges([1, 10, 100])
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        binsz=0.02,
+        width=(2, 2),
+        axes=[axis],
+    )
+
+    mask = geom.boundary_mask(width=(0.3 * u.deg, 0.1 * u.deg))
+    assert np.sum(mask.data[0, :, :]) == 6300
+    assert np.sum(mask.data[1, :, :]) == 6300
 
 
 @pytest.mark.parametrize(
@@ -412,6 +425,26 @@ def test_check_width(width, out):
 
     geom = WcsGeom.create(width=width, binsz=1.0)
     assert tuple(geom.npix) == out
+
+def test_check_binsz():
+    # float
+    binsz = _check_binsz(0.1)
+    assert isinstance(binsz, float)
+    # string and other units
+    binsz = _check_binsz("0.1deg")
+    assert isinstance(binsz, float)
+    binsz = _check_binsz("3.141592653589793 rad")
+    assert_allclose(binsz, 180)
+    # tuple
+    binsz = _check_binsz(("0.1deg", "0.2deg"))
+    assert isinstance(binsz, tuple)
+    assert isinstance(binsz[0], float)
+    assert isinstance(binsz[1], float)
+    # list
+    binsz = _check_binsz(["0.1deg", "0.2deg"])
+    assert isinstance(binsz, list)
+    assert isinstance(binsz[0], float)
+    assert isinstance(binsz[1], float)
 
 
 def test_check_width_bad_input():
@@ -471,6 +504,14 @@ def test_irregular_geom_equality():
 
     with pytest.raises(NotImplementedError):
         geom0 == geom1
+
+
+def test_wcs_geom_pad():
+    axis = MapAxis.from_bounds(0, 1, nbin=1, name="axis", unit="")
+    geom = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.1, axes=[axis])
+
+    geom_pad = geom.pad(axis_name="axis", pad_width=1)
+    assert_allclose(geom_pad.axes["axis"].edges, [-1, 0, 1, 2])
 
 
 @pytest.mark.parametrize("node_type", ["edges", "center"])

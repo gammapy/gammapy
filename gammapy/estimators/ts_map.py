@@ -12,20 +12,16 @@ from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
-from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.utils.array import shape_2N, symmetric_crop_pad_width, round_up_to_odd
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
 __all__ = ["TSMapEstimator"]
 
 log = logging.getLogger(__name__)
-
-
-def round_up_to_odd(f):
-    return int(np.ceil(f) // 2 * 2 + 1)
 
 
 def _extract_array(array, shape, position):
@@ -129,7 +125,7 @@ class TSMapEstimator(Estimator):
         n_sigma_ul=2,
         threshold=None,
         rtol=0.01,
-        selection_optional="all",
+        selection_optional=None,
         energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
@@ -192,33 +188,30 @@ class TSMapEstimator(Estimator):
 
         """
         # TODO: further simplify the code below
-        geom = dataset.counts.geom
+        geom = dataset.exposure.geom
 
         model = self.model.copy()
         model.spatial_model.position = geom.center_skydir
 
-        binsz = np.mean(geom.pixel_scales)
-        width_pix = self.kernel_width / binsz
-
-        npix = round_up_to_odd(width_pix.to_value(""))
-
-        axis = dataset.exposure.geom.axes["energy_true"]
-
-        geom_kernel = WcsGeom.create(
-            skydir=model.position, proj="TAN", npix=npix, axes=[axis], binsz=binsz
-        )
+        geom_kernel = geom.to_odd_npix(max_radius=self.kernel_width / 2)
 
         exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
         exposure.data += 1.0
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model, evaluation_mode="global")
-        evaluator.update(exposure, dataset.psf, dataset.edisp, dataset.counts.geom)
+        evaluator.update(
+            exposure,
+            dataset.psf,
+            dataset.edisp,
+            dataset.counts.geom,
+            dataset.mask_fit,
+        )
 
         kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()
 
-        if (self.kernel_width + binsz >= geom.width).any():
+        if (self.kernel_width >= geom.width).any():
             raise ValueError(
                 "Kernel shape larger than map shape, please adjust"
                 " size of the kernel"
@@ -244,7 +237,8 @@ class TSMapEstimator(Estimator):
             exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
         kernel = kernel / np.sum(kernel ** 2)
-        flux = (dataset.counts - dataset.npred()) / exposure
+        with np.errstate(invalid="ignore", divide="ignore"):
+            flux = (dataset.counts - dataset.npred()) / exposure
         flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
         return flux.sum_over_axes()

@@ -4,6 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalog2HWC
+from gammapy.catalog.hawc import SourceCatalog3HWC
 from gammapy.modeling.models import (
     DiskSpatialModel,
     PointSpatialModel,
@@ -104,3 +105,31 @@ class TestSourceCatalogObject2HWC:
         assert_allclose(pos_err.width.value, 2 * 0.057 * scale_r95, rtol=1e-4)
         assert_allclose(model.position.l.value, pos_err.center.l.value)
         assert_allclose(model.position.b.value, pos_err.center.b.value)
+
+
+@pytest.fixture(scope="session")
+def ca_3hwc():
+    return SourceCatalog3HWC()
+
+
+@requires_data()
+class TestSourceCatalog3HWC:
+    @staticmethod
+    def test_source_table(ca_3hwc):
+        assert ca_3hwc.tag == "3hwc"
+        assert len(ca_3hwc.table) == 65
+
+    @staticmethod
+    def test_positions(ca_3hwc):
+        assert len(ca_3hwc.positions) == 65
+
+
+@requires_data()
+class TestSourceCatalogObject3HWC:
+    @staticmethod
+    def test_data(ca_3hwc):
+        assert ca_3hwc[0].data["source_name"] == "3HWC J0534+220"
+        assert ca_3hwc[0].n_models == 1
+
+        assert ca_3hwc[1].data["source_name"] == "3HWC J0540+228"
+        assert ca_3hwc[1].n_models == 1

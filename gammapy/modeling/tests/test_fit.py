@@ -24,7 +24,7 @@ class MyDataset(Dataset):
     tag = "MyDataset"
 
     def __init__(self, name="test"):
-        self.name = name
+        self._name = name
         self._models = Models([MyModel(x=1.99, y=2.99e3, z=3.99e-2)])
         self.data_shape = (1,)
         self.meta_table = Table()
@@ -51,6 +51,16 @@ class MyDataset(Dataset):
 
     def stat_array(self):
         """Statistic array, one value per data point."""
+
+
+@requires_dependency("sherpa")
+@pytest.mark.parametrize("backend", ["sherpa", "scipy"])
+def test_warning_no_covariance(backend, caplog):
+   dataset = MyDataset()
+   fit = Fit([dataset])
+   result = fit.run(backend=backend)
+   assert caplog.records[-1].levelname == "WARNING"
+   assert caplog.records[-1].message == "No covariance estimate - not supported by this backend."
 
 
 @pytest.mark.parametrize("backend", ["minuit"])

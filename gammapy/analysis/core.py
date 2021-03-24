@@ -16,7 +16,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
@@ -33,8 +33,6 @@ class Analysis:
     an internal high-level interface model, though the user can also provide configuration
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
-
-    For more info see  :ref:`analysis`.
 
     Parameters
     ----------
@@ -133,7 +131,7 @@ class Analysis:
     def set_models(self, models):
         """Set models on datasets.
 
-        Adds `FoVVackgroundModel` if not present already
+        Adds `FoVBackgroundModel` if not present already
 
         Parameters
         ----------
@@ -153,12 +151,12 @@ class Analysis:
 
         self.models.extend(self.datasets.models)
 
-        for dataset in self.datasets:
+        if self.config.datasets.type == "3d":
+            for dataset in self.datasets:
+                if dataset.background_model is None:
+                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
 
-            if dataset.background_model is None:
-                bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
-
-            self.models.append(bkg_model)
+                self.models.append(bkg_model)
 
         self.datasets.models = self.models
 
@@ -181,8 +179,7 @@ class Analysis:
                 energy_min = fit_settings.fit_range.min
                 energy_max = fit_settings.fit_range.max
                 geom = dataset.counts.geom
-                data = geom.energy_mask(energy_min, energy_max)
-                dataset.mask_fit = Map.from_geom(geom=geom, data=data)
+                dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
         log.info("Fitting datasets.")
         self.fit = Fit(self.datasets)
@@ -359,9 +356,8 @@ class Analysis:
             datasets_settings.geom.axes.energy_true, name="energy_true"
         )
 
-        reference = SpectrumDataset.create(
-            e_reco=e_reco, e_true=e_true, region=on_region
-        )
+        geom = RegionGeom.create(region=on_region, axes=[e_reco])
+        reference = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
         datasets = []
         for obs in self.observations:

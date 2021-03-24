@@ -2,8 +2,8 @@
 
 .. _getting-started:
 
-Getting Started
-===============
+Quickstart guide
+================
 
 The best way to learn about Gammapy is to read and play with the examples in the
 Gammapy :ref:`tutorials`.
@@ -61,6 +61,13 @@ lists the common commands to install packages and work with environments.
 
 Use Gammapy
 -----------
+To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
+matplotlib for plotting. Many standard gamma-ray analyses can be done with few
+lines of configuration and code, so you can get pretty far by copy and pasting
+and adapting the working examples from the Gammapy documentation. But
+eventually, if you want to script more complex analyses, or inspect analysis
+results or intermediate analysis products, you need to acquire a basic to
+intermediate Python skill level.
 
 Python
 ++++++
@@ -75,7 +82,8 @@ Gammapy is a Python package, so you can of course import and use it from Python:
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from gammapy.stats import CashCountsStatistic
     >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
-    array([2.39791813])
+    2.397918129147546
+
 
 IPython
 +++++++
@@ -107,25 +115,41 @@ Of course, you can also use the Gammapy online docs if you prefer, clicking in l
 As an example, here's how you can create `gammapy.data.DataStore` and
 `gammapy.data.EventList` objects and start exploring H.E.S.S. data:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
-    >>> events = data_store.obs(obs_id=23523).events
-    >>> print(events)
-    EventList info:
-    - Number of events: 7613
-    - Median energy: 0.953 TeV
-    - OBS_ID = 23523
-    >>> events.energy.mean()
-    <Quantity 4.418008 TeV>
+    from gammapy.data import DataStore
+    data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
+    events = data_store.obs(obs_id=23523).events
+    print(events)
+
+.. testoutput::
+
+    EventList
+    ---------
+    <BLANKLINE>
+      Instrument       : H.E.S.S. Phase I
+      Telescope        : HESS
+      Obs. ID          : 23523
+    <BLANKLINE>
+      Number of events : 7613
+      Event rate       : 4.513 1 / s
+    <BLANKLINE>
+      Time start       : 53343.92234009259
+      Time stop        : 53343.94186555556
+    <BLANKLINE>
+      Min. energy      : 2.44e-01 TeV
+      Max. energy      : 1.01e+02 TeV
+      Median energy    : 9.53e-01 TeV
+    <BLANKLINE>
+      Max. offset      : 58.0 deg
 
 Try to make your first plot using the `gammapy.data.EventList.peek` helper method:
 
-.. code-block:: python
+.. testcode::
 
-    >>> events.peek()
-    >>> plt.savefig("events.png")
+    import matplotlib.pyplot as plt
+    events.peek()
+    plt.savefig("events.png")
 
 Python script
 +++++++++++++
@@ -133,13 +157,17 @@ Python script
 Another common way to use Gammapy is to write a Python script.
 Try it and put the following code into a file called ``example.py``:
 
-.. code-block:: python
+.. testcode::
 
     """Example Python script using Gammapy"""
     from gammapy.data import DataStore
     data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
     events = data_store.obs(obs_id=23523).events
     print(events.energy.mean())
+
+.. testoutput::
+
+    4.418007850646973 TeV
 
 You can run it with Python:
 

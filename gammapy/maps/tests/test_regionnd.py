@@ -2,6 +2,8 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from regions import CircleSkyRegion
+from astropy import units as u
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap
@@ -150,10 +152,10 @@ def test_region_nd_map_fill_events(region_map):
 
 
 def test_apply_edisp(region_map_true):
-    e_true = region_map_true.geom.axes[0].edges
-    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3).edges
+    e_true = region_map_true.geom.axes[0]
+    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 
-    edisp = EDispKernel.from_diagonal_response(energy_true=e_true, energy=e_reco)
+    edisp = EDispKernel.from_diagonal_response(energy_axis_true=e_true, energy_axis=e_reco)
 
     m = region_map_true.apply_edisp(edisp)
     assert m.geom.data_shape == (3, 1, 1)
@@ -184,3 +186,90 @@ def test_regionndmap_resample_axis():
     m3 = m.resample_axis(axis=new_axis)
     assert m3.data.shape == (3, 1, 1, 1)
     assert_allclose(m3.data, 2)
+
+
+def test_region_nd_io_ogip(tmpdir):
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 12, unit="TeV")
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis], binsz_wcs="0.01deg")
+    m.write(tmpdir / "test.fits", format="ogip")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="ogip")
+
+    assert isinstance(m_new.geom.region, CircleSkyRegion)
+
+    geom = m_new.geom.to_wcs_geom()
+    assert geom.data_shape == (12, 102, 102)
+
+    with pytest.raises(ValueError):
+        m.write(tmpdir / "test.fits", format="ogip-arf")
+
+
+def test_region_nd_io_ogip_arf(tmpdir):
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 12, unit="TeV", name="energy_true")
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+    m.write(tmpdir / "test.fits", format="ogip-arf")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="ogip-arf")
+
+    assert m_new.geom.region is None
+
+    with pytest.raises(ValueError):
+        m.write(tmpdir / "test.fits", format="ogip")
+
+
+def test_region_nd_io_gadf(tmpdir):
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+    m.write(tmpdir / "test.fits", format="gadf")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="gadf")
+
+    assert isinstance(m_new.geom.region, CircleSkyRegion)
+    assert m_new.geom.axes[0].name == "energy"
+    assert m_new.data.shape == (2, 1, 1)
+    assert_allclose(m_new.geom.axes["energy"].edges, [1, 3, 10] * u.TeV)
+
+
+def test_region_nd_io_gadf_no_region(tmpdir):
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    m = RegionNDMap.create(region=None, axes=[energy_axis])
+    m.write(tmpdir / "test.fits", format="gadf", hdu="TEST")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="gadf", hdu="TEST")
+
+    assert m_new.geom.region is None
+    assert m_new.geom.axes[0].name == "energy"
+    assert m_new.data.shape == (2, 1, 1)
+    assert_allclose(m_new.geom.axes["energy"].edges, [1, 3, 10] * u.TeV)
+
+
+def test_region_nd_io_gadf_rad_axis(tmpdir):
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    rad_axis = MapAxis.from_nodes([0, 0.1, 0.2] * u.deg, name="rad")
+    m = RegionNDMap.create(
+        "icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis, rad_axis], unit="sr-1"
+    )
+    m.data = np.arange(np.prod(m.data.shape)).reshape(m.data.shape)
+
+    m.write(tmpdir / "test.fits", format="gadf")
+
+    m_new = RegionNDMap.read(tmpdir / "test.fits", format="gadf")
+
+    assert isinstance(m_new.geom.region, CircleSkyRegion)
+    assert m_new.geom.axes.names == ["energy", "rad"]
+    assert m_new.unit == "sr-1"
+
+    # check that the data is not re-shuffled
+    assert_allclose(m_new.data, m.data)
+    assert m_new.data.shape == (3, 2, 1, 1)
+
+
+def test_region_nd_hdulist():
+    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
+    m = RegionNDMap.create(region="icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
+
+    hdulist = m.to_hdulist()
+    assert hdulist[0].name == "PRIMARY"
+    assert hdulist[1].name == "SKYMAP"
+    assert hdulist[2].name == "SKYMAP_BANDS"
+    assert hdulist[3].name == "SKYMAP_REGION"

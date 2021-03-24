@@ -70,7 +70,7 @@ class MapDatasetMaker(Maker):
         return counts
 
     @staticmethod
-    def make_exposure(geom, observation):
+    def make_exposure(geom, observation, use_region_center=True):
         """Make exposure map.
 
         Parameters
@@ -92,10 +92,11 @@ class MapDatasetMaker(Maker):
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
+            use_region_center=use_region_center,
         )
 
     @staticmethod
-    def make_exposure_irf(geom, observation):
+    def make_exposure_irf(geom, observation, use_region_center=True):
         """Make exposure map with irf geometry.
 
         Parameters
@@ -115,6 +116,7 @@ class MapDatasetMaker(Maker):
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
+            use_region_center=use_region_center,
         )
 
     def make_background(self, geom, observation):
@@ -146,12 +148,15 @@ class MapDatasetMaker(Maker):
                 "Options: ALTAZ, RADEC"
             )
 
+        use_region_center = getattr(self, "use_region_center", True)
+
         return make_map_background_irf(
             pointing=pointing,
             ontime=observation.observation_time_duration,
             bkg=observation.bkg,
             geom=geom,
             oversampling=self.background_oversampling,
+            use_region_center=use_region_center,
         )
 
     def make_edisp(self, geom, observation):
@@ -171,11 +176,14 @@ class MapDatasetMaker(Maker):
         """
         exposure = self.make_exposure_irf(geom.squash(axis_name="migra"), observation)
 
+        use_region_center = getattr(self, "use_region_center", True)
+
         return make_edisp_map(
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
+            use_region_center=use_region_center,
         )
 
     def make_edisp_kernel(self, geom, observation):
@@ -197,13 +205,18 @@ class MapDatasetMaker(Maker):
             exposure = None
             interp_map = observation.edisp.edisp_map.interp_to_geom(geom)
             return EDispKernelMap(edisp_kernel_map=interp_map, exposure_map=exposure)
+
         exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
+
+        use_region_center = getattr(self, "use_region_center", True)
 
         return make_edisp_kernel_map(
             edisp=observation.edisp,
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
+            use_region_center=use_region_center,
+
         )
 
     def make_psf(self, geom, observation):
@@ -222,12 +235,9 @@ class MapDatasetMaker(Maker):
             Psf map.
         """
         psf = observation.psf
+
         if isinstance(psf, PSFMap):
             return PSFMap(psf.psf_map.interp_to_geom(geom))
-
-        if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad_axis = geom.axes["rad"]
-            psf = psf.to_psf3d(rad=rad_axis.center)
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 
@@ -236,7 +246,7 @@ class MapDatasetMaker(Maker):
             pointing=observation.pointing_radec,
             geom=geom,
             exposure_map=exposure,
-        )
+       )
 
     @staticmethod
     def make_meta_table(observation):
@@ -276,8 +286,9 @@ class MapDatasetMaker(Maker):
         """
         kwargs = {"gti": observation.gti}
         kwargs["meta_table"] = self.make_meta_table(observation)
+
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
-        mask_safe.data |= True
+        mask_safe.data[...] = True
 
         kwargs["mask_safe"] = mask_safe
 
@@ -308,4 +319,4 @@ class MapDatasetMaker(Maker):
 
             kwargs["edisp"] = edisp
 
-        return MapDataset(name=dataset.name, **kwargs)
+        return dataset.__class__(name=dataset.name, **kwargs)

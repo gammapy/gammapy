@@ -251,9 +251,9 @@ class FluxPoints:
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> print(flux_points)
-        FluxPoints(sed_type="flux", n_points=24)
+        FluxPoints(sed_type='flux', n_points=24)
         >>> print(flux_points.drop_ul())
-        FluxPoints(sed_type="flux", n_points=19)
+        FluxPoints(sed_type='flux', n_points=19)
 
         Note: In order to reproduce the example you need the tests datasets folder.
         You may download it with the command
@@ -813,7 +813,7 @@ class FluxPointsEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
-        selection_optional="all",
+        selection_optional=None,
     ):
         self.energy_edges = energy_edges
         self.source = source
@@ -914,10 +914,12 @@ class FluxPointsEstimator(Estimator):
         counts = []
 
         for dataset in datasets:
-            energy_mask = dataset.counts.geom.energy_mask(
+            mask = dataset.counts.geom.energy_mask(
                 energy_min=energy_min, energy_max=energy_max, round_to_edge=True
             )
-            mask = dataset.mask & energy_mask
+            if dataset.mask is not None:
+                mask = mask & dataset.mask
+
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}

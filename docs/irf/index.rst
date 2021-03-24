@@ -8,7 +8,11 @@ irf - Instrument response functions
 
 Introduction
 ============
-For a definition of the response function you are invited to read 
+Typically the IRFs are stored in the form of multidimensional tables giving
+the response functions such as the distribution of gamma-like events or the
+probability density functions of the reconstructed energy and position.
+
+For a more detailed definition of the response function you are invited to read
 :ref:`irf-theory`.
 
 `gammapy.irf` handles the following instrument response functions (IRFs):
@@ -24,9 +28,6 @@ At the moment, there is little support for Fermi-LAT or other instruments.
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as
 part of their spectrum, image or cube analysis to compute exposure and effective
 EDISP and PSF for a given dataset.
-
-Most (at some point maybe all) classes in `gammapy.irf` have an
-`gammapy.utils.nddata.NDDataArray` as data attribute to support interpolation.
 
 
 IRF Axis naming

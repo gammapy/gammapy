@@ -65,7 +65,7 @@ class FluxEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=3,
         reoptimize=True,
-        selection_optional="all",
+        selection_optional=None,
     ):
 
         if norm_values is None:
@@ -161,16 +161,8 @@ class FluxEstimator(Estimator):
             energy_min=self.energy_min, energy_max=self.energy_max
         )
 
-        # TODO: simplify model book-keeping!!
-        models = Models()
-
-        for model in datasets.models:
-            if "sky-model" in model.tag:
-                models.append(model)
-            elif "fov-bkg" in model.tag:
-                bkg_model = model.copy(dataset_name=model.datasets_names[0] + "-sliced")
-                bkg_model.reset_to_default()
-                models.append(bkg_model)
+        models = datasets.models.copy()
+        datasets_sliced.models = models
 
         if len(datasets_sliced) > 0:
             # TODO: this relies on the energy binning of the first dataset
@@ -179,16 +171,21 @@ class FluxEstimator(Estimator):
         else:
             energy_min, energy_max = self.energy_min, self.energy_max
 
-        any_contribution = np.any(
-            [dataset.mask.data.any() for dataset in datasets_sliced]
-        )
+        contributions = []
+
+        for dataset in datasets_sliced:
+            if dataset.mask is not None:
+                value = dataset.mask.data.any()
+            else:
+                value = True
+            contributions.append(value)
 
         model = self.get_scale_model(models)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             result = self.get_reference_flux_values(model.model, energy_min, energy_max)
 
-        if len(datasets) == 0 or not any_contribution:
+        if len(datasets) == 0 or not np.any(contributions):
             result.update(self.nan_result)
         else:
             models[self.source].spectral_model = model
