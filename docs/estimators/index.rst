@@ -29,16 +29,16 @@ as :math:`-\sqrt{\Delta TS}` by convention.
 In general the flux can be estimated using two methods:
 
 #. **Based on model fitting:** given a (global) best fit model with multiple model components,
-the flux of the component of interest is re-fitted in the chosen energy, time or spatial
-region. The new flux is given as a ``norm`` with respect to the global reference model.
-Optionally other component parameters in the global model can be re-optimised. This method
-is also named **forward folding**.
+   the flux of the component of interest is re-fitted in the chosen energy, time or spatial
+   region. The new flux is given as a ``norm`` with respect to the global reference model.
+   Optionally other component parameters in the global model can be re-optimised. This method
+   is also named **forward folding**.
 
-#. ***Based on excess:** in the case of having one energy bin, neglecting the PSF and
-not re-optimising other parameters, one can estimate the significance based on the
-analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
-are given by the excess over the null hypothesis. This method is also named
-**backward folding**.
+#. **Based on excess:** in the case of having one energy bin, neglecting the PSF and
+   not re-optimising other parameters, one can estimate the significance based on the
+   analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
+   are given by the excess over the null hypothesis. This method is also named
+   **backward folding**.
 
 
 Uniformly for both methods most estimators compute the same basic quantities:
@@ -46,20 +46,15 @@ Uniformly for both methods most estimators compute the same basic quantities:
 ================= =================================================
 Quantity          Definition
 ================= =================================================
-e_ref             Reference energy
-e_min             Minimum energy
-e_max             Maximum energy
 norm              Best fit norm with respect to the reference spectral model
 norm_err          Symmetric error on the norm derived from the Hessian matrix
-ts                Difference in fit statistics (`stat - stat_null` )
-sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
-================= =================================================
 stat              Fit statistics value of the best fit hypothesis
 stat_null         Fit statistics value of the null hypothesis
-================= =================================================
+ts                Difference in fit statistics (`stat - stat_null` )
+sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
 npred             Predicted counts of the best fit hypothesis, equivalent to correlated counts for backward folding
-npred_null        Predicted counts of the null hypothesis
-npred_excess      Predicted counts of the excess over `npred_null`, equivalent to (`npred - npred_null`)
+npred_null        Predicted counts of the null hypothesis, equivalent to correlated null counts for backward folding
+npred_excess      Predicted counts of the excess over `npred_null`, equivalent to (`npred - npred_null`), equivalent to correlated counts for backward folding
 ================= =================================================
 
 
@@ -71,7 +66,6 @@ Quantity          Definition
 norm_errp         Positive error of the norm
 norm_errn         Negative error of the norm
 norm_ul           Upper limit of the norm
-================= =================================================
 norm_scan         Norm scan
 stat_scan         Fit statistics scan
 ================= =================================================
@@ -80,13 +74,16 @@ To compute the error, assymetric errors as well as upper limits one can
 specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
 arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
 
-In addition to the norm values a reference spectral model is given.
-Using this reference spectral model the norm values can be converted
+In addition to the norm values a reference spectral model and energy ranges
+are given. Using this reference spectral model the norm values can be converted
 to the following different SED types:
 
 ================= =================================================
 Quantity          Definition
 ================= =================================================
+e_ref             Reference energy
+e_min             Minimum energy
+e_max             Maximum energy
 dnde              Differential flux at ``e_ref``
 flux              Integrated flux between ``e_min`` and ``e_max``
 eflux             Integrated energy flux between ``e_min`` and ``e_max``
