@@ -39,7 +39,9 @@ OPTIONAL_MAPS = {
     ],
 }
 
-COMMON_MAPS = ["ts", "sqrt_ts"]
+COMMON_OPTIONAL_MAPS = [
+    "ts", "sqrt_ts", "npred", "npred_excess", "npred_null", "stat", "stat_null"
+]
 
 
 log = logging.getLogger(__name__)
@@ -165,7 +167,7 @@ class FluxMaps(FluxEstimate):
             data = self.data
         else:
             data = {}
-            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + COMMON_MAPS
+            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + COMMON_OPTIONAL_MAPS
 
             for quantity in all_maps:
                 try:
