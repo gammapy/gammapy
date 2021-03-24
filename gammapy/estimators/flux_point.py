@@ -664,8 +664,8 @@ class FluxPoints:
                 **kwargs,
             )
 
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
         ax.set_ylabel(f"{self.sed_type} ({y_unit})")
         return ax
@@ -740,8 +740,8 @@ class FluxPoints:
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
         caxes = ax.pcolormesh(x.value, y_values.value, -z.T, **kwargs)
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
         ax.set_ylabel(f"{self.sed_type} ({y_values.unit})")
 
