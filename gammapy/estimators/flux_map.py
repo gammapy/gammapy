@@ -103,8 +103,8 @@ class FluxMaps(FluxEstimate):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__)
         str_ += "\n\n"
-        str_ += "\t" + "\t\n".join(str(self.norm.geom).split("\n")[:1])
-        str_ += "\n\t" + "\n\t".join(str(self.norm.geom).split("\n")[2:])
+        str_ += "\t" + "\t\n".join(str(self.geom).split("\n")[:1])
+        str_ += "\n\t" + "\n\t".join(str(self.geom).split("\n")[2:])
 
         str_ += f"\n\tAvailable quantities : {list(self.data.keys())}\n\n"
 
