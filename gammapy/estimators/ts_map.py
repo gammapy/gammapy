@@ -161,7 +161,16 @@ class TSMapEstimator(Estimator):
     @property
     def selection_all(self):
         """Which quantities are computed"""
-        selection = ["ts", "norm", "niter", "norm_err", "npred", "npred_null", "stat", "stat_null"]
+        selection = [
+            "ts",
+            "norm",
+            "niter",
+            "norm_err",
+            "npred",
+            "npred_null",
+            "stat",
+            "stat_null",
+        ]
 
         if "errn-errp" in self.selection_optional:
             selection += ["norm_errp", "norm_errn"]
@@ -592,7 +601,11 @@ class BrentqFluxEstimator(Estimator):
             warnings.simplefilter("ignore")
             try:
                 result_fit = scipy.optimize.brentq(
-                    ts_diff, min_norm, max_norm, maxiter=self.max_niter, rtol=self.rtol,
+                    ts_diff,
+                    min_norm,
+                    max_norm,
+                    maxiter=self.max_niter,
+                    rtol=self.rtol,
                 )
                 return (result_fit - norm) * factor
             except (RuntimeError, ValueError):
