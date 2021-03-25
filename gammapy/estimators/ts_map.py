@@ -289,15 +289,6 @@ class TSMapEstimator(Estimator):
     def estimate_sqrt_ts(self, map_ts, norm):
         r"""Compute sqrt(TS) map.
 
-        Compute sqrt(TS) as defined by:
-
-        .. math::
-            \sqrt{TS} = \left \{
-            \begin{array}{ll}
-              -\sqrt{-TS} & : \text{if} \ TS < 0 \\
-              \sqrt{TS} & : \text{else}
-            \end{array}
-            \right.
 
         Parameters
         ----------

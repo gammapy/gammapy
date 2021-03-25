@@ -244,12 +244,28 @@ class FluxEstimate:
         self._check_norm_quantity("ts")
         return self.data["ts"]
 
-    # TODO: just derive from ts?
+    # TODO: just always derive from ts?
     @property
     def sqrt_ts(self):
-        """sqrt(TS) map (`Map`)"""
-        self._check_norm_quantity("sqrt_ts")
-        return self.data["sqrt_ts"]
+        """sqrt(TS) as defined by:
+
+        .. math::
+
+            \sqrt{TS} = \left \{
+            \begin{array}{ll}
+              -\sqrt{TS} & : \text{if} \ norm < 0 \\
+              \sqrt{TS} & : \text{else}
+            \end{array}
+            \right.
+
+        """
+        if "sqrt_ts" in self.data:
+            return self.data["sqrt_ts"]
+        elif "ts" in self.data:
+            with np.errstate(invalid="ignore", divide="ignore"):
+                return np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
+        else:
+            raise ValueError("'sqrt_ts' is not defined on flux estimate")
 
     @property
     def norm(self):

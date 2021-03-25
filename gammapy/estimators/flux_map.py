@@ -83,7 +83,7 @@ class FluxMaps(FluxEstimate):
             log.warning(
                 "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
             )
-            reference_model = self.default_model
+            reference_model = self.reference_model_default
 
         self.reference_model = reference_model
         self.gti = gti
@@ -91,13 +91,23 @@ class FluxMaps(FluxEstimate):
         super().__init__(data, spectral_model=reference_model.spectral_model)
 
     @classproperty
-    def default_model(cls):
+    def reference_model_default(cls):
+        """Default reference model: a point source with index = 2  (`SkyModel`)"""
         return SkyModel.create("pl", "point")
 
     @property
     def geom(self):
         """Reference map geometry (`Geom`)"""
         return self.data["norm"].geom
+
+    @property
+    def sqrt_ts(self):
+        """sqrt(TS) map (`Map`)"""
+        data = super().sqrt_ts
+        if isinstance(data, Map):
+            return data
+        else:
+            return Map.from_geom(self.geom, data=data)
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
