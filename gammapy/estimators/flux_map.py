@@ -395,3 +395,7 @@ class FluxMaps(FluxEstimate):
                 data[key] = maps[key]
 
         return cls(data=data, reference_model=reference_model, gti=gti)
+
+    # TODO: should we allow this?
+    def __getitem__(self, item):
+        return getattr(self, item)

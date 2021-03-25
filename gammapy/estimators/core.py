@@ -4,6 +4,7 @@ import inspect
 from copy import deepcopy
 import numpy as np
 from astropy.table import Table
+from astropy import units as u
 from gammapy.modeling.models import Model
 from gammapy.maps import MapAxis
 
@@ -18,6 +19,14 @@ OPTIONAL_QUANTITIES = [
 OPTIONAL_QUANTITIES_COMMON = [
     "ts", "sqrt_ts", "npred", "npred_excess", "npred_null", "stat", "stat_null"
 ]
+
+
+DEFAULT_UNIT = {
+    "dnde": u.Unit("cm-2 s-1 TeV-1"),
+    "e2dnde": u.Unit("erg cm-2 s-1"),
+    "flux": u.Unit("cm-2 s-1"),
+    "eflux": u.Unit("erg cm-2 s-1"),
+}
 
 
 class Estimator(abc.ABC):
@@ -300,7 +309,7 @@ class FluxEstimate:
     def dnde_ref(self):
         """Reference differential flux"""
         result = self.spectral_model(self.energy_axis.center)
-        return result[self._expand_slice]
+        return result[self._expand_slice].to(DEFAULT_UNIT["dnde"])
 
     @property
     def e2dnde_ref(self):
@@ -308,7 +317,7 @@ class FluxEstimate:
         result = (
             self.spectral_model(self.energy_axis.center) * self.energy_axis.center ** 2
         )
-        return result[self._expand_slice]
+        return result[self._expand_slice].to(DEFAULT_UNIT["e2dnde"])
 
     @property
     def flux_ref(self):
@@ -316,7 +325,7 @@ class FluxEstimate:
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.spectral_model.integral(energy_min, energy_max)
-        return result[self._expand_slice]
+        return result[self._expand_slice].to(DEFAULT_UNIT["flux"])
 
     @property
     def eflux_ref(self):
@@ -324,7 +333,7 @@ class FluxEstimate:
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.spectral_model.energy_flux(energy_min, energy_max)
-        return result[self._expand_slice]
+        return result[self._expand_slice].to(DEFAULT_UNIT["eflux"])
 
     @property
     def dnde(self):

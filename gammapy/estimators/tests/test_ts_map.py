@@ -116,7 +116,7 @@ def test_compute_ts_map(input_dataset):
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[0, 99, 99], 8)
+    assert_allclose(result.data["niter"].data[0, 99, 99], 8)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
 
@@ -136,7 +136,7 @@ def test_compute_ts_map_psf(fermi_dataset):
     result = estimator.run(fermi_dataset)
 
     assert_allclose(result["ts"].data[0, 29, 29], 835.140605, rtol=1e-2)
-    assert_allclose(result["niter"].data[0, 29, 29], 7)
+    assert_allclose(result.data["niter"].data[0, 29, 29], 7)
     assert_allclose(result["flux"].data[0, 29, 29], 1.351949e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=1e-2)
     assert_allclose(result["flux_errp"].data[0, 29, 29], 7.9376134e-11, rtol=1e-2)
@@ -164,7 +164,7 @@ def test_compute_ts_map_energy(fermi_dataset):
     assert_allclose(
         result["flux_err"].data[:, 29, 29], [7.382305e-11, 1.338985e-11], rtol=1e-2
     )
-    assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
+    assert_allclose(result.data["niter"].data[:, 29, 29], [6, 6])
 
     energy_axis = result["ts"].geom.axes["energy"]
     assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
@@ -183,7 +183,7 @@ def test_compute_ts_map_downsampled(input_dataset):
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[0, 99, 99], 1661.49, rtol=1e-2)
-    assert_allclose(result["niter"].data[0, 99, 99], 7)
+    assert_allclose(result.data["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.065988e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 4.005628e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[0, 99, 99], 8.220152e-11, rtol=1e-2)

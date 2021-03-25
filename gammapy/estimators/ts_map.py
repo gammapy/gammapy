@@ -17,6 +17,7 @@ from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, Sk
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width, round_up_to_odd
 from .core import Estimator
+from .flux_map import FluxMaps
 from .utils import estimate_exposure_reco_energy
 
 __all__ = ["TSMapEstimator"]
@@ -433,7 +434,7 @@ class TSMapEstimator(Estimator):
         result_all["sqrt_ts"] = self.estimate_sqrt_ts(
             result_all["ts"], result_all["norm"]
         )
-        return result_all
+        return FluxMaps(data=result_all, reference_model=self.model, gti=dataset.gti)
 
 
 # TODO: merge with MapDataset?
@@ -538,7 +539,6 @@ class BrentqFluxEstimator(Estimator):
         result : dict
             Result dict including 'norm' and 'norm_err'
         """
-        result = {}
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
@@ -563,13 +563,22 @@ class BrentqFluxEstimator(Estimator):
                     # Where the root finding fails NaN is set as norm
                     norm, niter = norm_min_total, self.max_niter
 
-        result["niter"] = niter
-
         with np.errstate(invalid="ignore", divide="ignore"):
-            result["norm_err"] = (
+            norm_err = (
                 np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
             )
-        return result
+
+        stat = dataset.stat_sum(norm=norm)
+        stat_null = dataset.stat_sum(norm=0)
+
+        return {
+            "norm": norm,
+            "norm_err": norm_err,
+            "niter": niter,
+            "ts": stat_null - stat,
+            "stat": stat,
+            "stat_null": stat_null
+        }
 
     def _confidence(self, dataset, n_sigma, result, positive):
         stat_best = result["stat"]
@@ -661,7 +670,17 @@ class BrentqFluxEstimator(Estimator):
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
 
-        return {"norm": norm, "norm_err": norm_err, "niter": 0}
+        stat = dataset.stat_sum(norm=norm)
+        stat_null = dataset.stat_sum(norm=0)
+
+        return {
+            "norm": norm,
+            "norm_err": norm_err,
+            "niter": 0,
+            "ts": stat_null - stat,
+            "stat": stat,
+            "stat_null": stat_null
+        }
 
     def run(self, dataset):
         """Run flux estimator
@@ -684,12 +703,6 @@ class BrentqFluxEstimator(Estimator):
             result = self.estimate_best_fit(dataset)
 
         norm = result["norm"]
-        stat = dataset.stat_sum(norm=norm)
-        stat_null = dataset.stat_sum(norm=0)
-
-        result["ts"] = stat_null - stat
-        result["stat"] = stat
-        result["stat_null"] = stat_null
         result["npred"] = dataset.npred(norm=norm).sum()
         result["npred_null"] = dataset.npred(norm=0).sum()
 
