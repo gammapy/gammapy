@@ -222,8 +222,9 @@ class FluxEstimate:
     @property
     def npred_excess(self):
         """Predicted excess counts"""
-        self._check_norm_quantity("npred_excess")
-        return self.data["npred_excess"]
+        self._check_norm_quantity("npred")
+        self._check_norm_quantity("npred_null")
+        return self.data["npred"] - self.data["npred_null"]
 
     @property
     def stat(self):
