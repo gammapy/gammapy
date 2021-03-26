@@ -3,7 +3,8 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.modeling.models import Model, Models, Parameter, Parameters
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, mpl_plot_check
+
 
 
 class MyModel(Model):
@@ -195,3 +196,15 @@ def test_set_parameters_from_table():
     assert d[0]["frozen"] == True
     assert d[0]["name"] == "index"
     assert d[1]["frozen"] == True
+
+
+@requires_data()
+def test_plot_models():
+    # read gammapy models
+    models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
+
+    with mpl_plot_check():
+        ax = models.plot()
+
+    with mpl_plot_check():
+        models.plot_error(ax=ax)

@@ -11,6 +11,7 @@ from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.maps import RegionGeom, Map, WcsGeom
 
+
 log = logging.getLogger(__name__)
 
 
@@ -816,56 +817,97 @@ class DatasetModels(collections.abc.Sequence):
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
 
-    def plot_spatial(self, ax=None, wcs=None, plot_extent=True, **kwargs):
-        """"Plot spatial models on a given geom
+
+    def plot_regions(self, ax=None, **kwargs):
+        """ Plot extent of the spatial models on a given wcs axis
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        wcs: `~astropy.wcs.WCS`
-            World coordinate system transformation to plot the models on.
-            By default, an all-sky wcs is chosen using a CAR projection
-        plot_extent : Bool
-            Whether to plot the extent (if True) or the positions (if False) of the extended sources
-            By default, the centers of the point sources and the extent of extended sources is plotted
+        ax : `~astropy.vizualisation.WCSAxes`
+            Axes to plot on. If no axes are given, an all-sky wcs
+            is chosen using a CAR projection
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.patches.Patch`
+            Keyword arguments passed to `~matplotlib.axes.Axes.add_artist`
 
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~astropy.vizualisation.WcsAxes
         """
         import matplotlib.pyplot as plt
+        from astropy.visualization.wcsaxes import WCSAxes
         from gammapy.modeling.models import PointSpatialModel
 
-        wcs = WcsGeom.create().wcs if wcs is None else wcs
-        ax = plt.gca(projection=wcs) if ax is None else ax
+        if ax is None or not isinstance(ax, WCSAxes):
+            wcs = WcsGeom.create().wcs
+            ax = plt.gca(projection=wcs)
+        else:
+            wcs = ax.wcs
 
         kwargs.setdefault("color", "black")
         kwargs.setdefault("linewidth", "2")
 
         for model in self:
-            if plot_extent is False:
+            if model.spatial_model is None:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+                continue
+            elif isinstance(model.spatial_model, PointSpatialModel):
                 ax.plot(
-                    model.position.to_pixel(wcs=wcs)[0],
-                    model.position.to_pixel(wcs=wcs)[1],
+                    model.spatial_model.position.to_pixel(wcs=wcs)[0],
+                    model.spatial_model.position.to_pixel(wcs=wcs)[1],
                     **kwargs,
                     marker="o",
                 )
             else:
-                if isinstance(model.spatial_model, PointSpatialModel):
-                    ax.plot(
-                        model.position.to_pixel(wcs=wcs)[0],
-                        model.position.to_pixel(wcs=wcs)[1],
-                        **kwargs,
-                        marker="o",
-                    )
-                else:
-                    model.spatial_model.to_region().to_pixel(wcs=wcs).plot(
-                        ax=ax, **kwargs
-                    )
+                region = model.spatial_model.to_region().to_pixel(ax.wcs)
+                artist = region.as_artist(**kwargs)
+                ax.add_artist(artist)
+
+        return ax
+
+
+    def plot_position(self, ax=None, **kwargs):
+        """"Plot the centers of the spatial models on a given wcs axis
+
+        ----------
+        ax : `~astropy.vizualisation.WCSAxes`
+            Axes to plot on. If no axes are given, an all-sky wcs
+            is chosen using a CAR projection
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes`
+
+
+        Returns
+        -------
+        ax : `~astropy.vizualisation.WcsAxes
+        """
+        import matplotlib.pyplot as plt
+        from astropy.visualization.wcsaxes import WCSAxes
+
+        if ax is None or not isinstance(ax, WCSAxes):
+            wcs = WcsGeom.create().wcs
+            ax = plt.gca(projection=wcs)
+        else:
+            wcs = ax.wcs
+
+        kwargs.setdefault("color", "black")
+        kwargs.setdefault("markersize", "2")
+        kwargs.setdefault("marker", "*")
+        for model in self:
+            if model.spatial_model is None:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+                continue
+            else:
+                ax.plot(
+                    model.spatial_model.position.to_pixel(wcs=wcs)[0],
+                    model.spatial_model.position.to_pixel(wcs=wcs)[1],
+                    **kwargs,
+                )
+        return ax
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
