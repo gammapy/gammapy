@@ -323,7 +323,7 @@ class FluxEstimate:
     def dnde_ref(self):
         """Reference differential flux"""
         result = self.reference_spectral_model(self.energy_axis.center)
-        return result[self._expand_slice].to(DEFAULT_UNIT["dnde"])
+        return result[self._expand_slice]
 
     @property
     def e2dnde_ref(self):
@@ -332,7 +332,7 @@ class FluxEstimate:
         result = (
             self.reference_spectral_model(energy) * energy ** 2
         )
-        return result[self._expand_slice].to(DEFAULT_UNIT["e2dnde"])
+        return result[self._expand_slice]
 
     @property
     def flux_ref(self):
@@ -340,7 +340,7 @@ class FluxEstimate:
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.reference_spectral_model.integral(energy_min, energy_max)
-        return result[self._expand_slice].to(DEFAULT_UNIT["flux"])
+        return result[self._expand_slice]
 
     @property
     def eflux_ref(self):
@@ -348,7 +348,7 @@ class FluxEstimate:
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.reference_spectral_model.energy_flux(energy_min, energy_max)
-        return result[self._expand_slice].to(DEFAULT_UNIT["eflux"])
+        return result[self._expand_slice]
 
     @property
     def dnde(self):
