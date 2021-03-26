@@ -97,10 +97,63 @@ More information can be found on the `likelihood SED type page`_.
 Getting Started
 ===============
 
-.. toctree::
-    :maxdepth: 1
+Flux maps
+---------
 
-    detect
+This how to compute flux maps with the `ExcessMapEstimator`:
+
+.. code-block:: python
+
+	import numpy as np
+	from gammapy.datasets import MapDataset
+	from gammapy.estimators import ExcessMapEstimator
+	from astropy import units as u
+
+	dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+
+	estimator = ExcessMapEstimator(
+		correlation_radius="0.1 deg", energy_edges=[0.1, 1, 10] * u.TeV
+	)
+
+	maps = estimator.run(dataset)
+	print(maps["flux"])
+
+
+Flux Points
+-----------
+
+This is how to compute flux points:
+
+.. code-block:: python
+
+	from astropy import units as u
+	from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+	from gammapy.estimators import FluxPointsEstimator
+	from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
+	path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
+	dataset_1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+	dataset_2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
+
+	datasets = Datasets([dataset_1, dataset_2])
+
+	pwl = PowerLawSpectralModel(index=2, amplitude='1e-12  cm-2 s-1 TeV-1')
+
+	datasets.models = SkyModel(spectral_model=pwl, name="crab")
+
+	estimator = FluxPointsEstimator(
+		source="crab", energy_edges=[0.1, 0.3, 1, 3, 10, 30, 100] * u.TeV
+	)
+
+	# this will run a joint fit of the datasets
+	fp = estimator.run(datasets)
+	print(fp.table[["e_ref", "dnde", "dnde_err"]])
+
+	# or stack the datasets
+	fp = estimator.run(datasets.stack_reduce())
+	print(fp.table[["e_ref", "dnde", "dnde_err"]])
+
+
 
 Tutorials
 =========
