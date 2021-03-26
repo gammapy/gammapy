@@ -73,6 +73,10 @@ class TestSourceCatalog:
         positions = self.cat.positions
         assert len(positions) == 3
 
+    def test_selection(self):
+        new = self.cat[self.cat.table["Source_Name"] != "a"]
+        assert len(new.table) == 2
+
 
 class TestSourceCatalogObject:
     def setup(self):

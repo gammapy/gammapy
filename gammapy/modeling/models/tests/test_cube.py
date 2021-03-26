@@ -631,17 +631,17 @@ def test_sky_model_create():
 
 
 def test_integrate_geom():
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1*u.deg, frame='icrs')
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
 
-    center = SkyCoord("0d", "0d", frame='icrs')
+    center = SkyCoord("0d", "0d", frame="icrs")
     radius = 0.3 * u.deg
     square = CircleSkyRegion(center, radius)
 
-    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name='energy_true')
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
     geom = RegionGeom(region=square, axes=[axis], binsz_wcs="0.01deg")
 
     integral = sky_model.integrate_geom(geom).data
 
-    assert_allclose(integral/1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)
+    assert_allclose(integral / 1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)

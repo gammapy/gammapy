@@ -60,6 +60,15 @@ class TestSourceCatalogHGPS:
     def test_large_scale_component(cat):
         assert isinstance(cat.large_scale_component, SourceCatalogLargeScaleHGPS)
 
+    @staticmethod
+    def test_to_models(cat):
+        models = cat.to_models(components_status="independent")
+        assert len(models) == 96
+        models = cat.to_models(components_status="linked")
+        assert len(models) == 96
+        models = cat.to_models(components_status="merged")
+        assert len(models) == 78
+
 
 @requires_data()
 class TestSourceCatalogObjectHGPS:
@@ -186,7 +195,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_sky_model_gaussian2(cat):
-        models = cat["HESS J1843-033"].sky_model()
+        models = cat["HESS J1843-033"].components_models()
 
         p = models[0].parameters
         assert_allclose(p["amplitude"].value, 4.259815e-13, rtol=1e-5)
@@ -202,7 +211,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_sky_model_gaussian3(cat):
-        models = cat["HESS J1825-137"].sky_model()
+        models = cat["HESS J1825-137"].components_models()
 
         p = models[0].parameters
         assert_allclose(p["amplitude"].value, 1.8952104218765842e-11)
@@ -225,7 +234,7 @@ class TestSourceCatalogObjectHGPS:
     @staticmethod
     def test_sky_model_gaussian_extern(cat):
         # special test for the only extern source with a gaussian morphology
-        model = cat["HESS J1801-233"].sky_model()
+        model = cat["HESS J1801-233"].components_models()
         p = model.parameters
         assert_allclose(p["amplitude"].value, 7.499999970031479e-13)
         assert_allclose(p["lon_0"].value, 6.656888961791992)
