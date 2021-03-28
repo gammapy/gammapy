@@ -137,6 +137,9 @@ referenced from the Gammapy docs.
 .. [Abdalla2018] `H.E.S.S. Collaboration (2018) <https://www.aanda.org/articles/aa/abs/2018/04/aa32098-17/aa32098-17.html>`_,
     "The H.E.S.S. Galactic plane survey"
 
+.. [Mohrmann2019] `Mohrmann et al. (2019) <https://www.aanda.org/articles/aa/abs/2019/12/aa36452-19/aa36452-19.html>`_,
+    "Validation of open-source science tools and background model construction in γ-ray astronomy"
+
 
 Software references:
 
