@@ -110,11 +110,12 @@ As an example, here's how you can create `gammapy.data.DataStore` and
 
 Try to make your first plot using the `gammapy.data.EventList.peek` helper method:
 
-.. testcode::
+.. code-block::
 
     import matplotlib.pyplot as plt
     events.peek()
     plt.savefig("events.png")
+
 
 Python scripts
 --------------
