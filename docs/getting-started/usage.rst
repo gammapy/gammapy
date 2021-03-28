@@ -1,10 +1,10 @@
 .. include:: ../references.txt
 
-.. _use-gammapy:
+.. _using-gammapy:
 
 
-Use Gammapy
-===========
+Using Gammapy
+=============
 
 To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
 matplotlib for plotting. Many standard gamma-ray analyses can be done with few
