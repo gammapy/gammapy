@@ -20,7 +20,7 @@ handbook`_ and the `Astropy Hands-On Tutorial`_.
 
 .. _tutorials_notebooks:
 
-Starting
+Overview
 --------
 
 The following three tutorials show different ways of how to use Gammapy to perform a complete data analysis,
@@ -100,12 +100,6 @@ Time
    analysis/time/light_curve.ipynb
    analysis/time/light_curve_flare.ipynb
    analysis/time/pulsar_analysis.ipynb
-
-Built-in models
----------------
-
-Gammapy provides a large choice of spatial, spectral and temporal models.
-You may check out the whole list of built-in models in the :ref:`model-gallery`.
 
 
 Package / API
