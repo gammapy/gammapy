@@ -23,12 +23,12 @@ Gammapy-related.
 
 .. _gammapy_intro:
 .. toctree::
-    :caption: Getting Started
+    :caption: User Guide
     :maxdepth: 1
 
     overview
+    getting-started/index
     install/index
-    getting-started
     tutorials/index
     modeling/gallery/index
     howto

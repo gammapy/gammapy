@@ -2,97 +2,139 @@
 
 .. _install:
 
-************
 Installation
-************
-
+============
 
 Using Anaconda
 --------------
+The easiest and recommended way to install Gammapy is to install the Anaconda distribution.
+The installation is explained in the :ref:`getting_started` section.
 
-The recommended way to install Gammapy is to install the Anaconda
-distribution from https://www.anaconda.com/download/ and then to install the
-Gammapy and it's dependencies by executing these commands in a terminal:
+.. _install-pip:
 
-.. code-block:: bash
+Using pip
+---------
 
-    curl -O https://gammapy.org/download/install/gammapy-0.18.2-environment.yml
-    conda env create -f gammapy-0.18.2-environment.yml
-
-.. note::
-
-    On Windows, you have to open up the conda environment file and delete the
-    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
-    currently aren't available on Windows.
-
-This creates a conda environment called ``gammapy-0.18.2`` which you can activate via:
+To install the latest Gammapy **stable** version (see `Gammapy page on PyPI`_)
+using `pip`_:
 
 .. code-block:: bash
 
-    conda activate gammapy-0.18.2
+   $ python -m pip install gammapy
 
-Note that you have to execute that activation command (but not the environment
-creation command) every time you open a new terminal window, because the default
-with conda is the base environment, which doesn't have Gammapy installed.
+To install the current Gammapy **development** version using `pip`_:
 
-To check your Gammapy installation, you can use this command:
+.. code-block:: bash
+
+   $ python -m pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
+
+Or like this, if you want to study or edit the code locally:
+
+.. code-block:: bash
+
+   $ git clone https://github.com/gammapy/gammapy.git
+   $ cd gammapy
+   $ pip install .
+
+How to get set up for Gammapy development is described here: :ref:`dev_setup`
+
+.. _install-other:
+
+Using other package managers
+----------------------------
+
+Gammapy has been packaged for some Linux package managers. E.g. on Debian, you
+can install Gammapy via:
+
+.. code-block:: bash
+
+    sudo apt-get install python3-gammapy
+
+To get a more fully featured scientific Python environment, you can install
+other Python packages using the system package manager (``apt-get`` in this
+example), and then on top of this install more Python packages using ``pip``.
+
+Example:
+
+.. code-block:: bash
+
+    sudo apt-get install \
+        python3-pip python3-matplotlib \
+        ipython3-notebook python3-gammapy
+
+    python3 -m pip install antigravity
+
+Note that also on Linux, the recommended way to install Gammapy is via
+``conda``. The ``conda`` install is maintained by the Gammapy team and gives you
+usually a very recent version (releases every 2 months), whereas the Linux
+package managers typically have release cycles of 6 months, or yearly or longer,
+meaning that you'll get an older version of Gammapy. But you can always get a
+recent version via pip:
+
+.. code-block:: bash
+
+    sudo apt-get install python3-gammapy
+    pip install -U gammapy
+
+Check your setup
+----------------
+You might want to display some info about Gammapy installed. You can execute
+the following command, and it should print detailed information about your
+installation to the terminal:
 
 .. code-block:: bash
 
     gammapy info
 
-
-Using other package managers
-----------------------------
-
-If you don't want to use Anaconda, you can use other package managers. To do so,the following pages contain detailed
-information about Gammapy dependencies and propose various installation options:
-
-* See gammapy install dependencies :ref:`install-dependencies`
-* If you want to install gammapy with pip see :ref:`install-pip`
-* If you want to use other package manager see :ref:`install-other`
-
-
-Download tutorials
-------------------
-
-You can now proceed to download the Gammapy tutorial notebooks and the example
-datasets used there (at the moment from CTA, H.E.S.S. and Fermi-LAT). The total
-size to download is about 180 MB. Select the location where you want to install
-the datasets and proceed with the following commands:
+If there is some issue, the following commands could help you to figure out
+your setup:
 
 .. code-block:: bash
 
-    gammapy download notebooks --release 0.18.2
-    gammapy download datasets
-    export GAMMAPY_DATA=$PWD/gammapy-datasets
+    conda info
+    which python
+    which ipython
+    which jupyter
+    which gammapy
+    env | grep PATH
+    python -c 'import gammapy; print(gammapy); print(gammapy.__version__)'
 
-You might want to put the definition of the ``$GAMMAPY_DATA`` environment
-variable in your shell profile setup file that is executed when you open a new
-terminal (for example ``$HOME/.bash_profile``).
+You can also use the following commands to check which conda environment is active and which
+ones you have set up:
 
-If you are not using the ``bash`` shell, handling of shell environment variables
-might be different, e.g. in some shells the command to use is ``set`` or something
-else instead of ``export``, and also the profile setup file will be different.
+.. code-block:: bash
 
-On Windows, you should set the ``GAMMAPY_DATA`` environment variable in the
-"Environment Variables" settings dialog, as explained e.g.
-`here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
+    conda info
+    conda env list
 
-The datasets are curated and stable, the notebooks are still under development
-just like Gammapy itself, and thus stored in a sub-folder that contains the
-Gammapy version number.
+If you're new to conda, you could also print out the `conda cheat sheet`_, which
+lists the common commands to install packages and work with environments.
 
-If there are issues, note that you can just delete the folder any time using ``rm
--r gammapy-tutorials`` and start over.
 
-What next?
-----------
+Install issues
+--------------
 
-Congratulations! You are all set to start using Gammapy!
+If you have problems and think you might not be using the right Python or
+importing Gammapy isn't working or giving you the right version, checking your
+Python executable and import path might help you find the issue:
 
-* If you're new to conda, Python, ipython and Jupyter, read the :ref:`getting-started` guide.
-* To learn how to use Gammapy, go to :ref:`tutorials`.
+.. code-block:: python
+
+    import sys
+    print(sys.executable)
+    print(sys.path)
+
+To check which Gammapy you are using you can use this:
+
+.. code-block:: python
+
+    import gammapy
+    print(gammapy)
+    print(gammapy.__version__)
+
+Now you should be all set and to use Gammapy. Let's move on to the
+:ref:`tutorials`.
+
 
 .. Include toc hidden to avoid warnings in doc building
 
@@ -100,5 +142,3 @@ Congratulations! You are all set to start using Gammapy!
     :hidden:
 
     dependencies
-    other
-    pip
