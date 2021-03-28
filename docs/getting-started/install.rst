@@ -75,12 +75,3 @@ recent version via pip:
 
     sudo apt-get install python3-gammapy
     pip install -U gammapy
-
-
-
-.. Include toc hidden to avoid warnings in doc building
-
-.. toctree::
-    :hidden:
-
-    dependencies

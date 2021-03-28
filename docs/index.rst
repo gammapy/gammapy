@@ -26,7 +26,7 @@ Gammapy-related.
     :caption: User Guide
     :maxdepth: 1
 
-    overview
+    overview/index
     getting-started/index
     tutorials/index
     modeling/gallery/index

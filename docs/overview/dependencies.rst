@@ -2,8 +2,8 @@
 
 .. _install-dependencies:
 
-Gammapy Dependencies
-====================
+Dependencies
+============
 
 The latest stable version of Gammapy is listed at https://gammapy.org
 
