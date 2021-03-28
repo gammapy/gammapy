@@ -2,7 +2,7 @@
 
 .. _howto:
 
-How To
+How-to
 ======
 
 This page contains short "how to" or "frequently asked question" entries for

@@ -20,8 +20,8 @@ handbook`_ and the `Astropy Hands-On Tutorial`_.
 
 .. _tutorials_notebooks:
 
-Overview
---------
+API Introduction
+----------------
 
 The following three tutorials show different ways of how to use Gammapy to perform a complete data analysis,
 from data selection to data reduction and finally modeling and fitting.

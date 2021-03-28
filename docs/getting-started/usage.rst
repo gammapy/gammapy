@@ -116,8 +116,8 @@ Try to make your first plot using the `gammapy.data.EventList.peek` helper metho
     events.peek()
     plt.savefig("events.png")
 
-Python script
--------------
+Python scripts
+--------------
 
 Another common way to use Gammapy is to write a Python script.
 Try it and put the following code into a file called ``example.py``:
