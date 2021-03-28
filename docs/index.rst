@@ -37,6 +37,7 @@ Gammapy-related.
 
 
 .. _gammapy_package:
+
 .. toctree::
     :caption: Gammapy Package
     :maxdepth: 1
@@ -60,8 +61,9 @@ Gammapy-related.
 
 
 .. _gammapy_dev:
+
 .. toctree::
-    :caption: Additional Documentation
+    :caption: Developer Documentation
     :titlesonly:
     :maxdepth: 1
 
