@@ -28,11 +28,13 @@ Gammapy-related.
 
     overview
     getting-started/index
-    install/index
     tutorials/index
     modeling/gallery/index
     howto
     references
+    changelog
+    List of releases <https://gammapy.org/news.html#releases>
+
 
 .. _gammapy_package:
 .. toctree::
@@ -64,5 +66,3 @@ Gammapy-related.
     :maxdepth: 1
 
     development/index
-    List of releases <https://gammapy.org/news.html#releases>
-    changelog
