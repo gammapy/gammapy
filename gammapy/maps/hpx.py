@@ -6,6 +6,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy import units as u
 from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
@@ -894,6 +895,22 @@ class HpxGeom(Geom):
         return self.__class__(
             2 ** order, self.nest, frame=self.frame, region=self.region, axes=axes
         )
+
+    def to_nside(self, nside):
+        """Upgrade or downgrade the reoslution to a given nside
+
+        Parameters
+        ----------
+        nside : int
+            Nside
+
+        Returns
+        -------
+        geom : `~HpxGeom`
+            A HEALPix geometry object.
+        """
+        order = nside_to_order(nside=nside)
+        return self.to_ud_graded(order=order)
 
     def to_swapped(self):
         """Geometry copy with swapped ORDERING (NEST->RING or vice versa).
