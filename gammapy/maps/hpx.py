@@ -1416,6 +1416,55 @@ class HpxGeom(Geom):
             proj=proj,
         )
 
+    def to_wcs_tiles(self, nside_tiles=4, margin=0 * u.deg):
+        """Create WCS tiles geometries from HPX geometry with given nside.
+
+        Parameters
+        ----------
+        nside_tiles : int
+            Nside for super pixel tiles. Usually nsi
+        margin : Angle
+            Width margin of the wcs tile
+
+        Return
+        ------
+        wcs_tiles : list
+            List of WCS tile geoms.
+        """
+        import healpy as hp
+
+        if nside_tiles >= self.nside:
+            raise ValueError(f"nside_tiles must be < {self.nside}")
+
+        binsz = get_pix_size_from_nside(self.nside) * u.deg
+
+        hpx = self.to_nside(nside=nside_tiles)
+        wcs_tiles = []
+
+        for pix in range(int(hpx.npix)):
+            skydir = hpx.pix_to_coord([pix])
+            vtx = hp.boundaries(
+                nside=hpx.nside, pix=pix, nest=hpx.nest, step=1
+            )
+
+            lon, lat = hp.vec2ang(vtx.T, lonlat=True)
+            boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
+
+            # Compute maximum separation between all pairs of boundaries and take it
+            # as width
+            width = boundaries.separation(boundaries[:, np.newaxis]).max()
+
+            wcs_tile_geom = WcsGeom.create(
+                skydir=(float(skydir[0]), float(skydir[1])),
+                width=width + margin,
+                binsz=binsz,
+                frame=hpx.frame,
+                proj="TAN"
+            )
+            wcs_tiles.append(wcs_tile_geom)
+
+        return wcs_tiles
+
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError(f"Image index out of range: {idx!r}")
