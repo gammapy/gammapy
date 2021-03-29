@@ -2,9 +2,10 @@
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.coordinates import SkyCoord
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .hpx import HPX_FITS_CONVENTIONS, HpxConv, HpxGeom, HpxToWcsMapping, nside_to_order
+from .hpx import HPX_FITS_CONVENTIONS, HpxConv, HpxGeom, HpxToWcsMapping, nside_to_order, get_superpixels
 from .hpxmap import HpxMap
 from .utils import INVALID_INDEX
 
@@ -50,6 +51,77 @@ class HpxNDMap(HpxMap):
             data = np.zeros(shape_np, dtype=dtype)
 
         return data
+
+    @classmethod
+    def from_wcs_tiles(cls, wcs_tiles, nest=True):
+        """Create HEALPix map from WCS tiles.
+
+        Parameters
+        ----------
+        wcs_tiles : list of  `WcsNDMap`
+            Wcs map tiles
+
+        Returns
+        -------
+        hpx_map : `HpxNDMap`
+            HEALPix map
+        """
+        import healpy as hp
+
+        geom_wcs = wcs_tiles[0].geom
+
+        map_hpx = cls.create(
+            binsz=geom_wcs.pixel_scales[0],
+            frame=geom_wcs.frame,
+            nest=nest
+        )
+
+        coords = map_hpx.geom.get_coord().skycoord
+
+        # sort wcs tiles
+        centers = SkyCoord([wcs_tile.geom.center_skydir for wcs_tile in wcs_tiles])
+
+        nside_superpix = hp.npix2nside(len(wcs_tiles))
+        nside_subpix = map_hpx.geom.nside
+
+        idx = np.arange(map_hpx.geom.npix)
+        hpx_ref = HpxGeom(nside=nside_superpix, nest=nest, frame=geom_wcs.frame)
+        sep = hpx_ref.get_coord().skycoord.separation(centers[:, np.newaxis])
+        order = sep.argmin(axis=0)
+        indices = get_superpixels(idx, nside_subpix, nside_superpix, nest=nest)
+
+        for idx, wcs_tile in enumerate(np.array(wcs_tiles)[order]):
+            mask = indices == idx
+            map_hpx.data[mask] = wcs_tile.interp_by_coord((coords[mask]))
+
+        return map_hpx
+
+    def to_wcs_tiles(self, nside_tiles=4):
+        """Convert HpxNDMap to a list of WCS tiles
+
+        Parameters
+        ----------
+        nside_tiles : int
+            Nside for super pixel tiles.
+
+        Returns
+        -------
+        wcs_tiles : list of `WcsNDMap`
+            WCS tiles.
+        """
+        from .wcsnd import WcsNDMap
+
+        wcs_tiles = []
+
+        wcs_geoms = self.geom.to_wcs_tiles(nside_tiles=nside_tiles)
+
+        for geom in wcs_geoms:
+            hpx2wcs = HpxToWcsMapping.create(self.geom, geom)
+            wcs_map = WcsNDMap.from_geom(geom, unit=self.unit)
+            hpx2wcs.fill_wcs_map_from_hpx_data(self.data, wcs_map.data, normalize=True)
+            wcs_tiles.append(wcs_map)
+
+        return wcs_tiles
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None, format=None):
