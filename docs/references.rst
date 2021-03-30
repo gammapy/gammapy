@@ -91,8 +91,8 @@ Glossary
 
 .. _publications:
 
-Publications
-------------
+References
+----------
 
 This is the bibliography containing the literature references for the implemented methods
 referenced from the Gammapy docs.
@@ -137,6 +137,9 @@ referenced from the Gammapy docs.
 .. [Abdalla2018] `H.E.S.S. Collaboration (2018) <https://www.aanda.org/articles/aa/abs/2018/04/aa32098-17/aa32098-17.html>`_,
     "The H.E.S.S. Galactic plane survey"
 
+.. [Mohrmann2019] `Mohrmann et al. (2019) <https://www.aanda.org/articles/aa/abs/2019/12/aa36452-19/aa36452-19.html>`_,
+    "Validation of open-source science tools and background model construction in γ-ray astronomy"
+
 
 Software references:
 
@@ -172,7 +175,7 @@ Here are some other software packages for gamma-ray astronomy:
 * `pointlike`_ -- Fermi-LAT science tools alternative by Toby Burnett
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `Gamera`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
-* `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry Light C<->Urve pipeline by Jean-Philippe Lenain
+* `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry light-curve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
 * `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins

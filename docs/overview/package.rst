@@ -1,9 +1,9 @@
-.. include:: references.txt
+.. include:: ../references.txt
 
 .. _overview:
 
-Overview
-========
+Package Structure
+=================
 
 This page gives an overview of the main concepts in Gammapy. :ref:`Fig. 1 <data_flow>`
 illustrates the general data flow and corresponding sub-package structure of Gammapy.
@@ -14,7 +14,7 @@ are explained in more detail in the following sections.
 
 .. _data_flow:
 
-.. figure:: _static/data-flow-gammapy.png
+.. figure:: ../_static/data-flow-gammapy.png
     :width: 100%
 
     Fig. 1 Data flow and sub-package structure of Gammapy. The folder icons

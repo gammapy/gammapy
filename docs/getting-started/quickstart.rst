@@ -1,17 +1,16 @@
 .. include:: ../references.txt
 
-.. _install:
-
-************
-Installation
-************
+.. _quickstart:
 
 
-Using Anaconda
---------------
+Quickstart
+==========
 
-The recommended way to install Gammapy is to install the Anaconda
-distribution from https://www.anaconda.com/download/ and then to install the
+Installation using Anaconda
+---------------------------
+
+The easiest and recommended way to install Gammapy is to install the Anaconda
+distribution from https://www.anaconda.com/download/ and then to install
 Gammapy and it's dependencies by executing these commands in a terminal:
 
 .. code-block:: bash
@@ -33,7 +32,7 @@ This creates a conda environment called ``gammapy-0.18.2`` which you can activat
 
 Note that you have to execute that activation command (but not the environment
 creation command) every time you open a new terminal window, because the default
-with conda is the base environment, which doesn't have Gammapy installed.
+with conda is the base environment, which does not have Gammapy installed.
 
 To check your Gammapy installation, you can use this command:
 
@@ -42,24 +41,13 @@ To check your Gammapy installation, you can use this command:
     gammapy info
 
 
-Using other package managers
-----------------------------
-
-If you don't want to use Anaconda, you can use other package managers. To do so,the following pages contain detailed
-information about Gammapy dependencies and propose various installation options:
-
-* See gammapy install dependencies :ref:`install-dependencies`
-* If you want to install gammapy with pip see :ref:`install-pip`
-* If you want to use other package manager see :ref:`install-other`
-
-
 Download tutorials
 ------------------
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
-datasets used there (at the moment from CTA, H.E.S.S. and Fermi-LAT). The total
-size to download is about 180 MB. Select the location where you want to install
-the datasets and proceed with the following commands:
+datasets used there (at the moment from `CTA`_, `H.E.S.S.`_. and `Fermi-LAT`_).
+The total size to download is ~180 MB. Select the location where you want
+to install the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
@@ -91,14 +79,5 @@ What next?
 
 Congratulations! You are all set to start using Gammapy!
 
-* If you're new to conda, Python, ipython and Jupyter, read the :ref:`getting-started` guide.
+* If you're new to conda, Python, ipython and Jupyter, read the :ref:`using-gammapy` guide.
 * To learn how to use Gammapy, go to :ref:`tutorials`.
-
-.. Include toc hidden to avoid warnings in doc building
-
-.. toctree::
-    :hidden:
-
-    dependencies
-    other
-    pip

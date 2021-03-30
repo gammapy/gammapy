@@ -23,18 +23,21 @@ Gammapy-related.
 
 .. _gammapy_intro:
 .. toctree::
-    :caption: Getting Started
+    :caption: User Guide
     :maxdepth: 1
 
-    overview
-    install/index
-    getting-started
+    overview/index
+    getting-started/index
     tutorials/index
     modeling/gallery/index
     howto
     references
+    changelog
+    List of releases <https://gammapy.org/news.html#releases>
+
 
 .. _gammapy_package:
+
 .. toctree::
     :caption: Gammapy Package
     :maxdepth: 1
@@ -58,11 +61,10 @@ Gammapy-related.
 
 
 .. _gammapy_dev:
+
 .. toctree::
-    :caption: Additional Documentation
+    :caption: Developer Documentation
     :titlesonly:
     :maxdepth: 1
 
     development/index
-    List of releases <https://gammapy.org/news.html#releases>
-    changelog

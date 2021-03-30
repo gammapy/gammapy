@@ -2,20 +2,9 @@
 
 .. _install-dependencies:
 
-Gammapy Dependencies
-====================
-
-The latest stable version of Gammapy is listed at https://gammapy.org
-
-Gammapy works with Python 3.6 or later.
-
-Linux and Mac OS are fully supported.
-
-Gammapy itself, and most analyses, work on Windows. However, two optional
-dependencies don't support Windows yet: Sherpa (an optional fitting backend) and
-healpy (needed to work with HEALPix maps, which is common for all-sky analyses).
-
-Gammapy is a Python package built on Numpy and Astropy, as well as a few other
+Dependencies
+============
+Gammapy is a Python package built on Numpy, Scipy and Astropy, as well as a few other
 required dependencies. For certain functionality, optional dependencies are
 used. The recommended way to install Gammapy is via a conda environment which
 includes all required and optional dependencies (see :ref:`install`).
@@ -26,6 +15,11 @@ can conda or pip install any extra Python package you like (e.g. `pip install
 pyjokes <https://pyjok.es/>`__), upgrade or downgrade packages to other versions
 (very rarely needed) or uninstall any package you don't like (almost never
 useful, unless you run out of disk space).
+
+Gammapy itself, and most analyses, work on Windows. However, two optional
+dependencies don't support Windows yet: Sherpa (an optional fitting backend) and
+healpy (needed to work with HEALPix maps, which is common for all-sky analyses).
+
 
 Required dependencies
 ---------------------
