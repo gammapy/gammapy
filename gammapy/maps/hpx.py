@@ -1443,7 +1443,7 @@ class HpxGeom(Geom):
         if nside_tiles >= self.nside:
             raise ValueError(f"nside_tiles must be < {self.nside}")
 
-        binsz = get_pix_size_from_nside(self.nside) * u.deg
+        binsz = np.degrees(hp.nside2resol(self.nside)) * u.deg
 
         hpx = self.to_nside(nside=nside_tiles)
         wcs_tiles = []

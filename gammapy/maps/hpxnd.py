@@ -5,7 +5,14 @@ from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .hpx import HPX_FITS_CONVENTIONS, HpxConv, HpxGeom, HpxToWcsMapping, nside_to_order, get_superpixels
+from .hpx import (
+    HPX_FITS_CONVENTIONS,
+    HpxConv,
+    HpxGeom,
+    HpxToWcsMapping,
+    nside_to_order,
+    get_superpixels
+)
 from .hpxmap import HpxMap
 from .utils import INVALID_INDEX
 
@@ -60,6 +67,8 @@ class HpxNDMap(HpxMap):
         ----------
         wcs_tiles : list of  `WcsNDMap`
             Wcs map tiles
+        nest : bool
+            Whether to use nested HEALPix scheme
 
         Returns
         -------
@@ -77,26 +86,21 @@ class HpxNDMap(HpxMap):
         )
 
         coords = map_hpx.geom.get_coord().skycoord
-
-        # sort wcs tiles
-        centers = SkyCoord([wcs_tile.geom.center_skydir for wcs_tile in wcs_tiles])
-
         nside_superpix = hp.npix2nside(len(wcs_tiles))
-        nside_subpix = map_hpx.geom.nside
+
+        hpx_ref = HpxGeom(nside=nside_superpix, nest=nest, frame=geom_wcs.frame)
 
         idx = np.arange(map_hpx.geom.npix)
-        hpx_ref = HpxGeom(nside=nside_superpix, nest=nest, frame=geom_wcs.frame)
-        sep = hpx_ref.get_coord().skycoord.separation(centers[:, np.newaxis])
-        order = sep.argmin(axis=0)
-        indices = get_superpixels(idx, nside_subpix, nside_superpix, nest=nest)
+        indices = get_superpixels(idx, map_hpx.geom.nside, nside_superpix, nest=nest)
 
-        for idx, wcs_tile in enumerate(np.array(wcs_tiles)[order]):
-            mask = indices == idx
+        for wcs_tile in wcs_tiles:
+            hpx_idx = int(hpx_ref.coord_to_idx(wcs_tile.geom.center_skydir)[0])
+            mask = indices == hpx_idx
             map_hpx.data[mask] = wcs_tile.interp_by_coord((coords[mask]))
 
         return map_hpx
 
-    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
+    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg", method="nearest", oversampling_factor=1):
         """Convert HpxNDMap to a list of WCS tiles
 
         Parameters
@@ -105,6 +109,10 @@ class HpxNDMap(HpxMap):
             Nside for super pixel tiles. Usually nsi
         margin : Angle
             Width margin of the wcs tile
+        method : {'nearest', 'linear'}
+            Interpolation method
+        oversampling_factor : int
+            Oversampling factor.
 
         Returns
         -------
@@ -120,9 +128,15 @@ class HpxNDMap(HpxMap):
         )
 
         for geom in wcs_geoms:
-            hpx2wcs = HpxToWcsMapping.create(self.geom, geom)
-            wcs_map = WcsNDMap.from_geom(geom, unit=self.unit)
-            hpx2wcs.fill_wcs_map_from_hpx_data(self.data, wcs_map.data, normalize=False)
+            if oversampling_factor > 1:
+                geom = geom.upsample(oversampling_factor)
+
+            coords = geom.get_coord()
+            data = self.interp_by_coord(coords=coords, method=method)
+
+            wcs_map = WcsNDMap.from_geom(
+                geom=geom, data=data, unit=self.unit
+            )
             wcs_tiles.append(wcs_map)
 
         return wcs_tiles
@@ -299,6 +313,8 @@ class HpxNDMap(HpxMap):
 
         if method == "linear":
             return self._interp_by_coord(coords)
+        elif method == "nearest":
+            return self.get_by_coord(coords)
         else:
             raise ValueError(f"Invalid interpolation method: {method!r}")
 
