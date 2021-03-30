@@ -1419,6 +1419,11 @@ class HpxGeom(Geom):
     def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
         """Create WCS tiles geometries from HPX geometry with given nside.
 
+        The HEALPix geom is divide into superpixels defined by nside_tiles,
+        which are then represented by a WCS geometry using a tangential
+        projection. The number of WCS tiles is given by the number of pixels
+        for the given nside_tiles.
+
         Parameters
         ----------
         nside_tiles : int
