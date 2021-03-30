@@ -1416,7 +1416,7 @@ class HpxGeom(Geom):
             proj=proj,
         )
 
-    def to_wcs_tiles(self, nside_tiles=4, margin=0 * u.deg):
+    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
         """Create WCS tiles geometries from HPX geometry with given nside.
 
         Parameters
@@ -1432,6 +1432,8 @@ class HpxGeom(Geom):
             List of WCS tile geoms.
         """
         import healpy as hp
+
+        margin = u.Quantity(margin)
 
         if nside_tiles >= self.nside:
             raise ValueError(f"nside_tiles must be < {self.nside}")
@@ -1591,7 +1593,7 @@ class HpxGeom(Geom):
             f"\tndim       : {self.ndim}\n"
             f"\tnside      : {self.nside[0]}\n"
             f"\tnested     : {self.nest}\n"
-            f"\tframe   : {self.frame}\n"
+            f"\tframe      : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         )

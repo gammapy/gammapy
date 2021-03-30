@@ -96,13 +96,15 @@ class HpxNDMap(HpxMap):
 
         return map_hpx
 
-    def to_wcs_tiles(self, nside_tiles=4):
+    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
         """Convert HpxNDMap to a list of WCS tiles
 
         Parameters
         ----------
         nside_tiles : int
-            Nside for super pixel tiles.
+            Nside for super pixel tiles. Usually nsi
+        margin : Angle
+            Width margin of the wcs tile
 
         Returns
         -------
@@ -113,12 +115,14 @@ class HpxNDMap(HpxMap):
 
         wcs_tiles = []
 
-        wcs_geoms = self.geom.to_wcs_tiles(nside_tiles=nside_tiles)
+        wcs_geoms = self.geom.to_wcs_tiles(
+            nside_tiles=nside_tiles, margin=margin
+        )
 
         for geom in wcs_geoms:
             hpx2wcs = HpxToWcsMapping.create(self.geom, geom)
             wcs_map = WcsNDMap.from_geom(geom, unit=self.unit)
-            hpx2wcs.fill_wcs_map_from_hpx_data(self.data, wcs_map.data, normalize=True)
+            hpx2wcs.fill_wcs_map_from_hpx_data(self.data, wcs_map.data, normalize=False)
             wcs_tiles.append(wcs_map)
 
         return wcs_tiles
