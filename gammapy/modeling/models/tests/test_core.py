@@ -2,9 +2,8 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import Model, Models, Parameter, Parameters
+from gammapy.modeling.models import Model, Models, Parameter, Parameters, SkyModel
 from gammapy.utils.testing import requires_data, mpl_plot_check
-
 
 
 class MyModel(Model):
@@ -199,12 +198,29 @@ def test_set_parameters_from_table():
 
 
 @requires_data()
-def test_plot_models():
+def test_plot_models(caplog):
     # read gammapy models
     models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
 
     with mpl_plot_check():
-        ax = models.plot()
+        models.plot_positions()
+        models.plot_regions()
 
-    with mpl_plot_check():
-        models.plot_error(ax=ax)
+    geom = models.geom
+    assert geom.data_shape == (1, 1)
+
+    regions = models.get_regions()
+    assert len(regions) == 3
+
+    p1 = Model.create("pl-2", model_type="spectral",)
+    g1 = Model.create("gauss", model_type="spatial")
+    p2 = Model.create("pl-2", model_type="spectral",)
+    m1 = SkyModel(spectral_model=p1, spatial_model=g1, name="m1")
+    m2 = SkyModel(spectral_model=p2, name="m2")
+    models = Models([m1, m2])
+
+    models.plot_regions()
+    assert caplog.records[-1].levelname == "WARNING"
+    assert (
+        caplog.records[-1].message == "Skipping model m2 - no spatial component present"
+    )

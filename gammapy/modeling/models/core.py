@@ -792,7 +792,6 @@ class DatasetModels(collections.abc.Sequence):
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
 
-
     def to_template_sky_model(self, geom, spectral_model=None, name=None):
         """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`
     
@@ -817,6 +816,32 @@ class DatasetModels(collections.abc.Sequence):
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
 
+    def get_regions(self):
+        """Returns a list of the regions for the spatial models
+
+        Returns
+        -------
+        regions: list of `~regions.SkyRegion`
+        """
+        regions = []
+        for model in self:
+            try:
+                region = model.spatial_model.to_region()
+                regions.append(region)
+            except AttributeError:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+        return regions
+
+    @property
+    def geom(self):
+        """ Minimum Region geom in which all the models are contained """
+        regions = self.get_regions()
+        try:
+            return RegionGeom.from_regions(regions)
+        except IndexError:
+            log.error("No spatial component in any model. Geom not defined")
 
     def plot_regions(self, ax=None, **kwargs):
         """ Plot extent of the spatial models on a given wcs axis
@@ -834,41 +859,33 @@ class DatasetModels(collections.abc.Sequence):
         -------
         ax : `~astropy.vizualisation.WcsAxes
         """
-        import matplotlib.pyplot as plt
         from astropy.visualization.wcsaxes import WCSAxes
-        from gammapy.modeling.models import PointSpatialModel
+        from regions import PointSkyRegion
 
         if ax is None or not isinstance(ax, WCSAxes):
-            wcs = WcsGeom.create().wcs
-            ax = plt.gca(projection=wcs)
-        else:
-            wcs = ax.wcs
+            wcs_geom = self.geom.to_wcs_geom()
+            fig, ax, _ = Map.from_geom(wcs_geom).plot()
+
+        wcs = ax.wcs
 
         kwargs.setdefault("color", "black")
         kwargs.setdefault("linewidth", "2")
 
-        for model in self:
-            if model.spatial_model is None:
-                log.warning(
-                    f"Skipping model {model.name} - no spatial component present"
-                )
-                continue
-            elif isinstance(model.spatial_model, PointSpatialModel):
+        for region in self.get_regions():
+            if isinstance(region, PointSkyRegion):
                 ax.plot(
-                    model.spatial_model.position.to_pixel(wcs=wcs)[0],
-                    model.spatial_model.position.to_pixel(wcs=wcs)[1],
+                    region.center.to_pixel(wcs=wcs)[0],
+                    region.center.to_pixel(wcs=wcs)[1],
                     **kwargs,
                     marker="o",
                 )
             else:
-                region = model.spatial_model.to_region().to_pixel(ax.wcs)
-                artist = region.as_artist(**kwargs)
+                artist = region.to_pixel(wcs).as_artist(**kwargs)
                 ax.add_artist(artist)
 
         return ax
 
-
-    def plot_position(self, ax=None, **kwargs):
+    def plot_positions(self, ax=None, **kwargs):
         """"Plot the centers of the spatial models on a given wcs axis
 
         ----------
@@ -883,30 +900,28 @@ class DatasetModels(collections.abc.Sequence):
         -------
         ax : `~astropy.vizualisation.WcsAxes
         """
-        import matplotlib.pyplot as plt
         from astropy.visualization.wcsaxes import WCSAxes
 
         if ax is None or not isinstance(ax, WCSAxes):
-            wcs = WcsGeom.create().wcs
-            ax = plt.gca(projection=wcs)
-        else:
-            wcs = ax.wcs
+            wcs_geom = self.geom.to_wcs_geom()
+            fig, ax, _ = Map.from_geom(wcs_geom).plot()
+        wcs = ax.wcs
 
         kwargs.setdefault("color", "black")
         kwargs.setdefault("markersize", "2")
         kwargs.setdefault("marker", "*")
         for model in self:
-            if model.spatial_model is None:
-                log.warning(
-                    f"Skipping model {model.name} - no spatial component present"
-                )
-                continue
-            else:
+            try:
                 ax.plot(
                     model.spatial_model.position.to_pixel(wcs=wcs)[0],
                     model.spatial_model.position.to_pixel(wcs=wcs)[1],
                     **kwargs,
                 )
+            except AttributeError:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+
         return ax
 
 
