@@ -76,33 +76,51 @@ of the energy dispersion matrix, and the masked matrices are combined.
 Values lying outside the safe mask of each dataset are lost.
 
 The stacking of 2 datasets is implemented as follows.
-Here, :math:`k` denotes a bin in reconstructed energy and
-:math:`j = {1,2}` is the dataset number
+Here, :math:`k` denotes a bin in reconstructed energy,
+:math:`l` a bin in true energy and
+:math:`j` is the dataset number
 
 
 ================= ================================== ==================================================================================
-Dataset attribute  Behaviour                          Implementation
-================= ================================== ===================================================================================
-`livetime`         Sum of individual livetimes       \overline{t} = \sum_j t_j
-`mask_safe`        Pixels added with `OR` operation  \overline{\epsilon_k} = \wedge_j \epsilon_{jk}
-`mask_fit`         Dropped
-`counts`           Summed outside exclusion regions   \overline{\mathrm{n_{on}}_k} = \sum_j \mathrm{n_{on}}_{jk} \cdot \epsilon_{jk}
-`background`       Summed outside exclusion regions   \overline{\mathrm{bkg}_k} = \sum_j \mathrm{bkg}_{jk} \cdot \epsilon_{jk}
-`exposure`         Summed outside exclusion regions   \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl} \cdot t_j}{\overline{t}}
-`psf`              Weighed by exposure and summed
-`edisp`            Weighed by exposure, mask applied
-                    on reco energy, and summed
+Dataset attribute Behaviour                          Implementation
+================= ================================== ==================================================================================
+
+``livetime``.        Sum of individual livetimes         :math:`\overline{t} = \sum_j t_j`
+
+``mask_safe``        Pixels added with `OR` operation     :math:`\overline{\epsilon_k} = \wedge_j \epsilon_{jk}`
+
+``mask_fit``         Dropped
+
+``counts``          Summed outside exclusion regions.     :math:`\overline{\mathrm{n_{on}}_k} = \sum_j \mathrm{n_{on}}_{jk} \cdot \epsilon_{jk}`
+
+``background``     Summed outside exclusion regions.    :math:`\overline{\mathrm{bkg}_k} = \sum_j \mathrm{bkg}_{jk} \cdot \epsilon_{jk}`
+
+``exposure``          Summed outside exclusion regions    :math:`\overline{\mathrm{exposure}}_l = \sum_{j}{\mathrm{exposure}_{jl} \cdot \sum_k \epsilon_{jk}}`
+
+``psf``               Weighed by exposure and summed
+
+``edisp``             Weighed by exposure, mask applied on reco energy, and summed
+================= ================================== ==================================================================================
+
+
 
 
 
 
 It is important to keep in mind that:
+
 - Stacking happens in-place, ie, dataset1.stack(dataset2) will overwrite dataset
+
 - To properly handle masks, it is necessary to stack onto an empty dataset.
+
 - Stacking only works for maps with equivalent geometry.
-Two geometries are called equivalent if one is exactly the same as,
-or can be obtained from a cutout of, the other.
+
+ Two geometries are called equivalent if one is exactly the same as,
+ or can be obtained from a cutout of, the other.
+
 - A stacked analysis is reasonable only when adding runs taken by the same instrument.
+
+
 
 
 
