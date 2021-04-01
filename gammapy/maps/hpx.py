@@ -836,10 +836,7 @@ class HpxGeom(Geom):
     @property
     def is_allsky(self):
         """Flag for all-sky maps."""
-        if self._region is None:
-            return True
-        else:
-            return False
+        return self._region is None
 
     @property
     def is_regular(self):
@@ -1443,9 +1440,12 @@ class HpxGeom(Geom):
         if nside_tiles >= self.nside:
             raise ValueError(f"nside_tiles must be < {self.nside}")
 
+        if not self.is_allsky:
+            raise ValueError("to_wcs_tiles() is only supported for all sky geoms")
+
         binsz = np.degrees(hp.nside2resol(self.nside)) * u.deg
 
-        hpx = self.to_nside(nside=nside_tiles)
+        hpx = self.to_image().to_nside(nside=nside_tiles)
         wcs_tiles = []
 
         for pix in range(int(hpx.npix)):
