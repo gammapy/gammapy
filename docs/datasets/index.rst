@@ -63,19 +63,19 @@ runs are binned together to get one final dataset for which a likelihood is
 computed during the fit.
 
 Counts, background and exposure (lying outside the masked regions are simply summed),
-while the energy dispersion and point spread function are weighed by the exposure
-and then summed.
+while for energy dispersion and point spread function an avergae is computed after
+weighing by the exposure.
 
 For the model evaluation, an important factor that needs to be accounted for is
 that the energy threshold changes between obseravtions.
 To ensure that the npred (ie, the predicted number of counts) on the stacked
 dataset is the sum expected by stacking the npred of the individual runs,
-the exposure weighted IRFs are computed.
+a `~gammapy.irf.EDispersionMap` is used, which contains the
 The mask_safe from each dataset is applied on the respective reconstructed energy axis
 of the energy dispersion matrix, and the masked matrices are combined.
 Values lying outside the safe mask of each dataset are lost.
 
-The stacking of 2 datasets is implemented as follows.
+Stacking of multiple datasets is implemented as follows.
 Here, :math:`k` denotes a bin in reconstructed energy,
 :math:`l` a bin in true energy and
 :math:`j` is the dataset number
@@ -87,46 +87,48 @@ Dataset attribute Behaviour                          Implementation
 
 ``livetime``.        Sum of individual livetimes         :math:`\overline{t} = \sum_j t_j`
 
-``mask_safe``        Pixels added with `OR` operation     :math:`\overline{\epsilon_k} = \wedge_j \epsilon_{jk}`
+``mask_safe``        Pixels added with `OR` operation     :math:`\overline{\epsilon_k} = \sum_{j} \epsilon_{jk}`
 
 ``mask_fit``         Dropped
 
-``counts``          Summed outside exclusion regions.     :math:`\overline{\mathrm{n_{on}}_k} = \sum_j \mathrm{n_{on}}_{jk} \cdot \epsilon_{jk}`
+``counts``           Summed outside exclusion region.     :math:`\overline{\mathrm{counts}_k} = \sum_j \mathrm{counts}_{jk} \cdot \epsilon_{jk}`
 
-``background``     Summed outside exclusion regions.    :math:`\overline{\mathrm{bkg}_k} = \sum_j \mathrm{bkg}_{jk} \cdot \epsilon_{jk}`
+``background``       Summed outside exclusion region.    :math:`\overline{\mathrm{bkg}_k} = \sum_j \mathrm{bkg}_{jk} \cdot \epsilon_{jk}`
 
-``exposure``          Summed outside exclusion regions    :math:`\overline{\mathrm{exposure}}_l = \sum_{j}{\mathrm{exposure}_{jl} \cdot \sum_k \epsilon_{jk}}`
+``exposure``         Summed outside spatial exclusion region    :math:`\overline{\mathrm{exposure}_l} = \sum_{j}{\mathrm{exposure}_{jl} \cdot \sum_k \epsilon_{jk}}`
 
-``psf``               Weighed by exposure and summed
+``psf``              Exposure weighted average                 :math:`\overline{\mathrm{psf}_l} = \frac{ \sum_{j}{\mathrm{psf}_{jl} \cdot \mathrm{exposure}_l} {\sum_{j} \cdot \mathrm{exposure}_l}`
 
-``edisp``             Weighed by exposure, mask applied on reco energy, and summed
+``edisp``            Exposure weighted average, with mask on reco energy :math:`\overline{\mathrm{edisp}_kl} = \frac{ \sum_{j}{\mathrm{edisp}_{jkl} \cdot \epsilon_{jk} \cdot \mathrm{exposure}_l} {\sum_{j} \cdot \mathrm{exposure}_l}`
+
+``gti``              Union of individual `gti`
+
 ================= ================================== ==================================================================================
-
-
-
 
 
 
 It is important to keep in mind that:
 
 - Stacking happens in-place, ie, dataset1.stack(dataset2) will overwrite dataset
-
 - To properly handle masks, it is necessary to stack onto an empty dataset.
-
 - Stacking only works for maps with equivalent geometry.
-
  Two geometries are called equivalent if one is exactly the same as,
  or can be obtained from a cutout of, the other.
-
 - A stacked analysis is reasonable only when adding runs taken by the same instrument.
 
 
+Joint Analysis
+==============
 
+A joint fit across multiple datasets implies that each dataset
+is handled independently during the data reduction stage,
+and the statistics combined during the likelihood fit.
+The likelihood is computed for each dataset and summed to get
+the total fit statistic.
 
-
-Getting Started
-===============
-
+The totat fit statistic of datasets is the sum of the
+fit statistic of each dataset. Note that this is **not** equal to the
+stacked fit statistic.
 
 
 Reference/API
