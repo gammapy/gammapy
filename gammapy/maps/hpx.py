@@ -1466,7 +1466,8 @@ class HpxGeom(Geom):
                 width=width + margin,
                 binsz=binsz,
                 frame=hpx.frame,
-                proj="TAN"
+                proj="TAN",
+                axes=self.axes
             )
             wcs_tiles.append(wcs_tile_geom)
 

@@ -79,24 +79,27 @@ class HpxNDMap(HpxMap):
 
         geom_wcs = wcs_tiles[0].geom
 
-        map_hpx = cls.create(
+        geom_hpx = HpxGeom.create(
             binsz=geom_wcs.pixel_scales[0],
             frame=geom_wcs.frame,
-            nest=nest
+            nest=nest,
+            axes=geom_wcs.axes
         )
+
+        map_hpx = cls.from_geom(geom=geom_hpx, unit=wcs_tiles[0].unit)
 
         coords = map_hpx.geom.get_coord().skycoord
         nside_superpix = hp.npix2nside(len(wcs_tiles))
 
         hpx_ref = HpxGeom(nside=nside_superpix, nest=nest, frame=geom_wcs.frame)
 
-        idx = np.arange(map_hpx.geom.npix)
+        idx = np.arange(map_hpx.geom.to_image().npix)
         indices = get_superpixels(idx, map_hpx.geom.nside, nside_superpix, nest=nest)
 
         for wcs_tile in wcs_tiles:
             hpx_idx = int(hpx_ref.coord_to_idx(wcs_tile.geom.center_skydir)[0])
             mask = indices == hpx_idx
-            map_hpx.data[mask] = wcs_tile.interp_by_coord((coords[mask]))
+            map_hpx.data[mask] = wcs_tile.interp_by_coord(coords[mask])
 
         return map_hpx
 
@@ -119,8 +122,6 @@ class HpxNDMap(HpxMap):
         wcs_tiles : list of `WcsNDMap`
             WCS tiles.
         """
-        from .wcsnd import WcsNDMap
-
         wcs_tiles = []
 
         wcs_geoms = self.geom.to_wcs_tiles(
@@ -131,12 +132,7 @@ class HpxNDMap(HpxMap):
             if oversampling_factor > 1:
                 geom = geom.upsample(oversampling_factor)
 
-            coords = geom.get_coord()
-            data = self.interp_by_coord(coords=coords, method=method)
-
-            wcs_map = WcsNDMap.from_geom(
-                geom=geom, data=data, unit=self.unit
-            )
+            wcs_map = self.interp_to_geom(geom=geom, method=method)
             wcs_tiles.append(wcs_map)
 
         return wcs_tiles
