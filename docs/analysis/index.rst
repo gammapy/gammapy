@@ -20,12 +20,15 @@ IPython sessions. The high-level user interface could also be used to automatise
 processes driven by parameters declared in a configuration file in YAML format
 that addresses the most common analysis use cases identified.
 
-Using the high-level interface
-------------------------------
+Using `gammapy.analysis`
+========================
 
 Gammapy tutorial notebooks that show examples using the high-level interface:
 
-* `First analysis <../tutorials/analysis_1.html>`__
+.. nbgallery::
+
+   ../tutorials/starting/analysis_1.ipynb
+
 
 Reference/API
 =============
