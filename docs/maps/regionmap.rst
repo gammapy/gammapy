@@ -483,9 +483,12 @@ The "gadf" allows to serialise a region map with arbitrary extra axis as well:
 
 Relevant tutorials
 ------------------
-:ref:`tutorials` that use `~RegionNDMap` and `~RegionGeom`:
 
-* `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
-* `extended_source_spectral_analysis.html <../tutorials/extended_source_spectral_analysis.html>`__
-* `spectrum_simulation.html <../tutorials/spectrum_simulation.html>`__
-* `cta_sensitivity.html <../tutorials/cta_sensitivity.html>`__
+Gammapy tutorial notebooks that use `~RegionNDMap` and `~RegionGeom`:
+
+.. nbgallery::
+
+   ../tutorials/analysis/1D/spectral_analysis.ipynb
+   ../tutorials/analysis/1D/extended_source_spectral_analysis.ipynb
+   ../tutorials/analysis/1D/spectrum_simulation.ipynb
+   ../tutorials/analysis/1D/cta_sensitivity.ipynb
