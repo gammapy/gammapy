@@ -49,16 +49,18 @@ Gammapy provides a large choice of spatial, spectral and temporal models.
 You may check out the whole list of built-in models in the :ref:`model-gallery`.
 
 
-Tutorials
-=========
+Using `gammapy.modeling`
+========================
 
-:ref:`tutorials` that show examples using ``gammapy.modeling``:
+Gammapy tutorial notebooks that show examples using ``gammapy.modeling``:
 
-- `Introduction to models API <../tutorials/models.html>`__
-- `Modeling and Fitting <../tutorials/fitting.html>`__
-- `Interation between models and datasets <../tutorials/model_management.html>`__
-- `analysis_3d.html <../tutorials/analysis_3d.html>`__
-- `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
+.. nbgallery::
+
+   ../tutorials/api/models.ipynb
+   ../tutorials/api/fitting.ipynb
+   ../tutorials/api/model_management.ipynb
+   ../tutorials/analysis/3D/analysis_3d.ipynb
+   ../tutorials/analysis/1D/spectral_analysis.ipynb
 
 
 Reference/API
