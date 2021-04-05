@@ -162,7 +162,7 @@ observations the safe mask is applied to the counts and predicted
 number of counts map during fitting. This correctly accounts for
 contributions (spill-over) by the PSF from outside the field of view.
 
-Background estimation
+Background Estimation
 =====================
 
 The background computed by the `MapDatasetMaker` gives the number of counts predicted
