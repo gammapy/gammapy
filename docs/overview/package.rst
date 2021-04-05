@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _overview:
+.. _overview_package:
 
 Package Structure
 =================
