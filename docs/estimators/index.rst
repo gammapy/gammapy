@@ -155,16 +155,18 @@ This is how to compute flux points:
 
 
 
-Tutorials
-=========
+Using `gammapy.modeling`
+========================
 
-The main tutorial that demonstrates how to use Estimator classes are:
+Gammapy tutorial notebooks that show examples using ``gammapy.estimators``:
 
-* `Light Curve tutorial (LightCurveEstimator) <../tutorials/analysis/time/light_curve.html>`__
-* `Flare tutorial (LightCurveEstimator) <../tutorials/analysis/time/light_curve_flare.html>`__
-* `Source detection (TSMapEstimator) <../tutorials/analysis/2D/detect.html>`__
-* `Spectral analysis (FluxPointEstimator) <../tutorials/analysis/1D/spectral_analysis.html>`__
-* `Detailed 3D analysis (ExcessMapEstimator) <../tutorials/analysis/3D/analysis_3d.html>`__
+.. nbgallery::
+
+   ../tutorials/analysis/time/light_curve.ipynb
+   ../tutorials/analysis/time/light_curve_flare.ipynb
+   ../tutorials/analysis/2D/detect.ipynb
+   ../tutorials/analysis/1D/spectral_analysis.ipynb
+   ../tutorials/analysis/3D/analysis_3d.ipynb
 
 
 Reference/API
