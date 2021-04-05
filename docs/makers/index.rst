@@ -283,11 +283,15 @@ Using `gammapy.makers`
 
 Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
 
-* `analysis_3d.html <../tutorials/analysis_3d.html>`__
-* `simulate_3d.html <../tutorials/simulate_3d.html>`__
-* `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
-* `spectrum_simulation.html <../tutorials/spectrum_simulation.html>`__
+.. nbgallery::
 
+   ../tutorials/starting/analysis_2.ipynb
+   ../tutorials/analysis/3D/analysis_3d.ipynb
+   ../tutorials/analysis/3D/simulate_3d.ipynb
+   ../tutorials/analysis/1D/spectral_analysis.ipynb
+   ../tutorials/analysis/1D/spectrum_simulation.ipynb
+
+Other examples using background makers:
 
 .. toctree::
     :maxdepth: 1
