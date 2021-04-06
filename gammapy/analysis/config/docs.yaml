@@ -1,5 +1,5 @@
 # Section: general
-# General settings for the high-level interface / optional
+# General settings for the high level interface / optional
 general:
     # logging settings for the session
     log:

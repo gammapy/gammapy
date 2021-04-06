@@ -1,7 +1,7 @@
 r"""
 .. _shell-spatial-model:
 
-Shell Spatial Model
+Shell spatial model
 ===================
 
 This is a spatial model parametrizing a projected radiating shell.

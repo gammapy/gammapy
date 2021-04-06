@@ -325,7 +325,7 @@ class RegionGeom(Geom):
         """Change the bin size of the underlying WCS geometry.
 
         Parameters
-         ----------
+        ----------
         binzs : float, string or `~astropy.quantity.Quantity`
 .
         Returns

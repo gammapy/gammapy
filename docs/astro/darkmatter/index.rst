@@ -105,9 +105,12 @@ particle model. GamLike can somehow be use to reproduce HESS results (Section
 Using `gammapy.astro.darkmatter`
 ================================
 
-For use cases please go to the tutorial notebooks:
+Gammapy tutorial notebooks that show examples using ``gammapy.astro.darkmatter``:
 
-* `astro_dark_matter.html <../../tutorials/astro_dark_matter.html>`__
+.. nbgallery::
+
+   ../../tutorials/api/astro_dark_matter.ipynb
+
 
 Reference/API
 =============

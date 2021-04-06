@@ -19,7 +19,7 @@ The ``gammapy.astro`` sub-package is in a prototyping phase and its scope and fu
 are currently being discussed. It is likely that some of the functionality will
 be removed or split out into a separate package at some point.
 
-Getting Started
+Getting started
 ===============
 
 The ``gammapy.astro`` namespace is empty. Use these import statements:

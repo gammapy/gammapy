@@ -1,6 +1,6 @@
 .. _hpxmap:
 
-HEALPix-based Maps
+HEALPix-based maps
 ==================
 
 This page provides examples and documentation specific to the HEALPix map
@@ -8,7 +8,7 @@ classes. All HEALPix classes inherit from `~gammapy.maps.Map` which provides gen
 interface methods that can be be used to access or update the contents of a map
 without reference to its pixelization scheme.
 
-HEALPix Geometry
+HEALPix geometry
 ----------------
 
 The `~gammapy.maps.HpxGeom` class encapsulates the geometry of a HEALPix map:

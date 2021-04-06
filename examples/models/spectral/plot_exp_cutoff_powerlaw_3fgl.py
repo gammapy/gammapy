@@ -1,8 +1,8 @@
 r"""
 .. _exp-cutoff-powerlaw-3fgl-spectral-model:
 
-Exponential Cutoff Powerlaw Spectral Model used for 3FGL
-========================================================
+Exponential cutoff power law spectral model used for 3FGL
+=========================================================
 
 This model parametrises a cutoff power law spectrum used for 3FGL.
 

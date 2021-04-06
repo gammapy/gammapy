@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _overview:
+.. _gamma_ray_analysis:
 
 
 Gamma-ray data analysis

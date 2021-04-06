@@ -13,7 +13,7 @@ The `gammapy.astro.population` module provides a simple framework for population
 synthesis of gamma-ray sources, which is useful in the context of surveys and
 population studies.
 
-Getting Started
+Getting started
 ===============
 
 The following example illustrates how to simulate a basic catalog including a

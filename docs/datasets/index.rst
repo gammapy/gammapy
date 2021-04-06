@@ -53,7 +53,7 @@ energy bin, e.g. for modeling and fitting,
 see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
 
-Getting Started
+Getting started
 ===============
 
 

@@ -30,7 +30,7 @@ where:
 The Instrument Response Functions
 ---------------------------------
 
-Most of the time, in high-level gamma-ray data (DL3), we assume that the instrument response can
+Most of the time, in high level gamma-ray data (DL3), we assume that the instrument response can
 be simplified as the product of three independent functions:
 
 .. math::

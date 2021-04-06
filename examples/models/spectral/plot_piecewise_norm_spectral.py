@@ -1,8 +1,8 @@
 r"""
 .. _piecewise-norm-spectral:
 
-Piecewise  Norm Spectral Model
-==============================================
+Piecewise  norm spectral model
+==============================
 
 This model parametrises a piecewise spectral correction
 with a free norm parameter at each fixed energy node.
