@@ -94,7 +94,7 @@ The same can be applied for the error and upper limit information.
 More information can be found on the `likelihood SED type page`_.
 
 
-Getting Started
+Getting started
 ===============
 
 Flux maps
@@ -119,7 +119,7 @@ This how to compute flux maps with the `ExcessMapEstimator`:
 	print(maps["flux"])
 
 
-Flux Points
+Flux points
 -----------
 
 This is how to compute flux points:

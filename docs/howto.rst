@@ -118,7 +118,7 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 For an example, see `Implementing a Custom Model
 <tutorials/models.html#Implementing-a-Custom-Model>`__.
 
-Energy Dependent Spatial Models
+Energy dependent spatial models
 +++++++++++++++++++++++++++++++
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.

@@ -1,7 +1,7 @@
 r"""
 .. _powerlaw-spectral-model:
 
-Power Law Spectral Model
+Power law spectral model
 ========================
 
 This model parametrises a power law spectrum.

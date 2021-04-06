@@ -35,7 +35,7 @@ Documentation specific to WCS- and HEALPix-based maps is provided in :doc:`hpxma
 Documentation specific to region-based maps is provided in :doc:`regionmap`.
 
 
-Getting Started
+Getting started
 ===============
 
 All map objects have an abstract inteface provided through the methods of the
@@ -67,7 +67,7 @@ multiplied by the bin volumes to finally return integrated maps, so the output
 predicted counts maps are integral with node_type "edges".
 
 
-Accessor Methods
+Accessor methods
 ----------------
 
 All map objects have a set of accessor methods provided through the abstract

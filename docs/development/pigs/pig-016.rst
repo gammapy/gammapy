@@ -125,7 +125,7 @@ dissolve gammapy.background or to move all background-related code to
 gammapy.background.
 
 Looking at the package structure illustration above, it's clear that
-gammapy.background is problematic, because it is lower-level than
+gammapy.background is problematic, because it is lower level than
 gammapy.spectrum and gammapy.maps, so moving background estimation classes from
 gammapy.cube down to gammapy.background would likely lead to circular
 dependencies, because they rely on the map dataset class in gammapy.cube.
@@ -163,7 +163,7 @@ Clean up gammapy.utils
 
 Above we propose to move gammapy.utils.fitting, the biggest piece of
 gammapy.utils to gammapy.modeling. We still need and want to keep gammapy.utils,
-as a lowest-level layer in Gammapy where we write adapters and helpers for
+as a lowest level layer in Gammapy where we write adapters and helpers for
 functionality e.g. from Numpy and Astropy. Mostly this is for usage within
 Gammapy, users very rarely need to import from gammapy.utils. Currently only
 energy_logspace, sqrt_space, sample_powerlaw and SphericalCircleSkyRegion are
@@ -190,7 +190,7 @@ in `GH 2290`_ for gammapy.modeling) in the future.
   package structure.
 * CTA IRFs and other CTA data level 3 classes might be maintained in ctapipe or
   somehow shared between Gammapy and ctapipe.
-* gammapy.spectrum will likely become higher-level than gammapy.cube, i.e. 1D
+* gammapy.spectrum will likely become higher level than gammapy.cube, i.e. 1D
   spectral analysis will be based on 3D maps analysis more.
 * gammapy.detect will likely grow map analysis and modeling based algorithms,
   i.e. depend on gammapy.cube and the rest of the Gammapy package

@@ -603,10 +603,10 @@ This is a compromise between the alternatives:
   Can be annoying for the caller to not get any result.
 * ``bounds_error=False, fill_value=nan`` -- Medium "safe". Always return a result, but put NaN values to make it easy
   for analysers to spot that there's an issue in their results (if pixels with NaN are used, that will usually lead
-  to NaN values in high-level analysis results.
+  to NaN values in high level analysis results.
 * ``bounds_error=False, fill_value=0`` or ``bounds_error=False, fill_value=None`` -- Least "safe".
   Extrapolate with zero or edge values (this is what ``None`` means).
-  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high-level analysis results
+  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high level analysis results
   aren't quite correct because IRFs or background models or ... were used outside their valid range.
 
 Methods that use interpolation should provide an option to the caller to pass interpolation options on to

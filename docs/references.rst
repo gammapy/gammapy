@@ -170,7 +170,7 @@ Here are some other software packages for gamma-ray astronomy:
   to deal with the data and IRFs and compute the likelihood for a given model.
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `ctapipe`_ --- CTA Python pipeline experimental version
-* `FermiPy`_ --- Fermi-LAT science tools high-level Python interface by Matthew Wood
+* `FermiPy`_ --- Fermi-LAT science tools high level Python interface by Matthew Wood
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `pointlike`_ -- Fermi-LAT science tools alternative by Toby Burnett
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza

@@ -276,7 +276,7 @@ unified. Instead of grouping the main functionality by use-case it is now
 grouped by abstractions and data levels. For this all ``Dataset`` classes
 were moved to the newly introduced `gammapy.datasets`. All ``Maker`` classes
 for data reduction from the DL3 to the DL4 data level were moved to the new
-`gammapy.makers` sub-package and all high-level ``Estimator`` classes were moved
+`gammapy.makers` sub-package and all high level ``Estimator`` classes were moved
 to the new `gammapy.estimators`. In addition a `gammapy.visualization` module
 was introduced to group plotting related functionality into a single namespace.
 The `gammapy.cube`, `gammapy.spectrum` and `gammapy.detect` modules were removed.
@@ -355,7 +355,7 @@ See the complete `Gammapy v0.17 merged pull requests list on Github <https://git
 - [#2817] Remove SpectrumEvaluator class (Axel Donath)
 - [#2816] Remove RegionGeom.energy_mask() (Axel Donath)
 - [#2815] Remove CountsSpectrum class (Axel Donath)
-- [#2812] Add ring background estimation in high-level interface (José Enrique Ruiz)
+- [#2812] Add ring background estimation in high level interface (José Enrique Ruiz)
 - [#2811] Fix confidence interval range in CountsStatistic class (Régis Terrier)
 - [#2810] Implement FluxEstimator (Régis Terrier)
 - [#2809] Add sampling of temporal models to event sampler (Fabio Pintore)
@@ -471,7 +471,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 See the complete `Gammapy v0.16 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.16+is%3Aclosed>`__.
 
 
-- [#2756] Add config params for get_flux_points method in High-level interface (José Enrique Ruiz)
+- [#2756] Add config params for get_flux_points method in High level interface (José Enrique Ruiz)
 - [#2747] Modify Config and Analysis to support SafeMaskMaker (Régis Terrier)
 - [#2752] Add temporal model support to SkyModel (Quentin Remy)
 - [#2755] Fix WcsNDMap and MapDataset cutout to support mode='partial' (Régis Terrier)
@@ -532,7 +532,7 @@ Summary
 
 **What's new**
 
-For Gammapy v0.15 the high-level ``Analysis`` class was moved to the newly
+For Gammapy v0.15 the high level ``Analysis`` class was moved to the newly
 introduced ``gammapy.analysis`` sub-package. The syntax of the YAML config
 file was simplified and validation of config parameters is now available
 for interactive use of the ``Analysis`` class as well. Both is demonstrated in the
@@ -774,7 +774,7 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 - [#2385] Change spatial model default frame to icrs (Christoph Deil)
 - [#2381] Add ``MapDataset.stack()``  (Atreyee Sinha)
 - [#2379] Cleanup ``WcsNDMap`` FITS convention handling (Axel Donath)
-- [#2378] Add support for 3D analysis in the high-level interface (José Enrique Ruiz)
+- [#2378] Add support for 3D analysis in the high level interface (José Enrique Ruiz)
 - [#2377] Implement ``WcsGeom`` coord caching (Axel Donath)
 - [#2375] Adapt ``MapMakerObs`` to return a ``MapDataset`` (Atreyee Sinha)
 - [#2368] Add ``MapDataset.create()`` method (Atreyee Sinha)
@@ -796,9 +796,9 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 - [#2338] Add model registries and ``Model.from_dict()`` method (Quentin Remy)
 - [#2335] Remove ``SpectrumAnalysisIACT`` class (José Enrique Ruiz)
 - [#2334] Simplify and extend background model handling (Axel Donath)
-- [#2330] Migrate SpectrumAnalysisIACT to the high-level interface (José Enrique Ruiz)
+- [#2330] Migrate SpectrumAnalysisIACT to the high level interface (José Enrique Ruiz)
 - [#2326] Fix bug in the spectral gaussian model evaluate method (Léa Jouvin)
-- [#2323] Add high-level Config and Analysis classes (José Enrique Ruiz)
+- [#2323] Add high level Config and Analysis classes (José Enrique Ruiz)
 - [#2321] Dissolve ``gammapy.image`` (Christoph Deil)
 - [#2320] Dissolve ``gammapy.background`` (Christoph Deil)
 - [#2314] Add datasets serialization (Quentin Remy)
@@ -807,7 +807,7 @@ See the complete `Gammapy v0.14 merged pull requests list on Github <https://git
 - [#2292] Implement ``MapDataset.to_spectrum_dataset()`` method (Régis Terrier)
 - [#2279] Update Gammapy packaging, removing astropy-helpers (Christoph Deil)
 - [#2274] PIG 16 - Gammapy package structure (Christoph Deil)
-- [#2219] PIG 12 - High-level interface (José Enrique Ruiz)
+- [#2219] PIG 12 - High level interface (José Enrique Ruiz)
 - [#2218] PIG 13 - Gammapy dependencies and distribution (Christoph Deil)
 - [#2136] PIG 9 - Event sampling (Fabio Pintore)
 
@@ -1602,7 +1602,7 @@ Command line interface:
 
 - The Gammapy command-line interface was changed to use a single command
   ``gammapy`` multiple sub-commands (like ``gammapy info`` or ``gammapy image
-  bin``). Discussions on developing the high-level interface for Gammapy (e.g.
+  bin``). Discussions on developing the high level interface for Gammapy (e.g.
   as a set of command line tools, or a config file driven analysis) are starting
   now.
 
@@ -1616,7 +1616,7 @@ Organisation:
   https://gammapy.org/team.html .
 - To improve the quality of Gammapy, we have set up a proposal-driven process
   for major improvements for Gammapy, described in :ref:`pig-001`. We are now
-  starting to use this to design a better low-level analysis code (`PIG 2`_) and
+  starting to use this to design a better low level analysis code (`PIG 2`_) and
   to define a plan to finish the Python 2-> 3 transition (`PIG 3`_).
 
 .. _PIG 2: https://github.com/gammapy/gammapy/pull/1277

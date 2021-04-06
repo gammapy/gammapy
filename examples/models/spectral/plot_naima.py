@@ -1,8 +1,8 @@
 r"""
 .. _naima-spectral-model:
 
-Naima Spectral Model
-=======================
+Naima spectral model
+====================
 
 This class provides an interface with the models defined in the naima models module.
 

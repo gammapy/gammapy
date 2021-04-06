@@ -2,7 +2,7 @@
 
 .. _getting-started:
 
-Getting Started
+Getting started
 ===============
 
 .. toctree::

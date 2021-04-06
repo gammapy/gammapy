@@ -14,7 +14,7 @@ Introduction
 The `gammapy.makers` sub-package contains classes to perform data reduction tasks
 from DL3 data to binned datasets.
 
-Getting Started
+Getting started
 ===============
 In the data reduction step the DL3 data is prepared for modeling and fitting,
 by binning events into a counts map and interpolating the exposure, background,
@@ -106,7 +106,7 @@ The `MapDatasetMaker` fills the corresponding `counts`, `exposure`, `background`
 `selection` parameter, in case some of the maps should not be computed.
 
 
-Safe Data Range Handling
+Safe data range handling
 ========================
 
 To exclude the data range from a `MapDataset`, that is associated with
@@ -162,7 +162,7 @@ observations the safe mask is applied to the counts and predicted
 number of counts map during fitting. This correctly accounts for
 contributions (spill-over) by the PSF from outside the field of view.
 
-Background Estimation
+Background estimation
 =====================
 
 The background computed by the `MapDatasetMaker` gives the number of counts predicted
@@ -170,7 +170,7 @@ by the background IRF of the observation. Because its actual normalization, or e
 spectral shape, might be poorly constrained, it is necessary to correct it with the data
 themselves. This is the role of background estimation Makers.
 
-FoV Background
+FoV background
 --------------
 
 If the background energy dependent morphology is well reproduced by the background model
@@ -180,7 +180,7 @@ This technique is recommended in most 3D data reductions.
 
 For more details and usage, see :ref:`fov_background`.
 
-Ring Background
+Ring background
 ---------------
 
 If the background model does not reproduce well the morphology, a classical approach consists
@@ -191,7 +191,7 @@ This technique is mostly used for imaging, and should not be applied for 3D mode
 
 For more details and usage, see :ref:`ring_background`.
 
-Reflected Regions Background
+Reflected regions background
 ----------------------------
 
 In the absence of a solid background model, a classical technique in Cherenkov astronomy for 1D
@@ -205,7 +205,7 @@ analysis.
 For more details and usage, see :ref:`reflected_background`.
 
 
-Stacking of Datasets
+Stacking of datasets
 ====================
 
 The `MapDataset` as well as `MapDatasetOnOff` both have an in-place ``stack()``
@@ -238,7 +238,7 @@ observations, the larger dataset must be created first:
 
     print(stacked)
 
-Combining Data Reduction Steps
+Combining data reduction steps
 ==============================
 
 The data reduction steps can be combined in a single loop to run

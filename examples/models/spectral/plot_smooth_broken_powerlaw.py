@@ -1,7 +1,7 @@
 r"""
 .. _smooth-broken-powerlaw-spectral-model:
 
-Smooth Broken Power Law Spectral Model
+Smooth broken power law spectral model
 ======================================
 
 This model parametrises a smooth broken power law spectrum.

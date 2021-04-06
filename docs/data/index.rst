@@ -28,7 +28,7 @@ Once some observation selection has been selected, the user can build a list of 
 a `~gammapy.data.Observations` object, which will be used for the data reduction process.
 
 
-Getting Started
+Getting started
 ===============
 
 You can use the `~gammapy.data.EventList` class to load IACT gamma-ray event lists:

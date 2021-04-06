@@ -34,7 +34,7 @@ class EventList:
     E.g. when simulating data, or processing it in certain ways.
     So generally any analysis code should assume ``TIME`` is not sorted.
 
-    Other optional (columns) that are sometimes useful for high-level analysis:
+    Other optional (columns) that are sometimes useful for high level analysis:
 
     - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
     - ``DETX``, ``DETY`` - Field of view coordinates (deg)

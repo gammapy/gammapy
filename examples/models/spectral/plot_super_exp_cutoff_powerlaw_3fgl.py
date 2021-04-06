@@ -1,7 +1,7 @@
 r"""
 .. _super-exp-cutoff-powerlaw-3fgl-spectral-model:
 
-Super Exponential Cutoff Power Law Model used for 3FGL
+Super exponential cutoff power law model used for 3FGL
 ======================================================
 
 This model parametrises super exponential cutoff power-law model spectrum used for 3FGL.

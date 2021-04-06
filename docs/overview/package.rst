@@ -43,8 +43,8 @@ The access to the data and instrument response is implemented in
 
 .. _overview_data_reduction:
 
-Data reduction (from DL3 to DL4)
---------------------------------
+Data reduction (DL3 to DL4)
+---------------------------
 
 In the next stage of the analysis the user selects a coordinates system, region or
 energy binning and events are binned into multidimensional data structures (maps)
@@ -79,8 +79,8 @@ To learn more about datasets, see :ref:`gammapy.datasets <datasets>` and
 
 .. _overview_modeling:
 
-Modeling and Fitting (from DL4 to DL5)
---------------------------------------
+Modeling and Fitting (DL4 to DL5)
+---------------------------------
 
 The next step is then typically to model and fit the datasets, either
 individually, or in a joint likelihood analysis. For this purpose Gammapy
@@ -100,7 +100,7 @@ and :ref:`gammapy.estimators <estimators>`.
 High Level Analysis Interface
 -----------------------------
 To define and execute a full data analysis process from a YAML configuration file,
-Gammapy implements a high-level analysis interface. It exposes a subset of
+Gammapy implements a high level analysis interface. It exposes a subset of
 the functionality that is available in the sub-packages to support
 standard analysis use case in a convenient way.
 

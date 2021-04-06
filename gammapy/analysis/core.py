@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Session class driving the high-level interface API"""
+"""Session class driving the high level interface API"""
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -27,10 +27,10 @@ log = logging.getLogger(__name__)
 
 
 class Analysis:
-    """Config-driven high-level analysis interface.
+    """Config-driven high level analysis interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
-    an internal high-level interface model, though the user can also provide configuration
+    an internal high level interface model, though the user can also provide configuration
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 

@@ -1,7 +1,7 @@
 r"""
 .. _disk-spatial-model:
 
-Disk Spatial Model
+Disk spatial model
 ==================
 
 This is a spatial model parametrising a disk.

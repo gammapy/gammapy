@@ -8,7 +8,7 @@ visualization - Plotting and Visualization
 
 .. currentmodule:: gammapy.visualization
 
-Getting Started
+Getting started
 ===============
 
 `gammapy.visualization` provides a few helper functions and classes to create
@@ -22,7 +22,7 @@ used in gamma-ray astronomy (`colormap_hess` and `colormap_milagro`).
 
 .. plot:: visualization/colormap_example.py
 
-Survey Panel Plots
+Survey panel plots
 ------------------
 
 The `MapPanelPlotter` allows to split e.g. a galactic plane survey image with

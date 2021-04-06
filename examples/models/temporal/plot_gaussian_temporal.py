@@ -1,7 +1,7 @@
 r"""
 .. _gaussian-temporal-model:
 
-Gaussian Temporal Model
+Gaussian temporal model
 =======================
 
 This model parametrises a gaussian time model.

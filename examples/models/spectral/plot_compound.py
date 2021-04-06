@@ -1,7 +1,7 @@
 r"""
 .. _compound-spectral-model:
 
-Compound Spectral Model
+Compound spectral model
 =======================
 
 This model is formed by the arithmetic combination of any two other spectral models.
