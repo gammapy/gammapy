@@ -109,7 +109,7 @@ Gammapy tutorial notebooks that show examples using ``gammapy.astro.darkmatter``
 
 .. nbgallery::
 
-   ../tutorials/api/astro_dark_matter.ipynb
+   ../../tutorials/api/astro_dark_matter.ipynb
 
 
 Reference/API

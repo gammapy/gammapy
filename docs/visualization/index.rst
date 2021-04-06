@@ -3,7 +3,7 @@
 .. _visualization:
 
 ******************************************
-visualization - Plotting and Visualization
+visualization - Plotting and visualization
 ******************************************
 
 .. currentmodule:: gammapy.visualization
