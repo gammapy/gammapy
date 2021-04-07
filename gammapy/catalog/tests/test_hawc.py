@@ -81,13 +81,11 @@ class TestSourceCatalogObject2HWC:
     @staticmethod
     def test_spatial_model(cat):
         m = cat[1].spatial_model()
-        # p = m.parameters
 
         assert isinstance(m, PointSpatialModel)
         assert m.lon_0.unit == "deg"
         assert_allclose(m.lon_0.value, 195.614, atol=1e-2)
-        # TODO: add assert on position error
-        # assert_allclose(p.error("lon_0"), tbd)
+        assert_allclose(m.lon_0.error, 0.114, atol=1e-2)
         assert m.lat_0.unit == "deg"
         assert_allclose(m.lat_0.value, 3.507, atol=1e-2)
         assert m.frame == "galactic"
@@ -128,12 +126,10 @@ class TestSourceCatalog3HWC:
     def test_positions(ca_3hwc):
         assert len(ca_3hwc.positions) == 65
 
-
-#    TODO : add tests for SourceCatalogObject3HWC.sky_model() and fix it
-#    @staticmethod
-#    def test_to_models(ca_3hwc):
-#        models = ca_3hwc.to_models(which="point")
-#        assert len(models)==65
+    @staticmethod
+    def test_to_models(ca_3hwc):
+        models = ca_3hwc.to_models()
+        assert len(models) == 65
 
 
 @requires_data()
@@ -145,3 +141,49 @@ class TestSourceCatalogObject3HWC:
 
         assert ca_3hwc[1].data["source_name"] == "3HWC J0540+228"
         assert ca_3hwc[1].n_models == 1
+
+    @staticmethod
+    def test_sky_model(ca_3hwc):
+        model = ca_3hwc[4].sky_model()
+        assert model.name == "3HWC J0621+382"
+        assert isinstance(model.spectral_model, PowerLawSpectralModel)
+        assert isinstance(model.spatial_model, DiskSpatialModel)
+
+    @staticmethod
+    def test_spectral_model(ca_3hwc):
+        m = ca_3hwc[0].spectral_model()
+        dnde, dnde_err = m.evaluate_error(7 * u.TeV)
+        assert dnde.unit == "cm-2 s-1 TeV-1"
+        assert_allclose(dnde.value, 2.34e-13, rtol=1e-2)
+        assert_allclose(dnde_err.value, 1.4e-15, rtol=1e-1)
+
+    @staticmethod
+    def test_spatial_model(ca_3hwc):
+        m = ca_3hwc[1].spatial_model()
+
+        assert isinstance(m, PointSpatialModel)
+        assert m.lon_0.unit == "deg"
+        assert_allclose(m.lon_0.value, 184.583, atol=1e-2)
+        assert_allclose(m.lon_0.error, 0.112, atol=1e-2)
+        assert m.lat_0.unit == "deg"
+        assert_allclose(m.lat_0.value, -4.129, atol=1e-2)
+        assert m.frame == "galactic"
+
+        m = ca_3hwc["3HWC J0621+382"].spatial_model()
+
+        assert isinstance(m, DiskSpatialModel)
+        assert m.lon_0.unit == "deg"
+        assert_allclose(m.lon_0.value, 175.444, atol=1e-10)
+        assert m.lat_0.unit == "deg"
+        assert_allclose(m.lat_0.value, 10.966, atol=1e-10)
+        assert m.frame == "galactic"
+        assert m.r_0.unit == "deg"
+        assert_allclose(m.r_0.value, 0.5, atol=1e-3)
+
+        model = ca_3hwc["3HWC J0621+382"].spatial_model()
+        pos_err = model.position_error
+        scale_r95 = Gauss2DPDF().containment_radius(0.95)
+        assert_allclose(pos_err.height.value, 2 * 0.301 * scale_r95, rtol=1e-4)
+        assert_allclose(pos_err.width.value, 2 * 0.301 * scale_r95, rtol=1e-4)
+        assert_allclose(model.position.l.value, pos_err.center.l.value)
+        assert_allclose(model.position.b.value, pos_err.center.b.value)
