@@ -64,24 +64,13 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
             f"Position error: {self.data.pos_err:.3f}\n"
         )
 
-    @staticmethod
-    def _info_spectrum_one(d, idx):
-        ss = f"Spectrum {idx}:\n"
-        val, err = d[f"spec{idx}_dnde"].value, d[f"spec{idx}_dnde_err"].value
-        ss += f"Flux at 7 TeV: {val:.3} +- {err:.3} cm-2 s-1 TeV-1\n"
-        val, err = d[f"spec{idx}_index"], d[f"spec{idx}_index_err"]
-        ss += f"Spectral index: {val:.3f} +- {err:.3f}\n"
-        radius = d[f"spec{idx}_radius"]
-        ss += f"Test Radius: {radius:1}\n\n"
-        return ss
-
     def _info_spectrum(self):
         """Print spectral info."""
         ss = "\n*** Spectral info ***\n\n"
-        ss += self._info_spectrum_one(self.data, 0)
+        ss += self._info_spectrum_one(0)
 
         if self.n_models == 2:
-            ss += self._info_spectrum_one(self.data, 1)
+            ss += self._info_spectrum_one(1)
         else:
             ss += "No second spectrum available for this source"
 
@@ -112,6 +101,17 @@ class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
                 raise ValueError(f"No extended source analysis available: {self.name}")
         else:
             raise ValueError(f"Invalid which: {which!r}")
+
+    def _info_spectrum_one(self, idx):
+        d = self.data
+        ss = f"Spectrum {idx}:\n"
+        val, err = d[f"spec{idx}_dnde"].value, d[f"spec{idx}_dnde_err"].value
+        ss += f"Flux at 7 TeV: {val:.3} +- {err:.3} cm-2 s-1 TeV-1\n"
+        val, err = d[f"spec{idx}_index"], d[f"spec{idx}_index_err"]
+        ss += f"Spectral index: {val:.3f} +- {err:.3f}\n"
+        radius = d[f"spec{idx}_radius"]
+        ss += f"Test Radius: {radius:1}\n\n"
+        return ss
 
     def spectral_model(self, which="point"):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
@@ -229,6 +229,29 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
     def n_models(self):
         return 1
 
+    def _info_spectrum_one(self, idx):
+        d = self.data
+        ss = f"Spectrum {idx}:\n"
+        val, errn, errp = (
+            d[f"spec{idx}_dnde"].value,
+            d[f"spec{idx}_dnde_errn"].value,
+            d[f"spec{idx}_dnde_errp"].value,
+        )
+        ss += f"Flux at 7 TeV: {val:.3} {errn:.3} + {errp:.3} cm-2 s-1 TeV-1\n"
+        val, errn, errp = (
+            d[f"spec{idx}_index"],
+            d[f"spec{idx}_index_errn"],
+            d[f"spec{idx}_index_errp"],
+        )
+        ss += f"Spectral index: {val:.3f} {errn:.3f} + {errp:.3f}\n"
+        radius = d[f"spec{idx}_radius"]
+        ss += f"Test Radius: {radius:1}\n\n"
+        return ss
+
+    @property
+    def is_pointlike(self):
+        return self.data[f"spec0_radius"] == 0.0
+
     def spectral_model(self):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`)."""
 
@@ -256,7 +279,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
         pars = {"lon_0": self.data.glon, "lat_0": self.data.glat, "frame": "galactic"}
 
-        if self.data[f"spec0_radius"] == 0.0:
+        if self.is_pointlike:
             tag = "PointSpatialModel"
         else:
             tag = "DiskSpatialModel"
