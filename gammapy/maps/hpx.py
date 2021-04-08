@@ -6,6 +6,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy import units as u
 from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
@@ -835,10 +836,7 @@ class HpxGeom(Geom):
     @property
     def is_allsky(self):
         """Flag for all-sky maps."""
-        if self._region is None:
-            return True
-        else:
-            return False
+        return self._region is None
 
     @property
     def is_regular(self):
@@ -894,6 +892,22 @@ class HpxGeom(Geom):
         return self.__class__(
             2 ** order, self.nest, frame=self.frame, region=self.region, axes=axes
         )
+
+    def to_nside(self, nside):
+        """Upgrade or downgrade the reoslution to a given nside
+
+        Parameters
+        ----------
+        nside : int
+            Nside
+
+        Returns
+        -------
+        geom : `~HpxGeom`
+            A HEALPix geometry object.
+        """
+        order = nside_to_order(nside=nside)
+        return self.to_ud_graded(order=order)
 
     def to_swapped(self):
         """Geometry copy with swapped ORDERING (NEST->RING or vice versa).
@@ -1399,6 +1413,66 @@ class HpxGeom(Geom):
             proj=proj,
         )
 
+    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
+        """Create WCS tiles geometries from HPX geometry with given nside.
+
+        The HEALPix geom is divide into superpixels defined by nside_tiles,
+        which are then represented by a WCS geometry using a tangential
+        projection. The number of WCS tiles is given by the number of pixels
+        for the given nside_tiles.
+
+        Parameters
+        ----------
+        nside_tiles : int
+            Nside for super pixel tiles. Usually nsi
+        margin : Angle
+            Width margin of the wcs tile
+
+        Return
+        ------
+        wcs_tiles : list
+            List of WCS tile geoms.
+        """
+        import healpy as hp
+
+        margin = u.Quantity(margin)
+
+        if nside_tiles >= self.nside:
+            raise ValueError(f"nside_tiles must be < {self.nside}")
+
+        if not self.is_allsky:
+            raise ValueError("to_wcs_tiles() is only supported for all sky geoms")
+
+        binsz = np.degrees(hp.nside2resol(self.nside)) * u.deg
+
+        hpx = self.to_image().to_nside(nside=nside_tiles)
+        wcs_tiles = []
+
+        for pix in range(int(hpx.npix)):
+            skydir = hpx.pix_to_coord([pix])
+            vtx = hp.boundaries(
+                nside=hpx.nside, pix=pix, nest=hpx.nest, step=1
+            )
+
+            lon, lat = hp.vec2ang(vtx.T, lonlat=True)
+            boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
+
+            # Compute maximum separation between all pairs of boundaries and take it
+            # as width
+            width = boundaries.separation(boundaries[:, np.newaxis]).max()
+
+            wcs_tile_geom = WcsGeom.create(
+                skydir=(float(skydir[0]), float(skydir[1])),
+                width=width + margin,
+                binsz=binsz,
+                frame=hpx.frame,
+                proj="TAN",
+                axes=self.axes
+            )
+            wcs_tiles.append(wcs_tile_geom)
+
+        return wcs_tiles
+
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError(f"Image index out of range: {idx!r}")
@@ -1525,7 +1599,7 @@ class HpxGeom(Geom):
             f"\tndim       : {self.ndim}\n"
             f"\tnside      : {self.nside[0]}\n"
             f"\tnested     : {self.nest}\n"
-            f"\tframe   : {self.frame}\n"
+            f"\tframe      : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         )

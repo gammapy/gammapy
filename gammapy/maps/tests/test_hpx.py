@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
+from astropy import units as u
 from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
@@ -726,6 +727,22 @@ def test_hpxgeom_solid_angle():
 
     assert solid_angle.shape == (1,)
     assert_allclose(solid_angle.value, 0.016362461737446838)
+
+
+def test_hpx_geom_to_wcs_tiles():
+    geom = HpxGeom.create(
+        nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
+    )
+
+    tiles = geom.to_wcs_tiles(nside_tiles=2)
+    assert len(tiles) == 48
+    assert tiles[0].projection == "TAN"
+    assert_allclose(tiles[0].width, [[43.974226], [43.974226]] * u.deg)
+
+    tiles = geom.to_wcs_tiles(nside_tiles=4)
+    assert len(tiles) == 192
+    assert tiles[0].projection == "TAN"
+    assert_allclose(tiles[0].width, [[21.987113], [21.987113]] * u.deg)
 
 
 def test_geom_repr():

@@ -351,3 +351,33 @@ def test_hpxndmap_resample_axis():
     m3 = m.resample_axis(axis=new_axis)
     assert m3.data.shape == (3, 1, 3072)
     assert_allclose(m3.data, 2)
+
+
+def test_hpx_nd_map_to_wcs_tiles():
+    m = HpxNDMap.create(nside=8, frame="galactic")
+    m.data += 1
+
+    tiles = m.to_wcs_tiles(nside_tiles=4)
+    assert_allclose(tiles[0].data, 1)
+    assert_allclose(tiles[32].data, 1)
+
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=8, frame="galactic", axes=[axis])
+    m.data += 1
+
+    tiles = m.to_wcs_tiles(nside_tiles=4)
+    assert_allclose(tiles[0].data, 1)
+    assert_allclose(tiles[32].data, 1)
+
+
+def test_from_wcs_tiles():
+    geom = HpxGeom.create(nside=8)
+
+    wcs_geoms = geom.to_wcs_tiles(nside_tiles=4)
+
+    wcs_tiles = [Map.from_geom(geom, data=1) for geom in wcs_geoms]
+
+    m = HpxNDMap.from_wcs_tiles(wcs_tiles=wcs_tiles)
+
+    assert_allclose(m.data, 1)
+
