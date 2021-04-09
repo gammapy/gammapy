@@ -72,7 +72,7 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         if self.n_models == 2:
             ss += self._info_spectrum_one(1)
         else:
-            ss += "No second spectrum available for this source"
+            ss += "No second spectrum available"
 
         return ss
 
