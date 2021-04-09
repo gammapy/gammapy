@@ -232,7 +232,7 @@ class Parameter:
 
     @quantity.setter
     def quantity(self, val):
-        val = u.Quantity(val, unit=self.unit)
+        val = u.Quantity(val)
         self.value = val.value
         self.unit = val.unit
 

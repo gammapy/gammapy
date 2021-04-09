@@ -84,7 +84,6 @@ def fermi_dataset():
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
     exposure = exposure.cutout(exposure.geom.center_skydir, size)
-    exposure.unit = "cm2 s"
 
     psfmap = PSFMap.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz", format="gtpsf"
@@ -119,6 +118,8 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(result["niter"].data[0, 99, 99], 8)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
+    # assert_allclose(result["npred"].data[0, 99, 99], array(3627.874063), rtol=1e-2)
+    # assert_allclose(result["npred_null"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -132,16 +133,22 @@ def test_compute_ts_map(input_dataset):
 
 @requires_data()
 def test_compute_ts_map_psf(fermi_dataset):
-    estimator = TSMapEstimator(kernel_width="1 deg", selection_optional="all")
+    spatial_model = PointSpatialModel()
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    estimator = TSMapEstimator(model=model, kernel_width="1 deg", selection_optional="all")
     result = estimator.run(fermi_dataset)
 
     assert_allclose(result["ts"].data[0, 29, 29], 835.140605, rtol=1e-2)
     assert_allclose(result["niter"].data[0, 29, 29], 7)
     assert_allclose(result["flux"].data[0, 29, 29], 1.351949e-09, rtol=1e-2)
+
     assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=1e-2)
     assert_allclose(result["flux_errp"].data[0, 29, 29], 7.9376134e-11, rtol=1e-2)
     assert_allclose(result["flux_errn"].data[0, 29, 29], 7.5180404579e-11, rtol=1e-2)
     assert_allclose(result["flux_ul"].data[0, 29, 29], 1.63222157e-10, rtol=1e-2)
+
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
@@ -149,7 +156,12 @@ def test_compute_ts_map_psf(fermi_dataset):
 
 @requires_data()
 def test_compute_ts_map_energy(fermi_dataset):
+    spatial_model = PointSpatialModel()
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
     estimator = TSMapEstimator(
+        model=model,
         kernel_width="0.6 deg",
         energy_edges=[10, 100, 1000] * u.GeV,
         sum_over_energy_groups=False,
