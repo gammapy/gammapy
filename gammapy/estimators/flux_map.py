@@ -78,20 +78,15 @@ class FluxMaps(FluxEstimate):
         the maps GTI information. Default is None.
     """
 
-    def __init__(self, data, reference_model=None, gti=None):
-        if reference_model is None:
-            log.warning(
-                "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
-            )
-            reference_model = self.default_model
-
+    def __init__(self, data, reference_model, gti=None):
         self.reference_model = reference_model
         self.gti = gti
 
-        super().__init__(data, spectral_model=reference_model.spectral_model)
+        super().__init__(data=data, reference_spectral_model=reference_model.spectral_model)
 
     @classproperty
-    def default_model(cls):
+    def reference_model_default(cls):
+        """Default reference model: a point source with index = 2  (`SkyModel`)"""
         return SkyModel.create("pl", "point")
 
     @property
@@ -103,8 +98,8 @@ class FluxMaps(FluxEstimate):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__)
         str_ += "\n\n"
-        str_ += "\t" + "\t\n".join(str(self.norm.geom).split("\n")[:1])
-        str_ += "\n\t" + "\n\t".join(str(self.norm.geom).split("\n")[2:])
+        str_ += "\t" + "\t\n".join(str(self.geom).split("\n")[:1])
+        str_ += "\n\t" + "\n\t".join(str(self.geom).split("\n")[2:])
 
         str_ += f"\n\tAvailable quantities : {list(self.data.keys())}\n\n"
 
@@ -131,7 +126,7 @@ class FluxMaps(FluxEstimate):
             position = self.geom.center_skydir
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            ref_fluxes = self.spectral_model.reference_fluxes(self.energy_axis)
+            ref_fluxes = self.reference_spectral_model.reference_fluxes(self.energy_axis)
 
         table = Table(ref_fluxes)
         table.meta["SED_TYPE"] = "likelihood"
@@ -141,7 +136,8 @@ class FluxMaps(FluxEstimate):
         )
 
         # TODO: add support of norm and stat scan
-        for name, m in self.data.items():
+        for name in self.data:
+            m = getattr(self, name)
             table[name] = m.get_by_coord(coords) * m.unit
 
         return FluxPoints(table).to_sed_type("dnde")
@@ -385,3 +381,7 @@ class FluxMaps(FluxEstimate):
                 data[key] = maps[key]
 
         return cls(data=data, reference_model=reference_model, gti=gti)
+
+    # TODO: should we allow this?
+    def __getitem__(self, item):
+        return getattr(self, item)

@@ -9,7 +9,7 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import Estimator
+from .core import Estimator, DEFAULT_UNIT
 from .flux import FluxEstimator
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
@@ -31,13 +31,6 @@ OPTIONAL_COLUMNS = {
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
     "likelihood": ["norm_scan", "stat_scan"],
-}
-
-DEFAULT_UNIT = {
-    "dnde": u.Unit("cm-2 s-1 TeV-1"),
-    "e2dnde": u.Unit("erg cm-2 s-1"),
-    "flux": u.Unit("cm-2 s-1"),
-    "eflux": u.Unit("erg cm-2 s-1"),
 }
 
 
