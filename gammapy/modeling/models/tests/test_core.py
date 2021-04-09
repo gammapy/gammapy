@@ -80,8 +80,8 @@ def test_model_init():
     # TODO: discuss if this is the behaviour we want, or if we instead
     # should change to the user-set unit, as long as it's compatible
     m = MyModel(x=99 * u.m)
-    assert_allclose(m.x.value, 9900)
-    assert m.x.unit == "cm"
+    assert_allclose(m.x.value, 99)
+    assert m.x.unit == "m"
 
     with pytest.raises(u.UnitConversionError):
         MyModel(x=99)
