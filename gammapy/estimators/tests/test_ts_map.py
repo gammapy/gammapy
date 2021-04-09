@@ -118,8 +118,9 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(result["niter"].data[0, 99, 99], 8)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
-    # assert_allclose(result["npred"].data[0, 99, 99], array(3627.874063), rtol=1e-2)
-    # assert_allclose(result["npred_null"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["npred"].data[0, 99, 99], 3627.874063, rtol=1e-2)
+    assert_allclose(result["npred_null"].data[0, 99, 99], 2601, rtol=1e-2)
+    assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
