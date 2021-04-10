@@ -192,9 +192,10 @@ def test_set_parameters_from_table():
     assert d[0]["value"] == 3.0
     assert d[0]["min"] == -10
     assert d[0]["max"] == 10
-    assert d[0]["frozen"] == True
+    assert d[0]["frozen"]
     assert d[0]["name"] == "index"
-    assert d[1]["frozen"] == True
+
+    assert d[1]["frozen"]
 
 
 @requires_data()
@@ -206,10 +207,9 @@ def test_plot_models(caplog):
         models.plot_positions()
         models.plot_regions()
 
-    geom = models.geom
-    assert geom.data_shape == (1, 1)
+    assert models.wcs_geom.data_shape == (171, 147)
 
-    regions = models.get_regions()
+    regions = models.to_regions()
     assert len(regions) == 3
 
     p1 = Model.create("pl-2", model_type="spectral",)

@@ -3,13 +3,16 @@ import logging
 import collections.abc
 import copy
 from os.path import split
+import yaml
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-import yaml
+from astropy.visualization.wcsaxes import WCSAxes
+from astropy.coordinates import  SkyCoord
+from regions import PointSkyRegion
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import RegionGeom, Map, WcsGeom
+from gammapy.maps import RegionGeom, Map
 
 
 log = logging.getLogger(__name__)
@@ -816,15 +819,32 @@ class DatasetModels(collections.abc.Sequence):
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
 
-    def get_regions(self):
+    @property
+    def positions(self):
+        """Positions of the models (`SkyCoord`)"""
+        positions = []
+
+        for model in self.select(tag="sky-model"):
+            if model.position:
+                positions.append(model.position)
+            else:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+
+        return SkyCoord(positions)
+
+    def to_regions(self):
         """Returns a list of the regions for the spatial models
 
         Returns
         -------
         regions: list of `~regions.SkyRegion`
+            Regions
         """
         regions = []
-        for model in self:
+
+        for model in self.select(tag="sky-model"):
             try:
                 region = model.spatial_model.to_region()
                 regions.append(region)
@@ -835,11 +855,11 @@ class DatasetModels(collections.abc.Sequence):
         return regions
 
     @property
-    def geom(self):
-        """ Minimum Region geom in which all the models are contained """
-        regions = self.get_regions()
+    def wcs_geom(self):
+        """Minimum WCS geom in which all the models are contained """
+        regions = self.to_regions()
         try:
-            return RegionGeom.from_regions(regions)
+            return RegionGeom.from_regions(regions).to_wcs_geom()
         except IndexError:
             log.error("No spatial component in any model. Geom not defined")
 
@@ -848,79 +868,68 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on. If no axes are given, an all-sky wcs
             is chosen using a CAR projection
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.add_artist`
+            Keyword arguments passed to `~matplotlib.artists.Artist`
 
 
         Returns
         -------
-        ax : `~astropy.vizualisation.WcsAxes
+        ax : `~astropy.visualization.WcsAxes
+            WCS axes
         """
-        from astropy.visualization.wcsaxes import WCSAxes
-        from regions import PointSkyRegion
-
         if ax is None or not isinstance(ax, WCSAxes):
-            wcs_geom = self.geom.to_wcs_geom()
-            fig, ax, _ = Map.from_geom(wcs_geom).plot()
+            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
 
-        wcs = ax.wcs
+        kwargs.setdefault("color", "tab:blue")
+        path_effects = kwargs.get('path_effects', None)
 
-        kwargs.setdefault("color", "black")
-        kwargs.setdefault("linewidth", "2")
-
-        for region in self.get_regions():
+        for region in self.to_regions():
             if isinstance(region, PointSkyRegion):
-                ax.plot(
-                    region.center.to_pixel(wcs=wcs)[0],
-                    region.center.to_pixel(wcs=wcs)[1],
-                    **kwargs,
-                    marker="o",
-                )
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs, marker="*")
             else:
-                artist = region.to_pixel(wcs).as_artist(**kwargs)
-                ax.add_artist(artist)
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
+
+            if path_effects:
+                artist.set_path_effects([path_effects])
+
+            ax.add_artist(artist)
 
         return ax
 
     def plot_positions(self, ax=None, **kwargs):
         """"Plot the centers of the spatial models on a given wcs axis
 
+        Parameters
         ----------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on. If no axes are given, an all-sky wcs
             is chosen using a CAR projection
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes`
+            Keyword arguments passed to `~matplotlib.pyplot.scatter`
 
 
         Returns
         -------
         ax : `~astropy.vizualisation.WcsAxes
+            Wcs axes
         """
-        from astropy.visualization.wcsaxes import WCSAxes
+        import matplotlib.pyplot as plt
 
         if ax is None or not isinstance(ax, WCSAxes):
-            wcs_geom = self.geom.to_wcs_geom()
-            fig, ax, _ = Map.from_geom(wcs_geom).plot()
-        wcs = ax.wcs
+            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
 
-        kwargs.setdefault("color", "black")
-        kwargs.setdefault("markersize", "2")
         kwargs.setdefault("marker", "*")
-        for model in self:
-            try:
-                ax.plot(
-                    model.spatial_model.position.to_pixel(wcs=wcs)[0],
-                    model.spatial_model.position.to_pixel(wcs=wcs)[1],
-                    **kwargs,
-                )
-            except AttributeError:
-                log.warning(
-                    f"Skipping model {model.name} - no spatial component present"
-                )
+        kwargs.setdefault("color", "tab:blue")
+        path_effects = kwargs.get('path_effects', None)
+
+        xp, yp = self.positions.to_pixel(ax.wcs)
+        p = ax.scatter(xp, yp, **kwargs)
+
+        if path_effects:
+            plt.setp(p, path_effects=path_effects)
 
         return ax
 
