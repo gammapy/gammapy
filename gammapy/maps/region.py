@@ -542,7 +542,7 @@ class RegionGeom(Geom):
         table.meta.update(header)
         return table
 
-    def to_hdulist(self, format="ogip", hdu=None):
+    def to_hdulist(self, format="ogip", hdu_bands=None, hdu_region=None):
         """Convert geom to hdulist
 
         Parameters
@@ -558,19 +558,22 @@ class RegionGeom(Geom):
             HDU list
 
         """
+        if hdu_bands is None:
+            hdu_bands = "HDU_BANDS"
+        if hdu_region is None:
+            hdu_region = "HDU_REGION"
+        if format != "gadf":
+            hdu_region = "REGION"
+
         hdulist = fits.HDUList()
 
-        hdulist.append(self.axes.to_table_hdu(prefix=hdu, format=format))
+        hdulist.append(self.axes.to_table_hdu(prefix=hdu_bands, format=format))
 
         # region HDU
         if self.region:
             region_table = self._to_region_table()
 
-            name = "REGION"
-            if hdu and format == "gadf":
-                name = hdu + "_" + name
-
-            region_hdu = fits.BinTableHDU(region_table, name=name)
+            region_hdu = fits.BinTableHDU(region_table, name=hdu_region)
             hdulist.append(region_hdu)
 
         return hdulist

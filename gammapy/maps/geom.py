@@ -580,8 +580,8 @@ class MapAxes(Sequence):
         elif format == "fgst-template":
             hdu = "ENERGIES"
         elif format == "gadf" or format is None:
-            if extname:
-                hdu = extname
+            if prefix:
+                hdu = prefix
             else:
                 hdu = "BANDS"
         else:
@@ -2130,8 +2130,8 @@ class Geom(abc.ABC):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def to_bands_hdu(self, hdu=None, hdu_skymap=None, format="gadf"):
-        table_hdu = self.axes.to_table_hdu(format=format, prefix=hdu_skymap)
+    def to_bands_hdu(self, hdu_bands=None, format="gadf"):
+        table_hdu = self.axes.to_table_hdu(format=format, prefix=hdu_bands)
         cols = table_hdu.columns.columns
         cols.extend(self._make_bands_cols())
         return fits.BinTableHDU.from_columns(

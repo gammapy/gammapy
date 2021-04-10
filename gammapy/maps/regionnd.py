@@ -334,7 +334,7 @@ class RegionNDMap(Map):
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="gadf", hdu="SKYMAP"):
+    def to_hdulist(self, format="gadf", hdu="SKYMAP", hdu_bands=None, hdu_region=None):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -343,6 +343,10 @@ class RegionNDMap(Map):
             Format specification
         hdu : str
             Name of the HDU with the map data, used for "gadf" format.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table, used for "gadf" format.
+        hdu_region : str
+            Name or index of the HDU with the region table.
 
         Returns
         -------
@@ -351,6 +355,11 @@ class RegionNDMap(Map):
         """
         hdulist = fits.HDUList()
         table = self.to_table(format=format)
+
+        if hdu_bands is None:
+            hdu_bands = f"{hdu.upper()}_BANDS"
+        if hdu_region is None:
+            hdu_region = f"{hdu.upper()}_REGION"
 
         if format in ["ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"]:
             hdulist.append(fits.BinTableHDU(table))
@@ -361,7 +370,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Unsupported format '{format}'")
 
         if format in ["ogip", "ogip-sherpa", "gadf"]:
-            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
+            hdulist_geom = self.geom.to_hdulist(format=format, hdu_bands=hdu_bands, hdu_region=hdu_region)
             hdulist.extend(hdulist_geom[1:])
 
         return hdulist

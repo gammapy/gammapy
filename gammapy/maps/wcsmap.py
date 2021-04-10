@@ -199,7 +199,7 @@ class WcsMap(Map):
 
         if self.geom.axes:
             hdu_bands_out = self.geom.to_bands_hdu(
-                extname=hdu_bands, format=format
+                hdu_bands=hdu_bands, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
