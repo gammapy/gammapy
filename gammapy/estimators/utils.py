@@ -12,7 +12,108 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-__all__ = ["find_peaks", "estimate_exposure_reco_energy"]
+__all__ = ["find_roots", "find_peaks", "estimate_exposure_reco_energy"]
+
+from scipy.optimize import root_scalar
+
+
+def find_roots(
+    f,
+    x_bounds,
+    nbin=1000,
+    args=(),
+    method="brentq",
+    fprime=None,
+    fprime2=None,
+    xtol=None,
+    rtol=None,
+    maxiter=None,
+    options=None,
+):
+    """ Find roots of a scalar function within a given range.
+    
+    Parameters
+    ----------
+    f : callable
+        A function to find roots of.
+    x_bounds : A sequence of 2 floats
+        The search range to find roots.
+    nbin : int
+        Number of bins to sample the search range
+    args : tuple, optional
+        Extra arguments passed to the objective function and its derivative(s).
+    method : str, optional
+        Solver available in `~scipy.optimize.root_scalar`.  Should be one of :
+            - 'brentq' (default),
+            - 'brenth',
+            - 'bisect', 
+            - 'ridder',
+            - 'toms748',
+            - 'newton',
+            - 'secant',
+            - 'halley',
+    fprime : bool or callable, optional
+        If `fprime` is a boolean and is True, `f` is assumed to return the
+        value of the objective function and of the derivative.
+        `fprime` can also be a callable returning the derivative of `f`. In
+        this case, it must accept the same arguments as `f`.
+    fprime2 : bool or callable, optional
+        If `fprime2` is a boolean and is True, `f` is assumed to return the
+        value of the objective function and of the
+        first and second derivatives.
+        `fprime2` can also be a callable returning the second derivative of `f`.
+        In this case, it must accept the same arguments as `f`.
+    xtol : float, optional
+        Tolerance (absolute) for termination.
+    rtol : float, optional
+        Tolerance (relative) for termination.
+    maxiter : int, optional
+        Maximum number of iterations.
+    options : dict, optional
+        A dictionary of solver options.
+        See `~scipy.optimize.root_scalar` for details.
+
+    Returns
+    -------
+    roots : `~numpy.array` or None
+        The function roots in the search range.
+        If no roots are not found, it returns None.
+        If the solver failed to converge in a bracketing range array element is NaN.
+    """
+
+    kwargs = dict(
+        args=(),
+        method=method,
+        fprime=fprime,
+        fprime2=fprime2,
+        xtol=xtol,
+        rtol=rtol,
+        maxiter=maxiter,
+        options=options,
+    )
+
+    x = np.linspace(x_bounds[0], x_bounds[1], nbin)
+    signs = np.sign(f(x))
+    ind = np.where(signs[:-1] != signs[1:])[0]
+    nroots = len(ind)
+    if nroots > 0:
+        roots = np.ones(nroots) * np.nan
+    else:
+        return None
+
+    for k, idx in enumerate(ind):
+        bracket = [x[idx], x[idx + 1]]
+        if method in ["bisection", "brentq", "brenth", "ridder", "toms748"]:
+            kwargs["bracket"] = bracket
+        elif method in ["secant", "newton", "halley"]:
+            kwargs["x0"] = bracket[0]
+            kwargs["x1"] = bracket[1]
+        else:
+            raise ValueError(f'Unknown solver "{method}"')
+        sol = root_scalar(f, **kwargs)
+        if sol.converged:
+            roots[k] = sol.root
+    return roots
 
 
 def find_peaks(image, threshold, min_distance=1):
@@ -63,7 +164,9 @@ def find_peaks(image, threshold, min_distance=1):
         raise TypeError("find_peaks only supports WcsNDMap")
 
     if not image.geom.is_flat:
-        raise ValueError("find_peaks only supports flat Maps, with no spatial axes of length 1.")
+        raise ValueError(
+            "find_peaks only supports flat Maps, with no spatial axes of length 1."
+        )
 
     if isinstance(min_distance, (str, u.Quantity)):
         min_distance = np.mean(u.Quantity(min_distance) / image.geom.pixel_scales)
