@@ -7,7 +7,6 @@ import yaml
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from astropy.visualization.wcsaxes import WCSAxes
 from astropy.coordinates import  SkyCoord
 from regions import PointSkyRegion
 from gammapy.modeling import Covariance, Parameter, Parameters
@@ -880,6 +879,8 @@ class DatasetModels(collections.abc.Sequence):
         ax : `~astropy.visualization.WcsAxes
             WCS axes
         """
+        from astropy.visualization.wcsaxes import WCSAxes
+
         if ax is None or not isinstance(ax, WCSAxes):
             fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
 
@@ -916,6 +917,7 @@ class DatasetModels(collections.abc.Sequence):
         ax : `~astropy.vizualisation.WcsAxes
             Wcs axes
         """
+        from astropy.visualization.wcsaxes import WCSAxes
         import matplotlib.pyplot as plt
 
         if ax is None or not isinstance(ax, WCSAxes):
