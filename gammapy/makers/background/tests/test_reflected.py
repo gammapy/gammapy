@@ -229,5 +229,5 @@ def test_reflected_bkg_maker_no_off_background(reflected_bkg_maker, observations
         dataset_on_off = reflected_bkg_maker.run(dataset, obs)
         datasets.append(dataset_on_off)
 
-    assert_allclose(datasets[0].counts_off.data, np.nan)
+    assert_allclose(datasets[0].counts_off.data, 0)
     assert_allclose(datasets[0].acceptance_off, 0)
