@@ -155,7 +155,7 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg"):
+    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg", data=None):
         """Create an empty region map object.
 
         Parameters
@@ -172,14 +172,16 @@ class RegionNDMap(Map):
             Dictionary to store meta data.
         wcs : `~astropy.wcs.WCS`
             WCS projection to use for local projections of the region
+        data : `~numpy.ndarray`
+            Data array
 
         Returns
         -------
         map : `RegionNDMap`
             Region map
         """
-        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs,binsz_wcs=binsz_wcs)
-        return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
+        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs, binsz_wcs=binsz_wcs)
+        return cls(geom=geom, dtype=dtype, unit=unit, meta=meta, data=data)
 
     def downsample(
         self, factor, preserve_counts=True, axis_name="energy", weights=None

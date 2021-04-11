@@ -56,11 +56,12 @@ def simulate_spectrum_dataset(model, random_state=0):
     mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
     mask_safe.data += True
 
+    acceptance_off = RegionNDMap.from_geom(geom=geom, data=5)
     dataset = SpectrumDatasetOnOff(
         name="test_onoff",
         exposure=exposure,
         acceptance=acceptance,
-        acceptance_off=5,
+        acceptance_off=acceptance_off,
         edisp=edisp,
         mask_safe=mask_safe
     )

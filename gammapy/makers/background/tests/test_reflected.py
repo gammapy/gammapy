@@ -209,6 +209,7 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
     assert datasets[0].counts_off is None
     assert_allclose(datasets[0].acceptance_off, 0)
 
+
 @requires_data()
 def test_reflected_bkg_maker_no_off_background(reflected_bkg_maker, observations):
     pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")

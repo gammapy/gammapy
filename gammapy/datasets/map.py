@@ -1852,7 +1852,7 @@ class MapDatasetOnOff(MapDataset):
         for key in ["counts_off", "acceptance", "acceptance_off"]:
             off_maps[key] = Map.from_geom(geom, unit="")
 
-        return cls.from_map_dataset(dataset, **off_maps)
+        return cls.from_map_dataset(dataset, name=name, **off_maps)
 
     @classmethod
     def from_map_dataset(
