@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.modeling.models import Model, Models, Parameter, Parameters, SkyModel
-from gammapy.utils.testing import requires_data, mpl_plot_check
+from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
 
 
 class MyModel(Model):
@@ -114,7 +114,6 @@ def test_model_parameter():
 
 
 # TODO: implement parameter linking. Not working ATM!
-@pytest.mark.xfail()
 def test_model_parameter_link():
     # Assigning a parameter should create a link
     m = MyModel()
@@ -199,8 +198,8 @@ def test_set_parameters_from_table():
 
 
 @requires_data()
+@requires_dependency("matplotlib")
 def test_plot_models(caplog):
-    # read gammapy models
     models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
 
     with mpl_plot_check():
