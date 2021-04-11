@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.estimators.utils import find_peaks
+from gammapy.estimators.utils import find_peaks, find_roots
 from gammapy.maps import Map, MapAxis
+import pytest
 
 
 class TestFindPeaks:
@@ -47,9 +48,9 @@ class TestFindPeaks:
 
     def test_flat_map(self):
         """Test a simple example"""
-        axis1 = MapAxis.from_edges([1,2],name='axis1')
-        axis2 = MapAxis.from_edges([9,10],name='axis2')
-        image = Map.create(npix=(10, 5), unit="s", axes=[axis1,axis2])
+        axis1 = MapAxis.from_edges([1, 2], name="axis1")
+        axis2 = MapAxis.from_edges([9, 10], name="axis2")
+        image = Map.create(npix=(10, 5), unit="s", axes=[axis1, axis2])
         image.data[..., 3, 3] = 11
         image.data[..., 3, 4] = 10
         image.data[..., 3, 5] = 12
@@ -63,3 +64,37 @@ class TestFindPeaks:
         assert_allclose(row["value"], 1e20)
         assert_allclose(row["ra"], 359.55)
         assert_allclose(row["dec"], -0.2)
+
+
+class TestFindRoots:
+    x_bounds = [-3 * np.pi, 2 * np.pi]
+
+    def f(self, x):
+        return np.cos(x)
+
+    def g(self, x):
+        return np.cos(x) + 2
+
+    def h(self, x):
+        return x ** 3 - 1
+
+    def test_brentq(self):
+        roots = find_roots(self.f, x_bounds=self.x_bounds, method="brentq")
+        assert_allclose(2 * roots / np.pi, np.array([-5.0, -3.0, -1.0, 1.0, 3.0]))
+
+        roots = find_roots(self.h, x_bounds=self.x_bounds, method="brentq")
+        assert_allclose(roots, np.array([1.0]))
+
+        roots = find_roots(self.g, x_bounds=self.x_bounds, method="brentq")
+        assert roots == None
+
+    def test_secant(self):
+        roots = find_roots(self.f, x_bounds=self.x_bounds, method="secant")
+        assert_allclose(2 * roots / np.pi, np.array([-5.0, -3.0, -1.0, 1.0, 3.0]))
+
+        roots = find_roots(self.h, x_bounds=self.x_bounds, method="secant")
+        assert_allclose(roots, np.array([1.0]))
+
+    def test_invalid_method(self):
+        with pytest.raises(ValueError, match='Unknown solver "xfail"'):
+            find_roots(self.f, x_bounds=self.x_bounds, method="xfail")
