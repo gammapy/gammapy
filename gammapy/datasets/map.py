@@ -1722,21 +1722,8 @@ class MapDatasetOnOff(MapDataset):
         self.counts = counts
         self.counts_off = counts_off
         self.exposure = exposure
-
-        if np.isscalar(acceptance):
-            acceptance = Map.from_geom(
-                self._geom, data=np.ones(self.data_shape) * acceptance
-            )
-
         self.acceptance = acceptance
-
-        if np.isscalar(acceptance_off):
-            acceptance_off = Map.from_geom(
-                self._geom, data=np.ones(self.data_shape) * acceptance_off
-            )
-
         self.acceptance_off = acceptance_off
-
         self.gti = gti
         self.mask_fit = mask_fit
         self.psf = psf
@@ -1903,7 +1890,7 @@ class MapDatasetOnOff(MapDataset):
         for key in ["counts_off", "acceptance", "acceptance_off"]:
             off_maps[key] = Map.from_geom(geom, unit="")
 
-        return cls.from_map_dataset(dataset, **off_maps)
+        return cls.from_map_dataset(dataset, name=name, **off_maps)
 
     @classmethod
     def from_map_dataset(
@@ -1948,7 +1935,7 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             gti=dataset.gti,
-            name=dataset.name,
+            name=name,
             meta_table=dataset.meta_table,
         )
 
@@ -1966,7 +1953,6 @@ class MapDatasetOnOff(MapDataset):
         dataset: `MapDataset`
             Map dataset with cash statistics
         """
-
         name = make_name(name)
 
         return MapDataset(

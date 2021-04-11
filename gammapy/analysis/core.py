@@ -380,6 +380,8 @@ class Analysis:
             stacked = self.datasets.stack_reduce(name="stacked")
             self.datasets = Datasets([stacked])
 
+
+
     @staticmethod
     def _make_energy_axis(axis, name="energy"):
         return MapAxis.from_bounds(
