@@ -2,8 +2,8 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import Model, Models, Parameter, Parameters
-from gammapy.utils.testing import requires_data
+from gammapy.modeling.models import Model, Models, Parameter, Parameters, SkyModel
+from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
 
 
 class MyModel(Model):
@@ -114,7 +114,6 @@ def test_model_parameter():
 
 
 # TODO: implement parameter linking. Not working ATM!
-@pytest.mark.xfail()
 def test_model_parameter_link():
     # Assigning a parameter should create a link
     m = MyModel()
@@ -192,6 +191,35 @@ def test_set_parameters_from_table():
     assert d[0]["value"] == 3.0
     assert d[0]["min"] == -10
     assert d[0]["max"] == 10
-    assert d[0]["frozen"] == True
+    assert d[0]["frozen"]
     assert d[0]["name"] == "index"
-    assert d[1]["frozen"] == True
+
+    assert d[1]["frozen"]
+
+
+@requires_data()
+@requires_dependency("matplotlib")
+def test_plot_models(caplog):
+    models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
+
+    with mpl_plot_check():
+        models.plot_positions()
+        models.plot_regions()
+
+    assert models.wcs_geom.data_shape == (171, 147)
+
+    regions = models.to_regions()
+    assert len(regions) == 3
+
+    p1 = Model.create("pl-2", model_type="spectral",)
+    g1 = Model.create("gauss", model_type="spatial")
+    p2 = Model.create("pl-2", model_type="spectral",)
+    m1 = SkyModel(spectral_model=p1, spatial_model=g1, name="m1")
+    m2 = SkyModel(spectral_model=p2, name="m2")
+    models = Models([m1, m2])
+
+    models.plot_regions()
+    assert caplog.records[-1].levelname == "WARNING"
+    assert (
+        caplog.records[-1].message == "Skipping model m2 - no spatial component present"
+    )

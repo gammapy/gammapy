@@ -3,13 +3,17 @@ import logging
 import collections.abc
 import copy
 from os.path import split
+import yaml
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-import yaml
+from astropy.visualization.wcsaxes import WCSAxes
+from astropy.coordinates import  SkyCoord
+from regions import PointSkyRegion
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.maps import RegionGeom, Map
+
 
 log = logging.getLogger(__name__)
 
@@ -814,6 +818,120 @@ class DatasetModels(collections.abc.Sequence):
         return SkyModel(
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
+
+    @property
+    def positions(self):
+        """Positions of the models (`SkyCoord`)"""
+        positions = []
+
+        for model in self.select(tag="sky-model"):
+            if model.position:
+                positions.append(model.position)
+            else:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+
+        return SkyCoord(positions)
+
+    def to_regions(self):
+        """Returns a list of the regions for the spatial models
+
+        Returns
+        -------
+        regions: list of `~regions.SkyRegion`
+            Regions
+        """
+        regions = []
+
+        for model in self.select(tag="sky-model"):
+            try:
+                region = model.spatial_model.to_region()
+                regions.append(region)
+            except AttributeError:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+        return regions
+
+    @property
+    def wcs_geom(self):
+        """Minimum WCS geom in which all the models are contained """
+        regions = self.to_regions()
+        try:
+            return RegionGeom.from_regions(regions).to_wcs_geom()
+        except IndexError:
+            log.error("No spatial component in any model. Geom not defined")
+
+    def plot_regions(self, ax=None, **kwargs):
+        """ Plot extent of the spatial models on a given wcs axis
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.WCSAxes`
+            Axes to plot on. If no axes are given, an all-sky wcs
+            is chosen using a CAR projection
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.artists.Artist`
+
+
+        Returns
+        -------
+        ax : `~astropy.visualization.WcsAxes
+            WCS axes
+        """
+        if ax is None or not isinstance(ax, WCSAxes):
+            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+
+        kwargs.setdefault("color", "tab:blue")
+        path_effects = kwargs.get('path_effects', None)
+
+        for region in self.to_regions():
+            if isinstance(region, PointSkyRegion):
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs, marker="*")
+            else:
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
+
+            if path_effects:
+                artist.set_path_effects([path_effects])
+
+            ax.add_artist(artist)
+
+        return ax
+
+    def plot_positions(self, ax=None, **kwargs):
+        """"Plot the centers of the spatial models on a given wcs axis
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.WCSAxes`
+            Axes to plot on. If no axes are given, an all-sky wcs
+            is chosen using a CAR projection
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.scatter`
+
+
+        Returns
+        -------
+        ax : `~astropy.vizualisation.WcsAxes
+            Wcs axes
+        """
+        import matplotlib.pyplot as plt
+
+        if ax is None or not isinstance(ax, WCSAxes):
+            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+
+        kwargs.setdefault("marker", "*")
+        kwargs.setdefault("color", "tab:blue")
+        path_effects = kwargs.get('path_effects', None)
+
+        xp, yp = self.positions.to_pixel(ax.wcs)
+        p = ax.scatter(xp, yp, **kwargs)
+
+        if path_effects:
+            plt.setp(p, path_effects=path_effects)
+
+        return ax
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
