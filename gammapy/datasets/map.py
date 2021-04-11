@@ -1923,6 +1923,16 @@ class MapDatasetOnOff(MapDataset):
             alpha = acceptance / acceptance_off
             counts_off = dataset.npred_background() / alpha
 
+        if np.isscalar(acceptance):
+            acceptance = Map.from_geom(
+                dataset._geom, data=acceptance
+            )
+
+        if np.isscalar(acceptance_off):
+            acceptance_off = Map.from_geom(
+                dataset._geom, data=acceptance_off
+            )
+
         return cls(
             models=dataset.models,
             counts=dataset.counts,
