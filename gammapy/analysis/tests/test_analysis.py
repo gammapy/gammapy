@@ -284,7 +284,6 @@ def test_analysis_1d_stacked_no_fit_range():
             method: reflected
     """
     config = AnalysisConfig.from_yaml(cfg)
-#    config = get_example_config("1d")
     analysis = Analysis(config)
     analysis.update_config(cfg)
     analysis.config.datasets.stack = True
