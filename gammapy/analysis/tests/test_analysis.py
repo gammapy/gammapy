@@ -236,34 +236,6 @@ def test_exclusion_region(tmp_path):
 
 @requires_dependency("iminuit")
 @requires_data()
-def test_analysis_1d_stacked():
-    cfg = """
-    datasets:
-        geom:
-            axes:
-                energy_true: {min: 0.03 TeV, max: 100 TeV, nbins: 50}
-        background:
-            method: reflected
-    """
-
-    config = get_example_config("1d")
-    analysis = Analysis(config)
-    analysis.update_config(cfg)
-    analysis.config.datasets.stack = True
-    analysis.get_observations()
-    analysis.get_datasets()
-    analysis.read_models(MODEL_FILE_1D)
-    analysis.run_fit()
-
-    assert len(analysis.datasets) == 1
-    assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
-    pars = analysis.fit_result.parameters
-
-    assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
-    assert_allclose(pars["amplitude"].value, 5.479729e-11, rtol=1e-2)
-
-@requires_dependency("iminuit")
-@requires_data()
 def test_analysis_1d_stacked_no_fit_range():
     cfg = """
     observations:
