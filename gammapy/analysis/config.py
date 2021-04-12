@@ -119,8 +119,8 @@ class SpatialCircleConfig(GammapyBaseConfig):
 
 
 class EnergyRangeConfig(GammapyBaseConfig):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
+    min: EnergyType = None
+    max: EnergyType = None
 
 
 class TimeRangeConfig(GammapyBaseConfig):
