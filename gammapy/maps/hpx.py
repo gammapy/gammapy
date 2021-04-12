@@ -656,6 +656,34 @@ class HpxGeom(Geom):
 
         return self.global_to_local(idx_global, ravel=True)
 
+    def cutout(self, position, width, **kwargs):
+        """Create a cutout around a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+            Radius of the circular cutout region.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.WcsNDMap`
+            Cutout map
+        """
+        if not self.is_regular:
+            raise ValueError("Can only do a cutout from a regular map.")
+
+        width = u.Quantity(width, "deg").value
+        return self.create(
+            nside=self.nside,
+            nest=self.nest,
+            width=width,
+            skydir=position,
+            frame=self.frame,
+            axes=self.axes
+        )
+
     def coord_to_pix(self, coords):
         import healpy as hp
 
