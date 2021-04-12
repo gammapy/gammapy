@@ -319,6 +319,33 @@ class HpxNDMap(HpxMap):
         """
         raise NotImplementedError
 
+    def cutout(self, position, width, *args, **kwargs):
+        """Create a cutout around a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+            Radius of the circular cutout region.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.HpxNDMap`
+            Cutout map
+        """
+        geom = self.geom.cutout(position=position, width=width)
+
+        if self.geom.is_allsky:
+            idx = geom._ipix
+        else:
+            idx = self.geom.to_image().global_to_local((geom._ipix,))
+
+        data = self.data[..., idx]
+        return self.__class__(
+            geom=geom, data=data, unit=self.unit, meta=self.meta
+        )
+
     def get_by_idx(self, idx):
         # inherited docstring
         idx = pix_tuple_to_idx(idx)
