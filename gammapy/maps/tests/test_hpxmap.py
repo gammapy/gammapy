@@ -381,3 +381,15 @@ def test_from_wcs_tiles():
 
     assert_allclose(m.data, 1)
 
+
+def test_hpx_map_cutout():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m.data += np.arange(12288)
+
+    cutout = m.cutout(SkyCoord("0d", "0d"), width=10 * u.deg)
+
+    assert cutout.data.shape == (1, 25)
+    assert_allclose(cutout.data.sum(), 239021)
+    assert_allclose(cutout.data[0, 0], 8452)
+    assert_allclose(cutout.data[0, -1], 9768)
