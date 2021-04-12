@@ -138,6 +138,12 @@ class FitConfig(GammapyBaseConfig):
     fit_range: EnergyRangeConfig = EnergyRangeConfig()
 
 
+class ExcessMapConfig(GammapyBaseConfig):
+    correlation_radius: AngleType = '0.1 deg'
+    parameters: dict = {"selection_optional": ""}
+    energy_edges: EnergyAxisConfig = None
+
+
 class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = None
     exclusion: FilePath = None
@@ -216,6 +222,7 @@ class AnalysisConfig(GammapyBaseConfig):
     datasets: DatasetsConfig = DatasetsConfig()
     fit: FitConfig = FitConfig()
     flux_points: FluxPointsConfig = FluxPointsConfig()
+    excess_map: ExcessMapConfig = ExcessMapConfig()
 
     def __str__(self):
         """Display settings in pretty YAML format."""
