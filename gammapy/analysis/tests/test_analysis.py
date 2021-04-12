@@ -263,6 +263,8 @@ def test_analysis_1d_stacked_no_fit_range():
     analysis.get_datasets()
     analysis.read_models(MODEL_FILE_1D)
     analysis.run_fit()
+    with pytest.raises(ValueError):
+        analysis.get_excess_map()
 
     assert len(analysis.datasets) == 1
     assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
@@ -282,11 +284,13 @@ def test_analysis_ring_background():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
+    analysis.get_excess_map()
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
         analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
     )
-
+    assert isinstance(analysis.excess_maps["sqrt_ts"], WcsNDMap)
+    assert_allclose(analysis.excess_maps["excess"].data[0,62,62],134.12389)
 
 @requires_data()
 def test_analysis_ring_3d():

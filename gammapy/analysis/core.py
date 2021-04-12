@@ -7,7 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-from gammapy.estimators import FluxPointsEstimator
+from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
@@ -206,6 +206,29 @@ class Analysis:
         )
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
+
+    def get_excess_map(self):
+        """Calculate excess map with respect to the current model."""
+        excess_settings = self.config.excess_map
+        log.info("Computing excess maps.")
+
+        if self.config.datasets.type == "1d":
+            raise ValueError("Cannot compute excess map for 1D dataset")
+
+        # Here we could possibly stack the datasets if needed.
+        if len(self.datasets)>1:
+            raise ValueError("Datasets must be stacked to compute the excess map")
+
+        energy_edges = None
+        if excess_settings.energy_edges:
+            energy_edges = excess_settings.energy_edges.edges
+
+        excess_map_estimator = ExcessMapEstimator(
+            correlation_radius=excess_settings.correlation_radius,
+            energy_edges=energy_edges,
+            **excess_settings.parameters
+        )
+        self.excess_maps = excess_map_estimator.run(self.datasets[0])
 
     def update_config(self, config):
         self.config = self.config.update(config=config)
