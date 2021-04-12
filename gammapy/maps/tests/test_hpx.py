@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
@@ -727,6 +728,21 @@ def test_hpxgeom_solid_angle():
 
     assert solid_angle.shape == (1,)
     assert_allclose(solid_angle.value, 0.016362461737446838)
+
+
+def test_hpx_geom_cutout():
+    geom = HpxGeom.create(
+        nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
+    )
+
+    cutout = geom.cutout(position=SkyCoord("0d", "0d"), width=30 * u.deg)
+
+    assert cutout.nside == 8
+    assert cutout.data_shape == (2, 14)
+
+    center = cutout.center_skydir.icrs
+    assert_allclose(center.ra.deg, 0, atol=1e-8)
+    assert_allclose(center.dec.deg, 0, atol=1e-8)
 
 
 def test_hpx_geom_to_wcs_tiles():
