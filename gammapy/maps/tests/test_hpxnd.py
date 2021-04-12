@@ -393,3 +393,16 @@ def test_hpx_map_cutout():
     assert_allclose(cutout.data.sum(), 239021)
     assert_allclose(cutout.data[0, 0], 8452)
     assert_allclose(cutout.data[0, -1], 9768)
+
+
+def test_partial_hpx_map_cutout():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90)
+
+    cutout = m.cutout(SkyCoord("0d", "0d"), width=10 * u.deg)
+
+    assert cutout.data.shape == (1, 25)
+    assert_allclose(cutout.data.sum(), 2225)
+    assert_allclose(cutout.data[0, 0], 89)
+    assert_allclose(cutout.data[0, -1], 89)
