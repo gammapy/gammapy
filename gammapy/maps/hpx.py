@@ -462,10 +462,9 @@ class HpxGeom(Geom):
     is_region = False
 
     def __init__(
-        self, nside, nest=True, frame="icrs", region=None, axes=None, sparse=False
+        self, nside, nest=True, frame="icrs", region=None, axes=None
     ):
 
-        # FIXME: Figure out what to do when sparse=True
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
@@ -483,20 +482,14 @@ class HpxGeom(Geom):
         self._frame = frame
         self._maxpix = 12 * self._nside * self._nside
         self._maxpix = self._maxpix * np.ones(self.shape_axes, dtype=int)
-        self._sparse = sparse
 
         self._ipix = None
-        self._rmap = None
         self._region = region
         self._create_lookup(region)
-
-        if self._ipix is not None:
-            self._rmap = {}
-            for i, ipix in enumerate(self._ipix.flat):
-                self._rmap[ipix] = i
-
         self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
+
         self._center_skydir = self._get_ref_dir()
+
         lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
         self._center_coord = tuple(
             [lon, lat]
@@ -600,7 +593,7 @@ class HpxGeom(Geom):
         else:
             idx = ravel_hpx_index(idx_global, self._maxpix)
 
-        if self._rmap is not None:
+        if self._ipix is not None:
             retval = np.full(idx.size, -1, "i")
             m = np.isin(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
@@ -1636,8 +1629,6 @@ class HpxGeom(Geom):
         if not isinstance(other, self.__class__):
             return NotImplemented
 
-        if self._sparse or other._sparse:
-            return NotImplemented
         if self.is_allsky and other.is_allsky is False:
             return NotImplemented
 
