@@ -175,6 +175,7 @@ class Analysis:
 
         fit_settings = self.config.fit
         for dataset in self.datasets:
+            print(fit_settings.fit_range)
             if fit_settings.fit_range:
                 energy_min = fit_settings.fit_range.min
                 energy_max = fit_settings.fit_range.max
