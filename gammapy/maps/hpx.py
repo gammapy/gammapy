@@ -1641,6 +1641,37 @@ class HpxGeom(Geom):
 
         return pix
 
+    def region_mask(self, regions):
+        """Create a mask from a given list of regions
+
+        The mask is filled such that a pixel inside the region is filled with
+        "True". To invert the mask, e.g. to create a mask with exclusion regions
+        the tilde (~) operator can be used (see example below).
+
+        Parameters
+        ----------
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
+
+        Returns
+        -------
+        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
+            Boolean region mask
+
+        """
+        from . import Map, RegionGeom
+
+        if not self.is_regular:
+            raise ValueError("Multi-resolution maps not supported yet")
+
+        # TODO: use spatial coordinates only...
+        geom = RegionGeom.from_regions(regions)
+        coords = self.get_coord()
+        mask = geom.contains(coords)
+        return Map.from_geom(self, data=mask)
+
     def get_coord(self, idx=None, flat=False):
         pix = self.get_idx(idx=idx, flat=flat)
         coords = self.pix_to_coord(pix)

@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from regions import CircleSkyRegion
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -452,3 +453,21 @@ def test_partial_hpx_map_stack():
 
     assert_allclose(m_1.data.sum(), 5933)
     assert_allclose(m_2.data.sum(), 4968)
+
+
+def test_hpx_map_to_region_nd_map():
+    axis = MapAxis.from_energy_bounds("10 GeV", "2 TeV", nbin=10)
+    m = HpxNDMap.create(nside=128, axes=[axis])
+    m.data += 1
+
+    circle = CircleSkyRegion(center=SkyCoord("0d", "0d"), radius=10 * u.deg)
+
+    spec = m.to_region_nd_map(region=circle)
+    assert_allclose(spec.data.sum(), 14660)
+
+    spec_mean = m.to_region_nd_map(region=circle, func=np.mean)
+    assert_allclose(spec_mean.data, 1)
+
+    spec_interp = m.to_region_nd_map(region=circle.center, func=np.mean)
+    assert_allclose(spec_interp.data, 1)
+
