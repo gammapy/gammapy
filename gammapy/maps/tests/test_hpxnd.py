@@ -441,3 +441,14 @@ def test_hpx_map_weights_stack():
 
     assert_allclose(m_allsky.data.sum(), 90)
 
+
+def test_partial_hpx_map_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m_1 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(110.,75.,20.)")
+    m_1.data += 1
+
+    m_2 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(130.,75.,20.)")
+    m_2.stack(m_1)
+
+    assert_allclose(m_1.data.sum(), 5933)
+    assert_allclose(m_2.data.sum(), 4968)
