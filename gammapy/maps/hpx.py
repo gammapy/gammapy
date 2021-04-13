@@ -903,7 +903,7 @@ class HpxGeom(Geom):
         ----------
         other : `HpxGeom`
             Other geom.
-        
+
         Returns
         -------
         aligned : bool
