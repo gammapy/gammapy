@@ -423,3 +423,7 @@ def test_partial_hpx_map_stack():
     )
     assert_allclose(value, 69)
 
+    with pytest.raises(ValueError):
+        m_allsky = HpxNDMap.create(nside=16, frame="galactic", axes=[axis])
+        m_allsky.stack(m)
+
