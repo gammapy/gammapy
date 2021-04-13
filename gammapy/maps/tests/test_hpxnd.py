@@ -406,3 +406,49 @@ def test_partial_hpx_map_cutout():
     assert_allclose(cutout.data.sum(), 2225)
     assert_allclose(cutout.data[0, 0], 89)
     assert_allclose(cutout.data[0, -1], 89)
+
+
+def test_hpx_map_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90)
+
+    m_allsky = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m_allsky.stack(m)
+
+    assert_allclose(m_allsky.data.sum(), (90 * 89) / 2)
+
+    value = m_allsky.get_by_coord(
+        {"skycoord": SkyCoord("110d", "75d", frame="galactic"), "energy": 3 * u.TeV}
+    )
+    assert_allclose(value, 69)
+
+    with pytest.raises(ValueError):
+        m_allsky = HpxNDMap.create(nside=16, frame="galactic", axes=[axis])
+        m_allsky.stack(m)
+
+
+def test_hpx_map_weights_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90) + 1
+
+    weights = m.copy()
+    weights.data = 1 / (np.arange(90) + 1)
+
+    m_allsky = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m_allsky.stack(m, weights=weights)
+
+    assert_allclose(m_allsky.data.sum(), 90)
+
+
+def test_partial_hpx_map_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m_1 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(110.,75.,20.)")
+    m_1.data += 1
+
+    m_2 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(130.,75.,20.)")
+    m_2.stack(m_1)
+
+    assert_allclose(m_1.data.sum(), 5933)
+    assert_allclose(m_2.data.sum(), 4968)

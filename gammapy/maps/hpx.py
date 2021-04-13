@@ -896,6 +896,32 @@ class HpxGeom(Geom):
         """HEALPIX pixel and band indices for every pixel in the map."""
         return self.get_idx()
 
+    def is_aligned(self, other):
+        """Check if HEALPIx geoms and extra axes are aligned.
+
+        Parameters
+        ----------
+        other : `HpxGeom`
+            Other geom.
+
+        Returns
+        -------
+        aligned : bool
+            Whether geometries are aligned
+        """
+        for axis, otheraxis in zip(self.axes, other.axes):
+            if axis != otheraxis:
+                return False
+
+        if not self.nside == other.nside:
+            return False
+        elif not self.frame == other.frame:
+            return False
+        elif not self.nest == other.nest:
+            return False
+        else:
+            return True
+
     def to_ud_graded(self, order):
         """Upgrade or downgrade the resolution to the given order.
 

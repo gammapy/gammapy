@@ -745,6 +745,24 @@ def test_hpx_geom_cutout():
     assert_allclose(center.dec.deg, 0, atol=1e-8)
 
 
+def test_hpx_geom_is_aligned():
+    geom = HpxGeom.create(nside=8, frame="galactic")
+
+    assert geom.is_aligned(geom)
+
+    cutout = geom.cutout(position=SkyCoord("0d", "0d"), width=30 * u.deg)
+    assert cutout.is_aligned(geom)
+
+    geom_other = HpxGeom.create(nside=4, frame="galactic")
+    assert not geom.is_aligned(geom_other)
+
+    geom_other = HpxGeom.create(nside=8, frame="galactic", nest=False)
+    assert not geom.is_aligned(geom_other)
+
+    geom_other = HpxGeom.create(nside=8, frame="icrs")
+    assert not geom.is_aligned(geom_other)
+
+
 def test_hpx_geom_to_wcs_tiles():
     geom = HpxGeom.create(
         nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
