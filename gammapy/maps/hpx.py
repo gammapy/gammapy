@@ -956,6 +956,36 @@ class HpxGeom(Geom):
         order = nside_to_order(nside=nside)
         return self.to_ud_graded(order=order)
 
+    def to_binsz(self, binsz):
+        """Change pixel size of the geometry.
+
+        Parameters
+        ----------
+        binsz : float or `~astropy.units.Quantity`
+            New pixel size. A float is assumed to be in degree.
+
+        Returns
+        -------
+        geom : `WcsGeom`
+            Geometry with new pixel size.
+        """
+        binsz = u.Quantity(binsz, "deg").value
+
+        if self.is_allsky:
+            return self.create(
+                binsz=binsz,
+                frame=self.frame,
+                axes=copy.deepcopy(self.axes),
+            )
+        else:
+            return self.create(
+                skydir=self.center_skydir,
+                binsz=binsz,
+                width=self._get_region_size(),
+                frame=self.frame,
+                axes=copy.deepcopy(self.axes),
+            )
+
     def to_swapped(self):
         """Geometry copy with swapped ORDERING (NEST->RING or vice versa).
 
