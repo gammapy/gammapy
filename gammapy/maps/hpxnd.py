@@ -3,7 +3,10 @@ import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
+from regions import PointSkyRegion
 from gammapy.utils.units import unit_from_fits_image_hdu
+from .region import RegionGeom
+from .regionnd import RegionNDMap
 from .geom import MapCoord, pix_tuple_to_idx
 from .hpx import (
     HPX_FITS_CONVENTIONS,
@@ -530,6 +533,57 @@ class HpxNDMap(HpxMap):
 
         map_out.set_by_idx(idx_new, vals)
         return map_out
+
+    def to_region_nd_map(self, region, func=np.nansum, weights=None, method="nearest"):
+        """Get region ND map in a given region.
+
+        By default the whole map region is considered.
+
+        Parameters
+        ----------
+        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
+             Region.
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
+        method : {"nearest", "linear"}
+            How to interpolate if a position is given.
+
+        Returns
+        -------
+        spectrum : `~gammapy.maps.RegionNDMap`
+            Spectrum in the given region.
+        """
+        if isinstance(region, SkyCoord):
+            region = PointSkyRegion(region)
+
+        if weights is not None:
+            if not self.geom == weights.geom:
+                raise ValueError("Incompatible spatial geoms between map and weights")
+
+        geom = RegionGeom(region=region, axes=self.geom.axes)
+
+        if isinstance(region, PointSkyRegion):
+            coords = geom.get_coord()
+            data = self.interp_by_coord(coords=coords, method=method)
+            if weights is not None:
+                data *= weights.interp_by_coord(coords=coords, method=method)
+        else:
+            cutout = self.cutout(position=geom.center_skydir, width=np.max(geom.width))
+
+            if weights is not None:
+                weights_cutout = weights.cutout(
+                    position=geom.center_skydir, width=geom.width
+                )
+                cutout.data *= weights_cutout.data
+
+            mask = cutout.geom.to_image().region_mask([region]).data
+            idx = np.where(mask)
+            data = func(cutout.data[..., idx], axis=-1)
+
+        return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
     def to_ud_graded(self, nside, preserve_counts=False):
         # FIXME: Should we remove/deprecate this method?
