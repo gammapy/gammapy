@@ -89,6 +89,9 @@ class ExcessMapEstimator(Estimator):
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
     correlate_off : Bool
         Correlate OFF events in the case of a MapDatasetOnOff
+    spectral_model : ~gammapy.modeling.models.SpectralModel
+        Spectral model used for the computation of the flux map. 
+        If None, a Power Law of index 2 is assumed (default). 
     """
 
     tag = "ExcessMapEstimator"
@@ -102,7 +105,8 @@ class ExcessMapEstimator(Estimator):
         selection_optional=None,
         energy_edges=None,
         apply_mask_fit=False,
-        correlate_off=False
+        correlate_off=False,
+        spectral_model=None,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -111,6 +115,7 @@ class ExcessMapEstimator(Estimator):
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
         self.correlate_off = correlate_off
+        self.spectral_model = spectral_model
 
     @property
     def correlation_radius(self):
@@ -193,7 +198,9 @@ class ExcessMapEstimator(Estimator):
         else:
             mask = np.ones(dataset.data_shape, dtype=bool)
 
-        counts_stat = convolved_map_dataset_counts_statistics(dataset, kernel, mask, self.correlate_off)
+        counts_stat = convolved_map_dataset_counts_statistics(
+            dataset, kernel, mask, self.correlate_off
+        )
 
         n_on = Map.from_geom(geom, data=counts_stat.n_on)
         bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
@@ -209,7 +216,7 @@ class ExcessMapEstimator(Estimator):
         result.update({"err": err})
 
         if dataset.exposure:
-            reco_exposure = estimate_exposure_reco_energy(dataset)
+            reco_exposure = estimate_exposure_reco_energy(dataset, self.spectral_model)
             with np.errstate(invalid="ignore", divide="ignore"):
                 flux = excess / reco_exposure
             flux.quantity = flux.quantity.to("1 / (cm2 s)")
