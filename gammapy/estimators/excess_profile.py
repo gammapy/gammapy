@@ -257,9 +257,9 @@ class ExcessProfileEstimator(Estimator):
         """
         if self.energy_edges is not None:
             axis = MapAxis.from_energy_edges(self.energy_edges)
-            dataset = dataset.resample_energy_axis(energy_axis=axis)
+            dataset = dataset.resample_energy_axis(energy_axis=axis, name=dataset.name)
         else:
-            dataset = dataset.to_image()
+            dataset = dataset.to_image(name=dataset.name)
 
         spectrum_datasets = self.get_spectrum_datasets(dataset)
 

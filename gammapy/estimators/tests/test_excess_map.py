@@ -6,6 +6,7 @@ import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.irf import PSFMap
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -119,6 +120,28 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
     assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
 
+    simple_dataset.exposure += 1e10 * u.cm ** 2 * u.s
+    axis = simple_dataset.exposure.geom.axes[0]
+    simple_dataset.psf = PSFMap.from_gauss(axis, sigma="0.05 deg")
+
+    model = SkyModel(
+        PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1 TeV-1"),
+        GaussianSpatialModel(
+            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+        ),
+        name="sky_model",
+    )
+
+    simple_dataset.models = [model]
+    simple_dataset.npred()
+
+    estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional="all")
+    result = estimator.run(simple_dataset)
+
+    assert_allclose(result["excess"].data.sum(), 19733.602)
+    assert_allclose(result["background"].data.sum(), 31818.398)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, atol=1e-5)
+
 
 def test_significance_map_estimator_map_dataset_on_off_no_correlation(
     simple_dataset_on_off,
@@ -214,7 +237,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
         ),
         name="sky_model",
     )
-    #
+
     simple_dataset_on_off.models = [model]
 
     estimator_mod = ExcessMapEstimator(
