@@ -408,7 +408,7 @@ def test_partial_hpx_map_cutout():
     assert_allclose(cutout.data[0, -1], 89)
 
 
-def test_partial_hpx_map_stack():
+def test_hpx_map_stack():
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
     m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
     m.data += np.arange(90)
@@ -426,4 +426,18 @@ def test_partial_hpx_map_stack():
     with pytest.raises(ValueError):
         m_allsky = HpxNDMap.create(nside=16, frame="galactic", axes=[axis])
         m_allsky.stack(m)
+
+
+def test_hpx_map_weights_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90) + 1
+
+    weights = m.copy()
+    weights.data = 1 / (np.arange(90) + 1)
+
+    m_allsky = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m_allsky.stack(m, weights=weights)
+
+    assert_allclose(m_allsky.data.sum(), 90)
 
