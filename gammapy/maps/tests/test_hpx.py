@@ -802,3 +802,25 @@ def test_hpxgeom_equal(nside, nested, frame, region, result):
 
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
+
+
+def test_hpx_geom_to_binsz():
+    geom = HpxGeom.create(nside=32, frame="galactic", nest=True)
+
+    geom_new = geom.to_binsz(1 * u.deg)
+
+    assert geom_new.nside[0] == 64
+    assert geom_new.frame == "galactic"
+    assert geom_new.nest
+
+    geom = HpxGeom.create(nside=32, frame="galactic", nest=True, region="DISK(110.,75.,10.)")
+
+    geom_new = geom.to_binsz(1 * u.deg)
+    assert geom_new.nside[0] == 64
+
+    center = geom_new.center_skydir.galactic
+
+    assert_allclose(center.l.deg, 110)
+    assert_allclose(center.b.deg, 75)
+
+
