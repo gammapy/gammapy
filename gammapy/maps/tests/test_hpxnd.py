@@ -406,3 +406,20 @@ def test_partial_hpx_map_cutout():
     assert_allclose(cutout.data.sum(), 2225)
     assert_allclose(cutout.data[0, 0], 89)
     assert_allclose(cutout.data[0, -1], 89)
+
+
+def test_partial_hpx_map_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90)
+
+    m_allsky = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m_allsky.stack(m)
+
+    assert_allclose(m_allsky.data.sum(), (90 * 89) / 2)
+
+    value = m_allsky.get_by_coord(
+        {"skycoord": SkyCoord("110d", "75d", frame="galactic"), "energy": 3 * u.TeV}
+    )
+    assert_allclose(value, 69)
+
