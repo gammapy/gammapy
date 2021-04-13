@@ -580,8 +580,7 @@ class HpxNDMap(HpxMap):
                 cutout.data *= weights_cutout.data
 
             mask = cutout.geom.to_image().region_mask([region]).data
-            idx = np.where(mask)
-            data = func(cutout.data[..., idx], axis=-1)
+            data = func(cutout.data[..., mask], axis=-1)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
