@@ -468,3 +468,6 @@ def test_hpx_map_to_region_nd_map():
     spec_mean = m.to_region_nd_map(region=circle, func=np.mean)
     assert_allclose(spec_mean.data, 1)
 
+    spec_interp = m.to_region_nd_map(region=circle.center, func=np.mean)
+    assert_allclose(spec_interp.data, 1)
+
