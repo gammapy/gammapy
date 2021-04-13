@@ -56,7 +56,9 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     datasets = crab_datasets_fermi
     parameter = datasets[0].models.parameters["amplitude"]
     scan_values = ScanValuesGenerator(n_values=10, err_rel_min=1e-3)
-    estimator = ParameterEstimator(reoptimize=False, scan_values=scan_values, selection_optional=["scan"])
+    estimator = ParameterEstimator(
+        reoptimize=False, scan_values=scan_values, selection_optional=["scan"]
+    )
     alpha_value = datasets[0].models.parameters["alpha"].value
 
     result = estimator.run(datasets, parameter)
