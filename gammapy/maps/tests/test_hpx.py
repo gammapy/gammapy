@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
@@ -822,5 +823,21 @@ def test_hpx_geom_to_binsz():
 
     assert_allclose(center.l.deg, 110)
     assert_allclose(center.b.deg, 75)
+
+
+def test_hpx_geom_region_mask():
+    geom = HpxGeom.create(nside=256, region="DISK(0.,0.,5.)")
+
+    circle = CircleSkyRegion(center=SkyCoord("0d", "0d"), radius=3 * u.deg)
+
+    mask = geom.region_mask(circle)
+
+    assert_allclose(mask.data.sum(), 534)
+    assert mask.geom.nside == 256
+
+    solid_angle = (mask.data * geom.solid_angle()).sum()
+    assert_allclose(solid_angle, 2 * np.pi * (1 - np.cos(3 * u.deg)) * u.sr, rtol=0.01)
+
+
 
 
