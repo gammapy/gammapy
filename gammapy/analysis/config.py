@@ -106,9 +106,9 @@ class SkyCoordConfig(GammapyBaseConfig):
 
 
 class EnergyAxisConfig(GammapyBaseConfig):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
-    nbins: int = 30
+    min: EnergyType = None
+    max: EnergyType = None
+    nbins: int = None
 
 
 class SpatialCircleConfig(GammapyBaseConfig):
@@ -141,7 +141,7 @@ class FitConfig(GammapyBaseConfig):
 class ExcessMapConfig(GammapyBaseConfig):
     correlation_radius: AngleType = '0.1 deg'
     parameters: dict = {"selection_optional": ""}
-    energy_edges: EnergyAxisConfig = None
+    energy_edges: EnergyAxisConfig = EnergyAxisConfig()
 
 
 class BackgroundConfig(GammapyBaseConfig):
@@ -156,8 +156,8 @@ class SafeMaskConfig(GammapyBaseConfig):
 
 
 class EnergyAxesConfig(GammapyBaseConfig):
-    energy: EnergyAxisConfig = EnergyAxisConfig()
-    energy_true: EnergyAxisConfig = EnergyAxisConfig()
+    energy: EnergyAxisConfig = EnergyAxisConfig(min="1 TeV", max="10 TeV", nbins=5)
+    energy_true: EnergyAxisConfig = EnergyAxisConfig(min="0.5 TeV", max="20 TeV", nbins=16)
 
 
 class SelectionConfig(GammapyBaseConfig):

@@ -219,9 +219,9 @@ class Analysis:
         if len(self.datasets)>1:
             raise ValueError("Datasets must be stacked to compute the excess map")
 
-        energy_edges = None
-        if excess_settings.energy_edges:
-            energy_edges = excess_settings.energy_edges.edges
+        energy_edges = self._make_energy_axis(excess_settings.energy_edges)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
 
         excess_map_estimator = ExcessMapEstimator(
             correlation_radius=excess_settings.correlation_radius,
@@ -407,12 +407,15 @@ class Analysis:
 
     @staticmethod
     def _make_energy_axis(axis, name="energy"):
-        return MapAxis.from_bounds(
-            name=name,
-            lo_bnd=axis.min.value,
-            hi_bnd=axis.max.to_value(axis.min.unit),
-            nbin=axis.nbins,
-            unit=axis.min.unit,
-            interp="log",
-            node_type="edges",
-        )
+        if axis.min is None and axis.max is None:
+            return None
+        else:
+            return MapAxis.from_bounds(
+                name=name,
+                lo_bnd=axis.min.value,
+                hi_bnd=axis.max.to_value(axis.min.unit),
+                nbin=axis.nbins,
+                unit=axis.min.unit,
+                interp="log",
+                node_type="edges",
+            )

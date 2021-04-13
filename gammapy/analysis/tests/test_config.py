@@ -32,7 +32,9 @@ def test_config_default_types():
     assert config.fit.fit_range.min is None
     assert config.fit.fit_range.max is None
     assert isinstance(config.excess_map.correlation_radius, Angle)
-    assert config.excess_map.energy_edges is None
+    assert config.excess_map.energy_edges.min is None
+    assert config.excess_map.energy_edges.max is None
+    assert config.excess_map.energy_edges.nbins is None
 
 def test_config_not_default_types():
     config = AnalysisConfig()
