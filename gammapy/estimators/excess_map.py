@@ -89,7 +89,7 @@ class ExcessMapEstimator(Estimator):
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
     correlate_off : Bool
         Correlate OFF events in the case of a MapDatasetOnOff
-    spectral_model : ~gammapy.modeling.models.SpectralModel
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map. 
         If None, a Power Law of index 2 is assumed (default). 
     """
