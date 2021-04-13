@@ -143,6 +143,7 @@ def fpe_map_pwl():
         norm_fit_max=1e5,
         norm_scan_values=norm_values,
         source="source",
+        selection_optional="all",
     )
     return datasets, fpe
 
