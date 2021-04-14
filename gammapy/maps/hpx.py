@@ -400,10 +400,6 @@ class HpxGeom(Geom):
         encompassed by the geometry.
     axes : list
         Axes for non-spatial dimensions.
-    sparse : bool
-        If True defer allocation of partial- to all-sky index mapping
-        arrays.  This option is only compatible with partial-sky maps
-        with an analytic geometry (e.g. DISK).
     """
 
     is_hpx = True
