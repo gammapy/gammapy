@@ -176,7 +176,7 @@ def test_analysis_1d():
 
     assert len(analysis.light_curve.table)==2
     assert_allclose(analysis.light_curve.time_min.mjd, [53343.92234 , 53343.954215])
-    assert_allclose(analysis.light_curve.table["flux"], [[1.927164e-11],[1.603529e-11]])
+    assert_allclose(analysis.light_curve.table["flux"], [[1.927164e-11],[1.603529e-11]], rtol=1e-4)
 
 @requires_data()
 def test_geom_analysis_1d():
