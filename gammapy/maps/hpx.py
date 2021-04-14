@@ -997,7 +997,7 @@ class HpxGeom(Geom):
         Returns
         -------
         separation : `~astropy.coordinates.Angle`
-            Separation angle array (2D)
+            Separation angle array (1D)
         """
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
