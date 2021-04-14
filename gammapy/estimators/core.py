@@ -60,7 +60,7 @@ class Estimator(abc.ABC):
         """Set optional selection"""
         available = self._available_selection_optional
 
-        if selection == "all":
+        if "all" in selection:
             self._selection_optional = available
         elif selection is None:
             self._selection_optional = []
