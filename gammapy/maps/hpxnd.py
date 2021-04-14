@@ -548,35 +548,6 @@ class HpxNDMap(HpxMap):
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
-    def to_ud_graded(self, nside, preserve_counts=False):
-        # FIXME: Should we remove/deprecate this method?
-
-        order = nside_to_order(nside)
-        new_hpx = self.geom.to_ud_graded(order)
-        map_out = self._init_copy(geom=new_hpx, data=None)
-
-        if np.all(order <= self.geom.order):
-            # Downsample
-            idx = self.geom.get_idx(flat=True)
-            coords = self.geom.pix_to_coord(idx)
-            vals = self.get_by_idx(idx)
-            map_out.fill_by_coord(coords, vals)
-        else:
-            # Upsample
-            idx = new_hpx.get_idx(flat=True)
-            coords = new_hpx.pix_to_coord(idx)
-            vals = self.get_by_coord(coords)
-            m = np.isfinite(vals)
-            map_out.fill_by_coord([c[m] for c in coords], vals[m])
-
-        if not preserve_counts:
-            fact = (2 ** order) ** 2 / (2 ** self.geom.order) ** 2
-            if self.geom.nside.size > 1:
-                fact = fact[..., None]
-            map_out.data *= fact
-
-        return map_out
-
     def plot(
         self,
         method="raster",

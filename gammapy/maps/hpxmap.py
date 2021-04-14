@@ -267,25 +267,6 @@ class HpxMap(Map):
         """
         pass
 
-    @abc.abstractmethod
-    def to_ud_graded(self, nside, preserve_counts=False):
-        """Upgrade or downgrade the resolution of the map to the chosen nside.
-
-        Parameters
-        ----------
-        nside : int
-            NSIDE parameter of the new map.
-        preserve_counts : bool
-            Choose whether to preserve counts (total amplitude) or
-            intensity (amplitude per unit solid angle).
-
-        Returns
-        -------
-        map : `~HpxMap`
-            Map object.
-        """
-        pass
-
     def to_hdu(self, hdu=None, hdu_bands=None, sparse=False, format=None):
         """Make a FITS HDU with input data.
 
