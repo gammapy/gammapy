@@ -7,6 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy import units as u
+from astropy.utils import lazyproperty
 from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
@@ -588,6 +589,13 @@ class HpxGeom(Geom):
         idx_local : tuple
             A tuple of pixel indices with local HEALPIX pixel indices.
         """
+        if (
+                isinstance(idx_global, int)
+                or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
+                or isinstance(idx_global, np.ndarray)
+        ):
+            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self._maxpix)
+
         if self.nside.size == 1:
             idx = np.array(idx_global[0], ndmin=1)
         else:
@@ -614,40 +622,6 @@ class HpxGeom(Geom):
             return idx_local
         else:
             return ravel_hpx_index(idx_local, self.npix)
-
-    def __getitem__(self, idx_global):
-        """Implement global-to-local index lookup.
-
-        For all-sky maps it just returns the input array.  For
-        partial-sky maps it returns the local indices corresponding to
-        the indices in the input array, and -1 for those pixels that
-        are outside the selected region.  For multi-dimensional maps
-        with a different ``NSIDE`` in each band the global index is an
-        unrolled index for both HEALPIX pixel number and image slice.
-
-        Parameters
-        ----------
-        idx_global : `~numpy.ndarray`
-            An array of global (all-sky) pixel indices.  If this is a
-            tuple, list, or array of integers it will be interpreted
-            as a global (raveled) index.  If this argument is a tuple
-            of lists or arrays it will be interpreted as a list of
-            unraveled index vectors.
-
-        Returns
-        -------
-        idx_local : `~numpy.ndarray`
-            An array of local HEALPIX pixel indices.
-        """
-        # Convert to tuple representation
-        if (
-            isinstance(idx_global, int)
-            or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
-            or isinstance(idx_global, np.ndarray)
-        ):
-            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self._maxpix)
-
-        return self.global_to_local(idx_global, ravel=True)
 
     def cutout(self, position, width, **kwargs):
         """Create a cutout around a given position.
@@ -931,7 +905,7 @@ class HpxGeom(Geom):
         if not self.is_regular:
             pix_local = [self.global_to_local([pix] + list(idxs))[0]]
         else:
-            pix_local = [self[pix]]
+            pix_local = [self.global_to_local(pix, ravel=True)]
 
         # If a pixel lies outside of the geometry set its index to the center pixel
         m = pix_local[0] == INVALID_INDEX.int
@@ -944,6 +918,7 @@ class HpxGeom(Geom):
 
         pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
         return pix_local, wts
+
     @property
     def ipix(self):
         """HEALPIX pixel and band indices for every pixel in the map."""
@@ -1824,8 +1799,6 @@ class HpxToWcsMapping:
         self._ipix = ipix
         self._mult_val = mult_val
         self._npix = npix
-        self._lmap = self._hpx[self._ipix]
-        self._valid = self._lmap >= 0
 
     @property
     def hpx(self):
@@ -1852,15 +1825,16 @@ class HpxToWcsMapping:
         """A tuple(nx,ny) of the shape of the WCS grid."""
         return self._npix
 
-    @property
+    @lazyproperty
     def lmap(self):
         """Array ``(nx, ny)`` mapping local HEALPIX pixel indices for each WCS pixel."""
-        return self._lmap
+
+        return self.hpx.global_to_local(self.ipix, ravel=True)
 
     @property
     def valid(self):
         """Array ``(nx, ny)`` of bool: which WCS pixel in inside the HEALPIX region."""
-        return self._valid
+        return self.lmap >= 0
 
     @classmethod
     def create(cls, hpx, wcs):
@@ -1938,12 +1912,12 @@ class HpxToWcsMapping:
         # FIXME: Do we want to flatten mapping arrays?
 
         shape = tuple([t.flat[0] for t in self._npix])
-        if self._valid.ndim != 1:
+        if self.valid.ndim != 1:
             shape = hpx_data.shape[:-1] + shape
 
-        valid = np.where(self._valid.reshape(shape))
-        lmap = self._lmap[self._valid]
-        mult_val = self._mult_val[self._valid]
+        valid = np.where(self.valid.reshape(shape))
+        lmap = self.lmap[self.valid]
+        mult_val = self._mult_val[self.valid]
 
         wcs_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
         wcs_slice = tuple(wcs_slice + list(valid)[::-1][:2])
@@ -1957,7 +1931,7 @@ class HpxToWcsMapping:
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
         if fill_nan:
-            valid = np.swapaxes(self._valid.reshape(shape), -1, -2)
+            valid = np.swapaxes(self.valid.reshape(shape), -1, -2)
             valid = valid * np.ones_like(wcs_data, dtype=bool)
             wcs_data[~valid] = np.nan
 
