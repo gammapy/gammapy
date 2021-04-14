@@ -170,42 +170,42 @@ def test_hpx_global_to_local():
 
     # 2D All-sky
     hpx = HpxGeom(16, False, "galactic")
-    assert_allclose(hpx[0], np.array([0]))
-    assert_allclose(hpx[633], np.array([633]))
-    assert_allclose(hpx[0, 633], np.array([0, 633]))
-    assert_allclose(hpx[np.array([0, 633])], np.array([0, 633]))
+    assert_allclose(hpx.global_to_local(0, ravel=True), np.array([0]))
+    assert_allclose(hpx.global_to_local(633, ravel=True), np.array([633]))
+    assert_allclose(hpx.global_to_local((0, 633), ravel=True), np.array([0, 633]))
+    assert_allclose(hpx.global_to_local(np.array([0, 633]), ravel=True), np.array([0, 633]))
 
     # 3D All-sky
     hpx = HpxGeom(16, False, "galactic", axes=[ax0])
     assert_allclose(
-        hpx[(np.array([177, 177]), np.array([0, 1]))], np.array([177, 177 + 3072])
+        hpx.global_to_local((np.array([177, 177]), np.array([0, 1])), ravel=True), np.array([177, 177 + 3072])
     )
 
     # 2D Partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
-    assert_allclose(hpx[0, 633, 706], np.array([-1, 0, 2]))
+    assert_allclose(hpx.global_to_local((0, 633, 706), ravel=True), np.array([-1, 0, 2]))
 
     # 3D Partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
-    assert_allclose(hpx[633], np.array([0]))
-    assert_allclose(hpx[49859], np.array([19]))
-    assert_allclose(hpx[0, 633, 706, 49859, 49935], np.array([-1, 0, 2, 19, 21]))
+    assert_allclose(hpx.global_to_local(633, ravel=True), np.array([0]))
+    assert_allclose(hpx.global_to_local(49859, ravel=True), np.array([19]))
+    assert_allclose(hpx.global_to_local((0, 633, 706, 49859, 49935), ravel=True), np.array([-1, 0, 2, 19, 21]))
     assert_allclose(
-        hpx[np.array([0, 633, 706, 49859, 49935])], np.array([-1, 0, 2, 19, 21])
+        hpx.global_to_local(np.array([0, 633, 706, 49859, 49935]), ravel=True), np.array([-1, 0, 2, 19, 21])
     )
-    assert_allclose(
-        hpx[(np.array([0, 633, 706, 707, 783]), np.array([0, 0, 0, 1, 1]))],
-        np.array([-1, 0, 2, 19, 21]),
-    )
+    idx_global = (np.array([0, 633, 706, 707, 783]), np.array([0, 0, 0, 1, 1]))
+    assert_allclose(hpx.global_to_local(idx_global, ravel=True), [-1, 0, 2, 19, 21])
 
     # 3D Partial-sky w/ variable bin size
     hpx = HpxGeom([32, 64], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
 
-    assert_allclose(hpx[191], np.array([0]))
-    assert_allclose(hpx[12995], np.array([6]))
-    assert_allclose(hpx[0, 191, 233, 12995], np.array([-1, 0, 2, 6]))
+    assert_allclose(hpx.global_to_local(191, ravel=True), [0])
+    assert_allclose(hpx.global_to_local(12995, ravel=True), [6])
+    assert_allclose(hpx.global_to_local((0, 191, 233, 12995), ravel=True), [-1, 0, 2, 6])
+
+    idx_global = (np.array([0, 191, 233, 707]), np.array([0, 0, 0, 1]))
     assert_allclose(
-        hpx[(np.array([0, 191, 233, 707]), np.array([0, 0, 0, 1]))],
+        hpx.global_to_local(idx_global, ravel=True),
         np.array([-1, 0, 2, 6]),
     )
 
@@ -217,9 +217,11 @@ def test_hpx_global_to_local():
         region="DISK(110.,75.,2.)",
         axes=[ax0, ax1],
     )
-    assert_allclose(hpx[3263], np.array([1]))
-    assert_allclose(hpx[28356], np.array([11]))
-    assert_allclose(hpx[(np.array([46]), np.array([0]), np.array([0]))], np.array([0]))
+    assert_allclose(hpx.global_to_local(3263, ravel=True), [1])
+    assert_allclose(hpx.global_to_local(28356, ravel=True), [11])
+
+    idx_global = (np.array([46]), np.array([0]), np.array([0]))
+    assert_allclose(hpx.global_to_local(idx_global, ravel=True), [0])
 
 
 @pytest.mark.parametrize(
