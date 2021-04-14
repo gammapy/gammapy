@@ -891,6 +891,59 @@ class HpxGeom(Geom):
         """
         return self._center_skydir
 
+    def interp_weights(self, coords, idxs=None):
+        """Get interpolation weights for given coords
+
+        Parameters
+        ----------
+        coords : `MapCoord` or dict
+            Input coordinates
+        idxs : `~numpy.ndarray`
+            Indices for non-spatial axes.
+
+        Returns
+        -------
+        weights : `~numpy.ndarray`
+            Interpolation weights
+        """
+        import healpy as hp
+
+        coords = MapCoord.create(coords, frame=self.frame)
+
+        if idxs is None:
+            idxs = self.coord_to_idx(coords, clip=True)[1:]
+
+        theta, phi = coords.theta, coords.phi
+
+        m = ~np.isfinite(theta)
+        theta[m] = 0
+        phi[m] = 0
+
+        if not self.is_regular:
+            nside = self.nside[tuple(idxs)]
+        else:
+            nside = self.nside
+
+        pix, wts = hp.get_interp_weights(nside, theta, phi, nest=self.nest)
+        wts[:, m] = 0
+        pix[:, m] = INVALID_INDEX.int
+
+        if not self.is_regular:
+            pix_local = [self.global_to_local([pix] + list(idxs))[0]]
+        else:
+            pix_local = [self[pix]]
+
+        # If a pixel lies outside of the geometry set its index to the center pixel
+        m = pix_local[0] == INVALID_INDEX.int
+        if m.any():
+            coords_ctr = [coords.lon, coords.lat]
+            coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.axes, idxs)]
+            idx_ctr = self.coord_to_idx(coords_ctr)
+            idx_ctr = self.global_to_local(idx_ctr)
+            pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
+
+        pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
+        return pix_local, wts
     @property
     def ipix(self):
         """HEALPIX pixel and band indices for every pixel in the map."""

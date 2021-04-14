@@ -385,47 +385,9 @@ class HpxNDMap(HpxMap):
         idx = self.geom.global_to_local(idx)
         return self.data.T[idx]
 
-    def _get_interp_weights(self, coords, idxs=None):
-        import healpy as hp
-
-        if idxs is None:
-            idxs = self.geom.coord_to_idx(coords, clip=True)[1:]
-
-        theta, phi = coords.theta, coords.phi
-
-        m = ~np.isfinite(theta)
-        theta[m] = 0
-        phi[m] = 0
-
-        if not self.geom.is_regular:
-            nside = self.geom.nside[tuple(idxs)]
-        else:
-            nside = self.geom.nside
-
-        pix, wts = hp.get_interp_weights(nside, theta, phi, nest=self.geom.nest)
-        wts[:, m] = 0
-        pix[:, m] = INVALID_INDEX.int
-
-        if not self.geom.is_regular:
-            pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
-        else:
-            pix_local = [self.geom[pix]]
-
-        # If a pixel lies outside of the geometry set its index to the center pixel
-        m = pix_local[0] == INVALID_INDEX.int
-        if m.any():
-            coords_ctr = [coords.lon, coords.lat]
-            coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.geom.axes, idxs)]
-            idx_ctr = self.geom.coord_to_idx(coords_ctr)
-            idx_ctr = self.geom.global_to_local(idx_ctr)
-            pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
-
-        pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
-        return pix_local, wts
-
     def _interp_by_coord(self, coords):
         """Linearly interpolate map values."""
-        pix, wts = self._get_interp_weights(coords)
+        pix, wts = self.geom.interp_weights(coords)
 
         if self.geom.is_image:
             return np.sum(self.data.T[tuple(pix)] * wts, axis=0)
@@ -451,7 +413,7 @@ class HpxNDMap(HpxMap):
                     pix_i += [idx]
 
             if not self.geom.is_regular:
-                pix, wts = self._get_interp_weights(coords, pix_i)
+                pix, wts = self.geom.interp_weights(coords, idxs=pix_i)
 
             wts[pix[0] == INVALID_INDEX.int] = 0
             wt[~np.isfinite(wt)] = 0
