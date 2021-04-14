@@ -239,37 +239,6 @@ def test_hpxgeom_init_with_pix(nside, nested, frame, region, axes):
 
 
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
-def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
-    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
-    slices = tuple([slice(1, 2) for i in range(2, geom.ndim)])
-    geom_slice = geom.to_slice(slices)
-    assert_allclose(geom_slice.ndim, 2)
-    assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
-
-    idx = geom.get_idx(flat=True)
-    idx_slice = geom_slice.get_idx(flat=True)
-    if geom.ndim > 2:
-        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
-        assert_allclose(idx_slice, (idx[0][m],))
-    else:
-        assert_allclose(idx_slice, idx)
-
-    # Test slicing with explicit geometry
-    geom = HpxGeom(nside, nested, frame, region=tuple([t[::3] for t in idx]), axes=axes)
-    geom_slice = geom.to_slice(slices)
-    assert_allclose(geom_slice.ndim, 2)
-    assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
-
-    idx = geom.get_idx()
-    idx_slice = geom_slice.get_idx()
-    if geom.ndim > 2:
-        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
-        assert_allclose(idx_slice, (idx[0][m],))
-    else:
-        assert_allclose(idx_slice, idx)
-
-
-@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_get_pix(nside, nested, frame, region, axes):
     geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     idx = geom.get_idx(local=False, flat=True)

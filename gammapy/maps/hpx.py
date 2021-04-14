@@ -669,36 +669,6 @@ class HpxGeom(Geom):
 
         return tuple(idx)
 
-    def to_slice(self, slices, drop_axes=True):
-        if len(slices) == 0 and self.ndim == 2:
-            return copy.deepcopy(self)
-
-        if len(slices) != self.ndim - 2:
-            raise ValueError()
-
-        nside = np.ones(self.shape_axes, dtype=int) * self.nside
-        nside = np.squeeze(nside[slices])
-
-        axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
-        if drop_axes:
-            axes = [ax for ax in axes if ax.nbin > 1]
-            slice_dims = [0] + [i + 1 for i, ax in enumerate(axes) if ax.nbin > 1]
-        else:
-            slice_dims = np.arange(self.ndim)
-
-        if self.region == "explicit":
-            idx = self.get_idx()
-            slices = (slice(None),) + slices
-            idx = [p[slices[::-1]] for p in idx]
-            idx = [p[p != INVALID_INDEX.int] for p in idx]
-            if drop_axes:
-                idx = [idx[i] for i in range(len(idx)) if i in slice_dims]
-            region = tuple(idx)
-        else:
-            region = self.region
-
-        return self.__class__(nside, self.nest, self.frame, region, axes)
-
     @property
     def axes(self):
         """List of non-spatial axes."""
@@ -1439,15 +1409,11 @@ class HpxGeom(Geom):
         else:
             return self.nside
 
-    def to_wcs_geom(self, proj="AIT", oversample=2, drop_axes=True, width_pix=None):
+    def to_wcs_geom(self, proj="AIT", oversample=2, width_pix=None):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
         ----------
-        drop_axes : bool
-            Drop non-spatial axes from the
-            HEALPIX geometry.  If False then all dimensions of the
-            HEALPIX geometry will be copied to the WCS geometry.
         proj : str
             Projection type of WCS geometry.
         oversample : float
@@ -1476,10 +1442,7 @@ class HpxGeom(Geom):
         if width > 90.0:
             width = min(360.0, width), min(180.0, width)
 
-        if drop_axes:
-            axes = None
-        else:
-            axes = copy.deepcopy(self.axes)
+        axes = copy.deepcopy(self.axes)
 
         return WcsGeom.create(
             width=width,

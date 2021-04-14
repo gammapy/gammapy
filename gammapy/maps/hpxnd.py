@@ -236,8 +236,8 @@ class HpxNDMap(HpxMap):
         # FIXME: Check whether the old mapping is still valid and reuse it
         if hpx2wcs is None:
             geom_wcs_image = self.geom.to_wcs_geom(
-                proj=proj, oversample=oversample, width_pix=width_pix, drop_axes=True
-            )
+                proj=proj, oversample=oversample, width_pix=width_pix
+            ).to_image()
 
             hpx2wcs = HpxToWcsMapping.create(self.geom, geom_wcs_image)
 
