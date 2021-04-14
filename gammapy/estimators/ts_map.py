@@ -83,6 +83,7 @@ class TSMapEstimator(Estimator):
     selection_optional : list of str
         Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
+
             * "all": all the optional steps are executed
             * "errn-errp": estimate assymmetric error on flux.
             * "ul": estimate upper limits on flux.

@@ -77,6 +77,7 @@ class ExcessMapEstimator(Estimator):
     selection_optional : list of str
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
+
             * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.

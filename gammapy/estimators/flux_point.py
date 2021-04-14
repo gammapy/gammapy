@@ -784,10 +784,11 @@ class FluxPointsEstimator(Estimator):
         Re-optimize other free model parameters.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
+
             * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
-            * "norm-scan": estimate fit statistic profiles.
+            * "scan": estimate fit statistic profiles.
 
         Default is None so the optionnal steps are not executed.
     """

@@ -37,6 +37,7 @@ class ParameterEstimator(Estimator):
         Re-optimize other free model parameters. Default is True.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
+
             * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors on parameter best fit value.
             * "ul": estimate upper limits.
