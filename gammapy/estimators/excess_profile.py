@@ -31,10 +31,12 @@ class ExcessProfileEstimator(Estimator):
     selection_optional : list of str
         Additional quantities to be estimated. Possible options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
-        By default all quantities are estimated.
+        Default is None so the optionnal steps are not executed.
+
 
     Examples
     --------
