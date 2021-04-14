@@ -986,6 +986,22 @@ class HpxGeom(Geom):
                 axes=copy.deepcopy(self.axes),
             )
 
+    def separation(self, center):
+        """Compute sky separation wrt a given center.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord`
+            Center position
+
+        Returns
+        -------
+        separation : `~astropy.coordinates.Angle`
+            Separation angle array (1D)
+        """
+        coord = self.to_image().get_coord()
+        return center.separation(coord.skycoord)
+
     def to_swapped(self):
         """Geometry copy with swapped ORDERING (NEST->RING or vice versa).
 
