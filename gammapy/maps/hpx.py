@@ -281,20 +281,6 @@ def get_hpxregion_dir(region, frame):
     else:
         raise ValueError(f"Invalid region type: {tokens[0]!r}")
 
-
-def get_hpxregion_size(region):
-    """Get the approximate size of region (in degrees) from a HEALPIX region string.
-    """
-    tokens = parse_hpxregion(region)
-    if tokens[0] in {"DISK", "DISK_INC"}:
-        return float(tokens[3])
-    elif tokens[0] == "HPX_PIXEL":
-        pix_size = get_pix_size_from_nside(int(tokens[2]))
-        return 2.0 * pix_size
-    else:
-        raise ValueError(f"Invalid region type: {tokens[0]!r}")
-
-
 def is_power2(n):
     """Check if an integer is a power of 2."""
     return (n > 0) & ((n & (n - 1)) == 0)
@@ -1460,16 +1446,22 @@ class HpxGeom(Geom):
         import healpy as hp
 
         if self.is_allsky:
-            return u.Quantity(180, "deg")
-
-        if self.region == "explicit":
+            width = 180.
+        elif self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
             dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=self.frame)
-            return np.max(dirs.separation(self.center_skydir))
+            width = np.max(dirs.separation(self.center_skydir))
+        else:
+            tokens = parse_hpxregion(self.region)
+            if tokens[0] in {"DISK", "DISK_INC"}:
+                width = float(tokens[3])
+            elif tokens[0] == "HPX_PIXEL":
+                pix_size = get_pix_size_from_nside(int(tokens[2]))
+                width = 2.0 * pix_size
 
-        return u.Quantity(get_hpxregion_size(self.region), "deg")
+        return u.Quantity(width, "deg")
 
     def _get_nside(self, idx):
         if self.nside.size > 1:

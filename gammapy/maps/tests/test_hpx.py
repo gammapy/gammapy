@@ -11,7 +11,6 @@ from gammapy.maps.hpx import (
     HpxGeom,
     HpxToWcsMapping,
     get_hpxregion_dir,
-    get_hpxregion_size,
     get_pix_size_from_nside,
     get_subpixels,
     get_superpixels,
@@ -384,7 +383,8 @@ def test_hpx_get_pix_size_from_nside():
 
 
 def test_hpx_get_hpxregion_size():
-    assert_allclose(get_hpxregion_size("DISK(110.,75.,2.)"), 2.0)
+    geom = HpxGeom.create(nside=128, region="DISK(110.,75.,2.)")
+    assert_allclose(geom.width, 2.0 * u.deg)
 
 
 def test_hpxgeom_get_hpxregion_dir():
