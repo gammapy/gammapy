@@ -351,6 +351,7 @@ class HpxNDMap(HpxMap):
 
     def stack(self, other, weights=None):
         """Stack cutout into map.
+
         Parameters
         ----------
         other : `HpxNDMap`
@@ -377,6 +378,7 @@ class HpxNDMap(HpxMap):
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible spatial geoms between map and weights")
             data = data * weights.data
+
         self.data[..., idx] += data
 
     def get_by_idx(self, idx):
