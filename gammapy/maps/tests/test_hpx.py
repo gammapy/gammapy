@@ -10,7 +10,6 @@ from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
     HpxToWcsMapping,
-    get_hpxregion_dir,
     get_pix_size_from_nside,
     get_subpixels,
     get_superpixels,
@@ -388,11 +387,13 @@ def test_hpx_get_hpxregion_size():
 
 
 def test_hpxgeom_get_hpxregion_dir():
-    refdir = get_hpxregion_dir("DISK(110.,75.,2.)", "galactic")
+    geom = HpxGeom.create(nside=128, region="DISK(110.,75.,2.)", frame="galactic")
+    refdir = geom.center_skydir
     assert_allclose(refdir.l.deg, 110.0)
     assert_allclose(refdir.b.deg, 75.0)
 
-    refdir = get_hpxregion_dir(None, "galactic")
+    geom = HpxGeom.create(nside=128, frame="galactic")
+    refdir = geom.center_skydir
     assert_allclose(refdir.l.deg, 0.0)
     assert_allclose(refdir.b.deg, 0.0)
 

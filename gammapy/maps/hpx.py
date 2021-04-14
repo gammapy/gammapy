@@ -246,41 +246,6 @@ def parse_hpxregion(region):
         return [m.group(1)] + re.split(",", m.group(2))
 
 
-def get_hpxregion_dir(region, frame):
-    """Get the reference direction for a HEALPIX region string.
-
-    Parameters
-    ----------
-    region : str
-        A string describing a HEALPIX region
-    frame : {'icrs', 'galactic'}
-        Coordinate system
-    """
-    import healpy as hp
-
-    if region is None:
-        return SkyCoord(0.0, 0.0, frame=frame, unit="deg")
-
-    tokens = parse_hpxregion(region)
-    if tokens[0] in ["DISK", "DISK_INC"]:
-        lon, lat = float(tokens[1]), float(tokens[2])
-        return SkyCoord(lon, lat, frame=frame, unit="deg")
-    elif tokens[0] == "HPX_PIXEL":
-        nside_pix = int(tokens[2])
-        ipix_pix = int(tokens[3])
-        if tokens[1] == "NESTED":
-            nest_pix = True
-        elif tokens[1] == "RING":
-            nest_pix = False
-        else:
-            raise ValueError(f"Invalid ordering scheme: {tokens[1]!r}")
-        theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
-        lat = np.degrees((np.pi / 2) - theta)
-        lon = np.degrees(phi)
-        return SkyCoord(lon, lat, frame=frame, unit="deg")
-    else:
-        raise ValueError(f"Invalid region type: {tokens[0]!r}")
-
 def is_power2(n):
     """Check if an integer is a power of 2."""
     return (n > 0) & ((n & (n - 1)) == 0)
@@ -474,15 +439,6 @@ class HpxGeom(Geom):
         self._region = region
         self._create_lookup(region)
         self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
-
-        self._center_skydir = self._get_ref_dir()
-
-        lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
-        self._center_coord = tuple(
-            [lon, lat]
-            + [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self.axes]
-        )
-        self._center_pix = self.coord_to_pix(self._center_coord)
 
     @property
     def data_shape(self):
@@ -834,12 +790,13 @@ class HpxGeom(Geom):
     @property
     def center_coord(self):
         """Map coordinates of the center of the geometry (tuple)."""
-        return self._center_coord
+        lon, lat, frame = skycoord_to_lonlat(self.center_skydir)
+        return tuple([lon, lat]) + self.axes.center_coord
 
     @property
     def center_pix(self):
         """Pixel coordinates of the center of the geometry (tuple)."""
-        return self._center_pix
+        return self.coord_to_pix(self.center_coord)
 
     @property
     def center_skydir(self):
@@ -847,9 +804,39 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        pix : `~astropy.coordinates.SkyCoord`
+        center : `~astropy.coordinates.SkyCoord`
+            Center position
         """
-        return self._center_skydir
+        # TODO: simplify
+        import healpy as hp
+
+        if self.is_allsky:
+            lon, lat = 0., 0.
+        elif self.region == "explicit":
+            idx = unravel_hpx_index(self._ipix, self._maxpix)
+            nside = self._get_nside(idx)
+            vec = hp.pix2vec(nside, idx[0], nest=self.nest)
+            vec = np.array([np.mean(t) for t in vec])
+            lonlat = hp.vec2ang(vec, lonlat=True)
+            lon, lat = lonlat[0], lonlat[1]
+        else:
+            tokens = parse_hpxregion(self.region)
+            if tokens[0] in ["DISK", "DISK_INC"]:
+                lon, lat = float(tokens[1]), float(tokens[2])
+            elif tokens[0] == "HPX_PIXEL":
+                nside_pix = int(tokens[2])
+                ipix_pix = int(tokens[3])
+                if tokens[1] == "NESTED":
+                    nest_pix = True
+                elif tokens[1] == "RING":
+                    nest_pix = False
+                else:
+                    raise ValueError(f"Invalid ordering scheme: {tokens[1]!r}")
+                theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
+                lat = np.degrees((np.pi / 2) - theta)
+                lon = np.degrees(phi)
+
+        return SkyCoord(lon, lat, frame=self.frame, unit="deg")
 
     def interp_weights(self, coords, idxs=None):
         """Get interpolation weights for given coords
@@ -1426,23 +1413,10 @@ class HpxGeom(Geom):
 
         return ilist
 
-    def _get_ref_dir(self):
-        """Compute the reference direction for this geometry."""
-        import healpy as hp
-
-        if self.region == "explicit":
-            idx = unravel_hpx_index(self._ipix, self._maxpix)
-            nside = self._get_nside(idx)
-            vec = hp.pix2vec(nside, idx[0], nest=self.nest)
-            vec = np.array([np.mean(t) for t in vec])
-            lonlat = hp.vec2ang(vec, lonlat=True)
-            return SkyCoord(lonlat[0], lonlat[1], frame=self.frame, unit="deg")
-
-        return get_hpxregion_dir(self.region, self.frame)
-
     @property
     def width(self):
         """Width of the map"""
+        # TODO: simplify
         import healpy as hp
 
         if self.is_allsky:

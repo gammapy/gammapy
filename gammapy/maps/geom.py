@@ -703,6 +703,12 @@ class MapAxes(Sequence):
         except ValueError:
             raise ValueError(message)
 
+    @property
+    def center_coord(self):
+        """Center coordinates"""
+        return tuple([ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self])
+
+
 class MapAxis:
     """Class representing an axis of a map.
 
