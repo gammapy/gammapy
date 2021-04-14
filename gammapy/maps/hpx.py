@@ -950,24 +950,6 @@ class HpxGeom(Geom):
         else:
             return True
 
-    def to_ud_graded(self, order):
-        """Upgrade or downgrade the resolution to the given order.
-
-        This method does not preserve the geometry footprint.
-
-        Returns
-        -------
-        geom : `~HpxGeom`
-            A HEALPix geometry object.
-        """
-        if np.any(self.order < 0):
-            raise ValueError("Upgrade and degrade only implemented for standard maps")
-
-        axes = copy.deepcopy(self.axes)
-        return self.__class__(
-            2 ** order, self.nest, frame=self.frame, region=self.region, axes=axes
-        )
-
     def to_nside(self, nside):
         """Upgrade or downgrade the reoslution to a given nside
 
@@ -981,8 +963,17 @@ class HpxGeom(Geom):
         geom : `~HpxGeom`
             A HEALPix geometry object.
         """
-        order = nside_to_order(nside=nside)
-        return self.to_ud_graded(order=order)
+        if not self.is_regular:
+            raise ValueError("Upgrade and degrade only implemented for standard maps")
+
+        axes = copy.deepcopy(self.axes)
+        return self.__class__(
+            nside=nside,
+            nest=self.nest,
+            frame=self.frame,
+            region=self.region,
+            axes=axes
+        )
 
     def to_binsz(self, binsz):
         """Change pixel size of the geometry.
