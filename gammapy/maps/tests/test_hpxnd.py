@@ -210,14 +210,6 @@ def test_hpxmap_swap_scheme(nside, nested, frame, region, axes):
     assert_allclose(m.get_by_coord(coords), m2.get_by_coord(coords))
 
 
-@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
-def test_hpxmap_ud_grade(nside, nested, frame, region, axes):
-    m = HpxNDMap(
-        HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
-    )
-    m.to_ud_graded(4)
-
-
 @pytest.mark.parametrize(
     ("nside", "nested", "frame", "region", "axes"), hpx_test_partialsky_geoms
 )
