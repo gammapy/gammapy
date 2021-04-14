@@ -78,10 +78,11 @@ class ExcessMapEstimator(Estimator):
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
-        By default all additional quantities are estimated.
+        Default is None so the optionnal steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
     apply_mask_fit : Bool

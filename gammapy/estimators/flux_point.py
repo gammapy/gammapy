@@ -456,9 +456,13 @@ class FluxPoints:
                 return sed_type
 
     @staticmethod
-    def _validate_table(table, sed_type):
+    def _validate_table(table, sed_type, use_optional=False):
         """Validate input table."""
         required = set(REQUIRED_COLUMNS[sed_type])
+        if use_optional:
+            required = set(REQUIRED_COLUMNS[sed_type] + OPTIONAL_COLUMNS[sed_type])
+        else:
+            required = set(REQUIRED_COLUMNS[sed_type])
 
         if not required.issubset(table.colnames):
             missing = required.difference(table.colnames)
@@ -699,7 +703,7 @@ class FluxPoints:
         if ax is None:
             ax = plt.gca()
 
-        self._validate_table(self.table, "likelihood")
+        self._validate_table(self.table, "likelihood", use_optional=True)
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
 
         if y_values is None:
@@ -785,11 +789,12 @@ class FluxPointsEstimator(Estimator):
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
-            * "norm-scan": estimate fit statistic profiles.
+            * "scan": estimate fit statistic profiles.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
     """
 
     tag = "FluxPointsEstimator"

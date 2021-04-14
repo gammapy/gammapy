@@ -80,14 +80,15 @@ class TSMapEstimator(Estimator):
     rtol : float (0.001)
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit.
-    selection_optional : list of str or 'all'
+    selection_optional : list of str
         Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate assymmetric error on flux.
             * "ul": estimate upper limits on flux.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the maps bins.
     sum_over_energy_groups : bool

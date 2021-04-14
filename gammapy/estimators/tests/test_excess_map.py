@@ -107,7 +107,7 @@ def test_compute_lima_on_off_image():
 
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional="all")
+    estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional=["all"])
     result = estimator.run(simple_dataset)
 
     assert_allclose(result["counts"].data[0, 10, 10], 162)
