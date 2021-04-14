@@ -116,7 +116,11 @@ class Analysis:
         if observations_settings.obs_time.start is not None:
             start = observations_settings.obs_time.start
             stop = observations_settings.obs_time.stop
-            self.observations = self.observations.select_time([(start, stop)])
+            if len(start.shape) == 0:
+                time_intervals = [(start, stop)]
+            else:
+                time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
+            self.observations = self.observations.select_time(time_intervals)
         log.info(f"Number of selected observations: {len(self.observations)}")
         for obs in self.observations:
             log.debug(obs)
@@ -241,10 +245,11 @@ class Analysis:
         energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
 
         if lc_settings.time_intervals.start is None or lc_settings.time_intervals.stop is None:
-            log.info("Time intervals not defined. Extract light on datasets GTIs.")
+            log.info("Time intervals not defined. Extract light curve on datasets GTIs.")
             time_intervals=None
         else:
-            time_intervals = [lc_settings.time_intervals.start, lc_settings.time_intervals.stop]
+            time_intervals = [(t1, t2) for t1, t2 in
+                              zip(lc_settings.time_intervals.start, lc_settings.time_intervals.stop)]
 
         light_curve_estimator = LightCurveEstimator(
             time_intervals=time_intervals,
