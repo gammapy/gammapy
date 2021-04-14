@@ -153,6 +153,8 @@ def test_analysis_1d():
         containment_correction: false
     flux_points:
         energy: {min: 1 TeV, max: 50 TeV, nbins: 4}
+    light_curve:
+        energy_edges: {min: 1 TeV, max: 50 TeV, nbins: 1}
     """
     config = get_example_config("1d")
     analysis = Analysis(config)
@@ -162,6 +164,7 @@ def test_analysis_1d():
     analysis.read_models(MODEL_FILE_1D)
     analysis.run_fit()
     analysis.get_flux_points()
+    analysis.get_light_curve()
 
     assert len(analysis.datasets) == 2
     assert len(analysis.flux_points.data.table) == 4
@@ -171,6 +174,9 @@ def test_analysis_1d():
     assert_allclose(dnde[0].value, 8.116854e-12, rtol=1e-2)
     assert_allclose(dnde[2].value, 3.547128e-14, rtol=1e-2)
 
+    assert len(analysis.light_curve.table)==2
+    assert_allclose(analysis.light_curve.time_min.mjd, [53343.92234 , 53343.954215])
+    assert_allclose(analysis.light_curve.table["flux"], [[1.927164e-11],[1.603529e-11]])
 
 @requires_data()
 def test_geom_analysis_1d():
