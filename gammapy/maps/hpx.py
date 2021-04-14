@@ -1000,7 +1000,7 @@ class HpxGeom(Geom):
             return self.create(
                 skydir=self.center_skydir,
                 binsz=binsz,
-                width=self._get_region_size(),
+                width=self.width.to_value("deg"),
                 frame=self.frame,
                 axes=copy.deepcopy(self.axes),
             )
@@ -1454,19 +1454,22 @@ class HpxGeom(Geom):
 
         return get_hpxregion_dir(self.region, self.frame)
 
-    def _get_region_size(self):
+    @property
+    def width(self):
+        """Width of the map"""
         import healpy as hp
 
-        if self.region is None:
-            return 180.0
+        if self.is_allsky:
+            return u.Quantity(180, "deg")
+
         if self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
             dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=self.frame)
-            return np.max(dirs.separation(self.center_skydir).deg)
+            return np.max(dirs.separation(self.center_skydir))
 
-        return get_hpxregion_size(self.region)
+        return u.Quantity(get_hpxregion_size(self.region), "deg")
 
     def _get_nside(self, idx):
         if self.nside.size > 1:
@@ -1503,7 +1506,7 @@ class HpxGeom(Geom):
         """
         pix_size = get_pix_size_from_nside(self.nside)
         binsz = np.min(pix_size) / oversample
-        width = 2.0 * self._get_region_size() + np.max(pix_size)
+        width = 2.0 * self.width.to_value("deg") + np.max(pix_size)
 
         if width_pix is not None and int(width / binsz) > width_pix:
             binsz = width / width_pix
