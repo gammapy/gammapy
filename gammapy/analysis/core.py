@@ -407,7 +407,9 @@ class Analysis:
 
     @staticmethod
     def _make_energy_axis(axis, name="energy"):
-        if axis.min is None and axis.max is None:
+        if axis.min is None or axis.max is None:
+            return None
+        elif axis.nbins is None or axis.nbins<1:
             return None
         else:
             return MapAxis.from_bounds(

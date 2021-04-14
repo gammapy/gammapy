@@ -139,8 +139,8 @@ class FitConfig(GammapyBaseConfig):
 
 
 class ExcessMapConfig(GammapyBaseConfig):
-    correlation_radius: AngleType = '0.1 deg'
-    parameters: dict = {"selection_optional": ""}
+    correlation_radius: AngleType = "0.1 deg"
+    parameters: dict = {}
     energy_edges: EnergyAxisConfig = EnergyAxisConfig()
 
 
