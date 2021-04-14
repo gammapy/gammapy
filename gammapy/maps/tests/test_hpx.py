@@ -839,7 +839,7 @@ def test_hpx_geom_region_mask():
     assert_allclose(solid_angle, 2 * np.pi * (1 - np.cos(3 * u.deg)) * u.sr, rtol=0.01)
 
 def test_hpx_geom_separation():
-    geom = HpxGeom.create(skydir=(0,0), binsz=0.1, frame="galactic", nest=True)
+    geom = HpxGeom.create(binsz=0.1, frame="galactic", nest=True)
     position = SkyCoord(0, 0, unit="deg", frame="galactic")
     separation = geom.separation(position)
     assert separation.unit == "deg"
