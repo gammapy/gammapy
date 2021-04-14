@@ -425,11 +425,8 @@ class HpxGeom(Geom):
                 "with the axes argument."
             )
 
-        self._order = nside_to_order(self._nside)
         self._nest = nest
         self._frame = frame
-        self._maxpix = 12 * self._nside * self._nside
-        self._maxpix = self._maxpix * np.ones(self.shape_axes, dtype=int)
 
         self._ipix = None
         self._region = region
@@ -451,7 +448,7 @@ class HpxGeom(Geom):
             ]
 
             self._ipix = [
-                ravel_hpx_index((p, i * np.ones_like(p)), np.ravel(self._maxpix))
+                ravel_hpx_index((p, i * np.ones_like(p)), np.ravel(self.npix_max))
                 for i, p in enumerate(ipix)
             ]
             self._region = region
@@ -462,14 +459,13 @@ class HpxGeom(Geom):
             self._ipix = np.concatenate(self._ipix)
 
         elif isinstance(region, tuple):
-
             region = [np.asarray(t) for t in region]
             m = np.any(np.stack([t >= 0 for t in region]), axis=0)
             region = [t[m] for t in region]
 
-            self._ipix = ravel_hpx_index(region, self._maxpix)
+            self._ipix = ravel_hpx_index(region, self.npix_max)
             self._ipix = np.unique(self._ipix)
-            region = unravel_hpx_index(self._ipix, self._maxpix)
+            region = unravel_hpx_index(self._ipix, self.npix_max)
             self._region = "explicit"
             self._indxschm = "EXPLICIT"
             if len(region) == 1:
@@ -483,7 +479,7 @@ class HpxGeom(Geom):
         elif region is None:
             self._region = None
             self._indxschm = "IMPLICIT"
-            self._npix = self._maxpix
+            self._npix = self.npix_max
 
         else:
             raise ValueError(f"Invalid region string: {region!r}")
@@ -507,7 +503,7 @@ class HpxGeom(Geom):
             )
             idx = ravel_hpx_index(idx_tmp, self._npix)
 
-        idx_global = unravel_hpx_index(self._ipix[idx], self._maxpix)
+        idx_global = unravel_hpx_index(self._ipix[idx], self.npix_max)
         return idx_global[:1] + tuple(idx_local[1:])
 
     def global_to_local(self, idx_global, ravel=False):
@@ -530,12 +526,12 @@ class HpxGeom(Geom):
                 or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
                 or isinstance(idx_global, np.ndarray)
         ):
-            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self._maxpix)
+            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self.npix_max)
 
         if self.nside.size == 1:
             idx = np.array(idx_global[0], ndmin=1)
         else:
-            idx = ravel_hpx_index(idx_global, self._maxpix)
+            idx = ravel_hpx_index(idx_global, self.npix_max)
 
         if self._ipix is not None:
             retval = np.full(idx.size, -1, "i")
@@ -734,7 +730,7 @@ class HpxGeom(Geom):
 
         Set to -1 for bands with NSIDE that is not a power of 2.
         """
-        return self._order
+        return nside_to_order(self.nside)
 
     @property
     def nest(self):
@@ -749,6 +745,12 @@ class HpxGeom(Geom):
         be less than the number of pixels for the band NSIDE.
         """
         return self._npix
+
+    @property
+    def npix_max(self):
+        """Max. number of pixels"""
+        maxpix = 12 * self.nside ** 2
+        return maxpix * np.ones(self.shape_axes, dtype=int)
 
     @property
     def frame(self):
@@ -807,7 +809,7 @@ class HpxGeom(Geom):
         if self.is_allsky:
             lon, lat = 0., 0.
         elif self.region == "explicit":
-            idx = unravel_hpx_index(self._ipix, self._maxpix)
+            idx = unravel_hpx_index(self._ipix, self.npix_max)
             nside = self._get_nside(idx)
             vec = hp.pix2vec(nside, idx[0], nest=self.nest)
             vec = np.array([np.mean(t) for t in vec])
@@ -1030,22 +1032,22 @@ class HpxGeom(Geom):
             raise ValueError("Cannot pad an all-sky map.")
 
         idx = self.get_idx(flat=True)
-        idx_r = ravel_hpx_index(idx, self._maxpix)
+        idx_r = ravel_hpx_index(idx, self.npix_max)
 
         # TODO: Pre-filter indices to find those close to the edge
         idx_nb = self._get_neighbors(idx)
-        idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+        idx_nb = ravel_hpx_index(idx_nb, self.npix_max)
 
         for _ in range(pad_width):
             mask_edge = np.isin(idx_nb, idx_r, invert=True)
             idx_edge = idx_nb[mask_edge]
             idx_edge = np.unique(idx_edge)
             idx_r = np.sort(np.concatenate((idx_r, idx_edge)))
-            idx_nb = unravel_hpx_index(idx_edge, self._maxpix)
+            idx_nb = unravel_hpx_index(idx_edge, self.npix_max)
             idx_nb = self._get_neighbors(idx_nb)
-            idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+            idx_nb = ravel_hpx_index(idx_nb, self.npix_max)
 
-        idx = unravel_hpx_index(idx_r, self._maxpix)
+        idx = unravel_hpx_index(idx_r, self.npix_max)
         return self.__class__(
             self.nside.copy(),
             self.nest,
@@ -1059,11 +1061,11 @@ class HpxGeom(Geom):
             raise ValueError("Cannot crop an all-sky map.")
 
         idx = self.get_idx(flat=True)
-        idx_r = ravel_hpx_index(idx, self._maxpix)
+        idx_r = ravel_hpx_index(idx, self.npix_max)
 
         # TODO: Pre-filter indices to find those close to the edge
         idx_nb = self._get_neighbors(idx)
-        idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+        idx_nb = ravel_hpx_index(idx_nb, self.npix_max)
 
         for _ in range(crop_width):
             # Mask of pixels that have at least one neighbor not
@@ -1072,7 +1074,7 @@ class HpxGeom(Geom):
             idx_r = idx_r[~mask_edge]
             idx_nb = idx_nb[:, ~mask_edge]
 
-        idx = unravel_hpx_index(idx_r, self._maxpix)
+        idx = unravel_hpx_index(idx_r, self.npix_max)
         return self.__class__(
             self.nside.copy(),
             self.nest,
@@ -1335,10 +1337,10 @@ class HpxGeom(Geom):
         header["PIXTYPE"] = "HEALPIX"
         header["ORDERING"] = self.ordering
         header["INDXSCHM"] = indxschm
-        header["ORDER"] = np.max(self._order)
-        header["NSIDE"] = np.max(self._nside)
+        header["ORDER"] = np.max(self.order)
+        header["NSIDE"] = np.max(self.nside)
         header["FIRSTPIX"] = 0
-        header["LASTPIX"] = np.max(self._maxpix) - 1
+        header["LASTPIX"] = np.max(self.npix_max) - 1
         header["HPX_CONV"] = format.convname.upper()
 
         if self.frame == "icrs":
@@ -1416,7 +1418,7 @@ class HpxGeom(Geom):
         if self.is_allsky:
             width = 180.
         elif self.region == "explicit":
-            idx = unravel_hpx_index(self._ipix, self._maxpix)
+            idx = unravel_hpx_index(self._ipix, self.npix_max)
             nside = self._get_nside(idx)
             ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
             dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=self.frame)
@@ -1597,7 +1599,7 @@ class HpxGeom(Geom):
                 s = slice(npix_sum[idx_ravel], npix_sum[idx_ravel + 1])
             else:
                 s = slice(None)
-            pix_flat = unravel_hpx_index(self._ipix[s], self._maxpix)
+            pix_flat = unravel_hpx_index(self._ipix[s], self.npix_max)
 
             shape = (np.max(self.npix),)
             if idx is None:
