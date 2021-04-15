@@ -379,6 +379,74 @@ class HpxNDMap(HpxMap):
             data = data * weights.data
         self.data[..., idx] += data
 
+
+    def smooth(self, width, kernel="gauss"):
+        """Smooth the map.
+
+        Iterates over 2D image planes, processing one at a time.
+
+        Parameters
+        ----------
+        width : `~astropy.units.Quantity`, str or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using ``healpy.nside2resol``.
+            It corresponds to the standard deviation in case of a Gaussian kernel,
+            and the radius in case of a disk kernel.
+        kernel : {'gauss', 'disk'}
+            Kernel shape
+
+        Returns
+        -------
+        image : `HpxNDMap`
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        import healpy as hp
+
+        nside = self.geom.nside
+        nest = self.geom.nest
+
+        # The smoothing width is expected by healpy in radians
+        if isinstance(width, (Quantity, str)):
+            width = Quantity(width)
+            width = width.to_value("rad")
+        else:
+            binsz = np.degrees(hp.nside2resol(nside))
+            width = width * binsz
+            width = np.deg2rad(width)
+
+        smoothed_data = np.empty(self.data.shape, dtype=float)
+
+        for img, idx in self.iter_by_image():
+            img = img.astype(float)
+
+            if nest:
+                # reorder to ring to do the smoothing
+                img = hp.pixelfunc.reorder(img, n2r=True)
+
+            if kernel == "gauss":
+                data = hp.sphtfunc.smoothing(img, sigma=width,pol=False, verbose=False)
+            elif kernel == "disk":
+                lmax = 3*nside-1
+                # create the step function in angular space
+                theta = np.append(np.linspace(0,width), width+1e-7)
+                beam = np.ones(len(theta))
+                beam[theta>width]=0
+                # convert to the spherical harmonics space
+                window_beam = hp.sphtfunc.beam2bl(beam, theta, lmax)
+                # normalize the window beam
+                window_beam = window_beam/window_beam.max()
+                data = hp.sphtfunc.smoothing(img, beam_window=window_beam,pol=False, verbose=False)
+
+            else:
+                raise ValueError(f"Invalid kernel: {kernel!r}")
+            if nest:
+                # reorder back to nest after the smoothing
+                data = hp.pixelfunc.reorder(data, r2n=True)
+            smoothed_data[idx] = data
+
+        return self._init_copy(data=smoothed_data)
+
     def get_by_idx(self, idx):
         # inherited docstring
         idx = pix_tuple_to_idx(idx)
