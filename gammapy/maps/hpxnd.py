@@ -429,7 +429,8 @@ class HpxNDMap(HpxMap):
             elif kernel == "disk":
                 lmax = 3*nside-1
                 # create the step function in angular space
-                theta = np.append(np.linspace(0,width), width+1e-7)
+                # (this is not great)
+                theta = np.append(np.linspace(0,width), np.linspace(width+1e-7, width+1, 10))
                 beam = np.ones(len(theta))
                 beam[theta>width]=0
                 # convert to the spherical harmonics space
