@@ -839,13 +839,19 @@ class FluxPointsEstimator(Estimator):
             selection_optional=self.selection_optional,
         )
 
-    def run(self, datasets):
+    def run(self, datasets, backend="minuit", optimize_opts=None, covariance_opts=None):
         """Run the flux point estimator for all energy groups.
 
         Parameters
         ----------
         datasets : list of `~gammapy.datasets.Dataset`
             Datasets
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -860,7 +866,12 @@ class FluxPointsEstimator(Estimator):
             self.energy_edges[:-1], self.energy_edges[1:]
         ):
             row = self.estimate_flux_point(
-                datasets, energy_min=energy_min, energy_max=energy_max
+                datasets,
+                energy_min=energy_min,
+                energy_max=energy_max,
+                backend=backend,
+                optimize_opts=optimize_opts,
+                covariance_opts=covariance_opts,
             )
             rows.append(row)
 
@@ -869,7 +880,15 @@ class FluxPointsEstimator(Estimator):
         # TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
-    def estimate_flux_point(self, datasets, energy_min, energy_max):
+    def estimate_flux_point(
+        self,
+        datasets,
+        energy_min,
+        energy_max,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
+    ):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -878,6 +897,12 @@ class FluxPointsEstimator(Estimator):
             Datasets
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -889,7 +914,14 @@ class FluxPointsEstimator(Estimator):
         )
         fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
-        result.update(fe.run(datasets=datasets))
+        result.update(
+            fe.run(
+                datasets=datasets,
+                backend=backend,
+                optimize_opts=optimize_opts,
+                covariance_opts=covariance_opts,
+            )
+        )
 
         return result
 

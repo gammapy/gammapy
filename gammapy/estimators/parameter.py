@@ -61,6 +61,9 @@ class ParameterEstimator(Estimator):
         scan_n_values=30,
         scan_values=None,
         reoptimize=True,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
         selection_optional=None,
     ):
         self.n_sigma = n_sigma
@@ -83,7 +86,14 @@ class ParameterEstimator(Estimator):
         if self._fit is None or datasets is not self._fit.datasets:
             self._fit = Fit(datasets)
 
-    def estimate_best_fit(self, datasets, parameter):
+    def estimate_best_fit(
+        self,
+        datasets,
+        parameter,
+        backend="minuit",
+        optimize_opts={},
+        covariance_opts={},
+    ):
         """Estimate parameter assymetric errors
 
         Parameters
@@ -92,6 +102,12 @@ class ParameterEstimator(Estimator):
             Datasets
         parameter : `Parameter`
             For which parameter to get the value
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -99,7 +115,11 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
         """
         self._setup_fit(datasets)
-        result_fit = self._fit.run()
+        result_fit = self._fit.run(
+            backend=backend,
+            optimize_opts=optimize_opts,
+            covariance_opts=covariance_opts,
+        )
 
         return {
             f"{parameter.name}": parameter.value,
@@ -108,7 +128,7 @@ class ParameterEstimator(Estimator):
             f"{parameter.name}_err": parameter.error * self.n_sigma,
         }
 
-    def estimate_ts(self, datasets, parameter):
+    def estimate_ts(self, datasets, parameter, backend="minuit", optimize_opts={}):
         """Estimate parameter ts
 
         Parameters
@@ -117,6 +137,10 @@ class ParameterEstimator(Estimator):
             Datasets
         parameter : `Parameter`
             For which parameter to get the value
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
 
         Returns
         -------
@@ -132,13 +156,15 @@ class ParameterEstimator(Estimator):
 
             if self.reoptimize:
                 parameter.frozen = True
-                _ = self._fit.optimize()
+                _ = self._fit.optimize(backend=backend, **optimize_opts)
 
             ts = datasets.stat_sum() - stat
 
         return {"ts": ts}
 
-    def estimate_errn_errp(self, datasets, parameter):
+    def estimate_errn_errp(
+        self, datasets, parameter, backend="minuit", optimize_opts={}
+    ):
         """Estimate parameter assymetric errors
 
         Parameters
@@ -147,6 +173,10 @@ class ParameterEstimator(Estimator):
             Datasets
         parameter : `Parameter`
             For which parameter to get the value
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
 
         Returns
         -------
@@ -155,7 +185,7 @@ class ParameterEstimator(Estimator):
         """
         # TODO: make Fit stateless and configurable
         self._setup_fit(datasets)
-        self._fit.optimize()
+        self._fit.optimize(backend=backend, **optimize_opts)
 
         res = self._fit.confidence(
             parameter=parameter, sigma=self.n_sigma, reoptimize=self.reoptimize
@@ -165,7 +195,7 @@ class ParameterEstimator(Estimator):
             f"{parameter.name}_errn": res["errn"],
         }
 
-    def estimate_scan(self, datasets, parameter):
+    def estimate_scan(self, datasets, parameter, backend="minuit", optimize_opts={}):
         """Estimate parameter stat scan.
 
         Parameters
@@ -174,6 +204,10 @@ class ParameterEstimator(Estimator):
             The datasets used to estimate the model parameter
         parameter : `Parameter`
             For which parameter to get the value
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
 
         Returns
         -------
@@ -182,7 +216,7 @@ class ParameterEstimator(Estimator):
 
         """
         self._setup_fit(datasets)
-        self._fit.optimize()
+        self._fit.optimize(backend=backend, **optimize_opts)
 
         if self.scan_min and self.scan_max:
             bounds = (self.scan_min, self.scan_max)
@@ -202,7 +236,7 @@ class ParameterEstimator(Estimator):
             "stat_scan": profile["stat_scan"],
         }
 
-    def estimate_ul(self, datasets, parameter):
+    def estimate_ul(self, datasets, parameter, backend="minuit", optimize_opts={}):
         """Estimate parameter ul.
 
         Parameters
@@ -211,6 +245,10 @@ class ParameterEstimator(Estimator):
             The datasets used to estimate the model parameter
         parameter : `Parameter`
             For which parameter to get the value
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
 
         Returns
         -------
@@ -219,13 +257,20 @@ class ParameterEstimator(Estimator):
 
         """
         self._setup_fit(datasets)
-        self._fit.optimize()
+        self._fit.optimize(backend=backend, **optimize_opts)
         res = self._fit.confidence(
             parameter=parameter, sigma=self.n_sigma_ul, backend="scipy"
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
-    def run(self, datasets, parameter):
+    def run(
+        self,
+        datasets,
+        parameter,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
+    ):
         """Run the parameter estimator.
 
         Parameters
@@ -234,6 +279,12 @@ class ParameterEstimator(Estimator):
             The datasets used to estimate the model parameter
         parameter : `str` or `Parameter`
             For which parameter to run the estimator
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -243,22 +294,59 @@ class ParameterEstimator(Estimator):
         datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
 
+        if optimize_opts is None:
+            optimize_opts = {}
+
+        if covariance_opts is None:
+            covariance_opts = {}
+
         with datasets.parameters.restore_status():
 
             if not self.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False
 
-            result = self.estimate_best_fit(datasets, parameter)
-            result.update(self.estimate_ts(datasets, parameter))
+            result = self.estimate_best_fit(
+                datasets,
+                parameter,
+                backend=backend,
+                optimize_opts=optimize_opts,
+                covariance_opts=covariance_opts,
+            )
+            result.update(
+                self.estimate_ts(
+                    datasets, parameter, backend=backend, optimize_opts=optimize_opts
+                )
+            )
 
             if "errn-errp" in self.selection_optional:
-                result.update(self.estimate_errn_errp(datasets, parameter))
+                result.update(
+                    self.estimate_errn_errp(
+                        datasets,
+                        parameter,
+                        backend=backend,
+                        optimize_opts=optimize_opts,
+                    )
+                )
 
             if "ul" in self.selection_optional:
-                result.update(self.estimate_ul(datasets, parameter))
+                result.update(
+                    self.estimate_ul(
+                        datasets,
+                        parameter,
+                        backend=backend,
+                        optimize_opts=optimize_opts,
+                    )
+                )
 
             if "scan" in self.selection_optional:
-                result.update(self.estimate_scan(datasets, parameter))
+                result.update(
+                    self.estimate_scan(
+                        datasets,
+                        parameter,
+                        backend=backend,
+                        optimize_opts=optimize_opts,
+                    )
+                )
 
         return result

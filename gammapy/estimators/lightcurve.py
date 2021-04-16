@@ -382,7 +382,7 @@ class LightCurveEstimator(Estimator):
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
 
-    def run(self, datasets):
+    def run(self, datasets, backend="minuit", optimize_opts=None, covariance_opts=None):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
@@ -391,6 +391,12 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -428,13 +434,21 @@ class LightCurveEstimator(Estimator):
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
-    def estimate_time_bin_flux(self, datasets):
+    def estimate_time_bin_flux(
+        self, datasets, backend="minuit", optimize_opts=None, covariance_opts=None
+    ):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
         datasets : `~gammapy.modeling.Datasets`
             the list of dataset object
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -459,7 +473,12 @@ class LightCurveEstimator(Estimator):
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
         )
-        fp = fe.run(datasets)
+        fp = fe.run(
+            datasets,
+            backend=backend,
+            optimize_opts=optimize_opts,
+            covariance_opts=covariance_opts,
+        )
 
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row
         result = {}

@@ -81,12 +81,14 @@ class FluxEstimator(Estimator):
         if self.energy_min >= self.energy_max:
             raise ValueError("Incorrect energy_range for Flux Estimator")
 
-        self.selection_optional = selection_optional
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.reoptimize = reoptimize
+        self.selection_optional = selection_optional
 
-        self._parameter_estimator = ParameterEstimator(
+    @property
+    def _parameter_estimator(self):
+        return ParameterEstimator(
             null_value=0,
             scan_values=self.norm_values,
             n_sigma=self.n_sigma,
@@ -143,13 +145,21 @@ class FluxEstimator(Estimator):
         scale_model.norm.frozen = False
         return scale_model
 
-    def run(self, datasets):
+    def run(
+        self, datasets, backend="minuit", optimize_opts=None, covariance_opts=None,
+    ):
         """Estimate flux for a given energy range.
 
         Parameters
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset`
             Spectrum datasets.
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -192,7 +202,15 @@ class FluxEstimator(Estimator):
             models[self.source].spectral_model = model
 
             datasets_sliced.models = models
-            result.update(self._parameter_estimator.run(datasets_sliced, model.norm))
+            result.update(
+                self._parameter_estimator.run(
+                    datasets_sliced,
+                    model.norm,
+                    backend=backend,
+                    optimize_opts=optimize_opts,
+                    covariance_opts=covariance_opts,
+                )
+            )
             result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
         return result
