@@ -403,7 +403,11 @@ class HpxNDMap(HpxMap):
         """
         import healpy as hp
 
+        if not self.geom.is_allsky:
+            raise NotImplementedError("Smoothing is only possible for all-sky maps")
+
         nside = self.geom.nside
+        lmax = 3*nside-1 # maximum l of the power spectrum
         nest = self.geom.nest
 
         # The smoothing width is expected by healpy in radians
@@ -425,22 +429,20 @@ class HpxNDMap(HpxMap):
                 img = hp.pixelfunc.reorder(img, n2r=True)
 
             if kernel == "gauss":
-                data = hp.sphtfunc.smoothing(img, sigma=width,pol=False, verbose=False)
+                data = hp.sphtfunc.smoothing(img, sigma=width, pol=False, verbose=False, lmax=lmax)
             elif kernel == "disk":
-                lmax = 3*nside-1
                 # create the step function in angular space
-                # (this is not great)
-                theta = np.append(np.linspace(0,width), np.linspace(width+1e-7, width+1, 10))
+                theta = np.linspace(0,width)
                 beam = np.ones(len(theta))
                 beam[theta>width]=0
                 # convert to the spherical harmonics space
                 window_beam = hp.sphtfunc.beam2bl(beam, theta, lmax)
                 # normalize the window beam
                 window_beam = window_beam/window_beam.max()
-                data = hp.sphtfunc.smoothing(img, beam_window=window_beam,pol=False, verbose=False)
-
+                data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
             else:
                 raise ValueError(f"Invalid kernel: {kernel!r}")
+
             if nest:
                 # reorder back to nest after the smoothing
                 data = hp.pixelfunc.reorder(data, r2n=True)
