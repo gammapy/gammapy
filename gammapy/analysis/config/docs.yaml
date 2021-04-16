@@ -64,5 +64,5 @@ flux_points:
 # Flux/significance map process /optional
 excess_map:
     correlation_radius: 0.1 deg
-    energy_edges: {min: None, max: None, nbins: None}
+    energy_edges: {min: 0.1 TeV, max: 10 TeV, nbins: 1}
     parameters: {}
