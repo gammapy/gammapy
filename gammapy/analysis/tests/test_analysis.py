@@ -289,8 +289,8 @@ def test_analysis_ring_background():
     assert_allclose(
         analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
     )
-    assert isinstance(analysis.excess_maps["sqrt_ts"], WcsNDMap)
-    assert_allclose(analysis.excess_maps["excess"].data[0,62,62],134.12389)
+    assert isinstance(analysis.excess_map["sqrt_ts"], WcsNDMap)
+    assert_allclose(analysis.excess_map["excess"].data[0,62,62],134.12389)
 
 @requires_data()
 def test_analysis_ring_3d():

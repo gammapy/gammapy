@@ -228,7 +228,7 @@ class Analysis:
             energy_edges=energy_edges,
             **excess_settings.parameters
         )
-        self.excess_maps = excess_map_estimator.run(self.datasets[0])
+        self.excess_map = excess_map_estimator.run(self.datasets[0])
 
     def update_config(self, config):
         self.config = self.config.update(config=config)
