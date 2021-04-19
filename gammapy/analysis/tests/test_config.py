@@ -31,7 +31,10 @@ def test_config_default_types():
     assert isinstance(config.datasets.geom.selection.offset_max, Angle)
     assert config.fit.fit_range.min is None
     assert config.fit.fit_range.max is None
-
+    assert isinstance(config.excess_map.correlation_radius, Angle)
+    assert config.excess_map.energy_edges.min is None
+    assert config.excess_map.energy_edges.max is None
+    assert config.excess_map.energy_edges.nbins is None
 
 def test_config_not_default_types():
     config = AnalysisConfig()

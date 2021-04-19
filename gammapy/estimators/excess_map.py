@@ -156,7 +156,7 @@ class ExcessMapEstimator(Estimator):
 
         """
         if not isinstance(dataset, MapDataset):
-            raise ValueError("Unsupported dataset type")
+            raise ValueError("Unsupported dataset type. Excess map is not applicable to 1D datasets.")
 
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
