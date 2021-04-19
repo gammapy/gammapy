@@ -471,3 +471,38 @@ def test_hpx_map_to_region_nd_map():
     spec_interp = m.to_region_nd_map(region=circle.center, func=np.mean)
     assert_allclose(spec_interp.data, 1)
 
+@pytest.mark.parametrize("kernel", ["gauss", "disk"])
+def test_smooth(kernel):
+    axes = [
+        MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
+        MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
+    ]
+    geom_nest = HpxGeom.create(
+        nside=256,nest = False, frame="galactic", axes=axes
+    )
+    geom_ring = HpxGeom.create(
+        nside=256,nest = True, frame="galactic", axes=axes
+    )
+    m_nest = HpxNDMap(geom_nest, data=np.ones(geom_nest.data_shape), unit="m2")
+    m_ring = HpxNDMap(geom_ring, data=np.ones(geom_ring.data_shape), unit="m2")
+
+    desired_nest = m_nest.data.sum()
+    desired_ring = m_ring.data.sum()
+
+    smoothed_nest = m_nest.smooth(0.2 * u.deg, kernel)
+    smoothed_ring = m_ring.smooth(0.2 * u.deg, kernel)
+
+    actual_nest = smoothed_nest.data.sum()
+    assert_allclose(actual_nest, desired_nest)
+    assert smoothed_nest.data.dtype == float
+
+    actual_ring = smoothed_ring.data.sum()
+    assert_allclose(actual_ring, desired_ring)
+    assert smoothed_ring.data.dtype == float
+
+    with pytest.raises(NotImplementedError):
+        cutout = m_nest.cutout(position=(0,0), width=5*u.deg)
+        cutout.smooth(0.2 * u.deg, kernel)
+
+    with pytest.raises(ValueError):
+        m_nest.smooth(0.2 * u.deg, "box")
