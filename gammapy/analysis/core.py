@@ -7,11 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-<<<<<<< HEAD
-from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator
-=======
-from gammapy.estimators import FluxPointsEstimator, LightCurveEstimator
->>>>>>> Further changes for LightCurve.
+from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator, LightCurveEstimator
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,

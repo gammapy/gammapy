@@ -230,7 +230,8 @@ class AnalysisConfig(GammapyBaseConfig):
     fit: FitConfig = FitConfig()
     flux_points: FluxPointsConfig = FluxPointsConfig()
     excess_map: ExcessMapConfig = ExcessMapConfig()
-
+    light_curve: LightCurveConfig = LightCurveConfig()
+    
     def __str__(self):
         """Display settings in pretty YAML format."""
         info = self.__class__.__name__ + "\n\n\t"
