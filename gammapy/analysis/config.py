@@ -134,6 +134,13 @@ class FluxPointsConfig(GammapyBaseConfig):
     parameters: dict = {"selection_optional": "all"}
 
 
+class LightCurveConfig(GammapyBaseConfig):
+    time_intervals: TimeRangeConfig = TimeRangeConfig()
+    energy_edges: EnergyAxisConfig = EnergyAxisConfig(min=None, max=None, nbins=None)
+    source: str = "source"
+    parameters: dict = {"selection_optional": "all"}
+
+
 class FitConfig(GammapyBaseConfig):
     fit_range: EnergyRangeConfig = EnergyRangeConfig()
 
