@@ -334,6 +334,12 @@ class LightCurveEstimator(Estimator):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
+    backend : str
+        Backend used for fitting, default : minuit
+    optimize_opts : dict
+        Options passed to `Fit.optimize`.
+    covariance_opts : dict
+        Options passed to `Fit.covariance`.
     reoptimize : bool
         reoptimize other parameters during fit statistic scan?
     selection_optional : list of str
@@ -362,6 +368,9 @@ class LightCurveEstimator(Estimator):
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
     ):
@@ -379,10 +388,17 @@ class LightCurveEstimator(Estimator):
         self.norm_values = norm_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.backend = backend
+        if optimize_opts is None:
+            optimize_opts = {}
+        if covariance_opts is None:
+            covariance_opts = {}
+        self.optimize_opts = optimize_opts
+        self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
 
-    def run(self, datasets, backend="minuit", optimize_opts=None, covariance_opts=None):
+    def run(self, datasets):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
@@ -391,12 +407,6 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
-        backend : str
-            Backend used for fitting, default : minuit
-        optimize_opts : dict
-            Options passed to `Fit.optimize`.
-        covariance_opts : dict
-            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -425,13 +435,7 @@ class LightCurveEstimator(Estimator):
 
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
             row.update(
-                self.estimate_time_bin_flux(
-                    datasets_to_fit,
-                    backend=backend,
-                    optimize_opts=optimize_opts,
-                    covariance_opts=covariance_opts,
-                )
-            )
+                self.estimate_time_bin_flux(datasets_to_fit))
             rows.append(row)
 
         if len(rows) == 0:
@@ -441,9 +445,7 @@ class LightCurveEstimator(Estimator):
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
-    def estimate_time_bin_flux(
-        self, datasets, backend="minuit", optimize_opts=None, covariance_opts=None
-    ):
+    def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -477,15 +479,13 @@ class LightCurveEstimator(Estimator):
             norm_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
+            backend = self.backend,
+            optimize_opts = self.optimize_opts,
+            covariance_opts = self.covariance_opts,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
         )
-        fp = fe.run(
-            datasets,
-            backend=backend,
-            optimize_opts=optimize_opts,
-            covariance_opts=covariance_opts,
-        )
+        fp = fe.run(datasets)
 
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row
         result = {}

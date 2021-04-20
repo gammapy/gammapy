@@ -784,6 +784,12 @@ class FluxPointsEstimator(Estimator):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
+    backend : str
+        Backend used for fitting, default : minuit
+    optimize_opts : dict
+        Options passed to `Fit.optimize`.
+    covariance_opts : dict
+        Options passed to `Fit.covariance`.
     reoptimize : bool
         Re-optimize other free model parameters.
     selection_optional : list of str
@@ -810,6 +816,9 @@ class FluxPointsEstimator(Estimator):
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
     ):
@@ -821,6 +830,13 @@ class FluxPointsEstimator(Estimator):
         self.norm_values = norm_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.backend = backend
+        if optimize_opts is None:
+            optimize_opts = {}
+        if covariance_opts is None:
+            covariance_opts = {}
+        self.optimize_opts = optimize_opts
+        self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
 
@@ -835,23 +851,20 @@ class FluxPointsEstimator(Estimator):
             norm_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
+            backend = self.backend,
+            optimize_opts = self.optimize_opts,
+            covariance_opts = self.covariance_opts,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
         )
 
-    def run(self, datasets, backend="minuit", optimize_opts=None, covariance_opts=None):
+    def run(self, datasets):
         """Run the flux point estimator for all energy groups.
 
         Parameters
         ----------
         datasets : list of `~gammapy.datasets.Dataset`
             Datasets
-        backend : str
-            Backend used for fitting, default : minuit
-        optimize_opts : dict
-            Options passed to `Fit.optimize`.
-        covariance_opts : dict
-            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -869,9 +882,6 @@ class FluxPointsEstimator(Estimator):
                 datasets,
                 energy_min=energy_min,
                 energy_max=energy_max,
-                backend=backend,
-                optimize_opts=optimize_opts,
-                covariance_opts=covariance_opts,
             )
             rows.append(row)
 
@@ -880,15 +890,7 @@ class FluxPointsEstimator(Estimator):
         # TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
-    def estimate_flux_point(
-        self,
-        datasets,
-        energy_min,
-        energy_max,
-        backend="minuit",
-        optimize_opts=None,
-        covariance_opts=None,
-    ):
+    def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -897,12 +899,6 @@ class FluxPointsEstimator(Estimator):
             Datasets
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
-        backend : str
-            Backend used for fitting, default : minuit
-        optimize_opts : dict
-            Options passed to `Fit.optimize`.
-        covariance_opts : dict
-            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -914,14 +910,7 @@ class FluxPointsEstimator(Estimator):
         )
         fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
-        result.update(
-            fe.run(
-                datasets=datasets,
-                backend=backend,
-                optimize_opts=optimize_opts,
-                covariance_opts=covariance_opts,
-            )
-        )
+        result.update(fe.run(datasets=datasets))
 
         return result
 
