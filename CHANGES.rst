@@ -3,6 +3,73 @@
 
 - No changes yet
 
+**What's new?**
+
+**Contributors**
+
+In alphabetical order by first name:
+
+- Atreyee Sinha
+- Axel Donath
+- Cosimo Nigro
+- Fabio Acero
+- Jalel Hajlaoui
+- Johannes Buchner
+- José Enrique Ruiz
+- Laura Olivera Nieto
+- Maximilian Nöthe
+- Quentin Remy
+- Régis Terrier
+- Vikas
+
+
+Pull Requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+- [#3314] Implement HpxNDMap.smooth() (Laura Olivera-Nieto)
+- [#3310] Hpx separation method (Vikas)
+- [#3309] Improve doc and cleanup for selection_optional argument in estimators (Quentin Rémy)
+- [#3308] Implement HpxNDMap.to_region_nd_map (Axel Donath)
+- [#3307] Add support for ExcessMapEstimator on high level interface (Régis Terrier)
+- [#3306] Allow to specify spectral model in ExcessMapEstimator (Quentin Rémy)
+- [#3305] Implement HpxGeom.to_binsz() (Axel Donath)
+- [#3304] Implement stacking of healpix maps (Axel Donath)
+- [#3303] Fix npred after energy resampling in ExcessMapEstimator (Quentin Rémy)
+- [#3302] Implement healpix cutout (Axel Donath)
+- [#3301] Change HLI default for Fit range (Régis Terrier)
+- [#3293] Add link to tutorials as thumbnails in API docs (Jose Enrique Ruiz)
+- [#3285] Use FluxMaps in TSMapEstimator (Axel Donath)
+- [#3284] Fixing Matplotlib deprecation of nonposx (Fabio Acero)
+- [#3283] Add Models.plot_spatial() (Atreyee Sinha)
+- [#3281] Refactor and shorten overview docs page (Axel Donath)
+- [#3279] Improve visibility of models gallery (Jose Enrique Ruiz)
+- [#3278] Extend documentation of quantities returned by estimators (Axel Donath)
+- [#3277] Change Estimator optional default selection (Axel Donath)
+- [#3276] Group tutorials files in category folders (Jose Enrique Ruiz)
+- [#3272] Add SourceCatalog.to_models() and improve models selection from catalogues (Quentin Rémy)
+- [#3262] Cleanup maps tutorial and rst page (Quentin Rémy)
+- [#3258] Add support for RegionGeom to MapDataset (Axel Donath)
+- [#3257] Remove code duplication in EDispMap.to_edisp_kernel_map() (Axel Donath)
+- [#3254] Add .mailmap (Maximilian Nöthe)
+- [#3246] Clean up and fix WcsNDMap binary operations (Axel Donath)
+- [#3243] Support I/O for RegionGeom in MapDataset (Axel Donath)
+- [#3241] Update 4FGL catalogue to DR2 (Quentin Rémy)
+- [#3238] Unify integration in EDispMap.get_edisp_kernel() and EnergyDispersion2D.get_edisp_kernel() (Axel Donath)
+- [#3230] Expand extended source analysis tutorial (Laura Olivera-Nieto)
+- [#3228] Remove EffectiveAreaTable class (Axel Donath)
+- [#3222] Add alternative parametrization for ShellSpatialModel (Quentin Rémy)
+- [#3219] Add missing values interpolation for Background3D (Quentin Rémy)
+- [#3217] Make is_norm_spectral_model as classproperty (Atreyee Sinha)
+- [#3216] Add a notebook to explain model management (Atreyee Sinha)
+- [#3211] Refactor notebooks processing (Jose Enrique Ruiz)
+- [#3208] Cleanup Dataset.plot_residuals() (Atreyee Sinha)
+- [#3207] Remove EnergyDependentTablePSF (Axel Donath)
+- [#3202] Add an option to the SpectrumDatasetMaker to average IRFs over a Region (Laura Olivera-Nieto)
+- [#3199] Enable tests of code in RST files and in docstrings of Python scripts (Jose Enrique Ruiz)
+- [#3197] Introduce PSF and ParametricPSF base classes (Axel Donath)
+- [#3191] Remove code duplication between SpectrumDatasetMaker and MapDatasetMaker (Axel Donath)
 
 0.18.2 (Nov 19th, 2020)
 -----------------------
