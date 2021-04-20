@@ -408,13 +408,13 @@ class LightCurveEstimator(Estimator):
             norm_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
-            backend = self.backend,
-            optimize_opts = self.optimize_opts,
-            covariance_opts = self.covariance_opts,
+            backend=self.backend,
+            optimize_opts=self.optimize_opts,
+            covariance_opts=self.covariance_opts,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
         )
-        
+
     def run(self, datasets):
         """Run light curve extraction.
 
@@ -451,8 +451,7 @@ class LightCurveEstimator(Estimator):
                 continue
 
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-            row.update(
-                self.estimate_time_bin_flux(datasets_to_fit))
+            row.update(self.estimate_time_bin_flux(datasets_to_fit))
             rows.append(row)
 
         if len(rows) == 0:

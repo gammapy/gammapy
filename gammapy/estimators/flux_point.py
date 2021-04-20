@@ -851,9 +851,9 @@ class FluxPointsEstimator(Estimator):
             norm_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
-            backend = self.backend,
-            optimize_opts = self.optimize_opts,
-            covariance_opts = self.covariance_opts,
+            backend=self.backend,
+            optimize_opts=self.optimize_opts,
+            covariance_opts=self.covariance_opts,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
         )
@@ -879,9 +879,7 @@ class FluxPointsEstimator(Estimator):
             self.energy_edges[:-1], self.energy_edges[1:]
         ):
             row = self.estimate_flux_point(
-                datasets,
-                energy_min=energy_min,
-                energy_max=energy_max,
+                datasets, energy_min=energy_min, energy_max=energy_max,
             )
             rows.append(row)
 

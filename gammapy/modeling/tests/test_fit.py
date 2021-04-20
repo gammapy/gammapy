@@ -56,11 +56,14 @@ class MyDataset(Dataset):
 @requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["sherpa", "scipy"])
 def test_warning_no_covariance(backend, caplog):
-   dataset = MyDataset()
-   fit = Fit([dataset], backend=backend)
-   result = fit.run()
-   assert caplog.records[-1].levelname == "WARNING"
-   assert caplog.records[-1].message == "No covariance estimate - not supported by this backend."
+    dataset = MyDataset()
+    fit = Fit([dataset], backend=backend)
+    result = fit.run()
+    assert caplog.records[-1].levelname == "WARNING"
+    assert (
+        caplog.records[-1].message
+        == "No covariance estimate - not supported by this backend."
+    )
 
 
 @pytest.mark.parametrize("backend", ["minuit"])
@@ -118,7 +121,7 @@ def test_optimize(backend):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
     dataset = MyDataset()
-    fit = Fit([dataset],backend=backend)
+    fit = Fit([dataset], backend=backend)
     fit.optimize()
     result = fit.confidence("x")
 
@@ -134,7 +137,7 @@ def test_confidence(backend):
 def test_confidence_frozen(backend):
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
-    fit = Fit([dataset],backend=backend)
+    fit = Fit([dataset], backend=backend)
     fit.optimize()
     result = fit.confidence("y")
 

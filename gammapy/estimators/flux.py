@@ -109,9 +109,9 @@ class FluxEstimator(Estimator):
             scan_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
-            backend = self.backend,
-            optimize_opts = self.optimize_opts,
-            covariance_opts = self.covariance_opts,
+            backend=self.backend,
+            optimize_opts=self.optimize_opts,
+            covariance_opts=self.covariance_opts,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
         )
@@ -213,9 +213,7 @@ class FluxEstimator(Estimator):
             models[self.source].spectral_model = model
 
             datasets_sliced.models = models
-            result.update(
-                self._parameter_estimator.run(datasets_sliced,model.norm)
-            )
+            result.update(self._parameter_estimator.run(datasets_sliced, model.norm))
             result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
         return result

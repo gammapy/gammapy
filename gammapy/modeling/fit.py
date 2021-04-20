@@ -77,7 +77,14 @@ class Fit:
         Options passed to `Fit.covariance`.
     """
 
-    def __init__(self, datasets,  backend="minuit", optimize_opts=None, covariance_opts=None, store_trace=False):
+    def __init__(
+        self,
+        datasets,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
+        store_trace=False,
+    ):
         from gammapy.datasets import Datasets
 
         # TODO: docstring for store_trace ?
@@ -91,8 +98,6 @@ class Fit:
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
 
-
-        
     @lazyproperty
     def _parameters(self):
         return self.datasets.parameters
@@ -217,7 +222,7 @@ class Fit:
             Results
         """
 
-        #TODO: docstring kwargs for covairance
+        # TODO: docstring kwargs for covairance
         self.covariance_opts.update(kwargs)
         compute = registry.get("covariance", self.backend)
         parameters = self._parameters
@@ -250,9 +255,7 @@ class Fit:
             message=info["message"],
         )
 
-    def confidence(
-        self, parameter, sigma=1, reoptimize=True, **kwargs
-    ):
+    def confidence(self, parameter, sigma=1, reoptimize=True, **kwargs):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -284,7 +287,7 @@ class Fit:
         parameters = self._parameters
         parameter = parameters[parameter]
 
-        #TODO: confidence_options on fit for consistancy ?
+        # TODO: confidence_options on fit for consistancy ?
 
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():

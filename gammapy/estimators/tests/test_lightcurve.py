@@ -216,22 +216,22 @@ def test_lightcurve_estimator_fit_options():
         time_intervals=time_intervals,
         selection_optional="all",
         backend="minuit",
-        optimize_opts = dict(tol=0.2, strategy=1),
+        optimize_opts=dict(tol=0.2, strategy=1),
     )
-    
+
     fpe = estimator._flux_poins_estimator(energy_edges)
     assert_allclose(fpe.optimize_opts["tol"], 0.2)
 
-    flux_estimator = fpe._flux_estimator(1*u.TeV, 30*u.TeV)
+    flux_estimator = fpe._flux_estimator(1 * u.TeV, 30 * u.TeV)
     assert_allclose(flux_estimator.optimize_opts["tol"], 0.2)
 
     param_estimator = flux_estimator._parameter_estimator
     assert_allclose(param_estimator.optimize_opts["tol"], 0.2)
-    
+
     param_estimator.fit(datasets).run()
     assert_allclose(param_estimator._fit.minuit.tol, 0.2)
-    
-    
+
+
 @requires_data()
 @requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets():
@@ -248,7 +248,7 @@ def test_lightcurve_estimator_spectrum_datasets():
         time_intervals=time_intervals,
         selection_optional="all",
     )
-    
+
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
     assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
@@ -296,7 +296,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         energy_edges=[1, 5, 30] * u.TeV,
         norm_n_values=3,
         time_intervals=time_intervals,
-        selection_optional="all"
+        selection_optional="all",
     )
     lightcurve = estimator.run(datasets)
     assert_allclose(lightcurve.table["time_min"], [55197.0, 55197.041667])
@@ -373,7 +373,9 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
     energy_max_fit = 3 * u.TeV
     for dataset in datasets:
         geom = dataset.counts.geom
-        dataset.mask_fit = geom.energy_mask(energy_min=energy_min_fit, energy_max=energy_max_fit)
+        dataset.mask_fit = geom.energy_mask(
+            energy_min=energy_min_fit, energy_max=energy_max_fit
+        )
 
     selection = ["scan"]
     estimator = LightCurveEstimator(

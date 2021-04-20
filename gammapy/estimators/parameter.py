@@ -98,11 +98,12 @@ class ParameterEstimator(Estimator):
 
     def fit(self, datasets):
         if self._fit is None or datasets is not self._fit.datasets:
-            self._fit = Fit(datasets,
-                            backend=self.backend,
-                            optimize_opts=self.optimize_opts,
-                            covariance_opts=self.covariance_opts,
-                            )
+            self._fit = Fit(
+                datasets,
+                backend=self.backend,
+                optimize_opts=self.optimize_opts,
+                covariance_opts=self.covariance_opts,
+            )
         return self._fit
 
     def estimate_best_fit(self, datasets, parameter):
@@ -242,9 +243,7 @@ class ParameterEstimator(Estimator):
         """
         self.fit(datasets)
         self._fit.optimize(**self.optimize_opts)
-        res = self._fit.confidence(
-            parameter=parameter, sigma=self.n_sigma_ul
-        )
+        res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
     def run(self, datasets, parameter):
@@ -281,6 +280,6 @@ class ParameterEstimator(Estimator):
                 result.update(self.estimate_ul(datasets, parameter))
 
             if "scan" in self.selection_optional:
-                result.update(self.estimate_scan(datasets,parameter))
+                result.update(self.estimate_scan(datasets, parameter))
 
         return result

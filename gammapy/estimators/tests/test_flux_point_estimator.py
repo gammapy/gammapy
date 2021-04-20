@@ -27,9 +27,7 @@ def simulate_spectrum_dataset(model, random_state=0):
     energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
     energy_axis_true = energy_axis.copy(name="energy_true")
 
-    aeff = EffectiveAreaTable2D.from_parametrization(
-        energy_axis_true=energy_axis_true
-    )
+    aeff = EffectiveAreaTable2D.from_parametrization(energy_axis_true=energy_axis_true)
 
     bkg_model = SkyModel(
         spectral_model=PowerLawSpectralModel(
@@ -43,14 +41,14 @@ def simulate_spectrum_dataset(model, random_state=0):
     geom = RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis])
     acceptance = RegionNDMap.from_geom(geom=geom, data=1)
     edisp = EDispKernelMap.from_diagonal_response(
-        energy_axis=energy_axis,
-        energy_axis_true=energy_axis_true,
-        geom=geom,
+        energy_axis=energy_axis, energy_axis_true=energy_axis_true, geom=geom,
     )
 
-    geom_true= RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis_true])
+    geom_true = RegionGeom.create(
+        region="icrs;circle(0, 0, 0.1)", axes=[energy_axis_true]
+    )
     exposure = make_map_exposure_true_energy(
-        pointing=SkyCoord("0d", "0d"), aeff=aeff, livetime=100 *u.h, geom=geom_true
+        pointing=SkyCoord("0d", "0d"), aeff=aeff, livetime=100 * u.h, geom=geom_true
     )
 
     mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
@@ -63,7 +61,7 @@ def simulate_spectrum_dataset(model, random_state=0):
         acceptance=acceptance,
         acceptance_off=acceptance_off,
         edisp=edisp,
-        mask_safe=mask_safe
+        mask_safe=mask_safe,
     )
     dataset.models = bkg_model
     bkg_npred = dataset.npred_signal()
@@ -86,7 +84,7 @@ def create_fpe(model):
         source="source",
         selection_optional="all",
         backend="minuit",
-        optimize_opts = dict(tol=0.2, strategy=1),
+        optimize_opts=dict(tol=0.2, strategy=1),
     )
     datasets = [dataset]
     return datasets, fpe
@@ -134,7 +132,10 @@ def fpe_map_pwl():
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_n_values=3, source="source", selection_optional="all"
+        energy_edges=energy_edges,
+        norm_n_values=3,
+        source="source",
+        selection_optional="all",
     )
     return datasets, fpe
 
@@ -302,7 +303,7 @@ def test_run_map_pwl(fpe_map_pwl):
     assert_allclose(actual, [0.2, 1, 5])
 
     actual = fp.table["stat_scan"][0] - fp.table["stat"][0]
-    assert_allclose(actual, [1.628398e+02, 1.452456e-01, 2.008018e+03], rtol=1e-2)
+    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
 
 
 @requires_dependency("iminuit")
@@ -340,12 +341,12 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl):
 
     assert_allclose(fpe.optimize_opts["tol"], 0.2)
 
-    flux_estimator = fpe._flux_estimator(1*u.TeV, 10*u.TeV)
+    flux_estimator = fpe._flux_estimator(1 * u.TeV, 10 * u.TeV)
     assert_allclose(flux_estimator.optimize_opts["tol"], 0.2)
 
     param_estimator = flux_estimator._parameter_estimator
     assert_allclose(param_estimator.optimize_opts["tol"], 0.2)
-    
+
     param_estimator.fit(datasets).run()
     assert_allclose(param_estimator._fit.minuit.tol, 0.2)
 
