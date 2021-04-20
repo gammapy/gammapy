@@ -90,14 +90,14 @@ def test_run(backend):
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     dataset = MyDataset()
-    fit = Fit([dataset], store_trace=True)
+    fit = Fit([dataset], store_trace=True, backend=backend)
 
     if backend == "scipy":
         kwargs = {"method": "L-BFGS-B"}
     else:
         kwargs = {}
 
-    result = fit.optimize(backend=backend, **kwargs)
+    result = fit.optimize(**kwargs)
     pars = dataset.models.parameters
 
     assert result.success is True
@@ -118,8 +118,8 @@ def test_optimize(backend):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.optimize(backend=backend)
+    fit = Fit([dataset],backend=backend)
+    fit.optimize()
     result = fit.confidence("x")
 
     assert result["success"] is True
@@ -134,8 +134,8 @@ def test_confidence(backend):
 def test_confidence_frozen(backend):
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
-    fit = Fit([dataset])
-    fit.optimize(backend=backend)
+    fit = Fit([dataset],backend=backend)
+    fit.optimize()
     result = fit.confidence("y")
 
     assert result["success"] is True
@@ -224,8 +224,8 @@ def test_stat_surface_reoptimize():
 def test_minos_contour():
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
-    fit = Fit([dataset])
-    fit.optimize(backend="minuit")
+    fit = Fit([dataset], backend="minuit")
+    fit.optimize()
     result = fit.minos_contour("y", "z")
 
     assert result["success"] is True

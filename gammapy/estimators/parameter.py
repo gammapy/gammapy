@@ -103,6 +103,7 @@ class ParameterEstimator(Estimator):
                             optimize_opts=self.optimize_opts,
                             covariance_opts=self.covariance_opts,
                             )
+        return self._fit
 
     def estimate_best_fit(self, datasets, parameter):
         """Estimate parameter assymetric errors
@@ -153,7 +154,7 @@ class ParameterEstimator(Estimator):
 
             if self.reoptimize:
                 parameter.frozen = True
-                _ = self._fit.optimize(backend=self.backend, **self.optimize_opts)
+                _ = self._fit.optimize(**self.optimize_opts)
 
             ts = datasets.stat_sum() - stat
 
@@ -175,8 +176,8 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
         """
         # TODO: make Fit stateless and configurable
-        self._setup_fit(datasets)
-        self._fit.optimize(backend=self.backend, **self.optimize_opts)
+        self.fit(datasets)
+        self._fit.optimize(**self.optimize_opts)
 
         res = self._fit.confidence(
             parameter=parameter, sigma=self.n_sigma, reoptimize=self.reoptimize
@@ -202,8 +203,8 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-        self._setup_fit(datasets)
-        self._fit.optimize(backend=self.backend, **self.optimize_opts)
+        self.fit(datasets)
+        self._fit.optimize(**self.optimize_opts)
 
         if self.scan_min and self.scan_max:
             bounds = (self.scan_min, self.scan_max)
@@ -239,10 +240,10 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-        self._setup_fit(datasets)
-        self._fit.optimize(backend=self.backend, **self.optimize_opts)
+        self.fit(datasets)
+        self._fit.optimize(**self.optimize_opts)
         res = self._fit.confidence(
-            parameter=parameter, sigma=self.n_sigma_ul, backend="scipy"
+            parameter=parameter, sigma=self.n_sigma_ul
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 

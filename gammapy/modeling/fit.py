@@ -111,13 +111,13 @@ class Fit:
             Results
         """
 
-        optimize_result = self.optimize(self.backend, **self.optimize_opts)
+        optimize_result = self.optimize(**self.optimize_opts)
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return optimize_result
 
-        covariance_result = self.covariance(self.backend, **self.covariance_opts)
+        covariance_result = self.covariance(**self.covariance_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success
@@ -129,9 +129,7 @@ class Fit:
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to the optimizer. For the `"minuit"` backend
             see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
             for a detailed description of the available options. If there is an entry
@@ -156,6 +154,8 @@ class Fit:
         fit_result : `FitResult`
             Results
         """
+        self.optimize_opts.update(kwargs)
+
         parameters = self._parameters
         parameters.check_limits()
 
@@ -171,7 +171,7 @@ class Fit:
             parameters=parameters,
             function=self.datasets.stat_sum,
             store_trace=self.store_trace,
-            **kwargs,
+            **self.optimize_opts,
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
@@ -196,7 +196,7 @@ class Fit:
             parameters=parameters,
             total_stat=self.datasets.stat_sum(),
             backend=self.backend,
-            method=kwargs.get("method", self.backend),
+            method=self.optimize_opts.get("method", self.backend),
             trace=trace,
             **info,
         )
@@ -208,14 +208,17 @@ class Fit:
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
+        **kwargs : dict, optional
+            Keyword arguments passed to the covariance method.
 
         Returns
         -------
         result : `CovarianceResult`
             Results
         """
+
+        #TODO: docstring kwargs for covairance
+        self.covariance_opts.update(kwargs)
         compute = registry.get("covariance", self.backend)
         parameters = self._parameters
 
@@ -230,7 +233,7 @@ class Fit:
             else:
                 method = ""
                 factor_matrix, info = compute(
-                    parameters, self.datasets.stat_sum, **kwargs
+                    parameters, self.datasets.stat_sum, **self.covariance_opts
                 )
 
             covariance = Covariance.from_factor_matrix(
@@ -280,6 +283,8 @@ class Fit:
         compute = registry.get("confidence", self.backend)
         parameters = self._parameters
         parameter = parameters[parameter]
+
+        #TODO: confidence_options on fit for consistancy ?
 
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
