@@ -2,8 +2,45 @@
 -----------------
 
 - No changes yet
+- 14 contributors
+- 148 pull requests so far (not all listed below)
 
 **What's new?**
+
+``SpectrumDataset`` now inherits from ``MapDataset`` which removes a lot of code duplication.
+The dataset creation API is now similar and relies on ``Geom``. IRFs can now be natively
+integrated or averaged over the region using a simple `use_region_center` parameter in
+the ``SpectrumDatasetMaker``.
+Model evaluation is now possible on a ``RegionGeom`` thanks to the ``RegionGeom.wcs``.
+Spatial models can now be evaluated using ``SpectrumDataset``.
+These changes allow for a direct support of extended sources in 1D analysis. The tutorial has
+been updated
+
+New catalog information has been added on `gammapy.catalog`, the data release 2 of the 4FGL
+and the third HAWC catalog.
+
+The `gammapy.estimators` package has been further cleaned-up. All ``Estimator`` share the
+same default options, in particular the full error and upper limit calculations are no longer
+default. A generic ``FluxEstimate`` class has been introduced that supports flux conversion
+from estimates based on a reference model and `norm` values into various fluxes as defined
+in gadf (namely `dnde`, `e2dnde`, `flux` or `eflux`).
+The class ``FluxMaps`` has been introduced to support easy handling of the collection of classes
+produced by the ``TSMapEstimators``. In particular, it allow for simple serialization of the maps.
+
+Model handling has been strongly simplified thanks to a number of helper methods allowing e.g.
+to freeze all spectral or spatial parameters of a given ``Models`` object, to select all
+components of a ``Models`` lying inside a given region.
+
+Documentation has been significantly reorganized. In particular, the tutorials have been
+restructured into subfolders based of the type of treatment described. Tutorials are now
+presented through a nice graphical gallery. Some tutorials have been removed because their
+objectives are too specific for the general documentation. To present these specific, possibly
+contributed examples, a new web page and repository has been created: `gammapy.recipes`
+(https://github.com/gammapy/gammapy-recipes).
+
+
+After changes in the Travis CI platform, the Continuous Integration (CI) has been simplified
+and moved from Travis to GitHub actions.
 
 **Contributors**
 
@@ -13,14 +50,16 @@ In alphabetical order by first name:
 - Axel Donath
 - Cosimo Nigro
 - Fabio Acero
+- Fabio Pintore
 - Jalel Hajlaoui
 - Johannes Buchner
 - José Enrique Ruiz
 - Laura Olivera Nieto
+- Mathieu de Bony
 - Maximilian Nöthe
 - Quentin Remy
 - Régis Terrier
-- Vikas
+- Vikas Joshi
 
 
 Pull Requests
@@ -28,7 +67,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-- [#3314] Implement HpxNDMap.smooth() (Laura Olivera-Nieto)
+- [#3314] Implement HpxNDMap.smooth() (Laura Olivera Nieto)
 - [#3310] Hpx separation method (Vikas)
 - [#3309] Improve doc and cleanup for selection_optional argument in estimators (Quentin Rémy)
 - [#3308] Implement HpxNDMap.to_region_nd_map (Axel Donath)
@@ -57,7 +96,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3243] Support I/O for RegionGeom in MapDataset (Axel Donath)
 - [#3241] Update 4FGL catalogue to DR2 (Quentin Rémy)
 - [#3238] Unify integration in EDispMap.get_edisp_kernel() and EnergyDispersion2D.get_edisp_kernel() (Axel Donath)
-- [#3230] Expand extended source analysis tutorial (Laura Olivera-Nieto)
+- [#3230] Expand extended source analysis tutorial (Laura Olivera Nieto)
 - [#3228] Remove EffectiveAreaTable class (Axel Donath)
 - [#3222] Add alternative parametrization for ShellSpatialModel (Quentin Rémy)
 - [#3219] Add missing values interpolation for Background3D (Quentin Rémy)
@@ -70,6 +109,26 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3199] Enable tests of code in RST files and in docstrings of Python scripts (Jose Enrique Ruiz)
 - [#3197] Introduce PSF and ParametricPSF base classes (Axel Donath)
 - [#3191] Remove code duplication between SpectrumDatasetMaker and MapDatasetMaker (Axel Donath)
+- [#3185] Introduce IRF base class and remove code duplication (Axel Donath)
+- [#3182] Introduce FluxEstimate class (Régis Terrier)
+- [#3180] Remove code duplication from models.spectral (Fabio Pintore)
+- [#3178] Clean up PSF classes in gammapy.irf (Axel Donath)
+- [#3173] Restructure hawc catalog in 2hwc and 3hwc (Jalel Hajlaoui)
+- [#3169] Add .select_region() and .select_mask() methods to Models (Quentin Rémy)
+- [#3168] Remove evaluator update from models setter (Quentin Rémy)
+- [#3165] Improve documentation of RegionGeom and RegionNDMap (Laura Olivera Nieto)
+- [#3162] Correct Models.from_dict to check input parameters names (Régis Terrier)
+- [#3158] Add binary_erosion/dilation to WcsNDMap (Quentin Rémy)
+- [#3155] Add a tutorials notebooks gallery layout (Jose Enrique Ruiz)
+- [#3153] Refactor gammapy download (Jose Enrique Ruiz)
+- [#3152] Unify dataset I/O interface (Axel Donath)
+- [#3148] Add various models and parameters management options (Quentin Rémy)
+- [#3145] Change the _compute_flux_spatial method on MapEvaluator (Fabio Pintore)
+- [#3141] Allow SkyModel.integrate_geom to integrate over a RegionGeom (Fabio Pintore)
+- [#3140] Add an option to ExcessMapEstimator to choose to correlate off events (Mathieu de Bony)
+- [#3138] Migrate Travis CI to Github actions (Jose Enrique Ruiz)
+- [#3136] Evaluate spatial model in RegionGeom (Laura Olivera Nieto)
+- [#3131] Further remove code duplication between SpectrumDataset and MapDataset (Axel Donath)
 
 0.18.2 (Nov 19th, 2020)
 -----------------------
