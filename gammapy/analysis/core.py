@@ -186,8 +186,8 @@ class Analysis:
                 dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
         log.info("Fitting datasets.")
-        self.fit = Fit(self.datasets)
-        self.fit_result = self.fit.run(optimize_opts=optimize_opts)
+        self.fit = Fit(self.datasets, optimize_opts=optimize_opts)
+        self.fit_result = self.fit.run()
         log.info(self.fit_result)
 
     def get_flux_points(self):

@@ -57,8 +57,8 @@ class MyDataset(Dataset):
 @pytest.mark.parametrize("backend", ["sherpa", "scipy"])
 def test_warning_no_covariance(backend, caplog):
    dataset = MyDataset()
-   fit = Fit([dataset])
-   result = fit.run(backend=backend)
+   fit = Fit([dataset], backend=backend)
+   result = fit.run()
    assert caplog.records[-1].levelname == "WARNING"
    assert caplog.records[-1].message == "No covariance estimate - not supported by this backend."
 
@@ -66,8 +66,8 @@ def test_warning_no_covariance(backend, caplog):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
     dataset = MyDataset()
-    fit = Fit([dataset])
-    result = fit.run(backend=backend)
+    fit = Fit([dataset], backend=backend)
+    result = fit.run()
     pars = result.parameters
 
     assert result.success is True
