@@ -81,7 +81,12 @@ def create_fpe(model):
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_n_values=11, source="source", selection_optional="all"
+        energy_edges=energy_edges,
+        norm_n_values=11,
+        source="source",
+        selection_optional="all",
+        backend="minuit",
+        optimize_opts = dict(tol=0.2, strategy=1),
     )
     datasets = [dataset]
     return datasets, fpe
@@ -332,6 +337,17 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl):
     fpe.selection_optional = None
 
     fp = fpe.run(datasets)
+
+    assert_allclose(fpe.optimize_opts["tol"], 0.2)
+
+    flux_estimator = fpe._flux_estimator(1*u.TeV, 10*u.TeV)
+    assert_allclose(flux_estimator.optimize_opts["tol"], 0.2)
+
+    param_estimator = flux_estimator._parameter_estimator
+    assert_allclose(param_estimator.optimize_opts["tol"], 0.2)
+    
+    param_estimator.fit(datasets).run()
+    assert_allclose(param_estimator._fit.minuit.tol, 0.2)
 
     assert fp.sed_type == "dnde"
     assert "norm_scan" not in fp.table.colnames

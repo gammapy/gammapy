@@ -398,6 +398,23 @@ class LightCurveEstimator(Estimator):
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
 
+    def _flux_poins_estimator(self, energy_edges):
+        return FluxPointsEstimator(
+            source=self.source,
+            energy_edges=energy_edges,
+            norm_min=self.norm_min,
+            norm_max=self.norm_max,
+            norm_n_values=self.norm_n_values,
+            norm_values=self.norm_values,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            backend = self.backend,
+            optimize_opts = self.optimize_opts,
+            covariance_opts = self.covariance_opts,
+            reoptimize=self.reoptimize,
+            selection_optional=self.selection_optional,
+        )
+        
     def run(self, datasets):
         """Run light curve extraction.
 
@@ -470,21 +487,7 @@ class LightCurveEstimator(Estimator):
         else:
             energy_edges = self.energy_edges
 
-        fe = FluxPointsEstimator(
-            source=self.source,
-            energy_edges=energy_edges,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
-            norm_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            backend = self.backend,
-            optimize_opts = self.optimize_opts,
-            covariance_opts = self.covariance_opts,
-            reoptimize=self.reoptimize,
-            selection_optional=self.selection_optional,
-        )
+        fe = self._flux_poins_estimator(energy_edges)
         fp = fe.run(datasets)
 
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row
