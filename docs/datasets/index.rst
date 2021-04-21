@@ -55,80 +55,103 @@ see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 To analyse multiple runs, you can either stack the datasets together, or perform
 a joint fit across multiple datasets.
 
+.. _stack:
+
 Stacking Multiple Datasets
 ==========================
 
 Stacking datasets implies that the counts, background and reduced IRFs from all the
 runs are binned together to get one final dataset for which a likelihood is
-computed during the fit.
+computed during the fit. Stacking is often useful to reduce the computation effort while
+analysing multiple runs.
 
-Counts, background and exposure (lying outside the masked regions are simply summed),
-while for energy dispersion and point spread function an avergae is computed after
+Counts, background and exposure (in the data range defined by the `mask_safe`)
+are simply summed,
+while for energy dispersion and point spread function an average is computed after
 weighing by the exposure.
 
 For the model evaluation, an important factor that needs to be accounted for is
 that the energy threshold changes between obseravtions.
-To ensure that the npred (ie, the predicted number of counts) on the stacked
+To ensure that the `npred` (ie, the predicted number of counts) on the stacked
 dataset is the sum expected by stacking the npred of the individual runs,
 a `~gammapy.irf.EDispersionMap` is used, which contains the
 The mask_safe from each dataset is applied on the respective reconstructed energy axis
 of the energy dispersion matrix, and the masked matrices are combined.
 Values lying outside the safe mask of each dataset are lost.
 
+The following plot shows the individual and stacked attributes for two `SpectrumDataset`
+
+.. plot:: datasets/plot_stack.py
+
 Stacking of multiple datasets is implemented as follows.
 Here, :math:`k` denotes a bin in reconstructed energy,
 :math:`l` a bin in true energy and
 :math:`j` is the dataset number
 
+.. list-table::
+   :widths: 25 25 50
+   :header-rows: 1
 
-================= ================================== ==================================================================================
-Dataset attribute Behaviour                          Implementation
-================= ================================== ==================================================================================
-
-``livetime``.        Sum of individual livetimes         :math:`\overline{t} = \sum_j t_j`
-
-``mask_safe``        Pixels added with `OR` operation     :math:`\overline{\epsilon_k} = \sum_{j} \epsilon_{jk}`
-
-``mask_fit``         Dropped
-
-``counts``           Summed outside exclusion region.     :math:`\overline{\mathrm{counts}_k} = \sum_j \mathrm{counts}_{jk} \cdot \epsilon_{jk}`
-
-``background``       Summed outside exclusion region.    :math:`\overline{\mathrm{bkg}_k} = \sum_j \mathrm{bkg}_{jk} \cdot \epsilon_{jk}`
-
-``exposure``         Summed outside spatial exclusion region    :math:`\overline{\mathrm{exposure}_l} = \sum_{j}{\mathrm{exposure}_{jl} \cdot \sum_k \epsilon_{jk}}`
-
-``psf``              Exposure weighted average                 :math:`\overline{\mathrm{psf}_l} = \frac{ \sum_{j}{\mathrm{psf}_{jl} \cdot \mathrm{exposure}_l} {\sum_{j} \cdot \mathrm{exposure}_l}`
-
-``edisp``            Exposure weighted average, with mask on reco energy :math:`\overline{\mathrm{edisp}_kl} = \frac{ \sum_{j}{\mathrm{edisp}_{jkl} \cdot \epsilon_{jk} \cdot \mathrm{exposure}_l} {\sum_{j} \cdot \mathrm{exposure}_l}`
-
-``gti``              Union of individual `gti`
-
-================= ================================== ==================================================================================
-
-
-
+   * - Dataset attribute
+     - Behaviour
+     - Implementation
+   * - ``livetime``
+     - Sum of individual livetimes
+     - :math:`\overline{t} = \sum_j t_j`
+   * - ``mask_safe``
+     - True if the pixel is included in the safe data range.
+     - :math:`\overline{\epsilon_k} = \sum_{j} \epsilon_{jk}`
+   * - ``mask_fit``
+     - Dropped
+     -
+   * - ``counts``
+     - Summed in the data range defined by `mask_safe`
+     - :math:`\overline{\mathrm{counts}_k} = \sum_j \mathrm{counts}_{jk} \cdot \epsilon_{jk}`
+   * - ``background``
+     - Summed in the data range defined by `mask_safe`
+     - :math:`\overline{\mathrm{bkg}_k} = \sum_j \mathrm{bkg}_{jk} \cdot \epsilon_{jk}`
+   * - ``exposure``
+     - Summed in the data range defined by `mask_safe`
+     -  :math:`\overline{\mathrm{exposure}_l} = \sum_{j} \mathrm{exposure}_{jl} \cdot \sum_k \epsilon_{jk}`
+   * - ``psf``
+     - Exposure weighted average
+     - :math:`\overline{\mathrm{psf}_l} = \frac{\sum_{j} \mathrm{psf}_{jl} \cdot \mathrm{exposure}_{jl}} {\sum_{j} \mathrm{exposure}_{jl}}`
+   * - ``edisp``
+     - Exposure weighted average, with mask on reconstructed energy
+     - :math:`\overline{\mathrm{edisp}_{kl}} = \frac{\sum_{j}\mathrm{edisp}_{jkl} \cdot \epsilon_{jk} \cdot \mathrm{exposure}_{jl}} {\sum_{j} \mathrm{exposure}_{jl}}`
+   * - ``gti``
+     - Union of individual `gti`
+     -
 It is important to keep in mind that:
 
-- Stacking happens in-place, ie, dataset1.stack(dataset2) will overwrite dataset
+- Stacking happens in-place, ie, ``dataset1.stack(dataset2)`` will overwrite ``dataset1``
 - To properly handle masks, it is necessary to stack onto an empty dataset.
 - Stacking only works for maps with equivalent geometry.
  Two geometries are called equivalent if one is exactly the same as,
  or can be obtained from a cutout of, the other.
 - A stacked analysis is reasonable only when adding runs taken by the same instrument.
 
-
+.. _joint:
 Joint Analysis
 ==============
 
-A joint fit across multiple datasets implies that each dataset
-is handled independently during the data reduction stage,
-and the statistics combined during the likelihood fit.
-The likelihood is computed for each dataset and summed to get
-the total fit statistic.
+An alternative to stacking datasets is a joint fit across all the datasets.
+For a definition, see :ref:`glossary`.
 
 The totat fit statistic of datasets is the sum of the
 fit statistic of each dataset. Note that this is **not** equal to the
 stacked fit statistic.
+
+A joint fit usually allows a better modeling of the background because
+the background model parameters can be fit for each dataset simultaneously
+with the source models. However, a joint fit is, performance wise,
+very computationally intensive.
+The fit convergence time increases non-linearly with the number of datasets to be fit.
+Moreover, depending upon the number of parameters in the background model,
+even fit convergence might be an issue for a large number of datasets.
+
+To strike a balance, what might be a practical solution for analysis of many runs is to
+stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
 
 
 Reference/API

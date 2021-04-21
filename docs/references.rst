@@ -53,9 +53,11 @@ Glossary
       and :ref:`irf`.
 
     Joint Analysis
-      In a joint analysis individual observations are reduced to datasets and are modeled
-      all together to extract physical informations through model fitting. This is opposed
-      to stacked analysis.
+      A joint fit across multiple datasets implies that each dataset is handled
+      independently during the data reduction stage,
+      and the statistics combined during the likelihood fit.
+      The likelihood is computed for each dataset and summed to get
+      the total fit statistic. See :ref:`joint`
 
     MET
       Short for Mission Elapsed Time; see also :ref:`MET_definition` in :ref:`time_handling`.
@@ -77,7 +79,7 @@ Glossary
       to obtain physical information through model fitting. Some approximations must
       be made to perform dataset stacking (e.g. loss of individual background normalization,
       averaging of instrument responses, loss of information outside region of interest etc),
-      but this can reduce very significantly the computing and memory cost.
+      but this can reduce very significantly the computing and memory cost. For details, see :ref:`stack`
 
     True Energy
       The true energy (often written `e_true`) is the energy of the incident photon
