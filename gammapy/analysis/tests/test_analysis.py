@@ -139,6 +139,10 @@ def test_analysis_1d():
     observations:
         datastore: $GAMMAPY_DATA/hess-dl3-dr1
         obs_ids: [23523, 23526]
+        obs_time: {
+            start: [J2004.92654346, J2004.92658453, J2004.92663655], 
+            stop: [J2004.92658453, J2004.92663655, J2004.92670773]
+        }
     datasets:
         type: 1d
         background:
@@ -155,6 +159,10 @@ def test_analysis_1d():
         energy: {min: 1 TeV, max: 50 TeV, nbins: 4}
     light_curve:
         energy_edges: {min: 1 TeV, max: 50 TeV, nbins: 1}
+        time_intervals: {
+            start: [J2004.92654346, J2004.92658453, J2004.92663655], 
+            stop: [J2004.92658453, J2004.92663655, J2004.92670773]        
+        }
     """
     config = get_example_config("1d")
     analysis = Analysis(config)
@@ -166,17 +174,17 @@ def test_analysis_1d():
     analysis.get_flux_points()
     analysis.get_light_curve()
 
-    assert len(analysis.datasets) == 2
+    assert len(analysis.datasets) == 3
     assert len(analysis.flux_points.data.table) == 4
     dnde = analysis.flux_points.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
 
     assert_allclose(dnde[0].value, 8.116854e-12, rtol=1e-2)
-    assert_allclose(dnde[2].value, 3.547128e-14, rtol=1e-2)
+    assert_allclose(dnde[2].value, 3.444475e-14, rtol=1e-2)
 
-    assert len(analysis.light_curve.table)==2
-    assert_allclose(analysis.light_curve.time_min.mjd, [53343.92234 , 53343.954215])
-    assert_allclose(analysis.light_curve.table["flux"], [[1.927164e-11],[1.603529e-11]], rtol=1e-4)
+    assert len(analysis.light_curve.table)==3
+    assert_allclose(analysis.light_curve.time_min.mjd, [53343.92, 53343.935, 53343.954])
+    assert_allclose(analysis.light_curve.table["flux"], [[1.688954e-11], [2.347870e-11],[1.604152e-11]], rtol=1e-4)
 
 @requires_data()
 def test_geom_analysis_1d():

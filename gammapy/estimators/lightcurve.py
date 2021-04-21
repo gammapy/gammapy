@@ -316,7 +316,7 @@ class LightCurveEstimator(Estimator):
     ----------
     time_intervals : list of `astropy.time.Time`
         Start and stop time for each interval to compute the LC
-    source : str
+    source : str or int
         For which source in the model to compute the flux points. Default is 0
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the light curve.
