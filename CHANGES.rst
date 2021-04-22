@@ -8,24 +8,24 @@
 **What's new?**
 
 ``SpectrumDataset`` now inherits from ``MapDataset`` which removes a lot of code duplication.
-The dataset creation API is now similar and relies on ``Geom``. IRFs can now be natively
-integrated or averaged over the region using a simple `use_region_center` parameter in
-the ``SpectrumDatasetMaker``.
+The APIs for the creation of both map and spectrum datasets are now similar and rely on ``Geom``.
+IRFs can now be natively integrated or averaged over the region using a simple `use_region_center`
+parameter in the ``SpectrumDatasetMaker``.
 Model evaluation is now possible on a ``RegionGeom`` thanks to the ``RegionGeom.wcs``.
 Spatial models can now be evaluated using ``SpectrumDataset``.
-These changes allow for a direct support of extended sources in 1D analysis. The tutorial has
-been updated
+These changes allow for a direct support of extended sources in 1D analysis.
 
 New catalog information has been added on `gammapy.catalog`, the data release 2 of the 4FGL
 and the third HAWC catalog.
 
-The `gammapy.estimators` package has been further cleaned-up. All ``Estimator`` share the
+The `gammapy.estimators` package has been further cleaned-up. All ``Estimator`` objects share the
 same default options, in particular the full error and upper limit calculations are no longer
-default. A generic ``FluxEstimate`` class has been introduced that supports flux conversion
+calculated by default, but passing an option `selection_optional` parameter.
+A generic ``FluxEstimate`` class has been introduced that supports flux conversion
 from estimates based on a reference model and `norm` values into various fluxes as defined
 in gadf (namely `dnde`, `e2dnde`, `flux` or `eflux`).
 The class ``FluxMaps`` has been introduced to support easy handling of the collection of classes
-produced by the ``TSMapEstimators``. In particular, it allow for simple serialization of the maps.
+produced by the ``TSMapEstimators``. In particular, it allows for simple serialization of the maps.
 
 Model handling has been strongly simplified thanks to a number of helper methods allowing e.g.
 to freeze all spectral or spatial parameters of a given ``Models`` object, to select all
@@ -33,10 +33,12 @@ components of a ``Models`` lying inside a given region.
 
 Documentation has been significantly reorganized. In particular, the tutorials have been
 restructured into subfolders based of the type of treatment described. Tutorials are now
-presented through a nice graphical gallery. Some tutorials have been removed because their
+presented in a nice gallery view format. Some tutorials have been removed because their
 objectives are too specific for the general documentation. To present these specific, possibly
 contributed examples, a new web page and repository has been created: `gammapy.recipes`
-(https://github.com/gammapy/gammapy-recipes).
+(https://github.com/gammapy/gammapy-recipes). Please, follow
+[these instructions](https://gammapy.github.io/gammapy-recipes/_build/html/contributing.html)
+if you would like to contribute to the gammapy recipes with your own.
 
 
 After changes in the Travis CI platform, the Continuous Integration (CI) has been simplified
@@ -67,6 +69,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
+- [#3319] Modify FoVBackgroundMaker to take spectral model as argument (Régis Terrier)
 - [#3314] Implement HpxNDMap.smooth() (Laura Olivera Nieto)
 - [#3310] Hpx separation method (Vikas)
 - [#3309] Improve doc and cleanup for selection_optional argument in estimators (Quentin Rémy)
