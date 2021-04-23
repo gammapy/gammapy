@@ -648,7 +648,7 @@ class MapDataset(Dataset):
                 if "livetime" in self.exposure.meta:
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
                 else:
-                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
+                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"].copy()
 
         if self.stat_type == "cash":
             if self.background and other.background:
