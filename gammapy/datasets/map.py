@@ -643,17 +643,12 @@ class MapDataset(Dataset):
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
             # TODO: check whether this can be improved e.g. handling this in GTI
-            livetime=0*u.s
-            if "livetime" in self.exposure.meta:
-                livetime = self.exposure.meta["livetime"]
-                if self.mask_safe_image:
-                    livetime *= np.any(self.mask_safe_image.data)
-            if "livetime" in other.exposure.meta:
-                livetime_other = other.exposure.meta["livetime"]
-                if other.mask_safe_image:
-                    livetime_other *= np.any(other.mask_safe_image.data)
-                livetime += livetime_other
-            self.exposure.meta["livetime"] = livetime
+
+            if "livetime" in other.exposure.meta and np.any(other.mask_safe_image):
+                if "livetime" in self.exposure.meta:
+                    self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
+                else:
+                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
 
         if self.stat_type == "cash":
             if self.background and other.background:
