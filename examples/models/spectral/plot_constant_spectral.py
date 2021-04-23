@@ -1,7 +1,7 @@
 r"""
 .. _constant-spectral-model:
 
-Constant Spectral Model
+Constant spectral model
 =======================
 
 This model takes a constant value along the spectral range.

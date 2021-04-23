@@ -1,7 +1,7 @@
 r"""
 .. _constant-spatial-model:
 
-Constant Spatial Model
+Constant spatial model
 ======================
 
 This model is a spatially constant model.

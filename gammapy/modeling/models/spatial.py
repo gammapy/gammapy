@@ -13,6 +13,7 @@ from regions import (
     CircleSkyRegion,
     EllipseSkyRegion,
     PointSkyRegion,
+    RectangleSkyRegion,
     PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
@@ -991,10 +992,12 @@ class TemplateSpatialModel(SpatialModel):
         return data
 
     def to_region(self, **kwargs):
-        """Model outline from template map boundary (`~regions.PolygonSkyRegion`)."""
-        footprint = self.map.geom.wcs.calc_footprint()
-        return PolygonSkyRegion(
-            vertices=SkyCoord(footprint, unit="deg", frame=self.frame, **kwargs)
+        """Model outline from template map boundary (`~regions.RectangleSkyRegion`)."""
+        return RectangleSkyRegion(
+            center=self.map.geom.center_skydir,
+            width=self.map.geom.width[0][0],
+            height=self.map.geom.width[1][0],
+            **kwargs,
         )
 
     def plot(self, ax=None, geom=None, **kwargs):

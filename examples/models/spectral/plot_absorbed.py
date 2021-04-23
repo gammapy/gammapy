@@ -1,7 +1,7 @@
 r"""
 .. _absorption-spectral-model:
 
-EBL Absorbption Spectral Model
+EBL absorbption spectral model
 ==============================
 
 This model evaluates absorbed spectral model.

@@ -106,9 +106,9 @@ class SkyCoordConfig(GammapyBaseConfig):
 
 
 class EnergyAxisConfig(GammapyBaseConfig):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
-    nbins: int = 30
+    min: EnergyType = None
+    max: EnergyType = None
+    nbins: int = None
 
 
 class SpatialCircleConfig(GammapyBaseConfig):
@@ -119,8 +119,8 @@ class SpatialCircleConfig(GammapyBaseConfig):
 
 
 class EnergyRangeConfig(GammapyBaseConfig):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
+    min: EnergyType = None
+    max: EnergyType = None
 
 
 class TimeRangeConfig(GammapyBaseConfig):
@@ -138,6 +138,12 @@ class FitConfig(GammapyBaseConfig):
     fit_range: EnergyRangeConfig = EnergyRangeConfig()
 
 
+class ExcessMapConfig(GammapyBaseConfig):
+    correlation_radius: AngleType = "0.1 deg"
+    parameters: dict = {}
+    energy_edges: EnergyAxisConfig = EnergyAxisConfig()
+
+
 class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = None
     exclusion: FilePath = None
@@ -150,8 +156,8 @@ class SafeMaskConfig(GammapyBaseConfig):
 
 
 class EnergyAxesConfig(GammapyBaseConfig):
-    energy: EnergyAxisConfig = EnergyAxisConfig()
-    energy_true: EnergyAxisConfig = EnergyAxisConfig()
+    energy: EnergyAxisConfig = EnergyAxisConfig(min="1 TeV", max="10 TeV", nbins=5)
+    energy_true: EnergyAxisConfig = EnergyAxisConfig(min="0.5 TeV", max="20 TeV", nbins=16)
 
 
 class SelectionConfig(GammapyBaseConfig):
@@ -216,6 +222,7 @@ class AnalysisConfig(GammapyBaseConfig):
     datasets: DatasetsConfig = DatasetsConfig()
     fit: FitConfig = FitConfig()
     flux_points: FluxPointsConfig = FluxPointsConfig()
+    excess_map: ExcessMapConfig = ExcessMapConfig()
 
     def __str__(self):
         """Display settings in pretty YAML format."""

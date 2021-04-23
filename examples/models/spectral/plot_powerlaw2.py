@@ -1,7 +1,7 @@
 r"""
 .. _powerlaw2-spectral-model:
 
-Power Law 2 Spectral Model
+Power law 2 spectral model
 ==========================
 
 This model parametrises a power law spectrum with integral as amplitude parameter.

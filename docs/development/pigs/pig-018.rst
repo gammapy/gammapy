@@ -17,7 +17,7 @@ Abstract
 
 Over the past years the Gammapy package and documentation has grown organically,
 at the moment there's a lot of duplicated and missing content, especially for
-recently added functionality like datasets, the high-level interface, and the
+recently added functionality like datasets, the high level interface, and the
 new restructure of the gammapy package. We propose to spend significant effort
 to reorganise and improve the Gammapy documentation in Nov and Dec 2019, roughly
 following the plan outlined here. Further discussion and planning will occur in
@@ -108,8 +108,8 @@ to improve the documentation:
   tutorials or Python scripts at the top, and the API docs at the bottom. Some pages
   have significant content, which is not related to code examples in between. (e.g.
   for maps, modeling or IRFs there is a description of the design).
-- When possible the notebooks should use the high-level interface everywhere it makes
-  sense (e.g. automatic data reduction), and the lower-level API at the end for the very
+- When possible the notebooks should use the high level interface everywhere it makes
+  sense (e.g. automatic data reduction), and the lower level API at the end for the very
   specific use case proposed, trying to have shorter notebooks going to the point.
 - Add a Gammapy overview page to the RST docs, where the general data
   analysis concepts are explained (DL3, Datasets, Model, Fitting). This page
@@ -154,7 +154,7 @@ notebooks (sub-items).
 
 - First analysis
    + Config-driven 1D and 3D analysis of Crab (evolution of current ``hess.ipynb`` that could be renamed)
-   + Extended source analysis, also showing the lower-level API with customisation options for background modeling (to be implemented)
+   + Extended source analysis, also showing the lower level API with customisation options for background modeling (to be implemented)
 
 The group below will be a "starting page" for people from CTA, HESS and Fermi,
 and possibly other instruments in the future. We could remove

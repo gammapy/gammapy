@@ -1,7 +1,7 @@
 r"""
 .. _gaussian-spectral-model:
 
-Gaussian Spectral Model
+Gaussian spectral model
 =======================
 
 This model parametrises a gaussian spectrum.

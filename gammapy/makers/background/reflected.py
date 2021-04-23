@@ -6,7 +6,6 @@ from astropy.coordinates import Angle
 from regions import PixCoord
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsNDMap
-from gammapy.utils.regions import list_to_compound_region
 from ..core import Maker
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
@@ -321,12 +320,15 @@ class ReflectedRegionsBackgroundMaker(Maker):
         energy_axis = dataset.counts.geom.axes["energy"]
 
         if len(finder.reflected_regions) > 0:
-            region_union = list_to_compound_region(finder.reflected_regions)
-            wcs = finder.reference_map.geom.wcs
-            geom = RegionGeom.create(region=region_union, axes=[energy_axis], wcs=wcs)
+            geom = RegionGeom.from_regions(
+                regions=finder.reflected_regions,
+                axes=[energy_axis],
+                wcs=finder.reference_map.geom.wcs
+            )
+
             counts_off = RegionNDMap.from_geom(geom=geom)
             counts_off.fill_events(observation.events)
-            acceptance_off = len(finder.reflected_regions)
+            acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(finder.reflected_regions))
         else:
             # if no OFF regions are found, off is set to None and acceptance_off to zero
             log.warning(
@@ -334,7 +336,8 @@ class ReflectedRegionsBackgroundMaker(Maker):
             )
 
             counts_off = None
-            acceptance_off = 0
+            acceptance_off = RegionNDMap.from_geom(geom=dataset._geom, data=0)
+
         return counts_off, acceptance_off
 
     def run(self, dataset, observation):
@@ -353,12 +356,14 @@ class ReflectedRegionsBackgroundMaker(Maker):
             On off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
+        acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom, data=1)
 
         dataset_onoff = SpectrumDatasetOnOff.from_spectrum_dataset(
             dataset=dataset,
-            acceptance=1,
+            acceptance=acceptance,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
+            name=dataset.name
         )
 
         if dataset_onoff.counts_off is None:

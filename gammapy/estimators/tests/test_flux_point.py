@@ -225,6 +225,15 @@ class TestFluxPoints:
         with mpl_plot_check():
             flux_points_likelihood.plot_ts_profiles()
 
+    @requires_dependency("matplotlib")
+    def test_plot_likelihood_error(self, flux_points_likelihood):
+        del flux_points_likelihood.table["norm_scan"]
+        with pytest.raises(
+            ValueError,
+            match="Missing columns for sed type 'likelihood': {'norm_scan'}",
+        ):
+            flux_points_likelihood.plot_ts_profiles()
+
 
 @requires_data()
 def test_compute_flux_points_dnde_fermi():

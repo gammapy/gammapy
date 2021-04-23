@@ -1,7 +1,7 @@
 r"""
 .. _template-spatial-model:
 
-Template Spatial Model
+Template spatial model
 ======================
 
 This is a spatial model based on a 2D sky map provided as a template.

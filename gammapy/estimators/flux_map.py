@@ -3,17 +3,12 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import MapCoord, Map
-from gammapy.estimators.core import FluxEstimate
+from gammapy.estimators.core import FluxEstimate, OPTIONAL_QUANTITIES_COMMON
 from gammapy.estimators.flux_point import FluxPoints
-from gammapy.utils.table import table_from_row_data
-from gammapy.modeling.models import (
-    SkyModel,
-    PowerLawSpectralModel,
-    PointSpatialModel,
-    Models,
-)
+from gammapy.modeling.models import SkyModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["FluxMaps"]
@@ -27,16 +22,26 @@ REQUIRED_MAPS = {
     "likelihood": ["norm"],
 }
 
-#TODO: add an entry for is_ul?
+
+# TODO: add an entry for is_ul?
 OPTIONAL_MAPS = {
     "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
-    "likelihood": ["norm_err", "norm_errn", "norm_errp","norm_ul", "norm_scan", "stat_scan"],
+    "likelihood": [
+        "norm_err",
+        "norm_errn",
+        "norm_errp",
+        "norm_ul",
+        "norm_scan",
+        "stat_scan",
+    ],
 }
 
+
 log = logging.getLogger(__name__)
+
 
 class FluxMaps(FluxEstimate):
     """A flux map container.
@@ -72,62 +77,31 @@ class FluxMaps(FluxEstimate):
     gti : `~gammapy.data.GTI`
         the maps GTI information. Default is None.
     """
-    def __init__(self, data, reference_model=None, gti=None):
-        self.geom = data['norm'].geom
 
-        if reference_model == None:
-            log.warning("No reference model set for FluxMaps. Assuming point source with E^-2 spectrum.")
-            reference_model = self._default_model()
-
+    def __init__(self, data, reference_model, gti=None):
         self.reference_model = reference_model
-
         self.gti = gti
 
-        super().__init__(data, spectral_model=reference_model.spectral_model)
+        super().__init__(data=data, reference_spectral_model=reference_model.spectral_model)
 
-    @staticmethod
-    def _default_model():
-        return SkyModel(spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2))
-
-    @property
-    def _additional_maps(self):
-        return self.data.keys() - (REQUIRED_MAPS["likelihood"] + OPTIONAL_MAPS["likelihood"])
+    @classproperty
+    def reference_model_default(cls):
+        """Default reference model: a point source with index = 2  (`SkyModel`)"""
+        return SkyModel.create("pl", "point")
 
     @property
-    def energy_ref(self):
-        axis = self.geom.axes["energy"]
-        return axis.center
-
-    @property
-    def energy_min(self):
-        axis = self.geom.axes["energy"]
-        return axis.edges[:-1]
-
-    @property
-    def energy_max(self):
-        axis = self.geom.axes["energy"]
-        return axis.edges[1:]
-
-    @property
-    def ts(self):
-        if not "ts" in self.data:
-            raise KeyError("No ts map present in FluxMaps.")
-        return self.data["ts"]
-
-    @property
-    def sqrt_ts(self):
-        if not "sqrt_ts" in self.data:
-            raise KeyError("No sqrt_ts map present in FluxMaps.")
-        return self.data["sqrt_ts"]
+    def geom(self):
+        """Reference map geometry (`Geom`)"""
+        return self.data["norm"].geom
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
-        str_ += "\t"+ "\t\n".join(str(self.norm.geom).split("\n")[:1])
-        str_ += "\n\t"+"\n\t".join(str(self.norm.geom).split("\n")[2:])
+        str_ += "-" * len(self.__class__.__name__)
+        str_ += "\n\n"
+        str_ += "\t" + "\t\n".join(str(self.geom).split("\n")[:1])
+        str_ += "\n\t" + "\n\t".join(str(self.geom).split("\n")[2:])
 
-        str_ += f"\n\tAvailable quantities : {self._available_quantities}\n\n"
-
-        str_ += f"\tAdditional maps : {self._additional_maps}\n\n"
+        str_ += f"\n\tAvailable quantities : {list(self.data.keys())}\n\n"
 
         str_ += "\tReference model:\n"
         if self.reference_model is not None:
@@ -135,62 +109,38 @@ class FluxMaps(FluxEstimate):
 
         return str_.expandtabs(tabsize=2)
 
-
-    def get_flux_points(self, coord=None):
+    def get_flux_points(self, position=None):
         """Extract flux point at a given position.
-
-        The flux points are returned in the the form of a `~gammapy.estimators.FluxPoints` object
-        (which stores the flux points in an `~astropy.table.Table`)
 
         Parameters
         ---------
-        coord : `~astropy.coordinates.SkyCoord`
-            the coordinate where the flux points are extracted.
+        position : `~astropy.coordinates.SkyCoord`
+            Position where the flux points are extracted.
 
         Returns
         -------
-        fluxpoints : `~gammapy.estimators.FluxPoints`
-            the flux points object
+        flux_points : `~gammapy.estimators.FluxPoints`
+            Flux points object
         """
-        if coord is None:
-            coord = self.geom.center_skydir
-        energies = self.energy_ref
-        coords = MapCoord.create(dict(skycoord=coord, energy=energies))
+        if position is None:
+            position = self.geom.center_skydir
 
-        ref = self.dnde_ref.squeeze()
+        with np.errstate(invalid="ignore", divide="ignore"):
+            ref_fluxes = self.reference_spectral_model.reference_fluxes(self.energy_axis)
 
-        fp = dict()
-        fp["norm"] = self.norm.get_by_coord(coords) * self.norm.unit
+        table = Table(ref_fluxes)
+        table.meta["SED_TYPE"] = "likelihood"
 
-        for quantity in self._available_quantities:
-            norm_quantity = f"norm_{quantity}"
-            res = getattr(self, norm_quantity).get_by_coord(coords)
-            res *= getattr(self, norm_quantity).unit
-            fp[norm_quantity] = res
-
-        for additional_quantity in self._additional_maps:
-            res = self.data[additional_quantity].get_by_coord(coords)
-            res *= self.data[additional_quantity].unit
-            fp[additional_quantity] = res
+        coords = MapCoord.create(
+            {"skycoord": position, "energy": self.energy_ref}
+        )
 
         # TODO: add support of norm and stat scan
+        for name in self.data:
+            m = getattr(self, name)
+            table[name] = m.get_by_coord(coords) * m.unit
 
-        rows = []
-        for idx, energy in enumerate(self.energy_ref):
-            result = dict()
-            result["e_ref"] = energy
-            result["e_min"] = self.energy_min[idx]
-            result["e_max"] = self.energy_max[idx]
-            result["ref_dnde"] = ref[idx]
-            result["norm"] = fp["norm"][idx]
-            for quantity in self._available_quantities:
-                norm_quantity = f"norm_{quantity}"
-                result[norm_quantity] = fp[norm_quantity][idx]
-            for key in self._additional_maps:
-                result[key] = fp[key][idx]
-            rows.append(result)
-        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        return FluxPoints(table).to_sed_type('dnde')
+        return FluxPoints(table).to_sed_type("dnde")
 
     def to_dict(self, sed_type="likelihood"):
         """Return maps in a given SED type in the form of a dictionary.
@@ -203,27 +153,25 @@ class FluxMaps(FluxEstimate):
         Returns
         -------
         map_dict : dict
-            dictionary containing the requested maps.
+            Dictionary containing the requested maps.
         """
         if sed_type == "likelihood":
-            map_dict = self.data
+            data = self.data
         else:
-            map_dict = {}
-            for entry in REQUIRED_MAPS[sed_type]:
-                map_dict[entry] = getattr(self, entry)
+            data = {}
+            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON
 
-            for entry in OPTIONAL_MAPS[sed_type]:
+            for quantity in all_maps:
                 try:
-                    map_dict[entry] = getattr(self, entry)
+                    data[quantity] = getattr(self, quantity)
                 except KeyError:
                     pass
 
-            for key in self._additional_maps:
-                map_dict[key] = self.data[key]
+        return data
 
-        return map_dict
-
-    def write(self, filename, filename_model=None, overwrite=False, sed_type="likelihood"):
+    def write(
+        self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
+    ):
         """Write flux map to file.
 
         Parameters
@@ -243,17 +191,18 @@ class FluxMaps(FluxEstimate):
         if filename_model is None:
             name_string = filename.as_posix()
             for suffix in filename.suffixes:
-                name_string.replace(suffix,'')
-            filename_model = name_string + '_model.yaml'
-        filename_model=make_path(filename_model)
+                name_string.replace(suffix, "")
+            filename_model = name_string + "_model.yaml"
+
+        filename_model = make_path(filename_model)
 
         hdulist = self.to_hdulist(sed_type)
 
         models = Models(self.reference_model)
         models.write(filename_model, overwrite=overwrite)
-        hdulist[0].header['MODEL'] = filename_model.as_posix()
+        hdulist[0].header["MODEL"] = filename_model.as_posix()
 
-        hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite)
 
     def to_hdulist(self, sed_type="likelihood", hdu_bands=None):
         """Convert flux map to list of HDUs.
@@ -276,14 +225,15 @@ class FluxMaps(FluxEstimate):
         exclude_primary = slice(1, None)
 
         hdu_primary = fits.PrimaryHDU()
+        hdu_primary.header["SED_TYPE"] = sed_type
         hdulist = fits.HDUList([hdu_primary])
 
-        hdu_primary.header["SED_TYPE"] = sed_type
+        data = self.to_dict(sed_type)
 
-        map_dict = self.to_dict(sed_type)
-
-        for key in map_dict:
-            hdulist += map_dict[key].to_hdulist(hdu=key, hdu_bands=hdu_bands)[exclude_primary]
+        for key, m in data.items():
+            hdulist += m.to_hdulist(hdu=key, hdu_bands=hdu_bands)[
+                exclude_primary
+            ]
 
         if self.gti:
             hdu = fits.BinTableHDU(self.gti.table, name="GTI")
@@ -302,12 +252,11 @@ class FluxMaps(FluxEstimate):
 
         Returns
         -------
-        flux_map : `~gammapy.estimators.FluxMaps`
-            Flux map.
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)
-
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu_bands=None):
@@ -323,53 +272,51 @@ class FluxMaps(FluxEstimate):
 
         Returns
         -------
-        fluxmaps : `~gammapy.estimators.FluxMaps`
-            the flux map.
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
         """
         try:
             sed_type = hdulist[0].header["SED_TYPE"]
         except KeyError:
-            raise ValueError(f"Cannot determine SED type of flux map from primary header.")
+            raise ValueError(
+                f"Cannot determine SED type of flux map from primary header."
+            )
 
-        result = {}
+        maps = {}
+
         for map_type in REQUIRED_MAPS[sed_type]:
+            maps[map_type] = Map.from_hdulist(
+                hdulist, hdu=map_type, hdu_bands=hdu_bands
+            )
+
+        for map_type in OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON:
             if map_type.upper() in hdulist:
-                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type, hdu_bands=hdu_bands)
-            else:
-                raise ValueError(f"Cannot find required map {map_type} for SED type {sed_type}.")
+                maps[map_type] = Map.from_hdulist(
+                    hdulist, hdu=map_type, hdu_bands=hdu_bands
+                )
 
-        for map_type in OPTIONAL_MAPS[sed_type]:
-            if map_type.upper() in hdulist:
-                result[map_type] = Map.from_hdulist(hdulist, hdu=map_type, hdu_bands=hdu_bands)
+        filename = hdulist[0].header.get("MODEL", None)
 
-        # Read additional image hdus
-        for hdu in hdulist[1:]:
-            if hdu.is_image:
-                if hdu.name.lower() not in (REQUIRED_MAPS[sed_type]+OPTIONAL_MAPS[sed_type]):
-                    result[hdu.name.lower()] = Map.from_hdulist(hdulist, hdu=hdu.name, hdu_bands=hdu_bands)
-
-        model_filename = hdulist[0].header.get("MODEL", None)
-
-        reference_model = None
-        if model_filename:
-            try:
-                reference_model = Models.read(model_filename)[0]
-            except FileNotFoundError:
-                raise FileNotFoundError(f"Cannot find {model_filename} model file. Check MODEL keyword.")
+        if filename:
+            reference_model = Models.read(filename)[0]
+        else:
+            reference_model = None
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist["GTI"]))
         else:
             gti = None
 
-        return cls.from_dict(result, sed_type, reference_model, gti)
+        return cls.from_dict(
+            maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
+        )
 
     @staticmethod
     def _validate_type(maps, sed_type):
         """Check that map input is valid and correspond to one of the SED type."""
         try:
             required = set(REQUIRED_MAPS[sed_type])
-        except:
+        except KeyError:
             raise ValueError(f"Unknown SED type.")
 
         if not required.issubset(maps.keys()):
@@ -378,64 +325,63 @@ class FluxMaps(FluxEstimate):
                 "Missing maps for sed type '{}':" " {}".format(sed_type, missing)
             )
 
-
     @classmethod
-    def from_dict(cls, maps, sed_type='likelihood', reference_model=None, gti=None):
+    def from_dict(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
         """Create FluxMaps from a dictionary of maps.
 
         Parameters
         ----------
         maps : dict
-            dictionary containing the requested maps.
+            Dictionary containing the input maps.
         sed_type : str
-            sed type to convert to. Default is `Likelihood`
+            SED type of the input maps. Default is `Likelihood`
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            the reference model to use for conversions. Default in None.
+            Reference model to use for conversions. Default in None.
             If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
         gti : `~gammapy.data.GTI`
-            the maps GTI information. Default is None.
+            Maps GTI information. Default is None.
 
         Returns
         -------
-        fluxmaps : `~gammapy.estimators.FluxMaps`
-            the flux map.
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
         """
         cls._validate_type(maps, sed_type)
 
-        if sed_type == 'likelihood':
-            return cls(maps, reference_model)
-
-        e_ref = maps[sed_type].geom.axes["energy"].center
-        e_edges = maps[sed_type].geom.axes["energy"].edges
+        if sed_type == "likelihood":
+            return cls(data=maps, reference_model=reference_model)
 
         if reference_model is None:
-            log.warning("No reference model set for FluxMaps. Assuming point source with E^-2 spectrum.")
-            reference_model = cls._default_model()
+            log.warning(
+                "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
+            )
+            reference_model = cls.default_model
 
-        ref_dnde = reference_model.spectral_model(e_ref)
+        map_ref = maps[sed_type]
 
-        if sed_type == "dnde":
-            factor = ref_dnde
-        elif sed_type == "flux":
-            factor = reference_model.spectral_model.integral(e_edges[:-1], e_edges[1:])
-        elif sed_type == "eflux":
-            factor = reference_model.spectral_model.energy_flux(e_edges[:-1], e_edges[1:])
-        elif sed_type == "e2dnde":
-            factor = e_ref ** 2 * ref_dnde
+        energy_axis = map_ref.geom.axes["energy"]
 
-        # to ensure the units are similar
-        factor = factor.to(maps[sed_type].unit)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            fluxes = reference_model.spectral_model.reference_fluxes(energy_axis=energy_axis)
+
+        # TODO: handle reshaping in MapAxis
+        factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[:, np.newaxis, np.newaxis]
 
         data = dict()
-        data["norm"] = maps[sed_type]/factor[:,np.newaxis, np.newaxis]
+        data["norm"] = map_ref / factor
 
-        for map_type in OPTIONAL_MAPS[sed_type]:
-            if map_type in maps:
-                norm_type = map_type.replace(sed_type, "norm")
-                data[norm_type] = maps[map_type]/factor[:,np.newaxis, np.newaxis]
+        for key in OPTIONAL_MAPS[sed_type]:
+            if key in maps:
+                norm_type = key.replace(sed_type, "norm")
+                data[norm_type] = maps[key] / factor
 
         # We add the remaining maps
-        for key in maps.keys() - (REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type]):
-            data[key] = maps[key]
+        for key in OPTIONAL_QUANTITIES_COMMON:
+            if key in maps:
+                data[key] = maps[key]
 
-        return cls(data, reference_model, gti)
+        return cls(data=data, reference_model=reference_model, gti=gti)
+
+    # TODO: should we allow this?
+    def __getitem__(self, item):
+        return getattr(self, item)

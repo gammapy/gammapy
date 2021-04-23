@@ -6,6 +6,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy import units as u
 from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
@@ -461,10 +462,9 @@ class HpxGeom(Geom):
     is_region = False
 
     def __init__(
-        self, nside, nest=True, frame="icrs", region=None, axes=None, sparse=False
+        self, nside, nest=True, frame="icrs", region=None, axes=None
     ):
 
-        # FIXME: Figure out what to do when sparse=True
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
@@ -482,20 +482,14 @@ class HpxGeom(Geom):
         self._frame = frame
         self._maxpix = 12 * self._nside * self._nside
         self._maxpix = self._maxpix * np.ones(self.shape_axes, dtype=int)
-        self._sparse = sparse
 
         self._ipix = None
-        self._rmap = None
         self._region = region
         self._create_lookup(region)
-
-        if self._ipix is not None:
-            self._rmap = {}
-            for i, ipix in enumerate(self._ipix.flat):
-                self._rmap[ipix] = i
-
         self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
+
         self._center_skydir = self._get_ref_dir()
+
         lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
         self._center_coord = tuple(
             [lon, lat]
@@ -599,7 +593,7 @@ class HpxGeom(Geom):
         else:
             idx = ravel_hpx_index(idx_global, self._maxpix)
 
-        if self._rmap is not None:
+        if self._ipix is not None:
             retval = np.full(idx.size, -1, "i")
             m = np.isin(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
@@ -654,6 +648,34 @@ class HpxGeom(Geom):
             idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self._maxpix)
 
         return self.global_to_local(idx_global, ravel=True)
+
+    def cutout(self, position, width, **kwargs):
+        """Create a cutout around a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+            Radius of the circular cutout region.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.WcsNDMap`
+            Cutout map
+        """
+        if not self.is_regular:
+            raise ValueError("Can only do a cutout from a regular map.")
+
+        width = u.Quantity(width, "deg").value
+        return self.create(
+            nside=self.nside,
+            nest=self.nest,
+            width=width,
+            skydir=position,
+            frame=self.frame,
+            axes=self.axes
+        )
 
     def coord_to_pix(self, coords):
         import healpy as hp
@@ -835,10 +857,7 @@ class HpxGeom(Geom):
     @property
     def is_allsky(self):
         """Flag for all-sky maps."""
-        if self._region is None:
-            return True
-        else:
-            return False
+        return self._region is None
 
     @property
     def is_regular(self):
@@ -877,6 +896,32 @@ class HpxGeom(Geom):
         """HEALPIX pixel and band indices for every pixel in the map."""
         return self.get_idx()
 
+    def is_aligned(self, other):
+        """Check if HEALPIx geoms and extra axes are aligned.
+
+        Parameters
+        ----------
+        other : `HpxGeom`
+            Other geom.
+
+        Returns
+        -------
+        aligned : bool
+            Whether geometries are aligned
+        """
+        for axis, otheraxis in zip(self.axes, other.axes):
+            if axis != otheraxis:
+                return False
+
+        if not self.nside == other.nside:
+            return False
+        elif not self.frame == other.frame:
+            return False
+        elif not self.nest == other.nest:
+            return False
+        else:
+            return True
+
     def to_ud_graded(self, order):
         """Upgrade or downgrade the resolution to the given order.
 
@@ -894,6 +939,68 @@ class HpxGeom(Geom):
         return self.__class__(
             2 ** order, self.nest, frame=self.frame, region=self.region, axes=axes
         )
+
+    def to_nside(self, nside):
+        """Upgrade or downgrade the reoslution to a given nside
+
+        Parameters
+        ----------
+        nside : int
+            Nside
+
+        Returns
+        -------
+        geom : `~HpxGeom`
+            A HEALPix geometry object.
+        """
+        order = nside_to_order(nside=nside)
+        return self.to_ud_graded(order=order)
+
+    def to_binsz(self, binsz):
+        """Change pixel size of the geometry.
+
+        Parameters
+        ----------
+        binsz : float or `~astropy.units.Quantity`
+            New pixel size. A float is assumed to be in degree.
+
+        Returns
+        -------
+        geom : `WcsGeom`
+            Geometry with new pixel size.
+        """
+        binsz = u.Quantity(binsz, "deg").value
+
+        if self.is_allsky:
+            return self.create(
+                binsz=binsz,
+                frame=self.frame,
+                axes=copy.deepcopy(self.axes),
+            )
+        else:
+            return self.create(
+                skydir=self.center_skydir,
+                binsz=binsz,
+                width=self._get_region_size(),
+                frame=self.frame,
+                axes=copy.deepcopy(self.axes),
+            )
+
+    def separation(self, center):
+        """Compute sky separation wrt a given center.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord`
+            Center position
+
+        Returns
+        -------
+        separation : `~astropy.coordinates.Angle`
+            Separation angle array (1D)
+        """
+        coord = self.to_image().get_coord()
+        return center.separation(coord.skycoord)
 
     def to_swapped(self):
         """Geometry copy with swapped ORDERING (NEST->RING or vice versa).
@@ -1399,6 +1506,66 @@ class HpxGeom(Geom):
             proj=proj,
         )
 
+    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
+        """Create WCS tiles geometries from HPX geometry with given nside.
+
+        The HEALPix geom is divide into superpixels defined by nside_tiles,
+        which are then represented by a WCS geometry using a tangential
+        projection. The number of WCS tiles is given by the number of pixels
+        for the given nside_tiles.
+
+        Parameters
+        ----------
+        nside_tiles : int
+            Nside for super pixel tiles. Usually nsi
+        margin : Angle
+            Width margin of the wcs tile
+
+        Return
+        ------
+        wcs_tiles : list
+            List of WCS tile geoms.
+        """
+        import healpy as hp
+
+        margin = u.Quantity(margin)
+
+        if nside_tiles >= self.nside:
+            raise ValueError(f"nside_tiles must be < {self.nside}")
+
+        if not self.is_allsky:
+            raise ValueError("to_wcs_tiles() is only supported for all sky geoms")
+
+        binsz = np.degrees(hp.nside2resol(self.nside)) * u.deg
+
+        hpx = self.to_image().to_nside(nside=nside_tiles)
+        wcs_tiles = []
+
+        for pix in range(int(hpx.npix)):
+            skydir = hpx.pix_to_coord([pix])
+            vtx = hp.boundaries(
+                nside=hpx.nside, pix=pix, nest=hpx.nest, step=1
+            )
+
+            lon, lat = hp.vec2ang(vtx.T, lonlat=True)
+            boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
+
+            # Compute maximum separation between all pairs of boundaries and take it
+            # as width
+            width = boundaries.separation(boundaries[:, np.newaxis]).max()
+
+            wcs_tile_geom = WcsGeom.create(
+                skydir=(float(skydir[0]), float(skydir[1])),
+                width=width + margin,
+                binsz=binsz,
+                frame=hpx.frame,
+                proj="TAN",
+                axes=self.axes
+            )
+            wcs_tiles.append(wcs_tile_geom)
+
+        return wcs_tiles
+
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError(f"Image index out of range: {idx!r}")
@@ -1490,6 +1657,37 @@ class HpxGeom(Geom):
 
         return pix
 
+    def region_mask(self, regions):
+        """Create a mask from a given list of regions
+
+        The mask is filled such that a pixel inside the region is filled with
+        "True". To invert the mask, e.g. to create a mask with exclusion regions
+        the tilde (~) operator can be used (see example below).
+
+        Parameters
+        ----------
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
+
+        Returns
+        -------
+        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
+            Boolean region mask
+
+        """
+        from . import Map, RegionGeom
+
+        if not self.is_regular:
+            raise ValueError("Multi-resolution maps not supported yet")
+
+        # TODO: use spatial coordinates only...
+        geom = RegionGeom.from_regions(regions)
+        coords = self.get_coord()
+        mask = geom.contains(coords)
+        return Map.from_geom(self, data=mask)
+
     def get_coord(self, idx=None, flat=False):
         pix = self.get_idx(idx=idx, flat=flat)
         coords = self.pix_to_coord(pix)
@@ -1525,7 +1723,7 @@ class HpxGeom(Geom):
             f"\tndim       : {self.ndim}\n"
             f"\tnside      : {self.nside[0]}\n"
             f"\tnested     : {self.nest}\n"
-            f"\tframe   : {self.frame}\n"
+            f"\tframe      : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         )
@@ -1534,8 +1732,6 @@ class HpxGeom(Geom):
         if not isinstance(other, self.__class__):
             return NotImplemented
 
-        if self._sparse or other._sparse:
-            return NotImplemented
         if self.is_allsky and other.is_allsky is False:
             return NotImplemented
 

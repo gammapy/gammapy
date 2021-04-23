@@ -8,7 +8,11 @@ irf - Instrument response functions
 
 Introduction
 ============
-For a definition of the response function you are invited to read 
+Typically the IRFs are stored in the form of multidimensional tables giving
+the response functions such as the distribution of gamma-like events or the
+probability density functions of the reconstructed energy and position.
+
+For a more detailed definition of the response function you are invited to read
 :ref:`irf-theory`.
 
 `gammapy.irf` handles the following instrument response functions (IRFs):
@@ -26,7 +30,7 @@ part of their spectrum, image or cube analysis to compute exposure and effective
 EDISP and PSF for a given dataset.
 
 
-IRF Axis naming
+IRF axis naming
 ---------------
 In the IRF classes we use the following axis naming convention:
 
@@ -42,7 +46,7 @@ Variable          Definition
 ``rad``        	  Offset angle from source position (:math:`\delta p` in :ref:`irf-theory`)
 ================= ============================================================================
 
-Getting Started
+Getting started
 ===============
 
 See `cta.html <../tutorials/cta.html>`__ for an example how to access IACT IRFs.

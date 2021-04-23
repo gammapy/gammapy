@@ -3,6 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
@@ -728,6 +731,55 @@ def test_hpxgeom_solid_angle():
     assert_allclose(solid_angle.value, 0.016362461737446838)
 
 
+def test_hpx_geom_cutout():
+    geom = HpxGeom.create(
+        nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
+    )
+
+    cutout = geom.cutout(position=SkyCoord("0d", "0d"), width=30 * u.deg)
+
+    assert cutout.nside == 8
+    assert cutout.data_shape == (2, 14)
+
+    center = cutout.center_skydir.icrs
+    assert_allclose(center.ra.deg, 0, atol=1e-8)
+    assert_allclose(center.dec.deg, 0, atol=1e-8)
+
+
+def test_hpx_geom_is_aligned():
+    geom = HpxGeom.create(nside=8, frame="galactic")
+
+    assert geom.is_aligned(geom)
+
+    cutout = geom.cutout(position=SkyCoord("0d", "0d"), width=30 * u.deg)
+    assert cutout.is_aligned(geom)
+
+    geom_other = HpxGeom.create(nside=4, frame="galactic")
+    assert not geom.is_aligned(geom_other)
+
+    geom_other = HpxGeom.create(nside=8, frame="galactic", nest=False)
+    assert not geom.is_aligned(geom_other)
+
+    geom_other = HpxGeom.create(nside=8, frame="icrs")
+    assert not geom.is_aligned(geom_other)
+
+
+def test_hpx_geom_to_wcs_tiles():
+    geom = HpxGeom.create(
+        nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
+    )
+
+    tiles = geom.to_wcs_tiles(nside_tiles=2)
+    assert len(tiles) == 48
+    assert tiles[0].projection == "TAN"
+    assert_allclose(tiles[0].width, [[43.974226], [43.974226]] * u.deg)
+
+    tiles = geom.to_wcs_tiles(nside_tiles=4)
+    assert len(tiles) == 192
+    assert tiles[0].projection == "TAN"
+    assert_allclose(tiles[0].width, [[21.987113], [21.987113]] * u.deg)
+
+
 def test_geom_repr():
     geom = HpxGeom(nside=8)
     assert geom.__class__.__name__ in repr(geom)
@@ -751,3 +803,56 @@ def test_hpxgeom_equal(nside, nested, frame, region, result):
 
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
+
+
+def test_hpx_geom_to_binsz():
+    geom = HpxGeom.create(nside=32, frame="galactic", nest=True)
+
+    geom_new = geom.to_binsz(1 * u.deg)
+
+    assert geom_new.nside[0] == 64
+    assert geom_new.frame == "galactic"
+    assert geom_new.nest
+
+    geom = HpxGeom.create(nside=32, frame="galactic", nest=True, region="DISK(110.,75.,10.)")
+
+    geom_new = geom.to_binsz(1 * u.deg)
+    assert geom_new.nside[0] == 64
+
+    center = geom_new.center_skydir.galactic
+
+    assert_allclose(center.l.deg, 110)
+    assert_allclose(center.b.deg, 75)
+
+
+def test_hpx_geom_region_mask():
+    geom = HpxGeom.create(nside=256, region="DISK(0.,0.,5.)")
+
+    circle = CircleSkyRegion(center=SkyCoord("0d", "0d"), radius=3 * u.deg)
+
+    mask = geom.region_mask(circle)
+
+    assert_allclose(mask.data.sum(), 534)
+    assert mask.geom.nside == 256
+
+    solid_angle = (mask.data * geom.solid_angle()).sum()
+    assert_allclose(solid_angle, 2 * np.pi * (1 - np.cos(3 * u.deg)) * u.sr, rtol=0.01)
+
+def test_hpx_geom_separation():
+    geom = HpxGeom.create(binsz=0.1, frame="galactic", nest=True)
+    position = SkyCoord(0, 0, unit="deg", frame="galactic")
+    separation = geom.separation(position)
+    assert separation.unit == "deg"
+    assert_allclose(separation.value[0], 45.000049)
+
+    # Make sure it also works for 2D maps as input
+    separation = geom.to_image().separation(position)
+    assert separation.unit == "deg"
+    assert_allclose(separation.value[0], 45.000049)
+
+    #make sure works for partial geometry
+    geom = HpxGeom.create(binsz=0.1, frame="galactic", nest=True, region="DISK(0,0,10)")
+    separation = geom.separation(position)
+    assert separation.unit == "deg"
+    assert_allclose(separation.value[0], 9.978725)
+

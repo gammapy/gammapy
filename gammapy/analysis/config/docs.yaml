@@ -1,5 +1,5 @@
 # Section: general
-# General settings for the high-level interface / optional
+# General settings for the high level interface / optional
 general:
     # logging settings for the session
     log:
@@ -58,4 +58,11 @@ fit:
 flux_points:
     energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
     source: "source"
+    parameters: {}
+
+# Section: excess_map
+# Flux/significance map process /optional
+excess_map:
+    correlation_radius: 0.1 deg
+    energy_edges: {min: 0.1 TeV, max: 10 TeV, nbins: 1}
     parameters: {}

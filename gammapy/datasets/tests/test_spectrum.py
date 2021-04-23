@@ -551,6 +551,8 @@ class TestSpectrumOnOff:
         mask_safe = RegionNDMap.from_geom(self.on_counts.geom, dtype=bool)
         mask_safe.data += True
 
+        acceptance = RegionNDMap.from_geom(self.on_counts.geom, data=1.)
+
         exposure = self.aeff * self.livetime
         exposure.meta["livetime"] = self.livetime
 
@@ -558,7 +560,7 @@ class TestSpectrumOnOff:
             counts=self.on_counts,
             exposure=exposure,
             mask_safe=mask_safe,
-            acceptance=1,
+            acceptance=acceptance,
             name="test",
         )
         dataset.write(tmp_path / "pha_obstest.fits")
@@ -592,8 +594,8 @@ class TestSpectrumOnOff:
             models=model,
             exposure=self.aeff * self.livetime,
             edisp=self.edisp,
-            acceptance=1,
-            acceptance_off=10,
+            acceptance=RegionNDMap.from_geom(geom=self.on_counts.geom, data=1),
+            acceptance_off=RegionNDMap.from_geom(geom=self.off_counts.geom, data=10),
         )
         assert "SpectrumDatasetOnOff" in str(dataset)
         assert "wstat" in str(dataset)
@@ -608,8 +610,8 @@ class TestSpectrumOnOff:
             models=source_model,
             exposure=self.aeff * self.livetime,
             edisp=self.edisp,
-            acceptance=1,
-            acceptance_off=10,
+            acceptance=RegionNDMap.from_geom(geom=self.on_counts.geom, data=1),
+            acceptance_off=RegionNDMap.from_geom(geom=self.off_counts.geom, data=10),
         )
         real_dataset = dataset.copy()
 
@@ -826,6 +828,10 @@ def make_observation_list():
     mask_safe = RegionNDMap.from_geom(geom, dtype=bool)
     mask_safe.data += True
 
+    acceptance = RegionNDMap.from_geom(geom=geom, data=1)
+    acceptance_off_1 = RegionNDMap.from_geom(geom=geom, data=2)
+    acceptance_off_2 = RegionNDMap.from_geom(geom=geom, data=4)
+
     aeff = RegionNDMap.from_geom(geom_true, data=1, unit="m2")
     edisp = EDispKernelMap.from_gauss(
         energy_axis=axis, energy_axis_true=axis_true, sigma=0.2, bias=0, geom=geom
@@ -844,8 +850,8 @@ def make_observation_list():
         exposure=exposure,
         edisp=edisp,
         mask_safe=mask_safe,
-        acceptance=1,
-        acceptance_off=2,
+        acceptance=acceptance.copy(),
+        acceptance_off=acceptance_off_1,
         name="1",
         gti=gti1,
     )
@@ -855,8 +861,8 @@ def make_observation_list():
         exposure=exposure.copy(),
         edisp=edisp,
         mask_safe=mask_safe,
-        acceptance=1,
-        acceptance_off=4,
+        acceptance=acceptance.copy(),
+        acceptance_off=acceptance_off_2,
         name="2",
         gti=gti2,
     )
@@ -1094,12 +1100,15 @@ class TestFit:
         """WStat with on source and background spectrum"""
         on_vector = self.src.copy()
         on_vector.data += self.bkg.data
+        acceptance = RegionNDMap.from_geom(self.src.geom, data=1)
+        acceptance_off = RegionNDMap.from_geom(self.bkg.geom, data=1 / self.alpha)
+
         dataset = SpectrumDatasetOnOff(
             counts=on_vector,
             counts_off=self.off,
             exposure=self.exposure,
-            acceptance=1,
-            acceptance_off=1 / self.alpha,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
         )
         dataset.models = self.source_model
 

@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Session class driving the high-level interface API"""
+"""Session class driving the high level interface API"""
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -7,7 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-from gammapy.estimators import FluxPointsEstimator
+from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
@@ -27,10 +27,10 @@ log = logging.getLogger(__name__)
 
 
 class Analysis:
-    """Config-driven high-level analysis interface.
+    """Config-driven high level analysis interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
-    an internal high-level interface model, though the user can also provide configuration
+    an internal high level interface model, though the user can also provide configuration
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
@@ -207,6 +207,29 @@ class Analysis:
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
 
+    def get_excess_map(self):
+        """Calculate excess map with respect to the current model."""
+        excess_settings = self.config.excess_map
+        log.info("Computing excess maps.")
+
+        if self.config.datasets.type == "1d":
+            raise ValueError("Cannot compute excess map for 1D dataset")
+
+        # Here we could possibly stack the datasets if needed.
+        if len(self.datasets)>1:
+            raise ValueError("Datasets must be stacked to compute the excess map")
+
+        energy_edges = self._make_energy_axis(excess_settings.energy_edges)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+
+        excess_map_estimator = ExcessMapEstimator(
+            correlation_radius=excess_settings.correlation_radius,
+            energy_edges=energy_edges,
+            **excess_settings.parameters
+        )
+        self.excess_map = excess_map_estimator.run(self.datasets[0])
+
     def update_config(self, config):
         self.config = self.config.update(config=config)
 
@@ -380,14 +403,21 @@ class Analysis:
             stacked = self.datasets.stack_reduce(name="stacked")
             self.datasets = Datasets([stacked])
 
+
+
     @staticmethod
     def _make_energy_axis(axis, name="energy"):
-        return MapAxis.from_bounds(
-            name=name,
-            lo_bnd=axis.min.value,
-            hi_bnd=axis.max.to_value(axis.min.unit),
-            nbin=axis.nbins,
-            unit=axis.min.unit,
-            interp="log",
-            node_type="edges",
-        )
+        if axis.min is None or axis.max is None:
+            return None
+        elif axis.nbins is None or axis.nbins<1:
+            return None
+        else:
+            return MapAxis.from_bounds(
+                name=name,
+                lo_bnd=axis.min.value,
+                hi_bnd=axis.max.to_value(axis.min.unit),
+                nbin=axis.nbins,
+                unit=axis.min.unit,
+                interp="log",
+                node_type="edges",
+            )

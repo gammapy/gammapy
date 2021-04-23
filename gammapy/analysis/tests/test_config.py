@@ -29,9 +29,12 @@ def test_config_default_types():
     assert isinstance(config.datasets.geom.axes.energy_true.min, Quantity)
     assert isinstance(config.datasets.geom.axes.energy_true.max, Quantity)
     assert isinstance(config.datasets.geom.selection.offset_max, Angle)
-    assert isinstance(config.fit.fit_range.min, Quantity)
-    assert isinstance(config.fit.fit_range.max, Quantity)
-
+    assert config.fit.fit_range.min is None
+    assert config.fit.fit_range.max is None
+    assert isinstance(config.excess_map.correlation_radius, Angle)
+    assert config.excess_map.energy_edges.min is None
+    assert config.excess_map.energy_edges.max is None
+    assert config.excess_map.energy_edges.nbins is None
 
 def test_config_not_default_types():
     config = AnalysisConfig()
@@ -41,6 +44,7 @@ def test_config_not_default_types():
         "lat": "22.014 deg",
         "radius": "1 deg",
     }
+    config.fit.fit_range = {"min": "0.1 TeV", "max": "10 TeV"}
     assert isinstance(config.observations.obs_cone.frame, FrameEnum)
     assert isinstance(config.observations.obs_cone.lon, Angle)
     assert isinstance(config.observations.obs_cone.lat, Angle)
@@ -49,6 +53,8 @@ def test_config_not_default_types():
     assert isinstance(config.observations.obs_time.start, Time)
     with pytest.raises(ValueError):
         config.flux_points.energy.min = "1 deg"
+    assert isinstance(config.fit.fit_range.min, Quantity)
+    assert isinstance(config.fit.fit_range.max, Quantity)
 
 
 def test_config_basics():

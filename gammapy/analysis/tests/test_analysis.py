@@ -236,17 +236,26 @@ def test_exclusion_region(tmp_path):
 
 @requires_dependency("iminuit")
 @requires_data()
-def test_analysis_1d_stacked():
+def test_analysis_1d_stacked_no_fit_range():
     cfg = """
+    observations:
+        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+        obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 5 deg}
+        obs_ids: [23592, 23559]
+
     datasets:
+        type: 1d
+        stack: false
         geom:
             axes:
+                energy: {min: 0.01 TeV, max: 100 TeV, nbins: 73}
                 energy_true: {min: 0.03 TeV, max: 100 TeV, nbins: 50}
+        on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.1 deg}
+        containment_correction: true
         background:
             method: reflected
     """
-
-    config = get_example_config("1d")
+    config = AnalysisConfig.from_yaml(cfg)
     analysis = Analysis(config)
     analysis.update_config(cfg)
     analysis.config.datasets.stack = True
@@ -254,10 +263,13 @@ def test_analysis_1d_stacked():
     analysis.get_datasets()
     analysis.read_models(MODEL_FILE_1D)
     analysis.run_fit()
+    with pytest.raises(ValueError):
+        analysis.get_excess_map()
 
     assert len(analysis.datasets) == 1
     assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
     pars = analysis.fit_result.parameters
+    assert_allclose(analysis.datasets[0].mask_fit.data, True)
 
     assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
     assert_allclose(pars["amplitude"].value, 5.479729e-11, rtol=1e-2)
@@ -272,11 +284,13 @@ def test_analysis_ring_background():
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
+    analysis.get_excess_map()
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
         analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
     )
-
+    assert isinstance(analysis.excess_map["sqrt_ts"], WcsNDMap)
+    assert_allclose(analysis.excess_map["excess"].data[0,62,62],134.12389)
 
 @requires_data()
 def test_analysis_ring_3d():

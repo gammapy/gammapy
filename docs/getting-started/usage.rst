@@ -1,69 +1,41 @@
-.. include:: references.txt
+.. include:: ../references.txt
 
-.. _getting-started:
-
-Getting Started
-===============
-
-The best way to learn about Gammapy is to read and play with the examples in the
-Gammapy :ref:`tutorials`.
-
-This section explains the steps to get set up for the Gammapy tutorials on your
-machine:
-
-1. Check your setup and Gammapy environment
-2. Use Gammapy with Python, IPython or Jupyter
-
-If you have used conda, Python, IPython and Jupyter before, you can just skim
-this page, and quickly copy & paste the commands to get set up.
-
-Help!?
-------
-
-If you have any questions or issues, please ask for help on the Gammapy Slack,
-mailing list or on Github (whatever is easiest for you, see `Gammapy contact`_)
+.. _using-gammapy:
 
 
-Check your setup
-----------------
-You might want to display some info about Gammapy installed. You can execute
-the following command, and it should print detailed information about your
-installation to the terminal:
+Using Gammapy
+=============
+
+To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
+matplotlib for plotting. Many standard gamma-ray analyses can be done with few
+lines of configuration and code, so you can get pretty far by copy and pasting
+and adapting the working examples from the Gammapy documentation. But
+eventually, if you want to script more complex analyses, or inspect analysis
+results or intermediate analysis products, you need to acquire a basic to
+intermediate Python skill level.
+
+Jupyter notebooks
+-----------------
+
+To learn more about Gammapy, and also for interactive data analysis in general,
+we recommend you use Jupyter notebooks. Assuming you have followed the steps above to install Gammapy and activate the conda environment, you can start
+`JupyterLab`_ like this:
 
 .. code-block:: bash
 
-    gammapy info
+    $ jupyter lab
 
-If there is some issue, the following commands could help you to figure out
-your setup:
+This should open up JupyterLab app in your web browser, where you can
+create new Jupyter notebooks or open up existing ones. If you have downloaded the
+tutorials with ``gammapy download tutorials``, you can browse your ``gammapy-tutorials``
+folder with Jupyterlab and execute them there.
 
-.. code-block:: bash
+If you haven't used Jupyter before, try typing ``print("Hello Jupyter")`` in the
+first input cell, and use the keyboard shortcut ``SHIFT + ENTER`` to execute it.
 
-    conda info
-    which python
-    which ipython
-    which jupyter
-    which gammapy
-    env | grep PATH
-    python -c 'import gammapy; print(gammapy); print(gammapy.__version__)'
-
-You can also use the following commands to check which conda environment is active and which
-ones you have set up:
-
-.. code-block:: bash
-
-    conda info
-    conda env list
-
-If you're new to conda, you could also print out the `conda cheat sheet`_, which
-lists the common commands to install packages and work with environments.
-
-
-Use Gammapy
------------
 
 Python
-++++++
+------
 
 Gammapy is a Python package, so you can of course import and use it from Python:
 
@@ -79,7 +51,7 @@ Gammapy is a Python package, so you can of course import and use it from Python:
 
 
 IPython
-+++++++
+-------
 
 IPython is nicer to use for interactive analysis:
 
@@ -138,14 +110,15 @@ As an example, here's how you can create `gammapy.data.DataStore` and
 
 Try to make your first plot using the `gammapy.data.EventList.peek` helper method:
 
-.. testcode::
+.. code-block::
 
     import matplotlib.pyplot as plt
     events.peek()
     plt.savefig("events.png")
 
-Python script
-+++++++++++++
+
+Python scripts
+--------------
 
 Another common way to use Gammapy is to write a Python script.
 Try it and put the following code into a file called ``example.py``:
@@ -177,47 +150,3 @@ running some Python code, use IPython like this:
     $ ipython -i example.py
 
 For examples how to run Gammapy analyses from Python scripts, see :ref:`tutorials_scripts`.
-
-
-Jupyter notebooks
-+++++++++++++++++
-
-To learn more about Gammapy, and also for interactive data analysis in general,
-we recommend you use Jupyter notebooks. Assuming you have followed the steps above to install Gammapy and activate the conda environment, you can start
-`JupyterLab`_ like this:
-
-.. code-block:: bash
-
-    $ jupyter lab
-
-This should open up JupyterLab app in your web browser, where you can
-create new Jupyter notebooks or open up existing ones. If you have downloaded the
-tutorials with ``gammapy download tutorials``, you can browse your ``gammapy-tutorials``
-folder with Jupyterlab and execute them there.
-
-If you haven't used Jupyter before, try typing ``print("Hello Jupyter")`` in the
-first input cell, and use the keyboard shortcut ``SHIFT + ENTER`` to execute it.
-
-Install issues
---------------
-
-If you have problems and think you might not be using the right Python or
-importing Gammapy isn't working or giving you the right version, checking your
-Python executable and import path might help you find the issue:
-
-.. code-block:: python
-
-    import sys
-    print(sys.executable)
-    print(sys.path)
-
-To check which Gammapy you are using you can use this:
-
-.. code-block:: python
-
-    import gammapy
-    print(gammapy)
-    print(gammapy.__version__)
-
-Now you should be all set and to use Gammapy. Let's move on to the
-:ref:`tutorials`.

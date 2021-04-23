@@ -11,8 +11,9 @@ Reflected regions background
 Overview
 --------
 
-This technique is used in classical Cherenkov astronomy for the 1D spectral
-extraction. A region on the sky, the ON region, is chosen to select events
+This method is used in classical Cherenkov astronomy to estimate background
+for spectral analysis. As illustrated in `Fig. 1 <figure_reflected_background>`_,
+a region on the sky, the ON region, is chosen to select events
 around the studied source position. In the absence of a solid template of the
 residual hadronic background, a classical method to estimate it is the so-called
 Reflected Region Background. The underlying assumption is that the background is
@@ -20,8 +21,15 @@ approximately purely radial in the field-of-view. A set of OFF counts is found
 in the observation, by rotating the ON region selected around the pointing
 position. To avoid that the reflected regions contain actual gamma-ray signal
 from other objects, one has to remove the gamma-ray bright parts of the
-field-of-view with a exclusion mask. Details on the reflected regions method can
-be found in [Berge2007]_
+field-of-view with a exclusion mask. More details on the reflected regions method can
+be found in [Berge2007]_.
+
+.. _figure_reflected_background:
+
+.. figure:: ../_static/hgps_spectrum_background_estimation.png
+    :width: 50%
+
+    Fig.1, Illustration of the reflected regions background estimation method, taken from [Abdalla2018]_.
 
 The extraction of the OFF events from the `~gammapy.data.EventList` of a
 set of observations is performed by the `ReflectedRegionsBackgroundMaker`.
@@ -107,4 +115,6 @@ The following notebook shows an example using
 `~gammapy.makers.ReflectedRegionsBackgroundMaker` to perform a spectral
 extraction and fitting:
 
-* `spectrum_analysis.html <../tutorials/spectrum_analysis.html>`__
+.. nbgallery::
+
+   ../tutorials/analysis/1D/spectral_analysis.ipynb

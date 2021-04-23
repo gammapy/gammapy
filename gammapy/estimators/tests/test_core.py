@@ -51,7 +51,7 @@ def map_flux_estimate():
 class TestFluxEstimate:
     def test_table_properties(self, table_flux_estimate):
         model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)
-        fe = FluxEstimate(data=table_flux_estimate, spectral_model=model)
+        fe = FluxEstimate(data=table_flux_estimate, reference_spectral_model=model)
 
         assert fe.dnde.unit == u.Unit("cm-2s-1TeV-1")
         assert_allclose(fe.dnde.value, [1e-9, 1e-11])
@@ -72,14 +72,14 @@ class TestFluxEstimate:
     def test_missing_column(self, table_flux_estimate):
         table_flux_estimate.remove_column("norm_errn")
         model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)
-        fe = FluxEstimate(data=table_flux_estimate, spectral_model=model)
+        fe = FluxEstimate(data=table_flux_estimate, reference_spectral_model=model)
 
         with pytest.raises(KeyError):
             fe.dnde_errn
 
     def test_map_properties(self, map_flux_estimate):
         model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)
-        fe = FluxEstimate(data=map_flux_estimate, spectral_model=model)
+        fe = FluxEstimate(data=map_flux_estimate, reference_spectral_model=model)
 
         assert fe.dnde.unit == u.Unit("cm-2s-1TeV-1")
         assert_allclose(fe.dnde.quantity.value[:, 2, 2], [1e-9, 1e-11])

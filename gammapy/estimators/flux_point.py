@@ -9,7 +9,7 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import Estimator
+from .core import Estimator, DEFAULT_UNIT
 from .flux import FluxEstimator
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
@@ -31,13 +31,6 @@ OPTIONAL_COLUMNS = {
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
     "likelihood": ["norm_scan", "stat_scan"],
-}
-
-DEFAULT_UNIT = {
-    "dnde": u.Unit("cm-2 s-1 TeV-1"),
-    "e2dnde": u.Unit("erg cm-2 s-1"),
-    "flux": u.Unit("cm-2 s-1"),
-    "eflux": u.Unit("erg cm-2 s-1"),
 }
 
 
@@ -463,9 +456,13 @@ class FluxPoints:
                 return sed_type
 
     @staticmethod
-    def _validate_table(table, sed_type):
+    def _validate_table(table, sed_type, use_optional=False):
         """Validate input table."""
         required = set(REQUIRED_COLUMNS[sed_type])
+        if use_optional:
+            required = set(REQUIRED_COLUMNS[sed_type] + OPTIONAL_COLUMNS[sed_type])
+        else:
+            required = set(REQUIRED_COLUMNS[sed_type])
 
         if not required.issubset(table.colnames):
             missing = required.difference(table.colnames)
@@ -664,8 +661,8 @@ class FluxPoints:
                 **kwargs,
             )
 
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
         ax.set_ylabel(f"{self.sed_type} ({y_unit})")
         return ax
@@ -706,7 +703,7 @@ class FluxPoints:
         if ax is None:
             ax = plt.gca()
 
-        self._validate_table(self.table, "likelihood")
+        self._validate_table(self.table, "likelihood", use_optional=True)
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
 
         if y_values is None:
@@ -740,8 +737,8 @@ class FluxPoints:
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
         caxes = ax.pcolormesh(x.value, y_values.value, -z.T, **kwargs)
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
         ax.set_ylabel(f"{self.sed_type} ({y_values.unit})")
 
@@ -792,11 +789,12 @@ class FluxPointsEstimator(Estimator):
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
-            * "norm-scan": estimate fit statistic profiles.
+            * "scan": estimate fit statistic profiles.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
     """
 
     tag = "FluxPointsEstimator"
