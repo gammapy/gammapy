@@ -643,11 +643,12 @@ class MapDataset(Dataset):
         if self.exposure and other.exposure:
             self.exposure.stack(other.exposure, weights=other.mask_safe_image)
             # TODO: check whether this can be improved e.g. handling this in GTI
-            if "livetime" in other.exposure.meta:
+
+            if "livetime" in other.exposure.meta and np.any(other.mask_safe_image):
                 if "livetime" in self.exposure.meta:
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
                 else:
-                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
+                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"].copy()
 
         if self.stat_type == "cash":
             if self.background and other.background:
@@ -1981,11 +1982,9 @@ class MapDatasetOnOff(MapDataset):
     @property
     def _is_stackable(self):
         """Check if the Dataset contains enough information to be stacked"""
-        if (
-            self.acceptance_off is None
-            or self.acceptance is None
-            or self.counts_off is None
-        ):
+        incomplete = self.acceptance_off is None or self.acceptance is None or self.counts_off is None
+        unmasked = np.any(self.mask_safe.data)
+        if incomplete and unmasked:
             return False
         else:
             return True
@@ -2016,11 +2015,12 @@ class MapDatasetOnOff(MapDataset):
         total_off = Map.from_geom(geom)
         total_alpha = Map.from_geom(geom)
 
-        total_off.stack(self.counts_off, weights=self.mask_safe)
-        total_off.stack(other.counts_off, weights=other.mask_safe)
-
-        total_alpha.stack(self.alpha * self.counts_off, weights=self.mask_safe)
-        total_alpha.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+        if self.counts_off:
+            total_off.stack(self.counts_off, weights=self.mask_safe)
+            total_alpha.stack(self.alpha * self.counts_off, weights=self.mask_safe)
+        if other.counts_off:
+            total_off.stack(other.counts_off, weights=other.mask_safe)
+            total_alpha.stack(other.alpha * other.counts_off, weights=other.mask_safe)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             acceptance_off = total_off / total_alpha
@@ -2034,9 +2034,7 @@ class MapDatasetOnOff(MapDataset):
         self.acceptance.data[...] = 1
         self.acceptance_off = acceptance_off
 
-        if self.counts_off is not None:
-            self.counts_off *= self.mask_safe
-            self.counts_off.stack(other.counts_off, weights=other.mask_safe)
+        self.counts_off = total_off
 
         super().stack(other)
 

@@ -972,6 +972,32 @@ def test_datasets_stack_reduce():
     assert_allclose(info_table_cum["counts"], [124, 250, 369, 459])
     assert stacked.name == "stacked"
 
+@requires_data("gammapy-data")
+def test_datasets_stack_reduce_no_off():
+    datasets = Datasets()
+    obs_ids = [23523, 23526, 23559, 23592]
+
+    for obs_id in obs_ids:
+        filename = f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ds = SpectrumDatasetOnOff.read(filename)
+        datasets.append(ds)
+
+    datasets[-1].counts_off = None
+
+    with pytest.raises(ValueError):
+        stacked = datasets.stack_reduce(name="stacked")
+
+    datasets[-1].mask_safe.data[...] = False
+    stacked = datasets.stack_reduce(name="stacked")
+    assert_allclose(stacked.exposure.meta["livetime"].to_value("s"), 4732.5469999)
+    assert stacked.counts == 369
+
+    datasets[0].mask_safe.data[...] = False
+
+    stacked = datasets.stack_reduce(name="stacked")
+    assert_allclose(stacked.exposure.meta["livetime"].to_value("s"), 3150.81024152)
+    assert stacked.counts == 245
+
 
 @requires_data("gammapy-data")
 def test_stack_livetime():
