@@ -21,7 +21,7 @@ from gammapy.irf import (
 )
 
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
+from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap, HpxGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -1552,3 +1552,16 @@ def test_map_dataset_region_geom_npred():
     npred = dataset_spec.npred()
 
     assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
+
+
+def test_map_dataset_create_hpx_geom():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    energy_axis_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4, name="energy_true")
+
+    geom = HpxGeom.create(nside=32, axes=[axis], frame="galactic")
+
+    dataset = MapDataset.create(
+        geom=geom, energy_axis_true=energy_axis_true, binsz_irf=10 * u.deg
+    )
+
+    assert isinstance(dataset.counts.geom, HpxGeom)
