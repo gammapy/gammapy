@@ -38,6 +38,19 @@ from gammapy.utils.gauss import Gauss2DPDF
 
 
 @pytest.fixture
+def geom_hpx():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    geom = HpxGeom.create(nside=32, axes=[axis], frame="galactic")
+
+    return {"geom": geom, "energy_axis_true": energy_axis_true}
+
+
+@pytest.fixture
 def geom():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     return WcsGeom.create(
@@ -1554,14 +1567,22 @@ def test_map_dataset_region_geom_npred():
     assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
 
 
-def test_map_dataset_create_hpx_geom():
-    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
-    energy_axis_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4, name="energy_true")
+def test_map_dataset_create_hpx_geom(geom_hpx):
 
-    geom = HpxGeom.create(nside=32, axes=[axis], frame="galactic")
-
-    dataset = MapDataset.create(
-        geom=geom, energy_axis_true=energy_axis_true, binsz_irf=10 * u.deg
-    )
+    dataset = MapDataset.create(**geom_hpx, binsz_irf=10 * u.deg)
 
     assert isinstance(dataset.counts.geom, HpxGeom)
+    assert dataset.counts.data.shape == (3, 12288)
+
+    assert isinstance(dataset.background.geom, HpxGeom)
+    assert dataset.background.data.shape == (3, 12288)
+
+    assert isinstance(dataset.exposure.geom, HpxGeom)
+    assert dataset.exposure.data.shape == (4, 12288)
+
+    assert isinstance(dataset.edisp.edisp_map.geom, HpxGeom)
+    assert dataset.edisp.edisp_map.data.shape == (4, 3, 768)
+
+    assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
+    assert dataset.psf.psf_map.data.shape == (4, 66, 768)
+
