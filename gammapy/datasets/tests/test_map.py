@@ -51,6 +51,19 @@ def geom_hpx():
 
 
 @pytest.fixture
+def geom_hpx_partial():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    geom = HpxGeom.create(nside=32, axes=[axis], frame="galactic", region="DISK(110.,75.,10.)")
+
+    return {"geom": geom, "energy_axis_true": energy_axis_true}
+
+
+@pytest.fixture
 def geom():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     return WcsGeom.create(
@@ -1586,3 +1599,22 @@ def test_map_dataset_create_hpx_geom(geom_hpx):
     assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
     assert dataset.psf.psf_map.data.shape == (4, 66, 768)
 
+
+def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
+
+    dataset = MapDataset.create(**geom_hpx_partial, binsz_irf=2 * u.deg)
+
+    assert isinstance(dataset.counts.geom, HpxGeom)
+    assert dataset.counts.data.shape == (3, 90)
+
+    assert isinstance(dataset.background.geom, HpxGeom)
+    assert dataset.background.data.shape == (3, 90)
+
+    assert isinstance(dataset.exposure.geom, HpxGeom)
+    assert dataset.exposure.data.shape == (4, 90)
+
+    assert isinstance(dataset.edisp.edisp_map.geom, HpxGeom)
+    assert dataset.edisp.edisp_map.data.shape == (4, 3, 24)
+
+    assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
+    assert dataset.psf.psf_map.data.shape == (4, 66, 24)
