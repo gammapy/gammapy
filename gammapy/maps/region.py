@@ -567,7 +567,7 @@ class RegionGeom(Geom):
 
         hdulist = fits.HDUList()
 
-        hdulist.append(self.axes.to_table_hdu(prefix=hdu_bands, format=format))
+        hdulist.append(self.axes.to_table_hdu(hdu_bands=hdu_bands, format=format))
 
         # region HDU
         if self.region:
