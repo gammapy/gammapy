@@ -8,6 +8,8 @@ from astropy.io import fits
 from regions import CircleSkyRegion
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.maps.utils import find_bintable_hdu
+from gammapy.maps.hpx import HpxConv
 
 pytest.importorskip("healpy")
 
@@ -508,19 +510,16 @@ def test_smooth(kernel):
         m_nest.smooth(0.2 * u.deg, "box")
 
 def test_hpxmap_read_healpy(tmp_path):
+    import healpy as hp
     path = tmp_path / "tmp.fits"
-
     npix = 12 * 1024 * 1024
     m = [np.arange(npix), np.arange(npix)-1, np.arange(npix)-2]
-    import healpy as hp
     hp.write_map(
         filename=path,
         m=m, nest=False,
         column_names=["data map", "background map", "exposure map"],
         overwrite=True
     )
-    from gammapy.maps.utils import find_bintable_hdu
-    from gammapy.maps.hpx import HpxConv
     with fits.open(path, memmap=False) as hdulist:
         hdu_out = find_bintable_hdu(hdulist)
         header = hdu_out.header
