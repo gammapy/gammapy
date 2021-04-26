@@ -58,7 +58,8 @@ class HpxConv:
                 return "galprop"
             else:
                 return "galprop2"
-
+        elif hduname == "xtension":
+            return "healpy"
         # Check the name of the first column
         colname = header["TTYPE1"]
         if colname == "PIX":
@@ -116,7 +117,11 @@ HPX_FITS_CONVENTIONS["galprop2"] = HpxConv(
     bands_hdu="ENERGIES",
     quantity_type="differential",
 )
-
+HPX_FITS_CONVENTIONS["healpy"] = HpxConv(
+    "healpy",
+    hduname=None,
+    colstring="data map"
+)
 
 def unravel_hpx_index(idx, npix):
     """Convert flattened global map index to an index tuple.
@@ -1246,6 +1251,7 @@ class HpxGeom(Geom):
                 - "fgst-srcmap-sparse"
                 - "galprop"
                 - "galprop2"
+                - "healpy"
 
         Returns
         -------
