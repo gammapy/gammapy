@@ -65,11 +65,6 @@ runs are binned together to get one final dataset for which a likelihood is
 computed during the fit. Stacking is often useful to reduce the computation effort while
 analysing multiple runs.
 
-Counts, background and exposure (in the data range defined by the `mask_safe`)
-are simply summed,
-while for energy dispersion and point spread function an average is computed after
-weighing by the exposure.
-
 For the model evaluation, an important factor that needs to be accounted for is
 that the energy threshold changes between obseravtions.
 To ensure that the `npred` (ie, the predicted number of counts) on the stacked
@@ -77,13 +72,8 @@ dataset is the sum expected by stacking the npred of the individual runs,
 a `~gammapy.irf.EDispersionMap` is used, which contains the
 The mask_safe from each dataset is applied on the respective reconstructed energy axis
 of the energy dispersion matrix, and the masked matrices are combined.
-Values lying outside the safe mask of each dataset are lost.
 
-The following plot shows the individual and stacked attributes for two `SpectrumDataset`
-
-.. plot:: datasets/plot_stack.py
-
-Stacking of multiple datasets is implemented as follows.
+The following table  lists how the individual quantities are handled during stacking.
 Here, :math:`k` denotes a bin in reconstructed energy,
 :math:`l` a bin in true energy and
 :math:`j` is the dataset number
@@ -122,14 +112,20 @@ Here, :math:`k` denotes a bin in reconstructed energy,
    * - ``gti``
      - Union of individual `gti`
      -
-It is important to keep in mind that:
 
-- Stacking happens in-place, ie, ``dataset1.stack(dataset2)`` will overwrite ``dataset1``
-- To properly handle masks, it is necessary to stack onto an empty dataset.
-- Stacking only works for maps with equivalent geometry.
- Two geometries are called equivalent if one is exactly the same as,
- or can be obtained from a cutout of, the other.
-- A stacked analysis is reasonable only when adding runs taken by the same instrument.
+The following plot shows the individual and stacked attributes for two `SpectrumDataset`
+
+.. plot:: datasets/plot_stack.py
+
+.. note::
+    - A stacked analysis is reasonable only when adding runs taken by the same instrument.
+    - Stacking happens in-place, ie, ``dataset1.stack(dataset2)`` will overwrite ``dataset1``
+    - To properly handle masks, it is necessary to stack onto an empty dataset.
+    - Stacking only works for maps with equivalent geometry.
+      Two geometries are called equivalent if one is exactly the same as, or can be obtained
+      from a cutout of, the other.
+
+
 
 .. _joint:
 Joint Analysis
