@@ -222,6 +222,11 @@ class RegionGeom(Geom):
         return self._shape[::-1]
 
     @property
+    def data_shape_axes(self):
+        """Shape of data of the non-spatial axes and unit spatial axes."""
+        return self.axes.shape[::-1] + (1, 1)
+
+    @property
     def _shape(self):
         """Number of bins in each dimension.
         The spatial dimension is always (1, 1), as a

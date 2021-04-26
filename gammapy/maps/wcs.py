@@ -179,6 +179,11 @@ class WcsGeom(Geom):
         return self._shape[::-1]
 
     @property
+    def data_shape_axes(self):
+        """Shape of data of the non-spatial axes and unit spatial axes."""
+        return self.axes.shape[::-1] + (1, 1)
+
+    @property
     def _shape(self):
         npix_shape = tuple([np.max(self.npix[0]), np.max(self.npix[1])])
         return npix_shape + self.axes.shape
