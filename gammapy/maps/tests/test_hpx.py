@@ -10,8 +10,6 @@ from gammapy.maps import MapAxis, MapCoord
 from gammapy.maps.hpx import (
     HpxGeom,
     HpxToWcsMapping,
-    get_hpxregion_dir,
-    get_hpxregion_size,
     get_pix_size_from_nside,
     get_subpixels,
     get_superpixels,
@@ -170,42 +168,42 @@ def test_hpx_global_to_local():
 
     # 2D All-sky
     hpx = HpxGeom(16, False, "galactic")
-    assert_allclose(hpx[0], np.array([0]))
-    assert_allclose(hpx[633], np.array([633]))
-    assert_allclose(hpx[0, 633], np.array([0, 633]))
-    assert_allclose(hpx[np.array([0, 633])], np.array([0, 633]))
+    assert_allclose(hpx.global_to_local(0, ravel=True), np.array([0]))
+    assert_allclose(hpx.global_to_local(633, ravel=True), np.array([633]))
+    assert_allclose(hpx.global_to_local((0, 633), ravel=True), np.array([0, 633]))
+    assert_allclose(hpx.global_to_local(np.array([0, 633]), ravel=True), np.array([0, 633]))
 
     # 3D All-sky
     hpx = HpxGeom(16, False, "galactic", axes=[ax0])
     assert_allclose(
-        hpx[(np.array([177, 177]), np.array([0, 1]))], np.array([177, 177 + 3072])
+        hpx.global_to_local((np.array([177, 177]), np.array([0, 1])), ravel=True), np.array([177, 177 + 3072])
     )
 
     # 2D Partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
-    assert_allclose(hpx[0, 633, 706], np.array([-1, 0, 2]))
+    assert_allclose(hpx.global_to_local((0, 633, 706), ravel=True), np.array([-1, 0, 2]))
 
     # 3D Partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
-    assert_allclose(hpx[633], np.array([0]))
-    assert_allclose(hpx[49859], np.array([19]))
-    assert_allclose(hpx[0, 633, 706, 49859, 49935], np.array([-1, 0, 2, 19, 21]))
+    assert_allclose(hpx.global_to_local(633, ravel=True), np.array([0]))
+    assert_allclose(hpx.global_to_local(49859, ravel=True), np.array([19]))
+    assert_allclose(hpx.global_to_local((0, 633, 706, 49859, 49935), ravel=True), np.array([-1, 0, 2, 19, 21]))
     assert_allclose(
-        hpx[np.array([0, 633, 706, 49859, 49935])], np.array([-1, 0, 2, 19, 21])
+        hpx.global_to_local(np.array([0, 633, 706, 49859, 49935]), ravel=True), np.array([-1, 0, 2, 19, 21])
     )
-    assert_allclose(
-        hpx[(np.array([0, 633, 706, 707, 783]), np.array([0, 0, 0, 1, 1]))],
-        np.array([-1, 0, 2, 19, 21]),
-    )
+    idx_global = (np.array([0, 633, 706, 707, 783]), np.array([0, 0, 0, 1, 1]))
+    assert_allclose(hpx.global_to_local(idx_global, ravel=True), [-1, 0, 2, 19, 21])
 
     # 3D Partial-sky w/ variable bin size
     hpx = HpxGeom([32, 64], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
 
-    assert_allclose(hpx[191], np.array([0]))
-    assert_allclose(hpx[12995], np.array([6]))
-    assert_allclose(hpx[0, 191, 233, 12995], np.array([-1, 0, 2, 6]))
+    assert_allclose(hpx.global_to_local(191, ravel=True), [0])
+    assert_allclose(hpx.global_to_local(12995, ravel=True), [6])
+    assert_allclose(hpx.global_to_local((0, 191, 233, 12995), ravel=True), [-1, 0, 2, 6])
+
+    idx_global = (np.array([0, 191, 233, 707]), np.array([0, 0, 0, 1]))
     assert_allclose(
-        hpx[(np.array([0, 191, 233, 707]), np.array([0, 0, 0, 1]))],
+        hpx.global_to_local(idx_global, ravel=True),
         np.array([-1, 0, 2, 6]),
     )
 
@@ -217,9 +215,11 @@ def test_hpx_global_to_local():
         region="DISK(110.,75.,2.)",
         axes=[ax0, ax1],
     )
-    assert_allclose(hpx[3263], np.array([1]))
-    assert_allclose(hpx[28356], np.array([11]))
-    assert_allclose(hpx[(np.array([46]), np.array([0]), np.array([0]))], np.array([0]))
+    assert_allclose(hpx.global_to_local(3263, ravel=True), [1])
+    assert_allclose(hpx.global_to_local(28356, ravel=True), [11])
+
+    idx_global = (np.array([46]), np.array([0]), np.array([0]))
+    assert_allclose(hpx.global_to_local(idx_global, ravel=True), [0])
 
 
 @pytest.mark.parametrize(
@@ -236,37 +236,6 @@ def test_hpxgeom_init_with_pix(nside, nested, frame, region, axes):
     geom = HpxGeom(nside, nested, frame, region=idx1, axes=axes)
     assert_allclose(idx1, geom.get_idx(flat=True))
     assert_allclose(len(idx1[0]), np.sum(geom.npix))
-
-
-@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
-def test_hpxgeom_to_slice(nside, nested, frame, region, axes):
-    geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
-    slices = tuple([slice(1, 2) for i in range(2, geom.ndim)])
-    geom_slice = geom.to_slice(slices)
-    assert_allclose(geom_slice.ndim, 2)
-    assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
-
-    idx = geom.get_idx(flat=True)
-    idx_slice = geom_slice.get_idx(flat=True)
-    if geom.ndim > 2:
-        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
-        assert_allclose(idx_slice, (idx[0][m],))
-    else:
-        assert_allclose(idx_slice, idx)
-
-    # Test slicing with explicit geometry
-    geom = HpxGeom(nside, nested, frame, region=tuple([t[::3] for t in idx]), axes=axes)
-    geom_slice = geom.to_slice(slices)
-    assert_allclose(geom_slice.ndim, 2)
-    assert_allclose(geom_slice.npix, np.squeeze(geom.npix[slices]))
-
-    idx = geom.get_idx()
-    idx_slice = geom_slice.get_idx()
-    if geom.ndim > 2:
-        m = np.all([np.isin(t, [1]) for t in idx[1:]], axis=0)
-        assert_allclose(idx_slice, (idx[0][m],))
-    else:
-        assert_allclose(idx_slice, idx)
 
 
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
@@ -382,15 +351,18 @@ def test_hpx_get_pix_size_from_nside():
 
 
 def test_hpx_get_hpxregion_size():
-    assert_allclose(get_hpxregion_size("DISK(110.,75.,2.)"), 2.0)
+    geom = HpxGeom.create(nside=128, region="DISK(110.,75.,2.)")
+    assert_allclose(geom.width, 2.0 * u.deg)
 
 
 def test_hpxgeom_get_hpxregion_dir():
-    refdir = get_hpxregion_dir("DISK(110.,75.,2.)", "galactic")
+    geom = HpxGeom.create(nside=128, region="DISK(110.,75.,2.)", frame="galactic")
+    refdir = geom.center_skydir
     assert_allclose(refdir.l.deg, 110.0)
     assert_allclose(refdir.b.deg, 75.0)
 
-    refdir = get_hpxregion_dir(None, "galactic")
+    geom = HpxGeom.create(nside=128, frame="galactic")
+    refdir = geom.center_skydir
     assert_allclose(refdir.l.deg, 0.0)
     assert_allclose(refdir.b.deg, 0.0)
 

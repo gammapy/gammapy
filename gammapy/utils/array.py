@@ -13,6 +13,11 @@ __all__ = [
 ]
 
 
+def is_power2(n):
+    """Check if an integer is a power of 2."""
+    return (n > 0) & ((n & (n - 1)) == 0)
+
+
 def array_stats_str(x, label=""):
     """Make a string summarising some stats for an array.
 
