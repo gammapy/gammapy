@@ -52,6 +52,7 @@ Note that in Gammapy, 2D image analyses are done with 3D cubes with a single
 energy bin, e.g. for modeling and fitting,
 see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
+
 To analyse multiple runs, you can either stack the datasets together, or perform
 a joint fit across multiple datasets.
 
@@ -148,6 +149,7 @@ even fit convergence might be an issue for a large number of datasets.
 
 To strike a balance, what might be a practical solution for analysis of many runs is to
 stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
+
 
 
 Reference/API

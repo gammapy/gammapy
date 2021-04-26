@@ -64,7 +64,7 @@ Sphinx during the build documentation process. You may include snippets of Pytho
 within blocks labelled with ``.. code-block:: python`` Sphinx directive. However this code could not be
 tested and it will not be possible to know if it fails in following versions of Gammapy. That's why we
 recommend to use the ``.. testcode::`` directive to enclose code that will be tested against the results
-present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::` directive is provided,
+present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::`` directive is provided,
 only execution tests will be performed.
 
 For example, we could check that the code below does not fail, since it does not provide any output.
@@ -603,10 +603,10 @@ This is a compromise between the alternatives:
   Can be annoying for the caller to not get any result.
 * ``bounds_error=False, fill_value=nan`` -- Medium "safe". Always return a result, but put NaN values to make it easy
   for analysers to spot that there's an issue in their results (if pixels with NaN are used, that will usually lead
-  to NaN values in high-level analysis results.
+  to NaN values in high level analysis results.
 * ``bounds_error=False, fill_value=0`` or ``bounds_error=False, fill_value=None`` -- Least "safe".
   Extrapolate with zero or edge values (this is what ``None`` means).
-  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high-level analysis results
+  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high level analysis results
   aren't quite correct because IRFs or background models or ... were used outside their valid range.
 
 Methods that use interpolation should provide an option to the caller to pass interpolation options on to

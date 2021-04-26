@@ -20,11 +20,10 @@ def spectrum_dataset():
     edisp = EDispKernelMap.from_diagonal_response(
         energy_axis_true=e_true, energy_axis=e_reco, geom=background.geom
     )
-    aeff = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[e_true], unit="m2")
-    aeff.data += 1e6
 
-    livetime = 1 * u.h
-    exposure = aeff * livetime
+    exposure = RegionNDMap.create(
+        region="icrs;circle(0, 0, 0.1)", axes=[e_true], unit="m2 h", data=1e6
+    )
 
     return SpectrumDataset(
         name="test", exposure=exposure, edisp=edisp, background=background
@@ -32,9 +31,14 @@ def spectrum_dataset():
 
 
 def test_cta_sensitivity_estimator(spectrum_dataset):
+    geom = spectrum_dataset.background.geom
+
     dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
-        dataset=spectrum_dataset, acceptance=1, acceptance_off=5
+        dataset=spectrum_dataset,
+        acceptance=RegionNDMap.from_geom(geom=geom, data=1),
+        acceptance_off=RegionNDMap.from_geom(geom=geom, data=5)
     )
+
     sens = SensitivityEstimator(gamma_min=25, bkg_syst_fraction=0.075)
     table = sens.run(dataset_on_off)
 

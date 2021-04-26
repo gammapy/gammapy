@@ -28,23 +28,28 @@ class FoVBackgroundMaker(Maker):
         the normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
-    spectral_model_tag : str
-        Default norm spectral model to use for the `FoVBackgroundModel`, if none is defined
-        on the dataset.
+    spectral_model : SpectralModel or str
+        Reference norm spectral model to use for the `FoVBackgroundModel`, if none is defined
+        on the dataset. By default, use pl-norm.
     """
     tag = "FoVBackgroundMaker"
     available_methods = ["fit", "scale"]
 
     def __init__(
-        self, method="scale", exclusion_mask=None, spectral_model_tag="pl-norm"
+        self, method="scale", exclusion_mask=None, spectral_model="pl-norm"
     ):
         self.method = method
         self.exclusion_mask = exclusion_mask
 
-        if "norm" not in spectral_model_tag:
+        if isinstance(spectral_model, str):
+            spectral_model = Model.create(
+                tag=spectral_model, model_type="spectral"
+            )
+
+        if not spectral_model.is_norm_spectral_model:
             raise ValueError("Spectral model must be a norm spectral model")
 
-        self.spectral_model_tag = spectral_model_tag
+        self.default_spectral_model = spectral_model
 
     @property
     def method(self):
@@ -74,12 +79,8 @@ class FoVBackgroundMaker(Maker):
             Map dataset including
 
         """
-        spectral_model = Model.create(
-            tag=self.spectral_model_tag, model_type="spectral"
-        )
-
         bkg_model = FoVBackgroundModel(
-            dataset_name=dataset.name, spectral_model=spectral_model.copy()
+            dataset_name=dataset.name, spectral_model=self.default_spectral_model.copy()
         )
 
         if dataset.models is None:
@@ -142,7 +143,10 @@ class FoVBackgroundMaker(Maker):
             fit = Fit([dataset])
             fit_result = fit.run()
             if not fit_result.success:
-                log.warning(f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}")
+                log.warning(f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "\
+                            f"Setting mask to False.")
+                dataset.mask_safe.data[...] = False
+
         return dataset
 
     @staticmethod
@@ -166,12 +170,16 @@ class FoVBackgroundMaker(Maker):
 
         if count_tot <= 0.0:
             log.warning(
-                f"FoVBackgroundMaker failed. No counts found outside exclusion mask for {dataset.name}."
+                f"FoVBackgroundMaker failed. No counts found outside exclusion mask for {dataset.name}. "\
+                f"Setting mask to False."
             )
+            dataset.mask_safe.data[...] = False
         elif bkg_tot <= 0.0:
             log.warning(
-                f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}."
+                f"FoVBackgroundMaker failed. No positive background found outside exclusion mask for {dataset.name}. "\
+                f"Setting mask to False."
             )
+            dataset.mask_safe.data[...] = False
         else:
             value = count_tot / bkg_tot
             dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = value

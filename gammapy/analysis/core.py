@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Session class driving the high-level interface API"""
+"""Session class driving the high level interface API"""
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -7,7 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-from gammapy.estimators import FluxPointsEstimator
+from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator, LightCurveEstimator
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
@@ -27,10 +27,10 @@ log = logging.getLogger(__name__)
 
 
 class Analysis:
-    """Config-driven high-level analysis interface.
+    """Config-driven high level analysis interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
-    an internal high-level interface model, though the user can also provide configuration
+    an internal high level interface model, though the user can also provide configuration
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
 
@@ -112,7 +112,11 @@ class Analysis:
         if observations_settings.obs_time.start is not None:
             start = observations_settings.obs_time.start
             stop = observations_settings.obs_time.stop
-            self.observations = self.observations.select_time([(start, stop)])
+            if len(start.shape) == 0:
+                time_intervals = [(start, stop)]
+            else:
+                time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
+            self.observations = self.observations.select_time(time_intervals)
         log.info(f"Number of selected observations: {len(self.observations)}")
         for obs in self.observations:
             log.debug(obs)
@@ -206,6 +210,53 @@ class Analysis:
         )
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
+
+    def get_excess_map(self):
+        """Calculate excess map with respect to the current model."""
+        excess_settings = self.config.excess_map
+        log.info("Computing excess maps.")
+
+        if self.config.datasets.type == "1d":
+            raise ValueError("Cannot compute excess map for 1D dataset")
+
+        # Here we could possibly stack the datasets if needed.
+        if len(self.datasets)>1:
+            raise ValueError("Datasets must be stacked to compute the excess map")
+
+        energy_edges = self._make_energy_axis(excess_settings.energy_edges)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+
+        excess_map_estimator = ExcessMapEstimator(
+            correlation_radius=excess_settings.correlation_radius,
+            energy_edges=energy_edges,
+            **excess_settings.parameters
+        )
+        self.excess_map = excess_map_estimator.run(self.datasets[0])
+
+    def get_light_curve(self):
+        """Calculate light curve for a specific model component."""
+        lc_settings = self.config.light_curve
+        log.info("Computing light curve.")
+        energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
+
+        if lc_settings.time_intervals.start is None or lc_settings.time_intervals.stop is None:
+            log.info("Time intervals not defined. Extract light curve on datasets GTIs.")
+            time_intervals=None
+        else:
+            time_intervals = [(t1, t2) for t1, t2 in
+                              zip(lc_settings.time_intervals.start, lc_settings.time_intervals.stop)]
+
+        light_curve_estimator = LightCurveEstimator(
+            time_intervals=time_intervals,
+            energy_edges=energy_edges,
+            source=lc_settings.source,
+            **lc_settings.parameters,
+        )
+        lc = light_curve_estimator.run(datasets=self.datasets)
+        lc.table["is_ul"] = lc.table["ts"] < 4
+        self.light_curve = lc
+        log.info("\n{}".format(self.light_curve.table))
 
     def update_config(self, config):
         self.config = self.config.update(config=config)
@@ -380,14 +431,21 @@ class Analysis:
             stacked = self.datasets.stack_reduce(name="stacked")
             self.datasets = Datasets([stacked])
 
+
+
     @staticmethod
     def _make_energy_axis(axis, name="energy"):
-        return MapAxis.from_bounds(
-            name=name,
-            lo_bnd=axis.min.value,
-            hi_bnd=axis.max.to_value(axis.min.unit),
-            nbin=axis.nbins,
-            unit=axis.min.unit,
-            interp="log",
-            node_type="edges",
-        )
+        if axis.min is None or axis.max is None:
+            return None
+        elif axis.nbins is None or axis.nbins<1:
+            return None
+        else:
+            return MapAxis.from_bounds(
+                name=name,
+                lo_bnd=axis.min.value,
+                hi_bnd=axis.max.to_value(axis.min.unit),
+                nbin=axis.nbins,
+                unit=axis.min.unit,
+                interp="log",
+                node_type="edges",
+            )

@@ -155,7 +155,7 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg"):
+    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg", data=None):
         """Create an empty region map object.
 
         Parameters
@@ -172,14 +172,16 @@ class RegionNDMap(Map):
             Dictionary to store meta data.
         wcs : `~astropy.wcs.WCS`
             WCS projection to use for local projections of the region
+        data : `~numpy.ndarray`
+            Data array
 
         Returns
         -------
         map : `RegionNDMap`
             Region map
         """
-        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs,binsz_wcs=binsz_wcs)
-        return cls(geom=geom, dtype=dtype, unit=unit, meta=meta)
+        geom = RegionGeom.create(region=region, axes=axes, wcs=wcs, binsz_wcs=binsz_wcs)
+        return cls(geom=geom, dtype=dtype, unit=unit, meta=meta, data=data)
 
     def downsample(
         self, factor, preserve_counts=True, axis_name="energy", weights=None
@@ -334,7 +336,7 @@ class RegionNDMap(Map):
             filename, overwrite=overwrite
         )
 
-    def to_hdulist(self, format="gadf", hdu="SKYMAP"):
+    def to_hdulist(self, format="gadf", hdu="SKYMAP", hdu_bands=None, hdu_region=None):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -343,6 +345,10 @@ class RegionNDMap(Map):
             Format specification
         hdu : str
             Name of the HDU with the map data, used for "gadf" format.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table, used for "gadf" format.
+        hdu_region : str
+            Name or index of the HDU with the region table.
 
         Returns
         -------
@@ -351,6 +357,11 @@ class RegionNDMap(Map):
         """
         hdulist = fits.HDUList()
         table = self.to_table(format=format)
+
+        if hdu_bands is None:
+            hdu_bands = f"{hdu.upper()}_BANDS"
+        if hdu_region is None:
+            hdu_region = f"{hdu.upper()}_REGION"
 
         if format in ["ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"]:
             hdulist.append(fits.BinTableHDU(table))
@@ -361,7 +372,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Unsupported format '{format}'")
 
         if format in ["ogip", "ogip-sherpa", "gadf"]:
-            hdulist_geom = self.geom.to_hdulist(format=format, hdu=hdu)
+            hdulist_geom = self.geom.to_hdulist(format=format, hdu_bands=hdu_bands, hdu_region=hdu_region)
             hdulist.extend(hdulist_geom[1:])
 
         return hdulist

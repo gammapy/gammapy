@@ -17,6 +17,7 @@ from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, Sk
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width, round_up_to_odd
 from .core import Estimator
+from .flux_map import FluxMaps
 from .utils import estimate_exposure_reco_energy
 
 __all__ = ["TSMapEstimator"]
@@ -79,14 +80,15 @@ class TSMapEstimator(Estimator):
     rtol : float (0.001)
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit.
-    selection_optional : list of str or 'all'
+    selection_optional : list of str
         Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate assymmetric error on flux.
             * "ul": estimate upper limits on flux.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the maps bins.
     sum_over_energy_groups : bool
@@ -161,13 +163,22 @@ class TSMapEstimator(Estimator):
     @property
     def selection_all(self):
         """Which quantities are computed"""
-        selection = ["ts", "flux", "niter", "flux_err"]
+        selection = [
+            "ts",
+            "norm",
+            "niter",
+            "norm_err",
+            "npred",
+            "npred_null",
+            "stat",
+            "stat_null",
+        ]
 
         if "errn-errp" in self.selection_optional:
-            selection += ["flux_errp", "flux_errn"]
+            selection += ["norm_errp", "norm_errn"]
 
         if "ul" in self.selection_optional:
-            selection += ["flux_ul"]
+            selection += ["norm_ul"]
 
         return selection
 
@@ -280,15 +291,6 @@ class TSMapEstimator(Estimator):
     def estimate_sqrt_ts(self, map_ts, norm):
         r"""Compute sqrt(TS) map.
 
-        Compute sqrt(TS) as defined by:
-
-        .. math::
-            \sqrt{TS} = \left \{
-            \begin{array}{ll}
-              -\sqrt{-TS} & : \text{if} \ TS < 0 \\
-              \sqrt{TS} & : \text{else}
-            \end{array}
-            \right.
 
         Parameters
         ----------
@@ -358,12 +360,8 @@ class TSMapEstimator(Estimator):
         geom = counts.geom.squash(axis_name="energy")
 
         for name in self.selection_all:
-            unit = 1 / exposure.unit if "flux" in name else ""
-            m = Map.from_geom(geom=geom, data=np.nan, unit=unit)
-            m.data[0, j, i] = [_[name.replace("flux", "norm")] for _ in results]
-            if "flux" in name:
-                m.data *= flux_ref.to_value(m.unit)
-                m.quantity = m.quantity.to("1 / (cm2 s)")
+            m = Map.from_geom(geom=geom, data=np.nan, unit="")
+            m.data[0, j, i] = [_[name] for _ in results]
             result[name] = m
 
         return result
@@ -393,6 +391,7 @@ class TSMapEstimator(Estimator):
 
         """
         dataset_models = dataset.models
+
         if self.downsampling_factor:
             shape = dataset.counts.geom.to_image().data_shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
@@ -434,9 +433,9 @@ class TSMapEstimator(Estimator):
             result_all[name] = map_all
 
         result_all["sqrt_ts"] = self.estimate_sqrt_ts(
-            result_all["ts"], result_all["flux"]
+            result_all["ts"], result_all["norm"]
         )
-        return result_all
+        return FluxMaps(data=result_all, reference_model=self.model, gti=dataset.gti)
 
 
 # TODO: merge with MapDataset?
@@ -529,8 +528,18 @@ class BrentqFluxEstimator(Estimator):
         self.ts_threshold = ts_threshold
 
     def estimate_best_fit(self, dataset):
-        """Optimize for a single parameter"""
-        result = {}
+        """Estimate best fit norm parameter
+
+        Parameters
+        ----------
+        dataset : `SimpleMapDataset`
+            Simple map dataset
+
+        Returns
+        -------
+        result : dict
+            Result dict including 'norm' and 'norm_err'
+        """
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
@@ -555,21 +564,24 @@ class BrentqFluxEstimator(Estimator):
                     # Where the root finding fails NaN is set as norm
                     norm, niter = norm_min_total, self.max_niter
 
-        stat = dataset.stat_sum(norm=norm)
-        stat_null = dataset.stat_sum(norm=0)
-        result["ts"] = stat_null - stat
-        result["norm"] = norm
-        result["niter"] = niter
-
         with np.errstate(invalid="ignore", divide="ignore"):
-            result["norm_err"] = (
+            norm_err = (
                 np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
             )
-        result["stat"] = stat
-        return result
+
+        stat = dataset.stat_sum(norm=norm)
+        stat_null = dataset.stat_sum(norm=0)
+
+        return {
+            "norm": norm,
+            "norm_err": norm_err,
+            "niter": niter,
+            "ts": stat_null - stat,
+            "stat": stat,
+            "stat_null": stat_null
+        }
 
     def _confidence(self, dataset, n_sigma, result, positive):
-
         stat_best = result["stat"]
         norm = result["norm"]
         norm_err = result["norm_err"]
@@ -590,7 +602,11 @@ class BrentqFluxEstimator(Estimator):
             warnings.simplefilter("ignore")
             try:
                 result_fit = scipy.optimize.brentq(
-                    ts_diff, min_norm, max_norm, maxiter=self.max_niter, rtol=self.rtol,
+                    ts_diff,
+                    min_norm,
+                    max_norm,
+                    maxiter=self.max_niter,
+                    rtol=self.rtol,
                 )
                 return (result_fit - norm) * factor
             except (RuntimeError, ValueError):
@@ -598,8 +614,18 @@ class BrentqFluxEstimator(Estimator):
                 return np.nan
 
     def estimate_ul(self, dataset, result):
-        """"""
+        """Compute upper limit using likelihood profile method.
 
+        Parameters
+        ----------
+        dataset : `SimpleMapDataset`
+            Simple map dataset
+
+        Returns
+        -------
+        result : dict
+            Result dict including 'norm_ul'
+        """
         flux_ul = self._confidence(
             dataset=dataset, n_sigma=self.n_sigma_ul, result=result, positive=True
         )
@@ -607,10 +633,18 @@ class BrentqFluxEstimator(Estimator):
         return {"norm_ul": flux_ul}
 
     def estimate_errn_errp(self, dataset, result):
-        """
-        Compute norm errors using likelihood profile method.
-        """
+        """Compute norm errors using likelihood profile method.
 
+        Parameters
+        ----------
+        dataset : `SimpleMapDataset`
+            Simple map dataset
+
+        Returns
+        -------
+        result : dict
+            Result dict including 'norm_errp' and 'norm_errn'
+        """
         flux_errn = self._confidence(
             dataset=dataset, result=result, n_sigma=self.n_sigma, positive=False
         )
@@ -620,23 +654,58 @@ class BrentqFluxEstimator(Estimator):
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
     def estimate_default(self, dataset):
+        """Estimate default norm
+
+        Parameters
+        ----------
+        dataset : `SimpleMapDataset`
+            Simple map dataset
+
+        Returns
+        -------
+        result : dict
+            Result dict including 'norm', 'norm_err' and "niter"
+        """
         norm = dataset.norm_guess
-        stat = dataset.stat_sum(norm=norm)
-        stat_null = dataset.stat_sum(norm=0)
-        ts = stat_null - stat
 
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-        return {"norm": norm, "ts": ts, "norm_err": norm_err, "stat": stat, "niter": 0}
+
+        stat = dataset.stat_sum(norm=norm)
+        stat_null = dataset.stat_sum(norm=0)
+
+        return {
+            "norm": norm,
+            "norm_err": norm_err,
+            "niter": 0,
+            "ts": stat_null - stat,
+            "stat": stat,
+            "stat_null": stat_null
+        }
 
     def run(self, dataset):
-        """"""
+        """Run flux estimator
+
+        Parameters
+        ----------
+        dataset : `SimpleMapDataset`
+            Simple map dataset
+
+        Returns
+        -------
+        result : dict
+            Result dict
+        """
         if self.ts_threshold is not None:
             result = self.estimate_default(dataset)
             if result["ts"] > self.ts_threshold:
                 result = self.estimate_best_fit(dataset)
         else:
             result = self.estimate_best_fit(dataset)
+
+        norm = result["norm"]
+        result["npred"] = dataset.npred(norm=norm).sum()
+        result["npred_null"] = dataset.npred(norm=0).sum()
 
         if "ul" in self.selection_optional:
             result.update(self.estimate_ul(dataset, result))

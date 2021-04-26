@@ -43,11 +43,12 @@ class FluxEstimator(Estimator):
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
-            * "norm-scan": estimate fit statistic profiles.
+            * "scan": estimate fit statistic profiles.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
     """
 
     tag = "FluxEstimator"

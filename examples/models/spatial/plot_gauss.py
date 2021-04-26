@@ -1,7 +1,7 @@
 r"""
 .. _gaussian-spatial-model:
 
-Gaussian Spatial Model
+Gaussian spatial model
 ======================
 
 This is a spatial model parametrising a Gaussian function.

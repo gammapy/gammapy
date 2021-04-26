@@ -30,17 +30,17 @@ The main functionality provided is methods that map catalog information to
 are to compare your results against previous results in the catalogs (e.g. overplot a spectral model),
 or to create initial source models for certain energy bands and sky regions.
 
-Tutorials
-=========
+Using `gammapy.catalog`
+=======================
 
-The main tutorial for `gammapy.catalog` is:
+Gammapy tutorial notebooks that show examples using ``gammapy.catalog``:
 
-* `Source catalogs tutorial <../tutorials/catalog.html>`__
+.. nbgallery::
 
-Other :ref:`tutorials` mentioning `gammapy.catalog` are:
+   ../tutorials/api/catalog.ipynb
+   ../tutorials/starting/overview.ipynb
+   ../tutorials/analysis/1D/sed_fitting.ipynb
 
-* `Overview tutorial <../tutorials/overview.html>`__
-* `SED fitting tutorial <../tutorials/sed_fitting.html>`__
 
 Reference/API
 =============

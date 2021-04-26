@@ -4,6 +4,7 @@ import inspect
 from copy import deepcopy
 import numpy as np
 from astropy.table import Table
+from astropy import units as u
 from gammapy.modeling.models import Model
 from gammapy.maps import MapAxis
 
@@ -16,8 +17,23 @@ OPTIONAL_QUANTITIES = [
 ]
 
 OPTIONAL_QUANTITIES_COMMON = [
-    "ts", "sqrt_ts", "npred", "npred_excess", "npred_null", "stat", "stat_null"
+    "ts",
+    "sqrt_ts",
+    "npred",
+    "npred_excess",
+    "npred_null",
+    "stat",
+    "stat_null",
+    "niter"
 ]
+
+
+DEFAULT_UNIT = {
+    "dnde": u.Unit("cm-2 s-1 TeV-1"),
+    "e2dnde": u.Unit("erg cm-2 s-1"),
+    "flux": u.Unit("cm-2 s-1"),
+    "eflux": u.Unit("erg cm-2 s-1"),
+}
 
 
 class Estimator(abc.ABC):
@@ -44,10 +60,11 @@ class Estimator(abc.ABC):
         """Set optional selection"""
         available = self._available_selection_optional
 
-        if selection == "all":
-            self._selection_optional = available
-        elif selection is None:
+
+        if selection is None:
             self._selection_optional = []
+        elif "all" in selection:
+            self._selection_optional = available
         else:
             if set(selection).issubset(set(available)):
                 self._selection_optional = selection
@@ -137,11 +154,11 @@ class FluxEstimate:
     data : dict of `Map` or `Table`
         Mappable containing the sed data with at least a 'norm' entry.
         If data is a Table, it should contain 'e_min' and 'e_max' columns.
-    spectral_model : `SpectralModel`
+    reference_spectral_model : `SpectralModel`
         Reference spectral model used to produce the input data.
     """
 
-    def __init__(self, data, spectral_model):
+    def __init__(self, data, reference_spectral_model):
         # TODO: Check data
         self._data = data
 
@@ -157,7 +174,13 @@ class FluxEstimate:
 
         # Note that here we could use the specification from dnde_ref to build piecewise PL
         # But does it work beyond min and max centers?
-        self.spectral_model = spectral_model
+
+        self._reference_spectral_model = reference_spectral_model
+
+    @property
+    def reference_spectral_model(self):
+        """Reference spectral model (`SpectralModel`)"""
+        return self._reference_spectral_model
 
     @property
     def data(self):
@@ -207,6 +230,13 @@ class FluxEstimate:
         """Energy max"""
         return self.energy_axis.edges[1:]
 
+    # TODO: keep or remove?
+    @property
+    def niter(self):
+        """Number of iterations of fit"""
+        self._check_norm_quantity("niter")
+        return self.data["niter"]
+
     @property
     def npred(self):
         """Predicted counts"""
@@ -222,8 +252,9 @@ class FluxEstimate:
     @property
     def npred_excess(self):
         """Predicted excess counts"""
-        self._check_norm_quantity("npred_excess")
-        return self.data["npred_excess"]
+        self._check_norm_quantity("npred")
+        self._check_norm_quantity("npred_null")
+        return self.data["npred"] - self.data["npred_null"]
 
     @property
     def stat(self):
@@ -243,11 +274,21 @@ class FluxEstimate:
         self._check_norm_quantity("ts")
         return self.data["ts"]
 
-    # TODO: just derive from ts?
+    # TODO: just always derive from ts?
     @property
     def sqrt_ts(self):
-        """sqrt(TS) map (`Map`)"""
-        self._check_norm_quantity("sqrt_ts")
+        """sqrt(TS) as defined by:
+
+        .. math::
+
+            \sqrt{TS} = \left \{
+            \begin{array}{ll}
+              -\sqrt{TS} & : \text{if} \ norm < 0 \\
+              \sqrt{TS} & : \text{else}
+            \end{array}
+            \right.
+
+        """
         return self.data["sqrt_ts"]
 
     @property
@@ -282,14 +323,15 @@ class FluxEstimate:
     @property
     def dnde_ref(self):
         """Reference differential flux"""
-        result = self.spectral_model(self.energy_axis.center)
+        result = self.reference_spectral_model(self.energy_axis.center)
         return result[self._expand_slice]
 
     @property
     def e2dnde_ref(self):
         """Reference differential flux * energy ** 2"""
+        energy = self.energy_axis.center
         result = (
-            self.spectral_model(self.energy_axis.center) * self.energy_axis.center ** 2
+            self.reference_spectral_model(energy) * energy ** 2
         )
         return result[self._expand_slice]
 
@@ -298,7 +340,7 @@ class FluxEstimate:
         """Reference integral flux"""
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
-        result = self.spectral_model.integral(energy_min, energy_max)
+        result = self.reference_spectral_model.integral(energy_min, energy_max)
         return result[self._expand_slice]
 
     @property
@@ -306,7 +348,7 @@ class FluxEstimate:
         """Reference energy flux"""
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
-        result = self.spectral_model.energy_flux(energy_min, energy_max)
+        result = self.reference_spectral_model.energy_flux(energy_min, energy_max)
         return result[self._expand_slice]
 
     @property

@@ -316,7 +316,7 @@ class LightCurveEstimator(Estimator):
     ----------
     time_intervals : list of `astropy.time.Time`
         Start and stop time for each interval to compute the LC
-    source : str
+    source : str or int
         For which source in the model to compute the flux points. Default is 0
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the light curve.
@@ -339,11 +339,12 @@ class LightCurveEstimator(Estimator):
     selection_optional : list of str
         Which steps to execute. Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
     """
 
     tag = "LightCurveEstimator"

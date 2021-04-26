@@ -1158,10 +1158,9 @@ def test_map_dataset_on_off_fake(geom):
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     energy_true_axis = geom.axes["energy"].copy(name="energy_true")
 
-    empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
-    empty_dataset = MapDatasetOnOff.from_map_dataset(
-        empty_dataset, acceptance=1, acceptance_off=10.0
-    )
+    empty_dataset = MapDatasetOnOff.create(geom, energy_true_axis, rad_axis=rad_axis)
+    empty_dataset.acceptance.data = 1.
+    empty_dataset.acceptance_off.data = 10.
 
     empty_dataset.acceptance_off.data[0, 50, 50] = 0
     background_map = Map.from_geom(geom, data=1)

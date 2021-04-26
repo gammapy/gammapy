@@ -1,7 +1,7 @@
 r"""
 .. _expdecay-temporal-model:
 
-ExpDecay Temporal Model
+ExpDecay temporal model
 =======================
 
 This model parametrises an ExpDecay time model.

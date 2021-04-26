@@ -1,8 +1,8 @@
 r"""
 .. _broken-powerlaw-spectral-model:
 
-Broken Power Law Spectral Model
-======================================
+Broken power law spectral model
+===============================
 
 This model parametrises a broken power law spectrum.
 

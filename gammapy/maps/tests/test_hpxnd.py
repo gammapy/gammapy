@@ -5,8 +5,11 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from regions import CircleSkyRegion
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.maps.utils import find_bintable_hdu
+from gammapy.maps.hpx import HpxConv
 
 pytest.importorskip("healpy")
 
@@ -209,14 +212,6 @@ def test_hpxmap_swap_scheme(nside, nested, frame, region, axes):
     assert_allclose(m.get_by_coord(coords), m2.get_by_coord(coords))
 
 
-@pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
-def test_hpxmap_ud_grade(nside, nested, frame, region, axes):
-    m = HpxNDMap(
-        HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
-    )
-    m.to_ud_graded(4)
-
-
 @pytest.mark.parametrize(
     ("nside", "nested", "frame", "region", "axes"), hpx_test_partialsky_geoms
 )
@@ -351,3 +346,183 @@ def test_hpxndmap_resample_axis():
     m3 = m.resample_axis(axis=new_axis)
     assert m3.data.shape == (3, 1, 3072)
     assert_allclose(m3.data, 2)
+
+
+def test_hpx_nd_map_to_wcs_tiles():
+    m = HpxNDMap.create(nside=8, frame="galactic")
+    m.data += 1
+
+    tiles = m.to_wcs_tiles(nside_tiles=4)
+    assert_allclose(tiles[0].data, 1)
+    assert_allclose(tiles[32].data, 1)
+
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=8, frame="galactic", axes=[axis])
+    m.data += 1
+
+    tiles = m.to_wcs_tiles(nside_tiles=4)
+    assert_allclose(tiles[0].data, 1)
+    assert_allclose(tiles[32].data, 1)
+
+
+def test_from_wcs_tiles():
+    geom = HpxGeom.create(nside=8)
+
+    wcs_geoms = geom.to_wcs_tiles(nside_tiles=4)
+
+    wcs_tiles = [Map.from_geom(geom, data=1) for geom in wcs_geoms]
+
+    m = HpxNDMap.from_wcs_tiles(wcs_tiles=wcs_tiles)
+
+    assert_allclose(m.data, 1)
+
+
+def test_hpx_map_cutout():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m.data += np.arange(12288)
+
+    cutout = m.cutout(SkyCoord("0d", "0d"), width=10 * u.deg)
+
+    assert cutout.data.shape == (1, 25)
+    assert_allclose(cutout.data.sum(), 239021)
+    assert_allclose(cutout.data[0, 0], 8452)
+    assert_allclose(cutout.data[0, -1], 9768)
+
+
+def test_partial_hpx_map_cutout():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90)
+
+    cutout = m.cutout(SkyCoord("0d", "0d"), width=10 * u.deg)
+
+    assert cutout.data.shape == (1, 25)
+    assert_allclose(cutout.data.sum(), 2225)
+    assert_allclose(cutout.data[0, 0], 89)
+    assert_allclose(cutout.data[0, -1], 89)
+
+
+def test_hpx_map_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90)
+
+    m_allsky = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m_allsky.stack(m)
+
+    assert_allclose(m_allsky.data.sum(), (90 * 89) / 2)
+
+    value = m_allsky.get_by_coord(
+        {"skycoord": SkyCoord("110d", "75d", frame="galactic"), "energy": 3 * u.TeV}
+    )
+    assert_allclose(value, 69)
+
+    with pytest.raises(ValueError):
+        m_allsky = HpxNDMap.create(nside=16, frame="galactic", axes=[axis])
+        m_allsky.stack(m)
+
+
+def test_hpx_map_weights_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m.data += np.arange(90) + 1
+
+    weights = m.copy()
+    weights.data = 1 / (np.arange(90) + 1)
+
+    m_allsky = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
+    m_allsky.stack(m, weights=weights)
+
+    assert_allclose(m_allsky.data.sum(), 90)
+
+
+def test_partial_hpx_map_stack():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    m_1 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(110.,75.,20.)")
+    m_1.data += 1
+
+    m_2 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(130.,75.,20.)")
+    m_2.stack(m_1)
+
+    assert_allclose(m_1.data.sum(), 5933)
+    assert_allclose(m_2.data.sum(), 4968)
+
+
+def test_hpx_map_to_region_nd_map():
+    axis = MapAxis.from_energy_bounds("10 GeV", "2 TeV", nbin=10)
+    m = HpxNDMap.create(nside=128, axes=[axis])
+    m.data += 1
+
+    circle = CircleSkyRegion(center=SkyCoord("0d", "0d"), radius=10 * u.deg)
+
+    spec = m.to_region_nd_map(region=circle)
+    assert_allclose(spec.data.sum(), 14660)
+
+    spec_mean = m.to_region_nd_map(region=circle, func=np.mean)
+    assert_allclose(spec_mean.data, 1)
+
+    spec_interp = m.to_region_nd_map(region=circle.center, func=np.mean)
+    assert_allclose(spec_interp.data, 1)
+
+@pytest.mark.parametrize("kernel", ["gauss", "disk"])
+def test_smooth(kernel):
+    axes = [
+        MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
+        MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
+    ]
+    geom_nest = HpxGeom.create(
+        nside=256,nest = False, frame="galactic", axes=axes
+    )
+    geom_ring = HpxGeom.create(
+        nside=256,nest = True, frame="galactic", axes=axes
+    )
+    m_nest = HpxNDMap(geom_nest, data=np.ones(geom_nest.data_shape), unit="m2")
+    m_ring = HpxNDMap(geom_ring, data=np.ones(geom_ring.data_shape), unit="m2")
+
+    desired_nest = m_nest.data.sum()
+    desired_ring = m_ring.data.sum()
+
+    smoothed_nest = m_nest.smooth(0.2 * u.deg, kernel)
+    smoothed_ring = m_ring.smooth(0.2 * u.deg, kernel)
+
+    actual_nest = smoothed_nest.data.sum()
+    assert_allclose(actual_nest, desired_nest)
+    assert smoothed_nest.data.dtype == float
+
+    actual_ring = smoothed_ring.data.sum()
+    assert_allclose(actual_ring, desired_ring)
+    assert smoothed_ring.data.dtype == float
+
+    with pytest.raises(NotImplementedError):
+        cutout = m_nest.cutout(position=(0,0), width=5*u.deg)
+        cutout.smooth(0.2 * u.deg, kernel)
+
+    with pytest.raises(ValueError):
+        m_nest.smooth(0.2 * u.deg, "box")
+
+def test_hpxmap_read_healpy(tmp_path):
+    import healpy as hp
+    path = tmp_path / "tmp.fits"
+    npix = 12 * 1024 * 1024
+    m = [np.arange(npix), np.arange(npix)-1, np.arange(npix)-2]
+    hp.write_map(
+        filename=path,
+        m=m, nest=False,
+        column_names=["data map", "background map", "exposure map"],
+        overwrite=True
+    )
+    with fits.open(path, memmap=False) as hdulist:
+        hdu_out = find_bintable_hdu(hdulist)
+        header = hdu_out.header
+        assert header["PIXTYPE"] == "HEALPIX"
+        assert header["ORDERING"] == "RING"
+        assert header["EXTNAME"] == "xtension"
+        assert header["NSIDE"] == 1024
+        format = HpxConv.identify_hpx_format(header)
+        assert format == "healpy"
+
+    m1 = Map.read(path)
+    assert m1.data.shape[0] == npix
+    diff = np.sum(m[0] - m1.data)
+    assert_allclose(diff, 0.0)

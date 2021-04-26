@@ -280,7 +280,7 @@ def test_sky_diffuse_map(caplog):
     assert radius.unit == "deg"
     assert_allclose(radius.value, 0.64, rtol=1.0e-2)
     assert model.frame == "fk5"
-    assert isinstance(model.to_region(), PolygonSkyRegion)
+    assert isinstance(model.to_region(), RectangleSkyRegion)
 
     with pytest.raises(TypeError):
         model.plot_interative()

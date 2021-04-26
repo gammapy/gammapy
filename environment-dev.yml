@@ -59,6 +59,8 @@ dependencies:
   - sphinx_rtd_theme
   - twine
   - yamllint
-  - nbformat=5.0.8
+  - nbformat==5.0.8
+  - docutils==0.16
+  - h5py==2.10.0
   - pip:
       - pytest-sphinx

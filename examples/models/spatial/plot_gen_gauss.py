@@ -1,7 +1,7 @@
 r"""
 .. _generalized-gaussian-spatial-model:
 
-Generalized Gaussian Spatial Model
+Generalized gaussian spatial model
 ==================================
 
 This is a spatial model parametrising a generalized Gaussian function.

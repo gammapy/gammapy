@@ -16,10 +16,7 @@ __all__ = [
 
 
 class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
-    """One source from the HAWC 2HWC catalog.
-
-    Catalog is represented by `~gammapy.catalog.SourceCatalog2HWC`.
-    """
+    """Base class for the HAWC catalogs objects"""
 
     _source_name_key = "source_name"
 
@@ -67,28 +64,24 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
             f"Position error: {self.data.pos_err:.3f}\n"
         )
 
-    @staticmethod
-    def _info_spectrum_one(d, idx):
-        ss = f"Spectrum {idx}:\n"
-        val, err = d[f"spec{idx}_dnde"].value, d[f"spec{idx}_dnde_err"].value
-        ss += f"Flux at 7 TeV: {val:.3} +- {err:.3} cm-2 s-1 TeV-1\n"
-        val, err = d[f"spec{idx}_index"], d[f"spec{idx}_index_err"]
-        ss += f"Spectral index: {val:.3f} +- {err:.3f}\n"
-        radius = d[f"spec{idx}_radius"]
-        ss += f"Test Radius: {radius:1}\n\n"
-        return ss
-
     def _info_spectrum(self):
         """Print spectral info."""
         ss = "\n*** Spectral info ***\n\n"
-        ss += self._info_spectrum_one(self.data, 0)
+        ss += self._info_spectrum_one(0)
 
         if self.n_models == 2:
-            ss += self._info_spectrum_one(self.data, 1)
+            ss += self._info_spectrum_one(1)
         else:
-            ss += "No second spectrum available for this source"
+            ss += "No second spectrum available"
 
         return ss
+
+
+class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
+    """One source from the HAWC 2HWC catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog2HWC`.
+    """
 
     @property
     def n_models(self):
@@ -108,6 +101,44 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
                 raise ValueError(f"No extended source analysis available: {self.name}")
         else:
             raise ValueError(f"Invalid which: {which!r}")
+
+    def _info_spectrum_one(self, idx):
+        d = self.data
+        ss = f"Spectrum {idx}:\n"
+        val, err = d[f"spec{idx}_dnde"].value, d[f"spec{idx}_dnde_err"].value
+        ss += f"Flux at 7 TeV: {val:.3} +- {err:.3} cm-2 s-1 TeV-1\n"
+        val, err = d[f"spec{idx}_index"], d[f"spec{idx}_index_err"]
+        ss += f"Spectral index: {val:.3f} +- {err:.3f}\n"
+        radius = d[f"spec{idx}_radius"]
+        ss += f"Test Radius: {radius:1}\n\n"
+        return ss
+
+    def spectral_model(self, which="point"):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+
+        * ``which="point"`` -- Spectral model under the point source assumption.
+        * ``which="extended"`` -- Spectral model under the extended source assumption.
+          Only available for some sources. Raise ValueError if not available.
+        """
+        idx = self._get_idx(which)
+
+        pars = {
+            "reference": "7 TeV",
+            "amplitude": self.data[f"spec{idx}_dnde"],
+            "index": -self.data[f"spec{idx}_index"],
+        }
+
+        errs = {
+            "amplitude": self.data[f"spec{idx}_dnde_err"],
+            "index": self.data[f"spec{idx}_index_err"],
+        }
+
+        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
+        return model
 
     def spatial_model(self, which="point"):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
@@ -154,35 +185,6 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         )
 
 
-class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
-    def spectral_model(self, which="point"):
-        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
-
-        * ``which="point"`` -- Spectral model under the point source assumption.
-        * ``which="extended"`` -- Spectral model under the extended source assumption.
-          Only available for some sources. Raise ValueError if not available.
-        """
-        idx = self._get_idx(which)
-
-        pars = {
-            "reference": "7 TeV",
-            "amplitude": self.data[f"spec{idx}_dnde"],
-            "index": -self.data[f"spec{idx}_index"],
-        }
-
-        errs = {
-            "amplitude": self.data[f"spec{idx}_dnde_err"],
-            "index": self.data[f"spec{idx}_index_err"],
-        }
-
-        model = Model.create("PowerLawSpectralModel", "spectral", **pars)
-
-        for name, value in errs.items():
-            model.parameters[name].error = value
-
-        return model
-
-
 class SourceCatalog2HWC(SourceCatalog):
     """HAWC 2HWC catalog.
 
@@ -218,29 +220,52 @@ class SourceCatalog2HWC(SourceCatalog):
 
 
 class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
-    def spectral_model(self, which="point"):
-        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+    """One source from the HAWC 3HWC catalog.
 
-        * ``which="point"`` -- Spectral model under the point source assumption.
-        * ``which="extended"`` -- Spectral model under the extended source assumption.
-          Only available for some sources. Raise ValueError if not available.
-        """
-        idx = self._get_idx(which)
+    Catalog is represented by `~gammapy.catalog.SourceCatalog3HWC`.
+    """
+
+    @property
+    def n_models(self):
+        return 1
+
+    def _info_spectrum_one(self, idx):
+        d = self.data
+        ss = f"Spectrum {idx}:\n"
+        val, errn, errp = (
+            d[f"spec{idx}_dnde"].value,
+            d[f"spec{idx}_dnde_errn"].value,
+            d[f"spec{idx}_dnde_errp"].value,
+        )
+        ss += f"Flux at 7 TeV: {val:.3} {errn:.3} + {errp:.3} cm-2 s-1 TeV-1\n"
+        val, errn, errp = (
+            d[f"spec{idx}_index"],
+            d[f"spec{idx}_index_errn"],
+            d[f"spec{idx}_index_errp"],
+        )
+        ss += f"Spectral index: {val:.3f} {errn:.3f} + {errp:.3f}\n"
+        radius = d[f"spec{idx}_radius"]
+        ss += f"Test Radius: {radius:1}\n\n"
+        return ss
+
+    @property
+    def is_pointlike(self):
+        return self.data[f"spec0_radius"] == 0.0
+
+    def spectral_model(self):
+        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`)."""
 
         pars = {
             "reference": "7 TeV",
-            "amplitude": self.data[f"spec{idx}_dnde"],
-            "index": -self.data[f"spec{idx}_index"],
+            "amplitude": self.data[f"spec0_dnde"],
+            "index": -self.data[f"spec0_index"],
         }
 
         errs = {
-            "index_err": 0.5
-            * (
-                self.data[f"spec_{idx}_index_errp"]
-                + self.data[f"spec_{idx}_index_errn"]
-            ),
-            "amplitude_err": 0.5
-            * (self.data[f"spec_{idx}_dnde_errp"] + self.data[f"spec_{idx}_dnde_errp"]),
+            "index": 0.5
+            * (self.data[f"spec0_index_errp"] + self.data[f"spec0_index_errn"]),
+            "amplitude": 0.5
+            * (self.data[f"spec0_dnde_errp"] + self.data[f"spec0_dnde_errp"]),
         }
 
         model = Model.create("PowerLawSpectralModel", "spectral", **pars)
@@ -249,6 +274,36 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
             model.parameters[name].error = value
 
         return model
+
+    def spatial_model(self):
+        """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
+        pars = {"lon_0": self.data.glon, "lat_0": self.data.glat, "frame": "galactic"}
+
+        if self.is_pointlike:
+            tag = "PointSpatialModel"
+        else:
+            tag = "DiskSpatialModel"
+            pars["r_0"] = self.data[f"spec0_radius"]
+
+        errs = {
+            "lat_0": self.data.pos_err,
+            "lon_0": self.data.pos_err / np.cos(self.data.glat),
+        }
+
+        model = Model.create(tag, "spatial", **pars)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
+        return model
+
+    def sky_model(self):
+        """Sky model (`~gammapy.modeling.models.SkyModel`)."""
+        return SkyModel(
+            spatial_model=self.spatial_model(),
+            spectral_model=self.spectral_model(),
+            name=self.name,
+        )
 
 
 class SourceCatalog3HWC(SourceCatalog):

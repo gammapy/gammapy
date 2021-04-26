@@ -190,9 +190,12 @@ class HpxMap(Map):
         -------
         hdu_list : `~astropy.io.fits.HDUList`
         """
+        if hdu_bands is None:
+            hdu_bands = f"{hdu.upper()}_BANDS"
+
         if self.geom.axes:
             hdu_bands_out = self.geom.to_bands_hdu(
-                hdu=hdu_bands, hdu_skymap=hdu, format=format
+                hdu_bands=hdu_bands, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
@@ -259,25 +262,6 @@ class HpxMap(Map):
     @abc.abstractmethod
     def to_swapped(self):
         """Return a new map with the opposite scheme (ring or nested).
-
-        Returns
-        -------
-        map : `~HpxMap`
-            Map object.
-        """
-        pass
-
-    @abc.abstractmethod
-    def to_ud_graded(self, nside, preserve_counts=False):
-        """Upgrade or downgrade the resolution of the map to the chosen nside.
-
-        Parameters
-        ----------
-        nside : int
-            NSIDE parameter of the new map.
-        preserve_counts : bool
-            Choose whether to preserve counts (total amplitude) or
-            intensity (amplitude per unit solid angle).
 
         Returns
         -------

@@ -10,9 +10,7 @@ __all__ = [
     "interpolate_profile",
 ]
 
-INTERPOLATION_ORDER = {
-    None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3
-}
+INTERPOLATION_ORDER = {None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3}
 
 
 class ScaledRegularGridInterpolator:
@@ -219,3 +217,4 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
     return ScaledRegularGridInterpolator(
         points=(x,), values=sign * y, values_scale=interp_scale
     )
+

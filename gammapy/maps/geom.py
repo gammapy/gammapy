@@ -516,8 +516,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template",
-                  "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -558,15 +557,15 @@ class MapAxes(Sequence):
 
         return table
 
-    def to_table_hdu(self, format="gadf", prefix=None):
+    def to_table_hdu(self, format="gadf", hdu_bands=None):
         """Make FITS table columns for map axes.
 
         Parameters
         ----------
         format : {"gadf", "fgst-ccube", "fgst-template"}
             Format to use.
-        prefix : str
-            HDU name prefix to use
+        hdu_bands : str
+            Name of the bands HDU to use.
 
         Returns
         -------
@@ -577,20 +576,18 @@ class MapAxes(Sequence):
         #  dimensionality of geometry and simplify!!!
 
         if format in ["fgst-ccube", "ogip", "ogip-sherpa"]:
-            hdu = "EBOUNDS"
+            hdu_bands = "EBOUNDS"
         elif format == "fgst-template":
-            hdu = "ENERGIES"
+            hdu_bands = "ENERGIES"
         elif format == "gadf" or format is None:
-            if prefix:
-                hdu = f"{prefix}_BANDS"
-            else:
-                hdu = "BANDS"
+            if hdu_bands is None:
+                hdu_bands = "BANDS"
         else:
             raise ValueError(f"Unknown format {format}")
 
         table = self.to_table(format=format)
         header = self.to_header(format=format)
-        return fits.BinTableHDU(table, name=hdu, header=header)
+        return fits.BinTableHDU(table, name=hdu_bands, header=header)
 
     @classmethod
     def from_table_hdu(cls, hdu, format="gadf"):
@@ -703,6 +700,12 @@ class MapAxes(Sequence):
 
         except ValueError:
             raise ValueError(message)
+
+    @property
+    def center_coord(self):
+        """Center coordinates"""
+        return tuple([ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self])
+
 
 class MapAxis:
     """Class representing an axis of a map.
@@ -2131,8 +2134,8 @@ class Geom(abc.ABC):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def to_bands_hdu(self, hdu=None, hdu_skymap=None, format="gadf"):
-        table_hdu = self.axes.to_table_hdu(format=format, prefix=hdu_skymap)
+    def to_bands_hdu(self, hdu_bands=None, format="gadf"):
+        table_hdu = self.axes.to_table_hdu(format=format, hdu_bands=hdu_bands)
         cols = table_hdu.columns.columns
         cols.extend(self._make_bands_cols())
         return fits.BinTableHDU.from_columns(

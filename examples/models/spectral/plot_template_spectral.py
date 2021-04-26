@@ -1,7 +1,7 @@
 r"""
 .. _template-spectral-model:
 
-Template Spectral Model
+Template spectral model
 =======================
 
 This model is defined by custom tabular values.
