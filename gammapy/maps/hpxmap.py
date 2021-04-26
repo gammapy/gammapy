@@ -190,9 +190,12 @@ class HpxMap(Map):
         -------
         hdu_list : `~astropy.io.fits.HDUList`
         """
+        if hdu_bands is None:
+            hdu_bands = f"{hdu.upper()}_BANDS"
+
         if self.geom.axes:
             hdu_bands_out = self.geom.to_bands_hdu(
-                hdu=hdu_bands, hdu_skymap=hdu, format=format
+                hdu_bands=hdu_bands, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
