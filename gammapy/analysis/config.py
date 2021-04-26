@@ -134,6 +134,13 @@ class FluxPointsConfig(GammapyBaseConfig):
     parameters: dict = {"selection_optional": "all"}
 
 
+class LightCurveConfig(GammapyBaseConfig):
+    time_intervals: TimeRangeConfig = TimeRangeConfig()
+    energy_edges: EnergyAxisConfig = EnergyAxisConfig()
+    source: str = "source"
+    parameters: dict = {"selection_optional": "all"}
+
+
 class FitConfig(GammapyBaseConfig):
     fit_range: EnergyRangeConfig = EnergyRangeConfig()
 
@@ -223,7 +230,8 @@ class AnalysisConfig(GammapyBaseConfig):
     fit: FitConfig = FitConfig()
     flux_points: FluxPointsConfig = FluxPointsConfig()
     excess_map: ExcessMapConfig = ExcessMapConfig()
-
+    light_curve: LightCurveConfig = LightCurveConfig()
+    
     def __str__(self):
         """Display settings in pretty YAML format."""
         info = self.__class__.__name__ + "\n\n\t"

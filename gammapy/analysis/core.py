@@ -7,7 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator
+from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator, LightCurveEstimator
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
@@ -112,7 +112,11 @@ class Analysis:
         if observations_settings.obs_time.start is not None:
             start = observations_settings.obs_time.start
             stop = observations_settings.obs_time.stop
-            self.observations = self.observations.select_time([(start, stop)])
+            if len(start.shape) == 0:
+                time_intervals = [(start, stop)]
+            else:
+                time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
+            self.observations = self.observations.select_time(time_intervals)
         log.info(f"Number of selected observations: {len(self.observations)}")
         for obs in self.observations:
             log.debug(obs)
@@ -229,6 +233,30 @@ class Analysis:
             **excess_settings.parameters
         )
         self.excess_map = excess_map_estimator.run(self.datasets[0])
+
+    def get_light_curve(self):
+        """Calculate light curve for a specific model component."""
+        lc_settings = self.config.light_curve
+        log.info("Computing light curve.")
+        energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
+
+        if lc_settings.time_intervals.start is None or lc_settings.time_intervals.stop is None:
+            log.info("Time intervals not defined. Extract light curve on datasets GTIs.")
+            time_intervals=None
+        else:
+            time_intervals = [(t1, t2) for t1, t2 in
+                              zip(lc_settings.time_intervals.start, lc_settings.time_intervals.stop)]
+
+        light_curve_estimator = LightCurveEstimator(
+            time_intervals=time_intervals,
+            energy_edges=energy_edges,
+            source=lc_settings.source,
+            **lc_settings.parameters,
+        )
+        lc = light_curve_estimator.run(datasets=self.datasets)
+        lc.table["is_ul"] = lc.table["ts"] < 4
+        self.light_curve = lc
+        log.info("\n{}".format(self.light_curve.table))
 
     def update_config(self, config):
         self.config = self.config.update(config=config)

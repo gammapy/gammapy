@@ -6,6 +6,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from pydantic import ValidationError
 from gammapy.analysis.config import AnalysisConfig, FrameEnum, GeneralConfig
+from gammapy.utils.testing import assert_allclose
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 DOC_FILE = CONFIG_PATH / "docs.yaml"
@@ -103,3 +104,31 @@ def test_safe_mask_config_validation():
 
     with pytest.raises(ValidationError):
         config.datasets.safe_mask.methods = ["bad"]
+
+def test_time_range_iso():
+    cfg = """
+    observations:
+        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+        obs_ids: [23523, 23526]
+        obs_time: {
+            start: [2004-12-04 22:04:48.000, 2004-12-04 22:26:24.000, 2004-12-04 22:53:45.600], 
+            stop: [2004-12-04 22:26:24.000, 2004-12-04 22:53:45.600, 2004-12-04 23:31:12.000]
+            }
+    """
+    config = AnalysisConfig.from_yaml(cfg)
+
+    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954] )
+
+def test_time_range_jyear():
+    cfg = """
+    observations:
+        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+        obs_ids: [23523, 23526]
+        obs_time: {
+            start: [J2004.92654346, J2004.92658453, J2004.92663655], 
+            stop: [J2004.92658453, J2004.92663655, J2004.92670773]
+            }
+    """
+    config = AnalysisConfig.from_yaml(cfg)
+
+    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954] )
