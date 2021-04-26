@@ -1618,3 +1618,22 @@ def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
 
     assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
     assert dataset.psf.psf_map.data.shape == (4, 66, 24)
+
+
+def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
+
+    dataset_all = MapDataset.create(**geom_hpx, binsz_irf=5 * u.deg)
+
+    gti = GTI.create(start=0 * u.s, stop=30 * u.min)
+    dataset_cutout = MapDataset.create(**geom_hpx_partial, binsz_irf=5 * u.deg, gti=gti)
+    dataset_cutout.counts.data += 1
+    dataset_cutout.background.data += 1
+    dataset_cutout.exposure.data += 1
+    dataset_cutout.mask_safe.data[...] = True
+
+    dataset_all.stack(dataset_cutout)
+
+    assert_allclose(dataset_all.counts.data.sum(), 3 * 90)
+    assert_allclose(dataset_all.background.data.sum(), 3 * 90)
+    assert_allclose(dataset_all.exposure.data.sum(), 4 * 90)
+
