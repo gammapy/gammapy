@@ -79,6 +79,7 @@ def test_create_axis(region, energy_axis, test_axis):
     assert geom.ndim == 3
     assert len(geom.axes) == 1
     assert geom.data_shape == (3, 1, 1)
+    assert geom.data_shape_axes == (3, 1, 1)
 
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
     assert geom.ndim == 4
