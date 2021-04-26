@@ -8,9 +8,9 @@ PIG 20 - Global Model API
 
 * Author: Axel Donath, Régis Terrier and Quentin Remy
 * Created: Jun 10, 2020
-* Accepted:
-* Status:
-* Discussion:
+* Withdrawn: Apr 30th, 2021
+* Status: withdrawn
+* Discussion: `GH 2942`_
 
 Abstract
 ========
@@ -126,8 +126,6 @@ In this case we drop the model from the dataset.
 Background Model Handling
 -------------------------
 
-We propose to
-
 We also propose to extend the ``BackgroundModel`` to include a spectral model
 component like so:
 
@@ -159,8 +157,12 @@ the ``BackgroundModel`` class.
 
 Decision
 ========
+The authors decided to withdraw the PIG. Most of the proposed changes have been
+discussed and implemented independently in small contributions and discussion
+with the Gammapy developer team.
 
 
+.. _GH 2942: https://github.com/gammapy/gammapy/pull/2942
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-web: https://github.com/gammapy/gammapy-webpage
 
