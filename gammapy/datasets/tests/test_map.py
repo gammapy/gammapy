@@ -21,7 +21,7 @@ from gammapy.irf import (
 )
 
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
+from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap, HpxGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -35,6 +35,32 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.gauss import Gauss2DPDF
+
+
+@pytest.fixture
+def geom_hpx():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    geom = HpxGeom.create(nside=32, axes=[axis], frame="galactic")
+
+    return {"geom": geom, "energy_axis_true": energy_axis_true}
+
+
+@pytest.fixture
+def geom_hpx_partial():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    geom = HpxGeom.create(nside=32, axes=[axis], frame="galactic", region="DISK(110.,75.,10.)")
+
+    return {"geom": geom, "energy_axis_true": energy_axis_true}
 
 
 @pytest.fixture
@@ -1552,3 +1578,64 @@ def test_map_dataset_region_geom_npred():
     npred = dataset_spec.npred()
 
     assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
+
+
+@requires_dependency("healpy")
+def test_map_dataset_create_hpx_geom(geom_hpx):
+
+    dataset = MapDataset.create(**geom_hpx, binsz_irf=10 * u.deg)
+
+    assert isinstance(dataset.counts.geom, HpxGeom)
+    assert dataset.counts.data.shape == (3, 12288)
+
+    assert isinstance(dataset.background.geom, HpxGeom)
+    assert dataset.background.data.shape == (3, 12288)
+
+    assert isinstance(dataset.exposure.geom, HpxGeom)
+    assert dataset.exposure.data.shape == (4, 12288)
+
+    assert isinstance(dataset.edisp.edisp_map.geom, HpxGeom)
+    assert dataset.edisp.edisp_map.data.shape == (4, 3, 768)
+
+    assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
+    assert dataset.psf.psf_map.data.shape == (4, 66, 768)
+
+
+@requires_dependency("healpy")
+def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
+
+    dataset = MapDataset.create(**geom_hpx_partial, binsz_irf=2 * u.deg)
+
+    assert isinstance(dataset.counts.geom, HpxGeom)
+    assert dataset.counts.data.shape == (3, 90)
+
+    assert isinstance(dataset.background.geom, HpxGeom)
+    assert dataset.background.data.shape == (3, 90)
+
+    assert isinstance(dataset.exposure.geom, HpxGeom)
+    assert dataset.exposure.data.shape == (4, 90)
+
+    assert isinstance(dataset.edisp.edisp_map.geom, HpxGeom)
+    assert dataset.edisp.edisp_map.data.shape == (4, 3, 24)
+
+    assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
+    assert dataset.psf.psf_map.data.shape == (4, 66, 24)
+
+
+@requires_dependency("healpy")
+def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
+
+    dataset_all = MapDataset.create(**geom_hpx, binsz_irf=5 * u.deg)
+
+    gti = GTI.create(start=0 * u.s, stop=30 * u.min)
+    dataset_cutout = MapDataset.create(**geom_hpx_partial, binsz_irf=5 * u.deg, gti=gti)
+    dataset_cutout.counts.data += 1
+    dataset_cutout.background.data += 1
+    dataset_cutout.exposure.data += 1
+    dataset_cutout.mask_safe.data[...] = True
+
+    dataset_all.stack(dataset_cutout)
+
+    assert_allclose(dataset_all.counts.data.sum(), 3 * 90)
+    assert_allclose(dataset_all.background.data.sum(), 3 * 90)
+    assert_allclose(dataset_all.exposure.data.sum(), 4 * 90)

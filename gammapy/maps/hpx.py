@@ -681,6 +681,11 @@ class HpxGeom(Geom):
         return self.axes.shape
 
     @property
+    def data_shape_axes(self):
+        """Shape of data of the non-spatial axes and unit spatial axes."""
+        return self.axes.shape[::-1] + (1,)
+
+    @property
     def ndim(self):
         """Number of dimensions (int)."""
         return len(self._axes) + 2

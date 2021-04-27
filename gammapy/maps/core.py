@@ -1281,7 +1281,7 @@ class Map(abc.ABC):
         axis_idx = self.geom.axes.index_data(axis_name)
 
         # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
-        shape = [1] * self.geom.ndim
+        shape = [1] * len(self.geom.data_shape)
         shape[axis_idx] = -1
 
         values = self.quantity * axis.bin_width.reshape(shape)

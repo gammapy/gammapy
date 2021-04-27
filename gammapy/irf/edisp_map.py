@@ -332,7 +332,7 @@ class EDispKernelMap(IRFMap):
         data = get_overlap_fraction(energy_axis, energy_axis_true)
 
         edisp_kernel_map = Map.from_geom(geom, unit="")
-        edisp_kernel_map.quantity += data[:, :, np.newaxis, np.newaxis]
+        edisp_kernel_map.quantity += data.reshape(geom.data_shape_axes)
         return cls(edisp_kernel_map=edisp_kernel_map, exposure_map=exposure)
 
     def get_edisp_kernel(self, position=None, energy_axis=None):

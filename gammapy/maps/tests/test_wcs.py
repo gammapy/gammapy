@@ -234,6 +234,7 @@ def test_cutout():
     assert_allclose(center_coord[2].value, 2.0)
 
     assert cutout_geom.data_shape == (2, 6, 6)
+    assert cutout_geom.data_shape_axes == (2, 1, 1)
 
 
 def test_cutout_info():
@@ -316,6 +317,7 @@ def test_wcsgeom_resample_overflows():
     geom_resample = geom.resample_axis(axis=new_axis)
 
     assert geom_resample.data_shape == (3, 2, 3, 3)
+    assert geom_resample.data_shape_axes == (3, 2, 1, 1)
     assert_allclose(geom_resample.axes[0].edges, [1, 2, 5])
 
 

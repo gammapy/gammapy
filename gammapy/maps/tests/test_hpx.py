@@ -712,6 +712,7 @@ def test_hpx_geom_cutout():
 
     assert cutout.nside == 8
     assert cutout.data_shape == (2, 14)
+    assert cutout.data_shape_axes == (2, 1)
 
     center = cutout.center_skydir.icrs
     assert_allclose(center.ra.deg, 0, atol=1e-8)
