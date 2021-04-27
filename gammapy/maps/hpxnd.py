@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.io import fits
-from astropy.units import Quantity
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -414,8 +414,8 @@ class HpxNDMap(HpxMap):
         nest = self.geom.nest
 
         # The smoothing width is expected by healpy in radians
-        if isinstance(width, (Quantity, str)):
-            width = Quantity(width)
+        if isinstance(width, (u.Quantity, str)):
+            width = u.Quantity(width)
             width = width.to_value("rad")
         else:
             binsz = np.degrees(hp.nside2resol(nside))
@@ -453,6 +453,47 @@ class HpxNDMap(HpxMap):
 
         return self._init_copy(data=smoothed_data)
 
+    def convolve_wcs(self, kernel, use_fft=True, **kwargs):
+        """
+        Convolve map with a WCS kernel.
+
+        It projects the map into a WCS geometry, convolves with a WCS kernel and
+        projects back into the initial Healpix geometry.
+
+        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is higher dimensional it must match the map in the number of
+        dimensions and the corresponding kernel is selected for every image plane.
+
+        Parameters
+        ----------
+        kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
+            Convolution kernel. Must have the same geometry as
+            `self.to_wcs()`.
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `ndi.convolve` otherwise.
+        kwargs : dict
+            Keyword arguments passed to `scipy.signal.fftconvolve` or
+            `ndi.convolve`.
+
+        Returns
+        -------
+        map : `HpxNDMap`
+            Convolved map.
+        """
+        if self.geom.width < 10*u.deg:
+            # Project to WCS and convolve
+            wcs_map  = self.to_wcs(fill_nan = False)
+            conv_wcs_map = wcs_map.convolve(kernel, use_fft,**kwargs)
+            # and back to hpx
+            hpx_data = HpxNDMap.from_geom(self.geom).data
+            hpx2wcs = HpxToWcsMapping.create(self.geom, conv_wcs_map.geom)
+            hpx_data = hpx2wcs.fill_hpx_map_from_wcs_data(conv_wcs_map.data, hpx_data)
+            conv_hpx_map = HpxNDMap.from_geom(self.geom, data = hpx_data)
+            return conv_hpx_map
+        else:
+            raise NotImplementedError('Convolution via a WCS geometry is not supported for large maps.')
+
     def get_by_idx(self, idx):
         # inherited docstring
         idx = pix_tuple_to_idx(idx)
@@ -477,7 +518,7 @@ class HpxNDMap(HpxMap):
                 idx = np.clip(idx, 0, len(ax.center) - 2)
 
                 w = ax.center[idx + 1] - ax.center[idx]
-                c = Quantity(coords[ax.name], ax.center.unit, copy=False).value
+                c = u.Quantity(coords[ax.name], ax.center.unit, copy=False).value
 
                 if i & (1 << j):
                     wt *= (c - ax.center[idx].value) / w.value
@@ -506,7 +547,7 @@ class HpxNDMap(HpxMap):
         msk = idx_local[0] >= 0
         idx_local = [t[msk] for t in idx_local]
         if weights is not None:
-            if isinstance(weights, Quantity):
+            if isinstance(weights, u.Quantity):
                 weights = weights.to_value(self.unit)
             weights = weights[msk]
 

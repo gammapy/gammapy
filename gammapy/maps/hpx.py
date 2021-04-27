@@ -1864,7 +1864,7 @@ class HpxToWcsMapping:
         return wcs_data
 
     def fill_hpx_map_from_wcs_data(
-        self, wcs_data, hpx_data, normalize=True, fill_nan=True
+        self, wcs_data, hpx_data, normalize=True
     ):
         """Fill the HPX map from the WCS data using the pre-calculated mappings.
 
