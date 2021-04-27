@@ -1769,6 +1769,13 @@ class MapAxis:
             except KeyError:
                 rad = table["Theta"].data * u.deg
                 axis = MapAxis.from_nodes(rad, name="rad")
+        elif format == "gadf-sed":
+            sed_type = table.meta.get("SED_TYPE")
+            if sed_type in ["dnde", "e2dnde"]:
+                axis = MapAxis.from_nodes(table["e_ref"].quantity, name="energy", interp="log")
+            else:
+                edges = edges_from_lo_hi(table["e_min"].quantity, table["e_max"].quantity)
+                axis = MapAxis.from_energy_edges(edges)
         else:
             raise ValueError(f"Format '{format}' not supported")
 
