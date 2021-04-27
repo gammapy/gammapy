@@ -145,10 +145,10 @@ def test_fermi_to_dnde():
 
     catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
     src = catalog_4fgl["FGES J1553.8-5325"]
-    fp_dnde = src.flux_points.to_sed_type("dnde", model=src.spectral_model())
+    fp = src.flux_points
 
     assert_allclose(
-        fp_dnde.table["dnde"].quantity[1],
+        fp.dnde[1],
         4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"),
         rtol=1e-5,
     )

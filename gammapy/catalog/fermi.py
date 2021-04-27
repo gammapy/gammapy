@@ -455,8 +455,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
-        table["sqrt_TS"] = self.data["Sqrt_TS_Band"]
-        return FluxPoints(table)
+        table["sqrt_ts"] = self.data["Sqrt_TS_Band"]
+        return FluxPoints.from_table(table, reference_model=self.spectral_model())
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = self.data[prefix]
