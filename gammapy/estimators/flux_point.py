@@ -727,6 +727,7 @@ class FluxPoints(FluxEstimate):
         add_cbar=True,
         y_values=None,
         y_unit=None,
+        sed_type="dnde",
         **kwargs,
     ):
         """Plot fit statistic SED profiles as a density plot.
@@ -757,10 +758,10 @@ class FluxPoints(FluxEstimate):
             ax = plt.gca()
 
         self._validate_table(self.table, "likelihood", use_optional=True)
-        y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
+        y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
 
         if y_values is None:
-            ref_values = self.table["ref_" + self.sed_type].quantity
+            ref_values = getattr(self, sed_type + "_ref")
             y_values = np.logspace(
                 np.log10(0.2 * ref_values.value.min()),
                 np.log10(5 * ref_values.value.max()),
@@ -772,9 +773,10 @@ class FluxPoints(FluxEstimate):
 
         # Compute fit statistic "image" one energy bin at a time
         # by interpolating e2dnde at the log bin centers
-        z = np.empty((len(self.table), len(y_values)))
+        z = np.empty((len(self.norm), len(y_values)))
+
         for idx, row in enumerate(self.table):
-            y_ref = self.table["ref_" + self.sed_type].quantity[idx]
+            y_ref = getattr(self, sed_type + "_ref")[idx]
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
             ts_scan = row["stat_scan"] - row["stat"]
@@ -793,7 +795,7 @@ class FluxPoints(FluxEstimate):
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
-        ax.set_ylabel(f"{self.sed_type} ({y_values.unit})")
+        ax.set_ylabel(f"{sed_type} ({y_values.unit})")
 
         if add_cbar:
             label = "fit statistic difference"
