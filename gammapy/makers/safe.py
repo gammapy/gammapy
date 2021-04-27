@@ -83,6 +83,9 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Maximum offset mask.
         """
+        if observation is None:
+            raise ValueError("Method 'offset-max' requires an observation object.")
+
         separation = dataset._geom.separation(observation.pointing_radec)
         return separation < self.offset_max
 
@@ -102,6 +105,9 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        if observation is None:
+            raise ValueError("Method 'offset-max' requires an observation object.")
+
         try:
             energy_max = observation.aeff.meta["HI_THRES"] * u.TeV
             energy_min = observation.aeff.meta["LO_THRES"] * u.TeV
