@@ -36,6 +36,32 @@ DEFAULT_UNIT = {
 }
 
 
+REQUIRED_MAPS = {
+    "dnde": ["dnde"],
+    "e2dnde": ["e2dnde"],
+    "flux": ["flux"],
+    "eflux": ["eflux"],
+    "likelihood": ["norm"],
+}
+
+
+# TODO: add an entry for is_ul?
+OPTIONAL_MAPS = {
+    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
+    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
+    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul"],
+    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
+    "likelihood": [
+        "norm_err",
+        "norm_errn",
+        "norm_errp",
+        "norm_ul",
+        "norm_scan",
+        "stat_scan",
+    ],
+}
+
+
 class Estimator(abc.ABC):
     """Abstract estimator base class."""
 
@@ -163,19 +189,36 @@ class FluxEstimate:
         self._data = data
 
         if hasattr(self._data["norm"], "geom"):
-            self.energy_axis = self.data["norm"].geom.axes["energy"]
+            self._energy_axis = self.data["norm"].geom.axes["energy"]
             self._expand_slice = (slice(None), np.newaxis, np.newaxis)
         else:
             # Here we assume there is only one row per energy
-            e_edges = self._data["e_min"].quantity
-            e_edges = e_edges.insert(len(self._data), self._data["e_max"].quantity[-1])
-            self.energy_axis = MapAxis.from_energy_edges(e_edges)
+            self._energy_axis = MapAxis.from_table(table=data, format="gadf-sed")
             self._expand_slice = slice(None)
 
         # Note that here we could use the specification from dnde_ref to build piecewise PL
         # But does it work beyond min and max centers?
 
         self._reference_spectral_model = reference_spectral_model
+
+    @staticmethod
+    def _validate_type(maps, sed_type):
+        """Check that map input is valid and correspond to one of the SED type."""
+        try:
+            required = set(REQUIRED_MAPS[sed_type])
+        except KeyError:
+            raise ValueError(f"Unknown SED type.")
+
+        if not required.issubset(maps.keys()):
+            missing = required.difference(maps.keys())
+            raise ValueError(
+                "Missing maps for sed type '{}':" " {}".format(sed_type, missing)
+            )
+
+    @property
+    def energy_axis(self):
+        """Energy axis (`MapAxis`)"""
+        return self._energy_axis
 
     @property
     def reference_spectral_model(self):
