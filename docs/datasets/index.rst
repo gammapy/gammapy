@@ -66,13 +66,6 @@ runs are binned together to get one final dataset for which a likelihood is
 computed during the fit. Stacking is often useful to reduce the computation effort while
 analysing multiple runs.
 
-For the model evaluation, an important factor that needs to be accounted for is
-that the energy threshold changes between obseravtions.
-To ensure that the `npred` (ie, the predicted number of counts) on the stacked
-dataset is the sum expected by stacking the npred of the individual runs,
-a `~gammapy.irf.EDispersionMap` is used, which contains the
-The mask_safe from each dataset is applied on the respective reconstructed energy axis
-of the energy dispersion matrix, and the masked matrices are combined.
 
 The following table  lists how the individual quantities are handled during stacking.
 Here, :math:`k` denotes a bin in reconstructed energy,
@@ -114,7 +107,14 @@ Here, :math:`k` denotes a bin in reconstructed energy,
      - Union of individual `gti`
      -
 
-The following plot shows the individual and stacked attributes for two `SpectrumDataset`
+For the model evaluation, an important factor that needs to be accounted for is
+that the energy threshold changes between obseravtions.
+With the above implementation using a `~gammapy.irf.EDispersionMap`,
+the `npred` is conserved,
+ie, the predicted number of counts on the stacked
+dataset is the sum expected by stacking the `npred` of the individual runs,
+
+The following plot shows the individual and stacked energy dispersion kernel and `npred`  for two `SpectrumDataset`
 
 .. plot:: datasets/plot_stack.py
 

@@ -31,28 +31,19 @@ dataset_stacked.models = model
 
 
 plt.figure(figsize=(20, 5))
-ax1 = plt.subplot(131)
-ax2 = plt.subplot(132)
-ax3 = plt.subplot(133)
+ax1 = plt.subplot(141)
+ax2 = plt.subplot(142)
+ax3 = plt.subplot(143)
+ax4 = plt.subplot(144)
 
-c1 = dataset1.counts * dataset1.mask_safe
-c2 = dataset2.counts * dataset2.mask_safe
+dataset1.edisp.get_edisp_kernel().plot_matrix()
+ax1.set_title("Energy dispersion dataset1")
 
-c1.plot_hist(ax=ax1, label="dataset1")
-c2.plot_hist(ax=ax1, label="dataset2")
-(c1 + c2).plot(color="green", ax=ax1, fmt="o", label="dataset1 + dataset2")
-dataset_stacked.counts.plot(ax=ax1, fmt="+", label="stacked", color="black")
-ax1.legend()
-ax1.set_title("counts")
+dataset2.edisp.get_edisp_kernel().plot_matrix()
+ax2.set_title("Energy dispersion dataset2")
 
-b1 = dataset1.background * dataset1.mask_safe
-b2 = dataset2.background * dataset2.mask_safe
-b1.plot_hist(ax=ax2, label="dataset1")
-b2.plot_hist(ax=ax2, label="dataset2")
-(b1 + b2).plot(color="green", ax=ax2, fmt="o", label="dataset1 + dataset2")
-dataset_stacked.background.plot(ax=ax2, fmt="+", label="stacked", color="black")
-ax2.legend()
-ax2.set_title("background")
+dataset_stacked.edisp.get_edisp_kernel().plot_matrix()
+ax2.set_title("Energy dispersion stacked")
 
 n1 = dataset1.npred() * dataset1.mask_safe
 n2 = dataset2.npred() * dataset2.mask_safe
