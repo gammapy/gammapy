@@ -10,6 +10,7 @@ from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.maps.utils import find_bintable_hdu
 from gammapy.maps.hpx import HpxConv
+from gammapy.irf import PSFKernel
 
 pytest.importorskip("healpy")
 
@@ -500,6 +501,20 @@ def test_smooth(kernel):
 
     with pytest.raises(ValueError):
         m_nest.smooth(0.2 * u.deg, "box")
+
+def test_convolve():
+    energy = MapAxis.from_bounds(1,100, unit='TeV', nbin=2, name='energy')
+    nside = 1024
+    hpx_geom = HpxGeom.create(
+        nside=nside,
+        axes=[energy],
+        region='DISK(0,0,2.5)',
+        )
+    hpx_map = Map.from_geom(hpx_geom)
+    hpx_map.set_by_coord((0,0, [2,90]), 1)
+    kernel = PSFKernel.from_gauss(hpx_geom.to_wcs_geom(), 0.1*u.deg)
+    convolved_map = hpx_map.convolve_wcs(kernel)
+    assert_allclose(convolved_map.data.sum(), 2, rtol=0.01)
 
 def test_hpxmap_read_healpy(tmp_path):
     import healpy as hp
