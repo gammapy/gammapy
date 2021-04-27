@@ -120,7 +120,7 @@ class FluxPoints(FluxEstimate):
     """
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(sed_type={self.sed_type!r}, n_points={len(self.table)})"
+        return f"{self.__class__.__name__}(n_points={len(self.table)})"
 
     @property
     def table(self):
@@ -207,7 +207,7 @@ class FluxPoints(FluxEstimate):
             self.table.write(filename, **kwargs)
 
     @classmethod
-    def stack(cls, flux_points):
+    def from_stack(cls, flux_points):
         """Create flux points by stacking list of flux points.
 
         The first `FluxPoints` object in the list is taken as a reference to infer
@@ -223,25 +223,20 @@ class FluxPoints(FluxEstimate):
         flux_points : `FluxPoints`
             Flux points without upper limit points.
         """
-        reference = flux_points[0].table
-
         tables = []
+
         for _ in flux_points:
-            table = _.table
-            for colname in reference.colnames:
-                column = reference[colname]
-                if column.unit:
-                    table[colname] = table[colname].quantity.to(column.unit)
-            tables.append(table[reference.colnames])
+            tables.append(_.table)
 
-        table_stacked = vstack(tables)
-        table_stacked.meta["SED_TYPE"] = reference.meta["SED_TYPE"]
+        table = vstack(tables)
 
-        return cls(table_stacked)
+        return cls(data=table, reference_spectral_model=flux_points[0].reference_spectral_model)
 
     @classmethod
     def from_table(cls, table, sed_type=None, reference_model=None):
         """"""
+        table = table_standardise_units_copy(table)
+
         if sed_type is None:
             try:
                 sed_type = table.meta["SED_TYPE"]
@@ -307,7 +302,7 @@ class FluxPoints(FluxEstimate):
         ``gammapy download datasets --tests --out $GAMMAPY_DATA``
         """
         table_drop_ul = self.table[~self.is_ul]
-        return self.__class__(table_drop_ul)
+        return self.__class__(data=table_drop_ul, reference_spectral_model=self.reference_spectral_model)
 
     def _flux_to_dnde(self, energy_ref, table, model, pwl_approx):
         if model is None:
@@ -696,7 +691,7 @@ class FluxPoints(FluxEstimate):
                     x_errp[is_ul].to_value(energy_unit),
                 )
 
-            y_ul = self.table[sed_type + "_ul"].quantity
+            y_ul = getattr(self, sed_type + "_ul")
             y_ul = (y_ul * np.power(x, energy_power)).to(y_unit)
 
             y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))

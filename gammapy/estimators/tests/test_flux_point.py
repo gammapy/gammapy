@@ -123,18 +123,19 @@ def test_compute_flux_points_dnde_exp(method):
         energy_ref = np.sqrt(energy_min * energy_max)
     elif method == "table":
         energy_ref = [2.0, 20.0] * u.TeV
-        table["e_ref"] = energy_ref
     elif method == "lafferty":
         energy_ref = FluxPoints._energy_ref_lafferty(model, energy_min, energy_max)
 
-    result = FluxPoints(table).to_sed_type("dnde", model=model, method=method)
+    table["e_ref"] = energy_ref
+
+    result = FluxPoints.from_table(table, reference_model=model)
 
     # Test energy
     actual = result.energy_ref
     assert_quantity_allclose(actual, energy_ref, rtol=1e-8)
 
     # Test flux
-    actual = result.table["dnde"].quantity
+    actual = result.dnde
     desired = model(energy_ref)
     assert_quantity_allclose(actual, desired, rtol=1e-8)
 
@@ -170,31 +171,22 @@ def flux_points_likelihood():
 class TestFluxPoints:
     def test_info(self, flux_points):
         info = str(flux_points)
-        assert flux_points.sed_type in info
+        assert "n_points" in info
 
     def test_energy_ref(self, flux_points):
         actual = flux_points.energy_ref
-        if flux_points.sed_type == "dnde":
-            pass
-        elif flux_points.sed_type == "flux":
-            desired = np.sqrt(flux_points.energy_min * flux_points.energy_max)
-            assert_quantity_allclose(actual, desired)
+        desired = np.sqrt(flux_points.energy_min * flux_points.energy_max)
+        assert_quantity_allclose(actual, desired)
 
     def test_energy_min(self, flux_points):
-        if flux_points.sed_type == "dnde":
-            pass
-        elif flux_points.sed_type == "flux":
-            actual = flux_points.energy_min
-            desired = 299530.97 * u.MeV
-            assert_quantity_allclose(actual.sum(), desired)
+        actual = flux_points.energy_min
+        desired = 299530.97 * u.MeV
+        assert_quantity_allclose(actual.sum(), desired)
 
     def test_energy_max(self, flux_points):
-        if flux_points.sed_type == "dnde":
-            pass
-        elif flux_points.sed_type == "flux":
-            actual = flux_points.energy_max
-            desired = 399430.975 * u.MeV
-            assert_quantity_allclose(actual.sum(), desired)
+        actual = flux_points.energy_max
+        desired = 399430.975 * u.MeV
+        assert_quantity_allclose(actual.sum(), desired)
 
     def test_write_fits(self, tmp_path, flux_points):
         flux_points.write(tmp_path / "tmp.fits")
@@ -209,11 +201,6 @@ class TestFluxPoints:
     def test_drop_ul(self, flux_points):
         flux_points = flux_points.drop_ul()
         assert not np.any(flux_points.is_ul)
-
-    def test_stack(self, flux_points):
-        stacked = FluxPoints.stack([flux_points, flux_points])
-        assert len(stacked.table) == 2 * len(flux_points.table)
-        assert stacked.sed_type == flux_points.sed_type
 
     @requires_dependency("matplotlib")
     def test_plot(self, flux_points):
