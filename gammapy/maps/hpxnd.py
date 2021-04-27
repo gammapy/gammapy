@@ -379,8 +379,10 @@ class HpxNDMap(HpxMap):
                 raise ValueError("Incompatible spatial geoms between map and weights")
             data = data * weights.data
 
-        self.data[..., idx] += data
-
+        if idx is None:
+            self.data += data
+        else:
+            self.data[..., idx] += data
 
     def smooth(self, width, kernel="gauss"):
         """Smooth the map.
