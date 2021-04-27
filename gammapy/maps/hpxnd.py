@@ -220,6 +220,7 @@ class HpxNDMap(HpxMap):
         oversample=2,
         width_pix=None,
         hpx2wcs=None,
+        fill_nan=True
     ):
         from .wcsnd import WcsNDMap
 
@@ -257,7 +258,7 @@ class HpxNDMap(HpxMap):
             wcs = hpx2wcs.wcs.to_cube(self.geom.axes)
 
         # FIXME: Should reimplement instantiating map first and fill data array
-        hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
+        hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize, fill_nan)
         return WcsNDMap(wcs, wcs_data, unit=self.unit)
 
     def _pad_spatial(self, pad_width, mode="constant", cval=0):
@@ -330,7 +331,7 @@ class HpxNDMap(HpxMap):
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout region.
         width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
-            Radius of the circular cutout region.
+            Diameter of the circular cutout region.
 
         Returns
         -------

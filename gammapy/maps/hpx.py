@@ -564,7 +564,7 @@ class HpxGeom(Geom):
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout region.
         width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
-            Radius of the circular cutout region.
+            Diameter of the circular cutout region.
 
         Returns
         -------
