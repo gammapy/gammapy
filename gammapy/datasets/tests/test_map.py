@@ -1580,6 +1580,7 @@ def test_map_dataset_region_geom_npred():
     assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
 
 
+@requires_dependency("healpy")
 def test_map_dataset_create_hpx_geom(geom_hpx):
 
     dataset = MapDataset.create(**geom_hpx, binsz_irf=10 * u.deg)
@@ -1600,6 +1601,7 @@ def test_map_dataset_create_hpx_geom(geom_hpx):
     assert dataset.psf.psf_map.data.shape == (4, 66, 768)
 
 
+@requires_dependency("healpy")
 def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
 
     dataset = MapDataset.create(**geom_hpx_partial, binsz_irf=2 * u.deg)
@@ -1620,6 +1622,7 @@ def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
     assert dataset.psf.psf_map.data.shape == (4, 66, 24)
 
 
+@requires_dependency("healpy")
 def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
 
     dataset_all = MapDataset.create(**geom_hpx, binsz_irf=5 * u.deg)
@@ -1636,4 +1639,3 @@ def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
     assert_allclose(dataset_all.counts.data.sum(), 3 * 90)
     assert_allclose(dataset_all.background.data.sum(), 3 * 90)
     assert_allclose(dataset_all.exposure.data.sum(), 4 * 90)
-
