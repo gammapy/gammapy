@@ -624,7 +624,7 @@ class FluxPoints(FluxEstimate):
         return self.table["e_max"].quantity
 
     def plot(
-        self, ax=None, energy_unit="TeV", flux_unit=None, energy_power=0, **kwargs
+        self, ax=None, energy_unit="TeV", flux_unit=None, energy_power=0, sed_type="dnde", **kwargs
     ):
         """Plot flux points.
 
@@ -651,16 +651,15 @@ class FluxPoints(FluxEstimate):
         if ax is None:
             ax = plt.gca()
 
-        sed_type = self.sed_type
         y_unit = u.Unit(flux_unit or DEFAULT_UNIT[sed_type])
 
-        y = self.table[sed_type].quantity.to(y_unit)
+        y = getattr(self, sed_type).to(y_unit)
         x = self.energy_ref.to(energy_unit)
 
         # get errors and ul
         is_ul = self.is_ul
         x_err_all = self._plot_get_energy_err()
-        y_err_all = self._plot_get_flux_err(sed_type)
+        y_err_all = self._plot_get_flux_err(sed_type=sed_type)
 
         # handle energy power
         energy_unit_y = self._get_y_energy_unit(y_unit)
@@ -718,7 +717,7 @@ class FluxPoints(FluxEstimate):
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
-        ax.set_ylabel(f"{self.sed_type} ({y_unit})")
+        ax.set_ylabel(f"{sed_type} ({y_unit})")
         return ax
 
     def plot_ts_profiles(
