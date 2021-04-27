@@ -236,6 +236,7 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
 
 
+@requires_data()
 @requires_dependency("healpy")
 def test_map_dataset_maker_hpx(geom_config_hpx, observations):
     reference = MapDataset.create(**geom_config_hpx, binsz_irf=5 * u.deg)
