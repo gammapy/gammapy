@@ -143,7 +143,7 @@ class FluxPoints(FluxEstimate):
         return table
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename, sed_type=None, reference_model=None, **kwargs):
         """Read flux points.
 
         Parameters
@@ -152,15 +152,23 @@ class FluxPoints(FluxEstimate):
             Filename
         kwargs : dict
             Keyword arguments passed to `astropy.table.Table.read`.
+
+        Returns
+        -------
+        flux_points : `FluxPoints`
+            Flux points
         """
         filename = make_path(filename)
+
         try:
             table = Table.read(filename, **kwargs)
         except IORegistryError:
             kwargs.setdefault("format", "ascii.ecsv")
             table = Table.read(filename, **kwargs)
 
-        if "SED_TYPE" not in table.meta.keys():
+        sed_type = table.meta.get("SED_TYPE", None)
+
+        if sed_type is None:
             sed_type = cls._guess_sed_type(table)
             table.meta["SED_TYPE"] = sed_type
 
@@ -179,7 +187,7 @@ class FluxPoints(FluxEstimate):
         if "dloglike_scan" in table.colnames and "stat_scan" not in table.colnames:
             table["stat_scan"] = 2 * table["dloglike_scan"]
 
-        return cls(table=table)
+        return cls.from_table(table=table, sed_type=sed_type, reference_model=reference_model)
 
     def write(self, filename, **kwargs):
         """Write flux points.
@@ -230,6 +238,51 @@ class FluxPoints(FluxEstimate):
         table_stacked.meta["SED_TYPE"] = reference.meta["SED_TYPE"]
 
         return cls(table_stacked)
+
+    @classmethod
+    def from_table(cls, table, sed_type=None, reference_model=None):
+        """"""
+        if sed_type is None:
+            try:
+                sed_type = table.meta["SED_TYPE"]
+            except KeyError:
+                raise ValueError("Specifying the sed type is required")
+
+        cls._validate_type(table, sed_type)
+
+        if reference_model is None:
+            log.warning(
+                "No reference model set for FluxPoints. Assuming point source with E^-2 spectrum."
+            )
+
+            reference_model = PowerLawSpectralModel()
+
+        if sed_type == "likelihood":
+            return cls(data=table, reference_spectral_model=reference_model)
+
+        energy_axis = MapAxis.from_table(table, format="gadf-sed")
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            fluxes = reference_model.reference_fluxes(energy_axis=energy_axis)
+
+        # TODO: handle reshaping in MapAxis
+        col_ref = table[sed_type]
+        factor = fluxes[f"ref_{sed_type}"].to(col_ref.unit)
+
+        data = Table(fluxes)
+        data["norm"] = col_ref / factor
+
+        for key in OPTIONAL_MAPS[sed_type]:
+            if key in table.colnames:
+                norm_type = key.replace(sed_type, "norm")
+                data[norm_type] = table[key] / factor
+
+        # We add the remaining maps
+        for key in OPTIONAL_QUANTITIES_COMMON:
+            if key in table.colnames:
+                data[key] = table[key]
+
+        return cls(data=data, reference_spectral_model=reference_model)
 
     def drop_ul(self):
         """Drop upper limit flux points.
