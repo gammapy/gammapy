@@ -10,8 +10,8 @@ from gammapy.data import GTI, DataStore, EventList, Observation
 from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.utils.testing import requires_data
+from gammapy.maps import Map, MapAxis, WcsGeom, HpxGeom
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -27,6 +27,27 @@ def geom(ebounds, binsz=0.5):
     return WcsGeom.create(
         skydir=skydir, binsz=binsz, width=(10, 5), frame="galactic", axes=[energy_axis]
     )
+
+
+@pytest.fixture(scope="session")
+def geom_config_hpx():
+    energy_axis = MapAxis.from_energy_bounds("0.5 TeV", "30 TeV", nbin=3)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.3 TeV",
+        "30 TeV",
+        nbin=3,
+        per_decade=True,
+        name="energy_true"
+    )
+
+    geom_hpx = HpxGeom.create(
+        binsz=0.1,
+        frame="galactic",
+        axes=[energy_axis],
+        region="DISK(0, 0, 5.)"
+    )
+    return {"geom": geom_hpx, "energy_axis_true": energy_axis_true}
 
 
 @requires_data()
@@ -213,6 +234,31 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["RA_PNT"], 267.68121338)
     assert_allclose(map_dataset_meta_table["DEC_PNT"], -29.6075)
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
+
+
+@requires_dependency("healpy")
+def test_map_dataset_maker_hpx(geom_config_hpx, observations):
+    reference = MapDataset.create(**geom_config_hpx, binsz_irf=5 * u.deg)
+
+    maker = MapDatasetMaker()
+    safe_mask_maker = SafeMaskMaker(
+        offset_max="2.5 deg", methods=["aeff-default", "offset-max"]
+    )
+
+    dataset = maker.run(reference, observation=observations[0])
+    dataset = safe_mask_maker.run(dataset, observation=observations[0]).to_masked()
+
+    assert_allclose(dataset.counts.data.sum(), 4264)
+    assert_allclose(dataset.background.data.sum(), 2964.5369, rtol=1e-5)
+    assert_allclose(dataset.exposure.data[4, 1000], 5.987e+09, rtol=1e-4)
+
+    coords = SkyCoord([0, 3], [0, 0], frame="galactic", unit="deg")
+    coords = {"skycoord": coords, "energy": 1 * u.TeV}
+    assert_allclose(dataset.mask_safe.get_by_coord(coords), [True, False])
+
+    kernel = dataset.edisp.get_edisp_kernel()
+
+    assert_allclose(kernel.data.sum(axis=1)[3], 1, rtol=0.01)
 
 
 def test_interpolate_map_dataset():
