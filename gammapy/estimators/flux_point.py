@@ -6,10 +6,12 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.datasets import Datasets
 from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import Estimator, DEFAULT_UNIT
+from .core import Estimator, DEFAULT_UNIT, FluxEstimate, OPTIONAL_QUANTITIES_COMMON, OPTIONAL_MAPS
 from .flux import FluxEstimator
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
@@ -34,7 +36,7 @@ OPTIONAL_COLUMNS = {
 }
 
 
-class FluxPoints:
+class FluxPoints(FluxEstimate):
     """Flux points container.
 
     The supported formats are described here: :ref:`gadf:flux-points`
@@ -117,14 +119,13 @@ class FluxPoints:
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
-    def __init__(self, table):
-        self.table = table_standardise_units_copy(table)
-        # validate that the table is a valid representation
-        # of the given flux point sed type
-        self._validate_table(self.table, table.meta["SED_TYPE"])
-
     def __repr__(self):
         return f"{self.__class__.__name__}(sed_type={self.sed_type!r}, n_points={len(self.table)})"
+
+    @property
+    def table(self):
+        """"""
+        return self._data
 
     @property
     def table_formatted(self):
@@ -493,13 +494,13 @@ class FluxPoints:
         """Compute flux error for given sed type"""
         try:
             # asymmetric error
-            y_errn = self.table[sed_type + "_errn"].quantity
-            y_errp = self.table[sed_type + "_errp"].quantity
+            y_errn = getattr(self, sed_type + "_errn")
+            y_errp = getattr(self, sed_type + "_errp")
             y_err = (y_errn, y_errp)
         except KeyError:
             try:
                 # symmetric error
-                y_err = self.table[sed_type + "_err"].quantity
+                y_err = getattr(self, sed_type + "_err")
                 y_err = (y_err, y_err)
             except KeyError:
                 # no error at all
@@ -511,7 +512,7 @@ class FluxPoints:
         try:
             return self.table["is_ul"].data.astype("bool")
         except KeyError:
-            return np.isnan(self.table[self.sed_type])
+            return np.isnan(self.norm)
 
     @property
     def energy_ref(self):
