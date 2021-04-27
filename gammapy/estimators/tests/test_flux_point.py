@@ -242,13 +242,13 @@ def test_compute_flux_points_dnde_fermi():
     """
     fermi_3fgl = SourceCatalog3FGL()
     source = fermi_3fgl["3FGL J0835.3-4510"]
-    flux_points = source.flux_points.to_sed_type(
-        "dnde", model=source.spectral_model(), method="log_center", pwl_approx=True
-    )
+    flux_points = source.flux_points
+    table = source.flux_points_table
+
     for column in ["dnde", "dnde_errn", "dnde_errp", "dnde_ul"]:
-        actual = flux_points.table["e2" + column].quantity
-        desired = flux_points.table[column].quantity * flux_points.energy_ref ** 2
-        assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
+        actual = table["e2" + column].quantity
+        desired = getattr(flux_points, column) * flux_points.energy_ref ** 2
+        assert_quantity_allclose(actual[:-1], desired[:-1], rtol=0.05)
 
 
 @pytest.fixture(scope="session")

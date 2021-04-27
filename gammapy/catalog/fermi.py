@@ -200,6 +200,13 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             name=name,
         )
 
+    @property
+    def flux_points(self):
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        return FluxPoints.from_table(
+            self.flux_points_table, reference_model=self.spectral_model()
+        )
+
 
 class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
     """One source from the Fermi-LAT 4FGL catalog.
@@ -422,8 +429,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
@@ -456,7 +463,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         # Square root of test statistic
         table["sqrt_ts"] = self.data["Sqrt_TS_Band"]
-        return FluxPoints.from_table(table, reference_model=self.spectral_model())
+        return table
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = self.data[prefix]
@@ -749,8 +756,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
@@ -782,8 +789,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
-        table["sqrt_TS"] = [self.data["Sqrt_TS" + _] for _ in self._energy_edges_suffix]
-        return FluxPoints(table)
+        table["sqrt_ts"] = [self.data["Sqrt_TS" + _] for _ in self._energy_edges_suffix]
+        return table
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = [self.data[prefix + _] for _ in self._energy_edges_suffix]
@@ -944,8 +951,8 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Integral flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
         table["e_min"] = self._energy_edges[:-1]
@@ -961,7 +968,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         table["flux_ul"] = np.nan * flux_err.unit
         flux_ul = compute_flux_points_ul(table["flux"], table["flux_errp"])
         table["flux_ul"][is_ul] = flux_ul[is_ul]
-        return FluxPoints(table)
+        return table
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = [self.data[prefix + _ + "GeV"] for _ in self._energy_edges_suffix]
@@ -1117,8 +1124,8 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
         table["e_min"] = self._energy_edges[:-1]
@@ -1150,7 +1157,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
         # Square root of test statistic
         table["sqrt_ts"] = self.data["Sqrt_TS_Band"]
-        return FluxPoints(table)
+        return table
 
     def spatial_model(self):
         """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
