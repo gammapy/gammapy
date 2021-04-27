@@ -155,8 +155,8 @@ This is how to compute flux points:
 
 
 
-Using `gammapy.modeling`
-========================
+Using `gammapy.estimators`
+==========================
 
 Gammapy tutorial notebooks that show examples using ``gammapy.estimators``:
 
