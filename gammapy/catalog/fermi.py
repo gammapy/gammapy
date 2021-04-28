@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace
-from .core import SourceCatalog, SourceCatalogObject
+from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = [
     "SourceCatalogObject4FGL",
@@ -149,7 +149,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
     def _info_spectral_points(self):
         ss = "\n*** Spectral points ***\n\n"
-        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+        lines = format_flux_points_table(self.flux_points_table).pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss
 

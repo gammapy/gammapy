@@ -19,6 +19,18 @@ class Bunch(dict):
         self.__dict__.update(kw)
 
 
+def format_flux_points_table(table):
+    for column in table.colnames:
+        if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
+            table[column].format = ".3e"
+        elif column.startswith(
+                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
+        ):
+            table[column].format = ".3f"
+
+    return table
+
+
 class SourceCatalogObject:
     """Source catalog object.
 

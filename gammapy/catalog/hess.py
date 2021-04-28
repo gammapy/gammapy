@@ -2,17 +2,16 @@
 """HESS Galactic plane survey (HGPS) catalog."""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.maps import WcsGeom, MapAxis, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import Model, Models, SkyModel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.regions import list_to_compound_region, compound_region_center
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict
-from .core import SourceCatalog, SourceCatalogObject
+from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = [
     "SourceCatalogHGPS",
@@ -99,6 +98,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def __str__(self):
         return self.info()
+
+    @property
+    def flux_points(self):
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        return FluxPoints.from_table(
+            self.flux_points_table, reference_model=self.spectral_model()
+        )
 
     def info(self, info="all"):
         """Info string.
@@ -386,7 +392,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = "\n*** Flux points info ***\n\n"
         ss += "Number of flux points: {}\n".format(d["N_Flux_Points"])
         ss += "Flux points table: \n\n"
-        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+        lines = format_flux_points_table(self.flux_points_table).pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss + "\n"
 
@@ -596,8 +602,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return geom.to_wcs_geom()
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points table (`~astropy.table.Table)."""
         table = Table()
         table.meta["SED_TYPE"] = "dnde"
         mask = ~np.isnan(self.data["Flux_Points_Energy"])
@@ -611,8 +617,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table["dnde_errp"] = self.data["Flux_Points_Flux_Err_Hi"][mask]
         table["dnde_ul"] = self.data["Flux_Points_Flux_UL"][mask]
         table["is_ul"] = self.data["Flux_Points_Flux_Is_UL"][mask].astype("bool")
-
-        return FluxPoints(table)
+        return table
 
 
 class SourceCatalogHGPS(SourceCatalog):
