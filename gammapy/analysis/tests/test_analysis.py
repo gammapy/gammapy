@@ -176,15 +176,16 @@ def test_analysis_1d():
 
     assert len(analysis.datasets) == 3
     assert len(analysis.flux_points.data.table) == 4
-    dnde = analysis.flux_points.data.table["dnde"].quantity
+    dnde = analysis.flux_points.data.dnde
     assert dnde.unit == "cm-2 s-1 TeV-1"
 
     assert_allclose(dnde[0].value, 8.116854e-12, rtol=1e-2)
     assert_allclose(dnde[2].value, 3.444475e-14, rtol=1e-2)
 
-    assert len(analysis.light_curve.table)==3
+    assert len(analysis.light_curve.table) == 3
     assert_allclose(analysis.light_curve.time_min.mjd, [53343.92, 53343.935, 53343.954])
     assert_allclose(analysis.light_curve.table["flux"], [[1.688954e-11], [2.347870e-11],[1.604152e-11]], rtol=1e-4)
+
 
 @requires_data()
 def test_geom_analysis_1d():
@@ -359,7 +360,7 @@ def test_analysis_3d():
     res = analysis.fit_result.parameters
     assert res["amplitude"].unit == "cm-2 s-1 TeV-1"
     assert len(analysis.flux_points.data.table) == 2
-    dnde = analysis.flux_points.data.table["dnde"].quantity
+    dnde = analysis.flux_points.data.dnde
 
     assert_allclose(dnde[0].value, 1.339052e-11, rtol=1e-2)
     assert_allclose(dnde[-1].value, 2.772374e-13, rtol=1e-2)

@@ -208,8 +208,9 @@ class Analysis:
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]
         )
-        cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-        log.info("\n{}".format(self.flux_points.data.table[cols]))
+        cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+        table = self.flux_points.data.to_table(sed_type="dnde")
+        log.info("\n{}".format(table[cols]))
 
     def get_excess_map(self):
         """Calculate excess map with respect to the current model."""
