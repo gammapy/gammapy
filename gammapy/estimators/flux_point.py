@@ -320,13 +320,20 @@ class FluxPoints(FluxEstimate):
             table = self.table.copy()
         else:
             table = Table()
-            all_quantities = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON
+            all_quantities = REQUIRED_COLUMNS[sed_type] + OPTIONAL_COLUMNS[sed_type] + OPTIONAL_QUANTITIES_COMMON
 
             for quantity in all_quantities:
-                try:
-                    table[quantity] = getattr(self, quantity)
-                except KeyError:
-                    pass
+                if quantity == "e_ref":
+                    table["e_ref"] = self.energy_ref
+                elif quantity == "e_min":
+                    table["e_min"] = self.energy_min
+                elif quantity == "e_max":
+                    table["e_max"] = self.energy_max
+                else:
+                    try:
+                        table[quantity] = getattr(self, quantity)
+                    except KeyError:
+                        pass
 
         return table
 

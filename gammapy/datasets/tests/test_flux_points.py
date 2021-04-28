@@ -65,7 +65,7 @@ def test_flux_point_dataset_serialization(tmp_path):
     )
 
     new_dataset = datasets[0]
-    assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
+    assert_allclose(new_dataset.data.dnde, dataset.data.dnde, 1e-4)
     if dataset.mask_fit is None:
         assert np.all(new_dataset.mask_fit == dataset.mask_safe)
     assert np.all(new_dataset.mask_safe == dataset.mask_safe)
