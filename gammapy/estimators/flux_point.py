@@ -11,7 +11,7 @@ from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import Estimator, DEFAULT_UNIT, FluxEstimate, OPTIONAL_QUANTITIES_COMMON, OPTIONAL_MAPS
+from .core import Estimator, DEFAULT_UNIT, FluxEstimate, OPTIONAL_QUANTITIES_COMMON, OPTIONAL_MAPS, REQUIRED_MAPS
 from .flux import FluxEstimator
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
@@ -301,6 +301,34 @@ class FluxPoints(FluxEstimate):
                 data[key] = table[key]
 
         return cls(data=data, reference_spectral_model=reference_model)
+
+    def to_table(self, sed_type="likelihood"):
+        """Create table for a given SED type.
+
+        Parameters
+        ----------
+        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
+            sed type to convert to. Default is `likelihood`
+
+        Returns
+        -------
+        map_dict : dict
+            Dictionary containing the requested maps.
+        """
+        # TODO: select only required and optional quantities here?
+        if sed_type == "likelihood":
+            table = self.table.copy()
+        else:
+            table = Table()
+            all_quantities = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON
+
+            for quantity in all_quantities:
+                try:
+                    table[quantity] = getattr(self, quantity)
+                except KeyError:
+                    pass
+
+        return table
 
     def drop_ul(self):
         """Drop upper limit flux points.
