@@ -366,17 +366,15 @@ class FluxPoints(FluxEstimate):
     def _validate_table(table, sed_type, use_optional=False):
         """Validate input table."""
         required = set(REQUIRED_COLUMNS[sed_type])
+
         if use_optional:
             required = set(REQUIRED_COLUMNS[sed_type] + OPTIONAL_COLUMNS[sed_type])
-        else:
-            required = set(REQUIRED_COLUMNS[sed_type])
 
         if not required.issubset(table.colnames):
             missing = required.difference(table.colnames)
             raise ValueError(
                 "Missing columns for sed type '{}':" " {}".format(sed_type, missing)
             )
-
 
     @property
     def is_ul(self):

@@ -114,7 +114,7 @@ class FluxMaps(FluxEstimate):
             m = getattr(self, name)
             table[name] = m.get_by_coord(coords) * m.unit
 
-        return FluxPoints(table).to_sed_type("dnde")
+        return FluxPoints(table, reference_spectral_model=self.reference_spectral_model)
 
     def to_dict(self, sed_type="likelihood"):
         """Return maps in a given SED type in the form of a dictionary.

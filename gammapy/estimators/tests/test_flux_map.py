@@ -225,8 +225,8 @@ def test_get_flux_point(wcs_flux_map, reference_model):
     assert_allclose(fp.table["sqrt_ts"], [1, 1])
     assert_allclose(fp.table["ts"], [0, 3])
 
-    assert_allclose(fp.table["dnde"], [1e-11, 1e-13])
-    assert fp.table["dnde"].unit == "cm-2s-1TeV-1"
+    assert_allclose(fp.dnde, [1e-11, 1e-13] * u.Unit("TeV-1 cm-2 s-1"))
+    assert fp.dnde.unit == "cm-2s-1TeV-1"
 
     with mpl_plot_check():
         fp.plot()
