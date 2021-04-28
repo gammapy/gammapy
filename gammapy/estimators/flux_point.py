@@ -791,8 +791,8 @@ class FluxPointsEstimator(Estimator):
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
 
-        # TODO: this should be changed once likelihood is fully supported
-        return FluxPoints(table).to_sed_type("dnde")
+        model = datasets.models[self.source]
+        return FluxPoints(table, reference_spectral_model=model.spectral_model.copy())
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.
