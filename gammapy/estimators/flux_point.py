@@ -7,7 +7,6 @@ from astropy.table import Table, vstack
 from gammapy.datasets import Datasets
 from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -202,15 +201,22 @@ class FluxPoints(FluxEstimate):
         flux_points : `FluxPoints`
             Flux points without upper limit points.
         """
+        reference = flux_points[0].to_table(sed_type="dnde")
+
         tables = []
 
-        for _ in flux_points:
-            tables.append(_.table)
+        for fp in flux_points:
+            table = fp.to_table(sed_type="dnde")
+            for colname in reference.colnames:
+                column = reference[colname]
+                if column.unit:
+                    table[colname] = table[colname].quantity.to(column.unit)
+            tables.append(table[reference.colnames])
 
-        table = vstack(tables)
-
-        # TODO: check equivalency of the reference model...
-        return cls(data=table, reference_spectral_model=flux_points[0].reference_spectral_model)
+        table_stacked = vstack(tables)
+        table_stacked.meta["SED_TYPE"] = "dnde"
+        table_stacked.sort("e_ref")
+        return cls.from_table(table=table_stacked, sed_type="dnde")
 
     @staticmethod
     def _convert_loglike_columns(table):
@@ -335,6 +341,7 @@ class FluxPoints(FluxEstimate):
                     except KeyError:
                         pass
 
+        table.meta["SED_TYPE"] = sed_type
         return table
 
     def drop_ul(self):
@@ -479,14 +486,14 @@ class FluxPoints(FluxEstimate):
         except IndexError:
             return u.Unit("TeV")
 
-    def _plot_get_energy_err(self, sed_type):
+    def _plot_get_energy_err(self):
         """Compute energy error for given sed type"""
-        if sed_type in ["flux", "eflux"]:
+        try:
             energy_min = self.energy_min
             energy_max = self.energy_max
             energy_ref = self.energy_ref
             x_err = ((energy_ref - energy_min), (energy_max - energy_ref))
-        else:
+        except KeyError:
             x_err = None
         return x_err
 
@@ -545,7 +552,7 @@ class FluxPoints(FluxEstimate):
 
         # get errors and ul
         is_ul = self.is_ul
-        x_err_all = self._plot_get_energy_err(sed_type=sed_type)
+        x_err_all = self._plot_get_energy_err()
         y_err_all = self._plot_get_flux_err(sed_type=sed_type)
 
         # handle energy power

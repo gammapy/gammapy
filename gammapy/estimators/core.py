@@ -24,7 +24,8 @@ OPTIONAL_QUANTITIES_COMMON = [
     "npred_null",
     "stat",
     "stat_null",
-    "niter"
+    "niter",
+    "is_ul"
 ]
 
 

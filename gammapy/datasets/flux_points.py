@@ -325,7 +325,7 @@ class FluxPointsDataset(Dataset):
         fp = self.data
         residuals = self.residuals(method)
 
-        xerr = fp._plot_get_energy_err(sed_type="dnde")
+        xerr = fp._plot_get_energy_err()
         if xerr is not None:
             xerr = (
                 xerr[0].to_value(self._energy_unit),
@@ -333,6 +333,7 @@ class FluxPointsDataset(Dataset):
             )
 
         yerr = fp._plot_get_flux_err(sed_type="dnde")
+
         if method == "diff":
             unit = yerr[0].unit
             yerr = yerr[0].to_value(unit), yerr[1].to_value(unit)
