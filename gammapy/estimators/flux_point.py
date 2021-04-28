@@ -368,10 +368,7 @@ class FluxPoints(FluxEstimate):
 
     @property
     def sed_type(self):
-        """SED type (str).
-
-        One of: {'dnde', 'e2dnde', 'flux', 'eflux'}
-        """
+        """SED type (str)."""
         return self.table.meta["SED_TYPE"]
 
     @staticmethod
