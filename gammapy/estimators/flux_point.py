@@ -377,41 +377,6 @@ class FluxPoints(FluxEstimate):
                 "Missing columns for sed type '{}':" " {}".format(sed_type, missing)
             )
 
-    @staticmethod
-    def _get_y_energy_unit(y_unit):
-        """Get energy part of the given y unit."""
-        try:
-            return [_ for _ in y_unit.bases if _.physical_type == "energy"][0]
-        except IndexError:
-            return u.Unit("TeV")
-
-    def _plot_get_energy_err(self):
-        """Compute energy error for given sed type"""
-        try:
-            energy_min = self.energy_min
-            energy_max = self.energy_max
-            energy_ref = self.energy_ref
-            x_err = ((energy_ref - energy_min), (energy_max - energy_ref))
-        except KeyError:
-            x_err = None
-        return x_err
-
-    def _plot_get_flux_err(self, sed_type=None):
-        """Compute flux error for given sed type"""
-        try:
-            # asymmetric error
-            y_errn = getattr(self, sed_type + "_errn")
-            y_errp = getattr(self, sed_type + "_errp")
-            y_err = (y_errn, y_errp)
-        except KeyError:
-            try:
-                # symmetric error
-                y_err = getattr(self, sed_type + "_err")
-                y_err = (y_err, y_err)
-            except KeyError:
-                # no error at all
-                y_err = None
-        return y_err
 
     @property
     def is_ul(self):
@@ -476,6 +441,43 @@ class FluxPoints(FluxEstimate):
         """
         return self.table["e_max"].quantity
 
+    @staticmethod
+    def _get_y_energy_unit(y_unit):
+        """Get energy part of the given y unit."""
+        try:
+            return [_ for _ in y_unit.bases if _.physical_type == "energy"][0]
+        except IndexError:
+            return u.Unit("TeV")
+
+    def _plot_get_energy_err(self, sed_type):
+        """Compute energy error for given sed type"""
+        if sed_type in ["flux", "eflux"]:
+            energy_min = self.energy_min
+            energy_max = self.energy_max
+            energy_ref = self.energy_ref
+            x_err = ((energy_ref - energy_min), (energy_max - energy_ref))
+        else:
+            x_err = None
+        return x_err
+
+    def _plot_get_flux_err(self, sed_type=None):
+        """Compute flux error for given sed type"""
+        try:
+            # asymmetric error
+            y_errn = getattr(self, sed_type + "_errn")
+            y_errp = getattr(self, sed_type + "_errp")
+            y_err = (y_errn, y_errp)
+        except KeyError:
+            try:
+                # symmetric error
+                y_err = getattr(self, sed_type + "_err")
+                y_err = (y_err, y_err)
+            except KeyError:
+                # no error at all
+                y_err = None
+        return y_err
+
+
     def plot(
         self, ax=None, energy_unit="TeV", flux_unit=None, energy_power=0, sed_type="dnde", **kwargs
     ):
@@ -491,6 +493,8 @@ class FluxPoints(FluxEstimate):
             Unit of the flux axis
         energy_power : int
             Power of energy to multiply y axis with
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+            Sed type
         kwargs : dict
             Keyword arguments passed to :func:`matplotlib.pyplot.errorbar`
 
@@ -511,7 +515,7 @@ class FluxPoints(FluxEstimate):
 
         # get errors and ul
         is_ul = self.is_ul
-        x_err_all = self._plot_get_energy_err()
+        x_err_all = self._plot_get_energy_err(sed_type=sed_type)
         y_err_all = self._plot_get_flux_err(sed_type=sed_type)
 
         # handle energy power
@@ -591,12 +595,14 @@ class FluxPoints(FluxEstimate):
             Axis object to plot on.
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
+        add_cbar : bool
+            Whether to add a colorbar to the plot.
         y_values : `astropy.units.Quantity`
             Array of y-values to use for the fit statistic profile evaluation.
         y_unit : str or `astropy.units.Unit`
             Unit to use for the y-axis.
-        add_cbar : bool
-            Whether to add a colorbar to the plot.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+            Sed type
         kwargs : dict
             Keyword arguments passed to :func:`matplotlib.pyplot.pcolormesh`
 
