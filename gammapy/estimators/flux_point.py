@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from gammapy.utils.interpolation import interpolate_profile
@@ -166,27 +166,6 @@ class FluxPoints(FluxEstimate):
             kwargs.setdefault("format", "ascii.ecsv")
             table = Table.read(filename, **kwargs)
 
-        sed_type = table.meta.get("SED_TYPE", None)
-
-        if sed_type is None:
-            sed_type = cls._guess_sed_type(table)
-            table.meta["SED_TYPE"] = sed_type
-
-        # TODO: check sign and factor 2 here
-        # https://github.com/gammapy/gammapy/pull/2546#issuecomment-554274318
-        # The idea below is to support the format here:
-        # https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/flux_points/index.html#likelihood-columns
-        # but internally to go to the uniform "stat"
-
-        if "loglike" in table.colnames and "stat" not in table.colnames:
-            table["stat"] = 2 * table["loglike"]
-
-        if "loglike_null" in table.colnames and "stat_null" not in table.colnames:
-            table["stat_null"] = 2 * table["loglike_null"]
-
-        if "dloglike_scan" in table.colnames and "stat_scan" not in table.colnames:
-            table["stat_scan"] = 2 * table["dloglike_scan"]
-
         return cls.from_table(table=table, sed_type=sed_type, reference_model=reference_model)
 
     def write(self, filename, **kwargs):
@@ -230,20 +209,67 @@ class FluxPoints(FluxEstimate):
 
         table = vstack(tables)
 
+        # TODO: check equivalency of the reference model...
         return cls(data=table, reference_spectral_model=flux_points[0].reference_spectral_model)
+
+    @staticmethod
+    def _convert_loglike_columns(table):
+        # TODO: check sign and factor 2 here
+        # https://github.com/gammapy/gammapy/pull/2546#issuecomment-554274318
+        # The idea below is to support the format here:
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/flux_points/index.html#likelihood-columns
+        # but internally to go to the uniform "stat"
+
+        if "loglike" in table.colnames and "stat" not in table.colnames:
+            table["stat"] = 2 * table["loglike"]
+
+        if "loglike_null" in table.colnames and "stat_null" not in table.colnames:
+            table["stat_null"] = 2 * table["loglike_null"]
+
+        if "dloglike_scan" in table.colnames and "stat_scan" not in table.colnames:
+            table["stat_scan"] = 2 * table["dloglike_scan"]
+
+        return table
 
     @classmethod
     def from_table(cls, table, sed_type=None, reference_model=None):
-        """"""
+        """Create flux points from table
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
+            Sed type
+        reference_model : `SpectralModel`
+            Reference spectral model
+
+        Returns
+        -------
+        flux_points : `FluxPoints`
+            Flux points
+        """
         table = table_standardise_units_copy(table)
 
         if sed_type is None:
-            try:
-                sed_type = table.meta["SED_TYPE"]
-            except KeyError:
-                raise ValueError("Specifying the sed type is required")
+            sed_type = table.meta.get("SED_TYPE", None)
+
+        if sed_type is None:
+            sed_type = cls._guess_sed_type(table)
+
+        if sed_type is None:
+            raise ValueError("Specifying the sed type is required")
 
         cls._validate_type(table, sed_type)
+
+        if sed_type == "likelihood":
+            table = cls._convert_loglike_columns(table)
+
+            reference_model = TemplateSpectralModel(
+                energy=table["e_ref"].quantity,
+                values=table["ref_dnde"].quantity
+            )
+            return cls(data=table, reference_spectral_model=reference_model)
 
         if reference_model is None:
             log.warning(
@@ -251,9 +277,6 @@ class FluxPoints(FluxEstimate):
             )
 
             reference_model = PowerLawSpectralModel()
-
-        if sed_type == "likelihood":
-            return cls(data=table, reference_spectral_model=reference_model)
 
         energy_axis = MapAxis.from_table(table, format="gadf-sed")
 
@@ -757,10 +780,8 @@ class FluxPoints(FluxEstimate):
 
         if y_values is None:
             ref_values = getattr(self, sed_type + "_ref")
-            y_values = np.logspace(
-                np.log10(0.2 * ref_values.value.min()),
-                np.log10(5 * ref_values.value.max()),
-                500,
+            y_values = np.geomspace(
+                0.2 * ref_values.value.min(), 5 * ref_values.value.max(), 500
             )
             y_values = u.Quantity(y_values, y_unit, copy=False)
 
