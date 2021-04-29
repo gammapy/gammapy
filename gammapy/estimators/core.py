@@ -10,11 +10,40 @@ from gammapy.maps import MapAxis
 
 __all__ = ["Estimator", "FluxEstimate"]
 
-SED_TYPES = ["dnde", "e2dnde", "flux", "eflux"]
 
-OPTIONAL_QUANTITIES = [
-    "err", "errn", "errp", "ul", "scan"
-]
+DEFAULT_UNIT = {
+    "dnde": u.Unit("cm-2 s-1 TeV-1"),
+    "e2dnde": u.Unit("erg cm-2 s-1"),
+    "flux": u.Unit("cm-2 s-1"),
+    "eflux": u.Unit("erg cm-2 s-1"),
+}
+
+REQUIRED_MAPS = {
+    "dnde": ["dnde"],
+    "e2dnde": ["e2dnde"],
+    "flux": ["flux"],
+    "eflux": ["eflux"],
+    "likelihood": ["norm"],
+}
+
+REQUIRED_COLUMNS = {
+    "dnde": ["e_ref", "dnde"],
+    "e2dnde": ["e_ref", "e2dnde"],
+    "flux": ["e_min", "e_max", "flux"],
+    "eflux": ["e_min", "e_max", "eflux"],
+    # TODO: extend required columns
+    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "norm"],
+}
+
+REQUIRED_QUANTITIES_SCAN = ["norm_scan", "stat_scan", "stat"]
+
+OPTIONAL_QUANTITIES = {
+    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
+    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
+    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul"],
+    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
+    "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul"],
+}
 
 OPTIONAL_QUANTITIES_COMMON = [
     "ts",
@@ -27,40 +56,6 @@ OPTIONAL_QUANTITIES_COMMON = [
     "niter",
     "is_ul"
 ]
-
-
-DEFAULT_UNIT = {
-    "dnde": u.Unit("cm-2 s-1 TeV-1"),
-    "e2dnde": u.Unit("erg cm-2 s-1"),
-    "flux": u.Unit("cm-2 s-1"),
-    "eflux": u.Unit("erg cm-2 s-1"),
-}
-
-
-REQUIRED_MAPS = {
-    "dnde": ["dnde"],
-    "e2dnde": ["e2dnde"],
-    "flux": ["flux"],
-    "eflux": ["eflux"],
-    "likelihood": ["norm"],
-}
-
-
-# TODO: add an entry for is_ul?
-OPTIONAL_MAPS = {
-    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
-    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
-    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul"],
-    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
-    "likelihood": [
-        "norm_err",
-        "norm_errn",
-        "norm_errp",
-        "norm_ul",
-        "norm_scan",
-        "stat_scan",
-    ],
-}
 
 
 class Estimator(abc.ABC):
@@ -239,19 +234,14 @@ class FluxEstimate:
 
         available_quantities = []
 
-        for quantity in OPTIONAL_QUANTITIES:
-            norm_quantity = f"norm_{quantity}"
-            if norm_quantity in keys:
-                available_quantities.append(quantity)
-
-        for quantity in OPTIONAL_QUANTITIES_COMMON:
+        for quantity in OPTIONAL_QUANTITIES["likelihood"] + OPTIONAL_QUANTITIES_COMMON:
             if quantity in keys:
                 available_quantities.append(quantity)
 
         return available_quantities
 
     # TODO: add support for scan
-    def _check_norm_quantity(self, quantity):
+    def _check_quantity(self, quantity):
         if quantity not in self.available_quantities:
             raise KeyError(
                 f"Cannot compute required flux quantity. {quantity} "
@@ -277,44 +267,50 @@ class FluxEstimate:
     @property
     def niter(self):
         """Number of iterations of fit"""
-        self._check_norm_quantity("niter")
+        self._check_quantity("niter")
         return self.data["niter"]
+
+    @property
+    def is_ul(self):
+        """Number of iterations of fit"""
+        self._check_quantity("is_ul")
+        return self.data["is_ul"]
 
     @property
     def npred(self):
         """Predicted counts"""
-        self._check_norm_quantity("npred")
+        self._check_quantity("npred")
         return self.data["npred"]
 
     @property
     def npred_null(self):
         """Predicted counts null hypothesis"""
-        self._check_norm_quantity("npred_null")
+        self._check_quantity("npred_null")
         return self.data["npred_null"]
 
     @property
     def npred_excess(self):
         """Predicted excess counts"""
-        self._check_norm_quantity("npred")
-        self._check_norm_quantity("npred_null")
+        self._check_quantity("npred")
+        self._check_quantity("npred_null")
         return self.data["npred"] - self.data["npred_null"]
 
     @property
     def stat(self):
         """Fit statistic value"""
-        self._check_norm_quantity("stat")
+        self._check_quantity("stat")
         return self.data["stat"]
 
     @property
     def stat_null(self):
         """Fit statistic value for thenull hypothesis"""
-        self._check_norm_quantity("stat_null")
+        self._check_quantity("stat_null")
         return self.data["stat_null"]
 
     @property
     def ts(self):
         """ts map (`Map`)"""
-        self._check_norm_quantity("ts")
+        self._check_quantity("ts")
         return self.data["ts"]
 
     # TODO: just always derive from ts?
@@ -342,25 +338,25 @@ class FluxEstimate:
     @property
     def norm_err(self):
         """Norm error"""
-        self._check_norm_quantity("err")
+        self._check_quantity("norm_err")
         return self.data["norm_err"]
 
     @property
     def norm_errn(self):
         """Negative norm error"""
-        self._check_norm_quantity("errn")
+        self._check_quantity("norm_errn")
         return self.data["norm_errn"]
 
     @property
     def norm_errp(self):
         """Positive norm error"""
-        self._check_norm_quantity("errp")
+        self._check_quantity("norm_errp")
         return self.data["norm_errp"]
 
     @property
     def norm_ul(self):
         """Norm upper limit"""
-        self._check_norm_quantity("ul")
+        self._check_quantity("norm_ul")
         return self.data["norm_ul"]
 
     @property

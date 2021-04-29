@@ -10,29 +10,21 @@ from gammapy.maps import MapAxis
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import Estimator, DEFAULT_UNIT, FluxEstimate, OPTIONAL_QUANTITIES_COMMON, OPTIONAL_MAPS, REQUIRED_MAPS
-from .flux import FluxEstimator
+from .core import (
+    Estimator,
+    FluxEstimate,
+    DEFAULT_UNIT,
+    OPTIONAL_QUANTITIES_COMMON,
+    OPTIONAL_QUANTITIES,
+    REQUIRED_COLUMNS,
+    REQUIRED_QUANTITIES_SCAN
+)
+from. flux import FluxEstimator
+
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
 
 log = logging.getLogger(__name__)
-
-REQUIRED_COLUMNS = {
-    "dnde": ["e_ref", "dnde"],
-    "e2dnde": ["e_ref", "e2dnde"],
-    "flux": ["e_min", "e_max", "flux"],
-    "eflux": ["e_min", "e_max", "eflux"],
-    # TODO: extend required columns
-    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "norm",],
-}
-
-OPTIONAL_COLUMNS = {
-    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul", "is_ul"],
-    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"],
-    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
-    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
-    "likelihood": ["norm_scan", "stat_scan"],
-}
 
 
 class FluxPoints(FluxEstimate):
@@ -296,7 +288,7 @@ class FluxPoints(FluxEstimate):
         data = Table(fluxes)
         data["norm"] = col_ref / factor
 
-        for key in OPTIONAL_MAPS[sed_type]:
+        for key in OPTIONAL_QUANTITIES[sed_type]:
             if key in table.colnames:
                 norm_type = key.replace(sed_type, "norm")
                 data[norm_type] = table[key] / factor
@@ -326,7 +318,7 @@ class FluxPoints(FluxEstimate):
             table = self.table.copy()
         else:
             table = Table()
-            all_quantities = REQUIRED_COLUMNS[sed_type] + OPTIONAL_COLUMNS[sed_type] + OPTIONAL_QUANTITIES_COMMON
+            all_quantities = REQUIRED_COLUMNS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
 
             for quantity in all_quantities:
                 if quantity == "e_ref":
@@ -402,12 +394,12 @@ class FluxPoints(FluxEstimate):
                 return sed_type
 
     @staticmethod
-    def _validate_table(table, sed_type, use_optional=False):
+    def _validate_table(table, sed_type, check_scan=False):
         """Validate input table."""
         required = set(REQUIRED_COLUMNS[sed_type])
 
-        if use_optional:
-            required = set(REQUIRED_COLUMNS[sed_type] + OPTIONAL_COLUMNS[sed_type])
+        if check_scan:
+            required = set(REQUIRED_COLUMNS[sed_type] + REQUIRED_QUANTITIES_SCAN)
 
         if not required.issubset(table.colnames):
             missing = required.difference(table.colnames)
@@ -513,7 +505,6 @@ class FluxPoints(FluxEstimate):
                 # no error at all
                 y_err = None
         return y_err
-
 
     def plot(
         self, ax=None, energy_unit="TeV", flux_unit=None, energy_power=0, sed_type="dnde", **kwargs
@@ -653,7 +644,8 @@ class FluxPoints(FluxEstimate):
         if ax is None:
             ax = plt.gca()
 
-        self._validate_table(self.table, "likelihood", use_optional=True)
+        self._validate_table(self.table, sed_type="likelihood", check_scan=True)
+
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
 
         if y_values is None:

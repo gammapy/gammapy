@@ -463,7 +463,7 @@ class LightCurveEstimator(Estimator):
         # TODO: cleanup here...
         fp = FluxPoints(table, reference_spectral_model=model.spectral_model.copy())
         table_flux = fp.to_table(sed_type="flux")
-        table_flux.remove_columns(["stat", "ts", "sqrt_ts"])
+        table_flux.remove_columns(["stat", "ts", "sqrt_ts", "e_min", "e_max"])
         return LightCurve(hstack([table, table_flux]))
 
     def estimate_time_bin_flux(self, datasets):

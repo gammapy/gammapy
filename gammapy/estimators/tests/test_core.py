@@ -53,6 +53,7 @@ class TestFluxEstimate:
         model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)
         fe = FluxEstimate(data=table_flux_estimate, reference_spectral_model=model)
 
+        print(fe.available_quantities)
         assert fe.dnde.unit == u.Unit("cm-2s-1TeV-1")
         assert_allclose(fe.dnde.value, [1e-9, 1e-11])
         assert_allclose(fe.dnde_err.value, [1e-10, 1e-12])

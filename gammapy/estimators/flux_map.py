@@ -6,7 +6,7 @@ from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import MapCoord, Map
-from gammapy.estimators.core import FluxEstimate, OPTIONAL_QUANTITIES_COMMON, REQUIRED_MAPS, OPTIONAL_MAPS
+from gammapy.estimators.core import FluxEstimate, OPTIONAL_QUANTITIES_COMMON, REQUIRED_MAPS, OPTIONAL_QUANTITIES
 from gammapy.estimators.flux_point import FluxPoints
 from gammapy.modeling.models import SkyModel, Models
 from gammapy.utils.scripts import make_path
@@ -133,7 +133,7 @@ class FluxMaps(FluxEstimate):
             data = self.data
         else:
             data = {}
-            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON
+            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
 
             for quantity in all_maps:
                 try:
@@ -263,7 +263,7 @@ class FluxMaps(FluxEstimate):
                 hdulist, hdu=map_type, hdu_bands=hdu_bands
             )
 
-        for map_type in OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON:
+        for map_type in OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON:
             if map_type.upper() in hdulist:
                 maps[map_type] = Map.from_hdulist(
                     hdulist, hdu=map_type, hdu_bands=hdu_bands
@@ -330,7 +330,7 @@ class FluxMaps(FluxEstimate):
         data = dict()
         data["norm"] = map_ref / factor
 
-        for key in OPTIONAL_MAPS[sed_type]:
+        for key in OPTIONAL_QUANTITIES[sed_type]:
             if key in maps:
                 norm_type = key.replace(sed_type, "norm")
                 data[norm_type] = maps[key] / factor
