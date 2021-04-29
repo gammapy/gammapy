@@ -57,6 +57,7 @@ class TestEffectiveAreaTable2D:
         area = EffectiveAreaTable2D.from_parametrization(axis, "HESS")
         assert_allclose(area.quantity[:, 0], area_ref)
         assert area.unit == area_ref.unit
+        assert area.meta["TELESCOP"] == "HESS"
 
     @staticmethod
     @requires_dependency("matplotlib")

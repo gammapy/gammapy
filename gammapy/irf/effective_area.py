@@ -247,4 +247,5 @@ class EffectiveAreaTable2D(IRF):
 
         # TODO: fake offset dependence?
         offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
-        return cls(axes=[energy_axis_true, offset_axis], data=data[:, np.newaxis], unit="cm2")
+        meta = {"TELESCOP": instrument}
+        return cls(axes=[energy_axis_true, offset_axis], data=data[:, np.newaxis], unit="cm2", meta=meta)
