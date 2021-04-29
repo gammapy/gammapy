@@ -197,17 +197,24 @@ class FluxEstimate:
         self._reference_spectral_model = reference_spectral_model
 
     @staticmethod
-    def _validate_type(maps, sed_type):
+    def _validate_data(data, sed_type, check_scan=False):
         """Check that map input is valid and correspond to one of the SED type."""
         try:
+            keys = data.keys()
             required = set(REQUIRED_MAPS[sed_type])
+        except AttributeError:
+            keys = data.columns
+            required = set(REQUIRED_COLUMNS[sed_type])
         except KeyError:
-            raise ValueError(f"Unknown SED type.")
+            raise ValueError(f"Unknown SED type: '{sed_type}'")
 
-        if not required.issubset(maps.keys()):
-            missing = required.difference(maps.keys())
+        if check_scan:
+            required = required.union(REQUIRED_QUANTITIES_SCAN)
+
+        if not required.issubset(keys):
+            missing = required.difference(keys)
             raise ValueError(
-                "Missing maps for sed type '{}':" " {}".format(sed_type, missing)
+                "Missing data / column for sed type '{}':" " {}".format(sed_type, missing)
             )
 
     @property

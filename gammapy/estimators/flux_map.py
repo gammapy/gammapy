@@ -306,7 +306,7 @@ class FluxMaps(FluxEstimate):
         flux_maps : `~gammapy.estimators.FluxMaps`
             Flux maps object.
         """
-        cls._validate_type(maps, sed_type)
+        cls._validate_data(data=maps, sed_type=sed_type)
 
         if sed_type == "likelihood":
             return cls(data=maps, reference_model=reference_model)

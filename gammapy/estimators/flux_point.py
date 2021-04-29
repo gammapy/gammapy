@@ -258,7 +258,7 @@ class FluxPoints(FluxEstimate):
         if sed_type is None:
             raise ValueError("Specifying the sed type is required")
 
-        cls._validate_type(table, sed_type)
+        cls._validate_data(data=table, sed_type=sed_type)
 
         if sed_type == "likelihood":
             table = cls._convert_loglike_columns(table)
@@ -392,20 +392,6 @@ class FluxPoints(FluxEstimate):
         for sed_type, default_unit in DEFAULT_UNIT.items():
             if unit.is_equivalent(default_unit):
                 return sed_type
-
-    @staticmethod
-    def _validate_table(table, sed_type, check_scan=False):
-        """Validate input table."""
-        required = set(REQUIRED_COLUMNS[sed_type])
-
-        if check_scan:
-            required = set(REQUIRED_COLUMNS[sed_type] + REQUIRED_QUANTITIES_SCAN)
-
-        if not required.issubset(table.colnames):
-            missing = required.difference(table.colnames)
-            raise ValueError(
-                "Missing columns for sed type '{}':" " {}".format(sed_type, missing)
-            )
 
     @property
     def is_ul(self):
@@ -644,7 +630,7 @@ class FluxPoints(FluxEstimate):
         if ax is None:
             ax = plt.gca()
 
-        self._validate_table(self.table, sed_type="likelihood", check_scan=True)
+        self._validate_data(self.table, sed_type="likelihood", check_scan=True)
 
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
 

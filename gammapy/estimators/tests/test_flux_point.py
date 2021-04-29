@@ -218,7 +218,7 @@ class TestFluxPoints:
         del flux_points_likelihood.table["norm_scan"]
         with pytest.raises(
             ValueError,
-            match="Missing columns for sed type 'likelihood': {'norm_scan'}",
+            match="Missing data / column for sed type 'likelihood': {'norm_scan'}",
         ):
             flux_points_likelihood.plot_ts_profiles()
 
