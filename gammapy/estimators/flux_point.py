@@ -64,6 +64,7 @@ class FluxPoints(FluxEstimate):
     and `'dnde'`. The corresponding `sed_type` has to be defined in the meta data
     of the table::
 
+        import numpy as np
         from astropy import units as u
         from astropy.table import Table
         from gammapy.estimators import FluxPoints
@@ -71,13 +72,14 @@ class FluxPoints(FluxEstimate):
 
         table = Table()
         pwl = PowerLawSpectralModel()
-        e_ref = np.logspace(0, 2, 7) * u.TeV
-        table['e_ref'] = e_ref
-        table['dnde'] = pwl(e_ref)
-        table.meta['SED_TYPE'] = 'dnde'
+        e_ref = np.geomspace(1, 100, 7) * u.TeV
 
-        flux_points = FluxPoints(table)
-        flux_points.plot()
+        table["e_ref"] = e_ref
+        table["dnde"] = pwl(e_ref)
+        table.meta["SED_TYPE"] = "dnde"
+
+        flux_points = FluxPoints.from_table(table)
+        flux_points.plot(sed_type="flux")
 
     If you have flux points in a different data format, the format can be changed
     by renaming the table columns and adding meta data::
@@ -86,8 +88,9 @@ class FluxPoints(FluxEstimate):
         from astropy import units as u
         from astropy.table import Table
         from gammapy.estimators import FluxPoints
+        from gammapy.utils.scripts import make_path
 
-        table = Table.read('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt',
+        table = Table.read(make_path('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt'),
                            format='ascii.csv', delimiter=' ', comment='#')
         table.meta['SED_TYPE'] = 'dnde'
         table.rename_column('Differential_Flux', 'dnde')
@@ -102,8 +105,8 @@ class FluxPoints(FluxEstimate):
         table.rename_column('E', 'e_ref')
         table['e_ref'].unit = 'TeV'
 
-        flux_points = FluxPoints(table)
-        flux_points.plot()
+        flux_points = FluxPoints.from_table(table)
+        flux_points.plot(sed_type="eflux")
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
