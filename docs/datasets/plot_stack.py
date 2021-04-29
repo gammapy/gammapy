@@ -36,20 +36,20 @@ ax2 = plt.subplot(142)
 ax3 = plt.subplot(143)
 ax4 = plt.subplot(144)
 
-dataset1.edisp.get_edisp_kernel().plot_matrix()
+dataset1.edisp.get_edisp_kernel().plot_matrix(ax=ax1)
 ax1.set_title("Energy dispersion dataset1")
 
-dataset2.edisp.get_edisp_kernel().plot_matrix()
+dataset2.edisp.get_edisp_kernel().plot_matrix(ax=ax2)
 ax2.set_title("Energy dispersion dataset2")
 
-dataset_stacked.edisp.get_edisp_kernel().plot_matrix()
-ax2.set_title("Energy dispersion stacked")
+dataset_stacked.edisp.get_edisp_kernel().plot_matrix(ax=ax3)
+ax3.set_title("Energy dispersion stacked")
 
 n1 = dataset1.npred() * dataset1.mask_safe
 n2 = dataset2.npred() * dataset2.mask_safe
-(n1).plot_hist(label="dataset1", ax=ax3)
-(n2).plot_hist(label="dataset2", ax=ax3)
-(n1 + n2).plot(color="green", fmt="o", label="dataset1 + dataset2", ax=ax3)
-dataset_stacked.npred().plot(fmt="+", label="stacked", color="black", ax=ax3)
-ax3.legend()
-ax3.set_title("npred")
+(n1).plot_hist(label="dataset1", ax=ax4)
+(n2).plot_hist(label="dataset2", ax=ax4)
+(n1 + n2).plot(color="green", fmt="o", label="dataset1 + dataset2", ax=ax4)
+dataset_stacked.npred().plot(fmt="+", label="stacked", color="black", ax=ax4)
+ax4.legend()
+ax4.set_title("npred")
