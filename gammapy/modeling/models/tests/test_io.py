@@ -8,11 +8,12 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
-    AbsorbedSpectralModel,
-    Absorption,
     BackgroundModel,
+    EBLAbsorptionNormSpectralModel,
     Model,
     Models,
+    PiecewiseNormSpectralModel,
+    PowerLawSpectralModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
@@ -88,10 +89,6 @@ def test_dict_to_skymodels():
     assert "TemplateSpatialModel" in model2.spatial_model.tag
 
     assert not model2.spatial_model.normalize
-    assert model2.spectral_model.parameters["norm"].value == 2.1
-
-    # TODO problem of duplicate parameter name between TemplateSpatialModel and TemplateSpectralModel
-    # assert model2.parameters["norm"].value == 2.1 # fail
 
 
 @requires_data()
@@ -100,7 +97,7 @@ def test_sky_models_io(tmp_path):
     filename = get_pkg_data_filename("data/examples.yaml")
     models = Models.read(filename)
     models.covariance = np.eye(len(models.parameters))
-    models.write(tmp_path / "tmp.yaml")
+    models.write(tmp_path / "tmp.yaml", full_output=True)
     models = Models.read(tmp_path / "tmp.yaml")
     assert models._covar_file == "tmp_covariance.dat"
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
@@ -111,45 +108,68 @@ def test_sky_models_io(tmp_path):
     # or check serialised dict content
 
 
-@requires_data()
-def test_absorption_io(tmp_path):
-    dominguez = Absorption.read_builtin("dominguez")
-    model = AbsorbedSpectralModel(
-        spectral_model=Model.create("pl", "spectral"),
-        absorption=dominguez,
-        redshift=0.5,
-    )
-    assert len(model.parameters) == 5
+def test_piecewise_norm_spectral_model_init():
+    with pytest.raises(ValueError):
+        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1, 5])
+
+    with pytest.raises(ValueError):
+        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1,])
+
+
+def test_piecewise_norm_spectral_model_io():
+    energy = [1, 3, 7, 10] * u.TeV
+    norms = [1, 5, 3, 0.5] * u.Unit("")
+
+    model = PiecewiseNormSpectralModel(energy=energy, norms=norms)
+    model.parameters[0].value = 2
 
     model_dict = model.to_dict()
-    parnames = [_["name"] for _ in model_dict["parameters"]]
-    assert parnames == ["redshift", "alpha_norm"]
 
-    new_model = AbsorbedSpectralModel.from_dict(model_dict)
+    parnames = [_["name"] for _ in model_dict["parameters"]]
+    for k, parname in enumerate(parnames):
+        assert parname == f"norm_{k}"
+
+    new_model = PiecewiseNormSpectralModel.from_dict(model_dict)
+
+    assert_allclose(new_model.parameters[0].value, 2)
+    assert_allclose(new_model.energy, energy)
+    assert_allclose(new_model.norms, [2, 5, 3, 0.5])
+
+
+@requires_data()
+def test_absorption_io(tmp_path):
+    dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
+    assert len(dominguez.parameters) == 2
+
+    model_dict = dominguez.to_dict()
+    parnames = [_["name"] for _ in model_dict["parameters"]]
+    assert parnames == [
+        "alpha_norm",
+        "redshift",
+    ]
+
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
     assert new_model.redshift.value == 0.5
     assert new_model.alpha_norm.name == "alpha_norm"
     assert new_model.alpha_norm.value == 1
-    assert "PowerLawSpectralModel" in new_model.spectral_model.tag
-    assert_allclose(new_model.absorption.energy, dominguez.energy)
-    assert_allclose(new_model.absorption.param, dominguez.param)
-    assert len(new_model.parameters) == 5
+    assert_allclose(new_model.energy, dominguez.energy)
+    assert_allclose(new_model.param, dominguez.param)
+    assert len(new_model.parameters) == 2
 
-    test_absorption = Absorption(
+    model = EBLAbsorptionNormSpectralModel(
         u.Quantity(range(3), "keV"),
         u.Quantity(range(2), ""),
         u.Quantity(np.ones((2, 3)), ""),
-    )
-    model = AbsorbedSpectralModel(
-        spectral_model=Model.create("PowerLawSpectralModel", "spectral"),
-        absorption=test_absorption,
         redshift=0.5,
+        alpha_norm=1,
     )
     model_dict = model.to_dict()
-    new_model = AbsorbedSpectralModel.from_dict(model_dict)
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
-    assert_allclose(new_model.absorption.energy, test_absorption.energy)
-    assert_allclose(new_model.absorption.param, test_absorption.param)
+    assert_allclose(new_model.energy, model.energy)
+    assert_allclose(new_model.param, model.param)
+    assert_allclose(new_model.data, model.data)
 
     write_yaml(model_dict, tmp_path / "tmp.yaml")
     read_yaml(tmp_path / "tmp.yaml")
@@ -194,8 +214,14 @@ def make_all_models():
     yield Model.create(
         "TemplateSpectralModel", "spectral", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?
+    yield Model.create(
+        "PiecewiseNormSpectralModel",
+        "spectral",
+        energy=[1, 2] * u.cm,
+        norms=[3, 4] * u.cm,
+    )
     yield Model.create("GaussianSpectralModel", "spectral")
-    # TODO: yield Model.create("AbsorbedSpectralModel")
+    # TODO: yield Model.create("EBLAbsorptionNormSpectralModel")
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
     yield Model.create("ConstantTemporalModel", "temporal")
@@ -208,7 +234,7 @@ def make_all_models():
     m1 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_nodes([1, 2] * u.TeV, name="energy")]
     )
-    yield Model.create("SkyDiffuseCube", map=m1)
+    yield Model.create("TemplateSpatialModel", "spatial", map=m1)
     m2 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")]
     )
@@ -237,5 +263,15 @@ def test_missing_parameters():
     assert len(models["source1"].spatial_model.parameters) == 6
 
 
+def test_simplified_output():
+    model = PowerLawSpectralModel()
+    full = model.to_dict(full_output=True)
+    simplified = model.to_dict()
+    for k, _ in enumerate(model.parameters.names):
+        for item in ["min", "max", "error"]:
+            assert item in full["parameters"][k]
+            assert item not in simplified["parameters"][k]
+
+
 def test_registries_print():
-    print(MODEL_REGISTRY)
+    assert "Registry" in str(MODEL_REGISTRY)

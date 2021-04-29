@@ -23,6 +23,7 @@ class PhaseBackgroundMaker(Maker):
     off_phase : `tuple` or list of tuples
         off-phase defined by the two edges of each interval (edges are excluded)
     """
+
     tag = "PhaseBackgroundMaker"
 
     def __init__(self, on_phase, off_phase):
@@ -45,7 +46,7 @@ class PhaseBackgroundMaker(Maker):
             )
             event_lists.append(events)
 
-        events = EventList.stack(event_lists)
+        events = EventList.from_stack(event_lists)
         counts = RegionNDMap.from_geom(dataset.counts.geom)
         counts.fill_events(events)
         return counts
@@ -101,8 +102,12 @@ class PhaseBackgroundMaker(Maker):
         """
         counts_off = self.make_counts_off(dataset, observation)
         counts = self.make_counts(dataset, observation)
-        acceptance = np.sum([_[1] - _[0] for _ in self.on_phase])
-        acceptance_off = np.sum([_[1] - _[0] for _ in self.off_phase])
+
+        acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom)
+        acceptance.data = np.sum([_[1] - _[0] for _ in self.on_phase])
+
+        acceptance_off = RegionNDMap.from_geom(geom=dataset.counts.geom)
+        acceptance_off.data = np.sum([_[1] - _[0] for _ in self.off_phase])
 
         dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
             dataset=dataset,

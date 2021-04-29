@@ -15,8 +15,10 @@ SPATIAL_MODEL_REGISTRY = Registry(
         TemplateSpatialModel,
         DiskSpatialModel,
         GaussianSpatialModel,
+        GeneralizedGaussianSpatialModel,
         PointSpatialModel,
         ShellSpatialModel,
+        Shell2SpatialModel,
     ]
 )
 """Registry of spatial model classes."""
@@ -29,6 +31,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         PowerLaw2SpectralModel,
         BrokenPowerLawSpectralModel,
         SmoothBrokenPowerLawSpectralModel,
+        PiecewiseNormSpectralModel,
         ExpCutoffPowerLawSpectralModel,
         ExpCutoffPowerLaw3FGLSpectralModel,
         SuperExpCutoffPowerLaw3FGLSpectralModel,
@@ -36,7 +39,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         LogParabolaSpectralModel,
         TemplateSpectralModel,
         GaussianSpectralModel,
-        AbsorbedSpectralModel,
+        EBLAbsorptionNormSpectralModel,
         NaimaSpectralModel,
         ScaleSpectralModel,
         PowerLawNormSpectralModel,
@@ -56,7 +59,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
 )
 """Registry of temporal models classes."""
 
-MODEL_REGISTRY = Registry([SkyModel, SkyDiffuseCube, BackgroundModel])
+MODEL_REGISTRY = Registry([SkyModel, FoVBackgroundModel, BackgroundModel])
 """Registry of model classes"""
 
 
@@ -65,14 +68,10 @@ __all__ = [
     "SPATIAL_MODEL_REGISTRY",
     "TEMPORAL_MODEL_REGISTRY",
     "SPECTRAL_MODEL_REGISTRY",
-    "SkyModelBase",
     "Models",
     "SkyModel",
-    "SkyDiffuseCube",
-    "BackgroundModel",
     "create_crab_spectral_model",
     "create_cosmic_ray_spectral_model",
-    "Absorption",
     "SpatialModel",
     "SpectralModel",
     "TemporalModel",

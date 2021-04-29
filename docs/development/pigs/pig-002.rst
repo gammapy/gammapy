@@ -3,7 +3,7 @@
 .. _pig-002:
 
 ***********************************************
-PIG 2 - Organization of low-level analysis code
+PIG 2 - Organization of low level analysis code
 ***********************************************
 
 -----------------------------------
@@ -24,8 +24,8 @@ of gammapy. Low level analysis is based on the gammapy building blocks from
 ``gammapy.data``, ``gammapy.irf`` and ``gammapy.maps``. Low level analysis
 implements all the individual steps required to perform data reduction for IACT
 from DL3 inputs (event lists and IRFs) to DL4 data (spectra, maps and cubes) and
-their associated reduced IRFs. Low-level analysis should be structured in a very
-modular way to allow easy implementation of high-level analysis classes and
+their associated reduced IRFs. Low level analysis should be structured in a very
+modular way to allow easy implementation of high level analysis classes and
 scripts.
 
 
@@ -70,7 +70,7 @@ Analysis subpackages are:
 Low level map and cube analysis
 ===============================
 
-The low-level analysis cube package deals with the production of all maps/cubes
+The low level analysis cube package deals with the production of all maps/cubes
 and PSF kernels required to perform 2D and 3D modeling and fitting. This
 includes counts, exposure, acceptance and normalized background maps and cubes.
 These reduced data and IRFs are stored using the ``gammapy.maps.WcsNDMap`` class

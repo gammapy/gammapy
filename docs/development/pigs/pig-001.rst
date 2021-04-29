@@ -43,7 +43,7 @@ We expect that we will not use PIGs very often, but we think they can be useful
 e.g. in the following cases:
 
 * Outline design for something that requires significant work,
-  e.g. on topics like "Modeling in Gammapy" or "High-level user interface in
+  e.g. on topics like "Modeling in Gammapy" or "High level user interface in
   Gammapy". These PIGs can be rather long, i.e. more than one page, explaining
   the design in detail and even explaining which alternatives were considered
   and why the proposed solution was preferred.

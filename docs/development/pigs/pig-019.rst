@@ -106,7 +106,7 @@ resolved by a common ``FluxEstimator`` base class (see `GH 2555`_).
 For this reason we propose to introduce a ``gammapy.estimators`` sub-package
 to group all existing estimator classes into the same namespace. This
 provides the possibility in future to define a common API via base classes,
-introducing general higher-level estimators and a common configuration
+introducing general higher level estimators and a common configuration
 system.
 
 

@@ -4,12 +4,16 @@ import logging
 import os
 import subprocess
 import sys
+import tarfile
 import time
+from pathlib import Path
 import click
+from gammapy.utils.scripts import get_images_paths, get_notebooks_paths
 
 log = logging.getLogger(__name__)
 
 OFF = ["GAMMA_CAT", "GAMMAPY_DATA", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
+PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
 
 
 @click.command(name="run")
@@ -26,7 +30,7 @@ def cli_jupyter_run(ctx, tutor, kernel):
     """Execute Jupyter notebooks."""
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
-            notebook_test(path, kernel)
+            notebook_run(path, kernel)
 
 
 def execute_notebook(path, kernel="python3", loglevel=30):
@@ -95,9 +99,7 @@ def cli_jupyter_black(ctx):
 
 class BlackNotebook:
     """Manage the process of black formatting.
-
     Probably this will become available directly in the future.
-
     See https://github.com/ambv/black/issues/298#issuecomment-476960082
     """
 
@@ -151,10 +153,10 @@ def cli_jupyter_test(ctx, tutor, kernel):
     """Check if Jupyter notebooks are broken."""
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
-            notebook_test(path, kernel)
+            notebook_run(path, kernel)
 
 
-def notebook_test(path, kernel="python3"):
+def notebook_run(path, kernel="python3"):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 
@@ -215,3 +217,23 @@ class environment:
         if self.tutor:
             os.environ = self.old
             log.info("Environment variables recovered.")
+
+
+@click.command(name="tar")
+@click.option(
+    "--out",
+    default="notebooks.tar",
+    help="Path and filename for the tar file that will be created.",
+    show_default=True,
+)
+def cli_jupyter_tar(out):
+    """Create a tar file with the notebooks in docs."""
+
+    tar_name = Path(out)
+    with tarfile.open(tar_name, "w:") as tar:
+        for name in get_notebooks_paths():
+            path_tail = str(name).split(str(PATH_DOCS.resolve()))[1]
+            tar.add(name, arcname=Path(path_tail))
+        for img in get_images_paths():
+            tar.add(img, arcname=Path("tutorials/images") / Path(img).name)
+    log.info(f"{tar_name} file has been created.")

@@ -45,7 +45,7 @@ def compute_fvar(flux, flux_err):
     sig_square = np.nansum(flux_err ** 2) / n_points
     fvar = np.sqrt(np.abs(s_square - sig_square)) / flux_mean
 
-    sigxserr_a = np.sqrt(2 / n_points) * (sig_square / flux_mean) ** 2
+    sigxserr_a = np.sqrt(2 / n_points) * sig_square / flux_mean ** 2
     sigxserr_b = np.sqrt(sig_square / n_points) * (2 * fvar / flux_mean)
     sigxserr = np.sqrt(sigxserr_a ** 2 + sigxserr_b ** 2)
     fvar_err = sigxserr / (2 * fvar)

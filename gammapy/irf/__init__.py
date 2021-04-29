@@ -9,14 +9,10 @@ from .edisp_map import *
 from .effective_area import *
 from .energy_dispersion import *
 from .io import *
-from .psf_3d import *
-from .psf_gauss import *
-from .psf_kernel import *
-from .psf_king import *
-from .psf_map import *
-from .psf_table import *
+from .psf import *
 
 
+# TODO: add EDispMap?
 IRF_REGISTRY = Registry(
     [
         EffectiveAreaTable2D,

@@ -82,10 +82,12 @@ def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
     m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
 
     coords = (3.456, 0.1234)[: len(m.geom.axes)]
+
     m_image = m.get_image_by_coord(coords)
 
     im_geom = m.geom.to_image()
     skycoord = im_geom.get_coord().skycoord
+
     m_vals = m.get_by_coord((skycoord,) + coords)
     assert_equal(m_image.data, m_vals)
 
@@ -292,23 +294,23 @@ def test_map_arithmetics(map_type):
     assert m1.unit == u.Unit("")
     assert_allclose(m1.data, 4)
 
-    lt_m2 = m2 < 1.5*u.m**2
+    lt_m2 = m2 < 1.5 * u.m ** 2
     assert lt_m2.data.dtype == bool
     assert_allclose(lt_m2, True)
 
-    le_m2 = m2 <= 10000*u.cm**2
+    le_m2 = m2 <= 10000 * u.cm ** 2
     assert_allclose(le_m2, True)
 
-    gt_m2 = m2 > 15000*u.cm**2
+    gt_m2 = m2 > 15000 * u.cm ** 2
     assert_allclose(gt_m2, False)
 
     ge_m2 = m2 >= m2
     assert_allclose(ge_m2, True)
 
-    eq_m2 = m2 == 500*u.cm**2
+    eq_m2 = m2 == 500 * u.cm ** 2
     assert_allclose(eq_m2, False)
 
-    ne_m2 = m2 != 500*u.cm**2
+    ne_m2 = m2 != 500 * u.cm ** 2
     assert_allclose(ne_m2, True)
 
 
@@ -372,45 +374,50 @@ def test_set_scalar():
     assert m.data.shape == (10, 10)
     assert_allclose(m.data, 1)
 
+
 def test_interp_to_geom():
     energy = MapAxis.from_energy_bounds("1 TeV", "300 TeV", nbin=5, name="energy")
-    energy_target = MapAxis.from_energy_bounds("1 TeV", "300 TeV", nbin=7, name="energy")
+    energy_target = MapAxis.from_energy_bounds(
+        "1 TeV", "300 TeV", nbin=7, name="energy"
+    )
     value = 30
-    coords = {
-        'skycoord': SkyCoord("0 deg", "0 deg"),
-        'energy': energy_target.center[3]
-    }
+    coords = {"skycoord": SkyCoord("0 deg", "0 deg"), "energy": energy_target.center[3]}
 
-    #WcsNDMap
-    geom_wcs = WcsGeom.create(npix=(5, 3), proj="CAR", binsz=60, axes=[energy], skydir=(0, 0))
+    # WcsNDMap
+    geom_wcs = WcsGeom.create(
+        npix=(5, 3), proj="CAR", binsz=60, axes=[energy], skydir=(0, 0)
+    )
     wcs_map = Map.from_geom(geom_wcs, unit="")
-    wcs_map.data = value*np.ones(wcs_map.data.shape)
+    wcs_map.data = value * np.ones(wcs_map.data.shape)
 
     wcs_geom_target = WcsGeom.create(
-        skydir=(0, 0),
-        width=(10, 10),
-        binsz=0.1*u.deg,
-        axes=[energy_target]
+        skydir=(0, 0), width=(10, 10), binsz=0.1 * u.deg, axes=[energy_target]
     )
-    interp_wcs_map = wcs_map.interp_to_geom(wcs_geom_target, interp=1)
+    interp_wcs_map = wcs_map.interp_to_geom(wcs_geom_target, method="linear")
 
     assert_allclose(interp_wcs_map.get_by_coord(coords)[0], value, atol=1e-7)
     assert isinstance(interp_wcs_map, WcsNDMap)
-    assert interp_wcs_map.geom  == wcs_geom_target
+    assert interp_wcs_map.geom == wcs_geom_target
 
-    #HpxNDMap
-    geom_hpx = HpxGeom.create(binsz=60,axes=[energy], skydir=(0, 0))
+    # HpxNDMap
+    geom_hpx = HpxGeom.create(binsz=60, axes=[energy], skydir=(0, 0))
     hpx_map = Map.from_geom(geom_hpx, unit="")
-    hpx_map.data = value*np.ones(hpx_map.data.shape)
+    hpx_map.data = value * np.ones(hpx_map.data.shape)
 
     hpx_geom_target = HpxGeom.create(
-        skydir=(0, 0),
-        width=10,
-        binsz=0.1*u.deg,
-        axes=[energy_target]
+        skydir=(0, 0), width=10, binsz=0.1 * u.deg, axes=[energy_target]
     )
     interp_hpx_map = hpx_map.interp_to_geom(hpx_geom_target)
 
     assert_allclose(interp_hpx_map.get_by_coord(coords)[0], value, atol=1e-7)
     assert isinstance(interp_hpx_map, HpxNDMap)
-    assert interp_hpx_map.geom  == hpx_geom_target
+    assert interp_hpx_map.geom == hpx_geom_target
+
+    # Preserving the counts
+    geom_initial = WcsGeom.create(skydir=(20, 20), width=(5, 5), binsz=0.2 * u.deg,)
+
+    test_map = Map.from_geom(geom_initial, unit="")
+    test_map.data = value * np.ones(test_map.data.shape)
+    geom_target = WcsGeom.create(skydir=(20, 20), width=(5, 5), binsz=0.1 * u.deg,)
+    new_map = test_map.interp_to_geom(geom_target, preserve_counts=True)
+    assert np.floor(np.sum(new_map.data)) == np.sum(test_map.data)

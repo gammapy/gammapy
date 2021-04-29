@@ -2,6 +2,7 @@
 """Multi-Gaussian distribution utilities (Gammapy internal)."""
 import numpy as np
 import scipy.optimize
+from astropy import units as u
 
 
 class Gauss2DPDF:
@@ -16,7 +17,7 @@ class Gauss2DPDF:
     """
 
     def __init__(self, sigma=1):
-        self.sigma = np.asarray(sigma, np.float64)
+        self.sigma = sigma
 
     @property
     def _sigma2(self):
@@ -43,9 +44,6 @@ class Gauss2DPDF:
         dpdxdy : `~numpy.ndarray`
             dp / (dx dy)
         """
-        x = np.asarray(x, dtype=np.float64)
-        y = np.asarray(y, dtype=np.float64)
-
         theta2 = x * x + y * y
         amplitude = 1 / (2 * np.pi * self._sigma2)
         exponent = -0.5 * theta2 / self._sigma2
@@ -64,18 +62,16 @@ class Gauss2DPDF:
         dpdtheta2 : `~numpy.ndarray`
             dp / dtheta2
         """
-        theta2 = np.asarray(theta2, dtype=np.float64)
-
         amplitude = 1 / (2 * self._sigma2)
         exponent = -0.5 * theta2 / self._sigma2
         return amplitude * np.exp(exponent)
 
-    def containment_fraction(self, theta):
+    def containment_fraction(self, rad):
         """Containment fraction.
 
         Parameters
         ----------
-        theta : `~numpy.ndarray`
+        rad : `~numpy.ndarray`
             Offset
 
         Returns
@@ -83,9 +79,7 @@ class Gauss2DPDF:
         containment_fraction : `~numpy.ndarray`
             Containment fraction
         """
-        theta = np.asarray(theta, dtype=np.float64)
-
-        return 1 - np.exp(-0.5 * theta ** 2 / self._sigma2)
+        return 1 - np.exp(-0.5 * rad ** 2 / self._sigma2)
 
     def containment_radius(self, containment_fraction):
         """Containment angle for a given containment fraction.
@@ -100,8 +94,6 @@ class Gauss2DPDF:
         containment_radius : `~numpy.ndarray`
             Containment radius
         """
-        containment_fraction = np.asarray(containment_fraction, dtype=np.float64)
-
         return self.sigma * np.sqrt(-2 * np.log(1 - containment_fraction))
 
     def gauss_convolve(self, sigma):
@@ -117,8 +109,6 @@ class Gauss2DPDF:
         gauss_convolve : `~gammapy.modeling.models.Gauss2DPDF`
             Convolution of both Gaussians.
         """
-        sigma = np.asarray(sigma, dtype=np.float64)
-
         new_sigma = np.sqrt(self._sigma2 + sigma ** 2)
         return Gauss2DPDF(new_sigma)
 
@@ -142,13 +132,12 @@ class MultiGauss2D:
 
     def __init__(self, sigmas, norms=None):
         # If no norms are given, you have a PDF.
-        sigmas = np.asarray(sigmas, dtype=np.float64)
         self.components = [Gauss2DPDF(sigma) for sigma in sigmas]
 
         if norms is None:
             self.norms = np.ones(len(self.components))
         else:
-            self.norms = np.asarray(norms, dtype=np.float64)
+            self.norms = norms
 
     def __call__(self, x, y=0):
         """dp / (dx dy) at position (x, y)
@@ -165,13 +154,11 @@ class MultiGauss2D:
         total : `~numpy.ndarray`
             dp / (dx dy)
         """
-        x = np.asarray(x, dtype=np.float64)
-        y = np.asarray(y, dtype=np.float64)
-
-        total = np.zeros_like(x)
+        values = []
         for norm, component in zip(self.norms, self.components):
-            total += norm * component(x, y)
-        return total
+            values.append(norm * component(x, y))
+
+        return np.stack(values).sum(axis=0)
 
     @property
     def n_components(self):
@@ -181,12 +168,12 @@ class MultiGauss2D:
     @property
     def sigmas(self):
         """Array of Gaussian widths (`~numpy.ndarray`)"""
-        return np.array([_.sigma for _ in self.components])
+        return u.Quantity([_.sigma for _ in self.components])
 
     @property
     def integral(self):
         """Integral as sum of norms (`~numpy.ndarray`)"""
-        return np.nansum(self.norms)
+        return np.nansum(self.norms, axis=0)
 
     @property
     def amplitude(self):
@@ -211,7 +198,7 @@ class MultiGauss2D:
         where ``N`` is normalization and ``sigma`` is width.
 
         """
-        sigma2s = np.array([component._sigma2 for component in self.components])
+        sigma2s = [component._sigma2 for component in self.components]
         return np.sqrt(np.sum(self.norms * sigma2s))
 
     def dpdtheta2(self, theta2):
@@ -227,13 +214,11 @@ class MultiGauss2D:
         dpdtheta2 : `~numpy.ndarray`
             dp / dtheta2
         """
+        values = []
         # Actually this is only a PDF if sum(norms) == 1
-        theta2 = np.asarray(theta2, dtype=np.float64)
-
-        total = np.zeros_like(theta2)
         for norm, component in zip(self.norms, self.components):
-            total += norm * component.dpdtheta2(theta2)
-        return total
+            values.append(norm * component.dpdtheta2(theta2))
+        return np.sum(values, axis=0)
 
     def normalize(self):
         """Normalize function.
@@ -243,17 +228,15 @@ class MultiGauss2D:
         norm_multigauss : `~gammapy.modeling.models.MultiGauss2D`
            normalized function
         """
-        sum = self.integral
-        if sum != 0:
-            self.norms /= sum
-        return self
+        with np.errstate(divide="ignore", invalid="ignore"):
+            self.norms = np.nan_to_num(self.norms / self.integral)
 
-    def containment_fraction(self, theta):
+    def containment_fraction(self, rad):
         """Containment fraction.
 
         Parameters
         ----------
-        theta : `~numpy.ndarray`
+        rad : `~numpy.ndarray`
             Offset
 
         Returns
@@ -261,13 +244,12 @@ class MultiGauss2D:
         containment_fraction : `~numpy.ndarray`
             Containment fraction
         """
-        theta = np.asarray(theta, dtype=np.float64)
+        values = []
 
-        total = np.zeros_like(theta)
         for norm, component in zip(self.norms, self.components):
-            total += norm * component.containment_fraction(theta)
+            values.append(norm * component.containment_fraction(rad))
 
-        return total
+        return np.sum(values, axis=0)
 
     def containment_radius(self, containment_fraction):
         """Containment angle for a given containment fraction.
@@ -282,17 +264,17 @@ class MultiGauss2D:
         containment_radius : `~numpy.ndarray`
             Containment radius
         """
-        theta_max = 1e3
+        rad_max = 1e3
 
-        def f(theta):
+        def f(rad):
             # positive if theta too large
-            return self.containment_fraction(theta) - containment_fraction
+            return self.containment_fraction(rad * u.deg) - containment_fraction
 
-        theta = scipy.optimize.brentq(f, a=0, b=theta_max)
-        if np.allclose(theta, theta_max):
-            theta = np.inf
+        rad = scipy.optimize.brentq(f, a=0, b=rad_max)
+        if np.allclose(rad, rad_max):
+            rad = np.inf
 
-        return theta
+        return rad * u.deg
 
     def match_sigma(self, containment_fraction):
         """Compute equivalent Gauss width.
@@ -338,9 +320,6 @@ class MultiGauss2D:
         new_multi_gauss_2d : `~gammapy.modeling.models.MultiGauss2D`
             Convolution as new MultiGauss2D
         """
-        sigma = np.asarray(sigma, dtype=np.float64)
-        norm = np.asarray(norm, dtype=np.float64)
-
         sigmas, norms = [], []
         for ii in range(self.n_components):
             sigmas.append(self.components[ii].gauss_convolve(sigma).sigma)

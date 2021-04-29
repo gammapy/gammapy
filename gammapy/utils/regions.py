@@ -17,19 +17,20 @@ Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
 import operator
+import numpy as np
+from scipy.optimize import minimize
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from regions import (
+    CircleAnnulusSkyRegion,
     CircleSkyRegion,
     CompoundSkyRegion,
     DS9Parser,
     PixelRegion,
+    RectangleSkyRegion,
     Region,
     SkyRegion,
-    RectangleSkyRegion,
-    CircleAnnulusSkyRegion
 )
-import numpy as np
-from astropy import units as u
-from astropy.coordinates import SkyCoord
 
 __all__ = [
     "make_region",
@@ -37,7 +38,7 @@ __all__ = [
     "make_orthogonal_rectangle_sky_regions",
     "make_concentric_annulus_sky_regions",
     "compound_region_to_list",
-    "list_to_compound_region"
+    "list_to_compound_region",
 ]
 
 
@@ -121,6 +122,43 @@ def make_pixel_region(region, wcs=None):
         raise TypeError(f"Invalid type: {region!r}")
 
 
+def compound_region_center(compound_region):
+    """Compute center for a CompoundRegion
+
+    The center of the compound region is defined here as the geometric median
+    of the individual centers of the regions. The geometric median is defined
+    as the point the minimises the distance to all other points.
+
+    Parameters
+    ----------
+    compound_region : `CompoundRegion`
+        Compound region
+
+    Returns
+    -------
+    center : `SkyCoord`
+        Geometric median of the positions of the individual regions
+    """
+    regions = compound_region_to_list(compound_region)
+    positions = SkyCoord([region.center for region in regions])
+
+    def f(x, coords):
+        """Function to minimize"""
+        lon, lat = x
+        center = SkyCoord(lon * u.deg, lat * u.deg)
+        return np.sum(center.separation(coords).deg)
+
+    eps = 1e-5
+    result = minimize(
+        f,
+        x0=[0, 0],
+        args=(positions,),
+        bounds=[(-180 + eps, 180 - eps), (-90 + eps, 90 - eps)],
+        method="L-BFGS-B",
+    )
+    return SkyCoord(result.x[0], result.x[1], frame="icrs", unit="deg")
+
+
 def compound_region_to_list(region):
     """Create list of regions from compound regions.
 
@@ -161,10 +199,9 @@ def list_to_compound_region(regions):
 
     Returns
     -------
-    compound : `~regions.CompoundSkyRegion`
+    compound : `~regions.CompoundSkyRegion` or `~regions.CompoundPixelRegion`
         Compound sky region
     """
-
     region_union = regions[0]
 
     for region in regions[1:]:
@@ -198,9 +235,9 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     Parameters
     ----------
-    start_pos : `~astropy.regions.SkyCoord'
+    start_pos : `~astropy.regions.SkyCoord`
         First sky coordinate defining the line to which the orthogonal boxes made
-    end_pos : `~astropy.regions.SkyCoord'
+    end_pos : `~astropy.regions.SkyCoord`
         Second sky coordinate defining the line to which the orthogonal boxes made
     height : `~astropy.quantity.Quantity`
         Height of the rectangle region.
@@ -228,7 +265,8 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     for center in coords:
         reg = RectangleSkyRegion(
-            center=center, width=width, height=u.Quantity(height), angle=angle)
+            center=center, width=width, height=u.Quantity(height), angle=angle
+        )
         regions.append(reg)
 
     return regions
@@ -257,13 +295,8 @@ def make_concentric_annulus_sky_regions(center, radius_max, nbin=11):
 
     for r_in, r_out in zip(edges[:-1], edges[1:]):
         region = CircleAnnulusSkyRegion(
-            center=center,
-            inner_radius=r_in,
-            outer_radius=r_out,
+            center=center, inner_radius=r_in, outer_radius=r_out,
         )
         regions.append(region)
 
     return regions
-
-
-

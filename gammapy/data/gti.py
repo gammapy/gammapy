@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import copy
+from operator import le, lt
 import numpy as np
-from operator import lt, le
 from astropy.table import Table, vstack
 from astropy.time import Time
+from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import (
@@ -60,7 +62,7 @@ class GTI:
         self.table = table
 
     def copy(self):
-        return self.__class__(self.table)
+        return copy.deepcopy(self)
 
     @classmethod
     def create(cls, start, stop, reference_time="2000-01-01"):
@@ -75,8 +77,8 @@ class GTI:
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         """
-        start = np.atleast_1d(Quantity(start))
-        stop = np.atleast_1d(Quantity(stop))
+        start = Quantity(start, ndmin=1)
+        stop = Quantity(stop, ndmin=1)
         reference_time = Time(reference_time)
         meta = time_ref_to_dict(reference_time)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
@@ -98,8 +100,16 @@ class GTI:
         return cls(table)
 
     def write(self, filename, **kwargs):
-        """Write to file."""
-        self.table.write(make_path(filename), **kwargs)
+        """Write to file.
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            File name to write to.
+        """
+        hdu = fits.BinTableHDU(self.table, name="GTI")
+        hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
+        hdulist.writeto(make_path(filename), **kwargs)
 
     def __str__(self):
         return (
@@ -144,7 +154,10 @@ class GTI:
     @property
     def time_intervals(self):
         """List of time intervals"""
-        return [(t_start, t_stop) for t_start, t_stop in zip(self.time_start, self.time_stop)]
+        return [
+            (t_start, t_stop)
+            for t_start, t_stop in zip(self.time_start, self.time_stop)
+        ]
 
     @classmethod
     def from_time_intervals(cls, time_intervals, reference_time="2000-01-01"):
@@ -203,7 +216,7 @@ class GTI:
         return self.__class__(gti_within)
 
     def stack(self, other):
-        """Stack with another GTI.
+        """Stack with another GTI in place.
 
         This simply changes the time reference of the second GTI table
         and stack the two tables. No logic is applied to the intervals.
@@ -213,15 +226,11 @@ class GTI:
         other : `~gammapy.data.GTI`
             GTI to stack to self
 
-        Returns
-        -------
-        new_gti : `~gammapy.data.GTI`
-            New GTI
         """
         start = (other.time_start - self.time_ref).sec
         end = (other.time_stop - self.time_ref).sec
         table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
-        return self.__class__(vstack([self.table, table]))
+        self.table = vstack([self.table, table])
 
     def union(self, overlap_ok=True, merge_equal=True):
         """Union of overlapping time intervals.

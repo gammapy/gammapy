@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy import units as u
 from astropy.io import fits
-from gammapy.utils.random import get_random_state
+import json
 
 
 def coordsys_to_frame(coordsys):
@@ -50,38 +51,6 @@ class InvalidIndex:
 
 INVALID_VALUE = InvalidValue()
 INVALID_INDEX = InvalidIndex()
-
-
-def fill_poisson(map_in, mu, random_state="random-seed"):
-    """Fill a map object with a poisson random variable.
-
-    This can be useful for testing, to make a simulated counts image.
-    E.g. filling with ``mu=0.5`` fills the map so that many pixels
-    have value 0 or 1, and a few more "counts".
-
-    Parameters
-    ----------
-    map_in : `~gammapy.maps.Map`
-        Input map
-    mu : scalar or `~numpy.ndarray`
-        Expectation value
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-        Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
-    """
-    random_state = get_random_state(random_state)
-    idx = map_in.geom.get_idx(flat=True)
-    mu = random_state.poisson(mu, idx[0].shape)
-    map_in.fill_by_idx(idx, mu)
-
-
-def interp_to_order(interp):
-    """Convert interpolation string to order."""
-    if isinstance(interp, int):
-        return interp
-
-    order_map = {None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3}
-    return order_map.get(interp, None)
 
 
 def find_bands_hdu(hdu_list, hdu):
@@ -142,6 +111,9 @@ def find_bintable_hdu(hdulist):
 
 
 def edges_from_lo_hi(edges_lo, edges_hi):
+    if np.isscalar(edges_lo.value) and np.isscalar(edges_hi.value):
+        return u.Quantity([edges_lo, edges_hi])
+
     edges = edges_lo.copy()
     try:
         edges = edges.insert(len(edges), edges_hi[-1])
@@ -157,3 +129,27 @@ def slice_to_str(slice_):
 def str_to_slice(slice_str):
     start, stop = slice_str.split(":")
     return slice(int(start), int(stop))
+
+
+class JsonQuantityEncoder(json.JSONEncoder):
+    """Support for quantities that JSON default encoder"""
+    def default(self, obj):
+        if isinstance(obj, u.Quantity):
+            return obj.to_string()
+
+        return json.JSONEncoder.default(self, obj)
+
+
+class JsonQuantityDecoder(json.JSONDecoder):
+    """Support for quantities that JSON default encoder"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    @staticmethod
+    def object_hook(data):
+        for key, value in data.items():
+            try:
+                data[key] = u.Quantity(value)
+            except TypeError:
+                continue
+        return data

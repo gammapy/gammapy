@@ -6,14 +6,10 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
-from .geom import (
-    Geom,
-    MapCoord,
-    find_and_read_bands,
-    make_axes,
-    pix_tuple_to_idx,
-    skycoord_to_lonlat,
-)
+from astropy import units as u
+from astropy.utils import lazyproperty
+from gammapy.utils.array import is_power2
+from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
 
@@ -46,6 +42,46 @@ class HpxConv:
     @classmethod
     def create(cls, convname="gadf"):
         return copy.deepcopy(HPX_FITS_CONVENTIONS[convname])
+
+    @staticmethod
+    def identify_hpx_format(header):
+        """Identify the convention used to write this file."""
+        # Hopefully the file contains the HPX_CONV keyword specifying
+        # the convention used
+        if "HPX_CONV" in header:
+            return header["HPX_CONV"].lower()
+
+        # Try based on the EXTNAME keyword
+        hduname = header.get("EXTNAME", None)
+        if hduname == "HPXEXPOSURES":
+            return "fgst-bexpcube"
+        elif hduname == "SKYMAP2":
+            if "COORDTYPE" in header.keys():
+                return "galprop"
+            else:
+                return "galprop2"
+        elif hduname == "xtension":
+            return "healpy"
+        # Check the name of the first column
+        colname = header["TTYPE1"]
+        if colname == "PIX":
+            colname = header["TTYPE2"]
+
+        if colname == "KEY":
+            return "fgst-srcmap-sparse"
+        elif colname == "ENERGY1":
+            return "fgst-template"
+        elif colname == "COSBINS":
+            return "fgst-ltcube"
+        elif colname == "Bin0":
+            return "galprop"
+        elif colname == "CHANNEL1" or colname == "CHANNEL0":
+            if hduname == "SKYMAP":
+                return "fgst-ccube"
+            else:
+                return "fgst-srcmap"
+        else:
+            raise ValueError("Could not identify HEALPIX convention")
 
 
 HPX_FITS_CONVENTIONS = {}
@@ -83,7 +119,11 @@ HPX_FITS_CONVENTIONS["galprop2"] = HpxConv(
     bands_hdu="ENERGIES",
     quantity_type="differential",
 )
-
+HPX_FITS_CONVENTIONS["healpy"] = HpxConv(
+    "healpy",
+    hduname=None,
+    colstring="data map"
+)
 
 def unravel_hpx_index(idx, npix):
     """Convert flattened global map index to an index tuple.
@@ -188,66 +228,6 @@ def get_pix_size_from_nside(nside):
     return HPX_ORDER_TO_PIXSIZE[order]
 
 
-def make_hpx_to_wcs_mapping(hpx, wcs):
-    """Make the pixel mapping from HPX- to a WCS-based geometry.
-
-    Parameters
-    ----------
-    hpx : `~gammapy.maps.HpxGeom`
-       The HEALPIX geometry
-    wcs : `~gammapy.maps.WcsGeom`
-       The WCS geometry
-
-    Returns
-    -------
-    ipix : `~numpy.ndarray`
-        array(nx,ny) of HEALPIX pixel indices for each wcs pixel
-    mult_val : `~numpy.ndarray`
-        array(nx,ny) of 1./number of WCS pixels pointing at each HEALPIX pixel
-    npix : tuple
-        tuple(nx,ny) with the shape of the WCS grid
-    """
-    import healpy as hp
-
-    npix = wcs.npix
-
-    # FIXME: Calculation of WCS pixel centers should be moved into a
-    # method of WcsGeom
-    pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
-    pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
-    sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
-    sky_crds *= np.radians(1.0)
-    sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
-
-    mask = ~np.any(np.isnan(sky_crds), axis=1)
-    ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
-    m = mask[None, :] * np.ones_like(ipix, dtype=bool)
-
-    ipix[m] = hp.ang2pix(
-        hpx.nside[..., None],
-        sky_crds[:, 1][mask][None, ...],
-        sky_crds[:, 0][mask][None, ...],
-        hpx.nest,
-    ).flatten()
-
-    # Here we are counting the number of HEALPIX pixels each WCS pixel
-    # points to and getting a multiplicative factor that tells use how
-    # to split up the counts in each HEALPIX pixel (by dividing the
-    # corresponding WCS pixels by the number of associated HEALPIX
-    # pixels).
-    mult_val = np.ones_like(ipix, dtype=float)
-    for i, t in enumerate(ipix):
-        count = np.unique(t, return_counts=True)
-        idx = np.searchsorted(count[0], t)
-        mult_val[i, ...] = 1.0 / count[1][idx]
-
-    if hpx.nside.size == 1:
-        ipix = np.squeeze(ipix, axis=0)
-        mult_val = np.squeeze(mult_val, axis=0)
-
-    return ipix, mult_val, npix
-
-
 def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
     """TODO: document."""
     import healpy as hp
@@ -270,60 +250,6 @@ def parse_hpxregion(region):
         return re.split(",", m.group(2))
     else:
         return [m.group(1)] + re.split(",", m.group(2))
-
-
-def get_hpxregion_dir(region, frame):
-    """Get the reference direction for a HEALPIX region string.
-
-    Parameters
-    ----------
-    region : str
-        A string describing a HEALPIX region
-    frame : {'icrs', 'galactic'}
-        Coordinate system
-    """
-    import healpy as hp
-
-    if region is None:
-        return SkyCoord(0.0, 0.0, frame=frame, unit="deg")
-
-    tokens = parse_hpxregion(region)
-    if tokens[0] in ["DISK", "DISK_INC"]:
-        lon, lat = float(tokens[1]), float(tokens[2])
-        return SkyCoord(lon, lat, frame=frame, unit="deg")
-    elif tokens[0] == "HPX_PIXEL":
-        nside_pix = int(tokens[2])
-        ipix_pix = int(tokens[3])
-        if tokens[1] == "NESTED":
-            nest_pix = True
-        elif tokens[1] == "RING":
-            nest_pix = False
-        else:
-            raise ValueError(f"Invalid ordering scheme: {tokens[1]!r}")
-        theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
-        lat = np.degrees((np.pi / 2) - theta)
-        lon = np.degrees(phi)
-        return SkyCoord(lon, lat, frame=frame, unit="deg")
-    else:
-        raise ValueError(f"Invalid region type: {tokens[0]!r}")
-
-
-def get_hpxregion_size(region):
-    """Get the approximate size of region (in degrees) from a HEALPIX region string.
-    """
-    tokens = parse_hpxregion(region)
-    if tokens[0] in {"DISK", "DISK_INC"}:
-        return float(tokens[3])
-    elif tokens[0] == "HPX_PIXEL":
-        pix_size = get_pix_size_from_nside(int(tokens[2]))
-        return 2.0 * pix_size
-    else:
-        raise ValueError(f"Invalid region type: {tokens[0]!r}")
-
-
-def is_power2(n):
-    """Check if an integer is a power of 2."""
-    return (n > 0) & ((n & (n - 1)) == 0)
 
 
 def nside_to_order(nside):
@@ -479,23 +405,20 @@ class HpxGeom(Geom):
         encompassed by the geometry.
     axes : list
         Axes for non-spatial dimensions.
-    sparse : bool
-        If True defer allocation of partial- to all-sky index mapping
-        arrays.  This option is only compatible with partial-sky maps
-        with an analytic geometry (e.g. DISK).
     """
 
     is_hpx = True
+    is_region = False
 
     def __init__(
-        self, nside, nest=True, frame="icrs", region=None, axes=None, sparse=False
+        self, nside, nest=True, frame="icrs", region=None, axes=None
     ):
 
-        # FIXME: Figure out what to do when sparse=True
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
-        self._axes = make_axes(axes)
+        self._axes = MapAxes.from_default(axes)
+
         if self.nside.size > 1 and self.nside.shape != self.shape_axes:
             raise ValueError(
                 "Wrong dimensionality for nside. nside must "
@@ -503,38 +426,19 @@ class HpxGeom(Geom):
                 "with the axes argument."
             )
 
-        self._order = nside_to_order(self._nside)
         self._nest = nest
         self._frame = frame
-        self._maxpix = 12 * self._nside * self._nside
-        self._maxpix = self._maxpix * np.ones(self.shape_axes, dtype=int)
-        self._sparse = sparse
 
         self._ipix = None
-        self._rmap = None
         self._region = region
         self._create_lookup(region)
-
-        if self._ipix is not None:
-            self._rmap = {}
-            for i, ipix in enumerate(self._ipix.flat):
-                self._rmap[ipix] = i
-
         self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
-        self._center_skydir = self._get_ref_dir()
-        lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
-        self._center_coord = tuple(
-            [lon, lat]
-            + [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self.axes]
-        )
-        self._center_pix = self.coord_to_pix(self._center_coord)
 
     @property
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
-        npix_shape = [np.max(self.npix)]
-        ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)[::-1]
+        npix_shape = tuple([np.max(self.npix)])
+        return (npix_shape + self.axes.shape)[::-1]
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
@@ -543,11 +447,9 @@ class HpxGeom(Geom):
                 self.get_index_list(nside, self._nest, region)
                 for nside in self._nside.flat
             ]
-            self._ibnd = np.concatenate(
-                [i * np.ones_like(p, dtype="int16") for i, p in enumerate(ipix)]
-            )
+
             self._ipix = [
-                ravel_hpx_index((p, i * np.ones_like(p)), np.ravel(self._maxpix))
+                ravel_hpx_index((p, i * np.ones_like(p)), np.ravel(self.npix_max))
                 for i, p in enumerate(ipix)
             ]
             self._region = region
@@ -558,14 +460,13 @@ class HpxGeom(Geom):
             self._ipix = np.concatenate(self._ipix)
 
         elif isinstance(region, tuple):
-
             region = [np.asarray(t) for t in region]
             m = np.any(np.stack([t >= 0 for t in region]), axis=0)
             region = [t[m] for t in region]
 
-            self._ipix = ravel_hpx_index(region, self._maxpix)
+            self._ipix = ravel_hpx_index(region, self.npix_max)
             self._ipix = np.unique(self._ipix)
-            region = unravel_hpx_index(self._ipix, self._maxpix)
+            region = unravel_hpx_index(self._ipix, self.npix_max)
             self._region = "explicit"
             self._indxschm = "EXPLICIT"
             if len(region) == 1:
@@ -579,7 +480,7 @@ class HpxGeom(Geom):
         elif region is None:
             self._region = None
             self._indxschm = "IMPLICIT"
-            self._npix = self._maxpix
+            self._npix = self.npix_max
 
         else:
             raise ValueError(f"Invalid region string: {region!r}")
@@ -603,7 +504,7 @@ class HpxGeom(Geom):
             )
             idx = ravel_hpx_index(idx_tmp, self._npix)
 
-        idx_global = unravel_hpx_index(self._ipix[idx], self._maxpix)
+        idx_global = unravel_hpx_index(self._ipix[idx], self.npix_max)
         return idx_global[:1] + tuple(idx_local[1:])
 
     def global_to_local(self, idx_global, ravel=False):
@@ -621,12 +522,19 @@ class HpxGeom(Geom):
         idx_local : tuple
             A tuple of pixel indices with local HEALPIX pixel indices.
         """
+        if (
+                isinstance(idx_global, int)
+                or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
+                or isinstance(idx_global, np.ndarray)
+        ):
+            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self.npix_max)
+
         if self.nside.size == 1:
             idx = np.array(idx_global[0], ndmin=1)
         else:
-            idx = ravel_hpx_index(idx_global, self._maxpix)
+            idx = ravel_hpx_index(idx_global, self.npix_max)
 
-        if self._rmap is not None:
+        if self._ipix is not None:
             retval = np.full(idx.size, -1, "i")
             m = np.isin(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
@@ -648,54 +556,43 @@ class HpxGeom(Geom):
         else:
             return ravel_hpx_index(idx_local, self.npix)
 
-    def __getitem__(self, idx_global):
-        """Implement global-to-local index lookup.
-
-        For all-sky maps it just returns the input array.  For
-        partial-sky maps it returns the local indices corresponding to
-        the indices in the input array, and -1 for those pixels that
-        are outside the selected region.  For multi-dimensional maps
-        with a different ``NSIDE`` in each band the global index is an
-        unrolled index for both HEALPIX pixel number and image slice.
+    def cutout(self, position, width, **kwargs):
+        """Create a cutout around a given position.
 
         Parameters
         ----------
-        idx_global : `~numpy.ndarray`
-            An array of global (all-sky) pixel indices.  If this is a
-            tuple, list, or array of integers it will be interpreted
-            as a global (raveled) index.  If this argument is a tuple
-            of lists or arrays it will be interpreted as a list of
-            unraveled index vectors.
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+            Radius of the circular cutout region.
 
         Returns
         -------
-        idx_local : `~numpy.ndarray`
-            An array of local HEALPIX pixel indices.
+        cutout : `~gammapy.maps.WcsNDMap`
+            Cutout map
         """
-        # Convert to tuple representation
-        if (
-            isinstance(idx_global, int)
-            or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
-            or isinstance(idx_global, np.ndarray)
-        ):
-            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self._maxpix)
+        if not self.is_regular:
+            raise ValueError("Can only do a cutout from a regular map.")
 
-        return self.global_to_local(idx_global, ravel=True)
+        width = u.Quantity(width, "deg").value
+        return self.create(
+            nside=self.nside,
+            nest=self.nest,
+            width=width,
+            skydir=position,
+            frame=self.frame,
+            axes=self.axes
+        )
 
     def coord_to_pix(self, coords):
         import healpy as hp
 
-        coords = MapCoord.create(coords, frame=self.frame)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
         theta, phi = coords.theta, coords.phi
 
-        c = self.coord_to_tuple(coords)
-
         if self.axes:
-            bins = []
-            idxs = []
-            for i, ax in enumerate(self.axes):
-                bins += [ax.coord_to_pix(c[i + 2])]
-                idxs += [ax.coord_to_idx(c[i + 2])]
+            idxs = self.axes.coord_to_idx(coords, clip=True)
+            bins = self.axes.coord_to_pix(coords)
 
             # FIXME: Figure out how to handle coordinates out of
             # bounds of non-spatial dimensions
@@ -708,7 +605,7 @@ class HpxGeom(Geom):
             theta[m] = 0.0
             phi[m] = 0.0
             pix = hp.ang2pix(nside, theta, phi, nest=self.nest)
-            pix = tuple([pix] + bins)
+            pix = tuple([pix]) + bins
             if np.any(m):
                 for p in pix:
                     p[m] = INVALID_INDEX.int
@@ -773,36 +670,6 @@ class HpxGeom(Geom):
 
         return tuple(idx)
 
-    def to_slice(self, slices, drop_axes=True):
-        if len(slices) == 0 and self.ndim == 2:
-            return copy.deepcopy(self)
-
-        if len(slices) != self.ndim - 2:
-            raise ValueError()
-
-        nside = np.ones(self.shape_axes, dtype=int) * self.nside
-        nside = np.squeeze(nside[slices])
-
-        axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
-        if drop_axes:
-            axes = [ax for ax in axes if ax.nbin > 1]
-            slice_dims = [0] + [i + 1 for i, ax in enumerate(axes) if ax.nbin > 1]
-        else:
-            slice_dims = np.arange(self.ndim)
-
-        if self.region == "explicit":
-            idx = self.get_idx()
-            slices = (slice(None),) + slices
-            idx = [p[slices[::-1]] for p in idx]
-            idx = [p[p != INVALID_INDEX.int] for p in idx]
-            if drop_axes:
-                idx = [idx[i] for i in range(len(idx)) if i in slice_dims]
-            region = tuple(idx)
-        else:
-            region = self.region
-
-        return self.__class__(nside, self.nest, self.frame, region, axes)
-
     @property
     def axes(self):
         """List of non-spatial axes."""
@@ -811,7 +678,12 @@ class HpxGeom(Geom):
     @property
     def shape_axes(self):
         """Shape of non-spatial axes."""
-        return tuple([ax.nbin for ax in self._axes])
+        return self.axes.shape
+
+    @property
+    def data_shape_axes(self):
+        """Shape of data of the non-spatial axes and unit spatial axes."""
+        return self.axes.shape[::-1] + (1,)
 
     @property
     def ndim(self):
@@ -834,7 +706,7 @@ class HpxGeom(Geom):
 
         Set to -1 for bands with NSIDE that is not a power of 2.
         """
-        return self._order
+        return nside_to_order(self.nside)
 
     @property
     def nest(self):
@@ -849,6 +721,12 @@ class HpxGeom(Geom):
         be less than the number of pixels for the band NSIDE.
         """
         return self._npix
+
+    @property
+    def npix_max(self):
+        """Max. number of pixels"""
+        maxpix = 12 * self.nside ** 2
+        return maxpix * np.ones(self.shape_axes, dtype=int)
 
     @property
     def frame(self):
@@ -867,10 +745,7 @@ class HpxGeom(Geom):
     @property
     def is_allsky(self):
         """Flag for all-sky maps."""
-        if self._region is None:
-            return True
-        else:
-            return False
+        return self._region is None
 
     @property
     def is_regular(self):
@@ -887,12 +762,13 @@ class HpxGeom(Geom):
     @property
     def center_coord(self):
         """Map coordinates of the center of the geometry (tuple)."""
-        return self._center_coord
+        lon, lat, frame = skycoord_to_lonlat(self.center_skydir)
+        return tuple([lon, lat]) + self.axes.center_coord
 
     @property
     def center_pix(self):
         """Pixel coordinates of the center of the geometry (tuple)."""
-        return self._center_pix
+        return self.coord_to_pix(self.center_coord)
 
     @property
     def center_skydir(self):
@@ -900,32 +776,195 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        pix : `~astropy.coordinates.SkyCoord`
+        center : `~astropy.coordinates.SkyCoord`
+            Center position
         """
-        return self._center_skydir
+        # TODO: simplify
+        import healpy as hp
+
+        if self.is_allsky:
+            lon, lat = 0., 0.
+        elif self.region == "explicit":
+            idx = unravel_hpx_index(self._ipix, self.npix_max)
+            nside = self._get_nside(idx)
+            vec = hp.pix2vec(nside, idx[0], nest=self.nest)
+            vec = np.array([np.mean(t) for t in vec])
+            lonlat = hp.vec2ang(vec, lonlat=True)
+            lon, lat = lonlat[0], lonlat[1]
+        else:
+            tokens = parse_hpxregion(self.region)
+            if tokens[0] in ["DISK", "DISK_INC"]:
+                lon, lat = float(tokens[1]), float(tokens[2])
+            elif tokens[0] == "HPX_PIXEL":
+                nside_pix = int(tokens[2])
+                ipix_pix = int(tokens[3])
+                if tokens[1] == "NESTED":
+                    nest_pix = True
+                elif tokens[1] == "RING":
+                    nest_pix = False
+                else:
+                    raise ValueError(f"Invalid ordering scheme: {tokens[1]!r}")
+                theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
+                lat = np.degrees((np.pi / 2) - theta)
+                lon = np.degrees(phi)
+
+        return SkyCoord(lon, lat, frame=self.frame, unit="deg")
+
+    def interp_weights(self, coords, idxs=None):
+        """Get interpolation weights for given coords
+
+        Parameters
+        ----------
+        coords : `MapCoord` or dict
+            Input coordinates
+        idxs : `~numpy.ndarray`
+            Indices for non-spatial axes.
+
+        Returns
+        -------
+        weights : `~numpy.ndarray`
+            Interpolation weights
+        """
+        import healpy as hp
+
+        coords = MapCoord.create(coords, frame=self.frame)
+
+        if idxs is None:
+            idxs = self.coord_to_idx(coords, clip=True)[1:]
+
+        theta, phi = coords.theta, coords.phi
+
+        m = ~np.isfinite(theta)
+        theta[m] = 0
+        phi[m] = 0
+
+        if not self.is_regular:
+            nside = self.nside[tuple(idxs)]
+        else:
+            nside = self.nside
+
+        pix, wts = hp.get_interp_weights(nside, theta, phi, nest=self.nest)
+        wts[:, m] = 0
+        pix[:, m] = INVALID_INDEX.int
+
+        if not self.is_regular:
+            pix_local = [self.global_to_local([pix] + list(idxs))[0]]
+        else:
+            pix_local = [self.global_to_local(pix, ravel=True)]
+
+        # If a pixel lies outside of the geometry set its index to the center pixel
+        m = pix_local[0] == INVALID_INDEX.int
+        if m.any():
+            coords_ctr = [coords.lon, coords.lat]
+            coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.axes, idxs)]
+            idx_ctr = self.coord_to_idx(coords_ctr)
+            idx_ctr = self.global_to_local(idx_ctr)
+            pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
+
+        pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
+        return pix_local, wts
 
     @property
     def ipix(self):
         """HEALPIX pixel and band indices for every pixel in the map."""
         return self.get_idx()
 
-    def to_ud_graded(self, order):
-        """Upgrade or downgrade the resolution to the given order.
+    def is_aligned(self, other):
+        """Check if HEALPIx geoms and extra axes are aligned.
 
-        This method does not preserve the geometry footprint.
+        Parameters
+        ----------
+        other : `HpxGeom`
+            Other geom.
+
+        Returns
+        -------
+        aligned : bool
+            Whether geometries are aligned
+        """
+        for axis, otheraxis in zip(self.axes, other.axes):
+            if axis != otheraxis:
+                return False
+
+        if not self.nside == other.nside:
+            return False
+        elif not self.frame == other.frame:
+            return False
+        elif not self.nest == other.nest:
+            return False
+        else:
+            return True
+
+    def to_nside(self, nside):
+        """Upgrade or downgrade the reoslution to a given nside
+
+        Parameters
+        ----------
+        nside : int
+            Nside
 
         Returns
         -------
         geom : `~HpxGeom`
             A HEALPix geometry object.
         """
-        if np.any(self.order < 0):
+        if not self.is_regular:
             raise ValueError("Upgrade and degrade only implemented for standard maps")
 
         axes = copy.deepcopy(self.axes)
         return self.__class__(
-            2 ** order, self.nest, frame=self.frame, region=self.region, axes=axes
+            nside=nside,
+            nest=self.nest,
+            frame=self.frame,
+            region=self.region,
+            axes=axes
         )
+
+    def to_binsz(self, binsz):
+        """Change pixel size of the geometry.
+
+        Parameters
+        ----------
+        binsz : float or `~astropy.units.Quantity`
+            New pixel size. A float is assumed to be in degree.
+
+        Returns
+        -------
+        geom : `WcsGeom`
+            Geometry with new pixel size.
+        """
+        binsz = u.Quantity(binsz, "deg").value
+
+        if self.is_allsky:
+            return self.create(
+                binsz=binsz,
+                frame=self.frame,
+                axes=copy.deepcopy(self.axes),
+            )
+        else:
+            return self.create(
+                skydir=self.center_skydir,
+                binsz=binsz,
+                width=self.width.to_value("deg"),
+                frame=self.frame,
+                axes=copy.deepcopy(self.axes),
+            )
+
+    def separation(self, center):
+        """Compute sky separation wrt a given center.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord`
+            Center position
+
+        Returns
+        -------
+        separation : `~astropy.coordinates.Angle`
+            Separation angle array (1D)
+        """
+        coord = self.to_image().get_coord()
+        return center.separation(coord.skycoord)
 
     def to_swapped(self):
         """Geometry copy with swapped ORDERING (NEST->RING or vice versa).
@@ -964,27 +1003,27 @@ class HpxGeom(Geom):
 
         return idx_nb
 
-    def pad(self, pad_width):
+    def _pad_spatial(self, pad_width):
         if self.is_allsky:
             raise ValueError("Cannot pad an all-sky map.")
 
         idx = self.get_idx(flat=True)
-        idx_r = ravel_hpx_index(idx, self._maxpix)
+        idx_r = ravel_hpx_index(idx, self.npix_max)
 
         # TODO: Pre-filter indices to find those close to the edge
         idx_nb = self._get_neighbors(idx)
-        idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+        idx_nb = ravel_hpx_index(idx_nb, self.npix_max)
 
         for _ in range(pad_width):
             mask_edge = np.isin(idx_nb, idx_r, invert=True)
             idx_edge = idx_nb[mask_edge]
             idx_edge = np.unique(idx_edge)
             idx_r = np.sort(np.concatenate((idx_r, idx_edge)))
-            idx_nb = unravel_hpx_index(idx_edge, self._maxpix)
+            idx_nb = unravel_hpx_index(idx_edge, self.npix_max)
             idx_nb = self._get_neighbors(idx_nb)
-            idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+            idx_nb = ravel_hpx_index(idx_nb, self.npix_max)
 
-        idx = unravel_hpx_index(idx_r, self._maxpix)
+        idx = unravel_hpx_index(idx_r, self.npix_max)
         return self.__class__(
             self.nside.copy(),
             self.nest,
@@ -998,11 +1037,11 @@ class HpxGeom(Geom):
             raise ValueError("Cannot crop an all-sky map.")
 
         idx = self.get_idx(flat=True)
-        idx_r = ravel_hpx_index(idx, self._maxpix)
+        idx_r = ravel_hpx_index(idx, self.npix_max)
 
         # TODO: Pre-filter indices to find those close to the edge
         idx_nb = self._get_neighbors(idx)
-        idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
+        idx_nb = ravel_hpx_index(idx_nb, self.npix_max)
 
         for _ in range(crop_width):
             # Mask of pixels that have at least one neighbor not
@@ -1011,7 +1050,7 @@ class HpxGeom(Geom):
             idx_r = idx_r[~mask_edge]
             idx_nb = idx_nb[:, ~mask_edge]
 
-        idx = unravel_hpx_index(idx_r, self._maxpix)
+        idx = unravel_hpx_index(idx_r, self.npix_max)
         return self.__class__(
             self.nside.copy(),
             self.nest,
@@ -1148,47 +1187,8 @@ class HpxGeom(Geom):
 
         return cls(nside, nest=nest, frame=frame, region=region, axes=axes)
 
-    @staticmethod
-    def identify_hpx_convention(header):
-        """Identify the convention used to write this file."""
-        # Hopefully the file contains the HPX_CONV keyword specifying
-        # the convention used
-        if "HPX_CONV" in header:
-            return header["HPX_CONV"].lower()
-
-        # Try based on the EXTNAME keyword
-        hduname = header.get("EXTNAME", None)
-        if hduname == "HPXEXPOSURES":
-            return "fgst-bexpcube"
-        elif hduname == "SKYMAP2":
-            if "COORDTYPE" in header.keys():
-                return "galprop"
-            else:
-                return "galprop2"
-
-        # Check the name of the first column
-        colname = header["TTYPE1"]
-        if colname == "PIX":
-            colname = header["TTYPE2"]
-
-        if colname == "KEY":
-            return "fgst-srcmap-sparse"
-        elif colname == "ENERGY1":
-            return "fgst-template"
-        elif colname == "COSBINS":
-            return "fgst-ltcube"
-        elif colname == "Bin0":
-            return "galprop"
-        elif colname == "CHANNEL1" or colname == "CHANNEL0":
-            if hduname == "SKYMAP":
-                return "fgst-ccube"
-            else:
-                return "fgst-srcmap"
-        else:
-            raise ValueError("Could not identify HEALPIX convention")
-
     @classmethod
-    def from_header(cls, header, hdu_bands=None, pix=None):
+    def from_header(cls, header, hdu_bands=None, format=None):
         """Create an HPX object from a FITS header.
 
         Parameters
@@ -1197,21 +1197,32 @@ class HpxGeom(Geom):
             The FITS header
         hdu_bands : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
-        pix : tuple
-            List of pixel index vectors defining the pixels
-            encompassed by the geometry.  For EXPLICIT geometries with
-            HPX_REG undefined this tuple defines the geometry.
+        format : str, optional
+            FITS convention. If None the format is guessed. The following
+            formats are supported:
+
+                - "gadf"
+                - "fgst-ccube"
+                - "fgst-ltcube"
+                - "fgst-bexpcube"
+                - "fgst-srcmap"
+                - "fgst-template"
+                - "fgst-srcmap-sparse"
+                - "galprop"
+                - "galprop2"
+                - "healpy"
 
         Returns
         -------
         hpx : `~HpxGeom`
             HEALPix geometry.
         """
-        convname = HpxGeom.identify_hpx_convention(header)
-        conv = HPX_FITS_CONVENTIONS[convname]
+        if format is None:
+            format = HpxConv.identify_hpx_format(header)
 
-        axes = find_and_read_bands(hdu_bands)
-        shape = [ax.nbin for ax in axes]
+        conv = HPX_FITS_CONVENTIONS[format]
+
+        axes = MapAxes.from_table_hdu(hdu_bands, format=format)
 
         if header["PIXTYPE"] != "HEALPIX":
             raise ValueError(
@@ -1228,7 +1239,7 @@ class HpxGeom(Geom):
             )
 
         if hdu_bands is not None and "NSIDE" in hdu_bands.columns.names:
-            nside = hdu_bands.data.field("NSIDE").reshape(shape).astype(int)
+            nside = hdu_bands.data.field("NSIDE").reshape(axes.shape).astype(int)
         elif "NSIDE" in header:
             nside = header["NSIDE"]
         elif "ORDER" in header:
@@ -1278,10 +1289,10 @@ class HpxGeom(Geom):
 
         return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
-    def make_header(self, conv="gadf", **kwargs):
+    def to_header(self, format="gadf", **kwargs):
         """Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
-        conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[conv])
+        format = kwargs.get("format", HPX_FITS_CONVENTIONS[format])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
@@ -1295,19 +1306,19 @@ class HpxGeom(Geom):
             else:
                 indxschm = "LOCAL"
 
-        if "FGST" in conv.convname.upper():
+        if "FGST" in format.convname.upper():
             header["TELESCOP"] = "GLAST"
             header["INSTRUME"] = "LAT"
 
-        header[conv.frame] = frame_to_coordsys(self.frame)
+        header[format.frame] = frame_to_coordsys(self.frame)
         header["PIXTYPE"] = "HEALPIX"
         header["ORDERING"] = self.ordering
         header["INDXSCHM"] = indxschm
-        header["ORDER"] = np.max(self._order)
-        header["NSIDE"] = np.max(self._nside)
+        header["ORDER"] = np.max(self.order)
+        header["NSIDE"] = np.max(self.nside)
         header["FIRSTPIX"] = 0
-        header["LASTPIX"] = np.max(self._maxpix) - 1
-        header["HPX_CONV"] = conv.convname.upper()
+        header["LASTPIX"] = np.max(self.npix_max) - 1
+        header["HPX_CONV"] = format.convname.upper()
 
         if self.frame == "icrs":
             header["EQUINOX"] = (2000.0, "Equinox of RA & DEC specifications")
@@ -1375,33 +1386,29 @@ class HpxGeom(Geom):
 
         return ilist
 
-    def _get_ref_dir(self):
-        """Compute the reference direction for this geometry."""
+    @property
+    def width(self):
+        """Width of the map"""
+        # TODO: simplify
         import healpy as hp
 
-        if self.region == "explicit":
-            idx = unravel_hpx_index(self._ipix, self._maxpix)
-            nside = self._get_nside(idx)
-            vec = hp.pix2vec(nside, idx[0], nest=self.nest)
-            vec = np.array([np.mean(t) for t in vec])
-            lonlat = hp.vec2ang(vec, lonlat=True)
-            return SkyCoord(lonlat[0], lonlat[1], frame=self.frame, unit="deg")
-
-        return get_hpxregion_dir(self.region, self.frame)
-
-    def _get_region_size(self):
-        import healpy as hp
-
-        if self.region is None:
-            return 180.0
-        if self.region == "explicit":
-            idx = unravel_hpx_index(self._ipix, self._maxpix)
+        if self.is_allsky:
+            width = 180.
+        elif self.region == "explicit":
+            idx = unravel_hpx_index(self._ipix, self.npix_max)
             nside = self._get_nside(idx)
             ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
             dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=self.frame)
-            return np.max(dirs.separation(self.center_skydir).deg)
+            width = np.max(dirs.separation(self.center_skydir))
+        else:
+            tokens = parse_hpxregion(self.region)
+            if tokens[0] in {"DISK", "DISK_INC"}:
+                width = float(tokens[3])
+            elif tokens[0] == "HPX_PIXEL":
+                pix_size = get_pix_size_from_nside(int(tokens[2]))
+                width = 2.0 * pix_size
 
-        return get_hpxregion_size(self.region)
+        return u.Quantity(width, "deg")
 
     def _get_nside(self, idx):
         if self.nside.size > 1:
@@ -1409,15 +1416,11 @@ class HpxGeom(Geom):
         else:
             return self.nside
 
-    def make_wcs(self, proj="AIT", oversample=2, drop_axes=True, width_pix=None):
+    def to_wcs_geom(self, proj="AIT", oversample=2, width_pix=None):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
         ----------
-        drop_axes : bool
-            Drop non-spatial axes from the
-            HEALPIX geometry.  If False then all dimensions of the
-            HEALPIX geometry will be copied to the WCS geometry.
         proj : str
             Projection type of WCS geometry.
         oversample : float
@@ -1438,7 +1441,7 @@ class HpxGeom(Geom):
         """
         pix_size = get_pix_size_from_nside(self.nside)
         binsz = np.min(pix_size) / oversample
-        width = 2.0 * self._get_region_size() + np.max(pix_size)
+        width = 2.0 * self.width.to_value("deg") + np.max(pix_size)
 
         if width_pix is not None and int(width / binsz) > width_pix:
             binsz = width / width_pix
@@ -1446,10 +1449,7 @@ class HpxGeom(Geom):
         if width > 90.0:
             width = min(360.0, width), min(180.0, width)
 
-        if drop_axes:
-            axes = None
-        else:
-            axes = copy.deepcopy(self.axes)
+        axes = copy.deepcopy(self.axes)
 
         return WcsGeom.create(
             width=width,
@@ -1459,6 +1459,66 @@ class HpxGeom(Geom):
             skydir=self.center_skydir,
             proj=proj,
         )
+
+    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
+        """Create WCS tiles geometries from HPX geometry with given nside.
+
+        The HEALPix geom is divide into superpixels defined by nside_tiles,
+        which are then represented by a WCS geometry using a tangential
+        projection. The number of WCS tiles is given by the number of pixels
+        for the given nside_tiles.
+
+        Parameters
+        ----------
+        nside_tiles : int
+            Nside for super pixel tiles. Usually nsi
+        margin : Angle
+            Width margin of the wcs tile
+
+        Return
+        ------
+        wcs_tiles : list
+            List of WCS tile geoms.
+        """
+        import healpy as hp
+
+        margin = u.Quantity(margin)
+
+        if nside_tiles >= self.nside:
+            raise ValueError(f"nside_tiles must be < {self.nside}")
+
+        if not self.is_allsky:
+            raise ValueError("to_wcs_tiles() is only supported for all sky geoms")
+
+        binsz = np.degrees(hp.nside2resol(self.nside)) * u.deg
+
+        hpx = self.to_image().to_nside(nside=nside_tiles)
+        wcs_tiles = []
+
+        for pix in range(int(hpx.npix)):
+            skydir = hpx.pix_to_coord([pix])
+            vtx = hp.boundaries(
+                nside=hpx.nside, pix=pix, nest=hpx.nest, step=1
+            )
+
+            lon, lat = hp.vec2ang(vtx.T, lonlat=True)
+            boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
+
+            # Compute maximum separation between all pairs of boundaries and take it
+            # as width
+            width = boundaries.separation(boundaries[:, np.newaxis]).max()
+
+            wcs_tile_geom = WcsGeom.create(
+                skydir=(float(skydir[0]), float(skydir[1])),
+                width=width + margin,
+                binsz=binsz,
+                frame=hpx.frame,
+                proj="TAN",
+                axes=self.axes
+            )
+            wcs_tiles.append(wcs_tile_geom)
+
+        return wcs_tiles
 
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
@@ -1509,7 +1569,7 @@ class HpxGeom(Geom):
                 s = slice(npix_sum[idx_ravel], npix_sum[idx_ravel + 1])
             else:
                 s = slice(None)
-            pix_flat = unravel_hpx_index(self._ipix[s], self._maxpix)
+            pix_flat = unravel_hpx_index(self._ipix[s], self.npix_max)
 
             shape = (np.max(self.npix),)
             if idx is None:
@@ -1551,6 +1611,37 @@ class HpxGeom(Geom):
 
         return pix
 
+    def region_mask(self, regions):
+        """Create a mask from a given list of regions
+
+        The mask is filled such that a pixel inside the region is filled with
+        "True". To invert the mask, e.g. to create a mask with exclusion regions
+        the tilde (~) operator can be used (see example below).
+
+        Parameters
+        ----------
+        regions : str, `~regions.Region` or list of `~regions.Region`
+            Region or list of regions (pixel or sky regions accepted).
+            A region can be defined as a string ind DS9 format as well.
+            See http://ds9.si.edu/doc/ref/region.html for details.
+
+        Returns
+        -------
+        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
+            Boolean region mask
+
+        """
+        from . import Map, RegionGeom
+
+        if not self.is_regular:
+            raise ValueError("Multi-resolution maps not supported yet")
+
+        # TODO: use spatial coordinates only...
+        geom = RegionGeom.from_regions(regions)
+        coords = self.get_coord()
+        mask = geom.contains(coords)
+        return Map.from_geom(self, data=mask)
+
     def get_coord(self, idx=None, flat=False):
         pix = self.get_idx(idx=idx, flat=flat)
         coords = self.pix_to_coord(pix)
@@ -1586,7 +1677,7 @@ class HpxGeom(Geom):
             f"\tndim       : {self.ndim}\n"
             f"\tnside      : {self.nside[0]}\n"
             f"\tnested     : {self.nest}\n"
-            f"\tframe   : {self.frame}\n"
+            f"\tframe      : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         )
@@ -1595,8 +1686,6 @@ class HpxGeom(Geom):
         if not isinstance(other, self.__class__):
             return NotImplemented
 
-        if self._sparse or other._sparse:
-            return NotImplemented
         if self.is_allsky and other.is_allsky is False:
             return NotImplemented
 
@@ -1636,8 +1725,6 @@ class HpxToWcsMapping:
         self._ipix = ipix
         self._mult_val = mult_val
         self._npix = npix
-        self._lmap = self._hpx[self._ipix]
-        self._valid = self._lmap >= 0
 
     @property
     def hpx(self):
@@ -1664,15 +1751,16 @@ class HpxToWcsMapping:
         """A tuple(nx,ny) of the shape of the WCS grid."""
         return self._npix
 
-    @property
+    @lazyproperty
     def lmap(self):
         """Array ``(nx, ny)`` mapping local HEALPIX pixel indices for each WCS pixel."""
-        return self._lmap
+
+        return self.hpx.global_to_local(self.ipix, ravel=True)
 
     @property
     def valid(self):
         """Array ``(nx, ny)`` of bool: which WCS pixel in inside the HEALPIX region."""
-        return self._valid
+        return self.lmap >= 0
 
     @classmethod
     def create(cls, hpx, wcs):
@@ -1688,9 +1776,47 @@ class HpxToWcsMapping:
         Returns
         -------
         hpx2wcs : `~HpxToWcsMapping`
+            Mapping
 
         """
-        ipix, mult_val, npix = make_hpx_to_wcs_mapping(hpx, wcs)
+        import healpy as hp
+
+        npix = wcs.npix
+
+        # FIXME: Calculation of WCS pixel centers should be moved into a
+        # method of WcsGeom
+        pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
+        pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
+        sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
+        sky_crds *= np.radians(1.0)
+        sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
+
+        mask = ~np.any(np.isnan(sky_crds), axis=1)
+        ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
+        m = mask[None, :] * np.ones_like(ipix, dtype=bool)
+
+        ipix[m] = hp.ang2pix(
+            hpx.nside[..., None],
+            sky_crds[:, 1][mask][None, ...],
+            sky_crds[:, 0][mask][None, ...],
+            hpx.nest,
+        ).flatten()
+
+        # Here we are counting the number of HEALPIX pixels each WCS pixel
+        # points to and getting a multiplicative factor that tells use how
+        # to split up the counts in each HEALPIX pixel (by dividing the
+        # corresponding WCS pixels by the number of associated HEALPIX
+        # pixels).
+        mult_val = np.ones_like(ipix, dtype=float)
+        for i, t in enumerate(ipix):
+            count = np.unique(t, return_counts=True)
+            idx = np.searchsorted(count[0], t)
+            mult_val[i, ...] = 1.0 / count[1][idx]
+
+        if hpx.nside.size == 1:
+            ipix = np.squeeze(ipix, axis=0)
+            mult_val = np.squeeze(mult_val, axis=0)
+
         return cls(hpx, wcs, ipix, mult_val, npix)
 
     def fill_wcs_map_from_hpx_data(
@@ -1712,12 +1838,12 @@ class HpxToWcsMapping:
         # FIXME: Do we want to flatten mapping arrays?
 
         shape = tuple([t.flat[0] for t in self._npix])
-        if self._valid.ndim != 1:
+        if self.valid.ndim != 1:
             shape = hpx_data.shape[:-1] + shape
 
-        valid = np.where(self._valid.reshape(shape))
-        lmap = self._lmap[self._valid]
-        mult_val = self._mult_val[self._valid]
+        valid = np.where(self.valid.reshape(shape))
+        lmap = self.lmap[self.valid]
+        mult_val = self._mult_val[self.valid]
 
         wcs_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
         wcs_slice = tuple(wcs_slice + list(valid)[::-1][:2])
@@ -1731,7 +1857,7 @@ class HpxToWcsMapping:
             wcs_data[wcs_slice] = hpx_data[hpx_slice]
 
         if fill_nan:
-            valid = np.swapaxes(self._valid.reshape(shape), -1, -2)
+            valid = np.swapaxes(self.valid.reshape(shape), -1, -2)
             valid = valid * np.ones_like(wcs_data, dtype=bool)
             wcs_data[~valid] = np.nan
 

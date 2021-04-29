@@ -1,7 +1,7 @@
 r"""
 .. _point-spatial-model:
 
-Point Spatial Model
+Point spatial model
 ===================
 
 This model is a delta function centered in *lon_0* and *lat_0* parameters provided:

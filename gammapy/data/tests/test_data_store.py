@@ -2,11 +2,14 @@
 import os
 from pathlib import Path
 import pytest
+import numpy as np
+from astropy.io import fits
 from gammapy.data import DataStore
 from gammapy.utils.testing import requires_data
+from gammapy.utils.scripts import make_path
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def data_store():
     return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
@@ -41,13 +44,23 @@ def test_datastore_from_dir():
 
 
 @requires_data()
-def test_datastore_from_file():
+def test_datastore_from_file(tmpdir):
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz"
+    index_hdu = fits.open(make_path(filename))["HDU_INDEX"]
+
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz"
+    obs_hdu = fits.open(make_path(filename))["OBS_INDEX"]
+
+    hdulist = fits.HDUList()
+    hdulist.append(index_hdu)
+    hdulist.append(obs_hdu)
+
+    filename = tmpdir / "test-index.fits"
+    hdulist.writeto(str(filename))
+
     data_store = DataStore.from_file(filename)
-    obs = data_store.obs(obs_id=23523)
-    # Check that things can be loaded:
-    obs.events
-    obs.bkg
+
+    assert data_store.obs_table["OBS_ID"][0] == 20136
 
 
 @requires_data()
@@ -60,21 +73,39 @@ def test_datastore_from_events():
     assert len(data_store.hdu_table) == 6
 
 
-@requires_data()
-def test_datastore_get_observations(data_store):
-    """Test loading data and IRF files via the DataStore"""
-    observations = data_store.get_observations([23523, 23592])
-    assert observations[0].obs_id == 23523
+    @requires_data()
+    def test_datastore_get_observations(data_store, caplog):
+        """Test loading data and IRF files via the DataStore"""
+        observations = data_store.get_observations([23523, 23592])
+        assert observations[0].obs_id == 23523
+        observations = data_store.get_observations()
+        assert len(observations) == 105
 
-    # Test that default is all observations
-    observations = data_store.get_observations()
-    assert len(observations) == 105
+        with pytest.raises(ValueError):
+            data_store.get_observations([11111, 23592])
+
+        observations = data_store.get_observations([11111, 23523], skip_missing=True)
+        assert observations[0].obs_id == 23523
+        assert "WARNING" in [_.levelname for _ in caplog.records]
+        assert "Skipping missing obs_id: 11111" in [_.message for _ in caplog.records]
+
+
+@requires_data()
+def test_broken_links_datastore(data_store):
+    # Test that datastore without complete IRFs are properly loaded
+    hdu_table = data_store.hdu_table
+    index = np.where(data_store.hdu_table["OBS_ID"] == 23526)[0][0]
+    data_store.hdu_table.remove_row(index)
+    data_store.hdu_table._hdu_type_stripped = np.array(
+        [_.strip() for _ in data_store.hdu_table["HDU_TYPE"]]
+    )
+    observations = data_store.get_observations(
+        [23523, 23526], required_irf=["aeff", "bkg"]
+    )
+    assert len(observations) == 1
 
     with pytest.raises(ValueError):
-        data_store.get_observations([11111, 23592])
-
-    observations = data_store.get_observations([11111, 23523], skip_missing=True)
-    assert observations[0].obs_id == 23523
+        observations = data_store.get_observations([23523], required_irf=["xyz"])
 
 
 @requires_data()

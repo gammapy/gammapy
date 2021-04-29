@@ -3,142 +3,20 @@ import abc
 import copy
 import inspect
 import logging
+from collections.abc import Sequence
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Column, QTable, Table
+from astropy.table import Column, Table, hstack
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
 from .utils import INVALID_INDEX, edges_from_lo_hi, find_bands_hdu, find_hdu
 
-__all__ = ["MapCoord", "Geom", "MapAxis"]
+__all__ = ["MapCoord", "Geom", "MapAxis", "MapAxes"]
 
 log = logging.getLogger(__name__)
-
-
-def make_axes(axes_in):
-    """Make a sequence of `~MapAxis` objects."""
-    if axes_in is None:
-        return []
-
-    axes_out = []
-    for idx, ax in enumerate(axes_in):
-        if isinstance(ax, np.ndarray):
-            ax = MapAxis(ax)
-
-        if ax.name == "":
-            ax.name = "axis{}".format(idx)
-
-        if ax.name not in [ax.name for ax in axes_out]:
-            axes_out += [ax]
-        else:
-            raise ValueError(f"Duplicated axis name: '{ax.name}'")
-
-    return axes_out
-
-
-def make_axes_cols(axes, axis_names=None):
-    """Make FITS table columns for map axes.
-
-    Parameters
-    ----------
-    axes : list
-        Python list of `MapAxis` objects
-
-    Returns
-    -------
-    cols : list
-        Python list of `~astropy.io.fits.Column`
-    """
-    size = np.prod([ax.nbin for ax in axes])
-    chan = np.arange(0, size)
-    cols = [fits.Column("CHANNEL", "I", array=chan)]
-
-    if axis_names is None:
-        axis_names = [ax.name for ax in axes]
-    axis_names = [_.upper() for _ in axis_names]
-
-    axes_ctr = np.meshgrid(*[ax.center for ax in axes])
-    axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
-    axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
-
-    for i, (ax, name) in enumerate(zip(axes, axis_names)):
-
-        if name == "ENERGY":
-            colnames = ["ENERGY", "E_MIN", "E_MAX"]
-        else:
-            s = "AXIS%i" % i if name == "" else name
-            colnames = [s, s + "_MIN", s + "_MAX"]
-
-        for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-            array = np.ravel(v[i])
-            unit = ax.unit.to_string("fits")
-            cols.append(fits.Column(colname, "E", array=array, unit=unit))
-
-    return cols
-
-
-def axes_from_bands_hdu(hdu):
-    """Read and returns the map axes from a BANDS table.
-
-    Parameters
-    ----------
-    hdu : `~astropy.io.fits.BinTableHDU`
-        The BANDS table HDU.
-
-    Returns
-    -------
-    axes : list of `~MapAxis`
-        List of axis objects.
-    """
-    axes = []
-
-    bands = Table.read(hdu)
-
-    for idx in range(5):
-        axcols = bands.meta.get("AXCOLS{}".format(idx + 1))
-
-        if axcols is None:
-            break
-
-        colnames = axcols.split(",")
-        node_type = "edges" if len(colnames) == 2 else "center"
-
-        # TODO: check why this extra case is needed
-        if colnames[0] == "E_MIN":
-            name = "energy"
-        else:
-            name = colnames[0].replace("_MIN", "").lower()
-
-        interp = bands.meta.get("INTERP{}".format(idx + 1), "lin")
-
-        if node_type == "center":
-            nodes = np.unique(bands[colnames[0]].quantity)
-        else:
-            edges_min = np.unique(bands[colnames[0]].quantity)
-            edges_max = np.unique(bands[colnames[1]].quantity)
-            nodes = edges_from_lo_hi(edges_min, edges_max)
-
-        axis = MapAxis(nodes=nodes, node_type=node_type, interp=interp, name=name)
-        axes.append(axis)
-
-    return axes
-
-
-def find_and_read_bands(hdu):
-    if hdu is None:
-        return []
-
-    if hdu.name == "ENERGIES":
-        axes = [MapAxis.from_table_hdu(hdu, format="fgst-template")]
-    elif hdu.name == "EBOUNDS":
-        axes = [MapAxis.from_table_hdu(hdu, format="fgst-ccube")]
-    else:
-        axes = axes_from_bands_hdu(hdu)
-
-    return axes
 
 
 def get_shape(param):
@@ -195,25 +73,6 @@ def pix_tuple_to_idx(pix):
     return tuple(idx)
 
 
-def coord_to_idx(edges, x, clip=False):
-    """Convert axis coordinates ``x`` to bin indices.
-
-    Returns -1 for values below/above the lower/upper edge.
-    """
-    x = np.array(x, ndmin=1)
-    ibin = np.digitize(x, edges) - 1
-
-    if clip:
-        ibin[x < edges[0]] = 0
-        ibin[x > edges[-1]] = len(edges) - 1
-    else:
-        with np.errstate(invalid="ignore"):
-            ibin[x > edges[-1]] = INVALID_INDEX.int
-
-    ibin[~np.isfinite(x)] = INVALID_INDEX.int
-    return ibin
-
-
 def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis to pixel coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
@@ -234,6 +93,618 @@ def pix_to_coord(edges, pix, interp="lin"):
     )
 
     return scale.inverse(interp_fn(pix))
+
+
+class MapAxes(Sequence):
+    """MapAxis container class.
+
+    Parameters
+    ----------
+    axes : list of `MapAxis`
+        List of map axis objects.
+    """
+
+    def __init__(self, axes):
+        unique_names = []
+
+        for ax in axes:
+            if ax.name in unique_names:
+                raise (
+                    ValueError(f"Axis names must be unique, got: '{ax.name}' twice.")
+                )
+            unique_names.append(ax.name)
+
+        self._axes = axes
+
+    @property
+    def reverse(self):
+        """Reverse axes order"""
+        return MapAxes(self[::-1])
+
+    @property
+    def iter_with_reshape(self):
+        """Iterate by shape"""
+        for idx, axis in enumerate(self):
+            # Extract values for each axis, default: nodes
+            shape = [1] * len(self)
+            shape[idx] = -1
+            yield tuple(shape), axis
+
+    def get_coord(self):
+        """Get axes coordinates
+
+        Returns
+        -------
+        coords : dict of `~astropy.units.Quanity`
+            Map coordinates
+        """
+        coords = {}
+
+        for shape, axis in self.iter_with_reshape:
+            coord = axis.center.reshape(shape)
+            coords[axis.name] = coord
+
+        return coords
+
+    def bin_volume(self):
+        """Bin axes volume
+
+        Returns
+        -------
+        bin_volume : `~astropy.units.Quantity`
+            Bin volume
+        """
+        bin_volume = np.array(1)
+
+        for shape, axis in self.iter_with_reshape:
+            bin_volume = bin_volume * axis.bin_width.reshape(shape)
+
+        return bin_volume
+
+    @property
+    def shape(self):
+        """Shape of the axes"""
+        return tuple([ax.nbin for ax in self])
+
+    @property
+    def names(self):
+        """Names of the axes"""
+        return [ax.name for ax in self]
+
+    def index(self, axis_name):
+        """Get index in list"""
+        return self.names.index(axis_name)
+
+    def index_data(self, axis_name):
+        """Get data index of the axes
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis.
+
+        Returns
+        -------
+        idx : int
+            Data index
+        """
+        idx = self.names.index(axis_name)
+        return len(self) - idx - 1
+
+    def __len__(self):
+        return len(self._axes)
+
+    def __add__(self, other):
+        return self.__class__(list(self) + list(other))
+
+    def upsample(self, factor, axis_name):
+        """Upsample axis by a given factor
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+        axis_name : str
+            Axis to upsample.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.upsample(factor=factor)
+
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def replace(self, axis):
+        """Replace a give axis
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            Map axis
+
+        Returns
+        -------
+        axes : MapAxes
+            Map axe
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis.name:
+                ax = axis
+
+            axes.append(ax)
+
+        return self.__class__(axes=axes)
+
+    def resample(self, axis):
+        """Resample axis binning.
+
+        This method groups the existing bins into a new binning.
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            New map axis.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes object with resampled axis.
+        """
+        axis_self = self[axis.name]
+        groups = axis_self.group_table(axis.edges)
+
+        # Keep only normal bins
+        groups = groups[groups["bin_type"] == "normal   "]
+
+        edges = edges_from_lo_hi(
+            groups[axis.name + "_min"].quantity, groups[axis.name + "_max"].quantity,
+        )
+
+        axis_resampled = MapAxis.from_edges(
+            edges=edges, interp=axis.interp, name=axis.name
+        )
+
+        axes = []
+        for ax in self:
+            if ax.name == axis.name:
+                axes.append(axis_resampled)
+            else:
+                axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def downsample(self, factor, axis_name):
+        """Downsample axis by a given factor
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+        axis_name : str
+            Axis to upsample.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes
+
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.downsample(factor=factor)
+
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def squash(self, axis_name):
+        """Squash axis.
+
+        Parameters
+        ----------
+        axis_name : str
+            Axis to squash.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes with squashed axis.
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.squash()
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def pad(self, axis_name, pad_width):
+        """Pad axes
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis to pad.
+        pad_width : int or tuple of int
+            Pad width
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes with squashed axis.
+
+        """
+        axes = []
+
+        for ax in self:
+            if ax.name == axis_name:
+                ax = ax.pad(pad_width=pad_width)
+            axes.append(ax)
+
+        return self.__class__(axes=axes)
+
+    def drop(self, axis_name):
+        """Drop an axis.
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis to remove.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Axes with squashed axis.
+        """
+        axes = []
+        for ax in self:
+            if ax.name == axis_name:
+                continue
+            axes.append(ax.copy())
+
+        return self.__class__(axes=axes)
+
+    def __getitem__(self, idx):
+        if isinstance(idx, (int, slice)):
+            return self._axes[idx]
+        elif isinstance(idx, str):
+            for ax in self._axes:
+                if ax.name == idx:
+                    return ax
+            raise KeyError(f"No axes: {idx!r}")
+        elif isinstance(idx, list):
+            axes = []
+            for name in idx:
+                axes.append(self[name])
+
+            return self.__class__(axes=axes)
+        else:
+            raise TypeError(f"Invalid type: {type(idx)!r}")
+
+    def coord_to_idx(self, coord, clip=True):
+        """Transform from axis to pixel indices.
+
+        Parameters
+        ----------
+        coord : dict of `~numpy.ndarray` or `MapCoord`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        pix : tuple of `~numpy.ndarray`
+            Array of pixel indices values.
+        """
+        return tuple([ax.coord_to_idx(coord[ax.name], clip=clip) for ax in self])
+
+    def coord_to_pix(self, coord):
+        """Transform from axis to pixel coordinates.
+
+        Parameters
+        ----------
+        coord : dict of `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        pix : tuple of `~numpy.ndarray`
+            Array of pixel coordinate values.
+        """
+        return tuple([ax.coord_to_pix(coord[ax.name]) for ax in self])
+
+    def pix_to_coord(self, pix):
+        """Convert pixel coordinates to map coordinates.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel coordinates.
+
+        Returns
+        -------
+        coords : tuple
+            Tuple of map coordinates.
+        """
+        return tuple([ax.pix_to_coord(p) for ax, p in zip(self, pix)])
+
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : tuple of `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : tuple `~numpy.ndarray`
+            Pixel indices.
+        """
+        idx = []
+
+        for pix_array, ax in zip(pix, self):
+            idx.append(ax.pix_to_idx(pix_array, clip=clip))
+
+        return tuple(idx)
+
+    def slice_by_idx(self, slices):
+        """Create a new geometry by slicing the non-spatial axes.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+
+        Returns
+        -------
+        geom : `~Geom`
+            Sliced geometry.
+        """
+        axes = []
+        for ax in self:
+            ax_slice = slices.get(ax.name, slice(None))
+
+            # in the case where isinstance(ax_slice, int) the axes is dropped
+            if isinstance(ax_slice, slice):
+                ax_sliced = ax.slice(ax_slice)
+                axes.append(ax_sliced.copy())
+
+        return self.__class__(axes=axes)
+
+    def to_header(self, format="gadf"):
+        """Convert axes to FITS header
+
+        Parameters
+        ----------
+        format : {"gadf"}
+            Header format
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            FITS header.
+        """
+        header = fits.Header()
+
+        for idx, ax in enumerate(self, start=1):
+            header_ax = ax.to_header(format=format, idx=idx)
+            header.update(header_ax)
+
+        return header
+
+    def to_table(self, format="gadf"):
+        """Convert axes to table
+
+        Parameters
+        ----------
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+            Format to use.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with axis data
+        """
+        if format == "gadf-dl3":
+            tables = []
+
+            for ax in self:
+                tables.append(ax.to_table(format=format))
+
+            table = hstack(tables)
+        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
+            table = Table()
+            table["CHANNEL"] = np.arange(np.prod(self.shape))
+
+            axes_ctr = np.meshgrid(*[ax.center for ax in self])
+            axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
+            axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
+
+            for idx, ax in enumerate(self):
+                name = ax.name.upper()
+
+                if name == "ENERGY":
+                    colnames = ["ENERGY", "E_MIN", "E_MAX"]
+                else:
+                    colnames = [name, name + "_MIN", name + "_MAX"]
+
+                for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
+                    table[colname] = np.ravel(v[idx]).astype(np.float32)
+        elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
+            energy_axis = self["energy"]
+            table = energy_axis.to_table(format=format)
+        else:
+            raise ValueError(f"Unsupported format: '{format}'")
+
+        return table
+
+    def to_table_hdu(self, format="gadf", hdu_bands=None):
+        """Make FITS table columns for map axes.
+
+        Parameters
+        ----------
+        format : {"gadf", "fgst-ccube", "fgst-template"}
+            Format to use.
+        hdu_bands : str
+            Name of the bands HDU to use.
+
+        Returns
+        -------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Bin table HDU.
+        """
+        # FIXME: Check whether convention is compatible with
+        #  dimensionality of geometry and simplify!!!
+
+        if format in ["fgst-ccube", "ogip", "ogip-sherpa"]:
+            hdu_bands = "EBOUNDS"
+        elif format == "fgst-template":
+            hdu_bands = "ENERGIES"
+        elif format == "gadf" or format is None:
+            if hdu_bands is None:
+                hdu_bands = "BANDS"
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        table = self.to_table(format=format)
+        header = self.to_header(format=format)
+        return fits.BinTableHDU(table, name=hdu_bands, header=header)
+
+    @classmethod
+    def from_table_hdu(cls, hdu, format="gadf"):
+        """Create MapAxes from BinTableHDU
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            Bin table HDU
+
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes object
+        """
+        if hdu is None:
+            return cls([])
+
+        table = Table.read(hdu)
+        return cls.from_table(table, format=format)
+
+    @classmethod
+    def from_table(cls, table, format="gadf"):
+        """Create MapAxes from BinTableHDU
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Bin table HDU
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube", "ogip-arf"}
+            Format to use.
+
+        Returns
+        -------
+        axes : `MapAxes`
+            Map axes object
+        """
+        from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+
+        axes = []
+
+        # Formats that support only one energy axis
+        if format in [
+            "fgst-ccube",
+            "fgst-template",
+            "fgst-bexpcube",
+            "ogip",
+            "ogip-arf",
+        ]:
+            axes.append(MapAxis.from_table(table, format=format))
+        elif format == "gadf":
+            # This limits the max number of axes to 5
+            for idx in range(5):
+                axcols = table.meta.get("AXCOLS{}".format(idx + 1))
+                if axcols is None:
+                    break
+
+                axis = MapAxis.from_table(table, format=format, idx=idx)
+                axes.append(axis)
+        elif format == "gadf-dl3":
+            for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
+                try:
+                    axis = MapAxis.from_table(
+                        table, format=format, column_prefix=column_prefix
+                    )
+                except KeyError:
+                    continue
+                axes.append(axis)
+        else:
+            raise ValueError(f"Unsupported format: '{format}'")
+
+        return cls(axes)
+
+    @classmethod
+    def from_default(cls, axes):
+        """Make a sequence of `~MapAxis` objects."""
+        if axes is None:
+            return cls([])
+
+        axes_out = []
+        for idx, ax in enumerate(axes):
+            if isinstance(ax, np.ndarray):
+                ax = MapAxis(ax)
+
+            if ax.name == "":
+                ax.name = f"axis{idx}"
+
+            axes_out.append(ax)
+
+        return cls(axes_out)
+
+    def assert_names(self, required_names):
+        """Assert required axis names and order
+
+        Parameters
+        ----------
+        required_names : list of str
+            Required
+        """
+        message = ("Incorrect axis order or names. Expected axis "
+                   f"order: {required_names}, got: {self.names}.")
+
+        if not len(self) == len(required_names):
+            raise ValueError(message)
+
+        try:
+            for ax, required_name in zip(self, required_names):
+                ax.assert_name(required_name)
+
+        except ValueError:
+            raise ValueError(message)
+
+    @property
+    def center_coord(self):
+        """Center coordinates"""
+        return tuple([ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self])
 
 
 class MapAxis:
@@ -269,14 +740,13 @@ class MapAxis:
         String specifying the data units.
     """
 
-    # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-
-        self.name = name
+        self._name = name
 
         if len(nodes) != len(np.unique(nodes)):
             raise ValueError("MapAxis: node values must be unique")
+
         if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
             raise ValueError("MapAxis: node values must be sorted")
 
@@ -310,6 +780,20 @@ class MapAxis:
             raise ValueError(f"Invalid node type: {node_type!r}")
 
         self._nbin = nbin
+
+    def assert_name(self, required_name):
+        """Assert axis name if a specific one is required.
+
+        Parameters
+        ----------
+        required_name : str
+            Required
+        """
+        if self.name != required_name:
+            raise ValueError(
+                "Unexpected axis name,"
+                f' expected "{required_name}", got: "{self.name}"'
+            )
 
     def is_aligned(self, other, atol=2e-2):
         """Check if other map axis is aligned.
@@ -360,6 +844,10 @@ class MapAxis:
         return id(self)
 
     @property
+    def is_energy_axis(self):
+        return self.name in ["energy", "energy_true"]
+
+    @property
     def interp(self):
         """Interpolation scale of the axis."""
         return self._interp
@@ -370,14 +858,23 @@ class MapAxis:
         return self._name
 
     @name.setter
-    def name(self, val):
-        self._name = val
+    def name(self, value):
+        """Name of the axis."""
+        self._name = value
 
     @lazyproperty
     def edges(self):
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+
+    @property
+    def as_xerr(self):
+        """Return tuple of xerr to be used with plt.errorbar()"""
+        return (
+            self.center - self.edges[:-1],
+            self.edges[1:] - self.center,
+        )
 
     @lazyproperty
     def center(self):
@@ -394,6 +891,20 @@ class MapAxis:
     def nbin(self):
         """Return number of bins."""
         return self._nbin
+
+    @property
+    def nbin_per_decade(self):
+        """Return number of bins."""
+        if self.interp != "log":
+            raise ValueError("Bins per decade can only be computed for log-spaced axes")
+
+        if self.node_type == "edges":
+            values = self.edges
+        else:
+            values = self.center
+
+        ndecades = np.log10(values.max() / values.min())
+        return (self._nbin / ndecades).value
 
     @property
     def node_type(self):
@@ -449,8 +960,49 @@ class MapAxis:
         return cls(nodes, **kwargs)
 
     @classmethod
+    def from_energy_edges(cls, energy_edges, unit=None, name=None, interp="log"):
+        """Make an energy axis from adjacent edges.
+
+        Parameters
+        ----------
+        energy_edges : `~astropy.units.Quantity`, float
+            Energy edges
+        unit : `~astropy.units.Unit`
+            Energy unit
+        name : str
+            Name of the energy axis, either 'energy' or 'energy_true'
+        interp: str
+            interpolation mode. Default is 'log'.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Axis with name "energy" and interp "log".
+        """
+        energy_edges = u.Quantity(energy_edges, unit)
+
+        if unit is None:
+            unit = energy_edges.unit
+            energy_edges = energy_edges.to(unit)
+
+        if name is None:
+            name = "energy"
+
+        if name not in ["energy", "energy_true"]:
+            raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
+
+        return cls.from_edges(energy_edges, unit=unit, interp=interp, name=name)
+
+    @classmethod
     def from_energy_bounds(
-        cls, emin, emax, nbin, unit=None, per_decade=False, name=None, node_type="edges"
+        cls,
+        energy_min,
+        energy_max,
+        nbin,
+        unit=None,
+        per_decade=False,
+        name=None,
+        node_type="edges",
     ):
         """Make an energy axis.
 
@@ -459,7 +1011,7 @@ class MapAxis:
 
         Parameters
         ----------
-        emin, emax : `~astropy.units.Quantity`, float
+        energy_min, energy_max : `~astropy.units.Quantity`, float
             Energy range
         nbin : int
             Number of bins
@@ -475,15 +1027,15 @@ class MapAxis:
         axis : `MapAxis`
             Axis with name "energy" and interp "log".
         """
-        emin = u.Quantity(emin, unit)
-        emax = u.Quantity(emax, unit)
+        energy_min = u.Quantity(energy_min, unit)
+        energy_max = u.Quantity(energy_max, unit)
 
         if unit is None:
-            unit = emax.unit
-            emin = emin.to(unit)
+            unit = energy_max.unit
+            energy_min = energy_min.to(unit)
 
         if per_decade:
-            nbin = np.ceil(np.log10(emax / emin).value * nbin)
+            nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
 
         if name is None:
             name = "energy"
@@ -492,7 +1044,13 @@ class MapAxis:
             raise ValueError("Energy axis can only be named 'energy' or 'energy_true'")
 
         return cls.from_bounds(
-            emin.value, emax.value, nbin=nbin, unit=unit, interp="log", name=name, node_type=node_type
+            energy_min.value,
+            energy_max.value,
+            nbin=nbin,
+            unit=unit,
+            interp="log",
+            name=name,
+            node_type=node_type,
         )
 
     @classmethod
@@ -555,19 +1113,51 @@ class MapAxis:
             Appended axis
         """
         if self.node_type != axis.node_type:
-            raise ValueError(f"Node type must agree, got {self.node_type} and {axis.node_type}")
+            raise ValueError(
+                f"Node type must agree, got {self.node_type} and {axis.node_type}"
+            )
 
         if self.name != axis.name:
             raise ValueError(f"Names must agree, got {self.name} and {axis.name} ")
 
         if self.interp != axis.interp:
-            raise ValueError(f"Interp type must agree, got {self.interp} and {axis.interp}")
+            raise ValueError(
+                f"Interp type must agree, got {self.interp} and {axis.interp}"
+            )
 
         if self.node_type == "edges":
             edges = np.append(self.edges, axis.edges[1:])
             return self.from_edges(edges=edges, interp=self.interp, name=self.name)
         else:
             nodes = np.append(self.center, axis.center)
+            return self.from_nodes(nodes=nodes, interp=self.interp, name=self.name)
+
+    def pad(self, pad_width):
+        """Pad axis by a given number of pixels
+
+        Parameters
+        ----------
+        pad_width : int or tuple of int
+            A single int pads in both direction of the axis, a tuple specifies,
+            which number of bins to pad at the low and high edge of the axis.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Padded axis
+        """
+        if isinstance(pad_width, tuple):
+            pad_low, pad_high = pad_width
+        else:
+            pad_low, pad_high = pad_width, pad_width
+
+        if self.node_type == "edges":
+            pix = np.arange(-pad_low, self.nbin + pad_high + 1) - 0.5
+            edges = self.pix_to_coord(pix)
+            return self.from_edges(edges=edges, interp=self.interp, name=self.name)
+        else:
+            pix = np.arange(-pad_low, self.nbin + pad_high)
+            nodes = self.pix_to_coord(pix)
             return self.from_nodes(nodes=nodes, interp=self.interp, name=self.name)
 
     @classmethod
@@ -611,6 +1201,31 @@ class MapAxis:
         values = pix_to_coord(self._nodes, pix, interp=self._interp)
         return u.Quantity(values, unit=self.unit, copy=False)
 
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : `~numpy.ndarray`
+            Pixel indices.
+        """
+        if clip:
+            idx = np.clip(pix, 0, self.nbin - 1)
+        else:
+            condition = (pix < 0) | (pix >= self.nbin)
+            idx = np.where(condition, -1, pix)
+
+        return idx
+
     def coord_to_pix(self, coord):
         """Transform from axis to pixel coordinates.
 
@@ -645,8 +1260,19 @@ class MapAxis:
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-        coord = u.Quantity(coord, self.unit, copy=False).value
-        return coord_to_idx(self.edges.value, coord, clip)
+        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
+        edges = self.edges.value
+        idx = np.digitize(coord, edges) - 1
+
+        if clip:
+            idx = np.clip(idx, 0, self.nbin - 1)
+        else:
+            with np.errstate(invalid="ignore"):
+                idx[coord > edges[-1]] = INVALID_INDEX.int
+
+        idx[~np.isfinite(coord)] = INVALID_INDEX.int
+
+        return idx
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -782,7 +1408,7 @@ class MapAxis:
         edges_idx = np.unique(edges_idx)
         edges_ref = self.pix_to_coord(edges_idx)
 
-        groups = QTable()
+        groups = Table()
         groups[f"{self.name}_min"] = edges_ref[:-1]
         groups[f"{self.name}_max"] = edges_ref[1:]
 
@@ -821,32 +1447,18 @@ class MapAxis:
         groups.add_column(group_idx, name="group_idx", index=0)
         return groups
 
-    def _up_down_sample(self, nbin):
-        if self.node_type == "edges":
-            nodes = self.edges
-        else:
-            nodes = self.center
-
-        lo_bnd, hi_bnd = nodes.min(), nodes.max()
-
-        return self.from_bounds(
-            lo_bnd=lo_bnd.value,
-            hi_bnd=hi_bnd.value,
-            nbin=nbin,
-            interp=self.interp,
-            node_type=self.node_type,
-            unit=self.unit,
-            name=self.name,
-        )
-
     def upsample(self, factor):
         """Upsample map axis by a given factor.
+
+        When up-sampling for each node specified in the axis, the corresponding
+        number of sub-nodes are introduced and preserving the initial nodes. For
+        node type "edges" this results in nbin * factor new bins. For node type
+        "center" this results in (nbin - 1) * factor + 1 new bins.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
-
 
         Returns
         -------
@@ -854,11 +1466,26 @@ class MapAxis:
             Usampled map axis.
 
         """
-        nbin = self.nbin * factor
-        return self._up_down_sample(nbin)
+        if self.node_type == "edges":
+            pix = self.coord_to_pix(self.edges)
+            nbin = int(self.nbin * factor) + 1
+            pix_new = np.linspace(pix.min(), pix.max(), nbin)
+            edges = self.pix_to_coord(pix_new)
+            return self.from_edges(edges, name=self.name, interp=self.interp)
+        else:
+            pix = self.coord_to_pix(self.center)
+            nbin = int((self.nbin - 1) * factor) + 1
+            pix_new = np.linspace(pix.min(), pix.max(), nbin)
+            nodes = self.pix_to_coord(pix_new)
+            return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
     def downsample(self, factor):
         """Downsample map axis by a given factor.
+
+        When down-sampling each n-th (given by the factor) bin is selected from
+        the axis while preserving the axis limits. For node type "edges" this
+        requires nbin to be dividable by the factor, for node type "center" this
+        requires nbin - 1 to be dividable by the factor.
 
         Parameters
         ----------
@@ -870,14 +1497,147 @@ class MapAxis:
         -------
         axis : `MapAxis`
             Downsampled map axis.
-
         """
-        nbin = self.nbin / factor
+        if self.node_type == "edges":
+            nbin = self.nbin / factor
 
-        if np.mod(nbin, 1) > 0:
-            raise ValueError(f"Number of {self.name} bins is not divisible by {factor}")
+            if np.mod(nbin, 1) > 0:
+                raise ValueError(
+                    f"Number of {self.name} bins is not divisible by {factor}"
+                )
 
-        return self._up_down_sample(nbin)
+            edges = self.edges[::factor]
+            return self.from_edges(edges, name=self.name, interp=self.interp)
+        else:
+            nbin = (self.nbin - 1) / factor
+
+            if np.mod(nbin, 1) > 0:
+                raise ValueError(
+                    f"Number of {self.name} bins - 1 is not divisible by {factor}"
+                )
+
+            nodes = self.center[::factor]
+            return self.from_nodes(nodes, name=self.name, interp=self.interp)
+
+    def to_header(self, format="ogip", idx=0):
+        """Create FITS header
+
+        Parameters
+        ----------
+        format : {"ogip"}
+            Format specification
+        idx : int
+            Column index of the axis.
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            Header to extend.
+        """
+        header = fits.Header()
+
+        if format in ["ogip", "ogip-sherpa"]:
+            header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
+            header["TELESCOP"] = "DUMMY", "Mission/satellite name"
+            header["INSTRUME"] = "DUMMY", "Instrument/detector"
+            header["FILTER"] = "None", "Filter information"
+            header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
+            header["DETCHANS"] = self.nbin, "Total number of detector PHA channels"
+            header["HDUCLASS"] = "OGIP", "Organisation devising file format"
+            header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
+            header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
+            header["HDUVERS"] = "1.2.0", "Version of file format"
+        elif format in ["gadf", "fgst-ccube", "fgst-template"]:
+            key = f"AXCOLS{idx}"
+            name = self.name.upper()
+
+            if self.name == "energy" and self.node_type == "edges":
+                header[key] = "E_MIN,E_MAX"
+            elif self.name == "energy" and self.node_type == "center":
+                header[key] = "ENERGY"
+            elif self.node_type == "edges":
+                header[key] = f"{name}_MIN,{name}_MAX"
+            elif self.node_type == "center":
+                header[key] = name
+            else:
+                raise ValueError(f"Invalid node type {self.node_type!r}")
+
+            key_interp = f"INTERP{idx}"
+            header[key_interp] = self.interp
+
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        return header
+
+    def to_table(self, format="ogip"):
+        """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
+
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+
+        The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
+
+        Parameters
+        ----------
+        format : {"ogip", "ogip-sherpa", "gadf-dl3", "gtpsf"}
+            Format specification
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table HDU
+        """
+        table = Table()
+        edges = self.edges
+
+        if format in ["ogip", "ogip-sherpa"]:
+            self.assert_name("energy")
+
+            if format == "ogip-sherpa":
+                edges = edges.to("keV")
+
+            table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
+            table["E_MIN"] = edges[:-1]
+            table["E_MAX"] = edges[1:]
+        elif format in ["ogip-arf", "ogip-arf-sherpa"]:
+            self.assert_name("energy_true")
+
+            if format == "ogip-arf-sherpa":
+                edges = edges.to("keV")
+
+            table["ENERG_LO"] = edges[:-1]
+            table["ENERG_HI"] = edges[1:]
+        elif format == "gadf-dl3":
+            from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+
+            if self.name == "energy":
+                column_prefix = "ENERG"
+            else:
+                for column_prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
+                    if spec["name"] == self.name:
+                        break
+
+            if self.node_type == "edges":
+                edges_hi, edges_lo = edges[:-1], edges[1:]
+            else:
+                edges_hi, edges_lo = self.center, self.center
+
+            table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
+            table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
+        elif format == "gtpsf":
+            if self.name == "energy_true":
+                table["Energy"] = self.center.to("MeV")
+            elif self.name == "rad":
+                table["Theta"] = self.center.to("deg")
+            else:
+                raise ValueError(
+                    "Can only convert true energy or rad axis to"
+                    f"'gtpsf' format, got {self.name}"
+                )
+        else:
+            raise ValueError(f"{format} is not a valid format")
+
+        return table
 
     def to_table_hdu(self, format="ogip"):
         """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
@@ -888,48 +1648,134 @@ class MapAxis:
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}
+        format : {"ogip", "ogip-sherpa", "gtpsf"}
             Format specification
-
 
         Returns
         -------
         hdu : `~astropy.io.fits.BinTableHDU`
             Table HDU
         """
-        if format not in ["ogip", "ogip-sherpa"]:
-            raise ValueError("Only 'ogip' and 'ogip-sherpa' format supported")
+        table = self.to_table(format=format)
 
-        if "energy" not in self.name:
-            raise ValueError("Only energy axes can be converted to HDU")
+        if format == "gtpsf":
+            name = "THETA"
+        else:
+            name = None
 
-        edges = self.edges
+        hdu = fits.BinTableHDU(table, name=name)
 
-        if format == "ogip-sherpa":
-            edges = edges.to("keV")
+        if format in ["ogip", "ogip-sherpa"]:
+            hdu.header.update(self.to_header(format=format))
 
-        table = Table()
-        table["CHANNEL"] = np.arange(self.nbin, dtype=np.int16)
-        table["E_MIN"] = edges[:-1]
-        table["E_MAX"] = edges[1:]
-
-        hdu = fits.BinTableHDU(table)
-
-        header = hdu.header
-        header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
-        header["TELESCOP"] = "DUMMY", "Mission/satellite name"
-        header["INSTRUME"] = "DUMMY", "Instrument/detector"
-        header["FILTER"] = "None", "Filter information"
-        header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
-        header["DETCHANS"] = self.nbin, "Total number of detector PHA channels"
-        header["HDUCLASS"] = "OGIP", "Organisation devising file format"
-        header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
-        header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
-        header["HDUVERS"] = "1.2.0", "Version of file format"
         return hdu
 
     @classmethod
-    def from_table_hdu(cls, hdu, format="ogip"):
+    def from_table(cls, table, format="ogip", idx=0, column_prefix=""):
+        """Instanciate MapAxis from table HDU
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table
+        format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template", "gadf", "gadf-dl3"}
+            Format specification
+        idx : int
+            Column index of the axis.
+        column_prefix : str
+            Column name prefix of the axis, used for creating the axis.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Map Axis
+        """
+        if format in ["ogip", "fgst-ccube"]:
+            energy_min = table["E_MIN"].quantity
+            energy_max = table["E_MAX"].quantity
+            energy_edges = (
+                np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            )
+            axis = cls.from_edges(energy_edges, name="energy", interp="log")
+
+        elif format == "ogip-arf":
+            energy_min = table["ENERG_LO"].quantity
+            energy_max = table["ENERG_HI"].quantity
+            energy_edges = (
+                np.append(energy_min.value, energy_max.value[-1]) * energy_min.unit
+            )
+            axis = cls.from_edges(energy_edges, name="energy_true", interp="log")
+
+        elif format in ["fgst-template", "fgst-bexpcube"]:
+            allowed_names = ["Energy", "ENERGY", "energy"]
+            for colname in table.colnames:
+                if colname in allowed_names:
+                    tag = colname
+                    break
+
+            nodes = table[tag].data
+            axis = cls.from_nodes(
+                nodes=nodes, name="energy_true", unit="MeV", interp="log"
+            )
+
+        elif format == "gadf":
+            axcols = table.meta.get("AXCOLS{}".format(idx + 1))
+            colnames = axcols.split(",")
+            node_type = "edges" if len(colnames) == 2 else "center"
+
+            # TODO: check why this extra case is needed
+            if colnames[0] == "E_MIN":
+                name = "energy"
+            else:
+                name = colnames[0].replace("_MIN", "").lower()
+                # this is need for backward compatibility
+                if name == "theta":
+                    name = "rad"
+
+            interp = table.meta.get("INTERP{}".format(idx + 1), "lin")
+
+            if node_type == "center":
+                nodes = np.unique(table[colnames[0]].quantity)
+            else:
+                edges_min = np.unique(table[colnames[0]].quantity)
+                edges_max = np.unique(table[colnames[1]].quantity)
+                nodes = edges_from_lo_hi(edges_min, edges_max)
+
+            axis = MapAxis(nodes=nodes, node_type=node_type, interp=interp, name=name)
+
+        elif format == "gadf-dl3":
+            from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
+
+            spec = IRF_DL3_AXES_SPECIFICATION[column_prefix]
+            name, interp = spec["name"], spec["interp"]
+
+            # background models are stored in reconstructed energy
+            hduclass = table.meta.get("HDUCLAS2")
+            if hduclass == "BKG" and column_prefix == "ENERG":
+                name = "energy"
+
+            edges_lo = table[f"{column_prefix}_LO"].quantity[0]
+            edges_hi = table[f"{column_prefix}_HI"].quantity[0]
+
+            if np.allclose(edges_hi, edges_lo):
+                axis = MapAxis.from_nodes(edges_hi, interp=interp, name=name)
+            else:
+                edges = edges_from_lo_hi(edges_lo, edges_hi)
+                axis = MapAxis.from_edges(edges, interp=interp, name=name)
+        elif format == "gtpsf":
+            try:
+                energy = table["Energy"].data * u.MeV
+                axis = MapAxis.from_nodes(energy, name="energy_true", interp="log")
+            except KeyError:
+                rad = table["Theta"].data * u.deg
+                axis = MapAxis.from_nodes(rad, name="rad")
+        else:
+            raise ValueError(f"Format '{format}' not supported")
+
+        return axis
+
+    @classmethod
+    def from_table_hdu(cls, hdu, format="ogip", idx=0):
         """Instanciate MapAxis from table HDU
 
         Parameters
@@ -938,6 +1784,8 @@ class MapAxis:
             Table HDU
         format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template"}
             Format specification
+        idx : int
+            Column index of the axis.
 
         Returns
         -------
@@ -945,30 +1793,7 @@ class MapAxis:
             Map Axis
         """
         table = Table.read(hdu)
-
-        if format in ["ogip", "fgst-ccube"]:
-            emin = table["E_MIN"].quantity
-            emax = table["E_MAX"].quantity
-            edges = np.append(emin.value, emax.value[-1]) * emin.unit
-            axis = cls.from_edges(edges, name="energy", interp="log")
-        elif format == "ogip-arf":
-            emin = table["ENERG_LO"].quantity
-            emax = table["ENERG_HI"].quantity
-            edges = np.append(emin.value, emax.value[-1]) * emin.unit
-            axis = cls.from_edges(edges, name="energy_true", interp="log")
-        elif format == "fgst-template":
-            allowed_names = ["Energy", "ENERGY", "energy"]
-            for colname in table.colnames:
-                if colname in allowed_names:
-                    tag = colname
-                    break
-
-            nodes = table[tag].data
-            axis = cls.from_nodes(nodes=nodes, name="energy_true", unit="MeV", interp="log")
-        else:
-            raise ValueError(f"Format '{format}' not supported")
-
-        return axis
+        return cls.from_table(table, format=format, idx=idx)
 
 
 class MapCoord:
@@ -1062,7 +1887,7 @@ class MapCoord:
         return SkyCoord(self.lon, self.lat, unit="deg", frame=self.frame)
 
     @classmethod
-    def _from_lonlat(cls, coords, frame=None):
+    def _from_lonlat(cls, coords, frame=None, axis_names=None):
         """Create a `~MapCoord` from a tuple of coordinate vectors.
 
         The first two elements of the tuple should be longitude and latitude in degrees.
@@ -1077,24 +1902,27 @@ class MapCoord:
         coord : `~MapCoord`
             A coordinates object.
         """
+        if axis_names is None:
+            axis_names = [f"axis{idx}" for idx in range(len(coords) - 2)]
+
         if isinstance(coords, (list, tuple)):
             coords_dict = {"lon": coords[0], "lat": coords[1]}
-            for i, c in enumerate(coords[2:]):
-                coords_dict[f"axis{i}"] = c
+            for name, c in zip(axis_names, coords[2:]):
+                coords_dict[name] = c
         else:
             raise ValueError("Unrecognized input type.")
 
         return cls(coords_dict, frame=frame, match_by_name=False)
 
     @classmethod
-    def _from_tuple(cls, coords, frame=None):
+    def _from_tuple(cls, coords, frame=None, axis_names=None):
         """Create from tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
-            return cls._from_lonlat(coords, frame=frame)
+            return cls._from_lonlat(coords, frame=frame, axis_names=axis_names)
         elif isinstance(coords[0], SkyCoord):
             lon, lat, frame = skycoord_to_lonlat(coords[0], frame=frame)
             coords = (lon, lat) + coords[1:]
-            return cls._from_lonlat(coords, frame=frame)
+            return cls._from_lonlat(coords, frame=frame, axis_names=axis_names)
         else:
             raise TypeError(f"Type not supported: {type(coords)!r}")
 
@@ -1115,7 +1943,7 @@ class MapCoord:
             raise ValueError("coords dict must contain 'lon'/'lat' or 'skycoord'.")
 
     @classmethod
-    def create(cls, data, frame=None):
+    def create(cls, data, frame=None, axis_names=None):
         """Create a new `~MapCoord` object.
 
         This method can be used to create either unnamed (with tuple input)
@@ -1129,6 +1957,8 @@ class MapCoord:
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry.
+        axis_names : list of str
+            Axis names use if a tuple is provided
 
         Examples
         --------
@@ -1153,9 +1983,9 @@ class MapCoord:
         elif isinstance(data, dict):
             return cls._from_dict(data, frame=frame)
         elif isinstance(data, (list, tuple)):
-            return cls._from_tuple(data, frame=frame)
+            return cls._from_tuple(data, frame=frame, axis_names=axis_names)
         elif isinstance(data, SkyCoord):
-            return cls._from_tuple((data,), frame=frame)
+            return cls._from_tuple((data,), frame=frame, axis_names=axis_names)
         else:
             raise TypeError(f"Unsupported input type: {type(data)!r}")
 
@@ -1203,6 +2033,12 @@ class MapCoord:
         data = {k: v[mask] for k, v in self._data.items()}
         return self.__class__(data, self.frame, self._match_by_name)
 
+    @property
+    def flat(self):
+        """Return flattened, valid coordinates"""
+        is_finite = np.isfinite(self[0])
+        return self.apply_mask(is_finite)
+
     def copy(self):
         """Copy `MapCoord` object."""
         return copy.deepcopy(self)
@@ -1229,6 +2065,22 @@ class Geom(abc.ABC):
         """Shape of the Numpy data array matching this geometry."""
         pass
 
+    def data_nbytes(self, dtype="float32"):
+        """Estimate memory usage in megabytes of the Numpy data array
+        matching this geometry depending on the given type.
+
+        Parameters
+        ----------
+        dtype : data-type
+            The desired data-type for the array. Default is "float32"
+            
+        Returns
+        -------
+        memory : `~astropy.units.Quantity`
+            Estimated memory usage in megabytes (MB)
+        """
+        return (np.empty(self.data_shape, dtype).nbytes * u.byte).to("MB")
+
     @property
     @abc.abstractmethod
     def is_allsky(self):
@@ -1248,10 +2100,6 @@ class Geom(abc.ABC):
     @abc.abstractmethod
     def center_skydir(self):
         pass
-
-    @property
-    def axes_names(self):
-        return [ax.name for ax in self.axes]
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
@@ -1286,31 +2134,13 @@ class Geom(abc.ABC):
 
         return cls.from_header(hdu.header, hdu_bands)
 
-    def make_bands_hdu(self, hdu=None, hdu_skymap=None, conv=None):
-        header = fits.Header()
-        self._fill_header_from_axes(header)
-        axis_names = None
-
-        # FIXME: Check whether convention is compatible with
-        # dimensionality of geometry
-
-        if conv == "fgst-ccube":
-            hdu = "EBOUNDS"
-            axis_names = ["energy"]
-        elif conv == "fgst-template":
-            hdu = "ENERGIES"
-            axis_names = ["energy"]
-        elif conv == "gadf" and hdu is None:
-            if hdu_skymap:
-                hdu = f"{hdu_skymap}_BANDS"
-            else:
-                hdu = "BANDS"
-        # else:
-        #     raise ValueError('Unknown conv: {}'.format(conv))
-
-        cols = make_axes_cols(self.axes, axis_names)
-        cols += self._make_bands_cols()
-        return fits.BinTableHDU.from_columns(cols, header, name=hdu)
+    def to_bands_hdu(self, hdu_bands=None, format="gadf"):
+        table_hdu = self.axes.to_table_hdu(format=format, hdu_bands=hdu_bands)
+        cols = table_hdu.columns.columns
+        cols.extend(self._make_bands_cols())
+        return fits.BinTableHDU.from_columns(
+            cols, header=table_hdu.header, name=table_hdu.name
+        )
 
     @abc.abstractmethod
     def _make_bands_cols(self):
@@ -1499,7 +2329,7 @@ class Geom(abc.ABC):
         slices : dict
             Dict of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
-            correspoding axes is dropped from the map. Axes not specified in the
+            corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
 
         Returns
@@ -1507,15 +2337,19 @@ class Geom(abc.ABC):
         geom : `~Geom`
             Sliced geometry.
         """
-        axes = []
-        for ax in self.axes:
-            ax_slice = slices.get(ax.name, slice(None))
-            if isinstance(ax_slice, slice):
-                ax_sliced = ax.slice(ax_slice)
-                axes.append(ax_sliced)
-                # in the case where isinstance(ax_slice, int) the axes is dropped
-
+        axes = self.axes.slice_by_idx(slices)
         return self._init_copy(axes=axes)
+
+    @property
+    def as_energy_true(self):
+        """If the geom contains an energy axis rename it to energy true"""
+        energy_axis = self.axes["energy"].copy(name="energy_true")
+        return self.to_image().to_cube([energy_axis])
+
+    @property
+    def has_energy_axis(self):
+        """Whether geom has an energy axis"""
+        return ("energy" in self.axes.names) ^ ("energy_true" in self.axes.names)
 
     @abc.abstractmethod
     def to_image(self):
@@ -1548,12 +2382,12 @@ class Geom(abc.ABC):
         """
         pass
 
-    def squash(self, axis):
+    def squash(self, axis_name):
         """Squash geom axis.
 
         Parameters
         ----------
-        axis : str
+        axis_name : str
             Axis to squash.
 
         Returns
@@ -1561,20 +2395,15 @@ class Geom(abc.ABC):
         geom : `Geom`
             Geom with squashed axis.
         """
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                ax = ax.squash()
-            axes.append(ax)
-
+        axes = self.axes.squash(axis_name=axis_name)
         return self.to_image().to_cube(axes=axes)
 
-    def drop(self, axis):
+    def drop(self, axis_name):
         """Drop an axis from the geom.
 
         Parameters
         ----------
-        axis : str
+        axis_name : str
             Name of the axis to remove.
 
         Returns
@@ -1582,35 +2411,10 @@ class Geom(abc.ABC):
         geom : `Geom`
             New geom with the axis removed.
         """
-        axes = []
-        for ax in copy.deepcopy(self.axes):
-            if ax.name == axis:
-                continue
-            axes.append(ax)
-
+        axes = self.axes.drop(axis_name=axis_name)
         return self.to_image().to_cube(axes=axes)
 
-    def coord_to_tuple(self, coord):
-        """Generate a coordinate tuple compatible with this geometry.
-
-        Parameters
-        ----------
-        coord : `~MapCoord`
-        """
-        if self.ndim != coord.ndim:
-            raise ValueError("ndim mismatch")
-
-        if not coord.match_by_name:
-            return tuple(coord._data.values())
-
-        coord_tuple = [coord.lon, coord.lat]
-        for ax in self.axes:
-            coord_tuple += [coord[ax.name]]
-
-        return coord_tuple
-
-    @abc.abstractmethod
-    def pad(self, pad_width):
+    def pad(self, pad_width, axis_name):
         """
         Pad the geometry at the edges.
 
@@ -1618,12 +2422,22 @@ class Geom(abc.ABC):
         ----------
         pad_width : {sequence, array_like, int}
             Number of values padded to the edges of each axis.
+        axis_name : str
+            Name of the axis to pad.
 
         Returns
         -------
         geom : `~Geom`
             Padded geometry.
         """
+        if axis_name is None:
+            return self._pad_spatial(pad_width)
+        else:
+            axes = self.axes.pad(axis_name=axis_name, pad_width=pad_width)
+            return self.to_image().to_cube(axes)
+
+    @abc.abstractmethod
+    def _pad_spatial(self, pad_width):
         pass
 
     @abc.abstractmethod
@@ -1644,14 +2458,14 @@ class Geom(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor, axis):
+    def downsample(self, factor, axis_name):
         """Downsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
-        axis : str
+        axis_name : str
             Axis to downsample.
 
         Returns
@@ -1663,14 +2477,14 @@ class Geom(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor, axis):
+    def upsample(self, factor, axis_name):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
-        axis : str
+        axis_name : str
             Axis to upsample.
 
         Returns
@@ -1696,54 +2510,13 @@ class Geom(abc.ABC):
         map : `Geom`
             Geom with resampled axis.
         """
-        axis_self = self.get_axis_by_name(axis.name)
-        groups = axis_self.group_table(axis.edges)
-
-        # Keep only normal bins
-        #TODO: improve on this
-        groups = groups[groups["bin_type"]=="normal   "]
-
-        edges = edges_from_lo_hi(
-            groups[axis.name + "_min"], groups[axis.name + "_max"]
-        )
-
-        axis_resampled = MapAxis.from_edges(
-            edges=edges,
-            interp=axis.interp,
-            name=axis.name
-        )
-
-        axes = []
-        for ax in self.axes:
-            if ax.name == axis.name:
-                axes.append(axis_resampled)
-            else:
-                axes.append(ax)
-
+        axes = self.axes.resample(axis=axis)
         return self._init_copy(axes=axes)
 
     @abc.abstractmethod
     def solid_angle(self):
         """Solid angle (`~astropy.units.Quantity` in ``sr``)."""
         pass
-
-    def _fill_header_from_axes(self, header):
-        for idx, ax in enumerate(self.axes, start=1):
-            key = "AXCOLS%i" % idx
-            name = ax.name.upper()
-            if ax.name == "energy" and ax.node_type == "edges":
-                header[key] = "E_MIN,E_MAX"
-            elif ax.name == "energy" and ax.node_type == "center":
-                header[key] = "ENERGY"
-            elif ax.node_type == "edges":
-                header[key] = f"{name}_MIN,{name}_MAX"
-            elif ax.node_type == "center":
-                header[key] = name
-            else:
-                raise ValueError(f"Invalid node type {ax.node_type!r}")
-
-            key_interp = "INTERP%i" % idx
-            header[key_interp] = ax._interp
 
     @property
     def is_image(self):
@@ -1762,38 +2535,6 @@ class Geom(abc.ABC):
             for axis in self.axes:
                 valid = valid and (axis.nbin == 1)
             return valid
-
-    def get_axis_by_name(self, name):
-        """Get an axis by name (case in-sensitive).
-
-        Parameters
-        ----------
-        name : str
-           Name of the requested axis
-
-        Returns
-        -------
-        axis : `~gammapy.maps.MapAxis`
-            Axis
-        """
-        axes = {axis.name.upper(): axis for axis in self.axes}
-        return axes[name.upper()]
-
-    def get_axis_index_by_name(self, name):
-        """Get an axis index by name (case in-sensitive).
-
-        Parameters
-        ----------
-        name : str
-           Axis name
-
-        Returns
-        -------
-        index : int
-            Axis index
-        """
-        names = [axis.name.upper() for axis in self.axes]
-        return names.index(name.upper())
 
     def _init_copy(self, **kwargs):
         """Init map geom instance by copying missing init arguments from self.
@@ -1822,14 +2563,14 @@ class Geom(abc.ABC):
         """
         return self._init_copy(**kwargs)
 
-    def energy_mask(self, emin=None, emax=None, round_to_edge=False):
+    def energy_mask(self, energy_min=None, energy_max=None, round_to_edge=False):
         """Create a mask for a given energy range.
 
         The energy bin must be fully contained to be included in the mask.
 
         Parameters
         ----------
-        emin, emax : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy range
 
         Returns
@@ -1837,19 +2578,22 @@ class Geom(abc.ABC):
         mask : `~numpy.ndarray`
             Energy mask
         """
+        from . import Map
+
         # get energy axes and values
-        energy_axis = self.get_axis_by_name("energy")
+        energy_axis = self.axes["energy"]
 
         if round_to_edge:
-            emin, emax = energy_axis.round([emin, emax])
+            energy_min, energy_max = energy_axis.round([energy_min, energy_max])
 
         # TODO: make this more general
         shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
-        edges = energy_axis.edges.reshape(shape)
+        energy_edges = energy_axis.edges.reshape(shape)
 
         # set default values
-        emin = emin if emin is not None else edges[0]
-        emax = emax if emax is not None else edges[-1]
+        energy_min = energy_min if energy_min is not None else energy_edges[0]
+        energy_max = energy_max if energy_max is not None else energy_edges[-1]
 
-        mask = (edges[:-1] >= emin) & (edges[1:] <= emax)
-        return np.broadcast_to(mask, shape=self.data_shape)
+        mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
+        data = np.broadcast_to(mask, shape=self.data_shape)
+        return Map.from_geom(geom=self, data=data)

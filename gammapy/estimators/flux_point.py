@@ -9,9 +9,8 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import Estimator
+from .core import Estimator, DEFAULT_UNIT
 from .flux import FluxEstimator
-
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
 
@@ -23,13 +22,7 @@ REQUIRED_COLUMNS = {
     "flux": ["e_min", "e_max", "flux"],
     "eflux": ["e_min", "e_max", "eflux"],
     # TODO: extend required columns
-    "likelihood": [
-        "e_min",
-        "e_max",
-        "e_ref",
-        "ref_dnde",
-        "norm",
-    ],
+    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "norm",],
 }
 
 OPTIONAL_COLUMNS = {
@@ -38,13 +31,6 @@ OPTIONAL_COLUMNS = {
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
     "likelihood": ["norm_scan", "stat_scan"],
-}
-
-DEFAULT_UNIT = {
-    "dnde": u.Unit("cm-2 s-1 TeV-1"),
-    "e2dnde": u.Unit("erg cm-2 s-1"),
-    "flux": u.Unit("cm-2 s-1"),
-    "eflux": u.Unit("erg cm-2 s-1"),
 }
 
 
@@ -258,9 +244,9 @@ class FluxPoints:
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> print(flux_points)
-        FluxPoints(sed_type="flux", n_points=24)
+        FluxPoints(sed_type='flux', n_points=24)
         >>> print(flux_points.drop_ul())
-        FluxPoints(sed_type="flux", n_points=19)
+        FluxPoints(sed_type='flux', n_points=19)
 
         Note: In order to reproduce the example you need the tests datasets folder.
         You may download it with the command
@@ -269,17 +255,19 @@ class FluxPoints:
         table_drop_ul = self.table[~self.is_ul]
         return self.__class__(table_drop_ul)
 
-    def _flux_to_dnde(self, e_ref, table, model, pwl_approx):
+    def _flux_to_dnde(self, energy_ref, table, model, pwl_approx):
         if model is None:
             model = PowerLawSpectralModel()
 
-        e_min, e_max = self.e_min, self.e_max
+        energy_min, energy_max = self.energy_min, self.energy_max
 
         flux = table["flux"].quantity
-        dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx)
+        dnde = self._dnde_from_flux(
+            flux, model, energy_ref, energy_min, energy_max, pwl_approx
+        )
 
         # Add to result table
-        table["e_ref"] = e_ref
+        table["e_ref"] = energy_ref
         table["dnde"] = dnde
 
         if "flux_err" in table.colnames:
@@ -292,18 +280,18 @@ class FluxPoints:
         if "flux_ul" in table.colnames:
             flux_ul = table["flux_ul"].quantity
             dnde_ul = self._dnde_from_flux(
-                flux_ul, model, e_ref, e_min, e_max, pwl_approx
+                flux_ul, model, energy_ref, energy_min, energy_max, pwl_approx
             )
             table["dnde_ul"] = dnde_ul
 
         return table
 
     @staticmethod
-    def _dnde_to_e2dnde(e_ref, table):
+    def _dnde_to_e2dnde(energy_ref, table):
         for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
             try:
                 data = table["dnde" + suffix].quantity
-                table["e2dnde" + suffix] = (e_ref ** 2 * data).to(
+                table["e2dnde" + suffix] = (energy_ref ** 2 * data).to(
                     DEFAULT_UNIT["e2dnde"]
                 )
             except KeyError:
@@ -312,11 +300,13 @@ class FluxPoints:
         return table
 
     @staticmethod
-    def _e2dnde_to_dnde(e_ref, table):
+    def _e2dnde_to_dnde(energy_ref, table):
         for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
             try:
                 data = table["e2dnde" + suffix].quantity
-                table["dnde" + suffix] = (data / e_ref ** 2).to(DEFAULT_UNIT["dnde"])
+                table["dnde" + suffix] = (data / energy_ref ** 2).to(
+                    DEFAULT_UNIT["dnde"]
+                )
             except KeyError:
                 continue
 
@@ -337,13 +327,13 @@ class FluxPoints:
             does not matter. Still it is recommended to use something with the right
             scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`
         method : {'lafferty', 'log_center', 'table'}
-            Flux points `e_ref` estimation method:
+            Flux points `energy_ref` estimation method:
 
-                * `'laferty'` Lafferty & Wyatt model-based e_ref
-                * `'log_center'` log bin center e_ref
-                * `'table'` using column 'e_ref' from input flux_points
+                * `'laferty'` Lafferty & Wyatt model-based energy_ref
+                * `'log_center'` log bin center energy_ref
+                * `'table'` using column 'energy_ref' from input flux_points
         pwl_approx : bool
-            Use local power law appoximation at e_ref to compute differential flux
+            Use local power law appoximation at energy_ref to compute differential flux
             from the integral flux. This method is used by the Fermi-LAT catalogs.
 
         Returns
@@ -369,23 +359,25 @@ class FluxPoints:
         table = self.table.copy()
 
         if self.sed_type == "flux" and sed_type == "dnde":
-            # Compute e_ref
+            # Compute energy_ref
             if method == "table":
-                e_ref = table["e_ref"].quantity
+                energy_ref = table["e_ref"].quantity
             elif method == "log_center":
-                e_ref = np.sqrt(self.e_min * self.e_max)
+                energy_ref = np.sqrt(self.energy_min * self.energy_max)
             elif method == "lafferty":
-                # set e_ref that it represents the mean dnde in the given energy bin
-                e_ref = self._e_ref_lafferty(model, self.e_min, self.e_max)
+                # set energy_ref that it represents the mean dnde in the given energy bin
+                energy_ref = self._energy_ref_lafferty(
+                    model, self.energy_min, self.energy_max
+                )
             else:
                 raise ValueError(f"Invalid method: {method}")
-            table = self._flux_to_dnde(e_ref, table, model, pwl_approx)
+            table = self._flux_to_dnde(energy_ref, table, model, pwl_approx)
 
         elif self.sed_type == "dnde" and sed_type == "e2dnde":
-            table = self._dnde_to_e2dnde(self.e_ref, table)
+            table = self._dnde_to_e2dnde(self.energy_ref, table)
 
         elif self.sed_type == "e2dnde" and sed_type == "dnde":
-            table = self._e2dnde_to_dnde(self.e_ref, table)
+            table = self._e2dnde_to_dnde(self.energy_ref, table)
 
         elif self.sed_type == "likelihood" and sed_type in ["dnde", "flux", "eflux"]:
             for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
@@ -406,36 +398,36 @@ class FluxPoints:
         return FluxPoints(table)
 
     @staticmethod
-    def _e_ref_lafferty(model, e_min, e_max):
+    def _energy_ref_lafferty(model, energy_min, energy_max):
         """Helper for `to_sed_type`.
 
-        Compute e_ref that the value at e_ref corresponds
-        to the mean value between e_min and e_max.
+        Compute energy_ref that the value at energy_ref corresponds
+        to the mean value between energy_min and energy_max.
         """
-        flux = model.integral(e_min, e_max)
-        dnde_mean = flux / (e_max - e_min)
+        flux = model.integral(energy_min, energy_max)
+        dnde_mean = flux / (energy_max - energy_min)
         return model.inverse(dnde_mean)
 
     @staticmethod
-    def _dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx):
+    def _dnde_from_flux(flux, model, energy_ref, energy_min, energy_max, pwl_approx):
         """Helper for `to_sed_type`.
 
         Compute dnde under the assumption that flux equals expected
         flux from model.
         """
-        dnde_model = model(e_ref)
+        dnde_model = model(energy_ref)
 
         if pwl_approx:
-            index = model.spectral_index(e_ref)
+            index = model.spectral_index(energy_ref)
             flux_model = PowerLawSpectralModel.evaluate_integral(
-                emin=e_min,
-                emax=e_max,
+                energy_min=energy_min,
+                energy_max=energy_max,
                 index=index,
-                reference=e_ref,
+                reference=energy_ref,
                 amplitude=dnde_model,
             )
         else:
-            flux_model = model.integral(e_min, e_max, intervals=True)
+            flux_model = model.integral(energy_min, energy_max)
 
         return dnde_model * (flux / flux_model)
 
@@ -464,9 +456,13 @@ class FluxPoints:
                 return sed_type
 
     @staticmethod
-    def _validate_table(table, sed_type):
+    def _validate_table(table, sed_type, use_optional=False):
         """Validate input table."""
         required = set(REQUIRED_COLUMNS[sed_type])
+        if use_optional:
+            required = set(REQUIRED_COLUMNS[sed_type] + OPTIONAL_COLUMNS[sed_type])
+        else:
+            required = set(REQUIRED_COLUMNS[sed_type])
 
         if not required.issubset(table.colnames):
             missing = required.difference(table.colnames)
@@ -485,10 +481,10 @@ class FluxPoints:
     def _plot_get_energy_err(self):
         """Compute energy error for given sed type"""
         try:
-            e_min = self.table["e_min"].quantity
-            e_max = self.table["e_max"].quantity
-            e_ref = self.e_ref
-            x_err = ((e_ref - e_min), (e_max - e_ref))
+            energy_min = self.energy_min
+            energy_max = self.energy_max
+            energy_ref = self.energy_ref
+            x_err = ((energy_ref - energy_min), (energy_max - energy_ref))
         except KeyError:
             x_err = None
         return x_err
@@ -518,57 +514,57 @@ class FluxPoints:
             return np.isnan(self.table[self.sed_type])
 
     @property
-    def e_ref(self):
+    def energy_ref(self):
         """Reference energy.
 
-        Defined by `e_ref` column in `FluxPoints.table` or computed as log
-        center, if `e_min` and `e_max` columns are present in `FluxPoints.table`.
+        Defined by `energy_ref` column in `FluxPoints.table` or computed as log
+        center, if `energy_min` and `energy_max` columns are present in `FluxPoints.table`.
 
         Returns
         -------
-        e_ref : `~astropy.units.Quantity`
+        energy_ref : `~astropy.units.Quantity`
             Reference energy.
         """
         try:
             return self.table["e_ref"].quantity
         except KeyError:
-            return np.sqrt(self.e_min * self.e_max)
+            return np.sqrt(self.energy_min * self.energy_max)
 
     @property
-    def e_edges(self):
+    def energy_edges(self):
         """Edges of the energy bin.
 
         Returns
         -------
-        e_edges : `~astropy.units.Quantity`
+        energy_edges : `~astropy.units.Quantity`
             Energy edges.
         """
-        e_edges = list(self.e_min)
-        e_edges += [self.e_max[-1]]
-        return u.Quantity(e_edges, self.e_min.unit, copy=False)
+        energy_edges = list(self.energy_min)
+        energy_edges += [self.energy_max[-1]]
+        return u.Quantity(energy_edges, self.energy_min.unit, copy=False)
 
     @property
-    def e_min(self):
+    def energy_min(self):
         """Lower bound of energy bin.
 
-        Defined by `e_min` column in `FluxPoints.table`.
+        Defined by `energy_min` column in `FluxPoints.table`.
 
         Returns
         -------
-        e_min : `~astropy.units.Quantity`
+        energy_min : `~astropy.units.Quantity`
             Lower bound of energy bin.
         """
         return self.table["e_min"].quantity
 
     @property
-    def e_max(self):
+    def energy_max(self):
         """Upper bound of energy bin.
 
-        Defined by ``e_max`` column in ``table``.
+        Defined by ``energy_max`` column in ``table``.
 
         Returns
         -------
-        e_max : `~astropy.units.Quantity`
+        energy_max : `~astropy.units.Quantity`
             Upper bound of energy bin.
         """
         return self.table["e_max"].quantity
@@ -605,7 +601,7 @@ class FluxPoints:
         y_unit = u.Unit(flux_unit or DEFAULT_UNIT[sed_type])
 
         y = self.table[sed_type].quantity.to(y_unit)
-        x = self.e_ref.to(energy_unit)
+        x = self.energy_ref.to(energy_unit)
 
         # get errors and ul
         is_ul = self.is_ul
@@ -613,8 +609,8 @@ class FluxPoints:
         y_err_all = self._plot_get_flux_err(sed_type)
 
         # handle energy power
-        e_unit = self._get_y_energy_unit(y_unit)
-        y_unit = y.unit * e_unit ** energy_power
+        energy_unit_y = self._get_y_energy_unit(y_unit)
+        y_unit = y.unit * energy_unit_y ** energy_power
         y = (y * np.power(x, energy_power)).to(y_unit)
 
         y_err, x_err = None, None
@@ -665,8 +661,8 @@ class FluxPoints:
                 **kwargs,
             )
 
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
         ax.set_ylabel(f"{self.sed_type} ({y_unit})")
         return ax
@@ -707,7 +703,7 @@ class FluxPoints:
         if ax is None:
             ax = plt.gca()
 
-        self._validate_table(self.table, "likelihood")
+        self._validate_table(self.table, "likelihood", use_optional=True)
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
 
         if y_values is None:
@@ -719,7 +715,7 @@ class FluxPoints:
             )
             y_values = u.Quantity(y_values, y_unit, copy=False)
 
-        x = self.e_edges.to(energy_unit)
+        x = self.energy_edges.to(energy_unit)
 
         # Compute fit statistic "image" one energy bin at a time
         # by interpolating e2dnde at the log bin centers
@@ -741,8 +737,8 @@ class FluxPoints:
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
         caxes = ax.pcolormesh(x.value, y_values.value, -z.T, **kwargs)
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
+        ax.set_xscale("log", nonpositive="clip")
+        ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
         ax.set_ylabel(f"{self.sed_type} ({y_values.unit})")
 
@@ -772,7 +768,7 @@ class FluxPointsEstimator(Estimator):
 
     Parameters
     ----------
-    e_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
     source : str or int
         For which source in the model to compute the flux points.
@@ -793,11 +789,12 @@ class FluxPointsEstimator(Estimator):
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
-            * "norm-scan": estimate fit statistic profiles.
+            * "scan": estimate fit statistic profiles.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
     """
 
     tag = "FluxPointsEstimator"
@@ -805,7 +802,7 @@ class FluxPointsEstimator(Estimator):
 
     def __init__(
         self,
-        e_edges=[1, 10] * u.TeV,
+        energy_edges=[1, 10] * u.TeV,
         source=0,
         norm_min=0.2,
         norm_max=5,
@@ -814,9 +811,9 @@ class FluxPointsEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         reoptimize=False,
-        selection_optional="all",
+        selection_optional=None,
     ):
-        self.e_edges = e_edges
+        self.energy_edges = energy_edges
         self.source = source
         self.norm_min = norm_min
         self.norm_max = norm_max
@@ -827,11 +824,11 @@ class FluxPointsEstimator(Estimator):
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
 
-    def _flux_estimator(self, e_min, e_max):
+    def _flux_estimator(self, energy_min, energy_max):
         return FluxEstimator(
             source=self.source,
-            e_min=e_min,
-            e_max=e_max,
+            energy_min=energy_min,
+            energy_max=energy_max,
             norm_min=self.norm_min,
             norm_max=self.norm_max,
             norm_n_values=self.norm_n_values,
@@ -840,7 +837,6 @@ class FluxPointsEstimator(Estimator):
             n_sigma_ul=self.n_sigma_ul,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
-
         )
 
     def run(self, datasets):
@@ -860,23 +856,27 @@ class FluxPointsEstimator(Estimator):
 
         rows = []
 
-        for e_min, e_max in zip(self.e_edges[:-1], self.e_edges[1:]):
-            row = self.estimate_flux_point(datasets, e_min=e_min, e_max=e_max)
+        for energy_min, energy_max in zip(
+            self.energy_edges[:-1], self.energy_edges[1:]
+        ):
+            row = self.estimate_flux_point(
+                datasets, energy_min=energy_min, energy_max=energy_max
+            )
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
 
-        #TODO: this should be changed once likelihood is fully supported
+        # TODO: this should be changed once likelihood is fully supported
         return FluxPoints(table).to_sed_type("dnde")
 
-    def estimate_flux_point(self, datasets, e_min, e_max):
+    def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
         datasets : Datasets
             Datasets
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
@@ -884,30 +884,24 @@ class FluxPointsEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        result = self.estimate_counts(datasets, e_min=e_min, e_max=e_max)
-
-        datasets = datasets.slice_energy(e_min=e_min, e_max=e_max)
-
-        if len(datasets) > 0:
-            # TODO: refactor energy handling of FluxEstimator?
-            energy_axis = datasets[0].counts.geom.get_axis_by_name("energy")
-            e_min, e_max = energy_axis.edges.min(), energy_axis.edges.max()
-
-        fe = self._flux_estimator(e_min=e_min, e_max=e_max)
+        result = self.estimate_counts(
+            datasets, energy_min=energy_min, energy_max=energy_max
+        )
+        fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
         result.update(fe.run(datasets=datasets))
 
         return result
 
     @staticmethod
-    def estimate_counts(datasets, e_min, e_max):
+    def estimate_counts(datasets, energy_min, energy_max):
         """Estimate counts for the flux point.
 
         Parameters
         ----------
         datasets : Datasets
             Datasets
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
@@ -918,10 +912,12 @@ class FluxPointsEstimator(Estimator):
         counts = []
 
         for dataset in datasets:
-            energy_mask = dataset.counts.geom.energy_mask(
-                emin=e_min, emax=e_max, round_to_edge=True
+            mask = dataset.counts.geom.energy_mask(
+                energy_min=energy_min, energy_max=energy_max, round_to_edge=True
             )
-            mask = dataset.mask & energy_mask
+            if dataset.mask is not None:
+                mask = mask & dataset.mask
+
             counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}

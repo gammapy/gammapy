@@ -6,9 +6,10 @@ import json
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
+from gammapy.maps.hpx import HpxGeom
 from gammapy.utils.scripts import make_path
-from .geom import MapCoord, pix_tuple_to_idx, MapAxis
-from .utils import INVALID_VALUE, edges_from_lo_hi
+from .geom import MapAxis, MapCoord, pix_tuple_to_idx
+from .utils import INVALID_VALUE, JsonQuantityDecoder
 
 __all__ = ["Map"]
 
@@ -30,6 +31,7 @@ class Map(abc.ABC):
     unit : str or `~astropy.units.Unit`
         Data unit
     """
+
     tag = "map"
 
     def __init__(self, geom, data, meta=None, unit=""):
@@ -54,6 +56,11 @@ class Map(abc.ABC):
             kwargs.setdefault(arg, copy.deepcopy(value))
 
         return self.from_geom(**kwargs)
+
+    @property
+    def is_mask(self):
+        """Whether map is mask with bool dtype"""
+        return self.data.dtype == bool
 
     @property
     def geom(self):
@@ -160,7 +167,7 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto"):
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Read a map from a FITS file.
 
         Parameters
@@ -173,7 +180,7 @@ class Map(abc.ABC):
             Name or index of the HDU with the BANDS table.  If not
             defined this will be inferred from the FITS header of the
             map HDU.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto', 'region'}
             Map type.  Selects the class that will be used to
             instantiate the map.  The map type should be consistent
             with the format of the input file.  If map_type is 'auto'
@@ -186,12 +193,10 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format)
 
     @staticmethod
-    def from_geom(
-        geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"
-    ):
+    def from_geom(geom, meta=None, data=None, unit="", dtype="float32"):
         """Generate an empty map from a `Geom` instance.
 
         Parameters
@@ -202,11 +207,6 @@ class Map(abc.ABC):
             data array
         meta : `dict`
             Dictionary to store meta data.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
-            Map type.  Selects the class that will be used to
-            instantiate the map. The map type should be consistent
-            with the geometry. If map_type is 'auto' then an
-            appropriate map type will be inferred from type of ``geom``.
         unit : str or `~astropy.units.Unit`
             Data unit.
 
@@ -216,37 +216,37 @@ class Map(abc.ABC):
             Map object
 
         """
-        if map_type == "auto":
+        from .hpx import HpxGeom
+        from .wcs import WcsGeom
+        from .region import RegionGeom
 
-            from .hpx import HpxGeom
-            from .wcs import WcsGeom
-            from .region import RegionGeom
-
-            if isinstance(geom, HpxGeom):
-                map_type = "hpx"
-            elif isinstance(geom, WcsGeom):
-                map_type = "wcs"
-            elif isinstance(geom, RegionGeom):
-                map_type = "region"
-            else:
-                raise ValueError("Unrecognized geom type.")
+        if isinstance(geom, HpxGeom):
+            map_type = "hpx"
+        elif isinstance(geom, WcsGeom):
+            map_type = "wcs"
+        elif isinstance(geom, RegionGeom):
+            map_type = "region"
+        else:
+            raise ValueError("Unrecognized geom type.")
 
         cls_out = Map._get_map_cls(map_type)
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto"):
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None):
         """Create from `astropy.io.fits.HDUList`."""
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
+        return cls_out.from_hdulist(
+            hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
+        )
 
     @staticmethod
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
         if "META" in header:
-            return json.loads(header["META"])
+            return json.loads(header["META"], cls=JsonQuantityDecoder)
         else:
             return {}
 
@@ -266,8 +266,10 @@ class Map(abc.ABC):
 
         if ("PIXTYPE" in header) and (header["PIXTYPE"] == "HEALPIX"):
             return "hpx"
-        else:
+        elif "CTYPE1" in header:
             return "wcs"
+        else:
+            return "region"
 
     @staticmethod
     def _get_map_cls(map_type):
@@ -313,15 +315,23 @@ class Map(abc.ABC):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        conv : str
+        format : str, optional
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
-            Fermi Science Tools).  Supported conventions are 'gadf',
-            'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
-            'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-            'galprop', and 'galprop2'.
+            Fermi Science Tools). The following formats are supported:
+
+                - "gadf" (default)
+                - "fgst-ccube"
+                - "fgst-ltcube"
+                - "fgst-bexpcube"
+                - "fgst-srcmap"
+                - "fgst-template"
+                - "fgst-srcmap-sparse"
+                - "galprop"
+                - "galprop2"
+
         sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
@@ -337,7 +347,7 @@ class Map(abc.ABC):
         and ``idx`` is a tuple of int, the index of the image plane.
 
         The image plane index is in data order, so that the data array can be
-        indexed directly. See :ref:`mapiter` for further information.
+        indexed directly.
         """
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
@@ -367,23 +377,21 @@ class Map(abc.ABC):
         vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
-    @abc.abstractmethod
-    def pad(self, pad_width, mode="constant", cval=0, order=1):
+    def pad(self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"):
         """Pad the spatial dimensions of the map.
 
         Parameters
         ----------
         pad_width : {sequence, array_like, int}
             Number of pixels padded to the edges of each axis.
+        axis_name : str
+            Which axis to downsample. By default spatial axes are padded.
         mode : {'edge', 'constant', 'interp'}
             Padding mode.  'edge' pads with the closest edge value.
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value.
         cval : float
             Padding value when mode='consant'.
-        order : int
-            Order of interpolation when mode='constant' (0 =
-            nearest-neighbor, 1 = linear, 2 = quadratic, 3 = cubic).
 
         Returns
         -------
@@ -391,6 +399,26 @@ class Map(abc.ABC):
             Padded map.
 
         """
+        if axis_name:
+            if np.isscalar(pad_width):
+                pad_width = (pad_width, pad_width)
+
+            geom = self.geom.pad(pad_width=pad_width, axis_name=axis_name)
+            idx = self.geom.axes.index_data(axis_name)
+            pad_width_np = [(0, 0)] * self.data.ndim
+            pad_width_np[idx] = pad_width
+
+            kwargs = {}
+            if mode == "constant":
+                kwargs["constant_values"] = cval
+
+            data = np.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
+            return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
+
+        return self._pad_spatial(pad_width, mode="constant", cval=cval)
+
+    @abc.abstractmethod
+    def _pad_spatial(self, pad_width, mode="constant", cval=0, order=1):
         pass
 
     @abc.abstractmethod
@@ -411,7 +439,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor, preserve_counts=True, axis=None):
+    def downsample(self, factor, preserve_counts=True, axis_name=None):
         """Downsample the spatial dimension by a given factor.
 
         Parameters
@@ -422,7 +450,7 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
-        axis : str
+        axis_name : str
             Which axis to downsample. By default spatial axes are downsampled.
 
         Returns
@@ -481,26 +509,35 @@ class Map(abc.ABC):
         """
         geom = self.geom.resample_axis(axis)
 
-        axis_self = self.geom.get_axis_by_name(axis.name)
-        axis_resampled = geom.get_axis_by_name(axis.name)
+        axis_self = self.geom.axes[axis.name]
+        axis_resampled = geom.axes[axis.name]
 
-        indices = axis_self.coord_to_idx(axis_resampled.edges[:-1])
+        # We don't use MapAxis.coord_to_idx because is does not behave as needed with boundaries
+        coord = axis_resampled.edges.value
+        edges = axis_self.edges.value
+        indices = np.digitize(coord, edges) - 1
 
-        idx = self.geom.get_axis_index_by_name(axis.name)
-
-        # transform to data idx
-        idx = len(geom.axes) - idx - 1
+        idx = self.geom.axes.index_data(axis.name)
 
         weights = 1 if weights is None else weights.data
 
-        data = ufunc.reduceat(self.data * weights, indices=indices, axis=idx)
+        if not isinstance(self.geom, HpxGeom):
+            shape = self.geom._shape[:2]
+        else:
+            shape = (self.geom.data_shape[-1],)
+        shape += tuple([ax.nbin if ax != axis else 1 for ax in self.geom.axes])
+
+        padded_array = np.append(self.data * weights, np.zeros(shape[::-1]), axis=idx)
+
+        slices = tuple([slice(0, _) for _ in geom.data_shape])
+        data = ufunc.reduceat(padded_array, indices=indices, axis=idx)[slices]
 
         return self._init_copy(data=data, geom=geom)
 
-    def slice_by_idx(self, slices, ):
+    def slice_by_idx(
+        self, slices,
+    ):
         """Slice sub map from map object.
-
-        For usage examples, see :ref:`mapslicing`.
 
         Parameters
         ----------
@@ -579,14 +616,9 @@ class Map(abc.ABC):
             image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
         """
         if isinstance(coords, tuple):
-            axes_names = [_.name for _ in self.geom.axes]
-            coords = dict(zip(axes_names, coords))
+            coords = dict(zip(self.geom.axes.names, coords))
 
-        idx = []
-        for ax in self.geom.axes:
-            value = coords[ax.name]
-            idx.append(ax.coord_to_idx(value))
-
+        idx = self.geom.axes.coord_to_idx(coords)
         return self.get_image_by_idx(idx)
 
     def get_image_by_pix(self, pix):
@@ -639,7 +671,7 @@ class Map(abc.ABC):
         data = self.data[idx[::-1]]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
-    def get_by_coord(self, coords):
+    def get_by_coord(self, coords, fill_value=np.nan):
         """Return map values at the given map coordinates.
 
         Parameters
@@ -648,6 +680,9 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
+        fill_value : float
+            Value which is returned if the position is outside of the projection
+            footprint
 
         Returns
         -------
@@ -655,12 +690,14 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(coords, frame=self.geom.frame)
+        coords = MapCoord.create(
+            coords, frame=self.geom.frame, axis_names=self.geom.axes.names
+        )
         pix = self.geom.coord_to_pix(coords)
-        vals = self.get_by_pix(pix)
+        vals = self.get_by_pix(pix, fill_value=fill_value)
         return vals
 
-    def get_by_pix(self, pix):
+    def get_by_pix(self, pix, fill_value=np.nan):
         """Return map values at the given pixel coordinates.
 
         Parameters
@@ -670,6 +707,9 @@ class Map(abc.ABC):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.
+        fill_value : float
+            Value which is returned if the position is outside of the projection
+            footprint
 
         Returns
         -------
@@ -685,9 +725,8 @@ class Map(abc.ABC):
         mask = self.geom.contains_pix(pix)
 
         if not mask.all():
-            invalid = INVALID_VALUE[self.data.dtype]
-            vals = vals.astype(type(invalid))
-            vals[~mask] = invalid
+            vals = vals.astype(type(fill_value))
+            vals[~mask] = fill_value
 
         return vals
 
@@ -711,7 +750,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def interp_by_coord(self, coords, interp=None, fill_value=None):
+    def interp_by_coord(self, coords, method="nearest", fill_value=None):
         """Interpolate map values at the given map coordinates.
 
         Parameters
@@ -720,16 +759,11 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
-            Method to interpolate data values.  By default no
+        method : {"nearest", "linear"}
+            Method to interpolate data values. By default no
             interpolation is performed and the return value will be
             the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
+            coordinate.
         fill_value : None or float value
             The value to use for points outside of the interpolation domain.
             If None, values outside the domain are extrapolated.
@@ -742,7 +776,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def interp_by_pix(self, pix, interp=None, fill_value=None):
+    def interp_by_pix(self, pix, method="nearest", fill_value=None):
         """Interpolate map values at the given pixel coordinates.
 
         Parameters
@@ -752,16 +786,11 @@ class Map(abc.ABC):
             map.  Tuple should be ordered as (p_lon, p_lat, p_0, ...,
             p_n) where p_i are pixel coordinates for non-spatial
             dimensions of the map.
-
-        interp : {None, 'nearest', 'linear', 'cubic', 0, 1, 2, 3}
+        method : {"nearest", "linear"}
             Method to interpolate data values.  By default no
             interpolation is performed and the return value will be
             the amplitude of the pixel encompassing the given
-            coordinate.  Integer values can be used in lieu of strings
-            to choose the interpolation method of the given order
-            (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
-            that only 'nearest' and 'linear' methods are supported for
-            all map types.
+            coordinate.
         fill_value : None or float value
             The value to use for points outside of the interpolation domain.
             If None, values outside the domain are extrapolated.
@@ -773,13 +802,17 @@ class Map(abc.ABC):
         """
         pass
 
-    def interp_to_geom(self, geom, **kwargs):
+    def interp_to_geom(self, geom, preserve_counts=False, **kwargs):
         """Interpolate map to input geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
             Target Map geometry
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
         **kwargs : dict
             Keyword arguments passed to `Map.interp_by_coord`
 
@@ -789,12 +822,23 @@ class Map(abc.ABC):
             Interpolated Map
         """
         coords = geom.get_coord()
+        map_copy = self.copy()
 
-        # set nearest neighbour interpolation for mask as default
-        if self.data.dtype == bool:
-            kwargs.setdefault("interp", 0)
+        if preserve_counts:
+            if geom.ndim > 2:
+                assert self.geom.axes[0] == geom.axes[0]  # Energy axis has to match
+            map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
-        data = self.interp_by_coord(coords, **kwargs)
+        if map_copy.is_mask:
+            # TODO: check this NaN handling is needed
+            data = map_copy.get_by_coord(coords)
+            data = np.nan_to_num(data).astype(bool)
+        else:
+            data = map_copy.interp_by_coord(coords, **kwargs)
+
+        if preserve_counts:
+            data *= geom.solid_angle().to_value("deg2")
+
         return Map.from_geom(geom, data=data, unit=self.unit)
 
     def fill_events(self, events):
@@ -895,6 +939,88 @@ class Map(abc.ABC):
         """
         pass
 
+    def plot_grid(self, figsize=None, ncols=3, **kwargs):
+        """Plot map as a grid of subplots for non-spatial axes
+
+        Parameters
+        ----------
+        figsize : tuple of int
+            Figsize to plot on
+        ncols : int
+            Number of columns to plot
+        **kwargs : dict
+            Keyword arguments passed to `Map.plot`.
+
+        Returns
+        -------
+        axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+            Axes grid
+        """
+        import matplotlib.pyplot as plt
+
+        if len(self.geom.axes) > 1:
+            raise ValueError("Grid plotting is only supported for one non spatial axis")
+
+        axis = self.geom.axes[0]
+
+        cols = min(ncols, axis.nbin)
+        rows = 1 + (axis.nbin - 1) // cols
+
+        if figsize is None:
+            width = 12
+            figsize = (width, width * rows / cols)
+
+        if self.geom.is_hpx:
+            wcs = self.geom.to_wcs_geom().wcs
+        else:
+            wcs = self.geom.wcs
+
+        fig, axes = plt.subplots(
+            ncols=cols,
+            nrows=rows,
+            subplot_kw={"projection": wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+        )
+
+        for idx in range(cols * rows):
+            ax = axes.flat[idx]
+
+            try:
+                image = self.get_image_by_idx((idx,))
+            except IndexError:
+                ax.set_visible(False)
+                continue
+
+            if image.geom.is_hpx:
+                image_wcs = image.to_wcs(normalize=False, proj="AIT", oversample=2,)
+            else:
+                image_wcs = image
+
+            image_wcs.plot(ax=ax, **kwargs)
+
+            if axis.node_type == "center":
+                info = f"{axis.center[idx]:.1f}"
+            else:
+                info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
+
+            ax.set_title(f"{axis.name.capitalize()} " + info)
+            lon, lat = ax.coords[0], ax.coords[1]
+            lon.set_ticks_position("b")
+            lat.set_ticks_position("l")
+
+            row, col = np.unravel_index(idx, shape=(rows, cols))
+
+            if col > 0:
+                lat.set_ticklabel_visible(False)
+                lat.set_axislabel("")
+
+            if row < (rows - 1):
+                lon.set_ticklabel_visible(False)
+                lon.set_axislabel("")
+
+        return axes
+
     def plot_interactive(self, rc_params=None, **kwargs):
         """
         Plot map with interactive widgets to explore the non spatial axes.
@@ -988,7 +1114,12 @@ class Map(abc.ABC):
             Copied Map.
         """
         if "geom" in kwargs:
-            raise ValueError("Can't copy and change geometry of the map.")
+            geom = kwargs["geom"]
+            if not geom.data_shape == self.geom.data_shape:
+                raise ValueError("Can't copy and change data size of the map. "
+                                 f" Current shape {self.geom.data_shape},"
+                                 f" requested shape {geom.data_shape}")
+
         return self._init_copy(**kwargs)
 
     def apply_edisp(self, edisp):
@@ -1006,19 +1137,43 @@ class Map(abc.ABC):
         """
         # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
         if edisp is not None:
-            loc = self.geom.get_axis_index_by_name("energy_true")
+            loc = self.geom.axes.index("energy_true")
             data = np.rollaxis(self.data, loc, len(self.data.shape))
             data = np.dot(data, edisp.pdf_matrix)
             data = np.rollaxis(data, -1, loc)
-            e_reco_axis = edisp.e_reco.copy(name="energy")
+            energy_axis = edisp.axes["energy"].copy(name="energy")
         else:
             data = self.data
-            e_reco_axis = self.geom.get_axis_by_name("energy_true").copy(name="energy")
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
 
-        geom_reco = self.geom.to_image().to_cube(axes=[e_reco_axis])
-        return self._init_copy(geom=geom_reco, data=data)
+        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+        return self._init_copy(geom=geom, data=data)
 
-    def sum_over_axes(self, axes=None, keepdims=True, weights=None):
+    def mask_nearest_position(self, position):
+        """Given a sky coordinate return nearest valid position in the mask
+
+        If the mask contains additional axes, the mask is reduced over those.
+
+        Parameters
+        ----------
+        position : `SkyCoord`
+            Test position
+
+        Returns
+        -------
+        position : `SkyCoord`
+            Nearest position in the mask
+        """
+        if not self.geom.is_image:
+            raise ValueError("Method only supported for 2D images")
+
+        coords = self.geom.to_image().get_coord().skycoord
+        separation = coords.separation(position)
+        separation[~self.data] = np.inf
+        idx = np.argmin(separation)
+        return coords.flatten()[idx]
+
+    def sum_over_axes(self, axes_names=None, keepdims=True, weights=None):
         """To sum map values over all non-spatial axes.
 
         Parameters
@@ -1026,9 +1181,8 @@ class Map(abc.ABC):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
-        axes: list
-            Names of MapAxis to reduce over
-            If None, all will summed over
+        axes_names: list of str
+            Names of MapAxis to reduce over. If None, all will summed over
         weights : `Map`
             Weights to be applied. The Map should have the same geometry.
 
@@ -1037,10 +1191,13 @@ class Map(abc.ABC):
         map_out : `~Map`
             Map with non-spatial axes summed over
         """
-        return self.reduce_over_axes(func=np.add, axes=axes, keepdims=keepdims, weights=weights)
+        return self.reduce_over_axes(
+            func=np.add, axes_names=axes_names, keepdims=keepdims, weights=weights
+        )
 
-
-    def reduce_over_axes(self, func=np.add, keepdims=False, axes=None, weights=None):
+    def reduce_over_axes(
+        self, func=np.add, keepdims=False, axes_names=None, weights=None
+    ):
         """Reduce map over non-spatial axes
 
         Parameters
@@ -1050,7 +1207,7 @@ class Map(abc.ABC):
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin
-        axes: list
+        axes_names: list
             Names of MapAxis to reduce over
             If None, all will reduced
         weights : `Map`
@@ -1061,20 +1218,23 @@ class Map(abc.ABC):
         map_out : `~Map`
             Map with non-spatial axes reduced
         """
-        if axes is None:
-            axes = [ax.name for ax in self.geom.axes]
+        if axes_names is None:
+            axes_names = self.geom.axes.names
 
         map_out = self.copy()
-        for ax in axes:
-            map_out = map_out.reduce(ax, func=func, keepdims=keepdims, weights=weights)
+        for axis_name in axes_names:
+            map_out = map_out.reduce(
+                axis_name, func=func, keepdims=keepdims, weights=weights
+            )
+
         return map_out
 
-    def reduce(self, axis, func=np.add, keepdims=False, weights=None):
+    def reduce(self, axis_name, func=np.add, keepdims=False, weights=None):
         """Reduce map over a single non-spatial axis
 
         Parameters
         ----------
-        axis: str
+        axis_name: str
             The name of the axis to reduce over
         func : `~numpy.ufunc`
             Function to use for reducing the data.
@@ -1090,22 +1250,99 @@ class Map(abc.ABC):
             Map with the given non-spatial axes reduced
         """
         if keepdims:
-            geom = self.geom.squash(axis=axis)
+            geom = self.geom.squash(axis_name=axis_name)
         else:
-            geom = self.geom.drop(axis=axis)
+            geom = self.geom.drop(axis_name=axis_name)
 
-        names = [ax.name for ax in reversed(self.geom.axes)]
-        idx = names.index(axis)
+        idx = self.geom.axes.index_data(axis_name)
 
         data = self.data
 
         if weights is not None:
             data = data * weights
 
-        data = func.reduce(
-            data, axis=idx, keepdims=keepdims, where=~np.isnan(data)
-        )
+        data = func.reduce(data, axis=idx, keepdims=keepdims, where=~np.isnan(data))
         return self._init_copy(geom=geom, data=data)
+
+    def cumsum(self, axis_name):
+        """Compute cumulative sum along a given axis
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to integrate.
+
+        Returns
+        -------
+        cumsum : `Map`
+            Map with cumulative sum
+        """
+        axis = self.geom.axes[axis_name]
+        axis_idx = self.geom.axes.index_data(axis_name)
+
+        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
+        shape = [1] * len(self.geom.data_shape)
+        shape[axis_idx] = -1
+
+        values = self.quantity * axis.bin_width.reshape(shape)
+
+        if axis_name == "rad":
+            # take Jacobian into account
+            values = 2 * np.pi * axis.center.reshape(shape) * values
+
+        data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
+
+        axis_shifted = MapAxis.from_nodes(
+            axis.edges, name=axis.name, interp=axis.interp
+        )
+        axes = self.geom.axes.replace(axis_shifted)
+        geom = self.geom.to_image().to_cube(axes)
+        return self.__class__(geom=geom, data=data.value, unit=data.unit)
+
+    def integral(self, axis_name, coords, **kwargs):
+        """Compute integral along a given axis
+
+        This method uses interpolation of the cumulative sum.
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to integrate.
+        coords : dict or `MapCoord`
+            Map coordinates
+
+        **kwargs : dict
+            Coordinates at which to evaluate the IRF
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Returns 2D array with axes offset
+        """
+        cumsum = self.cumsum(axis_name=axis_name)
+        cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
+        return u.Quantity(
+            cumsum.interp_by_coord(coords, **kwargs),
+            cumsum.unit,
+            copy=False
+        )
+
+    def normalize(self, axis_name=None):
+        """Normalise data in place along a given axis.
+
+        Parameters
+        ----------
+        axis_name : str
+            Along which axis to normalize.
+
+        """
+        cumsum = self.cumsum(axis_name=axis_name).quantity
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            axis = self.geom.axes.index_data(axis_name=axis_name)
+            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
+
+        self.quantity = np.nan_to_num(normed)
 
     @classmethod
     def from_images(cls, images, axis=None):
@@ -1138,18 +1375,42 @@ class Map(abc.ABC):
 
         if axis is None:
             try:
-                axis = MapAxis.from_stack(
-                    axes=[image.geom.axes[0] for image in images]
-                )
+                axis = MapAxis.from_stack(axes=[image.geom.axes[0] for image in images])
             except IndexError:
-                ValueError("Images don't have a non-spatial axis. Please provide"
-                           " the axis separately")
+                ValueError(
+                    "Images don't have a non-spatial axis. Please provide"
+                    " the axis separately"
+                )
 
         return cls.from_geom(
-            data=np.stack(data),
-            geom=geom_ref.to_cube(axes=[axis]),
-            unit=images[0].unit
+            data=np.stack(data), geom=geom_ref.to_cube(axes=[axis]), unit=images[0].unit
         )
+
+    def to_cube(self, axes):
+        """Append non-spatial axes to create a higher-dimensional Map.
+
+        This will result in a Map with a new geometry with
+        N+M dimensions where N is the number of current dimensions and
+        M is the number of axes in the list. The data is reshaped onto the
+        new geometry
+
+        Parameters
+        ----------
+        axes : list
+            Axes that will be appended to this Map.
+            The axes should have only one bin
+
+        Returns
+        -------
+        map : `~gammapy.maps.WcsNDMap`
+            new map
+        """
+        for ax in axes:
+            if ax.nbin > 1:
+                raise ValueError(ax.name, "should have only one bin")
+        geom = self.geom.to_cube(axes)
+        data = self.data.reshape((1,) * len(axes) + self.data.shape)
+        return self.from_geom(data=data, geom=geom, unit=self.unit)
 
     def __repr__(self):
         geom = self.geom.__class__.__name__

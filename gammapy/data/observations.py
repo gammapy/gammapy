@@ -301,7 +301,7 @@ class Observation:
         except AttributeError:
             logging.warning(f"No background model found for obs {self.obs_id}.")
 
-        self.psf.plot_containment_vs_energy(ax=ax_psf)
+        self.psf.plot_containment_radius_vs_energy(ax=ax_psf)
         self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
 
         ax_aeff.set_title("Effective area")
@@ -543,12 +543,3 @@ class ObservationChecker(Checker):
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return
-
-        # TODO: implement some basic check
-        # The following doesn't work, because EnergyDependentMultiGaussPSF
-        # has no attribute `data`
-        # Check that data isn't all null
-        # if np.max(psf.data.data) <= 0:
-        #     yield self._record(
-        #         level="error", msg="maximum entry of psf is <= 0"
-        #     )

@@ -24,7 +24,7 @@ use it you have to write a Python script or Jupyter notebook, where you import
 the functions and classes needed for a given analysis, and then call them,
 passing parameters to configure the analysis.
 
-We have also have a :ref:`analysis` that provides high-level Python functions for
+We have also have a :ref:`analysis` that provides high level Python functions for
 the most common needs present in the analysis process.
 
 That said, for some very commonly used and easy to configure analysis tasks we
@@ -152,21 +152,21 @@ Write your own CLI
 This section explains how to write your own command line interface (CLI).
 
 We will focus on the command line aspect, and use a very simple example where we
-just call `gammapy.stats.CashCountsStatistics.significance`.
+just call `gammapy.stats.CashCountsStatistics.sqrt_ts`.
 
 From the interactive Python or IPython prompt or from a Jupyter notebook you
 just import the functionality you need and call it, like this:
 
    >>> from gammapy.stats import CashCountsStatistic
-   >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).significance
-   2.3979181291475453
+   >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
+   2.397918129147546
 
 If you imagine that the actual computation involves many lines of code (and not
 just a one-line function call), and that you need to do this computation
 frequently, you will probably write a Python script that looks something like
 this:
 
-.. code-block:: python
+.. testcode::
 
     # Compute significance for a Poisson count observation
     from gammapy.stats import CashCountsStatistic
@@ -174,8 +174,12 @@ this:
     n_observed = 10
     mu_background = 4.2
 
-    s = CashCountsStatistic(n_observed, mu_background).significance
+    s = CashCountsStatistic(n_observed, mu_background).sqrt_ts
     print(s)
+
+.. testoutput::
+
+    2.397918129147546
 
 We have introduced variables that hold the parameters for the analysis and put
 them before the computation. Let's say this script is in a file called

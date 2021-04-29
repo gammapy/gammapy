@@ -5,17 +5,18 @@ from gammapy.maps.utils import edges_from_lo_hi
 __all__ = [
     "plot_spectrum_datasets_off_regions",
     "plot_contour_line",
-    "plot_theta_squared_table"
+    "plot_theta_squared_table",
 ]
 
 
-def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kwargs=None, **kwargs):
+def plot_spectrum_datasets_off_regions(
+    datasets, ax=None, legend=None, legend_kwargs=None, **kwargs
+):
     """Plot the off regions of spectrum datasets.
 
     Parameters
     ----------
-    datasets : `~gammapy.datasets.Datasets` of or sequence of
-    `~gammapy.datasets.SpectrumDatasetOnOff`
+    datasets : `~gammapy.datasets.Datasets` of or sequence of `~gammapy.datasets.SpectrumDatasetOnOff`
         List of spectrum on-off datasets.
     ax : `~astropy.visualization.wcsaxes.WCSAxes`
         Axes object to plot on.
@@ -31,38 +32,34 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw
 
     Notes
     -----
-    Properties from the ``prop_cycle`` have maximum priority, except ``color``.
+    Properties from the ``prop_cycle`` have maximum priority, except ``color``,
     ``edgecolor``/``color`` is selected from the sources below in this order:
-        ``kwargs["edgecolor"]``
-
-        ``kwargs["prop_cycle"]``
-
-        ``matplotlib.rcParams["axes.prop_cycle"]``
-
-        ``matplotlib.rcParams["patch.edgecolor"]``
-
-    ``matplotlib.rcParams["patch.facecolor"]`` is never used.
+    ``kwargs["edgecolor"]``, ``kwargs["prop_cycle"]``, ``matplotlib.rcParams["axes.prop_cycle"]``
+    ``matplotlib.rcParams["patch.edgecolor"]``, ``matplotlib.rcParams["patch.facecolor"]``
+    is never used.
 
     Examples
     --------
-    Plot forcibly without legend and with thick circles:
-    >>> plot_spectrum_datasets_off_regions(datasets, ax, legend=False, linewidth=2.5)
+    Plot forcibly without legend and with thick circles::
 
-    Plot that quantifies the overlap of off regions:
-    >>> plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='black')
+        plot_spectrum_datasets_off_regions(datasets, ax, legend=False, linewidth=2.5)
 
-    Plot that cycles through colors (``edgecolor``) and line styles together:
-    >>> plot_spectrum_datasets_off_regions(datasets, ax,
-        prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':'])
-        )
+    Plot that quantifies the overlap of off regions::
+
+        plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='black')
+
+    Plot that cycles through colors (``edgecolor``) and line styles together::
+
+        plot_spectrum_datasets_off_regions(datasets, ax, prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':']))
 
     Plot that uses a modified `~matplotlib.rcParams`, has two legend columns, static and
     dynamic colors, but only shows labels for ``datasets1`` and ``datasets2``. Note that
-    ``legend_kwargs`` only applies if it's given in the last function call with ``legend=True``:
-    >>> plt.rc('legend', columnspacing=1, fontsize=9)
-    >>> plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor='cyan')
-    >>> plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
-    >>> plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
+    ``legend_kwargs`` only applies if it's given in the last function call with ``legend=True``::
+
+        plt.rc('legend', columnspacing=1, fontsize=9)
+        plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor='cyan')
+        plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
+        plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
     """
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch, CirclePolygon
@@ -99,7 +96,9 @@ def plot_spectrum_datasets_off_regions(datasets, ax=None, legend=None, legend_kw
         handles = [(handle, handle) for handle in handles]
         tuple_handler = HandlerTuple(ndivide=None, pad=0)
 
-        def patch_func(legend, orig_handle, xdescent, ydescent, width, height, fontsize):
+        def patch_func(
+            legend, orig_handle, xdescent, ydescent, width, height, fontsize
+        ):
             radius = width / 2
             return CirclePolygon((radius - xdescent, height / 2 - ydescent), radius)
 
@@ -140,7 +139,7 @@ def plot_contour_line(ax, x, y, **kwargs):
         color = "b"
 
     ax.plot(out[:, 0], out[:, 1], "-", color=color, **kwargs)
-    ax.plot(xf, yf, linestyle='', marker=marker, color=color)
+    ax.plot(xf, yf, linestyle="", marker=marker, color=color)
 
 
 def plot_theta_squared_table(table):
@@ -156,25 +155,51 @@ def plot_theta_squared_table(table):
     """
     import matplotlib.pyplot as plt
 
-    theta2_edges = edges_from_lo_hi(table["theta2_min"], table["theta2_max"])
-    theta2_axis = MapAxis.from_edges(
-        theta2_edges, interp="lin", name="theta_squared"
+    theta2_edges = edges_from_lo_hi(
+        table["theta2_min"].quantity, table["theta2_max"].quantity
     )
+    theta2_axis = MapAxis.from_edges(theta2_edges, interp="lin", name="theta_squared")
 
     ax0 = plt.subplot(2, 1, 1)
-    xerr = (theta2_axis.center - theta2_axis.edges[:-1], theta2_axis.edges[1:] - theta2_axis.center)
+
+    x = theta2_axis.center.value
+    x_edges = theta2_axis.edges.value
+    xerr = (x - x_edges[:-1], x_edges[1:] - x)
 
     ax0.errorbar(
-        theta2_axis.center, table["counts"], xerr=xerr, yerr=np.sqrt(table["counts"]), linestyle='None', label="Counts")
-    ax0.errorbar(theta2_axis.center, table["counts_off"], xerr=xerr, yerr=np.sqrt(table["counts_off"]), linestyle='None',
-                 label="Counts Off")
-    ax0.errorbar(theta2_axis.center, table["excess"], xerr=xerr, yerr=(-table["excess_errn"], table["excess_errp"]), fmt="+",
-                 linestyle='None', label="Excess")
+        x,
+        table["counts"],
+        xerr=xerr,
+        yerr=np.sqrt(table["counts"]),
+        linestyle="None",
+        label="Counts",
+    )
+
+    ax0.errorbar(
+        x,
+        table["counts_off"],
+        xerr=xerr,
+        yerr=np.sqrt(table["counts_off"]),
+        linestyle="None",
+        label="Counts Off",
+    )
+
+    ax0.errorbar(
+        x,
+        table["excess"],
+        xerr=xerr,
+        yerr=(-table["excess_errn"], table["excess_errp"]),
+        fmt="+",
+        linestyle="None",
+        label="Excess",
+    )
+
     ax0.set_ylabel("Counts")
     ax0.set_xticks([])
-    ax0.set_xlabel('')
+    ax0.set_xlabel("")
     ax0.legend()
+
     ax1 = plt.subplot(2, 1, 2)
-    ax1.errorbar(theta2_axis.center, table["sqrt_ts"], xerr=xerr, linestyle='None')
+    ax1.errorbar(x, table["sqrt_ts"], xerr=xerr, linestyle="None")
     ax1.set_xlabel(f"Theta  [{theta2_axis.unit}]")
     ax1.set_ylabel("Significance")

@@ -17,7 +17,7 @@ from gammapy.makers import (
     ReflectedRegionsFinder,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap, RegionGeom
 from gammapy.utils.regions import compound_region_to_list
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -33,8 +33,7 @@ def exclusion_mask():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
-    mask = geom.region_mask([exclusion_region], inside=False)
-    return WcsNDMap(geom, data=mask)
+    return ~geom.region_mask([exclusion_region])
 
 
 @pytest.fixture(scope="session")
@@ -168,9 +167,8 @@ def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
 
-    dataset_empty = SpectrumDataset.create(
-        e_reco=e_reco, e_true=e_true, region=on_region
-    )
+    geom = RegionGeom(region=on_region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
     maker = SpectrumDatasetMaker(selection=["counts"])
 
@@ -189,7 +187,7 @@ def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
 
 
 @requires_data()
-def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
+def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations, caplog):
     pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
@@ -200,7 +198,8 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
 
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
-    dataset_empty = SpectrumDataset.create(e_reco=e_reco, e_true=e_true, region=region)
+    geom = RegionGeom.create(region=region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
     for obs in observations:
         dataset = maker.run(dataset_empty, obs)
@@ -208,4 +207,39 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
         datasets.append(dataset_on_off)
 
     assert datasets[0].counts_off is None
+    assert_allclose(datasets[0].acceptance_off, 0)
+    assert_allclose(datasets[0].mask_safe.data, False)
+
+    assert "WARNING" in [record.levelname for record in caplog.records]
+
+    message1 = f"ReflectedRegionsBackgroundMaker failed. " \
+              f"No OFF region found outside exclusion mask for {datasets[0].name}."
+    message2 = f"ReflectedRegionsBackgroundMaker failed. " \
+              f"Setting {datasets[0].name} mask to False."
+
+    assert message1 in [record.message for record in caplog.records]
+    assert message2 in [record.message for record in caplog.records]
+
+
+@requires_data()
+def test_reflected_bkg_maker_no_off_background(reflected_bkg_maker, observations):
+    pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
+    radius = Angle(0.11, "deg")
+    region = CircleSkyRegion(pos, radius)
+
+    maker = SpectrumDatasetMaker(selection=["counts", "background"])
+
+    datasets = []
+
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
+    geom = RegionGeom.create(region=region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+
+    for obs in observations:
+        dataset = maker.run(dataset_empty, obs)
+        dataset_on_off = reflected_bkg_maker.run(dataset, obs)
+        datasets.append(dataset_on_off)
+
+    assert_allclose(datasets[0].counts_off.data, 0)
     assert_allclose(datasets[0].acceptance_off, 0)

@@ -4,16 +4,16 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
-from astropy.time import Time
 from astropy.table import Table
-from gammapy.data import FixedPointingInfo, Observation, EventList, GTI
-from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
+from astropy.time import Time
+from gammapy.data import GTI, EventList, FixedPointingInfo, Observation
+from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D, Background2D
 from gammapy.makers.utils import (
     _map_spectrum_weight,
+    make_edisp_kernel_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
-    make_edisp_kernel_map,
-    make_theta_squared_table
+    make_theta_squared_table,
 )
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
@@ -127,30 +127,54 @@ def bkg_3d():
     return Background3D.read(filename, hdu="BACKGROUND")
 
 
+@pytest.fixture(scope="session")
+def bkg_2d():
+    offset_axis = MapAxis.from_bounds(0, 4, nbin=10, name="offset", unit="deg")
+    energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=20)
+    bkg_2d = Background2D(
+        axes=[energy_axis, offset_axis], unit="s-1 TeV-1 sr-1"
+    )
+    coords = bkg_2d.axes.get_coord()
+    value = np.exp(-0.5 * (coords["offset"] / (2 * u.deg)) ** 2)
+    bkg_2d.data = (value * (coords["energy"] / (1 * u.TeV)) ** -2).to_value("")
+    return bkg_2d
+
+
 def bkg_3d_custom(symmetry="constant"):
     if symmetry == "constant":
-        data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
+        data = np.ones((2, 3, 3))
     elif symmetry == "symmetric":
-        data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
+        data = np.ones((2, 3, 3))
         data[:, 1, 1] *= 2
     elif symmetry == "asymmetric":
         data = np.indices((3, 3))[1] + 1
-        data = np.stack(2 * [data]) * u.Unit("s-1 MeV-1 sr-1")
+        data = np.stack(2 * [data])
     else:
         raise ValueError(f"Unkown value for symmetry: {symmetry}")
 
-    energy = [0.1, 10, 1000] * u.TeV
-    fov_lon = [-3, -1, 1, 3] * u.deg
-    fov_lat = [-3, -1, 1, 3] * u.deg
+    energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
+    fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
+    fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
     return Background3D(
-        energy_lo=energy[:-1],
-        energy_hi=energy[1:],
-        fov_lon_lo=fov_lon[:-1],
-        fov_lon_hi=fov_lon[1:],
-        fov_lat_lo=fov_lat[:-1],
-        fov_lat_hi=fov_lat[1:],
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
+        unit=u.Unit("s-1 MeV-1 sr-1")
     )
+
+
+def test_map_background_2d(bkg_2d):
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+    skydir = SkyCoord("0d", "0d", frame="galactic")
+    geom = WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=skydir)
+
+    bkg = make_map_background_irf(
+        pointing=skydir,
+        ontime="42 s",
+        bkg=bkg_2d,
+        geom=geom,
+    )
+
+    assert_allclose(bkg.data[:, 1, 1], [1.807479, 0.183212], rtol=1e-5)
 
 
 def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
@@ -264,7 +288,11 @@ def test_make_edisp_kernel_map():
     ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
 
     edisp = EnergyDispersion2D.from_gauss(
-        etrue.edges, migra.edges, 0, 0.01, offset.edges
+        energy_axis_true=etrue,
+        migra_axis=migra,
+        bias=0,
+        sigma=0.01,
+        offset_axis=offset
     )
 
     geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])
@@ -272,9 +300,9 @@ def test_make_edisp_kernel_map():
     edispmap = make_edisp_kernel_map(edisp, pointing, geom)
 
     kernel = edispmap.get_edisp_kernel(pointing)
-    assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0))
-    assert_allclose(kernel.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0))
-    assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0))
+    assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-15)
+    assert_allclose(kernel.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0), atol=1e-15)
+    assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-15)
 
 
 class TestTheta2Table:
@@ -297,7 +325,9 @@ class TestTheta2Table:
         gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
         gti = GTI(gti_table)
 
-        self.observation = Observation(events=EventList(table), obs_info=meta_obs, gti=gti)
+        self.observation = Observation(
+            events=EventList(table), obs_info=meta_obs, gti=gti
+        )
 
     def test_make_theta_squared_table(self):
         # pointing position: (0,0.5) degree in ra/dec
@@ -305,9 +335,9 @@ class TestTheta2Table:
         # OFF theta2 distribution from the mirror position at (0,1) in ra/dec.
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
         axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
-        theta2_table = make_theta_squared_table(observations=[self.observation],
-                                                position=position, theta_squared_axis=axis
-                                                )
+        theta2_table = make_theta_squared_table(
+            observations=[self.observation], position=position, theta_squared_axis=axis
+        )
         theta2_lo = [0, 0.05, 0.1, 0.15]
         theta2_hi = [0.05, 0.1, 0.15, 0.2]
         on_counts = [2, 0, 0, 0]
@@ -329,16 +359,21 @@ class TestTheta2Table:
 
         # Taking the off position as the on one
         off_position = position
-        theta2_table2 = make_theta_squared_table(observations=[self.observation],
-                                                 position=position, theta_squared_axis=axis, position_off=off_position
-                                                 )
+        theta2_table2 = make_theta_squared_table(
+            observations=[self.observation],
+            position=position,
+            theta_squared_axis=axis,
+            position_off=off_position,
+        )
 
         assert_allclose(theta2_table2["counts_off"], theta2_table["counts"])
 
         # Test for two observations, here identical
-        theta2_table_two_obs = make_theta_squared_table(observations=[self.observation, self.observation],
-                                                        position=position, theta_squared_axis=axis
-                                                        )
+        theta2_table_two_obs = make_theta_squared_table(
+            observations=[self.observation, self.observation],
+            position=position,
+            theta_squared_axis=axis,
+        )
         on_counts_two_obs = [4, 0, 0, 0]
         off_counts_two_obs = [2, 0, 0, 0]
         acceptance_two_obs = [2, 2, 2, 2]

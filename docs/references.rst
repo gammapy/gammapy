@@ -53,9 +53,11 @@ Glossary
       and :ref:`irf`.
 
     Joint Analysis
-      In a joint analysis individual observations are reduced to datasets and are modeled
-      all together to extract physical informations through model fitting. This is opposed
-      to stacked analysis.
+      A joint fit across multiple datasets implies that each dataset is handled
+      independently during the data reduction stage,
+      and the statistics combined during the likelihood fit.
+      The likelihood is computed for each dataset and summed to get
+      the total fit statistic. See :ref:`joint`
 
     MET
       Short for Mission Elapsed Time; see also :ref:`MET_definition` in :ref:`time_handling`.
@@ -77,7 +79,7 @@ Glossary
       to obtain physical information through model fitting. Some approximations must
       be made to perform dataset stacking (e.g. loss of individual background normalization,
       averaging of instrument responses, loss of information outside region of interest etc),
-      but this can reduce very significantly the computing and memory cost.
+      but this can reduce very significantly the computing and memory cost. For details, see :ref:`stack`
 
     True Energy
       The true energy (often written `e_true`) is the energy of the incident photon
@@ -91,8 +93,8 @@ Glossary
 
 .. _publications:
 
-Publications
-------------
+References
+----------
 
 This is the bibliography containing the literature references for the implemented methods
 referenced from the Gammapy docs.
@@ -134,6 +136,13 @@ referenced from the Gammapy docs.
 .. [Stewart2009] `Stewart (2009) <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S>`_,
    "Maximum-likelihood detection of sources among Poissonian noise"
 
+.. [Abdalla2018] `H.E.S.S. Collaboration (2018) <https://www.aanda.org/articles/aa/abs/2018/04/aa32098-17/aa32098-17.html>`_,
+    "The H.E.S.S. Galactic plane survey"
+
+.. [Mohrmann2019] `Mohrmann et al. (2019) <https://www.aanda.org/articles/aa/abs/2019/12/aa36452-19/aa36452-19.html>`_,
+    "Validation of open-source science tools and background model construction in γ-ray astronomy"
+
+
 Software references:
 
 .. [Raue2012] `Raue (2012) <https://ui.adsabs.harvard.edu/abs/2012AIPC.1505..789R>`_,
@@ -163,12 +172,12 @@ Here are some other software packages for gamma-ray astronomy:
   to deal with the data and IRFs and compute the likelihood for a given model.
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `ctapipe`_ --- CTA Python pipeline experimental version
-* `FermiPy`_ --- Fermi-LAT science tools high-level Python interface by Matthew Wood
+* `FermiPy`_ --- Fermi-LAT science tools high level Python interface by Matthew Wood
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `pointlike`_ -- Fermi-LAT science tools alternative by Toby Burnett
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `Gamera`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
-* `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry Light C<->Urve pipeline by Jean-Philippe Lenain
+* `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry light-curve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
 * `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins

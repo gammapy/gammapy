@@ -4,15 +4,23 @@ import logging
 import tarfile
 from pathlib import Path
 import click
-from .downloadclasses import ComputePlan, ParallelDownload
+from gammapy import __version__
+
+log = logging.getLogger(__name__)
 
 BUNDLESIZE = 152  # in MB
-log = logging.getLogger(__name__)
+ENVS_BASE_URL = "https://gammapy.org/download/install"
+NBTAR_BASE_URL = "https://docs.gammapy.org"
+TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"
 
 
 def progress_download(source, destination):
-    import requests
-    from tqdm import tqdm
+    try:
+        import requests
+        from tqdm import tqdm
+    except ImportError:
+        log.error("To use gammapy download install the tqdm and requests packages")
+        return
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(source, stream=True) as r:
@@ -46,117 +54,59 @@ def extract_bundle(bundle, destination):
         tar.extractall(path=destination, members=members(tar))
     Path(bundle).unlink()
 
+def show_info_notebooks(outfolder, release):
+    print("")
+    print(
+        "*** Enter the following commands below to get started with this version of Gammapy"
+    )
+    print(f"cd {outfolder}")
+    print(f"conda env create -f gammapy-{release}-environment.yml")
+    print(f"conda activate gammapy-{release}")
+    print("jupyter lab")
+    print("")
+
+
+def show_info_datasets(outfolder):
+    print("")
+    print("*** You might want to declare GAMMAPY_DATA env variable")
+    print(f"export GAMMAPY_DATA={outfolder}")
+    print("")
+
 
 @click.command(name="notebooks")
-@click.option("--src", default="", help="Specific notebook to download.")
+@click.option("--release", required=True, help="Number of stable release - ex: 0.18.2)")
 @click.option(
     "--out",
     default="gammapy-notebooks",
     help="Path where the versioned notebook files will be copied.",
     show_default=True,
 )
-@click.option("--release", default="", help="Number of release - ex: 0.12)")
-@click.option("--all", default=True, is_flag=True, help="Consider also other notebooks than tutorials")
-@click.option("--modetutorials", default=False, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=True)
-def cli_download_notebooks(src, out, release, all, modetutorials, silent):
+def cli_download_notebooks(release, out):
     """Download notebooks"""
-    plan = ComputePlan(src, out, release, "notebooks", all_notebooks=all)
-    if release:
-        plan.getenvironment()
-    down = ParallelDownload(
-        plan.getfilelist(),
-        plan.getlocalfolder(),
-        release,
-        "notebooks",
-        modetutorials,
-        silent,
-    )
-    down.run()
-    print("")
-
-
-@click.command(name="scripts")
-@click.option("--src", default="", help="Specific script to download.")
-@click.option(
-    "--out",
-    default="gammapy-scripts",
-    help="Path where the versioned python scripts will be copied.",
-    show_default=True,
-)
-@click.option("--release", default="", help="Number of release - ex: 0.12")
-@click.option("--modetutorials", default=False, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=False)
-def cli_download_scripts(src, out, release, modetutorials, silent):
-    """Download scripts"""
-    plan = ComputePlan(src, out, release, "scripts")
-    if release:
-        plan.getenvironment()
-    down = ParallelDownload(
-        plan.getfilelist(),
-        plan.getlocalfolder(),
-        release,
-        "scripts",
-        modetutorials,
-        silent,
-    )
-    down.run()
-    print("")
+    localfolder = Path(out) / release
+    url_file_env = f"{ENVS_BASE_URL}/gammapy-{release}-environment.yml"
+    yaml_destination_file = localfolder / f"gammapy-{release}-environment.yml"
+    progress_download(url_file_env, yaml_destination_file)
+    url_tar_notebooks = f"{NBTAR_BASE_URL}/{release}/_downloads/notebooks-{release}.tar"
+    tar_destination_file = localfolder / f"notebooks_{release}.tar"
+    progress_download(url_tar_notebooks, tar_destination_file)
+    extract_bundle(tar_destination_file, localfolder)
+    show_info_notebooks(localfolder, release)
 
 
 @click.command(name="datasets")
-@click.option("--src", default="", help="Specific dataset to download.")
-@click.option(
-    "--out", default="gammapy-datasets", help="Destination folder.", show_default=True,
-)
-@click.option("--release", default="", help="Number of release - ex: 0.12")
-@click.option("--modetutorials", default=False, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=True)
-@click.option(
-    "--tests",
-    default=True,
-    is_flag=True,
-    help="Include datasets needed for tests. [default: True]",
-    hidden=True,
-)
-def cli_download_datasets(src, out, release, modetutorials, silent, tests):
-    """Download datasets"""
-    plan = ComputePlan(
-        src, out, release, "datasets", modetutorials=modetutorials, download_tests=tests
-    )
-    filelist = plan.getfilelist()
-    localfolder = plan.getlocalfolder()
-    down = ParallelDownload(
-        filelist, localfolder, release, "datasets", modetutorials, silent,
-    )
-    # tar bundle
-    if "bundle" in filelist:
-        log.info(f"Downloading datasets from {filelist['bundle']['url']}")
-        tar_destination_file = Path(localfolder) / "datasets.tar.gz"
-        progress_download(filelist["bundle"]["url"], tar_destination_file)
-        log.info(f"Extracting {tar_destination_file}")
-        extract_bundle(tar_destination_file, localfolder)
-
-    # specific collection
-    else:
-        down.run()
-    down.show_info_datasets()
-
-
-@click.command(name="tutorials")
-@click.pass_context
-@click.option("--src", default="", help="Specific tutorial to download.")
 @click.option(
     "--out",
-    default="gammapy-tutorials",
-    help="Path where notebooks and datasets folders will be copied.",
+    default="gammapy-datasets",
+    help="Destination folder.",
     show_default=True,
 )
-@click.option("--release", default="", help="Number of release - ex: 0.12")
-@click.option("--modetutorials", default=True, hidden=True)
-@click.option("--silent", default=True, is_flag=True, hidden=True)
-def cli_download_tutorials(ctx, src, out, release, modetutorials, silent):
-    """Download notebooks, scripts and datasets"""
-    ctx.forward(cli_download_notebooks)
-    ctx.forward(cli_download_scripts)
-    ctx.forward(cli_download_datasets)
+def cli_download_datasets(out):
+    """Download datasets"""
+    localfolder = Path(out)
+    log.info(f"Downloading datasets from {TAR_DATASETS}")
+    tar_destination_file = localfolder / "datasets.tar.gz"
+    progress_download(TAR_DATASETS, tar_destination_file)
+    log.info(f"Extracting {tar_destination_file}")
+    extract_bundle(tar_destination_file, localfolder)
+    show_info_datasets(localfolder)

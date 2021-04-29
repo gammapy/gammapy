@@ -3,7 +3,7 @@
 .. _pig-021:
 
 ****************************
-PIG 21 - Models Improvements
+PIG 21 - Models improvements
 ****************************
 
 * Author: Axel Donath, Régis Terrier and Quentin Remy

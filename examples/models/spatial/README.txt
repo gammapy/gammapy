@@ -1,4 +1,4 @@
 .. _spatial_models_gallery:
 
-Spatial Models
+Spatial models
 --------------

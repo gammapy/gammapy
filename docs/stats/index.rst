@@ -19,33 +19,72 @@ count events in a given region and time window, i.e. with Poisson-distributed
 counts measurements.
 
 
-General notions
-===============
+.. _stats_notation:
+
+Notations
+---------
+
+For statistical analysis we use the following variable names following mostly the
+notation in [LiMa1983]_. For the ``MapDataset`` attributes we chose more verbose
+equivalents:
+
+================= ====================== ====================================================
+Variable          Dataset attribute name Definition
+================= ====================== ====================================================
+``n_on``          ``counts``             Observed counts
+``n_off``         ``counts_off``         Observed counts in the off region
+``n_bkg``         ``background``         Estimated background counts, defined as ``alpha * n_off``
+``n_sig``		  ``excess``			 Estimated signal counts defined as ``n_on`` - ``n_bkg``
+``mu_on``         ``npred``              Predicted counts
+``mu_off``        ``npred_off``          Predicted counts in the off region
+``mu_bkg``        ``npred_background``   Predicted background counts
+``mu_sig``        ``npred_signal``       Predicted signal counts
+``a_on``          ``acceptance``         Relative background exposure
+``a_off``         ``acceptance_off``     Relative background exposure in the off region
+``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
+================= ====================== ====================================================
+
+
+The on measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
+a Poisson random variable with expected value
+:math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
+
+The off measurement is assumed to contain only background counts, with an acceptance to background
+:math:`a_{off}`. This off measurement can be used to estimate the number of background counts in the
+on region: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
+on and off acceptances.
+
+Therefore :math:`n_{off}` follows a Poisson distribution with expected
+value :math:`\mu_{off} = \mu_{bkg} / \alpha`.
+
+The expectation or predicted values :math:`\mu_X` are in general derived using maximum
+likelihood estimation.
+
 
 Counts and fit statistics
 -------------------------
 
-Gamma-ray measurements are counts, ``n_on``, containing both signal and background events.
+Gamma-ray measurements are counts, :math:`n_{on}`, containing both signal and background events.
 
 Estimation of number of signal events or of quantities in physical models is done through
 Poisson likelihood functions, the fit statistics. In gammapy, they are all log-likelihood
 functions normalized like chi-squares, i.e. if :math:`L` is the likelihood function used,
 they follow the expression :math:`2 \times log L`.
 
-When the expected number of background events, ``mu_bkg`` is known, the statistic function
+When the expected number of background events, :math:`\mu_{bkg}` is known, the statistic function
 is ``Cash`` (see :ref:`cash`). When the number of background events is unknown, one has to
-use a background estimate ``n_bkg`` taken from an OFF measurement where only background events
+use a background estimate :math:`n_{bkg}` taken from an off measurement where only background events
 are expected. In this case, the statistic function is ``WStat`` (see :ref:`wstat`).
 
 These statistic functions are at the heart of the model fitting approach in gammapy. They are
 used to estimate the best fit values of model parameters and their associated confidence intervals.
 
 They are used also to estimate the excess counts significance, i.e. the probability that
-a given number of measured events ``n_on`` actually contains some signal events :math:`n_{excess}`,
+a given number of measured events :math:`\n_{on}` actually contains some signal events :math:`n_{sig}`,
 as well as the errors associated to this estimated number of signal counts.
 
-Estimating Delta TS
--------------------
+Estimating TS
+-------------
 
 A classical approach to modeling and fitting relies on hypothesis testing. One wants to estimate whether
 an hypothesis :math:`H_1` is statistically preferred over the reference, or null-hypothesis, :math:`H_0`.
@@ -54,17 +93,45 @@ The maximum log-likelihood ratio test provides a way to estimate the p-value of 
 rather than :math:`H_0`, when the two hypotheses are nested.
 We note this ratio :math:`\lambda = \frac{max L(X|{H_1})}{max L(X|H_0)}`
 
-The Wilks theorem shows that under some hypothesis, :math:`-2 \log \lambda` assymptotically follows a :math:`\chi^2`
+The Wilks theorem shows that under some hypothesis, :math:`2 \log \lambda` assymptotically follows a :math:`\chi^2`
 distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is the difference of free parameters
 between :math:`H_1` and :math:`H_0`.
 
 With the definition the fit statistics :math:`-2 \log \lambda` is simply the difference of the fit statistic values for
-the two hypotheses, the delta TS (for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
-distribution with :math:`n_{dof}` degrees of freedom. In particular, with only one degree of freedom (e.g. intensity
-of a signal), on can estimate the statistical significance in terms of number of :math:`\sigma`
+the two hypotheses, the delta TS (short for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
+distribution with :math:`n_{dof}` degrees of freedom. This can be used to convert :math:`\Delta TS` into a "classical
+significance" using the following recipe:
+
+.. code::
+
+	from scipy.stats import chi2, norm
+
+	def sigma_to_ts(sigma, df=1):
+		"""Convert sigma to delta ts"""
+		p_value = 2 * norm.sf(sigma)
+		return chi2.isf(p_value, df=df)
+
+	def ts_to_sigma(ts, df=1):
+		"""Convert delta ts to sigma"""
+		p_value = chi2.sf(ts, df=df)
+		return norm.isf(0.5 * p_value)
+
+In particular, with only one degree of freedom (e.g. flux amplitude), one
+can estimate the statistical significance in terms of number of :math:`\sigma`
 as :math:`\sqrt{\Delta TS}`.
 
 
+In case the excess is negative, which can happen if the background is overestimated
+the following convention is used:
+
+.. math::
+
+	\sqrt{\Delta TS} = \left \{
+	\begin{array}{ll}
+	  -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
+	  \sqrt{\Delta TS} & : \text{else}
+	\end{array}
+	\right.
 
 Counts statistics classes
 =========================
@@ -81,30 +148,34 @@ Excess and Significance
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Assume one measured :math:`n_{on} = 13` counts in a region where one suspects a source might be present.
-if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=9.5`), one can use
-the Cash statistic to estimate the signal or excess number, its statistical significance as well as
-the confidence interval on the true signal value.
+if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=5.5`), one can use
+the Cash statistic to estimate the signal or excess number, its statistical significance
+as well as the confidence interval on the true signal counts number value.
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.excess
+    from gammapy.stats import CashCountsStatistic
+    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    print(stat.n_sig)
+    print(stat.error)
+    print(stat.ts)
+    print(stat.sqrt_ts)
+    print(stat.p_value)
+
+.. testoutput::
+
     7.5
-    >>> stat.error
     3.605551275463989
-    >>> stat.delta_ts
     7.365232895800901
-    >>> stat.significance
     2.7138962573762653
-    >>> stat.p_value
     0.006649698694909719
 
+
 The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{on}}`.
-The significance is the square root of the :math:`\Delta TS`, multiplied by the sign of the excess,
+The significance is the square root of the :math:`TS`, multiplied by the sign of the excess,
 which is equivalent to the Li & Ma significance for known background.
 
-To see how the :math:`\Delta TS`, relates to the statistic function, we plot below the profile of the Cash
+To see how the :math:`TS`, relates to the statistic function, we plot below the profile of the Cash
 statistic as a function of the expected signal events number.
 
 .. plot:: stats/plot_cash_significance.py
@@ -115,17 +186,27 @@ Excess errors
 You can also compute the confidence interval for the true excess based on the statistic value:
 If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confidence ranges:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> errn = count_statistic.compute_errn(1.)
-    >>> errp = count_statistic.compute_errp(1.)
-    >>> print(f"68% confidence range: {excess+errn} < mu < {excess+errp}")
+    from gammapy.stats import CashCountsStatistic
+    count_statistic = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    excess = count_statistic.n_sig
+    errn = count_statistic.compute_errn(1.)
+    errp = count_statistic.compute_errp(1.)
+    print(f"68% confidence range: {excess+errn} < mu < {excess+errp}")
+
+.. testoutput::
+
     68% confidence range: 4.219788441647667 < mu < 11.446309124623102
-    >>> errn_2sigma = count_statistic.compute_errn(2.)
-    >>> errp_2sigma = count_statistic.compute_errp(2.)
-    >>> print(f"95% confidence range: {excess+errn_2sigma} < mu < {excess+errp_2sigma}")
+
+.. testcode::
+
+    errn_2sigma = count_statistic.compute_errn(2.)
+    errp_2sigma = count_statistic.compute_errp(2.)
+    print(f"95% confidence range: {excess+errn_2sigma} < mu < {excess+errp_2sigma}")
+
+.. testoutput::
+
     95% confidence range: 1.5559091942635206 < mu < 16.10168631791818
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
@@ -143,7 +224,7 @@ WStat counts statistic
 Excess and Significance
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-To measure the significance of an excess, one can directly use the delta TS of the measurement with and
+To measure the significance of an excess, one can directly use the TS of the measurement with and
 without the excess. Taking the square root of the result yields the so-called Li & Ma significance
 [LiMa1983]_ (see equation 17).
 
@@ -154,24 +235,34 @@ background control region where you assume no source is present and that is
 
 Here's how you compute the statistical significance of your detection:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import WStatCountsStatistic
-    >>> stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
-    >>> stat.excess
-    >>> stat.significance
+    from gammapy.stats import WStatCountsStatistic
+    stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
+    print(stat.n_sig)
+    print(stat.sqrt_ts)
+
+.. testoutput::
+
+    7.5
+    2.09283236849328
 
 .. plot:: stats/plot_wstat_significance.py
 
-Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=9.5`, you can use
-the Cash statistic and obtain the Li & Ma significance for known background:
+Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=5.5`, you can use
+the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for known background:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.excess
-    >>> stat.significance
+    from gammapy.stats import CashCountsStatistic
+    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    print(stat.n_sig)
+    print(stat.sqrt_ts)
+
+.. testoutput::
+
+    7.5
+    2.7138962573762653
 
 .. plot:: stats/plot_cash_significance.py
 
@@ -182,18 +273,21 @@ You can also compute the confidence interval for the true excess based on the st
 
 If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confidence errors:
 
-.. code-block:: python
+.. testcode::
 
-    >>> from gammapy.stats import CashCountsStatistic
-    >>> stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    >>> stat.compute_errn(1.)
-    -3.91606323
-    >>> stat.compute_errp(1.)
-    4.5823187389960225
-    >>> stat.compute_errn(2.)
-    -3.91606323
-    >>> stat.compute_errp(2.)
-    4.5823187389960225
+    from gammapy.stats import CashCountsStatistic
+    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
+    print(stat.compute_errn(1.))
+    print(stat.compute_errp(1.))
+    print(stat.compute_errn(2.))
+    print(stat.compute_errp(2.))
+
+.. testoutput::
+
+    -3.280211558352333
+    3.9463091246231023
+    -5.944090805736479
+    8.60168631791818
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values
@@ -203,45 +297,6 @@ On the following plot, we show how the 1 :math:`\sigma` and 2 :math:`\sigma` con
 relate to the fit statistic profile.
 .. plot:: stats/plot_cash_errors.py
 
-
-Note that confidence intervals can be computed in a more robust manner following [Feldman1998]_.
-See :ref:`feldman_cousins`.
-
-
-.. _stats_notation:
-
-Notations
----------
-
-For on-off methods we use the following variable names following the
-notation in [Cousins2007]_:
-
-================= ====================== ====================================================
-Variable          Dataset attribute name Definition
-================= ====================== ====================================================
-``n_on``          ``counts``             Total observed counts in the on region
-``n_off``         ``counts_off``         Total observed counts in the off region
-``mu_on``         ``npred``              Total expected counts in the on region
-``mu_off``        ``npred_off``          Total expected counts in the off region
-``mu_sig``        ``npred_sig``          Signal expected counts in the on region
-``mu_bkg``        ``npred_bkg``          Background expected counts in the on region
-``a_on``          ``acceptance``         Relative background exposure in the on region
-``a_off``         ``acceptance_off``     Relative background exposure in the off region
-``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
-``n_bkg``         ``background``         Background estimate in the on region
-================= ====================== ====================================================
-
-The ON measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
-a Poisson random variable with expected value
-:math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
-
-The OFF measurement is assumed to contain only background counts, with an acceptance to background
-:math:`a_{off}`. This OFF measurement can be used to etimate the number of background counts in the
-ON measurement: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
-ON and OFF acceptances.
-
-Therefore :math:`n_{off}` follows a Poisson distribution  with expected value
-:math:\mu_{off} = \mu_{bkg) / \alpha
 
 These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
 [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
@@ -254,7 +309,6 @@ Using `gammapy.stats`
 
     fit_statistics
     wstat_derivation
-    feldman_cousins
 
 Reference/API
 =============

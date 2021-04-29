@@ -41,6 +41,7 @@ class AdaptiveRingBackgroundMaker(Maker):
     --------
     RingBackgroundMaker
     """
+
     tag = "AdaptiveRingBackgroundMaker"
 
     def __init__(
@@ -159,17 +160,13 @@ class AdaptiveRingBackgroundMaker(Maker):
             Dictionary containing ``counts_off``, ``acceptance`` and ``acceptance_off`` cubes.
         """
         counts = dataset.counts
-        background = dataset.background_model.map
+        background = dataset.npred_background()
         kernels = self.kernels(counts)
 
-        if self.exclusion_mask is not None:
-            # reproject exclusion mask
-            coords = counts.geom.get_coord()
-            data = self.exclusion_mask.get_by_coord(coords)
-            exclusion = Map.from_geom(geom=counts.geom, data=data)
+        if self.exclusion_mask:
+            exclusion = self.exclusion_mask.interp_to_geom(geom=counts.geom)
         else:
-            data = np.ones(counts.geom.data_shape, dtype=bool)
-            exclusion = Map.from_geom(geom=counts.geom, data=data)
+            exclusion = Map.from_geom(geom=counts.geom, data=True, dtype=bool)
 
         cubes = {}
         cubes["counts_off"] = scale_cube(
@@ -244,6 +241,7 @@ class RingBackgroundMaker(Maker):
     --------
     AdaptiveRingBackgroundEstimator
     """
+
     tag = "RingBackgroundMaker"
 
     def __init__(self, r_in, width, exclusion_mask=None):
@@ -286,7 +284,7 @@ class RingBackgroundMaker(Maker):
             Dictionary containing `counts_off` and `acceptance_off` maps.
         """
         counts = dataset.counts
-        background = dataset.background_model.map
+        background = dataset.npred_background()
 
         if self.exclusion_mask is not None:
             # reproject exclusion mask
@@ -324,7 +322,7 @@ class RingBackgroundMaker(Maker):
         from gammapy.datasets import MapDatasetOnOff
 
         maps_off = self.make_maps_off(dataset)
-        maps_off["acceptance"] = dataset.background_model.map
+        maps_off["acceptance"] = dataset.npred_background()
 
         mask_safe = dataset.mask_safe.copy()
         not_has_off_acceptance = maps_off["acceptance_off"].data <= 0

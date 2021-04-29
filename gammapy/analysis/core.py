@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Session class driving the high-level interface API"""
+"""Session class driving the high level interface API"""
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -7,7 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-from gammapy.estimators import FluxPointsEstimator
+from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator, LightCurveEstimator
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
@@ -16,9 +16,9 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import BackgroundModel, Models
+from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]
@@ -27,14 +27,12 @@ log = logging.getLogger(__name__)
 
 
 class Analysis:
-    """Config-driven high-level analysis interface.
+    """Config-driven high level analysis interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
-    an internal high-level interface model, though the user can also provide configuration
+    an internal high level interface model, though the user can also provide configuration
     parameters passed as a nested dictionary at the moment of instantiation. In that case these
     parameters will overwrite the default values of those present in the configuration file.
-
-    For more info see  :ref:`analysis`.
 
     Parameters
     ----------
@@ -114,7 +112,11 @@ class Analysis:
         if observations_settings.obs_time.start is not None:
             start = observations_settings.obs_time.start
             stop = observations_settings.obs_time.stop
-            self.observations = self.observations.select_time([(start, stop)])
+            if len(start.shape) == 0:
+                time_intervals = [(start, stop)]
+            else:
+                time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
+            self.observations = self.observations.select_time(time_intervals)
         log.info(f"Number of selected observations: {len(self.observations)}")
         for obs in self.observations:
             log.debug(obs)
@@ -133,6 +135,8 @@ class Analysis:
     def set_models(self, models):
         """Set models on datasets.
 
+        Adds `FoVBackgroundModel` if not present already
+
         Parameters
         ----------
         models : `~gammapy.modeling.models.Models` or str
@@ -149,7 +153,16 @@ class Analysis:
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
-        self.datasets.models.extend(self.models)
+        self.models.extend(self.datasets.models)
+
+        if self.config.datasets.type == "3d":
+            for dataset in self.datasets:
+                if dataset.background_model is None:
+                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+
+                self.models.append(bkg_model)
+
+        self.datasets.models = self.models
 
         log.info(self.models)
 
@@ -167,11 +180,10 @@ class Analysis:
         fit_settings = self.config.fit
         for dataset in self.datasets:
             if fit_settings.fit_range:
-                e_min = fit_settings.fit_range.min
-                e_max = fit_settings.fit_range.max
+                energy_min = fit_settings.fit_range.min
+                energy_max = fit_settings.fit_range.max
                 geom = dataset.counts.geom
-                data = geom.energy_mask(e_min, e_max)
-                dataset.mask_fit = Map.from_geom(geom=geom, data=data)
+                dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
         log.info("Fitting datasets.")
         self.fit = Fit(self.datasets)
@@ -185,9 +197,11 @@ class Analysis:
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
-        e_edges = self._make_energy_axis(fp_settings.energy).edges
+        energy_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
-            e_edges=e_edges, source=fp_settings.source, **fp_settings.parameters,
+            energy_edges=energy_edges,
+            source=fp_settings.source,
+            **fp_settings.parameters,
         )
         fp = flux_point_estimator.run(datasets=self.datasets)
         fp.table["is_ul"] = fp.table["ts"] < 4
@@ -196,6 +210,53 @@ class Analysis:
         )
         cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
         log.info("\n{}".format(self.flux_points.data.table[cols]))
+
+    def get_excess_map(self):
+        """Calculate excess map with respect to the current model."""
+        excess_settings = self.config.excess_map
+        log.info("Computing excess maps.")
+
+        if self.config.datasets.type == "1d":
+            raise ValueError("Cannot compute excess map for 1D dataset")
+
+        # Here we could possibly stack the datasets if needed.
+        if len(self.datasets)>1:
+            raise ValueError("Datasets must be stacked to compute the excess map")
+
+        energy_edges = self._make_energy_axis(excess_settings.energy_edges)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+
+        excess_map_estimator = ExcessMapEstimator(
+            correlation_radius=excess_settings.correlation_radius,
+            energy_edges=energy_edges,
+            **excess_settings.parameters
+        )
+        self.excess_map = excess_map_estimator.run(self.datasets[0])
+
+    def get_light_curve(self):
+        """Calculate light curve for a specific model component."""
+        lc_settings = self.config.light_curve
+        log.info("Computing light curve.")
+        energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
+
+        if lc_settings.time_intervals.start is None or lc_settings.time_intervals.stop is None:
+            log.info("Time intervals not defined. Extract light curve on datasets GTIs.")
+            time_intervals=None
+        else:
+            time_intervals = [(t1, t2) for t1, t2 in
+                              zip(lc_settings.time_intervals.start, lc_settings.time_intervals.stop)]
+
+        light_curve_estimator = LightCurveEstimator(
+            time_intervals=time_intervals,
+            energy_edges=energy_edges,
+            source=lc_settings.source,
+            **lc_settings.parameters,
+        )
+        lc = light_curve_estimator.run(datasets=self.datasets)
+        lc.table["is_ul"] = lc.table["ts"] < 4
+        self.light_curve = lc
+        log.info("\n{}".format(self.light_curve.table))
 
     def update_config(self, config):
         self.config = self.config.update(config=config)
@@ -278,13 +339,16 @@ class Analysis:
                 dataset = maker_safe_mask.run(dataset, obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
+
                 if bkg_method == "ring":
-                    dataset.models = Models([BackgroundModel(dataset.background)])
+                    dataset = dataset.to_map_dataset()
+
                 log.debug(dataset)
                 stacked.stack(dataset)
             datasets = [stacked]
         else:
             datasets = []
+
             for obs in self.observations:
                 log.info(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
@@ -294,6 +358,7 @@ class Analysis:
                     dataset = bkg_maker.run(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
+
         self.datasets = Datasets(datasets)
 
     def _spectrum_extraction(self):
@@ -312,7 +377,7 @@ class Analysis:
             ] = datasets_settings.containment_correction
         e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy)
 
-        maker_config["selection"] = ["counts", "aeff", "edisp"]
+        maker_config["selection"] = ["counts", "exposure", "edisp"]
         dataset_maker = SpectrumDatasetMaker(**maker_config)
 
         bkg_maker_config = {}
@@ -342,9 +407,8 @@ class Analysis:
             datasets_settings.geom.axes.energy_true, name="energy_true"
         )
 
-        reference = SpectrumDataset.create(
-            e_reco=e_reco, e_true=e_true, region=on_region
-        )
+        geom = RegionGeom.create(region=on_region, axes=[e_reco])
+        reference = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
         datasets = []
         for obs in self.observations:
@@ -367,14 +431,21 @@ class Analysis:
             stacked = self.datasets.stack_reduce(name="stacked")
             self.datasets = Datasets([stacked])
 
+
+
     @staticmethod
     def _make_energy_axis(axis, name="energy"):
-        return MapAxis.from_bounds(
-            name=name,
-            lo_bnd=axis.min.value,
-            hi_bnd=axis.max.to_value(axis.min.unit),
-            nbin=axis.nbins,
-            unit=axis.min.unit,
-            interp="log",
-            node_type="edges",
-        )
+        if axis.min is None or axis.max is None:
+            return None
+        elif axis.nbins is None or axis.nbins<1:
+            return None
+        else:
+            return MapAxis.from_bounds(
+                name=name,
+                lo_bnd=axis.min.value,
+                hi_bnd=axis.max.to_value(axis.min.unit),
+                nbin=axis.nbins,
+                unit=axis.min.unit,
+                interp="log",
+                node_type="edges",
+            )

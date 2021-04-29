@@ -48,8 +48,107 @@ the ``wstat`` fit statistic. The `~gammapy.datasets.FluxPointsDataset` contains
 `~gammapy.estimatorsFluxPoints` and a spectral model, the fit statistic used is
 ``chi2``.
 
-Getting Started
-===============
+Note that in Gammapy, 2D image analyses are done with 3D cubes with a single
+energy bin, e.g. for modeling and fitting,
+see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
+
+
+To analyse multiple runs, you can either stack the datasets together, or perform
+a joint fit across multiple datasets.
+
+.. _stack:
+
+Stacking Multiple Datasets
+==========================
+
+Stacking datasets implies that the counts, background and reduced IRFs from all the
+runs are binned together to get one final dataset for which a likelihood is
+computed during the fit. Stacking is often useful to reduce the computation effort while
+analysing multiple runs.
+
+
+The following table  lists how the individual quantities are handled during stacking.
+Here, :math:`k` denotes a bin in reconstructed energy,
+:math:`l` a bin in true energy and
+:math:`j` is the dataset number
+
+.. list-table::
+   :widths: 25 25 50
+   :header-rows: 1
+
+   * - Dataset attribute
+     - Behaviour
+     - Implementation
+   * - ``livetime``
+     - Sum of individual livetimes
+     - :math:`\overline{t} = \sum_j t_j`
+   * - ``mask_safe``
+     - True if the pixel is included in the safe data range.
+     - :math:`\overline{\epsilon_k} = \sum_{j} \epsilon_{jk}`
+   * - ``mask_fit``
+     - Dropped
+     -
+   * - ``counts``
+     - Summed in the data range defined by `mask_safe`
+     - :math:`\overline{\mathrm{counts}_k} = \sum_j \mathrm{counts}_{jk} \cdot \epsilon_{jk}`
+   * - ``background``
+     - Summed in the data range defined by `mask_safe`
+     - :math:`\overline{\mathrm{bkg}_k} = \sum_j \mathrm{bkg}_{jk} \cdot \epsilon_{jk}`
+   * - ``exposure``
+     - Summed in the data range defined by `mask_safe`
+     -  :math:`\overline{\mathrm{exposure}_l} = \sum_{j} \mathrm{exposure}_{jl} \cdot \sum_k \epsilon_{jk}`
+   * - ``psf``
+     - Exposure weighted average
+     - :math:`\overline{\mathrm{psf}_l} = \frac{\sum_{j} \mathrm{psf}_{jl} \cdot \mathrm{exposure}_{jl}} {\sum_{j} \mathrm{exposure}_{jl}}`
+   * - ``edisp``
+     - Exposure weighted average, with mask on reconstructed energy
+     - :math:`\overline{\mathrm{edisp}_{kl}} = \frac{\sum_{j}\mathrm{edisp}_{jkl} \cdot \epsilon_{jk} \cdot \mathrm{exposure}_{jl}} {\sum_{j} \mathrm{exposure}_{jl}}`
+   * - ``gti``
+     - Union of individual `gti`
+     -
+
+For the model evaluation, an important factor that needs to be accounted for is
+that the energy threshold changes between obseravtions.
+With the above implementation using a `~gammapy.irf.EDispersionMap`,
+the `npred` is conserved,
+ie, the predicted number of counts on the stacked
+dataset is the sum expected by stacking the `npred` of the individual runs,
+
+The following plot shows the individual and stacked energy dispersion kernel and `npred`  for two `SpectrumDataset`
+
+.. plot:: datasets/plot_stack.py
+
+.. note::
+    - A stacked analysis is reasonable only when adding runs taken by the same instrument.
+    - Stacking happens in-place, ie, ``dataset1.stack(dataset2)`` will overwrite ``dataset1``
+    - To properly handle masks, it is necessary to stack onto an empty dataset.
+    - Stacking only works for maps with equivalent geometry.
+      Two geometries are called equivalent if one is exactly the same as, or can be obtained
+      from a cutout of, the other.
+
+
+
+.. _joint:
+Joint Analysis
+==============
+
+An alternative to stacking datasets is a joint fit across all the datasets.
+For a definition, see :ref:`glossary`.
+
+The totat fit statistic of datasets is the sum of the
+fit statistic of each dataset. Note that this is **not** equal to the
+stacked fit statistic.
+
+A joint fit usually allows a better modeling of the background because
+the background model parameters can be fit for each dataset simultaneously
+with the source models. However, a joint fit is, performance wise,
+very computationally intensive.
+The fit convergence time increases non-linearly with the number of datasets to be fit.
+Moreover, depending upon the number of parameters in the background model,
+even fit convergence might be an issue for a large number of datasets.
+
+To strike a balance, what might be a practical solution for analysis of many runs is to
+stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
 
 
 

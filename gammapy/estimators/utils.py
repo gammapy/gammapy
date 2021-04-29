@@ -4,13 +4,13 @@ import scipy.ndimage
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import WcsNDMap
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     ConstantFluxSpatialModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.datasets.map import MapEvaluator
 
 __all__ = ["find_peaks", "estimate_exposure_reco_energy"]
 
@@ -43,7 +43,7 @@ def find_peaks(image, threshold, min_distance=1):
     Parameters
     ----------
     image : `~gammapy.maps.WcsNDMap`
-        2D map
+        Image like Map
     threshold : float or array-like
         The data value or pixel-wise data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
@@ -62,17 +62,17 @@ def find_peaks(image, threshold, min_distance=1):
     if not isinstance(image, WcsNDMap):
         raise TypeError("find_peaks only supports WcsNDMap")
 
-    if not image.geom.is_image:
-        raise ValueError("find_peaks only supports 2D images")
+    if not image.geom.is_flat:
+        raise ValueError("find_peaks only supports flat Maps, with no spatial axes of length 1.")
 
     if isinstance(min_distance, (str, u.Quantity)):
         min_distance = np.mean(u.Quantity(min_distance) / image.geom.pixel_scales)
         min_distance = np.round(min_distance).to_value("")
- 
+
     size = 2 * min_distance + 1
 
     # Remove non-finite values to avoid warnings or spurious detection
-    data = image.data.copy()
+    data = image.sum_over_axes(keepdims=False).data
     data[~np.isfinite(data)] = np.nanmin(data)
 
     # Handle edge case of constant data; treat as no peak
@@ -131,14 +131,12 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None):
         spatial_model=ConstantFluxSpatialModel(), spectral_model=spectral_model
     )
 
-    energy_axis = dataset._geom.get_axis_by_name("energy")
+    energy_axis = dataset._geom.axes["energy"]
 
     edisp = None
 
     if dataset.edisp is not None:
-        edisp = dataset.edisp.get_edisp_kernel(
-            position=None, energy_axis=energy_axis
-        )
+        edisp = dataset.edisp.get_edisp_kernel(position=None, energy_axis=energy_axis)
 
     meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=edisp)
     npred = meval.compute_npred()

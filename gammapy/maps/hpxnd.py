@@ -2,11 +2,22 @@
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.coordinates import SkyCoord
+from regions import PointSkyRegion
 from gammapy.utils.units import unit_from_fits_image_hdu
+from .region import RegionGeom
+from .regionnd import RegionNDMap
 from .geom import MapCoord, pix_tuple_to_idx
-from .hpx import HPX_FITS_CONVENTIONS, HpxGeom, HpxToWcsMapping, nside_to_order
+from .hpx import (
+    HPX_FITS_CONVENTIONS,
+    HpxConv,
+    HpxGeom,
+    HpxToWcsMapping,
+    nside_to_order,
+    get_superpixels
+)
 from .hpxmap import HpxMap
-from .utils import INVALID_INDEX, interp_to_order
+from .utils import INVALID_INDEX
 
 __all__ = ["HpxNDMap"]
 
@@ -39,8 +50,6 @@ class HpxNDMap(HpxMap):
             data = self._make_default_data(geom, data_shape, dtype)
 
         super().__init__(geom, data, meta, unit)
-        self._wcs2d = None
-        self._hpx2wcs = None
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):
@@ -54,7 +63,85 @@ class HpxNDMap(HpxMap):
         return data
 
     @classmethod
-    def from_hdu(cls, hdu, hdu_bands=None):
+    def from_wcs_tiles(cls, wcs_tiles, nest=True):
+        """Create HEALPix map from WCS tiles.
+
+        Parameters
+        ----------
+        wcs_tiles : list of  `WcsNDMap`
+            Wcs map tiles
+        nest : bool
+            Whether to use nested HEALPix scheme
+
+        Returns
+        -------
+        hpx_map : `HpxNDMap`
+            HEALPix map
+        """
+        import healpy as hp
+
+        geom_wcs = wcs_tiles[0].geom
+
+        geom_hpx = HpxGeom.create(
+            binsz=geom_wcs.pixel_scales[0],
+            frame=geom_wcs.frame,
+            nest=nest,
+            axes=geom_wcs.axes
+        )
+
+        map_hpx = cls.from_geom(geom=geom_hpx, unit=wcs_tiles[0].unit)
+
+        coords = map_hpx.geom.get_coord().skycoord
+        nside_superpix = hp.npix2nside(len(wcs_tiles))
+
+        hpx_ref = HpxGeom(nside=nside_superpix, nest=nest, frame=geom_wcs.frame)
+
+        idx = np.arange(map_hpx.geom.to_image().npix)
+        indices = get_superpixels(idx, map_hpx.geom.nside, nside_superpix, nest=nest)
+
+        for wcs_tile in wcs_tiles:
+            hpx_idx = int(hpx_ref.coord_to_idx(wcs_tile.geom.center_skydir)[0])
+            mask = indices == hpx_idx
+            map_hpx.data[mask] = wcs_tile.interp_by_coord(coords[mask])
+
+        return map_hpx
+
+    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg", method="nearest", oversampling_factor=1):
+        """Convert HpxNDMap to a list of WCS tiles
+
+        Parameters
+        ----------
+        nside_tiles : int
+            Nside for super pixel tiles. Usually nsi
+        margin : Angle
+            Width margin of the wcs tile
+        method : {'nearest', 'linear'}
+            Interpolation method
+        oversampling_factor : int
+            Oversampling factor.
+
+        Returns
+        -------
+        wcs_tiles : list of `WcsNDMap`
+            WCS tiles.
+        """
+        wcs_tiles = []
+
+        wcs_geoms = self.geom.to_wcs_tiles(
+            nside_tiles=nside_tiles, margin=margin
+        )
+
+        for geom in wcs_geoms:
+            if oversampling_factor > 1:
+                geom = geom.upsample(oversampling_factor)
+
+            wcs_map = self.interp_to_geom(geom=geom, method=method)
+            wcs_tiles.append(wcs_map)
+
+        return wcs_tiles
+
+    @classmethod
+    def from_hdu(cls, hdu, hdu_bands=None, format=None):
         """Make a HpxNDMap object from a FITS HDU.
 
         Parameters
@@ -63,20 +150,40 @@ class HpxNDMap(HpxMap):
             The FITS HDU
         hdu_bands  : `~astropy.io.fits.BinTableHDU`
             The BANDS table HDU
+        format : str, optional
+            FITS convention. If None the format is guessed. The following
+            formats are supported:
+
+                - "gadf"
+                - "fgst-ccube"
+                - "fgst-ltcube"
+                - "fgst-bexpcube"
+                - "fgst-srcmap"
+                - "fgst-template"
+                - "fgst-srcmap-sparse"
+                - "galprop"
+                - "galprop2"
+
+        Returns
+        -------
+        map : `HpxMap`
+            HEALPix map
+
         """
-        hpx = HpxGeom.from_header(hdu.header, hdu_bands)
+        if format is None:
+            format = HpxConv.identify_hpx_format(hdu.header)
 
-        convname = HpxGeom.identify_hpx_convention(hdu.header)
-        hpx_conv = HPX_FITS_CONVENTIONS[convname]
+        geom = HpxGeom.from_header(hdu.header, hdu_bands, format=format)
 
-        shape = tuple([ax.nbin for ax in hpx.axes[::-1]])
-        # shape_data = shape + tuple([np.max(hpx.npix)])
+        hpx_conv = HPX_FITS_CONVENTIONS[format]
+
+        shape = geom.axes.shape[::-1]
 
         # TODO: Should we support extracting slices?
 
         meta = cls._get_meta_from_header(hdu.header)
         unit = unit_from_fits_image_hdu(hdu.header)
-        map_out = cls(hpx, None, meta=meta, unit=unit)
+        map_out = cls(geom, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names
         cnames = []
@@ -99,44 +206,11 @@ class HpxNDMap(HpxMap):
             if nbin == 1:
                 map_out.data = hdu.data.field(cnames[0])
             else:
-                for i, cname in enumerate(cnames):
-                    idx = np.unravel_index(i, shape)
+                for idx, cname in enumerate(cnames):
+                    idx = np.unravel_index(idx, shape)
                     map_out.data[idx + (slice(None),)] = hdu.data.field(cname)
 
         return map_out
-
-    def make_wcs_mapping(
-        self, sum_bands=False, proj="AIT", oversample=2, width_pix=None
-    ):
-        """Make a HEALPix to WCS mapping object.
-
-        Parameters
-        ----------
-        sum_bands : bool
-            sum over non-spatial dimensions before reprojecting
-        proj  : str
-            WCS-projection
-        oversample : float
-            Oversampling factor for WCS map. This will be the
-            approximate ratio of the width of a HPX pixel to a WCS
-            pixel. If this parameter is None then the width will be
-            set from ``width_pix``.
-        width_pix : int
-            Width of the WCS geometry in pixels.  The pixel size will
-            be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
-            is None then the width will be set from ``oversample``.
-
-        Returns
-        -------
-        hpx2wcs : `~HpxToWcsMapping`
-
-        """
-        self._wcs2d = self.geom.make_wcs(
-            proj=proj, oversample=oversample, width_pix=width_pix, drop_axes=True
-        )
-        self._hpx2wcs = HpxToWcsMapping.create(self.geom, self._wcs2d)
-        return self._hpx2wcs
 
     def to_wcs(
         self,
@@ -161,9 +235,11 @@ class HpxNDMap(HpxMap):
 
         # FIXME: Check whether the old mapping is still valid and reuse it
         if hpx2wcs is None:
-            hpx2wcs = self.make_wcs_mapping(
-                oversample=oversample, proj=proj, width_pix=width_pix
-            )
+            geom_wcs_image = self.geom.to_wcs_geom(
+                proj=proj, oversample=oversample, width_pix=width_pix
+            ).to_image()
+
+            hpx2wcs = HpxToWcsMapping.create(self.geom, geom_wcs_image)
 
         # FIXME: Need a function to extract a valid shape from npix property
 
@@ -184,8 +260,8 @@ class HpxNDMap(HpxMap):
         hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data, unit=self.unit)
 
-    def pad(self, pad_width, mode="constant", cval=0, order=1):
-        geom = self.geom.pad(pad_width)
+    def _pad_spatial(self, pad_width, mode="constant", cval=0):
+        geom = self.geom._pad_spatial(pad_width=pad_width)
         map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
         coords = geom.get_coord(flat=True)
@@ -195,10 +271,7 @@ class HpxNDMap(HpxMap):
         if mode == "constant":
             map_out.set_by_coord(coords, cval)
         elif mode == "interp":
-            # FIXME: These modes don't work at present because
-            # interp_by_coord doesn't support extrapolation
-            vals = self.interp_by_coord(coords, interp=order)
-            map_out.set_by_coord(coords, vals)
+            raise ValueError("Method 'interp' not supported for HpxMap")
         else:
             raise ValueError(f"Unrecognized pad mode: {mode!r}")
 
@@ -233,20 +306,153 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
-    def interp_by_coord(self, coords, interp=1):
+    def interp_by_coord(self, coords, method="linear"):
         # inherited docstring
         coords = MapCoord.create(coords, frame=self.geom.frame)
 
-        order = interp_to_order(interp)
-        if order == 1:
-            return self._interp_by_coord(coords, order)
+        if method == "linear":
+            return self._interp_by_coord(coords)
+        elif method == "nearest":
+            return self.get_by_coord(coords)
         else:
-            raise ValueError(f"Invalid interpolation order: {order!r}")
+            raise ValueError(f"Invalid interpolation method: {method!r}")
 
-    def interp_by_pix(self, pix, interp=None):
+    def interp_by_pix(self, pix, method=None):
         """Interpolate map values at the given pixel coordinates.
         """
         raise NotImplementedError
+
+    def cutout(self, position, width, *args, **kwargs):
+        """Create a cutout around a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+            Radius of the circular cutout region.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.HpxNDMap`
+            Cutout map
+        """
+        geom = self.geom.cutout(position=position, width=width)
+
+        if self.geom.is_allsky:
+            idx = geom._ipix
+        else:
+            idx = self.geom.to_image().global_to_local((geom._ipix,))
+
+        data = self.data[..., idx]
+        return self.__class__(
+            geom=geom, data=data, unit=self.unit, meta=self.meta
+        )
+
+    def stack(self, other, weights=None):
+        """Stack cutout into map.
+
+        Parameters
+        ----------
+        other : `HpxNDMap`
+            Other map to stack
+        weights : `HpxNDMap`
+            Array to be used as weights. The spatial geometry must be equivalent
+            to `other` and additional axes must be broadcastable.
+        """
+        if self.geom == other.geom:
+            idx = None
+        elif self.geom.is_aligned(other.geom):
+            if self.geom.is_allsky:
+                idx = other.geom._ipix
+            else:
+                idx = self.geom.to_image().global_to_local((other.geom._ipix,))[0]
+        else:
+            raise ValueError(
+                "Can only stack equivalent maps or cutout of the same map."
+            )
+
+        data = other.quantity.to_value(self.unit)
+
+        if weights is not None:
+            if not other.geom.to_image() == weights.geom.to_image():
+                raise ValueError("Incompatible spatial geoms between map and weights")
+            data = data * weights.data
+
+        if idx is None:
+            self.data += data
+        else:
+            self.data[..., idx] += data
+
+    def smooth(self, width, kernel="gauss"):
+        """Smooth the map.
+
+        Iterates over 2D image planes, processing one at a time.
+
+        Parameters
+        ----------
+        width : `~astropy.units.Quantity`, str or float
+            Smoothing width given as quantity or float. If a float is given it
+            interpreted as smoothing width in pixels. If an (angular) quantity
+            is given it converted to pixels using ``healpy.nside2resol``.
+            It corresponds to the standard deviation in case of a Gaussian kernel,
+            and the radius in case of a disk kernel.
+        kernel : {'gauss', 'disk'}
+            Kernel shape
+
+        Returns
+        -------
+        image : `HpxNDMap`
+            Smoothed image (a copy, the original object is unchanged).
+        """
+        import healpy as hp
+
+        if not self.geom.is_allsky:
+            raise NotImplementedError("Smoothing is only possible for all-sky maps")
+
+        nside = self.geom.nside
+        lmax = 3*nside-1 # maximum l of the power spectrum
+        nest = self.geom.nest
+
+        # The smoothing width is expected by healpy in radians
+        if isinstance(width, (Quantity, str)):
+            width = Quantity(width)
+            width = width.to_value("rad")
+        else:
+            binsz = np.degrees(hp.nside2resol(nside))
+            width = width * binsz
+            width = np.deg2rad(width)
+
+        smoothed_data = np.empty(self.data.shape, dtype=float)
+
+        for img, idx in self.iter_by_image():
+            img = img.astype(float)
+
+            if nest:
+                # reorder to ring to do the smoothing
+                img = hp.pixelfunc.reorder(img, n2r=True)
+
+            if kernel == "gauss":
+                data = hp.sphtfunc.smoothing(img, sigma=width, pol=False, verbose=False, lmax=lmax)
+            elif kernel == "disk":
+                # create the step function in angular space
+                theta = np.linspace(0,width)
+                beam = np.ones(len(theta))
+                beam[theta>width]=0
+                # convert to the spherical harmonics space
+                window_beam = hp.sphtfunc.beam2bl(beam, theta, lmax)
+                # normalize the window beam
+                window_beam = window_beam/window_beam.max()
+                data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
+            else:
+                raise ValueError(f"Invalid kernel: {kernel!r}")
+
+            if nest:
+                # reorder back to nest after the smoothing
+                data = hp.pixelfunc.reorder(data, r2n=True)
+            smoothed_data[idx] = data
+
+        return self._init_copy(data=smoothed_data)
 
     def get_by_idx(self, idx):
         # inherited docstring
@@ -254,47 +460,9 @@ class HpxNDMap(HpxMap):
         idx = self.geom.global_to_local(idx)
         return self.data.T[idx]
 
-    def _get_interp_weights(self, coords, idxs=None):
-        import healpy as hp
-
-        if idxs is None:
-            idxs = self.geom.coord_to_idx(coords, clip=True)[1:]
-
-        theta, phi = coords.theta, coords.phi
-
-        m = ~np.isfinite(theta)
-        theta[m] = 0
-        phi[m] = 0
-
-        if not self.geom.is_regular:
-            nside = self.geom.nside[tuple(idxs)]
-        else:
-            nside = self.geom.nside
-
-        pix, wts = hp.get_interp_weights(nside, theta, phi, nest=self.geom.nest)
-        wts[:, m] = 0
-        pix[:, m] = INVALID_INDEX.int
-
-        if not self.geom.is_regular:
-            pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
-        else:
-            pix_local = [self.geom[pix]]
-
-        # If a pixel lies outside of the geometry set its index to the center pixel
-        m = pix_local[0] == INVALID_INDEX.int
-        if m.any():
-            coords_ctr = [coords.lon, coords.lat]
-            coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.geom.axes, idxs)]
-            idx_ctr = self.geom.coord_to_idx(coords_ctr)
-            idx_ctr = self.geom.global_to_local(idx_ctr)
-            pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
-
-        pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
-        return pix_local, wts
-
-    def _interp_by_coord(self, coords, order):
+    def _interp_by_coord(self, coords):
         """Linearly interpolate map values."""
-        pix, wts = self._get_interp_weights(coords)
+        pix, wts = self.geom.interp_weights(coords)
 
         if self.geom.is_image:
             return np.sum(self.data.T[tuple(pix)] * wts, axis=0)
@@ -320,7 +488,7 @@ class HpxNDMap(HpxMap):
                     pix_i += [idx]
 
             if not self.geom.is_regular:
-                pix, wts = self._get_interp_weights(coords, pix_i)
+                pix, wts = self.geom.interp_weights(coords, idxs=pix_i)
 
             wts[pix[0] == INVALID_INDEX.int] = 0
             wt[~np.isfinite(wt)] = 0
@@ -403,34 +571,55 @@ class HpxNDMap(HpxMap):
         map_out.set_by_idx(idx_new, vals)
         return map_out
 
-    def to_ud_graded(self, nside, preserve_counts=False):
-        # FIXME: Should we remove/deprecate this method?
+    def to_region_nd_map(self, region, func=np.nansum, weights=None, method="nearest"):
+        """Get region ND map in a given region.
 
-        order = nside_to_order(nside)
-        new_hpx = self.geom.to_ud_graded(order)
-        map_out = self._init_copy(geom=new_hpx, data=None)
+        By default the whole map region is considered.
 
-        if np.all(order <= self.geom.order):
-            # Downsample
-            idx = self.geom.get_idx(flat=True)
-            coords = self.geom.pix_to_coord(idx)
-            vals = self.get_by_idx(idx)
-            map_out.fill_by_coord(coords, vals)
+        Parameters
+        ----------
+        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
+             Region.
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
+        method : {"nearest", "linear"}
+            How to interpolate if a position is given.
+
+        Returns
+        -------
+        spectrum : `~gammapy.maps.RegionNDMap`
+            Spectrum in the given region.
+        """
+        if isinstance(region, SkyCoord):
+            region = PointSkyRegion(region)
+
+        if weights is not None:
+            if not self.geom == weights.geom:
+                raise ValueError("Incompatible spatial geoms between map and weights")
+
+        geom = RegionGeom(region=region, axes=self.geom.axes)
+
+        if isinstance(region, PointSkyRegion):
+            coords = geom.get_coord()
+            data = self.interp_by_coord(coords=coords, method=method)
+            if weights is not None:
+                data *= weights.interp_by_coord(coords=coords, method=method)
         else:
-            # Upsample
-            idx = new_hpx.get_idx(flat=True)
-            coords = new_hpx.pix_to_coord(idx)
-            vals = self.get_by_coord(coords)
-            m = np.isfinite(vals)
-            map_out.fill_by_coord([c[m] for c in coords], vals[m])
+            cutout = self.cutout(position=geom.center_skydir, width=np.max(geom.width))
 
-        if not preserve_counts:
-            fact = (2 ** order) ** 2 / (2 ** self.geom.order) ** 2
-            if self.geom.nside.size > 1:
-                fact = fact[..., None]
-            map_out.data *= fact
+            if weights is not None:
+                weights_cutout = weights.cutout(
+                    position=geom.center_skydir, width=geom.width
+                )
+                cutout.data *= weights_cutout.data
 
-        return map_out
+            mask = cutout.geom.to_image().region_mask([region]).data
+            data = func(cutout.data[..., mask], axis=-1)
+
+        return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
     def plot(
         self,
@@ -516,7 +705,7 @@ class HpxNDMap(HpxMap):
         from matplotlib.collections import PatchCollection
         import healpy as hp
 
-        wcs = self.geom.make_wcs(proj=proj, oversample=1)
+        wcs = self.geom.to_wcs_geom(proj=proj, oversample=1)
         if ax is None:
             fig = plt.gcf()
             ax = fig.add_subplot(111, projection=wcs.wcs, aspect="equal")

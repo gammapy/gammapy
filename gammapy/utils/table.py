@@ -30,10 +30,9 @@ def hstack_columns(table, table_other):
         Stacked table
     """
     stacked = Table()
+
     for column in table.colnames:
-        data = np.hstack(
-            [table[column].data[0], table_other[column].data[0]]
-        )
+        data = np.hstack([table[column].data[0], table_other[column].data[0]])
         stacked[column] = data[np.newaxis, :]
     return stacked
 
@@ -104,6 +103,9 @@ def table_from_row_data(rows, **kwargs):
         List of row data (each row a dict)
     """
     table = Table(**kwargs)
+    if len(rows) == 0:
+        return table
+
     colnames = list(rows[0].keys())
     for name in colnames:
         coldata = [_[name] for _ in rows]

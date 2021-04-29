@@ -61,15 +61,16 @@ MANIFEST
 *.ipynb_checkpoints
 docs/_static/notebooks
 docs/modeling/gallery
-docs/tutorials/fit_result_LogParabola.yaml
-docs/tutorials/model-best-fit.yaml
-docs/tutorials/crab-3datasets
-docs/tutorials/analysis_1
-docs/tutorials/analysis_3d
-docs/tutorials/event_sampling
+
+docs/tutorials/analysis/3D/crab-3datasets
+docs/tutorials/starting/analysis_1
+docs/tutorials/analysis/3D/analysis_3d
+docs/tutorials/analysis/3D/event_sampling
+docs/tutorials/*/*.yaml
 docs/tutorials/*.yaml
+docs/tutorials/*/*.dat
 docs/tutorials/*.dat
-docs/tutorials/*.reg
+docs/tutorials/*/*.reg
 
 gammapy-datasets
 temp
@@ -83,8 +84,8 @@ docs/api
 dev/crab
 
 # Data files generated in docs building
-#*.png
 #!tutorials/images/*
+#*.png
 *.fits
 *.fits.gz
 *.root

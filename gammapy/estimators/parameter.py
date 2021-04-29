@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from .core import Estimator
@@ -38,11 +37,13 @@ class ParameterEstimator(Estimator):
         Re-optimize other free model parameters. Default is True.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
+
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors on parameter best fit value.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        By default all steps are executed.
+        Default is None so the optionnal steps are not executed.
 
     """
 
@@ -60,7 +61,7 @@ class ParameterEstimator(Estimator):
         scan_n_values=30,
         scan_values=None,
         reoptimize=True,
-        selection_optional="all",
+        selection_optional=None,
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -124,7 +125,7 @@ class ParameterEstimator(Estimator):
         """
         stat = datasets.stat_sum()
 
-        with datasets.parameters.restore_values:
+        with datasets.parameters.restore_status():
 
             # compute ts value
             parameter.value = self.null_value
@@ -135,7 +136,7 @@ class ParameterEstimator(Estimator):
 
             ts = datasets.stat_sum() - stat
 
-        return {"ts": ts, "sqrt_ts": self.get_sqrt_ts(ts)}
+        return {"ts": ts}
 
     def estimate_errn_errp(self, datasets, parameter):
         """Estimate parameter assymetric errors
@@ -157,14 +158,12 @@ class ParameterEstimator(Estimator):
         self._fit.optimize()
 
         res = self._fit.confidence(
-            parameter=parameter,
-            sigma=self.n_sigma,
-            reoptimize=self.reoptimize
+            parameter=parameter, sigma=self.n_sigma, reoptimize=self.reoptimize
         )
         return {
-                f"{parameter.name}_errp": res["errp"],
-                f"{parameter.name}_errn": res["errn"],
-            }
+            f"{parameter.name}_errp": res["errp"],
+            f"{parameter.name}_errn": res["errn"],
+        }
 
     def estimate_scan(self, datasets, parameter):
         """Estimate parameter stat scan.
@@ -195,12 +194,12 @@ class ParameterEstimator(Estimator):
             values=self.scan_values,
             bounds=bounds,
             nvalues=self.scan_n_values,
-            reoptimize=self.reoptimize
+            reoptimize=self.reoptimize,
         )
 
         return {
-            f"{parameter.name}_scan": profile["values"],
-            "stat_scan": profile["stat"]
+            f"{parameter.name}_scan": profile[f"{parameter.name}_scan"],
+            "stat_scan": profile["stat_scan"],
         }
 
     def estimate_ul(self, datasets, parameter):
@@ -221,7 +220,9 @@ class ParameterEstimator(Estimator):
         """
         self._setup_fit(datasets)
         self._fit.optimize()
-        res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
+        res = self._fit.confidence(
+            parameter=parameter, sigma=self.n_sigma_ul, backend="scipy"
+        )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
     def run(self, datasets, parameter):
@@ -242,7 +243,7 @@ class ParameterEstimator(Estimator):
         datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
 
-        with datasets.parameters.restore_values:
+        with datasets.parameters.restore_status():
 
             if not self.reoptimize:
                 datasets.parameters.freeze_all()

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from astropy.table import Table
 from numpy.testing import assert_allclose
+from astropy.table import Table
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
@@ -14,6 +14,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def fit(dataset):
     return Fit([dataset])
 
+
 @pytest.fixture()
 def test_meta_table(dataset):
     meta_table = dataset.meta_table
@@ -21,11 +22,12 @@ def test_meta_table(dataset):
     assert meta_table["OBS_ID"] == "0001"
     assert meta_table["INSTRUME"] == "South_Z20_50h"
 
+
 @pytest.fixture()
 def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
-    data.table["e_ref"] = data.e_ref.to("TeV")
+    data.table["e_ref"] = data.energy_ref.to("TeV")
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
@@ -45,15 +47,23 @@ def dataset():
 def test_flux_point_dataset_serialization(tmp_path):
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
-    data.table["e_ref"] = data.e_ref.to("TeV")
+    data.table["e_ref"] = data.energy_ref.to("TeV")
     spectral_model = PowerLawSpectralModel(
         index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     model = SkyModel(spectral_model=spectral_model, name="test_model")
     dataset = FluxPointsDataset(model, data, name="test_dataset")
 
-    Datasets([dataset]).write(tmp_path, prefix="tmp")
-    datasets = Datasets.read(tmp_path, "tmp_datasets.yaml", "tmp_models.yaml")
+    Datasets([dataset]).write(
+        filename=tmp_path / "tmp_datasets.yaml",
+        filename_models=tmp_path / "tmp_models.yaml",
+    )
+
+    datasets = Datasets.read(
+        filename=tmp_path / "tmp_datasets.yaml",
+        filename_models=tmp_path / "tmp_models.yaml",
+    )
+
     new_dataset = datasets[0]
     assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
     if dataset.mask_fit is None:
@@ -101,7 +111,7 @@ class TestFluxPointFit:
 
         profile = fit.stat_profile("amplitude", nvalues=3, bounds=1)
 
-        ts_diff = profile["stat"] - result.total_stat
+        ts_diff = profile["stat_scan"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
         value = result.parameters["amplitude"].value
@@ -110,13 +120,13 @@ class TestFluxPointFit:
 
         profile = fit.stat_profile("amplitude", values=values)
 
-        ts_diff = profile["stat"] - result.total_stat
+        ts_diff = profile["stat_scan"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
     @staticmethod
     @requires_dependency("matplotlib")
-    def test_fp_dataset_peek(fit):
+    def test_fp_dataset_plot_fit(fit):
         fp_dataset = fit.datasets[0]
 
         with mpl_plot_check():
-            fp_dataset.peek(method="diff/model")
+            fp_dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))

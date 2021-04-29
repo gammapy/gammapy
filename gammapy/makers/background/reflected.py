@@ -6,7 +6,6 @@ from astropy.coordinates import Angle
 from regions import PixCoord
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsNDMap
-from gammapy.utils.regions import list_to_compound_region
 from ..core import Maker
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
@@ -60,9 +59,9 @@ class ReflectedRegionsFinder:
     >>> finder.run()
     >>> print(finder.reflected_regions[0])
     Region: CircleSkyRegion
-    center: <SkyCoord (Galactic): (l, b) in deg
-        ( 184.9367087, -8.37920222)>
-        radius: 0.400147197682 deg
+    center: <SkyCoord (ICRS): (ra, dec) in deg
+        (83.19879005, 25.57300957)>
+    radius: 0.39953342830756855 deg
     """
 
     def __init__(
@@ -97,7 +96,7 @@ class ReflectedRegionsFinder:
         self.reference_map = self.make_reference_map(
             self.region, self.center, self.binsz
         )
-        if self.exclusion_mask is not None:
+        if self.exclusion_mask:
             coords = self.reference_map.geom.get_coord()
             vals = self.exclusion_mask.get_by_coord(coords)
             self.reference_map.data += vals
@@ -187,7 +186,7 @@ class ReflectedRegionsFinder:
         self._pix_center = PixCoord.from_sky(self.center, geom.wcs)
 
         # Make the ON reference map
-        mask = geom.region_mask([self.region], inside=True)
+        mask = geom.region_mask([self.region]).data
         # on_reference_map = WcsNDMap(geom=geom, data=mask)
 
         # Extract all pixcoords in the geom
@@ -268,6 +267,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
     """
+
     tag = "ReflectedRegionsBackgroundMaker"
 
     def __init__(
@@ -317,19 +317,27 @@ class ReflectedRegionsBackgroundMaker(Maker):
         finder = self._get_finder(dataset, observation)
         finder.run()
 
-        energy_axis = dataset.counts.geom.get_axis_by_name("energy")
+        energy_axis = dataset.counts.geom.axes["energy"]
 
         if len(finder.reflected_regions) > 0:
-            region_union = list_to_compound_region(finder.reflected_regions)
-            wcs = finder.reference_map.geom.wcs
-            geom = RegionGeom.create(region=region_union, axes=[energy_axis], wcs=wcs)
+            geom = RegionGeom.from_regions(
+                regions=finder.reflected_regions,
+                axes=[energy_axis],
+                wcs=finder.reference_map.geom.wcs
+            )
+
             counts_off = RegionNDMap.from_geom(geom=geom)
             counts_off.fill_events(observation.events)
-            acceptance_off = len(finder.reflected_regions)
+            acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(finder.reflected_regions))
         else:
             # if no OFF regions are found, off is set to None and acceptance_off to zero
+            log.warning(
+                f"ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for {dataset.name}."
+            )
+
             counts_off = None
-            acceptance_off = 0
+            acceptance_off = RegionNDMap.from_geom(geom=dataset._geom, data=0)
+
         return counts_off, acceptance_off
 
     def run(self, dataset, observation):
@@ -348,10 +356,19 @@ class ReflectedRegionsBackgroundMaker(Maker):
             On off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
+        acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom, data=1)
 
-        return SpectrumDatasetOnOff.from_spectrum_dataset(
+        dataset_onoff = SpectrumDatasetOnOff.from_spectrum_dataset(
             dataset=dataset,
-            acceptance=1,
+            acceptance=acceptance,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
+            name=dataset.name
         )
+
+        if dataset_onoff.counts_off is None:
+            dataset_onoff.mask_safe.data[...] = False
+            log.warning(
+                f"ReflectedRegionsBackgroundMaker failed. Setting {dataset_onoff.name} mask to False."
+            )
+        return dataset_onoff

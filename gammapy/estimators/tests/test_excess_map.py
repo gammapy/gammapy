@@ -6,14 +6,19 @@ import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling.models import BackgroundModel
+from gammapy.irf import PSFMap
+from gammapy.modeling.models import (
+    GaussianSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 from gammapy.utils.testing import requires_data
+from gammapy.estimators.utils import estimate_exposure_reco_energy
 
-
-def image_to_cube(input_map, e_min, e_max):
-    e_min = u.Quantity(e_min)
-    e_max = u.Quantity(e_max)
-    axis = MapAxis.from_energy_bounds(e_min, e_max, nbin=1)
+def image_to_cube(input_map, energy_min, energy_max):
+    energy_min = u.Quantity(energy_min)
+    energy_max = u.Quantity(energy_max)
+    axis = MapAxis.from_energy_bounds(energy_min, energy_max, nbin=1)
     geom = input_map.geom.to_cube([axis])
     return Map.from_geom(geom, data=input_map.data[np.newaxis, :, :])
 
@@ -25,7 +30,7 @@ def simple_dataset():
     dataset = MapDataset.create(geom)
     dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.counts += 2
-    dataset.background_model.map += 1
+    dataset.background += 1
     return dataset
 
 
@@ -52,16 +57,13 @@ def test_compute_lima_image():
     counts = image_to_cube(counts, "1 GeV", "100 GeV")
     background = Map.read(filename, hdu="background")
     background = image_to_cube(background, "1 GeV", "100 GeV")
-    background_model = BackgroundModel(background)
-    dataset = MapDataset(counts=counts)
-    background_model.datasets_names = [dataset.name]
-    dataset.models = background_model
+    dataset = MapDataset(counts=counts, background=background)
 
-    estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
+    estimator = ExcessMapEstimator("0.1 deg")
     result_lima = estimator.run(dataset)
 
-    assert_allclose(result_lima["significance"].data[:, 100, 100], 30.814916, atol=1e-3)
-    assert_allclose(result_lima["significance"].data[:, 1, 1], 0.164, atol=1e-3)
+    assert_allclose(result_lima["sqrt_ts"].data[:, 100, 100], 30.814916, atol=1e-3)
+    assert_allclose(result_lima["sqrt_ts"].data[:, 1, 1], 0.164, atol=1e-3)
 
 
 @requires_data()
@@ -87,16 +89,16 @@ def test_compute_lima_on_off_image():
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, "1 TeV", "10 TeV")
-    estimator = ExcessMapEstimator("0.1 deg", selection_optional=None)
+    estimator = ExcessMapEstimator("0.1 deg")
     results = estimator.run(dataset)
 
     # Reproduce safe significance threshold from HESS software
-    results["significance"].data[results["counts"].data < 5] = 0
+    results["sqrt_ts"].data[results["counts"].data < 5] = 0
 
     # crop the image at the boundaries, because the reference image
     # is cut out from a large map, there is no way to reproduce the
     # result with regular boundary handling
-    actual = results["significance"].crop((11, 11)).data
+    actual = results["sqrt_ts"].crop((11, 11)).data
     desired = significance.crop((11, 11)).data
 
     # Set boundary to NaN in reference image
@@ -106,29 +108,73 @@ def test_compute_lima_on_off_image():
 
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
-    estimator = ExcessMapEstimator(0.1 * u.deg)
+    estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional=["all"])
     result = estimator.run(simple_dataset)
 
     assert_allclose(result["counts"].data[0, 10, 10], 162)
     assert_allclose(result["excess"].data[0, 10, 10], 81)
     assert_allclose(result["background"].data[0, 10, 10], 81)
-    assert_allclose(result["significance"].data[0, 10, 10], 7.910732, atol=1e-5)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
     assert_allclose(result["err"].data[0, 10, 10], 12.727922, atol=1e-3)
     assert_allclose(result["errp"].data[0, 10, 10], 13.063328, atol=1e-3)
     assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
     assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
 
-    estimator_image = ExcessMapEstimator(0.1 * u.deg, return_image=True)
-    result_image = estimator_image.run(simple_dataset)
+    simple_dataset.exposure += 1e10 * u.cm ** 2 * u.s
+    axis = simple_dataset.exposure.geom.axes[0]
+    simple_dataset.psf = PSFMap.from_gauss(axis, sigma="0.05 deg")
+
+    model = SkyModel(
+        PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1 TeV-1"),
+        GaussianSpatialModel(
+            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+        ),
+        name="sky_model",
+    )
+
+    simple_dataset.models = [model]
+    simple_dataset.npred()
+
+    estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional="all")
+    result = estimator.run(simple_dataset)
+
+    assert_allclose(result["excess"].data.sum(), 19733.602)
+    assert_allclose(result["background"].data.sum(), 31818.398)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, atol=1e-5)
+
+
+def test_significance_map_estimator_map_dataset_on_off_no_correlation(
+    simple_dataset_on_off,
+):
+    exposure = simple_dataset_on_off.exposure
+    exposure.data += 1e6
+
+    # Test with exposure
+    simple_dataset_on_off.exposure = exposure
+    estimator_image = ExcessMapEstimator(
+        0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV, correlate_off=False
+    )
+
+    result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["significance"].data[0, 10, 10], 7.910732, atol=1e-5)
+    assert_allclose(result_image["counts"].data[0, 10, 10], 194)
+    assert_allclose(result_image["excess"].data[0, 10, 10], 97)
+    assert_allclose(result_image["background"].data[0, 10, 10], 97)
+    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 0.780125, atol=1e-3)
+    assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
 
-def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
+def test_significance_map_estimator_map_dataset_on_off_with_correlation(
+    simple_dataset_on_off,
+):
+    exposure = simple_dataset_on_off.exposure
+    exposure.data += 1e6
+
+    # First without exposure
+    simple_dataset_on_off.exposure = None
+
     estimator = ExcessMapEstimator(
-        0.11 * u.deg,
-        selection_optional=None,
-        e_edges=[0.1 * u.TeV, 1 * u.TeV, 10 * u.TeV],
+        0.11 * u.deg, energy_edges=[0.1, 1, 10] * u.TeV, correlate_off=True
     )
     result = estimator.run(simple_dataset_on_off)
 
@@ -136,14 +182,24 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     assert_allclose(result["counts"].data[:, 10, 10], 194)
     assert_allclose(result["excess"].data[:, 10, 10], 97)
     assert_allclose(result["background"].data[:, 10, 10], 97)
-    assert_allclose(result["significance"].data[:, 10, 10], 5.741116, atol=1e-5)
+    assert_allclose(result["sqrt_ts"].data[:, 10, 10], 5.741116, atol=1e-5)
+    assert_allclose(result["flux"].data[:, 10, 10], np.nan)
 
-    estimator_image = ExcessMapEstimator(0.11 * u.deg, e_edges=[0.1 * u.TeV, 1 * u.TeV])
+    # Test with exposure
+    simple_dataset_on_off.exposure = exposure
+    estimator_image = ExcessMapEstimator(
+        0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV, correlate_off=True
+    )
 
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["significance"].data[0, 10, 10], 5.741116, atol=1e-3)
+    assert_allclose(result_image["counts"].data[0, 10, 10], 194)
+    assert_allclose(result_image["excess"].data[0, 10, 10], 97)
+    assert_allclose(result_image["background"].data[0, 10, 10], 97)
+    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 5.741116, atol=1e-3)
+    assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
+    # Test with mask fit
     mask_fit = Map.from_geom(
         simple_dataset_on_off._geom,
         data=np.ones(simple_dataset_on_off.counts.data.shape, dtype=bool),
@@ -152,23 +208,68 @@ def test_significance_map_estimator_map_dataset_on_off(simple_dataset_on_off):
     mask_fit.data[:, 10, :] = False
     simple_dataset_on_off.mask_fit = mask_fit
 
-    estimator_image = ExcessMapEstimator(0.11 * u.deg, apply_mask_fit=True)
-
-    simple_dataset_on_off.exposure.data = (
-        np.ones(simple_dataset_on_off.exposure.data.shape) * 1e6
+    estimator_image = ExcessMapEstimator(
+        0.11 * u.deg, apply_mask_fit=True, correlate_off=True
     )
+
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["counts"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_image["significance"].data[0, 10, 10], 7.186745, atol=1e-3)
-
-    assert_allclose(result_image["counts"].data[0, 10, 10], 304)
-    assert_allclose(result_image["excess"].data[0, 10, 10], 152)
-    assert_allclose(result_image["background"].data[0, 10, 10], 152)
+    assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], np.nan, atol=1e-3)
+    assert_allclose(result_image["counts"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["excess"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["background"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["sqrt_ts"].data[0, 9, 9], 7.186745, atol=1e-3)
+    assert_allclose(result_image["counts"].data[0, 9, 9], 304)
+    assert_allclose(result_image["excess"].data[0, 9, 9], 152)
+    assert_allclose(result_image["background"].data[0, 9, 9], 152)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
-    assert_allclose(result_image["flux"].data[0, 10, 10], 7.6e-9, rtol=1e-3)
+    assert_allclose(result_image["flux"].data[0, 9, 9], 1.52e-8, rtol=1e-3)
 
+    simple_dataset_on_off.psf = None
+
+    # TODO: this has never worked...
+    model = SkyModel(
+        PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
+        GaussianSpatialModel(
+            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+        ),
+        name="sky_model",
+    )
+
+    simple_dataset_on_off.models = [model]
+
+    estimator_mod = ExcessMapEstimator(
+        0.11 * u.deg, apply_mask_fit=False, correlate_off=True
+    )
+    result_mod = estimator_mod.run(simple_dataset_on_off)
+    assert result_mod["counts"].data.shape == (1, 20, 20)
+
+    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 6.240846, atol=1e-3)
+
+    assert_allclose(result_mod["counts"].data[0, 10, 10], 388)
+    assert_allclose(result_mod["excess"].data[0, 10, 10], 148.68057)
+    assert_allclose(result_mod["background"].data[0, 10, 10], 239.31943)
+
+    assert result_mod["flux"].unit == "cm-2s-1"
+    assert_allclose(result_mod["flux"].data[0, 10, 10], 1.486806e-08, rtol=1e-3)
+    assert_allclose(result_mod["flux"].data.sum(), 5.254442192077636e-06, rtol=1e-8)
+
+    spectral_model=PowerLawSpectralModel(index=15)
+    estimator_mod = ExcessMapEstimator(
+        0.11 * u.deg,
+        apply_mask_fit=False,
+        correlate_off=True,
+        spectral_model=spectral_model,
+    )
+    result_mod = estimator_mod.run(simple_dataset_on_off)
+
+    assert result_mod["flux"].unit == "cm-2s-1"
+    assert_allclose(result_mod["flux"].data.sum(), 5.254442192077636e-06, rtol=1e-8)
+
+    reco_exposure=estimate_exposure_reco_energy(simple_dataset_on_off, spectral_model=spectral_model)
+    assert_allclose(reco_exposure.data.sum(), 7.977796e+12, rtol=0.001)
 
 def test_incorrect_selection():
     with pytest.raises(ValueError):

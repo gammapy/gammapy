@@ -1,8 +1,8 @@
 r"""
 .. _exp-cutoff-powerlaw-spectral-model:
 
-Exponential Cutoff Powerlaw Spectral Model
-==========================================
+Exponential cutoff power law spectral model
+===========================================
 
 This model parametrises a cutoff power law spectrum.
 

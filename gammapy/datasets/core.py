@@ -2,15 +2,14 @@
 import abc
 import collections.abc
 import copy
-import numpy as np
 import logging
-from astropy.table import vstack, Table
+import numpy as np
 from astropy import units as u
-from gammapy.modeling.models import Models, ProperModels, BackgroundModel
+from astropy.table import Table, vstack
+from gammapy.data import GTI
+from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
-from gammapy.data import GTI
-
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +41,16 @@ class Dataset(abc.ABC):
         pass
 
     @property
+    def name(self):
+        return self._name
+
+    def to_dict(self):
+        """Convert to dict for YAML serialization."""
+        name = self.name.replace(" ", "_")
+        filename = f"{name}.fits"
+        return {"name": self.name, "type": self.tag, "filename": filename}
+
+    @property
     def mask(self):
         """Combined fit and safe mask"""
         if self.mask_safe is not None and self.mask_fit is not None:
@@ -65,19 +74,23 @@ class Dataset(abc.ABC):
         """Statistic array, one value per data point."""
 
     def copy(self, name=None):
-        """A deep copy."""
+        """A deep copy.
+
+        Parameters
+        ----------
+        name : str
+            Name of the copied dataset
+
+        Returns
+        -------
+        dataset : `Dataset`
+            Copied datasets.
+        """
         new = copy.deepcopy(self)
         name = make_name(name)
         new._name = name
-        # propagate new dataset name
-        if new._models is not None:
-            for m in new._models:
-                if m.datasets_names is not None:
-                    for k, d in enumerate(m.datasets_names):
-                        if d == self.name:
-                            m.datasets_names[k] = name
-                    if hasattr(new, "background_model") and m == new.background_model:
-                        m._name = name + "-bkg"
+        # TODO: check the model behaviour?
+        new.models = None
         return new
 
     @staticmethod
@@ -91,8 +104,7 @@ class Dataset(abc.ABC):
                 residuals = (data - model) / np.sqrt(model)
             else:
                 raise AttributeError(
-                    f"Invalid method: {method!r}. Choose between 'diff',"
-                    " 'diff/model' and 'diff/sqrt(model)'"
+                    f"Invalid method: {method!r} for computing residuals"
                 )
         return residuals
 
@@ -141,7 +153,24 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate model objects have been removed.
         The order of the unique models remains.
         """
-        return ProperModels(self)
+        models = {}
+
+        for dataset in self:
+            if dataset.models is not None:
+                for model in dataset.models:
+                    models[model] = model
+
+        return DatasetModels(list(models.keys()))
+
+    @models.setter
+    def models(self, models):
+        """Unique models (`~gammapy.modeling.Models`).
+
+        Duplicate model objects have been removed.
+        The order of the unique models remains.
+        """
+        for dataset in self:
+            dataset.models = models
 
     @property
     def names(self):
@@ -165,7 +194,7 @@ class Datasets(collections.abc.MutableSequence):
     @property
     def energy_axes_are_aligned(self):
         """Whether all contained datasets have aligned energy axis"""
-        axes = [d.counts.geom.get_axis_by_name("energy") for d in self]
+        axes = [d.counts.geom.axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
     def stat_sum(self):
@@ -205,12 +234,15 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets)
 
-    def slice_energy(self, e_min, e_max):
+    def slice_by_energy(self, energy_min, energy_max):
         """Select and slice datasets in energy range
+
+        The method keeps the current dataset names. Datasets, that do not
+        contribute to the selected energy range are dismissed.
 
         Parameters
         ----------
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
@@ -222,35 +254,16 @@ class Datasets(collections.abc.MutableSequence):
         datasets = []
 
         for dataset in self:
-            # TODO: implement slice_by_coord() and simplify?
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
             try:
-                group = energy_axis.group_table(edges=[e_min, e_max])
+                dataset_sliced = dataset.slice_by_energy(
+                    energy_min=energy_min, energy_max=energy_max, name=dataset.name,
+                )
             except ValueError:
-                log.info(f"Dataset {dataset.name} does not contribute in the energy range")
+                log.info(
+                    f"Dataset {dataset.name} does not contribute in the energy range"
+                )
                 continue
 
-            is_normal = group["bin_type"] == "normal   "
-            group = group[is_normal]
-
-            slices = {"energy": slice(
-                int(group["idx_min"][0]),
-                int(group["idx_max"][0]) + 1)
-            }
-
-            name = f"{dataset.name}-{e_min:.3f}-{e_max:.3f}"
-            dataset_sliced = dataset.slice_by_idx(slices, name=name)
-
-            # TODO: Simplify model handling!!!!
-            models = []
-
-            for model in dataset.models:
-                if isinstance(model, BackgroundModel):
-                    models.append(dataset_sliced.background_model)
-                else:
-                    models.append(model)
-
-            dataset_sliced.models = models
             datasets.append(dataset_sliced)
 
         return self.__class__(datasets=datasets)
@@ -265,18 +278,18 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        e_min, e_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
         """
 
-        e_mins, e_maxs = [], []
+        energy_mins, energy_maxs = [], []
 
         for dataset in self:
-            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
-            e_mins.append(energy_axis.edges[0])
-            e_maxs.append(energy_axis.edges[-1])
+            energy_axis = dataset.counts.geom.axes["energy"]
+            energy_mins.append(energy_axis.edges[0])
+            energy_maxs.append(energy_axis.edges[-1])
 
-        return u.Quantity(e_mins), u.Quantity(e_maxs)
+        return u.Quantity(energy_mins), u.Quantity(energy_maxs)
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n"
@@ -290,7 +303,12 @@ class Datasets(collections.abc.MutableSequence):
                 instrument = set(dataset.meta_table["TELESCOP"]).pop()
             except (KeyError, TypeError):
                 instrument = ""
-            str_ += f"\tInstrument : {instrument}\n\n"
+            str_ += f"\tInstrument : {instrument}\n"
+            if dataset.models:
+                names = dataset.models.names
+            else:
+                names = ""
+            str_ += f"\tModels     : {names}\n\n"
 
         return str_.expandtabs(tabsize=2)
 
@@ -299,22 +317,19 @@ class Datasets(collections.abc.MutableSequence):
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, path, filedata="_datasets.yaml", filemodel="_models.yaml", lazy=True, cache=True):
+    def read(cls, filename, filename_models=None, lazy=True, cache=True):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
         ----------
-        path : str, Path
-            Base directory of the datasets files.
-        filedata : str
-            file path or name of yaml datasets file
-        filemodel : str
-            file path or name of yaml models file
+        filename : str or `Path`
+            File path or name of datasets yaml file
+        filename_models : str or `Path`
+            File path or name of models fyaml ile
         lazy : bool
             Whether to lazy load data into memory
         cache : bool
             Whether to cache the data after loading.
-
 
         Returns
         -------
@@ -323,59 +338,59 @@ class Datasets(collections.abc.MutableSequence):
         """
         from . import DATASET_REGISTRY
 
-        path = make_path(path)
-
-        if (path / filedata).exists():
-            filedata = path / filedata
-        else:
-            filedata = make_path(filedata)
-        if (path / filemodel).exists():
-            filemodel = path / filemodel
-        else:
-            filemodel = make_path(filemodel)
-
-        models = Models.read(filemodel)
-        data_list = read_yaml(filedata)
+        filename = make_path(filename)
+        data_list = read_yaml(filename)
 
         datasets = []
         for data in data_list["datasets"]:
+            path = filename.parent
+
             if (path / data["filename"]).exists():
                 data["filename"] = str(make_path(path / data["filename"]))
 
             dataset_cls = DATASET_REGISTRY.get_cls(data["type"])
-            dataset = dataset_cls.from_dict(data, models, lazy=lazy, cache=cache)
+            dataset = dataset_cls.from_dict(data, lazy=lazy, cache=cache)
             datasets.append(dataset)
-        return cls(datasets)
 
-    def write(self, path, prefix="", overwrite=False, write_covariance=True):
+        datasets = cls(datasets)
+
+        if filename_models:
+            datasets.models = Models.read(filename_models)
+
+        return datasets
+
+    def write(
+        self, filename, filename_models=None, overwrite=False, write_covariance=True
+    ):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
         ----------
-        path : `pathlib.Path`
-            path to write files
-        prefix : str
-            common prefix of file names
+        filename : str or `Path`
+            File path or name of datasets yaml file
+        filename_models : str or `Path`
+            File path or name of models yaml file
         overwrite : bool
             overwrite datasets FITS files
         write_covariance : bool
             save covariance or not
         """
+        path = make_path(filename)
 
-        path = make_path(path).resolve()
-        datasets_dictlist = []
+        data = {"datasets": []}
+
         for dataset in self._datasets:
-            filename = f"{prefix}_data_{dataset.name}.fits"
-            dataset.write(path / filename, overwrite)
-            datasets_dictlist.append(dataset.to_dict(filename=filename))
-        datasets_dict = {"datasets": datasets_dictlist}
+            d = dataset.to_dict()
+            filename = d["filename"]
+            dataset.write(path.parent / filename, overwrite=overwrite)
+            data["datasets"].append(d)
 
-        write_yaml(datasets_dict, path / f"{prefix}_datasets.yaml", sort_keys=False)
-        self.models.write(
-            path / f"{prefix}_models.yaml",
-            overwrite=overwrite,
-            write_covariance=write_covariance,
-        )
+        write_yaml(data, path, sort_keys=False)
+
+        if filename_models:
+            self.models.write(
+                filename_models, overwrite=overwrite, write_covariance=write_covariance,
+            )
 
     def stack_reduce(self, name=None):
         """Reduce the Datasets to a unique Dataset by stacking them together.
@@ -383,9 +398,14 @@ class Datasets(collections.abc.MutableSequence):
         This works only if all Dataset are of the same type and if a proper
         in-place stack method exists for the Dataset type.
 
+        Parameters
+        ----------
+        name : str
+            Name of the stacked dataset.
+
         Returns
         -------
-        dataset : ~gammapy.utils.Dataset
+        dataset : `~gammapy.datasets.Dataset`
             the stacked dataset
         """
         if not self.is_all_same_type:
@@ -393,10 +413,12 @@ class Datasets(collections.abc.MutableSequence):
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        dataset = self[0].copy(name=name)
-        for ds in self[1:]:
-            dataset.stack(ds)
-        return dataset
+        stacked = self[0].to_masked(name=name)
+
+        for dataset in self[1:]:
+            stacked.stack(dataset)
+
+        return stacked
 
     def info_table(self, cumulative=False, region=None):
         """Get info table for datasets.
@@ -414,7 +436,7 @@ class Datasets(collections.abc.MutableSequence):
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        stacked = self[0].copy(name=self[0].name)
+        stacked = self[0].to_masked(name="stacked")
 
         rows = [stacked.info_dict()]
 

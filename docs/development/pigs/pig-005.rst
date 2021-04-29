@@ -3,7 +3,7 @@
 .. _pig-005:
 
 ***************************
-PIG 5 - Gammapy 1.0 Roadmap
+PIG 5 - Gammapy 1.0 roadmap
 ***************************
 
 * Author: Axel Donath, Régis Terrier & Christoph Deil
@@ -170,7 +170,7 @@ Timing Analysis
 Rewrite the current lightcurve estimation . Improve the existing ``Lightcurve``
 class. Implement 3D analysis based lightcurve estimation.
 
-High-level interface
+High level interface
 --------------------
 
 Implement a config-file based high level analysis interface (e.g. as used in

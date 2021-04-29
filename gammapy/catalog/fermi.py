@@ -217,7 +217,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         "ASSOC_GAM2",
         "ASSOC_GAM3",
     ]
-    _ebounds = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
+    _energy_edges = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
 
     def _info_more(self):
         d = self.data
@@ -427,8 +427,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
 
         flux = self._get_flux_values("Flux_Band")
         flux_err = self._get_flux_values("Unc_Flux_Band")
@@ -462,14 +462,31 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         values = self.data[prefix]
         return u.Quantity(values, unit)
 
-    @property
-    def lightcurve(self):
-        """Lightcurve (`~gammapy.estimators.LightCurve`)."""
-        flux = self.data["Flux_History"]
+    def lightcurve(self, interval="1-year"):
+        """Lightcurve (`~gammapy.estimators.LightCurve`).
 
+        Parameters
+        ----------
+        interval : {'1-year', '2-month'}
+            Time interval of the lightcurve. Default is '1-year'. 
+            Note that '2-month' is not available for all catalogue version.
+        """
+
+        if interval == "1-year":
+            tag = "Flux_History"
+        elif interval == "2-month":
+            tag = "Flux2_History"
+            if tag not in self.data:
+                raise ValueError(
+                    "Only '1-year' interval is available for this catalogue version"
+                )
+        else:
+            raise ValueError("Time intervals available are '1-year' or '2-month'")
+
+        flux = self.data[tag]
         # Flux error is given as asymmetric high/low
-        flux_errn = -self.data["Unc_Flux_History"][:, 0]
-        flux_errp = self.data["Unc_Flux_History"][:, 1]
+        flux_errn = -self.data[f"Unc_{tag}"][:, 0]
+        flux_errp = self.data[f"Unc_{tag}"][:, 1]
 
         # Really the time binning is stored in a separate HDU in the FITS
         # catalog file called `Hist_Start`, with a single column `Hist_Start`
@@ -482,8 +499,13 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         # equally-spaced time intervals. This is roughly correct,
         # for plotting the difference doesn't matter, only for analysis
         time_start = Time("2008-08-04T15:43:36.0000")
-        time_end = Time("2016-08-02T05:44:11.9999")
         n_points = len(flux)
+        if n_points in [8, 48]:
+            # 8 = 1/years * 8 years
+            # 48 = (12 month/year / 2month) * 8 years
+            time_end = Time("2016-08-02T05:44:11.9999")
+        else:
+            time_end = Time("2018-08-02T05:44:11.9999")
         time_step = (time_end - time_start) / n_points
         time_bounds = time_start + np.arange(n_points + 1) * time_step
 
@@ -505,8 +527,14 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
 
-    _ebounds = u.Quantity([100, 300, 1000, 3000, 10000, 100000], "MeV")
-    _ebounds_suffix = ["100_300", "300_1000", "1000_3000", "3000_10000", "10000_100000"]
+    _energy_edges = u.Quantity([100, 300, 1000, 3000, 10000, 100000], "MeV")
+    _energy_edges_suffix = [
+        "100_300",
+        "300_1000",
+        "1000_3000",
+        "3000_10000",
+        "10000_100000",
+    ]
     energy_range = u.Quantity([100, 100000], "MeV")
     """Energy range used for the catalog.
 
@@ -726,8 +754,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
 
         flux = self._get_flux_values("Flux")
         flux_err = self._get_flux_values("Unc_Flux")
@@ -754,14 +782,13 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
-        table["sqrt_TS"] = [self.data["Sqrt_TS" + _] for _ in self._ebounds_suffix]
+        table["sqrt_TS"] = [self.data["Sqrt_TS" + _] for _ in self._energy_edges_suffix]
         return FluxPoints(table)
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
-        values = [self.data[prefix + _] for _ in self._ebounds_suffix]
+        values = [self.data[prefix + _] for _ in self._energy_edges_suffix]
         return u.Quantity(values, unit)
 
-    @property
     def lightcurve(self):
         """Lightcurve (`~gammapy.estimators.LightCurve`)."""
         flux = self.data["Flux_History"]
@@ -805,8 +832,8 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
     """
 
     asso = ["ASSOC", "3FGL_Name", "1FHL_Name", "TeVCat_Name"]
-    _ebounds = u.Quantity([50, 171, 585, 2000], "GeV")
-    _ebounds_suffix = ["50_171", "171_585", "585_2000"]
+    _energy_edges = u.Quantity([50, 171, 585, 2000], "GeV")
+    _energy_edges_suffix = ["50_171", "171_585", "585_2000"]
     energy_range = u.Quantity([0.05, 2], "TeV")
     """Energy range used for the catalog."""
 
@@ -921,8 +948,8 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         """Integral flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
         table["flux"] = self._get_flux_values("Flux")
         flux_err = self._get_flux_values("Unc_Flux")
         table["flux_errn"] = np.abs(flux_err[:, 0])
@@ -937,7 +964,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return FluxPoints(table)
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
-        values = [self.data[prefix + _ + "GeV"] for _ in self._ebounds_suffix]
+        values = [self.data[prefix + _ + "GeV"] for _ in self._energy_edges_suffix]
         return u.Quantity(values, unit)
 
 
@@ -951,7 +978,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     energy_range = u.Quantity([0.01, 2], "TeV")
     """Energy range used for the catalog."""
 
-    _ebounds = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
+    _energy_edges = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
 
     def _info_position(self):
         d = self.data
@@ -1094,8 +1121,8 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        table["e_min"] = self._ebounds[:-1]
-        table["e_max"] = self._ebounds[1:]
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
 
         flux = self.data["Flux_Band"]
         flux_err = self.data["Unc_Flux_Band"]
@@ -1203,10 +1230,11 @@ class SourceCatalog3FGL(SourceCatalog):
 
 
 class SourceCatalog4FGL(SourceCatalog):
-    """Fermi-LAT 4FGL source catalog.
+    """Fermi-LAT 4FGL-DR2 source catalog.
 
-    - https://arxiv.org/abs/1902.10045
-    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/8yr_catalog/
+    - https://arxiv.org/abs/1902.10045 (4FGL paper)
+    - https://arxiv.org/abs/2005.11208 (DR2 document)
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/10yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
@@ -1215,7 +1243,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)

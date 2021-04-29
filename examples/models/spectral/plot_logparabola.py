@@ -1,7 +1,7 @@
 r"""
 .. _logparabola-spectral-model:
 
-Log Parabola Spectral Model
+Log parabola spectral model
 ===========================
 
 This model parametrises a log parabola spectrum.

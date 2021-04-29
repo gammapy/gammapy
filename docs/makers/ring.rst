@@ -10,8 +10,24 @@ Ring background
 
 Overview
 --------
-This technique is used in classical Cherenkov astronomy for the 2D image
-computation.
+This background estimation technique is used in classical Cherenkov astronomy
+for 2D image analysis. The working principle is illustrated in `Fig. 1 <figure_ring_background>`_.
+For any given pixel in a counts map the off counts are estimate from a ring
+centered on the test position with a given fixed radius and width. To improve
+the estimate, regions with known gamma-ray emission are excluded from measuring
+the off events. A variation of this methods is given by the "adaptive" ring.
+In some regions (e.g. in the Galactic plane) a lot of gamma-ray emission
+has to be excluded and there are not many regions left to estimate the background
+from. To improve the off statistics in this case, the ring is adaptively
+enlarged to achieve a defined minimal background efficiency ratio (see :ref:`stats_notation`).
+More details on the ring background method can be found in [Berge2007]_.
+
+.. _figure_ring_background:
+
+.. figure:: ../_static/hgps_map_background_estimation.png
+    :width: 50%
+
+    Fig.1, Illustration of the ring background estimation method, taken from [Abdalla2018]_.
 
 To include the classical ring background estimation into a data reduction
 chain, Gammapy provides the `RingBackgroundMaker` and `AdaptiveRingBackgroundMaker`
@@ -44,7 +60,7 @@ A given `MapDataset` has to be reduced to a single image by calling
 	)
 
 	circle = CircleSkyRegion(center=geom.center_skydir, radius=0.2 * u.deg)
-	exclusion_mask = Map.from_geom(geom, data=geom.region_mask([circle], inside=False))
+	exclusion_mask = geom.region_mask([circle], inside=False)
 
 	ring_bkg_maker = RingBackgroundMaker(r_in="0.3 deg", width="0.3 deg", exclusion_mask=exclusion_mask)
 

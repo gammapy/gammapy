@@ -3,10 +3,22 @@ import json
 import numpy as np
 from astropy.io import fits
 from .core import Map
-from .utils import find_bands_hdu, find_hdu
+from .utils import find_bands_hdu, find_hdu, JsonQuantityEncoder
 from .wcs import WcsGeom
 
+
 __all__ = ["WcsMap"]
+
+
+def identify_wcs_format(hdu):
+    if hdu is None:
+        return "gadf"
+    elif hdu.name == "ENERGIES":
+        return "fgst-template"
+    elif hdu.name == "EBOUNDS":
+        return "fgst-ccube"
+    else:
+        return "gadf"
 
 
 class WcsMap(Map):
@@ -74,8 +86,6 @@ class WcsMap(Map):
             be chosen to be center of the map.
         dtype : str, optional
             Data type, default is float32
-        conv : {'fgst-ccube','fgst-template','gadf'}, optional
-            FITS format convention.  Default is 'gadf'.
         meta : `dict`
             Dictionary to store meta data.
         unit : str or `~astropy.units.Unit`
@@ -107,7 +117,7 @@ class WcsMap(Map):
             raise ValueError(f"Invalid map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format="gadf"):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
@@ -118,6 +128,8 @@ class WcsMap(Map):
             Name or index of the HDU with the map data.
         hdu_bands : str
             Name or index of the HDU with the BANDS table.
+        format : {'gadf', 'fgst-ccube', 'fgst-template'}
+            FITS format convention.
 
         Returns
         -------
@@ -135,9 +147,20 @@ class WcsMap(Map):
         if hdu_bands is not None:
             hdu_bands = hdu_list[hdu_bands]
 
-        return cls.from_hdu(hdu, hdu_bands)
+        format = identify_wcs_format(hdu_bands)
 
-    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, conv="gadf"):
+        wcs_map = cls.from_hdu(hdu, hdu_bands, format=format)
+
+        if wcs_map.unit.is_equivalent(""):
+            if format == "fgst-template":
+                if "GTI" in hdu_list:  # exposure maps have an additional GTI hdu
+                    wcs_map.unit = "cm2 s"
+                else:
+                    wcs_map.unit = "cm-2 s-1 MeV-1 sr-1"
+
+        return wcs_map
+
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -149,7 +172,7 @@ class WcsMap(Map):
         sparse : bool
             Sparsify the map by only writing pixels with non-zero
             amplitude.
-        conv : {'gadf', 'fgst-ccube','fgst-template'}
+        format : {'gadf', 'fgst-ccube','fgst-template'}
             FITS format convention.
 
         Returns
@@ -165,23 +188,26 @@ class WcsMap(Map):
         if sparse and hdu == "PRIMARY":
             raise ValueError("Sparse maps cannot be written to the PRIMARY HDU.")
 
-        if conv in ["fgst-ccube", "fgst-template"]:
+        if format in ["fgst-ccube", "fgst-template"]:
             if self.geom.axes[0].name != "energy" or len(self.geom.axes) > 1:
                 raise ValueError(
                     "All 'fgst' formats don't support extra axes except for energy."
                 )
 
+        if hdu_bands is None:
+            hdu_bands = f"{hdu.upper()}_BANDS"
+
         if self.geom.axes:
-            hdu_bands_out = self.geom.make_bands_hdu(
-                hdu=hdu_bands, hdu_skymap=hdu, conv=conv
+            hdu_bands_out = self.geom.to_bands_hdu(
+                hdu_bands=hdu_bands, format=format
             )
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, conv=conv)
+        hdu_out = self.to_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse)
 
-        hdu_out.header["META"] = json.dumps(self.meta)
+        hdu_out.header["META"] = json.dumps(self.meta, cls=JsonQuantityEncoder)
 
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
@@ -195,7 +221,7 @@ class WcsMap(Map):
 
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv=None):
+    def to_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False):
         """Make a FITS HDU from this map.
 
         Parameters
@@ -213,17 +239,22 @@ class WcsMap(Map):
         hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             HDU containing the map data.
         """
-        header = self.geom.make_header()
+        header = self.geom.to_header()
+
+        if self.is_mask:
+            data = self.data.astype(int)
+        else:
+            data = self.data
 
         if hdu_bands is not None:
             header["BANDSHDU"] = hdu_bands
 
         if sparse:
-            hdu_out = self._make_hdu_sparse(self.data, self.geom.npix, hdu, header)
+            hdu_out = self._make_hdu_sparse(data, self.geom.npix, hdu, header)
         elif hdu == "PRIMARY":
-            hdu_out = fits.PrimaryHDU(self.data, header=header)
+            hdu_out = fits.PrimaryHDU(data, header=header)
         else:
-            hdu_out = fits.ImageHDU(self.data, header=header, name=hdu)
+            hdu_out = fits.ImageHDU(data, header=header, name=hdu)
 
         return hdu_out
 

@@ -3,7 +3,7 @@
 .. _pig-009:
 
 **********************
-PIG 9 - Event Sampling
+PIG 9 - Event sampling
 **********************
 
 * Author: Fabio Pintore, Andrea Giuliani, Axel Donath

@@ -5,14 +5,14 @@ from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import GTI, DataStore, EventListBase, ObservationFilter
+from gammapy.data import GTI, DataStore, EventList, ObservationFilter
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import assert_time_allclose, requires_data
 
 
 def test_event_filter_types():
     for method_str in ObservationFilter.EVENT_FILTER_TYPES.values():
-        assert hasattr(EventListBase, method_str)
+        assert hasattr(EventList, method_str)
 
 
 @pytest.fixture(scope="session")
@@ -44,7 +44,7 @@ def test_filter_events(observation):
     target_position = SkyCoord(ra=229.2, dec=-58.3, unit="deg", frame="icrs")
     region_radius = Angle("0.2 deg")
     region = SphericalCircleSkyRegion(center=target_position, radius=region_radius)
-    region_filter = {"type": "sky_region", "opts": {"region": region}}
+    region_filter = {"type": "sky_region", "opts": {"regions": region}}
 
     time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
 

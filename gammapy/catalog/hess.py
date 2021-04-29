@@ -2,12 +2,14 @@
 """HESS Galactic plane survey (HGPS) catalog."""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
+from gammapy.maps import WcsGeom, MapAxis, RegionGeom
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import Model, Models, SkyModel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.regions import list_to_compound_region, compound_region_center
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict
 from .core import SourceCatalog, SourceCatalogObject
@@ -403,18 +405,18 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def energy_range(self):
         """Spectral model energy range (`~astropy.units.Quantity` with length 2)."""
-        emin, emax = (
+        energy_min, energy_max = (
             self.data["Energy_Range_Spec_Min"],
             self.data["Energy_Range_Spec_Max"],
         )
 
-        if np.isnan(emin):
-            emin = u.Quantity(0.2, "TeV")
+        if np.isnan(energy_min):
+            energy_min = u.Quantity(0.2, "TeV")
 
-        if np.isnan(emax):
-            emax = u.Quantity(50, "TeV")
+        if np.isnan(energy_max):
+            energy_max = u.Quantity(50, "TeV")
 
-        return u.Quantity([emin, emax], "TeV")
+        return u.Quantity([energy_min, energy_max], "TeV")
 
     def spectral_model(self, which="best"):
         """Spectral model (`~gammapy.modeling.models.SpectralModel`).
@@ -519,33 +521,79 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
+            
+        Returns
+        -------
+        sky_model : `~gammapy.modeling.models.Models`
+           Models of the catalog object.
+        """
+
+        models = self.components_models(which=which)
+        if len(models) > 1:
+            geom = self._get_components_geom(models)
+            return models.to_template_sky_model(geom=geom, name=self.name)
+        else:
+            return models[0]
+
+    def components_models(self, which="best", linked=False):
+        """Models of the source components.
+
+        Parameters
+        ----------
+        which : {'best', 'pl', 'ecpl'}
+            Which spectral model
+            
+        linked : bool
+             Each sub-component of a source is given as a diffrent `SkyModel`
+             If True the spectral parameters except the mormalisation are linked.
+             Default is False
 
         Returns
         -------
-        sky_model : `~gammapy.modeling.models.SkyModel`
-            Sky model of the catalog object.
+        sky_model : `~gammapy.modeling.models.Models`
+           Models of the catalog object.
         """
+
         spatial_type = self.data["Spatial_Model"]
         if spatial_type in {"2-Gaussian", "3-Gaussian"}:
             models = []
+            spectral_model = self.spectral_model(which=which)
             for component in self.components:
-                spectral_model = self.spectral_model(which=which)
+                spec_component = spectral_model.copy()
                 weight = component.data["Flux_Map"] / self.data["Flux_Map"]
-                spectral_model.parameters["amplitude"].value *= weight
+                spec_component.parameters["amplitude"].value *= weight
+                if linked:
+                    for name in spec_component.parameters.names:
+                        if name not in ["norm", "amplitude"]:
+                            spec_component.__dict__[name] = spectral_model.parameters[
+                                name
+                            ]
                 model = SkyModel(
                     spatial_model=component.spatial_model(),
-                    spectral_model=spectral_model,
+                    spectral_model=spec_component,
                     name=component.name,
                 )
                 models.append(model)
-
-            return Models(models)
         else:
-            return SkyModel(
-                spatial_model=self.spatial_model(),
-                spectral_model=self.spectral_model(which=which),
-                name=self.name,
-            )
+            models = [
+                SkyModel(
+                    spatial_model=self.spatial_model(),
+                    spectral_model=self.spectral_model(which=which),
+                    name=self.name,
+                )
+            ]
+        return Models(models)
+
+    @staticmethod
+    def _get_components_geom(models):
+        energy_axis = MapAxis.from_energy_bounds(
+            "100 GeV", "100 TeV", nbin=10, per_decade=True, name="energy_true"
+        )
+        regions = [m.spatial_model.evaluation_region for m in models]
+        geom = RegionGeom.from_regions(
+            regions, binsz_wcs="0.02 deg", axes=[energy_axis]
+        )
+        return geom.to_wcs_geom()
 
     @property
     def flux_points(self):
@@ -586,24 +634,24 @@ class SourceCatalogHGPS(SourceCatalog):
 
     >>> from gammapy.catalog import SourceCatalogHGPS
     >>> filename = 'hgps_catalog_v1.fits.gz'
-    >>> cat = SourceCatalogHGPS(filename)
+    >>> cat = SourceCatalogHGPS(filename) # doctest: +SKIP
 
     Access a source by name:
 
-    >>> source = cat['HESS J1843-033']
-    >>> print(source)
+    >>> source = cat['HESS J1843-033'] # doctest: +SKIP
+    >>> print(source) # doctest: +SKIP
 
     Access source spectral data and plot it:
 
-    >>> source.spectral_model().plot(source.energy_range)
-    >>> source.spectral_model().plot_error(source.energy_range)
-    >>> source.flux_points.plot()
+    >>> source.spectral_model().plot(source.energy_range) # doctest: +SKIP
+    >>> source.spectral_model().plot_error(source.energy_range) # doctest: +SKIP
+    >>> source.flux_points.plot() # doctest: +SKIP
 
     Gaussian component information can be accessed as well,
     either via the source, or via the catalog:
 
-    >>> source.components
-    >>> cat.gaussian_component(83)
+    >>> source.components # doctest: +SKIP
+    >>> cat.gaussian_component(83) # doctest: +SKIP
     """
 
     tag = "hgps"
@@ -692,6 +740,44 @@ class SourceCatalogHGPS(SourceCatalog):
         data = table_row_to_dict(self.table_components[row_idx])
         data[SourceCatalogObject._row_index_key] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
+
+    def to_models(self, which="best", components_status="independent"):
+        """ Create Models object from catalogue
+
+        Parameters
+        ----------
+        which : {'best', 'pl', 'ecpl'}
+            Which spectral model
+            
+        components_status : {'independent', 'linked', 'merged'}
+            Relation between the sources components:
+                'independent' : each sub-component of a source is given as 
+                                a diffrent `SkyModel` (Default)
+                'linked' : each sub-component of a source is given as 
+                           a diffrent `SkyModel` but the spectral parameters
+                           except the mormalisation are linked.
+                'merged' : the sub-components are merged into a single `SkyModel`
+                           given as a `~gammapy.modeling.models.TemplateSpatialModel`
+                           with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
+                           In that case the relave weigths between the components
+                           cannot be adjusted.
+
+        Returns
+        -------
+        models : `~gammapy.modeling.models.Models`
+            Models of the catalog.
+        """
+
+        models = []
+        for source in self:
+            if components_status == "merged":
+                m = [source.sky_model(which=which)]
+            else:
+                m = source.components_models(
+                    which=which, linked=components_status == "linked"
+                )
+            models.extend(m)
+        return Models(models)
 
 
 class SourceCatalogLargeScaleHGPS:

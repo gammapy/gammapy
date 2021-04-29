@@ -13,6 +13,11 @@ __all__ = [
 ]
 
 
+def is_power2(n):
+    """Check if an integer is a power of 2."""
+    return (n > 0) & ((n & (n - 1)) == 0)
+
+
 def array_stats_str(x, label=""):
     """Make a string summarising some stats for an array.
 
@@ -84,6 +89,22 @@ def shape_divisible_by(shape, factor):
     shape = np.array(shape)
     new_shape = shape + (shape % factor)
     return tuple(new_shape)
+
+
+def round_up_to_odd(f):
+    """Round float to odd integer
+
+    Parameters
+    ----------
+    f : float
+        Float value
+
+    Returns
+    -------
+    int : int
+        Odd integer
+    """
+    return (np.ceil(f) // 2 * 2 + 1).astype(int)
 
 
 def symmetric_crop_pad_width(shape, new_shape):

@@ -12,7 +12,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap, RegionGeom
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -36,30 +36,24 @@ def observations_cta_dc1():
 def spectrum_dataset_gc():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-1, 2, 13) * u.TeV, name="energy_true")
-    pos = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
-    return SpectrumDataset.create(e_reco, e_true, region=region)
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.11)", axes=[e_reco])
+    return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
 @pytest.fixture()
 def spectrum_dataset_crab():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
-    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
-    return SpectrumDataset.create(e_reco, e_true, region=region)
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco], binsz_wcs="0.01deg")
+    return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
 @pytest.fixture()
 def spectrum_dataset_crab_fine():
     e_true = MapAxis.from_edges(np.logspace(-2, 2.5, 109) * u.TeV, name="energy_true")
-    e_reco = MapAxis.from_edges(np.logspace(-2, 2, 73) * u.TeV, name="energy")
-    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
-    radius = Angle(0.11, "deg")
-    region = CircleSkyRegion(pos, radius)
-    return SpectrumDataset.create(e_reco, e_true, region=region)
+    e_reco = MapAxis.from_energy_edges(np.logspace(-2, 2, 73) * u.TeV)
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco])
+    return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
 @pytest.fixture
@@ -67,8 +61,7 @@ def reflected_regions_bkg_maker():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
     geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
-    mask = geom.region_mask([exclusion_region], inside=False)
-    exclusion_mask = WcsNDMap(geom, data=mask)
+    exclusion_mask = ~geom.region_mask([exclusion_region])
 
     return ReflectedRegionsBackgroundMaker(
         exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
@@ -76,27 +69,69 @@ def reflected_regions_bkg_maker():
 
 
 @requires_data()
-def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
+def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
     datasets = []
-    maker = SpectrumDatasetMaker()
+    maker = SpectrumDatasetMaker(use_region_center=True)
 
     for obs in observations_hess_dl3:
         dataset = maker.run(spectrum_dataset_crab, obs)
         datasets.append(dataset)
 
+    assert isinstance(datasets[0], SpectrumDataset)
+
     assert_allclose(datasets[0].counts.data.sum(), 100)
     assert_allclose(datasets[1].counts.data.sum(), 92)
 
-    assert_allclose(datasets[0].livetime.value, 1581.736758)
-    assert_allclose(datasets[1].livetime.value, 1572.686724)
+    assert_allclose(datasets[0].exposure.meta["livetime"].value, 1581.736758)
+    assert_allclose(datasets[1].exposure.meta["livetime"].value, 1572.686724)
 
-    assert_allclose(datasets[0].background_model.map.data.sum(), 7.74732, rtol=1e-5)
-    assert_allclose(datasets[1].background_model.map.data.sum(), 6.118879, rtol=1e-5)
+    assert_allclose(datasets[0].npred_background().data.sum(), 7.747881, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.731624, rtol=1e-5)
+
+
+@requires_data()
+def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
+    datasets = []
+    maker = SpectrumDatasetMaker(use_region_center=False)
+
+    datasets = []
+    for obs in observations_hess_dl3:
+        dataset = maker.run(spectrum_dataset_crab, obs)
+        datasets.append(dataset)
+
+    # Exposure
+    assert_allclose(datasets[0].exposure.data.sum(), 7374718644.757894)
+    assert_allclose(datasets[1].exposure.data.sum(), 6691006466.659032)
+
+    # Background
+    assert_allclose(datasets[0].npred_background().data.sum(), 7.7429157, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 5.7314076, rtol=1e-5)
+
+    # Compare background with using bigger region
+    e_reco = datasets[0].background.geom.axes['energy']
+    e_true = datasets[0].exposure.geom.axes['energy_true']
+    geom_bigger = RegionGeom.create("icrs;circle(83.63, 22.01, 0.22)", axes=[e_reco])
+
+    datasets_big_region = []
+    bigger_region_dataset = SpectrumDataset.create(geom=geom_bigger, energy_axis_true=e_true)
+    for obs in observations_hess_dl3:
+        dataset = maker.run(bigger_region_dataset, obs)
+        datasets_big_region.append(dataset)
+
+    ratio_regions = datasets[0].counts.geom.solid_angle()/datasets_big_region[1].counts.geom.solid_angle()
+    ratio_bg_1 = datasets[0].npred_background().data.sum()/ datasets_big_region[0].npred_background().data.sum()
+    ratio_bg_2 = datasets[1].npred_background().data.sum()/ datasets_big_region[1].npred_background().data.sum()
+    assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2)
+    assert_allclose(ratio_bg_2, ratio_regions, rtol=1e-2)
+
+    #Edisp -> it isn't exactly 8, is that right? it also isn't without averaging
+    assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
+    assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
 
 
 @requires_data()
 def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_dc1):
-    maker = SpectrumDatasetMaker()
+    maker = SpectrumDatasetMaker(use_region_center=True)
 
     datasets = []
 
@@ -107,17 +142,17 @@ def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_d
     assert_allclose(datasets[0].counts.data.sum(), 53)
     assert_allclose(datasets[1].counts.data.sum(), 47)
 
-    assert_allclose(datasets[0].livetime.value, 1764.000034)
-    assert_allclose(datasets[1].livetime.value, 1764.000034)
+    assert_allclose(datasets[0].exposure.meta["livetime"].value, 1764.000034)
+    assert_allclose(datasets[1].exposure.meta["livetime"].value, 1764.000034)
 
-    assert_allclose(datasets[0].background_model.map.data.sum(), 2.238345, rtol=1e-5)
-    assert_allclose(datasets[1].background_model.map.data.sum(), 2.164593, rtol=1e-5)
+    assert_allclose(datasets[0].npred_background().data.sum(), 2.238805, rtol=1e-5)
+    assert_allclose(datasets[1].npred_background().data.sum(), 2.165188, rtol=1e-5)
 
 
 @requires_data()
 def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
 
-    safe_mask_maker = SafeMaskMaker()
+    safe_mask_maker = SafeMaskMaker(bias_percent=20)
     maker = SpectrumDatasetMaker()
 
     obs = observations_hess_dl3[0]
@@ -127,13 +162,13 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert dataset.energy_range[0].unit == "TeV"
 
     mask_safe = safe_mask_maker.make_mask_energy_aeff_max(dataset)
-    assert mask_safe.sum() == 4
+    assert mask_safe.data.sum() == 4
 
     mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert mask_safe.sum() == 3
+    assert mask_safe.data.sum() == 2
 
     mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert mask_safe.sum() == 3
+    assert mask_safe.data.sum() == 3
 
 
 @requires_data()
@@ -169,7 +204,7 @@ class TestSpectrumMakerChain:
             (
                 dict(containment_correction=False),
                 dict(
-                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.235864
+                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.23635
                 ),
             ),
             (
@@ -177,8 +212,8 @@ class TestSpectrumMakerChain:
                 dict(
                     n_on=125,
                     sigma=18.953014,
-                    aeff=361924.746081 * u.m ** 2,
-                    edisp=0.235864,
+                    aeff=375314.356461 * u.m ** 2,
+                    edisp=0.23635,
                 ),
             ),
         ],
@@ -201,19 +236,20 @@ class TestSpectrumMakerChain:
         dataset = reflected_regions_bkg_maker.run(dataset, obs)
         dataset = safe_mask_maker.run(dataset, obs)
 
-        aeff_actual = (
-            dataset.aeff.interp_by_coord(
+        exposure_actual = (
+            dataset.exposure.interp_by_coord(
                 {
                     "energy_true": 5 * u.TeV,
                     "skycoord": dataset.counts.geom.center_skydir,
                 }
             )
-            * u.m ** 2
+            * dataset.exposure.unit
         )
 
-        edisp_actual = dataset._edisp_kernel.data.evaluate(
+        edisp_actual = dataset.edisp.get_edisp_kernel().evaluate(
             energy_true=5 * u.TeV, energy=5.2 * u.TeV
         )
+        aeff_actual = exposure_actual / dataset.exposure.meta["livetime"]
 
         assert_quantity_allclose(aeff_actual, results["aeff"], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results["edisp"], rtol=1e-3)
@@ -221,8 +257,8 @@ class TestSpectrumMakerChain:
         # TODO: Introduce assert_stats_allclose
         info = dataset.info_dict()
 
-        assert info["n_on"] == results["n_on"]
-        assert_allclose(info["significance"], results["sigma"], rtol=1e-2)
+        assert info["counts"] == results["n_on"]
+        assert_allclose(info["sqrt_ts"], results["sigma"], rtol=1e-2)
 
         gti_obs = obs.gti.table
         gti_dataset = dataset.gti.table
@@ -241,4 +277,4 @@ class TestSpectrumMakerChain:
         dataset = safe_mask_maker.run(dataset, obs)
 
         actual = dataset.energy_range[0]
-        assert_quantity_allclose(actual, 0.8799225 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(actual, 0.774264 * u.TeV, rtol=1e-3)

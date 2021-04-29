@@ -9,7 +9,6 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from .gti import GTI
 
 __all__ = ["ObservationTable"]
 
@@ -249,23 +248,23 @@ class ObservationTable(Table):
         ...                  lat=Angle(0, 'deg'),
         ...                  radius=Angle(5, 'deg'),
         ...                  border=Angle(2, 'deg'))
-        >>> selected_obs_table = obs_table.select_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection) # doctest: +SKIP
 
         >>> selection = dict(type='time_box',
-        ...                  time_range=Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00']))
-        >>> selected_obs_table = obs_table.select_observations(selection)
+        ...                  time_range=Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'])) # doctest: +SKIP
+        >>> selected_obs_table = obs_table.select_observations(selection) # doctest: +SKIP
 
         >>> selection = dict(type='par_box', variable='ALT',
         ...                  value_range=Angle([60., 70.], 'deg'))
-        >>> selected_obs_table = obs_table.select_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection) # doctest: +SKIP
 
         >>> selection = dict(type='par_box', variable='OBS_ID',
         ...                  value_range=[2, 5])
-        >>> selected_obs_table = obs_table.select_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection) # doctest: +SKIP
 
         >>> selection = dict(type='par_box', variable='N_TELS',
         ...                  value_range=[4, 4])
-        >>> selected_obs_table = obs_table.select_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection) # doctest: +SKIP
         """
         if "inverted" not in selection:
             selection["inverted"] = False

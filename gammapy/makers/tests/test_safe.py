@@ -16,7 +16,7 @@ def observations():
 
 
 @requires_data()
-def test_safe_mask_maker(observations):
+def test_safe_mask_maker(observations, caplog):
     obs = observations[0]
 
     axis = MapAxis.from_bounds(
@@ -41,13 +41,15 @@ def test_safe_mask_maker(observations):
     mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(
         dataset=dataset, observation=obs
     )
-    assert_allclose(mask_energy_aeff_default.sum(), 1936)
+    assert_allclose(mask_energy_aeff_default.data.sum(), 1936)
 
     mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
-    assert_allclose(mask_aeff_max.sum(), 1210)
+    assert_allclose(mask_aeff_max.data.sum(), 1210)
 
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert_allclose(mask_edisp_bias.sum(), 1815)
+    assert_allclose(mask_edisp_bias.data.sum(), 1815)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert_allclose(mask_bkg_peak.sum(), 1815)
+    assert_allclose(mask_bkg_peak.data.sum(), 1815)      
+    assert caplog.records[-1].levelname == "WARNING"
+    assert caplog.records[-1].message == "No default thresholds defined for obs 110380"

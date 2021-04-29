@@ -21,10 +21,15 @@ class SherpaLikelihood(Likelihood):
 
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
-        return self.function(), 0
+        total_stat = self.function()
+
+        if self.store_trace:
+            self.store_trace_iteration(total_stat)
+
+        return total_stat, 0
 
 
-def optimize_sherpa(parameters, function, **kwargs):
+def optimize_sherpa(parameters, function, store_trace=False, **kwargs):
     """Sherpa optimization wrapper method.
 
     Parameters
@@ -49,7 +54,7 @@ def optimize_sherpa(parameters, function, **kwargs):
     parmins = [par.factor_min for par in parameters.free_parameters]
     parmaxes = [par.factor_max for par in parameters.free_parameters]
 
-    statfunc = SherpaLikelihood(function, parameters)
+    statfunc = SherpaLikelihood(function, parameters, store_trace)
 
     with np.errstate(invalid="ignore"):
         result = optimizer.fit(
@@ -57,7 +62,12 @@ def optimize_sherpa(parameters, function, **kwargs):
         )
 
     factors = result[1]
-    info = {"success": result[0], "message": result[3], "nfev": result[4]["nfev"]}
+    info = {
+        "success": result[0],
+        "message": result[3],
+        "nfev": result[4]["nfev"],
+        "trace": statfunc.trace,
+    }
 
     return factors, info, optimizer
 

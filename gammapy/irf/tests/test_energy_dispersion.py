@@ -4,29 +4,30 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.irf import EDispKernel, EnergyDispersion2D
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, MapAxes
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 class TestEDispKernel:
     def setup(self):
-        self.e_true = np.logspace(0, 1, 101) * u.TeV
-        self.e_reco = self.e_true
+        energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=100)
+        energy_axis_true = energy_axis.copy(name="energy_true")
+
         self.resolution = 0.1
         self.bias = 0
         self.edisp = EDispKernel.from_gauss(
-            e_true=self.e_true,
-            e_reco=self.e_reco,
+            energy_axis_true=energy_axis_true,
+            energy_axis=energy_axis,
             pdf_threshold=1e-7,
             sigma=self.resolution,
             bias=self.bias,
         )
 
     def test_from_diagonal_response(self):
-        e_true = [0.5, 1, 2, 4, 6] * u.TeV
-        e_reco = [2, 4, 6] * u.TeV
+        energy_axis_true = MapAxis.from_energy_edges([0.5, 1, 2, 4, 6] * u.TeV, name="energy_true")
+        energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
 
-        edisp = EDispKernel.from_diagonal_response(e_true, e_reco)
+        edisp = EDispKernel.from_diagonal_response(energy_axis_true, energy_axis)
 
         assert edisp.pdf_matrix.shape == (4, 2)
         expected = [[0, 0], [0, 0], [1, 0], [0, 1]]
@@ -34,20 +35,23 @@ class TestEDispKernel:
         assert_equal(edisp.pdf_matrix, expected)
 
         # Test square matrix
-        edisp = EDispKernel.from_diagonal_response(e_true)
-        assert_allclose(edisp.e_reco.edges.value, e_true.value)
-        assert edisp.e_reco.unit == "TeV"
+        edisp = EDispKernel.from_diagonal_response(energy_axis_true)
+        assert_allclose(edisp.axes["energy"].edges, edisp.axes["energy_true"].edges)
+        assert edisp.axes["energy"].unit == "TeV"
         assert_equal(edisp.pdf_matrix[0][0], 1)
         assert_equal(edisp.pdf_matrix[2][0], 0)
         assert edisp.pdf_matrix.sum() == 4
 
     def test_to_image(self):
-        e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
-        e_true = MapAxis.from_energy_bounds(
+        energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
+        energy_axis_true = MapAxis.from_energy_bounds(
             "0.08 TeV", "20 TeV", nbin=5, name="energy_true"
         )
         edisp = EDispKernel.from_gauss(
-            e_reco=e_reco.edges, e_true=e_true.edges, sigma=0.2, bias=0.1
+            energy_axis=energy_axis,
+            energy_axis_true=energy_axis_true,
+            sigma=0.2,
+            bias=0.1
         )
         im = edisp.to_image()
 
@@ -55,14 +59,14 @@ class TestEDispKernel:
         assert_allclose(
             im.pdf_matrix, [[0.97142], [1.0], [1.0], [1.0], [0.12349]], rtol=1e-3
         )
-        assert_allclose(im.e_reco.edges, [0.1, 10] * u.TeV)
+        assert_allclose(im.axes["energy"].edges, [0.1, 10] * u.TeV)
 
     def test_str(self):
         assert "EDispKernel" in str(self.edisp)
 
     def test_evaluate(self):
         # Check for correct normalization
-        pdf = self.edisp.data.evaluate(energy_true=3.34 * u.TeV)
+        pdf = self.edisp.evaluate(energy_true=3.34 * u.TeV)
         assert_allclose(np.sum(pdf), 1, atol=1e-2)
 
     def test_get_bias(self):
@@ -105,12 +109,24 @@ class TestEnergyDispersion2D:
         cls.edisp = EnergyDispersion2D.read(filename, hdu="EDISP")
 
         # Make a test case
-        e_true = np.logspace(-1.0, 2.0, 51) * u.TeV
-        migra = np.linspace(0.0, 4.0, 1001)
-        offset = np.linspace(0.0, 2.5, 5) * u.deg
-        sigma = 0.15 / (e_true[:-1] / (1 * u.TeV)).value ** 0.3
-        bias = 1e-3 * (e_true[:-1] - 1 * u.TeV).value
-        cls.edisp2 = EnergyDispersion2D.from_gauss(e_true, migra, bias, sigma, offset)
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "0.1 TeV", "100 TeV", nbin=50, name="energy_true"
+        )
+
+        migra_axis = MapAxis.from_bounds(0, 4, nbin=1000, node_type="edges", name="migra")
+        offset_axis = MapAxis.from_bounds(0, 2.5, nbin=5, unit="deg", name="offset")
+
+        energy_true = energy_axis_true.edges[:-1]
+        sigma = 0.15 / (energy_true / (1 * u.TeV)).value ** 0.3
+        bias = 1e-3 * (energy_true - 1 * u.TeV).value
+
+        cls.edisp2 = EnergyDispersion2D.from_gauss(
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            bias=bias,
+            sigma=sigma,
+            offset_axis=offset_axis
+        )
 
     def test_str(self):
         assert "EnergyDispersion2D" in str(self.edisp)
@@ -120,7 +136,7 @@ class TestEnergyDispersion2D:
         energy = [1, 2] * u.TeV
         migra = np.array([0.98, 0.97, 0.7])
         offset = [0.1, 0.2, 0.3, 0.4] * u.deg
-        actual = self.edisp.data.evaluate(
+        actual = self.edisp.evaluate(
             energy_true=energy.reshape(-1, 1, 1),
             migra=migra.reshape(1, -1, 1),
             offset=offset.reshape(1, 1, -1),
@@ -128,57 +144,42 @@ class TestEnergyDispersion2D:
         assert_allclose(actual.shape, (2, 3, 4))
 
         # Check evaluation at all nodes
-        actual = self.edisp.data.evaluate().shape
+        actual = self.edisp.evaluate().shape
         desired = (
-            self.edisp.data.axis("energy_true").nbin,
-            self.edisp.data.axis("migra").nbin,
-            self.edisp.data.axis("offset").nbin,
+            self.edisp.axes["energy_true"].nbin,
+            self.edisp.axes["migra"].nbin,
+            self.edisp.axes["offset"].nbin,
         )
         assert_equal(actual, desired)
-
-    def test_get_response(self):
-        pdf = self.edisp2.get_response(offset=0.7 * u.deg, e_true=1 * u.TeV)
-        assert_allclose(pdf.sum(), 1)
-        assert_allclose(pdf.max(), 0.010421, rtol=1e-4)
 
     def test_exporter(self):
         # Check RMF exporter
         offset = Angle(0.612, "deg")
         e_reco = MapAxis.from_energy_bounds(1, 10, 7, "TeV").edges
         e_true = MapAxis.from_energy_bounds(0.8, 5, 5, "TeV").edges
-        rmf = self.edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
+        rmf = self.edisp.to_edisp_kernel(offset, energy_true=e_true, energy=e_reco)
         assert_allclose(rmf.data.data[2, 3], 0.08, atol=5e-2)  # same tolerance as above
-        actual = rmf.pdf_matrix[2]
-        e_val = np.sqrt(e_true[2] * e_true[3])
-        desired = self.edisp.get_response(offset, e_val, e_reco)
-        assert_equal(actual, desired)
 
     def test_write(self):
-        energy_lo = np.logspace(0, 1, 11)[:-1] * u.TeV
-        energy_hi = np.logspace(0, 1, 11)[1:] * u.TeV
-        offset_lo = np.linspace(0, 1, 4)[:-1] * u.deg
-        offset_hi = np.linspace(0, 1, 4)[1:] * u.deg
-        migra_lo = np.linspace(0, 3, 4)[:-1]
-        migra_hi = np.linspace(0, 3, 4)[1:]
-
-        data = (
-            np.ones(shape=(len(energy_lo), len(migra_lo), len(offset_lo))) * u.cm * u.cm
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "1 TeV", "10 TeV", nbin=10, name="energy_true"
         )
 
-        edisp = EnergyDispersion2D(
-            e_true_lo=energy_lo,
-            e_true_hi=energy_hi,
-            migra_lo=migra_lo,
-            migra_hi=migra_hi,
-            offset_lo=offset_lo,
-            offset_hi=offset_hi,
-            data=data,
+        offset_axis = MapAxis.from_bounds(
+            0, 1, nbin=3, unit="deg", name="offset", node_type="edges"
         )
 
-        hdu = edisp.to_fits()
-        energy = edisp.data.axis("energy_true").edges
+        migra_axis = MapAxis.from_bounds(0, 3, nbin=3, name="migra", node_type="edges")
+
+        axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
+
+        data = np.ones(shape=axes.shape)
+        edisp = EnergyDispersion2D(axes=axes, data=data)
+
+        hdu = edisp.to_table_hdu()
+        energy = edisp.axes["energy_true"].edges
         assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
-        assert hdu.header["TUNIT1"] == edisp.data.axis("energy_true").unit
+        assert hdu.header["TUNIT1"] == edisp.axes["energy_true"].unit
 
     @requires_dependency("matplotlib")
     def test_plot_migration(self):

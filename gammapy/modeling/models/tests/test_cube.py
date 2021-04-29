@@ -3,24 +3,31 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import SkyCoord
 from astropy.time import Time
+from regions import CircleSkyRegion
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     BackgroundModel,
+    CompoundSpectralModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
+    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
-    SkyDiffuseCube,
     SkyModel,
+    SpatialModel,
+    TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -56,7 +63,8 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    return SkyDiffuseCube(m)
+    spatial_model = TemplateSpatialModel(m, normalize=False)
+    return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
 @pytest.fixture(scope="session")
@@ -88,9 +96,11 @@ def background(geom):
 
 @pytest.fixture(scope="session")
 def edisp(geom, geom_true):
-    e_reco = geom.get_axis_by_name("energy").edges
-    e_true = geom_true.get_axis_by_name("energy_true").edges
-    return EDispKernel.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+    e_reco = geom.axes["energy"]
+    e_true = geom_true.axes["energy_true"]
+    return EDispKernel.from_diagonal_response(
+        energy_axis_true=e_true, energy_axis=e_reco
+    )
 
 
 @pytest.fixture(scope="session")
@@ -336,7 +346,7 @@ class TestSkyModel:
         sky_model.apply_irf["edisp"] = True
 
 
-class TestSkyDiffuseCube:
+class Test_Template_with_cube:
     @staticmethod
     def test_evaluate_scalar(diffuse_model):
         # Check pixel inside map
@@ -367,8 +377,9 @@ class TestSkyDiffuseCube:
     @staticmethod
     @requires_data()
     def test_read():
-        model = SkyDiffuseCube.read(
-            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"
+        model = TemplateSpatialModel.read(
+            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits",
+            normalize=False,
         )
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 
@@ -412,7 +423,7 @@ class TestSkyDiffuseCube:
         assert "datasets_names" not in out
 
 
-class TestSkyDiffuseCubeMapEvaluator:
+class Test_template_cube_MapEvaluator:
     @staticmethod
     def test_compute_dnde(diffuse_evaluator):
         out = diffuse_evaluator.compute_dnde()
@@ -426,8 +437,8 @@ class TestSkyDiffuseCubeMapEvaluator:
         out = diffuse_evaluator.compute_flux()
         assert out.data.shape == (3, 4, 5)
         out = out.quantity.to("cm-2 s-1")
-        assert_allclose(out.value.sum(), 633263.444803, rtol=1e-5)
-        assert_allclose(out.value[0, 0, 0], 1164.656176, rtol=1e-5)
+        assert_allclose(out.value.sum(), 633263.444803, rtol=5e-3)
+        assert_allclose(out.value[0, 0, 0], 1164.656176, rtol=5e-3)
 
     @staticmethod
     def test_apply_psf(diffuse_evaluator):
@@ -435,8 +446,8 @@ class TestSkyDiffuseCubeMapEvaluator:
         npred = diffuse_evaluator.apply_exposure(flux)
         out = diffuse_evaluator.apply_psf(npred)
         assert out.data.shape == (3, 4, 5)
-        assert_allclose(out.data.sum(), 1.106404e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 5.586508e08, rtol=1e-5)
+        assert_allclose(out.data.sum(), 1.106404e12, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 5.586508e08, rtol=5e-3)
 
     @staticmethod
     def test_apply_edisp(diffuse_evaluator):
@@ -444,15 +455,15 @@ class TestSkyDiffuseCubeMapEvaluator:
         npred = diffuse_evaluator.apply_exposure(flux)
         out = diffuse_evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.sum(), 1.606345e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.164656e09, rtol=1e-5)
+        assert_allclose(out.data.sum(), 1.606345e12, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 1.83018e10, rtol=5e-3)
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.sum(), 1.106403e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 5.586508e08, rtol=1e-5)
+        assert_allclose(out.data.sum(), 1.106403e12, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=5e-3)
 
 
 class TestSkyModelMapEvaluator:
@@ -486,8 +497,8 @@ class TestSkyModelMapEvaluator:
         npred = evaluator.apply_exposure(flux)
         out = evaluator.apply_psf(npred)
         assert out.data.shape == (3, 4, 5)
-        assert_allclose(out.data.sum(), 3.862314e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 4.126612e-08, rtol=1e-5)
+        assert_allclose(out.data.sum(), 3.862314e-06, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 4.126612e-08, rtol=5e-3)
 
     @staticmethod
     def test_apply_edisp(evaluator):
@@ -496,14 +507,14 @@ class TestSkyModelMapEvaluator:
         out = evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 5.615601e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 7.938388e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.33602e-07, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(evaluator, gti):
         out = evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.sum(), 3.862314e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 4.126612e-08, rtol=1e-5)
+        assert_allclose(out.data.sum(), 3.862314e-06, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 6.94503e-08, rtol=5e-3)
 
 
 def test_sky_point_source():
@@ -553,3 +564,84 @@ def test_fermi_isotropic():
 
     assert_allclose(flux.value, 1.463e-13, rtol=1e-3)
     assert flux.unit == "MeV-1 cm-2 s-1 sr-1"
+    assert isinstance(model.spectral_model, CompoundSpectralModel)
+
+
+class MyCustomGaussianModel(SpatialModel):
+    """My custom gaussian model.
+
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    sigma_1TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 1 TeV
+    sigma_10TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 10 TeV
+
+    """
+
+    tag = "MyCustomGaussianModel"
+    lon_0 = Parameter("lon_0", "0 deg")
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
+
+    sigma_1TeV = Parameter("sigma_1TeV", "1 deg", min=0)
+    sigma_10TeV = Parameter("sigma_10TeV", "0.5 deg", min=0)
+
+    @staticmethod
+    def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
+        """Evaluate custom Gaussian model"""
+        sigmas = u.Quantity([sigma_1TeV, sigma_10TeV])
+        energy_nodes = [1, 10] * u.TeV
+        sigma = np.interp(energy, energy_nodes, sigmas)
+
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+
+        exponent = -0.5 * (sep / sigma) ** 2
+        norm = 1 / (2 * np.pi * sigma ** 2)
+        return norm * np.exp(exponent)
+
+    @property
+    def evaluation_radius(self):
+        """Evaluation radius (`~astropy.coordinates.Angle`)."""
+        return 5 * self.sigma_1TeV.quantity
+
+
+def test_energy_dependent_model(geom_true):
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    spatial_model = MyCustomGaussianModel(frame="galactic")
+    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    model = sky_model.integrate_geom(geom_true)
+
+    assert_allclose(model.data.sum(), 1.678314e-14, rtol=1e-3)
+
+
+@requires_dependency("matplotlib")
+def test_plot_grid(geom_true):
+    spatial_model = MyCustomGaussianModel(frame="galactic")
+    with mpl_plot_check():
+        spatial_model.plot_grid(geom=geom_true)
+
+
+def test_sky_model_create():
+    m = SkyModel.create("pl", "point", name="my-source")
+    assert isinstance(m.spatial_model, PointSpatialModel)
+    assert isinstance(m.spectral_model, PowerLawSpectralModel)
+    assert m.name == "my-source"
+
+
+def test_integrate_geom():
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
+
+    center = SkyCoord("0d", "0d", frame="icrs")
+    radius = 0.3 * u.deg
+    square = CircleSkyRegion(center, radius)
+
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
+    geom = RegionGeom(region=square, axes=[axis], binsz_wcs="0.01deg")
+
+    integral = sky_model.integrate_geom(geom).data
+
+    assert_allclose(integral / 1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)

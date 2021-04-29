@@ -10,6 +10,8 @@ __all__ = [
     "interpolate_profile",
 ]
 
+INTERPOLATION_ORDER = {None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3}
+
 
 class ScaledRegularGridInterpolator:
     """Thin wrapper around `scipy.interpolate.RegularGridInterpolator`.
@@ -69,7 +71,6 @@ class ScaledRegularGridInterpolator:
             kwargs.setdefault("fill_value", None)
 
         if axis is None:
-            # print(points_scaled, values_scaled)
             self._interpolate = scipy.interpolate.RegularGridInterpolator(
                 points=points_scaled, values=values_scaled, **kwargs
             )
@@ -138,7 +139,7 @@ class InterpolationScale:
 
     def __call__(self, values):
         if hasattr(self, "_unit"):
-            values = values.to_value(self._unit)
+            values = u.Quantity(values, copy=False).to_value(self._unit)
         else:
             if isinstance(values, u.Quantity):
                 self._unit = values.unit
@@ -216,3 +217,4 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
     return ScaledRegularGridInterpolator(
         points=(x,), values=sign * y, values_scale=interp_scale
     )
+

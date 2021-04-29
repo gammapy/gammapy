@@ -1,21 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import pytest
+import numpy as np
 from gammapy.datasets import Datasets
-from gammapy.modeling.sampling import run_mcmc, ln_uniform_prior
-from gammapy.utils.testing import requires_dependency, requires_data
+from gammapy.modeling.models import Models
+from gammapy.modeling.sampling import ln_uniform_prior, run_mcmc
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
 def dataset():
-    dataset = Datasets.read(
-        "$GAMMAPY_DATA/fermi-3fhl-crab/",
-        "Fermi-LAT-3FHL_datasets.yaml",
-        "Fermi-LAT-3FHL_models.yaml",
-    )
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+    models = Models.read(filename_models)
 
     # Define the free parameters and min, max values
-    parameters = dataset.models.parameters
+    parameters = models.parameters
     parameters["lon_0"].frozen = False
     parameters["lat_0"].frozen = False
     parameters["norm"].frozen = True
@@ -28,7 +26,10 @@ def dataset():
     parameters["amplitude"].min = 0.01 * parameters["amplitude"].value
     parameters["amplitude"].max = 100 * parameters["amplitude"].value
 
-    return dataset
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    datasets = Datasets.read(filename=filename)
+    datasets.models = models
+    return datasets
 
 
 @requires_data()
@@ -51,3 +52,14 @@ def test_runmcmc(dataset):
 
     sampler = run_mcmc(dataset, nwalkers=6, nrun=10)  # to speedup the test
     assert isinstance(sampler, emcee.ensemble.EnsembleSampler)
+
+
+@requires_dependency("emcee")
+@requires_data()
+def test_runmcmc_noprior(dataset, caplog):
+   # Running a small MCMC on pregenerated datasets
+   dataset.models.parameters["lon_0"].max = np.nan
+   dataset.models.parameters["lon_0"].min = np.nan
+   sampler = run_mcmc(dataset, nwalkers=6, nrun=10)
+   assert "WARNING" in [_.levelname for _ in caplog.records]
+   assert "Missing prior for parameter: lon_0.\nMCMC will likely fail!" in [_.message for _ in caplog.records]

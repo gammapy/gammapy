@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import sys
 import logging
+import sys
 from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
 from astropy.units import Quantity
@@ -23,7 +23,14 @@ class HDULocation:
     """
 
     def __init__(
-        self, hdu_class, base_dir=".", file_dir=None, file_name=None, hdu_name=None, cache=True
+        self,
+        hdu_class,
+        base_dir=".",
+        file_dir=None,
+        file_name=None,
+        hdu_name=None,
+        cache=True,
+        format=None
     ):
         self.hdu_class = hdu_class
         self.base_dir = base_dir
@@ -31,6 +38,7 @@ class HDULocation:
         self.file_name = file_name
         self.hdu_name = hdu_name
         self.cache = cache
+        self.format = format
 
     def info(self, file=None):
         """Print some summary info to stdout."""
@@ -68,6 +76,7 @@ class HDULocation:
         TODO: this should probably go via an extensible registry.
         """
         from gammapy.irf import IRF_REGISTRY
+
         hdu_class = self.hdu_class
         filename = self.path()
         hdu = self.hdu_name
@@ -82,7 +91,8 @@ class HDULocation:
             return GTI.read(filename, hdu=hdu)
         elif hdu_class == "map":
             from gammapy.maps import Map
-            return Map.read(filename, hdu=hdu)
+
+            return Map.read(filename, hdu=hdu, format=self.format)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)
 

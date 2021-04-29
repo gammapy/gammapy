@@ -21,4 +21,3 @@ MAKER_REGISTRY = Registry(
 
 __all__ = ["MAKER_REGISTRY", "Maker"]
 __all__.extend(cls.__name__ for cls in MAKER_REGISTRY)
-

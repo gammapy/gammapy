@@ -85,24 +85,16 @@ def cli_analysis():
 @cli.group("download", short_help="Download datasets and notebooks")
 @click.pass_context
 def cli_download(ctx):  # noqa: D301
-    """Download notebooks, scripts and datasets.
+    """Download notebooks and datasets.
 
     \b
-    Download notebooks published as tutorials, example python scripts and the
-    related datasets needed to execute them. It is also possible to download
-    individual notebooks, scrtipts or datasets.
+    Download notebooks published in the Gammapy documentation as well as the
+    related datasets needed to execute them.
     \b
-    - The option `tutorials` will download versioned folders for the notebooks
-    and python scripts into a `gammapy-tutorials` folder created at the current
-    working directory, as well as the datasets needed to reproduce them.
+    - The option `notebooks` will download the notebook files into a `gammapy-notebooks`
+    folder created at the current working directory.
     \b
-    - The option `notebooks` will download the notebook files used in the tutorials
-    into a `gammapy-notebooks` folder created at the current working directory.
-    \b
-    - The option `scripts` will download a collection of example python scripts
-    into a `gammapy-scripts` folder created at the current working directory.
-    \b
-    - The option `datasets` will download the datasets used by Gammapy into a
+    - The option `datasets` will download the datasets used in the documentation into a
     `gammapy-datasets` folder created at the current working directory.
 
     \b
@@ -110,18 +102,19 @@ def cli_download(ctx):  # noqa: D301
     --------
 
     \b
-    $ gammapy download scripts
-    $ gammapy download datasets
-    $ gammapy download notebooks
-    $ gammapy download tutorials --release 0.8
-    $ gammapy download notebooks --src overview
-    $ gammapy download datasets  --src fermi-3fhl-gc --out localfolder/
+    $ gammapy download datasets  --out localfolder
+    $ gammapy download notebooks --release 0.18 --out localfolder
     """
 
 
 @cli.group("jupyter", short_help="Perform actions on notebooks")
 @click.option("--src", default=".", help="Local folder or Jupyter notebook filename.")
-@click.option("--r", default=False, is_flag=True, help="Apply to notebooks found recursively in folder.")
+@click.option(
+    "--r",
+    default=False,
+    is_flag=True,
+    help="Apply to notebooks found recursively in folder.",
+)
 @click.pass_context
 def cli_jupyter(ctx, src, r):  # noqa: D301
     """
@@ -167,17 +160,9 @@ def add_subcommands():
 
     cli_download.add_command(cli_download_notebooks)
 
-    from .download import cli_download_scripts
-
-    cli_download.add_command(cli_download_scripts)
-
     from .download import cli_download_datasets
 
     cli_download.add_command(cli_download_datasets)
-
-    from .download import cli_download_tutorials
-
-    cli_download.add_command(cli_download_tutorials)
 
     from .jupyter import cli_jupyter_black
 
@@ -194,6 +179,10 @@ def add_subcommands():
     from .jupyter import cli_jupyter_test
 
     cli_jupyter.add_command(cli_jupyter_test)
+
+    from .jupyter import cli_jupyter_tar
+
+    cli_jupyter.add_command(cli_jupyter_tar)
 
     from .analysis import cli_make_config
 

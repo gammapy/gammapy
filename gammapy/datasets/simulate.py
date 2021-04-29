@@ -1,16 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
-import copy
 import numpy as np
-from astropy.coordinates import SkyCoord, SkyOffsetFrame
 import astropy.units as u
+from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 import gammapy
 from gammapy.data import EventList
 from gammapy.maps import MapCoord
-from gammapy.modeling.models import BackgroundModel, ConstantTemporalModel
+from gammapy.modeling.models import ConstantTemporalModel
 from gammapy.utils.random import get_random_state
-
 
 __all__ = ["MapDatasetEventSampler"]
 
@@ -66,25 +64,25 @@ class MapDatasetEventSampler:
         events : `~gammapy.data.EventList`
             Event list
         """
+
         events_all = []
-        for idx, model in enumerate(dataset.models):
-            if isinstance(model, BackgroundModel):
-                continue
+        for idx, evaluator in enumerate(dataset.evaluators.values()):
+            if evaluator.needs_update:
+                evaluator.update(
+                    dataset.exposure,
+                    dataset.psf,
+                    dataset.edisp,
+                    dataset._geom,
+                    dataset.mask,
+                )
 
-            evaluator = dataset.evaluators.get(model)
+            flux = evaluator.compute_flux()
+            npred = evaluator.apply_exposure(flux)
 
-            evaluator = copy.deepcopy(evaluator)
-            evaluator.model.apply_irf["psf"] = False
-            evaluator.model.apply_irf["edisp"] = False
-            npred = evaluator.compute_npred()
-
-            if hasattr(model, "temporal_model"):
-                if getattr(model, "temporal_model") is None:
-                    temporal_model = ConstantTemporalModel()
-                else:
-                    temporal_model = model.temporal_model
-            else:
+            if evaluator.model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
+            else:
+                temporal_model = evaluator.model.temporal_model
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             if len(table) > 0:
@@ -94,7 +92,7 @@ class MapDatasetEventSampler:
                 table.add_column(mcid)
             events_all.append(EventList(table))
 
-        return EventList.stack(events_all)
+        return EventList.from_stack(events_all)
 
     def sample_background(self, dataset):
         """Sample background
@@ -109,7 +107,7 @@ class MapDatasetEventSampler:
         events : `gammapy.data.EventList`
             Background events
         """
-        background = dataset.background_model.evaluate()
+        background = dataset.npred_background()
 
         temporal_model = ConstantTemporalModel()
 
@@ -261,27 +259,27 @@ class MapDatasetEventSampler:
         meta["DSUNI2"] = "TeV"
         meta[
             "DSVAL2"
-        ] = f'{dataset._geom.get_axis_by_name("energy").edges.min().value}:{dataset._geom.get_axis_by_name("energy").edges.max().value}'
+        ] = f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'
         meta["DSTYP3"] = "POS(RA,DEC)     "
+
+        offset_max = np.max(dataset._geom.width).to_value("deg")
         meta[
             "DSVAL3"
-        ] = f"CIRCLE({observation.pointing_radec.ra.deg},{observation.pointing_radec.dec.deg},{dataset.models[0].evaluation_radius.value})"
+        ] = f"CIRCLE({observation.pointing_radec.ra.deg},{observation.pointing_radec.dec.deg},{offset_max})"
         meta["DSUNI3"] = "deg             "
         meta["NDSKEYS"] = " 3 "
 
-        if len(dataset.models) > 1:
-            if dataset.models[1] != dataset.background_model:
-                meta["OBJECT"] = dataset.models[1].name
-                meta["RA_OBJ"] = dataset.models[1].position.icrs.ra.deg
-                meta["DEC_OBJ"] = dataset.models[1].position.icrs.dec.deg
-            else:
-                meta["OBJECT"] = dataset.models[0].name
-                meta["RA_OBJ"] = dataset.models[0].position.icrs.ra.deg
-                meta["DEC_OBJ"] = dataset.models[0].position.icrs.dec.deg
+        # get first non background model component
+        for model in dataset.models:
+            if model is not dataset.background_model:
+                break
         else:
-            meta["OBJECT"] = dataset.models[0].name
-            meta["RA_OBJ"] = dataset.models[0].position.icrs.ra.deg
-            meta["DEC_OBJ"] = dataset.models[0].position.icrs.dec.deg
+            model = None
+
+        if model:
+            meta["OBJECT"] = model.name
+            meta["RA_OBJ"] = model.position.icrs.ra.deg
+            meta["DEC_OBJ"] = model.position.icrs.dec.deg
 
         meta["TELAPSE"] = dataset.gti.time_sum.to("s").value
         meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
@@ -357,15 +355,15 @@ class MapDatasetEventSampler:
                 else:
                     events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
 
-            if dataset.background_model:
+            if dataset.background:
                 events_bkg = self.sample_background(dataset)
-                events = EventList.stack([events_bkg, events_src])
+                events = EventList.from_stack([events_bkg, events_src])
             else:
                 events = events_src
 
         if len(dataset.models) == 1 and dataset.background_model is not None:
             events_bkg = self.sample_background(dataset)
-            events = EventList.stack([events_bkg])
+            events = EventList.from_stack([events_bkg])
 
         events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))

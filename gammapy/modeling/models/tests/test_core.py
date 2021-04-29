@@ -2,9 +2,8 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import Model, Parameter, Parameters
-from gammapy.datasets import Datasets
-from gammapy.utils.testing import requires_data
+from gammapy.modeling.models import Model, Models, Parameter, Parameters, SkyModel
+from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
 
 
 class MyModel(Model):
@@ -81,8 +80,8 @@ def test_model_init():
     # TODO: discuss if this is the behaviour we want, or if we instead
     # should change to the user-set unit, as long as it's compatible
     m = MyModel(x=99 * u.m)
-    assert_allclose(m.x.value, 9900)
-    assert m.x.unit == "cm"
+    assert_allclose(m.x.value, 99)
+    assert m.x.unit == "m"
 
     with pytest.raises(u.UnitConversionError):
         MyModel(x=99)
@@ -115,7 +114,6 @@ def test_model_parameter():
 
 
 # TODO: implement parameter linking. Not working ATM!
-@pytest.mark.xfail()
 def test_model_parameter_link():
     # Assigning a parameter should create a link
     m = MyModel()
@@ -151,7 +149,7 @@ def test_compound_model():
     m = CoModel(m1, m2)
     assert len(m.parameters) == 5
     assert m.parameters.names == ["norm", "x", "y", "x", "y"]
-    assert_allclose(m.parameters.values, [42, 1, 2, 10, 20])
+    assert_allclose(m.parameters.value, [42, 1, 2, 10, 20])
 
 
 def test_parameter_link_init():
@@ -175,93 +173,53 @@ def test_parameter_link():
 
 
 @requires_data()
-def test_models_management(tmp_path):
-    path = "$GAMMAPY_DATA/tests/models"
-    filedata = "gc_example_datasets.yaml"
-    filemodel = "gc_example_models.yaml"
+def test_set_parameters_from_table():
+    # read gammapy models
+    models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
 
-    datasets = Datasets.read(path, filedata, filemodel)
+    tab = models.to_parameters_table()
+    tab["value"][0] = 3.0
+    tab["min"][0] = -10
+    tab["max"][0] = 10
+    tab["frozen"][0] = True
+    tab["name"][0] = "index2"
+    tab["frozen"][1] = True
 
-    model1 = datasets.models[0].copy(name="model1", datasets_names=None)
-    model2 = datasets.models[0].copy(name="model2", datasets_names=[datasets[1].name])
-    model3 = datasets.models[0].copy(name="model3", datasets_names=[datasets[0].name])
+    models.update_parameters_from_table(tab)
 
-    model1b = datasets.models[0].copy(name="model1", datasets_names=None)
-    model1b.spectral_model.amplitude.value *= 2
+    d = models.parameters.to_dict()
+    assert d[0]["value"] == 3.0
+    assert d[0]["min"] == -10
+    assert d[0]["max"] == 10
+    assert d[0]["frozen"]
+    assert d[0]["name"] == "index"
 
-    names0 = datasets[0].models.names
-    names1 = datasets[1].models.names
+    assert d[1]["frozen"]
 
-    datasets[0].models.append(model1)
-    _ = datasets[0].models + model2
-    assert datasets[0].models.names == names0 + ["model1", "model2"]
-    assert datasets[0].models["model1"].datasets_names is None
-    assert datasets[0].models["model2"].datasets_names == [
-        datasets[1].name,
-        datasets[0].name,
-    ]
-    assert datasets[1].models.names == names1 + ["model1", "model2"]
 
-    # TODO consistency check at datasets level ?
-    # or force same Models for each dataset._models on datasets init ?
-    # here we have the right behavior: model1 and model2 are also added to dataset1
-    # because serialization create a global model object shared by all datasets
-    # if that was not the case we could have inconsistancies
-    # such as model1.datasets_names == None added only to dataset1
-    # user can still create such inconsistancies if they define datasets
-    # with diferent Models objects for each dataset.
+@requires_data()
+@requires_dependency("matplotlib")
+def test_plot_models(caplog):
+    models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
 
-    del datasets[0].models["model1"]
-    assert datasets[0].models.names == names0 + ["model2"]
+    with mpl_plot_check():
+        models.plot_positions()
+        models.plot_regions()
 
-    datasets[0].models.remove(model2)
-    assert datasets[0].models.names == names0
+    assert models.wcs_geom.data_shape == (171, 147)
 
-    datasets.models.append(model2)
-    assert model2 in datasets.models
-    assert model2 in datasets[1].models
-    assert datasets[0].models.names == names0 + ["model2"]
+    regions = models.to_regions()
+    assert len(regions) == 3
 
-    datasets[0].models.extend([model1, model3])
-    assert datasets[0].models.names == names0 + ["model2", "model1", "model3"]
+    p1 = Model.create("pl-2", model_type="spectral",)
+    g1 = Model.create("gauss", model_type="spatial")
+    p2 = Model.create("pl-2", model_type="spectral",)
+    m1 = SkyModel(spectral_model=p1, spatial_model=g1, name="m1")
+    m2 = SkyModel(spectral_model=p2, name="m2")
+    models = Models([m1, m2])
 
-    for m in [model1, model2, model3]:
-        datasets.models.remove(m)
-    assert datasets[0].models.names == names0
-    assert datasets[1].models.names == names1
-    datasets.models.extend([model1, model2, model3])
-    assert datasets[0].models.names == names0 + ["model1", "model2", "model3"]
-    assert datasets[1].models.names == names1 + ["model1", "model2"]
-
-    for m in [model1, model2, model3]:
-        datasets.models.remove(m)
-    _ = datasets.models + [model1, model2]
-    assert datasets[0].models.names == names0 + ["model1", "model2"]
-    assert datasets[1].models.names == names1 + ["model1", "model2"]
-
-    datasets[0].models["model2"] = model3
-    assert datasets[0].models.names == names0 + ["model1", "model3"]
-    assert datasets[1].models.names == names1 + ["model1"]
-
-    datasets.models.remove(model1)
-    datasets[0].models = model1
-    _ = datasets.models  # auto-update models
-
-    npred1 = datasets[0].npred().data.sum()
-    datasets.models.remove(model1)
-    npred0 = datasets[0].npred().data.sum()
-    datasets.models.append(model1b)
-    npred1b = datasets[0].npred().data.sum()
-    assert npred1b != npred1
-    assert npred1b != npred0
-    assert_allclose(npred1b, 5199.102662, rtol=1e-5)
-
-    datasets.models.remove(model1b)
-    _ = datasets.models  # auto-update models
-    newmodels = [datasets.models[0].copy() for k in range(48)]
-    datasets.models.extend(newmodels)
-
-    datasets[0].use_cache = False
-    nocache = datasets[0].npred().data.sum()
-    datasets[0].use_cache = True
-    assert_allclose(datasets[0].npred().data.sum(), nocache)
+    models.plot_regions()
+    assert caplog.records[-1].levelname == "WARNING"
+    assert (
+        caplog.records[-1].message == "Skipping model m2 - no spatial component present"
+    )
