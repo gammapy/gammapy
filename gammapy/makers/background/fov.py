@@ -206,13 +206,13 @@ class FoVBackgroundMaker(Maker):
 
         if count_tot <= self.min_counts:
             log.warning(
-                f"FoVBackgroundMaker failed. Only {count_tot} counts outside exclusion mask for {dataset.name}. "
+                f"FoVBackgroundMaker failed. Only {int(count_tot)} counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
             )
             dataset.mask_safe.data[...] = False
         elif bkg_tot <= self.min_npred_background:
             log.warning(
-                f"FoVBackgroundMaker failed. Only {bkg_tot} background counts outside exclusion mask for {dataset.name}. "
+                f"FoVBackgroundMaker failed. Only {int(bkg_tot)} background counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
             )
             dataset.mask_safe.data[...] = False

@@ -110,7 +110,7 @@ def test_fov_bkg_maker_scale_nocounts(obs_dataset, exclusion_mask, caplog):
     assert_allclose(model.tilt.value, 0.0, rtol=1e-2)
     assert caplog.records[-1].levelname == "WARNING"
     assert (
-        "Only 0.0 counts outside exclusion mask for test-fov"
+        "Only 0 counts outside exclusion mask for test-fov"
         in caplog.records[-1].message
     )
     assert "FoVBackgroundMaker failed" in caplog.records[-1].message
@@ -233,7 +233,7 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask, caplog):
     assert_allclose(model.norm.value, 1, rtol=1e-4)
     assert caplog.records[-1].levelname == "WARNING"
     assert (
-        f"Only -1940.3238771984525 background counts outside exclusion mask for test-fov"
+        f"Only -1940 background counts outside exclusion mask for test-fov"
         in caplog.records[-1].message
     )
     assert "FoVBackgroundMaker failed" in caplog.records[-1].message
