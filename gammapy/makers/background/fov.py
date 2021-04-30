@@ -24,8 +24,8 @@ class FoVBackgroundMaker(Maker):
     If a SkyModel is set on the input dataset and method is 'fit', it' parameters
     are frozen during the fov normalization fit.
 
-    If the requirement of either min_counts or min_bkg is not satisfied, the background will not be
-    normalised
+    If the requirement (greater than) of either min_counts or min_npred_background is not satisfied,
+    the background will not be normalised
 
     Parameters
     ----------
@@ -36,9 +36,9 @@ class FoVBackgroundMaker(Maker):
     spectral_model : SpectralModel or str
         Reference norm spectral model to use for the `FoVBackgroundModel`, if none is defined
         on the dataset. By default, use pl-norm.
-    min_counts : float
+    min_counts : int
         Minimum number of counts required outside the exclusion region
-    min_bkg : float
+    min_npred_background : float
        Minimum number of predicted background counts required outside the exclusion region
     """
 
@@ -51,12 +51,12 @@ class FoVBackgroundMaker(Maker):
         exclusion_mask=None,
         spectral_model="pl-norm",
         min_counts=0,
-        min_bkg=0,
+        min_npred_background=0,
     ):
         self.method = method
         self.exclusion_mask = exclusion_mask
         self.min_counts = min_counts
-        self.min_bkg = min_bkg
+        self.min_npred_background = min_npred_background
 
         if isinstance(spectral_model, str):
             spectral_model = Model.create(tag=spectral_model, model_type="spectral")
@@ -93,7 +93,7 @@ class FoVBackgroundMaker(Maker):
         Returns
         -------
         dataset : `~gammapy.datasets.MapDataset`
-            Map dataset including
+            Map dataset including background model
 
         """
         bkg_model = FoVBackgroundModel(
@@ -110,6 +110,11 @@ class FoVBackgroundMaker(Maker):
     def make_exclusion_mask(self, dataset):
         """Project input exclusion mask to dataset geom
 
+        Parameters
+        ---------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input map dataset.
+
         Returns
         -------
         mask : `~gammapy.maps.WcsNDMap`
@@ -119,7 +124,7 @@ class FoVBackgroundMaker(Maker):
         if self.exclusion_mask:
             mask = self.exclusion_mask.interp_to_geom(geom=geom)
         else:
-            mask = Map.from_geom(geom=geom, data=1)
+            mask = Map.from_geom(geom=geom, data=1, dtype=bool)
         return mask
 
     def run(self, dataset, observation=None):
@@ -205,7 +210,7 @@ class FoVBackgroundMaker(Maker):
                 f"Setting mask to False."
             )
             dataset.mask_safe.data[...] = False
-        elif bkg_tot <= self.min_bkg:
+        elif bkg_tot <= self.min_npred_background:
             log.warning(
                 f"FoVBackgroundMaker failed. Only {bkg_tot} background counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
