@@ -58,20 +58,27 @@ a joint fit across multiple datasets.
 
 Predicted counts
 ================
-Predicted counts are computed like:
+The total number of predicted counts from a `MapDataset` are computed per bin like:
 
 .. math::
 
-	N_{Pred} = N_{Bkg} + \mathrm{PSF} \circledast \mathrm{EDISP(\mathcal{E} \cdot F_{Src}(l, b, E_{True}))}
+	N_{Pred} = N_{Bkg} + \sum_{Src} N_{Src}
 
+Where :math:`N_{Bkg}` is the expected residual hadronic background model and :math:`N_{Src}`
+the predicted counts from a given source model component.
 
-Where :math:`$N_{Bkg}$` is the expected residual hadronic background,
-:math:`$F_{Src}$` the integrated flux of the source model,
-:math:`$\mathrm{EDISP}$` the energy dispersion matrix and
-:math:`$\mathrm{PSF}$` the PSF convolution kernel. Predicted counts are computed
-per model component, where the corresponding IRFs are extracted
-at the current position of the model component and assumed to be
-constant across the size of the source.
+The predicted counts from a source are given by:
+
+.. math::
+
+	N_{Src} = \mathrm{PSF_{Src}} \circledast \mathrm{EDISP_{Src}}(\mathcal{E} \cdot F_{Src}(l, b, E_{True}))
+
+Where :math:`F_{Src}` is the integrated flux of the source model,
+:math:`\mathcal{E}` the exposure,
+:math:`\mathrm{EDISP}` the energy dispersion matrix and
+:math:`\mathrm{PSF}` the PSF convolution kernel. The corresponding IRFs are extracted
+at the current position of the model component defined by :math:`(l, b)` and assumed
+to be constant across the size of the source.
 
 
 .. _stack:
