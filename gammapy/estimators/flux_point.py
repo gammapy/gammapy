@@ -17,7 +17,6 @@ from .core import (
     OPTIONAL_QUANTITIES_COMMON,
     OPTIONAL_QUANTITIES,
     REQUIRED_COLUMNS,
-    REQUIRED_QUANTITIES_SCAN
 )
 from. flux import FluxEstimator
 
@@ -232,6 +231,27 @@ class FluxPoints(FluxEstimate):
 
         return table
 
+    @staticmethod
+    def _convert_flux_columns(table, reference_model, sed_type):
+        energy_axis = MapAxis.from_table(table, format="gadf-sed")
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            fluxes = reference_model.reference_fluxes(energy_axis=energy_axis)
+
+        # TODO: handle reshaping in MapAxis
+        col_ref = table[sed_type]
+        factor = fluxes[f"ref_{sed_type}"].to(col_ref.unit)
+
+        data = Table(fluxes)
+        data["norm"] = col_ref / factor
+
+        for key in OPTIONAL_QUANTITIES[sed_type]:
+            if key in table.colnames:
+                norm_type = key.replace(sed_type, "norm")
+                data[norm_type] = table[key] / factor
+
+        return data
+
     @classmethod
     def from_table(cls, table, sed_type=None, reference_model=None):
         """Create flux points from table
@@ -263,44 +283,33 @@ class FluxPoints(FluxEstimate):
 
         cls._validate_data(data=table, sed_type=sed_type)
 
-        if sed_type == "likelihood":
-            table = cls._convert_loglike_columns(table)
+        if sed_type in ["dnde", "eflux", "e2dnde", "flux"]:
+            if reference_model is None:
+                log.warning(
+                    "No reference model set for FluxPoints. Assuming point source with E^-2 spectrum."
+                )
 
+                reference_model = PowerLawSpectralModel()
+
+            data = cls._convert_flux_columns(
+                table=table, reference_model=reference_model, sed_type=sed_type
+            )
+
+        elif sed_type == "likelihood":
+            data = cls._convert_loglike_columns(table)
             reference_model = TemplateSpectralModel(
                 energy=table["e_ref"].quantity,
                 values=table["ref_dnde"].quantity
             )
-            return cls(data=table, reference_spectral_model=reference_model)
-
-        if reference_model is None:
-            log.warning(
-                "No reference model set for FluxPoints. Assuming point source with E^-2 spectrum."
-            )
-
-            reference_model = PowerLawSpectralModel()
-
-        energy_axis = MapAxis.from_table(table, format="gadf-sed")
-
-        with np.errstate(invalid="ignore", divide="ignore"):
-            fluxes = reference_model.reference_fluxes(energy_axis=energy_axis)
-
-        # TODO: handle reshaping in MapAxis
-        col_ref = table[sed_type]
-        factor = fluxes[f"ref_{sed_type}"].to(col_ref.unit)
-
-        data = Table(fluxes)
-        data["norm"] = col_ref / factor
-
-        for key in OPTIONAL_QUANTITIES[sed_type]:
-            if key in table.colnames:
-                norm_type = key.replace(sed_type, "norm")
-                data[norm_type] = table[key] / factor
+        else:
+            raise ValueError(f"Not a valid SED type {sed_type}")
 
         # We add the remaining maps
         for key in OPTIONAL_QUANTITIES_COMMON:
             if key in table.colnames:
                 data[key] = table[key]
 
+        data.meta["SED_TYPE"] = "likelihood"
         return cls(data=data, reference_spectral_model=reference_model)
 
     def to_table(self, sed_type="likelihood"):
@@ -402,62 +411,6 @@ class FluxPoints(FluxEstimate):
             return self.table["is_ul"].data.astype("bool")
         except KeyError:
             return np.isnan(self.norm)
-
-    @property
-    def energy_ref(self):
-        """Reference energy.
-
-        Defined by `energy_ref` column in `FluxPoints.table` or computed as log
-        center, if `energy_min` and `energy_max` columns are present in `FluxPoints.table`.
-
-        Returns
-        -------
-        energy_ref : `~astropy.units.Quantity`
-            Reference energy.
-        """
-        try:
-            return self.table["e_ref"].quantity
-        except KeyError:
-            return np.sqrt(self.energy_min * self.energy_max)
-
-    @property
-    def energy_edges(self):
-        """Edges of the energy bin.
-
-        Returns
-        -------
-        energy_edges : `~astropy.units.Quantity`
-            Energy edges.
-        """
-        energy_edges = list(self.energy_min)
-        energy_edges += [self.energy_max[-1]]
-        return u.Quantity(energy_edges, self.energy_min.unit, copy=False)
-
-    @property
-    def energy_min(self):
-        """Lower bound of energy bin.
-
-        Defined by `energy_min` column in `FluxPoints.table`.
-
-        Returns
-        -------
-        energy_min : `~astropy.units.Quantity`
-            Lower bound of energy bin.
-        """
-        return self.table["e_min"].quantity
-
-    @property
-    def energy_max(self):
-        """Upper bound of energy bin.
-
-        Defined by ``energy_max`` column in ``table``.
-
-        Returns
-        -------
-        energy_max : `~astropy.units.Quantity`
-            Upper bound of energy bin.
-        """
-        return self.table["e_max"].quantity
 
     @staticmethod
     def _get_y_energy_unit(y_unit):
@@ -644,7 +597,7 @@ class FluxPoints(FluxEstimate):
             )
             y_values = u.Quantity(y_values, y_unit, copy=False)
 
-        x = self.energy_edges.to(energy_unit)
+        x = self.energy_axis.edges.to(energy_unit)
 
         # Compute fit statistic "image" one energy bin at a time
         # by interpolating e2dnde at the log bin centers
