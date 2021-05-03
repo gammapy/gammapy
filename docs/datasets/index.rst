@@ -64,10 +64,11 @@ The total number of predicted counts from a `MapDataset` are computed per bin li
 
 	N_{Pred} = N_{Bkg} + \sum_{Src} N_{Src}
 
-Where :math:`N_{Bkg}` is the expected residual hadronic background model and :math:`N_{Src}`
-the predicted counts from a given source model component.
-
-The predicted counts from a source are given by:
+Where :math:`N_{Bkg}` is the expected counts from the residual hadronic background
+model and :math:`N_{Src}` the predicted counts from a given source model component.
+The predicted counts from the hadronic background are computed directly from
+the model in reconstructed energy and spatial coordinates, while the predicted counts
+from a source are obtained by forward folding with the instrument response:
 
 .. math::
 
