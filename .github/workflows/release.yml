@@ -13,10 +13,10 @@ jobs:
       - name: modif docs
         run: |
           release="${{ github.event.release.tag_name }}"
-          sed -i -E "s/gammapy-.*-environment.yml/gammapy-$release-environment.yml/" docs/install/index.rst
-          sed -i -E "s/called\s``gammapy-.*``/called ``gammapy-$release``/" docs/install/index.rst
-          sed -i -E "s/activate\sgammapy-.*/activate gammapy-$release/" docs/install/index.rst
-          sed -i -E "s/--release\s.*/--release $release/" docs/install/index.rst
+          sed -i -E "s/gammapy-.*-environment.yml/gammapy-$release-environment.yml/" docs/getting-started/iquickstartndex.rst
+          sed -i -E "s/called\s``gammapy-.*``/called ``gammapy-$release``/" docs/getting-started/quickstart.rst
+          sed -i -E "s/activate\sgammapy-.*/activate gammapy-$release/" docs/getting-started/quickstart.rst
+          sed -i -E "s/--release\s.*/--release $release/" docs/getting-started/quickstart.rst
       - name: dispatch web
         run: |
           curl -XPOST -u "${{ secrets.REMOTE_DISPATCH }}" \

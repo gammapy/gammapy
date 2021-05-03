@@ -62,7 +62,7 @@ Make release
 Steps for the day of the release:
 
 #. Follow the instructions how to release an Astropy affiliated package `<https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
-#. Edit `docs/index.rst` and change the version numbers in the text in the `gammapy` code repository.
+#. Edit `docs/getting-started/quickstart.rst` and change the version numbers in the text in the `gammapy` code repository.
 #. Draft the release in the `gammapy` code repository.
 
 At this moment a set of Github actions will automate the following steps:
