@@ -52,9 +52,27 @@ Note that in Gammapy, 2D image analyses are done with 3D cubes with a single
 energy bin, e.g. for modeling and fitting,
 see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
-
 To analyse multiple runs, you can either stack the datasets together, or perform
 a joint fit across multiple datasets.
+
+
+Predicted counts
+================
+Predicted counts are computed like:
+
+.. math::
+
+	N_{Pred} = N_{Bkg} + \mathrm{PSF} \circledast \mathrm{EDISP(\mathcal{E} \cdot F_{Src}(l, b, E_{True}))}
+
+
+Where :math:`$N_{Bkg}$` is the expected residual hadronic background,
+:math:`$F_{Src}$` the integrated flux of the source model,
+:math:`$\mathrm{EDISP}$` the energy dispersion matrix and
+:math:`$\mathrm{PSF}$` the PSF convolution kernel. Predicted counts are computed
+per model component, where the corresponding IRFs are extracted
+at the current position of the model component and assumed to be
+constant across the size of the source.
+
 
 .. _stack:
 
@@ -129,6 +147,7 @@ The following plot shows the individual and stacked energy dispersion kernel and
 
 
 .. _joint:
+
 Joint Analysis
 ==============
 
