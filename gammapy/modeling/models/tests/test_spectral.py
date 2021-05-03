@@ -396,6 +396,27 @@ def test_model_plot():
         pwl.plot_error((1 * u.TeV, 10 * u.TeV))
 
 
+@requires_dependency("matplotlib")
+def test_model_plot_sed_type():
+    pwl = PowerLawSpectralModel(
+                                amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
+                                )
+    pwl.amplitude.error = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
+                                
+    with mpl_plot_check():
+        ax = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
+        assert(ax.axes.axes.get_ylabel() == "Flux [1 / (cm2 s TeV)]")
+    with mpl_plot_check():
+        ax = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
+        assert(ax.axes.axes.get_ylabel() == "E2 * Flux [TeV / (cm2 s)]")
+    with mpl_plot_check():
+        ax = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="flux")
+        assert(ax.axes.axes.get_ylabel() == "Flux [1 / (cm2 s)]")
+    with mpl_plot_check():
+        ax = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
+        assert(ax.axes.axes.get_ylabel() == "Flux [TeV / (cm2 s)]")
+
+
 def test_to_from_dict():
     spectrum = TEST_MODELS[0]
     model = spectrum["model"]

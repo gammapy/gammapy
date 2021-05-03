@@ -273,6 +273,7 @@ class SpectralModel(Model):
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
+        sed_type = "",
         n_points=100,
         **kwargs,
     ):
@@ -302,6 +303,8 @@ class SpectralModel(Model):
             Unit of the flux axis
         energy_power : int, optional
             Power of energy to multiply flux axis with
+        sed_type : str, optional
+            Evaluation methods of the model
         n_points : int, optional
             Number of evaluation nodes
 
@@ -316,13 +319,35 @@ class SpectralModel(Model):
 
         energy_min, energy_max = energy_range
         energy = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points, energy_unit
-        ).edges
+                                            energy_min, energy_max, n_points, energy_unit
+                                            ).edges
 
-        # evaluate model
-        flux = self(energy).to(flux_unit)
+        if sed_type:
+            if sed_type == "dnde":
+                energy_power = 0
+                flux = self(energy).to(flux_unit)
 
-        y = self._plot_scale_flux(energy, flux, energy_power)
+            if sed_type == "e2dnde":
+                energy_power = 2
+                flux = self(energy).to(flux_unit)
+
+            if sed_type == "flux":
+                energy_power = 0
+                flux = self.integral(energy[:-1], energy[1:]).to("cm-2 s-1")
+                energy = (energy[:-1] + energy[1:]) / 2.
+
+            if sed_type == "eflux":
+                energy_power = 0
+                flux = self.energy_flux(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
+                energy = (energy[:-1] + energy[1:]) / 2.
+
+            y = self._plot_scale_flux(energy, flux, energy_power)
+
+        else:
+            # evaluate model
+            flux = self(energy).to(flux_unit)
+
+            y = self._plot_scale_flux(energy, flux, energy_power)
 
         ax.plot(energy.value, y.value, **kwargs)
 
