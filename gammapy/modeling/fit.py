@@ -69,13 +69,34 @@ class Fit:
     ----------
     datasets : `Datasets`
         Datasets
+    backend : str
+        Backend used for fitting, default : minuit
+    optimize_opts : dict
+        Options passed to `Fit.optimize`.
+    covariance_opts : dict
+        Options passed to `Fit.covariance`.
     """
 
-    def __init__(self, datasets, store_trace=False):
+    def __init__(
+        self,
+        datasets,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
+        store_trace=False,
+    ):
         from gammapy.datasets import Datasets
 
+        # TODO: docstring for store_trace ?
         self.store_trace = store_trace
         self.datasets = Datasets(datasets)
+        self.backend = backend
+        if optimize_opts is None:
+            optimize_opts = {}
+        if covariance_opts is None:
+            covariance_opts = {}
+        self.optimize_opts = optimize_opts
+        self.covariance_opts = covariance_opts
 
     @lazyproperty
     def _parameters(self):
@@ -85,18 +106,9 @@ class Fit:
     def _models(self):
         return self.datasets.models
 
-    def run(self, backend="minuit", optimize_opts=None, covariance_opts=None):
+    def run(self):
         """
         Run all fitting steps.
-
-        Parameters
-        ----------
-        backend : str
-            Backend used for fitting, default : minuit
-        optimize_opts : dict
-            Options passed to `Fit.optimize`.
-        covariance_opts : dict
-            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -104,32 +116,25 @@ class Fit:
             Results
         """
 
-        if optimize_opts is None:
-            optimize_opts = {}
-        optimize_result = self.optimize(backend, **optimize_opts)
+        optimize_result = self.optimize(**self.optimize_opts)
 
-        if covariance_opts is None:
-            covariance_opts = {}
-
-        if backend not in registry.register["covariance"]:
+        if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return optimize_result
 
-        covariance_result = self.covariance(backend, **covariance_opts)
+        covariance_result = self.covariance(**self.covariance_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success
 
         return optimize_result
 
-    def optimize(self, backend="minuit", **kwargs):
+    def optimize(self, **kwargs):
         """Run the optimization.
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to the optimizer. For the `"minuit"` backend
             see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
             for a detailed description of the available options. If there is an entry
@@ -154,6 +159,8 @@ class Fit:
         fit_result : `FitResult`
             Results
         """
+        self.optimize_opts.update(kwargs)
+
         parameters = self._parameters
         parameters.check_limits()
 
@@ -161,7 +168,7 @@ class Fit:
         if np.all(self._models.covariance.data == 0):
             parameters.autoscale()
 
-        compute = registry.get("optimize", backend)
+        compute = registry.get("optimize", self.backend)
         # TODO: change this calling interface!
         # probably should pass a fit statistic, which has a model, which has parameters
         # and return something simpler, not a tuple of three things
@@ -169,14 +176,14 @@ class Fit:
             parameters=parameters,
             function=self.datasets.stat_sum,
             store_trace=self.store_trace,
-            **kwargs,
+            **self.optimize_opts,
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
         # stateful backends, put a proper, backend-agnostic solution for this.
         # As preliminary solution would like to provide a possibility that the user
         # can access the Minuit object, because it features a lot useful functionality
-        if backend == "minuit":
+        if self.backend == "minuit":
             self.minuit = optimizer
 
         trace = table_from_row_data(info.pop("trace"))
@@ -193,33 +200,36 @@ class Fit:
         return OptimizeResult(
             parameters=parameters,
             total_stat=self.datasets.stat_sum(),
-            backend=backend,
-            method=kwargs.get("method", backend),
+            backend=self.backend,
+            method=self.optimize_opts.get("method", self.backend),
             trace=trace,
             **info,
         )
 
-    def covariance(self, backend="minuit", **kwargs):
+    def covariance(self, **kwargs):
         """Estimate the covariance matrix.
 
         Assumes that the model parameters are already optimised.
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
+        **kwargs : dict, optional
+            Keyword arguments passed to the covariance method.
 
         Returns
         -------
         result : `CovarianceResult`
             Results
         """
-        compute = registry.get("covariance", backend)
+
+        # TODO: docstring kwargs for covairance
+        self.covariance_opts.update(kwargs)
+        compute = registry.get("covariance", self.backend)
         parameters = self._parameters
 
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
-            if backend == "minuit":
+            if self.backend == "minuit":
                 method = "hesse"
                 if hasattr(self, "minuit"):
                     factor_matrix, info = compute(self.minuit)
@@ -228,7 +238,7 @@ class Fit:
             else:
                 method = ""
                 factor_matrix, info = compute(
-                    parameters, self.datasets.stat_sum, **kwargs
+                    parameters, self.datasets.stat_sum, **self.covariance_opts
                 )
 
             covariance = Covariance.from_factor_matrix(
@@ -238,16 +248,14 @@ class Fit:
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
-            backend=backend,
+            backend=self.backend,
             method=method,
             parameters=parameters,
             success=info["success"],
             message=info["message"],
         )
 
-    def confidence(
-        self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
-    ):
+    def confidence(self, parameter, sigma=1, reoptimize=True, **kwargs):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -275,13 +283,15 @@ class Fit:
         result : dict
             Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
-        compute = registry.get("confidence", backend)
+        compute = registry.get("confidence", self.backend)
         parameters = self._parameters
         parameter = parameters[parameter]
 
+        # TODO: confidence_options on fit for consistancy ?
+
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
-            if backend == "minuit":
+            if self.backend == "minuit":
                 if hasattr(self, "minuit"):
                     # This is ugly. We will access parameters and make a copy
                     # from the backend, to avoid modifying the state

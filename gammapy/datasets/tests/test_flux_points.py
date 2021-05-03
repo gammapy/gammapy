@@ -12,7 +12,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 
 @pytest.fixture()
 def fit(dataset):
-    return Fit([dataset])
+    return Fit([dataset], backend="minuit")
 
 
 @pytest.fixture()
@@ -81,12 +81,13 @@ def test_flux_point_dataset_str(dataset):
 class TestFluxPointFit:
     @requires_dependency("iminuit")
     def test_fit_pwl_minuit(self, fit):
-        result = fit.run(backend="minuit")
+        result = fit.run()
         self.assert_result(result)
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, fit):
-        result = fit.optimize(backend="sherpa", method="simplex")
+        fit.backend = backend="sherpa"
+        result = fit.optimize(method="simplex")
         self.assert_result(result)
 
     @staticmethod
@@ -106,8 +107,8 @@ class TestFluxPointFit:
     @staticmethod
     @requires_dependency("iminuit")
     def test_stat_profile(fit):
-
-        result = fit.run(backend="minuit")
+        fit.backend = "minuit"
+        result = fit.run()
 
         profile = fit.stat_profile("amplitude", nvalues=3, bounds=1)
 
