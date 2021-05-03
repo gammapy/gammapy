@@ -1048,7 +1048,7 @@ gallery, and then replace the ``"metadata": {},`` bit above the code cell with t
     "metadata": {
      "nbsphinx-thumbnail": {
       "tooltip": "Learn how to do perform a Fit in gammapy."
-     },
+     }},
 
 Note that you may write whatever you like after "tooltip".
 

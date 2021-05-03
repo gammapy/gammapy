@@ -110,6 +110,7 @@ expose how to perform more specific use cases.
 
 .. nbgallery::
 
+   api/makers.ipynb
    api/catalog.ipynb
    api/models.ipynb
    api/model_management.ipynb
