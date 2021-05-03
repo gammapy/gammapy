@@ -220,6 +220,11 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     assert "MapDataset" in str(dataset)
 
 
+def test_map_dataset_str_empty():
+    dataset = MapDataset()
+    assert "MapDataset" in str(dataset)
+    
+
 @requires_data()
 def test_fake(sky_model, geom, geom_etrue):
     """Test the fake dataset"""
