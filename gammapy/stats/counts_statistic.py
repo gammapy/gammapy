@@ -18,13 +18,17 @@ class CountsStatistic(abc.ABC):
 
     @property
     def sqrt_ts(self):
-        """Return statistical significance of measured excess."""
+        """Return statistical significance of measured excess.
+           The sign of the excess is applied to distinguish positive and negative fluctuations.
+        """
         return np.sign(self.n_sig) * np.sqrt(self.ts)
 
     @property
     def p_value(self):
-        """Return p_value of measured excess."""
-        return chi2.sf(self.ts, 1)
+        """Return p_value of measured excess.
+           Here the value accounts only for the positive excess significance (i.e. one-sided).
+        """
+        return 0.5*chi2.sf(self.ts, 1)
 
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.

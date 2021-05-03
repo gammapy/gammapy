@@ -168,12 +168,13 @@ as well as the confidence interval on the true signal counts number value.
     3.605551275463989
     7.365232895800901
     2.7138962573762653
-    0.006649698694909719
+    0.0033248493474548595
 
 
 The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{on}}`.
-The significance is the square root of the :math:`TS`, multiplied by the sign of the excess,
-which is equivalent to the Li & Ma significance for known background.
+The `sqrt_ts` is the square root of the :math:`TS`, multiplied by the sign of the excess,
+which is equivalent to the Li & Ma significance for known background. The p-value is now computed taking into
+account only positive fluctuations.
 
 To see how the :math:`TS`, relates to the statistic function, we plot below the profile of the Cash
 statistic as a function of the expected signal events number.
