@@ -343,7 +343,7 @@ class SpectralModel(Model):
             else:
                 raise ValueError(f"Not a valid SED type {sed_type}")
 
-            y = self._plot_scale_flux(energy, flux, energy_power)
+        y = self._plot_scale_flux(energy, flux, energy_power)
 
         ax.plot(energy.value, y.value, **kwargs)
 
