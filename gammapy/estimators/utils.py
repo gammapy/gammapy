@@ -11,7 +11,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-
+from gammapy.utils.interpolation import interpolation_scale
 __all__ = ["find_roots", "find_peaks", "estimate_exposure_reco_energy"]
 
 from scipy.optimize import root_scalar
@@ -22,6 +22,7 @@ def find_roots(
     lower_bounds,
     upper_bounds,
     nbin=1000,
+    points_scale="lin",
     args=(),
     method="brentq",
     fprime=None,
@@ -45,6 +46,8 @@ def find_roots(
         If an array is given search will be performed element-wise.
     nbin : int
         Number of bins to sample the search range
+    points_scale : {"lin", "log", "sqrt"}
+        Scale used to sample the search range. Default is linear ("lin")
     args : tuple, optional
         Extra arguments passed to the objective function and its derivative(s).
     method : str, optional
@@ -112,9 +115,10 @@ def find_roots(
     while not it.finished:
         it_idx = it.multi_index
         
-        x = np.linspace(
-            lower_bounds[it_idx].value, upper_bounds[it_idx].value, nbin
-        )
+        scale = interpolation_scale(points_scale)
+        a = scale(lower_bounds[it_idx].value)
+        b = scale(upper_bounds[it_idx].value)
+        x = scale.inverse(np.linspace(a, b, nbin))
         signs = np.sign(f(x))
         ind = np.where(signs[:-1] != signs[1:])[0]
         nroots = len(ind)
