@@ -6,11 +6,11 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from regions import CircleSkyRegion
-from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
+from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.maps.utils import find_bintable_hdu
 from gammapy.maps.hpx import HpxConv
-from gammapy.irf import PSFKernel
+from gammapy.irf import PSFKernel, PSFMap
 
 pytest.importorskip("healpy")
 
@@ -502,19 +502,54 @@ def test_smooth(kernel):
     with pytest.raises(ValueError):
         m_nest.smooth(0.2 * u.deg, "box")
 
-def test_convolve():
+@pytest.mark.parametrize("nest", [True, False])
+def test_convolve_wcs(nest):
     energy = MapAxis.from_bounds(1,100, unit='TeV', nbin=2, name='energy')
-    nside = 1024
+    nside = 256
     hpx_geom = HpxGeom.create(
         nside=nside,
         axes=[energy],
         region='DISK(0,0,2.5)',
+        nest = nest
         )
     hpx_map = Map.from_geom(hpx_geom)
     hpx_map.set_by_coord((0,0, [2,90]), 1)
-    kernel = PSFKernel.from_gauss(hpx_geom.to_wcs_geom(), 0.1*u.deg)
+    wcs_geom = WcsGeom.create(width=5,
+                            binsz = 0.04,
+                            axes = [energy])
+    kernel = PSFKernel.from_gauss(wcs_geom, 0.4*u.deg)
     convolved_map = hpx_map.convolve_wcs(kernel)
-    assert_allclose(convolved_map.data.sum(), 2, rtol=0.01)
+    assert_allclose(convolved_map.data.sum(), 2, rtol=0.001)
+
+
+@pytest.mark.parametrize("region", [None, 'DISK(0,0,70)'])
+def test_convolve_full(region):
+    energy = MapAxis.from_bounds(1,100, unit='TeV', nbin=2, name='energy_true')
+    nside = 256
+    all_sky_geom = HpxGeom(nside=nside,
+                            axes=[energy],
+                            region = region,
+                            nest = False,
+                            frame = 'icrs')
+    all_sky_map = Map.from_geom(all_sky_geom)
+    all_sky_map.set_by_coord((0,0, [2,90]), 1)
+    all_sky_map.set_by_coord((10,10, [2,90]), 1)
+    all_sky_map.set_by_coord((30,30, [2,90]), 1)
+    all_sky_map.set_by_coord((-40,-40, [2,90]), 1)
+    all_sky_map.set_by_coord((60,0, [2,90]), 1)
+    all_sky_map.set_by_coord((-45,30, [2,90]), 1)
+    all_sky_map.set_by_coord((30,-45, [2,90]), 1)
+
+    wcs_geom = WcsGeom.create(width=5,
+                            binsz = 0.05,
+                            axes = [energy])
+    psf = PSFMap.from_gauss(
+        energy_axis_true=energy, sigma=[0.5, 0.6] * u.deg
+    )
+
+    kernel = psf.get_psf_kernel(geom=wcs_geom, max_radius=1*u.deg)
+    convolved_map = all_sky_map.convolve_full(kernel)
+    assert_allclose(convolved_map.data.sum(), 14, rtol=1e-5)
 
 def test_hpxmap_read_healpy(tmp_path):
     import healpy as hp
