@@ -503,6 +503,83 @@ class HpxNDMap(HpxMap):
         conv_hpx_map = HpxNDMap.from_geom(self.geom, data = hpx_data)
         return conv_hpx_map
 
+    def convolve_full(self, kernel):
+        """
+        Convolve map with a symmetrical WCS kernel.
+
+        It extracts the radial profille of the kernel (assuming radial symmetry) and
+        convolves via `hp.sphtfunc.smoothing`. Since no projection is applied, this is
+        suited for full-sky and large maps.
+
+        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is higher dimensional it must match the map in the number of
+        dimensions and the corresponding kernel is selected for every image plane.
+
+        Parameters
+        ----------
+        kernel : `~gammapy.irf.PSFKernel`
+            Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
+            with respect to the input map to prevent artifacts in the projection.
+
+
+        Returns
+        -------
+        map : `HpxNDMap`
+            Convolved map.
+        """
+        import healpy as hp
+
+        nside = self.geom.nside
+        lmax = 3*nside-1 # maximum l of the power spectrum
+        nest = self.geom.nest
+        allsky = self.geom.is_allsky
+        ipix = self.geom._ipix
+
+        if not allsky: #stack into an all sky map
+            full_sky_geom = HpxGeom.create(nside = self.geom.nside,
+                                        nest = self.geom.nest,
+                                        frame = self.geom.frame,
+                                        axes = self.geom.axes
+                                        )
+            full_sky_map = HpxNDMap.from_geom(full_sky_geom)
+            for img, idx in self.iter_by_image():
+                full_sky_map.data[idx, ipix] = img
+        else:
+            full_sky_map = self
+
+        # Get radial profile from the kernel
+        psf_kernel = kernel.psf_kernel_map
+
+        center_pix = psf_kernel.geom.center_pix[:2]
+        center = max(center_pix)
+        dim = np.argmax(center_pix)
+
+        pixels =[0,0]
+        pixels[dim] = np.linspace(0,center, int(center+1)) # assuming radially symmetric kernel
+        pixels[abs(1-dim)] =  center_pix[abs(1-dim)]*np.ones(int(center+1))
+        coords = psf_kernel.geom.pix_to_coord(pixels)
+        coordinates = SkyCoord(coords[0], coords[1], frame=psf_kernel.geom.frame )
+        angles = coordinates.separation(psf_kernel.geom.center_skydir).rad
+        values = psf_kernel.get_by_pix(pixels)
+
+        # Do the convolution in each image plane
+        convolved_data = np.empty(self.data.shape, dtype=float)
+        for img, idx in full_sky_map.iter_by_image():
+            img = img.astype(float)
+            if nest:
+                # reorder to ring to do the convolution
+                img = hp.pixelfunc.reorder(img, n2r=True)
+            radial_profile = np.reshape(values[:,idx], (values.shape[0],))
+            window_beam = hp.sphtfunc.beam2bl(np.flip(radial_profile), np.flip(angles), lmax)
+            window_beam = window_beam/window_beam.max()
+            data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
+            if nest:
+                # reorder back to nest after the convolution
+                data = hp.pixelfunc.reorder(data, r2n=True)
+
+            convolved_data[idx] = data[ipix]
+        return self._init_copy(data=convolved_data)
+
 
     def get_by_idx(self, idx):
         # inherited docstring
