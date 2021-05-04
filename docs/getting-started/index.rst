@@ -11,5 +11,6 @@ Getting started
     quickstart
     install
     usage
+    docker
     troubleshooting
 
