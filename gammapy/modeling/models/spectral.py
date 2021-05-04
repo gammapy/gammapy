@@ -322,32 +322,28 @@ class SpectralModel(Model):
                                             energy_min, energy_max, n_points, energy_unit
                                             ).edges
 
-        if sed_type:
-            if sed_type == "dnde":
-                flux = self(energy).to(flux_unit)
+        if sed_type == "dnde":
+            flux = self(energy).to(flux_unit)
 
-            elif sed_type == "e2dnde":
-                energy_power = 2
-                flux = self(energy).to(flux_unit)
+        elif sed_type == "e2dnde":
+            flux = energy ** 2 * self(energy).to(flux_unit)
 
-            elif sed_type == "flux":
-                energy_power = 0
-                flux = self.integral(energy[:-1], energy[1:]).to("cm-2 s-1")
-                energy = (energy[:-1] + energy[1:]) / 2.
+        elif sed_type == "flux":
+            flux = self.integral(energy[:-1], energy[1:]).to("cm-2 s-1")
+            energy = (energy[:-1] + energy[1:]) / 2.
 
-            elif sed_type == "eflux":
-                energy_power = 0
-                flux = self.energy_flux(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
-                energy = (energy[:-1] + energy[1:]) / 2.
+        elif sed_type == "eflux":
+            flux = self.energy_flux(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
+            energy = (energy[:-1] + energy[1:]) / 2.
 
-            else:
-                raise ValueError(f"Not a valid SED type {sed_type}")
+        else:
+            raise ValueError(f"Not a valid SED type {sed_type}")
 
         y = self._plot_scale_flux(energy, flux, energy_power)
 
         ax.plot(energy.value, y.value, **kwargs)
 
-        self._plot_format_ax(ax, energy, y, energy_power)
+        self._plot_format_ax(ax, energy, y, energy_power, sed_type)
         return ax
 
     def plot_error(
@@ -415,26 +411,22 @@ class SpectralModel(Model):
         ).edges
 
 
-        if sed_type:
-            if sed_type == "dnde":
-                flux, flux_err = self.evaluate_error(energy).to(flux_unit)
-            
-            elif sed_type == "e2dnde":
-                energy_power = 2
-                flux, flux_err = self.evaluate_error(energy).to(flux_unit)
+        if sed_type == "dnde":
+            flux, flux_err = self.evaluate_error(energy).to(flux_unit)
+        
+        elif sed_type == "e2dnde":
+            flux, flux_err = energy ** 2 * self.evaluate_error(energy).to(flux_unit)
 
-            elif sed_type == "flux":
-                energy_power = 0
-                flux, flux_err = self.integral_error(energy[:-1], energy[1:]).to("cm-2 s-1")
-                energy = (energy[:-1] + energy[1:]) / 2.
+        elif sed_type == "flux":
+            flux, flux_err = self.integral_error(energy[:-1], energy[1:]).to("cm-2 s-1")
+            energy = (energy[:-1] + energy[1:]) / 2.
 
-            elif sed_type == "eflux":
-                energy_power = 0
-                flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
-                energy = (energy[:-1] + energy[1:]) / 2.
+        elif sed_type == "eflux":
+            flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
+            energy = (energy[:-1] + energy[1:]) / 2.
 
-            else:
-                raise ValueError(f"Not a valid SED type {sed_type}")
+        else:
+            raise ValueError(f"Not a valid SED type {sed_type}")
 
         y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
         y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
@@ -442,15 +434,15 @@ class SpectralModel(Model):
         where = (energy >= energy_range[0]) & (energy <= energy_range[1])
         ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
 
-        self._plot_format_ax(ax, energy, y_lo, energy_power)
+        self._plot_format_ax(ax, energy, y_lo, energy_power, sed_type)
         return ax
 
-    def _plot_format_ax(self, ax, energy, y, energy_power):
+    def _plot_format_ax(self, ax, energy, y, energy_power, sed_type):
         ax.set_xlabel(f"Energy [{energy.unit}]")
         if energy_power > 0:
-            ax.set_ylabel(f"E{energy_power} * Flux [{y.unit}]")
+            ax.set_ylabel(f"E{energy_power} * {sed_type} [{y.unit}]")
         else:
-            ax.set_ylabel(f"Flux [{y.unit}]")
+            ax.set_ylabel(f"{sed_type} [{y.unit}]")
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
