@@ -12,6 +12,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.interpolation import interpolation_scale
+
 __all__ = ["find_roots", "find_peaks", "estimate_exposure_reco_energy"]
 
 from scipy.optimize import root_scalar
@@ -114,7 +115,7 @@ def find_roots(
     NDouput = np.empty(lower_bounds.shape, dtype=object)
     while not it.finished:
         it_idx = it.multi_index
-        
+
         scale = interpolation_scale(points_scale)
         a = scale(lower_bounds[it_idx].value)
         b = scale(upper_bounds[it_idx].value)
