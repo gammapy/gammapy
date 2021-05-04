@@ -20,7 +20,7 @@ from scipy.optimize import root_scalar
 def find_roots(
     f,
     lower_bounds,
-    uper_bounds,
+    upper_bounds,
     nbin=1000,
     args=(),
     method="brentq",
@@ -101,28 +101,34 @@ def find_roots(
         options=options,
     )
 
-    if lower_bounds.shape != uper_bounds.shape:
-        raise ValueError(f"Dimension mismatch between lower_bounds and uper_bounds")
     lower_bounds = u.Quantity(lower_bounds)
-    uper_bounds = u.Quantity(uper_bounds).to(lower_bounds.unit)
+    xunit = lower_bounds.unit
+    upper_bounds = u.Quantity(upper_bounds).to(xunit)
+    if lower_bounds.shape != upper_bounds.shape:
+        raise ValueError(f"Dimension mismatch between lower_bounds and upper_bounds")
 
     it = np.nditer(lower_bounds, flags=["multi_index"])
     NDouput = np.empty(lower_bounds.shape, dtype=object)
     while not it.finished:
-        ind = it.multi_index
-        x = np.linspace(lower_bounds[ind], uper_bounds[ind], nbin)
-        xunit = x.unit
+        it_idx = it.multi_index
+        
+        x = np.linspace(
+            lower_bounds[it_idx].value, upper_bounds[it_idx].value, nbin
+        )
         signs = np.sign(f(x))
         ind = np.where(signs[:-1] != signs[1:])[0]
         nroots = len(ind)
+
         if nroots > 0:
-            roots = np.ones(nroots) * np.nan
+            roots = u.Quantity(np.ones(nroots), unit=xunit) * np.nan
             solvers = np.empty(nroots, dtype=object)
         else:
-            NDouput[ind] = {"roots": None, "solvers": None}
+            NDouput[it_idx] = {"roots": None, "solvers": None}
+            it.iternext()
+            continue
 
         for k, idx in enumerate(ind):
-            bracket = [x[idx].value, x[idx + 1].value]
+            bracket = [x[idx], x[idx + 1]]
             if method in ["bisection", "brentq", "brenth", "ridder", "toms748"]:
                 kwargs["bracket"] = bracket
             elif method in ["secant", "newton", "halley"]:
@@ -137,8 +143,9 @@ def find_roots(
                     roots[k] = sol.root * xunit
             except (RuntimeError, ValueError):
                 continue
-        NDouput[ind] = {"roots": roots, "solvers": solvers}
+        NDouput[it_idx] = {"roots": roots, "solvers": solvers}
         it.iternext()
+
     return NDouput
 
 

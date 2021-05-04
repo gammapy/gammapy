@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import astropy.units as u
 from numpy.testing import assert_allclose
 from gammapy.estimators.utils import find_peaks, find_roots
 from gammapy.maps import Map, MapAxis
@@ -67,34 +68,59 @@ class TestFindPeaks:
 
 
 class TestFindRoots:
-    x_bounds = [-3 * np.pi, 2 * np.pi]
+    lower_bounds = [-3 * np.pi, np.pi] * u.rad
+    upper_bounds = [np.pi, 2 * np.pi] * u.rad
 
     def f(self, x):
         return np.cos(x)
 
-    def g(self, x):
-        return np.cos(x) + 2
-
     def h(self, x):
         return x ** 3 - 1
 
-    def test_brentq(self):
-        roots = find_roots(self.f, x_bounds=self.x_bounds, method="brentq")
-        assert_allclose(2 * roots / np.pi, np.array([-5.0, -3.0, -1.0, 1.0, 3.0]))
+    def test_methods(self):
 
-        roots = find_roots(self.h, x_bounds=self.x_bounds, method="brentq")
-        assert_allclose(roots, np.array([1.0]))
+        methods = ["brentq", "secant"]
+        for method in methods:
+            res = find_roots(
+                self.f,
+                lower_bounds=self.lower_bounds,
+                upper_bounds=self.upper_bounds,
+                method="brentq",
+            )
+            assert res[0]["roots"].unit == u.rad
+            assert_allclose(
+                2 * res[0]["roots"].value / np.pi, np.array([-5.0, -3.0, -1.0, 1.0])
+            )
+            assert_allclose(2 * res[1]["roots"].value / np.pi, np.array([3.0]))
+            assert np.all([sol.converged for sol in res[0]["solvers"]])
+            assert np.all([sol.converged for sol in res[1]["solvers"]])
 
-        roots = find_roots(self.g, x_bounds=self.x_bounds, method="brentq")
-        assert roots == None
-
-    def test_secant(self):
-        roots = find_roots(self.f, x_bounds=self.x_bounds, method="secant")
-        assert_allclose(2 * roots / np.pi, np.array([-5.0, -3.0, -1.0, 1.0, 3.0]))
-
-        roots = find_roots(self.h, x_bounds=self.x_bounds, method="secant")
-        assert_allclose(roots, np.array([1.0]))
+            res = find_roots(
+                self.h,
+                lower_bounds=self.lower_bounds,
+                upper_bounds=self.upper_bounds,
+                method="brentq",
+            )
+            assert_allclose(res[0]["roots"].value, np.array([1.0]))
+            assert res[1]["roots"] is None
+            assert res[1]["solvers"] is None
 
     def test_invalid_method(self):
         with pytest.raises(ValueError, match='Unknown solver "xfail"'):
-            find_roots(self.f, x_bounds=self.x_bounds, method="xfail")
+            find_roots(
+                self.f,
+                lower_bounds=self.lower_bounds,
+                upper_bounds=self.upper_bounds,
+                method="xfail",
+            )
+
+    def test_invalid_dimensions(self):
+        with pytest.raises(
+            ValueError, match="Dimension mismatch between lower_bounds and upper_bounds"
+        ):
+            find_roots(
+                self.f,
+                lower_bounds=self.lower_bounds,
+                upper_bounds=[1, 2, 3] * u.rad,
+                method="xfail",
+            )
