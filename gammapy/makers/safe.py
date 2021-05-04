@@ -35,6 +35,9 @@ class SafeMaskMaker(Maker):
     position : `~astropy.coordinates.SkyCoord`
         Position at which the `aeff_percent` or `bias_percent` are computed. By default,
         it uses the position of the center of the map.
+    fixed_offset : `~astropy.coordinates.Angle`
+        offset, calculated from the coordinates of the center of the map, at which 
+        the `aeff_percent` or `bias_percent` are computed.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
@@ -54,6 +57,7 @@ class SafeMaskMaker(Maker):
         aeff_percent=10,
         bias_percent=10,
         position=None,
+        fixed_offset=None,
         offset_max="3 deg",
     ):
         methods = set(methods)
@@ -66,6 +70,7 @@ class SafeMaskMaker(Maker):
         self.aeff_percent = aeff_percent
         self.bias_percent = bias_percent
         self.position = position
+        self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
 
     def make_mask_offset_max(self, dataset, observation):
@@ -134,6 +139,10 @@ class SafeMaskMaker(Maker):
         """
         geom = dataset._geom
 
+        if self.fixed_offset:
+            self.position = geom.center_skydir.directional_offset_by(position_angle=0.*u.deg,
+                                                                              separation=self.fixed_offset)
+
         if self.position is None:
             position = PointSkyRegion(dataset.counts.geom.center_skydir)
         else:
@@ -160,6 +169,10 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         edisp, geom = dataset.edisp, dataset._geom
+
+        if self.fixed_offset:
+            self.position = geom.center_skydir.directional_offset_by(position_angle=0*u.deg,
+                                                                             separation=self.fixed_offset)
 
         if isinstance(edisp, EDispKernelMap):
             edisp = edisp.get_edisp_kernel(self.position)
