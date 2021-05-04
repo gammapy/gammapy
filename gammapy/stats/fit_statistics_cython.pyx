@@ -29,6 +29,9 @@ def cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
             sum += npred[i]
             if counts[i] > 0:
                 sum -= counts[i] * log(npred[i])
+        else:
+            if counts[i] > 0:
+                sum += 1e8
     return 2 * sum
 
 
