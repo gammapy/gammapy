@@ -11,7 +11,7 @@ Installation using Anaconda
 
 The easiest and recommended way to install Gammapy is to install the Anaconda
 distribution from https://www.anaconda.com/download/ and then to install
-Gammapy and it's dependencies by executing this command in a terminal:
+Gammapy and its dependencies by executing this command in a terminal:
 
 .. code-block:: bash
 
