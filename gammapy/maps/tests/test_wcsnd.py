@@ -149,7 +149,7 @@ def test_wcs_nd_map_data_transpose_issue(tmp_path):
     assert_equal(m2.data, data)
 
     # Data should be unmodified after write / read to sparse image format
-    m.write(tmp_path / "sparse.fits.gz")
+    m.write(tmp_path / "sparse.fits.gz", sparse=True)
     m2 = Map.read(tmp_path / "sparse.fits.gz")
     assert_equal(m2.data, data)
 
