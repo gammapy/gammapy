@@ -5,6 +5,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
 from gammapy.utils.units import unit_from_fits_image_hdu
+import logging
 from .region import RegionGeom
 from .regionnd import RegionNDMap
 from .geom import MapCoord, pix_tuple_to_idx
@@ -14,12 +15,15 @@ from .hpx import (
     HpxGeom,
     HpxToWcsMapping,
     nside_to_order,
-    get_superpixels
+    get_superpixels,
+    get_pix_size_from_nside,
 )
 from .hpxmap import HpxMap
 from .utils import INVALID_INDEX
 
 __all__ = ["HpxNDMap"]
+
+log = logging.getLogger(__name__)
 
 
 class HpxNDMap(HpxMap):
@@ -466,9 +470,9 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
-            Convolution kernel. Must have the same geometry as
-            `self.to_wcs()`.
+        kernel : `~gammapy.irf.PSFKernel`
+            Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
+            with respect to the input map to prevent artifacts in the projection.
         use_fft : bool
             Use `scipy.signal.fftconvolve` if True (default)
             and `ndi.convolve` otherwise.
@@ -481,18 +485,24 @@ class HpxNDMap(HpxMap):
         map : `HpxNDMap`
             Convolved map.
         """
-        if self.geom.width < 10*u.deg:
-            # Project to WCS and convolve
-            wcs_map  = self.to_wcs(fill_nan = False)
-            conv_wcs_map = wcs_map.convolve(kernel, use_fft,**kwargs)
-            # and back to hpx
-            hpx_data = HpxNDMap.from_geom(self.geom).data
-            hpx2wcs = HpxToWcsMapping.create(self.geom, conv_wcs_map.geom)
-            hpx_data = hpx2wcs.fill_hpx_map_from_wcs_data(conv_wcs_map.data, hpx_data)
-            conv_hpx_map = HpxNDMap.from_geom(self.geom, data = hpx_data)
-            return conv_hpx_map
-        else:
-            raise NotImplementedError('Convolution via a WCS geometry is not supported for large maps.')
+        if self.geom.width > 10*u.deg:
+            log.warning("Convolution via WCS projection is not recommended for large maps. "\
+                "Perhaps the method `convolve_full()` is more suited for this case.")
+        wcs_geom = kernel.psf_kernel_map.geom.to_image()
+        wcs_size = np.min(wcs_geom._cdelt)
+        hpx_size = get_pix_size_from_nside(self.geom.nside[0])
+        if wcs_size > 0.5*hpx_size:
+            raise ValueError("The kernel pixel size has to be smaller by at least a factor 2 than the input map to prevent artifacts.")
+        hpx2wcs = HpxToWcsMapping.create(self.geom, wcs_geom)
+        # Project to WCS and convolve
+        wcs_map  = self.to_wcs(hpx2wcs = hpx2wcs, fill_nan = False)
+        conv_wcs_map = wcs_map.convolve(kernel, use_fft,**kwargs)
+        # and back to hpx
+        hpx_data = HpxNDMap.from_geom(self.geom).data
+        hpx_data = hpx2wcs.fill_hpx_map_from_wcs_data(conv_wcs_map.data, hpx_data)
+        conv_hpx_map = HpxNDMap.from_geom(self.geom, data = hpx_data)
+        return conv_hpx_map
+
 
     def get_by_idx(self, idx):
         # inherited docstring
