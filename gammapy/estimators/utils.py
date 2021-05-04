@@ -19,7 +19,8 @@ from scipy.optimize import root_scalar
 
 def find_roots(
     f,
-    x_bounds,
+    lower_bounds,
+    uper_bounds,
     nbin=1000,
     args=(),
     method="brentq",
@@ -35,9 +36,13 @@ def find_roots(
     Parameters
     ----------
     f : callable
-        A function to find roots of.
-    x_bounds : A sequence of 2 floats
-        The search range to find roots.
+        A function to find roots of. Its output should be unitless.
+    lower_bounds : `~astropy.units.Quantity`
+        Lower bound of the search ranges to find roots.
+        If an array is given search will be performed element-wise.
+    uper_bounds : `~astropy.units.Quantity`
+        Uper bound of the search ranges to find roots.
+        If an array is given search will be performed element-wise.
     nbin : int
         Number of bins to sample the search range
     args : tuple, optional
@@ -75,10 +80,14 @@ def find_roots(
 
     Returns
     -------
-    roots : `~numpy.array` or None
-        The function roots in the search range.
-        If no roots are not found, it returns None.
-        If the solver failed to converge in a bracketing range array element is NaN.
+    results : `~numpy.array` of dict
+        Each array element contains a dict of {`roots`, `solvers`}.
+        For each input search range :
+        `roots` is a `~astropy.units.Quantity` containig the function roots
+        `solvers` is a `~scipy.optimize.RootResults` containig the solver results.
+        If no roots are not found, `roots` and `solvers` are None.
+        If the solver failed to converge in a bracketing range
+        the corresponding `roots` array element is NaN.
     """
 
     kwargs = dict(
@@ -92,28 +101,45 @@ def find_roots(
         options=options,
     )
 
-    x = np.linspace(x_bounds[0], x_bounds[1], nbin)
-    signs = np.sign(f(x))
-    ind = np.where(signs[:-1] != signs[1:])[0]
-    nroots = len(ind)
-    if nroots > 0:
-        roots = np.ones(nroots) * np.nan
-    else:
-        return None
+    if lower_bounds.shape != uper_bounds.shape:
+        raise ValueError(f"Dimension mismatch between lower_bounds and uper_bounds")
+    lower_bounds = u.Quantity(lower_bounds)
+    uper_bounds = u.Quantity(uper_bounds).to(lower_bounds.unit)
 
-    for k, idx in enumerate(ind):
-        bracket = [x[idx], x[idx + 1]]
-        if method in ["bisection", "brentq", "brenth", "ridder", "toms748"]:
-            kwargs["bracket"] = bracket
-        elif method in ["secant", "newton", "halley"]:
-            kwargs["x0"] = bracket[0]
-            kwargs["x1"] = bracket[1]
+    it = np.nditer(lower_bounds, flags=["multi_index"])
+    NDouput = np.empty(lower_bounds.shape, dtype=object)
+    while not it.finished:
+        ind = it.multi_index
+        x = np.linspace(lower_bounds[ind], uper_bounds[ind], nbin)
+        xunit = x.unit
+        signs = np.sign(f(x))
+        ind = np.where(signs[:-1] != signs[1:])[0]
+        nroots = len(ind)
+        if nroots > 0:
+            roots = np.ones(nroots) * np.nan
+            solvers = np.empty(nroots, dtype=object)
         else:
-            raise ValueError(f'Unknown solver "{method}"')
-        sol = root_scalar(f, **kwargs)
-        if sol.converged:
-            roots[k] = sol.root
-    return roots
+            NDouput[ind] = {"roots": None, "solvers": None}
+
+        for k, idx in enumerate(ind):
+            bracket = [x[idx].value, x[idx + 1].value]
+            if method in ["bisection", "brentq", "brenth", "ridder", "toms748"]:
+                kwargs["bracket"] = bracket
+            elif method in ["secant", "newton", "halley"]:
+                kwargs["x0"] = bracket[0]
+                kwargs["x1"] = bracket[1]
+            else:
+                raise ValueError(f'Unknown solver "{method}"')
+            try:
+                sol = root_scalar(f, **kwargs)
+                solvers[k] = sol
+                if sol.converged:
+                    roots[k] = sol.root * xunit
+            except (RuntimeError, ValueError):
+                continue
+        NDouput[ind] = {"roots": roots, "solvers": solvers}
+        it.iternext()
+    return NDouput
 
 
 def find_peaks(image, threshold, min_distance=1):
