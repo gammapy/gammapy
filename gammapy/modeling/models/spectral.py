@@ -357,6 +357,7 @@ class SpectralModel(Model):
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
+        sed_type = "dnde",
         n_points=100,
         **kwargs,
     ):
@@ -388,6 +389,8 @@ class SpectralModel(Model):
             Unit of the flux axis
         energy_power : int, optional
             Power of energy to multiply flux axis with
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+            Evaluation methods of the model
         n_points : int, optional
             Number of evaluation nodes
         **kwargs : dict
@@ -411,7 +414,27 @@ class SpectralModel(Model):
             energy_min, energy_max, n_points, energy_unit
         ).edges
 
-        flux, flux_err = self.evaluate_error(energy).to(flux_unit)
+
+        if sed_type:
+            if sed_type == "dnde":
+                flux, flux_err = self.evaluate_error(energy).to(flux_unit)
+            
+            elif sed_type == "e2dnde":
+                energy_power = 2
+                flux, flux_err = self.evaluate_error(energy).to(flux_unit)
+
+            elif sed_type == "flux":
+                energy_power = 0
+                flux, flux_err = self.integral_error(energy[:-1], energy[1:]).to("cm-2 s-1")
+                energy = (energy[:-1] + energy[1:]) / 2.
+
+            elif sed_type == "eflux":
+                energy_power = 0
+                flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
+                energy = (energy[:-1] + energy[1:]) / 2.
+
+            else:
+                raise ValueError(f"Not a valid SED type {sed_type}")
 
         y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
         y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
