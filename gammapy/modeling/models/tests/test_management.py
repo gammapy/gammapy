@@ -6,7 +6,7 @@ from regions import CircleSkyRegion
 from numpy.testing import assert_allclose
 from gammapy.modeling import Covariance
 from gammapy.modeling.models import (
-    BackgroundModel,
+    TemplateDataModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
@@ -23,8 +23,8 @@ def backgrounds():
     geom = WcsGeom.create(skydir=(0, 0), npix=(5, 4), frame="galactic", axes=[axis])
     m = Map.from_geom(geom)
     m.quantity = np.ones(geom.data_shape) * 1e-7
-    background1 = BackgroundModel(m, name="bkg1", datasets_names="dataset-1")
-    background2 = BackgroundModel(m, name="bkg2", datasets_names=["dataset-2"])
+    background1 = TemplateDataModel(m, name="bkg1", datasets_names="dataset-1")
+    background2 = TemplateDataModel(m, name="bkg2", datasets_names=["dataset-2"])
     backgrounds = [background1, background2]
     return backgrounds
 
@@ -130,8 +130,8 @@ def test_select(models):
         {"datasets_names": "dataset-2"},
         {"datasets_names": ["dataset-1", "dataset-2"]},
         {"datasets_names": None},
-        {"tag": "BackgroundModel"},
-        {"tag": ["SkyModel", "BackgroundModel"]},
+        {"tag": "TemplateDataModel"},
+        {"tag": ["SkyModel", "TemplateDataModel"]},
         {"tag": "point", "model_type": "spatial"},
         {"tag": ["point", "gauss"], "model_type": "spatial"},
         {"tag": "pl", "model_type": "spectral"},
