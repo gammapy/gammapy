@@ -163,7 +163,7 @@ class ASmoothMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(self.energy_edges) - 1, show_pbar=show_pbar, desc="Energy bins") as pb:
+        with pbar(total=len(energy_edges) - 1, show_pbar=show_pbar, desc="Energy bins") as pb:
             for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
                 dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
                 dataset_sliced.models = dataset.models
