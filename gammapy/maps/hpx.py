@@ -564,7 +564,7 @@ class HpxGeom(Geom):
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout region.
         width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
-            Radius of the circular cutout region.
+            Diameter of the circular cutout region.
 
         Returns
         -------
@@ -1862,3 +1862,39 @@ class HpxToWcsMapping:
             wcs_data[~valid] = np.nan
 
         return wcs_data
+
+    def fill_hpx_map_from_wcs_data(
+        self, wcs_data, hpx_data, normalize=True
+    ):
+        """Fill the HPX map from the WCS data using the pre-calculated mappings.
+
+        Parameters
+        ----------
+        wcs_data : `~numpy.ndarray`
+            The input WCS data
+        hpx_data : `~numpy.ndarray`
+            The data array being filled
+        normalize : bool
+            True -> preserve integral by splitting HEALPIX values between bins
+        """
+
+        shape = tuple([t.flat[0] for t in self._npix])
+        if self.valid.ndim != 1:
+            shape = hpx_data.shape[:-1] + shape
+
+        valid = np.where(self.valid.reshape(shape))
+        lmap = self.lmap[self.valid]
+        mult_val = self._mult_val[self.valid]
+
+        wcs_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
+        wcs_slice = tuple(wcs_slice + list(valid)[::-1][:2])
+
+        hpx_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
+        hpx_slice = tuple(hpx_slice + [lmap])
+
+        if normalize:
+            hpx_data[hpx_slice] = 1/mult_val * wcs_data[wcs_slice]
+        else:
+            hpx_data[hpx_slice] = wcs_data[wcs_slice]
+
+        return hpx_data
