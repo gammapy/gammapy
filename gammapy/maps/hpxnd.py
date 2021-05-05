@@ -496,7 +496,7 @@ class HpxNDMap(HpxMap):
         map : `HpxNDMap`
             Convolved map.
         """
-        return convolve_wcs(self, kernel, use_fft=True, **kwargs)
+        return self.convolve_wcs(kernel, use_fft, **kwargs)
 
     def convolve_wcs(self, kernel, use_fft=True, **kwargs):
         """
