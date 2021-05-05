@@ -7,7 +7,6 @@ cimport cython
 cdef extern from "math.h":
     float log(float x)
 
-
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
@@ -22,16 +21,21 @@ def cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
         Predicted counts array.
     """
     cdef np.float_t sum = 0
+    cdef np.float_t npr, lognpr
     cdef unsigned int i, ni
     ni = counts.shape[0]
     for i in range(ni):
-        if npred[i] > 0:
-            sum += npred[i]
-            if counts[i] > 0:
-                sum -= counts[i] * log(npred[i])
+        npr = npred[i]
+        if npr > 0:
+            lognpr = log(npr)
         else:
-            if counts[i] > 0:
-                sum += 1e8
+            npr = 1e-25
+            lognpr = -57.56
+
+        sum += npr
+        if counts[i] > 0:
+            sum -= counts[i] * lognpr
+
     return 2 * sum
 
 
