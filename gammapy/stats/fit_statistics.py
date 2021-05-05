@@ -8,9 +8,9 @@ import numpy as np
 __all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
 N_ON_MIN = 1e-25
+TRUNCATION_VALUE = 1e-25
 
-
-def cash(n_on, mu_on):
+def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     r"""Cash statistic, for Poisson data.
 
     The Cash statistic is defined as:
@@ -27,6 +27,9 @@ def cash(n_on, mu_on):
         Observed counts
     mu_on : array_like
         Expected counts
+    truncation_value : array_like
+        Minimum value use for ``mu_on``
+        ``mu_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value``
 
     Returns
     -------
@@ -44,11 +47,15 @@ def cash(n_on, mu_on):
     """
     n_on = np.asanyarray(n_on)
     mu_on = np.asanyarray(mu_on)
+    truncation_value = np.asanyarray(truncation_value)
+    if np.any(truncation_value)<=0:
+        raise ValueError("Cash statistic truncation value must be positive.")
+
+    mu_on = np.where(mu_on <= truncation_value, truncation_value, mu_on)
 
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide="ignore", invalid="ignore"):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
-        stat = np.where(mu_on > 0, stat, 0)
     return stat
 
 
