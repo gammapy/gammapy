@@ -509,7 +509,6 @@ def test_hpxmap_read_healpy(tmp_path):
     hp.write_map(
         filename=path,
         m=m, nest=False,
-        column_names=["data map", "background map", "exposure map"],
         overwrite=True
     )
     with fits.open(path, memmap=False) as hdulist:
@@ -522,7 +521,14 @@ def test_hpxmap_read_healpy(tmp_path):
         format = HpxConv.identify_hpx_format(header)
         assert format == "healpy"
 
+    #default case: should take the first column "TEMPERATURE"
     m1 = Map.read(path)
     assert m1.data.shape[0] == npix
     diff = np.sum(m[0] - m1.data)
+    assert_allclose(diff, 0.0)
+
+    #specifying the colname by default for healpy it is "Q_POLARISATION"
+    m2 = Map.read(path, colname="Q_POLARISATION")
+    assert m2.data.shape[0] == npix
+    diff = np.sum(m[1] - m2.data)
     assert_allclose(diff, 0.0)

@@ -141,7 +141,7 @@ class HpxNDMap(HpxMap):
         return wcs_tiles
 
     @classmethod
-    def from_hdu(cls, hdu, hdu_bands=None, format=None):
+    def from_hdu(cls, hdu, hdu_bands=None, format=None, colname=None):
         """Make a HpxNDMap object from a FITS HDU.
 
         Parameters
@@ -199,9 +199,12 @@ class HpxNDMap(HpxMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            for c in colnames:
-                if c.find(hpx_conv.colstring) == 0:
-                    cnames.append(c)
+            if colname is not None:
+                cnames.append(colname)
+            else:
+                for c in colnames:
+                    if c.find(hpx_conv.colstring) == 0:
+                        cnames.append(c)
             nbin = len(cnames)
             if nbin == 1:
                 map_out.data = hdu.data.field(cnames[0])

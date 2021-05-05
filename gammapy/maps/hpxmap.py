@@ -99,7 +99,7 @@ class HpxMap(Map):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None, colname=None):
         """Make a HpxMap object from a FITS HDUList.
 
         Parameters
@@ -149,7 +149,7 @@ class HpxMap(Map):
         if format is None:
             format = HpxConv.identify_hpx_format(hdu_out.header)
 
-        hpx_map = cls.from_hdu(hdu_out, hdu_bands_out, format=format)
+        hpx_map = cls.from_hdu(hdu_out, hdu_bands_out, format=format, colname=colname)
 
         # exposure maps have an additional GTI hdu
         if format == "fgst-bexpcube" and "GTI" in hdu_list:
