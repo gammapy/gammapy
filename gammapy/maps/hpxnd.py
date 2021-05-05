@@ -410,12 +410,23 @@ class HpxNDMap(HpxMap):
         """
         import healpy as hp
 
-        if not self.geom.is_allsky:
-            raise NotImplementedError("Smoothing is only possible for all-sky maps")
-
         nside = self.geom.nside
         lmax = 3*nside-1 # maximum l of the power spectrum
         nest = self.geom.nest
+        allsky = self.geom.is_allsky
+        ipix = self.geom._ipix
+
+        if not allsky: #stack into an all sky map
+            full_sky_geom = HpxGeom.create(nside = self.geom.nside,
+                                        nest = self.geom.nest,
+                                        frame = self.geom.frame,
+                                        axes = self.geom.axes
+                                        )
+            full_sky_map = HpxNDMap.from_geom(full_sky_geom)
+            for img, idx in self.iter_by_image():
+                full_sky_map.data[idx][ipix] = img
+        else:
+            full_sky_map = self
 
         # The smoothing width is expected by healpy in radians
         if isinstance(width, (u.Quantity, str)):
@@ -428,7 +439,7 @@ class HpxNDMap(HpxMap):
 
         smoothed_data = np.empty(self.data.shape, dtype=float)
 
-        for img, idx in self.iter_by_image():
+        for img, idx in full_sky_map.iter_by_image():
             img = img.astype(float)
 
             if nest:
@@ -453,9 +464,39 @@ class HpxNDMap(HpxMap):
             if nest:
                 # reorder back to nest after the smoothing
                 data = hp.pixelfunc.reorder(data, r2n=True)
-            smoothed_data[idx] = data
+            smoothed_data[idx] = data[ipix]
 
         return self._init_copy(data=smoothed_data)
+
+    def convolve(self, kernel, use_fft=True, **kwargs):
+        """
+        Convolve map with a WCS kernel.
+
+        It projects the map into a WCS geometry, convolves with a WCS kernel and
+        projects back into the initial Healpix geometry.
+
+        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is higher dimensional it must match the map in the number of
+        dimensions and the corresponding kernel is selected for every image plane.
+
+        Parameters
+        ----------
+        kernel : `~gammapy.irf.PSFKernel`
+            Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
+            with respect to the input map to prevent artifacts in the projection.
+        use_fft : bool
+            Use `scipy.signal.fftconvolve` if True (default)
+            and `ndi.convolve` otherwise.
+        kwargs : dict
+            Keyword arguments passed to `scipy.signal.fftconvolve` or
+            `ndi.convolve`.
+
+        Returns
+        -------
+        map : `HpxNDMap`
+            Convolved map.
+        """
+        return convolve_wcs(self, kernel, use_fft=True, **kwargs)
 
     def convolve_wcs(self, kernel, use_fft=True, **kwargs):
         """
@@ -489,7 +530,7 @@ class HpxNDMap(HpxMap):
             log.warning("Convolution via WCS projection is not recommended for large maps. "\
                 "Perhaps the method `convolve_full()` is more suited for this case.")
         wcs_geom = kernel.psf_kernel_map.geom.to_image()
-        wcs_size = np.min(wcs_geom._cdelt)
+        wcs_size = np.max(wcs_geom.pixel_scales.deg)
         hpx_size = get_pix_size_from_nside(self.geom.nside[0])
         if wcs_size > 0.5*hpx_size:
             raise ValueError("The kernel pixel size has to be smaller by at least a factor 2 than the input map to prevent artifacts.")
@@ -543,7 +584,7 @@ class HpxNDMap(HpxMap):
                                         )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
             for img, idx in self.iter_by_image():
-                full_sky_map.data[idx, ipix] = img
+                full_sky_map.data[idx][ipix] = img
         else:
             full_sky_map = self
 
