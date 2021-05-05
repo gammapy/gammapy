@@ -495,9 +495,12 @@ def test_smooth(kernel):
     assert_allclose(actual_ring, desired_ring)
     assert smoothed_ring.data.dtype == float
 
-    with pytest.raises(NotImplementedError):
-        cutout = m_nest.cutout(position=(0,0), width=5*u.deg)
-        cutout.smooth(0.2 * u.deg, kernel)
+    # with pytest.raises(NotImplementedError):
+    cutout = m_nest.cutout(position=(0,0), width=15*u.deg)
+    smoothed_cutout = cutout.smooth(0.1 * u.deg, kernel)
+    actual_cutout = cutout.data.sum()
+    desired_cutout = smoothed_cutout.data.sum()
+    assert_allclose(actual_cutout, desired_cutout, rtol=0.01)
 
     with pytest.raises(ValueError):
         m_nest.smooth(0.2 * u.deg, "box")
