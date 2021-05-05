@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+from astropy import units as u
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
@@ -33,6 +34,11 @@ def test_safe_mask_maker(observations, caplog):
         offset_max="3 deg", bias_percent=0.02, position=obs.pointing_radec
     )
 
+    fixed_offset = 1.5 * u.deg
+    safe_mask_maker_offset = SafeMaskMaker(
+                                    offset_max="3 deg", bias_percent=0.02, fixed_offset = fixed_offset
+                                    )
+
     dataset = dataset_maker.run(empty_dataset, obs)
 
     mask_offset = safe_mask_maker.make_mask_offset_max(dataset=dataset, observation=obs)
@@ -44,10 +50,14 @@ def test_safe_mask_maker(observations, caplog):
     assert_allclose(mask_energy_aeff_default.data.sum(), 1936)
 
     mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
+    mask_aeff_max_offset = safe_mask_maker_offset.make_mask_energy_aeff_max(dataset, obs)
     assert_allclose(mask_aeff_max.data.sum(), 1210)
+    assert_allclose(mask_aeff_max_offset.data.sum(), 1210)
 
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
+    mask_edisp_bias_offset = safe_mask_maker_offset.make_mask_energy_edisp_bias(dataset, obs)
     assert_allclose(mask_edisp_bias.data.sum(), 1815)
+    assert_allclose(mask_edisp_bias_offset.data.sum(), 121)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert_allclose(mask_bkg_peak.data.sum(), 1815)      
