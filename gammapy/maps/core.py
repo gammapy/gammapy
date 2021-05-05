@@ -238,10 +238,14 @@ class Map(abc.ABC):
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(
-            hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format, colname=colname
-        )
-
+        if map_type is "hpx":
+            return cls_out.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format, colname=colname
+            )
+        else:
+            return cls_out.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
+            )
     @staticmethod
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
