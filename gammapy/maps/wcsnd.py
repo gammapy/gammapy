@@ -602,8 +602,10 @@ class WcsNDMap(WcsMap):
         """Convolve map with a kernel.
 
         If the kernel is two dimensional, it is applied to all image planes likewise.
-        If the kernel is higher dimensional it must match the map in the number of
-        dimensions and the corresponding kernel is selected for every image plane.
+        If the kernel is higher dimensional should either match the map in the number of
+        dimensions or the map must be an image (no non-spatial axes). In that case, the
+        corresponding kernel is selected and applied to every image plane or to the single
+        input image respectively.
 
         Parameters
         ----------
