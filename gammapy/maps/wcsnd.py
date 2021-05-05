@@ -599,8 +599,7 @@ class WcsNDMap(WcsMap):
         return self._init_copy(data=data)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
-        """
-        Convolve map with a kernel.
+        """Convolve map with a kernel.
 
         If the kernel is two dimensional, it is applied to all image planes likewise.
         If the kernel is higher dimensional it must match the map in the number of

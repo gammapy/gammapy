@@ -533,17 +533,17 @@ class HpxNDMap(HpxMap):
         """
         # TODO: maybe go through `.to_wcs_tiles()` to make this work for allsky maps
         if self.geom.is_allsky:
-            raise ValueError("WCS based convolution is not supported for allsky maps.")
+            raise ValueError("Convolution via WCS projection is not supported for allsky maps.")
 
         if self.geom.width > 10 * u.deg:
             log.warning(
                 "Convolution via WCS projection is not recommended for large "
-                "maps. Perhaps the method `convolve_full()` is more suited for "
+                "maps (> 10 deg). Perhaps the method `convolve_full()` is more suited for "
                 "this case."
             )
 
-        wcs_geom = kernel.psf_kernel_map.geom.to_image()
-        wcs_size = np.max(wcs_geom.pixel_scales.deg)
+        geom_kernel = kernel.psf_kernel_map.geom.to_image()
+        wcs_size = np.max(geom_kernel.pixel_scales.deg)
         hpx_size = get_pix_size_from_nside(self.geom.nside[0])
 
         if wcs_size > 0.5 * hpx_size:
@@ -552,7 +552,8 @@ class HpxNDMap(HpxMap):
                 f" a factor 2 than the pixel size of the input map of {hpx_size}"
             )
 
-        hpx2wcs = HpxToWcsMapping.create(hpx=self.geom, wcs=wcs_geom)
+        geom_wcs = self.geom.to_wcs_geom(proj="TAN").to_image()
+        hpx2wcs = HpxToWcsMapping.create(hpx=self.geom, wcs=geom_wcs.to_binsz(binsz=wcs_size))
 
         # Project to WCS and convolve
         wcs_map = self.to_wcs(hpx2wcs=hpx2wcs, fill_nan=False)
