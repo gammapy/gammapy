@@ -7,6 +7,9 @@ cimport cython
 cdef extern from "math.h":
     float log(float x)
 
+global TRUNCATION_VALUE
+TRUNCATION_VALUE = 1e-25
+
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
@@ -23,14 +26,17 @@ def cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
     cdef np.float_t sum = 0
     cdef np.float_t npr, lognpr
     cdef unsigned int i, ni
+    cdef np.float_t trunc = TRUNCATION_VALUE
+    cdef np.float_t logtrunc = log(TRUNCATION_VALUE)
+
     ni = counts.shape[0]
     for i in range(ni):
         npr = npred[i]
-        if npr > 0:
+        if npr > trunc:
             lognpr = log(npr)
         else:
-            npr = 1e-25
-            lognpr = -57.56
+            npr = trunc
+            lognpr = logtrunc
 
         sum += npr
         if counts[i] > 0:
