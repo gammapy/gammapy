@@ -2655,16 +2655,13 @@ class MapEvaluator:
     def compute_flux_psf_convolved(self):
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
-
         if self.model.spatial_model:
             if self.psf_containment is not None:
                 value = value * self.psf_containment
             else:
                 value = value * self.compute_flux_spatial()
-
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
-
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
     def _compute_flux_spatial(self):
@@ -2705,7 +2702,10 @@ class MapEvaluator:
         """Compute spectral flux"""
         energy = self.geom.axes["energy_true"].edges
         value = self.model.spectral_model.integral(energy[:-1], energy[1:],)
-        return value.reshape((-1, 1, 1))
+        if self.geom.is_hpx:
+            return value.reshape((-1, 1))
+        else:
+            return value.reshape((-1, 1, 1))
 
     def compute_temporal_norm(self):
         """Compute temporal norm """
