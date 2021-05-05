@@ -50,12 +50,12 @@ def test_safe_mask_maker(observations, caplog):
     assert_allclose(mask_energy_aeff_default.data.sum(), 1936)
 
     mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
-    mask_aeff_max_offset = safe_mask_maker_offset.make_mask_energy_aeff_max(dataset)
+    mask_aeff_max_offset = safe_mask_maker_offset.make_mask_energy_aeff_max(dataset, obs)
     assert_allclose(mask_aeff_max.data.sum(), 1210)
     assert_allclose(mask_aeff_max_offset.data.sum(), 1210)
 
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    mask_edisp_bias_offset = safe_mask_maker_offset.make_mask_energy_edisp_bias(dataset)
+    mask_edisp_bias_offset = safe_mask_maker_offset.make_mask_energy_edisp_bias(dataset, obs)
     assert_allclose(mask_edisp_bias.data.sum(), 1815)
     assert_allclose(mask_edisp_bias_offset.data.sum(), 121)
 

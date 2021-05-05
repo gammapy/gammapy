@@ -56,7 +56,7 @@ class SafeMaskMaker(Maker):
         methods=("aeff-default",),
         aeff_percent=10,
         bias_percent=10,
-        position=None,
+        position = None,
         fixed_offset=None,
         offset_max="3 deg",
     ):
@@ -72,6 +72,9 @@ class SafeMaskMaker(Maker):
         self.position = position
         self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
+
+        if self.position and self.fixed_offset:
+            raise ValueError("`position` and `fixed_offset` attributes are mutually exclusive")
 
     def make_mask_offset_max(self, dataset, observation):
         """Make maximum offset mask.
@@ -124,13 +127,15 @@ class SafeMaskMaker(Maker):
             energy_min=energy_min, energy_max=energy_max
         )
 
-    def make_mask_energy_aeff_max(self, dataset):
+    def make_mask_energy_aeff_max(self, dataset, observation=None):
         """Make safe energy mask from effective area maximum value.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
+        observation: `~gammapy.data.Observation`
+            Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
         -------
@@ -140,10 +145,13 @@ class SafeMaskMaker(Maker):
         geom = dataset._geom
 
         if self.fixed_offset:
-            self.position = geom.center_skydir.directional_offset_by(position_angle=0.*u.deg,
+            if observation:
+                position = observation.pointing_radec.directional_offset_by(position_angle=0.*u.deg,
                                                                               separation=self.fixed_offset)
+            else:
+                raise ValueError(f"observation argument is mandatory with {self.fixed_offset}")
 
-        if self.position is None:
+        elif self.position is None and self.fixed_offset is None:
             position = PointSkyRegion(dataset.counts.geom.center_skydir)
         else:
             position = PointSkyRegion(self.position)
@@ -155,13 +163,15 @@ class SafeMaskMaker(Maker):
         energy_min = model.inverse(aeff_thres)
         return geom.energy_mask(energy_min=energy_min)
 
-    def make_mask_energy_edisp_bias(self, dataset):
+    def make_mask_energy_edisp_bias(self, dataset, observation=None):
         """Make safe energy mask from energy dispersion bias.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
+        observation: `~gammapy.data.Observation`
+            Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
         -------
@@ -169,16 +179,27 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         edisp, geom = dataset.edisp, dataset._geom
+        position = None
 
         if self.fixed_offset:
-            self.position = geom.center_skydir.directional_offset_by(position_angle=0*u.deg,
+            if observation:
+                position = observation.pointing_radec.directional_offset_by(position_angle=0*u.deg,
                                                                              separation=self.fixed_offset)
+            else:
+                raise ValueError(f"{observation} argument is mandatory with {fixed_offset}")
 
         if isinstance(edisp, EDispKernelMap):
-            edisp = edisp.get_edisp_kernel(self.position)
+            if position:
+                edisp = edisp.get_edisp_kernel(position)
+            else:
+                edisp = edisp.get_edisp_kernel(self.position)
         else:
-            e_reco = dataset.counts.geom.axes["energy"].edges
-            edisp = edisp.get_edisp_kernel(self.position, e_reco)
+            if position:
+                e_reco = dataset.counts.geom.axes["energy"].edges
+                edisp = edisp.get_edisp_kernel(position, e_reco)
+            else:
+                e_reco = dataset.counts.geom.axes["energy"].edges
+                edisp = edisp.get_edisp_kernel(self.position, e_reco)
 
         energy_min = edisp.get_bias_energy(self.bias_percent / 100)
         return geom.energy_mask(energy_min=energy_min)
