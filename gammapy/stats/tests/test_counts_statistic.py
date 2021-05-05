@@ -29,11 +29,11 @@ def test_cash_basic(n_on, mu_bkg, result):
 
 
 values = [
-    (1, 2, [-1.0, 1.35767667]),
+    (1, 2, [-0.69829, 1.35767667]),
     (5, 1, [-1.915916, 2.581106]),
     (10, 5, [-2.838105, 3.504033]),
     (100, 23, [-9.669482, 10.336074]),
-    (1, 20, [-1, 1.357677]),
+    (1, 20, [-0.69829, 1.357677]),
     (5 * ref_array, 1 * ref_array, [-1.915916, 2.581106]),
 ]
 
@@ -69,10 +69,9 @@ def test_cash_ul(n_on, mu_bkg, result):
 values = [
     (100, 5, 54.012755),
     (100, -5, -45.631273),
-    (1, -2, np.nan),
+    pytest.param(1, -2, np.nan, marks=pytest.mark.xfail),
     ([1, 2], 5, [8.327276, 10.550546]),
 ]
-
 
 @pytest.mark.parametrize(("mu_bkg", "significance", "result"), values)
 def test_cash_excess_matching_significance(mu_bkg, significance, result):

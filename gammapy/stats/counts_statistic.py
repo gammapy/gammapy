@@ -130,6 +130,7 @@ class CountsStatistic(abc.ABC):
 
         while not it.finished:
             try:
+                # Note that this can fail silently now. A false root can be found. Because of too large slope?
                 n_sig[it.multi_index] = newton(
                     self._n_sig_matching_significance_fcn,
                     np.sqrt(self.n_bkg[it.multi_index]) * significance,
