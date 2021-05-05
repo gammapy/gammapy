@@ -9,6 +9,7 @@ from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
+from gammapy.utils.pbar import pbar
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
@@ -135,14 +136,15 @@ class ASmoothMapEstimator(Estimator):
             )
         return scube
 
-    def run(self, dataset):
+    def run(self, dataset, show_pbar=False):
         """Run adaptive smoothing on input MapDataset.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the input dataset (with one bin in energy at most)
-
+        show_pbar : bool
+            Display progress bar.
         Returns
         -------
         images : dict of `~gammapy.maps.WcsNDMap`
@@ -161,12 +163,13 @@ class ASmoothMapEstimator(Estimator):
 
         results = []
 
-        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
-            dataset_sliced.models = dataset.models
-            result = self.estimate_maps(dataset_sliced)
-            results.append(result)
-
+        with pbar(total=len(self.energy_edges) - 1, show_pbar=show_pbar, desc="Energy bins") as pb:
+            for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
+                dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
+                dataset_sliced.models = dataset.models
+                result = self.estimate_maps(dataset_sliced)
+                results.append(result)
+                pb.update(1)
         result_all = {}
 
         for name in results[0].keys():

@@ -188,7 +188,7 @@ class ParameterEstimator(Estimator):
             f"{parameter.name}_errn": res["errn"],
         }
 
-    def estimate_scan(self, datasets, parameter):
+    def estimate_scan(self, datasets, parameter, show_pbar=False):
         """Estimate parameter stat scan.
 
         Parameters
@@ -218,6 +218,7 @@ class ParameterEstimator(Estimator):
             bounds=bounds,
             nvalues=self.scan_n_values,
             reoptimize=self.reoptimize,
+            show_pbar=show_pbar
         )
 
         return {

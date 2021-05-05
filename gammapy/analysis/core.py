@@ -20,6 +20,7 @@ from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
+from gammapy.utils.pbar import pbar
 
 __all__ = ["Analysis"]
 
@@ -121,16 +122,22 @@ class Analysis:
         for obs in self.observations:
             log.debug(obs)
 
-    def get_datasets(self):
-        """Produce reduced datasets."""
+    def get_datasets(self, show_pbar=False):
+        """Produce reduced datasets.
+
+        Parameters
+        ----------
+        show_pbar : bool
+            Display progress bar.
+        """
         datasets_settings = self.config.datasets
         if not self.observations or len(self.observations) == 0:
             raise RuntimeError("No observations have been selected.")
 
         if datasets_settings.type == "1d":
-            self._spectrum_extraction()
+            self._spectrum_extraction(show_pbar=show_pbar)
         else:  # 3d
-            self._map_making()
+            self._map_making(show_pbar=show_pbar)
 
     def set_models(self, models):
         """Set models on datasets.
@@ -190,8 +197,14 @@ class Analysis:
         self.fit_result = self.fit.run()
         log.info(self.fit_result)
 
-    def get_flux_points(self):
-        """Calculate flux points for a specific model component."""
+    def get_flux_points(self, show_pbar=False):
+        """Calculate flux points for a specific model component.
+
+        Parameters
+        ----------
+        show_pbar : bool
+            Display progress bar.
+        """
         if not self.fit:
             raise RuntimeError("No results available from Fit.")
 
@@ -203,7 +216,7 @@ class Analysis:
             source=fp_settings.source,
             **fp_settings.parameters,
         )
-        fp = flux_point_estimator.run(datasets=self.datasets)
+        fp = flux_point_estimator.run(datasets=self.datasets, show_pbar=show_pbar)
         fp.table["is_ul"] = fp.table["ts"] < 4
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]
@@ -234,8 +247,14 @@ class Analysis:
         )
         self.excess_map = excess_map_estimator.run(self.datasets[0])
 
-    def get_light_curve(self):
-        """Calculate light curve for a specific model component."""
+    def get_light_curve(self, show_pbar=False):
+        """Calculate light curve for a specific model component.
+
+        Parameters
+        ----------
+        show_pbar : bool
+            Display progress bar.
+        """
         lc_settings = self.config.light_curve
         log.info("Computing light curve.")
         energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
@@ -253,7 +272,7 @@ class Analysis:
             source=lc_settings.source,
             **lc_settings.parameters,
         )
-        lc = light_curve_estimator.run(datasets=self.datasets)
+        lc = light_curve_estimator.run(datasets=self.datasets, show_pbar=show_pbar)
         lc.table["is_ul"] = lc.table["ts"] < 4
         self.light_curve = lc
         log.info("\n{}".format(self.light_curve.table))
@@ -283,8 +302,14 @@ class Analysis:
         geom_params["width"] = (width, height)
         return WcsGeom.create(**geom_params)
 
-    def _map_making(self):
-        """Make maps and datasets for 3d analysis."""
+    def _map_making(self, show_pbar=False):
+        """Make maps and datasets for 3d analysis.
+
+        Parameters
+        ----------
+        show_pbar : bool
+            Display progress bar.
+        """
         datasets_settings = self.config.datasets
         log.info("Creating geometry.")
         geom = self._create_geometry()
@@ -331,38 +356,44 @@ class Analysis:
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
-        if datasets_settings.stack:
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
+        with pbar(total=len(self.observations), show_pbar=show_pbar, desc="Datasets") as pb:
+            if datasets_settings.stack:
+                for obs in self.observations:
+                    cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
+                    dataset = maker.run(cutout, obs)
+                    dataset = maker_safe_mask.run(dataset, obs)
+                    if bkg_maker is not None:
+                        dataset = bkg_maker.run(dataset)
 
-                if bkg_method == "ring":
-                    dataset = dataset.to_map_dataset()
+                    if bkg_method == "ring":
+                        dataset = dataset.to_map_dataset()
 
-                log.debug(dataset)
-                stacked.stack(dataset)
-            datasets = [stacked]
-        else:
-            datasets = []
+                    log.debug(dataset)
+                    stacked.stack(dataset)
+                    pb.update(1)
+                datasets = [stacked]
+            else:
+                datasets = []
 
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
-                log.debug(dataset)
-                datasets.append(dataset)
-
+                for obs in self.observations:
+                    cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
+                    dataset = maker.run(cutout, obs)
+                    dataset = maker_safe_mask.run(dataset, obs)
+                    if bkg_maker is not None:
+                        dataset = bkg_maker.run(dataset)
+                    log.debug(dataset)
+                    datasets.append(dataset)
+                    pb.update(1)
         self.datasets = Datasets(datasets)
 
-    def _spectrum_extraction(self):
-        """Run all steps for the spectrum extraction."""
+    def _spectrum_extraction(self, show_pbar=False):
+        """Run all steps for the spectrum extraction.
+
+        Parameters
+        ----------
+        show_pbar : bool
+            Display progress bar.
+        """
         log.info("Reducing spectrum datasets.")
         datasets_settings = self.config.datasets
         on_lon = datasets_settings.on_region.lon
@@ -411,20 +442,20 @@ class Analysis:
         reference = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
         datasets = []
-        for obs in self.observations:
-            log.info(f"Processing observation {obs.obs_id}")
-            dataset = dataset_maker.run(reference.copy(), obs)
-            if bkg_maker is not None:
-                dataset = bkg_maker.run(dataset, obs)
-                if dataset.counts_off is None:
-                    log.info(
-                        f"No OFF region found for observation {obs.obs_id}. Discarding."
-                    )
-                    continue
-            dataset = safe_mask_maker.run(dataset, obs)
-            log.debug(dataset)
-            datasets.append(dataset)
-
+        with pbar(total=len(self.observations), show_pbar=show_pbar, desc="Datasets") as pb:
+            for obs in self.observations:
+                dataset = dataset_maker.run(reference.copy(), obs)
+                if bkg_maker is not None:
+                    dataset = bkg_maker.run(dataset, obs)
+                    if dataset.counts_off is None:
+                        log.info(
+                            f"No OFF region found for observation {obs.obs_id}. Discarding."
+                        )
+                        continue
+                dataset = safe_mask_maker.run(dataset, obs)
+                log.debug(dataset)
+                datasets.append(dataset)
+                pb.update(1)
         self.datasets = Datasets(datasets)
 
         if datasets_settings.stack:

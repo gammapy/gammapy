@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data
+from gammapy.utils.pbar import pbar
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
@@ -322,6 +323,7 @@ class Fit:
         nvalues=11,
         reoptimize=False,
         optimize_opts=None,
+        show_pbar=False,
     ):
         """Compute fit statistic profile.
 
@@ -346,7 +348,8 @@ class Fit:
             Number of parameter grid points to use.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
-
+        show_pbar : bool
+            Display progress bar.
         Returns
         -------
         results : dict
@@ -372,17 +375,19 @@ class Fit:
 
         stats = []
         fit_results = []
-        with parameters.restore_status():
-            for value in values:
-                parameter.value = value
-                if reoptimize:
-                    parameter.frozen = True
-                    result = self.optimize(**optimize_opts)
-                    stat = result.total_stat
-                    fit_results.append(result)
-                else:
-                    stat = self.datasets.stat_sum()
-                stats.append(stat)
+        with pbar(total=len(values), show_pbar=show_pbar, desc="Trial values") as pb:
+            with parameters.restore_status():
+                for value in values:
+                    parameter.value = value
+                    if reoptimize:
+                        parameter.frozen = True
+                        result = self.optimize(**optimize_opts)
+                        stat = result.total_stat
+                        fit_results.append(result)
+                    else:
+                        stat = self.datasets.stat_sum()
+                    stats.append(stat)
+                    pb.update(1)
 
         return {
             f"{parameter.name}_scan": values,
@@ -390,7 +395,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
+    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, show_pbar=False, **optimize_opts):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -408,6 +413,8 @@ class Fit:
             Parameter values to evaluate the fit statistic for.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
+        show_pbar : bool
+            Display progress bar.
         **optimize_opts : dict
             Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
 
@@ -423,22 +430,24 @@ class Fit:
 
         stats = []
         fit_results = []
-        with parameters.restore_status():
-            for x_value, y_value in itertools.product(x_values, y_values):
-                # TODO: Remove log.info() and provide a nice progress bar
-                log.info(f"Processing: x={x_value}, y={y_value}")
-                x.value = x_value
-                y.value = y_value
-                if reoptimize:
-                    x.frozen = True
-                    y.frozen = True
-                    result = self.optimize(**optimize_opts)
-                    stat = result.total_stat
-                    fit_results.append(result)
-                else:
-                    stat = self.datasets.stat_sum()
+        with pbar(total=len(x_values) * len(y_values), show_pbar=show_pbar, desc="Trial values") as pb:
+            with parameters.restore_status():
+                for x_value, y_value in itertools.product(x_values, y_values):
+                    # TODO: Remove log.info() and provide a nice progress bar
+                    log.info(f"Processing: x={x_value}, y={y_value}")
+                    x.value = x_value
+                    y.value = y_value
+                    if reoptimize:
+                        x.frozen = True
+                        y.frozen = True
+                        result = self.optimize(**optimize_opts)
+                        stat = result.total_stat
+                        fit_results.append(result)
+                    else:
+                        stat = self.datasets.stat_sum()
 
-                stats.append(stat)
+                    stats.append(stat)
+                    pb.update(1)
 
         shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
         stats = np.array(stats)

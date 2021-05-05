@@ -15,7 +15,8 @@ from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
-from gammapy.utils.array import shape_2N, symmetric_crop_pad_width, round_up_to_odd
+from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.utils.pbar import pbar
 from .core import Estimator
 from .flux_map import FluxMaps
 from .utils import estimate_exposure_reco_energy
@@ -366,7 +367,7 @@ class TSMapEstimator(Estimator):
 
         return result
 
-    def run(self, dataset):
+    def run(self, dataset, show_pbar=False):
         """
         Run TS map estimation.
 
@@ -377,7 +378,8 @@ class TSMapEstimator(Estimator):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input MapDataset.
-
+        show_pbar : bool
+            Display progress bar.
         Returns
         -------
         maps : dict
@@ -408,15 +410,17 @@ class TSMapEstimator(Estimator):
 
         results = []
 
-        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
+        with pbar(total=len(self.energy_edges) - 1, show_pbar=show_pbar, desc="Energy bins") as pb:
+            for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
+                sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
-            if self.sum_over_energy_groups:
-                sliced_dataset = sliced_dataset.to_image()
+                if self.sum_over_energy_groups:
+                    sliced_dataset = sliced_dataset.to_image()
 
-            sliced_dataset.models = dataset_models
-            result = self.estimate_flux_map(sliced_dataset)
-            results.append(result)
+                sliced_dataset.models = dataset_models
+                result = self.estimate_flux_map(sliced_dataset)
+                results.append(result)
+                pb.update(1)
 
         result_all = {}
 
