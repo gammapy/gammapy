@@ -186,6 +186,8 @@ class Map(abc.ABC):
             with the format of the input file.  If map_type is 'auto'
             then an appropriate map type will be inferred from the
             input file.
+        colname : str, optional
+            data column name to be used of healix map.
 
         Returns
         -------
@@ -234,7 +236,12 @@ class Map(abc.ABC):
 
     @staticmethod
     def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
-        """Create from `astropy.io.fits.HDUList`."""
+        """Create from `astropy.io.fits.HDUList`.
+        Parameters
+        ----------
+        colname : str, optional
+            data column name to be used of healix map.
+        """
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
