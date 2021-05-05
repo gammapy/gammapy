@@ -2615,7 +2615,10 @@ class MapEvaluator:
                     # here we just need to choose a large value, the size will be the rad max
                     geom = geom.to_wcs_geom(width_min="15 deg")
 
-                self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
+                if geom.is_hpx:
+                    self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom.to_wcs_geom())
+                else:
+                    self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local":
             self._init_position = self.model.position
