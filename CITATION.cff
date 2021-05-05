@@ -1,0 +1,93 @@
+# YAML 1.2
+# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
+cff-version: 1.0.3
+message: This research made use of Gammapy, a community-developed core Python package for gamma-ray astronomy.
+title: 'Gammapy'
+doi: 10.5281/zenodo.4701500
+authors:
+- given-names: Christoph
+  family-names: Deil
+  affiliation: HeidelbergCement
+- given-names: Axel
+  family-names: Donath
+  affiliation: MPIK
+- given-names: Régis
+  family-names: Terrier
+  affiliation: APC, CNRS, Université de Paris
+- given-names: Jose
+  family-names: Ruiz
+  name-particle: Enrique
+  affiliation: Instituto de Astrofísica de Andalucía - CSIC
+- given-names: Johannes
+  family-names: King
+  affiliation: Pamyra
+- given-names: Quentin
+  family-names: Remy
+- given-names: Atreyee
+  family-names: Sinha
+  affiliation: LUPM, IN2P3/CNRS
+- given-names: Matthew
+  family-names: Wood
+- given-names: Fabio
+  family-names: Pintore
+  affiliation: INAF
+- given-names: Paz
+  family-names: Arribas
+- given-names: Laura
+  family-names: Olivera
+  affiliation: MPIK
+- given-names: Luca
+  family-names: Giunti
+  affiliation: APC
+- given-names: Ellis
+  family-names: Owen
+- given-names: Brigitta
+  family-names: Sipőcz
+  affiliation: DIRAC Institute, UW
+- given-names: Olga
+  family-names: Vorokh
+- given-names: Thomas
+  family-names: Robitaille
+- given-names: Jonathan
+  family-names: Harris
+- given-names: Lars
+  family-names: Mohrmann
+- given-names: Bruno
+  family-names: Khelifi
+  affiliation: CNRS
+- given-names: Jaleleddine
+  family-names: ''
+- given-names: Cosimo
+  family-names: Nigro
+  affiliation: IFAE
+- given-names: Nachiketa
+  family-names: Chakraborty
+- given-names: Michael
+  family-names: Droettboom
+  affiliation: Mozilla
+- given-names: Helen
+  family-names: Poon
+- given-names: Jason
+  family-names: Watson
+  affiliation: DESY
+- given-names: Arjun
+  family-names: Voruganti
+- given-names: Erik
+  family-names: Tollerud
+  affiliation: Space Telescope Science Institute
+- given-names: Thomas
+  family-names: Armstrong
+- given-names: Domenico
+  family-names: Tiziani
+version: 0.18.2
+date-released: 2020-11-19
+repository-code: https://github.com/gammapy/gammapy
+license: BSD3
+keywords:
+  - Astronomy
+  - "Gamma-rays"
+  - "Data analysis"
+identifiers:
+    -
+      type: url
+      value: "https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D"
