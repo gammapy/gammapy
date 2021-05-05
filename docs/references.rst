@@ -43,10 +43,6 @@ Glossary
       of measuring a given reconstructed energy as a function of the true photon
       energy. See :ref:`irf-edisp`
 
-    FoV
-        Stands for "field of view", and indicates the solid angle on the sky that is
-        visible by the telescope with a single pointing.
-
     GTI
       Short for Good Time Interval: an continuous time interval of data acquisition.
       In CTA, they also represent time intervals where the IRFs are supposed to be constant.
@@ -76,11 +72,6 @@ Glossary
 
     Ring Background
       Background estimation method typically used for image analysis.
-
-    RoI
-      Stands for "region of interest", and indicates the spatial region in which the
-      data are analyzed. In practice, at each energy it corresponds with the sky region
-      in which the dataset mask is True.
 
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
