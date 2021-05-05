@@ -3,6 +3,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table, hstack
 from astropy.visualization import quantity_support
+from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -152,6 +153,37 @@ class RegionNDMap(Map):
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
         """
         ax = self.geom.plot_region(ax, **kwargs)
+        return ax
+
+    def plot_mask(self, ax=None, color="k", label=""):
+        """Plot region
+
+        Parameters
+        ----------
+        ax : `~astropy.vizualisation.WCSAxes`
+            Axes to plot on. If no axes are given,
+            the region is shown using the minimal
+            equivalent WCS geometry.
+        color : str
+            color of the shaded region.
+        label : str
+            label of the shaded region.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        edges = self.geom.axes["energy"].edges.reshape((-1, 1, 1))
+
+        labels, nlabels = ndi_label(self.data)
+
+        for idx in range(1, nlabels + 1):
+            mask = (labels == idx)
+            xmin = edges[:-1][mask].min().value
+            xmax = edges[1:][mask].max().value
+            ax.axvspan(xmin, xmax, color=color, alpha=0.05, label=label)
+            label = None
+
         return ax
 
     @classmethod
