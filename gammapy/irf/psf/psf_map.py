@@ -256,7 +256,7 @@ class PSFMap(IRFMap):
         coords = {"energy_true": energy, "rad": rad, "skycoord": position}
 
         data = self.psf_map.interp_by_coord(
-            coords=coords, fill_value=None, method="linear",
+            coords=coords, method="linear",
         )
 
         kernel_map = Map.from_geom(geom=geom_upsampled, data=np.clip(data, 0, np.inf))
