@@ -171,7 +171,7 @@ class SelectionConfig(GammapyBaseConfig):
     offset_max: AngleType = "2.5 deg"
 
 
-class WidthConfig(GammapyBaseConfig):
+class FovConfig(GammapyBaseConfig):
     width: AngleType = "5 deg"
     height: AngleType = "5 deg"
 
@@ -179,7 +179,7 @@ class WidthConfig(GammapyBaseConfig):
 class WcsConfig(GammapyBaseConfig):
     skydir: SkyCoordConfig = SkyCoordConfig()
     binsize: AngleType = "0.02 deg"
-    width: WidthConfig = WidthConfig()
+    fov: FovConfig = FovConfig()
     binsize_irf: AngleType = "0.2 deg"
 
 
