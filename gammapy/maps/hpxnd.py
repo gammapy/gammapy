@@ -470,9 +470,8 @@ class HpxNDMap(HpxMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def convolve(self, kernel, use_fft=True, **kwargs):
-        """
-        Convolve map with a WCS kernel.
+    def convolve(self, kernel, use_fft=True, method="wcs-tan", **kwargs):
+        """Convolve map with a WCS kernel.
 
         It projects the map into a WCS geometry, convolves with a WCS kernel and
         projects back into the initial Healpix geometry.
@@ -489,7 +488,7 @@ class HpxNDMap(HpxMap):
         use_fft : bool
             Use `scipy.signal.fftconvolve` if True (default)
             and `ndi.convolve` otherwise.
-        kwargs : dict
+        **kwargs : dict
             Keyword arguments passed to `scipy.signal.fftconvolve` or
             `ndi.convolve`.
 
@@ -498,11 +497,15 @@ class HpxNDMap(HpxMap):
         map : `HpxNDMap`
             Convolved map.
         """
-        return self.convolve_wcs(kernel, use_fft, **kwargs)
+        if method == "wcs-tan":
+            return self.convolve_wcs(kernel, use_fft, **kwargs)
+        elif method == "":
+            return self.convolve_full(kernel)
+        else:
+            raise ValueError(f"Not a valid method for HPX convolution {method}")
 
     def convolve_wcs(self, kernel, use_fft=True, **kwargs):
-        """
-        Convolve map with a WCS kernel.
+        """Convolve map with a WCS kernel.
 
         It projects the map into a WCS geometry, convolves with a WCS kernel and
         projects back into the initial Healpix geometry.
@@ -528,29 +531,45 @@ class HpxNDMap(HpxMap):
         map : `HpxNDMap`
             Convolved map.
         """
-        if self.geom.width > 10*u.deg:
-            log.warning("Convolution via WCS projection is not recommended for large maps. "\
-                "Perhaps the method `convolve_full()` is more suited for this case.")
-        wcs_geom = kernel.psf_kernel_map.geom.to_image()
-        wcs_size = np.max(wcs_geom.pixel_scales.deg)
+        # TODO: maybe go through `.to_wcs_tiles()` to make this work for allsky maps
+        if self.geom.is_allsky:
+            raise ValueError("Convolution via WCS projection is not supported for allsky maps.")
+
+        if self.geom.width > 10 * u.deg:
+            log.warning(
+                "Convolution via WCS projection is not recommended for large "
+                "maps (> 10 deg). Perhaps the method `convolve_full()` is more suited for "
+                "this case."
+            )
+
+        geom_kernel = kernel.psf_kernel_map.geom.to_image()
+        wcs_size = np.max(geom_kernel.pixel_scales.deg)
         hpx_size = get_pix_size_from_nside(self.geom.nside[0])
-        if wcs_size > 0.5*hpx_size:
-            raise ValueError("The kernel pixel size has to be smaller by at least a factor 2 than the input map to prevent artifacts.")
-        hpx2wcs = HpxToWcsMapping.create(self.geom, wcs_geom)
+
+        if wcs_size > 0.5 * hpx_size:
+            raise ValueError(
+                f"The kernel pixel size of {wcs_size} has to be smaller by at least"
+                f" a factor 2 than the pixel size of the input map of {hpx_size}"
+            )
+
+        geom_wcs = self.geom.to_wcs_geom(proj="TAN").to_image()
+        hpx2wcs = HpxToWcsMapping.create(hpx=self.geom, wcs=geom_wcs.to_binsz(binsz=wcs_size))
+
         # Project to WCS and convolve
-        wcs_map  = self.to_wcs(hpx2wcs = hpx2wcs, fill_nan = False)
-        conv_wcs_map = wcs_map.convolve(kernel, use_fft,**kwargs)
+        wcs_map = self.to_wcs(hpx2wcs=hpx2wcs, fill_nan=False)
+        conv_wcs_map = wcs_map.convolve(kernel=kernel, use_fft=use_fft, **kwargs)
+
         # and back to hpx
-        hpx_data = HpxNDMap.from_geom(self.geom).data
-        hpx_data = hpx2wcs.fill_hpx_map_from_wcs_data(conv_wcs_map.data, hpx_data)
-        conv_hpx_map = HpxNDMap.from_geom(self.geom, data = hpx_data)
-        return conv_hpx_map
+        data = np.zeros(self.geom.data_shape)
+        data = hpx2wcs.fill_hpx_map_from_wcs_data(
+            wcs_data=conv_wcs_map.data, hpx_data=data
+        )
+        return HpxNDMap.from_geom(self.geom, data=data)
 
     def convolve_full(self, kernel):
-        """
-        Convolve map with a symmetrical WCS kernel.
+        """Convolve map with a symmetrical WCS kernel.
 
-        It extracts the radial profille of the kernel (assuming radial symmetry) and
+        It extracts the radial profile of the kernel (assuming radial symmetry) and
         convolves via `hp.sphtfunc.smoothing`. Since no projection is applied, this is
         suited for full-sky and large maps.
 
