@@ -36,7 +36,7 @@ class SafeMaskMaker(Maker):
         Position at which the `aeff_percent` or `bias_percent` are computed. By default,
         it uses the position of the center of the map.
     fixed_offset : `~astropy.coordinates.Angle`
-        offset, calculated from the coordinates of the center of the map, at which 
+        offset, calculated from the pointing position, at which 
         the `aeff_percent` or `bias_percent` are computed.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
