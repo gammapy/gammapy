@@ -1,7 +1,7 @@
 # gammapy docker container
 FROM continuumio/miniconda3:latest
 RUN apt-get update \
-    && apt-get install -y python3-pip \
+    && apt-get install -y build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # define workdir
@@ -14,8 +14,13 @@ COPY . /usr/src/app/
 RUN conda install -c conda-forge mamba \
     && mamba env create -n gammapy -f environment-dev.yml \
     && conda clean --all --yes
-RUN echo 'source activate gammapy' >> ~/.bashrc
-ENV PATH /opt/conda/envs/gammapy/bin:$PATH
+
+# add jupyter lab alias and env activation to .bashrc config file
+RUN echo 'alias gammapylab="jupyter lab --no-browser --ip=0.0.0.0 --allow-root"\nconda activate gammapy\n' >> ~/.bashrc
+EXPOSE 8888
+
+# Make RUN commands use the gammapy environment
+SHELL ["conda", "run", "-n", "gammapy", "/bin/bash", "-c"]
 
 # install gammapy
 RUN pip install -e .
@@ -23,10 +28,6 @@ RUN pip install -e .
 # download datasets
 RUN gammapy download datasets
 ENV GAMMAPY_DATA /usr/src/app/gammapy-datasets
-
-# add external notebook functionality
-RUN echo 'alias gammapylab="jupyter lab --no-browser --ip=0.0.0.0 --allow-root"' >> ~/.bashrc
-EXPOSE 8888
 
 # define entry
 CMD [ "/bin/bash" ]
