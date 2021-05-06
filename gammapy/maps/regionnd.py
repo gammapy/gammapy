@@ -151,11 +151,6 @@ class RegionNDMap(Map):
             equivalent WCS geometry.
         **kwargs : dict
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
-
-        Returns
-        -------
-        ax : `~matplotlib.pyplot.Axis`
-            Axis used for plotting
         """
         ax = self.geom.plot_region(ax, **kwargs)
         return ax
@@ -169,6 +164,11 @@ class RegionNDMap(Map):
             Axis instance to be used for the plot.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.axvspan`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Axis used for plotting
         """
         import matplotlib.pyplot as plt
 
