@@ -286,7 +286,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
 
     -3.280211558352333
     3.9463091246231023
-    -5.944090805736479
+    -5.94409080573643
     8.60168631791818
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
