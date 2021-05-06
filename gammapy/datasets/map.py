@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import inspect
 from functools import lru_cache
 import numpy as np
 import astropy.units as u
@@ -2549,9 +2550,6 @@ class MapEvaluator:
 
         # define cached computations
         self._compute_npred = lru_cache()(self._compute_npred)
-        self._compute_npred_psf_after_edisp = lru_cache()(
-            self._compute_npred_psf_after_edisp
-        )
         self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_spatial = None
@@ -2574,7 +2572,6 @@ class MapEvaluator:
             if key in [
                 "_compute_npred",
                 "_compute_flux_spatial",
-                "_compute_npred_psf_after_edisp",
             ]:
                 state[key] = lru_cache()(value)
 
@@ -2690,7 +2687,6 @@ class MapEvaluator:
 
         self._compute_npred.cache_clear()
         self._compute_flux_spatial.cache_clear()
-        self._compute_npred_psf_after_edisp.cache_clear()
         self._computation_cache = None
 
     def compute_dnde(self):
@@ -2773,23 +2769,21 @@ class MapEvaluator:
         )
         return np.sum(integral)
 
-    def apply_exposure(self):
+    def apply_exposure(self, flux):
         """Compute npred cube
 
         For now just divide flux cube by exposure
         """
-        flux = self._computation_cache
         npred = (flux.quantity * self.exposure.quantity).to_value("")
         return Map.from_geom(self.geom, data=npred, unit="")
 
-    def apply_psf(self):
+    def apply_psf(self, npred):
         """Convolve npred cube with PSF"""
-        npred = self._computation_cache
         tmp = npred.convolve(self.psf)
         tmp.data[tmp.data < 0.0] = 0
         return tmp
 
-    def apply_edisp(self):
+    def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.
 
         Parameters
@@ -2802,7 +2796,6 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reco energy bins
         """
-        npred = self._computation_cache
         return npred.apply_edisp(self.edisp)
 
     def _compute_npred(self):
@@ -2810,12 +2803,15 @@ class MapEvaluator:
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
-            norm_only_changed, norm_ratio = self.norm_only_changed()
-            if norm_only_changed and self.use_cache:
-                npred = norm_ratio * self._computation_cache
-            else:
-                for method in self.methods_sequence(self.model):
-                    self._computation_cache = method()
+            norm_only_changed, renorm = self.norm_only_changed()
+            if not (norm_only_changed and self.use_cache):
+                for method in self.methods_sequence:
+                    if inspect.ismethod(method):
+                        values = method(self._computation_cache)
+                    else:
+                        values = method
+                    self._computation_cache = values
+            npred = self._computation_cache * renorm
         return npred
 
     @property
@@ -2896,44 +2892,40 @@ class MapEvaluator:
 
     def norm_only_changed(self):
         """Parameters changed"""
+        norm_only_changed = False
+        renorm = 1
+        if self._computation_cache is not None:
+            values = self.model.parameters.value
+            names = self.model.parameters.names
+            ind_diff = np.where(self._cached_parameter_values != values)[0]
+            if len(ind_diff) == 1:
+                idx = ind_diff[0]
+                norm_only_changed = names[idx] in ["norm", "amplitude"]
+                if norm_only_changed:
+                    renorm = values[idx] / self._cached_parameter_values[idx]
+        return norm_only_changed, renorm
 
-        if self._computation_cache is None:
-            return False, np.nan
-
-        values = self.model.parameters.value
-        names = self.model.parameters.names
-
-        ind_diff = np.where(self._cached_parameter_values != values)
-        idx = ind_diff[0]
-        norm_only_changed = len(ind_diff) == 1 and names[idx] in ["norm", "amplitude"]
-
-        norm_ratio = values[ind_diff[0]] / self._cached_parameter_values[ind_diff[0]]
-        return norm_only_changed, norm_ratio
-
-
+    @property
     def methods_sequence(self):
         """order to apply irf"""
 
         if self.apply_psf_after_edisp:
             methods = [
-                self.compute_flux_psf_convolved,
-                self.apply_exposure,
-                self.apply_edisp,
-            ]
-        else:
-            methods = [
-                self.compute_flux,
+                self.compute_flux(),
                 self.apply_exposure,
                 self.apply_edisp,
                 self.apply_psf,
             ]
-
+            if not self.psf or not self.model.apply_irf["psf"]:
+                methods.remove(self.apply_psf)
+        else:
+            methods = [
+                self.compute_flux_psf_convolved(),
+                self.apply_exposure,
+                self.apply_edisp,
+            ]
         if not self.model.apply_irf["exposure"]:
             methods.remove(self.apply_exposure)
         if not self.model.apply_irf["edisp"]:
             methods.remove(self.apply_edisp)
-        if (not self.psf or not self.model.apply_irf["psf"]) and (
-            self.apply_psf in methods
-        ):
-            methods.remove(self.apply_psf)
         return methods
