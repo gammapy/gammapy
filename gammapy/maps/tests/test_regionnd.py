@@ -70,9 +70,9 @@ def test_region_nd_map_plot(region_map):
 
 @requires_dependency("matplotlib")
 def test_region_plot_mask(region_map):
+    mask = region_map.geom.energy_mask(2.5 * u.TeV, 6 * u.TeV)
     with mpl_plot_check():
-        region_map.plot_mask()
-
+        mask.plot_mask()
 
 def test_region_nd_map_misc(region_map):
     assert_allclose(region_map.sum_over_axes(), 15)
