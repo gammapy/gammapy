@@ -155,21 +155,21 @@ class RegionNDMap(Map):
         ax = self.geom.plot_region(ax, **kwargs)
         return ax
 
-    def plot_mask(self, ax=None, color="k", label=""):
-        """Plot region
+    def plot_mask(self, ax=None, **kwargs):
+        """Plot the mask as a shaded area in a xmin-xmax range
 
         Parameters
         ----------
-        ax : `~astropy.vizualisation.WCSAxes`
-            Axes to plot on. If no axes are given,
-            the region is shown using the minimal
-            equivalent WCS geometry.
-        color : str
-            color of the shaded region.
-        label : str
-            label of the shaded region.
+        ax : `~matplotlib.axis` 
+            Axis instance to be used for the plot.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.axvspan`
         """
         import matplotlib.pyplot as plt
+
+        kwargs.setdefault("color", "k")
+        kwargs.setdefault("alpha", 0.05)
+        kwargs.setdefault("label", "mask")
 
         ax = plt.gca() if ax is None else ax
 
@@ -181,7 +181,7 @@ class RegionNDMap(Map):
             mask = (labels == idx)
             xmin = edges[:-1][mask].min().value
             xmax = edges[1:][mask].max().value
-            ax.axvspan(xmin, xmax, color=color, alpha=0.05, label=label)
+            ax.axvspan(xmin, xmax, **kwargs)
             label = None
 
         return ax
