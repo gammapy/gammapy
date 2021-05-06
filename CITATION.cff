@@ -1,8 +1,9 @@
 # YAML 1.2
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
 cff-version: 1.0.3
-message: This research made use of Gammapy, a community-developed core Python package for gamma-ray astronomy.
-title: 'Gammapy'
+message: This research made use of Gammapy, a community-developed core Python package for gamma-ray astronomy. https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D/abstract
+title: 'Gammapy: Python toolbox for gamma-ray astronomy'
+abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, and the Cherenkov Telescope Array (CTA).'
 doi: 10.5281/zenodo.4701500
 authors:
 - given-names: Christoph
@@ -14,6 +15,8 @@ authors:
 - given-names: Régis
   family-names: Terrier
   affiliation: APC, CNRS, Université de Paris
+- given-names: Lea
+  family-names: Jouvin
 - given-names: Jose
   family-names: Ruiz
   name-particle: Enrique
@@ -46,6 +49,10 @@ authors:
   affiliation: DIRAC Institute, UW
 - given-names: Olga
   family-names: Vorokh
+- given-names: Fabio
+  family-names: Acero
+- given-names: David
+  family-names: Fidalgo
 - given-names: Thomas
   family-names: Robitaille
 - given-names: Jonathan
@@ -67,6 +74,8 @@ authors:
   affiliation: Mozilla
 - given-names: Helen
   family-names: Poon
+- given-names: Alexis
+  family-names: Coutinho
 - given-names: Jason
   family-names: Watson
   affiliation: DESY
@@ -79,6 +88,80 @@ authors:
   family-names: Armstrong
 - given-names: Domenico
   family-names: Tiziani
+- given-names: E. M.
+  family-names: Bray
+- given-names: Maximilian
+  family-names: Nöthe
+- given-names: Kai
+  family-names: Brügge
+- given-names: Ignacio
+  family-names: Minaya
+- given-names: Arpit
+  family-names: ''
+- given-names: gallanty
+  family-names: ''
+- given-names: Hubert
+  family-names: Siejkowski
+- given-names: Vikas
+  family-names: Joshi
+- given-names: Luigi
+  family-names: Tibaldo
+- given-names: Andrew
+  family-names: Chen
+- given-names: Lab
+  family-names: Saha
+- given-names: kaoriinakashima
+  family-names: ''
+- given-names: Julien
+  family-names: Lefaucheur
+- given-names: Larry
+  family-names: Bradley
+- given-names: Matt
+  family-names: Craig
+- given-names: Mathieu
+  family-names: de Bony
+- given-names: Kyle
+  family-names: Barbary
+- given-names: Zé
+  family-names: Vinicius
+- given-names: Thomas
+  family-names: Villaume
+- given-names: Dirk
+  family-names: Lennarz
+- given-names: Oscar
+  family-names: Blanch Bigas
+- given-names: Victor
+  family-names: Zabalza
+- given-names: Wolfgang
+  family-names: Kerzendorf
+- given-names: Adam
+  family-names: Ginsburg
+- given-names: Daniel
+  family-names: Morcuende
+- given-names: Jose Luis
+  family-names: Contreras
+- given-names: Jean-Philippe
+  family-names: Lenain
+- given-names: Hugo
+  family-names: van Kemenade
+- given-names: Rubén
+  family-names: López-Coto
+- given-names: pdeiml
+  family-names: ''
+- given-names: Johannes
+  family-names: Buchner
+- given-names: samcarter
+  family-names: ''
+- given-names: rbuehler
+  family-names: ''
+- given-names: Benjamin Alan
+  family-names: Weaver
+- given-names: Debanjan
+  family-names: Bose
+- given-names: Eric O.
+  family-names: Lebigot
+- given-names: klepser
+  family-names: ''
 version: 0.18.2
 date-released: 2020-11-19
 repository-code: https://github.com/gammapy/gammapy
@@ -88,6 +171,9 @@ keywords:
   - "Gamma-rays"
   - "Data analysis"
 identifiers:
-    -
-      type: url
-      value: "https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D"
+ - type: "doi"
+   value: 10.5281/zenodo.4701500
+ - type: "bibcode"
+   value: "2017ascl.soft11014D"
+ - type: "ascl-id"
+   value: "1711.014"

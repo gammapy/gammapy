@@ -13,7 +13,7 @@
     "version": "0.18.2",
     "identifier": "10.5281/zenodo.4701488",
     "description": "Gammapy is an open-source Python package for gamma-ray astronomy built on Numpy, Scipy and Astropy. It is a prototype for the science tools of the Cherenkov Telescope Array (CTA) and is already widely used in the analysis of existing gamma-ray instruments, such as H.E.S.S., MAGIC, VERITAS and HAWC.",
-    "applicationCategory": "Astronomy",
+    "applicationCategory": "Scientific/Engineering :: Astronomy",
     "developmentStatus": "active",
     "referencePublication": "https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D",
     "keywords": [
@@ -24,8 +24,104 @@
     "programmingLanguage": [
         "Python 3"
     ],
+    "provider": {
+        "@id": "https://pypi.org",
+        "@type": "Organization",
+        "name": "The Python Package Index",
+        "url": "https://pypi.org"
+    },
     "softwareRequirements": [
-        "Numpy, Scipy, Astropy, Regions, PyYaml, Click, Pydantic"
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "numpy",
+            "name": "numpy",
+            "provider": {
+                "@id": "https://pypi.org",
+                "@type": "Organization",
+                "name": "The Python Package Index",
+                "url": "https://pypi.org"
+            },
+            "runtimePlatform": "Python 3",
+            "version": ">=1.17"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "astropy",
+            "name": "astropy",
+            "provider": {
+                "@id": "https://pypi.org",
+                "@type": "Organization",
+                "name": "The Python Package Index",
+                "url": "https://pypi.org"
+            },
+            "runtimePlatform": "Python 3",
+            "version": ">=4.0"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "scipy",
+            "name": "scipy",
+            "provider": {
+                "@id": "https://pypi.org",
+                "@type": "Organization",
+                "name": "The Python Package Index",
+                "url": "https://pypi.org"
+            },
+            "runtimePlatform": "Python 3",
+            "version": ">=1.2"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "regions",
+            "name": "regions",
+            "provider": {
+                "@id": "https://pypi.org",
+                "@type": "Organization",
+                "name": "The Python Package Index",
+                "url": "https://pypi.org"
+            },
+            "runtimePlatform": "Python 3",
+            "version": ">=0.4"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "pyyaml",
+            "name": "pyyaml",
+            "provider": {
+                "@id": "https://pypi.org",
+                "@type": "Organization",
+                "name": "The Python Package Index",
+                "url": "https://pypi.org"
+            },
+            "runtimePlatform": "Python 3",
+            "version": ">=5.1"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "click",
+            "name": "click",
+            "provider": {
+                "@id": "https://pypi.org",
+                "@type": "Organization",
+                "name": "The Python Package Index",
+                "url": "https://pypi.org"
+            },
+            "runtimePlatform": "Python 3",
+            "version": ">=7.0"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "identifier": "pydantic",
+            "name": "pydantic",
+            "provider": {
+                "@id": "https://pypi.org",
+                "@type": "Organization",
+                "name": "The Python Package Index",
+                "url": "https://pypi.org"
+            },
+            "runtimePlatform": "Python 3",
+            "version": ">=1.0"
+        }
     ],
     "relatedLink": [
         "https://gammapy.org",
@@ -60,9 +156,12 @@
                 "@type": "Organization",
                 "name": "APC, CNRS, Université de Paris"
             }
-        }
-    ],
-    "contributor": [
+        },
+        {
+            "@type": "Person",
+            "givenName": "Lea",
+            "familyName": "Jouvin"
+        },
         {
             "@type": "Person",
             "givenName": "José Enrique",
@@ -83,8 +182,8 @@
         },
         {
             "@type": "Person",
-            "givenName": "Remi",
-            "familyName": "Quintin",
+            "givenName": "Quentin",
+            "familyName": "Remy",
             "affiliation": {
                 "@type": "Organization",
                 "name": "MPIK"
