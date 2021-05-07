@@ -2556,6 +2556,7 @@ class MapEvaluator:
         self._cached_position = (0, 0)
         self._computation_cache = None
         self._cached_parameter_previous = None
+        self._neval = 0  # for debugging
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -2689,6 +2690,7 @@ class MapEvaluator:
         self._compute_npred.cache_clear()
         self._compute_flux_spatial.cache_clear()
         self._computation_cache = None
+        self._cached_parameter_previous = None
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
