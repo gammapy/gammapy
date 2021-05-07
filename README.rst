@@ -26,13 +26,10 @@ Status shields
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/gammapy/gammapy
 
-* .. image:: https://img.shields.io/lgtm/alerts/g/gammapy/gammapy.svg?logo=lgtm&logoWidth=18
-    :target: https://lgtm.com/projects/g/gammapy/gammapy/alerts/
+* .. image:: https://img.shields.io/lgtm/grade/python/g/gammapy/gammapy.svg?logo=lgtm&logoWidth=18
+    :target: https://lgtm.com/projects/g/gammapy/gammapy/context:python
     :alt: LGTM
 
-* .. image:: https://api.codacy.com/project/badge/Grade/32cac57dfd9a4d4cb96e7563d5350298
-    :target: https://www.codacy.com/app/cdeil/gammapy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammapy/gammapy&amp;utm_campaign=Badge_Grade
-    :alt: Codacy
 
 * .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
     :target: https://pypi.org/project/gammapy/

@@ -71,7 +71,7 @@ In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 - In the `0.14/docs/_downloads` folder, rename `notebooks-dev.tar` file as `notebooks-0.14.tar`.
 - Edit `stable/index.html` to point to `0.14/index.html`.
 
-In the `gammapy-web repo <https://github.com/gammapy/gammapy-web>`__:
+In the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__:
 
 - Mention the release on the front page and on the news page.
 - In the `download/install` folder, copy `gammapy-0.13-environment.yml` file as `gammapy-0.14-environment.yml`.

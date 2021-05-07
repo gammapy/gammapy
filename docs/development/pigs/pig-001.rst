@@ -192,7 +192,7 @@ let's do more of those!
 
 .. _Pig (disambiguation): https://en.wikipedia.org/wiki/Pig_(disambiguation)
 .. _PEPs: https://www.python.org/dev/peps/pep-0001/
-.. _NEPs: https://docs.scipy.org/doc/numpy-dev/neps/index.html
+.. _NEPs: https://numpy.org/neps/
 .. _APEs: https://github.com/astropy/astropy-APEs
 .. _JEPs: https://github.com/jupyter/enhancement-proposals
 .. _APE template: https://github.com/astropy/astropy-APEs/blob/master/APEtemplate.rst

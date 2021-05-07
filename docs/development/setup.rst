@@ -53,7 +53,7 @@ as well as the related datasets needed to execute them. The set of notebooks is 
 for each stable release as tar bundles published within the versioned documentation in the
 `gammapy-docs <https://github.com/gammapy/gammapy-docs>`__ repository.
 The same happens for conda working environments of stable releases, whose yaml files are published
-in the `gammapy-web <https://github.com/gammapy/gammapy-web>`__ repository. The datasets are not
+in the `gammapy-web <https://github.com/gammapy/gammapy-webpage>`__ repository. The datasets are not
 versioned and they are placed in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__
 repository.
 
@@ -272,10 +272,8 @@ We are running various builds as Github actions workflows for CI.
 Code quality
 ============
 
-* Code quality: https://landscape.io/github/gammapy/gammapy/master
 * Code coverage: https://coveralls.io/r/gammapy/gammapy
-* Codacy: https://app.codacy.com/manual/cdeil/gammapy/dashboard
-* LGTM: https://lgtm.com/projects/g/gammapy/gammapy/alerts/?mode=list
+* Code quality: https://lgtm.com/projects/g/gammapy/gammapy/context:python
 
 To run all tests and measure coverage, type the command ``make test-cov``::
 

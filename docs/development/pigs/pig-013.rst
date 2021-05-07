@@ -261,5 +261,5 @@ support of older versions. Thus the proposal was accepted on Sep 9.
 .. _conda metapackage: https://docs.conda.io/projects/conda-build/en/latest/resources/commands/conda-metapackage.html
 .. _fermitools conda meta.yaml: https://github.com/fermi-lat/Fermitools-conda/blob/master/meta.yaml
 .. _glueviz conda meta.yaml: https://github.com/conda-forge/glueviz-feedstock/blob/master/recipe/meta.yaml
-.. _pysal: https://pysal.org/install
-.. _sunpy pip installation instructions: https://docs.sunpy.org/en/stable/guide/installation/advanced.html
+.. _pysal: https://pysal.org/docs/install/
+.. _sunpy pip installation instructions: https://docs.sunpy.org/en/stable/guide/installation.html
