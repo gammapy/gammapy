@@ -2810,10 +2810,10 @@ class MapEvaluator:
             if not (norm_only_changed and self.use_cache):
                 self._cached_parameter_previous = self.model.parameters.value
                 for method in self.methods_sequence:
-                    if inspect.ismethod(method):
-                        values = method(self._computation_cache)
+                    if len(inspect.signature(method).parameters)==0:
+                        values = method()
                     else:
-                        values = method
+                        values = method(self._computation_cache)
                     self._computation_cache = values
             npred = self._computation_cache * renorm
         return npred
@@ -2917,7 +2917,7 @@ class MapEvaluator:
 
         if self.apply_psf_after_edisp:
             methods = [
-                self.compute_flux(),
+                self.compute_flux,
                 self.apply_exposure,
                 self.apply_edisp,
                 self.apply_psf,
@@ -2926,7 +2926,7 @@ class MapEvaluator:
                 methods.remove(self.apply_psf)
         else:
             methods = [
-                self.compute_flux_psf_convolved(),
+                self.compute_flux_psf_convolved,
                 self.apply_exposure,
                 self.apply_edisp,
             ]
