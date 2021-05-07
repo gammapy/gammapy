@@ -1,8 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for progress bar display"""
 from contextlib import contextmanager
-from tqdm import tqdm
 
+try:
+    from tqdm import tqdm
+except ImportError:
+    class tqdm():
+        def __init__(
+                self,
+                total=0,
+                mininterval=0,
+                disable=True,
+                desc=""
+        ):
+            pass
+        def update(self, x):
+            pass
 
 @contextmanager
 def pbar(total=None, show_pbar=True, desc=None):

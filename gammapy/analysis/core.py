@@ -359,6 +359,7 @@ class Analysis:
         with pbar(total=len(self.observations), show_pbar=show_pbar, desc="Datasets") as pb:
             if datasets_settings.stack:
                 for obs in self.observations:
+                    log.debug(f"Processing observation {obs.obs_id}")
                     cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                     dataset = maker.run(cutout, obs)
                     dataset = maker_safe_mask.run(dataset, obs)
@@ -376,6 +377,7 @@ class Analysis:
                 datasets = []
 
                 for obs in self.observations:
+                    log.debug(f"Processing observation {obs.obs_id}")
                     cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                     dataset = maker.run(cutout, obs)
                     dataset = maker_safe_mask.run(dataset, obs)
@@ -444,11 +446,12 @@ class Analysis:
         datasets = []
         with pbar(total=len(self.observations), show_pbar=show_pbar, desc="Datasets") as pb:
             for obs in self.observations:
+                log.debug(f"Processing observation {obs.obs_id}")
                 dataset = dataset_maker.run(reference.copy(), obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset, obs)
                     if dataset.counts_off is None:
-                        log.info(
+                        log.debug(
                             f"No OFF region found for observation {obs.obs_id}. Discarding."
                         )
                         continue
