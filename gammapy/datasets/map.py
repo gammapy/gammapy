@@ -2544,6 +2544,8 @@ class MapEvaluator:
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
+            # Here we do not use SkyCoord.separation to improve performance
+            # (it avoids equivalence comparisons for frame and units)
             spatial = self.model.spatial_model
             lon1 = spatial.lon_0.quantity.to_value(u.rad)
             lat1 = spatial.lat_0.quantity.to_value(u.rad)
