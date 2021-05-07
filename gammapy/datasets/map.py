@@ -2810,7 +2810,7 @@ class MapEvaluator:
             if not (norm_only_changed and self.use_cache):
                 self._cached_parameter_previous = self.model.parameters.value
                 for method in self.methods_sequence:
-                    if len(inspect.signature(method).parameters)==0:
+                    if len(inspect.signature(method).parameters) == 0:
                         values = method()
                     else:
                         values = method(self._computation_cache)
