@@ -407,7 +407,7 @@ class IRF:
         return fits.HDUList([fits.PrimaryHDU(), hdu])
 
     def write(self, filename, *args, **kwargs):
-        """Write PSF to FITS file.
+        """Write IRF to fits.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
