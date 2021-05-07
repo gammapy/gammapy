@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
 from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, WcsGeom, WcsNDMap
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 pytest.importorskip("healpy")
 
@@ -421,3 +422,25 @@ def test_interp_to_geom():
     geom_target = WcsGeom.create(skydir=(20, 20), width=(5, 5), binsz=0.1 * u.deg,)
     new_map = test_map.interp_to_geom(geom_target, preserve_counts=True)
     assert np.floor(np.sum(new_map.data)) == np.sum(test_map.data)
+
+
+@requires_dependency("matplotlib")
+def test_map_plot_mask():
+    from regions import CircleSkyRegion
+
+    skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+
+    m_wcs = Map.create(
+                   map_type='wcs',
+                   binsz=0.02,
+                   skydir=skydir,
+                   width=2.0,
+                   )
+
+    exclusion_region = CircleSkyRegion(center=SkyCoord(0.0, 0.0, unit="deg", frame="galactic"),
+                                       radius=0.6 * u.deg)
+
+    mask = ~m_wcs.geom.region_mask([exclusion_region])
+
+    with mpl_plot_check():
+        mask.plot_mask()
