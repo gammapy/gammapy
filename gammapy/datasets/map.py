@@ -6,10 +6,11 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
+from astropy.coordinates.angle_utilities import angular_separation
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     TemplateNPredModel,
     DatasetModels,
@@ -2543,9 +2544,14 @@ class MapEvaluator:
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
         else:
-            position = self.model.position
-            separation = self._init_position.separation(position)
-            update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
+            spatial = self.model.spatial_model
+            lon1 = spatial.lon_0.quantity.to_value(u.rad)
+            lat1 = spatial.lat_0.quantity.to_value(u.rad)
+            lon2, lat2 = self._init_position
+            separation = angular_separation(lon1, lat1, lon2, lat2)
+            update = separation > (
+                self.model.evaluation_radius + CUTOUT_MARGIN
+            ).to_value(u.rad)
 
         return update
 
@@ -2590,6 +2596,7 @@ class MapEvaluator:
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
+        spatial = self.model.spatial_model
 
         # lookup edisp
         if edisp:
@@ -2599,7 +2606,7 @@ class MapEvaluator:
             )
 
         # lookup psf
-        if psf and self.model.spatial_model:
+        if psf and spatial:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
@@ -2618,10 +2625,11 @@ class MapEvaluator:
                 self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local":
-            self._init_position = self.model.position
-            self.contributes = self.model.contributes(
-                mask=mask, margin=self.psf_width
+            self._init_position = (
+                spatial.lon_0.quantity.to_value(u.rad),
+                spatial.lat_0.quantity.to_value(u.rad),
             )
+            self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
 
             if self.contributes:
                 self.exposure = exposure.cutout(
