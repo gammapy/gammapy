@@ -45,7 +45,7 @@ Glossary
 
     FoV
         Stands for "field of view", and indicates the solid angle on the sky that is
-        visible by the telescope with a single pointing.
+        visible by the instrument with a single pointing.
 
     GTI
       Short for Good Time Interval: an continuous time interval of data acquisition.
