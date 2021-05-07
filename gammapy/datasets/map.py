@@ -2653,10 +2653,13 @@ class MapEvaluator:
                 self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local":
-            self._init_position = (
-                spatial.lon_0.quantity.to_value(u.rad),
-                spatial.lat_0.quantity.to_value(u.rad),
-            )
+            try:
+                self._init_position = (
+                    spatial.lon_0.quantity.to_value(u.rad),
+                    spatial.lat_0.quantity.to_value(u.rad),
+                )
+            except:
+                pass
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
 
             if self.contributes:
