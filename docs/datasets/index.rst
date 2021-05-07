@@ -80,7 +80,7 @@ Where :math:`F_{Src}` is the integrated flux of the source model,
 :math:`\mathrm{PSF}` the PSF convolution kernel. The corresponding IRFs are extracted
 at the current position of the model component defined by :math:`(l, b)` and assumed
 to be constant across the size of the source. The detailed expressions to compute the
-predicted number of counts from a source and corresponding IRFs are given in `irf-theory`_.
+predicted number of counts from a source and corresponding IRFs are given in :ref:`irf-theory`.
 
 
 .. _stack:

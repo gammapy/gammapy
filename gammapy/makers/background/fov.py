@@ -111,7 +111,7 @@ class FoVBackgroundMaker(Maker):
         """Project input exclusion mask to dataset geom
 
         Parameters
-        ---------
+        ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input map dataset.
 

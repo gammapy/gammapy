@@ -876,7 +876,7 @@ class DatasetModels(collections.abc.Sequence):
 
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes
+        ax : `~astropy.visualization.WcsAxes`
             WCS axes
         """
         from astropy.visualization.wcsaxes import WCSAxes
@@ -914,7 +914,7 @@ class DatasetModels(collections.abc.Sequence):
 
         Returns
         -------
-        ax : `~astropy.vizualisation.WcsAxes
+        ax : `~astropy.vizualisation.WcsAxes`
             Wcs axes
         """
         from astropy.visualization.wcsaxes import WCSAxes
