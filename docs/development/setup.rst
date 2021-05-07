@@ -274,6 +274,7 @@ Code quality
 
 * Code coverage: https://coveralls.io/r/gammapy/gammapy
 * Code quality: https://lgtm.com/projects/g/gammapy/gammapy/context:python
+* Codacy: https://app.codacy.com/gh/gammapy/gammapy/dashboard
 
 To run all tests and measure coverage, type the command ``make test-cov``::
 

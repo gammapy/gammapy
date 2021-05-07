@@ -30,6 +30,9 @@ Status shields
     :target: https://lgtm.com/projects/g/gammapy/gammapy/context:python
     :alt: LGTM
 
+* .. image:: https://app.codacy.com/project/badge/Grade/9c32a21a915d4a28823f3b44a99a2810
+    :target: https://www.codacy.com/gh/gammapy/gammapy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammapy/gammapy&amp;utm_campaign=Badge_Grade
+    :alt: Codacy
 
 * .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
     :target: https://pypi.org/project/gammapy/
