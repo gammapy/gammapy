@@ -2555,6 +2555,7 @@ class MapEvaluator:
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
+        self._cached_parameter_previous = None
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -2805,6 +2806,7 @@ class MapEvaluator:
         else:
             norm_only_changed, renorm = self.norm_only_changed()
             if not (norm_only_changed and self.use_cache):
+                self._cached_parameter_previous = self.model.parameters.value
                 for method in self.methods_sequence:
                     if inspect.ismethod(method):
                         values = method(self._computation_cache)
@@ -2828,7 +2830,6 @@ class MapEvaluator:
         npred : `~gammapy.maps.Map`
             Predicted counts on the map (in reco energy bins)
         """
-
         if self.parameters_changed or not self.use_cache:
             self._compute_npred.cache_clear()
 
@@ -2894,15 +2895,18 @@ class MapEvaluator:
         """Parameters changed"""
         norm_only_changed = False
         renorm = 1
+        values = self.model.parameters.value
         if self._computation_cache is not None:
-            values = self.model.parameters.value
             names = self.model.parameters.names
-            ind_diff = np.where(self._cached_parameter_values != values)[0]
+            ind_diff = np.where(self._cached_parameter_previous != values)[0]
             if len(ind_diff) == 1:
                 idx = ind_diff[0]
-                norm_only_changed = names[idx] in ["norm", "amplitude"]
+                norm_only_changed = (
+                    names[idx] in ["norm", "amplitude"]
+                    and self._cached_parameter_previous[idx] != 0
+                )
                 if norm_only_changed:
-                    renorm = values[idx] / self._cached_parameter_values[idx]
+                    renorm = values[idx] / self._cached_parameter_previous[idx]
         return norm_only_changed, renorm
 
     @property
