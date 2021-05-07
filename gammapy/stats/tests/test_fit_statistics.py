@@ -117,6 +117,13 @@ def test_cash_sum_cython(test_data):
     ref = stats.cash(counts, npred).sum()
     assert_allclose(stat, ref)
 
+def test_cash_bad_truncation():
+    with pytest.raises(ValueError):
+        stats.cash(10,10,0.)
+
+def test_cstat_bad_truncation():
+    with pytest.raises(ValueError):
+        stats.cstat(10,10,0.)
 
 def test_wstat_corner_cases():
     """test WSTAT formulae for corner cases"""

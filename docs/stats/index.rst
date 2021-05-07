@@ -193,21 +193,21 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confi
     excess = count_statistic.n_sig
     errn = count_statistic.compute_errn(1.)
     errp = count_statistic.compute_errp(1.)
-    print(f"68% confidence range: {excess+errn} < mu < {excess+errp}")
+    print(f"68% confidence range: {excess+errn:.3f} < mu < {excess+errp:.3f}")
 
 .. testoutput::
 
-    68% confidence range: 4.219788441647667 < mu < 11.446309124623102
+    68% confidence range: 4.220 < mu < 11.446
 
 .. testcode::
 
     errn_2sigma = count_statistic.compute_errn(2.)
     errp_2sigma = count_statistic.compute_errp(2.)
-    print(f"95% confidence range: {excess+errn_2sigma} < mu < {excess+errp_2sigma}")
+    print(f"95% confidence range: {excess+errn_2sigma:.3f} < mu < {excess+errp_2sigma:.3f}")
 
 .. testoutput::
 
-    95% confidence range: 1.5559091942635206 < mu < 16.10168631791818
+    95% confidence range: 1.556 < mu < 16.102
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values
@@ -286,7 +286,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
 
     -3.280211558352333
     3.9463091246231023
-    -5.944090805736479
+    -5.94409080573643
     8.60168631791818
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
