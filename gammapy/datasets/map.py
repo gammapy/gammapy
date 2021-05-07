@@ -2543,6 +2543,8 @@ class MapEvaluator:
             return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
+        elif len(self.model.spatial_model.parameters.free_parameters) == 0:
+            return False
         else:
             # Here we do not use SkyCoord.separation to improve performance
             # (it avoids equivalence comparisons for frame and units)
