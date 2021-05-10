@@ -416,7 +416,7 @@ class LightCurveEstimator(Estimator):
             selection_optional=self.selection_optional,
         )
 
-    def run(self, datasets, show_pbar=False):
+    def run(self, datasets, show_progress_bar=False):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
@@ -425,7 +425,7 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         Returns
         -------
@@ -443,7 +443,7 @@ class LightCurveEstimator(Estimator):
 
         rows = []
 
-        with pbar(total=len(gti.time_intervals), show_pbar=show_pbar, desc="Time intervals") as pb:
+        with pbar(total=len(gti.time_intervals), show_progress_bar=show_progress_bar, desc="Time intervals") as pb:
             for t_min, t_max in gti.time_intervals:
                 datasets_to_fit = datasets.select_time(
                     t_min=t_min, t_max=t_max, atol=self.atol

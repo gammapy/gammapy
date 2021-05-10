@@ -136,14 +136,14 @@ class ASmoothMapEstimator(Estimator):
             )
         return scube
 
-    def run(self, dataset, show_pbar=False):
+    def run(self, dataset, show_progress_bar=False):
         """Run adaptive smoothing on input MapDataset.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the input dataset (with one bin in energy at most)
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         Returns
         -------
@@ -163,7 +163,7 @@ class ASmoothMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(energy_edges) - 1, show_pbar=show_pbar, desc="Energy bins") as pb:
+        with pbar(total=len(energy_edges) - 1, show_progress_bar=show_progress_bar, desc="Energy bins") as pb:
             for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
                 dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
                 dataset_sliced.models = dataset.models

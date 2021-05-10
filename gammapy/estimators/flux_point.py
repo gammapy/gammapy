@@ -859,14 +859,14 @@ class FluxPointsEstimator(Estimator):
             selection_optional=self.selection_optional,
         )
 
-    def run(self, datasets, show_pbar=False):
+    def run(self, datasets, show_progress_bar=False):
         """Run the flux point estimator for all energy groups.
 
         Parameters
         ----------
         datasets : list of `~gammapy.datasets.Dataset`
             Datasets
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         Returns
         -------
@@ -877,7 +877,7 @@ class FluxPointsEstimator(Estimator):
 
         rows = []
 
-        with pbar(total=len(self.energy_edges) - 1, show_pbar=show_pbar, desc="Energy bins") as pb:
+        with pbar(total=len(self.energy_edges) - 1, show_progress_bar=show_progress_bar, desc="Energy bins") as pb:
             for energy_min, energy_max in zip(
                 self.energy_edges[:-1], self.energy_edges[1:]
             ):

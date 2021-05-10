@@ -12,8 +12,8 @@ except ImportError:
             pass
 
 @contextmanager
-def pbar(total=None, show_pbar=True, desc=None):
-    if total is None and show_pbar == True:
+def pbar(total=None, show_progress_bar=True, desc=None):
+    if total is None and show_progress_bar == True:
         raise AttributeError("Can't set up the progress bar if total is None")
 
-    yield tqdm(total=total, mininterval=0, disable=not show_pbar, desc=desc)
+    yield tqdm(total=total, mininterval=0, disable=not show_progress_bar, desc=desc)

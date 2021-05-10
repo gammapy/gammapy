@@ -122,12 +122,12 @@ class Analysis:
         for obs in self.observations:
             log.debug(obs)
 
-    def get_datasets(self, show_pbar=False):
+    def get_datasets(self, show_progress_bar=False):
         """Produce reduced datasets.
 
         Parameters
         ----------
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         """
         datasets_settings = self.config.datasets
@@ -135,9 +135,9 @@ class Analysis:
             raise RuntimeError("No observations have been selected.")
 
         if datasets_settings.type == "1d":
-            self._spectrum_extraction(show_pbar=show_pbar)
+            self._spectrum_extraction(show_progress_bar=show_progress_bar)
         else:  # 3d
-            self._map_making(show_pbar=show_pbar)
+            self._map_making(show_progress_bar=show_progress_bar)
 
     def set_models(self, models):
         """Set models on datasets.
@@ -197,12 +197,12 @@ class Analysis:
         self.fit_result = self.fit.run()
         log.info(self.fit_result)
 
-    def get_flux_points(self, show_pbar=False):
+    def get_flux_points(self, show_progress_bar=False):
         """Calculate flux points for a specific model component.
 
         Parameters
         ----------
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         """
         if not self.fit:
@@ -216,7 +216,7 @@ class Analysis:
             source=fp_settings.source,
             **fp_settings.parameters,
         )
-        fp = flux_point_estimator.run(datasets=self.datasets, show_pbar=show_pbar)
+        fp = flux_point_estimator.run(datasets=self.datasets, show_progress_bar=show_progress_bar)
         fp.table["is_ul"] = fp.table["ts"] < 4
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]
@@ -247,12 +247,12 @@ class Analysis:
         )
         self.excess_map = excess_map_estimator.run(self.datasets[0])
 
-    def get_light_curve(self, show_pbar=False):
+    def get_light_curve(self, show_progress_bar=False):
         """Calculate light curve for a specific model component.
 
         Parameters
         ----------
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         """
         lc_settings = self.config.light_curve
@@ -272,7 +272,7 @@ class Analysis:
             source=lc_settings.source,
             **lc_settings.parameters,
         )
-        lc = light_curve_estimator.run(datasets=self.datasets, show_pbar=show_pbar)
+        lc = light_curve_estimator.run(datasets=self.datasets, show_progress_bar=show_progress_bar)
         lc.table["is_ul"] = lc.table["ts"] < 4
         self.light_curve = lc
         log.info("\n{}".format(self.light_curve.table))
@@ -302,12 +302,12 @@ class Analysis:
         geom_params["width"] = (width, height)
         return WcsGeom.create(**geom_params)
 
-    def _map_making(self, show_pbar=False):
+    def _map_making(self, show_progress_bar=False):
         """Make maps and datasets for 3d analysis.
 
         Parameters
         ----------
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         """
         datasets_settings = self.config.datasets
@@ -356,7 +356,7 @@ class Analysis:
 
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
-        with pbar(total=len(self.observations), show_pbar=show_pbar, desc="Datasets") as pb:
+        with pbar(total=len(self.observations), show_progress_bar=show_progress_bar, desc="Datasets") as pb:
             if datasets_settings.stack:
                 for obs in self.observations:
                     log.debug(f"Processing observation {obs.obs_id}")
@@ -388,12 +388,12 @@ class Analysis:
                     pb.update(1)
         self.datasets = Datasets(datasets)
 
-    def _spectrum_extraction(self, show_pbar=False):
+    def _spectrum_extraction(self, show_progress_bar=False):
         """Run all steps for the spectrum extraction.
 
         Parameters
         ----------
-        show_pbar : bool
+        show_progress_bar : bool
             Display progress bar.
         """
         log.info("Reducing spectrum datasets.")
@@ -444,7 +444,7 @@ class Analysis:
         reference = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
         datasets = []
-        with pbar(total=len(self.observations), show_pbar=show_pbar, desc="Datasets") as pb:
+        with pbar(total=len(self.observations), show_progress_bar=show_progress_bar, desc="Datasets") as pb:
             for obs in self.observations:
                 log.debug(f"Processing observation {obs.obs_id}")
                 dataset = dataset_maker.run(reference.copy(), obs)
