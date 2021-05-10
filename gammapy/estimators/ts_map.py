@@ -132,6 +132,7 @@ class TSMapEstimator(Estimator):
         energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
+        show_progress_bar=False
     ):
         self.kernel_width = Angle(kernel_width)
 
@@ -160,6 +161,7 @@ class TSMapEstimator(Estimator):
             selection_optional=selection_optional,
             ts_threshold=threshold,
         )
+        self.show_progress_bar = show_progress_bar
 
     @property
     def selection_all(self):
@@ -367,7 +369,7 @@ class TSMapEstimator(Estimator):
 
         return result
 
-    def run(self, dataset, show_progress_bar=False):
+    def run(self, dataset):
         """
         Run TS map estimation.
 
@@ -410,7 +412,7 @@ class TSMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(energy_edges) - 1, show_progress_bar=show_progress_bar, desc="Energy bins") as pb:
+        with pbar(total=len(energy_edges) - 1, show_progress_bar=self.show_progress_bar, desc="Energy bins") as pb:
             for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
                 sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 

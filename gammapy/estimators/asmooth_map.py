@@ -55,6 +55,7 @@ class ASmoothMapEstimator(Estimator):
         method="lima",
         threshold=5,
         energy_edges=None,
+        show_progress_bar=False
     ):
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -69,6 +70,7 @@ class ASmoothMapEstimator(Estimator):
         self.threshold = threshold
         self.method = method
         self.energy_edges = energy_edges
+        self.show_progress_bar =  show_progress_bar
 
     def selection_all(self):
         """Which quantities are computed"""
@@ -136,7 +138,7 @@ class ASmoothMapEstimator(Estimator):
             )
         return scube
 
-    def run(self, dataset, show_progress_bar=False):
+    def run(self, dataset):
         """Run adaptive smoothing on input MapDataset.
 
         Parameters
@@ -163,7 +165,7 @@ class ASmoothMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(energy_edges) - 1, show_progress_bar=show_progress_bar, desc="Energy bins") as pb:
+        with pbar(total=len(energy_edges) - 1, show_progress_bar=self.show_progress_bar, desc="Energy bins") as pb:
             for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
                 dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
                 dataset_sliced.models = dataset.models

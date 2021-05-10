@@ -374,6 +374,7 @@ class LightCurveEstimator(Estimator):
         covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
+        show_progress_bar=False
     ):
 
         self.source = source
@@ -398,6 +399,7 @@ class LightCurveEstimator(Estimator):
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
+        self.show_progress_bar = show_progress_bar
 
     def _flux_poins_estimator(self, energy_edges):
         return FluxPointsEstimator(
@@ -416,7 +418,7 @@ class LightCurveEstimator(Estimator):
             selection_optional=self.selection_optional,
         )
 
-    def run(self, datasets, show_progress_bar=False):
+    def run(self, datasets):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
@@ -443,7 +445,7 @@ class LightCurveEstimator(Estimator):
 
         rows = []
 
-        with pbar(total=len(gti.time_intervals), show_progress_bar=show_progress_bar, desc="Time intervals") as pb:
+        with pbar(total=len(gti.time_intervals), show_progress_bar=self.show_progress_bar, desc="Time intervals") as pb:
             for t_min, t_max in gti.time_intervals:
                 datasets_to_fit = datasets.select_time(
                     t_min=t_min, t_max=t_max, atol=self.atol

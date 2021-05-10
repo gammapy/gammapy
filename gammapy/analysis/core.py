@@ -214,9 +214,10 @@ class Analysis:
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
+            show_progress_bar=show_progress_bar,
             **fp_settings.parameters,
         )
-        fp = flux_point_estimator.run(datasets=self.datasets, show_progress_bar=show_progress_bar)
+        fp = flux_point_estimator.run(datasets=self.datasets)
         fp.table["is_ul"] = fp.table["ts"] < 4
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]
@@ -270,9 +271,10 @@ class Analysis:
             time_intervals=time_intervals,
             energy_edges=energy_edges,
             source=lc_settings.source,
+            show_progress_bar=show_progress_bar,
             **lc_settings.parameters,
         )
-        lc = light_curve_estimator.run(datasets=self.datasets, show_progress_bar=show_progress_bar)
+        lc = light_curve_estimator.run(datasets=self.datasets)
         lc.table["is_ul"] = lc.table["ts"] < 4
         self.light_curve = lc
         log.info("\n{}".format(self.light_curve.table))
