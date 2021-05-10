@@ -36,7 +36,7 @@ set of observations is performed by the `ReflectedRegionsBackgroundMaker`.
 The latter uses the `~gammapy.makers.ReflectedRegionsFinder` to create reflected
 regions for a given circular on region and exclusion mask.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.makers import SpectrumDatasetMaker, ReflectedRegionsBackgroundMaker, SafeMaskMaker
     from gammapy.datasets import SpectrumDataset, Datasets

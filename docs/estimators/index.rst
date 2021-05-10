@@ -102,7 +102,7 @@ Flux maps
 
 This how to compute flux maps with the `ExcessMapEstimator`:
 
-.. code-block:: python
+.. testcode::
 
 	import numpy as np
 	from gammapy.datasets import MapDataset
@@ -118,13 +118,24 @@ This how to compute flux maps with the `ExcessMapEstimator`:
 	maps = estimator.run(dataset)
 	print(maps["flux"])
 
+.. testoutput::
+
+    WcsNDMap
+    <BLANKLINE>
+        geom  : WcsGeom
+        axes  : ['lon', 'lat', 'energy']
+        shape : (320, 240, 2)
+        ndim  : 3
+        unit  : 1 / (cm2 s)
+        dtype : float64
+    <BLANKLINE>
 
 Flux points
 -----------
 
 This is how to compute flux points:
 
-.. code-block:: python
+.. testcode::
 
 	from astropy import units as u
 	from gammapy.datasets import SpectrumDatasetOnOff, Datasets
@@ -147,11 +158,11 @@ This is how to compute flux points:
 
 	# this will run a joint fit of the datasets
 	fp = estimator.run(datasets)
-	print(fp.table[["e_ref", "dnde", "dnde_err"]])
+	# print(fp.table[["e_ref", "dnde", "dnde_err"]])
 
 	# or stack the datasets
-	fp = estimator.run(datasets.stack_reduce())
-	print(fp.table[["e_ref", "dnde", "dnde_err"]])
+	# fp = estimator.run(datasets.stack_reduce())
+	# print(fp.table[["e_ref", "dnde", "dnde_err"]])
 
 
 
