@@ -335,7 +335,7 @@ class RegionGeom(Geom):
 .
         Returns
         -------
-        `~RegionGeom`
+        region : `~RegionGeom`
             A RegionGeom with the same axes and region as the input,
             but different wcs pixelization.
         """

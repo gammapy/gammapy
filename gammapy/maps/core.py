@@ -237,6 +237,7 @@ class Map(abc.ABC):
     @staticmethod
     def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
         """Create from `astropy.io.fits.HDUList`.
+
         Parameters
         ----------
         colname : str, optional
