@@ -1,13 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for progress bar display"""
+import logging
 from contextlib import contextmanager
+
+log = logging.getLogger(__name__)
 
 try:
     from tqdm import tqdm
 except ImportError:
     class tqdm():
-        def __init__(self, *args, **kwargs):
-            pass
+        def __init__(self, disable=True, **kwargs):
+            self.disable = disable
+            if self.disable == False:
+                log.info(
+                    f"Tqdm is currently not installed. Visit https://tqdm.github.io/"
+                )
         def update(self, x):
             pass
 
