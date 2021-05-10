@@ -40,7 +40,7 @@ class DataStore:
     >>> data_store.info()
     Data store:
     HDU index table:
-    BASE_DIR: /Users/jer/git/gammapy/gammapy-data/hess-dl3-dr1
+    BASE_DIR: /home/runner/work/gammapy/gammapy/gammapy-datasets/hess-dl3-dr1
     Rows: 630
     OBS_ID: 20136 -- 47829
     HDU_TYPE: ['aeff', 'bkg', 'edisp', 'events', 'gti', 'psf']
