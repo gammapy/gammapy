@@ -40,7 +40,7 @@ class EnergyDispersion2D(IRF):
     for a given field of view offset and energy binning:
 
     >>> energy = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log").edges
-    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', e_reco=energy, energy_true=energy) # doctest: +SKIP
+    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', energy=energy, energy_true=energy)
 
     See Also
     --------
