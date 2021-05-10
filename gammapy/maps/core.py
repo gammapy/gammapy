@@ -1131,15 +1131,22 @@ class Map(abc.ABC):
         if not self.is_mask:
             raise ValueError("This is not a mask and cannot be plotted")
 
-        kwargs.setdefault("alpha", 0.05)
-        kwargs.setdefault("colors", "k")
+        kwargs.setdefault("alpha", 0.5)
+        kwargs.setdefault("colors", "w")
 
-        ax = plt.gca() if ax is None else ax
+        if ax is None:
+            fig = plt.gcf()
+            if self.geom.projection in ["AIT"]:
+                ax = fig.add_subplot(
+                                 1, 1, 1, projection=self.geom.wcs,
+                                 frame_class=EllipticalFrame
+                                 )
+            else:
+                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
         data = self.data.astype(float)
 
-        cs = ax.contourf(data, level=[0, 0.5], **kwargs)
-        ax.contour(cs)
+        ax.contourf(data, level=[0, 0.5], **kwargs)
 
         return ax
 
