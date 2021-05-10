@@ -37,7 +37,20 @@ class DataStore:
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
-    >>> data_store.info() # doctest: +SKIP
+    >>> data_store.info()
+    Data store:
+    HDU index table:
+    BASE_DIR: /Users/jer/git/gammapy/gammapy-data/hess-dl3-dr1
+    Rows: 630
+    OBS_ID: 20136 -- 47829
+    HDU_TYPE: ['aeff', 'bkg', 'edisp', 'events', 'gti', 'psf']
+    HDU_CLASS: ['aeff_2d', 'bkg_3d', 'edisp_2d', 'events', 'gti', 'psf_table']
+    <BLANKLINE>
+    <BLANKLINE>
+    Observation table:
+    Observatory name: 'N/A'
+    Number of observations: 105
+    <BLANKLINE>
     """
 
     DEFAULT_HDU_TABLE = "hdu-index.fits.gz"
