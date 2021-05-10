@@ -35,7 +35,7 @@ classed. Theses classes can only be used for image based data.
 A given `MapDataset` has to be reduced to a single image by calling
 `MapDataset.to_image()`
 
-.. code-block:: python
+.. testcode::
 
 	from gammapy.makers import MapDatasetMaker, RingBackgroundMaker, SafeMaskMaker
 	from gammapy.datasets import MapDataset
