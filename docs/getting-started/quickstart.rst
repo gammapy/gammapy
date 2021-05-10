@@ -19,8 +19,8 @@ Gammapy and its dependencies by executing this command in a terminal:
 
 Though this is one line command is the standard way to install a software package using Anaconda, **we recommend to
 make use of an environment definition file** that we provide, so you can get additional useful packages together with
-Gammapy in a virtual isolated environment. In order to proceed in this way, just copy and paste in your terminal
-the two lines below:
+Gammapy in a virtual isolated environment. If you want to learn about using virtual environments see
+:ref:`virtual-envs`. In order to proceed in this way, just copy and paste in your terminal the two lines below:
 
 .. code-block:: bash
 
@@ -32,6 +32,7 @@ the two lines below:
     On Windows, you have to open up the conda environment file and delete the
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
+
 
 This creates a conda environment called ``gammapy-0.18.2`` which you can activate via:
 
