@@ -1112,6 +1112,7 @@ class Map(abc.ABC):
                 fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
                 plt.show()
 
+
     def copy(self, **kwargs):
         """Copy map instance and overwrite given attributes, except for geometry.
 
