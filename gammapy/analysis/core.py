@@ -278,8 +278,8 @@ class Analysis:
         axes = [self._make_energy_axis(geom_settings.axes.energy)]
         geom_params["axes"] = axes
         geom_params["binsz"] = geom_settings.wcs.binsize
-        width = geom_settings.wcs.fov.width.to("deg").value
-        height = geom_settings.wcs.fov.height.to("deg").value
+        width = geom_settings.wcs.width.width.to("deg").value
+        height = geom_settings.wcs.width.height.to("deg").value
         geom_params["width"] = (width, height)
         return WcsGeom.create(**geom_params)
 
