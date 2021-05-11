@@ -2570,6 +2570,8 @@ class MapEvaluator:
             return False
         elif len(self.model.spatial_model.parameters.free_parameters) == 0:
             return False
+        elif not self.parameters_spatial_changed:
+            return False
         else:
             # Here we do not use SkyCoord.separation to improve performance
             # (it avoids equivalence comparisons for frame and units)
