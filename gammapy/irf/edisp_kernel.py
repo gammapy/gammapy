@@ -28,19 +28,25 @@ class EDispKernel(IRF):
     --------
     Create a Gaussian energy dispersion matrix::
 
-        from gammapy.maps import MapAxis
-        from gammapy.irf import EDispKernel
-        energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
-        energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
-        edisp = EDispKernel.from_gauss(
-            energy_true=energy, energy=energy,
-            sigma=0.1, bias=0,
-        )
+    >>> from gammapy.maps import MapAxis
+    >>> from gammapy.irf import EDispKernel
+    >>> energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
+    >>> energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
+    >>> edisp = EDispKernel.from_gauss(energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0)
 
     Have a quick look:
 
-    >>> print(edisp) # doctest: +SKIP
-    >>> edisp.peek() # doctest: +SKIP
+    >>> print(edisp)
+    EDispKernel
+    -----------
+    <BLANKLINE>
+      axes  : ['energy_true', 'energy']
+      shape : (10, 10)
+      ndim  : 2
+      unit  :
+      dtype : float64
+    <BLANKLINE>
+    >>> edisp.peek()
 
     """
     required_axes = ["energy_true", "energy"]
