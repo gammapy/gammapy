@@ -23,7 +23,7 @@ possibly to change its spectral distribution. By default, only the `norm` parame
 `~gammapy.modeling.models.PowerLaWNormSpectralModel` is left free. If needed the spectral parameters
 can be unfrozen.
 
-.. code-block:: python
+.. testcode::
 
 	from gammapy.makers import MapDatasetMaker, FoVBackgroundMaker, SafeMaskMaker
 	from gammapy.datasets import MapDataset
