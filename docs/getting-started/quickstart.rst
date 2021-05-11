@@ -9,17 +9,18 @@ Quickstart
 Installation using Anaconda
 ---------------------------
 
-The easiest and recommended way to install Gammapy is to install the Anaconda
+The easiest way to install Gammapy is to install the Anaconda
 distribution from https://www.anaconda.com/download/ and then to install
-Gammapy and it's dependencies by executing this command in a terminal:
+Gammapy and its dependencies by executing this command in a terminal:
 
 .. code-block:: bash
 
     conda install -c conda-forge gammapy
 
-
-Alternatively, we also provide an environment definition file, so you can
-get additional useful packages together with gammapy in an isolated environment:
+Though this is one line command is the standard way to install a software package using Anaconda, **we recommend to
+make use of an environment definition file** that we provide, so you can get additional useful packages together with
+Gammapy in a virtual isolated environment. If you want to learn about using virtual environments see
+:ref:`virtual-envs`. In order to proceed in this way, just copy and paste in your terminal the two lines below:
 
 .. code-block:: bash
 
@@ -32,6 +33,7 @@ get additional useful packages together with gammapy in an isolated environment:
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
+
 This creates a conda environment called ``gammapy-0.18.2`` which you can activate via:
 
 .. code-block:: bash
@@ -40,7 +42,7 @@ This creates a conda environment called ``gammapy-0.18.2`` which you can activat
 
 Note that you have to execute that activation command (but not the environment
 creation command) every time you open a new terminal window, because the default
-with conda is the base environment, which does not have Gammapy installed.
+with conda is the base environment, which might not have Gammapy installed.
 
 To check your Gammapy installation, you can use this command:
 
@@ -48,6 +50,13 @@ To check your Gammapy installation, you can use this command:
 
     gammapy info
 
+To leave the environment, you may activate another one or just type:
+
+.. code-block:: bash
+
+    conda deactivate
+
+.. _download-tutorials:
 
 Download tutorials
 ------------------

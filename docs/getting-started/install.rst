@@ -7,8 +7,39 @@ Installation
 
 Using Anaconda
 --------------
-The easiest and recommended way to install Gammapy is to install the Anaconda distribution.
+The easiest way to install Gammapy is to install the Anaconda distribution.
 The installation is explained in the :ref:`quickstart` section.
+
+.. _virtual-envs:
+
+Using virtual environments
+--------------------------
+
+We recommend to create an isolated virtual environment for each version of Gammapy, so that you have full
+control over additional packages that you may use in your analysis. We provide, for each stable release of Gammapy,
+a YAML file that allows you to easily create a specific conda execution environment. This could also help you on
+improving reproducibility within the users community. See installation instructions on :ref:`quickstart` section.
+
+You may prefer to create your virtual environments with Python `venv` command instead of using Anaconda.
+To create a virtual environment with `venv` (Python 3.5+ required) run the command:
+
+.. code-block:: bash
+
+    $ python -m venv gammapy-env
+
+which will create one in a `gammapy-env` folder. To activate it:
+
+.. code-block:: bash
+
+    $ . gammapy-env/bin/activate
+
+After that you can install Gammapy using `pip` as well as other packages you may need.
+
+To leave the environment, you may activate another one or just type:
+
+.. code-block:: bash
+
+    $ deactivate
 
 .. _install-pip:
 
