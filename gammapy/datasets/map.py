@@ -2656,6 +2656,8 @@ class MapEvaluator:
 
         if self.evaluation_mode == "local":
             try:
+                # TODO: maybe all models including templates
+                # should have lon_0/lat_0 parameters defined ? remove try if so
                 self._init_position = (
                     spatial.lon_0.quantity.to_value(u.rad),
                     spatial.lat_0.quantity.to_value(u.rad),
