@@ -1111,44 +1111,6 @@ class Map(abc.ABC):
                 fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
                 plt.show()
 
-    def plot_mask(self, ax=None, **kwargs):
-        """Plot the mask as a shaded area
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axis`
-            Axis instance to be used for the plot.
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.axvspan`
-
-        Returns
-        -------
-        ax : `~matplotlib.pyplot.Axis`
-            Axis used for plotting
-        """
-        import matplotlib.pyplot as plt
-
-        if not self.is_mask:
-            raise ValueError("This is not a mask and cannot be plotted")
-
-        kwargs.setdefault("alpha", 0.5)
-        kwargs.setdefault("colors", "w")
-
-        if ax is None:
-            fig = plt.gcf()
-            if self.geom.projection in ["AIT"]:
-                ax = fig.add_subplot(
-                                 1, 1, 1, projection=self.geom.wcs,
-                                 frame_class=EllipticalFrame
-                                 )
-            else:
-                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
-
-        data = self.data.astype(float)
-
-        ax.contourf(data, level=[0, 0.5], **kwargs)
-
-        return ax
 
     def copy(self, **kwargs):
         """Copy map instance and overwrite given attributes, except for geometry.

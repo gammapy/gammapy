@@ -332,21 +332,14 @@ class WcsNDMap(WcsMap):
         """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
-        from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
         if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
 
+        ax = self._plot_default_axes(ax=ax)
+
         if fig is None:
             fig = plt.gcf()
-
-        if ax is None:
-            if self.geom.projection in ["AIT"]:
-                ax = fig.add_subplot(
-                    1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame
-                )
-            else:
-                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
         if self.geom.is_image:
             data = self.data.astype(float)
@@ -376,6 +369,61 @@ class WcsNDMap(WcsMap):
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
         return fig, ax, cbar
+
+    def plot_mask(self, ax=None, **kwargs):
+        """Plot the mask as a shaded area
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.contourf`
+
+        Returns
+        -------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        """
+        if not self.geom.is_flat:
+            raise TypeError("Use .plot_interactive() for Map dimension > 2")
+
+        if not self.is_mask:
+            raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
+
+        ax = self._plot_default_axes(ax=ax)
+
+        kwargs.setdefault("alpha", 0.5)
+        kwargs.setdefault("colors", "w")
+
+        data = np.squeeze(self.data).astype(float)
+
+        ax.contourf(data, levels=[0, 0.5], **kwargs)
+
+        if self.geom.is_allsky:
+            ax = self._plot_format_allsky(ax)
+        else:
+            ax = self._plot_format(ax)
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return ax
+
+    def _plot_default_axes(self, ax):
+        import matplotlib.pyplot as plt
+        from astropy.visualization.wcsaxes.frame import EllipticalFrame
+
+        if ax is None:
+            fig = plt.gcf()
+            if self.geom.projection in ["AIT"]:
+                ax = fig.add_subplot(
+                    1, 1, 1, projection=self.geom.wcs,
+                    frame_class=EllipticalFrame
+                )
+            else:
+                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+
+        return ax
 
     def _plot_format(self, ax):
         try:
