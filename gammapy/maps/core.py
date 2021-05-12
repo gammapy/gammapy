@@ -240,13 +240,28 @@ class Map(abc.ABC):
 
         Parameters
         ----------
+        hdulist :  `~astropy.io.fits.HDUList`
+            HDU list containing HDUs for map data and bands.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.
+        map_type : {"auto", "wcs", "hpx", "region"}
+            Map type.
+        format : {'gadf', 'fgst-ccube', 'fgst-template'}
+            FITS format convention.
         colname : str, optional
-            data column name to be used of healix map.
+            Data column name to be used for the HEALPix map.
+
+        Returns
+        -------
+        map_out : `Map`
+            Map object
         """
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        if map_type is "hpx":
+        if map_type == "hpx":
             return cls_out.from_hdulist(
                 hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format, colname=colname
             )
@@ -254,6 +269,7 @@ class Map(abc.ABC):
             return cls_out.from_hdulist(
                 hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
             )
+
     @staticmethod
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
@@ -1111,7 +1127,6 @@ class Map(abc.ABC):
             with mpl.rc_context(rc=rc_params):
                 fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
                 plt.show()
-
 
     def copy(self, **kwargs):
         """Copy map instance and overwrite given attributes, except for geometry.
