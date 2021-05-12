@@ -74,6 +74,18 @@ class Observation:
         self.obs_filter = obs_filter or ObservationFilter()
 
     @property
+    def available_irfs(self):
+        """Which irfs are available"""
+        available_irf = []
+
+        for irf in ["aeff", "edisp", "psf", "bkg"]:
+            available = self.__dict__.get(irf, False) is None
+            if available:
+                available_irf.append(irf)
+
+        return available_irf
+
+    @property
     def events(self):
         events = self.obs_filter.filter_events(self._events)
         return events
