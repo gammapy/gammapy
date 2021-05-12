@@ -130,7 +130,7 @@ def test_select(models):
         {"datasets_names": "dataset-2"},
         {"datasets_names": ["dataset-1", "dataset-2"]},
         {"datasets_names": None},
-        {"tag": "TemplateDataModel"},
+        {"tag": "TemplateNPredModel"},
         {"tag": ["SkyModel", "TemplateNPredModel"]},
         {"tag": "point", "model_type": "spatial"},
         {"tag": ["point", "gauss"], "model_type": "spatial"},
@@ -160,7 +160,6 @@ def test_select(models):
     ]
     for cdt, xp in zip(conditions, expected):
         selected = models.select(**cdt)
-        print(selected.names)
         assert selected.names == xp
 
     mask = models.selection_mask(**conditions[4]) | models.selection_mask(
