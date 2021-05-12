@@ -8,7 +8,7 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
-    BackgroundModel,
+    TemplateNPredModel,
     EBLAbsorptionNormSpectralModel,
     Model,
     Models,
@@ -28,7 +28,7 @@ def test_dict_to_skymodels():
     assert len(models) == 5
 
     model0 = models[0]
-    assert isinstance(model0, BackgroundModel)
+    assert isinstance(model0, TemplateNPredModel)
     assert model0.name == "background_irf"
 
     model0 = models[1]
@@ -238,7 +238,7 @@ def make_all_models():
     m2 = Map.create(
         npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")]
     )
-    yield Model.create("BackgroundModel", map=m2)
+    yield Model.create("TemplateNPredModel", map=m2)
 
 
 @pytest.mark.parametrize("model_class", MODEL_REGISTRY)

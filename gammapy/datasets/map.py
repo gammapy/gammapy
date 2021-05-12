@@ -11,7 +11,7 @@ from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import (
-    BackgroundModel,
+    TemplateNPredModel,
     DatasetModels,
     FoVBackgroundModel,
     PointSpatialModel
@@ -2495,7 +2495,7 @@ class MapEvaluator:
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None or self.model.evaluation_radius is None:
+        if isinstance(self.model, TemplateNPredModel) or self.model.spatial_model is None or self.model.evaluation_radius is None:
             self.evaluation_mode = "global"
 
         # define cached computations
@@ -2534,7 +2534,7 @@ class MapEvaluator:
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
         # TODO: simplify and clean up
-        if isinstance(self.model, BackgroundModel):
+        if isinstance(self.model, TemplateNPredModel):
             return False
         elif self.exposure is None:
             return True
@@ -2742,7 +2742,7 @@ class MapEvaluator:
 
     def _compute_npred(self):
         """Compute npred"""
-        if isinstance(self.model, BackgroundModel):
+        if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
             npred = self.compute_flux_psf_convolved()
@@ -2758,12 +2758,12 @@ class MapEvaluator:
     @property
     def apply_psf_after_edisp(self):
         """"""
-        if not isinstance(self.model, BackgroundModel):
+        if not isinstance(self.model, TemplateNPredModel):
             return self.model.apply_irf.get("psf_after_edisp")
 
     # TODO: remove again if possible...
     def _compute_npred_psf_after_edisp(self):
-        if isinstance(self.model, BackgroundModel):
+        if isinstance(self.model, TemplateNPredModel):
             return self.model.evaluate()
 
         npred = self.compute_flux()

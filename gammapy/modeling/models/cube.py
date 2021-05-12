@@ -17,7 +17,7 @@ from .temporal import TemporalModel
 __all__ = [
     "SkyModel",
     "FoVBackgroundModel",
-    "BackgroundModel",
+    "TemplateNPredModel",
     "create_fermi_isotropic_diffuse_model",
 ]
 
@@ -202,7 +202,7 @@ class SkyModel(Model):
     def __add__(self, other):
         if isinstance(other, (Models, list)):
             return Models([self, *other])
-        elif isinstance(other, (SkyModel, BackgroundModel)):
+        elif isinstance(other, (SkyModel, TemplateNPredModel)):
             return Models([self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
@@ -660,7 +660,7 @@ class FoVBackgroundModel(Model):
             self._spectral_model.unfreeze()
 
 
-class BackgroundModel(Model):
+class TemplateNPredModel(Model):
     """Background model.
 
     Create a new map by a tilt and normalization on the available map
@@ -674,7 +674,7 @@ class BackgroundModel(Model):
         default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     """
 
-    tag = "BackgroundModel"
+    tag = "TemplateNPredModel"
     map = LazyFitsData(cache=True)
 
     def __init__(
@@ -817,7 +817,7 @@ class BackgroundModel(Model):
 
         Returns
         -------
-        cutout : `BackgroundModel`
+        cutout : `TemplateNPredModel`
             Cutout background model.
         """
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
@@ -833,7 +833,7 @@ class BackgroundModel(Model):
 
         Parameters
         ----------
-        other : `BackgroundModel`
+        other : `TemplateNPredModel`
             Other background model.
         """
         bkg = self.evaluate()
