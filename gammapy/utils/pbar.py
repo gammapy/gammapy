@@ -6,7 +6,7 @@ from contextlib import contextmanager
 log = logging.getLogger(__name__)
 
 try:
-    from tqdm import tqdm
+    from tqdm.auto import tqdm
 except ImportError:
     class tqdm():
         def __init__(self, disable=True, **kwargs):
