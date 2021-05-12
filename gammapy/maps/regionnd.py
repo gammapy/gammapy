@@ -3,6 +3,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table, hstack
 from astropy.visualization import quantity_support
+from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -152,6 +153,45 @@ class RegionNDMap(Map):
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
         """
         ax = self.geom.plot_region(ax, **kwargs)
+        return ax
+
+    def plot_mask(self, ax=None, **kwargs):
+        """Plot the mask as a shaded area in a xmin-xmax range
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axis` 
+            Axis instance to be used for the plot.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.axvspan`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Axis used for plotting
+        """
+        import matplotlib.pyplot as plt
+
+        if not self.is_mask:
+            raise ValueError("This is not a mask and cannot be plotted")
+
+        kwargs.setdefault("color", "k")
+        kwargs.setdefault("alpha", 0.05)
+        kwargs.setdefault("label", "mask")
+
+        ax = plt.gca() if ax is None else ax
+
+        edges = self.geom.axes["energy"].edges.reshape((-1, 1, 1))
+
+        labels, nlabels = ndi_label(self.data)
+
+        for idx in range(1, nlabels + 1):
+            mask = (labels == idx)
+            xmin = edges[:-1][mask].min().value
+            xmax = edges[1:][mask].max().value
+            ax.axvspan(xmin, xmax, **kwargs)
+            label = None
+
         return ax
 
     @classmethod

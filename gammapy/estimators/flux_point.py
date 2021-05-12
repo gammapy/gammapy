@@ -784,6 +784,12 @@ class FluxPointsEstimator(Estimator):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
+    backend : str
+        Backend used for fitting, default : minuit
+    optimize_opts : dict
+        Options passed to `Fit.optimize`.
+    covariance_opts : dict
+        Options passed to `Fit.covariance`.
     reoptimize : bool
         Re-optimize other free model parameters.
     selection_optional : list of str
@@ -810,6 +816,9 @@ class FluxPointsEstimator(Estimator):
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
     ):
@@ -821,6 +830,13 @@ class FluxPointsEstimator(Estimator):
         self.norm_values = norm_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.backend = backend
+        if optimize_opts is None:
+            optimize_opts = {}
+        if covariance_opts is None:
+            covariance_opts = {}
+        self.optimize_opts = optimize_opts
+        self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
 
@@ -835,6 +851,9 @@ class FluxPointsEstimator(Estimator):
             norm_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
+            backend=self.backend,
+            optimize_opts=self.optimize_opts,
+            covariance_opts=self.covariance_opts,
             reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
         )
@@ -860,7 +879,7 @@ class FluxPointsEstimator(Estimator):
             self.energy_edges[:-1], self.energy_edges[1:]
         ):
             row = self.estimate_flux_point(
-                datasets, energy_min=energy_min, energy_max=energy_max
+                datasets, energy_min=energy_min, energy_max=energy_max,
             )
             rows.append(row)
 

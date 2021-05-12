@@ -351,9 +351,9 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     >>> energy_range = [1, 10] * u.TeV
     >>> source.spectral_model().plot(energy_range)
-    <AxesSubplot:xlabel='Energy [TeV]', ylabel='Flux [1 / (cm2 s TeV)]'>
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
     >>> source.spectral_model().plot_error(energy_range)
-    <AxesSubplot:xlabel='Energy [TeV]', ylabel='Flux [1 / (cm2 s TeV)]'>
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
     >>> source.flux_points.plot()
     <AxesSubplot:xlabel='Energy (TeV)', ylabel='dnde (1 / (cm2 s TeV))'>
     """

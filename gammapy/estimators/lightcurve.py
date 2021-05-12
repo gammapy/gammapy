@@ -334,6 +334,12 @@ class LightCurveEstimator(Estimator):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
+    backend : str
+        Backend used for fitting, default : minuit
+    optimize_opts : dict
+        Options passed to `Fit.optimize`.
+    covariance_opts : dict
+        Options passed to `Fit.covariance`.
     reoptimize : bool
         reoptimize other parameters during fit statistic scan?
     selection_optional : list of str
@@ -362,6 +368,9 @@ class LightCurveEstimator(Estimator):
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
     ):
@@ -379,8 +388,32 @@ class LightCurveEstimator(Estimator):
         self.norm_values = norm_values
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.backend = backend
+        if optimize_opts is None:
+            optimize_opts = {}
+        if covariance_opts is None:
+            covariance_opts = {}
+        self.optimize_opts = optimize_opts
+        self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
+
+    def _flux_poins_estimator(self, energy_edges):
+        return FluxPointsEstimator(
+            source=self.source,
+            energy_edges=energy_edges,
+            norm_min=self.norm_min,
+            norm_max=self.norm_max,
+            norm_n_values=self.norm_n_values,
+            norm_values=self.norm_values,
+            n_sigma=self.n_sigma,
+            n_sigma_ul=self.n_sigma_ul,
+            backend=self.backend,
+            optimize_opts=self.optimize_opts,
+            covariance_opts=self.covariance_opts,
+            reoptimize=self.reoptimize,
+            selection_optional=self.selection_optional,
+        )
 
     def run(self, datasets):
         """Run light curve extraction.
@@ -435,6 +468,12 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : `~gammapy.modeling.Datasets`
             the list of dataset object
+        backend : str
+            Backend used for fitting, default : minuit
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -447,18 +486,7 @@ class LightCurveEstimator(Estimator):
         else:
             energy_edges = self.energy_edges
 
-        fe = FluxPointsEstimator(
-            source=self.source,
-            energy_edges=energy_edges,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
-            norm_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            reoptimize=self.reoptimize,
-            selection_optional=self.selection_optional,
-        )
+        fe = self._flux_poins_estimator(energy_edges)
         fp = fe.run(datasets)
 
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row

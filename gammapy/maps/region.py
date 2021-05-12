@@ -327,15 +327,16 @@ class RegionGeom(Geom):
         return wcs_geom
 
     def to_binsz_wcs(self, binsz):
+
         """Change the bin size of the underlying WCS geometry.
 
         Parameters
         ----------
         binzs : float, string or `~astropy.quantity.Quantity`
-.
+
         Returns
         -------
-        `~RegionGeom`
+        region : `~RegionGeom`
             A RegionGeom with the same axes and region as the input,
             but different wcs pixelization.
         """

@@ -95,20 +95,21 @@ by passing a list of `~MapAxis` objects for non-spatial dimensions with the axes
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     region =  CircleSkyRegion(center=center, radius=1*u.deg)
     geom = RegionGeom(region, axes=[energy_axis])
+    print(geom)
 
-The resulting `~RegionGeom` object has `ndim = 3`, two spatial dimensions with one single bin and the chosen energy axis with 12 bins:
-
-.. code-block:: python
-
-    geom
+.. testoutput::
 
     RegionGeom
-            region     : CircleSkyRegion
-            axes       : ['lon', 'lat', 'energy']
-            shape      : (1, 1, 12)
-            ndim       : 3
-            frame      : galactic
-            center     : 0.0 deg, 0.0 deg
+    <BLANKLINE>
+       region     : CircleSkyRegion
+       axes       : ['lon', 'lat', 'energy']
+       shape      : (1, 1, 12)
+       ndim       : 3
+       frame      : galactic
+       center     : 0.0 deg, 0.0 deg
+    <BLANKLINE>
+
+The resulting `~RegionGeom` object has `ndim = 3`, two spatial dimensions with one single bin and the chosen energy axis with 12 bins.
 
 RegionGeom and coordinates
 --------------------------

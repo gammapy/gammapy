@@ -231,9 +231,9 @@ class EventList:
         --------
         >>> from astropy.units import Quantity
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
+        >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
         >>> energy_range = Quantity([1, 20], 'TeV')
-        >>> event_list = event_list.select_energy() # doctest: +SKIP
+        >>> event_list = event_list.select_energy(energy_range=energy_range)
         """
         energy = self.energy
         mask = energy_range[0] <= energy
@@ -297,10 +297,11 @@ class EventList:
 
         Examples
         --------
+        >>> from astropy import units as u
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
-        >>> phase_region = (0.3, 0.5)
-        >>> event_list = event_list.select_parameter(parameter='PHASE', band=phase_region) # doctest: +SKIP
+        >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
+        >>> zd = (0, 30) * u.deg
+        >>> event_list = event_list.select_parameter(parameter='ZENITH_ANGLE', band=zd)
         """
         mask = band[0] <= self.table[parameter].quantity
         mask &= self.table[parameter].quantity < band[1]

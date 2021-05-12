@@ -167,7 +167,7 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None):
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
         """Read a map from a FITS file.
 
         Parameters
@@ -186,6 +186,8 @@ class Map(abc.ABC):
             with the format of the input file.  If map_type is 'auto'
             then an appropriate map type will be inferred from the
             input file.
+        colname : str, optional
+            data column name to be used of healix map.
 
         Returns
         -------
@@ -193,7 +195,7 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format, colname=colname)
 
     @staticmethod
     def from_geom(geom, meta=None, data=None, unit="", dtype="float32"):
@@ -233,15 +235,25 @@ class Map(abc.ABC):
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None):
-        """Create from `astropy.io.fits.HDUList`."""
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
+        """Create from `astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        colname : str, optional
+            data column name to be used of healix map.
+        """
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(
-            hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
-        )
-
+        if map_type is "hpx":
+            return cls_out.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format, colname=colname
+            )
+        else:
+            return cls_out.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
+            )
     @staticmethod
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
@@ -1099,6 +1111,7 @@ class Map(abc.ABC):
             with mpl.rc_context(rc=rc_params):
                 fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
                 plt.show()
+
 
     def copy(self, **kwargs):
         """Copy map instance and overwrite given attributes, except for geometry.

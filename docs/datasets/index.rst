@@ -52,9 +52,36 @@ Note that in Gammapy, 2D image analyses are done with 3D cubes with a single
 energy bin, e.g. for modeling and fitting,
 see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
 
-
 To analyse multiple runs, you can either stack the datasets together, or perform
 a joint fit across multiple datasets.
+
+
+Predicted counts
+================
+The total number of predicted counts from a `MapDataset` are computed per bin like:
+
+.. math::
+
+	N_{Pred} = N_{Bkg} + \sum_{Src} N_{Src}
+
+Where :math:`N_{Bkg}` is the expected counts from the residual hadronic background
+model and :math:`N_{Src}` the predicted counts from a given source model component.
+The predicted counts from the hadronic background are computed directly from
+the model in reconstructed energy and spatial coordinates, while the predicted counts
+from a source are obtained by forward folding with the instrument response:
+
+.. math::
+
+	N_{Src} = \mathrm{PSF_{Src}} \circledast \mathrm{EDISP_{Src}}(\mathcal{E} \cdot F_{Src}(l, b, E_{True}))
+
+Where :math:`F_{Src}` is the integrated flux of the source model,
+:math:`\mathcal{E}` the exposure,
+:math:`\mathrm{EDISP}` the energy dispersion matrix and
+:math:`\mathrm{PSF}` the PSF convolution kernel. The corresponding IRFs are extracted
+at the current position of the model component defined by :math:`(l, b)` and assumed
+to be constant across the size of the source. The detailed expressions to compute the
+predicted number of counts from a source and corresponding IRFs are given in :ref:`irf-theory`.
+
 
 .. _stack:
 
@@ -129,6 +156,7 @@ The following plot shows the individual and stacked energy dispersion kernel and
 
 
 .. _joint:
+
 Joint Analysis
 ==============
 

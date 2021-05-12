@@ -149,3 +149,9 @@ a limited set of observations and summary files following the scheme described i
 This is possible with the method `~gammapy.data.DataStore.copy_obs` provided by the
 `~gammapy.data.DataStore`. It allows to copy individual observations files in a given directory
 and build the associated observation and HDU tables.
+
+Interpolate maps onto a different geometry
+++++++++++++++++++++++++++++++++++++++++++
+
+To interpolate maps onto a different geometry, use `Map.interp_to_geom`,
+see `here <tutorials/maps.html#Filling-maps-from-interpolation>`__.

@@ -25,7 +25,7 @@ Glossary
       by `Map` objects (see :ref:`maps`) and contained in a `MapDataset` object.
 
     Aeff
-      Is short for effective area, the IRF representing the detector collection
+      Short for effective area: it is the IRF representing the detector collection
       area. See :ref:`irf-aeff`.
 
     Cash
@@ -39,13 +39,18 @@ Glossary
       compared to the measured counts using the likelihood.
 
     EDisp
-      EDisp is short for energy dispersion, the IRF that represents the probability
+      Short for energy dispersion: it is the IRF that represents the probability
       of measuring a given reconstructed energy as a function of the true photon
       energy. See :ref:`irf-edisp`
 
+    FoV
+      Short for "field of view": it indicates the angular aperture (sometimes also the
+      solid angle) on the sky that is visible by the instrument with a single pointing.
+
     GTI
-      Short for Good Time Interval: an continuous time interval of data acquisition.
-      In CTA, they also represent time intervals where the IRFs are supposed to be constant.
+      Short for Good Time Interval: it indicates a continuous time interval of data
+      acquisition. In CTA, it also represents a time interval in which the IRFs are
+      supposed to be constant.
 
     IRF
       Short for Instrument Response Function. They are used to model the probability
@@ -72,6 +77,11 @@ Glossary
 
     Ring Background
       Background estimation method typically used for image analysis.
+
+    RoI
+      Short for "region of interest": it indicates the spatial region in which the
+      data are analyzed. In practice, at each energy it corresponds with the sky region
+      in which the dataset mask is True.
 
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
