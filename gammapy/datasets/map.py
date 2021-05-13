@@ -2559,6 +2559,8 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
+        values = self.model.spatial_model.parameters.value
+        spaial_changed = ~np.all(self._cached_parameter_values_spatial == values)
         # TODO: simplify and clean up
         if isinstance(self.model, TemplateNPredModel):
             return False
@@ -2570,7 +2572,7 @@ class MapEvaluator:
             return False
         elif len(self.model.spatial_model.parameters.free_parameters) == 0:
             return False
-        elif not self.parameters_spatial_changed:
+        elif not spaial_changed:
             return False
         else:
             # Here we do not use SkyCoord.separation to improve performance
