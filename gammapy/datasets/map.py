@@ -2517,7 +2517,11 @@ class MapEvaluator:
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, TemplateNPredModel) or self.model.spatial_model is None or self.model.evaluation_radius is None:
+        if (
+            isinstance(self.model, TemplateNPredModel)
+            or self.model.spatial_model is None
+            or self.model.evaluation_radius is None
+        ):
             self.evaluation_mode = "global"
 
         # define cached computations
