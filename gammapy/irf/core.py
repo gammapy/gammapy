@@ -35,13 +35,14 @@ class IRF:
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=None,)
 
-    def __init__(self, axes, data=0, unit="", meta=None):
+    def __init__(self, axes, data=0, unit="", is_pointlike = False, meta=None):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
         self.data = data
         self.unit = unit
         self.meta = meta or {}
+        self._is_pointlike = is_pointlike
 
     @property
     @abc.abstractmethod
@@ -52,6 +53,11 @@ class IRF:
     @abc.abstractmethod
     def required_axes(self):
         pass
+
+    @property
+    def is_pointlike(self):
+        """Whether the IRF is pointlike of full containment."""
+        return self._is_pointlike
 
     @property
     def is_offset_dependent(self):
@@ -357,7 +363,10 @@ class IRF:
         axes = MapAxes.from_table(table=table, format=format)[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
-        return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
+        is_pointlike = False
+        if "HDUCLAS3" in table.meta and table.meta["HDUCLAS3"]=="POINT-LIKE":
+            is_pointlike = True
+        return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit, is_pointlike=is_pointlike)
 
     def to_table(self, format="gadf-dl3"):
         """Convert to table
@@ -379,6 +388,8 @@ class IRF:
             spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
             # TODO: add missing required meta data!
             table.meta["HDUCLAS2"] = spec["hduclas2"]
+            if self.is_pointlike:
+                table.meta["HDUCLAS3"] = "POINT-LIKE"
             table[spec["column_name"]] = self.quantity.T[np.newaxis]
         else:
             raise ValueError(f"Not a valid supported format: '{format}'")
