@@ -6,15 +6,16 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
+from astropy.coordinates.angle_utilities import angular_separation
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     TemplateNPredModel,
     DatasetModels,
     FoVBackgroundModel,
-    PointSpatialModel
+    PointSpatialModel,
 )
 from gammapy.stats import (
     CashCountsStatistic,
@@ -411,11 +412,7 @@ class MapDataset(Dataset):
 
             if evaluator.needs_update:
                 evaluator.update(
-                    self.exposure,
-                    self.psf,
-                    self.edisp,
-                    self._geom,
-                    self.mask_image,
+                    self.exposure, self.psf, self.edisp, self._geom, self.mask_image,
                 )
 
             if evaluator.contributes:
@@ -648,7 +645,9 @@ class MapDataset(Dataset):
                 if "livetime" in self.exposure.meta:
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
                 else:
-                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"].copy()
+                    self.exposure.meta["livetime"] = other.exposure.meta[
+                        "livetime"
+                    ].copy()
 
         if self.stat_type == "cash":
             if self.background and other.background:
@@ -1001,13 +1000,17 @@ class MapDataset(Dataset):
             kwargs["exposure"] = exposure
 
         if "BACKGROUND" in hdulist:
-            kwargs["background"] = Map.from_hdulist(hdulist, hdu="background", format=format)
+            kwargs["background"] = Map.from_hdulist(
+                hdulist, hdu="background", format=format
+            )
 
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp", format=format)
 
             try:
-                exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure", format=format)
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="edisp_exposure", format=format
+                )
             except KeyError:
                 exposure_map = None
 
@@ -1019,7 +1022,9 @@ class MapDataset(Dataset):
         if "PSF" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf", format=format)
             try:
-                exposure_map = Map.from_hdulist(hdulist, hdu="psf_exposure", format=format)
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="psf_exposure", format=format
+                )
             except KeyError:
                 exposure_map = None
             kwargs["psf"] = PSFMap(psf_map, exposure_map)
@@ -1068,7 +1073,7 @@ class MapDataset(Dataset):
                 file_name=path.name,
                 hdu_name=hdu_name.upper(),
                 cache=cache,
-                format=format
+                format=format,
             )
 
         kwargs["edisp"] = HDULocation(
@@ -1077,7 +1082,7 @@ class MapDataset(Dataset):
             file_name=path.name,
             hdu_name="EDISP",
             cache=cache,
-            format=format
+            format=format,
         )
 
         kwargs["psf"] = HDULocation(
@@ -1086,7 +1091,7 @@ class MapDataset(Dataset):
             file_name=path.name,
             hdu_name="PSF",
             cache=cache,
-            format=format
+            format=format,
         )
 
         return cls(**kwargs)
@@ -1116,7 +1121,9 @@ class MapDataset(Dataset):
         name = make_name(name)
 
         if lazy:
-            return cls._read_lazy(name=name, filename=filename, cache=cache, format=format)
+            return cls._read_lazy(
+                name=name, filename=filename, cache=cache, format=format
+            )
         else:
             with fits.open(str(make_path(filename)), memmap=False) as hdulist:
                 return cls.from_hdulist(hdulist, name=name, format=format)
@@ -1265,8 +1272,7 @@ class MapDataset(Dataset):
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containment correction is only supported for"
-                    " `CircleSkyRegion`."
+                    "Containment correction is only supported for" " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
@@ -1276,13 +1282,21 @@ class MapDataset(Dataset):
                 containment = self.psf.containment(
                     position=on_region.center,
                     energy_true=energy_true,
-                    rad=on_region.radius
+                    rad=on_region.radius,
                 )
                 dataset.exposure.quantity *= containment.reshape(geom.data_shape)
 
         kwargs = {}
 
-        for name in ["counts", "edisp", "mask_safe", "mask_fit", "exposure", "gti", "meta_table"]:
+        for name in [
+            "counts",
+            "edisp",
+            "mask_safe",
+            "mask_fit",
+            "exposure",
+            "gti",
+            "meta_table",
+        ]:
             kwargs[name] = getattr(dataset, name)
 
         if self.stat_type == "cash":
@@ -1883,7 +1897,7 @@ class MapDatasetOnOff(MapDataset):
             geom_edisp=geom_edisp,
             name=name,
             reference_time=reference_time,
-            **kwargs
+            **kwargs,
         )
 
         off_maps = {}
@@ -1925,14 +1939,10 @@ class MapDatasetOnOff(MapDataset):
             counts_off = dataset.npred_background() / alpha
 
         if np.isscalar(acceptance):
-            acceptance = Map.from_geom(
-                dataset._geom, data=acceptance
-            )
+            acceptance = Map.from_geom(dataset._geom, data=acceptance)
 
         if np.isscalar(acceptance_off):
-            acceptance_off = Map.from_geom(
-                dataset._geom, data=acceptance_off
-            )
+            acceptance_off = Map.from_geom(dataset._geom, data=acceptance_off)
 
         return cls(
             models=dataset.models,
@@ -1982,7 +1992,11 @@ class MapDatasetOnOff(MapDataset):
     @property
     def _is_stackable(self):
         """Check if the Dataset contains enough information to be stacked"""
-        incomplete = self.acceptance_off is None or self.acceptance is None or self.counts_off is None
+        incomplete = (
+            self.acceptance_off is None
+            or self.acceptance is None
+            or self.counts_off is None
+        )
         unmasked = np.any(self.mask_safe.data)
         if incomplete and unmasked:
             return False
@@ -2117,16 +2131,24 @@ class MapDatasetOnOff(MapDataset):
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts", format=format)
 
         if "COUNTS_OFF" in hdulist:
-            kwargs["counts_off"] = Map.from_hdulist(hdulist, hdu="counts_off", format=format)
+            kwargs["counts_off"] = Map.from_hdulist(
+                hdulist, hdu="counts_off", format=format
+            )
 
         if "ACCEPTANCE" in hdulist:
-            kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance", format=format)
+            kwargs["acceptance"] = Map.from_hdulist(
+                hdulist, hdu="acceptance", format=format
+            )
 
         if "ACCEPTANCE_OFF" in hdulist:
-            kwargs["acceptance_off"] = Map.from_hdulist(hdulist, hdu="acceptance_off", format=format)
+            kwargs["acceptance_off"] = Map.from_hdulist(
+                hdulist, hdu="acceptance_off", format=format
+            )
 
         if "EXPOSURE" in hdulist:
-            kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure", format=format)
+            kwargs["exposure"] = Map.from_hdulist(
+                hdulist, hdu="exposure", format=format
+            )
 
         # TODO: this misses the PSFMap and EDispMap
 
@@ -2495,7 +2517,11 @@ class MapEvaluator:
         self.evaluation_mode = evaluation_mode
 
         # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, TemplateNPredModel) or self.model.spatial_model is None or self.model.evaluation_radius is None:
+        if (
+            isinstance(self.model, TemplateNPredModel)
+            or self.model.spatial_model is None
+            or self.model.evaluation_radius is None
+        ):
             self.evaluation_mode = "global"
 
         # define cached computations
@@ -2520,7 +2546,11 @@ class MapEvaluator:
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["_compute_npred", "_compute_flux_spatial", "_compute_npred_psf_after_edisp"]:
+            if key in [
+                "_compute_npred",
+                "_compute_flux_spatial",
+                "_compute_npred_psf_after_edisp",
+            ]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -2542,11 +2572,24 @@ class MapEvaluator:
             return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
+        elif len(self.model.spatial_model.parameters.free_parameters) == 0:
+            return False
+        elif self.model.spatial_model is not None and np.all(
+            self._cached_parameter_values_spatial
+            == self.model.spatial_model.parameters.value
+        ):
+            return False
         else:
-            position = self.model.position
-            separation = self._init_position.separation(position)
-            update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
-
+            # Here we do not use SkyCoord.separation to improve performance
+            # (it avoids equivalence comparisons for frame and units)
+            spatial = self.model.spatial_model
+            lon1 = spatial.lon_0.quantity.to_value(u.rad)
+            lat1 = spatial.lat_0.quantity.to_value(u.rad)
+            lon2, lat2 = self._init_position
+            separation = angular_separation(lon1, lat1, lon2, lat2)
+            update = separation > (
+                self.model.evaluation_radius + CUTOUT_MARGIN
+            ).to_value(u.rad)
         return update
 
     @property
@@ -2590,6 +2633,7 @@ class MapEvaluator:
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
+        spatial = self.model.spatial_model
 
         # lookup edisp
         if edisp:
@@ -2599,7 +2643,7 @@ class MapEvaluator:
             )
 
         # lookup psf
-        if psf and self.model.spatial_model:
+        if psf and spatial:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
@@ -2618,10 +2662,16 @@ class MapEvaluator:
                 self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local":
-            self._init_position = self.model.position
-            self.contributes = self.model.contributes(
-                mask=mask, margin=self.psf_width
-            )
+            try:
+                # TODO: maybe all models including templates
+                # should have lon_0/lat_0 parameters defined ? remove try if so
+                self._init_position = (
+                    spatial.lon_0.quantity.to_value(u.rad),
+                    spatial.lat_0.quantity.to_value(u.rad),
+                )
+            except:
+                pass
+            self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
 
             if self.contributes:
                 self.exposure = exposure.cutout(
