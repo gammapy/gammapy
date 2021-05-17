@@ -79,8 +79,10 @@ class Observation:
         available_irf = []
 
         for irf in ["aeff", "edisp", "psf", "bkg"]:
-            available = self.__dict__.get(irf, False) is None
-            if available:
+            available = self.__dict__.get(irf, False)
+            available_hdu = self.__dict__.get(f"_{irf}_hdu", False)
+
+            if available or available_hdu:
                 available_irf.append(irf)
 
         return available_irf

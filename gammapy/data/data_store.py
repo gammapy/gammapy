@@ -264,7 +264,7 @@ class DataStore:
 
         if not set(required_irf).issubset(available_irf):
             difference = set(required_irf).difference(available_irf)
-            raise ValueError(f"{difference} is not a valid method.")
+            raise ValueError(f"{difference} is not a valid irf key. Choose from: {available_irf}")
 
         if obs_id is None:
             obs_id = self.obs_table["OBS_ID"].data
