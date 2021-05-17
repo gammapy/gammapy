@@ -2572,12 +2572,7 @@ class MapEvaluator:
             return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
-        elif len(self.model.spatial_model.parameters.free_parameters) == 0:
-            return False
-        elif self.model.spatial_model is not None and np.all(
-            self._cached_parameter_values_spatial
-            == self.model.spatial_model.parameters.value
-        ):
+        elif not self.parameters_spatial_changed(reset=False):
             return False
         else:
             # Here we do not use SkyCoord.separation to improve performance
@@ -2744,7 +2739,7 @@ class MapEvaluator:
 
     def compute_flux_spatial(self):
         """Compute spatial flux using caching"""
-        if self.parameters_spatial_changed or not self.use_cache:
+        if self.parameters_spatial_changed() or not self.use_cache:
             self._compute_flux_spatial.cache_clear()
         return self._compute_flux_spatial()
 
@@ -2861,15 +2856,25 @@ class MapEvaluator:
 
         return changed
 
-    @property
-    def parameters_spatial_changed(self):
-        """Parameters changed"""
+    def parameters_spatial_changed(self, reset=True):
+        """Parameters changed
+
+        Parameters
+        ----------
+        reset : bool
+            Reset cached values
+
+        Returns
+        -------
+        changed : bool
+            Whether spatial parameters changed.
+        """
         values = self.model.spatial_model.parameters.value
 
         # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values_spatial == values)
 
-        if changed:
+        if changed and reset:
             self._cached_parameter_values_spatial = values
 
         return changed
