@@ -15,6 +15,13 @@ it's not a complete list of how to do everything in Gammapy.
 
 Please give feedback and suggest additions to this page!
 
+
+Spell and pronounce Gammapy
++++++++++++++++++++++++++++
+The recommended spelling is "Gammapy" (as a proper name), where the syllable "py"
+is pronounced like the english word "pie".
+
+
 Access IACT data
 ++++++++++++++++
 
