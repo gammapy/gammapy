@@ -167,6 +167,8 @@ class HpxNDMap(HpxMap):
                 - "fgst-srcmap-sparse"
                 - "galprop"
                 - "galprop2"
+        colname : str, optional
+            Data column name to be used for the HEALPix map.
 
         Returns
         -------
