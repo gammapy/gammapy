@@ -59,7 +59,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         if self.containment_correction:
             if observation.aeff.is_pointlike:
                 raise ValueError("Cannot apply containment correction for point-like IRF.")
-            
+
             if not isinstance(geom.region, CircleSkyRegion):
                 raise TypeError(
                     "Containment correction only supported for circular regions."
