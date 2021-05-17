@@ -1644,3 +1644,19 @@ def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
     assert_allclose(dataset_all.counts.data.sum(), 3 * 90)
     assert_allclose(dataset_all.background.data.sum(), 3 * 90)
     assert_allclose(dataset_all.exposure.data.sum(), 4 * 90)
+
+@requires_dependency("healpy")
+def test_map_dataset_hpx_geom_npred(geom_hpx_partial):
+    hpx_geom = geom_hpx_partial["geom"]
+    hpx_true = hpx_geom.to_image().to_cube([geom_hpx_partial["energy_axis_true"]])
+    dataset = get_map_dataset(hpx_geom, hpx_true,edisp="edispkernelmap")
+
+    pwl = PowerLawSpectralModel()
+    point = PointSpatialModel(
+        lon_0="110 deg", lat_0="75 deg", frame="galactic"
+    )
+    sky_model = SkyModel(pwl, point)
+
+    dataset.models = [sky_model]
+
+    assert_allclose(dataset.npred().data.sum(), 54, rtol=1e-3)
