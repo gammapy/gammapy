@@ -516,8 +516,10 @@ class HpxNDMap(HpxMap):
         projects back into the initial Healpix geometry.
 
         If the kernel is two dimensional, it is applied to all image planes likewise.
-        If the kernel is higher dimensional it must match the map in the number of
-        dimensions and the corresponding kernel is selected for every image plane.
+        If the kernel is higher dimensional should either match the map in the number of
+        dimensions or the map must be an image (no non-spatial axes). In that case, the
+        corresponding kernel is selected and applied to every image plane or to the single
+        input image respectively.
 
         Parameters
         ----------
@@ -547,8 +549,8 @@ class HpxNDMap(HpxMap):
                 "this case."
             )
 
-        geom_kernel = kernel.psf_kernel_map.geom.to_image()
-        wcs_size = np.max(geom_kernel.pixel_scales.deg)
+        geom_kernel = kernel.psf_kernel_map.geom
+        wcs_size = np.max(geom_kernel.to_image().pixel_scales.deg)
         hpx_size = get_pix_size_from_nside(self.geom.nside[0])
 
         if wcs_size > 0.5 * hpx_size:
@@ -564,12 +566,17 @@ class HpxNDMap(HpxMap):
         wcs_map = self.to_wcs(hpx2wcs=hpx2wcs, fill_nan=False)
         conv_wcs_map = wcs_map.convolve(kernel=kernel, use_fft=use_fft, **kwargs)
 
+        if self.geom.is_image and geom_kernel.ndim > 2:
+            target_geom = self.geom.to_cube(geom_kernel.axes)
+        else:
+            target_geom = self.geom
+
         # and back to hpx
-        data = np.zeros(self.geom.data_shape)
+        data = np.zeros(target_geom.data_shape)
         data = hpx2wcs.fill_hpx_map_from_wcs_data(
             wcs_data=conv_wcs_map.data, hpx_data=data
         )
-        return HpxNDMap.from_geom(self.geom, data=data)
+        return HpxNDMap.from_geom(target_geom, data=data)
 
     def convolve_full(self, kernel):
         """Convolve map with a symmetrical WCS kernel.

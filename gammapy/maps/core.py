@@ -1440,6 +1440,33 @@ class Map(abc.ABC):
         data = self.data.reshape((1,) * len(axes) + self.data.shape)
         return self.from_geom(data=data, geom=geom, unit=self.unit)
 
+    def get_spectrum(self, region=None, func=np.nansum, weights=None):
+        """Extract spectrum in a given region.
+
+        The spectrum can be computed by summing (or, more generally, applying ``func``)
+        along the spatial axes in each energy bin. This occurs only inside the ``region``,
+        which by default is assumed to be the whole spatial extension of the map.
+
+        Parameters
+        ----------
+        region: `~regions.Region`
+             Region (pixel or sky regions accepted).
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For a boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
+
+        Returns
+        -------
+        spectrum : `~gammapy.maps.RegionNDMap`
+            Spectrum in the given region.
+        """
+        if not self.geom.has_energy_axis:
+            raise ValueError("Energy axis required")
+
+        return self.to_region_nd_map(region=region, func=func, weights=weights)
+
     def __repr__(self):
         geom = self.geom.__class__.__name__
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]

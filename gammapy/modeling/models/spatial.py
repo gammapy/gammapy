@@ -394,9 +394,14 @@ class PointSpatialModel(SpatialModel):
             Predicted flux map
         """
         geom_image = geom.to_image()
-        x, y = geom_image.get_pix()
-        x0, y0 = self.position.to_pixel(geom.wcs)
-        data = self._grid_weights(x, y, x0, y0)
+        if geom.is_hpx:
+            idx, weights = geom_image.interp_weights({"skycoord": self.position})
+            data = np.zeros(geom_image.data_shape)
+            data[tuple(idx)] = weights
+        else:
+            x, y = geom_image.get_pix()
+            x0, y0 = self.position.to_pixel(geom.wcs)
+            data = self._grid_weights(x, y, x0, y0)
         return Map.from_geom(geom=geom_image, data=data, unit="")
 
     def to_region(self, **kwargs):
