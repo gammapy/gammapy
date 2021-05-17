@@ -186,6 +186,11 @@ class SkyModel(Model):
         return getattr(self.spatial_model, "position", None)
 
     @property
+    def position_lonlat(self):
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
+        return getattr(self.spatial_model, "position_lonlat", None)
+
+    @property
     def evaluation_radius(self):
         """`~astropy.coordinates.Angle`"""
         return self.spatial_model.evaluation_radius

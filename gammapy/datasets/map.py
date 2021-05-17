@@ -2532,6 +2532,7 @@ class MapEvaluator:
         self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_spatial = None
+        self._cached_position = (0, 0)
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -2572,25 +2573,10 @@ class MapEvaluator:
             return False
         elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
             return False
-        elif len(self.model.spatial_model.parameters.free_parameters) == 0:
-            return False
-        elif self.model.spatial_model is not None and np.all(
-            self._cached_parameter_values_spatial
-            == self.model.spatial_model.parameters.value
-        ):
+        elif not self.parameters_spatial_changed(reset=False):
             return False
         else:
-            # Here we do not use SkyCoord.separation to improve performance
-            # (it avoids equivalence comparisons for frame and units)
-            spatial = self.model.spatial_model
-            lon1 = spatial.lon_0.quantity.to_value(u.rad)
-            lat1 = spatial.lat_0.quantity.to_value(u.rad)
-            lon2, lat2 = self._init_position
-            separation = angular_separation(lon1, lat1, lon2, lat2)
-            update = separation > (
-                self.model.evaluation_radius + CUTOUT_MARGIN
-            ).to_value(u.rad)
-        return update
+            return self.irf_position_changed
 
     @property
     def psf_width(self):
@@ -2633,7 +2619,7 @@ class MapEvaluator:
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
-        spatial = self.model.spatial_model
+        spatial_model = self.model.spatial_model
 
         # lookup edisp
         if edisp:
@@ -2643,7 +2629,7 @@ class MapEvaluator:
             )
 
         # lookup psf
-        if psf and spatial:
+        if psf and spatial_model:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
@@ -2662,15 +2648,6 @@ class MapEvaluator:
                 self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
 
         if self.evaluation_mode == "local":
-            try:
-                # TODO: maybe all models including templates
-                # should have lon_0/lat_0 parameters defined ? remove try if so
-                self._init_position = (
-                    spatial.lon_0.quantity.to_value(u.rad),
-                    spatial.lat_0.quantity.to_value(u.rad),
-                )
-            except:
-                pass
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
 
             if self.contributes:
@@ -2744,7 +2721,7 @@ class MapEvaluator:
 
     def compute_flux_spatial(self):
         """Compute spatial flux using caching"""
-        if self.parameters_spatial_changed or not self.use_cache:
+        if self.parameters_spatial_changed() or not self.use_cache:
             self._compute_flux_spatial.cache_clear()
         return self._compute_flux_spatial()
 
@@ -2861,15 +2838,45 @@ class MapEvaluator:
 
         return changed
 
-    @property
-    def parameters_spatial_changed(self):
-        """Parameters changed"""
+    def parameters_spatial_changed(self, reset=True):
+        """Parameters changed
+
+        Parameters
+        ----------
+        reset : bool
+            Reset cached values
+
+        Returns
+        -------
+        changed : bool
+            Whether spatial parameters changed.
+        """
         values = self.model.spatial_model.parameters.value
 
         # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values_spatial == values)
 
-        if changed:
+        if changed and reset:
             self._cached_parameter_values_spatial = values
 
         return changed
+
+    @property
+    def irf_position_changed(self):
+        """Position for IRF changed"""
+
+        # Here we do not use SkyCoord.separation to improve performance
+        # (it avoids equivalence comparisons for frame and units)
+        lon_cached, lat_cached = self._cached_position
+        lon, lat = self.model.position_lonlat
+
+        separation = angular_separation(lon, lat, lon_cached, lat_cached)
+        changed = separation > (
+                self.model.evaluation_radius + CUTOUT_MARGIN
+        ).to_value(u.rad)
+
+        if changed:
+            self._cached_position = lon, lat
+
+        return changed
+

@@ -69,7 +69,7 @@ class SpatialModel(Model):
 
     @property
     def position(self):
-        """Spatial model center position"""
+        """Spatial model center position (`SkyCoord`)"""
         lon = self.lon_0.quantity
         lat = self.lat_0.quantity
         return SkyCoord(lon, lat, frame=self.frame)
@@ -80,6 +80,13 @@ class SpatialModel(Model):
         coord = skycoord.transform_to(self.frame)
         self.lon_0.quantity = coord.data.lon
         self.lat_0.quantity = coord.data.lat
+
+    @property
+    def position_lonlat(self):
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
+        lon = self.lon_0.quantity.to_value(u.rad)
+        lat = self.lat_0.quantity.to_value(u.rad)
+        return lon, lat
 
     # TODO: get rid of this!
     _phi_0 = 0.0
@@ -971,6 +978,13 @@ class TemplateSpatialModel(SpatialModel):
     def position(self):
         """`~astropy.coordinates.SkyCoord`"""
         return self.map.geom.center_skydir
+
+    @property
+    def position_lonlat(self):
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
+        lon = self.position.data.lon.rad
+        lat = self.position.data.lat.rad
+        return lon, lat
 
     @property
     def frame(self):
