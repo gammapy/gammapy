@@ -69,7 +69,7 @@ class SpatialModel(Model):
 
     @property
     def position(self):
-        """Spatial model center position"""
+        """Spatial model center position (`SkyCoord`)"""
         lon = self.lon_0.quantity
         lat = self.lat_0.quantity
         return SkyCoord(lon, lat, frame=self.frame)
@@ -83,7 +83,7 @@ class SpatialModel(Model):
 
     @property
     def position_lonlat(self):
-        """Lon,lat coordinate tuple in rad and coordinate frame of the model"""
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
         lon = self.lon_0.quantity.to_value(u.rad)
         lat = self.lat_0.quantity.to_value(u.rad)
         return lon, lat
@@ -981,7 +981,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def position_lonlat(self):
-        """Lon, lat coordinate tuple in rad and coordinate frame of the model"""
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
         lon = self.position.data.lon.rad
         lat = self.position.data.lat.rad
         return lon, lat
