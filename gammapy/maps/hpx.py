@@ -122,7 +122,7 @@ HPX_FITS_CONVENTIONS["galprop2"] = HpxConv(
 HPX_FITS_CONVENTIONS["healpy"] = HpxConv(
     "healpy",
     hduname=None,
-    colstring="TEMPERATURE"
+    colstring=None
 )
 
 def unravel_hpx_index(idx, npix):
