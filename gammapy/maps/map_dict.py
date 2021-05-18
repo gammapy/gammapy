@@ -7,6 +7,12 @@ from gammapy.utils.scripts import make_path
 __all__ = ["MapDict"]
 
 class MapDict(UserDict):
+    """A Dictionary containing Map objects sharing the same geometry.
+
+    This class simplifies handling and I/O of maps collections.
+
+    For maps with different geometries, use a regular dict.
+    """
     def __init__(self, **kwargs):
         self._geom = None
         super().__init__(**kwargs)

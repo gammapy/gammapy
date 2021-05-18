@@ -36,7 +36,6 @@ def test_map_dict_wrong_addition(map_dictionary):
         map_dict["map3"] = map_dict["map1"].sum_over_axes()
 
 
-
 def test_map_dict_read_write(map_dictionary):
     map_dict = MapDict(**map_dictionary)
     map_dict.write('test.fits', overwrite=True)
@@ -47,3 +46,13 @@ def test_map_dict_read_write(map_dictionary):
     assert_allclose(new_map_dict["MAP1"].data, 1)
     assert_allclose(new_map_dict["MAP2"].data, 2)
 
+def test_map_dict_region():
+    axis = MapAxis.from_edges([1, 2, 3, 4], name="axis", unit="cm")
+    map1 = RegionNDMap.create(axes=[axis])
+    map1.data = 1
+    map2 = RegionNDMap.create(axes=[axis])
+
+    map_dict = MapDict(map1=map1, map2=map2)
+
+    assert len(map_dict) == 2
+    assert_allclose(map_dict["map1"], 1)
