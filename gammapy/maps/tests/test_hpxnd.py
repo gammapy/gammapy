@@ -521,8 +521,8 @@ def test_hpxmap_read_healpy(tmp_path):
         format = HpxConv.identify_hpx_format(header)
         assert format == "healpy"
 
-    #default case: should take the first column "TEMPERATURE"
-    m1 = Map.read(path)
+    #first column "TEMPERATURE"
+    m1 = Map.read(path, colname="TEMPERATURE")
     assert m1.data.shape[0] == npix
     diff = np.sum(m[0] - m1.data)
     assert_allclose(diff, 0.0)
