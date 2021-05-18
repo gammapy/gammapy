@@ -48,9 +48,9 @@ def test_map_dict_read_write(map_dictionary):
 
 def test_map_dict_region():
     axis = MapAxis.from_edges([1, 2, 3, 4], name="axis", unit="cm")
-    map1 = RegionNDMap.create(axes=[axis])
+    map1 = RegionNDMap.create(region=None, axes=[axis])
     map1.data = 1
-    map2 = RegionNDMap.create(axes=[axis])
+    map2 = RegionNDMap.create(region=None, axes=[axis])
 
     map_dict = MapDict(map1=map1, map2=map2)
 

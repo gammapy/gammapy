@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import UserDict
+from collections.abc import MutableMapping
 from astropy.io import fits
 from gammapy.maps import Map
 from gammapy.utils.scripts import make_path
 
 __all__ = ["MapDict"]
 
-class MapDict(UserDict):
+class MapDict(MutableMapping):
     """A Dictionary containing Map objects sharing the same geometry.
 
     This class simplifies handling and I/O of maps collections.
@@ -15,31 +16,42 @@ class MapDict(UserDict):
     """
     def __init__(self, **kwargs):
         self._geom = None
-        super().__init__(**kwargs)
+        self._data = {}
+        for key, value in kwargs.items():
+            self.__setitem__(key, value)
 
     @property
     def geom(self):
         """Map geometry (`Geom`)"""
         return self._geom
 
-    def __setitem__(self, key, value, **kwargs):
+    def __setitem__(self, key, value):
         if value is not None and not isinstance(value, Map):
             raise ValueError(f"MapDict can only contain Map objects.")
 
-        if self.__len__() > 0:
+        if len(self._data) > 0:
             if value.geom != self._geom:
                 raise ValueError(f"MapDict items must share the same geometry.")
         else:
             self._geom = value.geom
 
-        super().__setitem__(key, value, **kwargs)
-        setattr(self, key, value)
+        self._data[key] = value
 
-    def __getitem__(self, item):
-        return getattr(self, item)
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __len__(self):
+        """Returns length of MapDict."""
+        return len(self._data)
+
+    def __delitem__(self, key):
+        del self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __repr__(self):
-        return f"{type(self).__name__}({self.data})"
+        return f"{type(self).__name__}({self._data})"
 
     def to_hdulist(self, hdu_bands='BANDS'):
         """Convert map dictionary to list of HDUs.
