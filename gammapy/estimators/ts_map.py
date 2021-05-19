@@ -77,7 +77,7 @@ class TSMapEstimator(Estimator):
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
-    rtol : float (0.001)
+    rtol : float (0.01)
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit.
     selection_optional : list of str
