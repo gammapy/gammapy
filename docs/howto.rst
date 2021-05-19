@@ -40,8 +40,8 @@ contained in an observation. This is usually done thanks to their ``peek()``
 methods. See example for CTA `here <tutorials/cta.html#IRFs>`__ and for H.E.S.S.
 `here <tutorials/hess.html#DL3-DR1>`__.
 
-Use gammapy for modeling 2D images
-++++++++++++++++++++++++++++++++++
+Model 2D images
++++++++++++++++
 
 Gammapy treats 2D maps as 3D cubes with one bin in energy. To see an example of the relevant data reduction, see
 `2-dim sky image analysis <tutorials#core-tutorials>`
@@ -126,8 +126,8 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 For an example, see `Implementing a Custom Model
 <tutorials/models.html#Implementing-a-Custom-Model>`__.
 
-Energy dependent spatial models
-+++++++++++++++++++++++++++++++
+Implement an energy dependent spatial models
+++++++++++++++++++++++++++++++++++++++++++++
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.
 For an example, see `here
@@ -149,8 +149,8 @@ used to sample the PSF. This will reduce the quality of the PSF description.
 - If one or several IRFs are not required for the study at hand, it is possible not to build them
 by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
 
-Copy part of a datastore
-++++++++++++++++++++++++
+Copy part of a data store
++++++++++++++++++++++++++
 
 To share specific data from a database, it might be necessary to create a new data storage with
 a limited set of observations and summary files following the scheme described in gadf_.
