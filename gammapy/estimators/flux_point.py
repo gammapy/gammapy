@@ -410,13 +410,6 @@ class FluxPoints(FluxEstimate):
             if unit.is_equivalent(default_unit):
                 return sed_type
 
-    @property
-    def is_ul(self):
-        try:
-            return self.table["is_ul"].data.astype("bool")
-        except KeyError:
-            return np.isnan(self.norm)
-
     @staticmethod
     def _get_y_energy_unit(y_unit):
         """Get energy part of the given y unit."""

@@ -318,7 +318,7 @@ class FluxEstimate:
 
     @property
     def is_ul(self):
-        """Number of iterations of fit"""
+        """Whether data is an upper limit"""
         self._check_quantity("is_ul")
         return self.data["is_ul"]
 
