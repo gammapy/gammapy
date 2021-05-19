@@ -118,60 +118,6 @@ class FluxPoints(FluxEstimate):
         return f"{self.__class__.__name__}(n_points={len(self.table)})"
 
     @property
-    def energy_ref(self):
-        """Reference energy.
-        Defined by `energy_ref` column in `FluxPoints.table` or computed as log
-        center, if `energy_min` and `energy_max` columns are present in `FluxPoints.table`.
-        Returns
-        -------
-        energy_ref : `~astropy.units.Quantity`
-            Reference energy.
-        """
-        try:
-            return self.table["e_ref"].quantity
-        except KeyError:
-            return np.sqrt(self.energy_min * self.energy_max)
-
-    @property
-    def energy_edges(self):
-        """Edges of the energy bin.
-
-        Returns
-        -------
-        energy_edges : `~astropy.units.Quantity`
-            Energy edges.
-        """
-        energy_edges = list(self.energy_min)
-        energy_edges += [self.energy_max[-1]]
-        return u.Quantity(energy_edges, self.energy_min.unit, copy=False)
-
-    @property
-    def energy_min(self):
-        """Lower bound of energy bin.
-
-        Defined by `energy_min` column in `FluxPoints.table`.
-
-        Returns
-        -------
-        energy_min : `~astropy.units.Quantity`
-            Lower bound of energy bin.
-        """
-        return self.table["e_min"].quantity
-
-    @property
-    def energy_max(self):
-        """Upper bound of energy bin.
-
-        Defined by ``energy_max`` column in ``table``.
-
-        Returns
-        -------
-        energy_max : `~astropy.units.Quantity`
-            Upper bound of energy bin.
-        """
-        return self.table["e_max"].quantity
-
-    @property
     def table(self):
         """"""
         return self._data
@@ -405,7 +351,6 @@ class FluxPoints(FluxEstimate):
                     except KeyError:
                         pass
 
-        table.meta["SED_TYPE"] = sed_type
         return table
 
     def drop_ul(self):

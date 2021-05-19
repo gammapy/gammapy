@@ -266,18 +266,48 @@ class FluxEstimate:
 
     @property
     def energy_ref(self):
-        """Reference energy"""
-        return self.energy_axis.center
+        """Reference energy.
+
+        Defined by `energy_ref` column in `FluxPoints.table` or computed as log
+        center, if `energy_min` and `energy_max` columns are present in `FluxEstimate.data`.
+
+        Returns
+        -------
+        energy_ref : `~astropy.units.Quantity`
+            Reference energy.
+        """
+        try:
+            return self.data["e_ref"].quantity
+        except KeyError:
+            return self.energy_axis.center
 
     @property
     def energy_min(self):
-        """Energy min"""
-        return self.energy_axis.edges[:-1]
+        """Energy min
+
+        Returns
+        -------
+        energy_min : `~astropy.units.Quantity`
+            Lower bound of energy bin.
+        """
+        try:
+            return self.data["e_min"].quantity
+        except KeyError:
+            return self.energy_axis.edges[:-1]
 
     @property
     def energy_max(self):
-        """Energy max"""
-        return self.energy_axis.edges[1:]
+        """Energy max
+
+        Returns
+        -------
+        energy_max : `~astropy.units.Quantity`
+            Upper bound of energy bin.
+        """
+        try:
+            return self.data["e_max"].quantity
+        except KeyError:
+            return self.energy_axis.edges[1:]
 
     # TODO: keep or remove?
     @property
