@@ -10,7 +10,7 @@ from astropy.table import Table
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
-from .core import SourceCatalog, SourceCatalogObject
+from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = ["SourceCatalogGammaCat", "SourceCatalogObjectGammaCat"]
 
@@ -27,6 +27,13 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     def __str__(self):
         return self.info()
+
+    @property
+    def flux_points(self):
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        return FluxPoints.from_table(
+            self.flux_points_table, reference_model=self.spectral_model()
+        )
 
     def info(self, info="all"):
         """Info string.
@@ -156,11 +163,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += f"Number of spectral points: {d.sed_n_points}\n"
         ss += f"Number of upper limits: {d.sed_n_ul}\n\n"
 
-        flux_points = self.flux_points
-        if flux_points is None:
+        table = self.flux_points_table
+        if table is None:
             ss += "\nNo spectral points available for this source."
         else:
-            lines = flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+            lines = format_flux_points_table(table).pformat(max_width=-1, max_lines=-1)
             ss += "\n".join(lines)
 
         return ss + "\n"
@@ -287,7 +294,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         m["reference_id"] = d["reference_id"]
 
     @property
-    def flux_points(self):
+    def flux_points_table(self):
         """Differential flux points (`~gammapy.estimators.FluxPoints`)."""
         d = self.data
         table = Table()
@@ -320,7 +327,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         for colname in table.colnames:
             _del_nan_col(table, colname)
 
-        return FluxPoints(table)
+        return table
 
 
 class SourceCatalogGammaCat(SourceCatalog):

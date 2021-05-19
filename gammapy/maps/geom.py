@@ -19,6 +19,12 @@ __all__ = ["MapCoord", "Geom", "MapAxis", "MapAxes"]
 log = logging.getLogger(__name__)
 
 
+def flat_if_equal(array):
+    if array.ndim == 2:
+        return array[0]
+    else:
+        return array
+
 def get_shape(param):
     if param is None:
         return tuple()
@@ -1769,6 +1775,16 @@ class MapAxis:
             except KeyError:
                 rad = table["Theta"].data * u.deg
                 axis = MapAxis.from_nodes(rad, name="rad")
+        elif format == "gadf-sed":
+            sed_type = table.meta.get("SED_TYPE")
+            if sed_type in ["dnde", "e2dnde"]:
+                e_ref = flat_if_equal(table["e_ref"].quantity)
+                axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
+            else:
+                e_min = flat_if_equal(table["e_min"].quantity)
+                e_max = flat_if_equal(table["e_max"].quantity)
+                edges = edges_from_lo_hi(e_min, e_max)
+                axis = MapAxis.from_energy_edges(edges)
         else:
             raise ValueError(f"Format '{format}' not supported")
 

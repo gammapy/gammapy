@@ -6,38 +6,12 @@ from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import MapCoord, Map
-from gammapy.estimators.core import FluxEstimate, OPTIONAL_QUANTITIES_COMMON
+from gammapy.estimators.core import FluxEstimate, OPTIONAL_QUANTITIES_COMMON, REQUIRED_MAPS, OPTIONAL_QUANTITIES
 from gammapy.estimators.flux_point import FluxPoints
 from gammapy.modeling.models import SkyModel, Models
 from gammapy.utils.scripts import make_path
 
 __all__ = ["FluxMaps"]
-
-
-REQUIRED_MAPS = {
-    "dnde": ["dnde"],
-    "e2dnde": ["e2dnde"],
-    "flux": ["flux"],
-    "eflux": ["eflux"],
-    "likelihood": ["norm"],
-}
-
-
-# TODO: add an entry for is_ul?
-OPTIONAL_MAPS = {
-    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
-    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
-    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul"],
-    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
-    "likelihood": [
-        "norm_err",
-        "norm_errn",
-        "norm_errp",
-        "norm_ul",
-        "norm_scan",
-        "stat_scan",
-    ],
-}
 
 
 log = logging.getLogger(__name__)
@@ -140,7 +114,7 @@ class FluxMaps(FluxEstimate):
             m = getattr(self, name)
             table[name] = m.get_by_coord(coords) * m.unit
 
-        return FluxPoints(table).to_sed_type("dnde")
+        return FluxPoints(table, reference_spectral_model=self.reference_spectral_model)
 
     def to_dict(self, sed_type="likelihood"):
         """Return maps in a given SED type in the form of a dictionary.
@@ -159,7 +133,7 @@ class FluxMaps(FluxEstimate):
             data = self.data
         else:
             data = {}
-            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON
+            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
 
             for quantity in all_maps:
                 try:
@@ -289,7 +263,7 @@ class FluxMaps(FluxEstimate):
                 hdulist, hdu=map_type, hdu_bands=hdu_bands
             )
 
-        for map_type in OPTIONAL_MAPS[sed_type] + OPTIONAL_QUANTITIES_COMMON:
+        for map_type in OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON:
             if map_type.upper() in hdulist:
                 maps[map_type] = Map.from_hdulist(
                     hdulist, hdu=map_type, hdu_bands=hdu_bands
@@ -310,20 +284,6 @@ class FluxMaps(FluxEstimate):
         return cls.from_dict(
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
-
-    @staticmethod
-    def _validate_type(maps, sed_type):
-        """Check that map input is valid and correspond to one of the SED type."""
-        try:
-            required = set(REQUIRED_MAPS[sed_type])
-        except KeyError:
-            raise ValueError(f"Unknown SED type.")
-
-        if not required.issubset(maps.keys()):
-            missing = required.difference(maps.keys())
-            raise ValueError(
-                "Missing maps for sed type '{}':" " {}".format(sed_type, missing)
-            )
 
     @classmethod
     def from_dict(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
@@ -346,7 +306,7 @@ class FluxMaps(FluxEstimate):
         flux_maps : `~gammapy.estimators.FluxMaps`
             Flux maps object.
         """
-        cls._validate_type(maps, sed_type)
+        cls._validate_data(data=maps, sed_type=sed_type)
 
         if sed_type == "likelihood":
             return cls(data=maps, reference_model=reference_model)
@@ -370,7 +330,7 @@ class FluxMaps(FluxEstimate):
         data = dict()
         data["norm"] = map_ref / factor
 
-        for key in OPTIONAL_MAPS[sed_type]:
+        for key in OPTIONAL_QUANTITIES[sed_type]:
             if key in maps:
                 norm_type = key.replace(sed_type, "norm")
                 data[norm_type] = maps[key] / factor

@@ -74,11 +74,8 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
-        if data.sed_type != "dnde":
-            raise ValueError("Currently only flux points of type 'dnde' are supported.")
-
         if mask_safe is None:
-            mask_safe = np.isfinite(data.table["dnde"])
+            mask_safe = np.isfinite(data.dnde)
 
         self.mask_safe = mask_safe
 
@@ -143,7 +140,7 @@ class FluxPointsDataset(Dataset):
         table.remove_columns(["mask_fit", "mask_safe"])
         return cls(
             name=data["name"],
-            data=FluxPoints(table),
+            data=FluxPoints.from_table(table),
             mask_fit=mask_fit,
             mask_safe=mask_safe,
         )
@@ -207,8 +204,8 @@ class FluxPointsDataset(Dataset):
     def stat_array(self):
         """Fit statistic array."""
         model = self.flux_pred()
-        data = self.data.table["dnde"].quantity
-        sigma = self.data.table["dnde_err"].quantity
+        data = self.data.dnde
+        sigma = self.data.dnde_err
         return ((data - model) / sigma).to_value("") ** 2
 
     def residuals(self, method="diff"):
@@ -227,11 +224,10 @@ class FluxPointsDataset(Dataset):
             Residuals array.
         """
         fp = self.data
-        data = fp.table[fp.sed_type]
 
         model = self.flux_pred()
 
-        residuals = self._compute_residuals(data, model, method)
+        residuals = self._compute_residuals(fp.dnde, model, method)
         # Remove residuals for upper_limits
         residuals[fp.is_ul] = np.nan
         return residuals
@@ -336,7 +332,8 @@ class FluxPointsDataset(Dataset):
                 xerr[1].to_value(self._energy_unit),
             )
 
-        yerr = fp._plot_get_flux_err(fp.sed_type)
+        yerr = fp._plot_get_flux_err(sed_type="dnde")
+
         if method == "diff":
             unit = yerr[0].unit
             yerr = yerr[0].to_value(unit), yerr[1].to_value(unit)

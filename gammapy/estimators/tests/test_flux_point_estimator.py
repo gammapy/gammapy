@@ -350,7 +350,7 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl):
     param_estimator.fit(datasets).run()
     assert_allclose(param_estimator._fit.minuit.tol, 0.2)
 
-    assert fp.sed_type == "dnde"
+    assert fp.sed_type == "likelihood"
     assert "norm_scan" not in fp.table.colnames
 
 

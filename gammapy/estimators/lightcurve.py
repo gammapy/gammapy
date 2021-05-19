@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
+from astropy.table import Table, hstack
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
@@ -458,8 +458,13 @@ class LightCurveEstimator(Estimator):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        table = FluxPoints(table).to_sed_type("flux").table
-        return LightCurve(table)
+        model = datasets.models[self.source]
+
+        # TODO: cleanup here...
+        fp = FluxPoints(table, reference_spectral_model=model.spectral_model.copy())
+        table_flux = fp.to_table(sed_type="flux")
+        table_flux.remove_columns(["stat", "ts", "sqrt_ts", "e_min", "e_max"])
+        return LightCurve(hstack([table, table_flux]))
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
