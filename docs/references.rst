@@ -115,7 +115,7 @@ referenced from the Gammapy docs.
 .. [Berge2007] `Berge et al. (2007) <https://ui.adsabs.harvard.edu/abs/2007A%26A...466.1219B>`_,
    "Background modelling in very-high-energy gamma-ray astronomy"
 
-.. [Cash1979] `Cash (1979) <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L>`_,
+.. [Cash1979] `Cash (1979) <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_,
    "Parameter estimation in astronomy through application of the likelihood ratio"
 
 .. [Cousins2007] `Cousins et al. (2007) <https://ui.adsabs.harvard.edu/abs/2007physics...2156C>`_,
