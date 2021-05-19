@@ -12,7 +12,7 @@ from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import Map
+from gammapy.maps import Map, MapCoord
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width, round_up_to_odd
@@ -77,7 +77,7 @@ class TSMapEstimator(Estimator):
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
-    rtol : float (0.001)
+    rtol : float (0.01)
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit.
     selection_optional : list of str
@@ -206,8 +206,10 @@ class TSMapEstimator(Estimator):
 
         geom_kernel = geom.to_odd_npix(max_radius=self.kernel_width / 2)
 
+        # Creating exposure map with exposure at map center
         exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
-        exposure.data += 1.0
+        coord = MapCoord.create(dict(skycoord=geom.center_skydir, energy_true=geom.axes["energy_true"].center))
+        exposure.data[...] = dataset.exposure.get_by_coord(coord)[:, np.newaxis, np.newaxis]
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model, evaluation_mode="global")
