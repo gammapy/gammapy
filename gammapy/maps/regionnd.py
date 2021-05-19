@@ -73,10 +73,7 @@ class RegionNDMap(Map):
                 "Use `.plot_interactive()` if more the one extra axis is present."
             )
 
-        try:
-            axis = self.geom.axes["energy"]
-        except KeyError:
-            axis = self.geom.axes["energy_true"]
+        axis = self.geom.axes[0]
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
@@ -93,7 +90,9 @@ class RegionNDMap(Map):
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 
-        ax.set_yscale("log")
+        if axis.interp == "log":
+            ax.set_yscale("log")
+
         return ax
 
     def plot_hist(self, ax=None, **kwargs):
