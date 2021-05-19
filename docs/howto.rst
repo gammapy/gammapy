@@ -18,8 +18,9 @@ Please give feedback and suggest additions to this page!
 
 Spell and pronounce Gammapy
 +++++++++++++++++++++++++++
-The recommended spelling is "Gammapy" (as a proper name), where the syllable "py"
-is pronounced like the english word "pie".
+The recommended spelling is "Gammapy" as proper name. The recommended
+pronunciation is [ɡæməpaɪ] where the syllable "py" is pronounced like
+the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=ˈ%C9%A1æməpaɪ&voice=Amy>`__.
 
 
 Access IACT data
