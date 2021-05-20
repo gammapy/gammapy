@@ -8,7 +8,7 @@ from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Map
-from .geom import pix_tuple_to_idx
+from .geom import pix_tuple_to_idx, MapAxes
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -415,6 +415,28 @@ class RegionNDMap(Map):
             hdulist.extend(hdulist_geom[1:])
 
         return hdulist
+
+    @classmethod
+    def from_table(cls, table, format="", colname=None):
+        """"""
+        if format == "gadf-sed":
+            if colname is None:
+                raise ValueError(f"Column name required")
+
+            axes = MapAxes.from_table(table=table, format=format)
+
+            if colname == "stat_scan":
+                geom = RegionGeom.create(region=None, axes=axes)
+            else:
+                geom = RegionGeom.create(region=None, axes=[axes["energy"]])
+
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        else:
+            raise ValueError(f"Format not supported {format}")
+
+        return cls(geom=geom, data=data, unit=unit)
+
 
     @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):

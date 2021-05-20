@@ -32,10 +32,11 @@ REQUIRED_COLUMNS = {
     "flux": ["e_min", "e_max", "flux"],
     "eflux": ["e_min", "e_max", "eflux"],
     # TODO: extend required columns
-    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "norm"],
+    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "ref_flux", "ref_eflux", "norm"],
 }
 
-REQUIRED_QUANTITIES_SCAN = ["norm_scan", "stat_scan", "stat"]
+
+REQUIRED_QUANTITIES_SCAN = ["stat_scan", "stat"]
 
 OPTIONAL_QUANTITIES = {
     "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
@@ -44,6 +45,25 @@ OPTIONAL_QUANTITIES = {
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
     "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul"],
 }
+
+VALID_QUANTITIES = [
+    "norm",
+    "norm_err",
+    "norm_errn",
+    "norm_errp",
+    "norm_ul",
+    "ts",
+    "sqrt_ts",
+    "npred",
+    "npred_excess",
+    "npred_null",
+    "stat",
+    "stat_scan",
+    "stat_null",
+    "niter",
+    "is_ul",
+]
+
 
 OPTIONAL_QUANTITIES_COMMON = [
     "ts",
@@ -192,13 +212,8 @@ class FluxEstimate:
         # TODO: Check data
         self._data = data
 
-        if hasattr(self._data["norm"], "geom"):
-            self._energy_axis = self.data["norm"].geom.axes["energy"]
-            self._expand_slice = (slice(None), np.newaxis, np.newaxis)
-        else:
-            # Here we assume there is only one row per energy
-            self._energy_axis = MapAxis.from_table(table=data, format="gadf-sed")
-            self._expand_slice = slice(None)
+        self._energy_axis = self.data["norm"].geom.axes["energy"]
+        self._expand_slice = (slice(None), np.newaxis, np.newaxis)
 
         # Note that here we could use the specification from dnde_ref to build piecewise PL
         # But does it work beyond min and max centers?
@@ -243,14 +258,11 @@ class FluxEstimate:
     @property
     def available_quantities(self):
         """Available quantities"""
-        try:
-            keys = self.data.keys()
-        except AttributeError:
-            keys = self.data.columns
+        keys = self.data.keys()
 
         available_quantities = []
 
-        for quantity in OPTIONAL_QUANTITIES["likelihood"] + OPTIONAL_QUANTITIES_COMMON:
+        for quantity in VALID_QUANTITIES:
             if quantity in keys:
                 available_quantities.append(quantity)
 
@@ -259,7 +271,7 @@ class FluxEstimate:
     # TODO: add support for scan
     def _check_quantity(self, quantity):
         if quantity not in self.available_quantities:
-            raise KeyError(
+            raise AttributeError(
                 f"Cannot compute required flux quantity. {quantity} "
                 "is not defined on current flux estimate."
             )
@@ -276,10 +288,7 @@ class FluxEstimate:
         energy_ref : `~astropy.units.Quantity`
             Reference energy.
         """
-        try:
-            return self.data["e_ref"].quantity
-        except KeyError:
-            return self.energy_axis.center
+        return self.energy_axis.center
 
     @property
     def energy_min(self):
@@ -290,10 +299,7 @@ class FluxEstimate:
         energy_min : `~astropy.units.Quantity`
             Lower bound of energy bin.
         """
-        try:
-            return self.data["e_min"].quantity
-        except KeyError:
-            return self.energy_axis.edges[:-1]
+        return self.energy_axis.edges[:-1]
 
     @property
     def energy_max(self):
@@ -304,10 +310,7 @@ class FluxEstimate:
         energy_max : `~astropy.units.Quantity`
             Upper bound of energy bin.
         """
-        try:
-            return self.data["e_max"].quantity
-        except KeyError:
-            return self.energy_axis.edges[1:]
+        return self.energy_axis.edges[1:]
 
     # TODO: keep or remove?
     @property
@@ -342,6 +345,12 @@ class FluxEstimate:
         return self.data["npred"] - self.data["npred_null"]
 
     @property
+    def stat_scan(self):
+        """Fit statistic value"""
+        self._check_quantity("stat_scan")
+        return self.data["stat_scan"]
+
+    @property
     def stat(self):
         """Fit statistic value"""
         self._check_quantity("stat")
@@ -349,7 +358,7 @@ class FluxEstimate:
 
     @property
     def stat_null(self):
-        """Fit statistic value for thenull hypothesis"""
+        """Fit statistic value for the null hypothesis"""
         self._check_quantity("stat_null")
         return self.data["stat_null"]
 

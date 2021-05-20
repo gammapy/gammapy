@@ -7,7 +7,7 @@ from astropy.table import Table, vstack
 from gammapy.datasets import Datasets
 from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 from gammapy.modeling import Fit
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
@@ -19,6 +19,7 @@ from .core import (
     OPTIONAL_QUANTITIES_COMMON,
     OPTIONAL_QUANTITIES,
     REQUIRED_COLUMNS,
+    VALID_QUANTITIES
 )
 from. flux import FluxEstimator
 
@@ -117,26 +118,6 @@ class FluxPoints(FluxEstimate):
     def __repr__(self):
         return f"{self.__class__.__name__}(n_points={len(self.table)})"
 
-    @property
-    def table(self):
-        """"""
-        return self._data
-
-    @property
-    def table_formatted(self):
-        """Return formatted version of the flux points table. Used for pretty printing"""
-        table = self.table.copy()
-
-        for column in table.colnames:
-            if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
-                table[column].format = ".3e"
-            elif column.startswith(
-                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
-            ):
-                table[column].format = ".3f"
-
-        return table
-
     @classmethod
     def read(cls, filename, sed_type=None, reference_model=None, **kwargs):
         """Read flux points.
@@ -167,22 +148,21 @@ class FluxPoints(FluxEstimate):
 
         return cls.from_table(table=table, sed_type=sed_type, reference_model=reference_model)
 
-    def write(self, filename, **kwargs):
+    def write(self, filename, sed_type="likelihood", **kwargs):
         """Write flux points.
 
         Parameters
         ----------
         filename : str
             Filename
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
+            Sed type
         kwargs : dict
             Keyword arguments passed to `astropy.table.Table.write`.
         """
         filename = make_path(filename)
-        try:
-            self.table.write(filename, **kwargs)
-        except IORegistryError:
-            kwargs.setdefault("format", "ascii.ecsv")
-            self.table.write(filename, **kwargs)
+        table = self.to_table(sed_type=sed_type)
+        table.write(filename, **kwargs)
 
     @classmethod
     def from_stack(cls, flux_points):
@@ -297,12 +277,12 @@ class FluxPoints(FluxEstimate):
 
                 reference_model = PowerLawSpectralModel()
 
-            data = cls._convert_flux_columns(
+            table = cls._convert_flux_columns(
                 table=table, reference_model=reference_model, sed_type=sed_type
             )
 
         elif sed_type == "likelihood":
-            data = cls._convert_loglike_columns(table)
+            table = cls._convert_loglike_columns(table)
             reference_model = TemplateSpectralModel(
                 energy=table["e_ref"].quantity,
                 values=table["ref_dnde"].quantity
@@ -310,46 +290,77 @@ class FluxPoints(FluxEstimate):
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
 
+        maps = {}
+
         # We add the remaining maps
-        for key in OPTIONAL_QUANTITIES_COMMON:
+        for key in VALID_QUANTITIES:
             if key in table.colnames:
-                data[key] = table[key]
+                maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
 
-        data.meta["SED_TYPE"] = "likelihood"
-        return cls(data=data, reference_spectral_model=reference_model)
+        return cls(data=maps, reference_spectral_model=reference_model)
 
-    def to_table(self, sed_type="likelihood"):
+    @staticmethod
+    def _format_table(table):
+        """Format table"""
+        for column in table.colnames:
+            if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
+                table[column].format = ".3e"
+            elif column.startswith(
+                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
+            ):
+                table[column].format = ".3f"
+
+        return table
+
+    def to_table(self, sed_type="likelihood", format="gadf-sed", formatted=False):
         """Create table for a given SED type.
 
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
             sed type to convert to. Default is `likelihood`
+        format : {"gadf-sed"}
+            Format
+        formatted : bool
+            Formatted version with column formats applied. Numerical columns are
+            formatted to .3f and .3e respectively.
 
         Returns
         -------
-        map_dict : dict
-            Dictionary containing the requested maps.
+        table : `~astropy.table.Table`
+            Flux points table
         """
-        # TODO: select only required and optional quantities here?
-        if sed_type == "likelihood":
-            table = self.table.copy()
-        else:
-            table = Table()
-            all_quantities = REQUIRED_COLUMNS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
+        table = Table()
 
-            for quantity in all_quantities:
-                if quantity == "e_ref":
-                    table["e_ref"] = self.energy_ref
-                elif quantity == "e_min":
-                    table["e_min"] = self.energy_min
-                elif quantity == "e_max":
-                    table["e_max"] = self.energy_max
-                else:
-                    try:
-                        table[quantity] = getattr(self, quantity)
-                    except KeyError:
-                        pass
+        all_quantities = (
+            REQUIRED_COLUMNS[sed_type] +
+            OPTIONAL_QUANTITIES[sed_type] +
+            OPTIONAL_QUANTITIES_COMMON
+        )
+
+        # TODO: simplify...
+        for quantity in all_quantities:
+            if quantity == "e_ref":
+                table["e_ref"] = self.energy_ref
+            elif quantity == "e_min":
+                table["e_min"] = self.energy_min
+            elif quantity == "e_max":
+                table["e_max"] = self.energy_max
+            elif quantity == "ref_dnde":
+                table["ref_dnde"] = self.dnde_ref.squeeze()
+            elif quantity == "ref_flux":
+                table["ref_flux"] = self.flux_ref.squeeze()
+            elif quantity == "ref_eflux":
+                table["ref_eflux"] = self.eflux_ref.squeeze()
+            else:
+                data = getattr(self, quantity, None)
+                if data:
+                    table[quantity] = data.quantity.squeeze()
+
+        table.meta["SED_TYPE"] = sed_type
+
+        if formatted:
+            table = self._format_table(table=table)
 
         return table
 
@@ -388,11 +399,6 @@ class FluxPoints(FluxEstimate):
         flux = model.integral(energy_min, energy_max)
         dnde_mean = flux / (energy_max - energy_min)
         return model.inverse(dnde_mean)
-
-    @property
-    def sed_type(self):
-        """SED type (str)."""
-        return self.table.meta["SED_TYPE"]
 
     @staticmethod
     def _guess_sed_type(table):
@@ -433,13 +439,13 @@ class FluxPoints(FluxEstimate):
         """Compute flux error for given sed type"""
         try:
             # asymmetric error
-            y_errn = getattr(self, sed_type + "_errn")
-            y_errp = getattr(self, sed_type + "_errp")
+            y_errn = getattr(self, sed_type + "_errn").quantity.squeeze()
+            y_errp = getattr(self, sed_type + "_errp").quantity.squeeze()
             y_err = (y_errn, y_errp)
         except KeyError:
             try:
                 # symmetric error
-                y_err = getattr(self, sed_type + "_err")
+                y_err = getattr(self, sed_type + "_err").quantity.squeeze()
                 y_err = (y_err, y_err)
             except KeyError:
                 # no error at all
@@ -471,6 +477,9 @@ class FluxPoints(FluxEstimate):
         ax : `~matplotlib.axes.Axes`
             Axis object
         """
+        if not self.norm.geom.is_region:
+            raise ValueError("Plotting only supported for flux points")
+
         import matplotlib.pyplot as plt
 
         if ax is None:
@@ -478,11 +487,11 @@ class FluxPoints(FluxEstimate):
 
         y_unit = u.Unit(flux_unit or DEFAULT_UNIT[sed_type])
 
-        y = getattr(self, sed_type).to(y_unit)
+        y = getattr(self, sed_type).quantity.squeeze().to(y_unit)
         x = self.energy_ref.to(energy_unit)
 
         # get errors and ul
-        is_ul = self.is_ul
+        is_ul = self.is_ul.data.squeeze()
         x_err_all = self._plot_get_energy_err()
         y_err_all = self._plot_get_flux_err(sed_type=sed_type)
 
@@ -521,7 +530,7 @@ class FluxPoints(FluxEstimate):
                     x_errp[is_ul].to_value(energy_unit),
                 )
 
-            y_ul = getattr(self, sed_type + "_ul")
+            y_ul = getattr(self, sed_type + "_ul").quantity.squeeze()
             y_ul = (y_ul * np.power(x, energy_power)).to(y_unit)
 
             y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))
@@ -556,7 +565,6 @@ class FluxPoints(FluxEstimate):
         **kwargs,
     ):
         """Plot fit statistic SED profiles as a density plot.
-
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
@@ -584,28 +592,26 @@ class FluxPoints(FluxEstimate):
         if ax is None:
             ax = plt.gca()
 
-        self._validate_data(self.table, sed_type="likelihood", check_scan=True)
-
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
 
         if y_values is None:
-            ref_values = getattr(self, sed_type + "_ref")
+            ref_values = getattr(self, sed_type + "_ref").to_value(y_unit)
             y_values = np.geomspace(
-                0.2 * ref_values.value.min(), 5 * ref_values.value.max(), 500
+                0.2 * ref_values.min(), 5 * ref_values.max(), 500
             )
             y_values = u.Quantity(y_values, y_unit, copy=False)
 
         x = self.energy_axis.edges.to(energy_unit)
 
-        # Compute fit statistic "image" one energy bin at a time
-        # by interpolating e2dnde at the log bin centers
-        z = np.empty((len(self.norm), len(y_values)))
+        z = np.empty((len(self.norm.data), len(y_values)))
 
-        for idx, row in enumerate(self.table):
-            y_ref = getattr(self, sed_type + "_ref")[idx]
+        stat_scan = self.data["stat_scan"]
+        norm_scan = stat_scan.geom.axes["norm"].center.to_value("")
+
+        for idx in range(self.energy_axis.nbin):
+            y_ref = getattr(self, sed_type + "_ref")[idx, 0, 0]
             norm = (y_values / y_ref).to_value("")
-            norm_scan = row["norm_scan"]
-            ts_scan = row["stat_scan"] - row["stat"]
+            ts_scan = stat_scan.data[idx, :, 0, 0] - self.stat.data[idx, 0, 0]
             interp = interpolate_profile(norm_scan, ts_scan)
             z[idx] = interp((norm,))
 
@@ -614,17 +620,19 @@ class FluxPoints(FluxEstimate):
         kwargs.setdefault("zorder", 0)
         kwargs.setdefault("cmap", "Blues")
         kwargs.setdefault("linewidths", 0)
+        kwargs.setdefault("shading", "auto")
 
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
-        caxes = ax.pcolormesh(x.value, y_values.value, -z.T, **kwargs)
+        caxes = ax.pcolormesh(x.value, y_values.to_value(y_unit), -z.T, **kwargs)
+
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
         ax.set_ylabel(f"{sed_type} ({y_values.unit})")
 
         if add_cbar:
-            label = "fit statistic difference"
+            label = "Fit statistic difference"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
