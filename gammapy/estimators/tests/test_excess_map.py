@@ -246,15 +246,15 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     result_mod = estimator_mod.run(simple_dataset_on_off)
     assert result_mod["counts"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 6.240846, atol=1e-3)
+    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 8.899278, atol=1e-3)
 
     assert_allclose(result_mod["counts"].data[0, 10, 10], 388)
-    assert_allclose(result_mod["excess"].data[0, 10, 10], 148.68057)
-    assert_allclose(result_mod["background"].data[0, 10, 10], 239.31943)
+    assert_allclose(result_mod["excess"].data[0, 10, 10], 190.68057)
+    assert_allclose(result_mod["background"].data[0, 10, 10], 197.31943)
 
     assert result_mod["flux"].unit == "cm-2s-1"
-    assert_allclose(result_mod["flux"].data[0, 10, 10], 1.486806e-08, rtol=1e-3)
-    assert_allclose(result_mod["flux"].data.sum(), 5.254442192077636e-06, rtol=1e-8)
+    assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)
+    assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06 , rtol=1e-3)
 
     spectral_model=PowerLawSpectralModel(index=15)
     estimator_mod = ExcessMapEstimator(
@@ -266,7 +266,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     result_mod = estimator_mod.run(simple_dataset_on_off)
 
     assert result_mod["flux"].unit == "cm-2s-1"
-    assert_allclose(result_mod["flux"].data.sum(), 5.254442192077636e-06, rtol=1e-8)
+    assert_allclose(result_mod["flux"].data.sum(),5.920642e-06, rtol=1e-3)
 
     reco_exposure=estimate_exposure_reco_energy(simple_dataset_on_off, spectral_model=spectral_model)
     assert_allclose(reco_exposure.data.sum(), 7.977796e+12, rtol=0.001)
