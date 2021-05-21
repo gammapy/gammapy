@@ -605,7 +605,7 @@ class FluxPoints(FluxEstimate):
 
         z = np.empty((len(self.norm.data), len(y_values)))
 
-        stat_scan = self.data["stat_scan"]
+        stat_scan = self.stat_scan
         norm_scan = stat_scan.geom.axes["norm"].center.to_value("")
 
         for idx in range(self.energy_axis.nbin):

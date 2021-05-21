@@ -126,33 +126,6 @@ class FluxMaps(FluxEstimate):
 
         return FluxPoints(table, reference_spectral_model=self.reference_spectral_model)
 
-    def to_dict(self, sed_type="likelihood"):
-        """Return maps in a given SED type in the form of a dictionary.
-
-        Parameters
-        ----------
-        sed_type : str
-            sed type to convert to. Default is `Likelihood`
-
-        Returns
-        -------
-        map_dict : dict
-            Dictionary containing the requested maps.
-        """
-        if sed_type == "likelihood":
-            data = self.data
-        else:
-            data = {}
-            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
-
-            for quantity in all_maps:
-                try:
-                    data[quantity] = getattr(self, quantity)
-                except KeyError:
-                    pass
-
-        return data
-
     def write(
         self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
     ):
@@ -294,63 +267,6 @@ class FluxMaps(FluxEstimate):
         return cls.from_dict(
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
-
-    @classmethod
-    def from_dict(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
-        """Create FluxMaps from a dictionary of maps.
-
-        Parameters
-        ----------
-        maps : dict
-            Dictionary containing the input maps.
-        sed_type : str
-            SED type of the input maps. Default is `Likelihood`
-        reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            Reference model to use for conversions. Default in None.
-            If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
-        gti : `~gammapy.data.GTI`
-            Maps GTI information. Default is None.
-
-        Returns
-        -------
-        flux_maps : `~gammapy.estimators.FluxMaps`
-            Flux maps object.
-        """
-        cls._validate_data(data=maps, sed_type=sed_type)
-
-        if sed_type == "likelihood":
-            return cls(data=maps, reference_model=reference_model)
-
-        if reference_model is None:
-            log.warning(
-                "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
-            )
-            reference_model = cls.default_model
-
-        map_ref = maps[sed_type]
-
-        energy_axis = map_ref.geom.axes["energy"]
-
-        with np.errstate(invalid="ignore", divide="ignore"):
-            fluxes = reference_model.spectral_model.reference_fluxes(energy_axis=energy_axis)
-
-        # TODO: handle reshaping in MapAxis
-        factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[:, np.newaxis, np.newaxis]
-
-        data = dict()
-        data["norm"] = map_ref / factor
-
-        for key in OPTIONAL_QUANTITIES[sed_type]:
-            if key in maps:
-                norm_type = key.replace(sed_type, "norm")
-                data[norm_type] = maps[key] / factor
-
-        # We add the remaining maps
-        for key in OPTIONAL_QUANTITIES_COMMON:
-            if key in maps:
-                data[key] = maps[key]
-
-        return cls(data=data, reference_model=reference_model, gti=gti)
 
     # TODO: should we allow this?
     def __getitem__(self, item):
