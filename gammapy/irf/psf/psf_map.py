@@ -61,6 +61,7 @@ class PSFMap(IRFMap):
         geom=exposure_geom.upsample(factor=10).drop("rad")
         psf_kernel = psf_map.get_psf_kernel(geom=geom)
     """
+
     tag = "psf_map"
     required_axes = ["rad", "energy_true"]
 
@@ -108,7 +109,7 @@ class PSFMap(IRFMap):
         return IRFLikePSF(
             axes=[geom.axes["energy_true"], geom.axes["rad"], axis_lat, axis_lon],
             data=self.psf_map.data,
-            unit=self.psf_map.unit
+            unit=self.psf_map.unit,
         )
 
     def _get_irf_coords(self, **kwargs):
@@ -150,11 +151,7 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
-        coords = {
-            "skycoord": position,
-            "rad": rad,
-            "energy_true": energy_true
-        }
+        coords = {"skycoord": position, "rad": rad, "energy_true": energy_true}
 
         return self.psf_map.integral(axis_name="rad", coords=coords).to("")
 
@@ -178,9 +175,7 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
-        coords = self._get_irf_coords(
-            energy_true=energy_true, skycoord=position
-        )
+        coords = self._get_irf_coords(energy_true=energy_true, skycoord=position)
 
         return self._psf_irf.containment_radius(fraction, **coords)
 
@@ -204,15 +199,11 @@ class PSFMap(IRFMap):
         data = self.containment_radius(
             fraction=fraction,
             energy_true=energy_true,
-            position=geom.get_coord().skycoord
+            position=geom.get_coord().skycoord,
         )
-        return Map.from_geom(
-            geom=geom,
-            data=data.value,
-            unit=data.unit
-        )
+        return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    def get_psf_kernel(self,  geom, position=None, max_radius=None, factor=4):
+    def get_psf_kernel(self, geom, position=None, max_radius=None, factor=4):
         """Returns a PSF kernel at the given position.
 
         The PSF is returned in the form a WcsNDMap defined by the input Geom.
@@ -255,9 +246,7 @@ class PSFMap(IRFMap):
         energy = energy_axis.center[:, np.newaxis, np.newaxis]
         coords = {"energy_true": energy, "rad": rad, "skycoord": position}
 
-        data = self.psf_map.interp_by_coord(
-            coords=coords, method="linear",
-        )
+        data = self.psf_map.interp_by_coord(coords=coords, method="linear",)
 
         kernel_map = Map.from_geom(geom=geom_upsampled, data=np.clip(data, 0, np.inf))
         kernel_map = kernel_map.downsample(factor, preserve_counts=True)
@@ -340,11 +329,7 @@ class PSFMap(IRFMap):
             rad_axis = RAD_AXIS_DEFAULT.copy()
 
         if geom is None:
-            geom = WcsGeom.create(
-                npix=(2, 1),
-                proj="CAR",
-                binsz=180,
-            )
+            geom = WcsGeom.create(npix=(2, 1), proj="CAR", binsz=180,)
 
         geom = geom.to_image().to_cube([rad_axis, energy_axis_true])
 
@@ -355,7 +340,9 @@ class PSFMap(IRFMap):
         data = gauss(coords["rad"])
 
         psf_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
-        return cls(psf_map=psf_map)
+        geom_exposure = geom.squash(axis_name="rad")
+        exposure_psf = Map.from_geom(geom_exposure, unit="m2 s")
+        return cls(psf_map=psf_map, exposure_map=exposure_psf)
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing
@@ -393,7 +380,7 @@ class PSFMap(IRFMap):
         return self.__class__(psf_map=psf, exposure_map=exposure)
 
     def plot_containment_radius_vs_energy(
-            self, ax=None, fraction=[0.68, 0.95], **kwargs
+        self, ax=None, fraction=[0.68, 0.95], **kwargs
     ):
         """Plot containment fraction as a function of energy.
 
@@ -426,9 +413,7 @@ class PSFMap(IRFMap):
             radius = self.containment_radius(
                 energy_true=energy_true, position=position, fraction=frac
             )
-            plot_kwargs.setdefault(
-                "label", f"Containment: {100 * frac:.1f}%"
-            )
+            plot_kwargs.setdefault("label", f"Containment: {100 * frac:.1f}%")
             ax.plot(energy_true, radius, **plot_kwargs)
 
         ax.semilogx()
@@ -437,7 +422,7 @@ class PSFMap(IRFMap):
         ax.set_ylabel(f"Containment radius ({radius.unit})")
         return ax
 
-    def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV,  **kwargs):
+    def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
         """Plot PSF vs radius.
 
         The method plots the profile at the center of the map.
@@ -468,7 +453,7 @@ class PSFMap(IRFMap):
                 {
                     "skycoord": self.psf_map.geom.center_skydir,
                     "energy_true": value,
-                    "rad": rad
+                    "rad": rad,
                 }
             )
             label = f"{value:.0f}"
