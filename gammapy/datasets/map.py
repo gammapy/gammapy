@@ -2121,7 +2121,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `MapDatasetOnOff`
             Map dataset.
         """
         kwargs = {}
@@ -2150,7 +2150,30 @@ class MapDatasetOnOff(MapDataset):
                 hdulist, hdu="exposure", format=format
             )
 
-        # TODO: this misses the PSFMap and EDispMap
+        if "EDISP" in hdulist:
+            edisp_map = Map.from_hdulist(hdulist, hdu="edisp", format=format)
+
+            try:
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="edisp_exposure", format=format
+                )
+            except KeyError:
+                exposure_map = None
+
+            if edisp_map.geom.axes[0].name == "energy":
+                kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
+            else:
+                kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
+
+        if "PSF" in hdulist:
+            psf_map = Map.from_hdulist(hdulist, hdu="psf", format=format)
+            try:
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="psf_exposure", format=format
+                )
+            except KeyError:
+                exposure_map = None
+            kwargs["psf"] = PSFMap(psf_map, exposure_map)
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
@@ -2646,9 +2669,13 @@ class MapEvaluator:
                     geom = geom.to_wcs_geom(width_min="15 deg")
 
                 if geom.is_hpx:
-                    self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom.to_wcs_geom())
+                    self.psf = psf.get_psf_kernel(
+                        position=self.model.position, geom=geom.to_wcs_geom()
+                    )
                 else:
-                    self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
+                    self.psf = psf.get_psf_kernel(
+                        position=self.model.position, geom=geom
+                    )
 
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
@@ -2877,12 +2904,11 @@ class MapEvaluator:
         lon, lat = self.model.position_lonlat
 
         separation = angular_separation(lon, lat, lon_cached, lat_cached)
-        changed = separation > (
-                self.model.evaluation_radius + CUTOUT_MARGIN
-        ).to_value(u.rad)
+        changed = separation > (self.model.evaluation_radius + CUTOUT_MARGIN).to_value(
+            u.rad
+        )
 
         if changed:
             self._cached_position = lon, lat
 
         return changed
-
