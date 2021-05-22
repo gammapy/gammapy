@@ -957,3 +957,71 @@ class HpxNDMap(HpxMap):
         ax.coords.grid(color="w", linestyle=":", linewidth=0.5)
 
         return fig, ax, p
+
+
+    def plot_mask(self, ax=None, proj="AIT", **kwargs):
+        """Plot the mask as a shaded area
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        proj : string, optional
+            Any valid WCS projection type.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.contourf`
+
+        Returns
+        -------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
+        """
+        if not self.geom.is_flat:
+            raise TypeError("Use .plot_interactive() for Map dimension > 2")
+
+        if not self.is_mask:
+            raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
+
+        m = self.to_wcs(proj=proj)
+
+        ax = self._plot_default_axes(ax=ax, proj=proj)
+
+        kwargs.setdefault("alpha", 0.5)
+        kwargs.setdefault("colors", "r")
+
+        data = np.squeeze(m.data).astype(float)
+
+        ax.contourf(data, levels=[0, 0.5], **kwargs)
+
+        if self.geom.is_allsky:
+            ax = self._plot_format_allsky(ax)
+        else:
+            ax = self._plot_format(ax)
+
+        # without this the axis limits are changed when calling scatter
+        ax.autoscale(enable=False)
+        return ax
+
+    def _plot_default_axes(self, proj, ax):
+        import matplotlib.pyplot as plt
+
+        wcs = self.to_wcs(proj=proj).geom.to_wcs_geom(proj=proj, oversample=1)
+        if ax is None:
+            fig = plt.gcf()
+            ax = fig.add_subplot(1, 1, 1, projection=wcs.wcs,
+                aspect="equal",
+                frame_class=EllipticalFrame
+                )
+
+        return ax
+
+    def _plot_format(self, ax):
+        try:
+            ax.coords["glon"].set_axislabel("Galactic Longitude")
+            ax.coords["glat"].set_axislabel("Galactic Latitude")
+        except KeyError:
+            ax.coords["ra"].set_axislabel("Right Ascension")
+            ax.coords["dec"].set_axislabel("Declination")
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
+        return ax
