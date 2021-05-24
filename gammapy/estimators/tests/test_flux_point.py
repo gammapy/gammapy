@@ -87,7 +87,9 @@ def test_dnde_from_flux():
 
     # Get values
     model = XSqrTestModel()
-    table["e_ref"] = FluxPoints._energy_ref_lafferty(model, table["e_min"], table["e_max"])
+    table["e_ref"] = FluxPoints._energy_ref_lafferty(
+        model, table["e_min"], table["e_max"]
+    )
     dnde = FluxPoints.from_table(table, reference_model=model)
 
     # Set up test case comparison
@@ -150,9 +152,7 @@ def test_fermi_to_dnde():
     fp = src.flux_points
 
     assert_allclose(
-        fp.dnde[1],
-        4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"),
-        rtol=1e-5,
+        fp.dnde[1], 4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"), rtol=1e-5,
     )
 
 

@@ -37,9 +37,6 @@ class FluxEstimator(Estimator):
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
         Sigma to use for upper limit computation.
-    ul_method : {"confidence", "profile"}
-        Select upper-limit computation method using confidence or stat profile.
-        Default is confidence".
     backend : str
         Backend used for fitting, default : minuit
     optimize_opts : dict
@@ -72,7 +69,6 @@ class FluxEstimator(Estimator):
         norm_scan_values=None,
         n_sigma=1,
         n_sigma_ul=3,
-        ul_method="confidence",
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
@@ -99,7 +95,6 @@ class FluxEstimator(Estimator):
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
-        self.ul_method = ul_method
         self.selection_optional = selection_optional
 
     @property
@@ -109,8 +104,6 @@ class FluxEstimator(Estimator):
             scan_values=self.norm_scan_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
-            ul_method=self.ul_method,
-            ul_method = self.ul_method,
             backend=self.backend,
             optimize_opts=self.optimize_opts,
             covariance_opts=self.covariance_opts,

@@ -18,7 +18,7 @@ from .core import (
     OPTIONAL_QUANTITIES,
     REQUIRED_COLUMNS,
 )
-from. flux import FluxEstimator
+from .flux import FluxEstimator
 
 
 __all__ = ["FluxPoints", "FluxPointsEstimator"]
@@ -217,7 +217,9 @@ class FluxPoints(FluxEstimate):
             kwargs.setdefault("format", "ascii.ecsv")
             table = Table.read(filename, **kwargs)
 
-        return cls.from_table(table=table, sed_type=sed_type, reference_model=reference_model)
+        return cls.from_table(
+            table=table, sed_type=sed_type, reference_model=reference_model
+        )
 
     def write(self, filename, **kwargs):
         """Write flux points.
@@ -356,8 +358,7 @@ class FluxPoints(FluxEstimate):
         elif sed_type == "likelihood":
             data = cls._convert_loglike_columns(table)
             reference_model = TemplateSpectralModel(
-                energy=table["e_ref"].quantity,
-                values=table["ref_dnde"].quantity
+                energy=table["e_ref"].quantity, values=table["ref_dnde"].quantity
             )
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
@@ -388,7 +389,11 @@ class FluxPoints(FluxEstimate):
             table = self.table.copy()
         else:
             table = Table()
-            all_quantities = REQUIRED_COLUMNS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
+            all_quantities = (
+                REQUIRED_COLUMNS[sed_type]
+                + OPTIONAL_QUANTITIES[sed_type]
+                + OPTIONAL_QUANTITIES_COMMON
+            )
 
             for quantity in all_quantities:
                 if quantity == "e_ref":
@@ -429,7 +434,9 @@ class FluxPoints(FluxEstimate):
         ``gammapy download datasets --tests --out $GAMMAPY_DATA``
         """
         table_drop_ul = self.table[~self.is_ul]
-        return self.__class__(data=table_drop_ul, reference_spectral_model=self.reference_spectral_model)
+        return self.__class__(
+            data=table_drop_ul, reference_spectral_model=self.reference_spectral_model
+        )
 
     @staticmethod
     def _energy_ref_lafferty(model, energy_min, energy_max):
@@ -507,7 +514,13 @@ class FluxPoints(FluxEstimate):
         return y_err
 
     def plot(
-        self, ax=None, energy_unit="TeV", flux_unit=None, energy_power=0, sed_type="dnde", **kwargs
+        self,
+        ax=None,
+        energy_unit="TeV",
+        flux_unit=None,
+        energy_power=0,
+        sed_type="dnde",
+        **kwargs,
     ):
         """Plot flux points.
 
@@ -725,9 +738,6 @@ class FluxPointsEstimator(Estimator):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
-    ul_method : {"confidence", "profile"}
-        Select upper-limit computation method using confidence or stat profile.
-        Default is confidence".
     backend : str
         Backend used for fitting, default : minuit
     optimize_opts : dict
@@ -759,7 +769,6 @@ class FluxPointsEstimator(Estimator):
         norm_scan_values=None,
         n_sigma=1,
         n_sigma_ul=2,
-        ul_method="confidence",
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,

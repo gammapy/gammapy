@@ -207,7 +207,7 @@ def test_group_datasets_in_time_interval_outflows():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_fit_options():
+def test_lightcurve_estimator_fit_options(norm_values):
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -218,7 +218,7 @@ def test_lightcurve_estimator_fit_options():
 
     estimator = LightCurveEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
+        norm_scan_values=norm_values,
         time_intervals=time_intervals,
         selection_optional="all",
         backend="minuit",
@@ -240,7 +240,7 @@ def test_lightcurve_estimator_fit_options():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets():
+def test_lightcurve_estimator_spectrum_datasets(norm_values):
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [

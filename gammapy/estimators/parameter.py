@@ -83,10 +83,7 @@ class ParameterEstimator(Estimator):
         Which null value to use for the parameter
     scan_values : `~numpy.ndarray` or `~gammapy.estimators.parameter.ScanValuesGenerator`
         Array of values to be used for the fit statistic profile
-        or `ScanValuesMaker` generator instance.
-    ul_method : {"confidence", "profile"}
-        Select upper-limit computation method using confidence or stat profile.
-        Default is confidence".
+        or `ScanValuesGenerator` generator instance.
     backend : str
         Backend used for fitting, default : minuit
     optimize_opts : dict
@@ -117,7 +114,6 @@ class ParameterEstimator(Estimator):
         n_sigma_ul=2,
         null_value=1e-150,
         scan_values=None,
-        ul_method="confidence",
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
@@ -134,7 +130,6 @@ class ParameterEstimator(Estimator):
             scan_values = ScanValuesGenerator()
         self.scan_values = scan_values
 
-        self.ul_method = ul_method
         self.backend = backend
         if optimize_opts is None:
             optimize_opts = {}
@@ -288,23 +283,11 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-            self._setup_fit(datasets)
-            
-        if self.ul_method == "confidence":
-            self.fit(datasets)
-            self._fit.optimize(**self.optimize_opts)
-            res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
-            ul = {f"{parameter.name}_ul": res["errp"] + parameter.value}
-        elif self.ul_method == "profile":
-            if isinstance(self.scan_values, ScanValuesMaker):
-                scan_values = self.scan_values(parameter)
-            else:
-                scan_values = self.scan_values
-            if self._profile is None:
-                profile = self.estimate_scan(self, datasets, parameter)
-            ul = stat_profile_ul_scipy(
-                scan_values, profile["stat_scan"], delta_ts=4, interp_scale="sqrt"
-            )
+
+        self.fit(datasets)
+        self._fit.optimize(**self.optimize_opts)
+        res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
+        ul = {f"{parameter.name}_ul": res["errp"] + parameter.value}
         return ul
 
     def run(self, datasets, parameter):
