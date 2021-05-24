@@ -69,6 +69,11 @@ class PlotMixin:
     def _energy_unit(self):
         return self._geom.axes[0].unit
 
+    @property
+    def energy_range(self):
+        """Energy range defined by the safe mask"""
+        return super().energy_range()
+
     def _plot_energy_range(self, ax):
         energy_min, energy_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}
@@ -221,11 +226,6 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
     def to_spectrum_dataset(self, *args, **kwargs):
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
-
-    @property
-    def energy_range(self):
-        """Energy range defined by the safe mask"""
-        return super().energy_range()
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
