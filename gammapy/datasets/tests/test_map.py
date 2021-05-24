@@ -324,7 +324,7 @@ def test_energy_range(sky_model, geom10, geom_etrue):
     mask2 = geom10.region_mask([region2]) & geom10.energy_mask(2 * u.TeV, 8 * u.TeV)
     mask3 = geom10.energy_mask(3 * u.TeV, 6 * u.TeV)
 
-    mask_safe = Map.from_geom(geom10, data=mask1 | mask2 | mask3)
+    mask_safe = Map.from_geom(geom10, data=(mask1 | mask2 | mask3).data)
     dataset = get_map_dataset(geom10, geom_etrue, edisp=None, mask_safe=mask_safe)
     energy = geom10.axes["energy"]
 
