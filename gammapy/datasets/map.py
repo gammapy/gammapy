@@ -361,7 +361,7 @@ class MapDataset(Dataset):
         else:
             mask = None
 
-        return u.Quantity([energy_min[mask].min(), energy_max[mask].max()])
+        return u.Quantity([energy_min[mask][0], energy_max[mask][-1]])
 
     def npred(self):
         """Predicted source and background counts

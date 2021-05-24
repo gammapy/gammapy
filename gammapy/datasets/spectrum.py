@@ -222,6 +222,11 @@ class SpectrumDataset(PlotMixin, MapDataset):
     def to_spectrum_dataset(self, *args, **kwargs):
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
 
+    @property
+    def energy_range(self):
+        """Energy range defined by the safe mask"""
+        return super().energy_range()
+
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     stat_type = "wstat"
