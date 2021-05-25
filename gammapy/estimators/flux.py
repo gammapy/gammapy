@@ -6,6 +6,7 @@ from gammapy.datasets import Datasets
 from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import Models, ScaleSpectralModel
+from gammapy.modeling import Fit
 
 log = logging.getLogger(__name__)
 
@@ -38,14 +39,6 @@ class FluxEstimator(Estimator):
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
         Sigma to use for upper limit computation.
-    backend : str
-        Backend used for fitting, default : minuit
-    optimize_opts : dict
-        Options passed to `Fit.optimize`.
-    covariance_opts : dict
-        Options passed to `Fit.covariance`.
-    reoptimize : bool
-        Re-optimize other free model parameters.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
@@ -55,6 +48,9 @@ class FluxEstimator(Estimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optionnal steps are not executed.
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
+
     """
 
     tag = "FluxEstimator"
@@ -71,11 +67,8 @@ class FluxEstimator(Estimator):
         norm_values=None,
         n_sigma=1,
         n_sigma_ul=3,
-        backend="minuit",
-        optimize_opts=None,
-        covariance_opts=None,
-        reoptimize=True,
         selection_optional=None,
+        fit=None
     ):
 
         if norm_values is None:
@@ -92,15 +85,13 @@ class FluxEstimator(Estimator):
 
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
-        self.backend = backend
-        if optimize_opts is None:
-            optimize_opts = {}
-        if covariance_opts is None:
-            covariance_opts = {}
-        self.optimize_opts = optimize_opts
-        self.covariance_opts = covariance_opts
-        self.reoptimize = reoptimize
         self.selection_optional = selection_optional
+
+        if fit is None:
+            fit = Fit(reoptimize=True)
+
+        self.fit = fit
+
 
     @property
     def _parameter_estimator(self):
@@ -109,11 +100,8 @@ class FluxEstimator(Estimator):
             scan_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
-            backend=self.backend,
-            optimize_opts=self.optimize_opts,
-            covariance_opts=self.covariance_opts,
-            reoptimize=self.reoptimize,
             selection_optional=self.selection_optional,
+            fit=self.fit
         )
 
     @staticmethod
