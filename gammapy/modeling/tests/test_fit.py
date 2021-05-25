@@ -57,8 +57,8 @@ class MyDataset(Dataset):
 @pytest.mark.parametrize("backend", ["sherpa", "scipy"])
 def test_warning_no_covariance(backend, caplog):
     dataset = MyDataset()
-    fit = Fit([dataset], backend=backend)
-    result = fit.run()
+    fit = Fit(backend=backend)
+    result = fit.run([dataset])
     assert caplog.records[-1].levelname == "WARNING"
     assert (
         caplog.records[-1].message
@@ -69,8 +69,8 @@ def test_warning_no_covariance(backend, caplog):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
     dataset = MyDataset()
-    fit = Fit([dataset], backend=backend)
-    result = fit.run()
+    fit = Fit(backend=backend)
+    result = fit.run([dataset])
     pars = result.parameters
 
     assert result.success is True
@@ -93,14 +93,14 @@ def test_run(backend):
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     dataset = MyDataset()
-    fit = Fit([dataset], store_trace=True, backend=backend)
+    fit = Fit(store_trace=True, backend=backend)
 
     if backend == "scipy":
         kwargs = {"method": "L-BFGS-B"}
     else:
         kwargs = {}
 
-    result = fit.optimize(**kwargs)
+    result = fit.optimize([dataset], **kwargs)
     pars = dataset.models.parameters
 
     assert result.success is True
@@ -121,8 +121,8 @@ def test_optimize(backend):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
     dataset = MyDataset()
-    fit = Fit([dataset], backend=backend)
-    fit.optimize()
+    fit = Fit(backend=backend)
+    fit.optimize([dataset])
     result = fit.confidence("x")
 
     assert result["success"] is True
@@ -137,8 +137,8 @@ def test_confidence(backend):
 def test_confidence_frozen(backend):
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
-    fit = Fit([dataset], backend=backend)
-    fit.optimize()
+    fit = Fit(backend=backend)
+    fit.optimize([dataset])
     result = fit.confidence("y")
 
     assert result["success"] is True
@@ -148,8 +148,8 @@ def test_confidence_frozen(backend):
 
 def test_stat_profile():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
+    fit = Fit()
+    fit.run([dataset])
     result = fit.stat_profile("x", nvalues=3)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
@@ -162,8 +162,8 @@ def test_stat_profile():
 
 def test_stat_profile_reoptimize():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
+    fit = Fit()
+    fit.run([dataset])
 
     dataset.models.parameters["y"].value = 0
     result = fit.stat_profile("x", nvalues=3, reoptimize=True)
@@ -177,8 +177,8 @@ def test_stat_profile_reoptimize():
 
 def test_stat_surface():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
+    fit = Fit()
+    fit.run([dataset])
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
     result = fit.stat_surface("x", "y", x_values=x_values, y_values=y_values)
@@ -200,8 +200,8 @@ def test_stat_surface():
 
 def test_stat_surface_reoptimize():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
+    fit = Fit()
+    fit.run([dataset])
 
     dataset.models.parameters["z"].value = 0
     x_values = [1, 2, 3]
@@ -227,8 +227,8 @@ def test_stat_surface_reoptimize():
 def test_minos_contour():
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
-    fit = Fit([dataset], backend="minuit")
-    fit.optimize()
+    fit = Fit(backend="minuit")
+    fit.optimize([dataset])
     result = fit.minos_contour("y", "z")
 
     assert result["success"] is True

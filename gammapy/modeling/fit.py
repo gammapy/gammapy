@@ -68,36 +68,38 @@ class Fit:
 
     Parameters
     ----------
-    datasets : `Datasets`
-        Datasets
-    backend : str
+    backend : {"minuit", "scipy" "sherpa"}
         Backend used for fitting, default : minuit
     optimize_opts : dict
         Options passed to `Fit.optimize`.
     covariance_opts : dict
         Options passed to `Fit.covariance`.
+    store_trace : bool
+        Whether to store the trace of the fit
+    reoptimize : bool
+        Reoptimize for confidence and stat profile.
     """
 
     def __init__(
         self,
-        datasets,
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
         store_trace=False,
+        reoptimize=False
     ):
-        from gammapy.datasets import Datasets
-
-        # TODO: docstring for store_trace ?
         self.store_trace = store_trace
-        self.datasets = Datasets(datasets)
         self.backend = backend
+
         if optimize_opts is None:
             optimize_opts = {}
+
         if covariance_opts is None:
             covariance_opts = {}
+
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
+        self.reoptimize = reoptimize
 
     @lazyproperty
     def _parameters(self):
@@ -107,7 +109,7 @@ class Fit:
     def _models(self):
         return self.datasets.models
 
-    def run(self):
+    def run(self, datasets):
         """
         Run all fitting steps.
 
@@ -116,57 +118,41 @@ class Fit:
         fit_result : `FitResult`
             Results
         """
-
-        optimize_result = self.optimize(**self.optimize_opts)
+        optimize_result = self.optimize(datasets=datasets, **self.optimize_opts)
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return optimize_result
 
-        covariance_result = self.covariance(**self.covariance_opts)
+        covariance_result = self.covariance(datasets=datasets, **self.covariance_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success
 
         return optimize_result
 
-    def optimize(self, **kwargs):
+    def optimize(self, datasets, **kwargs):
         """Run the optimization.
 
         Parameters
         ----------
-        **kwargs : dict, optional
-            Keyword arguments passed to the optimizer. For the `"minuit"` backend
-            see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
-            for a detailed description of the available options. If there is an entry
-            'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
-
-            For the `"sherpa"` backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
-            Those methods are described and compared in detail on
-            http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
-            options of the optimization methods are described on the following
-            pages in detail:
-
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
-
-            For the `"scipy"` backend the available options are desribed in detail here:
-            https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
 
         Returns
         -------
         fit_result : `FitResult`
             Results
         """
+        from gammapy.datasets import Datasets
+        datasets = Datasets(datasets)
         self.optimize_opts.update(kwargs)
 
-        parameters = self._parameters
+        parameters = datasets.parameters
         parameters.check_limits()
 
         # TODO: expose options if / when to scale? On the Fit class?
-        if np.all(self._models.covariance.data == 0):
+        if np.all(datasets.models.covariance.data == 0):
             parameters.autoscale()
 
         compute = registry.get("optimize", self.backend)
@@ -175,7 +161,7 @@ class Fit:
         # and return something simpler, not a tuple of three things
         factors, info, optimizer = compute(
             parameters=parameters,
-            function=self.datasets.stat_sum,
+            function=datasets.stat_sum,
             store_trace=self.store_trace,
             **self.optimize_opts,
         )
@@ -190,9 +176,8 @@ class Fit:
         trace = table_from_row_data(info.pop("trace"))
 
         if self.store_trace:
-            pars = self._models.parameters
-            idx = [pars.index(par) for par in pars.unique_parameters.free_parameters]
-            unique_names = np.array(self._models.parameters_unique_names)[idx]
+            idx = [parameters.index(par) for par in parameters.unique_parameters.free_parameters]
+            unique_names = np.array(datasets.models.parameters_unique_names)[idx]
             trace.rename_columns(trace.colnames[1:], list(unique_names))
 
         # Copy final results into the parameters object
@@ -200,20 +185,22 @@ class Fit:
         parameters.check_limits()
         return OptimizeResult(
             parameters=parameters,
-            total_stat=self.datasets.stat_sum(),
+            total_stat=datasets.stat_sum(),
             backend=self.backend,
             method=self.optimize_opts.get("method", self.backend),
             trace=trace,
             **info,
         )
 
-    def covariance(self, **kwargs):
+    def covariance(self, datasets):
         """Estimate the covariance matrix.
 
         Assumes that the model parameters are already optimised.
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         **kwargs : dict, optional
             Keyword arguments passed to the covariance method.
 
@@ -222,11 +209,11 @@ class Fit:
         result : `CovarianceResult`
             Results
         """
+        from gammapy.datasets import Datasets
 
-        # TODO: docstring kwargs for covairance
-        self.covariance_opts.update(kwargs)
+        datasets = Datasets(datasets)
         compute = registry.get("covariance", self.backend)
-        parameters = self._parameters
+        parameters = datasets.parameters
 
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
@@ -239,13 +226,13 @@ class Fit:
             else:
                 method = ""
                 factor_matrix, info = compute(
-                    parameters, self.datasets.stat_sum, **self.covariance_opts
+                    parameters, datasets.stat_sum, **self.covariance_opts
                 )
 
             covariance = Covariance.from_factor_matrix(
-                parameters=self._models.parameters, matrix=factor_matrix
+                parameters=parameters, matrix=factor_matrix
             )
-            self._models.covariance = covariance
+            datasets.models.covariance = covariance
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
@@ -256,7 +243,7 @@ class Fit:
             message=info["message"],
         )
 
-    def confidence(self, parameter, sigma=1, reoptimize=True, **kwargs):
+    def confidence(self, datasets, parameter, sigma=1, reoptimize=True, **kwargs):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -268,8 +255,6 @@ class Fit:
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         sigma : float
@@ -284,8 +269,12 @@ class Fit:
         result : dict
             Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
+        from gammapy.datasets import Datasets
+
         compute = registry.get("confidence", self.backend)
-        parameters = self._parameters
+
+        datasets = Datasets(datasets)
+        parameters = datasets.parameters
         parameter = parameters[parameter]
 
         # TODO: confidence_options on fit for consistancy ?
@@ -305,7 +294,7 @@ class Fit:
                 result = compute(
                     parameters,
                     parameter,
-                    self.datasets.stat_sum,
+                    datasets.stat_sum,
                     sigma,
                     reoptimize,
                     **kwargs,
@@ -317,6 +306,7 @@ class Fit:
 
     def stat_profile(
         self,
+        datasets,
         parameter,
         values=None,
         bounds=2,
@@ -353,7 +343,10 @@ class Fit:
             Dictionary with keys "values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
-        parameters = self._parameters
+        from gammapy.datasets import Datasets
+
+        datasets = Datasets(datasets)
+        parameters = datasets.parameters
         parameter = parameters[parameter]
 
         optimize_opts = optimize_opts or {}
