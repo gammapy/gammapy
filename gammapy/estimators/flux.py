@@ -52,7 +52,6 @@ class FluxEstimator(Estimator):
         Fit instance specifying the backend and fit options.
 
     """
-
     tag = "FluxEstimator"
     _available_selection_optional = ["errn-errp", "ul", "scan"]
 
@@ -88,10 +87,10 @@ class FluxEstimator(Estimator):
         self.selection_optional = selection_optional
 
         if fit is None:
+            # TODO: why the different default here?
             fit = Fit(reoptimize=True)
 
         self.fit = fit
-
 
     @property
     def _parameter_estimator(self):
