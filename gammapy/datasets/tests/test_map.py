@@ -564,8 +564,8 @@ def test_map_fit(sky_model, geom, geom_etrue):
     models["test-1-bkg"].spectral_model.norm.value = 0.49
     models["test-2-bkg"].spectral_model.norm.value = 0.99
 
-    fit = Fit(datasets)
-    result = fit.run()
+    fit = Fit()
+    result = fit.run(datasets=datasets)
 
     assert result.success
     assert "minuit" in repr(result)
@@ -596,7 +596,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
     dataset_2.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
 
-    stat = fit.datasets.stat_sum()
+    stat = datasets.stat_sum()
     assert_allclose(stat, 14823.772744, rtol=1e-5)
 
     region = sky_model.spatial_model.to_region()
@@ -635,8 +635,8 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     sky_model.parameters["sigma"].value = 0.21
     dataset.models[f"{dataset.name}-bkg"].parameters["norm"].frozen = True
 
-    fit = Fit([dataset])
-    result = fit.run()
+    fit = Fit()
+    result = fit.run(datasets=[dataset])
 
     assert result.success
 
