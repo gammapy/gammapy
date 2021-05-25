@@ -39,8 +39,6 @@ def hess_datasets():
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     estimator = FluxEstimator(
         0,
-        energy_min="1 GeV",
-        energy_max="100 GeV",
         norm_n_values=5,
         norm_min=0.5,
         norm_max=2,
@@ -48,7 +46,12 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         reoptimize=False
     )
 
-    result = estimator.run(fermi_datasets)
+    datasets = fermi_datasets.slice_by_energy(
+        energy_min="1 GeV", energy_max="100 GeV"
+    )
+    datasets.models = fermi_datasets.models
+
+    result = estimator.run(datasets)
 
     assert_allclose(result["norm"], 0.98949, atol=1e-3)
     assert_allclose(result["ts"], 25083.75408, rtol=1e-3)
@@ -67,12 +70,16 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(
         0,
-        energy_min="1 GeV",
-        energy_max="100 GeV",
         selection_optional=None,
         reoptimize=True
     )
-    result = estimator.run(fermi_datasets)
+
+    datasets = fermi_datasets.slice_by_energy(
+        energy_min="1 GeV", energy_max="100 GeV"
+    )
+    datasets.models = fermi_datasets.models
+
+    result = estimator.run(datasets)
 
     assert_allclose(result["norm"], 0.989989, atol=1e-3)
     assert_allclose(result["ts"], 18729.907481, rtol=1e-3)
@@ -84,10 +91,13 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(
         source="Crab",
-        energy_min=1 * u.TeV,
-        energy_max=10 * u.TeV,
         selection_optional=["errn-errp", "ul"],
     )
+    datasets = hess_datasets.slice_by_energy(
+        energy_min=1 * u.TeV, energy_max=10 * u.TeV,
+    )
+    datasets.models = hess_datasets.models
+
     result = estimator.run(hess_datasets)
 
     assert_allclose(result["norm"], 1.218139, atol=1e-3)
@@ -102,35 +112,19 @@ def test_flux_estimator_1d(hess_datasets):
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_flux_estimator_incorrect_energy_range(fermi_datasets):
-    with pytest.raises(ValueError):
-        FluxEstimator(source="Crab", energy_min=10 * u.TeV, energy_max=1 * u.TeV)
-
-    fe = FluxEstimator(
-        source="Crab Nebula", energy_min=0.18 * u.TeV, energy_max=0.2 * u.TeV
-    )
-
-    result = fe.run(fermi_datasets)
-
-    assert np.isnan(result["norm"])
-
-
-@requires_data()
-@requires_dependency("iminuit")
 def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
-
-    for dataset in hess_datasets:
-        dataset.models = fermi_datasets.models
-
     datasets = Datasets()
 
     datasets.extend(fermi_datasets)
     datasets.extend(hess_datasets)
 
+    datasets = datasets.slice_by_energy(
+        energy_min=1 * u.TeV, energy_max=10 * u.TeV,
+    )
+    datasets.models = fermi_datasets.models
+
     estimator = FluxEstimator(
         source="Crab Nebula",
-        energy_min=1 * u.TeV,
-        energy_max=10 * u.TeV,
         selection_optional=None,
     )
     result = estimator.run(datasets)
