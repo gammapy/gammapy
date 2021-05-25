@@ -123,7 +123,7 @@ def test_confidence(backend):
     dataset = MyDataset()
     fit = Fit(backend=backend)
     fit.optimize([dataset])
-    result = fit.confidence("x")
+    result = fit.confidence(datasets=[dataset], parameter="x")
 
     assert result["success"] is True
     assert_allclose(result["errp"], 1)
@@ -139,7 +139,7 @@ def test_confidence_frozen(backend):
     dataset.models.parameters["x"].frozen = True
     fit = Fit(backend=backend)
     fit.optimize([dataset])
-    result = fit.confidence("y")
+    result = fit.confidence(datasets=[dataset], parameter="y")
 
     assert result["success"] is True
     assert_allclose(result["errp"], 1)
@@ -150,7 +150,7 @@ def test_stat_profile():
     dataset = MyDataset()
     fit = Fit()
     fit.run([dataset])
-    result = fit.stat_profile("x", nvalues=3)
+    result = fit.stat_profile(datasets=[dataset], parameter="x", nvalues=3)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -166,7 +166,7 @@ def test_stat_profile_reoptimize():
     fit.run([dataset])
 
     dataset.models.parameters["y"].value = 0
-    result = fit.stat_profile("x", nvalues=3, reoptimize=True)
+    result = fit.stat_profile(datasets=[dataset], parameter="x", nvalues=3, reoptimize=True)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -181,7 +181,9 @@ def test_stat_surface():
     fit.run([dataset])
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
-    result = fit.stat_surface("x", "y", x_values=x_values, y_values=y_values)
+    result = fit.stat_surface(
+        datasets=[dataset], x="x", y="y", x_values=x_values, y_values=y_values
+    )
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
     assert_allclose(result["y_scan"], y_values, atol=1e-7)
@@ -207,7 +209,7 @@ def test_stat_surface_reoptimize():
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
     result = fit.stat_surface(
-        "x", "y", x_values=x_values, y_values=y_values, reoptimize=True
+        datasets=[dataset], x="x", y="y", x_values=x_values, y_values=y_values, reoptimize=True
     )
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
@@ -229,7 +231,7 @@ def test_minos_contour():
     dataset.models.parameters["x"].frozen = True
     fit = Fit(backend="minuit")
     fit.optimize([dataset])
-    result = fit.minos_contour("y", "z")
+    result = fit.minos_contour(datasets=[dataset], x="y", y="z")
 
     assert result["success"] is True
 

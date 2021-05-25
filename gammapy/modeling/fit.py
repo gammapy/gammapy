@@ -373,11 +373,11 @@ class Fit:
                 parameter.value = value
                 if reoptimize:
                     parameter.frozen = True
-                    result = self.optimize(**optimize_opts)
+                    result = self.optimize(datasets=datasets, **optimize_opts)
                     stat = result.total_stat
                     fit_results.append(result)
                 else:
-                    stat = self.datasets.stat_sum()
+                    stat = datasets.stat_sum()
                 stats.append(stat)
 
         return {
@@ -386,7 +386,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
+    def stat_surface(self, datasets, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -413,7 +413,10 @@ class Fit:
             Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
-        parameters = self._parameters
+        from gammapy.datasets import Datasets
+        datasets = Datasets(datasets)
+        parameters = datasets.parameters
+
         x = parameters[x]
         y = parameters[y]
 
@@ -431,11 +434,11 @@ class Fit:
                 if reoptimize:
                     x.frozen = True
                     y.frozen = True
-                    result = self.optimize(**optimize_opts)
+                    result = self.optimize(datasets=datasets, **optimize_opts)
                     stat = result.total_stat
                     fit_results.append(result)
                 else:
-                    stat = self.datasets.stat_sum()
+                    stat = datasets.stat_sum()
 
                 stats.append(stat)
 
@@ -453,7 +456,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def minos_contour(self, x, y, numpoints=10, sigma=1.0):
+    def minos_contour(self, datasets, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.
 
         Calls ``iminuit.Minuit.mncontour``.
@@ -481,7 +484,10 @@ class Fit:
             Dictionary containing the parameter values defining the contour, with the
             boolean flag "success" and the info objects from ``mncontour``.
         """
-        parameters = self._parameters
+        from gammapy.datasets import Datasets
+        datasets = Datasets(datasets)
+        parameters = datasets.parameters
+
         x = parameters[x]
         y = parameters[y]
 
