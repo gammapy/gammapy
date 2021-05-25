@@ -59,8 +59,6 @@ class FluxEstimator(Estimator):
     def __init__(
         self,
         source,
-        energy_min,
-        energy_max,
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -77,12 +75,6 @@ class FluxEstimator(Estimator):
         self.norm_max = norm_max
         self.norm_n_values = norm_n_values
         self.source = source
-        self.energy_min = u.Quantity(energy_min)
-        self.energy_max = u.Quantity(energy_max)
-
-        if self.energy_min >= self.energy_max:
-            raise ValueError("Incorrect energy_range for Flux Estimator")
-
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.selection_optional = selection_optional
@@ -169,24 +161,11 @@ class FluxEstimator(Estimator):
             Dict with results for the flux point.
         """
         datasets = Datasets(datasets)
-
-        datasets_sliced = datasets.slice_by_energy(
-            energy_min=self.energy_min, energy_max=self.energy_max
-        )
-
         models = datasets.models.copy()
-        datasets_sliced.models = models
-
-        if len(datasets_sliced) > 0:
-            # TODO: this relies on the energy binning of the first dataset
-            energy_axis = datasets_sliced[0].counts.geom.axes["energy"]
-            energy_min, energy_max = energy_axis.edges.min(), energy_axis.edges.max()
-        else:
-            energy_min, energy_max = self.energy_min, self.energy_max
 
         contributions = []
 
-        for dataset in datasets_sliced:
+        for dataset in datasets:
             if dataset.mask is not None:
                 value = dataset.mask.data.any()
             else:
@@ -195,16 +174,20 @@ class FluxEstimator(Estimator):
 
         model = self.get_scale_model(models)
 
+        energy_min, energy_max = datasets.energy_ranges
+
         with np.errstate(invalid="ignore", divide="ignore"):
-            result = self.get_reference_flux_values(model.model, energy_min, energy_max)
+            result = self.get_reference_flux_values(
+                model.model, energy_min.min(), energy_max.min()
+            )
 
         if len(datasets) == 0 or not np.any(contributions):
             result.update(self.nan_result)
         else:
             models[self.source].spectral_model = model
 
-            datasets_sliced.models = models
-            result.update(self._parameter_estimator.run(datasets_sliced, model.norm))
+            datasets.models = models
+            result.update(self._parameter_estimator.run(datasets, model.norm))
             result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
         return result
