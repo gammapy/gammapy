@@ -392,21 +392,6 @@ class LightCurveEstimator(Estimator):
         self.fit = fit
         self.reoptimize = reoptimize
 
-    def _flux_poins_estimator(self, energy_edges):
-        return FluxPointsEstimator(
-            source=self.source,
-            energy_edges=energy_edges,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
-            norm_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            selection_optional=self.selection_optional,
-            fit=self.fit,
-            reoptimize=self.reoptimize
-        )
-
     def run(self, datasets):
         """Run light curve extraction.
 

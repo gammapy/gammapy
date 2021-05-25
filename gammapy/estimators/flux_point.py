@@ -756,8 +756,12 @@ class FluxPointsEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         selection_optional=None,
+<<<<<<< HEAD
         fit=None,
         reoptimize=False
+=======
+        fit=None
+>>>>>>> 4c722c79b... Adapt LightcurveEstimator
     ):
         self.energy_edges = energy_edges
         self.source = source
@@ -774,22 +778,6 @@ class FluxPointsEstimator(Estimator):
 
         self.fit = fit
         self.reoptimize = reoptimize
-
-    def _flux_estimator(self, energy_min, energy_max):
-        return FluxEstimator(
-            source=self.source,
-            energy_min=energy_min,
-            energy_max=energy_max,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
-            norm_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            selection_optional=self.selection_optional,
-            fit=self.fit,
-            reoptimize=self.reoptimize
-        )
 
     def run(self, datasets):
         """Run the flux point estimator for all energy groups.
