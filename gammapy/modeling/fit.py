@@ -139,6 +139,12 @@ class Fit:
         datasets = Datasets(datasets)
         return datasets, datasets.parameters
 
+    @staticmethod
+    def _parse_datasets(datasets):
+        from gammapy.datasets import Datasets
+        datasets = Datasets(datasets)
+        return datasets, datasets.parameters
+
     def run(self, datasets):
         """Run all fitting steps.
 

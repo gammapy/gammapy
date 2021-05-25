@@ -183,7 +183,7 @@ def test_stat_profile():
 
 def test_stat_profile_reoptimize():
     dataset = MyDataset()
-    fit = Fit()
+    fit = Fit(reoptimize=True)
     fit.run([dataset])
 
     dataset.models.parameters["y"].value = 0
@@ -226,7 +226,7 @@ def test_stat_surface():
 
 def test_stat_surface_reoptimize():
     dataset = MyDataset()
-    fit = Fit()
+    fit = Fit(reoptimize=True)
     fit.run([dataset])
 
     x_values = [1, 2, 3]
