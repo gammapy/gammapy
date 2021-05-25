@@ -4,6 +4,7 @@ from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data
 
 pytest.importorskip("iminuit")
@@ -18,7 +19,7 @@ def crab_datasets_1d():
 
 
 @pytest.fixture
-def PLmodel():
+def pwl_model():
     return PowerLawSpectralModel(amplitude="3e-11 cm-2s-1TeV-1", index=2.7)
 
 
@@ -31,10 +32,13 @@ def crab_datasets_fermi():
 
 
 @requires_data()
-def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
+def test_parameter_estimator_1d(crab_datasets_1d, pwl_model):
     datasets = crab_datasets_1d
+
+    model = SkyModel(spectral_model=pwl_model, name="Crab")
+
     for dataset in datasets:
-        dataset.models = SkyModel(spectral_model=PLmodel, name="Crab")
+        dataset.models = model
 
     estimator = ParameterEstimator(scan_n_values=10, selection_optional="all")
 
@@ -54,7 +58,9 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
 def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     datasets = crab_datasets_fermi
     parameter = datasets[0].models.parameters["amplitude"]
-    estimator = ParameterEstimator(reoptimize=False, scan_n_values=10, selection_optional=["scan"])
+
+    fit = Fit(reoptimize=False)
+    estimator = ParameterEstimator(fit=fit, scan_n_values=10, selection_optional=["scan"])
     alpha_value = datasets[0].models.parameters["alpha"].value
 
     result = estimator.run(datasets, parameter)

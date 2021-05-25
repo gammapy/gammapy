@@ -10,10 +10,9 @@ log = logging.getLogger(__name__)
 class ParameterEstimator(Estimator):
     """Model parameter estimator.
 
-    Estimates a model parameter for a group of datasets.
-    Compute best fit value, symmetric and delta TS for a given null value.
-    Additionnally asymmetric errors as well as parameter upper limit and fit statistic profile
-    can be estimated.
+    Estimates a model parameter for a group of datasets. Compute best fit value,
+    symmetric and delta TS for a given null value. Additionally asymmetric errors
+    as well as parameter upper limit and fit statistic profile can be estimated.
 
     Parameters
     ----------
@@ -33,14 +32,6 @@ class ParameterEstimator(Estimator):
         Number of values used to scan fit stat profile
     scan_values : `~numpy.ndarray`
         Values to use for the scan.
-    backend : str
-        Backend used for fitting, default : minuit
-    optimize_opts : dict
-        Options passed to `Fit.optimize`.
-    covariance_opts : dict
-        Options passed to `Fit.covariance`.
-    reoptimize : bool
-        Re-optimize other free model parameters. Default is True.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
@@ -50,7 +41,8 @@ class ParameterEstimator(Estimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optionnal steps are not executed.
-
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
 
     """
 
@@ -67,11 +59,8 @@ class ParameterEstimator(Estimator):
         scan_max=None,
         scan_n_values=30,
         scan_values=None,
-        backend="minuit",
-        optimize_opts=None,
-        covariance_opts=None,
-        reoptimize=True,
         selection_optional=None,
+        fit=None
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -84,27 +73,12 @@ class ParameterEstimator(Estimator):
         self.scan_min = scan_min
         self.scan_max = scan_max
 
-        self.backend = backend
-        if optimize_opts is None:
-            optimize_opts = {}
-        if covariance_opts is None:
-            covariance_opts = {}
-        self.optimize_opts = optimize_opts
-        self.covariance_opts = covariance_opts
-
-        self.reoptimize = reoptimize
         self.selection_optional = selection_optional
-        self._fit = None
 
-    def fit(self, datasets):
-        if self._fit is None or datasets is not self._fit.datasets:
-            self._fit = Fit(
-                datasets,
-                backend=self.backend,
-                optimize_opts=self.optimize_opts,
-                covariance_opts=self.covariance_opts,
-            )
-        return self._fit
+        if fit is None:
+            fit = Fit(reoptimize=True)
+
+        self.fit = fit
 
     def estimate_best_fit(self, datasets, parameter):
         """Estimate parameter assymetric errors
@@ -121,8 +95,7 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
-        self.fit(datasets)
-        result_fit = self._fit.run()
+        result_fit = self.fit.run(datasets=datasets)
 
         return {
             f"{parameter.name}": parameter.value,
@@ -149,13 +122,12 @@ class ParameterEstimator(Estimator):
         stat = datasets.stat_sum()
 
         with datasets.parameters.restore_status():
-
             # compute ts value
             parameter.value = self.null_value
 
-            if self.reoptimize:
+            if self.fit.reoptimize:
                 parameter.frozen = True
-                _ = self._fit.optimize(**self.optimize_opts)
+                _ = self.fit.optimize(datasets=datasets)
 
             ts = datasets.stat_sum() - stat
 
@@ -176,12 +148,10 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
-        # TODO: make Fit stateless and configurable
-        self.fit(datasets)
-        self._fit.optimize(**self.optimize_opts)
+        self.fit.optimize(datasets=datasets)
 
-        res = self._fit.confidence(
-            parameter=parameter, sigma=self.n_sigma, reoptimize=self.reoptimize
+        res = self.fit.confidence(
+            datasets=datasets, parameter=parameter, sigma=self.n_sigma
         )
         return {
             f"{parameter.name}_errp": res["errp"],
@@ -204,20 +174,19 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-        self.fit(datasets)
-        self._fit.optimize(**self.optimize_opts)
+        self.fit.optimize(datasets=datasets)
 
         if self.scan_min and self.scan_max:
             bounds = (self.scan_min, self.scan_max)
         else:
             bounds = self.scan_n_sigma
 
-        profile = self._fit.stat_profile(
+        profile = self.fit.stat_profile(
+            datasets=datasets,
             parameter=parameter,
             values=self.scan_values,
             bounds=bounds,
             nvalues=self.scan_n_values,
-            reoptimize=self.reoptimize,
         )
 
         return {
@@ -241,9 +210,10 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-        self.fit(datasets)
-        self._fit.optimize(**self.optimize_opts)
-        res = self._fit.confidence(parameter=parameter, sigma=self.n_sigma_ul)
+        self.fit.optimize(datasets=datasets)
+        res = self.fit.confidence(
+            datasets=datasets, parameter=parameter, sigma=self.n_sigma_ul
+        )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
     def run(self, datasets, parameter):
@@ -266,7 +236,7 @@ class ParameterEstimator(Estimator):
 
         with datasets.parameters.restore_status():
 
-            if not self.reoptimize:
+            if not self.fit.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False
 
