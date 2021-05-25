@@ -2,7 +2,6 @@
 import itertools
 import logging
 import numpy as np
-from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
@@ -101,6 +100,12 @@ class Fit:
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
 
+    @staticmethod
+    def _parse_datasets(datasets):
+        from gammapy.datasets import Datasets
+        datasets = Datasets(datasets)
+        return datasets, datasets.parameters
+
     def run(self, datasets):
         """Run all fitting steps.
 
@@ -122,7 +127,7 @@ class Fit:
 
         return optimize_result
 
-    def optimize(self, datasets, **kwargs):
+    def optimize(self, datasets):
         """Run the optimization.
 
         Parameters
@@ -135,12 +140,8 @@ class Fit:
         fit_result : `FitResult`
             Results
         """
-        from gammapy.datasets import Datasets
-        datasets = Datasets(datasets)
-        self.optimize_opts.update(kwargs)
-
-        parameters = datasets.parameters
-        parameters.check_limits()
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets.parameters.check_limits()
 
         # TODO: expose options if / when to scale? On the Fit class?
         if np.all(datasets.models.covariance.data == 0):
@@ -192,19 +193,14 @@ class Fit:
         ----------
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
-        **kwargs : dict, optional
-            Keyword arguments passed to the covariance method.
 
         Returns
         -------
         result : `CovarianceResult`
             Results
         """
-        from gammapy.datasets import Datasets
-
-        datasets = Datasets(datasets)
+        datasets, parameters = self._parse_datasets(datasets=datasets)
         compute = registry.get("covariance", self.backend)
-        parameters = datasets.parameters
 
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
@@ -234,7 +230,7 @@ class Fit:
             message=info["message"],
         )
 
-    def confidence(self, datasets, parameter, sigma=1, reoptimize=True, **kwargs):
+    def confidence(self, datasets, parameter, sigma=1, **kwargs):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -250,8 +246,6 @@ class Fit:
             Parameter of interest
         sigma : float
             Number of standard deviations for the confidence level
-        reoptimize : bool
-            Re-optimize other parameters, when computing the confidence region.
         **kwargs : dict
             Keyword argument passed ot the confidence estimation method.
 
@@ -260,12 +254,9 @@ class Fit:
         result : dict
             Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
-        from gammapy.datasets import Datasets
+        datasets, parameters = self._parse_datasets(datasets=datasets)
 
         compute = registry.get("confidence", self.backend)
-
-        datasets = Datasets(datasets)
-        parameters = datasets.parameters
         parameter = parameters[parameter]
 
         # TODO: confidence_options on fit for consistancy ?
@@ -287,7 +278,7 @@ class Fit:
                     parameter,
                     datasets.stat_sum,
                     sigma,
-                    reoptimize,
+                    self.reoptimize,
                     **kwargs,
                 )
 
@@ -302,8 +293,6 @@ class Fit:
         values=None,
         bounds=2,
         nvalues=11,
-        reoptimize=False,
-        optimize_opts=None,
     ):
         """Compute fit statistic profile.
 
@@ -326,21 +315,15 @@ class Fit:
             spaced between those.
         nvalues : int
             Number of parameter grid points to use.
-        reoptimize : bool
-            Re-optimize other parameters, when computing the fit statistic profile.
+
         Returns
         -------
         results : dict
             Dictionary with keys "values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
-        from gammapy.datasets import Datasets
-
-        datasets = Datasets(datasets)
-        parameters = datasets.parameters
+        datasets, parameters = self._parse_datasets(datasets=datasets)
         parameter = parameters[parameter]
-
-        optimize_opts = optimize_opts or {}
 
         if values is None:
             if isinstance(bounds, tuple):
@@ -362,9 +345,9 @@ class Fit:
                 desc="Trial values"
             ):
                 parameter.value = value
-                if reoptimize:
+                if self.reoptimize:
                     parameter.frozen = True
-                    result = self.optimize(datasets=datasets, **optimize_opts)
+                    result = self.optimize(datasets=datasets)
                     stat = result.total_stat
                     fit_results.append(result)
                 else:
@@ -377,7 +360,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def stat_surface(self, datasets, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
+    def stat_surface(self, datasets, x, y, x_values, y_values):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -393,10 +376,6 @@ class Fit:
             Parameters of interest
         x_values, y_values : list or `numpy.ndarray`
             Parameter values to evaluate the fit statistic for.
-        reoptimize : bool
-            Re-optimize other parameters, when computing the fit statistic profile.
-        **optimize_opts : dict
-            Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
 
         Returns
         -------
@@ -404,9 +383,7 @@ class Fit:
             Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
-        from gammapy.datasets import Datasets
-        datasets = Datasets(datasets)
-        parameters = datasets.parameters
+        datasets, parameters = self._parse_datasets(datasets=datasets)
 
         x = parameters[x]
         y = parameters[y]
@@ -422,10 +399,10 @@ class Fit:
                 log.info(f"Processing: x={x_value}, y={y_value}")
                 x.value = x_value
                 y.value = y_value
-                if reoptimize:
+                if self.reoptimize:
                     x.frozen = True
                     y.frozen = True
-                    result = self.optimize(datasets=datasets, **optimize_opts)
+                    result = self.optimize(datasets=datasets)
                     stat = result.total_stat
                     fit_results.append(result)
                 else:
@@ -436,7 +413,7 @@ class Fit:
         shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
         stats = np.array(stats)
         stats = stats.reshape(shape)
-        if reoptimize:
+        if self.reoptimize:
             fit_results = np.array(fit_results)
             fit_results = fit_results.reshape(shape)
 
@@ -475,9 +452,7 @@ class Fit:
             Dictionary containing the parameter values defining the contour, with the
             boolean flag "success" and the info objects from ``mncontour``.
         """
-        from gammapy.datasets import Datasets
-        datasets = Datasets(datasets)
-        parameters = datasets.parameters
+        datasets, parameters = self._parse_datasets(datasets=datasets)
 
         x = parameters[x]
         y = parameters[y]
