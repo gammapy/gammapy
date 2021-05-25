@@ -101,30 +101,21 @@ class Fit:
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
 
-    @lazyproperty
-    def _parameters(self):
-        return self.datasets.parameters
-
-    @lazyproperty
-    def _models(self):
-        return self.datasets.models
-
     def run(self, datasets):
-        """
-        Run all fitting steps.
+        """Run all fitting steps.
 
         Returns
         -------
         fit_result : `FitResult`
             Results
         """
-        optimize_result = self.optimize(datasets=datasets, **self.optimize_opts)
+        optimize_result = self.optimize(datasets=datasets)
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return optimize_result
 
-        covariance_result = self.covariance(datasets=datasets, **self.covariance_opts)
+        covariance_result = self.covariance(datasets=datasets)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success

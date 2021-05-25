@@ -773,7 +773,7 @@ class FluxPointsEstimator(Estimator):
         self.selection_optional = selection_optional
 
         if fit is None:
-            fit = Fit(reoptimize=True)
+            fit = Fit(reoptimize=False)
 
         self.fit = fit
 
