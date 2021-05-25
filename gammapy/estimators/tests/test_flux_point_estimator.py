@@ -146,7 +146,6 @@ def fpe_map_pwl_reoptimize():
     energy_edges = [1, 10] * u.TeV
     dataset.models.parameters["lon_0"].frozen = True
     dataset.models.parameters["lat_0"].frozen = True
-    #    dataset.models.parameters["index"].frozen = True
     dataset.models.parameters["sigma"].frozen = True
     datasets = [dataset]
     fpe = FluxPointsEstimator(
