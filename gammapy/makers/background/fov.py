@@ -52,6 +52,7 @@ class FoVBackgroundMaker(Maker):
         spectral_model="pl-norm",
         min_counts=0,
         min_npred_background=0,
+        fit=None
     ):
         self.method = method
         self.exclusion_mask = exclusion_mask
@@ -65,6 +66,11 @@ class FoVBackgroundMaker(Maker):
             raise ValueError("Spectral model must be a norm spectral model")
 
         self.default_spectral_model = spectral_model
+
+        if fit is None:
+            fit = Fit()
+
+        self.fit = fit
 
     @property
     def method(self):
@@ -154,8 +160,7 @@ class FoVBackgroundMaker(Maker):
         dataset.mask_fit = mask_fit
         return dataset
 
-    @staticmethod
-    def make_background_fit(dataset):
+    def make_background_fit(self, dataset):
         """Fit the FoV background model on the dataset counts data
 
         Parameters
@@ -175,8 +180,7 @@ class FoVBackgroundMaker(Maker):
         with models.restore_status(restore_values=False):
             models.select(tag="sky-model").freeze()
 
-            fit = Fit([dataset])
-            fit_result = fit.run()
+            fit_result = self.fit.run(datasets=[dataset])
             if not fit_result.success:
                 log.warning(
                     f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "
