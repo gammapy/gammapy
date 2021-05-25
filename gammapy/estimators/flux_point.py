@@ -756,12 +756,8 @@ class FluxPointsEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         selection_optional=None,
-<<<<<<< HEAD
         fit=None,
         reoptimize=False
-=======
-        fit=None
->>>>>>> 4c722c79b... Adapt LightcurveEstimator
     ):
         self.energy_edges = energy_edges
         self.source = source
@@ -824,12 +820,17 @@ class FluxPointsEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
+        datasets_sliced = datasets.slice_by_energy(
+            energy_min=energy_min, energy_max=energy_max
+        )
+
+        datasets_sliced.models = datasets.models.copy()
+
         result = self.estimate_counts(
             datasets, energy_min=energy_min, energy_max=energy_max
         )
-        fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
-        result.update(fe.run(datasets=datasets))
+        result.update(self._flux_estimator.run(datasets=datasets_sliced))
 
         return result
 
