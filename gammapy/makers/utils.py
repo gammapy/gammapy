@@ -396,12 +396,17 @@ def make_theta_squared_table(
     alpha_tot = np.zeros(len(table))
     livetime_tot = 0
 
+    if position_off is None:
+        create_off = True
+    else:
+        create_off = False
+
     for observation in observations:
         separation = position.separation(observation.events.radec)
         counts, _ = np.histogram(separation ** 2, theta_squared_axis.edges)
         table["counts"] += counts
 
-        if not position_off:
+        if create_off:
             # Estimate the position of the mirror position
             pos_angle = observation.pointing_radec.position_angle(position)
             sep_angle = observation.pointing_radec.separation(position)
