@@ -9,7 +9,7 @@ from gammapy.maps import Map, WcsNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
-from gammapy.utils.pbar import pbar
+from gammapy.utils.pbar import progress_bar
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
@@ -165,13 +165,15 @@ class ASmoothMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(energy_edges) - 1, show_progress_bar=self.show_progress_bar, desc="Energy bins") as pb:
-            for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-                dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
-                dataset_sliced.models = dataset.models
-                result = self.estimate_maps(dataset_sliced)
-                results.append(result)
-                pb.update(1)
+        for energy_min, energy_max in progress_bar(
+            zip(energy_edges[:-1], energy_edges[1:]),
+            show_progress_bar=self.show_progress_bar,
+            desc="Energy bins"
+        ):
+            dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
+            dataset_sliced.models = dataset.models
+            result = self.estimate_maps(dataset_sliced)
+            results.append(result)
         result_all = {}
 
         for name in results[0].keys():

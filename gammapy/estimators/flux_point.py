@@ -8,7 +8,7 @@ from gammapy.datasets import Datasets
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
-from gammapy.utils.pbar import pbar
+from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
 from .core import Estimator, DEFAULT_UNIT
 from .flux import FluxEstimator
@@ -879,15 +879,15 @@ class FluxPointsEstimator(Estimator):
 
         rows = []
 
-        with pbar(total=len(self.energy_edges) - 1, show_progress_bar=self.show_progress_bar, desc="Energy bins") as pb:
-            for energy_min, energy_max in zip(
-                self.energy_edges[:-1], self.energy_edges[1:]
-            ):
-                row = self.estimate_flux_point(
-                    datasets, energy_min=energy_min, energy_max=energy_max,
-                )
-                rows.append(row)
-                pb.update(1)
+        for energy_min, energy_max in progress_bar(
+            zip(self.energy_edges[:-1], self.energy_edges[1:]),
+            show_progress_bar=self.show_progress_bar,
+            desc="Energy bins"
+        ):
+            row = self.estimate_flux_point(
+                datasets, energy_min=energy_min, energy_max=energy_max,
+            )
+            rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
 

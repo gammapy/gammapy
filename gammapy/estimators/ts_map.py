@@ -16,7 +16,7 @@ from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
-from gammapy.utils.pbar import pbar
+from gammapy.utils.pbar import progress_bar
 from .core import Estimator
 from .flux_map import FluxMaps
 from .utils import estimate_exposure_reco_energy
@@ -412,17 +412,19 @@ class TSMapEstimator(Estimator):
 
         results = []
 
-        with pbar(total=len(energy_edges) - 1, show_progress_bar=self.show_progress_bar, desc="Energy bins") as pb:
-            for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-                sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
+        for energy_min, energy_max in progress_bar(
+            zip(energy_edges[:-1], energy_edges[1:]),
+            show_progress_bar=self.show_progress_bar,
+            desc="Energy bins"
+        ):
+            sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
-                if self.sum_over_energy_groups:
-                    sliced_dataset = sliced_dataset.to_image()
+            if self.sum_over_energy_groups:
+                sliced_dataset = sliced_dataset.to_image()
 
-                sliced_dataset.models = dataset_models
-                result = self.estimate_flux_map(sliced_dataset)
-                results.append(result)
-                pb.update(1)
+            sliced_dataset.models = dataset_models
+            result = self.estimate_flux_map(sliced_dataset)
+            results.append(result)
 
         result_all = {}
 

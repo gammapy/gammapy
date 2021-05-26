@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for progress bar display"""
 import logging
-from contextlib import contextmanager
+from collections.abc import Iterable
 
 log = logging.getLogger(__name__)
 
@@ -15,12 +15,15 @@ except ImportError:
                 log.info(
                     f"Tqdm is currently not installed. Visit https://tqdm.github.io/"
                 )
+
         def update(self, x):
             pass
 
-@contextmanager
-def pbar(total=None, show_progress_bar=True, desc=None):
-    if total is None and show_progress_bar == True:
+def progress_bar(iterable=None, show_progress_bar=False, desc=None):
+    if not isinstance(iterable, Iterable) and show_progress_bar == True:
         raise AttributeError("Can't set up the progress bar if total is None")
 
-    yield tqdm(total=total, mininterval=0, disable=not show_progress_bar, desc=desc)
+    # Necessary because iterable may be a zip
+    total = len(list(iterable))
+
+    return tqdm(iterable, total=total, mininterval=0, disable=not show_progress_bar, desc=desc)

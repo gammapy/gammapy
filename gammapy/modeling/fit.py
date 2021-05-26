@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data
-from gammapy.utils.pbar import pbar
+from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
@@ -375,19 +375,21 @@ class Fit:
 
         stats = []
         fit_results = []
-        with pbar(total=len(values), show_progress_bar=show_progress_bar, desc="Trial values") as pb:
-            with parameters.restore_status():
-                for value in values:
-                    parameter.value = value
-                    if reoptimize:
-                        parameter.frozen = True
-                        result = self.optimize(**optimize_opts)
-                        stat = result.total_stat
-                        fit_results.append(result)
-                    else:
-                        stat = self.datasets.stat_sum()
-                    stats.append(stat)
-                    pb.update(1)
+        with parameters.restore_status():
+            for value in progress_bar(
+                values,
+                show_progress_bar=show_progress_bar,
+                desc="Trial values"
+            ):
+                parameter.value = value
+                if reoptimize:
+                    parameter.frozen = True
+                    result = self.optimize(**optimize_opts)
+                    stat = result.total_stat
+                    fit_results.append(result)
+                else:
+                    stat = self.datasets.stat_sum()
+                stats.append(stat)
 
         return {
             f"{parameter.name}_scan": values,
@@ -430,24 +432,26 @@ class Fit:
 
         stats = []
         fit_results = []
-        with pbar(total=len(x_values) * len(y_values), show_progress_bar=show_progress_bar, desc="Trial values") as pb:
-            with parameters.restore_status():
-                for x_value, y_value in itertools.product(x_values, y_values):
-                    # TODO: Remove log.info() and provide a nice progress bar
-                    log.info(f"Processing: x={x_value}, y={y_value}")
-                    x.value = x_value
-                    y.value = y_value
-                    if reoptimize:
-                        x.frozen = True
-                        y.frozen = True
-                        result = self.optimize(**optimize_opts)
-                        stat = result.total_stat
-                        fit_results.append(result)
-                    else:
-                        stat = self.datasets.stat_sum()
+        with parameters.restore_status():
+            for x_value, y_value in progress_bar(
+                itertools.product(x_values, y_values),
+                show_progress_bar=show_progress_bar,
+                desc="Trial values"
+            ):
+                # TODO: Remove log.info() and provide a nice progress bar
+                log.info(f"Processing: x={x_value}, y={y_value}")
+                x.value = x_value
+                y.value = y_value
+                if reoptimize:
+                    x.frozen = True
+                    y.frozen = True
+                    result = self.optimize(**optimize_opts)
+                    stat = result.total_stat
+                    fit_results.append(result)
+                else:
+                    stat = self.datasets.stat_sum()
 
-                    stats.append(stat)
-                    pb.update(1)
+                stats.append(stat)
 
         shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
         stats = np.array(stats)
