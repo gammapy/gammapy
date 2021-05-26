@@ -9,8 +9,9 @@ try:
     from tqdm.auto import tqdm
 except ImportError:
     class tqdm():
-        def __init__(self, disable=True, **kwargs):
+        def __init__(self, iterable, disable=True, **kwargs):
             self.disable = disable
+            self._iterable = iterable
             if self.disable == False:
                 log.info(
                     f"Tqdm is currently not installed. Visit https://tqdm.github.io/"
@@ -19,7 +20,13 @@ except ImportError:
         def update(self, x):
             pass
 
-def progress_bar(iterable=None, show_progress_bar=False, desc=None):
+        def __iter__(self):
+            return self._iterable.__iter__()
+
+        def __next__(self):
+            return self._iterable.__next__()
+
+def progress_bar(iterable, show_progress_bar=False, desc=None):
     if not isinstance(iterable, Iterable) and show_progress_bar == True:
         raise AttributeError("Can't set up the progress bar if total is None")
 
