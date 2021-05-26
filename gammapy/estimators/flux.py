@@ -145,8 +145,6 @@ class FluxEstimator(Estimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
-        scale_model.norm.min = -1e5
-        scale_model.norm.max = 1e5
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
         return scale_model

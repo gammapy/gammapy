@@ -84,11 +84,13 @@ class Fit:
         backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
+        confidence_opts=None,
         store_trace=False,
         reoptimize=False
     ):
         self.store_trace = store_trace
         self.backend = backend
+        self.reoptimize = reoptimize
 
         if optimize_opts is None:
             optimize_opts = {}
@@ -96,9 +98,12 @@ class Fit:
         if covariance_opts is None:
             covariance_opts = {}
 
+        if confidence_opts is None:
+            confidence_opts = {}
+
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
-        self.reoptimize = reoptimize
+        self.confidence_opts = confidence_opts
 
     @staticmethod
     def _parse_datasets(datasets):
@@ -255,15 +260,16 @@ class Fit:
             Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
+        backend = self.confidence_opts.get("backend", self.backend)
 
-        compute = registry.get("confidence", self.backend)
+        compute = registry.get("confidence", backend)
         parameter = parameters[parameter]
 
         # TODO: confidence_options on fit for consistancy ?
 
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
-            if self.backend == "minuit":
+            if backend == "minuit":
                 if hasattr(self, "minuit"):
                     # This is ugly. We will access parameters and make a copy
                     # from the backend, to avoid modifying the state
