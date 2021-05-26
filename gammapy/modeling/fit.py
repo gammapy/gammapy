@@ -68,15 +68,37 @@ class Fit:
     Parameters
     ----------
     backend : {"minuit", "scipy" "sherpa"}
-        Backend used for fitting, default : minuit
+        Global backend used for fitting, default : minuit
     optimize_opts : dict
-        Options passed to `Fit.optimize`.
+        Keyword arguments passed to the optimizer. For the `"minuit"` backend
+        see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+        for a detailed description of the available options. If there is an entry
+        'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
+
+        For the `"sherpa"` backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
+        Those methods are described and compared in detail on
+        http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
+        options of the optimization methods are described on the following
+        pages in detail:
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
+
+        For the `"scipy"` backend the available options are decsribed in detail here:
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+
     covariance_opts : dict
-        Options passed to `Fit.covariance`.
+        Covariance options passed to the given backend.
+    confidence_opts : dict
+        Extra arguments passed to the backend. E.g. `iminuit.Minuit.minos` supports
+        a ``maxcall`` option. For the scipy backend ``confidence_opts`` are forwarded
+        to `~scipy.optimize.brentq`. If the confidence estimation fails, the bracketing
+        interval can be adapted by modifying the the upper bound of the interval (``b``) value.
     store_trace : bool
         Whether to store the trace of the fit
     reoptimize : bool
-        Reoptimize for confidence and stat profile.
+        Reoptimize for confidence and stat profiles.
     """
 
     def __init__(
@@ -93,13 +115,13 @@ class Fit:
         self.reoptimize = reoptimize
 
         if optimize_opts is None:
-            optimize_opts = {}
+            optimize_opts = {"backend": backend}
 
         if covariance_opts is None:
-            covariance_opts = {}
+            covariance_opts = {"backend": backend}
 
         if confidence_opts is None:
-            confidence_opts = {}
+            confidence_opts = {"backend": backend}
 
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
@@ -152,7 +174,10 @@ class Fit:
         if np.all(datasets.models.covariance.data == 0):
             parameters.autoscale()
 
-        compute = registry.get("optimize", self.backend)
+        kwargs = self.optimize_opts.copy()
+        backend = kwargs.pop("backend", self.backend)
+
+        compute = registry.get("optimize", backend)
         # TODO: change this calling interface!
         # probably should pass a fit statistic, which has a model, which has parameters
         # and return something simpler, not a tuple of three things
@@ -160,14 +185,14 @@ class Fit:
             parameters=parameters,
             function=datasets.stat_sum,
             store_trace=self.store_trace,
-            **self.optimize_opts,
+            **kwargs,
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
         # stateful backends, put a proper, backend-agnostic solution for this.
         # As preliminary solution would like to provide a possibility that the user
         # can access the Minuit object, because it features a lot useful functionality
-        if self.backend == "minuit":
+        if backend == "minuit":
             self.minuit = optimizer
 
         trace = table_from_row_data(info.pop("trace"))
@@ -183,8 +208,8 @@ class Fit:
         return OptimizeResult(
             parameters=parameters,
             total_stat=datasets.stat_sum(),
-            backend=self.backend,
-            method=self.optimize_opts.get("method", self.backend),
+            backend=backend,
+            method=kwargs.get("method", backend),
             trace=trace,
             **info,
         )
@@ -205,7 +230,11 @@ class Fit:
             Results
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
-        compute = registry.get("covariance", self.backend)
+
+        kwargs = self.covariance_opts.copy()
+        backend = kwargs.pop("backend", self.backend)
+
+        compute = registry.get("covariance", backend)
 
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
@@ -218,7 +247,9 @@ class Fit:
             else:
                 method = ""
                 factor_matrix, info = compute(
-                    parameters, datasets.stat_sum, **self.covariance_opts
+                    parameters=parameters,
+                    fucntion=datasets.stat_sum,
+                    **kwargs
                 )
 
             covariance = Covariance.from_factor_matrix(
@@ -228,14 +259,14 @@ class Fit:
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
-            backend=self.backend,
+            backend=backend,
             method=method,
             parameters=parameters,
             success=info["success"],
             message=info["message"],
         )
 
-    def confidence(self, datasets, parameter, sigma=1, **kwargs):
+    def confidence(self, datasets, parameter, sigma=1):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -247,12 +278,12 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         sigma : float
             Number of standard deviations for the confidence level
-        **kwargs : dict
-            Keyword argument passed ot the confidence estimation method.
 
         Returns
         -------
@@ -260,7 +291,9 @@ class Fit:
             Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
-        backend = self.confidence_opts.get("backend", self.backend)
+
+        kwargs = self.confidence_opts.copy()
+        backend = kwargs.pop("backend", self.backend)
 
         compute = registry.get("confidence", backend)
         parameter = parameters[parameter]
@@ -274,17 +307,21 @@ class Fit:
                     # This is ugly. We will access parameters and make a copy
                     # from the backend, to avoid modifying the state
                     result = compute(
-                        self.minuit, parameters, parameter, sigma, **kwargs
+                        minuit=self.minuit,
+                        parameters=parameters,
+                        parameter=parameter,
+                        sigma=sigma,
+                        **kwargs
                     )
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 result = compute(
-                    parameters,
-                    parameter,
-                    datasets.stat_sum,
-                    sigma,
-                    self.reoptimize,
+                    parameters=parameters,
+                    parameter=parameter,
+                    function=datasets.stat_sum,
+                    sigma=sigma,
+                    reoptimize=self.reoptimize,
                     **kwargs,
                 )
 
