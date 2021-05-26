@@ -218,17 +218,10 @@ def test_lightcurve_estimator_fit_options():
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1))
     )
 
-    fpe = estimator._flux_poins_estimator(energy_edges)
-    assert_allclose(fpe.fit.optimize_opts["tol"], 0.2)
+    assert_allclose(estimator.fit.optimize_opts["tol"], 0.2)
 
-    flux_estimator = fpe._flux_estimator(1 * u.TeV, 30 * u.TeV)
-    assert_allclose(flux_estimator.fit.optimize_opts["tol"], 0.2)
-
-    param_estimator = flux_estimator._parameter_estimator
-    assert_allclose(param_estimator.fit.optimize_opts["tol"], 0.2)
-
-    param_estimator.fit.run(datasets=datasets)
-    assert_allclose(param_estimator.fit.minuit.tol, 0.2)
+    estimator.fit.run(datasets=datasets)
+    assert_allclose(estimator.fit.minuit.tol, 0.2)
 
 
 @requires_data()
