@@ -9,7 +9,7 @@ from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
 import yaml
-from pydantic import BaseModel, FilePath
+from pydantic import BaseModel
 from pydantic.utils import deep_update
 from gammapy.makers import MapDatasetMaker
 from gammapy.utils.scripts import make_path, read_yaml

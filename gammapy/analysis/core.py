@@ -309,7 +309,8 @@ class Analysis:
 
         bkg_maker_config = {}
         if datasets_settings.background.exclusion:
-            exclusion_region = Map.read(datasets_settings.background.exclusion)
+            path = make_path(datasets_settings.background.exclusion)
+            exclusion_region = Map.read(path)
             bkg_maker_config["exclusion_mask"] = exclusion_region
         bkg_maker_config.update(datasets_settings.background.parameters)
 
@@ -383,7 +384,8 @@ class Analysis:
 
         bkg_maker_config = {}
         if datasets_settings.background.exclusion:
-            exclusion_region = Map.read(datasets_settings.background.exclusion)
+            path = make_path(datasets_settings.background.exclusion)
+            exclusion_region = Map.read(path)
             bkg_maker_config["exclusion_mask"] = exclusion_region
         bkg_maker_config.update(datasets_settings.background.parameters)
         bkg_method = datasets_settings.background.method
