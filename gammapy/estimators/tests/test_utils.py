@@ -85,7 +85,7 @@ class TestFindRoots:
                 self.f,
                 lower_bounds=self.lower_bounds,
                 upper_bounds=self.upper_bounds,
-                method="brentq",
+                method=method,
             )
             assert res[0]["roots"].unit == u.rad
             assert_allclose(
@@ -99,7 +99,7 @@ class TestFindRoots:
                 self.h,
                 lower_bounds=self.lower_bounds,
                 upper_bounds=self.upper_bounds,
-                method="brentq",
+                method=method,
             )
             assert_allclose(res[0]["roots"].value, np.array([1.0]))
             assert res[1]["roots"] is None
