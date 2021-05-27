@@ -727,14 +727,6 @@ class FluxPointsEstimator(Estimator):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
-    backend : str
-        Backend used for fitting, default : minuit
-    optimize_opts : dict
-        Options passed to `Fit.optimize`.
-    covariance_opts : dict
-        Options passed to `Fit.covariance`.
-    reoptimize : bool
-        Re-optimize other free model parameters.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
@@ -744,6 +736,9 @@ class FluxPointsEstimator(Estimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optionnal steps are not executed.
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
+
     """
 
     tag = "FluxPointsEstimator"

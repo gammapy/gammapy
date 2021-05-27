@@ -347,7 +347,6 @@ class LightCurveEstimator(Estimator):
         Default is None so the optionnal steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
-
     """
 
     tag = "LightCurveEstimator"
@@ -462,12 +461,6 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : `~gammapy.modeling.Datasets`
             the list of dataset object
-        backend : str
-            Backend used for fitting, default : minuit
-        optimize_opts : dict
-            Options passed to `Fit.optimize`.
-        covariance_opts : dict
-            Options passed to `Fit.covariance`.
 
         Returns
         -------
