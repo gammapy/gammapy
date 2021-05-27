@@ -83,7 +83,6 @@ def _confidence_scipy_brentq(
         ts_diff.fcn,
         lower_bounds=[parameter.factor],
         upper_bounds=[bound],
-        nbin=1,
         **kwargs
     )[0]
     result = (res["root"][0], res["solvers"][0])
@@ -164,6 +163,7 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
+    from gammapy.estimators.utils import find_roots
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
     def f(x):
@@ -178,8 +178,5 @@ def stat_profile_ul_scipy(
         nbin=1,
         **kwargs
     )[0]
-    if res["root"] is not None:
-        ul = res["root"][0]
-    else:
-        ul = np.nan
+    ul = res["root"][0]
     return ul
