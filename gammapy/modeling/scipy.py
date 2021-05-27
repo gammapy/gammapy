@@ -3,7 +3,6 @@ import numpy as np
 import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from .likelihood import Likelihood
-from gammapy.estimators.utils import find_roots
 
 __all__ = [
     "optimize_scipy",
@@ -61,14 +60,10 @@ class TSDifference:
 
 
 def _confidence_scipy_brentq(
-    parameters,
-    parameter,
-    function,
-    sigma,
-    reoptimize,
-    upper=True,
-    **kwargs
+    parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
+    from gammapy.estimators.utils import find_roots
+
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
     )
@@ -83,14 +78,14 @@ def _confidence_scipy_brentq(
 
     message, success = "Confidence terminated successfully.", True
     kwargs.setdefault("nbin", 1)
-    
+
     res = find_roots(
-                    ts_diff.fcn,
-                    lower_bounds = [parameter.factor],
-                    upper_bounds = [bound],
-                    nbin=1,
-                    **kwargs
-                    )[0]
+        ts_diff.fcn,
+        lower_bounds=[parameter.factor],
+        upper_bounds=[bound],
+        nbin=1,
+        **kwargs
+    )[0]
     result = (res["root"][0], res["solvers"][0])
     if np.isnan(res["roots"][0]):
         message = (
@@ -177,13 +172,13 @@ def stat_profile_ul_scipy(
     idx = np.argmin(stat_scan)
     norm_best_fit = value_scan[idx]
     res = find_roots(
-                    f,
-                    lower_bounds=[norm_best_fit],
-                    lupper_bounds=[value_scan[-1]],
-                    nbin=1,
-                    **kwargs
-                    )[0]
-    if res["root"] is not None: 
+        f,
+        lower_bounds=[norm_best_fit],
+        lupper_bounds=[value_scan[-1]],
+        nbin=1,
+        **kwargs
+    )[0]
+    if res["root"] is not None:
         ul = res["root"][0]
     else:
         ul = np.nan

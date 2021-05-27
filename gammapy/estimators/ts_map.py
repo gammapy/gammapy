@@ -209,17 +209,19 @@ class TSMapEstimator(Estimator):
 
         # Creating exposure map with exposure at map center
         exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
-        coord = MapCoord.create(dict(skycoord=geom.center_skydir, energy_true=geom.axes["energy_true"].center))
-        exposure.data[...] = dataset.exposure.get_by_coord(coord)[:, np.newaxis, np.newaxis]
+        coord = MapCoord.create(
+            dict(
+                skycoord=geom.center_skydir, energy_true=geom.axes["energy_true"].center
+            )
+        )
+        exposure.data[...] = dataset.exposure.get_by_coord(coord)[
+            :, np.newaxis, np.newaxis
+        ]
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model, evaluation_mode="global")
         evaluator.update(
-            exposure,
-            dataset.psf,
-            dataset.edisp,
-            dataset.counts.geom,
-            dataset.mask_fit,
+            exposure, dataset.psf, dataset.edisp, dataset.counts.geom, dataset.mask_fit,
         )
 
         kernel = evaluator.compute_npred()
@@ -557,7 +559,7 @@ class BrentqFluxEstimator(Estimator):
                 res = find_roots(
                     f=dataset.stat_derivative,
                     lower_bounds=[norm_min],
-                    lower_bounds=[norm_max],
+                    upper_bounds=[norm_max],
                     nbin=1,
                     maxiter=self.max_niter,
                     rtol=self.rtol,
@@ -567,9 +569,7 @@ class BrentqFluxEstimator(Estimator):
                 norm, niter = res["roots"][0], res["solvers"][0].iterations
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            norm_err = (
-                np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
-            )
+            norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
 
         stat = dataset.stat_sum(norm=norm)
         stat_null = dataset.stat_sum(norm=0)
@@ -580,7 +580,7 @@ class BrentqFluxEstimator(Estimator):
             "niter": niter,
             "ts": stat_null - stat,
             "stat": stat,
-            "stat_null": stat_null
+            "stat_null": stat_null,
         }
 
     def _confidence(self, dataset, n_sigma, result, positive):
@@ -610,9 +610,8 @@ class BrentqFluxEstimator(Estimator):
                 maxiter=self.max_niter,
                 rtol=self.rtol,
             )[0]
-            result_fit = res["roots"][0]
             # Where the root finding fails NaN is set as norm
-            return (result_fit - norm) * factor
+            return (res["roots"][0] - norm) * factor
 
     def estimate_ul(self, dataset, result):
         """Compute upper limit using likelihood profile method.
@@ -681,7 +680,7 @@ class BrentqFluxEstimator(Estimator):
             "niter": 0,
             "ts": stat_null - stat,
             "stat": stat,
-            "stat_null": stat_null
+            "stat_null": stat_null,
         }
 
     def run(self, dataset):

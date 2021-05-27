@@ -102,8 +102,8 @@ class TestFindRoots:
                 method=method,
             )
             assert_allclose(res[0]["roots"].value, np.array([1.0]))
-            assert res[1]["roots"] is None
-            assert res[1]["solvers"] is None
+            assert np.isnan(res[1]["roots"][0])
+            assert res[1]["solvers"][0].iterations == 0
 
     def test_invalid_method(self):
         with pytest.raises(ValueError, match='Unknown solver "xfail"'):

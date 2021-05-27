@@ -94,7 +94,7 @@ def find_roots(
     """
 
     kwargs = dict(
-        args=(),
+        args=args,
         method=method,
         fprime=fprime,
         fprime2=fprime2,
@@ -112,26 +112,30 @@ def find_roots(
 
     it = np.nditer(lower_bounds, flags=["multi_index"])
     NDouput = np.empty(lower_bounds.shape, dtype=object)
+    bad_sol = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
     while not it.finished:
         it_idx = it.multi_index
 
         scale = interpolation_scale(points_scale)
         a = scale(lower_bounds[it_idx].value)
         b = scale(upper_bounds[it_idx].value)
-        x = scale.inverse(np.linspace(a, b, nbin))
-        signs = np.sign(f(x))
-        ind = np.where(signs[:-1] != signs[1:])[0]
-        nroots = len(ind)
+        x = scale.inverse(np.linspace(a, b, nbin + 1))
+        if len(x) > 2:
+            signs = np.sign([f(xk, *args) for xk in x])
+            ind = np.where(signs[:-1] != signs[1:])[0]
+        else:
+            ind = [0]
 
-        bad_sol = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
+        nroots = len(ind)
+        print(nroots)
         if nroots > 0:
             roots = u.Quantity(np.ones(nroots), unit=xunit) * np.nan
             solvers = np.empty(nroots, dtype=object)
         else:
             NDouput[it_idx] = {
-                    "roots":  u.Quantity([np.nan]),
-                    "solvers": np.array([bad_sol])
-                    }
+                "roots": u.Quantity([np.nan]),
+                "solvers": np.array([bad_sol]),
+            }
             it.iternext()
             continue
 

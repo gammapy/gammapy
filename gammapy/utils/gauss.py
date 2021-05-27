@@ -3,7 +3,6 @@
 import numpy as np
 import scipy.optimize
 from astropy import units as u
-from gammapy.estimators.utils import find_roots
 
 class Gauss2DPDF:
     """2D symmetric Gaussian PDF.
@@ -264,6 +263,7 @@ class MultiGauss2D:
         containment_radius : `~numpy.ndarray`
             Containment radius
         """
+        from gammapy.estimators.utils import find_roots
         rad_max = 1e3
 
         def f(rad):

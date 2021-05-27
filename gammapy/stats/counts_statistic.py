@@ -3,7 +3,6 @@ import abc
 import numpy as np
 from scipy.stats import chi2
 from .fit_statistics import cash, get_wstat_mu_bkg, wstat
-from gammapy.estimators.utils import find_roots
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
@@ -28,7 +27,7 @@ class CountsStatistic(abc.ABC):
         """Return p_value of measured excess.
            Here the value accounts only for the positive excess significance (i.e. one-sided).
         """
-        return 0.5*chi2.sf(self.ts, 1)
+        return 0.5 * chi2.sf(self.ts, 1)
 
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
@@ -40,6 +39,8 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
+        from gammapy.estimators.utils import find_roots
+
         errn = np.zeros_like(self.n_on, dtype="float")
         min_range = self.n_sig - 2 * n_sigma * (self.error + 1)
 
@@ -47,15 +48,15 @@ class CountsStatistic(abc.ABC):
         while not it.finished:
             res = find_roots(
                 self._stat_fcn,
-                min_range[it.multi_index],
-                self.n_sig[it.multi_index],
+                [min_range[it.multi_index]],
+                [self.n_sig[it.multi_index]],
                 nbin=1,
                 args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
             )[0]
             if np.isnan(res["roots"][0]):
                 errn[it.multi_index] = -self.n_on[it.multi_index]
             else:
-                errn[it.multi_index] = res - self.n_sig[it.multi_index]
+                errn[it.multi_index] = res["roots"][0] - self.n_sig[it.multi_index]
             it.iternext()
 
         return errn
@@ -70,6 +71,8 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
+        from gammapy.estimators.utils import find_roots
+
         errp = np.zeros_like(self.n_on, dtype="float")
         max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
 
@@ -98,6 +101,8 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the upper limit expressed in number of sigma. Default is 3.
         """
+        from gammapy.estimators.utils import find_roots
+
         ul = np.zeros_like(self.n_on, dtype="float")
 
         min_range = np.maximum(0, self.n_sig)
@@ -133,6 +138,8 @@ class CountsStatistic(abc.ABC):
         n_sig : `numpy.ndarray`
             Excess
         """
+        from gammapy.estimators.utils import find_roots
+
         n_sig = np.zeros_like(self.n_bkg, dtype="float")
         it = np.nditer(n_sig, flags=["multi_index"])
 
@@ -141,18 +148,18 @@ class CountsStatistic(abc.ABC):
             # find upper bounds for secant method as in scipy
             eps = 1e-4
             upper_bound = lower_bound * (1 + eps)
-            upper_bound += (eps if upper_bound >= 0 else -eps)
+            upper_bound += eps if upper_bound >= 0 else -eps
             # TODO: find_roots support ND case, maybe we could avoid the iteration
             # but here the function also need the index
             res = find_roots(
                 self._n_sig_matching_significance_fcn,
-                lower_bounds = [lower_bound],
-                upper_bounds = [upper_bound],
+                lower_bounds=[lower_bound],
+                upper_bounds=[upper_bound],
                 args=(significance, it.multi_index),
                 nbin=1,
-                method="secant"
+                method="secant",
             )[0]
-            n_sig[it.multi_index] = res["roots"][0] #return NaN if fail
+            n_sig[it.multi_index] = res["roots"][0]  # return NaN if fail
             it.iternext()
         return n_sig
 

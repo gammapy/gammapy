@@ -17,7 +17,6 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.scripts import make_path
 from .core import Model
-from gammapy.estimators.utils import find_roots
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
@@ -242,7 +241,7 @@ class SpectralModel(Model):
             **kwargs,
         )
 
-    def reference_fluxes(self,  energy_axis):
+    def reference_fluxes(self, energy_axis):
         """Get reference fluxes for a given energy axis.
 
         Parameters
@@ -274,7 +273,7 @@ class SpectralModel(Model):
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
-        sed_type = "dnde",
+        sed_type="dnde",
         n_points=100,
         **kwargs,
     ):
@@ -320,8 +319,8 @@ class SpectralModel(Model):
 
         energy_min, energy_max = energy_range
         energy = MapAxis.from_energy_bounds(
-                                            energy_min, energy_max, n_points, energy_unit
-                                            ).edges
+            energy_min, energy_max, n_points, energy_unit
+        ).edges
 
         if sed_type == "dnde":
             flux = self(energy).to(flux_unit)
@@ -331,11 +330,11 @@ class SpectralModel(Model):
 
         elif sed_type == "flux":
             flux = self.integral(energy[:-1], energy[1:]).to("cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         elif sed_type == "eflux":
             flux = self.energy_flux(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
@@ -354,7 +353,7 @@ class SpectralModel(Model):
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
-        sed_type = "dnde",
+        sed_type="dnde",
         n_points=100,
         **kwargs,
     ):
@@ -411,20 +410,21 @@ class SpectralModel(Model):
             energy_min, energy_max, n_points, energy_unit
         ).edges
 
-
         if sed_type == "dnde":
             flux, flux_err = self.evaluate_error(energy).to(flux_unit)
-        
+
         elif sed_type == "e2dnde":
             flux, flux_err = energy ** 2 * self.evaluate_error(energy).to(flux_unit)
 
         elif sed_type == "flux":
             flux, flux_err = self.integral_error(energy[:-1], energy[1:]).to("cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         elif sed_type == "eflux":
-            flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to(
+                "TeV cm-2 s-1"
+            )
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
@@ -498,6 +498,8 @@ class SpectralModel(Model):
         energy : `~astropy.units.Quantity`
             Energies at which the model has the given ``value``.
         """
+        from gammapy.estimators.utils import find_roots
+
         eunit = "TeV"
 
         def f(x):
@@ -534,6 +536,7 @@ class SpectralModel(Model):
             res = self.inverse_all(val, [energy_min], [energy_max])
             energies.append(res)
         return energies
+
 
 class ConstantSpectralModel(SpectralModel):
     r"""Constant model.
