@@ -161,7 +161,7 @@ class SafeMaskMaker(Maker):
 
         aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
         energy_min = model.inverse(aeff_thres)
-        return geom.energy_mask(energy_min=energy_min)
+        return geom.energy_mask(energy_min=energy_min[0])
 
     def make_mask_energy_edisp_bias(self, dataset, observation=None):
         """Make safe energy mask from energy dispersion bias.
@@ -186,7 +186,7 @@ class SafeMaskMaker(Maker):
                 position = observation.pointing_radec.directional_offset_by(position_angle=0*u.deg,
                                                                              separation=self.fixed_offset)
             else:
-                raise ValueError(f"{observation} argument is mandatory with {fixed_offset}")
+                raise ValueError(f"{observation} argument is mandatory with {self.fixed_offset}")
 
         if isinstance(edisp, EDispKernelMap):
             if position:
@@ -202,7 +202,7 @@ class SafeMaskMaker(Maker):
                 edisp = edisp.get_edisp_kernel(self.position, e_reco)
 
         energy_min = edisp.get_bias_energy(self.bias_percent / 100)
-        return geom.energy_mask(energy_min=energy_min)
+        return geom.energy_mask(energy_min=energy_min[0])
 
     @staticmethod
     def make_mask_energy_bkg_peak(dataset):

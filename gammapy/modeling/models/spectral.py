@@ -17,6 +17,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.scripts import make_path
 from .core import Model
+from gammapy.estimators.utils import find_roots
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
@@ -499,22 +500,40 @@ class SpectralModel(Model):
         """
         eunit = "TeV"
 
+        def f(x):
+            # scale by 1e12 to achieve better precision
+            energy = u.Quantity(x, eunit, copy=False)
+            y = self(energy).to_value(value.unit)
+            return 1e12 * (y - value.value)
+
+        res = find_roots(f, [energy_min], [energy_max])[0]
+        return res["roots"]
+
+    def inverse_all(self, values, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
+        """Return energy for a multiple function values of the spectral model.
+
+        Calls the `scipy.optimize.brentq` numerical root finding method.
+
+        Parameters
+        ----------
+        values : `~astropy.units.Quantity`
+            Function values of the spectral model.
+        energy_min : `~astropy.units.Quantity`
+            Lower bracket value in case solution is not unique.
+        energy_max : `~astropy.units.Quantity`
+            Upper bracket value in case solution is not unique.
+
+        Returns
+        -------
+        energy : list of `~astropy.units.Quantity`
+            each element contain the energies at which the model
+            has corresponding value of ``values``.
+        """
         energies = []
-        for val in np.atleast_1d(value):
-
-            def f(x):
-                # scale by 1e12 to achieve better precision
-                energy = u.Quantity(x, eunit, copy=False)
-                y = self(energy).to_value(value.unit)
-                return 1e12 * (y - val.value)
-
-            energy = scipy.optimize.brentq(
-                f, energy_min.to_value(eunit), energy_max.to_value(eunit)
-            )
-            energies.append(energy)
-
-        return u.Quantity(energies, eunit, copy=False)
-
+        for val in np.atleast_1d(values):
+            res = self.inverse_all(val, [energy_min], [energy_max])
+            energies.append(res)
+        return energies
 
 class ConstantSpectralModel(SpectralModel):
     r"""Constant model.

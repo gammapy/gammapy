@@ -3,6 +3,7 @@ import numpy as np
 import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from .likelihood import Likelihood
+from gammapy.estimators.utils import find_roots
 
 __all__ = [
     "optimize_scipy",
@@ -60,16 +61,19 @@ class TSDifference:
 
 
 def _confidence_scipy_brentq(
-    parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
+    parameters,
+    parameter,
+    function,
+    sigma,
+    reoptimize,
+    upper=True,
+    **kwargs
 ):
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
     )
 
-    kwargs.setdefault("a", parameter.factor)
-
     bound = parameter.factor_max if upper else parameter.factor_min
-
     if np.isnan(bound):
         bound = parameter.factor
         if upper:
@@ -77,25 +81,22 @@ def _confidence_scipy_brentq(
         else:
             bound -= 1e2 * parameter.error / parameter.scale
 
-    kwargs.setdefault("b", bound)
-
     message, success = "Confidence terminated successfully.", True
-
-    try:
-        result = scipy.optimize.brentq(ts_diff.fcn, full_output=True, **kwargs)
-    except ValueError:
+    kwargs.setdefault("nbin", 1)
+    
+    res = find_roots(
+                    ts_diff.fcn,
+                    lower_bounds = [parameter.factor],
+                    upper_bounds = [bound],
+                    nbin=1,
+                    **kwargs
+                    )[0]
+    result = (res["root"][0], res["solvers"][0])
+    if np.isnan(res["roots"][0]):
         message = (
-            "Confidence estimation failed, because bracketing interval"
-            " does not contain a unique solution. Try setting the interval by hand."
+            "Confidence estimation failed. Try to set the parameter.min/max by hand."
         )
         success = False
-        result = (
-            np.nan,
-            scipy.optimize.RootResults(
-                root=np.nan, iterations=0, function_calls=0, flag=0
-            ),
-        )
-
     suffix = "errp" if upper else "errn"
 
     return {
@@ -175,6 +176,15 @@ def stat_profile_ul_scipy(
 
     idx = np.argmin(stat_scan)
     norm_best_fit = value_scan[idx]
-    ul = scipy.optimize.brentq(f, a=norm_best_fit, b=value_scan[-1], **kwargs)
-
+    res = find_roots(
+                    f,
+                    lower_bounds=[norm_best_fit],
+                    lupper_bounds=[value_scan[-1]],
+                    nbin=1,
+                    **kwargs
+                    )[0]
+    if res["root"] is not None: 
+        ul = res["root"][0]
+    else:
+        ul = np.nan
     return ul

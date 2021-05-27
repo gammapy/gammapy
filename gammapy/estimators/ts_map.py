@@ -19,7 +19,7 @@ from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from .core import Estimator
 from .flux_map import FluxMaps
-from .utils import estimate_exposure_reco_energy
+from .utils import estimate_exposure_reco_energy, find_roots
 
 __all__ = ["TSMapEstimator"]
 
@@ -554,20 +554,17 @@ class BrentqFluxEstimator(Estimator):
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                try:
-                    result_fit = scipy.optimize.brentq(
-                        f=dataset.stat_derivative,
-                        a=norm_min,
-                        b=norm_max,
-                        maxiter=self.max_niter,
-                        full_output=True,
-                        rtol=self.rtol,
-                    )
-                    norm = max(result_fit[0], norm_min_total)
-                    niter = result_fit[1].iterations
-                except (RuntimeError, ValueError):
-                    # Where the root finding fails NaN is set as norm
-                    norm, niter = norm_min_total, self.max_niter
+                res = find_roots(
+                    f=dataset.stat_derivative,
+                    lower_bounds=[norm_min],
+                    lower_bounds=[norm_max],
+                    nbin=1,
+                    maxiter=self.max_niter,
+                    rtol=self.rtol,
+                )[0]
+
+                # Where the root finding fails NaN is set as norm
+                norm, niter = res["roots"][0], res["solvers"][0].iterations
 
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = (
@@ -605,18 +602,17 @@ class BrentqFluxEstimator(Estimator):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            try:
-                result_fit = scipy.optimize.brentq(
-                    ts_diff,
-                    min_norm,
-                    max_norm,
-                    maxiter=self.max_niter,
-                    rtol=self.rtol,
-                )
-                return (result_fit - norm) * factor
-            except (RuntimeError, ValueError):
-                # Where the root finding fails NaN is set as norm
-                return np.nan
+            res = find_roots(
+                ts_diff,
+                [min_norm],
+                [max_norm],
+                nbin=1,
+                maxiter=self.max_niter,
+                rtol=self.rtol,
+            )[0]
+            result_fit = res["roots"][0]
+            # Where the root finding fails NaN is set as norm
+            return (result_fit - norm) * factor
 
     def estimate_ul(self, dataset, result):
         """Compute upper limit using likelihood profile method.

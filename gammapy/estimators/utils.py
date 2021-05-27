@@ -15,7 +15,7 @@ from gammapy.utils.interpolation import interpolation_scale
 
 __all__ = ["find_roots", "find_peaks", "estimate_exposure_reco_energy"]
 
-from scipy.optimize import root_scalar
+from scipy.optimize import root_scalar, RootResults
 
 
 def find_roots(
@@ -88,8 +88,7 @@ def find_roots(
         Each array element contains a dict of {`roots`, `solvers`}.
         For each input search range :
         `roots` is a `~astropy.units.Quantity` containig the function roots
-        `solvers` is a `~scipy.optimize.RootResults` containig the solver results.
-        If no roots are not found, `roots` and `solvers` are None.
+        `solvers` is an array of `~scipy.optimize.RootResults`
         If the solver failed to converge in a bracketing range
         the corresponding `roots` array element is NaN.
     """
@@ -124,11 +123,15 @@ def find_roots(
         ind = np.where(signs[:-1] != signs[1:])[0]
         nroots = len(ind)
 
+        bad_sol = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
         if nroots > 0:
             roots = u.Quantity(np.ones(nroots), unit=xunit) * np.nan
             solvers = np.empty(nroots, dtype=object)
         else:
-            NDouput[it_idx] = {"roots": None, "solvers": None}
+            NDouput[it_idx] = {
+                    "roots":  u.Quantity([np.nan]),
+                    "solvers": np.array([bad_sol])
+                    }
             it.iternext()
             continue
 
@@ -147,6 +150,7 @@ def find_roots(
                 if sol.converged:
                     roots[k] = sol.root * xunit
             except (RuntimeError, ValueError):
+                solvers[k] = bad_sol
                 continue
         NDouput[it_idx] = {"roots": roots, "solvers": solvers}
         it.iternext()

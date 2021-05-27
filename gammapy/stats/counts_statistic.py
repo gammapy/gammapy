@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import numpy as np
-from scipy.optimize import brentq, newton
 from scipy.stats import chi2
 from .fit_statistics import cash, get_wstat_mu_bkg, wstat
+from gammapy.estimators.utils import find_roots
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
@@ -45,16 +45,17 @@ class CountsStatistic(abc.ABC):
 
         it = np.nditer(errn, flags=["multi_index"])
         while not it.finished:
-            try:
-                res = brentq(
-                    self._stat_fcn,
-                    min_range[it.multi_index],
-                    self.n_sig[it.multi_index],
-                    args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
-                )
-                errn[it.multi_index] = res - self.n_sig[it.multi_index]
-            except ValueError:
+            res = find_roots(
+                self._stat_fcn,
+                min_range[it.multi_index],
+                self.n_sig[it.multi_index],
+                nbin=1,
+                args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
+            )[0]
+            if np.isnan(res["roots"][0]):
                 errn[it.multi_index] = -self.n_on[it.multi_index]
+            else:
+                errn[it.multi_index] = res - self.n_sig[it.multi_index]
             it.iternext()
 
         return errn
@@ -74,12 +75,14 @@ class CountsStatistic(abc.ABC):
 
         it = np.nditer(errp, flags=["multi_index"])
         while not it.finished:
-            errp[it.multi_index] = brentq(
+            res = find_roots(
                 self._stat_fcn,
-                self.n_sig[it.multi_index],
-                max_range[it.multi_index],
+                [self.n_sig[it.multi_index]],
+                [max_range[it.multi_index]],
+                nbin=1,
                 args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
-            )
+            )[0]
+            errp[it.multi_index] = res["roots"][0]
             it.iternext()
 
         return errp - self.n_sig
@@ -104,14 +107,15 @@ class CountsStatistic(abc.ABC):
         while not it.finished:
             TS_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
 
-            ul[it.multi_index] = brentq(
+            res = find_roots(
                 self._stat_fcn,
-                min_range[it.multi_index],
-                max_range[it.multi_index],
+                [min_range[it.multi_index]],
+                [max_range[it.multi_index]],
+                nbin=1,
                 args=(TS_ref + n_sigma ** 2, it.multi_index),
-            )
+            )[0]
+            ul[it.multi_index] = res["roots"][0]
             it.iternext()
-
         return ul
 
     def n_sig_matching_significance(self, significance):
@@ -133,16 +137,22 @@ class CountsStatistic(abc.ABC):
         it = np.nditer(n_sig, flags=["multi_index"])
 
         while not it.finished:
-            try:
-                # Note that this can fail silently now. A false root can be found. Because of too large slope?
-                n_sig[it.multi_index] = newton(
-                    self._n_sig_matching_significance_fcn,
-                    np.sqrt(self.n_bkg[it.multi_index]) * significance,
-                    args=(significance, it.multi_index),
-                )
-            except:
-                n_sig[it.multi_index] = np.nan
-
+            lower_bound = np.sqrt(self.n_bkg[it.multi_index]) * significance
+            # find upper bounds for secant method as in scipy
+            eps = 1e-4
+            upper_bound = lower_bound * (1 + eps)
+            upper_bound += (eps if upper_bound >= 0 else -eps)
+            # TODO: find_roots support ND case, maybe we could avoid the iteration
+            # but here the function also need the index
+            res = find_roots(
+                self._n_sig_matching_significance_fcn,
+                lower_bounds = [lower_bound],
+                upper_bounds = [upper_bound],
+                args=(significance, it.multi_index),
+                nbin=1,
+                method="secant"
+            )[0]
+            n_sig[it.multi_index] = res["roots"][0] #return NaN if fail
             it.iternext()
         return n_sig
 

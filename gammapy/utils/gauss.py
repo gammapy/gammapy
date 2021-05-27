@@ -3,7 +3,7 @@
 import numpy as np
 import scipy.optimize
 from astropy import units as u
-
+from gammapy.estimators.utils import find_roots
 
 class Gauss2DPDF:
     """2D symmetric Gaussian PDF.
@@ -270,10 +270,15 @@ class MultiGauss2D:
             # positive if theta too large
             return self.containment_fraction(rad * u.deg) - containment_fraction
 
-        rad = scipy.optimize.brentq(f, a=0, b=rad_max)
-        if np.allclose(rad, rad_max):
+        res = find_roots(f,
+                         lower_bounds=[0],
+                         upper_bounds=[rad_max],
+                         nbin=1,
+                         )[0]
+        if np.isnan(res["roots"][0]) or not np.allclose(res["roots"][0], rad_max):
             rad = np.inf
-
+        else:
+            rad = res["roots"][0]
         return rad * u.deg
 
     def match_sigma(self, containment_fraction):
