@@ -692,7 +692,7 @@ class FluxPoints(FluxEstimate):
         return ax
 
 
-class FluxPointsEstimator(Estimator):
+class FluxPointsEstimator(FluxEstimator):
     """Flux points estimator.
 
     Estimates flux points for a given list of datasets, energies and spectral model.
@@ -748,32 +748,14 @@ class FluxPointsEstimator(Estimator):
     def __init__(
         self,
         energy_edges=[1, 10] * u.TeV,
-        source=0,
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
-        n_sigma=1,
-        n_sigma_ul=2,
-        selection_optional=None,
-        fit=None,
-        reoptimize=False
+        **kwargs
     ):
+        fit = Fit(confidence_opts={"backend": "scipy"})
+
         self.energy_edges = energy_edges
-        self.source = source
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
-        self.norm_values = norm_values
-        self.n_sigma = n_sigma
-        self.n_sigma_ul = n_sigma_ul
-        self.selection_optional = selection_optional
 
-        if fit is None:
-            fit = Fit(confidence_opts={"backend": "scipy"})
-
-        self.fit = fit
-        self.reoptimize = reoptimize
+        kwargs.setdefault("fit", fit)
+        super().__init__(**kwargs)
 
     def run(self, datasets):
         """Run the flux point estimator for all energy groups.
@@ -830,7 +812,7 @@ class FluxPointsEstimator(Estimator):
             datasets, energy_min=energy_min, energy_max=energy_max
         )
 
-        result.update(self._flux_estimator.run(datasets=datasets_sliced))
+        result.update(super().run(datasets=datasets_sliced))
 
         return result
 

@@ -64,7 +64,7 @@ class FluxEstimator(Estimator):
         norm_n_values=11,
         norm_values=None,
         n_sigma=1,
-        n_sigma_ul=3,
+        n_sigma_ul=2,
         selection_optional=None,
         fit=None,
         # TODO: why the different default here?

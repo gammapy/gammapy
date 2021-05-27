@@ -188,6 +188,7 @@ class ParameterEstimator(Estimator):
 
         """
         self.fit.optimize(datasets=datasets)
+
         res = self.fit.confidence(
             datasets=datasets,
             parameter=parameter,
