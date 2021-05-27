@@ -127,7 +127,6 @@ def find_roots(
             ind = [0]
 
         nroots = len(ind)
-        print(nroots)
         if nroots > 0:
             roots = u.Quantity(np.ones(nroots), unit=xunit) * np.nan
             solvers = np.empty(nroots, dtype=object)
