@@ -2552,11 +2552,12 @@ class MapEvaluator:
         self._compute_npred = lru_cache()(self._compute_npred)
         self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
+        self._cached_parameter_values_previous = None
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
-        self._cached_parameter_previous = None
         self._neval = 0  # for debugging
+        self._renorm = 1
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -2703,11 +2704,11 @@ class MapEvaluator:
         """
         return self.model.evaluate_geom(self.geom, self.gti)
 
-    def compute_flux(self):
+    def compute_flux(self, *arg):
         """Compute flux"""
         return self.model.integrate_geom(self.geom, self.gti)
 
-    def compute_flux_psf_convolved(self):
+    def compute_flux_psf_convolved(self, *arg):
         """Compute psf convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
@@ -2806,16 +2807,13 @@ class MapEvaluator:
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
-            norm_only_changed, renorm = self.norm_only_changed()
-            if not (norm_only_changed and self.use_cache):
-                self._cached_parameter_previous = self.model.parameters.value
+            if not self.parameter_norm_only_changed:
                 for method in self.methods_sequence:
-                    if len(inspect.signature(method).parameters) == 0:
-                        values = method()
-                    else:
-                        values = method(self._computation_cache)
+                    values = method(self._computation_cache)
                     self._computation_cache = values
-            npred = self._computation_cache * renorm
+                npred = self._computation_cache
+            else:
+                npred = self._computation_cache * self.renorm()
         return npred
 
     @property
@@ -2849,6 +2847,20 @@ class MapEvaluator:
             self._cached_parameter_values = values
 
         return changed
+
+    @property
+    def parameter_norm_only_changed(self):
+        """Only norm parameter changed"""
+        norm_only_changed = False
+        idx = self._norm_idx
+        values = self.model.parameters.value
+        if idx and self._computation_cache is not None:
+            changed = self._cached_parameter_values_previous == values
+            norm_only_changed = sum(changed) == 1 and changed[idx]
+
+        if not norm_only_changed:
+            self._cached_parameter_values_previous = values
+        return norm_only_changed
 
     def parameters_spatial_changed(self, reset=True):
         """Parameters changed
@@ -2892,26 +2904,22 @@ class MapEvaluator:
 
         return changed
 
+    @lazyproperty
+    def _norm_idx(self):
+        """norm index"""
+        names = self.model.parameters.names
+        ind = [idx for idx, name in enumerate(names) if name in ["norm", "amplitude"]]
+        if len(ind) == 1:
+            return ind[0]
+        else:
+            return None
 
-    def norm_only_changed(self):
-        """Parameters changed"""
-        norm_only_changed = False
-        renorm = 1
-        values = self.model.parameters.value
-        if self._computation_cache is not None:
-            names = self.model.parameters.names
-            ind_diff = np.where(self._cached_parameter_previous != values)[0]
-            if len(ind_diff) == 1:
-                idx = ind_diff[0]
-                norm_only_changed = (
-                    names[idx] in ["norm", "amplitude"]
-                    and self._cached_parameter_previous[idx] != 0
-                )
-                if norm_only_changed:
-                    renorm = values[idx] / self._cached_parameter_previous[idx]
-        return norm_only_changed, renorm
+    def renorm(self):
+        value = self.model.parameters.value[self._norm_idx]
+        value_cached = self._cached_parameter_values_previous[self._norm_idx]
+        return value / value_cached
 
-    @property
+    @lazyproperty
     def methods_sequence(self):
         """order to apply irf"""
 
