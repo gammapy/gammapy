@@ -556,17 +556,17 @@ class BrentqFluxEstimator(Estimator):
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                res = find_roots(
+                roots, res = find_roots(
                     f=dataset.stat_derivative,
-                    lower_bounds=[norm_min],
-                    upper_bounds=[norm_max],
+                    lower_bound=norm_min,
+                    upper_bound=norm_max,
                     nbin=1,
                     maxiter=self.max_niter,
                     rtol=self.rtol,
-                )[0]
+                )
 
                 # Where the root finding fails NaN is set as norm
-                norm, niter = res["roots"][0], res["solvers"][0].iterations
+                norm, niter = roots[0], res[0].iterations
 
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
@@ -602,16 +602,16 @@ class BrentqFluxEstimator(Estimator):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            res = find_roots(
+            roots, res = find_roots(
                 ts_diff,
                 [min_norm],
                 [max_norm],
                 nbin=1,
                 maxiter=self.max_niter,
                 rtol=self.rtol,
-            )[0]
+            )
             # Where the root finding fails NaN is set as norm
-            return (res["roots"][0] - norm) * factor
+            return (roots[0] - norm) * factor
 
     def estimate_ul(self, dataset, result):
         """Compute upper limit using likelihood profile method.

@@ -68,8 +68,8 @@ class TestFindPeaks:
 
 
 class TestFindRoots:
-    lower_bounds = [-3 * np.pi, np.pi] * u.rad
-    upper_bounds = [np.pi, 2 * np.pi] * u.rad
+    lower_bound = -3 * np.pi* u.rad
+    upper_bound = 0 * u.rad
 
     def f(self, x):
         return np.cos(x)
@@ -81,46 +81,33 @@ class TestFindRoots:
 
         methods = ["brentq", "secant"]
         for method in methods:
-            res = find_roots(
+            roots, res = find_roots(
                 self.f,
-                lower_bounds=self.lower_bounds,
-                upper_bounds=self.upper_bounds,
+                lower_bound=self.lower_bound,
+                upper_bound=self.upper_bound,
                 method=method,
             )
-            assert res[0]["roots"].unit == u.rad
+            assert roots.unit == u.rad
             assert_allclose(
-                2 * res[0]["roots"].value / np.pi, np.array([-5.0, -3.0, -1.0, 1.0])
+                2 * roots.value / np.pi, np.array([-5.0, -3.0, -1.0])
             )
-            assert_allclose(2 * res[1]["roots"].value / np.pi, np.array([3.0]))
-            assert np.all([sol.converged for sol in res[0]["solvers"]])
-            assert np.all([sol.converged for sol in res[1]["solvers"]])
+            assert np.all([sol.converged for sol in res])
 
-            res = find_roots(
+            roots, res = find_roots(
                 self.h,
-                lower_bounds=self.lower_bounds,
-                upper_bounds=self.upper_bounds,
+                lower_bound=self.lower_bound,
+                upper_bound=self.upper_bound,
                 method=method,
             )
-            assert_allclose(res[0]["roots"].value, np.array([1.0]))
-            assert np.isnan(res[1]["roots"][0])
-            assert res[1]["solvers"][0].iterations == 0
+            assert np.isnan(roots[0])
+            assert res[0].iterations == 0
 
     def test_invalid_method(self):
         with pytest.raises(ValueError, match='Unknown solver "xfail"'):
             find_roots(
                 self.f,
-                lower_bounds=self.lower_bounds,
-                upper_bounds=self.upper_bounds,
+                lower_bound=self.lower_bound,
+                upper_bound=self.upper_bound,
                 method="xfail",
             )
 
-    def test_invalid_dimensions(self):
-        with pytest.raises(
-            ValueError, match="Dimension mismatch between lower_bounds and upper_bounds"
-        ):
-            find_roots(
-                self.f,
-                lower_bounds=self.lower_bounds,
-                upper_bounds=[1, 2, 3] * u.rad,
-                method="xfail",
-            )

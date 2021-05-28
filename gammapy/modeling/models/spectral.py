@@ -501,15 +501,17 @@ class SpectralModel(Model):
         from gammapy.estimators.utils import find_roots
 
         eunit = "TeV"
-
+        energy_min = energy_min.to(eunit)
+        energy_max = energy_max.to(eunit)
         def f(x):
             # scale by 1e12 to achieve better precision
             energy = u.Quantity(x, eunit, copy=False)
             y = self(energy).to_value(value.unit)
             return 1e12 * (y - value.value)
 
-        res = find_roots(f, [energy_min], [energy_max])[0]
-        return res["roots"]
+        roots, res  = find_roots(f, energy_min, energy_max, points_scale="log")
+        print(roots)
+        return roots
 
     def inverse_all(self, values, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a multiple function values of the spectral model.
@@ -533,7 +535,7 @@ class SpectralModel(Model):
         """
         energies = []
         for val in np.atleast_1d(values):
-            res = self.inverse_all(val, [energy_min], [energy_max])
+            res = self.inverse(val, energy_min, energy_max)
             energies.append(res)
         return energies
 

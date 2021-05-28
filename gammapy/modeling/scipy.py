@@ -68,25 +68,26 @@ def _confidence_scipy_brentq(
         function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
     )
 
-    bound = parameter.factor_max if upper else parameter.factor_min
-    if np.isnan(bound):
-        bound = parameter.factor
+    lower_bound = parameter.factor
+    upper_bound = parameter.factor_max if upper else parameter.factor_min
+    if np.isnan(upper_bound):
+        upper_bound = parameter.factor
         if upper:
-            bound += 1e2 * parameter.error / parameter.scale
+            upper_bound += 1e2 * parameter.error / parameter.scale
         else:
-            bound -= 1e2 * parameter.error / parameter.scale
+            upper_bound -= 1e2 * parameter.error / parameter.scale
 
     message, success = "Confidence terminated successfully.", True
     kwargs.setdefault("nbin", 1)
 
-    res = find_roots(
+    roots, res = find_roots(
         ts_diff.fcn,
-        lower_bounds=[parameter.factor],
-        upper_bounds=[bound],
+        lower_bound=lower_bound,
+        upper_bound=upper_bound,
         **kwargs
-    )[0]
-    result = (res["root"][0], res["solvers"][0])
-    if np.isnan(res["roots"][0]):
+    )
+    result = (roots[0], res[0])
+    if np.isnan(roots[0]):
         message = (
             "Confidence estimation failed. Try to set the parameter.min/max by hand."
         )
@@ -95,7 +96,7 @@ def _confidence_scipy_brentq(
 
     return {
         "nfev_" + suffix: result[1].iterations,
-        suffix: np.abs(result[0] - kwargs["a"]),
+        suffix: np.abs(result[0] - lower_bound),
         "success_" + suffix: success,
         "message_" + suffix: message,
         "stat_null": ts_diff.stat_null,
@@ -171,12 +172,11 @@ def stat_profile_ul_scipy(
 
     idx = np.argmin(stat_scan)
     norm_best_fit = value_scan[idx]
-    res = find_roots(
+    roots, res = find_roots(
         f,
-        lower_bounds=[norm_best_fit],
-        lupper_bounds=[value_scan[-1]],
+        lower_bound=norm_best_fit,
+        upper_bound=value_scan[-1],
         nbin=1,
         **kwargs
-    )[0]
-    ul = res["root"][0]
-    return ul
+    )
+    return roots[0]

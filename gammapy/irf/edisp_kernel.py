@@ -451,7 +451,7 @@ class EDispKernel(IRF):
         energy_true_bias = bias_spectrum.inverse(
             Quantity(bias), energy_min=energy_min, energy_max=energy_max
         )
-
+        self.plot_bias()
         # return reconstructed energy
         return energy_true_bias * (1 + bias)
 

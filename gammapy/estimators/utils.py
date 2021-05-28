@@ -16,13 +16,14 @@ from gammapy.utils.interpolation import interpolation_scale
 __all__ = ["find_roots", "find_peaks", "estimate_exposure_reco_energy"]
 
 from scipy.optimize import root_scalar, RootResults
+BAD_RES = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
 
 
 def find_roots(
     f,
-    lower_bounds,
-    upper_bounds,
-    nbin=1000,
+    lower_bound,
+    upper_bound,
+    nbin=100,
     points_scale="lin",
     args=(),
     method="brentq",
@@ -39,14 +40,14 @@ def find_roots(
     ----------
     f : callable
         A function to find roots of. Its output should be unitless.
-    lower_bounds : `~astropy.units.Quantity`
+    lower_bound : `~astropy.units.Quantity`
         Lower bound of the search ranges to find roots.
         If an array is given search will be performed element-wise.
-    uper_bounds : `~astropy.units.Quantity`
+    upper_bound : `~astropy.units.Quantity`
         Uper bound of the search ranges to find roots.
         If an array is given search will be performed element-wise.
     nbin : int
-        Number of bins to sample the search range
+        Number of bins to sample the search range, ignored if bounds are arrays
     points_scale : {"lin", "log", "sqrt"}
         Scale used to sample the search range. Default is linear ("lin")
     args : tuple, optional
@@ -84,13 +85,15 @@ def find_roots(
 
     Returns
     -------
-    results : `~numpy.array` of dict
-        Each array element contains a dict of {`roots`, `solvers`}.
-        For each input search range :
-        `roots` is a `~astropy.units.Quantity` containig the function roots
-        `solvers` is an array of `~scipy.optimize.RootResults`
+    roots : `~astropy.units.Quantity`
+        The function roots.
+        
+    results : `~numpy.array`
+        An array of `~scipy.optimize.RootResults` which is an
+        object containing information about the convergence.
         If the solver failed to converge in a bracketing range
         the corresponding `roots` array element is NaN.
+
     """
 
     kwargs = dict(
@@ -103,62 +106,44 @@ def find_roots(
         maxiter=maxiter,
         options=options,
     )
+    
+    if isinstance(lower_bound, u.Quantity):
+        unit = lower_bound.unit
+        lower_bound = lower_bound.value
+        upper_bound = u.Quantity(upper_bound).to_value(unit)
+    else:
+        unit = 1
 
-    lower_bounds = u.Quantity(lower_bounds)
-    xunit = lower_bounds.unit
-    upper_bounds = u.Quantity(upper_bounds).to(xunit)
-    if lower_bounds.shape != upper_bounds.shape:
-        raise ValueError(f"Dimension mismatch between lower_bounds and upper_bounds")
+    scale = interpolation_scale(points_scale)
+    a = scale(lower_bound)
+    b = scale(upper_bound)
+    x = scale.inverse(np.linspace(a, b, nbin + 1))
+    if len(x) > 2:
+        signs = np.sign([f(xk, *args) for xk in x])
+        ind = np.where(signs[:-1] != signs[1:])[0]
+    else:
+        ind = [0]
+    nroots = max(1, len(ind))
+    roots = np.ones(nroots) * np.nan
+    results = np.array(nroots*[BAD_RES])
 
-    it = np.nditer(lower_bounds, flags=["multi_index"])
-    NDouput = np.empty(lower_bounds.shape, dtype=object)
-    bad_sol = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
-    while not it.finished:
-        it_idx = it.multi_index
-
-        scale = interpolation_scale(points_scale)
-        a = scale(lower_bounds[it_idx].value)
-        b = scale(upper_bounds[it_idx].value)
-        x = scale.inverse(np.linspace(a, b, nbin + 1))
-        if len(x) > 2:
-            signs = np.sign([f(xk, *args) for xk in x])
-            ind = np.where(signs[:-1] != signs[1:])[0]
+    for k, idx in enumerate(ind):
+        bracket = [x[idx], x[idx + 1]]
+        if method in ["bisection", "brentq", "brenth", "ridder", "toms748"]:
+            kwargs["bracket"] = bracket
+        elif method in ["secant", "newton", "halley"]:
+            kwargs["x0"] = bracket[0]
+            kwargs["x1"] = bracket[1]
         else:
-            ind = [0]
-
-        nroots = len(ind)
-        if nroots > 0:
-            roots = u.Quantity(np.ones(nroots), unit=xunit) * np.nan
-            solvers = np.empty(nroots, dtype=object)
-        else:
-            NDouput[it_idx] = {
-                "roots": u.Quantity([np.nan]),
-                "solvers": np.array([bad_sol]),
-            }
-            it.iternext()
+            raise ValueError(f'Unknown solver "{method}"')
+        try:
+            res = root_scalar(f, **kwargs)
+            results[k] = res
+            if res.converged:
+                roots[k] = res.root
+        except (RuntimeError, ValueError):
             continue
-
-        for k, idx in enumerate(ind):
-            bracket = [x[idx], x[idx + 1]]
-            if method in ["bisection", "brentq", "brenth", "ridder", "toms748"]:
-                kwargs["bracket"] = bracket
-            elif method in ["secant", "newton", "halley"]:
-                kwargs["x0"] = bracket[0]
-                kwargs["x1"] = bracket[1]
-            else:
-                raise ValueError(f'Unknown solver "{method}"')
-            try:
-                sol = root_scalar(f, **kwargs)
-                solvers[k] = sol
-                if sol.converged:
-                    roots[k] = sol.root * xunit
-            except (RuntimeError, ValueError):
-                solvers[k] = bad_sol
-                continue
-        NDouput[it_idx] = {"roots": roots, "solvers": solvers}
-        it.iternext()
-
-    return NDouput
+    return roots*unit, results
 
 
 def find_peaks(image, threshold, min_distance=1):

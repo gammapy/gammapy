@@ -46,17 +46,17 @@ class CountsStatistic(abc.ABC):
 
         it = np.nditer(errn, flags=["multi_index"])
         while not it.finished:
-            res = find_roots(
+            roots, res  = find_roots(
                 self._stat_fcn,
-                [min_range[it.multi_index]],
-                [self.n_sig[it.multi_index]],
+                min_range[it.multi_index],
+                self.n_sig[it.multi_index],
                 nbin=1,
                 args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
-            )[0]
-            if np.isnan(res["roots"][0]):
+            )
+            if np.isnan(roots[0]):
                 errn[it.multi_index] = -self.n_on[it.multi_index]
             else:
-                errn[it.multi_index] = res["roots"][0] - self.n_sig[it.multi_index]
+                errn[it.multi_index] = roots[0] - self.n_sig[it.multi_index]
             it.iternext()
 
         return errn
@@ -78,14 +78,14 @@ class CountsStatistic(abc.ABC):
 
         it = np.nditer(errp, flags=["multi_index"])
         while not it.finished:
-            res = find_roots(
+            roots, res  = find_roots(
                 self._stat_fcn,
-                [self.n_sig[it.multi_index]],
-                [max_range[it.multi_index]],
+                self.n_sig[it.multi_index],
+                max_range[it.multi_index],
                 nbin=1,
                 args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
-            )[0]
-            errp[it.multi_index] = res["roots"][0]
+            )
+            errp[it.multi_index] = roots[0]
             it.iternext()
 
         return errp - self.n_sig
@@ -112,14 +112,14 @@ class CountsStatistic(abc.ABC):
         while not it.finished:
             TS_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
 
-            res = find_roots(
+            roots, res = find_roots(
                 self._stat_fcn,
-                [min_range[it.multi_index]],
-                [max_range[it.multi_index]],
+                min_range[it.multi_index],
+                max_range[it.multi_index],
                 nbin=1,
                 args=(TS_ref + n_sigma ** 2, it.multi_index),
-            )[0]
-            ul[it.multi_index] = res["roots"][0]
+            )
+            ul[it.multi_index] = roots[0]
             it.iternext()
         return ul
 
@@ -149,17 +149,15 @@ class CountsStatistic(abc.ABC):
             eps = 1e-4
             upper_bound = lower_bound * (1 + eps)
             upper_bound += eps if upper_bound >= 0 else -eps
-            # TODO: find_roots support ND case, maybe we could avoid the iteration
-            # but here the function also need the index
-            res = find_roots(
+            roots, res  = find_roots(
                 self._n_sig_matching_significance_fcn,
-                lower_bounds=[lower_bound],
-                upper_bounds=[upper_bound],
+                lower_bound=lower_bound,
+                upper_bound=upper_bound,
                 args=(significance, it.multi_index),
                 nbin=1,
                 method="secant",
-            )[0]
-            n_sig[it.multi_index] = res["roots"][0]  # return NaN if fail
+            )
+            n_sig[it.multi_index] = roots[0]  # return NaN if fail
             it.iternext()
         return n_sig
 
