@@ -7,6 +7,7 @@ from gammapy.utils.scripts import make_path
 
 __all__ = ["Maps"]
 
+
 class Maps(MutableMapping):
     """A Dictionary containing Map objects sharing the same geometry.
 
@@ -14,6 +15,7 @@ class Maps(MutableMapping):
 
     For maps with different geometries, use a regular dict.
     """
+
     def __init__(self, **kwargs):
         self._geom = None
         self._data = {}
@@ -53,7 +55,7 @@ class Maps(MutableMapping):
     def __repr__(self):
         return f"{type(self).__name__}({self._data})"
 
-    def to_hdulist(self, hdu_bands='BANDS'):
+    def to_hdulist(self, hdu_bands="BANDS"):
         """Convert map dictionary to list of HDUs.
 
         Parameters
@@ -73,14 +75,12 @@ class Maps(MutableMapping):
         hdulist = fits.HDUList([hdu_primary])
 
         for key, m in self.items():
-            hdulist += m.to_hdulist(hdu=key, hdu_bands=hdu_bands)[
-                exclude_primary
-            ]
+            hdulist += m.to_hdulist(hdu=key, hdu_bands=hdu_bands)[exclude_primary]
 
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu_bands='BANDS'):
+    def from_hdulist(cls, hdulist, hdu_bands="BANDS"):
         """Create map dictionary from list of HDUs.
 
         Parameters
@@ -137,4 +137,3 @@ class Maps(MutableMapping):
 
         hdulist = self.to_hdulist()
         hdulist.writeto(filename, overwrite=overwrite)
-
