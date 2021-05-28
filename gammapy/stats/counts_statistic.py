@@ -46,7 +46,7 @@ class CountsStatistic(abc.ABC):
 
         it = np.nditer(errn, flags=["multi_index"])
         while not it.finished:
-            roots, res  = find_roots(
+            roots, res = find_roots(
                 self._stat_fcn,
                 min_range[it.multi_index],
                 self.n_sig[it.multi_index],
@@ -78,7 +78,7 @@ class CountsStatistic(abc.ABC):
 
         it = np.nditer(errp, flags=["multi_index"])
         while not it.finished:
-            roots, res  = find_roots(
+            roots, res = find_roots(
                 self._stat_fcn,
                 self.n_sig[it.multi_index],
                 max_range[it.multi_index],
@@ -149,7 +149,7 @@ class CountsStatistic(abc.ABC):
             eps = 1e-4
             upper_bound = lower_bound * (1 + eps)
             upper_bound += eps if upper_bound >= 0 else -eps
-            roots, res  = find_roots(
+            roots, res = find_roots(
                 self._n_sig_matching_significance_fcn,
                 lower_bound=lower_bound,
                 upper_bound=upper_bound,

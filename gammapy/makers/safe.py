@@ -56,7 +56,7 @@ class SafeMaskMaker(Maker):
         methods=("aeff-default",),
         aeff_percent=10,
         bias_percent=10,
-        position = None,
+        position=None,
         fixed_offset=None,
         offset_max="3 deg",
     ):
@@ -74,7 +74,9 @@ class SafeMaskMaker(Maker):
         self.offset_max = Angle(offset_max)
 
         if self.position and self.fixed_offset:
-            raise ValueError("`position` and `fixed_offset` attributes are mutually exclusive")
+            raise ValueError(
+                "`position` and `fixed_offset` attributes are mutually exclusive"
+            )
 
     def make_mask_offset_max(self, dataset, observation):
         """Make maximum offset mask.
@@ -146,17 +148,22 @@ class SafeMaskMaker(Maker):
 
         if self.fixed_offset:
             if observation:
-                position = observation.pointing_radec.directional_offset_by(position_angle=0.*u.deg,
-                                                                              separation=self.fixed_offset)
+                position = observation.pointing_radec.directional_offset_by(
+                    position_angle=0.0 * u.deg, separation=self.fixed_offset
+                )
             else:
-                raise ValueError(f"observation argument is mandatory with {self.fixed_offset}")
+                raise ValueError(
+                    f"observation argument is mandatory with {self.fixed_offset}"
+                )
 
         elif self.position is None and self.fixed_offset is None:
             position = PointSkyRegion(dataset.counts.geom.center_skydir)
         else:
             position = PointSkyRegion(self.position)
 
-        aeff = dataset.exposure.get_spectrum(position) / dataset.exposure.meta["livetime"]
+        aeff = (
+            dataset.exposure.get_spectrum(position) / dataset.exposure.meta["livetime"]
+        )
         model = TemplateSpectralModel.from_region_map(aeff)
 
         aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
@@ -183,10 +190,13 @@ class SafeMaskMaker(Maker):
 
         if self.fixed_offset:
             if observation:
-                position = observation.pointing_radec.directional_offset_by(position_angle=0*u.deg,
-                                                                             separation=self.fixed_offset)
+                position = observation.pointing_radec.directional_offset_by(
+                    position_angle=0 * u.deg, separation=self.fixed_offset
+                )
             else:
-                raise ValueError(f"{observation} argument is mandatory with {self.fixed_offset}")
+                raise ValueError(
+                    f"{observation} argument is mandatory with {self.fixed_offset}"
+                )
 
         if isinstance(edisp, EDispKernelMap):
             if position:

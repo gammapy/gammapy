@@ -81,10 +81,7 @@ def _confidence_scipy_brentq(
     kwargs.setdefault("nbin", 1)
 
     roots, res = find_roots(
-        ts_diff.fcn,
-        lower_bound=lower_bound,
-        upper_bound=upper_bound,
-        **kwargs
+        ts_diff.fcn, lower_bound=lower_bound, upper_bound=upper_bound, **kwargs
     )
     result = (roots[0], res[0])
     if np.isnan(roots[0]):
@@ -165,6 +162,7 @@ def stat_profile_ul_scipy(
         Upper limit value.
     """
     from gammapy.estimators.utils import find_roots
+
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
     def f(x):
@@ -173,10 +171,6 @@ def stat_profile_ul_scipy(
     idx = np.argmin(stat_scan)
     norm_best_fit = value_scan[idx]
     roots, res = find_roots(
-        f,
-        lower_bound=norm_best_fit,
-        upper_bound=value_scan[-1],
-        nbin=1,
-        **kwargs
+        f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs
     )
     return roots[0]

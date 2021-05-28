@@ -68,7 +68,7 @@ class TestFindPeaks:
 
 
 class TestFindRoots:
-    lower_bound = -3 * np.pi* u.rad
+    lower_bound = -3 * np.pi * u.rad
     upper_bound = 0 * u.rad
 
     def f(self, x):
@@ -88,9 +88,7 @@ class TestFindRoots:
                 method=method,
             )
             assert roots.unit == u.rad
-            assert_allclose(
-                2 * roots.value / np.pi, np.array([-5.0, -3.0, -1.0])
-            )
+            assert_allclose(2 * roots.value / np.pi, np.array([-5.0, -3.0, -1.0]))
             assert np.all([sol.converged for sol in res])
 
             roots, res = find_roots(
@@ -110,4 +108,3 @@ class TestFindRoots:
                 upper_bound=self.upper_bound,
                 method="xfail",
             )
-

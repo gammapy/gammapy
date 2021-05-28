@@ -16,6 +16,7 @@ from gammapy.utils.interpolation import interpolation_scale
 __all__ = ["find_roots", "find_peaks", "estimate_exposure_reco_energy"]
 
 from scipy.optimize import root_scalar, RootResults
+
 BAD_RES = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
 
 
@@ -106,7 +107,7 @@ def find_roots(
         maxiter=maxiter,
         options=options,
     )
-    
+
     if isinstance(lower_bound, u.Quantity):
         unit = lower_bound.unit
         lower_bound = lower_bound.value
@@ -125,7 +126,7 @@ def find_roots(
         ind = [0]
     nroots = max(1, len(ind))
     roots = np.ones(nroots) * np.nan
-    results = np.array(nroots*[BAD_RES])
+    results = np.array(nroots * [BAD_RES])
 
     for k, idx in enumerate(ind):
         bracket = [x[idx], x[idx + 1]]
@@ -143,7 +144,7 @@ def find_roots(
                 roots[k] = res.root
         except (RuntimeError, ValueError):
             continue
-    return roots*unit, results
+    return roots * unit, results
 
 
 def find_peaks(image, threshold, min_distance=1):
