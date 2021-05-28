@@ -57,7 +57,7 @@ def test_safe_mask_maker(observations, caplog):
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
     mask_edisp_bias_offset = safe_mask_maker_offset.make_mask_energy_edisp_bias(dataset, obs)
     assert_allclose(mask_edisp_bias.data.sum(), 1815)
-    assert_allclose(mask_edisp_bias_offset.data.sum(), 121)
+    assert_allclose(mask_edisp_bias_offset.data.sum(), 1694)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert_allclose(mask_bkg_peak.data.sum(), 1815)      
