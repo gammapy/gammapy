@@ -122,22 +122,16 @@ class Analysis:
         for obs in self.observations:
             log.debug(obs)
 
-    def get_datasets(self, show_progress_bar=False):
-        """Produce reduced datasets.
-
-        Parameters
-        ----------
-        show_progress_bar : bool
-            Display progress bar.
-        """
+    def get_datasets(self):
+        """Produce reduced datasets."""
         datasets_settings = self.config.datasets
         if not self.observations or len(self.observations) == 0:
             raise RuntimeError("No observations have been selected.")
 
         if datasets_settings.type == "1d":
-            self._spectrum_extraction(show_progress_bar=show_progress_bar)
+            self._spectrum_extraction()
         else:  # 3d
-            self._map_making(show_progress_bar=show_progress_bar)
+            self._map_making()
 
     def set_models(self, models):
         """Set models on datasets.
@@ -197,14 +191,8 @@ class Analysis:
         self.fit_result = self.fit.run()
         log.info(self.fit_result)
 
-    def get_flux_points(self, show_progress_bar=False):
-        """Calculate flux points for a specific model component.
-
-        Parameters
-        ----------
-        show_progress_bar : bool
-            Display progress bar.
-        """
+    def get_flux_points(self):
+        """Calculate flux points for a specific model component."""
         if not self.fit:
             raise RuntimeError("No results available from Fit.")
 
@@ -214,7 +202,6 @@ class Analysis:
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
-            show_progress_bar=show_progress_bar,
             **fp_settings.parameters,
         )
         fp = flux_point_estimator.run(datasets=self.datasets)
@@ -248,14 +235,8 @@ class Analysis:
         )
         self.excess_map = excess_map_estimator.run(self.datasets[0])
 
-    def get_light_curve(self, show_progress_bar=False):
-        """Calculate light curve for a specific model component.
-
-        Parameters
-        ----------
-        show_progress_bar : bool
-            Display progress bar.
-        """
+    def get_light_curve(self):
+        """Calculate light curve for a specific model component."""
         lc_settings = self.config.light_curve
         log.info("Computing light curve.")
         energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
@@ -271,7 +252,6 @@ class Analysis:
             time_intervals=time_intervals,
             energy_edges=energy_edges,
             source=lc_settings.source,
-            show_progress_bar=show_progress_bar,
             **lc_settings.parameters,
         )
         lc = light_curve_estimator.run(datasets=self.datasets)
@@ -304,14 +284,8 @@ class Analysis:
         geom_params["width"] = (width, height)
         return WcsGeom.create(**geom_params)
 
-    def _map_making(self, show_progress_bar=False):
-        """Make maps and datasets for 3d analysis.
-
-        Parameters
-        ----------
-        show_progress_bar : bool
-            Display progress bar.
-        """
+    def _map_making(self):
+        """Make maps and datasets for 3d analysis"""
         datasets_settings = self.config.datasets
         log.info("Creating geometry.")
         geom = self._create_geometry()
@@ -361,7 +335,6 @@ class Analysis:
         if datasets_settings.stack:
             for obs in progress_bar(
                 self.observations,
-                show_progress_bar=show_progress_bar,
                 desc="Observations"
             ):
                 log.debug(f"Processing observation {obs.obs_id}")
@@ -382,7 +355,6 @@ class Analysis:
 
             for obs in progress_bar(
                     self.observations,
-                    show_progress_bar=show_progress_bar,
                     desc="Observations"
             ):
                 log.debug(f"Processing observation {obs.obs_id}")
@@ -395,14 +367,8 @@ class Analysis:
                 datasets.append(dataset)
         self.datasets = Datasets(datasets)
 
-    def _spectrum_extraction(self, show_progress_bar=False):
-        """Run all steps for the spectrum extraction.
-
-        Parameters
-        ----------
-        show_progress_bar : bool
-            Display progress bar.
-        """
+    def _spectrum_extraction(self):
+        """Run all steps for the spectrum extraction."""
         log.info("Reducing spectrum datasets.")
         datasets_settings = self.config.datasets
         on_lon = datasets_settings.on_region.lon
@@ -453,7 +419,6 @@ class Analysis:
         datasets = []
         for obs in progress_bar(
                 self.observations,
-                show_progress_bar=show_progress_bar,
                 desc="Observations"
         ):
             log.debug(f"Processing observation {obs.obs_id}")

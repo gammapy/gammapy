@@ -822,7 +822,6 @@ class FluxPointsEstimator(Estimator):
         covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
-        show_progress_bar=False
     ):
         self.energy_edges = energy_edges
         self.source = source
@@ -841,7 +840,6 @@ class FluxPointsEstimator(Estimator):
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
-        self.show_progress_bar = show_progress_bar
 
     def _flux_estimator(self, energy_min, energy_max):
         return FluxEstimator(
@@ -868,8 +866,6 @@ class FluxPointsEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.Dataset`
             Datasets
-        show_progress_bar : bool
-            Display progress bar.
         Returns
         -------
         flux_points : `FluxPoints`
@@ -881,7 +877,6 @@ class FluxPointsEstimator(Estimator):
 
         for energy_min, energy_max in progress_bar(
             zip(self.energy_edges[:-1], self.energy_edges[1:]),
-            show_progress_bar=self.show_progress_bar,
             desc="Energy bins"
         ):
             row = self.estimate_flux_point(

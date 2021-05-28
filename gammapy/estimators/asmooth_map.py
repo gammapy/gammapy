@@ -55,7 +55,6 @@ class ASmoothMapEstimator(Estimator):
         method="lima",
         threshold=5,
         energy_edges=None,
-        show_progress_bar=False
     ):
         if spectrum is None:
             spectrum = PowerLawSpectralModel()
@@ -70,7 +69,6 @@ class ASmoothMapEstimator(Estimator):
         self.threshold = threshold
         self.method = method
         self.energy_edges = energy_edges
-        self.show_progress_bar =  show_progress_bar
 
     def selection_all(self):
         """Which quantities are computed"""
@@ -145,8 +143,6 @@ class ASmoothMapEstimator(Estimator):
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the input dataset (with one bin in energy at most)
-        show_progress_bar : bool
-            Display progress bar.
         Returns
         -------
         images : dict of `~gammapy.maps.WcsNDMap`
@@ -167,7 +163,6 @@ class ASmoothMapEstimator(Estimator):
 
         for energy_min, energy_max in progress_bar(
             zip(energy_edges[:-1], energy_edges[1:]),
-            show_progress_bar=self.show_progress_bar,
             desc="Energy bins"
         ):
             dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)

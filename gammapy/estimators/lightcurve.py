@@ -374,7 +374,6 @@ class LightCurveEstimator(Estimator):
         covariance_opts=None,
         reoptimize=False,
         selection_optional=None,
-        show_progress_bar=False
     ):
 
         self.source = source
@@ -399,7 +398,6 @@ class LightCurveEstimator(Estimator):
         self.covariance_opts = covariance_opts
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
-        self.show_progress_bar = show_progress_bar
 
     def _flux_poins_estimator(self, energy_edges):
         return FluxPointsEstimator(
@@ -427,8 +425,6 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
-        show_progress_bar : bool
-            Display progress bar.
         Returns
         -------
         lightcurve : `~gammapy.estimators.LightCurve`
@@ -446,7 +442,6 @@ class LightCurveEstimator(Estimator):
         rows = []
         for t_min, t_max in progress_bar(
                 gti.time_intervals,
-                show_progress_bar=self.show_progress_bar,
                 desc="Time intervals"
         ):
             datasets_to_fit = datasets.select_time(

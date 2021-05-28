@@ -323,7 +323,6 @@ class Fit:
         nvalues=11,
         reoptimize=False,
         optimize_opts=None,
-        show_progress_bar=False,
     ):
         """Compute fit statistic profile.
 
@@ -348,8 +347,6 @@ class Fit:
             Number of parameter grid points to use.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
-        show_progress_bar : bool
-            Display progress bar.
         Returns
         -------
         results : dict
@@ -378,7 +375,6 @@ class Fit:
         with parameters.restore_status():
             for value in progress_bar(
                 values,
-                show_progress_bar=show_progress_bar,
                 desc="Trial values"
             ):
                 parameter.value = value
@@ -397,7 +393,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, show_progress_bar=False, **optimize_opts):
+    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -415,8 +411,6 @@ class Fit:
             Parameter values to evaluate the fit statistic for.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
-        show_progress_bar : bool
-            Display progress bar.
         **optimize_opts : dict
             Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
 
@@ -435,7 +429,6 @@ class Fit:
         with parameters.restore_status():
             for x_value, y_value in progress_bar(
                 itertools.product(x_values, y_values),
-                show_progress_bar=show_progress_bar,
                 desc="Trial values"
             ):
                 # TODO: Remove log.info() and provide a nice progress bar

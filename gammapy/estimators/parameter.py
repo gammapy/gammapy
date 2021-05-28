@@ -72,7 +72,6 @@ class ParameterEstimator(Estimator):
         covariance_opts=None,
         reoptimize=True,
         selection_optional=None,
-        show_progress_bar=False
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -96,7 +95,6 @@ class ParameterEstimator(Estimator):
         self.reoptimize = reoptimize
         self.selection_optional = selection_optional
         self._fit = None
-        self.show_progress_bar = show_progress_bar
 
     def fit(self, datasets):
         if self._fit is None or datasets is not self._fit.datasets:
@@ -220,7 +218,6 @@ class ParameterEstimator(Estimator):
             bounds=bounds,
             nvalues=self.scan_n_values,
             reoptimize=self.reoptimize,
-            show_progress_bar=self.show_progress_bar
         )
 
         return {

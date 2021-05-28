@@ -25,9 +25,12 @@ except ImportError:
         def __next__(self):
             return self._iterable.__next__()
 
-def progress_bar(iterable, show_progress_bar=False, desc=None):
+global SHOW_PROGRESS_BAR
+SHOW_PROGRESS_BAR = False
+
+def progress_bar(iterable, desc=None):
     # Necessary because iterable may be a zip
     iterable_to_list = list(iterable)
     total = len(iterable_to_list)
 
-    return tqdm(iterable_to_list, total=total, mininterval=0, disable=not show_progress_bar, desc=desc)
+    return tqdm(iterable_to_list, total=total, mininterval=0, disable=not SHOW_PROGRESS_BAR, desc=desc)

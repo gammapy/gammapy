@@ -132,7 +132,6 @@ class TSMapEstimator(Estimator):
         energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
-        show_progress_bar=False
     ):
         self.kernel_width = Angle(kernel_width)
 
@@ -161,7 +160,6 @@ class TSMapEstimator(Estimator):
             selection_optional=selection_optional,
             ts_threshold=threshold,
         )
-        self.show_progress_bar = show_progress_bar
 
     @property
     def selection_all(self):
@@ -380,8 +378,6 @@ class TSMapEstimator(Estimator):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input MapDataset.
-        show_progress_bar : bool
-            Display progress bar.
         Returns
         -------
         maps : dict
@@ -414,7 +410,6 @@ class TSMapEstimator(Estimator):
 
         for energy_min, energy_max in progress_bar(
             zip(energy_edges[:-1], energy_edges[1:]),
-            show_progress_bar=self.show_progress_bar,
             desc="Energy bins"
         ):
             sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
