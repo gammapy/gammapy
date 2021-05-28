@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for progress bar display"""
 import logging
-from collections.abc import Iterable
 
 log = logging.getLogger(__name__)
 
@@ -12,7 +11,7 @@ except ImportError:
         def __init__(self, iterable, disable=True, **kwargs):
             self.disable = disable
             self._iterable = iterable
-            if self.disable == False:
+            if not self.disable:
                 log.info(
                     f"Tqdm is currently not installed. Visit https://tqdm.github.io/"
                 )
@@ -27,10 +26,8 @@ except ImportError:
             return self._iterable.__next__()
 
 def progress_bar(iterable, show_progress_bar=False, desc=None):
-    if not isinstance(iterable, Iterable) and show_progress_bar == True:
-        raise AttributeError("Can't set up the progress bar if total is None")
-
     # Necessary because iterable may be a zip
-    total = len(list(iterable))
+    iterable_to_list = list(iterable)
+    total = len(iterable_to_list)
 
-    return tqdm(iterable, total=total, mininterval=0, disable=not show_progress_bar, desc=desc)
+    return tqdm(iterable_to_list, total=total, mininterval=0, disable=not show_progress_bar, desc=desc)
