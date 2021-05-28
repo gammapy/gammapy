@@ -5,9 +5,9 @@ from astropy.io import fits
 from gammapy.maps import Map
 from gammapy.utils.scripts import make_path
 
-__all__ = ["MapDict"]
+__all__ = ["Maps"]
 
-class MapDict(MutableMapping):
+class Maps(MutableMapping):
     """A Dictionary containing Map objects sharing the same geometry.
 
     This class simplifies handling and I/O of maps collections.
