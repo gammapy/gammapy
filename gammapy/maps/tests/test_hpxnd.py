@@ -589,23 +589,22 @@ def test_hpxmap_read_healpy(tmp_path):
     diff = np.sum(m[1] - m2.data)
     assert_allclose(diff, 0.0)
 
+
 @requires_dependency("matplotlib")
 def test_map_plot_mask():
     from regions import CircleSkyRegion
-    import random
+    from gammapy.maps import HpxGeom
+    from astropy.coordinates import SkyCoord
+    from astropy import units as u
 
     geom = HpxGeom.create(nside=16)
-    map_hp = HpxNDMap.from_geom(geom)
-    wcs_map = map_hp.to_wcs(proj='AIT')
 
-    val = np.array([random.choices(range(0,np.shape(wcs_map)[0]),
-    k=np.shape(wcs_map)[0]) for _ in range(np.shape(wcs_map)[1])])
+    region = CircleSkyRegion(
+        center=SkyCoord("0d", "0d", frame="galactic"),
+        radius=20 * u.deg
+    )
 
-    wcs_map.data = val
-
-    exclusion_region = CircleSkyRegion(center=SkyCoord(0.0, 0.0, unit="deg", frame="galactic"), radius=0.6 * u.deg)
-
-    mask = ~wcs_map.geom.region_mask([exclusion_region])
+    mask = geom.region_mask([region])
 
     with mpl_plot_check():
         mask.plot_mask()

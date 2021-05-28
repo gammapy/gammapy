@@ -1000,12 +1000,14 @@ class HpxNDMap(HpxMap):
 
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
+
         return ax
 
     def _plot_default_axes(self, proj, ax):
         import matplotlib.pyplot as plt
+        from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
-        wcs = self.to_wcs(proj=proj).geom.to_wcs_geom(proj=proj, oversample=1)
+        wcs = self.geom.to_wcs_geom()
         if ax is None:
             fig = plt.gcf()
             ax = fig.add_subplot(1, 1, 1, projection=wcs.wcs,
@@ -1024,4 +1026,37 @@ class HpxNDMap(HpxMap):
             ax.coords["dec"].set_axislabel("Declination")
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
+
+        return ax
+
+    def _plot_format_allsky(self, ax):
+        # Remove frame
+        ax.coords.frame.set_linewidth(0)
+
+        # Set plot axis limits
+        xmin = self.geom.to_image().coord_to_pix({"lon": 180, "lat": 0})
+        xmax = self.geom.to_image().coord_to_pix({"lon": -180, "lat": 0})
+
+        ymin = self.geom.to_image().coord_to_pix({"lon": 0, "lat": -90})
+        ymax = self.geom.to_image().coord_to_pix({"lon": 0, "lat": 90})
+
+        ax.set_xlim(xmin[0], xmax[0])
+        ax.set_ylim(ymin[0], ymax[0])
+
+        ax.text(0, ymax[0], self.geom.frame + " coords")
+
+        # Grid and ticks
+        glon_spacing, glat_spacing = 45, 15
+        lon, lat = ax.coords
+        lon.set_ticks(spacing=glon_spacing * u.deg, color="w", alpha=0.8)
+        lat.set_ticks(spacing=glat_spacing * u.deg)
+        lon.set_ticks_visible(False)
+
+        lon.set_major_formatter("d")
+        lat.set_major_formatter("d")
+
+        lon.set_ticklabel(color="w", alpha=0.8)
+        lon.grid(alpha=0.2, linestyle="solid", color="w")
+        lat.grid(alpha=0.2, linestyle="solid", color="w")
+
         return ax
