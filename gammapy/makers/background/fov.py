@@ -170,14 +170,13 @@ class FoVBackgroundMaker(Maker):
         """
         # freeze all model components not related to background model
 
-        models = dataset.models
+        models = dataset.models.select(tag="sky-model")
 
         with models.restore_status(restore_values=False):
             models.select(tag="sky-model").freeze()
 
             fit = Fit([dataset])
             fit_result = fit.run()
-            #print("fit res \n", fit_result.parameters.to_table())
             if not fit_result.success:
                 log.warning(
                     f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "
@@ -185,7 +184,6 @@ class FoVBackgroundMaker(Maker):
                 )
                 dataset.mask_safe.data[...] = False
 
-        #print("fit res outside \n", fit_result.parameters.to_table())
         return dataset
 
     def make_background_scale(self, dataset):
