@@ -170,7 +170,7 @@ class FoVBackgroundMaker(Maker):
         """
         # freeze all model components not related to background model
 
-        models = dataset.models
+        models = dataset.models.select(tag="sky-model")
 
         with models.restore_status(restore_values=False):
             models.select(tag="sky-model").freeze()
