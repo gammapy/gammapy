@@ -702,7 +702,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         return energy_flux
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
@@ -795,7 +795,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
         return energy_flux
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
@@ -883,7 +883,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
         return amplitude * top / bottom
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
