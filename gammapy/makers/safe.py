@@ -171,10 +171,12 @@ class SafeMaskMaker(Maker):
         energy_max = energy_true[-1]
 
         aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
-        energy_min = model.inverse(
+        inversion = model.inverse(
             aeff_thres, energy_min=energy_min, energy_max=energy_max
         )
-        return geom.energy_mask(energy_min=energy_min[0])
+        if not np.isnan(inversion[0]):
+            energy_min = inversion[0]
+        return geom.energy_mask(energy_min=energy_min)
 
     def make_mask_energy_edisp_bias(self, dataset, observation=None):
         """Make safe energy mask from energy dispersion bias.

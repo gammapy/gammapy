@@ -451,6 +451,8 @@ class EDispKernel(IRF):
         energy_true_bias = bias_spectrum.inverse(
             Quantity(bias), energy_min=energy_min, energy_max=energy_max
         )
+        if np.isnan(energy_true_bias[0]):
+            energy_true_bias[0] = energy_min
         # return reconstructed energy
         return energy_true_bias * (1 + bias)
 
