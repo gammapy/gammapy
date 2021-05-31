@@ -25,7 +25,6 @@ except ImportError:
         def __next__(self):
             return self._iterable.__next__()
 
-global SHOW_PROGRESS_BAR
 SHOW_PROGRESS_BAR = False
 
 def progress_bar(iterable, desc=None):
