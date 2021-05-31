@@ -9,7 +9,7 @@ from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
 import yaml
-from pydantic import BaseModel, FilePath
+from pydantic import BaseModel
 from pydantic.utils import deep_update
 from gammapy.makers import MapDatasetMaker
 from gammapy.utils.scripts import make_path, read_yaml
@@ -153,7 +153,7 @@ class ExcessMapConfig(GammapyBaseConfig):
 
 class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = None
-    exclusion: FilePath = None
+    exclusion: Path = None
     parameters: dict = {}
 
 
@@ -203,7 +203,7 @@ class DatasetsConfig(GammapyBaseConfig):
 class ObservationsConfig(GammapyBaseConfig):
     datastore: Path = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids: List[int] = []
-    obs_file: FilePath = None
+    obs_file: Path = None
     obs_cone: SpatialCircleConfig = SpatialCircleConfig()
     obs_time: TimeRangeConfig = TimeRangeConfig()
 
