@@ -250,7 +250,7 @@ def test_mde_run(dataset, models):
     assert_allclose(meta["TSTOP"], 3600.0)
     assert_allclose(meta["ONTIME"], 3600.0)
     assert_allclose(meta["LIVETIME"], 3600.0)
-    assert_allclose(meta["DEADC"], 0.0)
+    assert_allclose(meta["DEADC"], 1.0)
     assert_allclose(meta["RA_PNT"], 266.4049882865447)
     assert_allclose(meta["DEC_PNT"], -28.936177761791473)
     assert meta["EQUINOX"] == "J2000"
