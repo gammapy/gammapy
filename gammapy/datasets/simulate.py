@@ -238,7 +238,7 @@ class MapDatasetEventSampler:
         )
         meta["ONTIME"] = observation.observation_time_duration.to("s").value
         meta["LIVETIME"] = observation.observation_live_time_duration.to("s").value
-        meta["DEADC"] = observation.observation_dead_time_fraction
+        meta["DEADC"] = 1 - observation.observation_dead_time_fraction
 
         meta["RA_PNT"] = observation.pointing_radec.icrs.ra.deg
         meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.deg
