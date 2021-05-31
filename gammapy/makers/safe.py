@@ -166,8 +166,14 @@ class SafeMaskMaker(Maker):
         )
         model = TemplateSpectralModel.from_region_map(aeff)
 
+        energy_true = model.energy
+        energy_min = energy_true[np.where(model.values > 0)[0][0]]
+        energy_max = energy_true[-1]
+
         aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
-        energy_min = model.inverse(aeff_thres)
+        energy_min = model.inverse(
+            aeff_thres, energy_min=energy_min, energy_max=energy_max
+        )
         return geom.energy_mask(energy_min=energy_min[0])
 
     def make_mask_energy_edisp_bias(self, dataset, observation=None):
