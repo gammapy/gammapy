@@ -177,6 +177,7 @@ class FoVBackgroundMaker(Maker):
 
             fit = Fit([dataset])
             fit_result = fit.run()
+            #print("fit res \n", fit_result.parameters.to_table())
             if not fit_result.success:
                 log.warning(
                     f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "
@@ -184,6 +185,7 @@ class FoVBackgroundMaker(Maker):
                 )
                 dataset.mask_safe.data[...] = False
 
+        #print("fit res outside \n", fit_result.parameters.to_table())
         return dataset
 
     def make_background_scale(self, dataset):
