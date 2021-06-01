@@ -67,10 +67,6 @@ class ExcessMapEstimator(Estimator):
     If a model is set on the dataset the excess map estimator will compute the excess taking into account
     the predicted counts of the model.
 
-    Some background estimation techniques like ring background or adaptive ring background will provide already
-    correlated data for OFF. In the case of already correlated OFF data, the OFF data should not be correlated again,
-    and so the option correlate_off should set to False (default).
-
     Parameters
     ----------
     correlation_radius : ~astropy.coordinate.Angle
@@ -96,7 +92,7 @@ class ExcessMapEstimator(Estimator):
         Apply a mask for the computation.
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
     correlate_off : Bool
-        Correlate OFF events in the case of a MapDatasetOnOff
+        Correlate OFF events in the case of a MapDatasetOnOff. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map. 
         If None, a Power Law of index 2 is assumed (default). 
@@ -113,7 +109,7 @@ class ExcessMapEstimator(Estimator):
         selection_optional=None,
         energy_edges=None,
         apply_mask_fit=False,
-        correlate_off=False,
+        correlate_off=True,
         spectral_model=None,
     ):
         self.correlation_radius = correlation_radius
