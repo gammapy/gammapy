@@ -9,6 +9,7 @@ from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 from gammapy.maps import MapAxis
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
+from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
 from .core import (
     Estimator,
@@ -806,7 +807,6 @@ class FluxPointsEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.Dataset`
             Datasets
-
         Returns
         -------
         flux_points : `FluxPoints`
@@ -816,8 +816,9 @@ class FluxPointsEstimator(Estimator):
 
         rows = []
 
-        for energy_min, energy_max in zip(
-            self.energy_edges[:-1], self.energy_edges[1:]
+        for energy_min, energy_max in progress_bar(
+            zip(self.energy_edges[:-1], self.energy_edges[1:]),
+            desc="Energy bins"
         ):
             row = self.estimate_flux_point(
                 datasets, energy_min=energy_min, energy_max=energy_max,

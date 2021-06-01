@@ -20,6 +20,7 @@ from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
+from gammapy.utils.pbar import progress_bar
 
 __all__ = ["Analysis"]
 
@@ -285,7 +286,7 @@ class Analysis:
         return WcsGeom.create(**geom_params)
 
     def _map_making(self):
-        """Make maps and datasets for 3d analysis."""
+        """Make maps and datasets for 3d analysis"""
         datasets_settings = self.config.datasets
         log.info("Creating geometry.")
         geom = self._create_geometry()
@@ -334,8 +335,11 @@ class Analysis:
         stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
 
         if datasets_settings.stack:
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
+            for obs in progress_bar(
+                self.observations,
+                desc="Observations"
+            ):
+                log.debug(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
@@ -351,8 +355,11 @@ class Analysis:
         else:
             datasets = []
 
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
+            for obs in progress_bar(
+                    self.observations,
+                    desc="Observations"
+            ):
+                log.debug(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
@@ -360,7 +367,6 @@ class Analysis:
                     dataset = bkg_maker.run(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
-
         self.datasets = Datasets(datasets)
 
     def _spectrum_extraction(self):
@@ -414,20 +420,22 @@ class Analysis:
         reference = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
         datasets = []
-        for obs in self.observations:
-            log.info(f"Processing observation {obs.obs_id}")
+        for obs in progress_bar(
+                self.observations,
+                desc="Observations"
+        ):
+            log.debug(f"Processing observation {obs.obs_id}")
             dataset = dataset_maker.run(reference.copy(), obs)
             if bkg_maker is not None:
                 dataset = bkg_maker.run(dataset, obs)
                 if dataset.counts_off is None:
-                    log.info(
+                    log.debug(
                         f"No OFF region found for observation {obs.obs_id}. Discarding."
                     )
                     continue
             dataset = safe_mask_maker.run(dataset, obs)
             log.debug(dataset)
             datasets.append(dataset)
-
         self.datasets = Datasets(datasets)
 
         if datasets_settings.stack:

@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data
+from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
@@ -346,7 +347,6 @@ class Fit:
             Number of parameter grid points to use.
         reoptimize : bool
             Re-optimize other parameters, when computing the fit statistic profile.
-
         Returns
         -------
         results : dict
@@ -373,7 +373,10 @@ class Fit:
         stats = []
         fit_results = []
         with parameters.restore_status():
-            for value in values:
+            for value in progress_bar(
+                values,
+                desc="Trial values"
+            ):
                 parameter.value = value
                 if reoptimize:
                     parameter.frozen = True
@@ -424,7 +427,10 @@ class Fit:
         stats = []
         fit_results = []
         with parameters.restore_status():
-            for x_value, y_value in itertools.product(x_values, y_values):
+            for x_value, y_value in progress_bar(
+                itertools.product(x_values, y_values),
+                desc="Trial values"
+            ):
                 # TODO: Remove log.info() and provide a nice progress bar
                 log.info(f"Processing: x={x_value}, y={y_value}")
                 x.value = x_value

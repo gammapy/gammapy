@@ -8,6 +8,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data
+from gammapy.utils.pbar import progress_bar
 from .core import Estimator
 from .flux_point import FluxPoints, FluxPointsEstimator
 
@@ -424,7 +425,6 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
-
         Returns
         -------
         lightcurve : `~gammapy.estimators.LightCurve`
@@ -440,8 +440,10 @@ class LightCurveEstimator(Estimator):
         gti = gti.union(overlap_ok=False, merge_equal=False)
 
         rows = []
-
-        for t_min, t_max in gti.time_intervals:
+        for t_min, t_max in progress_bar(
+                gti.time_intervals,
+                desc="Time intervals"
+        ):
             datasets_to_fit = datasets.select_time(
                 t_min=t_min, t_max=t_max, atol=self.atol
             )
