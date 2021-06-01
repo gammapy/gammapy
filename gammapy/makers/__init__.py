@@ -2,6 +2,7 @@ from gammapy.utils.registry import Registry
 from .background import *
 from .core import *
 from .map import *
+from .reduce import *
 from .safe import *
 from .spectrum import *
 
@@ -15,6 +16,7 @@ MAKER_REGISTRY = Registry(
         SpectrumDatasetMaker,
         MapDatasetMaker,
         SafeMaskMaker,
+        Makers,
     ]
 )
 """Registry of maker classes in Gammapy."""
