@@ -3,7 +3,12 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from gammapy.data import DataStore
-from gammapy.makers import Makers, MapDatasetMaker, SafeMaskMaker, FoVBackgroundMaker
+from gammapy.makers import (
+    DatasetsMaker,
+    MapDatasetMaker,
+    SafeMaskMaker,
+    FoVBackgroundMaker,
+)
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.datasets import MapDataset
 from gammapy.utils.testing import requires_data
@@ -64,7 +69,7 @@ def makers_list():
 )
 @requires_data()
 def test_makers(pars, observations, makers_list, tmp_path):
-    makers = Makers(
+    makers = DatasetsMaker(
         makers_list,
         pars["dataset"],
         stacking=pars["stacking"],
@@ -76,18 +81,14 @@ def test_makers(pars, observations, makers_list, tmp_path):
         overwrite=True,
     )
 
-    obs_groups = makers._group_observations(2, observations)
-    assert len(obs_groups[0]) == 2
-    assert len(obs_groups[1]) == 1
+    datasets = makers.run(observations)
 
-    stacked = makers.run(observations)
-
-    if stacked is not None:
-        counts = stacked.counts
+    if len(datasets) == 0:
+        counts = datasets[0].counts
         assert counts.unit == ""
         assert_allclose(counts.data.sum(), 46716, rtol=1e-5)
 
-        exposure = stacked.exposure
+        exposure = datasets[0].exposure
         assert exposure.unit == "m2 s"
         assert_allclose(exposure.data.mean(), 1.350841e09, rtol=3e-3)
 
@@ -95,7 +96,7 @@ def test_makers(pars, observations, makers_list, tmp_path):
 @requires_data()
 def test_makers_cutout_width(observations, makers_list, tmp_path):
 
-    makers = Makers(
+    makers = DatasetsMaker(
         makers_list,
         get_mapdataset(name="linear_staking_1deg"),
         stacking=True,
@@ -106,12 +107,12 @@ def test_makers_cutout_width(observations, makers_list, tmp_path):
         write_all=False,
         overwrite=True,
     )
-    stacked = makers.run(observations)
+    datasets = makers.run(observations)
 
-    counts = stacked.counts
+    counts = datasets[0].counts
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), 46716, rtol=1e-5)
 
-    exposure = stacked.exposure
+    exposure = datasets[0].exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 1.350841e09, rtol=3e-3)

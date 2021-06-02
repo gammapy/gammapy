@@ -16,7 +16,7 @@ MAKER_REGISTRY = Registry(
         SpectrumDatasetMaker,
         MapDatasetMaker,
         SafeMaskMaker,
-        Makers,
+        DatasetsMaker,
     ]
 )
 """Registry of maker classes in Gammapy."""
