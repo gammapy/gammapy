@@ -959,22 +959,44 @@ class HpxNDMap(HpxMap):
         return fig, ax, p
 
 
-    def plot_mask(self, ax=None, proj="AIT", **kwargs):
+    def plot_mask(self,
+            method="raster",
+            ax=None,
+            normalize=False,
+            proj="AIT",
+            oversample=2,
+            width_pix=1000,
+            **kwargs,
+        ):
         """Plot the mask as a shaded area
 
         Parameters
         ----------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
-            WCS axis object to plot on.
+        method : {'raster','poly'}
+            Method for mapping HEALPix pixels to a two-dimensional
+            image.  Can be set to 'raster' (rasterization to cartesian
+            image plane) or 'poly' (explicit polygons for each pixel).
+            WARNING: The 'poly' method is much slower than 'raster'
+            and only suitable for maps with less than ~10k pixels.
         proj : string, optional
             Any valid WCS projection type.
+        oversample : float
+            Oversampling factor for WCS map. This will be the
+            approximate ratio of the width of a HPX pixel to a WCS
+            pixel. If this parameter is None then the width will be
+            set from ``width_pix``.
+        width_pix : int
+            Width of the WCS geometry in pixels.  The pixel size will
+            be set to the number of pixels satisfying ``oversample``
+            or ``width_pix`` whichever is smaller.  If this parameter
+            is None then the width will be set from ``oversample``.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.contourf`
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
         Returns
         -------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
-            WCS axis object to plot on.
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            WCS axis object
         """
         if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
@@ -982,81 +1004,23 @@ class HpxNDMap(HpxMap):
         if not self.is_mask:
             raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
 
-        m = self.to_wcs(proj=proj)
+        if method == "raster":
+            m = self.to_wcs(
+                sum_bands=True,
+                normalize=normalize,
+                proj=proj,
+                oversample=oversample,
+                width_pix=width_pix,
+            )
 
-        ax = self._plot_default_axes(ax=ax, proj=proj)
+            m.data = np.nan_to_num(m.data).astype(bool)
 
-        kwargs.setdefault("alpha", 0.5)
-        kwargs.setdefault("colors", "r")
+            kwargs.setdefault("alpha", 0.1)
+            kwargs.setdefault("colors", "r")
 
-        data = np.squeeze(m.data).astype(float)
+            m.plot_mask(**kwargs)
 
-        ax.contourf(data, levels=[0, 0.5], **kwargs)
-
-        if self.geom.is_allsky:
-            ax = self._plot_format_allsky(ax)
         else:
-            ax = self._plot_format(ax)
-
-        # without this the axis limits are changed when calling scatter
-        ax.autoscale(enable=False)
-
-        return ax
-
-    def _plot_default_axes(self, proj, ax):
-        import matplotlib.pyplot as plt
-        from astropy.visualization.wcsaxes.frame import EllipticalFrame
-
-        wcs = self.geom.to_wcs_geom()
-        if ax is None:
-            fig = plt.gcf()
-            ax = fig.add_subplot(1, 1, 1, projection=wcs.wcs,
-                aspect="equal",
-                frame_class=EllipticalFrame
-                )
-
-        return ax
-
-    def _plot_format(self, ax):
-        try:
-            ax.coords["glon"].set_axislabel("Galactic Longitude")
-            ax.coords["glat"].set_axislabel("Galactic Latitude")
-        except KeyError:
-            ax.coords["ra"].set_axislabel("Right Ascension")
-            ax.coords["dec"].set_axislabel("Declination")
-        except AttributeError:
-            log.info("Can't set coordinate axes. No WCS information available.")
-
-        return ax
-
-    def _plot_format_allsky(self, ax):
-        # Remove frame
-        ax.coords.frame.set_linewidth(0)
-
-        # Set plot axis limits
-        xmin = self.geom.to_image().coord_to_pix({"lon": 180, "lat": 0})
-        xmax = self.geom.to_image().coord_to_pix({"lon": -180, "lat": 0})
-
-        ymin = self.geom.to_image().coord_to_pix({"lon": 0, "lat": -90})
-        ymax = self.geom.to_image().coord_to_pix({"lon": 0, "lat": 90})
-
-        ax.set_xlim(xmin[0], xmax[0])
-        ax.set_ylim(ymin[0], ymax[0])
-
-        ax.text(0, ymax[0], self.geom.frame + " coords")
-
-        # Grid and ticks
-        glon_spacing, glat_spacing = 45, 15
-        lon, lat = ax.coords
-        lon.set_ticks(spacing=glon_spacing * u.deg, color="w", alpha=0.8)
-        lat.set_ticks(spacing=glat_spacing * u.deg)
-        lon.set_ticks_visible(False)
-
-        lon.set_major_formatter("d")
-        lat.set_major_formatter("d")
-
-        lon.set_ticklabel(color="w", alpha=0.8)
-        lon.grid(alpha=0.2, linestyle="solid", color="w")
-        lat.grid(alpha=0.2, linestyle="solid", color="w")
+            raise ValueError(f"Invalid method: {method!r}")
 
         return ax
