@@ -17,6 +17,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.scripts import make_path
 from .core import Model
+from gammapy.utils.roots import find_roots
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
@@ -498,7 +499,6 @@ class SpectralModel(Model):
         energy : `~astropy.units.Quantity`
             Energies at which the model has the given ``value``.
         """
-        from gammapy.estimators.utils import find_roots
 
         eunit = "TeV"
         energy_min = energy_min.to(eunit)

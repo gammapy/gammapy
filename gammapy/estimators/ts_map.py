@@ -19,7 +19,8 @@ from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from .core import Estimator
 from .flux_map import FluxMaps
-from .utils import estimate_exposure_reco_energy, find_roots
+from .utils import estimate_exposure_reco_energy
+from gammapy.utils.roots import find_roots
 
 __all__ = ["TSMapEstimator"]
 

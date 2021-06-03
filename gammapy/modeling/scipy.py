@@ -3,6 +3,7 @@ import numpy as np
 import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from .likelihood import Likelihood
+from gammapy.utils.roots import find_roots
 
 __all__ = [
     "optimize_scipy",
@@ -62,7 +63,6 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
-    from gammapy.estimators.utils import find_roots
 
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
@@ -161,7 +161,6 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
-    from gammapy.estimators.utils import find_roots
 
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 

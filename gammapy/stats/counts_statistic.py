@@ -3,6 +3,7 @@ import abc
 import numpy as np
 from scipy.stats import chi2
 from .fit_statistics import cash, get_wstat_mu_bkg, wstat
+from gammapy.utils.roots import find_roots
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
@@ -39,7 +40,6 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
-        from gammapy.estimators.utils import find_roots
 
         errn = np.zeros_like(self.n_on, dtype="float")
         min_range = self.n_sig - 2 * n_sigma * (self.error + 1)
@@ -71,7 +71,6 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
-        from gammapy.estimators.utils import find_roots
 
         errp = np.zeros_like(self.n_on, dtype="float")
         max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
@@ -101,7 +100,6 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the upper limit expressed in number of sigma. Default is 3.
         """
-        from gammapy.estimators.utils import find_roots
 
         ul = np.zeros_like(self.n_on, dtype="float")
 
@@ -138,7 +136,6 @@ class CountsStatistic(abc.ABC):
         n_sig : `numpy.ndarray`
             Excess
         """
-        from gammapy.estimators.utils import find_roots
 
         n_sig = np.zeros_like(self.n_bkg, dtype="float")
         it = np.nditer(n_sig, flags=["multi_index"])

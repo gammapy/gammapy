@@ -357,7 +357,6 @@ def test_models(spectrum):
         or spectrum["name"] == "pbpl"
     ):
         assert_quantity_allclose(model.inverse(value), energy, rtol=0.01)
-        print(values)
         inverse = model.inverse_all(values)
         for ke, ener in enumerate(energies):
             assert_quantity_allclose(inverse[ke], energies[ke], rtol=0.01)
