@@ -490,9 +490,9 @@ class SpectralModel(Model):
         value : `~astropy.units.Quantity`
             Function value of the spectral model.
         energy_min : `~astropy.units.Quantity`
-            Lower bracket value in case solution is not unique.
+            Lower energy bound of the roots finding
         energy_max : `~astropy.units.Quantity`
-            Upper bracket value in case solution is not unique.
+            Upper energy bound of the roots finding
 
         Returns
         -------
@@ -514,7 +514,7 @@ class SpectralModel(Model):
         return roots
 
     def inverse_all(self, values, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
-        """Return energy for a multiple function values of the spectral model.
+        """Return energies for multiple function values of the spectral model.
 
         Calls the `scipy.optimize.brentq` numerical root finding method.
 
@@ -523,9 +523,9 @@ class SpectralModel(Model):
         values : `~astropy.units.Quantity`
             Function values of the spectral model.
         energy_min : `~astropy.units.Quantity`
-            Lower bracket value in case solution is not unique.
+            Lower energy bound of the roots finding
         energy_max : `~astropy.units.Quantity`
-            Upper bracket value in case solution is not unique.
+            Upper energy bound of the roots finding
 
         Returns
         -------
