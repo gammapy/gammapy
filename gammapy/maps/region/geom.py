@@ -77,16 +77,6 @@ class RegionGeom(Geom):
         self.get_wcs_coord_and_weights = lru_cache()(self.get_wcs_coord_and_weights)
 
 
-    # workaround for the lru_cache pickle issue
-    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key, value in state.items():
-            func = getattr(value, "__wrapped__", None)
-            if func is not None:
-                state[key] = func
-        return state
-
     def __setstate__(self, state):
         for key, value in state.items():
             if key in ["get_wcs_coord_and_weights"]:

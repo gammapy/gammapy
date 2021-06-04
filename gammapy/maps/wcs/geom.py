@@ -119,16 +119,6 @@ class WcsGeom(Geom):
         self.bin_volume = lru_cache()(self.bin_volume)
         self.to_image = lru_cache()(self.to_image)
 
-    # workaround for the lru_cache pickle issue
-    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key, value in state.items():
-            func = getattr(value, "__wrapped__", None)
-            if func is not None:
-                state[key] = func
-
-        return state
 
     def __setstate__(self, state):
         for key, value in state.items():
