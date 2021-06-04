@@ -6,7 +6,7 @@ from pathlib import Path
 from astropy.coordinates import Angle
 from .core import Maker
 from .safe import SafeMaskMaker
-from gammapy.datasets import Datasets
+from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 
 log = logging.getLogger(__name__)
 
@@ -65,10 +65,16 @@ class DatasetsMaker(Maker):
         self.n_jobs = n_jobs
         self.write_all = write_all
         self.stacking = stacking
-        self.dataset = dataset
+
+        if isinstance(dataset, MapDataset):
+            # also valid for Spectrum as it inherits from MapDataset
+            self.dataset = dataset
+        else:
+            raise Exception(TypeError("Invalid reference dataset."))
+
         self._datasets = []
 
-        if self.cutout_width is None:
+        if self.cutout_width is None and not isinstance(dataset, SpectrumDataset):
             if self.offset_max is None:
                 raise Exception(
                     ValueError("cutout_width must be defined if there is no offset_max")
@@ -96,14 +102,19 @@ class DatasetsMaker(Maker):
             Observation
         """
 
-        cutouts_kwargs = {
-            "position": observation.pointing_radec.galactic,
-            "width": self.cutout_width,
-            "mode": self.cutout_mode,
-        }
-        dataset_obs = self.dataset.cutout(
-            **cutouts_kwargs, name=f"obs-{observation.obs_id}_{self.dataset.name}"
-        )
+        if isinstance(self.dataset, SpectrumDataset):
+            dataset_obs = self.dataset.copy(
+                name=f"obs-{observation.obs_id}_{self.dataset.name}"
+            )
+        elif isinstance(self.dataset, MapDataset):
+            cutouts_kwargs = {
+                "position": observation.pointing_radec.galactic,
+                "width": self.cutout_width,
+                "mode": self.cutout_mode,
+            }
+            dataset_obs = self.dataset.cutout(
+                **cutouts_kwargs, name=f"obs-{observation.obs_id}_{self.dataset.name}"
+            )
 
         log.info(f"Computing dataset for observation {observation.obs_id}")
         for maker in self.makers:
@@ -123,9 +134,11 @@ class DatasetsMaker(Maker):
         dataset.write(filename, overwrite=self.overwrite)
 
     def callback(self, dataset):
+        print(dataset.name)
         if self.stacking:
             self.dataset.stack(dataset)
         else:
+
             self._datasets.append(dataset)
 
     def run(self, observations):
@@ -137,18 +150,18 @@ class DatasetsMaker(Maker):
         """
 
         if self.n_jobs is not None and self.n_jobs > 1:
-            with contextlib.closing(Pool(processes=self.n_jobs)) as pool:
-                log.info("Using {} jobs.".format(self.n_jobs))
+            n_jobs = min(self.n_jobs, len(observations))
+            with contextlib.closing(Pool(processes=n_jobs)) as pool:
+                log.info("Using {} jobs.".format(n_jobs))
                 results = []
                 for observation in observations:
                     result = pool.apply_async(
                         self.make_dataset, (observation,), callback=self.callback
                     )
                     results.append(result)
-
                 # wait async run is done
-                for result in results:
-                    result.wait()
+                [result.wait() for result in results]
+
         else:
             for obs in observations:
                 dataset = self.make_dataset(obs)
