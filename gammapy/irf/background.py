@@ -136,6 +136,32 @@ class Background3D(BackgroundIRF):
     def peek(self, figsize=(10, 8)):
         return self.to_2d().peek(figsize)
 
+    def plot_at_energy(self, energy=None, ax=None, add_cbar=True, **kwargs):
+        """ Plot the background rate in Field of view co-ordinates at a given energy.
+
+        Parameters
+        -----------
+        energy : `~astropy.units.Quantity`
+            Energy
+        ax: `~matplotlib.axes.Axes`, optional
+            Axis
+        add_cbar : bool
+            Add color bar?
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        bkg = self.evaluate(energy=energy)
+        ax.imshow(bkg.squeeze(), **kwargs)
+        ax.set_xlabel(bkg.axes.names[1])
+        ax.set_ylabel(bkg.axes.names[2])
+        ax.set_title(str(energy))
+        if add_cbar:
+            ax.figure.colorbar(label=bkg.unit)
+
 
 class Background2D(BackgroundIRF):
     """Background 2D.

@@ -125,6 +125,12 @@ def test_background_3d_evaluate(bkg_3d):
     assert res.shape == (2, 2)
 
 
+@requires_dependency("matplotlib")
+def test_plot(bkg_3d):
+    with mpl_plot_check():
+        bkg_3d.plot_at_energy("5 TeV")
+
+
 def test_background_3d_missing_values(bkg_3d_interp):
 
     res = bkg_3d_interp.evaluate(
