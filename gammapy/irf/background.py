@@ -155,12 +155,12 @@ class Background3D(BackgroundIRF):
         ax = plt.gca() if ax is None else ax
 
         bkg = self.evaluate(energy=energy)
-        ax.imshow(bkg.squeeze(), **kwargs)
-        ax.set_xlabel(bkg.axes.names[1])
-        ax.set_ylabel(bkg.axes.names[2])
+        im = ax.imshow(bkg.squeeze(), **kwargs)
+        ax.set_xlabel(self.axes.names[1])
+        ax.set_ylabel(self.axes.names[2])
         ax.set_title(str(energy))
         if add_cbar:
-            ax.figure.colorbar(label=bkg.unit)
+            ax.figure.colorbar(im, ax=ax, label=bkg.unit)
 
 
 class Background2D(BackgroundIRF):
