@@ -57,9 +57,17 @@ def test_safe_mask_maker(observations, caplog):
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
     mask_edisp_bias_offset = safe_mask_maker_offset.make_mask_energy_edisp_bias(dataset, obs)
     assert_allclose(mask_edisp_bias.data.sum(), 1815)
-    assert_allclose(mask_edisp_bias_offset.data.sum(), 121)
+    assert_allclose(mask_edisp_bias_offset.data.sum(), 1694)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert_allclose(mask_bkg_peak.data.sum(), 1815)      
     assert caplog.records[-1].levelname == "WARNING"
     assert caplog.records[-1].message == "No default thresholds defined for obs 110380"
+
+    safe_mask_maker_noroot = SafeMaskMaker(
+                                    offset_max="3 deg", aeff_percent = -10, bias_percent=-10
+                                    )
+    mask_aeff_max_noroot = safe_mask_maker_noroot.make_mask_energy_aeff_max(dataset)
+    mask_edisp_bias_noroot = safe_mask_maker_noroot.make_mask_energy_edisp_bias(dataset)
+    assert_allclose(mask_aeff_max_noroot.data.sum(), 1815)
+    assert_allclose(mask_edisp_bias_noroot.data.sum(), 1936)

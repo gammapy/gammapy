@@ -324,6 +324,8 @@ def test_models(spectrum):
     model = spectrum["model"]
     energy = 2 * u.TeV
     value = model(energy)
+    energies =  [2, 3] * u.TeV
+    values = model(energies)
     assert_quantity_allclose(value, spectrum["val_at_2TeV"], rtol=1e-7)
     if "val_at_3TeV" in spectrum:
         energy = 3 * u.TeV
@@ -354,7 +356,11 @@ def test_models(spectrum):
         or spectrum["name"] == "GaussianSpectralModel"
         or spectrum["name"] == "pbpl"
     ):
-        assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
+        assert_quantity_allclose(model.inverse(value), energy, rtol=0.01)
+        inverse = model.inverse_all(values)
+        for ke, ener in enumerate(energies):
+            assert_quantity_allclose(inverse[ke], energies[ke], rtol=0.01)
+
 
     if "integral_infinity" in spectrum:
         energy_min = 0 * u.TeV

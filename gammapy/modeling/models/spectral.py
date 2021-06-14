@@ -17,6 +17,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.scripts import make_path
 from .core import Model
+from gammapy.utils.roots import find_roots
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
@@ -241,7 +242,7 @@ class SpectralModel(Model):
             **kwargs,
         )
 
-    def reference_fluxes(self,  energy_axis):
+    def reference_fluxes(self, energy_axis):
         """Get reference fluxes for a given energy axis.
 
         Parameters
@@ -273,7 +274,7 @@ class SpectralModel(Model):
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
-        sed_type = "dnde",
+        sed_type="dnde",
         n_points=100,
         **kwargs,
     ):
@@ -319,8 +320,8 @@ class SpectralModel(Model):
 
         energy_min, energy_max = energy_range
         energy = MapAxis.from_energy_bounds(
-                                            energy_min, energy_max, n_points, energy_unit
-                                            ).edges
+            energy_min, energy_max, n_points, energy_unit
+        ).edges
 
         if sed_type == "dnde":
             flux = self(energy).to(flux_unit)
@@ -330,11 +331,11 @@ class SpectralModel(Model):
 
         elif sed_type == "flux":
             flux = self.integral(energy[:-1], energy[1:]).to("cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         elif sed_type == "eflux":
             flux = self.energy_flux(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
@@ -353,7 +354,7 @@ class SpectralModel(Model):
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
-        sed_type = "dnde",
+        sed_type="dnde",
         n_points=100,
         **kwargs,
     ):
@@ -410,20 +411,21 @@ class SpectralModel(Model):
             energy_min, energy_max, n_points, energy_unit
         ).edges
 
-
         if sed_type == "dnde":
             flux, flux_err = self.evaluate_error(energy).to(flux_unit)
-        
+
         elif sed_type == "e2dnde":
             flux, flux_err = energy ** 2 * self.evaluate_error(energy).to(flux_unit)
 
         elif sed_type == "flux":
             flux, flux_err = self.integral_error(energy[:-1], energy[1:]).to("cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         elif sed_type == "eflux":
-            flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.
+            flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to(
+                "TeV cm-2 s-1"
+            )
+            energy = (energy[:-1] + energy[1:]) / 2.0
 
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
@@ -488,32 +490,54 @@ class SpectralModel(Model):
         value : `~astropy.units.Quantity`
             Function value of the spectral model.
         energy_min : `~astropy.units.Quantity`
-            Lower bracket value in case solution is not unique.
+            Lower energy bound of the roots finding
         energy_max : `~astropy.units.Quantity`
-            Upper bracket value in case solution is not unique.
+            Upper energy bound of the roots finding
 
         Returns
         -------
         energy : `~astropy.units.Quantity`
             Energies at which the model has the given ``value``.
         """
+
         eunit = "TeV"
+        energy_min = energy_min.to(eunit)
+        energy_max = energy_max.to(eunit)
 
+        def f(x):
+            # scale by 1e12 to achieve better precision
+            energy = u.Quantity(x, eunit, copy=False)
+            y = self(energy).to_value(value.unit)
+            return 1e12 * (y - value.value)
+
+        roots, res = find_roots(f, energy_min, energy_max, points_scale="log")
+        return roots
+
+    def inverse_all(self, values, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
+        """Return energies for multiple function values of the spectral model.
+
+        Calls the `scipy.optimize.brentq` numerical root finding method.
+
+        Parameters
+        ----------
+        values : `~astropy.units.Quantity`
+            Function values of the spectral model.
+        energy_min : `~astropy.units.Quantity`
+            Lower energy bound of the roots finding
+        energy_max : `~astropy.units.Quantity`
+            Upper energy bound of the roots finding
+
+        Returns
+        -------
+        energy : list of `~astropy.units.Quantity`
+            each element contain the energies at which the model
+            has corresponding value of ``values``.
+        """
         energies = []
-        for val in np.atleast_1d(value):
-
-            def f(x):
-                # scale by 1e12 to achieve better precision
-                energy = u.Quantity(x, eunit, copy=False)
-                y = self(energy).to_value(value.unit)
-                return 1e12 * (y - val.value)
-
-            energy = scipy.optimize.brentq(
-                f, energy_min.to_value(eunit), energy_max.to_value(eunit)
-            )
-            energies.append(energy)
-
-        return u.Quantity(energies, eunit, copy=False)
+        for val in np.atleast_1d(values):
+            res = self.inverse(val, energy_min, energy_max)
+            energies.append(res)
+        return energies
 
 
 class ConstantSpectralModel(SpectralModel):
@@ -678,7 +702,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         return energy_flux
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
@@ -771,7 +795,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
         return energy_flux
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
@@ -859,7 +883,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
         return amplitude * top / bottom
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters

@@ -49,6 +49,7 @@ class EDispKernel(IRF):
     >>> edisp.peek()
 
     """
+
     required_axes = ["energy_true", "energy"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
     """Default Interpolation kwargs for `~IRF`. Fill zeros and do not
@@ -99,8 +100,7 @@ class EDispKernel(IRF):
         data = self.pdf_in_safe_range(lo_threshold, hi_threshold)
 
         return self.__class__(
-            axes=self.axes.squash("energy"),
-            data=np.sum(data, axis=1, keepdims=True),
+            axes=self.axes.squash("energy"), data=np.sum(data, axis=1, keepdims=True),
         )
 
     @classmethod
@@ -142,7 +142,9 @@ class EDispKernel(IRF):
             bias=bias,
             pdf_threshold=pdf_threshold,
         )
-        return edisp.to_edisp_kernel(offset=offset_axis.center[0], energy=energy_axis.edges)
+        return edisp.to_edisp_kernel(
+            offset=offset_axis.center[0], energy=energy_axis.edges
+        )
 
     @classmethod
     def from_diagonal_response(cls, energy_axis_true, energy_axis=None):
@@ -444,14 +446,13 @@ class EDispKernel(IRF):
         if energy_max is None:
             energy_max = energy_true[-1]
 
-        bias_spectrum = TemplateSpectralModel(
-            energy=energy_true, values=values
-        )
+        bias_spectrum = TemplateSpectralModel(energy=energy_true, values=values)
 
         energy_true_bias = bias_spectrum.inverse(
             Quantity(bias), energy_min=energy_min, energy_max=energy_max
         )
-
+        if np.isnan(energy_true_bias[0]):
+            energy_true_bias[0] = energy_min
         # return reconstructed energy
         return energy_true_bias * (1 + bias)
 

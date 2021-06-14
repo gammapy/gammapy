@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multi-Gaussian distribution utilities (Gammapy internal)."""
 import numpy as np
-import scipy.optimize
 from astropy import units as u
-
+from gammapy.utils.roots import find_roots
 
 class Gauss2DPDF:
     """2D symmetric Gaussian PDF.
@@ -270,10 +269,11 @@ class MultiGauss2D:
             # positive if theta too large
             return self.containment_fraction(rad * u.deg) - containment_fraction
 
-        rad = scipy.optimize.brentq(f, a=0, b=rad_max)
-        if np.allclose(rad, rad_max):
+        roots, res = find_roots(f, lower_bound=0, upper_bound=rad_max, nbin=1)
+        if np.isnan(roots[0]) or np.allclose(roots[0], rad_max):
             rad = np.inf
-
+        else:
+            rad = roots[0]
         return rad * u.deg
 
     def match_sigma(self, containment_fraction):
