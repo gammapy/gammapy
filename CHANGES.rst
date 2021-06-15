@@ -2,8 +2,8 @@
 -----------------
 
 - No changes yet
-- 14 contributors
-- 148 pull requests so far (not all listed below)
+- 16 contributors
+- 182 pull requests so far (not all listed below)
 
 **What's new?**
 
@@ -14,6 +14,11 @@ parameter in the ``SpectrumDatasetMaker``.
 Model evaluation is now possible on a ``RegionGeom`` thanks to the ``RegionGeom.wcs``.
 Spatial models can now be evaluated using ``SpectrumDataset``.
 These changes allow for a direct support of extended sources in 1D analysis.
+
+In addition, healpy support has been improved with the addition of a `convolve` method on the
+``HpxNDMap`` and improved I/O methods.
+#TODO : Say more about convolution ?
+Computation of `npred` on a ``MapDataset`` with a ``HpxGeom`` geometry is now possible.
 
 New catalog information has been added on `gammapy.catalog`, the data release 2 of the 4FGL
 and the third HAWC catalog.
@@ -50,6 +55,7 @@ In alphabetical order by first name:
 
 - Atreyee Sinha
 - Axel Donath
+- Bruno Khelifi
 - Cosimo Nigro
 - Fabio Acero
 - Fabio Pintore
@@ -57,6 +63,7 @@ In alphabetical order by first name:
 - Johannes Buchner
 - José Enrique Ruiz
 - Laura Olivera Nieto
+- Luca Giunti
 - Mathieu de Bony
 - Maximilian Nöthe
 - Quentin Remy
@@ -69,6 +76,26 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
+- [#3379] Use find_roots to call root finding methods (Quentin Rémy)
+- [#3377] Expand $GAMMAPY_DATA defined in HLI config (Jose Enrique Ruiz)
+- [#3374] Fix off position only created for first observation in make_theta_squared_table (Maximilian Nöthe)
+- [#3369] Enable reading psf and edisp for MapDatasetOnOff (Atreyee Sinha)
+- [#3363] Read healpy maps with col name (Vikas Joshi)
+- [#3358] Complete test coverage in docstrings of python files (Jose Enrique Ruiz)
+- [#3357] Improve test coverage in RST files (Jose Enrique Ruiz)
+- [#3353] Tweak in MapEvaluator.need_update for performance (Quentin Rémy)
+- [#3349] Cleanup MapEvaluator and add more caching (Quentin Rémy)
+- [#3347] Simplify and refactor installation instructions (Jose Enrique Ruiz)
+- [#3346] Allow Npred computation for Healpix MapDataset (Laura Olivera Nieto)
+- [#3343] Display progress bar in gammapy (Luca Giunti)
+- [#3342] Add truncation value to npred in cash statistics calculation (Régis Terrier)
+- [#3338] Add fixed_offset attribute to SafeMaskMaker (Fabio Pintore)
+- [#3337] Rename BackgroundModel to TemplateNPredModel (Axel Donath)
+- [#3335] Changed p-value for CountsStatistic (Régis Terrier)
+- [#3333] Add sed_type keyword to SpectralModel.plot (Fabio Pintore)
+- [#3328] Make FluxPoints inherit from FluxEstimate (Axel Donath)
+- [#3323] Implement HpxNDMap.convolve() (Laura Olivera Nieto)
+- [#3320] Add functionality to read healpy maps (Vikas Joshi)
 - [#3319] Modify FoVBackgroundMaker to take spectral model as argument (Régis Terrier)
 - [#3314] Implement HpxNDMap.smooth() (Laura Olivera Nieto)
 - [#3310] Hpx separation method (Vikas)
