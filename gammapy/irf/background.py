@@ -136,31 +136,52 @@ class Background3D(BackgroundIRF):
     def peek(self, figsize=(10, 8)):
         return self.to_2d().peek(figsize)
 
-    def plot_at_energy(self, energy=None, ax=None, add_cbar=True, **kwargs):
+    def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
         """ Plot the background rate in Field of view co-ordinates at a given energy.
 
         Parameters
         -----------
         energy : `~astropy.units.Quantity`
-            Energy
+            list of Energy
         ax: `~matplotlib.axes.Axes`, optional
             Axis
         add_cbar : bool
             Add color bar?
+        ncols : int
+            Number of columns to plot
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
         """
         import matplotlib.pyplot as plt
 
-        ax = plt.gca() if ax is None else ax
+        n = len(energy)
+        cols = min(ncols, n)
+        rows = 1 + (n - 1) // cols
+        width = 12
+        figsize = (width, width * rows / cols)
 
-        bkg = self.evaluate(energy=energy)
-        im = ax.imshow(bkg.squeeze(), **kwargs)
-        ax.set_xlabel(self.axes.names[1])
-        ax.set_ylabel(self.axes.names[2])
-        ax.set_title(str(energy))
-        if add_cbar:
-            ax.figure.colorbar(im, ax=ax, label=bkg.unit)
+        fig, axes = plt.subplots(
+            ncols=cols,
+            nrows=rows,
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.2, "wspace": 0.3},
+        )
+
+        for i, ee in enumerate(energy):
+            ax = axes.flat[i]
+            bkg = self.evaluate(energy=ee)
+            im = ax.imshow(bkg.squeeze(), **kwargs)
+            ax.set_xlabel(self.axes.names[1])
+            ax.set_ylabel(self.axes.names[2])
+            ax.set_title(str(ee))
+            if add_cbar:
+                ax.figure.colorbar(im, ax=ax, label=bkg.unit)
+
+            row, col = np.unravel_index(i, shape=(rows, cols))
+            if col > 0:
+                ax.set_ylabel("")
+            if row < rows - 1:
+                ax.set_xlabel("")
 
 
 class Background2D(BackgroundIRF):
