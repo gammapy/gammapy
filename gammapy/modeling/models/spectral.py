@@ -1023,6 +1023,8 @@ class PiecewiseNormSpectralModel(SpectralModel):
         else:
             parameters = Parameters(norms)
 
+        for p in parameters:
+            p._type  = 'spectral'
         self.default_parameters = parameters
         super().__init__()
 
@@ -1753,6 +1755,8 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
+        for p in parameters:
+            p._type  = 'spectral'
         self.default_parameters = Parameters(parameters)
         super().__init__()
 
