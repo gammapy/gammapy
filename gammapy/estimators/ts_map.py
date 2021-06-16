@@ -557,17 +557,20 @@ class BrentqFluxEstimator(Estimator):
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                roots, res = find_roots(
-                    f=dataset.stat_derivative,
-                    lower_bound=norm_min,
-                    upper_bound=norm_max,
-                    nbin=1,
-                    maxiter=self.max_niter,
-                    rtol=self.rtol,
-                )
-
-                # Where the root finding fails NaN is set as norm
-                norm, niter = roots[0], res[0].iterations
+                try:
+                    # here we do not use avoid find_roots for performance
+                    result_fit = scipy.optimize.brentq(
+                        f=dataset.stat_derivative,
+                        a=norm_min,
+                        b=norm_max,
+                        maxiter=self.max_niter,
+                        full_output=True,
+                        rtol=self.rtol,
+                    )
+                    norm = max(result_fit[0], norm_min_total)
+                    niter = result_fit[1].iterations
+                except (RuntimeError, ValueError):
+                    norm, niter = norm_min_total, self.max_niter
 
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
