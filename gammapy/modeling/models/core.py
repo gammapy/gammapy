@@ -40,8 +40,6 @@ class Model:
 
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
-        for p in self.default_parameters:
-            p._type = self._type
         default_parameters = self.default_parameters.copy()
 
         for par in default_parameters:
@@ -54,6 +52,14 @@ class Model:
 
             setattr(self, par.name, par)
         self._covariance = Covariance(self.parameters)
+
+    def __getattribute__(self, name):
+        value = object.__getattribute__(self, name)
+        
+        if isinstance(value, Parameter):
+            return value.__get__(self, None)
+    
+        return value
 
     @property
     def type(self):
