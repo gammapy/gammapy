@@ -40,6 +40,8 @@ class Model:
 
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
+        for p in self.default_parameters:
+            p._type = self._type
         default_parameters = self.default_parameters.copy()
 
         for par in default_parameters:
