@@ -53,6 +53,14 @@ class Model:
             setattr(self, par.name, par)
         self._covariance = Covariance(self.parameters)
 
+    def __getattribute__(self, name):
+        value = object.__getattribute__(self, name)
+        
+        if isinstance(value, Parameter):
+            return value.__get__(self, None)
+    
+        return value
+
     @property
     def type(self):
         return self._type

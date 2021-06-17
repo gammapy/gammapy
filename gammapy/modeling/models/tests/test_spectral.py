@@ -322,6 +322,8 @@ TEST_MODELS.append(
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
 def test_models(spectrum):
     model = spectrum["model"]
+    for p in model.parameters:
+        assert p._type == 'spectral'
     energy = 2 * u.TeV
     value = model(energy)
     energies =  [2, 3] * u.TeV
@@ -639,6 +641,8 @@ class TestNaimaModel:
             particle_distribution, nh=1 * u.cm ** -3
         )
         model = NaimaSpectralModel(radiative_model)
+        for p in model.parameters:
+            assert p._type == 'spectral'
 
         val_at_2TeV = 9.725347355450884e-14 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 3.530537143620737e-13 * u.Unit("cm-2 s-1")
@@ -678,6 +682,8 @@ class TestNaimaModel:
         )
 
         model = NaimaSpectralModel(radiative_model)
+        for p in model.parameters:
+            assert p._type == 'spectral'
 
         val_at_2TeV = 4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 1.595813e-11 * u.Unit("cm-2 s-1")
@@ -707,6 +713,8 @@ class TestNaimaModel:
         radiative_model = naima.radiative.Synchrotron(particle_distribution, B=2 * u.G)
 
         model = NaimaSpectralModel(radiative_model)
+        for p in model.parameters:
+            assert p._type == 'spectral'
 
         val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 4.449186e-13 * u.Unit("cm-2 s-1")
