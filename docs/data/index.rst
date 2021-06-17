@@ -100,7 +100,7 @@ of the sky.
 
 Combining event lists and GTIs
 ==============================
-Both event lists and GTIs can be stacked into a larger one. An `~gammapy.data.EventList` can also be created `~gammapy.data..EventList.from_stack`, that is,
+Both event lists and GTIs can be stacked into a larger one. An `~gammapy.data.EventList` can also be created `~gammapy.data.EventList.from_stack`, that is,
 from a list of `~gammapy.data.EventList` objects.
 
 .. testcode::
