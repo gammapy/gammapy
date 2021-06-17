@@ -10,10 +10,10 @@ without reference to its pixelization scheme.
 
 .. warning::
 
-    Gammapy uses `NEST` as default pixel order scheme, while `healpy`
+    Gammapy uses `NEST` as default pixel order scheme, while `~healpy`
     functions have `RING` as the default (see https://healpy.readthedocs.io/en/1.11.0/index.html).
-    If you are interfacing Gammapy HEALPix maps with `healpy` functions, you need to specify the pixelization scheme
-    either while creating the Gammapy object or when using the `healpy` functions.
+    If you are interfacing Gammapy HEALPix maps with `~healpy` functions, you need to specify the pixelization scheme
+    either while creating the Gammapy object or when using the `~healpy` functions.
 
 HEALPix geometry
 ----------------

@@ -56,6 +56,102 @@ to load IACT data. E.g. an alternative way to load the events for observation ID
     data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
     events = data_store.obs(23523).events
 
+Working with event lists
+========================
+To take a quick look at the events inside the list, one can use `~gammapy.data.EventList.peek()`
+
+.. plot::
+    :include-source:
+
+    from gammapy.data import EventList
+    filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    events = EventList.read(filename)
+    events.peek()
+
+Events can be selected based on any of their properties, with dedicated functions existing
+for energy, time, offset from pointing position and the selection of events in a particular region
+of the sky.
+
+.. testcode::
+
+    import astropy.units as u
+    from gammapy.data import EventList
+    filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    events = EventList.read(filename)
+
+    # Select events based on energy
+    selected_energy = events.select_energy([1*u.TeV, 1.2*u.TeV])
+
+    # Select events based on time
+    t_start = Time(57185, format='mjd')
+    t_stop = Time(57185.5, format='mjd')
+
+    selected_time = events.select_time([t_start, t_stop])
+
+    # Select events based on offset
+    selected_offset = events.select_offset([1*u.deg, 2*u.deg])
+
+    # Select events from a region in the sky
+    selected_region =  events.select_region("icrs;circle(86.3,22.01,3)")
+
+    # Finally one can select events based on any other of the columns of the `EventList.table`
+    selected_id = events.select_parameter('EVENT_ID', (5407363826067,5407363826070))
+
+
+Combining event lists and GTIs
+==============================
+Both event lists and GTIs can be stacked into a larger one. An `~gammapy.data.EventList` can also be created `~gammapy.data..EventList.from_stack`, that is,
+from a list of `~gammapy.data.EventList` objects.
+
+.. testcode::
+
+    from gammapy.data import EventList, GTI
+
+    filename_1 = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    filename_2 = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023526.fits.gz'
+
+    events_1 = EventList.read(filename_1)
+    events_2 = EventList.read(filename_2)
+
+    gti_1 = GTI.read(filename_1)
+    gti_2 = GTI.read(filename_2)
+
+    # stack in place, now the _1 object contains the information of both
+    gti_1.stack(gti_2)
+    events_1.stack(events_2)
+
+    # or instead create a new event list from the other two
+    combined_events = EventList.from_stack([events_1, events_2])
+
+Writing event lists and GTIs to file
+====================================
+To write the events or GTIs separately, one can just save the underlying
+`astropy.table.Table`. However, it is usually best to save the events and
+their associated GTIs together in the same FITS file.
+
+.. testcode::
+
+    from gammapy.data import EventList, GTI
+
+    filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+
+    events = EventList.read(filename)
+    gti = GTI.read(filename)
+
+    # Save separately
+    events.table.write('test_events.fits.gz',hdu="EVENTS")
+    gti.write('test_gti.fits.gz')
+
+    # Save together
+    from astropy.io import fits
+    primary_hdu = fits.PrimaryHDU(np.ones((4,4)))
+    EVENTS = fits.BinTableHDU(data=events.table, name='events')
+    GTI_table = fits.BinTableHDU(gti.table,name='gti')
+    hdul = fits.HDUList([primary_hdu, EVENTS, GTI_table])
+    hdul.writeto('test_together.fits.gz')
+
+
+
 Using `gammapy.data`
 ====================
 
