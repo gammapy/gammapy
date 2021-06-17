@@ -63,7 +63,6 @@ class Maps(MutableMapping):
         str_ += "\n"
         for name, value in self.items():
             str_ += f"{name} \n"
-#            str_ += "-" * len(name) + "\n"
             str_ += f"\t unit\t : {value.unit} \n"
             str_ += f"\t dtype\t : {value.data.dtype}\n"
             str_ += "\n"
@@ -107,8 +106,8 @@ class Maps(MutableMapping):
 
         Returns
         -------
-        map_Dict : `~gammapy.maps.MapDict`
-            Map dict object.
+        maps : `~gammapy.maps.Maps`
+            Maps object.
         """
         maps = cls()
 
@@ -131,8 +130,8 @@ class Maps(MutableMapping):
 
         Returns
         -------
-        flux_maps : `~gammapy.estimators.FluxMaps`
-            Flux maps object.
+        maps : `~gammapy.maps.Maps`
+            Maps object.
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)
@@ -151,3 +150,29 @@ class Maps(MutableMapping):
 
         hdulist = self.to_hdulist()
         hdulist.writeto(filename, overwrite=overwrite)
+
+    @classmethod
+    def from_geom(cls, geom, names, kwargs_list=None):
+        """Create map dictionary from geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            the input geometry that will be used by all maps
+        names : list of str
+            the list of all map names
+        kwargs_list : list of dict
+            the list of arguments to be passed to `~gammapy.maps.Map.from_geom()`
+
+        Returns
+        -------
+        maps : `~gammapy.maps.Maps`
+            Maps object.
+        """
+        mapdict = {}
+        if kwargs_list is None:
+            kwargs_list = [ {} ] * len(names)
+        for name, kwargs in zip(names, kwargs_list):
+            mapdict[name] = Map.from_geom(geom, **kwargs)
+
+        return cls(**mapdict)

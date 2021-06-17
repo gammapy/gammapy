@@ -15,7 +15,7 @@ def map_dictionary():
 
 
 def test_map_dict(map_dictionary):
-    map_dict = MapDict(**map_dictionary)
+    map_dict = Maps(**map_dictionary)
 
     map_dict["map3"] = map_dict["map1"].copy()
 
@@ -24,10 +24,11 @@ def test_map_dict(map_dictionary):
     assert_allclose(map_dict["map1"].data, 1)
     assert_allclose(map_dict["map2"].data, 2)
     assert_allclose(map_dict["map3"].data, 1)
+    assert "map3" in map_dict.__str__()
 
 
 def test_map_dict_wrong_addition(map_dictionary):
-    map_dict = MapDict(**map_dictionary)
+    map_dict = Maps(**map_dictionary)
 
     # Test pop method
     some_map = map_dict.pop("map2")
