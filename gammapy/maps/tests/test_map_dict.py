@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from gammapy.maps import Map, MapAxis, Maps, RegionNDMap, WcsGeom
 from gammapy.utils.testing import assert_allclose
 
@@ -61,3 +62,25 @@ def test_map_dict_region():
 
     assert len(map_dict) == 2
     assert_allclose(map_dict["map1"], 1)
+
+def test_map_dict_from_geom():
+    geom = WcsGeom.create(npix=5)
+    names = ["map1", "map2", "map3"]
+    kwargs_list = [
+        {"unit":"cm2s", "dtype":"float64"},
+        {"dtype" : "bool"},
+        {"data" : np.arange(25).reshape(5,5)}
+    ]
+
+    maps = Maps.from_geom(geom, names)
+    maps_kwargs = Maps.from_geom(geom, names, kwargs_list=kwargs_list)
+
+    assert len(maps)==3
+    assert maps["map1"].geom == geom
+    assert maps["map2"].unit == ''
+    assert maps["map3"].data.dtype == np.float32
+    assert len(maps_kwargs)==3
+    assert maps_kwargs["map1"].unit == 'cm2s'
+    assert maps_kwargs["map1"].data.dtype == np.float64
+    assert maps_kwargs["map2"].data.dtype == np.bool
+    assert maps_kwargs["map3"].data[2,2] == 12
