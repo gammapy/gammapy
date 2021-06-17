@@ -588,3 +588,18 @@ def test_hpxmap_read_healpy(tmp_path):
     assert m2.data.shape[0] == npix
     diff = np.sum(m[1] - m2.data)
     assert_allclose(diff, 0.0)
+
+
+@requires_dependency("matplotlib")
+def test_map_plot_mask():
+    geom = HpxGeom.create(nside=16)
+
+    region = CircleSkyRegion(
+        center=SkyCoord("0d", "0d", frame="galactic"),
+        radius=20 * u.deg
+    )
+
+    mask = geom.region_mask([region])
+
+    with mpl_plot_check():
+        mask.plot_mask()

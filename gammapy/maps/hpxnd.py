@@ -966,3 +966,58 @@ class HpxNDMap(HpxMap):
         ax.coords.grid(color="w", linestyle=":", linewidth=0.5)
 
         return fig, ax, p
+
+
+    def plot_mask(self,
+            method="raster",
+            ax=None,
+            proj="AIT",
+            oversample=2,
+            width_pix=1000,
+            **kwargs,
+        ):
+        """Plot the mask as a shaded area
+
+        Parameters
+        ----------
+        method : {'raster','poly'}
+            Method for mapping HEALPix pixels to a two-dimensional
+            image.  Can be set to 'raster' (rasterization to cartesian
+            image plane) or 'poly' (explicit polygons for each pixel).
+            WARNING: The 'poly' method is much slower than 'raster'
+            and only suitable for maps with less than ~10k pixels.
+        proj : string, optional
+            Any valid WCS projection type.
+        oversample : float
+            Oversampling factor for WCS map. This will be the
+            approximate ratio of the width of a HPX pixel to a WCS
+            pixel. If this parameter is None then the width will be
+            set from ``width_pix``.
+        width_pix : int
+            Width of the WCS geometry in pixels.  The pixel size will
+            be set to the number of pixels satisfying ``oversample``
+            or ``width_pix`` whichever is smaller.  If this parameter
+            is None then the width will be set from ``oversample``.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+
+        Returns
+        -------
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+            WCS axis object
+        """
+        if not self.is_mask:
+            raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
+
+        if method == "raster":
+            m = self.to_wcs(
+                sum_bands=True,
+                normalize=False,
+                proj=proj,
+                oversample=oversample,
+                width_pix=width_pix,
+            )
+            m.data = np.nan_to_num(m.data).astype(bool)
+            return m.plot_mask(ax=ax, **kwargs)
+        else:
+            raise ValueError(f"Invalid method: {method!r}")
