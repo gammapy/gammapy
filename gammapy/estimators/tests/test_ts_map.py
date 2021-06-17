@@ -170,7 +170,7 @@ def test_compute_ts_map_energy(fermi_dataset):
 
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result.ts.data[1, 43, 30], -94.245192)
+    assert_allclose(result.ts.data[1, 43, 30], 0.199291, rtol=1e-5)
 
     assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
     assert_allclose(
