@@ -962,7 +962,6 @@ class HpxNDMap(HpxMap):
     def plot_mask(self,
             method="raster",
             ax=None,
-            normalize=False,
             proj="AIT",
             oversample=2,
             width_pix=1000,
@@ -998,29 +997,18 @@ class HpxNDMap(HpxMap):
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
         """
-        if not self.geom.is_flat:
-            raise TypeError("Use .plot_interactive() for Map dimension > 2")
-
         if not self.is_mask:
             raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
 
         if method == "raster":
             m = self.to_wcs(
                 sum_bands=True,
-                normalize=normalize,
+                normalize=False,
                 proj=proj,
                 oversample=oversample,
                 width_pix=width_pix,
             )
-
             m.data = np.nan_to_num(m.data).astype(bool)
-
-            kwargs.setdefault("alpha", 0.1)
-            kwargs.setdefault("colors", "r")
-
-            m.plot_mask(**kwargs)
-
+            return m.plot_mask(ax=ax, **kwargs)
         else:
             raise ValueError(f"Invalid method: {method!r}")
-
-        return ax

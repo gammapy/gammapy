@@ -592,11 +592,6 @@ def test_hpxmap_read_healpy(tmp_path):
 
 @requires_dependency("matplotlib")
 def test_map_plot_mask():
-    from regions import CircleSkyRegion
-    from gammapy.maps import HpxGeom
-    from astropy.coordinates import SkyCoord
-    from astropy import units as u
-
     geom = HpxGeom.create(nside=16)
 
     region = CircleSkyRegion(
