@@ -29,11 +29,11 @@ class Maps(MutableMapping):
 
     def __setitem__(self, key, value):
         if value is not None and not isinstance(value, Map):
-            raise ValueError(f"MapDict can only contain Map objects.")
+            raise ValueError(f"MapDict can only contain Map objects, got {type(value)} instead.")
 
         if len(self._data) > 0:
             if value.geom != self._geom:
-                raise ValueError(f"MapDict items must share the same geometry.")
+                raise ValueError(f"MapDict items must share the same geometry. Expected {self._geom} got {value.geom}")
         else:
             self._geom = value.geom
 
@@ -54,6 +54,20 @@ class Maps(MutableMapping):
 
     def __repr__(self):
         return f"{type(self).__name__}({self._data})"
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n"
+        str_ += "\n"
+        str_ += self._geom.__repr__()
+        str_ += "\n"
+        for name, value in self.items():
+            str_ += f"{name} \n"
+#            str_ += "-" * len(name) + "\n"
+            str_ += f"\t unit\t : {value.unit} \n"
+            str_ += f"\t dtype\t : {value.data.dtype}\n"
+            str_ += "\n"
+        return str_
 
     def to_hdulist(self, hdu_bands="BANDS"):
         """Convert map dictionary to list of HDUs.
