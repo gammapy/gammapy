@@ -98,7 +98,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3320] Add functionality to read healpy maps (Vikas Joshi)
 - [#3319] Modify FoVBackgroundMaker to take spectral model as argument (Régis Terrier)
 - [#3314] Implement HpxNDMap.smooth() (Laura Olivera Nieto)
-- [#3310] Hpx separation method (Vikas)
+- [#3310] Hpx separation method (Vikas Joshi)
 - [#3309] Improve doc and cleanup for selection_optional argument in estimators (Quentin Rémy)
 - [#3308] Implement HpxNDMap.to_region_nd_map (Axel Donath)
 - [#3307] Add support for ExcessMapEstimator on high level interface (Régis Terrier)
