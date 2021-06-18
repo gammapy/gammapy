@@ -48,8 +48,8 @@ def test_map_dict_read_write(map_dictionary):
 
     assert new_map_dict.geom == map_dict.geom
     assert len(new_map_dict) == 2
-    assert_allclose(new_map_dict["MAP1"].data, 1)
-    assert_allclose(new_map_dict["MAP2"].data, 2)
+    assert_allclose(new_map_dict["map1"].data, 1)
+    assert_allclose(new_map_dict["map2"].data, 2)
 
 
 def test_map_dict_region():

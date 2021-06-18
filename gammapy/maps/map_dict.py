@@ -96,6 +96,8 @@ class Maps(MutableMapping):
     def from_hdulist(cls, hdulist, hdu_bands="BANDS"):
         """Create map dictionary from list of HDUs.
 
+        Because FITS keywords are case insensitive, all key names will return as lower-case.
+
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
@@ -113,7 +115,7 @@ class Maps(MutableMapping):
 
         for hdu in hdulist:
             if hdu.is_image and hdu.data is not None:
-                map_name = hdu.name
+                map_name = hdu.name.lower()
                 maps[map_name] = Map.from_hdulist(
                     hdulist, hdu=map_name, hdu_bands=hdu_bands
                 )
@@ -122,6 +124,8 @@ class Maps(MutableMapping):
     @classmethod
     def read(cls, filename):
         """Read map dictionary from file.
+
+        Because FITS keywords are case insensitive, all key names will return as lower-case.
 
         Parameters
         ----------
