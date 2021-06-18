@@ -23,24 +23,7 @@ class MinuitLikelihood(Likelihood):
         return total_stat
 
 
-def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
-    """iminuit optimization
-
-    Parameters
-    ----------
-    parameters : `~gammapy.modeling.Parameters`
-        Parameters with starting values
-    function : callable
-        Likelihood function
-    **kwargs : dict
-        Options passed to `iminuit.Minuit` constructor. If there is an entry 'migrad_opts', those options
-        will be passed to `iminuit.Minuit.migrad()`.
-
-    Returns
-    -------
-    result : (factors, info, optimizer)
-        Tuple containing the best fit factors, some info and the optimizer instance.
-    """
+def setup_iminuit(parameters, function, store_trace=False, **kwargs):
     from iminuit import Minuit
 
     # In Gammapy, we have the factor 2 in the likelihood function
@@ -52,12 +35,41 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     minuit_func = MinuitLikelihood(function, parameters, store_trace=store_trace)
 
     kwargs = kwargs.copy()
-    migrad_opts = kwargs.pop("migrad_opts", {})
     strategy = kwargs.pop("strategy", 1)
     tol = kwargs.pop("tol", 0.1)
     minuit = Minuit(minuit_func.fcn, **kwargs)
     minuit.tol = tol
     minuit.strategy = strategy
+    return minuit, minuit_func
+
+
+def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
+    """iminuit optimization
+
+    Parameters
+    ----------
+    parameters : `~gammapy.modeling.Parameters`
+        Parameters with starting values
+    function : callable
+        Likelihood function
+    store_trace : bool
+        Store trace of the fit
+    **kwargs : dict
+        Options passed to `iminuit.Minuit` constructor. If there is an entry 'migrad_opts', those options
+        will be passed to `iminuit.Minuit.migrad()`.
+
+    Returns
+    -------
+    result : (factors, info, optimizer)
+        Tuple containing the best fit factors, some info and the optimizer instance.
+    """
+    minuit, minuit_func = setup_iminuit(
+        parameters=parameters,
+        function=function,
+        store_trace=store_trace,
+        **kwargs
+    )
+    migrad_opts = kwargs.pop("migrad_opts", {})
     minuit.migrad(**migrad_opts)
 
     factors = minuit.args
@@ -72,8 +84,14 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     return factors, info, optimizer
 
 
-def covariance_iminuit(minuit):
-    # TODO: add minuit.hesse() call once we have better tests
+def covariance_iminuit(parameters, function, **kwargs):
+    minuit, minuit_func = setup_iminuit(
+        parameters=parameters,
+        function=function,
+        store_trace=False,
+        **kwargs
+    )
+    minuit.hesse()
 
     message, success = "Hesse terminated successfully.", True
     try:
@@ -85,8 +103,21 @@ def covariance_iminuit(minuit):
     return covariance_factors, {"success": success, "message": message}
 
 
-def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
+def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, maxcall=0, **kwargs):
     # TODO: this is ugly - design something better for translating to MINUIT parameter names.
+    if not reoptimize:
+        log.warning("Reoptimize = False ignored for iminuit backend")
+
+    minuit, minuit_func = setup_iminuit(
+        parameters=parameters,
+        function=function,
+        store_trace=False,
+        **kwargs
+    )
+
+    migrad_opts = kwargs.get("migrad_opts", {})
+    minuit.migrad(**migrad_opts)
+
     # Maybe a wrapper class MinuitParameters?
     parameter = parameters[parameter]
     idx = parameters.free_parameters.index(parameter)
@@ -96,7 +127,7 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     try:
         result = minuit.minos(var=var, sigma=sigma, maxcall=maxcall)
         info = result[var]
-    except RuntimeError as error:
+    except AttributeError as error:
         message, success = str(error), False
         info = {"is_valid": False, "lower": np.nan, "upper": np.nan, "nfcn": 0}
 
