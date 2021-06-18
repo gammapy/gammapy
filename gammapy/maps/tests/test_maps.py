@@ -15,55 +15,55 @@ def map_dictionary():
     return mapdict
 
 
-def test_map_dict(map_dictionary):
-    map_dict = Maps(**map_dictionary)
+def test_maps(map_dictionary):
+    maps = Maps(**map_dictionary)
 
-    map_dict["map3"] = map_dict["map1"].copy()
+    maps["map3"] = maps["map1"].copy()
 
-    assert map_dict.geom.npix[0] == 10
-    assert len(map_dict) == 3
-    assert_allclose(map_dict["map1"].data, 1)
-    assert_allclose(map_dict["map2"].data, 2)
-    assert_allclose(map_dict["map3"].data, 1)
-    assert "map3" in map_dict.__str__()
+    assert maps.geom.npix[0] == 10
+    assert len(maps) == 3
+    assert_allclose(maps["map1"].data, 1)
+    assert_allclose(maps["map2"].data, 2)
+    assert_allclose(maps["map3"].data, 1)
+    assert "map3" in maps.__str__()
 
 
-def test_map_dict_wrong_addition(map_dictionary):
-    map_dict = Maps(**map_dictionary)
+def test_maps_wrong_addition(map_dictionary):
+    maps = Maps(**map_dictionary)
 
     # Test pop method
-    some_map = map_dict.pop("map2")
-    assert len(map_dict) == 1
+    some_map = maps.pop("map2")
+    assert len(maps) == 1
     assert_allclose(some_map.data, 2)
 
     # Test incorrect map addition
     with pytest.raises(ValueError):
-        map_dict["map3"] = map_dict["map1"].sum_over_axes()
+        maps["map3"] = maps["map1"].sum_over_axes()
 
 
-def test_map_dict_read_write(map_dictionary):
-    map_dict = Maps(**map_dictionary)
-    map_dict.write("test.fits", overwrite=True)
-    new_map_dict = Maps.read("test.fits")
+def test_maps_read_write(map_dictionary):
+    maps = Maps(**map_dictionary)
+    maps.write("test.fits", overwrite=True)
+    new_maps = Maps.read("test.fits")
 
-    assert new_map_dict.geom == map_dict.geom
-    assert len(new_map_dict) == 2
-    assert_allclose(new_map_dict["map1"].data, 1)
-    assert_allclose(new_map_dict["map2"].data, 2)
+    assert new_maps.geom == maps.geom
+    assert len(new_maps) == 2
+    assert_allclose(new_maps["map1"].data, 1)
+    assert_allclose(new_maps["map2"].data, 2)
 
 
-def test_map_dict_region():
+def test_maps_region():
     axis = MapAxis.from_edges([1, 2, 3, 4], name="axis", unit="cm")
     map1 = RegionNDMap.create(region=None, axes=[axis])
     map1.data = 1
     map2 = RegionNDMap.create(region=None, axes=[axis])
 
-    map_dict = Maps(map1=map1, map2=map2)
+    maps = Maps(map1=map1, map2=map2)
 
-    assert len(map_dict) == 2
-    assert_allclose(map_dict["map1"], 1)
+    assert len(maps) == 2
+    assert_allclose(maps["map1"], 1)
 
-def test_map_dict_from_geom():
+def test_maps_from_geom():
     geom = WcsGeom.create(npix=5)
     names = ["map1", "map2", "map3"]
     kwargs_list = [
