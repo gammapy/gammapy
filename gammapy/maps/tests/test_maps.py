@@ -63,24 +63,25 @@ def test_maps_region():
     assert len(maps) == 2
     assert_allclose(maps["map1"], 1)
 
+
 def test_maps_from_geom():
     geom = WcsGeom.create(npix=5)
     names = ["map1", "map2", "map3"]
     kwargs_list = [
-        {"unit":"cm2s", "dtype":"float64"},
-        {"dtype" : "bool"},
-        {"data" : np.arange(25).reshape(5,5)}
+        {"unit": "cm2s", "dtype": "float64"},
+        {"dtype": "bool"},
+        {"data": np.arange(25).reshape(5, 5)},
     ]
 
     maps = Maps.from_geom(geom, names)
     maps_kwargs = Maps.from_geom(geom, names, kwargs_list=kwargs_list)
 
-    assert len(maps)==3
+    assert len(maps) == 3
     assert maps["map1"].geom == geom
-    assert maps["map2"].unit == ''
+    assert maps["map2"].unit == ""
     assert maps["map3"].data.dtype == np.float32
-    assert len(maps_kwargs)==3
-    assert maps_kwargs["map1"].unit == 'cm2s'
+    assert len(maps_kwargs) == 3
+    assert maps_kwargs["map1"].unit == "cm2s"
     assert maps_kwargs["map1"].data.dtype == np.float64
     assert maps_kwargs["map2"].data.dtype == np.bool
-    assert maps_kwargs["map3"].data[2,2] == 12
+    assert maps_kwargs["map3"].data[2, 2] == 12

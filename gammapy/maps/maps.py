@@ -29,11 +29,15 @@ class Maps(MutableMapping):
 
     def __setitem__(self, key, value):
         if value is not None and not isinstance(value, Map):
-            raise ValueError(f"MapDict can only contain Map objects, got {type(value)} instead.")
+            raise ValueError(
+                f"MapDict can only contain Map objects, got {type(value)} instead."
+            )
 
         if len(self._data) > 0:
             if value.geom != self._geom:
-                raise ValueError(f"MapDict items must share the same geometry. Expected {self._geom} got {value.geom}")
+                raise ValueError(
+                    f"MapDict items must share the same geometry. Expected {self._geom} got {value.geom}"
+                )
         else:
             self._geom = value.geom
 
@@ -175,7 +179,7 @@ class Maps(MutableMapping):
         """
         mapdict = {}
         if kwargs_list is None:
-            kwargs_list = [ {} ] * len(names)
+            kwargs_list = [{}] * len(names)
         for name, kwargs in zip(names, kwargs_list):
             mapdict[name] = Map.from_geom(geom, **kwargs)
 
