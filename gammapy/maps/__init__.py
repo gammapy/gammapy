@@ -5,6 +5,7 @@ from .geom import *
 from .hpx import *
 from .hpxmap import *
 from .hpxnd import *
+from .maps import *
 from .region import *
 from .regionnd import *
 from .wcs import *
