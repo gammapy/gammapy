@@ -43,7 +43,8 @@ class ParameterEstimator(Estimator):
         Default is None so the optionnal steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
-
+    reoptimize : bool
+        Re-optimize other free model parameters. Default is True.
     """
 
     tag = "ParameterEstimator"
@@ -60,7 +61,8 @@ class ParameterEstimator(Estimator):
         scan_n_values=30,
         scan_values=None,
         selection_optional=None,
-        fit=None
+        fit=None,
+        reoptimize=True
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -76,9 +78,10 @@ class ParameterEstimator(Estimator):
         self.selection_optional = selection_optional
 
         if fit is None:
-            fit = Fit(reoptimize=True)
+            fit = Fit()
 
         self.fit = fit
+        self.reoptimize = reoptimize
 
     def estimate_best_fit(self, datasets, parameter):
         """Estimate parameter assymetric errors
@@ -125,7 +128,7 @@ class ParameterEstimator(Estimator):
             # compute ts value
             parameter.value = self.null_value
 
-            if self.fit.reoptimize:
+            if self.reoptimize:
                 parameter.frozen = True
                 _ = self.fit.optimize(datasets=datasets)
 
@@ -151,7 +154,10 @@ class ParameterEstimator(Estimator):
         self.fit.optimize(datasets=datasets)
 
         res = self.fit.confidence(
-            datasets=datasets, parameter=parameter, sigma=self.n_sigma
+            datasets=datasets,
+            parameter=parameter,
+            sigma=self.n_sigma,
+            reoptimize=self.reoptimize
         )
         return {
             f"{parameter.name}_errp": res["errp"],
@@ -187,6 +193,7 @@ class ParameterEstimator(Estimator):
             values=self.scan_values,
             bounds=bounds,
             nvalues=self.scan_n_values,
+            reoptimize=self.reoptimize
         )
 
         return {
@@ -212,7 +219,10 @@ class ParameterEstimator(Estimator):
         """
         self.fit.optimize(datasets=datasets)
         res = self.fit.confidence(
-            datasets=datasets, parameter=parameter, sigma=self.n_sigma_ul
+            datasets=datasets,
+            parameter=parameter,
+            sigma=self.n_sigma_ul,
+            reoptimize=self.reoptimize
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
@@ -236,7 +246,7 @@ class ParameterEstimator(Estimator):
 
         with datasets.parameters.restore_status():
 
-            if not self.fit.reoptimize:
+            if not self.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False
 

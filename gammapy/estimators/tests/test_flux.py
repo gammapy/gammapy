@@ -44,9 +44,9 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         norm_n_values=5,
         norm_min=0.5,
         norm_max=2,
-        selection_optional="all"
+        selection_optional="all",
+        reoptimize=False
     )
-    estimator.fit.reoptimize = False
 
     result = estimator.run(fermi_datasets)
 
@@ -70,7 +70,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
         energy_min="1 GeV",
         energy_max="100 GeV",
         selection_optional=None,
-        fit=Fit(reoptimize=True)
+        reoptimize=True
     )
     result = estimator.run(fermi_datasets)
 

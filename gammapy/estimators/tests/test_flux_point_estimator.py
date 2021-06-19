@@ -151,7 +151,7 @@ def fpe_map_pwl_reoptimize():
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
         norm_values=[1],
-        fit=Fit(reoptimize=True),
+        reoptimize=True,
         source="source"
     )
     return datasets, fpe

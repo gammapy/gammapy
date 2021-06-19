@@ -50,7 +50,8 @@ class FluxEstimator(Estimator):
         Default is None so the optionnal steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
-
+    reoptimize : bool
+        Re-optimize other free model parameters. Default is True.
     """
     tag = "FluxEstimator"
     _available_selection_optional = ["errn-errp", "ul", "scan"]
@@ -67,7 +68,9 @@ class FluxEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=3,
         selection_optional=None,
-        fit=None
+        fit=None,
+        # TODO: why the different default here?
+        reoptimize=True
     ):
 
         if norm_values is None:
@@ -85,10 +88,10 @@ class FluxEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.selection_optional = selection_optional
+        self.reoptimize = reoptimize
 
         if fit is None:
-            # TODO: why the different default here?
-            fit = Fit(reoptimize=True)
+            fit = Fit()
 
         self.fit = fit
 
@@ -100,7 +103,8 @@ class FluxEstimator(Estimator):
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             selection_optional=self.selection_optional,
-            fit=self.fit
+            fit=self.fit,
+            reoptimize=self.reoptimize
         )
 
     @staticmethod

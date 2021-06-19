@@ -738,7 +738,8 @@ class FluxPointsEstimator(Estimator):
         Default is None so the optionnal steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
-
+    reoptimize : bool
+        Re-optimize other free model parameters. Default is True.
     """
 
     tag = "FluxPointsEstimator"
@@ -755,7 +756,8 @@ class FluxPointsEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         selection_optional=None,
-        fit=None
+        fit=None,
+        reoptimize=False
     ):
         self.energy_edges = energy_edges
         self.source = source
@@ -768,9 +770,10 @@ class FluxPointsEstimator(Estimator):
         self.selection_optional = selection_optional
 
         if fit is None:
-            fit = Fit(reoptimize=False, confidence_opts={"backend": "scipy"})
+            fit = Fit(confidence_opts={"backend": "scipy"})
 
         self.fit = fit
+        self.reoptimize = reoptimize
 
     def _flux_estimator(self, energy_min, energy_max):
         return FluxEstimator(
@@ -784,7 +787,8 @@ class FluxPointsEstimator(Estimator):
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             selection_optional=self.selection_optional,
-            fit=self.fit
+            fit=self.fit,
+            reoptimize=self.reoptimize
         )
 
     def run(self, datasets):
