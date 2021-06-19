@@ -97,8 +97,6 @@ class Fit:
         interval can be adapted by modifying the the upper bound of the interval (``b``) value.
     store_trace : bool
         Whether to store the trace of the fit
-    reoptimize : bool
-        Reoptimize for confidence and stat profiles.
     """
 
     def __init__(
@@ -108,11 +106,9 @@ class Fit:
         covariance_opts=None,
         confidence_opts=None,
         store_trace=False,
-        reoptimize=False
     ):
         self.store_trace = store_trace
         self.backend = backend
-        self.reoptimize = reoptimize
 
         if optimize_opts is None:
             optimize_opts = {"backend": backend}
@@ -266,7 +262,7 @@ class Fit:
             message=info["message"],
         )
 
-    def confidence(self, datasets, parameter, sigma=1):
+    def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -284,6 +280,8 @@ class Fit:
             Parameter of interest
         sigma : float
             Number of standard deviations for the confidence level
+        reoptimize : bool
+            Re-optimize other parameters, when computing the confidence region.
 
         Returns
         -------
@@ -321,7 +319,7 @@ class Fit:
                     parameter=parameter,
                     function=datasets.stat_sum,
                     sigma=sigma,
-                    reoptimize=self.reoptimize,
+                    reoptimize=reoptimize,
                     **kwargs,
                 )
 
@@ -336,6 +334,7 @@ class Fit:
         values=None,
         bounds=2,
         nvalues=11,
+        reoptimize=False
     ):
         """Compute fit statistic profile.
 
@@ -358,6 +357,8 @@ class Fit:
             spaced between those.
         nvalues : int
             Number of parameter grid points to use.
+        reoptimize : bool
+            Re-optimize other parameters, when computing the confidence region.
 
         Returns
         -------
@@ -388,7 +389,7 @@ class Fit:
                 desc="Trial values"
             ):
                 parameter.value = value
-                if self.reoptimize:
+                if reoptimize:
                     parameter.frozen = True
                     result = self.optimize(datasets=datasets)
                     stat = result.total_stat
@@ -403,7 +404,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def stat_surface(self, datasets, x, y, x_values, y_values):
+    def stat_surface(self, datasets, x, y, x_values, y_values, reoptimize=False):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -419,6 +420,9 @@ class Fit:
             Parameters of interest
         x_values, y_values : list or `numpy.ndarray`
             Parameter values to evaluate the fit statistic for.
+        reoptimize : bool
+            Re-optimize other parameters, when computing the confidence region.
+
 
         Returns
         -------
@@ -442,7 +446,7 @@ class Fit:
                 log.info(f"Processing: x={x_value}, y={y_value}")
                 x.value = x_value
                 y.value = y_value
-                if self.reoptimize:
+                if reoptimize:
                     x.frozen = True
                     y.frozen = True
                     result = self.optimize(datasets=datasets)
@@ -456,7 +460,8 @@ class Fit:
         shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
         stats = np.array(stats)
         stats = stats.reshape(shape)
-        if self.reoptimize:
+
+        if reoptimize:
             fit_results = np.array(fit_results)
             fit_results = fit_results.reshape(shape)
 
