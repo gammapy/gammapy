@@ -259,6 +259,9 @@ class WcsNDMap(WcsMap):
         return map_out
 
     def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
+        if factor == 1 or factor is None:
+            return self
+
         geom = self.geom.upsample(factor, axis_name=axis_name)
         idx = geom.get_idx()
 
@@ -285,6 +288,9 @@ class WcsNDMap(WcsMap):
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def downsample(self, factor, preserve_counts=True, axis_name=None, weights=None):
+        if factor == 1 or factor is None:
+            return self
+
         geom = self.geom.downsample(factor, axis_name=axis_name)
 
         if axis_name is None:
