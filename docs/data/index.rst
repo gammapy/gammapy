@@ -134,22 +134,23 @@ their associated GTIs together in the same FITS file.
 
     from gammapy.data import EventList, GTI
 
-    filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
 
     events = EventList.read(filename)
     gti = GTI.read(filename)
 
     # Save separately
-    events.table.write('test_events.fits.gz',hdu="EVENTS")
-    gti.write('test_gti.fits.gz')
+	events.table.meta = {"extname": "EVENTS"}
+    events.table.write("test_events.fits.gz")
+    gti.write("test_gti.fits.gz")
 
     # Save together
     from astropy.io import fits
-    primary_hdu = fits.PrimaryHDU(np.ones((4,4)))
-    events_hdu = fits.BinTableHDU(data=events.table, name='events')
-    gti_hdu = fits.BinTableHDU(gti.table,name='gti')
-    hdul = fits.HDUList([primary_hdu, events_hdu, gti_hdu])
-    hdul.writeto('test_together.fits.gz')
+    primary_hdu = fits.PrimaryHDU()
+    events_hdu = fits.BinTableHDU(data=events.table, name="events")
+    gti_hdu = fits.BinTableHDU(gti.table, name="gti")
+    hdulist = fits.HDUList([primary_hdu, events_hdu, gti_hdu])
+    hdulist.writeto("test_together.fits.gz")
 
 
 
