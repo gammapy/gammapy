@@ -1467,6 +1467,22 @@ class Map(abc.ABC):
 
         return self.to_region_nd_map(region=region, func=func, weights=weights)
 
+    def to_unit(self, unit):
+        """Convert map to different unit
+
+        Parameters
+        ----------
+        unit : `~astropy.unit.Unit` or str
+            New unit
+
+        Returns
+        -------
+        map : `Map`
+            Map with new unit and converted data
+        """
+        data = self.quantity.to_value(unit)
+        return self.from_geom(self.geom, data=data, unit=unit)
+
     def __repr__(self):
         geom = self.geom.__class__.__name__
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
