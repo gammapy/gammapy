@@ -146,9 +146,9 @@ their associated GTIs together in the same FITS file.
     # Save together
     from astropy.io import fits
     primary_hdu = fits.PrimaryHDU(np.ones((4,4)))
-    EVENTS = fits.BinTableHDU(data=events.table, name='events')
-    GTI_table = fits.BinTableHDU(gti.table,name='gti')
-    hdul = fits.HDUList([primary_hdu, EVENTS, GTI_table])
+    events_hdu = fits.BinTableHDU(data=events.table, name='events')
+    gti_hdu = fits.BinTableHDU(gti.table,name='gti')
+    hdul = fits.HDUList([primary_hdu, events_hdu, gti_hdu])
     hdul.writeto('test_together.fits.gz')
 
 
