@@ -331,7 +331,7 @@ class TSMapEstimator(Estimator):
         )
 
         exposure_npred = (exposure * flux_ref * mask.data).to_unit("")
-    
+
         norm = (flux / flux_ref).to_unit("")
         return {
             "counts": counts,
@@ -453,7 +453,7 @@ class TSMapEstimator(Estimator):
             )
 
             if self.sum_over_energy_groups:
-                sliced_dataset = sliced_dataset.to_image()
+                sliced_dataset = sliced_dataset.to_image(name=dataset.name)
 
             sliced_dataset.models = dataset_models
             result = self.estimate_flux_map(sliced_dataset)
