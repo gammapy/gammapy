@@ -18,6 +18,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -83,8 +84,7 @@ def create_fpe(model):
         norm_n_values=11,
         source="source",
         selection_optional="all",
-        backend="minuit",
-        optimize_opts=dict(tol=0.2, strategy=1),
+        fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1))
     )
     datasets = [dataset]
     return datasets, fpe
@@ -146,11 +146,13 @@ def fpe_map_pwl_reoptimize():
     energy_edges = [1, 10] * u.TeV
     dataset.models.parameters["lon_0"].frozen = True
     dataset.models.parameters["lat_0"].frozen = True
-    #    dataset.models.parameters["index"].frozen = True
     dataset.models.parameters["sigma"].frozen = True
     datasets = [dataset]
     fpe = FluxPointsEstimator(
-        energy_edges=energy_edges, norm_values=[1], reoptimize=True, source="source"
+        energy_edges=energy_edges,
+        norm_values=[1],
+        reoptimize=True,
+        source="source"
     )
     return datasets, fpe
 
@@ -339,16 +341,8 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl):
 
     fp = fpe.run(datasets)
 
-    assert_allclose(fpe.optimize_opts["tol"], 0.2)
-
-    flux_estimator = fpe._flux_estimator(1 * u.TeV, 10 * u.TeV)
-    assert_allclose(flux_estimator.optimize_opts["tol"], 0.2)
-
-    param_estimator = flux_estimator._parameter_estimator
-    assert_allclose(param_estimator.optimize_opts["tol"], 0.2)
-
-    param_estimator.fit(datasets).run()
-    assert_allclose(param_estimator._fit.minuit.tol, 0.2)
+    assert_allclose(fpe.fit.optimize_opts["tol"], 0.2)
+    assert_allclose(fpe.fit.minuit.tol, 0.2)
 
     assert fp.sed_type == "likelihood"
     assert "norm_scan" not in fp.table.colnames

@@ -133,8 +133,8 @@ def test_npred_models():
 @requires_dependency("iminuit")
 def test_fit(spectrum_dataset):
     """Simple CASH fit to the on vector"""
-    fit = Fit([spectrum_dataset])
-    result = fit.run()
+    fit = Fit()
+    result = fit.run(datasets=[spectrum_dataset])
 
     # assert result.success
     assert "minuit" in repr(result)
@@ -696,7 +696,7 @@ class TestSpectralFit:
 
         # Example fit for one observation
         self.datasets[0].models = self.pwl
-        self.fit = Fit([self.datasets[0]])
+        self.fit = Fit()
 
     def set_model(self, model):
         for obs in self.datasets:
@@ -705,8 +705,8 @@ class TestSpectralFit:
     @requires_dependency("iminuit")
     def test_basic_results(self):
         self.set_model(self.pwl)
-        result = self.fit.run()
-        pars = self.fit.datasets.parameters
+        result = self.fit.run([self.datasets[0]])
+        pars = self.datasets.parameters
 
         assert self.pwl is self.datasets[0].models[0]
 
@@ -719,7 +719,7 @@ class TestSpectralFit:
 
     def test_basic_errors(self):
         self.set_model(self.pwl)
-        result = self.fit.run()
+        result = self.fit.run([self.datasets[0]])
         pars = result.parameters
 
         assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
@@ -728,21 +728,21 @@ class TestSpectralFit:
 
     def test_ecpl_fit(self):
         self.set_model(self.ecpl)
-        fit = Fit([self.datasets[0]])
-        fit.run()
+        fit = Fit()
+        fit.run([self.datasets[0]])
 
-        actual = fit.datasets.parameters["lambda_"].quantity
+        actual = self.datasets.parameters["lambda_"].quantity
         assert actual.unit == "TeV-1"
         assert_allclose(actual.value, 0.145215, rtol=1e-2)
 
     def test_joint_fit(self):
         self.set_model(self.pwl)
-        fit = Fit(self.datasets)
-        fit.run()
-        actual = fit.datasets.parameters["index"].value
+        fit = Fit()
+        fit.run(self.datasets)
+        actual = self.datasets.parameters["index"].value
         assert_allclose(actual, 2.7806, rtol=1e-3)
 
-        actual = fit.datasets.parameters["amplitude"].quantity
+        actual = self.datasets.parameters["amplitude"].quantity
         assert actual.unit == "cm-2 s-1 TeV-1"
         assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
 
@@ -750,8 +750,8 @@ class TestSpectralFit:
         dataset = self.datasets[0].copy()
         dataset.models = self.pwl
 
-        fit = Fit([dataset])
-        result = fit.run()
+        fit = Fit()
+        result = fit.run(datasets=[dataset])
 
         stats = dataset.stat_array()
         actual = np.sum(stats[dataset.mask_safe])
@@ -773,8 +773,8 @@ class TestSpectralFit:
         dataset.edisp = None
         dataset.models = self.pwl
 
-        fit = Fit([dataset])
-        result = fit.run()
+        fit = Fit()
+        result = fit.run(datasets=[dataset])
         assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
@@ -782,8 +782,8 @@ class TestSpectralFit:
         dataset.stack(self.datasets[1])
         dataset.models = SkyModel(PowerLawSpectralModel())
 
-        fit = Fit([dataset])
-        result = fit.run()
+        fit = Fit()
+        result = fit.run(datasets=[dataset])
         pars = result.parameters
 
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
@@ -1088,8 +1088,8 @@ class TestFit:
 
         self.source_model.parameters["index"].value = 1.12
 
-        fit = Fit([dataset])
-        result = fit.run()
+        fit = Fit()
+        result = fit.run(datasets=[dataset])
 
         # These values are check with sherpa fits, do not change
         pars = result.parameters
@@ -1114,8 +1114,8 @@ class TestFit:
 
         self.source_model.parameters.index = 1.12
 
-        fit = Fit([dataset])
-        result = fit.run()
+        fit = Fit()
+        result = fit.run(datasets=[dataset])
         pars = self.source_model.parameters
 
         assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
@@ -1147,10 +1147,10 @@ class TestFit:
             counts=self.src,
             mask_safe=mask_safe,
         )
-        fit = Fit([dataset])
-        result = fit.run()
+        fit = Fit()
+        result = fit.run(datasets=[dataset])
         true_idx = result.parameters["index"].value
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.stat_profile("index", values=values)
+        profile = fit.stat_profile(datasets=[dataset], parameter="index", values=values)
         actual = values[np.argmin(profile["stat_scan"])]
         assert_allclose(actual, true_idx, rtol=0.01)

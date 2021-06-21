@@ -6,6 +6,7 @@ import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -43,8 +44,8 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         norm_n_values=5,
         norm_min=0.5,
         norm_max=2,
-        reoptimize=False,
-        selection_optional="all"
+        selection_optional="all",
+        reoptimize=False
     )
 
     result = estimator.run(fermi_datasets)
@@ -68,8 +69,8 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
         0,
         energy_min="1 GeV",
         energy_max="100 GeV",
-        reoptimize=True,
         selection_optional=None,
+        reoptimize=True
     )
     result = estimator.run(fermi_datasets)
 

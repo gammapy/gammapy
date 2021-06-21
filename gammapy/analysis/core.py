@@ -48,7 +48,7 @@ class Analysis:
         self.observations = None
         self.datasets = None
         self.models = None
-        self.fit = None
+        self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
 
@@ -173,7 +173,7 @@ class Analysis:
         models = Models.read(path)
         self.set_models(models)
 
-    def run_fit(self, optimize_opts=None):
+    def run_fit(self):
         """Fitting reduced datasets to model."""
         if not self.models:
             raise RuntimeError("Missing models")
@@ -187,14 +187,13 @@ class Analysis:
                 dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
         log.info("Fitting datasets.")
-        self.fit = Fit(self.datasets, optimize_opts=optimize_opts)
-        self.fit_result = self.fit.run()
+        self.fit_result = self.fit.run(datasets=self.datasets)
         log.info(self.fit_result)
 
     def get_flux_points(self):
         """Calculate flux points for a specific model component."""
-        if not self.fit:
-            raise RuntimeError("No results available from Fit.")
+        if not self.datasets:
+            raise RuntimeError("No datasets set.")
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
@@ -202,8 +201,10 @@ class Analysis:
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
+            fit=self.fit,
             **fp_settings.parameters,
         )
+
         fp = flux_point_estimator.run(datasets=self.datasets)
         fp.table["is_ul"] = fp.table["ts"] < 4
         self.flux_points = FluxPointsDataset(
@@ -253,6 +254,7 @@ class Analysis:
             time_intervals=time_intervals,
             energy_edges=energy_edges,
             source=lc_settings.source,
+            fit=self.fit,
             **lc_settings.parameters,
         )
         lc = light_curve_estimator.run(datasets=self.datasets)
@@ -441,8 +443,6 @@ class Analysis:
         if datasets_settings.stack:
             stacked = self.datasets.stack_reduce(name="stacked")
             self.datasets = Datasets([stacked])
-
-
 
     @staticmethod
     def _make_energy_axis(axis, name="energy"):

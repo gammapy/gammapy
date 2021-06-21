@@ -11,11 +11,6 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 
 
 @pytest.fixture()
-def fit(dataset):
-    return Fit([dataset], backend="minuit")
-
-
-@pytest.fixture()
 def test_meta_table(dataset):
     meta_table = dataset.meta_table
     assert meta_table["TELESCOP"] == "CTA"
@@ -80,14 +75,15 @@ def test_flux_point_dataset_str(dataset):
 @requires_data()
 class TestFluxPointFit:
     @requires_dependency("iminuit")
-    def test_fit_pwl_minuit(self, fit):
-        result = fit.run()
+    def test_fit_pwl_minuit(self, dataset):
+        fit = Fit()
+        result = fit.run(dataset)
         self.assert_result(result)
 
     @requires_dependency("sherpa")
-    def test_fit_pwl_sherpa(self, fit):
-        fit.backend = backend="sherpa"
-        result = fit.optimize(method="simplex")
+    def test_fit_pwl_sherpa(self, dataset):
+        fit = Fit(backend="sherpa", optimize_opts={"method": "simplex"})
+        result = fit.optimize(datasets=[dataset])
         self.assert_result(result)
 
     @staticmethod
@@ -106,11 +102,11 @@ class TestFluxPointFit:
 
     @staticmethod
     @requires_dependency("iminuit")
-    def test_stat_profile(fit):
-        fit.backend = "minuit"
-        result = fit.run()
+    def test_stat_profile(dataset):
+        fit = Fit()
+        result = fit.run(datasets=dataset)
 
-        profile = fit.stat_profile("amplitude", nvalues=3, bounds=1)
+        profile = fit.stat_profile(datasets=dataset, parameter="amplitude", nvalues=3, bounds=1)
 
         ts_diff = profile["stat_scan"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
@@ -119,15 +115,14 @@ class TestFluxPointFit:
         err = result.parameters["amplitude"].error
         values = np.array([value - err, value, value + err])
 
-        profile = fit.stat_profile("amplitude", values=values)
+        profile = fit.stat_profile(datasets=dataset, parameter="amplitude", values=values)
 
         ts_diff = profile["stat_scan"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
     @staticmethod
     @requires_dependency("matplotlib")
-    def test_fp_dataset_plot_fit(fit):
-        fp_dataset = fit.datasets[0]
+    def test_fp_dataset_plot_fit(dataset):
 
         with mpl_plot_check():
-            fp_dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))
+            dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))
