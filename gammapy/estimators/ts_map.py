@@ -182,6 +182,15 @@ class TSMapEstimator(Estimator):
 
         return selection
 
+    def energy_edges_axis(self, dataset):
+        """Energy axis"""
+        if self.energy_edges is None:
+            energy_axis = dataset.counts.geom.axes["energy"].squash()
+        else:
+            energy_axis = MapAxis.from_energy_edges(self.energy_edges)
+
+        return energy_axis
+
     def estimate_kernel(self, dataset):
         """Get the convolution kernel for the input dataset.
 
@@ -250,6 +259,7 @@ class TSMapEstimator(Estimator):
 
         with np.errstate(invalid="ignore", divide="ignore"):
             flux = (dataset.counts - dataset.npred()) / exposure
+            flux.data = np.nan_to_num(flux.data)
 
         flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
@@ -289,13 +299,18 @@ class TSMapEstimator(Estimator):
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
 
-    def estimate_flux_map(self, dataset):
-        """Estimate flux and ts maps for single dataset
+    def estimate_fit_input_maps(self, dataset):
+        """Estimate fit input maps
 
         Parameters
         ----------
         dataset : `MapDataset`
             Map dataset
+
+        Returns
+        -------
+        maps : dict of `Map`
+            Maps dict
         """
         # First create 2D map arrays
         counts = dataset.counts
@@ -310,22 +325,44 @@ class TSMapEstimator(Estimator):
         flux = self.estimate_flux_default(dataset, kernel.data, exposure=exposure)
 
         energy_axis = counts.geom.axes["energy"]
+
         flux_ref = self.model.spectral_model.integral(
             energy_axis.edges[0], energy_axis.edges[-1]
         )
-        exposure_npred = (exposure * flux_ref).quantity.to_value("")
+
+        exposure_npred = (exposure * flux_ref * mask.data).to_unit("")
+    
+        norm = (flux / flux_ref).to_unit("")
+        return {
+            "counts": counts,
+            "background": background,
+            "norm": norm,
+            "mask": mask,
+            "exposure": exposure_npred,
+            "kernel": kernel
+        }
+
+    def estimate_flux_map(self, dataset):
+        """Estimate flux and ts maps for single dataset
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Map dataset
+        """
+        maps = self.estimate_fit_input_maps(dataset=dataset)
 
         wrap = functools.partial(
             _ts_value,
-            counts=counts.data.astype(float),
-            exposure=exposure_npred.astype(float),
-            background=background.data.astype(float),
-            kernel=kernel.data,
-            norm=(flux.quantity / flux_ref).to_value(""),
+            counts=maps["counts"].data.astype(float),
+            exposure=maps["exposure"].data.astype(float),
+            background=maps["background"].data.astype(float),
+            kernel=maps["kernel"].data,
+            norm=maps["norm"].data,
             flux_estimator=self._flux_estimator,
         )
 
-        x, y = np.where(np.squeeze(mask.data))
+        x, y = np.where(np.squeeze(maps["mask"].data))
         positions = list(zip(x, y))
 
         if self.n_jobs is None:
@@ -341,7 +378,7 @@ class TSMapEstimator(Estimator):
 
         j, i = zip(*positions)
 
-        geom = counts.geom.squash(axis_name="energy")
+        geom = maps["counts"].geom.squash(axis_name="energy")
 
         for name in self.selection_all:
             m = Map.from_geom(geom=geom, data=np.nan, unit="")
@@ -404,10 +441,7 @@ class TSMapEstimator(Estimator):
         dataset = dataset.pad(pad_width, name=dataset.name)
         dataset = dataset.downsample(self.downsampling_factor, name=dataset.name)
 
-        if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"].squash()
-        else:
-            energy_axis = MapAxis.from_energy_edges(self.energy_edges)
+        energy_axis = self.energy_edges_axis(dataset=dataset)
 
         results = []
 
@@ -432,7 +466,9 @@ class TSMapEstimator(Estimator):
 
             order = 0 if name == "niter" else 1
             m = m.upsample(
-                factor=self.downsampling_factor, preserve_counts=False, order=order
+                factor=self.downsampling_factor,
+                preserve_counts=False,
+                order=order
             )
 
             maps[name] = m.crop(crop_width=pad_width)
