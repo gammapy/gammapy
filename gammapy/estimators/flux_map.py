@@ -68,6 +68,13 @@ class FluxMaps(FluxEstimate):
         """Reference map geometry (`Geom`)"""
         return self.data["norm"].geom
 
+    @property
+    def sqrt_ts(self):
+        """Sqrt TS"""
+        with np.errstate(invalid="ignore", divide="ignore"):
+            data = np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
+            return Map.from_geom(geom=self.geom, data=data)
+
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__)

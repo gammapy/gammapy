@@ -405,7 +405,7 @@ class TSMapEstimator(Estimator):
         datasets = Datasets(dataset)
 
         if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"]
+            energy_axis = dataset.counts.geom.axes["energy"].squash()
         else:
             energy_axis = MapAxis.from_energy_edges(self.energy_edges)
 
