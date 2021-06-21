@@ -7,12 +7,11 @@ import warnings
 from multiprocessing import Pool
 import numpy as np
 import scipy.optimize
-from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import Map, MapCoord
+from gammapy.maps import Map, MapCoord, MapAxis
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
@@ -407,15 +406,13 @@ class TSMapEstimator(Estimator):
 
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"]
-            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
         else:
-            energy_edges = self.energy_edges
+            energy_axis = MapAxis.from_energy_edges(self.energy_edges)
 
         results = []
 
         for energy_min, energy_max in progress_bar(
-            zip(energy_edges[:-1], energy_edges[1:]),
-            desc="Energy bins"
+                energy_axis.iter_by_edges, desc="Energy bins"
         ):
             sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
 
