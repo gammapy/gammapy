@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
+from astropy.nddata.utils import overlap_slices
 from astropy.convolution import Tophat2DKernel
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
@@ -211,10 +212,30 @@ class WcsGeom(Geom):
         """
         return self._frame
 
-    @property
-    def cutout_info(self):
-        """Cutout info dict."""
-        return self._cutout_info
+    def cutout_slices(self, geom):
+        """Cutout info dict.
+
+        Parameters
+        ----------
+        geom : `WcsGeom`
+            Reference geometry
+
+        Returns
+        -------
+        slices : dict
+            Dictionary containing "parent-slices" and "cutout-slices".
+        """
+        position = geom.to_image().coord_to_pix(self.center_skydir)
+        slices = overlap_slices(
+            large_array_shape=geom.data_shape[-2:],
+            small_array_shape=self.data_shape[-2:],
+            position=position[::-1],
+            mode="partial"
+        )
+        return {
+            "parent-slices": slices[0],
+            "cutout-slices": slices[1],
+        }
 
     @property
     def projection(self):
