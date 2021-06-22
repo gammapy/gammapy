@@ -2,9 +2,9 @@
 
 import numpy as np
 from astropy.time import Time
+from gammapy.maps import MapAxis
 
-
-class TimeAxis:
+class TimeMapAxis(MapAxis):
     """Class representing a time axis.
 
     Provides methods for transforming to/from axis and pixel coordinates.
@@ -22,7 +22,7 @@ class TimeAxis:
     name : str
         Axis name
     """
-    node_type = "edges"
+    _node_type = "edges"
     def __init__(self, time_min, time_max, name="", interp="lin",):
         self._name = name
 
@@ -30,7 +30,8 @@ class TimeAxis:
         if len(invalid)>0:
             raise TypeError(f"TimeAxis edges must be Time objects. Got {invalid}")
 
-        if not len(time_min) == len(time_max):
+        # Note: flatten is there to deal with scalr Time objects
+        if not len(time_min.flatten()) == len(time_max.flatten()):
             raise ValueError("Time min and time max must have the same length.")
 
         if not (np.all(time_min == time_min.sort()) and np.all(time_max == time_max.sort()) ):
@@ -42,7 +43,7 @@ class TimeAxis:
         self._interp = interp
 
         self._pix_offset = -0.5
-        self._nbin = len(time_min)
+        self._nbin = len(time_min.flatten())
 
     @property
     def name(self):
@@ -121,6 +122,42 @@ class TimeAxis:
 
     def upsample(self):
         raise NotImplementedError
+
+    def slice(self, idx):
+        """Create a new axis object by extracting a slice from this axis.
+
+        Parameters
+        ----------
+        idx : slice
+            Slice object selecting a subselection of the axis.
+
+        Returns
+        -------
+        axis : `~TimeMapAxis`
+            Sliced axis object.
+        """
+        return TimeMapAxis(
+            self.time_min[idx].copy(),
+            self.time_max[idx].copy(),
+            interp=self._interp,
+            name=self._name,
+        )
+
+    def squash(self):
+        """Create a new axis object by squashing the axis into one bin.
+
+        Returns
+        -------
+        axis : `~MapAxis`
+            Sliced axis object.
+        """
+        return TimeMapAxis(
+            time_min=self.time_min[0],
+            time_max=self.time_max[-1],
+            interp=self._interp,
+            name=self._name,
+        )
+
 
     #TODO: how configurable should that be? column names?
     @classmethod
