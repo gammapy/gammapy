@@ -63,13 +63,15 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     result : (factors, info, optimizer)
         Tuple containing the best fit factors, some info and the optimizer instance.
     """
+    migrad_opts = kwargs.pop("migrad_opts", {})
+
     minuit, minuit_func = setup_iminuit(
         parameters=parameters,
         function=function,
         store_trace=store_trace,
         **kwargs
     )
-    migrad_opts = kwargs.pop("migrad_opts", {})
+
     minuit.migrad(**migrad_opts)
 
     factors = minuit.args
@@ -94,12 +96,14 @@ def covariance_iminuit(parameters, function, **kwargs):
     minuit.hesse()
 
     message, success = "Hesse terminated successfully.", True
+
     try:
         covariance_factors = minuit.np_covariance()
     except (TypeError, RuntimeError):
         N = len(minuit.args)
         covariance_factors = np.nan * np.ones((N, N))
         message, success = "Hesse failed", False
+
     return covariance_factors, {"success": success, "message": message}
 
 

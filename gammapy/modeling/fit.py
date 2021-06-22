@@ -232,29 +232,23 @@ class Fit:
 
         kwargs = self.covariance_opts.copy()
         backend = kwargs.pop("backend", self.backend)
-
         compute = registry.get("covariance", backend)
 
-        # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
             if self.backend == "minuit":
                 method = "hesse"
-                if hasattr(self, "minuit"):
-                    factor_matrix, info = compute(self.minuit)
-                else:
-                    raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 method = ""
-                factor_matrix, info = compute(
-                    parameters=parameters,
-                    fucntion=datasets.stat_sum,
-                    **kwargs
-                )
 
-            covariance = Covariance.from_factor_matrix(
+            factor_matrix, info = compute(
+                parameters=parameters,
+                function=datasets.stat_sum,
+                **kwargs
+            )
+
+            datasets.models.covariance = Covariance.from_factor_matrix(
                 parameters=parameters, matrix=factor_matrix
             )
-            datasets.models.covariance = covariance
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
@@ -299,32 +293,15 @@ class Fit:
         compute = registry.get("confidence", backend)
         parameter = parameters[parameter]
 
-        # TODO: confidence_options on fit for consistancy ?
-
-        # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
-            if backend == "minuit":
-                if hasattr(self, "minuit"):
-                    # This is ugly. We will access parameters and make a copy
-                    # from the backend, to avoid modifying the state
-                    result = compute(
-                        minuit=self.minuit,
-                        parameters=parameters,
-                        parameter=parameter,
-                        sigma=sigma,
-                        **kwargs
-                    )
-                else:
-                    raise RuntimeError("To use minuit, you must first optimize.")
-            else:
-                result = compute(
-                    parameters=parameters,
-                    parameter=parameter,
-                    function=datasets.stat_sum,
-                    sigma=sigma,
-                    reoptimize=reoptimize,
-                    **kwargs,
-                )
+            result = compute(
+                parameters=parameters,
+                parameter=parameter,
+                function=datasets.stat_sum,
+                sigma=sigma,
+                reoptimize=reoptimize,
+                **kwargs,
+            )
 
         result["errp"] *= parameter.scale
         result["errn"] *= parameter.scale
@@ -348,6 +325,8 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         values : `~astropy.units.Quantity` (optional)
