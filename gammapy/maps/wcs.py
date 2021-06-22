@@ -119,8 +119,6 @@ class WcsGeom(Geom):
         Reference pixel coordinate in each image plane.
     axes : list
         Axes for non-spatial dimensions
-    cutout_info : dict
-        Dict with cutout info, if the `WcsGeom` was created by `WcsGeom.cutout()`
     """
 
     _slice_spatial_axes = slice(0, 2)
@@ -128,7 +126,7 @@ class WcsGeom(Geom):
     is_hpx = False
     is_region = False
 
-    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, cutout_info=None):
+    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
@@ -147,7 +145,6 @@ class WcsGeom(Geom):
             crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.0)
 
         self._crpix = crpix
-        self._cutout_info = cutout_info
 
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
@@ -499,20 +496,7 @@ class WcsGeom(Geom):
             npix = (header["NAXIS1"], header["NAXIS2"])
             cdelt = None
 
-        if "PSLICE1" in header:
-            cutout_info = {}
-            cutout_info["parent-slices"] = (
-                str_to_slice(header["PSLICE2"]),
-                str_to_slice(header["PSLICE1"]),
-            )
-            cutout_info["cutout-slices"] = (
-                str_to_slice(header["CSLICE2"]),
-                str_to_slice(header["CSLICE1"]),
-            )
-        else:
-            cutout_info = None
-
-        return cls(wcs, npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
+        return cls(wcs, npix, cdelt=cdelt, axes=axes)
 
     def _make_bands_cols(self):
 
@@ -554,17 +538,8 @@ class WcsGeom(Geom):
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))
         for ax in self.axes:
             shape += f",{ax.nbin}"
+
         header["WCSSHAPE"] = f"({shape})"
-
-        if self.cutout_info is not None:
-            slices_parent = self.cutout_info["parent-slices"]
-            slices_cutout = self.cutout_info["cutout-slices"]
-
-            header["PSLICE1"] = (slice_to_str(slices_parent[1]), "Parent slice")
-            header["PSLICE2"] = (slice_to_str(slices_parent[0]), "Parent slice")
-            header["CSLICE1"] = (slice_to_str(slices_cutout[1]), "Cutout slice")
-            header["CSLICE2"] = (slice_to_str(slices_cutout[0]), "Cutout slice")
-
         return header
 
     def get_idx(self, idx=None, flat=False):
@@ -705,7 +680,7 @@ class WcsGeom(Geom):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         return self.__class__(
-            self._wcs, npix, cdelt=cdelt, cutout_info=self.cutout_info
+            self._wcs, npix, cdelt=cdelt
         )
 
     def to_cube(self, axes):
@@ -717,7 +692,6 @@ class WcsGeom(Geom):
             npix,
             cdelt=cdelt,
             axes=axes,
-            cutout_info=self.cutout_info,
         )
 
     def _pad_spatial(self, pad_width):
@@ -888,15 +862,7 @@ class WcsGeom(Geom):
             size=width[::-1] * u.deg,
             mode=mode,
         )
-
-        cutout_info = {
-            "parent-slices": c2d.slices_original,
-            "cutout-slices": c2d.slices_cutout,
-        }
-
-        return self._init_copy(
-            wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info
-        )
+        return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1])
 
     def boundary_mask(self, width):
         """Create a mask applying binary erosion with a given width from geom edges
