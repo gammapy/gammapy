@@ -761,7 +761,7 @@ class WcsNDMap(WcsMap):
             Cutout map
         """
         geom_cutout = self.geom.cutout(position=position, width=width, mode=mode)
-        cutout_info = geom_cutout.cutout_slices(self.geom)
+        cutout_info = geom_cutout.cutout_slices(self.geom, mode=mode)
 
         slices = cutout_info["parent-slices"]
         parent_slices = Ellipsis, slices[0], slices[1]
