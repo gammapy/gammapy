@@ -856,3 +856,18 @@ def test_memory_usage():
     assert geom.data_nbytes().unit == u.MB
     assert_allclose(geom.data_nbytes(dtype="float32").value, 1.0368)
     assert_allclose(geom.data_nbytes(dtype="b").value, 0.2592)
+
+
+def test_double_cutout():
+    # regression test for https://github.com/gammapy/gammapy/issues/3368
+    m = Map.create(width="10 deg")
+    m.data = np.arange(10_000, dtype="float")
+
+    position = SkyCoord("1d", "1d")
+    m_c = m.cutout(position=position, width="3 deg")
+    m_cc = m_c.cutout(position=position, width="2 deg")
+
+    m_new = Map.create(width="10 deg")
+    m_new.stack(m_cc)
+    m_c_new = m_new.cutout(position=position, width="2 deg")
+    np.testing.assert_allclose(m_c_new.data, m_cc.data)
