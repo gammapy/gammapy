@@ -21,6 +21,25 @@ def test_time_axis(time_intervals):
     assert axis.name == "time"
     assert axis.node_type == "edges"
     assert_allclose(axis.time_delta.to_value("min"), 60)
+    assert_allclose(axis.center[0].mjd, 58927.020833333336)
+    assert "time" in axis.__str__()
+    assert "20" in axis.__str__()
 
 
+def test_incorrect_time_axis():
+    tmin = np.linspace(0,10)*u.h
+    tmax = np.linspace(1,11)*u.h
+    with pytest.raises(TypeError):
+        TimeAxis(tmin, tmax, name="time")
+
+def test_bad_length_sort_time_axis(time_intervals):
+    tmin = time_intervals["t_min"]
+
+    tmax = time_intervals["t_max"][::-1]
+    with pytest.raises(ValueError):
+        TimeAxis(tmin, tmax, name="time")
+
+    tmax = time_intervals["t_max"][:-1]
+    with pytest.raises(ValueError):
+        TimeAxis(tmin, tmax, name="time")
 
