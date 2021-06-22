@@ -26,10 +26,9 @@ class TimeAxis:
     def __init__(self, time_min, time_max, name="", interp="lin",):
         self._name = name
 
-        if not isinstance(time_min, Time):
-            raise TypeError(f"TimeAxis time_min must be Time object. Got {time_min.__class__}")
-        if not isinstance(time_max, Time):
-            raise TypeError(f"TimeAxis time_max must be Time object. Got {time_max.__class__}")
+        invalid = [type(_).__name__ for _ in (time_min, time_max) if not isinstance(_, Time)]
+        if len(invalid)>0:
+            raise TypeError(f"TimeAxis edges must be Time objects. Got {invalid}")
 
         if not len(time_min) == len(time_max):
             raise ValueError("Time min and time max must have the same length.")
