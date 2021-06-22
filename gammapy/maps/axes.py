@@ -123,6 +123,7 @@ class TimeAxis:
     def upsample(self):
         raise NotImplementedError
 
+    #TODO: how configurable should that be? column names?
     @classmethod
     def from_table(cls, table, name="time"):
         if "TIMESYS" not in table.meta:
@@ -131,6 +132,15 @@ class TimeAxis:
         else:
             scale = table.meta["TIMESYS"]
         format = "mjd"
+
         tmin = Time(table["time_min"], scale=scale, format=format)
         tmax = Time(table["time_max"], scale=scale, format=format)
+        return cls(tmin, tmax, name)
+
+    @classmethod
+    def from_gti(cls, gti, name="time"):
+        """Create a time axis from an input GTI."""
+        tmin = gti.time_start
+        tmax = gti.time_stop
+
         return cls(tmin, tmax, name)
