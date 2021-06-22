@@ -457,7 +457,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def minos_contour(self, datasets, x, y, numpoints=10, sigma=1):
+    def stat_contour(self, datasets, x, y, numpoints=10, sigma=1):
         """Compute MINOS contour.
 
         Calls ``iminuit.Minuit.mncontour``.
