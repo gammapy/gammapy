@@ -454,6 +454,12 @@ class WcsGeom(Geom):
         wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
+    @property
+    def footprint(self):
+        """Footprint of the geometry"""
+        coords = self.wcs.calc_footprint()
+        return SkyCoord(coords, frame=self.frame, unit="deg")
+
     @classmethod
     def from_header(cls, header, hdu_bands=None, format="gadf"):
         """Create a WCS geometry object from a FITS header.
