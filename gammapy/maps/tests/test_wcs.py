@@ -241,24 +241,14 @@ def test_cutout_info():
     geom = WcsGeom.create(skydir=(0, 0), npix=10)
     position = SkyCoord(0, 0, unit="deg")
     cutout_geom = geom.cutout(position=position, width="2 deg")
-    assert cutout_geom.cutout_info["parent-slices"][0].start == 3
-    assert cutout_geom.cutout_info["parent-slices"][1].start == 3
 
-    assert cutout_geom.cutout_info["cutout-slices"][0].start == 0
-    assert cutout_geom.cutout_info["cutout-slices"][1].start == 0
+    cutout_info = cutout_geom.cutout_slices(geom)
 
-    header = cutout_geom.to_header()
-    assert "PSLICE1" in header
-    assert "PSLICE2" in header
-    assert "CSLICE1" in header
-    assert "CSLICE2" in header
+    assert cutout_info["parent-slices"][0].start == 3
+    assert cutout_info["parent-slices"][1].start == 3
 
-    geom = WcsGeom.from_header(header)
-    assert geom.cutout_info["parent-slices"][0].start == 3
-    assert geom.cutout_info["parent-slices"][1].start == 3
-
-    assert geom.cutout_info["cutout-slices"][0].start == 0
-    assert geom.cutout_info["cutout-slices"][1].start == 0
+    assert cutout_info["cutout-slices"][0].start == 0
+    assert cutout_info["cutout-slices"][1].start == 0
 
 
 def test_wcsgeom_get_coord():
