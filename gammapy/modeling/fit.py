@@ -97,6 +97,8 @@ class Fit:
         interval can be adapted by modifying the the upper bound of the interval (``b``) value.
     store_trace : bool
         Whether to store the trace of the fit
+    scale_parameters : bool
+        Whether to scale parameters prior to the fit.
     """
 
     def __init__(
@@ -106,6 +108,7 @@ class Fit:
         covariance_opts=None,
         confidence_opts=None,
         store_trace=False,
+        scale_parameters=True
     ):
         self.store_trace = store_trace
         self.backend = backend
@@ -122,6 +125,7 @@ class Fit:
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
         self.confidence_opts = confidence_opts
+        self.scale_parameters = scale_parameters
 
     @staticmethod
     def _parse_datasets(datasets):
@@ -166,8 +170,7 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
 
-        # TODO: expose options if / when to scale? On the Fit class?
-        if np.all(datasets.models.covariance.data == 0):
+        if self.scale_parameters:
             parameters.autoscale()
 
         kwargs = self.optimize_opts.copy()
