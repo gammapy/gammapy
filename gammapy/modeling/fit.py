@@ -126,6 +126,12 @@ class Fit:
         self.covariance_opts = covariance_opts
         self.confidence_opts = confidence_opts
         self.scale_parameters = scale_parameters
+        self._minuit = None
+
+    @property
+    def minuit(self):
+        """Iminuit object"""
+        return self._minuit
 
     @staticmethod
     def _parse_datasets(datasets):
@@ -164,8 +170,8 @@ class Fit:
 
         Returns
         -------
-        fit_result : `FitResult`
-            Results
+        optimize_result : `OptimizeResult`
+            Optimization result
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
@@ -187,12 +193,8 @@ class Fit:
             **kwargs,
         )
 
-        # TODO: Change to a stateless interface for minuit also, or if we must support
-        # stateful backends, put a proper, backend-agnostic solution for this.
-        # As preliminary solution would like to provide a possibility that the user
-        # can access the Minuit object, because it features a lot useful functionality
         if backend == "minuit":
-            self.minuit = optimizer
+            self._minuit = optimizer
 
         trace = table_from_row_data(info.pop("trace"))
 
@@ -398,6 +400,8 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
         x_values, y_values : list or `numpy.ndarray`
@@ -424,10 +428,9 @@ class Fit:
                 itertools.product(x_values, y_values),
                 desc="Trial values"
             ):
-                # TODO: Remove log.info() and provide a nice progress bar
-                log.info(f"Processing: x={x_value}, y={y_value}")
                 x.value = x_value
                 y.value = y_value
+
                 if reoptimize:
                     x.frozen = True
                     y.frozen = True
@@ -454,7 +457,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def minos_contour(self, datasets, x, y, numpoints=10, sigma=1.0):
+    def minos_contour(self, datasets, x, y, numpoints=10, sigma=1):
         """Compute MINOS contour.
 
         Calls ``iminuit.Minuit.mncontour``.
@@ -469,6 +472,8 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
         numpoints : int

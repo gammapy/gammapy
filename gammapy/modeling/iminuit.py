@@ -93,11 +93,11 @@ def covariance_iminuit(parameters, function, **kwargs):
         store_trace=False,
         **kwargs
     )
-    minuit.hesse()
 
     message, success = "Hesse terminated successfully.", True
 
     try:
+        minuit.hesse()
         covariance_factors = minuit.np_covariance()
     except (TypeError, RuntimeError):
         N = len(minuit.args)
