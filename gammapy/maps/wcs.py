@@ -209,13 +209,15 @@ class WcsGeom(Geom):
         """
         return self._frame
 
-    def cutout_slices(self, geom):
-        """Cutout info dict.
+    def cutout_slices(self, geom, mode="partial"):
+        """Compute cutout slices.
 
         Parameters
         ----------
         geom : `WcsGeom`
-            Reference geometry
+            Parent geometry
+        mode : {"trim", "partial", "strict"}
+            Cutout slices mode.
 
         Returns
         -------
@@ -227,7 +229,7 @@ class WcsGeom(Geom):
             large_array_shape=geom.data_shape[-2:],
             small_array_shape=self.data_shape[-2:],
             position=position[::-1],
-            mode="partial"
+            mode=mode
         )
         return {
             "parent-slices": slices[0],
