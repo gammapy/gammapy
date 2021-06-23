@@ -460,6 +460,45 @@ class WcsGeom(Geom):
         return SkyCoord(coords, frame=self.frame, unit="deg")
 
     @classmethod
+    def from_aligned(cls, geom, skydir, width):
+        """Create an aligned geometry from an existing one
+
+        Parameters
+        ----------
+        geom : `~WcsGeom`
+            A reference WCS geometry object.
+        skydir : tuple or `~astropy.coordinates.SkyCoord`
+            Sky position of map center.  Can be either a SkyCoord
+            object or a tuple of longitude and latitude in deg in the
+            coordinate system of the map.
+        width : float or tuple or list or string
+            Width of the map in degrees.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.  For maps
+            with non-spatial dimensions, list input can be used to
+            define a different map width in each image plane.
+
+        Returns
+        -------
+        geom : `~WcsGeom`
+            An aligned WCS geometry object with specified size and center.
+
+        """
+        width = _check_width(width) * u.deg
+        xref, yref = geom.to_image().coord_to_idx(skydir)
+        npix = np.rint(width / geom.pixel_scales).astype(int)
+        xref = -int(xref) + npix[0] // 2 + geom.wcs.wcs.crpix[0]
+        yref = -int(yref) + npix[1] // 2 + geom.wcs.wcs.crpix[1]
+        return cls.create(
+            skydir=tuple(geom.wcs.wcs.crval),
+            npix=tuple(npix),
+            refpix=(xref - 1, yref),
+            frame=geom.frame,
+            binsz=tuple(geom.pixel_scales.deg),
+            axes=geom.axes,
+            proj=geom.projection
+        )
+
+    @classmethod
     def from_header(cls, header, hdu_bands=None, format="gadf"):
         """Create a WCS geometry object from a FITS header.
 
