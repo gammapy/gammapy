@@ -206,6 +206,25 @@ class Background2D(BackgroundIRF):
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.)
     """Default Interpolation kwargs."""
 
+    def to_3d(self):
+        """"Convert to Background3D"""
+        idx_lon = self.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
+        idx_lat = self.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
+        data = self.quantity[:, idx_lon:, idx_lat].copy()
+
+        data = np.sqrt(self.quantity)
+
+        offset = self.axes["fov_lon"].edges[idx_lon:]
+        offset_axis = MapAxis.from_edges(offset, name="offset")
+
+        fov_lat = self.axes['offset'].copy(name='fov_lat')
+        fov_lon = self.axes['offset'].copy(name='fov_lat')
+
+        return Background3D(
+            axes=[self.axes["energy"], fov_lon, fov_lat], data=data.value, unit=data.unit
+        )
+
+
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model.
         """
