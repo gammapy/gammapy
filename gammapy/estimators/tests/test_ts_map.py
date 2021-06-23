@@ -138,7 +138,9 @@ def test_compute_ts_map_psf(fermi_dataset):
     spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    estimator = TSMapEstimator(model=model, kernel_width="1 deg", selection_optional="all")
+    estimator = TSMapEstimator(
+        model=model, kernel_width="1 deg", selection_optional="all"
+    )
     result = estimator.run(fermi_dataset)
 
     assert_allclose(result["ts"].data[0, 29, 29], 833.38, rtol=2e-3)
@@ -192,7 +194,10 @@ def test_compute_ts_map_downsampled(input_dataset):
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     ts_estimator = TSMapEstimator(
-        model=model, downsampling_factor=2, kernel_width="1 deg", selection_optional=["ul"]
+        model=model,
+        downsampling_factor=2,
+        kernel_width="1 deg",
+        selection_optional=["ul"]
     )
     result = ts_estimator.run(input_dataset)
 
