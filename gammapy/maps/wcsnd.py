@@ -761,11 +761,12 @@ class WcsNDMap(WcsMap):
             Cutout map
         """
         geom_cutout = self.geom.cutout(position=position, width=width, mode=mode)
+        cutout_info = geom_cutout.cutout_slices(self.geom, mode=mode)
 
-        slices = geom_cutout.cutout_info["parent-slices"]
+        slices = cutout_info["parent-slices"]
         parent_slices = Ellipsis, slices[0], slices[1]
 
-        slices = geom_cutout.cutout_info["cutout-slices"]
+        slices = cutout_info["cutout-slices"]
         cutout_slices = Ellipsis, slices[0], slices[1]
 
         data = np.zeros(shape=geom_cutout.data_shape, dtype=self.data.dtype)
@@ -787,10 +788,12 @@ class WcsNDMap(WcsMap):
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None
         elif self.geom.is_aligned(other.geom):
-            slices = other.geom.cutout_info["parent-slices"]
+            cutout_slices = other.geom.cutout_slices(self.geom)
+
+            slices = cutout_slices["parent-slices"]
             parent_slices = Ellipsis, slices[0], slices[1]
 
-            slices = other.geom.cutout_info["cutout-slices"]
+            slices = cutout_slices["cutout-slices"]
             cutout_slices = Ellipsis, slices[0], slices[1]
         else:
             raise ValueError(
