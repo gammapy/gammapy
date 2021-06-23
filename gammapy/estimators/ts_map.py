@@ -407,7 +407,7 @@ class TSMapEstimator(Estimator):
 
         if self.downsampling_factor and self.downsampling_factor > 1:
             shape = tuple(np.array(geom.data_shape) + 2 * pad_width)
-            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
+            pad_width = symmetric_crop_pad_width(geom.data_shape, shape_2N(shape))[0]
 
         return tuple(pad_width)
 
