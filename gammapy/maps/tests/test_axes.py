@@ -14,12 +14,12 @@ from gammapy.utils.scripts import make_path
 @pytest.fixture
 def time_intervals():
     t0 = Time("2020-03-19")
-    t_min = t0 + np.linspace(0, 10, 20) * u.d
+    t_min = np.linspace(0, 10, 20) * u.d
     t_max = t_min + 1 * u.h
-    return {"t_min" : t_min, "t_max" : t_max}
+    return {"t_min" : t_min, "t_max" : t_max, "t_ref":t0}
 
 def test_time_axis(time_intervals):
-    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], name="time")
+    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
 
     assert axis.nbin == 20
     assert axis.name == "time"
@@ -38,21 +38,23 @@ def test_incorrect_time_axis():
         TimeMapAxis(tmin, tmax, name="time")
 
 def test_bad_length_sort_time_axis(time_intervals):
+    tref = time_intervals["t_ref"]
     tmin = time_intervals["t_min"]
     tmax_reverse = time_intervals["t_max"][::-1]
     tmax_short = time_intervals["t_max"][:-1]
 
     with pytest.raises(ValueError):
-        TimeMapAxis(tmin, tmax_reverse, name="time")
+        TimeMapAxis(tmin, tmax_reverse, tref, name="time")
 
     with pytest.raises(ValueError):
-        TimeMapAxis(tmin, tmax_short, name="time")
+        TimeMapAxis(tmin, tmax_short, tref, name="time")
 
 
 def test_coord_to_idx_time_axis(time_intervals):
     tmin = time_intervals["t_min"]
     tmax = time_intervals["t_max"]
-    axis = TimeMapAxis(tmin, tmax, name="time")
+    tref = time_intervals["t_ref"]
+    axis = TimeMapAxis(tmin, tmax, tref, name="time")
 
     time = Time(58927.020833333336, format="mjd")
     times = axis.time_mid
@@ -66,15 +68,15 @@ def test_coord_to_idx_time_axis(time_intervals):
     assert_allclose(indices[::2], -1)
 
 def test_slice_time_axis(time_intervals):
-    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], name="time")
+    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
 
     new_axis = axis.slice([2,6,9])
     squashed = axis.squash()
 
     assert new_axis.nbin == 3
-    assert_allclose(squashed.time_max[0].mjd, 1)
+    assert_allclose(squashed.time_max[0].mjd, 58937.041667)
     assert squashed.nbin == 1
-    assert_allclose(squashed.time_max[0].mjd, 1)
+    assert_allclose(squashed.time_max[0].mjd, 58937.041667)
 
 def test_from_table_time_axis():
     t0 = Time("2006-02-12", scale='utc')
@@ -103,7 +105,7 @@ def test_from_gti_time_axis():
     assert axis.nbin == 1
 
 def test_map_with_time_axis(time_intervals):
-    time_axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], name="time")
+    time_axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
     energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit="TeV")
     region_map = RegionNDMap.create(region="fk5; circle(0,0,0.1)", axes=[energy_axis, time_axis])
 

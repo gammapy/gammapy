@@ -2,6 +2,7 @@
 
 import numpy as np
 from astropy.time import Time
+import astropy.units as u
 from gammapy.maps import MapAxis
 
 class TimeMapAxis(MapAxis):
@@ -12,10 +13,12 @@ class TimeMapAxis(MapAxis):
 
     Parameters
     ----------
-    time_min : `~astropy.time.Time`
-        Array of edge time values.
-    time_max : `~astropy.time.Time`
-        Array of edge time values.
+    edges_min : `~astropy.units.Quantity`
+        Array of edge time values. This the time delta w.r.t. to the reference time.
+    edges_max : ``~astropy.units.Quantity`
+        Array of edge time values. This the time delta w.r.t. to the reference time.
+    reference_time : `~astropy.time.Time`
+        Reference time to use.
     interp : str
         Interpolation method used to transform between axis and pixel
         coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
@@ -23,48 +26,64 @@ class TimeMapAxis(MapAxis):
         Axis name
     """
     _node_type = "edges"
-    def __init__(self, time_min, time_max, name="", interp="lin",):
+    def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin",):
         self._name = name
 
-        invalid = [type(_).__name__ for _ in (time_min, time_max) if not isinstance(_, Time)]
+        edges_min = u.Quantity(edges_min, ndmin=1)
+        edges_max = u.Quantity(edges_max, ndmin=1)
+
+        if not isinstance(reference_time, Time):
+            raise TypeError(f"TimeAxis reference time must be Time object. Got {type(reference_time).__name__}.")
+
+        invalid = [_.unit.name for _ in (edges_min, edges_max) if not _.unit.is_equivalent("d")]
         if len(invalid)>0:
-            raise TypeError(f"TimeAxis edges must be Time objects. Got {invalid}")
+            raise TypeError(f"TimeAxis edges must be time-like quantities. Got {invalid}")
 
         # Note: flatten is there to deal with scalr Time objects
-        if not len(time_min.flatten()) == len(time_max.flatten()):
+        if not len(edges_min.flatten()) == len(edges_max.flatten()):
             raise ValueError("Time min and time max must have the same length.")
 
-        if not (np.all(time_min == time_min.sort()) and np.all(time_max == time_max.sort()) ):
-            raise ValueError("TimeAxis: edge values must be sorted")
+        if not (np.all(edges_min == np.sort(edges_min))
+                and np.all(edges_max == np.sort(edges_max))):
+            raise ValueError("TimeAxis: edges values must be sorted")
 
-        self._time_min = Time(time_min)
-        self._time_max = Time(time_max)
-
+        self._edges_min = u.Quantity(edges_min)
+        self._edges_max = u.Quantity(edges_max)
+        self._reference_time = reference_time
         self._interp = interp
 
         self._pix_offset = -0.5
-        self._nbin = len(time_min.flatten())
+        self._nbin = len(edges_min.flatten())
+
+    @property
+    def reference_time(self):
+        """The reference time used for the axis."""
+        return self._reference_time
 
     @property
     def name(self):
+        """The axis name."""
         return self._name
 
     @property
     def nbin(self):
-        return len(self._time_min)
+        """The number of bins in the axis."""
+        return self._nbin
 
     @property
     def time_min(self):
-        return self._time_min
+        """Axis lower edges as Time objects."""
+        return self._edges_min + self.reference_time
 
     @property
     def time_max(self):
-        return self._time_max
+        """Axis upper edges as Time objects."""
+        return self._edges_max + self.reference_time
 
     @property
     def time_delta(self):
-        """Time bin width (`~astropy.time.TimeDelta`)."""
-        return self.time_max - self.time_min
+        """Axis time bin width (`~astropy.time.TimeDelta`)."""
+        return self._edges_max - self._edges_min
 
     @property
     def time_mid(self):
@@ -137,10 +156,11 @@ class TimeMapAxis(MapAxis):
             Sliced axis object.
         """
         return TimeMapAxis(
-            self.time_min[idx].copy(),
-            self.time_max[idx].copy(),
+            self._edges_min[idx].copy(),
+            self._edges_max[idx].copy(),
+            self.reference_time,
             interp=self._interp,
-            name=self._name,
+            name=self.name,
         )
 
     def squash(self):
@@ -152,8 +172,9 @@ class TimeMapAxis(MapAxis):
             Sliced axis object.
         """
         return TimeMapAxis(
-            time_min=self.time_min[0],
-            time_max=self.time_max[-1],
+            self._edges_min[0],
+            self._edges_max[-1],
+            self.reference_time,
             interp=self._interp,
             name=self._name,
         )
@@ -161,7 +182,7 @@ class TimeMapAxis(MapAxis):
 
     #TODO: how configurable should that be? column names?
     @classmethod
-    def from_table(cls, table, name="time"):
+    def from_table(cls, table, reference_time=None, name="time"):
         if "TIMESYS" not in table.meta:
             print("No TIMESYS information. Assuming UTC scale.")
             scale = "utc"
@@ -169,14 +190,17 @@ class TimeMapAxis(MapAxis):
             scale = table.meta["TIMESYS"]
         format = "mjd"
 
+        # TODO: improve and correct
         tmin = Time(table["time_min"], scale=scale, format=format)
         tmax = Time(table["time_max"], scale=scale, format=format)
-        return cls(tmin, tmax, name)
+        if not reference_time:
+            reference_time = tmin[0]
+        return cls((tmin-reference_time).to('d'), (tmax-reference_time).to('d'), reference_time, name)
 
     @classmethod
     def from_gti(cls, gti, name="time"):
         """Create a time axis from an input GTI."""
-        tmin = gti.time_start
-        tmax = gti.time_stop
+        tmin = gti.time_start - gti.time_ref
+        tmax = gti.time_stop - gti.time_ref
 
-        return cls(tmin, tmax, name)
+        return cls(tmin.to('s'), tmax.to('s'), gti.time_ref, name)
