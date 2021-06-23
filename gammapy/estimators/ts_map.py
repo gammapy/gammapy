@@ -182,15 +182,6 @@ class TSMapEstimator(Estimator):
 
         return selection
 
-    def energy_edges_axis(self, dataset):
-        """Energy axis"""
-        if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"].squash()
-        else:
-            energy_axis = MapAxis.from_energy_edges(self.energy_edges)
-
-        return energy_axis
-
     def estimate_kernel(self, dataset):
         """Get the convolution kernel for the input dataset.
 
@@ -441,7 +432,7 @@ class TSMapEstimator(Estimator):
         dataset = dataset.pad(pad_width, name=dataset.name)
         dataset = dataset.downsample(self.downsampling_factor, name=dataset.name)
 
-        energy_axis = self.energy_edges_axis(dataset=dataset)
+        energy_axis = self._get_energy_axis(dataset=dataset)
 
         results = []
 

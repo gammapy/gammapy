@@ -153,10 +153,7 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"].squash()
-        else:
-            energy_axis = MapAxis.from_energy_edges(self.energy_edges)
+        energy_axis = self._get_energy_axis(dataset)
 
         results = []
 
