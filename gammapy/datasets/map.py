@@ -395,8 +395,8 @@ class MapDataset(Dataset):
 
         Parameters
         -------------
-        model: `~gammapy.modeling.models.SkyModel`, optional
-            Sky model to compute the npred for.
+        model: str
+        Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
 
@@ -407,10 +407,13 @@ class MapDataset(Dataset):
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        for evaluator in self.evaluators.values():
-            if model is evaluator.model:
-                return evaluator.compute_npred()
+        if model is not None:
+            try:
+                return self.evaluators[model].compute_npred()
+            except:
+                raise ValueError("Model name not found")
 
+        for evaluator in self.evaluators.values():
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure, self.psf, self.edisp, self._geom, self.mask_image,
