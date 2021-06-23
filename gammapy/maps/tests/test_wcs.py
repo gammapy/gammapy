@@ -137,6 +137,21 @@ def test_wcsgeom_contains(npix, binsz, frame, proj, skydir, axes):
         assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
 
 
+@pytest.mark.parametrize(
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_wcs_geom_from_aligned(npix, binsz, frame, proj, skydir, axes):
+    geom = WcsGeom.create(
+        npix=npix, binsz=binsz, skydir=(0, 0), proj=proj, frame=frame, axes=axes
+    )
+
+    aligned_geom = WcsGeom.from_aligned(
+        geom=geom, skydir=(2, 3), width="90 deg"
+    )
+
+    assert aligned_geom.is_aligned(geom)
+
+
 def test_wcsgeom_solid_angle():
     # Test using a CAR projection map with an extra axis
     binsz = 1.0 * u.deg
