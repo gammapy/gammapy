@@ -882,6 +882,12 @@ class MapAxis:
             self.edges[1:] - self.center,
         )
 
+    @property
+    def iter_by_edges(self):
+        """Iterate by intervals defined by the edges"""
+        for value_min, value_max in zip(self.edges[:-1], self.edges[1:]):
+            yield (value_min, value_max)
+
     @lazyproperty
     def center(self):
         """Return array of bin centers."""

@@ -7,12 +7,10 @@ import warnings
 from multiprocessing import Pool
 import numpy as np
 import scipy.optimize
-from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import Map, MapCoord
+from gammapy.maps import Map, MapCoord, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
@@ -210,17 +208,12 @@ class TSMapEstimator(Estimator):
 
         # Creating exposure map with exposure at map center
         exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
-        coord = MapCoord.create(
-            dict(
-                skycoord=geom.center_skydir, energy_true=geom.axes["energy_true"].center
-            )
-        )
-        exposure.data[...] = dataset.exposure.get_by_coord(coord)[
-            :, np.newaxis, np.newaxis
-        ]
+
+        exposure.data[...] = dataset.exposure.to_region_nd_map(geom.center_skydir).data
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model, evaluation_mode="global")
+
         evaluator.update(
             exposure, dataset.psf, dataset.edisp, dataset.counts.geom, dataset.mask_fit,
         )
@@ -254,8 +247,11 @@ class TSMapEstimator(Estimator):
             exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
         kernel = kernel / np.sum(kernel ** 2)
+
         with np.errstate(invalid="ignore", divide="ignore"):
             flux = (dataset.counts - dataset.npred()) / exposure
+            flux.data = np.nan_to_num(flux.data)
+
         flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
         return flux.sum_over_axes()
@@ -294,30 +290,18 @@ class TSMapEstimator(Estimator):
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
 
-    def estimate_sqrt_ts(self, map_ts, norm):
-        r"""Compute sqrt(TS) map.
-
-
-        Parameters
-        ----------
-        map_ts : `gammapy.maps.WcsNDMap`
-            Input TS map.
-
-        Returns
-        -------
-        sqrt_ts : `gammapy.maps.WcsNDMap`
-            Sqrt(TS) map.
-        """
-        sqrt_ts = self.get_sqrt_ts(map_ts.data, norm.data)
-        return map_ts.copy(data=sqrt_ts)
-
-    def estimate_flux_map(self, dataset):
-        """Estimate flux and ts maps for single dataset
+    def estimate_fit_input_maps(self, dataset):
+        """Estimate fit input maps
 
         Parameters
         ----------
         dataset : `MapDataset`
             Map dataset
+
+        Returns
+        -------
+        maps : dict of `Map`
+            Maps dict
         """
         # First create 2D map arrays
         counts = dataset.counts
@@ -332,22 +316,44 @@ class TSMapEstimator(Estimator):
         flux = self.estimate_flux_default(dataset, kernel.data, exposure=exposure)
 
         energy_axis = counts.geom.axes["energy"]
+
         flux_ref = self.model.spectral_model.integral(
             energy_axis.edges[0], energy_axis.edges[-1]
         )
-        exposure_npred = (exposure * flux_ref).quantity.to_value("")
+
+        exposure_npred = (exposure * flux_ref * mask.data).to_unit("")
+
+        norm = (flux / flux_ref).to_unit("")
+        return {
+            "counts": counts,
+            "background": background,
+            "norm": norm,
+            "mask": mask,
+            "exposure": exposure_npred,
+            "kernel": kernel
+        }
+
+    def estimate_flux_map(self, dataset):
+        """Estimate flux and ts maps for single dataset
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Map dataset
+        """
+        maps = self.estimate_fit_input_maps(dataset=dataset)
 
         wrap = functools.partial(
             _ts_value,
-            counts=counts.data.astype(float),
-            exposure=exposure_npred.astype(float),
-            background=background.data.astype(float),
-            kernel=kernel.data,
-            norm=(flux.quantity / flux_ref).to_value(""),
+            counts=maps["counts"].data.astype(float),
+            exposure=maps["exposure"].data.astype(float),
+            background=maps["background"].data.astype(float),
+            kernel=maps["kernel"].data,
+            norm=maps["norm"].data,
             flux_estimator=self._flux_estimator,
         )
 
-        x, y = np.where(np.squeeze(mask.data))
+        x, y = np.where(np.squeeze(maps["mask"].data))
         positions = list(zip(x, y))
 
         if self.n_jobs is None:
@@ -363,7 +369,7 @@ class TSMapEstimator(Estimator):
 
         j, i = zip(*positions)
 
-        geom = counts.geom.squash(axis_name="energy")
+        geom = maps["counts"].geom.squash(axis_name="energy")
 
         for name in self.selection_all:
             m = Map.from_geom(geom=geom, data=np.nan, unit="")
@@ -371,6 +377,30 @@ class TSMapEstimator(Estimator):
             result[name] = m
 
         return result
+
+    def estimate_pad_width(self, dataset):
+        """Estimate pad width of the dataset
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input MapDataset.
+
+        Returns
+        -------
+        pad_width : tuple
+            Padding width
+        """
+        geom = dataset.counts.geom.to_image()
+        geom_kernel = geom.to_odd_npix(max_radius=self.kernel_width / 2)
+
+        pad_width = np.array(geom_kernel.data_shape) // 2
+
+        if self.downsampling_factor and self.downsampling_factor > 1:
+            shape = tuple(np.array(geom.data_shape) + 2 * pad_width)
+            pad_width = symmetric_crop_pad_width(geom.data_shape, shape_2N(shape))[0]
+
+        return tuple(pad_width)
 
     def run(self, dataset):
         """
@@ -383,6 +413,7 @@ class TSMapEstimator(Estimator):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input MapDataset.
+
         Returns
         -------
         maps : dict
@@ -397,53 +428,43 @@ class TSMapEstimator(Estimator):
         """
         dataset_models = dataset.models
 
-        if self.downsampling_factor:
-            shape = dataset.counts.geom.to_image().data_shape
-            pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
-            dataset = dataset.pad(pad_width).downsample(self.downsampling_factor)
+        pad_width = self.estimate_pad_width(dataset=dataset)
+        dataset = dataset.pad(pad_width, name=dataset.name)
+        dataset = dataset.downsample(self.downsampling_factor, name=dataset.name)
 
-        # TODO: add support for joint likelihood fitting to TSMapEstimator
-        datasets = Datasets(dataset)
-
-        if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"]
-            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
-        else:
-            energy_edges = self.energy_edges
+        energy_axis = self._get_energy_axis(dataset=dataset)
 
         results = []
 
         for energy_min, energy_max in progress_bar(
-            zip(energy_edges[:-1], energy_edges[1:]),
-            desc="Energy bins"
+                energy_axis.iter_by_edges, desc="Energy bins"
         ):
-            sliced_dataset = datasets.slice_by_energy(energy_min, energy_max)[0]
+            sliced_dataset = dataset.slice_by_energy(
+                energy_min=energy_min, energy_max=energy_max, name=dataset.name
+            )
 
             if self.sum_over_energy_groups:
-                sliced_dataset = sliced_dataset.to_image()
+                sliced_dataset = sliced_dataset.to_image(name=dataset.name)
 
             sliced_dataset.models = dataset_models
             result = self.estimate_flux_map(sliced_dataset)
             results.append(result)
 
-        result_all = {}
+        maps = Maps()
 
         for name in self.selection_all:
-            map_all = Map.from_images(images=[_[name] for _ in results])
+            m = Map.from_images(images=[_[name] for _ in results])
 
-            if self.downsampling_factor:
-                order = 0 if name == "niter" else 1
-                map_all = map_all.upsample(
-                    factor=self.downsampling_factor, preserve_counts=False, order=order
-                )
-                map_all = map_all.crop(crop_width=pad_width)
+            order = 0 if name == "niter" else 1
+            m = m.upsample(
+                factor=self.downsampling_factor,
+                preserve_counts=False,
+                order=order
+            )
 
-            result_all[name] = map_all
+            maps[name] = m.crop(crop_width=pad_width)
 
-        result_all["sqrt_ts"] = self.estimate_sqrt_ts(
-            result_all["ts"], result_all["norm"]
-        )
-        return FluxMaps(data=result_all, reference_model=self.model, gti=dataset.gti)
+        return FluxMaps(data=maps, reference_model=self.model, gti=dataset.gti)
 
 
 # TODO: merge with MapDataset?

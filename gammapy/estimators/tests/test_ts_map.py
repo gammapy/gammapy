@@ -211,15 +211,6 @@ def test_compute_ts_map_downsampled(input_dataset):
     assert np.isnan(result["ts"].data[0, 30, 40])
 
 
-@requires_data()
-def test_large_kernel(input_dataset):
-    """Minimal test of compute_ts_image"""
-    ts_estimator = TSMapEstimator(kernel_width="4 deg")
-
-    with pytest.raises(ValueError):
-        ts_estimator.run(input_dataset)
-
-
 def test_ts_map_with_model(fake_dataset):
     model = fake_dataset.models["source"]
 
@@ -251,5 +242,5 @@ def test_ts_map_with_model(fake_dataset):
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
-    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323, atol=0.1)
-    assert_allclose(maps["flux"].data[:, 25, 25], 1.015417e-12, atol=1e-12)
+    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323203, atol=0.1)
+    assert_allclose(maps["flux"].data[:, 25, 25], 1.015509e-12, atol=1e-12)

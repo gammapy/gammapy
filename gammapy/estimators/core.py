@@ -121,6 +121,15 @@ class Estimator(abc.ABC):
         with np.errstate(invalid="ignore", divide="ignore"):
             return np.where(norm > 0, np.sqrt(ts), -np.sqrt(ts))
 
+    def _get_energy_axis(self, dataset):
+        """Energy axis"""
+        if self.energy_edges is None:
+            energy_axis = dataset.counts.geom.axes["energy"].squash()
+        else:
+            energy_axis = MapAxis.from_energy_edges(self.energy_edges)
+
+        return energy_axis
+
     def copy(self):
         """Copy estimator"""
         return deepcopy(self)
