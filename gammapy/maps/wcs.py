@@ -491,7 +491,7 @@ class WcsGeom(Geom):
         return cls.create(
             skydir=tuple(geom.wcs.wcs.crval),
             npix=tuple(npix),
-            refpix=(xref - 1, yref),
+            refpix=(xref - 1, yref),  # TODO: understand why the -1 is required for consistency with .cutout()
             frame=geom.frame,
             binsz=tuple(geom.pixel_scales.deg),
             axes=geom.axes,
