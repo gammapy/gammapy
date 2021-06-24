@@ -1839,13 +1839,10 @@ class MapCoord:
     """
 
     def __init__(self, data, frame=None, match_by_name=True):
-
         if "lon" not in data or "lat" not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
-        data = {k: np.atleast_1d(np.asanyarray(v)) for k, v in data.items()}
-        vals = np.broadcast_arrays(*data.values(), subok=True)
-        self._data = dict(zip(data.keys(), vals))
+        self._data = {k: np.atleast_1d(v) for k, v in data.items()}
         self._frame = frame
         self._match_by_name = match_by_name
 
