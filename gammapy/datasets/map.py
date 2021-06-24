@@ -902,13 +902,9 @@ class MapDataset(Dataset):
 
         return ax_spatial, ax_spectral
 
-    @lazyproperty
-    def _counts_data(self):
-        return self.counts.data.astype(float)
-
     def stat_sum(self):
         """Total likelihood given the current model parameters."""
-        counts, npred = self._counts_data, self.npred().data
+        counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
             return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
