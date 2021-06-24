@@ -269,7 +269,7 @@ class SpectralModel(Model):
 
     def plot(
         self,
-        energy_range,
+        energy_bounds,
         ax=None,
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
@@ -289,15 +289,15 @@ class SpectralModel(Model):
             from astropy import units as u
 
             pwl = ExpCutoffPowerLawSpectralModel()
-            ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
+            ax = pwl.plot(energy_bounds=(0.1, 100) * u.TeV)
             ax.set_yscale('linear')
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        energy_range : `~astropy.units.Quantity`
-            Plot range
+        energy_bounds : `~astropy.units.Quantity`
+            Plot energy bounds
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
@@ -318,7 +318,7 @@ class SpectralModel(Model):
 
         ax = plt.gca() if ax is None else ax
 
-        energy_min, energy_max = energy_range
+        energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
             energy_min, energy_max, n_points, energy_unit
         ).edges
@@ -349,7 +349,7 @@ class SpectralModel(Model):
 
     def plot_error(
         self,
-        energy_range,
+        energy_bounds,
         ax=None,
         energy_unit="TeV",
         flux_unit="cm-2 s-1 TeV-1",
@@ -378,8 +378,8 @@ class SpectralModel(Model):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        energy_range : `~astropy.units.Quantity`
-            Plot range
+        energy_bounds : `~astropy.units.Quantity`
+            Plot energy bounds
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
@@ -406,7 +406,7 @@ class SpectralModel(Model):
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
 
-        energy_min, energy_max = energy_range
+        energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
             energy_min, energy_max, n_points, energy_unit
         ).edges
@@ -433,7 +433,7 @@ class SpectralModel(Model):
         y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
         y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
 
-        where = (energy >= energy_range[0]) & (energy <= energy_range[1])
+        where = (energy >= energy_bounds[0]) & (energy <= energy_bounds[1])
         ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
 
         self._plot_format_ax(ax, energy, y_lo, energy_power, sed_type)
