@@ -587,7 +587,7 @@ class HpxGeom(Geom):
     def coord_to_pix(self, coords):
         import healpy as hp
 
-        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names).broadcasted
         theta, phi = coords.theta, coords.phi
 
         if self.axes:
@@ -827,7 +827,7 @@ class HpxGeom(Geom):
         """
         import healpy as hp
 
-        coords = MapCoord.create(coords, frame=self.frame)
+        coords = MapCoord.create(coords, frame=self.frame).broadcasted
 
         if idxs is None:
             idxs = self.coord_to_idx(coords, clip=True)[1:]

@@ -99,7 +99,7 @@ def test_get_coord(region, energy_axis, test_axis):
 
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
     coords = geom.get_coord()
-    assert coords["lon"].shape == (2, 3, 1, 1)
+    assert coords["lon"].shape == (1, 1)
     assert coords["test"].shape == (2, 3, 1, 1)
     assert_allclose(
         coords["energy"].value[1].squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5
