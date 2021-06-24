@@ -57,37 +57,37 @@ class TimeMapAxis:
 
     @property
     def reference_time(self):
-        """The reference time used for the axis."""
+        """Return reference time used for the axis."""
         return self._reference_time
 
     @property
     def name(self):
-        """The axis name."""
+        """Return axis name."""
         return self._name
 
     @property
     def nbin(self):
-        """The number of bins in the axis."""
+        """Return number of bins in the axis."""
         return self._nbin
 
     @property
     def time_min(self):
-        """Axis lower edges as Time objects."""
+        """Return axis lower edges as Time objects."""
         return self._edges_min + self.reference_time
 
     @property
     def time_max(self):
-        """Axis upper edges as Time objects."""
+        """Return axis upper edges as Time objects."""
         return self._edges_max + self.reference_time
 
     @property
     def time_delta(self):
-        """Axis time bin width (`~astropy.time.TimeDelta`)."""
+        """Return axis time bin width (`~astropy.time.TimeDelta`)."""
         return self._edges_max - self._edges_min
 
     @property
     def time_mid(self):
-        """Time bin center (`~astropy.time.Time`)."""
+        """Return time bin center (`~astropy.time.Time`)."""
         return self.time_min + 0.5 * self.time_delta
 
     def coord_to_idx(self, time):
@@ -124,10 +124,12 @@ class TimeMapAxis:
 
     @property
     def center(self):
+        """Return `~astropy.time.Time` at interval centers."""
         return self.time_mid
 
     @property
     def bin_width(self):
+        """Return time interval width."""
         return self.time_delta
 
     def __repr__(self):
