@@ -203,7 +203,7 @@ class PSFMap(IRFMap):
         )
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    def get_psf_kernel(self, geom, position=None, max_radius=None, factor=4):
+    def get_psf_kernel(self, geom, position=None, max_radius=None, containment=0.999, factor=4):
         """Returns a PSF kernel at the given position.
 
         The PSF is returned in the form a WcsNDMap defined by the input Geom.
@@ -217,6 +217,10 @@ class PSFMap(IRFMap):
             center position is used.
         max_radius : `~astropy.coordinates.Angle`
             maximum angular size of the kernel map
+        containment : float
+            Containment fraction to use as size of the kernel. The max. radius
+            across all energies is used. The radius can be overwritten using
+            the `max_radius` argument.
         factor : int
             oversampling factor to compute the PSF
 
@@ -232,9 +236,14 @@ class PSFMap(IRFMap):
         position = self._get_nearest_valid_position(position)
 
         if max_radius is None:
-            max_radius = np.max(self.psf_map.geom.axes["rad"].center)
-            min_radius_geom = np.min(geom.width) / 2.0
-            max_radius = min(max_radius, min_radius_geom)
+            energy_axis = self.psf_map.geom.axes["energy_true"]
+
+            radii = self.containment_radius(
+                fraction=containment,
+                position=position,
+                energy_true=energy_axis.center
+            )
+            max_radius = np.max(radii)
 
         geom = geom.to_odd_npix(max_radius=max_radius)
 
