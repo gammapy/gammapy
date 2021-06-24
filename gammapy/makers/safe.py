@@ -125,7 +125,7 @@ class SafeMaskMaker(Maker):
             log.warning(f"No default thresholds defined for obs {observation.obs_id}")
             energy_min, energy_max = None, None
 
-        return dataset.counts.geom.energy_mask(
+        return dataset._geom.energy_mask(
             energy_min=energy_min, energy_max=energy_max
         )
 
@@ -157,7 +157,7 @@ class SafeMaskMaker(Maker):
                 )
 
         elif self.position is None and self.fixed_offset is None:
-            position = PointSkyRegion(dataset.counts.geom.center_skydir)
+            position = PointSkyRegion(dataset._geom.center_skydir)
         else:
             position = PointSkyRegion(self.position)
 
@@ -213,10 +213,10 @@ class SafeMaskMaker(Maker):
                 edisp = edisp.get_edisp_kernel(self.position)
         else:
             if position:
-                e_reco = dataset.counts.geom.axes["energy"].edges
+                e_reco = dataset._geom.axes["energy"].edges
                 edisp = edisp.get_edisp_kernel(position, e_reco)
             else:
-                e_reco = dataset.counts.geom.axes["energy"].edges
+                e_reco = dataset._geom.axes["energy"].edges
                 edisp = edisp.get_edisp_kernel(self.position, e_reco)
 
         energy_min = edisp.get_bias_energy(self.bias_percent / 100)
@@ -240,7 +240,7 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-        geom = dataset.counts.geom
+        geom = dataset._geom
         background_spectrum = dataset.npred_background().get_spectrum()
         idx = np.argmax(background_spectrum.data, axis=0)
         energy_axis = geom.axes["energy"]
