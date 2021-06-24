@@ -179,6 +179,32 @@ class TimeMapAxis(MapAxis):
             name=self._name,
         )
 
+    # TODO: if we are to allow log or sqrt bins the reference time should always
+    # be strictly lower than all times
+    # Should we define a mechanism to ensure this is always correct?
+    @classmethod
+    def from_time_edges(cls, time_min, time_max, interp="lin", name="time"):
+        """Create TimeMapAxis from the time interval edges defined as `~astropy.time.Time`.
+
+        The reference time is defined as the lower edge of the first interval.
+
+        Parameters
+        ----------
+        time_min : `~astropy.time.Time`
+            Array of lower edge times.
+        time_max : ``~astropy.time.Time`
+            Array of lower edge times.
+        interp : str
+            Interpolation method used to transform between axis and pixel
+            coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
+        name : str
+            Axis name
+        """
+        reference_time = time_min[0]
+        edges_min = time_min - reference_time
+        edges_max = time_max - reference_time
+
+        return cls(edges_min, edges_max, reference_time, interp=interp, name=name)
 
     #TODO: how configurable should that be? column names?
     @classmethod
