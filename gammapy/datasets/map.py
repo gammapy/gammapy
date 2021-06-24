@@ -387,7 +387,7 @@ class MapDataset(Dataset):
 
         return background
 
-    def npred_signal(self, model=None):
+    def npred_signal(self, model_name=None):
         """"Model predicted signal counts.
 
         If a model is passed, predicted counts from that component is returned.
@@ -395,8 +395,8 @@ class MapDataset(Dataset):
 
         Parameters
         -------------
-        model: `~gammapy.modeling.models.SkyModel`, optional
-            Sky model to compute the npred for.
+        model_name: str
+        Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
 
@@ -407,10 +407,10 @@ class MapDataset(Dataset):
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        for evaluator in self.evaluators.values():
-            if model is evaluator.model:
-                return evaluator.compute_npred()
+        if model_name is not None:
+            return self.evaluators[model_name].compute_npred()
 
+        for evaluator in self.evaluators.values():
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure, self.psf, self.edisp, self._geom, self.mask_image,

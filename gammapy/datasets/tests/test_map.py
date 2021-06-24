@@ -818,14 +818,20 @@ def test_npred_sig(sky_model, geom, geom_etrue):
     gauss = GaussianSpatialModel(
         lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
     )
-    model1 = SkyModel(pwl, gauss)
+    model1 = SkyModel(pwl, gauss, name="m1")
 
     bkg = FoVBackgroundModel(dataset_name=dataset.name)
     dataset.models = [bkg, sky_model, model1]
 
     assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
     assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
-    assert_allclose(dataset.npred_signal(model=model1).data.sum(), 150.7487, rtol=1e-3)
+    assert_allclose(
+        dataset.npred_signal(model_name=model1.name).data.sum(), 150.7487, rtol=1e-3
+    )
+    with pytest.raises(
+        KeyError, match="m2",
+    ):
+        dataset.npred_signal(model_name="m2")
 
 
 def test_stack_npred():
