@@ -29,6 +29,21 @@ def test_time_axis(time_intervals):
     assert "time" in axis.__str__()
     assert "20" in axis.__str__()
 
+def test_from_time_edges_time_axis():
+    t0 = Time("2020-03-19")
+    t_min = t0 + np.linspace(0, 10, 20) * u.d
+    t_max = t_min + 1 * u.h
+
+    axis = TimeMapAxis.from_time_edges(t_min, t_max)
+    axis_h = TimeMapAxis.from_time_edges(t_min, t_max, unit='h')
+
+    assert axis.nbin == 20
+    assert axis.name == "time"
+    assert_time_allclose(axis.reference_time, t0)
+    assert_allclose(axis.time_delta.to_value("min"), 60)
+    assert_allclose(axis.center[0].mjd, 58927.020833333336)
+    assert_allclose(axis_h.time_delta.to_value("h"), 1)
+    assert_allclose(axis_h.center[0].mjd, 58927.020833333336)
 
 def test_incorrect_time_axis():
     tmin = np.linspace(0,10)*u.h

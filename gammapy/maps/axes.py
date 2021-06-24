@@ -5,7 +5,7 @@ from astropy.time import Time
 import astropy.units as u
 from gammapy.maps import MapAxis
 
-class TimeMapAxis(MapAxis):
+class TimeMapAxis:
     """Class representing a time axis.
 
     Provides methods for transforming to/from axis and pixel coordinates.
@@ -25,7 +25,7 @@ class TimeMapAxis(MapAxis):
     name : str
         Axis name
     """
-    _node_type = "edges"
+    node_type = "edges"
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin",):
         self._name = name
 
@@ -183,7 +183,7 @@ class TimeMapAxis(MapAxis):
     # be strictly lower than all times
     # Should we define a mechanism to ensure this is always correct?
     @classmethod
-    def from_time_edges(cls, time_min, time_max, interp="lin", name="time"):
+    def from_time_edges(cls, time_min, time_max, unit="d", interp="lin", name="time"):
         """Create TimeMapAxis from the time interval edges defined as `~astropy.time.Time`.
 
         The reference time is defined as the lower edge of the first interval.
@@ -194,17 +194,20 @@ class TimeMapAxis(MapAxis):
             Array of lower edge times.
         time_max : ``~astropy.time.Time`
             Array of lower edge times.
+        unit : `~astropy.units.Unit` or str
+            The unit to convert the edges to. Default is 'd' (day).
         interp : str
             Interpolation method used to transform between axis and pixel
             coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
         name : str
             Axis name
         """
+        unit = u.Unit(unit)
         reference_time = time_min[0]
         edges_min = time_min - reference_time
         edges_max = time_max - reference_time
 
-        return cls(edges_min, edges_max, reference_time, interp=interp, name=name)
+        return cls(edges_min.to(unit), edges_max.to(unit), reference_time, interp=interp, name=name)
 
     #TODO: how configurable should that be? column names?
     @classmethod
