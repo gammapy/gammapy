@@ -387,7 +387,7 @@ class MapDataset(Dataset):
 
         return background
 
-    def npred_signal(self, model=None):
+    def npred_signal(self, model_name=None):
         """"Model predicted signal counts.
 
         If a model is passed, predicted counts from that component is returned.
@@ -395,7 +395,7 @@ class MapDataset(Dataset):
 
         Parameters
         -------------
-        model: str
+        model_name: str
         Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
@@ -407,11 +407,8 @@ class MapDataset(Dataset):
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        if model is not None:
-            try:
-                return self.evaluators[model].compute_npred()
-            except:
-                raise ValueError("Model name not found")
+        if model_name is not None:
+            return self.evaluators[model_name].compute_npred()
 
         for evaluator in self.evaluators.values():
             if evaluator.needs_update:

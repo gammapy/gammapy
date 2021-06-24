@@ -126,7 +126,7 @@ def test_npred_models():
     npred_sig = spectrum_dataset.npred_signal()
     assert_allclose(npred_sig.data.sum(), 64.8)
 
-    npred_sig_model1 = spectrum_dataset.npred_signal(model=model_1.name)
+    npred_sig_model1 = spectrum_dataset.npred_signal(model_name=model_1.name)
     assert_allclose(npred_sig_model1.data.sum(), 32.4)
 
 
