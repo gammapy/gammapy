@@ -1048,6 +1048,7 @@ class WcsGeom(Geom):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
+        lon_ref, lat_ref = self.wcs.wcs.crval
 
         return (
             f"{self.__class__.__name__}\n\n"
@@ -1058,6 +1059,7 @@ class WcsGeom(Geom):
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
+            f"\twcs ref    : {lon_ref:.1f} deg, {lat_ref:.1f} deg\n"
         )
 
     def to_odd_npix(self, max_radius=None):
