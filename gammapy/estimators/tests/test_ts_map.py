@@ -141,14 +141,13 @@ def test_compute_ts_map_psf(fermi_dataset):
     estimator = TSMapEstimator(model=model, kernel_width="1 deg", selection_optional="all")
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result["ts"].data[0, 29, 29], 833.38, atol=0.1)
+    assert_allclose(result["ts"].data[0, 29, 29], 833.38, rtol=2e-3)
     assert_allclose(result["niter"].data[0, 29, 29], 7)
-    assert_allclose(result["flux"].data[0, 29, 29], 1.34984e-09, rtol=1e-3)
-
-    assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=1e-3)
-    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.948953e-11, rtol=1e-3)
-    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.508168e-11, rtol=1e-3)
-    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.63222157e-10, rtol=1e-3)
+    assert_allclose(result["flux"].data[0, 29, 29], 1.34984e-09, rtol=2e-3)
+    assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=2e-3)
+    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.948953e-11, rtol=2e-3)
+    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.508168e-11, rtol=2e-3)
+    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.63222157e-10, rtol=2e-3)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -170,7 +169,7 @@ def test_compute_ts_map_energy(fermi_dataset):
 
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result.ts.data[1, 43, 30], 0.199291, rtol=1e-5)
+    assert_allclose(result.ts.data[1, 43, 30], 0.199291, atol=0.01)
 
     assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
     assert_allclose(

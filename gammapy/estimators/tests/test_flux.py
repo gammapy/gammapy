@@ -51,7 +51,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     result = estimator.run(fermi_datasets)
 
     assert_allclose(result["norm"], 0.98949, atol=1e-3)
-    assert_allclose(result["ts"], 25083.75408, atol=1e-3)
+    assert_allclose(result["ts"], 25083.75408, rtol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
     assert_allclose(result["norm_errn"], 0.0199, atol=1e-3)
     assert_allclose(result["norm_errp"], 0.0199, atol=1e-3)
@@ -75,7 +75,7 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     result = estimator.run(fermi_datasets)
 
     assert_allclose(result["norm"], 0.989989, atol=1e-3)
-    assert_allclose(result["ts"], 18729.907481, atol=1e-3)
+    assert_allclose(result["ts"], 18729.907481, rtol=1e-3)
     assert_allclose(result["norm_err"], 0.01998, atol=1e-3)
 
 
