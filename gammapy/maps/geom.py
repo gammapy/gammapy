@@ -1863,11 +1863,12 @@ class MapCoord:
     @property
     def shape(self):
         """Coordinate array shape."""
-        return self[0].shape
+        shapes = [_.shape for _ in self._data.values()]
+        return np.broadcast_shapes(*shapes)
 
     @property
     def size(self):
-        return self[0].size
+        return np.prod(self.shape)
 
     @property
     def lon(self):

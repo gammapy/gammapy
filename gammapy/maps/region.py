@@ -244,16 +244,13 @@ class RegionGeom(Geom):
         """
         # TODO: support mode=edges?
         cdict = {}
+        
         cdict["skycoord"] = self.center_skydir.reshape((1, 1))
 
         if self.axes is not None:
-            coords = []
-            for ax in self.axes:
-                coords.append(ax.center)  # .reshape((-1, 1, 1)))
-
-            coords = np.meshgrid(*coords)
-            for idx, ax in enumerate(self.axes):
-                cdict[ax.name] = coords[idx].reshape(self.data_shape)
+            for shape, ax in self.axes.iter_with_reshape:
+                shape = shape[::-1] + (1, 1)
+                cdict[ax.name] = ax.center.reshape(shape)
 
         if frame is None:
             frame = self.frame
@@ -462,10 +459,10 @@ class RegionGeom(Geom):
         else:
             in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
-            x = np.zeros(coords.shape)
+            x = np.zeros(coords.skycoord.shape)
             x[~in_region] = np.nan
 
-            y = np.zeros(coords.shape)
+            y = np.zeros(coords.skycoord.shape)
             y[~in_region] = np.nan
 
             pix = (x, y)
