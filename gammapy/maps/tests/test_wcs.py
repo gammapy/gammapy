@@ -365,7 +365,16 @@ def test_geom_repr():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(10, 4), binsz=50, frame="galactic", proj="AIT"
     )
-    assert geom.__class__.__name__ in repr(geom)
+
+    str_info = repr(geom)
+    assert geom.__class__.__name__ in str_info
+    assert "wcs ref" in str_info
+    assert "center" in str_info
+    assert "projection" in str_info
+    assert "axes" in str_info
+    assert "shape" in str_info
+    assert "ndim" in str_info
+    assert "width" in str_info
 
 
 def test_geom_refpix():
@@ -451,6 +460,7 @@ def test_check_width(width, out):
 
     geom = WcsGeom.create(width=width, binsz=1.0)
     assert tuple(geom.npix) == out
+
 
 def test_check_binsz():
     # float
