@@ -112,6 +112,10 @@ def test_compute_ts_map(input_dataset):
     ts_estimator = TSMapEstimator(
         model=model, threshold=1, kernel_width="1 deg", selection_optional=[]
     )
+
+    kernel = ts_estimator.estimate_kernel(dataset=input_dataset)
+    assert_allclose(kernel.geom.width, 1.02 * u.deg)
+
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
