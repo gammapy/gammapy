@@ -4,7 +4,7 @@ from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
-from gammapy.maps import Map, WcsNDMap
+from gammapy.maps import Map, MapCoord
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
@@ -273,25 +273,27 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     edispmap : `~gammapy.irf.EDispMap`
         the resulting EDisp map
     """
-    energy_true = geom.axes["energy_true"].center
-    migra = geom.axes["migra"].center
-
     # Compute separations with pointing position
     if not use_region_center:
+        # TODO: simplify
+        energy_true = geom.axes["energy_true"].center
+        migra = geom.axes["migra"].center
         region_coord, weights = geom.get_wcs_coord_and_weights()
-        offset = region_coord.skycoord.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis, np.newaxis]
-        migra_dim = migra[:, np.newaxis]
+        coords = MapCoord.create({
+            "skycoord": region_coord.skycoord,
+            "energy_true": energy_true[:, np.newaxis, np.newaxis],
+            "migra": migra[:, np.newaxis]
+        })
     else:
-        offset = geom.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis, np.newaxis, np.newaxis]
-        migra_dim = migra[:, np.newaxis, np.newaxis]
+        coords = geom.get_coord(sparse=True)
+
+    offset = coords.skycoord.separation(pointing)
 
     # Compute EDisp values
     edisp_values = edisp.evaluate(
         offset=offset,
-        energy_true=energy_true_dim,
-        migra=migra_dim,
+        energy_true=coords["energy_true"],
+        migra=coords["migra"],
     ).to_value("")
 
     if not use_region_center:

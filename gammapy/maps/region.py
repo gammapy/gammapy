@@ -234,7 +234,7 @@ class RegionGeom(Geom):
         """
         return tuple((1, 1) + self.axes.shape)
 
-    def get_coord(self, frame=None):
+    def get_coord(self, frame=None, sparse=False):
         """Get map coordinates from the geometry.
 
         Returns
@@ -255,7 +255,12 @@ class RegionGeom(Geom):
         if frame is None:
             frame = self.frame
 
-        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
+        coord = MapCoord.create(cdict, frame=self.frame).to_frame(frame)
+
+        if sparse:
+            return coord
+
+        return coord.broadcasted
 
     def _pad_spatial(self, pad_width):
         raise NotImplementedError("Spatial padding of `RegionGeom` not supported")
