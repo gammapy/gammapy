@@ -285,21 +285,19 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
             "migra": migra[:, np.newaxis]
         })
     else:
-        coords = geom.get_coord(sparse=True)
+        coords, weights = geom.get_coord(sparse=True), None
 
     offset = coords.skycoord.separation(pointing)
 
     # Compute EDisp values
-    edisp_values = edisp.evaluate(
+    data = edisp.evaluate(
         offset=offset,
         energy_true=coords["energy_true"],
         migra=coords["migra"],
     ).to_value("")
 
     if not use_region_center:
-        data = np.average(edisp_values, axis=2, weights=weights)
-    else:
-        data = edisp_values
+        data = np.average(data, axis=2, weights=weights)
 
     # Create Map and fill relevant entries
     edisp_map = Map.from_geom(geom, data=data, unit="")
