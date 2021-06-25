@@ -156,12 +156,31 @@ def test_from_aligned_vs_cutout():
     skydir = SkyCoord(0.12, -0.34, unit="deg", frame="galactic")
 
     geom = WcsGeom.create(
-        binsz=0.1, skydir=skydir, proj="TAN", frame="galactic"
+        binsz=0.1, skydir=skydir, proj="AIT", frame="galactic"
     )
 
     position = SkyCoord("2.23d", "3.102d", frame="galactic")
 
     width = ("89 deg", "79 deg")
+    aligned_geom = WcsGeom.from_aligned(
+        geom=geom, skydir=position, width=width
+    )
+
+    geom_cutout = geom.cutout(position=position, width=width)
+
+    assert geom_cutout == aligned_geom
+
+
+def test_from_aligned_vs_cutout_tan():
+    skydir = SkyCoord(0.12, -0.34, unit="deg", frame="galactic")
+
+    geom = WcsGeom.create(
+        binsz=0.1, skydir=skydir, proj="TAN", frame="galactic"
+    )
+
+    position = SkyCoord("165.23d", "74.102d", frame="galactic")
+    width = ("89 deg", "79 deg")
+
     aligned_geom = WcsGeom.from_aligned(
         geom=geom, skydir=position, width=width
     )
