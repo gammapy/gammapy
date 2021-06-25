@@ -486,9 +486,9 @@ class WcsGeom(Geom):
         """
         width = _check_width(width) * u.deg
         npix = tuple(np.round(width / geom.pixel_scales).astype(int))
-        xref, yref = skycoord_to_pixel(skydir, geom.wcs, mode='all')
-        xref = np.floor(-xref + npix[0] / 2.) + geom.wcs.wcs.crpix[0]
-        yref = np.floor(-yref + npix[1] / 2.) + geom.wcs.wcs.crpix[1]
+        xref, yref = geom.to_image().coord_to_pix(skydir)
+        xref = int(np.floor(-xref + npix[0] / 2.)) + geom.wcs.wcs.crpix[0]
+        yref = int(np.floor(-yref + npix[1] / 2.)) + geom.wcs.wcs.crpix[1]
         return cls.create(
             skydir=tuple(geom.wcs.wcs.crval),
             npix=npix,

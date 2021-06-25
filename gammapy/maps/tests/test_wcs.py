@@ -172,23 +172,23 @@ def test_from_aligned_vs_cutout():
 
 
 def test_from_aligned_vs_cutout_tan():
-    skydir = SkyCoord(0.12, -0.34, unit="deg", frame="galactic")
+    skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
 
     geom = WcsGeom.create(
-        binsz=0.1, skydir=skydir, proj="TAN", frame="galactic"
+        binsz=1, skydir=skydir, proj="TAN", frame="galactic", width=("180d", "90d")
     )
 
-    position = SkyCoord("165.23d", "74.102d", frame="galactic")
-    width = ("89 deg", "79 deg")
+    position = SkyCoord("53.23d", "22.102d", frame="galactic")
+    width = ("17 deg", "15 deg")
+
+    geom_cutout = geom.cutout(position=position, width=width, mode="partial")
 
     aligned_geom = WcsGeom.from_aligned(
         geom=geom, skydir=position, width=width
     )
 
-    geom_cutout = geom.cutout(position=position, width=width)
-
-    assert geom_cutout == aligned_geom
-
+    assert aligned_geom == geom_cutout
+    
 
 def test_wcsgeom_solid_angle():
     # Test using a CAR projection map with an extra axis
