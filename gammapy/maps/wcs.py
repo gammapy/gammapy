@@ -13,6 +13,7 @@ from astropy.wcs.utils import (
     celestial_frame_to_wcs,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
+    skycoord_to_pixel
 )
 from gammapy.utils.array import round_up_to_odd
 from .geom import (
@@ -484,14 +485,14 @@ class WcsGeom(Geom):
 
         """
         width = _check_width(width) * u.deg
-        xref, yref = geom.to_image().coord_to_idx(skydir)
-        npix = np.rint(width / geom.pixel_scales).astype(int)
-        xref = -int(xref) + npix[0] // 2 + geom.wcs.wcs.crpix[0]
-        yref = -int(yref) + npix[1] // 2 + geom.wcs.wcs.crpix[1]
+        npix = tuple(np.round(width / geom.pixel_scales).astype(int))
+        xref, yref = skycoord_to_pixel(skydir, geom.wcs, mode='all')
+        xref = np.floor(-xref + npix[0] / 2.) + geom.wcs.wcs.crpix[0]
+        yref = np.floor(-yref + npix[1] / 2.) + geom.wcs.wcs.crpix[1]
         return cls.create(
             skydir=tuple(geom.wcs.wcs.crval),
-            npix=tuple(npix),
-            refpix=(xref - 1, yref),  # TODO: understand why the -1 is required for consistency with .cutout()
+            npix=npix,
+            refpix=(xref, yref),
             frame=geom.frame,
             binsz=tuple(geom.pixel_scales.deg),
             axes=geom.axes,
