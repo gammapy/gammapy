@@ -246,14 +246,11 @@ class PSFMap(IRFMap):
             max_radius = np.max(radii)
 
         geom = geom.to_odd_npix(max_radius=max_radius)
-
         geom_upsampled = geom.upsample(factor=factor)
-        rad = geom_upsampled.separation(geom.center_skydir)
+        coords = geom_upsampled.get_coord(sparse=True)
+        rad = coords.skycoord.separation(geom.center_skydir)
 
-        energy_axis = geom.axes["energy_true"]
-
-        energy = energy_axis.center[:, np.newaxis, np.newaxis]
-        coords = {"energy_true": energy, "rad": rad, "skycoord": position}
+        coords = {"energy_true": coords["energy_true"], "rad": rad, "skycoord": position}
 
         data = self.psf_map.interp_by_coord(coords=coords, method="linear",)
 
