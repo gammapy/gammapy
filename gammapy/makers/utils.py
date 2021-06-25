@@ -45,30 +45,28 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
     map : `~gammapy.maps.WcsNDMap`
         Exposure map
     """
-    energy_true = geom.axes["energy_true"].center
-
     if not use_region_center:
         region_coord, weights = geom.get_wcs_coord_and_weights()
-        offset = region_coord.skycoord.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis]
+        coords = MapCoord.create({
+            "skycoord": region_coord.skycoord,
+            "energy_true": geom.axes["energy_true"].center[:, np.newaxis]
+        })
     else:
-        offset = geom.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis, np.newaxis]
+        coords, weights = geom.get_coord(sparse=True), None
 
+    offset = coords.skycoord.separation(pointing)
     exposure = aeff.evaluate(
-        offset=offset, energy_true=energy_true_dim
+        offset=offset, energy_true=coords["energy_true"]
     )
 
-    exposure = (exposure * livetime).to("m2 s")
-    meta = {"livetime": livetime}
+    data = (exposure * livetime).to("m2 s")
 
     if not use_region_center:
-        data = np.average(exposure.value, axis=1, weights=weights)
-    else:
-        data = exposure.value
+        data = np.average(data, axis=1, weights=weights)
 
+    meta = {"livetime": livetime}
     return Map.from_geom(
-        geom=geom, data=data, unit=exposure.unit, meta=meta
+        geom=geom, data=data.value, unit=data.unit, meta=meta
     )
 
 
