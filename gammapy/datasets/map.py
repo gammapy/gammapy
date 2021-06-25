@@ -2640,7 +2640,6 @@ class MapEvaluator:
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
-        spatial_model = self.model.spatial_model
 
         # lookup edisp
         if edisp:
@@ -2650,7 +2649,7 @@ class MapEvaluator:
             )
 
         # lookup psf
-        if psf and spatial_model:
+        if psf and self.model.spatial_model:
             if self.apply_psf_after_edisp:
                 geom = geom.as_energy_true
             else:
@@ -2662,29 +2661,23 @@ class MapEvaluator:
                     energy_true=energy_true, rad=geom.region.radius
                 )
             else:
-                if geom.is_region:
-                    # here we just need to choose a large value, the size will be the rad max
-                    geom = geom.to_wcs_geom(width_min="15 deg")
+                if geom.is_region or geom.is_hpx:
+                    geom = geom.to_wcs_geom()
 
-                if geom.is_hpx:
-                    self.psf = psf.get_psf_kernel(
-                        position=self.model.position,
-                        geom=geom.to_wcs_geom(),
-                        containment=PSF_CONTAINMENT
-                    )
-                else:
-                    self.psf = psf.get_psf_kernel(
-                        position=self.model.position,
-                        geom=geom,
-                        containment=PSF_CONTAINMENT
-                    )
+                self.psf = psf.get_psf_kernel(
+                    position=self.model.position,
+                    geom=geom,
+                    containment=PSF_CONTAINMENT
+                )
 
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
 
             if self.contributes:
                 self.exposure = exposure.cutout(
-                    position=self.model.position, width=self.cutout_width
+                    position=self.model.position,
+                    width=self.cutout_width,
+                    odd_npix=True
                 )
         else:
             self.exposure = exposure
