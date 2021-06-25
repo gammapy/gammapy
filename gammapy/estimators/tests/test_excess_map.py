@@ -138,9 +138,9 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional="all")
     result = estimator.run(simple_dataset)
 
-    assert_allclose(result["excess"].data.sum(), 19733.602)
-    assert_allclose(result["background"].data.sum(), 31818.398)
-    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, atol=1e-5)
+    assert_allclose(result["excess"].data.sum(), 19733.602, rtol=1e-3)
+    assert_allclose(result["background"].data.sum(), 31818.398, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, rtol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_on_off_no_correlation(

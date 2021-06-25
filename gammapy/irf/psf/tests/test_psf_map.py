@@ -138,6 +138,13 @@ def test_psfmap_to_psf_kernel():
     psfkernel = psfmap.get_psf_kernel(
         position=SkyCoord(1, 1, unit="deg"), geom=kern_geom, max_radius=1 * u.deg
     )
+    assert_allclose(psfkernel.psf_kernel_map.geom.width, 2.02 * u.deg)
+    assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
+
+    psfkernel = psfmap.get_psf_kernel(
+        position=SkyCoord(1, 1, unit="deg"), geom=kern_geom,
+    )
+    assert_allclose(psfkernel.psf_kernel_map.geom.width, 1.14 * u.deg)
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
 
 

@@ -50,6 +50,7 @@ BINSZ_IRF_DEFAULT = 0.2
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
+PSF_CONTAINMENT = 0.999
 
 
 def create_map_dataset_geoms(
@@ -2667,11 +2668,15 @@ class MapEvaluator:
 
                 if geom.is_hpx:
                     self.psf = psf.get_psf_kernel(
-                        position=self.model.position, geom=geom.to_wcs_geom()
+                        position=self.model.position,
+                        geom=geom.to_wcs_geom(),
+                        containment=PSF_CONTAINMENT
                     )
                 else:
                     self.psf = psf.get_psf_kernel(
-                        position=self.model.position, geom=geom
+                        position=self.model.position,
+                        geom=geom,
+                        containment=PSF_CONTAINMENT
                     )
 
         if self.evaluation_mode == "local":
