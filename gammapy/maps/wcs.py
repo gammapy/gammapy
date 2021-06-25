@@ -13,6 +13,7 @@ from astropy.wcs.utils import (
     celestial_frame_to_wcs,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
+    skycoord_to_pixel
 )
 from gammapy.utils.array import round_up_to_odd
 from .geom import (
@@ -458,6 +459,45 @@ class WcsGeom(Geom):
         """Footprint of the geometry"""
         coords = self.wcs.calc_footprint()
         return SkyCoord(coords, frame=self.frame, unit="deg")
+
+    @classmethod
+    def from_aligned(cls, geom, skydir, width):
+        """Create an aligned geometry from an existing one
+
+        Parameters
+        ----------
+        geom : `~WcsGeom`
+            A reference WCS geometry object.
+        skydir : tuple or `~astropy.coordinates.SkyCoord`
+            Sky position of map center.  Can be either a SkyCoord
+            object or a tuple of longitude and latitude in deg in the
+            coordinate system of the map.
+        width : float or tuple or list or string
+            Width of the map in degrees.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.  For maps
+            with non-spatial dimensions, list input can be used to
+            define a different map width in each image plane.
+
+        Returns
+        -------
+        geom : `~WcsGeom`
+            An aligned WCS geometry object with specified size and center.
+
+        """
+        width = _check_width(width) * u.deg
+        npix = tuple(np.round(width / geom.pixel_scales).astype(int))
+        xref, yref = geom.to_image().coord_to_pix(skydir)
+        xref = int(np.floor(-xref + npix[0] / 2.)) + geom.wcs.wcs.crpix[0]
+        yref = int(np.floor(-yref + npix[1] / 2.)) + geom.wcs.wcs.crpix[1]
+        return cls.create(
+            skydir=tuple(geom.wcs.wcs.crval),
+            npix=npix,
+            refpix=(xref, yref),
+            frame=geom.frame,
+            binsz=tuple(geom.pixel_scales.deg),
+            axes=geom.axes,
+            proj=geom.projection
+        )
 
     @classmethod
     def from_header(cls, header, hdu_bands=None, format="gadf"):
@@ -1009,6 +1049,7 @@ class WcsGeom(Geom):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
+        lon_ref, lat_ref = self.wcs.wcs.crval
 
         return (
             f"{self.__class__.__name__}\n\n"
@@ -1019,6 +1060,7 @@ class WcsGeom(Geom):
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
+            f"\twcs ref    : {lon_ref:.1f} deg, {lat_ref:.1f} deg\n"
         )
 
     def to_odd_npix(self, max_radius=None):

@@ -137,6 +137,59 @@ def test_wcsgeom_contains(npix, binsz, frame, proj, skydir, axes):
         assert_allclose(geom.contains(coords), np.zeros((1,), dtype=bool))
 
 
+@pytest.mark.parametrize(
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_wcs_geom_from_aligned(npix, binsz, frame, proj, skydir, axes):
+    geom = WcsGeom.create(
+        npix=npix, binsz=binsz, skydir=(0, 0), proj=proj, frame=frame, axes=axes
+    )
+
+    aligned_geom = WcsGeom.from_aligned(
+        geom=geom, skydir=(2, 3), width="90 deg"
+    )
+
+    assert aligned_geom.is_aligned(geom)
+
+
+def test_from_aligned_vs_cutout():
+    skydir = SkyCoord(0.12, -0.34, unit="deg", frame="galactic")
+
+    geom = WcsGeom.create(
+        binsz=0.1, skydir=skydir, proj="AIT", frame="galactic"
+    )
+
+    position = SkyCoord("2.23d", "3.102d", frame="galactic")
+
+    width = ("89 deg", "79 deg")
+    aligned_geom = WcsGeom.from_aligned(
+        geom=geom, skydir=position, width=width
+    )
+
+    geom_cutout = geom.cutout(position=position, width=width)
+
+    assert geom_cutout == aligned_geom
+
+
+def test_from_aligned_vs_cutout_tan():
+    skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
+
+    geom = WcsGeom.create(
+        binsz=1, skydir=skydir, proj="TAN", frame="galactic", width=("180d", "90d")
+    )
+
+    position = SkyCoord("53.23d", "22.102d", frame="galactic")
+    width = ("17 deg", "15 deg")
+
+    geom_cutout = geom.cutout(position=position, width=width, mode="partial")
+
+    aligned_geom = WcsGeom.from_aligned(
+        geom=geom, skydir=position, width=width
+    )
+
+    assert aligned_geom == geom_cutout
+    
+
 def test_wcsgeom_solid_angle():
     # Test using a CAR projection map with an extra axis
     binsz = 1.0 * u.deg
@@ -331,7 +384,16 @@ def test_geom_repr():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(10, 4), binsz=50, frame="galactic", proj="AIT"
     )
-    assert geom.__class__.__name__ in repr(geom)
+
+    str_info = repr(geom)
+    assert geom.__class__.__name__ in str_info
+    assert "wcs ref" in str_info
+    assert "center" in str_info
+    assert "projection" in str_info
+    assert "axes" in str_info
+    assert "shape" in str_info
+    assert "ndim" in str_info
+    assert "width" in str_info
 
 
 def test_geom_refpix():
@@ -417,6 +479,7 @@ def test_check_width(width, out):
 
     geom = WcsGeom.create(width=width, binsz=1.0)
     assert tuple(geom.npix) == out
+
 
 def test_check_binsz():
     # float
