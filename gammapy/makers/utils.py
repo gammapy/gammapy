@@ -221,27 +221,22 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
-    use_region_center: bool
-        If geom is a RegionGeom, whether to just
-        consider the values at the region center
-        or the insted the average over the whole region
 
     Returns
     -------
     psfmap : `~gammapy.irf.PSFMap`
         the resulting PSF map
     """
-    energy_true = geom.axes["energy_true"].center
-    rad = geom.axes["rad"].center
+    coords = geom.get_coord(sparse=True)
 
     # Compute separations with pointing position
-    offset = geom.separation(pointing)
+    offset = coords.skycoord.separation(pointing)
 
     # Compute PSF values
     data = psf.evaluate(
-            energy_true=energy_true[:, np.newaxis, np.newaxis, np.newaxis],
+            energy_true=coords["energy_true"],
             offset=offset,
-            rad=rad[:, np.newaxis, np.newaxis],
+            rad=coords["rad"],
     )
 
     # Create Map and fill relevant entries

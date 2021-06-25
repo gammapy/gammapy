@@ -590,7 +590,7 @@ class WcsGeom(Geom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_all(self, idx=None, mode="center", sparse=sparse):
+    def _get_pix_all(self, idx=None, mode="center", sparse=False):
         """Get idx coordinate array without footprint of the projection applied"""
         if mode == "edges":
             shape = self._shape_edges

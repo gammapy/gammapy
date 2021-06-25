@@ -1642,7 +1642,7 @@ class HpxGeom(Geom):
         mask = geom.contains(coords)
         return Map.from_geom(self, data=mask)
 
-    def get_coord(self, idx=None, flat=False):
+    def get_coord(self, idx=None, flat=False, sparse=False):
         pix = self.get_idx(idx=idx, flat=flat)
         coords = self.pix_to_coord(pix)
         cdict = {"lon": coords[0], "lat": coords[1]}
