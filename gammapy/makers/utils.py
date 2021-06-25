@@ -188,12 +188,10 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
 
-    values = (bkg_de * d_omega * ontime).to_value("")
+    data = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
-        data = np.sum(weights * values, axis=2)
-    else:
-        data = values
+        data = np.sum(weights * data, axis=2)
 
     bkg_map = Map.from_geom(geom, data=data)
 
