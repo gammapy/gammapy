@@ -98,7 +98,7 @@ def test_get_coord(region, energy_axis, test_axis):
     )
 
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
-    coords = geom.get_coord()
+    coords = geom.get_coord(sparse=True)
     assert coords["lon"].shape == (1, 1)
     assert coords["test"].shape == (2, 1, 1, 1)
     assert coords["energy"].shape == (1, 3, 1, 1)

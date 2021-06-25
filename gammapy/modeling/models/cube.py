@@ -599,7 +599,7 @@ class FoVBackgroundModel(Model):
     def evaluate_geom(self, geom):
         """Evaluate map"""
         coords = geom.get_coord(sparse=True)
-        return self.evaluate(energy=coords["energy_true"])
+        return self.evaluate(energy=coords["energy"])
 
     def evaluate(self, energy):
         """Evaluate model"""
