@@ -2056,8 +2056,9 @@ class MapCoord:
     @property
     def flat(self):
         """Return flattened, valid coordinates"""
-        is_finite = np.isfinite(self[0])
-        return self.apply_mask(is_finite)
+        coords = self.broadcasted
+        is_finite = np.isfinite(coords[0])
+        return coords.apply_mask(is_finite)
 
     @property
     def broadcasted(self):

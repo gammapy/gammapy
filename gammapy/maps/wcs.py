@@ -590,7 +590,7 @@ class WcsGeom(Geom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_all(self, idx=None, mode="center"):
+    def _get_pix_all(self, idx=None, mode="center", sparse=sparse):
         """Get idx coordinate array without footprint of the projection applied"""
         if mode == "edges":
             shape = self._shape_edges
@@ -607,7 +607,7 @@ class WcsGeom(Geom):
             for pix_array in pix[self._slice_spatial_axes]:
                 pix_array -= 0.5
 
-        return np.meshgrid(*pix[::-1], indexing="ij")[::-1]
+        return np.meshgrid(*pix[::-1], indexing="ij", sparse=sparse)[::-1]
 
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
@@ -629,20 +629,24 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, mode="center", frame=None):
+    def get_coord(self, idx=None, mode="center", frame=None, sparse=False):
         """Get map coordinates from the geometry.
 
         Parameters
         ----------
         mode : {'center', 'edges'}
             Get center or edge coordinates for the spatial axes.
+        frame : str or `~astropy.coordinates.Frame`
+            Coordinate frame
+        sparse : bool
+            Compute sparse coordinates
 
         Returns
         -------
         coord : `~MapCoord`
             Map coordinate object.
         """
-        pix = self._get_pix_all(idx=idx, mode=mode)
+        pix = self._get_pix_all(idx=idx, mode=mode, sparse=sparse)
         coords = self.pix_to_coord(pix)
 
         axes_names = ["lon", "lat"] + self.axes.names
