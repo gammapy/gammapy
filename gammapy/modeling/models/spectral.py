@@ -297,7 +297,7 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds
+            Plot energy bounds passed to MapAxis.from_energy_bounds
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
@@ -379,7 +379,7 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds
+            Plot energy bounds passed to MapAxis.from_energy_bounds
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
