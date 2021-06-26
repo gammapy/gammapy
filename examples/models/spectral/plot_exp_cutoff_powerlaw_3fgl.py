@@ -22,14 +22,14 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import ExpCutoffPowerLaw3FGLSpectralModel, Models, SkyModel
 
-energy_range = [0.1, 100] * u.TeV
+energy_bounds = [0.1, 100] * u.TeV
 model = ExpCutoffPowerLaw3FGLSpectralModel(
     index=2.3 * u.Unit(""),
     amplitude=4 / u.cm ** 2 / u.s / u.TeV,
     reference=1 * u.TeV,
     ecut=10 * u.TeV,
 )
-model.plot(energy_range)
+model.plot(energy_bounds)
 plt.grid(which="both")
 
 # %%

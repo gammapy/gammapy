@@ -42,14 +42,14 @@ franceschini = EBLAbsorptionNormSpectralModel.read_builtin(
 finke = EBLAbsorptionNormSpectralModel.read_builtin("finke", redshift=redshift)
 
 plt.figure()
-energy_range = [0.08, 3] * u.TeV
-opts = dict(energy_range=energy_range, energy_unit="TeV", flux_unit="")
+energy_bounds = [0.08, 3] * u.TeV
+opts = dict(energy_bounds=energy_bounds, energy_unit="TeV", flux_unit="")
 franceschini.plot(label="Franceschini 2008", **opts)
 finke.plot(label="Finke 2010", **opts)
 dominguez.plot(label="Dominguez 2011", **opts)
 
 plt.ylabel(r"Absorption coefficient [$\exp{(-\tau(E))}$]")
-plt.xlim(energy_range.value)
+plt.xlim(energy_bounds.value)
 plt.ylim(1e-4, 2)
 plt.title(f"EBL models (z={redshift})")
 plt.grid(which="both")
@@ -68,9 +68,9 @@ absorption = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=r
 
 model = pwl * absorption
 
-energy_range = [0.1, 100] * u.TeV
+energy_bounds = [0.1, 100] * u.TeV
 plt.figure()
-model.plot(energy_range)
+model.plot(energy_bounds)
 plt.grid(which="both")
 plt.ylim(1e-24, 1e-8)
 
