@@ -62,10 +62,19 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
 
 
 class ExcessMapEstimator(Estimator):
-    """Computes correlated excess, sqrt TS (i.e. Li-Ma significance) and errors for MapDatasets.
+    """Computes correlated excess, significance and error maps from a map dataset.
 
-    If a model is set on the dataset the excess map estimator will compute the excess taking into account
-    the predicted counts of the model.
+    If a model is set on the dataset the excess map estimator will compute the
+    excess taking into account the predicted counts of the model.
+
+    ..note::
+        By default the excess estimator correlates the off counts as well to avoid
+        artifacts at the edges of the :term:`FoV` for stacked on-off datasets.
+        However when the on-off dataset has been derived from a ring background
+        estimate, this leads to the off counts being correlated twice. To avoid
+        artifacts and the double correlation, the `ExcessMapEstimator` has to
+        be applied per dataset and the resulting maps need to be stacked, taking
+        the :term:`FoV` cut into account.
 
     Parameters
     ----------
@@ -88,11 +97,11 @@ class ExcessMapEstimator(Estimator):
         Default is None so the optionnal steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
-    apply_mask_fit : Bool
+    apply_mask_fit : bool
         Apply a mask for the computation.
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
-    correlate_off : Bool
-        Correlate OFF events in the case of a MapDatasetOnOff. Default is True.
+    correlate_off : bool
+        Correlate OFF events in the case of a `MapDatasetOnOff`. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map. 
         If None, a Power Law of index 2 is assumed (default). 
