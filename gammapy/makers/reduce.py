@@ -28,11 +28,6 @@ class DatasetsMaker(Maker):
         Cutout mode. Default is "partial"
     cutout_width : str or `~astropy.coordinates.Angle`,
         Cutout width. Default is None, If Default is determined 
-        Path
-    write_all : bool
-        Write a dataset per observation or not
-    overwrite : bool
-        Whether to overwrite
     
     Returns
     -------
