@@ -133,20 +133,23 @@ class EnergyDispersion2D(IRF):
                 energy_true, name="energy_true",
             )
 
+        axes = MapAxes([energy_axis_true, energy_axis])
+        coords = axes.get_coord(mode="edges", axis_name="energy")
+
         # migration value of energy bounds
-        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+        migra = coords["energy"] / coords["energy_true"]
 
         values = self.integral(
             axis_name="migra",
             offset=offset,
-            energy_true=energy_axis_true.center[:, np.newaxis],
+            energy_true=coords["energy_true"],
             migra=migra,
         )
 
         data = np.diff(values)
 
         return EDispKernel(
-            axes=[energy_axis_true, energy_axis],
+            axes=axes,
             data=data.to_value(""),
         )
 
