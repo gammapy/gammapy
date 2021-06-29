@@ -110,7 +110,7 @@ class MapAxes(Sequence):
         List of map axis objects.
     """
 
-    def __init__(self, axes):
+    def __init__(self, axes, n_spatial_axes=None):
         unique_names = []
 
         for ax in axes:
@@ -121,6 +121,7 @@ class MapAxes(Sequence):
             unique_names.append(ax.name)
 
         self._axes = axes
+        self._n_spatial_axes = n_spatial_axes
 
     @property
     def reverse(self):
@@ -134,6 +135,8 @@ class MapAxes(Sequence):
             # Extract values for each axis, default: nodes
             shape = [1] * len(self)
             shape[idx] = -1
+            if self._n_spatial_axes:
+                shape = shape[::-1] + [1, ] * self._n_spatial_axes
             yield tuple(shape), axis
 
     def get_coord(self, mode="center", axis_name=None):
@@ -144,7 +147,7 @@ class MapAxes(Sequence):
         mode : {"center", "edges"}
             Coordinate center or edges
         axis_name : str
-            Axis name
+            Axis name for which mode='edges' applies
 
         Returns
         -------
@@ -679,7 +682,7 @@ class MapAxes(Sequence):
         return cls(axes)
 
     @classmethod
-    def from_default(cls, axes):
+    def from_default(cls, axes, n_spatial_axes=None):
         """Make a sequence of `~MapAxis` objects."""
         if axes is None:
             return cls([])
@@ -694,7 +697,7 @@ class MapAxes(Sequence):
 
             axes_out.append(ax)
 
-        return cls(axes_out)
+        return cls(axes_out, n_spatial_axes=n_spatial_axes)
 
     def assert_names(self, required_names):
         """Assert required axis names and order
@@ -2060,7 +2063,17 @@ class MapCoord:
         coords : `~MapCoord`
             A coordinates object.
         """
-        data = {k: v[mask] for k, v in self._data.items()}
+        try:
+            data = {k: v[mask] for k, v in self._data.items()}
+        except IndexError:
+            data = {}
+
+            for name, coord in self._data.items():
+                if name in ["lon", "lat"]:
+                    data[name] = np.squeeze(coord)[mask]
+                else:
+                    data[name] = np.squeeze(coord, axis=-1)
+
         return self.__class__(data, self.frame, self._match_by_name)
 
     @property
