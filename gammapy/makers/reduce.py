@@ -113,7 +113,6 @@ class DatasetsMaker(Maker):
             dataset_obs = maker.run(dataset=dataset_obs, observation=observation)
         return dataset_obs
 
-
     def callback(self, dataset):
         if self.stacking:
             self.dataset.stack(dataset)
@@ -152,7 +151,7 @@ class DatasetsMaker(Maker):
             obs_ids = [d.meta_table["OBS_ID"][0] for d in self._datasets]
             ordered = []
             for obs in observations:
-                ind = np.where(np.array(obs_ids)==obs.obs_id)[0][0]
+                ind = np.where(np.array(obs_ids) == obs.obs_id)[0][0]
                 ordered.append(self._datasets[ind])
             self._datasets = ordered
             return Datasets(self._datasets)

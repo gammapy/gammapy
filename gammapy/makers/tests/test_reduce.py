@@ -176,13 +176,10 @@ def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
 def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
 
     makers = DatasetsMaker(
-        makers_spectrum,
-        get_spectrumdataset(name="spec"),
-        stacking=False,
-        n_jobs=2,
+        makers_spectrum, get_spectrumdataset(name="spec"), stacking=False, n_jobs=2,
     )
     datasets = makers.run(observations_hess)
-    
+
     counts = datasets[0].counts
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), 192, rtol=1e-5)
