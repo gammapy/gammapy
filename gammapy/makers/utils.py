@@ -181,7 +181,6 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
         coords["fov_lat"] = fov_lat
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
-
     data = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:

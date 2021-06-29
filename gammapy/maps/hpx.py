@@ -1520,19 +1520,19 @@ class HpxGeom(Geom):
 
         return wcs_tiles
 
-    def get_idx(self, idx=None, local=False, flat=False):
+    def get_idx(self, idx=None, local=False, flat=False, sparse=False):
+        # TODO: simplify this!!!
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError(f"Image index out of range: {idx!r}")
 
         # Regular all- and partial-sky maps
         if self.is_regular:
-
             pix = [np.arange(np.max(self._npix))]
             if idx is None:
                 pix += [np.arange(ax.nbin, dtype=int) for ax in self.axes]
             else:
                 pix += [t for t in idx]
-            pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=False)[::-1]
+            pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=sparse)[::-1]
             pix = self.local_to_global(pix)
 
         # Non-regular all-sky
@@ -1642,8 +1642,8 @@ class HpxGeom(Geom):
         mask = geom.contains(coords)
         return Map.from_geom(self, data=mask)
 
-    def get_coord(self, idx=None, flat=False, sparse=False):
-        pix = self.get_idx(idx=idx, flat=flat)
+    def get_coord(self, idx=None, flat=False, sparse=False, mode="center", axis_name=None):
+        pix = self.get_idx(idx=idx, flat=flat, sparse=sparse)
         coords = self.pix_to_coord(pix)
         cdict = {"lon": coords[0], "lat": coords[1]}
 
