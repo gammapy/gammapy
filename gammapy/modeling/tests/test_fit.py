@@ -53,17 +53,35 @@ class MyDataset(Dataset):
         """Statistic array, one value per data point."""
 
 
+@requires_dependency("iminuit")
 @requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["sherpa", "scipy"])
-def test_warning_no_covariance(backend, caplog):
+def test_optimize_backend_and_covariance(backend):
     dataset = MyDataset()
-    fit = Fit(backend=backend)
+
+    if backend == "scipy":
+        kwargs = {"method": "L-BFGS-B"}
+    else:
+        kwargs = {}
+
+    kwargs["backend"] = backend
+
+    fit = Fit(optimize_opts=kwargs)
     result = fit.run([dataset])
-    assert caplog.records[-1].levelname == "WARNING"
-    assert (
-        caplog.records[-1].message
-        == "No covariance estimate - not supported by this backend."
-    )
+
+    pars = result.parameters
+    assert_allclose(pars["x"].value, 2, rtol=1e-3)
+    assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
+
+    assert_allclose(pars["x"].error, 1, rtol=1e-7)
+    assert_allclose(pars["y"].error, 1, rtol=1e-7)
+    assert_allclose(pars["z"].error, 1, rtol=1e-7)
+
+    correlation = dataset.models.covariance.correlation
+    assert_allclose(correlation[0, 1], 0, atol=1e-7)
+    assert_allclose(correlation[0, 2], 0, atol=1e-7)
+    assert_allclose(correlation[1, 2], 0, atol=1e-7)
 
 
 @pytest.mark.parametrize("backend", ["minuit"])
@@ -226,12 +244,12 @@ def test_stat_surface_reoptimize():
     )
 
 
-def test_minos_contour():
+def test_stat_contour():
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
     fit = Fit(backend="minuit")
     fit.optimize([dataset])
-    result = fit.minos_contour(datasets=[dataset], x="y", y="z")
+    result = fit.stat_contour(datasets=[dataset], x="y", y="z")
 
     assert result["success"] is True
 

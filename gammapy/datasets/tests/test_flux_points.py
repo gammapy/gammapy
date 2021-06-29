@@ -106,19 +106,28 @@ class TestFluxPointFit:
         fit = Fit()
         result = fit.run(datasets=dataset)
 
-        profile = fit.stat_profile(datasets=dataset, parameter="amplitude", nvalues=3, bounds=1)
+        profile = fit.stat_profile(
+            datasets=dataset,
+            parameter="amplitude",
+            nvalues=3,
+            bounds=1,
+        )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
 
         value = result.parameters["amplitude"].value
         err = result.parameters["amplitude"].error
         values = np.array([value - err, value, value + err])
 
-        profile = fit.stat_profile(datasets=dataset, parameter="amplitude", values=values)
+        profile = fit.stat_profile(
+            datasets=dataset,
+            parameter="amplitude",
+            values=values
+        )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
 
     @staticmethod
     @requires_dependency("matplotlib")
