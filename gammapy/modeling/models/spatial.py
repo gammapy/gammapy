@@ -147,11 +147,10 @@ class SpatialModel(Model):
         `~gammapy.maps.Map`
 
         """
-        coords = geom.to_image().get_coord(frame=self.frame)
+        coords = geom.get_coord(frame=self.frame, sparse=True)
 
         if self.is_energy_dependent:
-            energy = geom.axes["energy_true"].center
-            return self(coords.lon, coords.lat, energy[:, np.newaxis, np.newaxis])
+            return self(coords.lon, coords.lat, energy=coords["energy_true"])
         else:
             return self(coords.lon, coords.lat)
 
