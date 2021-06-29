@@ -630,7 +630,7 @@ class WcsGeom(Geom):
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
         for _ in pix:
-            _[~m] = INVALID_INDEX.floatgit s
+            _[~m] = INVALID_INDEX.float
         return pix
 
     def get_coord(self, idx=None, mode="center", frame=None, sparse=False, axis_name=None):

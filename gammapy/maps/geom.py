@@ -136,8 +136,15 @@ class MapAxes(Sequence):
             shape[idx] = -1
             yield tuple(shape), axis
 
-    def get_coord(self):
+    def get_coord(self, mode="center", axis_name=None):
         """Get axes coordinates
+
+        Parameters
+        ----------
+        mode : {"center", "edges"}
+            Coordinate center or edges
+        axis_name : str
+            Axis name
 
         Returns
         -------
@@ -147,8 +154,11 @@ class MapAxes(Sequence):
         coords = {}
 
         for shape, axis in self.iter_with_reshape:
-            coord = axis.center.reshape(shape)
-            coords[axis.name] = coord
+            if mode == "edges" and axis.name == axis_name:
+                coord = axis.edges
+            else:
+                coord = axis.center
+            coords[axis.name] = coord.reshape(shape)
 
         return coords
 
