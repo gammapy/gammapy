@@ -170,4 +170,11 @@ class DatasetsMaker(Maker):
         if self.stacking:
             return Datasets([self.dataset])
         else:
+            # have to sort datasets because of async
+            obs_ids = [d.meta_table["OBS_ID"][0] for d in self._datasets]
+            ordered = []
+            for obs in observations:
+                ind = np.where(np.array(obs_ids)==obs.obs_id)[0][0]
+                ordered.append(self._datasets[ind])
+            self._datasets = ordered
             return Datasets(self._datasets)
