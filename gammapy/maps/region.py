@@ -53,7 +53,7 @@ class RegionGeom(Geom):
 
     def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.1 deg"):
         self._region = region
-        self._axes = MapAxes.from_default(axes)
+        self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
         self._binsz_wcs = binsz_wcs
 
         if wcs is None and region is not None:
@@ -234,33 +234,36 @@ class RegionGeom(Geom):
         """
         return tuple((1, 1) + self.axes.shape)
 
-    def get_coord(self, frame=None, sparse=False):
+    def get_coord(self, mode="center", frame=None, sparse=False, axis_name=None):
         """Get map coordinates from the geometry.
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}
+            Get center or edge coordinates for the non-spatial axes.
+        frame : str or `~astropy.coordinates.Frame`
+            Coordinate frame
+        sparse : bool
+            Compute sparse coordinates
+        axis_name : str
+            If mode = "edges", the edges will be returned for this axis only.
+
 
         Returns
         -------
         coord : `~MapCoord`
             Map coordinate object.
         """
-        # TODO: support mode=edges?
-        cdict = {}
-        
-        cdict["skycoord"] = self.center_skydir.reshape((1, 1))
+        if mode == "edges" and axis_name is None:
+            raise ValueError("Mode 'edges' requires axis name")
 
-        if self.axes is not None:
-            for shape, ax in self.axes.iter_with_reshape:
-                shape = shape[::-1] + (1, 1)
-                cdict[ax.name] = ax.center.reshape(shape)
+        coords = self.axes.get_coord(mode=mode, axis_name=axis_name)
+        coords["skycoord"] = self.center_skydir.reshape((1, 1))
 
         if frame is None:
             frame = self.frame
 
-        coord = MapCoord.create(cdict, frame=self.frame).to_frame(frame)
-
-        if sparse:
-            return coord
-
-        return coord.broadcasted
+        return MapCoord.create(coords, frame=self.frame).to_frame(frame)
 
     def _pad_spatial(self, pad_width):
         raise NotImplementedError("Spatial padding of `RegionGeom` not supported")
@@ -366,9 +369,9 @@ class RegionGeom(Geom):
             Weights representing the fraction of each pixel
             contained in the region.
         """
-        wcs_geom = self.to_wcs_geom().to_image()
+        wcs_geom = self.to_wcs_geom()
 
-        weights = wcs_geom.region_weights(
+        weights = wcs_geom.to_image().region_weights(
             regions=[self.region], oversampling_factor=factor
         )
 
@@ -376,9 +379,8 @@ class RegionGeom(Geom):
         weights = weights.data[mask]
 
         # Get coordinates
-        region_coord = wcs_geom.get_coord().apply_mask(mask)
-
-        return region_coord, weights
+        coords = wcs_geom.get_coord(sparse=True).apply_mask(mask)
+        return coords, weights
 
     def to_binsz(self, binsz):
         """Returns self"""
