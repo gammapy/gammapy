@@ -38,7 +38,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
     use_region_center: bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------
@@ -46,11 +46,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
         Exposure map
     """
     if not use_region_center:
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        coords = MapCoord.create({
-            "skycoord": region_coord.skycoord,
-            "energy_true": geom.axes["energy_true"].center[:, np.newaxis]
-        })
+        coords, weights = geom.get_wcs_coord_and_weights()
     else:
         coords, weights = geom.get_coord(sparse=True), None
 
@@ -271,15 +267,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     """
     # Compute separations with pointing position
     if not use_region_center:
-        # TODO: simplify
-        energy_true = geom.axes["energy_true"].center
-        migra = geom.axes["migra"].center
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        coords = MapCoord.create({
-            "skycoord": region_coord.skycoord,
-            "energy_true": energy_true[:, np.newaxis, np.newaxis],
-            "migra": migra[:, np.newaxis]
-        })
+        coords, weights = geom.get_wcs_coord_and_weights()
     else:
         coords, weights = geom.get_coord(sparse=True), None
 
@@ -290,13 +278,13 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
         offset=offset,
         energy_true=coords["energy_true"],
         migra=coords["migra"],
-    ).to_value("")
+    )
 
     if not use_region_center:
         data = np.average(data, axis=2, weights=weights)
 
     # Create Map and fill relevant entries
-    edisp_map = Map.from_geom(geom, data=data, unit="")
+    edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")
     edisp_map.normalize(axis_name="migra")
     return EDispMap(edisp_map, exposure_map)
 
