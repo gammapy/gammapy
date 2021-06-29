@@ -250,15 +250,16 @@ class EDispMap(IRFMap):
             Energy dispersion kernel map.
         """
         energy_axis_true = self.edisp_map.geom.axes["energy_true"]
-        geom_image = self.edisp_map.geom.to_image()
 
-        # migration value of energy bounds
-        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+        geom_image = self.edisp_map.geom.to_image()
+        geom = geom_image.to_cube([energy_axis, energy_axis_true])
+
+        coords = geom.get_coord(sparse=True, mode="edges", axis_name="energy")
 
         coords = {
-            "energy_true": energy_axis_true.center[:, np.newaxis, np.newaxis, np.newaxis],
-            "migra": migra[:, :, np.newaxis, np.newaxis],
-            "skycoord": geom_image.get_coord().skycoord
+            "energy_true": coords["energy_true"],
+            "migra": coords["energy"] / coords["energy_true"],
+            "skycoord": coords.skycoord
         }
 
         values = self.edisp_map.integral(axis_name="migra", coords=coords)
@@ -266,7 +267,6 @@ class EDispMap(IRFMap):
         axis = self.edisp_map.geom.axes.index_data("migra")
         data = np.clip(np.diff(values, axis=axis), 0, np.inf)
 
-        geom = geom_image.to_cube([energy_axis, energy_axis_true])
         edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(""), unit="")
 
         if self.exposure_map:

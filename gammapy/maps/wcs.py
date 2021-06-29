@@ -178,6 +178,11 @@ class WcsGeom(Geom):
         return self._shape[::-1]
 
     @property
+    def axes_names(self):
+        """All axes names"""
+        return ["lon", "lat"] + self.axes.names
+
+    @property
     def data_shape_axes(self):
         """Shape of data of the non-spatial axes and unit spatial axes."""
         return self.axes.shape[::-1] + (1, 1)
@@ -590,22 +595,17 @@ class WcsGeom(Geom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_all(self, idx=None, mode="center", sparse=False):
+    def _get_pix_all(self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")):
         """Get idx coordinate array without footprint of the projection applied"""
-        if mode == "edges":
-            shape = self._shape_edges
-        else:
-            shape = self._shape
+        pix = []
 
-        if idx is None:
-            pix = [np.arange(n, dtype=float) for n in shape]
-        else:
-            pix = [np.arange(n, dtype=float) for n in shape[self._slice_spatial_axes]]
-            pix += [float(t) for t in idx]
+        for name, nbin in zip(self.axes_names, self._shape):
+            if mode == "edges" and name in axis_name:
+                pix_coords = np.arange(-0.5, nbin, dtype=float)
+            else:
+                pix_coords = np.arange(nbin, dtype=float)
 
-        if mode == "edges":
-            for pix_array in pix[self._slice_spatial_axes]:
-                pix_array -= 0.5
+            pix.append(pix_coords)
 
         return np.meshgrid(*pix[::-1], indexing="ij", sparse=sparse)[::-1]
 
@@ -629,7 +629,7 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, mode="center", frame=None, sparse=False):
+    def get_coord(self, idx=None, mode="center", frame=None, sparse=False, axis_name=None):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -640,17 +640,21 @@ class WcsGeom(Geom):
             Coordinate frame
         sparse : bool
             Compute sparse coordinates
+        axis_name : str
+            If mode = "edges", the edges will be returned for this axis only.
 
         Returns
         -------
         coord : `~MapCoord`
             Map coordinate object.
         """
-        pix = self._get_pix_all(idx=idx, mode=mode, sparse=sparse)
+        if axis_name is None:
+            axis_name = ("lon", "lat")
+
+        pix = self._get_pix_all(idx=idx, mode=mode, sparse=sparse, axis_name=axis_name)
         coords = self.pix_to_coord(pix)
 
-        axes_names = ["lon", "lat"] + self.axes.names
-        cdict = dict(zip(axes_names, coords))
+        cdict = dict(zip(self.axes_names, coords))
 
         if frame is None:
             frame = self.frame
@@ -1050,14 +1054,13 @@ class WcsGeom(Geom):
         return structure.reshape(shape)
 
     def __repr__(self):
-        axes = ["lon", "lat"] + [_.name for _ in self.axes]
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
         lon_ref, lat_ref = self.wcs.wcs.crval
 
         return (
             f"{self.__class__.__name__}\n\n"
-            f"\taxes       : {axes}\n"
+            f"\taxes       : {self.axes_names}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
             f"\tframe      : {self.frame}\n"
