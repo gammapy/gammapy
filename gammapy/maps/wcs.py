@@ -597,17 +597,21 @@ class WcsGeom(Geom):
 
     def _get_pix_all(self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")):
         """Get idx coordinate array without footprint of the projection applied"""
-        pix = []
+        pix_all = []
 
         for name, nbin in zip(self.axes_names, self._shape):
             if mode == "edges" and name in axis_name:
-                pix_coords = np.arange(-0.5, nbin, dtype=float)
+                pix = np.arange(-0.5, nbin, dtype=float)
             else:
-                pix_coords = np.arange(nbin, dtype=float)
+                pix = np.arange(nbin, dtype=float)
 
-            pix.append(pix_coords)
+            pix_all.append(pix)
 
-        return np.meshgrid(*pix[::-1], indexing="ij", sparse=sparse)[::-1]
+        # TODO: improve varying bin size coordinate handling
+        if idx is not None:
+            pix_all = pix_all[self._slice_spatial_axes] + [float(t) for t in idx]
+
+        return np.meshgrid(*pix_all[::-1], indexing="ij", sparse=sparse)[::-1]
 
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
@@ -626,7 +630,7 @@ class WcsGeom(Geom):
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
         for _ in pix:
-            _[~m] = INVALID_INDEX.float
+            _[~m] = INVALID_INDEX.floatgit s
         return pix
 
     def get_coord(self, idx=None, mode="center", frame=None, sparse=False, axis_name=None):

@@ -529,7 +529,6 @@ class WcsNDMap(WcsMap):
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
-
     def mask_contains_region(self, region):
         """Check if input region is contained in a boolean mask map.
 
@@ -838,7 +837,6 @@ class WcsNDMap(WcsMap):
         coords = self.geom.pix_to_coord(coords_pix[::-1])
 
         # TODO: pix_to_coord should return a MapCoord object
-        axes_names = ["lon", "lat"] + self.geom.axes.names
-        cdict = OrderedDict(zip(axes_names, coords))
+        cdict = OrderedDict(zip(self.geom.axes_names, coords))
 
         return MapCoord.create(cdict, frame=self.geom.frame)
