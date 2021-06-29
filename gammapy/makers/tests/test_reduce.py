@@ -101,19 +101,19 @@ def makers_spectrum(exclusion_mask):
     [
         {
             "dataset": get_mapdataset(name="linear_staking"),
-            "stacking": True,
+            "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": None,
         },
         {
             "dataset": get_mapdataset(name="parallel"),
-            "stacking": False,
+            "stack_datasets": False,
             "cutout_width": None,
             "n_jobs": 2,
         },
         {
             "dataset": get_mapdataset(name="parallel_staking"),
-            "stacking": True,
+            "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 2,
         },
@@ -123,14 +123,13 @@ def makers_spectrum(exclusion_mask):
 def test_datasetsmaker_map(pars, observations_cta, makers_map):
     makers = DatasetsMaker(
         makers_map,
-        pars["dataset"],
-        stacking=pars["stacking"],
+        stack_datasets=pars["stack_datasets"],
         cutout_mode="partial",
         cutout_width=pars["cutout_width"],
         n_jobs=pars["n_jobs"],
     )
 
-    datasets = makers.run(observations_cta)
+    datasets = makers.run(pars["dataset"], observations_cta)
     if len(datasets) == 1:
         counts = datasets[0].counts
         assert counts.unit == ""
@@ -155,13 +154,12 @@ def test_datasetsmaker_map(pars, observations_cta, makers_map):
 def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
     makers = DatasetsMaker(
         makers_map,
-        get_mapdataset(name="linear_staking_1deg"),
-        stacking=True,
+        stack_datasets=True,
         cutout_mode="partial",
         cutout_width="5 deg",
         n_jobs=None,
     )
-    datasets = makers.run(observations_cta)
+    datasets = makers.run(get_mapdataset(name="linear_staking_1deg"), observations_cta)
 
     counts = datasets[0].counts
     assert counts.unit == ""
@@ -175,10 +173,8 @@ def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
 @requires_data()
 def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
 
-    makers = DatasetsMaker(
-        makers_spectrum, get_spectrumdataset(name="spec"), stacking=False, n_jobs=2,
-    )
-    datasets = makers.run(observations_hess)
+    makers = DatasetsMaker(makers_spectrum, stack_datasets=False, n_jobs=2)
+    datasets = makers.run(get_spectrumdataset(name="spec"), observations_hess)
 
     counts = datasets[0].counts
     assert counts.unit == ""
