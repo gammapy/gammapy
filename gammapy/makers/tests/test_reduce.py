@@ -103,27 +103,24 @@ def makers_spectrum(exclusion_mask):
             "dataset": get_mapdataset(name="linear_staking"),
             "stacking": True,
             "cutout_width": None,
-            "write_all": False,
             "n_jobs": None,
         },
         {
             "dataset": get_mapdataset(name="parallel"),
             "stacking": False,
             "cutout_width": None,
-            "write_all": True,
             "n_jobs": 2,
         },
         {
             "dataset": get_mapdataset(name="parallel_staking"),
             "stacking": True,
             "cutout_width": None,
-            "write_all": False,
             "n_jobs": 2,
         },
     ],
 )
 @requires_data()
-def test_datasetsmaker_map(pars, observations_cta, makers_map, tmp_path):
+def test_datasetsmaker_map(pars, observations_cta, makers_map):
     makers = DatasetsMaker(
         makers_map,
         pars["dataset"],
@@ -131,9 +128,6 @@ def test_datasetsmaker_map(pars, observations_cta, makers_map, tmp_path):
         cutout_mode="partial",
         cutout_width=pars["cutout_width"],
         n_jobs=pars["n_jobs"],
-        path=tmp_path,
-        write_all=pars["write_all"],
-        overwrite=True,
     )
 
     datasets = makers.run(observations_cta)
@@ -148,11 +142,11 @@ def test_datasetsmaker_map(pars, observations_cta, makers_map, tmp_path):
     else:
         assert len(datasets) == 3
         # get by name because of async
-        counts = datasets["obs-110380_parallel"].counts
+        counts = datasets[0].counts
         assert counts.unit == ""
         assert_allclose(counts.data.sum(), 26318, rtol=1e-5)
 
-        exposure = datasets["obs-110380_parallel"].exposure
+        exposure = datasets[0].exposure
         assert exposure.unit == "m2 s"
         assert_allclose(exposure.data.mean(), 2.436063e09, rtol=3e-3)
 
@@ -166,9 +160,6 @@ def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
         cutout_mode="partial",
         cutout_width="5 deg",
         n_jobs=None,
-        path=tmp_path,
-        write_all=False,
-        overwrite=True,
     )
     datasets = makers.run(observations_cta)
 
@@ -182,24 +173,21 @@ def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
 
 
 @requires_data()
-def test_datasetsmaker_spectrum(observations_hess, makers_spectrum, tmp_path):
+def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
 
     makers = DatasetsMaker(
         makers_spectrum,
         get_spectrumdataset(name="spec"),
         stacking=False,
         n_jobs=2,
-        path=tmp_path,
-        write_all=False,
-        overwrite=True,
     )
     datasets = makers.run(observations_hess)
-
-    counts = datasets["obs-23523_spec"].counts  # get by name because of async
+    
+    counts = datasets[0].counts
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), 192, rtol=1e-5)
     assert_allclose(datasets[0].background.data.sum(), 18.66666664, rtol=1e-5)
 
-    exposure = datasets["obs-23523_spec"].exposure
+    exposure = datasets[0].exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 3.94257338e08, rtol=3e-3)
