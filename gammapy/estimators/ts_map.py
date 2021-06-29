@@ -121,7 +121,7 @@ class TSMapEstimator(Estimator):
     def __init__(
         self,
         model=None,
-        kernel_width="0.2 deg",
+        kernel_width=None,
         downsampling_factor=None,
         n_sigma=1,
         n_sigma_ul=2,
@@ -132,7 +132,10 @@ class TSMapEstimator(Estimator):
         sum_over_energy_groups=True,
         n_jobs=None,
     ):
-        self.kernel_width = Angle(kernel_width)
+        if kernel_width is not None:
+            kernel_width = Angle(kernel_width)
+
+        self.kernel_width = kernel_width
 
         if model is None:
             model = SkyModel(
@@ -198,45 +201,44 @@ class TSMapEstimator(Estimator):
             Kernel map
 
         """
-        # TODO: further simplify the code below
         geom = dataset.exposure.geom
+
+        if self.kernel_width is not None:
+            geom = geom.to_odd_npix(max_radius=self.kernel_width / 2)
 
         model = self.model.copy()
         model.spatial_model.position = geom.center_skydir
 
-        geom_kernel = geom.to_odd_npix(max_radius=self.kernel_width / 2)
-
         # Creating exposure map with exposure at map center
-        exposure = Map.from_geom(geom_kernel, unit="cm2 s1")
-
-        exposure.data[...] = dataset.exposure.to_region_nd_map(geom.center_skydir).data
+        exposure = Map.from_geom(geom, unit="cm2 s1")
+        exposure_center = dataset.exposure.to_region_nd_map(geom.center_skydir)
+        exposure.data[...] = exposure_center.data
 
         # We use global evaluation mode to not modify the geometry
-        evaluator = MapEvaluator(model, evaluation_mode="global")
+        evaluator = MapEvaluator(model=model)
 
         evaluator.update(
-            exposure, dataset.psf, dataset.edisp, dataset.counts.geom, dataset.mask_fit,
+            exposure=exposure,
+            psf=dataset.psf,
+            edisp=dataset.edisp,
+            geom=dataset.counts.geom,
+            mask=dataset.mask_image,
         )
-
         kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()
-
-        if (self.kernel_width >= geom.width).any():
-            raise ValueError(
-                "Kernel shape larger than map shape, please adjust"
-                " size of the kernel"
-            )
         return kernel
 
-    def estimate_flux_default(self, dataset, kernel, exposure=None):
+    def estimate_flux_default(self, dataset, kernel=None, exposure=None):
         """Estimate default flux map using a given kernel.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input dataset.
-        kernel : `~numpy.ndarray`
+        kernel : `~gammapy.maps.WcsNDMap`
             Source model kernel.
+        exposure : `~gammapy.maps.WcsNDMap`
+            Exposure map on reconstructed energy.
 
         Returns
         -------
@@ -246,7 +248,10 @@ class TSMapEstimator(Estimator):
         if exposure is None:
             exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
-        kernel = kernel / np.sum(kernel ** 2)
+        if kernel is None:
+            kernel = self.estimate_kernel(dataset=dataset)
+
+        kernel = kernel.data / np.sum(kernel.data ** 2)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             flux = (dataset.counts - dataset.npred()) / exposure
@@ -256,28 +261,30 @@ class TSMapEstimator(Estimator):
         flux = flux.convolve(kernel)
         return flux.sum_over_axes()
 
-    @staticmethod
-    def estimate_mask_default(dataset, kernel):
+    def estimate_mask_default(self, dataset, kernel=None):
         """Compute default mask where to estimate TS values.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input dataset.
-        kernel : `~numpy.ndarray`
+        kernel : `WcsNDMap`
             Source model kernel.
 
         Returns
         -------
-        mask : `gammapy.maps.WcsNDMap`
+        mask : `WcsNDMap`
             Mask map.
         """
+        if kernel is None:
+            kernel = self.estimate_kernel(dataset=dataset)
+
         geom = dataset.counts.geom.to_image()
 
         # mask boundary
         mask = np.zeros(geom.data_shape, dtype=bool)
-        slice_x = slice(kernel.shape[2] // 2, -kernel.shape[2] // 2 + 1)
-        slice_y = slice(kernel.shape[1] // 2, -kernel.shape[1] // 2 + 1)
+        slice_x = slice(kernel.data.shape[2] // 2, -kernel.data.shape[2] // 2 + 1)
+        slice_y = slice(kernel.data.shape[1] // 2, -kernel.data.shape[1] // 2 + 1)
         mask[slice_y, slice_x] = 1
 
         if dataset.mask is not None:
@@ -289,6 +296,35 @@ class TSMapEstimator(Estimator):
         background = dataset.npred().sum_over_axes(keepdims=False)
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
+
+    def estimate_pad_width(self, dataset, kernel=None):
+        """Estimate pad width of the dataset
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Input MapDataset.
+        kernel : `WcsNDMap`
+            Source model kernel.
+
+        Returns
+        -------
+        pad_width : tuple
+            Padding width
+        """
+        if kernel is None:
+            kernel = self.estimate_kernel(dataset=dataset)
+
+        geom = dataset.counts.geom.to_image()
+        geom_kernel = kernel.geom.to_image()
+
+        pad_width = np.array(geom_kernel.data_shape) // 2
+
+        if self.downsampling_factor and self.downsampling_factor > 1:
+            shape = tuple(np.array(geom.data_shape) + 2 * pad_width)
+            pad_width = symmetric_crop_pad_width(geom.data_shape, shape_2N(shape))[0]
+
+        return tuple(pad_width)
 
     def estimate_fit_input_maps(self, dataset):
         """Estimate fit input maps
@@ -311,9 +347,9 @@ class TSMapEstimator(Estimator):
 
         kernel = self.estimate_kernel(dataset)
 
-        mask = self.estimate_mask_default(dataset, kernel.data)
+        mask = self.estimate_mask_default(dataset, kernel=kernel)
 
-        flux = self.estimate_flux_default(dataset, kernel.data, exposure=exposure)
+        flux = self.estimate_flux_default(dataset, kernel=kernel, exposure=exposure)
 
         energy_axis = counts.geom.axes["energy"]
 
@@ -377,30 +413,6 @@ class TSMapEstimator(Estimator):
             result[name] = m
 
         return result
-
-    def estimate_pad_width(self, dataset):
-        """Estimate pad width of the dataset
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input MapDataset.
-
-        Returns
-        -------
-        pad_width : tuple
-            Padding width
-        """
-        geom = dataset.counts.geom.to_image()
-        geom_kernel = geom.to_odd_npix(max_radius=self.kernel_width / 2)
-
-        pad_width = np.array(geom_kernel.data_shape) // 2
-
-        if self.downsampling_factor and self.downsampling_factor > 1:
-            shape = tuple(np.array(geom.data_shape) + 2 * pad_width)
-            pad_width = symmetric_crop_pad_width(geom.data_shape, shape_2N(shape))[0]
-
-        return tuple(pad_width)
 
     def run(self, dataset):
         """

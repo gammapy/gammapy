@@ -110,16 +110,20 @@ def test_compute_ts_map(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     ts_estimator = TSMapEstimator(
-        model=model, threshold=1, kernel_width="1 deg", selection_optional=[]
+        model=model, threshold=1, selection_optional=[]
     )
+
+    kernel = ts_estimator.estimate_kernel(dataset=input_dataset)
+    assert_allclose(kernel.geom.width, 1.22 * u.deg)
+
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[0, 99, 99], 8)
+    assert_allclose(result["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
-    assert_allclose(result["npred"].data[0, 99, 99], 3627.874063, rtol=1e-2)
-    assert_allclose(result["npred_null"].data[0, 99, 99], 2601, rtol=1e-2)
+    assert_allclose(result["npred"].data[0, 99, 99], 4744.020361, rtol=1e-2)
+    assert_allclose(result["npred_null"].data[0, 99, 99], 3721, rtol=1e-2)
     assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
@@ -138,7 +142,9 @@ def test_compute_ts_map_psf(fermi_dataset):
     spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    estimator = TSMapEstimator(model=model, kernel_width="1 deg", selection_optional="all")
+    estimator = TSMapEstimator(
+        model=model, kernel_width="1 deg", selection_optional="all"
+    )
     result = estimator.run(fermi_dataset)
 
     assert_allclose(result["ts"].data[0, 29, 29], 833.38, rtol=2e-3)
@@ -192,7 +198,10 @@ def test_compute_ts_map_downsampled(input_dataset):
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     ts_estimator = TSMapEstimator(
-        model=model, downsampling_factor=2, kernel_width="1 deg", selection_optional=["ul"]
+        model=model,
+        downsampling_factor=2,
+        kernel_width="1 deg",
+        selection_optional=["ul"]
     )
     result = ts_estimator.run(input_dataset)
 
