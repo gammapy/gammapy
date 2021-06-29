@@ -90,7 +90,7 @@ class EnergyDispersion2D(IRF):
         pdf = pdf / (migra_max - migra_min)
 
         # no offset dependence
-        data = pdf * np.ones(coords["offset"].shape) * np.ones(coords["energy_true"].shape)
+        data = pdf * np.ones(axes.shape)
         data[data < pdf_threshold] = 0
 
         return cls(
