@@ -56,8 +56,13 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         """
         exposure = super().make_exposure(geom, observation, use_region_center=self.use_region_center)
 
+        is_pointlike = exposure.meta.get("is_pointlike", False)
+        if is_pointlike:
+            log.warning("MapMaker: use_region_center=False should not be used with point-like IRF. "
+                        "Results are likely inaccurate.")
+
         if self.containment_correction:
-            if observation.aeff.is_pointlike:
+            if is_pointlike:
                 raise ValueError("Cannot apply containment correction for point-like IRF.")
 
             if not isinstance(geom.region, CircleSkyRegion):
