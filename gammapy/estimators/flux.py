@@ -11,7 +11,7 @@ from gammapy.modeling import Fit
 log = logging.getLogger(__name__)
 
 
-class FluxEstimator(Estimator):
+class FluxEstimator(ParameterEstimator):
     """Flux estimator.
 
     Estimates flux for a given list of datasets with their model in a given energy range.
@@ -25,8 +25,6 @@ class FluxEstimator(Estimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    energy_min, energy_max: `~astropy.units.Quantity`
-        The energy interval on which to compute the flux
     norm_min : float
         Minimum value for the norm used for the fit statistic profile evaluation.
     norm_max : float
@@ -68,7 +66,7 @@ class FluxEstimator(Estimator):
         selection_optional=None,
         fit=None,
         # TODO: why the different default here?
-        reoptimize=True
+        reoptimize=False
     ):
         self.norm_values = norm_values
         self.norm_min = norm_min
@@ -85,9 +83,7 @@ class FluxEstimator(Estimator):
 
         self.fit = fit
 
-    @property
-    def _parameter_estimator(self):
-        return ParameterEstimator(
+        super().__init__(
             null_value=0,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
