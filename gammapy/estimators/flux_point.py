@@ -750,10 +750,9 @@ class FluxPointsEstimator(FluxEstimator):
         energy_edges=[1, 10] * u.TeV,
         **kwargs
     ):
-        fit = Fit(confidence_opts={"backend": "scipy"})
-
         self.energy_edges = energy_edges
 
+        fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
         super().__init__(**kwargs)
 
