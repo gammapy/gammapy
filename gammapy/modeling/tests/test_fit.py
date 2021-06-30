@@ -168,7 +168,8 @@ def test_stat_profile():
     dataset = MyDataset()
     fit = Fit()
     fit.run([dataset])
-    result = fit.stat_profile(datasets=[dataset], parameter="x", nvalues=3)
+    dataset.models.parameters["x"].scan_n_values = 3
+    result = fit.stat_profile(datasets=[dataset], parameter="x")
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -184,7 +185,8 @@ def test_stat_profile_reoptimize():
     fit.run([dataset])
 
     dataset.models.parameters["y"].value = 0
-    result = fit.stat_profile(datasets=[dataset], parameter="x", nvalues=3,reoptimize=True)
+    dataset.models.parameters["x"].scan_n_values = 3
+    result = fit.stat_profile(datasets=[dataset], parameter="x", reoptimize=True)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
