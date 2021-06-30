@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.interpolate import interp1d
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, MapAxes, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .edisp_kernel import EDispKernel
 from .core import IRFMap
@@ -119,12 +118,16 @@ class EDispMap(IRFMap):
         position = self._get_nearest_valid_position(position)
         energy_axis_true = self.edisp_map.geom.axes["energy_true"]
 
+        axes = MapAxes([energy_axis_true, energy_axis])
+
+        coords = axes.get_coord(mode="edges", axis_name="energy")
+
         # migration value of energy bounds
-        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+        migra = coords["energy"] / coords["energy_true"]
 
         coords = {
             "skycoord": position,
-            "energy_true": energy_axis_true.center[:, np.newaxis],
+            "energy_true": coords["energy_true"],
             "migra": migra,
         }
 
@@ -135,7 +138,7 @@ class EDispMap(IRFMap):
         data = np.diff(np.clip(values, 0, 1))
 
         return EDispKernel(
-            axes=[energy_axis_true, energy_axis], data=data.to_value("")
+            axes=axes, data=data.to_value("")
         )
 
     @classmethod
