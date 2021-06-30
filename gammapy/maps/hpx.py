@@ -406,7 +406,6 @@ class HpxGeom(Geom):
     axes : list
         Axes for non-spatial dimensions.
     """
-
     is_hpx = True
     is_region = False
 
@@ -417,7 +416,7 @@ class HpxGeom(Geom):
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
-        self._axes = MapAxes.from_default(axes)
+        self._axes = MapAxes.from_default(axes, n_spatial_axes=1)
 
         if self.nside.size > 1 and self.nside.shape != self.shape_axes:
             raise ValueError(
@@ -433,12 +432,6 @@ class HpxGeom(Geom):
         self._region = region
         self._create_lookup(region)
         self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
-
-    @property
-    def data_shape(self):
-        """Shape of the Numpy data array matching this geometry."""
-        npix_shape = tuple([np.max(self.npix)])
-        return (npix_shape + self.axes.shape)[::-1]
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
@@ -676,9 +669,20 @@ class HpxGeom(Geom):
         return self._axes
 
     @property
+    def axes_names(self):
+        """All axes names"""
+        return ["skycoord"] + self.axes.names
+
+    @property
     def shape_axes(self):
         """Shape of non-spatial axes."""
         return self.axes.shape
+
+    @property
+    def data_shape(self):
+        """Shape of the Numpy data array matching this geometry."""
+        npix_shape = tuple([np.max(self.npix)])
+        return (npix_shape + self.axes.shape)[::-1]
 
     @property
     def data_shape_axes(self):
@@ -1520,7 +1524,7 @@ class HpxGeom(Geom):
 
         return wcs_tiles
 
-    def get_idx(self, idx=None, local=False, flat=False, sparse=False):
+    def get_idx(self, idx=None, local=False, flat=False, sparse=False, mode="center", axis_name=None):
         # TODO: simplify this!!!
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError(f"Image index out of range: {idx!r}")
@@ -1529,9 +1533,14 @@ class HpxGeom(Geom):
         if self.is_regular:
             pix = [np.arange(np.max(self._npix))]
             if idx is None:
-                pix += [np.arange(ax.nbin, dtype=int) for ax in self.axes]
+                for ax in self.axes:
+                    if mode == "edges" and ax.name == axis_name:
+                        pix += [np.arange(-0.5, ax.nbin, dtype=int)]
+                    else:
+                        pix += [np.arange(ax.nbin, dtype=int)]
             else:
                 pix += [t for t in idx]
+
             pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=sparse)[::-1]
             pix = self.local_to_global(pix)
 
@@ -1643,14 +1652,17 @@ class HpxGeom(Geom):
         return Map.from_geom(self, data=mask)
 
     def get_coord(self, idx=None, flat=False, sparse=False, mode="center", axis_name=None):
-        pix = self.get_idx(idx=idx, flat=flat, sparse=sparse)
-        coords = self.pix_to_coord(pix)
-        cdict = {"lon": coords[0], "lat": coords[1]}
+        if mode == "edges" and axis_name is None:
+            raise ValueError("Mode 'edges' requires axis name to be defined")
 
-        for i, axis in enumerate(self.axes):
-            cdict[axis.name] = coords[i + 2]
+        pix = self.get_idx(idx=idx, flat=flat, sparse=sparse, mode=mode, axis_name=axis_name)
+        data = self.pix_to_coord(pix)
 
-        return MapCoord.create(cdict, frame=self.frame)
+        coords = MapCoord.create(
+            data=data, frame=self.frame, axis_names=self.axes.names
+        )
+
+        return coords
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)
@@ -1667,12 +1679,10 @@ class HpxGeom(Geom):
         return Quantity(hp.nside2pixarea(self.nside), "sr")
 
     def __repr__(self):
-        axes = ["skycoord"] + [_.name for _ in self.axes]
         lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
-
         return (
             f"{self.__class__.__name__}\n\n"
-            f"\taxes       : {axes}\n"
+            f"\taxes       : {self.axes_names}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
             f"\tnside      : {self.nside[0]}\n"

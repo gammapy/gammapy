@@ -13,7 +13,6 @@ from astropy.wcs.utils import (
     celestial_frame_to_wcs,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
-    skycoord_to_pixel
 )
 from gammapy.utils.array import round_up_to_odd
 from .geom import (
@@ -24,7 +23,7 @@ from .geom import (
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
-from .utils import INVALID_INDEX, slice_to_str, str_to_slice
+from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]
 
@@ -131,7 +130,7 @@ class WcsGeom(Geom):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
-        self._axes = MapAxes.from_default(axes)
+        self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
@@ -645,7 +644,7 @@ class WcsGeom(Geom):
         sparse : bool
             Compute sparse coordinates
         axis_name : str
-            If mode = "edges", the edges will be returned for this axis only.
+            If mode = "edges", the edges will be returned for this axis.
 
         Returns
         -------
@@ -655,15 +654,19 @@ class WcsGeom(Geom):
         if axis_name is None:
             axis_name = ("lon", "lat")
 
-        pix = self._get_pix_all(idx=idx, mode=mode, sparse=sparse, axis_name=axis_name)
-        coords = self.pix_to_coord(pix)
-
-        cdict = dict(zip(self.axes_names, coords))
-
         if frame is None:
             frame = self.frame
 
-        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
+        pix = self._get_pix_all(
+            idx=idx, mode=mode, sparse=sparse, axis_name=axis_name
+        )
+
+        data = self.pix_to_coord(pix)
+
+        coords = MapCoord.create(
+            data=data, frame=self.frame, axis_names=self.axes.names
+        )
+        return coords.to_frame(frame)
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
@@ -867,7 +870,7 @@ class WcsGeom(Geom):
         value = self.to_image().solid_angle()
 
         if not self.is_image:
-            value = value * self.axes.bin_volume().T[..., np.newaxis, np.newaxis]
+            value = value * self.axes.bin_volume()
 
         return value
 

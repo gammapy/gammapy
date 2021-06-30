@@ -953,8 +953,9 @@ def get_map_dataset_onoff(images, **kwargs):
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     energy_axis = mask_geom.axes["energy"]
     energy_axis_true = energy_axis.copy(name="energy_true")
+
     psf = PSFMap.from_gauss(
-        energy_axis_true=energy_axis_true, sigma=0.2 * u.deg, geom=mask_geom
+        energy_axis_true=energy_axis_true, sigma=0.2 * u.deg, geom=mask_geom.to_image()
     )
 
     edisp = EDispKernelMap.from_diagonal_response(
