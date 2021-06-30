@@ -1876,8 +1876,8 @@ class MapCoord:
     @property
     def shape(self):
         """Coordinate array shape."""
-        shapes = [_.shape for _ in self._data.values()]
-        return np.broadcast_shapes(*shapes)
+        arrays = [_ for _ in self._data.values()]
+        return np.broadcast(*arrays).shape
 
     @property
     def size(self):
