@@ -158,7 +158,6 @@ class EDispMap(IRFMap):
 
         coords = geom.get_coord(sparse=True, mode="edges", axis_name="energy")
 
-        print(coords)
         migra = coords["energy"] / coords["energy_true"]
 
         coords = {

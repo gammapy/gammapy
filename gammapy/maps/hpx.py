@@ -1535,7 +1535,7 @@ class HpxGeom(Geom):
             if idx is None:
                 for ax in self.axes:
                     if mode == "edges" and ax.name == axis_name:
-                        pix += [np.arange(-0.5, ax.nbin, dtype=int)]
+                        pix += [np.arange(-0.5, ax.nbin, dtype=float)]
                     else:
                         pix += [np.arange(ax.nbin, dtype=int)]
             else:
