@@ -208,8 +208,8 @@ def test_get_bias_energy():
 def test_edisp2d_pointlike():
     filename = "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"
 
-    aeff = EnergyDispersion2D.read(filename)
-    hdu = aeff.to_table_hdu()
+    edisp = EnergyDispersion2D.read(filename)
+    hdu = edisp.to_table_hdu()
 
-    assert aeff.is_pointlike is True
+    assert edisp.is_pointlike
     assert hdu.header["HDUCLAS3"] == "POINT-LIKE"

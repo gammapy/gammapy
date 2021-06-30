@@ -111,5 +111,5 @@ def test_aeff2d_pointlike():
     aeff = EffectiveAreaTable2D.read(filename)
     hdu = aeff.to_table_hdu()
 
-    assert aeff.is_pointlike is True
+    assert aeff.is_pointlike
     assert hdu.header["HDUCLAS3"] == "POINT-LIKE"
