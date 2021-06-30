@@ -313,9 +313,6 @@ class Fit:
         self,
         datasets,
         parameter,
-        values=None,
-        bounds=2,
-        nvalues=11,
         reoptimize=False
     ):
         """Compute fit statistic profile.
@@ -331,16 +328,6 @@ class Fit:
             Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
-        values : `~astropy.units.Quantity` (optional)
-            Parameter values to evaluate the fit statistic for.
-        bounds : int or tuple of float
-            When an `int` is passed the bounds are computed from `bounds * sigma`
-            from the best fit value of the parameter, where `sigma` corresponds to
-            the one sigma error on the parameter. If a tuple of floats is given
-            those are taken as the min and max values and ``nvalues`` are linearly
-            spaced between those.
-        nvalues : int
-            Number of parameter grid points to use.
         reoptimize : bool
             Re-optimize other parameters, when computing the confidence region.
 
@@ -353,23 +340,11 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
         parameter = parameters[parameter]
 
-        if values is None:
-            if isinstance(bounds, tuple):
-                parmin, parmax = bounds
-            else:
-                if np.isnan(parameter.error):
-                    raise ValueError("Parameter error is not properly set.")
-                parerr = parameter.error
-                parval = parameter.value
-                parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
-
-            values = np.linspace(parmin, parmax, nvalues)
-
         stats = []
         fit_results = []
         with parameters.restore_status():
             for value in progress_bar(
-                values,
+                parameter.scan_values,
                 desc="Trial values"
             ):
                 parameter.value = value
@@ -383,7 +358,7 @@ class Fit:
                 stats.append(stat)
 
         return {
-            f"{parameter.name}_scan": values,
+            f"{parameter.name}_scan": parameter.scan_values,
             "stat_scan": np.array(stats),
             "fit_results": fit_results,
         }
