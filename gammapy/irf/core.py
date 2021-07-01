@@ -54,6 +54,11 @@ class IRF:
         pass
 
     @property
+    def is_pointlike(self):
+        """Whether the IRF is pointlike of full containment."""
+        return self.meta.get("is_pointlike", False)
+
+    @property
     def is_offset_dependent(self):
         """Whether the IRF depends on offset"""
         return "offset" in self.required_axes
@@ -357,6 +362,9 @@ class IRF:
         axes = MapAxes.from_table(table=table, format=format)[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
+
+        if "HDUCLAS3" in table.meta and table.meta["HDUCLAS3"]=="POINT-LIKE":
+            table.meta["is_pointlike"] = True
         return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
 
     def to_table(self, format="gadf-dl3"):
@@ -379,6 +387,8 @@ class IRF:
             spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
             # TODO: add missing required meta data!
             table.meta["HDUCLAS2"] = spec["hduclas2"]
+            if self.is_pointlike:
+                table.meta["HDUCLAS3"] = "POINT-LIKE"
             table[spec["column_name"]] = self.quantity.T[np.newaxis]
         else:
             raise ValueError(f"Not a valid supported format: '{format}'")
