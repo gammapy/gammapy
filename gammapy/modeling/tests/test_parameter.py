@@ -175,6 +175,33 @@ def test_parameters_autoscale():
     assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
 
+
+def test_parameter_scan_values():
+    p = Parameter(name="test", value=0, error=1)
+
+    values = p.scan_values
+
+    assert len(values) == 11
+    assert_allclose(values[[0, -1]], [-2, 2])
+    assert_allclose(values[5], 0)
+
+    p.scan_n_sigma = 3
+    assert_allclose(p.scan_values[[0, -1]], [-3, 3])
+
+    p.scan_min = -2
+    p.scan_max = 3
+    assert_allclose(p.scan_values[[0, -1]], [-2, 3])
+
+    p.scan_n_values = 5
+    assert len(p.scan_values) == 5
+
+    p.interp = "log"
+    p.scan_n_values = 3
+    p.scan_min = 0.1
+    p.scan_max = 10
+    assert_allclose(p.scan_values, [0.1, 1, 10])
+
+
 def test_update_from_dict():
     par = Parameter("test", value=1e-10, min="nan", max="nan", frozen=False, unit="TeV")
     par.autoscale()
