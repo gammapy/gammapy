@@ -73,23 +73,13 @@ class FluxEstimator(ParameterEstimator):
         self.norm_max = norm_max
         self.norm_n_values = norm_n_values
         self.source = source
-        self.n_sigma = n_sigma
-        self.n_sigma_ul = n_sigma_ul
-        self.selection_optional = selection_optional
-        self.reoptimize = reoptimize
-
-        if fit is None:
-            fit = Fit()
-
-        self.fit = fit
-
         super().__init__(
             null_value=0,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            selection_optional=self.selection_optional,
-            fit=self.fit,
-            reoptimize=self.reoptimize
+            n_sigma=n_sigma,
+            n_sigma_ul=n_sigma_ul,
+            selection_optional=selection_optional,
+            fit=fit,
+            reoptimize=reoptimize
         )
 
     @staticmethod

@@ -52,7 +52,6 @@ class ParameterEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.null_value = null_value
-
         self.selection_optional = selection_optional
 
         if fit is None:
