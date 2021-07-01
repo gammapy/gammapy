@@ -302,7 +302,7 @@ class LightCurve:
         return x, (xn, xp)
 
 
-class LightCurveEstimator(Estimator):
+class LightCurveEstimator(FluxPointsEstimator):
     """Estimate light curve.
 
     The estimator will fit the source model component to datasets in each of the
@@ -357,40 +357,12 @@ class LightCurveEstimator(Estimator):
     def __init__(
         self,
         time_intervals=None,
-        source=0,
-        energy_edges=None,
         atol="1e-6 s",
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
-        n_sigma=1,
-        n_sigma_ul=2,
-        selection_optional=None,
-        fit=None,
-        reoptimize=False,
+        **kwargs
     ):
-
-        self.source = source
         self.time_intervals = time_intervals
-
         self.atol = u.Quantity(atol)
-
-        self.energy_edges = energy_edges
-
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
-        self.norm_values = norm_values
-        self.n_sigma = n_sigma
-        self.n_sigma_ul = n_sigma_ul
-        self.selection_optional = selection_optional
-
-        if fit is None:
-            fit = Fit()
-
-        self.fit = fit
-        self.reoptimize = reoptimize
+        super().__init__(**kwargs)
 
     def run(self, datasets):
         """Run light curve extraction.
@@ -457,14 +429,7 @@ class LightCurveEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
-        if self.energy_edges is None:
-            energy_min, energy_max = datasets.energy_ranges
-            energy_edges = energy_min.min(), energy_max.max()
-        else:
-            energy_edges = self.energy_edges
-
-        fe = self._flux_poins_estimator(energy_edges)
-        fp = fe.run(datasets)
+        fp = super().run(datasets)
 
         # TODO: remove once FluxPointsEstimator returns object with all energies in one row
         result = {}

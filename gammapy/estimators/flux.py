@@ -56,7 +56,7 @@ class FluxEstimator(ParameterEstimator):
 
     def __init__(
         self,
-        source,
+        source=0,
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -183,7 +183,7 @@ class FluxEstimator(ParameterEstimator):
             models[self.source].spectral_model = model
 
             datasets.models = models
-            result.update(self._parameter_estimator.run(datasets, model.norm))
+            result.update(super().run(datasets, model.norm))
             result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
         return result
