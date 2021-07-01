@@ -103,7 +103,6 @@ def pars():
     return Parameters([Parameter("spam", 42, "deg"), Parameter("ham", 99, "TeV")])
 
 
-@pytest.mark.xfail
 def test_parameters_basics(pars):
     # This applies a unit transformation
     pars["ham"].error = "10000 GeV"

@@ -339,14 +339,12 @@ class Fit:
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
         parameter = parameters[parameter]
+        values = parameter.scan_values
 
         stats = []
         fit_results = []
         with parameters.restore_status():
-            for value in progress_bar(
-                parameter.scan_values,
-                desc="Trial values"
-            ):
+            for value in progress_bar(values, desc="Scan values"):
                 parameter.value = value
                 if reoptimize:
                     parameter.frozen = True
@@ -358,7 +356,7 @@ class Fit:
                 stats.append(stat)
 
         return {
-            f"{parameter.name}_scan": parameter.scan_values,
+            f"{parameter.name}_scan": values,
             "stat_scan": np.array(stats),
             "fit_results": fit_results,
         }
