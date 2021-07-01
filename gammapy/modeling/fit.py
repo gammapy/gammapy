@@ -320,14 +320,13 @@ class Fit:
         The method used is to vary one parameter, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
 
-        See also: `Fit.minos_profile`.
-
         Parameters
         ----------
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
-            Parameter of interest
+            Parameter of interest. The specification for the scan, such as bounds
+            and number of values is taken from the parameter object.
         reoptimize : bool
             Re-optimize other parameters, when computing the confidence region.
 
