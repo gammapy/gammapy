@@ -57,14 +57,15 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
         offset=offset, energy_true=coords["energy_true"]
     )
 
-    exposure = (exposure * livetime).to("m2 s")
-    meta = {"livetime": livetime,
-            "is_pointlike": aeff.is_pointlike}
+    data = (exposure * livetime).to("m2 s")
+    meta = {
+        "livetime": livetime,
+        "is_pointlike": aeff.is_pointlike
+    }
 
     if not use_region_center:
         data = np.average(data, axis=1, weights=weights)
 
-    meta = {"livetime": livetime}
     return Map.from_geom(
         geom=geom, data=data.value, unit=data.unit, meta=meta
     )
