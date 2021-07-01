@@ -199,11 +199,13 @@ def test_stat_surface():
     dataset = MyDataset()
     fit = Fit()
     fit.run([dataset])
+
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
-    result = fit.stat_surface(
-        datasets=[dataset], x="x", y="y", x_values=x_values, y_values=y_values
-    )
+
+    dataset.models.parameters["x"].scan_values = x_values
+    dataset.models.parameters["y"].scan_values = y_values
+    result = fit.stat_surface(datasets=[dataset], x="x", y="y")
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
     assert_allclose(result["y_scan"], y_values, atol=1e-7)
@@ -225,11 +227,15 @@ def test_stat_surface_reoptimize():
     fit = Fit()
     fit.run([dataset])
 
-    dataset.models.parameters["z"].value = 0
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
+
+    dataset.models.parameters["z"].value = 0
+    dataset.models.parameters["x"].scan_values = x_values
+    dataset.models.parameters["y"].scan_values = y_values
+
     result = fit.stat_surface(
-        datasets=[dataset], x="x", y="y", x_values=x_values, y_values=y_values, reoptimize=True
+        datasets=[dataset], x="x", y="y", reoptimize=True
     )
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
