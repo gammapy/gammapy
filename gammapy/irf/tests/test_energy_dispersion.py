@@ -204,3 +204,13 @@ def test_get_bias_energy():
     edisp = EDispKernel.read(rmffile)
     thresh_lo = edisp.get_bias_energy(0.1)
     assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)
+
+@requires_data("gammapy-data")
+def test_edisp2d_pointlike():
+    filename = "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"
+
+    edisp = EnergyDispersion2D.read(filename)
+    hdu = edisp.to_table_hdu()
+
+    assert edisp.is_pointlike
+    assert hdu.header["HDUCLAS3"] == "POINT-LIKE"

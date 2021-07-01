@@ -890,7 +890,7 @@ class WcsGeom(Geom):
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
 
-    def cutout(self, position, width, mode="trim"):
+    def cutout(self, position, width, mode="trim", odd_npix=False):
         """
         Create a cutout around a given position.
 
@@ -903,20 +903,28 @@ class WcsGeom(Geom):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        odd_npix : bool
+            Force width to odd number of pixels.
 
         Returns
         -------
         cutout : `~gammapy.maps.WcsNDMap`
             Cutout map
         """
-        width = _check_width(width)
+        width = _check_width(width) * u.deg
+
+        if odd_npix:
+            binsz = self.pixel_scales
+            width_npix = (width / binsz).to_value("")
+            width = round_up_to_odd(width_npix)
+
         dummy_data = np.empty(self.to_image().data_shape)
         c2d = Cutout2D(
             data=dummy_data,
             wcs=self.wcs,
             position=position,
             # Cutout2D takes size with order (lat, lon)
-            size=width[::-1] * u.deg,
+            size=width[::-1],
             mode=mode,
         )
         return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1])

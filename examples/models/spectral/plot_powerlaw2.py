@@ -24,11 +24,11 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import Models, PowerLaw2SpectralModel, SkyModel
 
-energy_range = [0.1, 100] * u.TeV
+energy_bounds = [0.1, 100] * u.TeV
 model = PowerLaw2SpectralModel(
     amplitude=u.Quantity(1e-12, "cm-2 s-1"), index=2.3, emin=1 * u.TeV, emax=10 * u.TeV,
 )
-model.plot(energy_range)
+model.plot(energy_bounds)
 plt.grid(which="both")
 
 # %%

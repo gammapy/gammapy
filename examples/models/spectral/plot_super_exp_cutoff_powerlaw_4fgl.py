@@ -30,7 +30,7 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
 
-energy_range = [0.1, 100] * u.TeV
+energy_bounds = [0.1, 100] * u.TeV
 model = SuperExpCutoffPowerLaw4FGLSpectralModel(
     index_1=1,
     index_2=2,
@@ -38,7 +38,7 @@ model = SuperExpCutoffPowerLaw4FGLSpectralModel(
     reference="1 TeV",
     expfactor=1e-2,
 )
-model.plot(energy_range)
+model.plot(energy_bounds)
 plt.grid(which="both")
 plt.ylim(1e-24, 1e-10)
 

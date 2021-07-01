@@ -746,7 +746,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def cutout(self, position, width, mode="trim"):
+    def cutout(self, position, width, mode="trim", odd_npix=False):
         """
         Create a cutout around a given position.
 
@@ -759,13 +759,17 @@ class WcsNDMap(WcsMap):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        odd_npix : bool
+            Force width to odd number of pixels.
 
         Returns
         -------
         cutout : `~gammapy.maps.WcsNDMap`
             Cutout map
         """
-        geom_cutout = self.geom.cutout(position=position, width=width, mode=mode)
+        geom_cutout = self.geom.cutout(
+            position=position, width=width, mode=mode, odd_npix=odd_npix
+        )
         cutout_info = geom_cutout.cutout_slices(self.geom, mode=mode)
 
         slices = cutout_info["parent-slices"]

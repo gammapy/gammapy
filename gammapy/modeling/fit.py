@@ -97,6 +97,8 @@ class Fit:
         interval can be adapted by modifying the the upper bound of the interval (``b``) value.
     store_trace : bool
         Whether to store the trace of the fit
+    scale_parameters : bool
+        Whether to scale parameters prior to the fit.
     """
 
     def __init__(
@@ -106,6 +108,7 @@ class Fit:
         covariance_opts=None,
         confidence_opts=None,
         store_trace=False,
+        scale_parameters=True
     ):
         self.store_trace = store_trace
         self.backend = backend
@@ -122,6 +125,13 @@ class Fit:
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
         self.confidence_opts = confidence_opts
+        self.scale_parameters = scale_parameters
+        self._minuit = None
+
+    @property
+    def minuit(self):
+        """Iminuit object"""
+        return self._minuit
 
     @staticmethod
     def _parse_datasets(datasets):
@@ -160,14 +170,13 @@ class Fit:
 
         Returns
         -------
-        fit_result : `FitResult`
-            Results
+        optimize_result : `OptimizeResult`
+            Optimization result
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
 
-        # TODO: expose options if / when to scale? On the Fit class?
-        if np.all(datasets.models.covariance.data == 0):
+        if self.scale_parameters:
             parameters.autoscale()
 
         kwargs = self.optimize_opts.copy()
@@ -184,12 +193,8 @@ class Fit:
             **kwargs,
         )
 
-        # TODO: Change to a stateless interface for minuit also, or if we must support
-        # stateful backends, put a proper, backend-agnostic solution for this.
-        # As preliminary solution would like to provide a possibility that the user
-        # can access the Minuit object, because it features a lot useful functionality
         if backend == "minuit":
-            self.minuit = optimizer
+            self._minuit = optimizer
 
         trace = table_from_row_data(info.pop("trace"))
 
@@ -229,29 +234,23 @@ class Fit:
 
         kwargs = self.covariance_opts.copy()
         backend = kwargs.pop("backend", self.backend)
-
         compute = registry.get("covariance", backend)
 
-        # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
             if self.backend == "minuit":
                 method = "hesse"
-                if hasattr(self, "minuit"):
-                    factor_matrix, info = compute(self.minuit)
-                else:
-                    raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 method = ""
-                factor_matrix, info = compute(
-                    parameters=parameters,
-                    fucntion=datasets.stat_sum,
-                    **kwargs
-                )
 
-            covariance = Covariance.from_factor_matrix(
+            factor_matrix, info = compute(
+                parameters=parameters,
+                function=datasets.stat_sum,
+                **kwargs
+            )
+
+            datasets.models.covariance = Covariance.from_factor_matrix(
                 parameters=parameters, matrix=factor_matrix
             )
-            datasets.models.covariance = covariance
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
@@ -296,32 +295,15 @@ class Fit:
         compute = registry.get("confidence", backend)
         parameter = parameters[parameter]
 
-        # TODO: confidence_options on fit for consistancy ?
-
-        # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
-            if backend == "minuit":
-                if hasattr(self, "minuit"):
-                    # This is ugly. We will access parameters and make a copy
-                    # from the backend, to avoid modifying the state
-                    result = compute(
-                        minuit=self.minuit,
-                        parameters=parameters,
-                        parameter=parameter,
-                        sigma=sigma,
-                        **kwargs
-                    )
-                else:
-                    raise RuntimeError("To use minuit, you must first optimize.")
-            else:
-                result = compute(
-                    parameters=parameters,
-                    parameter=parameter,
-                    function=datasets.stat_sum,
-                    sigma=sigma,
-                    reoptimize=reoptimize,
-                    **kwargs,
-                )
+            result = compute(
+                parameters=parameters,
+                parameter=parameter,
+                function=datasets.stat_sum,
+                sigma=sigma,
+                reoptimize=reoptimize,
+                **kwargs,
+            )
 
         result["errp"] *= parameter.scale
         result["errn"] *= parameter.scale
@@ -345,6 +327,8 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         values : `~astropy.units.Quantity` (optional)
@@ -416,6 +400,8 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
         x_values, y_values : list or `numpy.ndarray`
@@ -442,10 +428,9 @@ class Fit:
                 itertools.product(x_values, y_values),
                 desc="Trial values"
             ):
-                # TODO: Remove log.info() and provide a nice progress bar
-                log.info(f"Processing: x={x_value}, y={y_value}")
                 x.value = x_value
                 y.value = y_value
+
                 if reoptimize:
                     x.frozen = True
                     y.frozen = True
@@ -472,7 +457,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def minos_contour(self, datasets, x, y, numpoints=10, sigma=1.0):
+    def stat_contour(self, datasets, x, y, numpoints=10, sigma=1):
         """Compute MINOS contour.
 
         Calls ``iminuit.Minuit.mncontour``.
@@ -487,6 +472,8 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
         numpoints : int

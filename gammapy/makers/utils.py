@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
@@ -18,6 +19,7 @@ __all__ = [
     "make_theta_squared_table",
 ]
 
+log = logging.getLogger(__name__)
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_center=True):
     """Compute exposure map.
@@ -55,7 +57,9 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
         offset=offset, energy_true=coords["energy_true"]
     )
 
-    data = (exposure * livetime).to("m2 s")
+    exposure = (exposure * livetime).to("m2 s")
+    meta = {"livetime": livetime,
+            "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:
         data = np.average(data, axis=1, weights=weights)

@@ -507,7 +507,7 @@ def test_table_model_from_file():
         filename=filename, param=0.3
     )
     with mpl_plot_check():
-        absorption_z03.plot(energy_range=(0.03, 10), energy_unit=u.TeV, flux_unit="")
+        absorption_z03.plot(energy_bounds=(0.03, 10), energy_unit=u.TeV, flux_unit="")
 
 
 @requires_data()

@@ -89,7 +89,7 @@ def test_compute_lima_on_off_image():
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, "1 TeV", "10 TeV")
-    estimator = ExcessMapEstimator("0.1 deg")
+    estimator = ExcessMapEstimator("0.1 deg", correlate_off=False)
     results = estimator.run(dataset)
 
     # Reproduce safe significance threshold from HESS software
