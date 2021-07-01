@@ -36,11 +36,12 @@ def test_parameter_estimator_1d(crab_datasets_1d, pwl_model):
     datasets = crab_datasets_1d
 
     model = SkyModel(spectral_model=pwl_model, name="Crab")
+    model.spectral_model.amplitude.scan_n_values = 10
 
     for dataset in datasets:
         dataset.models = model
 
-    estimator = ParameterEstimator(scan_n_values=10, selection_optional="all")
+    estimator = ParameterEstimator(selection_optional="all")
 
     result = estimator.run(datasets, parameter="amplitude")
 
@@ -58,8 +59,9 @@ def test_parameter_estimator_1d(crab_datasets_1d, pwl_model):
 def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     datasets = crab_datasets_fermi
     parameter = datasets[0].models.parameters["amplitude"]
+    parameter.scan_n_values = 10
 
-    estimator = ParameterEstimator(reoptimize=False, scan_n_values=10, selection_optional=["scan"])
+    estimator = ParameterEstimator(reoptimize=False, selection_optional=["scan"])
     alpha_value = datasets[0].models.parameters["alpha"].value
 
     result = estimator.run(datasets, parameter)

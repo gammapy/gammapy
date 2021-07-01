@@ -68,16 +68,18 @@ class Parameter:
         Frozen? (used in fitting)
     error : float
         Parameter error
-    scan_min : float or int
-        Minimum value for the parameter scan.
-    scan_max : float or int
-        Minimum value for the parameter scan.
+    scan_min : float
+        Minimum value for the parameter scan. Overwrites scan_n_sigma.
+    scan_max : float
+        Minimum value for the parameter scan. Overwrites scan_n_sigma.
     scan_n_values: int
         Number of values to be used fo the parameter scan.
+    scan_n_sigma : int
+        Number of sigmas to scan.
     scan_values: `numpy.array`
-        Scan values
+        Scan values. Overwrites all of the scan keywords before.
     interp : {"lin", "sqrt", "log"}
-        Scaling to use for the scan.
+        Parameter scaling to use for the scan.
 
     """
 
@@ -91,9 +93,10 @@ class Parameter:
         max=np.nan,
         frozen=False,
         error=0,
-        scan_min=2,
-        scan_max=2,
+        scan_min=None,
+        scan_max=None,
         scan_n_values=11,
+        scan_n_sigma=2,
         scan_values=None,
         interp="lin",
     ):
@@ -120,6 +123,7 @@ class Parameter:
         self.scan_max = scan_max
         self.scan_values = scan_values
         self.scan_n_values = scan_n_values
+        self.scan_n_sigma = scan_n_sigma
         self.interp = interp
 
     def __get__(self, instance, owner):
@@ -268,16 +272,16 @@ class Parameter:
     @property
     def scan_min(self):
         """Stat scan min"""
-        if isinstance(self._scan_min, int):
-            return self.value - self.error * self._scan_min
+        if self._scan_min is None:
+            return self.value - self.error * self.scan_n_sigma
 
         return self._scan_min
 
     @property
     def scan_max(self):
         """Stat scan max"""
-        if isinstance(self._scan_max, int):
-            return self.value + self.error * self._scan_max
+        if self._scan_max is None:
+            return self.value + self.error * self.scan_n_sigma
 
         return self._scan_max
 
@@ -290,6 +294,16 @@ class Parameter:
     def scan_max(self, value):
         """Stat scan max setter"""
         self._scan_max = value
+
+    @property
+    def scan_n_sigma(self):
+        """Stat scan n sigma"""
+        return self._scan_n_sigma
+
+    @scan_n_sigma.setter
+    def scan_n_sigma(self, n_sigma):
+        """Stat scan n sigma"""
+        self._scan_n_sigma = int(n_sigma)
 
     @property
     def scan_values(self):
