@@ -291,7 +291,7 @@ class FluxPointsDataset(Dataset):
         return ax_spectrum, ax_residuals
 
     @property
-    def _energy_range(self):
+    def _energy_bounds(self):
         try:
             return u.Quantity([self.data.energy_min.min(), self.data.energy_max.max()])
         except KeyError:
@@ -356,7 +356,7 @@ class FluxPointsDataset(Dataset):
         # format axes
         ax.set_xlabel(f"Energy [{self._energy_unit}]")
         ax.set_xscale("log")
-        ax.set_xlim(self._energy_range.to_value(self._energy_unit))
+        ax.set_xlim(self._energy_bounds.to_value(self._energy_unit))
         label = self._residuals_labels[method]
         ax.set_ylabel(f"Residuals ({label}){f' [{unit}]' if unit else ''}")
         ymin = 1.05 * np.nanmin(residuals.value - yerr[0])
@@ -399,7 +399,7 @@ class FluxPointsDataset(Dataset):
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_model)
-        plot_kwargs.setdefault("energy_range", self._energy_range)
+        plot_kwargs.setdefault("energy_bounds", self._energy_bounds)
         plot_kwargs.setdefault("label", "Best fit model")
         plot_kwargs.setdefault("zorder", 10)
 
@@ -416,5 +416,5 @@ class FluxPointsDataset(Dataset):
                     model.spectral_model.plot_error(ax=ax, **plot_kwargs)
 
         # format axes
-        ax.set_xlim(self._energy_range.to_value(self._energy_unit))
+        ax.set_xlim(self._energy_bounds.to_value(self._energy_unit))
         return ax
