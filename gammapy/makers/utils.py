@@ -66,7 +66,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
             "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:
-         data = np.average(exposure.value, axis=1, weights=weights)
+        data = np.average(exposure.value, axis=1, weights=weights)
     else:
         data = exposure.value
 
