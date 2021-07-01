@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.special
-from scipy.interpolate import interp1d
 from astropy.coordinates import Angle
 from astropy.units import Quantity
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, MapAxes
 from .edisp_kernel import EDispKernel
 from .core import IRF
 
@@ -73,28 +72,29 @@ class EnergyDispersion2D(IRF):
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
         sigma : float or `~numpy.ndarray`
-            RMS width of Gaussian energy dispersion, resolution
+            RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        true2d, migra2d = np.meshgrid(energy_axis_true.center, migra_axis.edges)
+        axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
+        coords = axes.get_coord(mode="edges", axis_name="migra")
 
-        migra2d_lo = migra2d[:-1, :]
-        migra2d_hi = migra2d[1:, :]
+        migra_min = coords["migra"][:, :-1, :]
+        migra_max = coords["migra"][:, 1:, :]
 
         # Analytical formula for integral of Gaussian
         s = np.sqrt(2) * sigma
-        t1 = (migra2d_hi - 1 - bias) / s
-        t2 = (migra2d_lo - 1 - bias) / s
+        t1 = (migra_max - 1 - bias) / s
+        t2 = (migra_min - 1 - bias) / s
         pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
-        pdf = pdf / (migra2d_hi - migra2d_lo)
+        pdf = pdf / (migra_max - migra_min)
 
-        data = pdf.T[:, :, np.newaxis] * np.ones(offset_axis.nbin)
-
+        # no offset dependence
+        data = pdf * np.ones(axes.shape)
         data[data < pdf_threshold] = 0
 
         return cls(
-            axes=[energy_axis_true, migra_axis, offset_axis],
+            axes=axes,
             data=data.value,
         )
 
@@ -133,20 +133,23 @@ class EnergyDispersion2D(IRF):
                 energy_true, name="energy_true",
             )
 
+        axes = MapAxes([energy_axis_true, energy_axis])
+        coords = axes.get_coord(mode="edges", axis_name="energy")
+
         # migration value of energy bounds
-        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+        migra = coords["energy"] / coords["energy_true"]
 
         values = self.integral(
             axis_name="migra",
             offset=offset,
-            energy_true=energy_axis_true.center[:, np.newaxis],
+            energy_true=coords["energy_true"],
             migra=migra,
         )
 
         data = np.diff(values)
 
         return EDispKernel(
-            axes=[energy_axis_true, energy_axis],
+            axes=axes,
             data=data.to_value(""),
         )
 

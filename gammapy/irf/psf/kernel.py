@@ -183,7 +183,9 @@ class PSFKernel:
 
         if exposure is None:
             exposure = np.ones(map.geom.axes[0].center.shape)
+
         exposure = u.Quantity(exposure)
+
         if exposure.shape != map.geom.axes[0].center.shape:
             raise ValueError("Incorrect exposure_array shape")
 

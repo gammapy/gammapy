@@ -98,13 +98,16 @@ def test_get_coord(region, energy_axis, test_axis):
     )
 
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
-    coords = geom.get_coord()
-    assert coords["lon"].shape == (2, 3, 1, 1)
-    assert coords["test"].shape == (2, 3, 1, 1)
+    coords = geom.get_coord(sparse=True)
+    assert coords["lon"].shape == (1, 1)
+    assert coords["test"].shape == (2, 1, 1, 1)
+    assert coords["energy"].shape == (1, 3, 1, 1)
+
     assert_allclose(
-        coords["energy"].value[1].squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5
+        coords["energy"].value[0, :, 0, 0], [1.467799, 3.162278, 6.812921], rtol=1e-5
     )
-    assert_allclose(coords["test"].value[:, 1].squeeze(), [1, 2], rtol=1e-5)
+
+    assert_allclose(coords["test"].value[:, 0, 0, 0].squeeze(), [1, 2], rtol=1e-5)
 
 
 def test_get_idx(region, energy_axis, test_axis):

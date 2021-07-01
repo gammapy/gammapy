@@ -246,14 +246,11 @@ class PSFMap(IRFMap):
             max_radius = np.max(radii)
 
         geom = geom.to_odd_npix(max_radius=max_radius)
-
         geom_upsampled = geom.upsample(factor=factor)
-        rad = geom_upsampled.separation(geom.center_skydir)
+        coords = geom_upsampled.get_coord(sparse=True)
+        rad = coords.skycoord.separation(geom.center_skydir)
 
-        energy_axis = geom.axes["energy_true"]
-
-        energy = energy_axis.center[:, np.newaxis, np.newaxis]
-        coords = {"energy_true": energy, "rad": rad, "skycoord": position}
+        coords = {"energy_true": coords["energy_true"], "rad": rad, "skycoord": position}
 
         data = self.psf_map.interp_by_coord(coords=coords, method="linear",)
 
@@ -340,18 +337,21 @@ class PSFMap(IRFMap):
         if geom is None:
             geom = WcsGeom.create(npix=(2, 1), proj="CAR", binsz=180,)
 
-        geom = geom.to_image().to_cube([rad_axis, energy_axis_true])
+        geom = geom.to_cube([rad_axis, energy_axis_true])
 
-        coords = geom.get_coord()
+        coords = geom.get_coord(sparse=True)
 
-        sigma = np.broadcast_to(u.Quantity(sigma), energy_axis_true.nbin, subok=True)
-        gauss = Gauss2DPDF(sigma=sigma.reshape((-1, 1, 1, 1)))
-        data = gauss(coords["rad"])
+        sigma = u.Quantity(sigma).reshape((-1, 1, 1, 1))
+        gauss = Gauss2DPDF(sigma=sigma)
+
+        data = gauss(coords["rad"]) * np.ones(geom.data_shape)
 
         psf_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
-        geom_exposure = geom.squash(axis_name="rad")
-        exposure_psf = Map.from_geom(geom_exposure, unit="m2 s")
-        return cls(psf_map=psf_map, exposure_map=exposure_psf)
+
+        exposure_map = Map.from_geom(
+            geom=geom.squash(axis_name="rad"), unit="m2 s", data=1
+        )
+        return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing

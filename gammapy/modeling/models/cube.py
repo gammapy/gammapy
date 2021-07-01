@@ -305,8 +305,8 @@ class SkyModel(Model):
 
     def evaluate_geom(self, geom, gti=None):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        energy = geom.axes["energy_true"].center[:, np.newaxis, np.newaxis]
-        value = self.spectral_model(energy)
+        coords = geom.get_coord(sparse=True)
+        value = self.spectral_model(coords["energy_true"])
 
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
@@ -598,8 +598,8 @@ class FoVBackgroundModel(Model):
 
     def evaluate_geom(self, geom):
         """Evaluate map"""
-        energy = geom.axes["energy"].center[:, np.newaxis, np.newaxis]
-        return self.evaluate(energy=energy)
+        coords = geom.get_coord(sparse=True)
+        return self.evaluate(energy=coords["energy"])
 
     def evaluate(self, energy):
         """Evaluate model"""

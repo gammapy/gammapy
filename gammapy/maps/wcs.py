@@ -13,7 +13,6 @@ from astropy.wcs.utils import (
     celestial_frame_to_wcs,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
-    skycoord_to_pixel
 )
 from gammapy.utils.array import round_up_to_odd
 from .geom import (
@@ -24,7 +23,7 @@ from .geom import (
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
-from .utils import INVALID_INDEX, slice_to_str, str_to_slice
+from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]
 
@@ -131,7 +130,7 @@ class WcsGeom(Geom):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
-        self._axes = MapAxes.from_default(axes)
+        self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
@@ -176,6 +175,11 @@ class WcsGeom(Geom):
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
         return self._shape[::-1]
+
+    @property
+    def axes_names(self):
+        """All axes names"""
+        return ["lon", "lat"] + self.axes.names
 
     @property
     def data_shape_axes(self):
@@ -590,24 +594,23 @@ class WcsGeom(Geom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_all(self, idx=None, mode="center"):
+    def _get_pix_all(self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")):
         """Get idx coordinate array without footprint of the projection applied"""
-        if mode == "edges":
-            shape = self._shape_edges
-        else:
-            shape = self._shape
+        pix_all = []
 
-        if idx is None:
-            pix = [np.arange(n, dtype=float) for n in shape]
-        else:
-            pix = [np.arange(n, dtype=float) for n in shape[self._slice_spatial_axes]]
-            pix += [float(t) for t in idx]
+        for name, nbin in zip(self.axes_names, self._shape):
+            if mode == "edges" and name in axis_name:
+                pix = np.arange(-0.5, nbin, dtype=float)
+            else:
+                pix = np.arange(nbin, dtype=float)
 
-        if mode == "edges":
-            for pix_array in pix[self._slice_spatial_axes]:
-                pix_array -= 0.5
+            pix_all.append(pix)
 
-        return np.meshgrid(*pix[::-1], indexing="ij")[::-1]
+        # TODO: improve varying bin size coordinate handling
+        if idx is not None:
+            pix_all = pix_all[self._slice_spatial_axes] + [float(t) for t in idx]
+
+        return np.meshgrid(*pix_all[::-1], indexing="ij", sparse=sparse)[::-1]
 
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
@@ -629,29 +632,41 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, mode="center", frame=None):
+    def get_coord(self, idx=None, mode="center", frame=None, sparse=False, axis_name=None):
         """Get map coordinates from the geometry.
 
         Parameters
         ----------
         mode : {'center', 'edges'}
             Get center or edge coordinates for the spatial axes.
+        frame : str or `~astropy.coordinates.Frame`
+            Coordinate frame
+        sparse : bool
+            Compute sparse coordinates
+        axis_name : str
+            If mode = "edges", the edges will be returned for this axis.
 
         Returns
         -------
         coord : `~MapCoord`
             Map coordinate object.
         """
-        pix = self._get_pix_all(idx=idx, mode=mode)
-        coords = self.pix_to_coord(pix)
-
-        axes_names = ["lon", "lat"] + self.axes.names
-        cdict = dict(zip(axes_names, coords))
+        if axis_name is None:
+            axis_name = ("lon", "lat")
 
         if frame is None:
             frame = self.frame
 
-        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
+        pix = self._get_pix_all(
+            idx=idx, mode=mode, sparse=sparse, axis_name=axis_name
+        )
+
+        data = self.pix_to_coord(pix)
+
+        coords = MapCoord.create(
+            data=data, frame=self.frame, axis_names=self.axes.names
+        )
+        return coords.to_frame(frame)
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
@@ -855,7 +870,7 @@ class WcsGeom(Geom):
         value = self.to_image().solid_angle()
 
         if not self.is_image:
-            value = value * self.axes.bin_volume().T[..., np.newaxis, np.newaxis]
+            value = value * self.axes.bin_volume()
 
         return value
 
@@ -1054,14 +1069,13 @@ class WcsGeom(Geom):
         return structure.reshape(shape)
 
     def __repr__(self):
-        axes = ["lon", "lat"] + [_.name for _ in self.axes]
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
         lon_ref, lat_ref = self.wcs.wcs.crval
 
         return (
             f"{self.__class__.__name__}\n\n"
-            f"\taxes       : {axes}\n"
+            f"\taxes       : {self.axes_names}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
             f"\tframe      : {self.frame}\n"

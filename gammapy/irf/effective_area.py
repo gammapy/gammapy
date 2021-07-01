@@ -242,10 +242,13 @@ class EffectiveAreaTable2D(IRF):
 
         g1, g2, g3 = pars[instrument]
 
-        energy = energy_axis_true.center.to_value("MeV")
-        data = g1 * energy ** (-g2) * np.exp(-g3 / energy)
+        offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
+        axes = MapAxes([energy_axis_true, offset_axis])
+        coords = axes.get_coord()
+
+        energy, offset = coords["energy_true"].to_value("MeV"), coords["offset"]
+        data = np.ones_like(offset.value) * g1 * energy ** (-g2) * np.exp(-g3 / energy)
 
         # TODO: fake offset dependence?
-        offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
         meta = {"TELESCOP": instrument}
-        return cls(axes=[energy_axis_true, offset_axis], data=data[:, np.newaxis], unit="cm2", meta=meta)
+        return cls(axes=axes, data=data, unit="cm2", meta=meta)

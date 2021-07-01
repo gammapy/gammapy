@@ -110,7 +110,7 @@ class MapAxes(Sequence):
         List of map axis objects.
     """
 
-    def __init__(self, axes):
+    def __init__(self, axes, n_spatial_axes=None):
         unique_names = []
 
         for ax in axes:
@@ -121,6 +121,7 @@ class MapAxes(Sequence):
             unique_names.append(ax.name)
 
         self._axes = axes
+        self._n_spatial_axes = n_spatial_axes
 
     @property
     def reverse(self):
@@ -134,10 +135,19 @@ class MapAxes(Sequence):
             # Extract values for each axis, default: nodes
             shape = [1] * len(self)
             shape[idx] = -1
+            if self._n_spatial_axes:
+                shape = shape[::-1] + [1, ] * self._n_spatial_axes
             yield tuple(shape), axis
 
-    def get_coord(self):
+    def get_coord(self, mode="center", axis_name=None):
         """Get axes coordinates
+
+        Parameters
+        ----------
+        mode : {"center", "edges"}
+            Coordinate center or edges
+        axis_name : str
+            Axis name for which mode='edges' applies
 
         Returns
         -------
@@ -147,8 +157,11 @@ class MapAxes(Sequence):
         coords = {}
 
         for shape, axis in self.iter_with_reshape:
-            coord = axis.center.reshape(shape)
-            coords[axis.name] = coord
+            if mode == "edges" and axis.name == axis_name:
+                coord = axis.edges
+            else:
+                coord = axis.center
+            coords[axis.name] = coord.reshape(shape)
 
         return coords
 
@@ -669,7 +682,7 @@ class MapAxes(Sequence):
         return cls(axes)
 
     @classmethod
-    def from_default(cls, axes):
+    def from_default(cls, axes, n_spatial_axes=None):
         """Make a sequence of `~MapAxis` objects."""
         if axes is None:
             return cls([])
@@ -684,7 +697,7 @@ class MapAxes(Sequence):
 
             axes_out.append(ax)
 
-        return cls(axes_out)
+        return cls(axes_out, n_spatial_axes=n_spatial_axes)
 
     def assert_names(self, required_names):
         """Assert required axis names and order
@@ -1839,13 +1852,10 @@ class MapCoord:
     """
 
     def __init__(self, data, frame=None, match_by_name=True):
-
         if "lon" not in data or "lat" not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
-        data = {k: np.atleast_1d(np.asanyarray(v)) for k, v in data.items()}
-        vals = np.broadcast_arrays(*data.values(), subok=True)
-        self._data = dict(zip(data.keys(), vals))
+        self._data = {k: np.atleast_1d(v) for k, v in data.items()}
         self._frame = frame
         self._match_by_name = match_by_name
 
@@ -1866,11 +1876,12 @@ class MapCoord:
     @property
     def shape(self):
         """Coordinate array shape."""
-        return self[0].shape
+        arrays = [_ for _ in self._data.values()]
+        return np.broadcast(*arrays).shape
 
     @property
     def size(self):
-        return self[0].size
+        return np.prod(self.shape)
 
     @property
     def lon(self):
@@ -2052,14 +2063,32 @@ class MapCoord:
         coords : `~MapCoord`
             A coordinates object.
         """
-        data = {k: v[mask] for k, v in self._data.items()}
+        try:
+            data = {k: v[mask] for k, v in self._data.items()}
+        except IndexError:
+            data = {}
+
+            for name, coord in self._data.items():
+                if name in ["lon", "lat"]:
+                    data[name] = np.squeeze(coord)[mask]
+                else:
+                    data[name] = np.squeeze(coord, axis=-1)
+
         return self.__class__(data, self.frame, self._match_by_name)
 
     @property
     def flat(self):
         """Return flattened, valid coordinates"""
-        is_finite = np.isfinite(self[0])
-        return self.apply_mask(is_finite)
+        coords = self.broadcasted
+        is_finite = np.isfinite(coords[0])
+        return coords.apply_mask(is_finite)
+
+    @property
+    def broadcasted(self):
+        """Return broadcasted coords"""
+        vals = np.broadcast_arrays(*self._data.values(), subok=True)
+        data = dict(zip(self._data.keys(), vals))
+        return self.__class__(data=data, frame=self.frame, match_by_name=self._match_by_name)
 
     def copy(self):
         """Copy `MapCoord` object."""

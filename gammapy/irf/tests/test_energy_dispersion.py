@@ -116,7 +116,7 @@ class TestEnergyDispersion2D:
         migra_axis = MapAxis.from_bounds(0, 4, nbin=1000, node_type="edges", name="migra")
         offset_axis = MapAxis.from_bounds(0, 2.5, nbin=5, unit="deg", name="offset")
 
-        energy_true = energy_axis_true.edges[:-1]
+        energy_true = energy_axis_true.edges[:-1].reshape((-1, 1, 1))
         sigma = 0.15 / (energy_true / (1 * u.TeV)).value ** 0.3
         bias = 1e-3 * (energy_true - 1 * u.TeV).value
 
