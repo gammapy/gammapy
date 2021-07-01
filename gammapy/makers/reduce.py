@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 class DatasetsMaker(Maker):
     """Run makers in a chain
+
     Parameters
     ----------
     makers : list of `Maker` objects
@@ -26,11 +27,6 @@ class DatasetsMaker(Maker):
         Cutout mode. Default is "partial"
     cutout_width : str or `~astropy.coordinates.Angle`,
         Cutout width. Default is None, If Default is determined 
-    
-    Returns
-    -------
-    datasets : `~gammapy.datasets.Datasets`
-        Datasets
     """
 
     tag = "DatasetsMaker"
@@ -75,6 +71,7 @@ class DatasetsMaker(Maker):
 
     def make_dataset(self, dataset, observation):
         """Make single dataset.
+
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
@@ -110,7 +107,8 @@ class DatasetsMaker(Maker):
             self._datasets.append(dataset)
 
     def run(self, dataset, observations, datasets=None):
-        """Run and write
+        """Run data reduction
+
         Parameters
         ----------
          dataset : `~gammapy.datasets.MapDataset`
@@ -119,6 +117,11 @@ class DatasetsMaker(Maker):
             Observations
          datasets : `~gammapy.datasets.Datasets`   
              Base datasets, if provided its length must be the same than the observations.
+
+        Returns
+        -------
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets
 
         """
 
