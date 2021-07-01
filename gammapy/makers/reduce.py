@@ -49,6 +49,12 @@ class DatasetsMaker(Maker):
         if cutout_width is not None:
             cutout_width = Angle(cutout_width)
         self.cutout_width = cutout_width
+        self._apply_cutout = True
+        if self.cutout_width is None:
+            if self.offset_max is None:
+                self._apply_cutout = False
+            else:
+                self.cutout_width = 2 * self.offset_max
         self.n_jobs = n_jobs
         self.stack_datasets = stack_datasets
 
@@ -67,23 +73,29 @@ class DatasetsMaker(Maker):
             if isinstance(m, SafeMaskMaker):
                 return m
 
-    def make_dataset(self, observation):
+    def make_dataset(self, dataset, observation):
         """Make single dataset.
         Parameters
         ----------
-        observation : `Observation`
+        dataset : `~gammapy.datasets.MapDataset`
+            Reference dataset
+         observation : `Observation`
             Observation
         """
 
-        if isinstance(self._dataset, SpectrumDataset):
-            dataset_obs = self._dataset.copy()
-        elif isinstance(self._dataset, MapDataset):
+        if self._apply_cutout:
             cutouts_kwargs = {
                 "position": observation.pointing_radec.galactic,
                 "width": self.cutout_width,
                 "mode": self.cutout_mode,
             }
-            dataset_obs = self._dataset.cutout(**cutouts_kwargs)
+            dataset_obs = dataset.cutout(**cutouts_kwargs,)
+        else:
+            dataset_obs = dataset.copy()
+        if dataset.models is not None:
+            models = dataset.models.copy()
+            models.reassign(dataset.name, dataset_obs.name)
+            dataset_obs.models = models
 
         log.info(f"Computing dataset for observation {observation.obs_id}")
         for maker in self.makers:
@@ -97,14 +109,17 @@ class DatasetsMaker(Maker):
         else:
             self._datasets.append(dataset)
 
-    def run(self, dataset, observations):
+    def run(self, dataset, observations, datasets=None):
         """Run and write
         Parameters
         ----------
          dataset : `~gammapy.datasets.MapDataset`
-            Reference dataset
+            Reference dataset (used only for stacking if datasets are provided) 
          observations : `Observations`
             Observations
+         datasets : `~gammapy.datasets.Datasets`   
+             Base datasets, if provided its length must be the same than the observations.
+
         """
 
         if isinstance(dataset, MapDataset):
@@ -113,29 +128,29 @@ class DatasetsMaker(Maker):
         else:
             raise TypeError("Invalid reference dataset.")
 
-        if self.cutout_width is None and not isinstance(dataset, SpectrumDataset):
-            if self.offset_max is None:
-                raise Exception(
-                    ValueError("cutout_width must be defined if there is no offset_max")
-                )
-            else:
-                self.cutout_width = 2 * self.offset_max
+        if isinstance(dataset, SpectrumDataset):
+            self._apply_cutout = False
+
+        if datasets is not None:
+            self._apply_cutout = False
+        else:
+            datasets = len(observations) * [dataset]
 
         if self.n_jobs is not None and self.n_jobs > 1:
             n_jobs = min(self.n_jobs, len(observations))
             with contextlib.closing(Pool(processes=n_jobs)) as pool:
                 log.info("Using {} jobs.".format(n_jobs))
                 results = []
-                for observation in observations:
+                for base, obs in zip(datasets, observations):
                     result = pool.apply_async(
-                        self.make_dataset, (observation,), callback=self.callback
+                        self.make_dataset, (base, obs,), callback=self.callback
                     )
                     results.append(result)
                 # wait async run is done
                 [result.wait() for result in results]
         else:
-            for obs in observations:
-                dataset = self.make_dataset(obs)
+            for base, obs in zip(datasets, observations):
+                dataset = self.make_dataset(base, obs)
                 self.callback(dataset)
 
         if self.stack_datasets:

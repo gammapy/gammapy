@@ -162,6 +162,43 @@ def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
     datasets = makers.run(get_mapdataset(name="linear_staking_1deg"), observations_cta)
 
     counts = datasets[0].counts
+
+    assert counts.unit == ""
+    assert_allclose(counts.data.sum(), 46716, rtol=1e-5)
+
+    exposure = datasets[0].exposure
+    assert exposure.unit == "m2 s"
+    assert_allclose(exposure.data.mean(), 1.350841e09, rtol=3e-3)
+
+
+@requires_data()
+def test_datasetsmaker_map_2steps(observations_cta, makers_map, tmp_path):
+
+    makers = DatasetsMaker(
+        [MapDatasetMaker()],
+        stack_datasets=False,
+        cutout_mode="partial",
+        cutout_width="5 deg",
+        n_jobs=None,
+    )
+
+    dataset = get_mapdataset(name="2steps")
+    datasets = makers.run(dataset, observations_cta)
+
+    makers_list = [
+        SafeMaskMaker(methods=["offset-max"], offset_max="2 deg"),
+        FoVBackgroundMaker(method="scale"),
+    ]
+    makers = DatasetsMaker(
+        makers_list,
+        stack_datasets=True,
+        cutout_mode="partial",
+        cutout_width="5 deg",
+        n_jobs=None,
+    )
+    datasets = makers.run(dataset, observations_cta, datasets)
+
+    counts = datasets[0].counts
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), 46716, rtol=1e-5)
 
