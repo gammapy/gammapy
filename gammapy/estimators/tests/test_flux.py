@@ -92,20 +92,21 @@ def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(
         source="Crab",
         selection_optional=["errn-errp", "ul"],
+        reoptimize=False
     )
     datasets = hess_datasets.slice_by_energy(
         energy_min=1 * u.TeV, energy_max=10 * u.TeV,
     )
     datasets.models = hess_datasets.models
 
-    result = estimator.run(hess_datasets)
+    result = estimator.run(datasets)
 
     assert_allclose(result["norm"], 1.218139, atol=1e-3)
     assert_allclose(result["ts"], 527.492959, atol=1e-3)
     assert_allclose(result["norm_err"], 0.095496, atol=1e-3)
     assert_allclose(result["norm_errn"], 0.093204, atol=1e-3)
     assert_allclose(result["norm_errp"], 0.097818, atol=1e-3)
-    assert_allclose(result["norm_ul"], 1.525773, atol=1e-3)
+    assert_allclose(result["norm_ul"], 1.418475, atol=1e-3)
     assert_allclose(result["e_min"], 1 * u.TeV, atol=1e-3)
     assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)
 
@@ -125,7 +126,8 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
 
     estimator = FluxEstimator(
         source="Crab Nebula",
-        selection_optional=None,
+        selection_optional=[],
+        reoptimize=True
     )
     result = estimator.run(datasets)
 
