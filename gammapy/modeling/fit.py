@@ -151,7 +151,7 @@ class Fit:
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
-            return optimize_result
+            return {"optimize_result": optimize_result, "covariance_result": None}
 
         covariance_result = self.covariance(datasets=datasets)
         # TODO: not sure how best to report the results
