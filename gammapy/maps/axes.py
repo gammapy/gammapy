@@ -22,12 +22,12 @@ class TimeMapAxis:
         Reference time to use.
     interp : str
         Interpolation method used to transform between axis and pixel
-        coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
+        coordinates.  For now only 'lin' is supported.
     name : str
         Axis name
     """
     node_type = "edges"
-    def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin",):
+    def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
 
         edges_min = u.Quantity(edges_min, ndmin=1)
@@ -51,6 +51,9 @@ class TimeMapAxis:
         self._edges_min = u.Quantity(edges_min)
         self._edges_max = u.Quantity(edges_max)
         self._reference_time = reference_time
+
+        if interp != "lin":
+            raise ValueError("TimeMapAxis: non-linear scaling scheme are not supported yet.")
         self._interp = interp
 
         self._pix_offset = -0.5
@@ -119,17 +122,24 @@ class TimeMapAxis:
 
     def coord_to_pix(self, coord):
         time = Time(coord[..., np.newaxis])
-        indices = self.coord_to_idx(time)
-        valid = ~(indices == -1)
+        relative_time = time-self.reference_time
 
         scale = interpolation_scale(self._interp)
-        s_min = scale(self._edges_min[indices[valid]])
-        s_max = scale(self._edges_max[indices[valid]])
-
-        relative_time = time[valid]-self.reference_time
+        s_min = scale(self._edges_min)
+        s_max = scale(self._edges_max)
         s_coord = scale(relative_time.to(self._edges_min.unit))
-        pix = np.zeros(time.shape) - 1
-        pix[valid] = (s_coord - s_min) / (s_max - s_min) + indices[valid]
+
+        delta_plus = s_coord - s_min
+        delta_minus = s_coord - s_max
+
+        mask = np.logical_and(delta_plus>0, delta_minus<=0)
+        idx = np.asanyarray(np.argmax(mask, axis=-1))
+        valid = np.any(mask, axis=-1)
+        idx[~valid] = -1
+        print(idx.shape)
+        pix = (s_coord - s_min) / (s_max - s_min) + idx
+        pix[~valid] = -1
+        print(pix.shape)
         return pix
 
     def pix_to_idx(self, pix, clip=False):
