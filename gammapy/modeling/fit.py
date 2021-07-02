@@ -156,9 +156,9 @@ class Fit:
         covariance_result = self.covariance(datasets=datasets)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
-        optimize_result._success = optimize_result.success and covariance_result.success
 
-        return optimize_result
+        return {"optimize_result": optimize_result,
+                "covariance_result": covariance_result}
 
     def optimize(self, datasets):
         """Run the optimization.
