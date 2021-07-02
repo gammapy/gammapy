@@ -78,9 +78,14 @@ def test_coord_to_idx_time_axis(time_intervals):
     idx = axis.coord_to_idx(time)
     indices = axis.coord_to_idx(times)
 
+    pix = axis.coord_to_pix(time)
+    pixels = axis.coord_to_pix(times)
+
     assert idx == 0
     assert_allclose(indices[1::2], [1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
     assert_allclose(indices[::2], -1)
+    assert_allclose(pix, 0.5)
+    assert_allclose(pixels[1::2], [1.5, 3.5, 5.5, 7.5, 9.5, 11.5, 13.5, 15.5, 17.5, 19.5])
 
 def test_slice_time_axis(time_intervals):
     axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])

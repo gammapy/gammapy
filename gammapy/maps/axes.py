@@ -3,7 +3,8 @@
 import numpy as np
 from astropy.time import Time
 import astropy.units as u
-from gammapy.maps import MapAxis
+from gammapy.utils.interpolation import interpolation_scale
+
 
 class TimeMapAxis:
     """Class representing a time axis.
@@ -90,7 +91,7 @@ class TimeMapAxis:
         """Return time bin center (`~astropy.time.Time`)."""
         return self.time_min + 0.5 * self.time_delta
 
-    def coord_to_idx(self, time):
+    def coord_to_idx(self, coord):
         """Transform from axis time coordinate to bin index.
 
         Indices of time values falling outside time bins will be
@@ -107,7 +108,7 @@ class TimeMapAxis:
             Array of bin indices.
         """
 
-        time = Time(time[..., np.newaxis])
+        time = Time(coord[..., np.newaxis])
         delta_plus = (time - self.time_min).value > 0.
         delta_minus = (time - self.time_max).value <= 0.
         mask = np.logical_and(delta_plus, delta_minus)
@@ -116,8 +117,20 @@ class TimeMapAxis:
         idx[~np.any(mask, axis=-1)] = -1
         return idx
 
-    def time_to_pix(self, coord):
-        return self.coord_to_idx(coord)
+    def coord_to_pix(self, coord):
+        time = Time(coord[..., np.newaxis])
+        indices = self.coord_to_idx(time)
+        valid = ~(indices == -1)
+
+        scale = interpolation_scale(self._interp)
+        s_min = scale(self._edges_min[indices[valid]])
+        s_max = scale(self._edges_max[indices[valid]])
+
+        relative_time = time[valid]-self.reference_time
+        s_coord = scale(relative_time.to(self._edges_min.unit))
+        pix = np.zeros(time.shape) - 1
+        pix[valid] = (s_coord - s_min) / (s_max - s_min) + indices[valid]
+        return pix
 
     def pix_to_idx(self, pix, clip=False):
         return pix
