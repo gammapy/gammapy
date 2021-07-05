@@ -115,7 +115,7 @@ def load_cta_irfs(filename):
     """
     from .background import Background3D
     from .effective_area import EffectiveAreaTable2D
-    from .energy_dispersion import EnergyDispersion2D
+    from .edisp import EnergyDispersion2D
     from .psf import EnergyDependentMultiGaussPSF
 
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
