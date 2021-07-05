@@ -135,7 +135,7 @@ def test_fit(spectrum_dataset):
     """Simple CASH fit to the on vector"""
     fit = Fit()
     result = fit.run(datasets=[spectrum_dataset])
-
+    result = result["optimize_result"]
     # assert result.success
     assert "minuit" in repr(result)
 
@@ -696,6 +696,7 @@ class TestSpectralFit:
     def test_basic_results(self):
         self.set_model(self.pwl)
         result = self.fit.run([self.datasets[0]])
+        result = result["optimize_result"]
         pars = self.datasets.parameters
 
         assert self.pwl is self.datasets[0].models[0]
@@ -710,6 +711,7 @@ class TestSpectralFit:
     def test_basic_errors(self):
         self.set_model(self.pwl)
         result = self.fit.run([self.datasets[0]])
+        result = result["optimize_result"]
         pars = result.parameters
 
         assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
@@ -742,7 +744,7 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-
+        result = result["optimize_result"]
         stats = dataset.stat_array()
         actual = np.sum(stats[dataset.mask_safe])
 
@@ -765,6 +767,7 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
+        result = result["optimize_result"]
         assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
@@ -774,6 +777,7 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
+        result = result["optimize_result"]
         pars = result.parameters
 
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
@@ -1079,6 +1083,7 @@ class TestFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
+        result = result["optimize_result"]
 
         # These values are check with sherpa fits, do not change
         pars = result.parameters
@@ -1105,6 +1110,7 @@ class TestFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
+        result = result["optimize_result"]
         pars = self.source_model.parameters
 
         assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
@@ -1138,6 +1144,7 @@ class TestFit:
         )
         fit = Fit()
         result = fit.run(datasets=[dataset])
+        result = result["optimize_result"]
         true_idx = result.parameters["index"].value
 
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)

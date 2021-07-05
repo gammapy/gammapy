@@ -80,8 +80,8 @@ class ParameterEstimator(Estimator):
 
         return {
             f"{parameter.name}": parameter.value,
-            "stat": result_fit.total_stat,
-            "success": result_fit.success,
+            "stat": result_fit["optimize_result"].total_stat,
+            "success": result_fit["optimize_result"].success,
             f"{parameter.name}_err": parameter.error * self.n_sigma,
         }
 
