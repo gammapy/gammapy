@@ -33,7 +33,7 @@ dependencies:
   - tqdm
   # extra dependencies
   - healpy
-  - iminuit<2.0
+  - iminuit>=2.0
   - ipython
   - jupyter
   - jupyterlab

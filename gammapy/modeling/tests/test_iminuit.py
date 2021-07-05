@@ -2,7 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 from gammapy.modeling import Parameter
-from gammapy.modeling.iminuit2 import confidence_iminuit, optimize_iminuit
+from gammapy.modeling.iminuit import confidence_iminuit, optimize_iminuit
 from gammapy.modeling.models import Model, Models
 
 pytest.importorskip("iminuit")
