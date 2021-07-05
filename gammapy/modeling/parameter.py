@@ -7,6 +7,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from gammapy.utils.table import table_from_row_data
+from gammapy.utils.interpolation import interpolation_scale
 
 __all__ = ["Parameter", "Parameters"]
 
@@ -65,6 +66,21 @@ class Parameter:
         Maximum (sometimes used in fitting)
     frozen : bool, optional
         Frozen? (used in fitting)
+    error : float
+        Parameter error
+    scan_min : float
+        Minimum value for the parameter scan. Overwrites scan_n_sigma.
+    scan_max : float
+        Minimum value for the parameter scan. Overwrites scan_n_sigma.
+    scan_n_values: int
+        Number of values to be used fo the parameter scan.
+    scan_n_sigma : int
+        Number of sigmas to scan.
+    scan_values: `numpy.array`
+        Scan values. Overwrites all of the scan keywords before.
+    interp : {"lin", "sqrt", "log"}
+        Parameter scaling to use for the scan.
+
     """
 
     def __init__(
@@ -77,6 +93,12 @@ class Parameter:
         max=np.nan,
         frozen=False,
         error=0,
+        scan_min=None,
+        scan_max=None,
+        scan_n_values=11,
+        scan_n_sigma=2,
+        scan_values=None,
+        interp="lin",
     ):
         self.name = name
         self._link_label_io = None
@@ -96,6 +118,13 @@ class Parameter:
         else:
             self.factor = value
             self.unit = unit
+
+        self.scan_min = scan_min
+        self.scan_max = scan_max
+        self.scan_values = scan_values
+        self.scan_n_values = scan_n_values
+        self.scan_n_sigma = scan_n_sigma
+        self.interp = interp
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -239,6 +268,58 @@ class Parameter:
 
         self.value = val.value
         self.unit = val.unit
+
+    @property
+    def scan_min(self):
+        """Stat scan min"""
+        if self._scan_min is None:
+            return self.value - self.error * self.scan_n_sigma
+
+        return self._scan_min
+
+    @property
+    def scan_max(self):
+        """Stat scan max"""
+        if self._scan_max is None:
+            return self.value + self.error * self.scan_n_sigma
+
+        return self._scan_max
+
+    @scan_min.setter
+    def scan_min(self, value):
+        """Stat scan min setter"""
+        self._scan_min = value
+
+    @scan_max.setter
+    def scan_max(self, value):
+        """Stat scan max setter"""
+        self._scan_max = value
+
+    @property
+    def scan_n_sigma(self):
+        """Stat scan n sigma"""
+        return self._scan_n_sigma
+
+    @scan_n_sigma.setter
+    def scan_n_sigma(self, n_sigma):
+        """Stat scan n sigma"""
+        self._scan_n_sigma = int(n_sigma)
+
+    @property
+    def scan_values(self):
+        """Stat scan values (`~numpy.ndarray`)"""
+        if self._scan_values is None:
+            scale = interpolation_scale(self.interp)
+            parmin, parmax = scale([self.scan_min, self.scan_max])
+            values = np.linspace(parmin, parmax, self.scan_n_values)
+            return scale.inverse(values)
+
+        return self._scan_values
+
+    @scan_values.setter
+    def scan_values(self, values):
+        """Set scan values"""
+        self._scan_values = values
 
     def check_limits(self):
         """Emit a warning or error if value is outside the min/max range"""

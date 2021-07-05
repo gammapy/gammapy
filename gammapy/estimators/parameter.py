@@ -22,16 +22,6 @@ class ParameterEstimator(Estimator):
         Sigma to use for upper limit computation. Default is 2.
     null_value : float
         Which null value to use for the parameter
-    scan_n_sigma : int
-        Range to scan in number of parameter error
-    scan_min : float
-        Minimum value to use for the stat scan
-    scan_max : int
-        Maximum value to use for the stat scan
-    scan_n_values : int
-        Number of values used to scan fit stat profile
-    scan_values : `~numpy.ndarray`
-        Values to use for the scan.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
@@ -55,11 +45,6 @@ class ParameterEstimator(Estimator):
         n_sigma=1,
         n_sigma_ul=2,
         null_value=1e-150,
-        scan_n_sigma=3,
-        scan_min=None,
-        scan_max=None,
-        scan_n_values=30,
-        scan_values=None,
         selection_optional=None,
         fit=None,
         reoptimize=True
@@ -67,13 +52,6 @@ class ParameterEstimator(Estimator):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.null_value = null_value
-
-        # scan parameters
-        self.scan_n_sigma = scan_n_sigma
-        self.scan_n_values = scan_n_values
-        self.scan_values = scan_values
-        self.scan_min = scan_min
-        self.scan_max = scan_max
 
         self.selection_optional = selection_optional
 
@@ -182,17 +160,9 @@ class ParameterEstimator(Estimator):
         """
         self.fit.optimize(datasets=datasets)
 
-        if self.scan_min and self.scan_max:
-            bounds = (self.scan_min, self.scan_max)
-        else:
-            bounds = self.scan_n_sigma
-
         profile = self.fit.stat_profile(
             datasets=datasets,
             parameter=parameter,
-            values=self.scan_values,
-            bounds=bounds,
-            nvalues=self.scan_n_values,
             reoptimize=self.reoptimize
         )
 

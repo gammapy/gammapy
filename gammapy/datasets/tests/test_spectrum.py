@@ -1146,7 +1146,10 @@ class TestFit:
         result = fit.run(datasets=[dataset])
         result = result["optimize_result"]
         true_idx = result.parameters["index"].value
+
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.stat_profile(datasets=[dataset], parameter="index", values=values)
+        self.source_model.spectral_model.index.scan_values = values
+
+        profile = fit.stat_profile(datasets=[dataset], parameter="index")
         actual = values[np.argmin(profile["stat_scan"])]
         assert_allclose(actual, true_idx, rtol=0.01)

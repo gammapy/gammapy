@@ -106,11 +106,15 @@ class TestFluxPointFit:
         fit = Fit()
         result = fit.run(datasets=dataset)
         result = result["optimize_result"]
+
+        model = dataset.models[0].spectral_model
+
+        model.amplitude.scan_n_values = 3
+        model.amplitude.scan_n_sigma = 1
+
         profile = fit.stat_profile(
             datasets=dataset,
             parameter="amplitude",
-            nvalues=3,
-            bounds=1,
         )
 
         ts_diff = profile["stat_scan"] - result.total_stat
@@ -118,12 +122,11 @@ class TestFluxPointFit:
 
         value = result.parameters["amplitude"].value
         err = result.parameters["amplitude"].error
-        values = np.array([value - err, value, value + err])
 
+        model.amplitude.scan_values = np.array([value - err, value, value + err])
         profile = fit.stat_profile(
             datasets=dataset,
             parameter="amplitude",
-            values=values
         )
 
         ts_diff = profile["stat_scan"] - result.total_stat

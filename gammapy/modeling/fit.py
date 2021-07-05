@@ -313,9 +313,6 @@ class Fit:
         self,
         datasets,
         parameter,
-        values=None,
-        bounds=2,
-        nvalues=11,
         reoptimize=False
     ):
         """Compute fit statistic profile.
@@ -323,24 +320,13 @@ class Fit:
         The method used is to vary one parameter, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
 
-        See also: `Fit.minos_profile`.
-
         Parameters
         ----------
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
-            Parameter of interest
-        values : `~astropy.units.Quantity` (optional)
-            Parameter values to evaluate the fit statistic for.
-        bounds : int or tuple of float
-            When an `int` is passed the bounds are computed from `bounds * sigma`
-            from the best fit value of the parameter, where `sigma` corresponds to
-            the one sigma error on the parameter. If a tuple of floats is given
-            those are taken as the min and max values and ``nvalues`` are linearly
-            spaced between those.
-        nvalues : int
-            Number of parameter grid points to use.
+            Parameter of interest. The specification for the scan, such as bounds
+            and number of values is taken from the parameter object.
         reoptimize : bool
             Re-optimize other parameters, when computing the confidence region.
 
@@ -352,26 +338,12 @@ class Fit:
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
         parameter = parameters[parameter]
-
-        if values is None:
-            if isinstance(bounds, tuple):
-                parmin, parmax = bounds
-            else:
-                if np.isnan(parameter.error):
-                    raise ValueError("Parameter error is not properly set.")
-                parerr = parameter.error
-                parval = parameter.value
-                parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
-
-            values = np.linspace(parmin, parmax, nvalues)
+        values = parameter.scan_values
 
         stats = []
         fit_results = []
         with parameters.restore_status():
-            for value in progress_bar(
-                values,
-                desc="Trial values"
-            ):
+            for value in progress_bar(values, desc="Scan values"):
                 parameter.value = value
                 if reoptimize:
                     parameter.frozen = True
@@ -388,7 +360,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def stat_surface(self, datasets, x, y, x_values, y_values, reoptimize=False):
+    def stat_surface(self, datasets, x, y, reoptimize=False):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -396,7 +368,7 @@ class Fit:
 
         Caveat: This method can be very computationally intensive and slow
 
-        See also: `Fit.minos_contour`
+        See also: `Fit.stat_contour`
 
         Parameters
         ----------
@@ -404,11 +376,8 @@ class Fit:
             Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
-        x_values, y_values : list or `numpy.ndarray`
-            Parameter values to evaluate the fit statistic for.
         reoptimize : bool
             Re-optimize other parameters, when computing the confidence region.
-
 
         Returns
         -------
@@ -418,22 +387,20 @@ class Fit:
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
-        x = parameters[x]
-        y = parameters[y]
+        x, y = parameters[x], parameters[y]
 
         stats = []
         fit_results = []
+
         with parameters.restore_status():
             for x_value, y_value in progress_bar(
-                itertools.product(x_values, y_values),
+                itertools.product(x.scan_values, y.scan_values),
                 desc="Trial values"
             ):
-                x.value = x_value
-                y.value = y_value
+                x.value, y.value = x_value, y_value
 
                 if reoptimize:
-                    x.frozen = True
-                    y.frozen = True
+                    x.frozen, y.frozen = True, True
                     result = self.optimize(datasets=datasets)
                     stat = result.total_stat
                     fit_results.append(result)
@@ -442,17 +409,15 @@ class Fit:
 
                 stats.append(stat)
 
-        shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
-        stats = np.array(stats)
-        stats = stats.reshape(shape)
+        shape = (len(x.scan_values), len(y.scan_values))
+        stats = np.array(stats).reshape(shape)
 
         if reoptimize:
-            fit_results = np.array(fit_results)
-            fit_results = fit_results.reshape(shape)
+            fit_results = np.array(fit_results).reshape(shape)
 
         return {
-            f"{x.name}_scan": x_values,
-            f"{y.name}_scan": y_values,
+            f"{x.name}_scan": x.scan_values,
+            f"{y.name}_scan": y.scan_values,
             "stat_scan": stats,
             "fit_results": fit_results,
         }
