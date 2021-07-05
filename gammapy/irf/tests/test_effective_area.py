@@ -105,6 +105,7 @@ def test_wrong_axis_order():
             axes=[energy_axis_true, offset_axis], data=data, unit="cm2"
         )
 
+
 @requires_data("gammapy-data")
 def test_aeff2d_pointlike():
     filename = "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"

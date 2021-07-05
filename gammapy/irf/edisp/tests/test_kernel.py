@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from gammapy.irf import EDispKernel
 from gammapy.maps import MapAxis
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_dependency, requires_data
 
 
 class TestEDispKernel:
@@ -98,3 +98,12 @@ class TestEDispKernel:
     def test_peek(self):
         with mpl_plot_check():
             self.edisp.peek()
+
+
+@requires_data("gammapy-data")
+def test_get_bias_energy():
+    """Obs read from file"""
+    rmffile = "$GAMMAPY_DATA/joint-crab/spectra/hess/rmf_obs23523.fits"
+    edisp = EDispKernel.read(rmffile)
+    thresh_lo = edisp.get_bias_energy(0.1)
+    assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)
