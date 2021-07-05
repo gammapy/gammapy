@@ -462,8 +462,6 @@ class Fit:
             x_name: x,
             y_name: y,
             "success": result["success"],
-            f"{x_name}_info": result["x_info"],
-            f"{y_name}_info": result["y_info"],
         }
 
 

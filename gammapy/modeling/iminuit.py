@@ -159,15 +159,11 @@ def mncontour(minuit, parameters, x, y, numpoints, sigma):
 
     cl = chi2(2).cdf(sigma)
     contour = minuit.mncontour(x=x, y=y, size=numpoints, cl=cl)
-
-    #success = x_info["is_valid"] and y_info["is_valid"]
-
+    # TODO: add try and except to get the success
     return {
         "success": True,
         "x": contour[:, 0],
         "y": contour[:, 1],
-        "x_info": {},
-        "y_info": {},
     }
 
 
