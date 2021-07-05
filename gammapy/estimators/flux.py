@@ -72,12 +72,10 @@ class FluxEstimator(Estimator):
         # TODO: why the different default here?
         reoptimize=True
     ):
-
-        if norm_values is None:
-            norm_values = np.logspace(
-                np.log10(norm_min), np.log10(norm_max), norm_n_values
-            )
         self.norm_values = norm_values
+        self.norm_min = norm_min
+        self.norm_max = norm_max
+        self.norm_n_values = norm_n_values
         self.source = source
         self.energy_min = u.Quantity(energy_min)
         self.energy_max = u.Quantity(energy_max)
@@ -99,7 +97,6 @@ class FluxEstimator(Estimator):
     def _parameter_estimator(self):
         return ParameterEstimator(
             null_value=0,
-            scan_values=self.norm_values,
             n_sigma=self.n_sigma,
             n_sigma_ul=self.n_sigma_ul,
             selection_optional=self.selection_optional,
@@ -151,6 +148,11 @@ class FluxEstimator(Estimator):
         scale_model = ScaleSpectralModel(ref_model)
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
+        scale_model.norm.scan_values = self.norm_values
+        scale_model.norm.interp = "log"
+        scale_model.norm.scan_min = self.norm_min
+        scale_model.norm.scan_max = self.norm_max
+        scale_model.norm.scan_n_values = self.norm_n_values
         return scale_model
 
     def run(self, datasets):

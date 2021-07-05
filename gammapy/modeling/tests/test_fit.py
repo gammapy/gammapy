@@ -168,7 +168,8 @@ def test_stat_profile():
     dataset = MyDataset()
     fit = Fit()
     fit.run([dataset])
-    result = fit.stat_profile(datasets=[dataset], parameter="x", nvalues=3)
+    dataset.models.parameters["x"].scan_n_values = 3
+    result = fit.stat_profile(datasets=[dataset], parameter="x")
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -184,7 +185,8 @@ def test_stat_profile_reoptimize():
     fit.run([dataset])
 
     dataset.models.parameters["y"].value = 0
-    result = fit.stat_profile(datasets=[dataset], parameter="x", nvalues=3,reoptimize=True)
+    dataset.models.parameters["x"].scan_n_values = 3
+    result = fit.stat_profile(datasets=[dataset], parameter="x", reoptimize=True)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -197,11 +199,13 @@ def test_stat_surface():
     dataset = MyDataset()
     fit = Fit()
     fit.run([dataset])
+
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
-    result = fit.stat_surface(
-        datasets=[dataset], x="x", y="y", x_values=x_values, y_values=y_values
-    )
+
+    dataset.models.parameters["x"].scan_values = x_values
+    dataset.models.parameters["y"].scan_values = y_values
+    result = fit.stat_surface(datasets=[dataset], x="x", y="y")
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
     assert_allclose(result["y_scan"], y_values, atol=1e-7)
@@ -223,11 +227,15 @@ def test_stat_surface_reoptimize():
     fit = Fit()
     fit.run([dataset])
 
-    dataset.models.parameters["z"].value = 0
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
+
+    dataset.models.parameters["z"].value = 0
+    dataset.models.parameters["x"].scan_values = x_values
+    dataset.models.parameters["y"].scan_values = y_values
+
     result = fit.stat_surface(
-        datasets=[dataset], x="x", y="y", x_values=x_values, y_values=y_values, reoptimize=True
+        datasets=[dataset], x="x", y="y", reoptimize=True
     )
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
