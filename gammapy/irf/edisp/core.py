@@ -4,8 +4,8 @@ import scipy.special
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from gammapy.maps import MapAxis, MapAxes
-from .edisp_kernel import EDispKernel
-from .core import IRF
+from .kernel import EDispKernel
+from ..core import IRF
 
 __all__ = ["EnergyDispersion2D"]
 

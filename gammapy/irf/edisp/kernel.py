@@ -5,7 +5,7 @@ from astropy.table import Table
 from astropy.units import Quantity
 from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
-from .core import IRF
+from ..core import IRF
 
 __all__ = ["EDispKernel"]
 

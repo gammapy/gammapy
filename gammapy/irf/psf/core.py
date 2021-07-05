@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.array import array_stats_str
 from ..core import IRF
 
