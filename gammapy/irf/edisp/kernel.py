@@ -5,7 +5,7 @@ from astropy.table import Table
 from astropy.units import Quantity
 from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
-from .core import IRF
+from ..core import IRF
 
 __all__ = ["EDispKernel"]
 
@@ -127,7 +127,7 @@ class EDispKernel(IRF):
         edisp : `EDispKernel`
             Edisp kernel.
         """
-        from .energy_dispersion import EnergyDispersion2D
+        from .core import EnergyDispersion2D
 
         migra_axis = MapAxis.from_bounds(1.0 / 3, 3, nbin=200, name="migra")
 
@@ -180,7 +180,7 @@ class EDispKernel(IRF):
             edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
             edisp.plot_matrix()
         """
-        from .edisp_map import get_overlap_fraction
+        from .map import get_overlap_fraction
 
         energy_axis_true.assert_name("energy_true")
 

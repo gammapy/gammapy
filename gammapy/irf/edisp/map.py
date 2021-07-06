@@ -2,8 +2,8 @@
 import numpy as np
 from gammapy.maps import Map, MapAxis, MapAxes, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
-from .edisp_kernel import EDispKernel
-from .core import IRFMap
+from .kernel import EDispKernel
+from ..core import IRFMap
 
 __all__ = ["EDispMap", "EDispKernelMap"]
 

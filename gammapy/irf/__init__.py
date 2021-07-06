@@ -4,10 +4,8 @@ Instrument response functions (IRFs).
 """
 from gammapy.utils.registry import Registry
 from .background import *
-from .edisp_kernel import *
-from .edisp_map import *
+from .edisp import *
 from .effective_area import *
-from .energy_dispersion import *
 from .io import *
 from .psf import *
 
