@@ -121,25 +121,38 @@ class TimeMapAxis:
         return idx
 
     def coord_to_pix(self, coord):
-        time = Time(coord[..., np.newaxis])
-        relative_time = time-self.reference_time
+        """Transform from time to coordinate to pixel position.
+
+        Pixels of time values falling outside time bins will be
+        set to -1.
+
+        Parameters
+        ----------
+        coord : `~astropy.time.Time`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        pix : `~numpy.ndarray`
+            Array of pixel positions.
+        """
+        idx = self.coord_to_idx(coord)
+
+        valid_pix = np.where(idx!=-1)
+        pix = np.asarray(idx, dtype = 'float')
+        if pix.shape == ():
+            pix = pix.reshape((1,))
+
+        if coord.shape == ():
+            coord = coord.reshape((1,))
+        relative_time = coord[valid_pix]-self.reference_time
 
         scale = interpolation_scale(self._interp)
-        s_min = scale(self._edges_min)
-        s_max = scale(self._edges_max)
+        s_min = scale(self._edges_min[valid_pix])
+        s_max = scale(self._edges_max[valid_pix])
         s_coord = scale(relative_time.to(self._edges_min.unit))
 
-        delta_plus = s_coord - s_min
-        delta_minus = s_coord - s_max
-
-        mask = np.logical_and(delta_plus>0, delta_minus<=0)
-        idx = np.asanyarray(np.argmax(mask, axis=-1))
-        valid = np.any(mask, axis=-1)
-        idx[~valid] = -1
-        print(idx.shape)
-        pix = (s_coord - s_min) / (s_max - s_min) + idx
-        pix[~valid] = -1
-        print(pix.shape)
+        pix[valid_pix] += (s_coord - s_min) / (s_max - s_min)
         return pix
 
     def pix_to_idx(self, pix, clip=False):
