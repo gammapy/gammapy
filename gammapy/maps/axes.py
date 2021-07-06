@@ -5,6 +5,7 @@ import numpy as np
 from astropy.time import Time
 import astropy.units as u
 from gammapy.utils.interpolation import interpolation_scale
+from .utils import INVALID_INDEX
 
 __all__ = ["TimeMapAxis"]
 
@@ -167,7 +168,7 @@ class TimeMapAxis:
         mask = np.logical_and(delta_plus, delta_minus)
 
         idx = np.asanyarray(np.argmax(mask, axis=-1))
-        idx[~np.any(mask, axis=-1)] = -1
+        idx[~np.any(mask, axis=-1)] = INVALID_INDEX.int
         return idx
 
     def coord_to_pix(self, coord):
@@ -188,7 +189,7 @@ class TimeMapAxis:
         """
         idx = self.coord_to_idx(coord)
 
-        valid_pix = np.where(idx!=-1)
+        valid_pix = np.where(idx!=INVALID_INDEX.int)
         pix = np.asarray(idx, dtype = 'float')
         if pix.shape == ():
             pix = pix.reshape((1,))
