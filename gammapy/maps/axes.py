@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
+import copy
+import inspect
 import numpy as np
 from astropy.time import Time
 import astropy.units as u
 from gammapy.utils.interpolation import interpolation_scale
-
+from gammapy.utils.testing import assert_time_allclose
 
 class TimeMapAxis:
     """Class representing a time axis.
@@ -20,11 +21,11 @@ class TimeMapAxis:
         Array of edge time values. This the time delta w.r.t. to the reference time.
     reference_time : `~astropy.time.Time`
         Reference time to use.
+    name : str
+        Axis name
     interp : str
         Interpolation method used to transform between axis and pixel
         coordinates.  For now only 'lin' is supported.
-    name : str
-        Axis name
     """
     node_type = "edges"
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
@@ -93,6 +94,53 @@ class TimeMapAxis:
     def time_mid(self):
         """Return time bin center (`~astropy.time.Time`)."""
         return self.time_min + 0.5 * self.time_delta
+
+    def assert_name(self, required_name):
+        """Assert axis name if a specific one is required.
+
+        Parameters
+        ----------
+        required_name : str
+            Required
+        """
+        if self.name != required_name:
+            raise ValueError(
+                "Unexpected axis name,"
+                f' expected "{required_name}", got: "{self.name}"'
+            )
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        if self._edges_min.shape != other._edges_min.shape:
+            return False
+        # This will test equality at microsec level.
+        delta_min = self.time_min - other.time_min
+        delta_max = self.time_max - other.time_max
+
+        return (
+            np.allclose(delta_min.to_value("s"), 0., atol=1e-6)
+            and np.allclose(delta_max.to_value("s"), 0., atol=1e-6)
+            and self._interp == other._interp
+            and self.name.upper() == other.name.upper()
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return id(self)
+
+
+    def is_aligned(self, other, atol=2e-2):
+        raise NotImplementedError
+
+    @property
+    def iter_by_edges(self):
+        """Iterate by intervals defined by the edges"""
+        for time_min, time_max in zip(self.time_min, self.time_max):
+            yield (time_min, time_max)
 
     def coord_to_idx(self, coord):
         """Transform from axis time coordinate to bin index.
@@ -179,6 +227,36 @@ class TimeMapAxis:
 
     def upsample(self):
         raise NotImplementedError
+
+    def downsample(self):
+        raise NotImplementedError
+
+    def _init_copy(self, **kwargs):
+        """Init map axis instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getfullargspec(self.__init__).args
+        argnames.remove("self")
+
+        for arg in argnames:
+            value = getattr(self, "_" + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)
+
+    def copy(self, **kwargs):
+        """Copy `MapAxis` instance and overwrite given attributes.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments to overwrite in the map axis constructor.
+
+        Returns
+        -------
+        copy : `MapAxis`
+            Copied map axis.
+        """
+        return self._init_copy(**kwargs)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -271,3 +349,5 @@ class TimeMapAxis:
         tmax = gti.time_stop - gti.time_ref
 
         return cls(tmin.to('s'), tmax.to('s'), gti.time_ref, name)
+
+

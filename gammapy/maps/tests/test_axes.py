@@ -21,6 +21,8 @@ def time_intervals():
 def test_time_axis(time_intervals):
     axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
 
+    axis_copy = axis.copy()
+
     assert axis.nbin == 20
     assert axis.name == "time"
     assert axis.node_type == "edges"
@@ -28,6 +30,21 @@ def test_time_axis(time_intervals):
     assert_allclose(axis.center[0].mjd, 58927.020833333336)
     assert "time" in axis.__str__()
     assert "20" in axis.__str__()
+    with pytest.raises(ValueError):
+        axis.assert_name("bad")
+    assert axis_copy == axis
+
+def test_slice_squash_time_axis(time_intervals):
+    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
+    axis_squash = axis.squash()
+    axis_slice = axis.slice(slice(1,5))
+
+    assert axis_squash.nbin ==1
+    assert_allclose(axis_squash.time_min[0].mjd, 58927)
+    assert_allclose(axis_squash.time_delta.to_value("d"), 10.04166666)
+    assert axis_slice.nbin == 4
+    assert_allclose(axis_slice.time_delta.to_value("d")[0], 0.04166666666)
+    assert axis_squash != axis_slice
 
 def test_from_time_edges_time_axis():
     t0 = Time("2020-03-19")
@@ -44,6 +61,7 @@ def test_from_time_edges_time_axis():
     assert_allclose(axis.center[0].mjd, 58927.020833333336)
     assert_allclose(axis_h.time_delta.to_value("h"), 1)
     assert_allclose(axis_h.center[0].mjd, 58927.020833333336)
+    assert axis == axis_h
 
 def test_incorrect_time_axis():
     tmin = np.linspace(0,10)*u.h
