@@ -5,7 +5,9 @@ import numpy as np
 from astropy.time import Time
 import astropy.units as u
 from gammapy.utils.interpolation import interpolation_scale
-from gammapy.utils.testing import assert_time_allclose
+
+__all__ = ["TimeMapAxis"]
+
 
 class TimeMapAxis:
     """Class representing a time axis.
