@@ -25,7 +25,7 @@ def test_time_axis(time_intervals):
 
     assert axis.nbin == 20
     assert axis.name == "time"
-    assert axis.node_type == "edges"
+    assert axis.node_type == "intervals"
     assert_allclose(axis.time_delta.to_value("min"), 60)
     assert_allclose(axis.center[0].mjd, 58927.020833333336)
     assert "time" in axis.__str__()

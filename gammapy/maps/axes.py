@@ -30,7 +30,7 @@ class TimeMapAxis:
         Interpolation method used to transform between axis and pixel
         coordinates.  For now only 'lin' is supported.
     """
-    node_type = "edges"
+    node_type = "intervals"
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
 
@@ -225,7 +225,8 @@ class TimeMapAxis:
         fmt = "\t{:<10s} : {:<10s}\n"
         str_ += fmt.format("name", self.name)
         str_ += fmt.format("nbins", str(self.nbin))
-        str_ += fmt.format("node type", self.node_type)
+        str_ += fmt.format("reference time", self.reference_time.iso)
+        str_ += fmt.format("total time", self.time_delta.sum())
         return str_.expandtabs(tabsize=2)
 
     def upsample(self):
