@@ -592,7 +592,8 @@ class DiskSpatialModel(SpatialModel):
         Increases counter-clockwise from the North direction.
     edge : `~astropy.coordinates.Angle`
         Width of the edge. The width is defined as the range within the
-        smooth edges of the model drops from 95% to 5% of its amplitude.
+        smooth edges of the model drops from 95% to 5% of its amplitude
+        and is given as fraction of r_0.
     frame : {"icrs", "galactic"}
         Center position coordinate frame
     """
@@ -603,7 +604,7 @@ class DiskSpatialModel(SpatialModel):
     r_0 = Parameter("r_0", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
-    edge = Parameter("edge", "0.01 deg", frozen=True)
+    edge = Parameter("edge", value=0.1, min=0, max=1, frozen=True)
 
     @property
     def evaluation_radius(self):
@@ -639,8 +640,7 @@ class DiskSpatialModel(SpatialModel):
         edge_width_95 = 2.326174307353347
         return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
 
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_0, e, phi, edge):
+    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
@@ -651,7 +651,7 @@ class DiskSpatialModel(SpatialModel):
 
         norm = DiskSpatialModel._evaluate_norm_factor(r_0, e)
 
-        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, edge)
+        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, sigma_eff * edge)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
     def to_region(self, **kwargs):
