@@ -45,7 +45,7 @@ class SafeMaskMaker(Maker):
         `n_95percentile` times the 95% percentile value.
         Default is None then only non-finite values are masked.
     force_clipping : bool
-       If True the aberrant value found by `bkg-clip` method will be set to zero.
+       If True (default), the aberrant value found by `bkg-clip` method will be set to zero.
     """
 
     tag = "SafeMaskMaker"
@@ -67,7 +67,7 @@ class SafeMaskMaker(Maker):
         fixed_offset=None,
         offset_max="3 deg",
         n_95percentile=None,
-        force_clipping=False,
+        force_clipping=True,
     ):
         methods = set(methods)
 
