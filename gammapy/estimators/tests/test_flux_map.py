@@ -240,13 +240,13 @@ def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(other_data, reference_model)
 
     coord = SkyCoord(0., 0., unit="deg", frame="galactic")
-    fp = fluxmap.get_flux_points(coord)
+    table = fluxmap.get_flux_points(coord).to_table()
 
-    assert_allclose(fp.table["e_min"], [0.1, 1.0])
-    assert_allclose(fp.table["norm"], [1, 1])
-    assert_allclose(fp.table["norm_err"], [0.1, 0.1])
-    assert_allclose(fp.table["norm_ul"], [2, 2])
-    assert "norm_errn" not in fp.table.columns
+    assert_allclose(table["e_min"], [0.1, 1.0])
+    assert_allclose(table["norm"], [1, 1])
+    assert_allclose(table["norm_err"], [0.1, 0.1])
+    assert_allclose(table["norm_ul"], [2, 2])
+    assert "norm_errn" not in table.columns
 
 
 def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
