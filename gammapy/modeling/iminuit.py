@@ -148,7 +148,15 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
     }
 
 
-def mncontour(minuit, parameters, x, y, numpoints, sigma):
+def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
+    minuit, minuit_func = setup_iminuit(
+        parameters=parameters,
+        function=function,
+        store_trace=False,
+        **kwargs
+    )
+    minuit.migrad()
+
     par_x = parameters[x]
     idx_x = parameters.free_parameters.index(par_x)
     x = _make_parname(idx_x, par_x)

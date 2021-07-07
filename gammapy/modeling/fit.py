@@ -5,7 +5,7 @@ import numpy as np
 from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
-from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
+from .iminuit import confidence_iminuit, covariance_iminuit, contour_iminuit, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
@@ -416,7 +416,7 @@ class Fit:
         }
 
     def stat_contour(self, datasets, x, y, numpoints=10, sigma=1):
-        """Compute MINOS contour.
+        """Compute stat contour.
 
         Calls ``iminuit.Minuit.mncontour``.
 
@@ -451,7 +451,14 @@ class Fit:
         y = parameters[y]
 
         with parameters.restore_status():
-            result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
+            result = contour_iminuit(
+                parameters=parameters,
+                function=datasets.stat_sum,
+                x=x,
+                y=y,
+                numpoints=numpoints,
+                sigma=sigma
+            )
 
         x_name = x.name
         y_name = y.name
