@@ -408,17 +408,6 @@ class FluxPoints(FluxEstimate):
         except IndexError:
             return u.Unit("TeV")
 
-    def _plot_get_energy_err(self):
-        """Compute energy error for given sed type"""
-        try:
-            energy_min = self.energy_min
-            energy_max = self.energy_max
-            energy_ref = self.energy_ref
-            x_err = ((energy_ref - energy_min), (energy_max - energy_ref))
-        except KeyError:
-            x_err = None
-        return x_err
-
     def _plot_get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""
         try:
@@ -476,7 +465,7 @@ class FluxPoints(FluxEstimate):
 
         # get errors and ul
         is_ul = self.is_ul.data.squeeze()
-        x_err_all = self._plot_get_energy_err()
+        x_err_all = self.energy_axis.as_xerr
         y_err_all = self._plot_get_flux_err(sed_type=sed_type)
 
         # handle energy power
