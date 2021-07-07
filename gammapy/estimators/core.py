@@ -208,17 +208,11 @@ class FluxEstimate:
         Reference spectral model used to produce the input data.
     """
 
-    def __init__(self, data, reference_spectral_model):
-        # TODO: Check data
+    def __init__(self, data, reference_spectral_model, ts_threshold_ul=4):
         self._data = data
-
-        self._energy_axis = self._data["norm"].geom.axes["energy"]
         self._expand_slice = (slice(None), np.newaxis, np.newaxis)
-
-        # Note that here we could use the specification from dnde_ref to build piecewise PL
-        # But does it work beyond min and max centers?
-
         self._reference_spectral_model = reference_spectral_model
+        self.ts_threshold_ul = ts_threshold_ul
 
     @staticmethod
     def _validate_data(data, sed_type, check_scan=False):
@@ -241,7 +235,7 @@ class FluxEstimate:
     @property
     def energy_axis(self):
         """Energy axis (`MapAxis`)"""
-        return self._energy_axis
+        return self._data["norm"].geom.axes["energy"]
 
     @property
     def reference_spectral_model(self):

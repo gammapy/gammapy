@@ -437,7 +437,6 @@ class RegionNDMap(Map):
 
         return cls(geom=geom, data=data, unit=unit)
 
-
     @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
         """Create from `~astropy.io.fits.HDUList`.

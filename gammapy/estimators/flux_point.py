@@ -219,7 +219,7 @@ class FluxPoints(FluxEstimate):
 
     @staticmethod
     def _convert_flux_columns(table, reference_model, sed_type):
-        energy_axis = MapAxis.from_table(table, format="gadf-sed")
+        energy_axis = MapAxis.from_table(table, format="gadf-sed-energy")
 
         with np.errstate(invalid="ignore", divide="ignore"):
             fluxes = reference_model.reference_fluxes(energy_axis=energy_axis)

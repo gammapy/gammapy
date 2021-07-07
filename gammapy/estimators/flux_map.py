@@ -66,13 +66,13 @@ class FluxMaps(FluxEstimate):
     @property
     def geom(self):
         """Reference map geometry (`Geom`)"""
-        return self.data["norm"].geom
+        return self._data["norm"].geom
 
     @property
     def sqrt_ts(self):
         """Sqrt TS"""
-        if "sqrt_ts" in self.data:
-            return self.data["sqrt_ts"]
+        if "sqrt_ts" in self._data:
+            return self._data["sqrt_ts"]
         else:
             with np.errstate(invalid="ignore", divide="ignore"):
                 data = np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
@@ -85,7 +85,7 @@ class FluxMaps(FluxEstimate):
         str_ += "\t" + "\t\n".join(str(self.geom).split("\n")[:1])
         str_ += "\n\t" + "\n\t".join(str(self.geom).split("\n")[2:])
 
-        str_ += f"\n\tAvailable quantities : {list(self.data.keys())}\n\n"
+        str_ += f"\n\tAvailable quantities : {list(self._data.keys())}\n\n"
 
         str_ += "\tReference model:\n"
         if self.reference_model is not None:
@@ -109,22 +109,13 @@ class FluxMaps(FluxEstimate):
         if position is None:
             position = self.geom.center_skydir
 
-        with np.errstate(invalid="ignore", divide="ignore"):
-            ref_fluxes = self.reference_spectral_model.reference_fluxes(self.energy_axis)
+        data = {}
 
-        table = Table(ref_fluxes)
-        table.meta["SED_TYPE"] = "likelihood"
-
-        coords = MapCoord.create(
-            {"skycoord": position, "energy": self.energy_ref}
-        )
-
-        # TODO: add support of norm and stat scan
-        for name in self.data:
+        for name in self._data:
             m = getattr(self, name)
-            table[name] = m.get_by_coord(coords) * m.unit
+            data[name] = m.to_region_nd_map(region=position, method="nearest")
 
-        return FluxPoints(table, reference_spectral_model=self.reference_spectral_model)
+        return FluxPoints(data, reference_spectral_model=self.reference_spectral_model)
 
     def write(
         self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
