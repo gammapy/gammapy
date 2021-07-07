@@ -221,7 +221,7 @@ class Analysis:
         )
 
         fp = flux_point_estimator.run(datasets=self.datasets)
-        fp.table["is_ul"] = fp.table["ts"] < 4
+
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]
         )

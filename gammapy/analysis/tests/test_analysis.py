@@ -175,8 +175,10 @@ def test_analysis_1d():
     analysis.get_light_curve()
 
     assert len(analysis.datasets) == 3
-    assert len(analysis.flux_points.data.table) == 4
-    dnde = analysis.flux_points.data.dnde
+    table = analysis.flux_points.data.to_table(sed_type="dnde")
+
+    assert len(table) == 4
+    dnde = table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
 
     assert_allclose(dnde[0].value, 8.116854e-12, rtol=1e-2)
@@ -184,7 +186,7 @@ def test_analysis_1d():
 
     assert len(analysis.light_curve.table) == 3
     assert_allclose(analysis.light_curve.time_min.mjd, [53343.92, 53343.935, 53343.954])
-    assert_allclose(analysis.light_curve.table["flux"], [[1.688954e-11], [2.347870e-11],[1.604152e-11]], rtol=1e-4)
+    assert_allclose(analysis.light_curve.table["flux"], [[1.688954e-11], [2.347870e-11], [1.604152e-11]], rtol=1e-4)
 
 
 @requires_data()
@@ -307,6 +309,7 @@ def test_analysis_ring_background():
     assert isinstance(analysis.excess_map["sqrt_ts"], WcsNDMap)
     assert_allclose(analysis.excess_map["excess"].data[0,62,62],134.12389)
 
+
 @requires_data()
 def test_analysis_ring_3d():
     config = get_example_config("3d")
@@ -318,7 +321,6 @@ def test_analysis_ring_3d():
         analysis.get_datasets()
 
 
-
 @requires_data()
 def test_analysis_no_bkg_1d(caplog):
     config = get_example_config("1d")
@@ -328,7 +330,6 @@ def test_analysis_no_bkg_1d(caplog):
     assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
     assert caplog.records[-1].levelname == "WARNING"
     assert caplog.records[-1].message == "No background maker set. Check configuration."
-
 
 
 @requires_data()
@@ -359,8 +360,10 @@ def test_analysis_3d():
     assert len(analysis.fit_result.parameters) == 8
     res = analysis.fit_result.parameters
     assert res["amplitude"].unit == "cm-2 s-1 TeV-1"
-    assert len(analysis.flux_points.data.table) == 2
-    dnde = analysis.flux_points.data.dnde
+
+    table = analysis.flux_points.data.to_table(sed_type="dnde")
+    assert len(table) == 2
+    dnde = table["dnde"].quantity
 
     assert_allclose(dnde[0].value, 1.339052e-11, rtol=1e-2)
     assert_allclose(dnde[-1].value, 2.772374e-13, rtol=1e-2)
