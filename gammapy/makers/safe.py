@@ -40,6 +40,10 @@ class SafeMaskMaker(Maker):
         the `aeff_percent` or `bias_percent` are computed.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
+    n_95percentile : float
+        If not None the `bkg-clip` method will mask the values larger than 
+        `n_95percentile` times the 95% percentile value.
+        Default is None then only non-finite values are masked.
     """
 
     tag = "SafeMaskMaker"
@@ -49,6 +53,7 @@ class SafeMaskMaker(Maker):
         "edisp-bias",
         "offset-max",
         "bkg-peak",
+        "bkg-clip",
     }
 
     def __init__(
@@ -59,6 +64,7 @@ class SafeMaskMaker(Maker):
         position=None,
         fixed_offset=None,
         offset_max="3 deg",
+        n_95percentile=None,
     ):
         methods = set(methods)
 
@@ -72,7 +78,7 @@ class SafeMaskMaker(Maker):
         self.position = position
         self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
-
+        self.n_95percentile = n_95percentile
         if self.position and self.fixed_offset:
             raise ValueError(
                 "`position` and `fixed_offset` attributes are mutually exclusive"
@@ -125,9 +131,7 @@ class SafeMaskMaker(Maker):
             log.warning(f"No default thresholds defined for obs {observation.obs_id}")
             energy_min, energy_max = None, None
 
-        return dataset._geom.energy_mask(
-            energy_min=energy_min, energy_max=energy_max
-        )
+        return dataset._geom.energy_mask(energy_min=energy_min, energy_max=energy_max)
 
     def make_mask_energy_aeff_max(self, dataset, observation=None):
         """Make safe energy mask from effective area maximum value.
@@ -247,6 +251,39 @@ class SafeMaskMaker(Maker):
         energy_min = energy_axis.pix_to_coord(idx)
         return geom.energy_mask(energy_min=energy_min)
 
+    def make_mask_bkg_clip(self, dataset):
+        """Mask aberrant values in background maps
+
+        By default only non-finite values are masked.
+        If`n_95percentile` is not None then the values larger than 
+        `n_95percentile` times the 95% percentile value will also be masked.
+       
+ 
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Dataset to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Safe data range mask.
+        """
+
+        bkg = dataset.background.data
+        mask = np.isfinite(bkg)
+        if self.n_95percentile is not None:
+            for k in range(bkg.shape[0]):
+                data = bkg[k, :, :]
+                thr = self.n_95percentile * np.nanpercentile(data[data > 0], 95)
+                mask[k, :, :] = np.abs(bkg[k, :, :]) < thr
+        if np.any(~mask):
+            bad_values = np.unique(bkg[~mask])
+            log.warning(f"Invalid values found in background masked \n {bad_values}")
+            # TODO: maybe we should store the bad values and their coord somewhere,
+            # in the metadata of the dataset ?
+        return mask
+
     def run(self, dataset, observation=None):
         """Make safe data range mask.
 
@@ -263,6 +300,11 @@ class SafeMaskMaker(Maker):
             Dataset with defined safe range mask.
         """
         mask_safe = np.ones(dataset._geom.data_shape, dtype=bool)
+
+        if "bkg-clip" in self.methods:
+            # apply it first so only clipped values are removed for "bkg-peak"
+            mask_safe &= self.make_mask_bkg_clip(dataset)
+            dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
 
         if "offset-max" in self.methods:
             mask_safe &= self.make_mask_offset_max(dataset, observation)
