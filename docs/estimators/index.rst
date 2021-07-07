@@ -93,6 +93,16 @@ e2dnde            Differential energy flux between ``e_ref``
 The same can be applied for the error and upper limit information.
 More information can be found on the `likelihood SED type page`_.
 
+The `FluxPoints` and `FluxMaps` objects can optionally define meta
+data with the following valid keywords:
+
+================= =================================================
+Name              Definition
+================= =================================================
+n_sigma           Number of sigma used for error estimation
+n_sigma_ul        Number of sigma used for upper limit estimation
+ts_threshold_ul   TS threshold to define the use of an upper limit
+================= =================================================
 
 Getting started
 ===============
@@ -104,19 +114,19 @@ This how to compute flux maps with the `ExcessMapEstimator`:
 
 .. testcode::
 
-	import numpy as np
-	from gammapy.datasets import MapDataset
-	from gammapy.estimators import ExcessMapEstimator
-	from astropy import units as u
+    import numpy as np
+    from gammapy.datasets import MapDataset
+    from gammapy.estimators import ExcessMapEstimator
+    from astropy import units as u
 
-	dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
 
-	estimator = ExcessMapEstimator(
-		correlation_radius="0.1 deg", energy_edges=[0.1, 1, 10] * u.TeV
-	)
+    estimator = ExcessMapEstimator(
+        correlation_radius="0.1 deg", energy_edges=[0.1, 1, 10] * u.TeV
+    )
 
-	maps = estimator.run(dataset)
-	print(maps["flux"])
+    maps = estimator.run(dataset)
+    print(maps["flux"])
 
 .. testoutput::
 
@@ -137,32 +147,34 @@ This is how to compute flux points:
 
 .. testcode::
 
-	from astropy import units as u
-	from gammapy.datasets import SpectrumDatasetOnOff, Datasets
-	from gammapy.estimators import FluxPointsEstimator
-	from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+    from astropy import units as u
+    from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+    from gammapy.estimators import FluxPointsEstimator
+    from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 
-	path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-	dataset_1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
-	dataset_2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
+    path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
+    dataset_1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+    dataset_2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
 
-	datasets = Datasets([dataset_1, dataset_2])
+    datasets = Datasets([dataset_1, dataset_2])
 
-	pwl = PowerLawSpectralModel(index=2, amplitude='1e-12  cm-2 s-1 TeV-1')
+    pwl = PowerLawSpectralModel(index=2, amplitude='1e-12  cm-2 s-1 TeV-1')
 
-	datasets.models = SkyModel(spectral_model=pwl, name="crab")
+    datasets.models = SkyModel(spectral_model=pwl, name="crab")
 
-	estimator = FluxPointsEstimator(
-		source="crab", energy_edges=[0.1, 0.3, 1, 3, 10, 30, 100] * u.TeV
-	)
+    estimator = FluxPointsEstimator(
+        source="crab", energy_edges=[0.1, 0.3, 1, 3, 10, 30, 100] * u.TeV
+    )
 
-	# this will run a joint fit of the datasets
-	fp = estimator.run(datasets)
-	# print(fp.table[["e_ref", "dnde", "dnde_err"]])
+    # this will run a joint fit of the datasets
+    fp = estimator.run(datasets)
+    table = fp.to_table(sed_type="dnde", formatted=True)
+    # print(table[["e_ref", "dnde", "dnde_err"]])
 
-	# or stack the datasets
-	# fp = estimator.run(datasets.stack_reduce())
-	# print(fp.table[["e_ref", "dnde", "dnde_err"]])
+    # or stack the datasets
+    # fp = estimator.run(datasets.stack_reduce())
+    table = fp.to_table(sed_type="dnde", formatted=True)
+    # print(table[["e_ref", "dnde", "dnde_err"]])
 
 
 

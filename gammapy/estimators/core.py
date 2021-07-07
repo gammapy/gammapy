@@ -203,16 +203,18 @@ class FluxEstimate:
 
     Parameters
     ----------
-    data : dict of `Map` or `Table`
+    data : dict of `Map`
         Mappable containing the sed data with at least a 'norm' entry.
         If data is a Table, it should contain 'e_min' and 'e_max' columns.
     reference_spectral_model : `SpectralModel`
         Reference spectral model used to produce the input data.
+    meta : dict
+        Flux maps meta data.
     """
+    _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
     def __init__(self, data, reference_spectral_model, meta=None):
         self._data = data
-        self._expand_slice = (slice(None), np.newaxis, np.newaxis)
         self._reference_spectral_model = reference_spectral_model
 
         if meta is None:
