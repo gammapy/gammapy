@@ -256,11 +256,10 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(
         lightcurve.table["ref_eflux"], [[3.453878e-12], [3.453878e-12]], rtol=1e-5
     )
-    assert_allclose(lightcurve.table["ref_e2dnde"], [[1e-12], [1e-12]], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"], [[16.824042], [17.391981]], rtol=1e-5)
     assert_allclose(lightcurve.table["norm"], [[0.911963], [0.9069318]], rtol=1e-2)
     assert_allclose(lightcurve.table["norm_err"], [[0.057769], [0.057835]], rtol=1e-2)
-    assert_allclose(lightcurve.table["counts"], [[791], [784]])
+    assert_allclose(lightcurve.table["counts"], [[[791]], [[784]]])
     assert_allclose(lightcurve.table["norm_errp"], [[0.058398], [0.058416]], rtol=1e-2)
     assert_allclose(lightcurve.table["norm_errn"], [[0.057144], [0.057259]], rtol=1e-2)
     assert_allclose(lightcurve.table["norm_ul"], [[1.029989], [1.025061]], rtol=1e-2)
@@ -320,7 +319,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         [[0.065905, 0.121288], [0.06601, 0.119457]],
         rtol=1e-2,
     )
-    assert_allclose(lightcurve.table["counts"], [[669.0, 122.0], [667.0, 117.0]])
+    assert_allclose(lightcurve.table["counts"], [[[669.0], [122.0]], [[667.0], [117.0]]])
     assert_allclose(
         lightcurve.table["norm_errp"],
         [[0.06664, 0.124741], [0.066815, 0.122832]],
@@ -442,7 +441,6 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(lightcurve.table["ref_dnde"][0], [3.162278e-14], rtol=1e-5)
     assert_allclose(lightcurve.table["ref_flux"][0], [9.683772e-13], rtol=1e-5)
     assert_allclose(lightcurve.table["ref_eflux"][0], [3.453878e-12], rtol=1e-5)
-    assert_allclose(lightcurve.table["ref_e2dnde"][0], [1e-12], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"][0], [34.219808], rtol=1e-5)
     assert_allclose(lightcurve.table["norm"][0], [0.909646], rtol=1e-5)
     assert_allclose(lightcurve.table["norm_err"][0], [0.040874], rtol=1e-3)
@@ -536,7 +534,6 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(
         lightcurve.table["ref_eflux"], [[4.4407e-11], [4.4407e-11]], rtol=1e-5
     )
-    assert_allclose(lightcurve.table["ref_e2dnde"], [[1e-11], [1e-11]], rtol=1e-5)
     assert_allclose(lightcurve.table["stat"], [[9402.778975], [9517.750207]], rtol=1e-2)
     assert_allclose(lightcurve.table["norm"], [[0.971592], [0.963286]], rtol=1e-2)
     assert_allclose(lightcurve.table["norm_err"], [[0.044643], [0.044475]], rtol=1e-2)
@@ -562,9 +559,8 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(lightcurve2.table["ref_dnde"][0], [8.483429e-14], rtol=1e-5)
     assert_allclose(lightcurve2.table["ref_flux"][0], [8.383429e-12], rtol=1e-5)
     assert_allclose(lightcurve2.table["ref_eflux"][0], [4.4407e-11], rtol=1e-5)
-    assert_allclose(lightcurve2.table["ref_e2dnde"][0], [1e-11], rtol=1e-5)
     assert_allclose(lightcurve2.table["stat"][0], [18920.54651], rtol=1e-2)
     assert_allclose(lightcurve2.table["norm"][0], [0.967438], rtol=1e-2)
     assert_allclose(lightcurve2.table["norm_err"][0], [0.031508], rtol=1e-2)
-    assert_allclose(lightcurve.table["counts"][0], [2205])
+    assert_allclose(lightcurve.table["counts"][0], [[2205]])
     assert_allclose(lightcurve2.table["ts"][0], [2557.346464], rtol=1e-2)
