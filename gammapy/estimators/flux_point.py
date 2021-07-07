@@ -280,10 +280,11 @@ class FluxPoints(FluxEstimate):
 
         elif sed_type == "likelihood":
             table = cls._convert_loglike_columns(table)
-            reference_model = TemplateSpectralModel(
-                energy=table["e_ref"].quantity,
-                values=table["ref_dnde"].quantity
-            )
+            if reference_model is None:
+                reference_model = TemplateSpectralModel(
+                    energy=table["e_ref"].quantity,
+                    values=table["ref_dnde"].quantity
+                )
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
 
@@ -335,6 +336,8 @@ class FluxPoints(FluxEstimate):
             OPTIONAL_QUANTITIES_COMMON
         )
 
+        idx = (Ellipsis, 0, 0)
+
         # TODO: simplify...
         for quantity in all_quantities:
             if quantity == "e_ref":
@@ -344,15 +347,24 @@ class FluxPoints(FluxEstimate):
             elif quantity == "e_max":
                 table["e_max"] = self.energy_max
             elif quantity == "ref_dnde":
-                table["ref_dnde"] = self.dnde_ref.squeeze()
+                table["ref_dnde"] = self.dnde_ref[idx]
             elif quantity == "ref_flux":
-                table["ref_flux"] = self.flux_ref.squeeze()
+                table["ref_flux"] = self.flux_ref[idx]
             elif quantity == "ref_eflux":
-                table["ref_eflux"] = self.eflux_ref.squeeze()
+                table["ref_eflux"] = self.eflux_ref[idx]
             else:
                 data = getattr(self, quantity, None)
                 if data:
-                    table[quantity] = data.quantity.squeeze()
+                    table[quantity] = data.quantity[idx]
+
+        if sed_type == "likelihood":
+            try:
+                norm_axis = self.stat_scan.geom.axes["norm"]
+                table["norm_scan"] = norm_axis.center.reshape((1, -1))
+                table["stat"] = self.stat.data[idx]
+                table["stat_scan"] = self.stat_scan.data[idx]
+            except AttributeError:
+                pass
 
         table.meta["SED_TYPE"] = sed_type
 
@@ -700,9 +712,8 @@ class FluxPointsEstimator(FluxEstimator):
             rows.append(row)
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-
         model = datasets.models[self.source]
-        return FluxPoints(table, reference_spectral_model=model.spectral_model.copy())
+        return FluxPoints.from_table(table, reference_model=model.spectral_model.copy())
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.

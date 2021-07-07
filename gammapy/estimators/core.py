@@ -62,6 +62,7 @@ VALID_QUANTITIES = [
     "stat_null",
     "niter",
     "is_ul",
+    "counts"
 ]
 
 
@@ -74,7 +75,8 @@ OPTIONAL_QUANTITIES_COMMON = [
     "stat",
     "stat_null",
     "niter",
-    "is_ul"
+    "is_ul",
+    "counts"
 ]
 
 
@@ -334,12 +336,18 @@ class FluxEstimate:
     def is_ul(self):
         """Whether data is an upper limit"""
         try:
-            is_ul = self.ts > self.ts_threshold_ul
+            is_ul = self.ts < self.ts_threshold_ul
         except AttributeError:
             is_ul = self.norm.copy()
             is_ul.data = np.isnan(self.norm)
 
         return is_ul
+
+    @property
+    def counts(self):
+        """Predicted counts null hypothesis"""
+        self._check_quantity("counts")
+        return self._data["counts"]
 
     @property
     def npred(self):

@@ -8,7 +8,7 @@ from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Map
-from .geom import pix_tuple_to_idx, MapAxes
+from .geom import pix_tuple_to_idx, MapAxes, MapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -426,15 +426,22 @@ class RegionNDMap(Map):
             axes = MapAxes.from_table(table=table, format=format)
 
             if colname == "stat_scan":
-                geom = RegionGeom.create(region=None, axes=axes)
+                axes = axes
+            # TODO: this is not officially supported by GADF...
+            # replace by LabelledMapAxis
+            elif colname == "counts":
+                edges = np.arange(table[colname].shape[1] + 1) - 0.5
+                axis = MapAxis.from_edges(edges, name="dataset-idx")
+                axes = [axis, axes["energy"]]
             else:
-                geom = RegionGeom.create(region=None, axes=[axes["energy"]])
+                axes = [axes["energy"]]
 
             data = table[colname].data
             unit = table[colname].unit or ""
         else:
             raise ValueError(f"Format not supported {format}")
 
+        geom = RegionGeom.create(region=None, axes=axes)
         return cls(geom=geom, data=data, unit=unit)
 
     @classmethod
