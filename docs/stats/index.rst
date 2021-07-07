@@ -104,17 +104,17 @@ significance" using the following recipe:
 
 .. code::
 
-	from scipy.stats import chi2, norm
+    from scipy.stats import chi2, norm
 
-	def sigma_to_ts(sigma, df=1):
-		"""Convert sigma to delta ts"""
-		p_value = 2 * norm.sf(sigma)
-		return chi2.isf(p_value, df=df)
+    def sigma_to_ts(sigma, df=1):
+        """Convert sigma to delta ts"""
+        p_value = 2 * norm.sf(sigma)
+        return chi2.isf(p_value, df=df)
 
-	def ts_to_sigma(ts, df=1):
-		"""Convert delta ts to sigma"""
-		p_value = chi2.sf(ts, df=df)
-		return norm.isf(0.5 * p_value)
+    def ts_to_sigma(ts, df=1):
+        """Convert delta ts to sigma"""
+        p_value = chi2.sf(ts, df=df)
+        return norm.isf(0.5 * p_value)
 
 In particular, with only one degree of freedom (e.g. flux amplitude), one
 can estimate the statistical significance in terms of number of :math:`\sigma`
@@ -126,12 +126,12 @@ the following convention is used:
 
 .. math::
 
-	\sqrt{\Delta TS} = \left \{
-	\begin{array}{ll}
-	  -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
-	  \sqrt{\Delta TS} & : \text{else}
-	\end{array}
-	\right.
+    \sqrt{\Delta TS} = \left \{
+    \begin{array}{ll}
+      -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
+      \sqrt{\Delta TS} & : \text{else}
+    \end{array}
+    \right.
 
 Counts statistics classes
 =========================
@@ -156,20 +156,19 @@ as well as the confidence interval on the true signal counts number value.
 
     from gammapy.stats import CashCountsStatistic
     stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(stat.n_sig)
-    print(stat.error)
-    print(stat.ts)
-    print(stat.sqrt_ts)
-    print(stat.p_value)
+    print(f"Excess  : {stat.n_sig:.2f}")
+    print(f"Error   : {stat.error:.2f}")
+    print(f"TS      : {stat.ts:.2f}")
+    print(f"sqrt(TS): {stat.sqrt_ts:.2f}")
+    print(f"p-value : {stat.p_value:.4f}")
 
 .. testoutput::
 
-    7.5
-    3.605551275463989
-    7.365232895800901
-    2.7138962573762653
-    0.0033248493474548595
-
+    Excess  : 7.50
+    Error   : 3.61
+    TS      : 7.37
+    sqrt(TS): 2.71
+    p-value : 0.0033
 
 The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{on}}`.
 The `sqrt_ts` is the square root of the :math:`TS`, multiplied by the sign of the excess,

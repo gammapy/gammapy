@@ -140,7 +140,7 @@ their associated GTIs together in the same FITS file.
     gti = GTI.read(filename)
 
     # Save separately
-	events.table.meta = {"extname": "EVENTS"}
+    events.table.meta = {"extname": "EVENTS"}
     events.table.write("test_events.fits.gz")
     gti.write("test_gti.fits.gz")
 
