@@ -14,7 +14,9 @@ class TimeMapAxis:
     """Class representing a time axis.
 
     Provides methods for transforming to/from axis and pixel coordinates.
-    A time axis can represent non-contiguous sequences of time intervals.
+    A time axis can represent non-contiguous sequences of non-overlapping time intervals.
+
+    Time intervals must be provided in increasing order.
 
     Parameters
     ----------
@@ -55,13 +57,21 @@ class TimeMapAxis:
         self._edges_min = u.Quantity(edges_min)
         self._edges_max = u.Quantity(edges_max)
         self._reference_time = reference_time
+        self._pix_offset = -0.5
+        self._nbin = len(edges_min.flatten())
+
+        if self.nbin>1:
+            delta = self._edges_min[1:] - self._edges_max[:-1]
+            if np.any(delta.to_value("s")<0):
+                raise ValueError("TimeMapAxis: time intervals must not overlap.")
+#        else:
+#            self._edges_min.reshape((1,))
+#            self._edges_max.reshape((1,))
 
         if interp != "lin":
             raise ValueError("TimeMapAxis: non-linear scaling scheme are not supported yet.")
         self._interp = interp
 
-        self._pix_offset = -0.5
-        self._nbin = len(edges_min.flatten())
 
     @property
     def reference_time(self):
@@ -187,7 +197,7 @@ class TimeMapAxis:
         pix : `~numpy.ndarray`
             Array of pixel positions.
         """
-        idx = self.coord_to_idx(coord)
+        idx = np.atleast_1d(self.coord_to_idx(coord))
 
         valid_pix = np.where(idx!=INVALID_INDEX.int)
         pix = np.asarray(idx, dtype = 'float')
@@ -198,9 +208,11 @@ class TimeMapAxis:
             coord = coord.reshape((1,))
         relative_time = coord[valid_pix]-self.reference_time
 
+        print(valid_pix)
         scale = interpolation_scale(self._interp)
-        s_min = scale(self._edges_min[valid_pix])
-        s_max = scale(self._edges_max[valid_pix])
+        valid_idx = idx[valid_pix]
+        s_min = scale(self._edges_min[valid_idx])
+        s_max = scale(self._edges_max[valid_idx])
         s_coord = scale(relative_time.to(self._edges_min.unit))
 
         pix[valid_pix] += (s_coord - s_min) / (s_max - s_min)

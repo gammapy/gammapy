@@ -18,6 +18,14 @@ def time_intervals():
     t_max = t_min + 1 * u.h
     return {"t_min" : t_min, "t_max" : t_max, "t_ref":t0}
 
+@pytest.fixture
+def time_interval():
+    t0 = Time("2020-03-19")
+    t_min = 1 * u.d
+    t_max = 11 *u.d
+    return {"t_min" : t_min, "t_max" : t_max, "t_ref":t0}
+
+
 def test_time_axis(time_intervals):
     axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
 
@@ -33,6 +41,16 @@ def test_time_axis(time_intervals):
     with pytest.raises(ValueError):
         axis.assert_name("bad")
     assert axis_copy == axis
+
+def test_single_interval_time_axis(time_interval):
+    axis = TimeMapAxis(time_interval["t_min"], time_interval["t_max"], time_interval["t_ref"])
+    coord = Time(58933, format="mjd") + u.Quantity([1.5, 3.5, 10], unit="d")
+    pix = axis.coord_to_pix(coord)
+
+    assert axis.nbin == 1
+    assert_allclose(axis.time_delta.to_value("d"), 10)
+    assert_allclose(axis.center[0].mjd, 58933)
+    assert_allclose(pix, [0.65, 0.85, -1.0])
 
 def test_slice_squash_time_axis(time_intervals):
     axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
@@ -64,11 +82,17 @@ def test_from_time_edges_time_axis():
     assert axis == axis_h
 
 def test_incorrect_time_axis():
-    tmin = np.linspace(0,10)*u.h
-    tmax = np.linspace(1,11)*u.h
+    tmin = np.linspace(0,10, 20)*u.h
+    tmax = np.linspace(1,11, 20)*u.h
 
+    # incorrect reference time
     with pytest.raises(TypeError):
-        TimeMapAxis(tmin, tmax, name="time")
+        TimeMapAxis(tmin, tmax, reference_time=51000*u.d, name="time")
+
+    # overlapping time intervals
+    with pytest.raises(ValueError):
+        TimeMapAxis(tmin, tmax, reference_time=Time.now(), name="time")
+
 
 def test_bad_length_sort_time_axis(time_intervals):
     tref = time_intervals["t_ref"]
