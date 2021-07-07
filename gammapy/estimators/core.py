@@ -6,7 +6,7 @@ import numpy as np
 from astropy.table import Table
 from astropy import units as u
 from gammapy.modeling.models import Model
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, Map
 
 __all__ = ["Estimator", "FluxEstimate"]
 
@@ -208,11 +208,28 @@ class FluxEstimate:
         Reference spectral model used to produce the input data.
     """
 
-    def __init__(self, data, reference_spectral_model, ts_threshold_ul=4):
+    def __init__(self, data, reference_spectral_model, meta=None):
         self._data = data
         self._expand_slice = (slice(None), np.newaxis, np.newaxis)
         self._reference_spectral_model = reference_spectral_model
-        self.ts_threshold_ul = ts_threshold_ul
+
+        if meta is None:
+            meta = {}
+
+        self.meta = meta
+
+    @property
+    def available_quantities(self):
+        """Available quantities"""
+        keys = self._data.keys()
+
+        available_quantities = []
+
+        for quantity in VALID_QUANTITIES:
+            if quantity in keys:
+                available_quantities.append(quantity)
+
+        return available_quantities
 
     @staticmethod
     def _validate_data(data, sed_type, check_scan=False):
@@ -232,29 +249,6 @@ class FluxEstimate:
                 "Missing data / column for sed type '{}':" " {}".format(sed_type, missing)
             )
 
-    @property
-    def energy_axis(self):
-        """Energy axis (`MapAxis`)"""
-        return self._data["norm"].geom.axes["energy"]
-
-    @property
-    def reference_spectral_model(self):
-        """Reference spectral model (`SpectralModel`)"""
-        return self._reference_spectral_model
-
-    @property
-    def available_quantities(self):
-        """Available quantities"""
-        keys = self._data.keys()
-
-        available_quantities = []
-
-        for quantity in VALID_QUANTITIES:
-            if quantity in keys:
-                available_quantities.append(quantity)
-
-        return available_quantities
-
     # TODO: add support for scan
     def _check_quantity(self, quantity):
         if quantity not in self.available_quantities:
@@ -262,6 +256,36 @@ class FluxEstimate:
                 f"Cannot compute required flux quantity. {quantity} "
                 "is not defined on current flux estimate."
             )
+
+    @property
+    def n_sigma_ul(self):
+        """n sigma UL"""
+        return self.meta.get("n_sigma_ul")
+
+    @property
+    def ts_threshold_ul(self):
+        """n sigma UL"""
+        return self.meta.get("ts_threshold_ul", 4)
+
+    @property
+    def sed_type_init(self):
+        """Initial sed type"""
+        return self.meta.get("SED_TYPE", None)
+
+    @property
+    def geom(self):
+        """Reference map geometry (`Geom`)"""
+        return self.norm.geom
+
+    @property
+    def energy_axis(self):
+        """Energy axis (`MapAxis`)"""
+        return self.geom.axes["energy"]
+
+    @property
+    def reference_spectral_model(self):
+        """Reference spectral model (`SpectralModel`)"""
+        return self._reference_spectral_model
 
     @property
     def energy_ref(self):
@@ -309,8 +333,13 @@ class FluxEstimate:
     @property
     def is_ul(self):
         """Whether data is an upper limit"""
-        self._check_quantity("is_ul")
-        return self._data["is_ul"]
+        try:
+            is_ul = self.ts > self.ts_threshold_ul
+        except AttributeError:
+            is_ul = self.norm.copy()
+            is_ul.data = np.isnan(self.norm)
+
+        return is_ul
 
     @property
     def npred(self):
@@ -355,7 +384,6 @@ class FluxEstimate:
         self._check_quantity("ts")
         return self._data["ts"]
 
-    # TODO: just always derive from ts?
     @property
     def sqrt_ts(self):
         """sqrt(TS) as defined by:
@@ -370,7 +398,12 @@ class FluxEstimate:
             \right.
 
         """
-        return self._data["sqrt_ts"]
+        if "sqrt_ts" in self._data:
+            return self._data["sqrt_ts"]
+        else:
+            with np.errstate(invalid="ignore", divide="ignore"):
+                data = np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
+                return Map.from_geom(geom=self.geom, data=data)
 
     @property
     def norm(self):
@@ -613,22 +646,17 @@ class FluxEstimate:
 
         return cls(data=data, reference_model=reference_model, gti=gti)
 
-    @property
-    def geom(self):
-        """Reference map geometry (`Geom`)"""
-        return self._data["norm"].geom
-
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__)
         str_ += "\n\n"
-        str_ += "\t" + "\t\n".join(str(self.geom).split("\n")[:1])
-        str_ += "\n\t" + "\n\t".join(str(self.geom).split("\n")[2:])
 
-        str_ += f"\n\tAvailable quantities : {list(self._data.keys())}\n\n"
+        str_ += "\t" + f"geom       : {self.geom.__class__.__name__}\n"
+        str_ += "\t" + f"axes       : {self.geom.axes.names}\n"
+        str_ += "\t" + f"shape      : {self.geom.axes.shape}\n"
 
-        str_ += "\tReference model:\n"
-        if self.reference_spectral_model is not None:
-            str_ += "\t" + "\n\t".join(str(self.reference_spectral_model).split("\n")[2:])
+        str_ += "\t" + f"quantities : {list(self.available_quantities)}\n"
+
+        str_ += "\t" + f"ref. model : {self.reference_spectral_model.tag[-1]}\n"
 
         return str_.expandtabs(tabsize=2)

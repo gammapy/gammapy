@@ -115,9 +115,6 @@ class FluxPoints(FluxEstimate):
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
-    def __repr__(self):
-        return f"{self.__class__.__name__}(n_points={len(self.table)})"
-
     @classmethod
     def read(cls, filename, sed_type=None, reference_model=None, **kwargs):
         """Read flux points.
@@ -228,7 +225,7 @@ class FluxPoints(FluxEstimate):
         col_ref = table[sed_type]
         factor = fluxes[f"ref_{sed_type}"].to(col_ref.unit)
 
-        data = Table(fluxes)
+        data = Table(fluxes, meta=table.meta)
         data["norm"] = col_ref / factor
 
         for key in OPTIONAL_QUANTITIES[sed_type]:
@@ -297,7 +294,7 @@ class FluxPoints(FluxEstimate):
             if key in table.colnames:
                 maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
 
-        return cls(data=maps, reference_spectral_model=reference_model)
+        return cls(data=maps, reference_spectral_model=reference_model, meta=table.meta)
 
     @staticmethod
     def _format_table(table):
@@ -364,31 +361,6 @@ class FluxPoints(FluxEstimate):
 
         return table
 
-    def drop_ul(self):
-        """Drop upper limit flux points.
-
-        Returns
-        -------
-        flux_points : `FluxPoints`
-            Flux points with upper limit points removed.
-
-        Examples
-        --------
-        >>> from gammapy.estimators import FluxPoints
-        >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
-        >>> flux_points = FluxPoints.read(filename)
-        >>> print(flux_points)
-        FluxPoints(n_points=24)
-        >>> print(flux_points.drop_ul())
-        FluxPoints(n_points=19)
-
-        Note: In order to reproduce the example you need the tests datasets folder.
-        You may download it with the command
-        ``gammapy download datasets --tests --out $GAMMAPY_DATA``
-        """
-        table_drop_ul = self.table[~self.is_ul]
-        return self.__class__(data=table_drop_ul, reference_spectral_model=self.reference_spectral_model)
-
     @staticmethod
     def _energy_ref_lafferty(model, energy_min, energy_max):
         """Helper for `to_sed_type`.
@@ -442,12 +414,12 @@ class FluxPoints(FluxEstimate):
             y_errn = getattr(self, sed_type + "_errn").quantity.squeeze()
             y_errp = getattr(self, sed_type + "_errp").quantity.squeeze()
             y_err = (y_errn, y_errp)
-        except KeyError:
+        except AttributeError:
             try:
                 # symmetric error
                 y_err = getattr(self, sed_type + "_err").quantity.squeeze()
                 y_err = (y_err, y_err)
-            except KeyError:
+            except AttributeError:
                 # no error at all
                 y_err = None
         return y_err

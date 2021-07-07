@@ -150,7 +150,7 @@ def test_fermi_to_dnde():
     fp = src.flux_points
 
     assert_allclose(
-        fp.dnde[1],
+        fp.dnde.quantity[1, 0, 0],
         4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"),
         rtol=1e-5,
     )
@@ -172,7 +172,10 @@ def flux_points_likelihood():
 class TestFluxPoints:
     def test_info(self, flux_points):
         info = str(flux_points)
-        assert "n_points" in info
+        assert "geom" in info
+        assert "axes" in info
+        assert "ref. model" in info
+        assert "quantities" in info
 
     def test_energy_ref(self, flux_points):
         actual = flux_points.energy_ref
@@ -190,18 +193,14 @@ class TestFluxPoints:
         assert_quantity_allclose(actual.sum(), desired)
 
     def test_write_fits(self, tmp_path, flux_points):
-        flux_points.write(tmp_path / "tmp.fits")
+        flux_points.write(tmp_path / "tmp.fits", sed_type=flux_points.sed_type_init)
         actual = FluxPoints.read(tmp_path / "tmp.fits")
         assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmp_path, flux_points):
-        flux_points.write(tmp_path / "flux_points.ecsv")
+        flux_points.write(tmp_path / "flux_points.ecsv", sed_type=flux_points.sed_type_init)
         actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
         assert str(flux_points) == str(actual)
-
-    def test_drop_ul(self, flux_points):
-        flux_points = flux_points.drop_ul()
-        assert not np.any(flux_points.is_ul)
 
     @requires_dependency("matplotlib")
     def test_plot(self, flux_points):
@@ -215,11 +214,8 @@ class TestFluxPoints:
 
     @requires_dependency("matplotlib")
     def test_plot_likelihood_error(self, flux_points_likelihood):
-        del flux_points_likelihood.table["norm_scan"]
-        with pytest.raises(
-            ValueError,
-            match="Missing data / column for sed type 'likelihood': {'norm_scan'}",
-        ):
+        del flux_points_likelihood._data["stat_scan"]
+        with pytest.raises(AttributeError):
             flux_points_likelihood.plot_ts_profiles()
 
 
@@ -233,7 +229,7 @@ def test_compute_flux_points_dnde_fermi():
     flux_points = source.flux_points
     table = source.flux_points_table
 
-    for column in ["dnde", "dnde_errn", "dnde_errp", "dnde_ul"]:
-        actual = table["e2" + column].quantity
-        desired = getattr(flux_points, column) * flux_points.energy_ref ** 2
+    for column in ["e2dnde", "e2dnde_errn", "e2dnde_errp", "e2dnde_ul"]:
+        actual = table[column].quantity
+        desired = getattr(flux_points, column).quantity.squeeze()
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=0.05)
