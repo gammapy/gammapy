@@ -8,6 +8,7 @@ from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.scripts import make_path
 
 
 @pytest.fixture()
@@ -21,8 +22,9 @@ def test_meta_table(dataset):
 @pytest.fixture()
 def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-    data = FluxPoints.read(path)
-    data.table["e_ref"] = data.energy_ref.to("TeV")
+    table = Table.read(make_path(path))
+    table["e_ref"] = table["e_ref"].quantity.to("TeV")
+    data = FluxPoints.from_table(table)
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
@@ -41,8 +43,10 @@ def dataset():
 @requires_data()
 def test_flux_point_dataset_serialization(tmp_path):
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-    data = FluxPoints.read(path)
-    data.table["e_ref"] = data.energy_ref.to("TeV")
+    table = Table.read(make_path(path))
+    table["e_ref"] = table["e_ref"].quantity.to("TeV")
+    data = FluxPoints.from_table(table)
+
     spectral_model = PowerLawSpectralModel(
         index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
     )
