@@ -208,7 +208,6 @@ class TimeMapAxis:
             coord = coord.reshape((1,))
         relative_time = coord[valid_pix]-self.reference_time
 
-        print(valid_pix)
         scale = interpolation_scale(self._interp)
         valid_idx = idx[valid_pix]
         s_min = scale(self._edges_min[valid_idx])
