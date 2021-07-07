@@ -75,7 +75,7 @@ class FluxPointsDataset(Dataset):
         self.meta_table = meta_table
 
         if mask_safe is None:
-            mask_safe = np.isfinite(data.dnde)
+            mask_safe = np.isfinite(data.dnde.quantity[:, 0, 0])
 
         self.mask_safe = mask_safe
 
@@ -107,7 +107,8 @@ class FluxPointsDataset(Dataset):
         **kwargs : dict
              Keyword arguments passed to `~astropy.table.Table.write`.
         """
-        table = self.data.table.copy()
+        table = self.data.to_table()
+
         if self.mask_fit is None:
             mask_fit = self.mask_safe
         else:
@@ -155,7 +156,7 @@ class FluxPointsDataset(Dataset):
         # data section
         n_bins = 0
         if self.data is not None:
-            n_bins = len(self.data.table)
+            n_bins = self.data.energy_axis.nbin
         str_ += "\t{:32}: {} \n".format("Number of total flux points", n_bins)
 
         n_fit_bins = 0
@@ -204,8 +205,8 @@ class FluxPointsDataset(Dataset):
     def stat_array(self):
         """Fit statistic array."""
         model = self.flux_pred()
-        data = self.data.dnde
-        sigma = self.data.dnde_err
+        data = self.data.dnde.quantity[:, 0, 0]
+        sigma = self.data.dnde_err.quantity[:, 0, 0]
         return ((data - model) / sigma).to_value("") ** 2
 
     def residuals(self, method="diff"):
@@ -227,9 +228,9 @@ class FluxPointsDataset(Dataset):
 
         model = self.flux_pred()
 
-        residuals = self._compute_residuals(fp.dnde, model, method)
+        residuals = self._compute_residuals(fp.dnde.quantity[:, 0, 0], model, method)
         # Remove residuals for upper_limits
-        residuals[fp.is_ul] = np.nan
+        residuals[fp.is_ul.data[:, 0, 0]] = np.nan
         return residuals
 
     def plot_fit(
@@ -325,7 +326,8 @@ class FluxPointsDataset(Dataset):
         fp = self.data
         residuals = self.residuals(method)
 
-        xerr = fp._plot_get_energy_err()
+        xerr = self.data.energy_axis.as_xerr
+        
         if xerr is not None:
             xerr = (
                 xerr[0].to_value(self._energy_unit),
