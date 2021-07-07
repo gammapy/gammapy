@@ -700,7 +700,13 @@ class FluxPointsEstimator(FluxEstimator):
             )
             rows.append(row)
 
-        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
+        meta = {
+            "n_sigma": self.n_sigma,
+            "n_sigma_ul": self.n_sigma_ul,
+            "SED_TYPE": "likelihood"
+        }
+
+        table = table_from_row_data(rows=rows, meta=meta)
         model = datasets.models[self.source]
         return FluxPoints.from_table(table, reference_model=model.spectral_model.copy())
 

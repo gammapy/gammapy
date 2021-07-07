@@ -327,7 +327,7 @@ class FluxPointsDataset(Dataset):
         residuals = self.residuals(method)
 
         xerr = self.data.energy_axis.as_xerr
-        
+
         if xerr is not None:
             xerr = (
                 xerr[0].to_value(self._energy_unit),

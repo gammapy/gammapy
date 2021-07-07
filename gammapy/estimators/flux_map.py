@@ -52,36 +52,20 @@ class FluxMaps(FluxEstimate):
         the maps GTI information. Default is None.
     """
 
-    def __init__(self, data, reference_model, gti=None):
+    def __init__(self, data, reference_model, gti=None, meta=None):
         self.reference_model = reference_model
         self.gti = gti
 
-        super().__init__(data=data, reference_spectral_model=reference_model.spectral_model)
+        super().__init__(
+            data=data,
+            reference_spectral_model=reference_model.spectral_model,
+            meta=meta
+        )
 
     @classproperty
     def reference_model_default(cls):
         """Default reference model: a point source with index = 2  (`SkyModel`)"""
         return SkyModel.create("pl", "point")
-
-    @property
-    def geom(self):
-        """Reference map geometry (`Geom`)"""
-        return self._data["norm"].geom
-
-    def __str__(self):
-        str_ = f"{self.__class__.__name__}\n"
-        str_ += "-" * len(self.__class__.__name__)
-        str_ += "\n\n"
-        str_ += "\t" + "\t\n".join(str(self.geom).split("\n")[:1])
-        str_ += "\n\t" + "\n\t".join(str(self.geom).split("\n")[2:])
-
-        str_ += f"\n\tAvailable quantities : {list(self._data.keys())}\n\n"
-
-        str_ += "\tReference model:\n"
-        if self.reference_model is not None:
-            str_ += "\t" + "\n\t".join(str(self.reference_model).split("\n")[2:])
-
-        return str_.expandtabs(tabsize=2)
 
     def get_flux_points(self, position=None):
         """Extract flux point at a given position.
