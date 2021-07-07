@@ -44,6 +44,8 @@ class SafeMaskMaker(Maker):
         If not None the `bkg-clip` method will mask the values larger than 
         `n_95percentile` times the 95% percentile value.
         Default is None then only non-finite values are masked.
+    force_clipping : bool
+       If True the aberrant value found by `bkg-clip` method will be set to zero.
     """
 
     tag = "SafeMaskMaker"
@@ -65,6 +67,7 @@ class SafeMaskMaker(Maker):
         fixed_offset=None,
         offset_max="3 deg",
         n_95percentile=None,
+        force_clipping=False,
     ):
         methods = set(methods)
 
@@ -79,6 +82,7 @@ class SafeMaskMaker(Maker):
         self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
         self.n_95percentile = n_95percentile
+        self.force_clipping = force_clipping
         if self.position and self.fixed_offset:
             raise ValueError(
                 "`position` and `fixed_offset` attributes are mutually exclusive"
@@ -277,6 +281,8 @@ class SafeMaskMaker(Maker):
                 data = bkg[k, :, :]
                 thr = self.n_95percentile * np.nanpercentile(data[data > 0], 95)
                 mask[k, :, :] = np.abs(bkg[k, :, :]) < thr
+        if self.force_clipping:
+            dataset.background.data[~mask] = 0.0
         if np.any(~mask):
             bad_values = np.unique(bkg[~mask])
             log.warning(f"Invalid values found in background masked \n {bad_values}")

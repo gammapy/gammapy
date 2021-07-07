@@ -103,6 +103,9 @@ def test_safe_mask_maker_bkg_clip(observations_hess_dl3):
 
     safe_mask_maker_nonan = SafeMaskMaker(["bkg-clip"])
     safe_mask_maker_nolarge = SafeMaskMaker(["bkg-clip"], n_95percentile=10)
+    safe_mask_maker_clip = SafeMaskMaker(
+        ["bkg-clip"], n_95percentile=10, force_clipping=True
+    )
 
     dataset = dataset_maker.run(empty_dataset, obs)
     bkg = dataset.background.data
@@ -118,3 +121,8 @@ def test_safe_mask_maker_bkg_clip(observations_hess_dl3):
     # the value of n_95percentile requires some tuning...
     # using reasonnale parameters for the other masks, n_95percentile may not be needed
     # but this must be checked as aberrant values would bias the fov-bkg-maker scaling.
+
+    dataset = safe_mask_maker_clip.run(dataset)
+
+    assert_allclose(dataset.mask_safe, mask_nolarge)
+    assert np.all(np.isfinite(dataset.background.data))
