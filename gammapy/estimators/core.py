@@ -660,15 +660,12 @@ class FluxEstimate:
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__)
         str_ += "\n\n"
-
-        str_ += "\t" + f"geom       : {self.geom.__class__.__name__}\n"
-        str_ += "\t" + f"axes       : {self.geom.axes_names}\n"
-        str_ += "\t" + f"shape      : {self.geom.data_shape[::-1]}\n"
-
-        str_ += "\t" + f"quantities : {list(self.available_quantities)}\n"
-
-        str_ += "\t" + f"ref. model : {self.reference_spectral_model.tag[-1]}\n"
-
-        str_ += "\t" + f"n_sigma    : {self.meta.get('n_sigma', '')}\n"
-        str_ += "\t" + f"n_sigma_ul : {self.meta.get('n_sigma_ul', '')}\n"
+        str_ += "\t" + f"geom            : {self.geom.__class__.__name__}\n"
+        str_ += "\t" + f"axes            : {self.geom.axes_names}\n"
+        str_ += "\t" + f"shape           : {self.geom.data_shape[::-1]}\n"
+        str_ += "\t" + f"quantities      : {list(self.available_quantities)}\n"
+        str_ += "\t" + f"ref. model      : {self.reference_spectral_model.tag[-1]}\n"
+        str_ += "\t" + f"n_sigma         : {self.meta.get('n_sigma', '')}\n"
+        str_ += "\t" + f"n_sigma_ul      : {self.meta.get('n_sigma_ul', '')}\n"
+        str_ += "\t" + f"ts_threshold_ul : {self.ts_threshold_ul}\n"
         return str_.expandtabs(tabsize=2)
