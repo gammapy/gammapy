@@ -264,7 +264,7 @@ class Parameter:
         val = u.Quantity(val)
 
         if not val.unit.is_equivalent(self.unit):
-            raise u.UnitConversionError(f"Unit must be equivalent to {self.unit}")
+            raise u.UnitConversionError(f"Unit must be equivalent to {self.unit} for parameter {self.name}")
 
         self.value = val.value
         self.unit = val.unit
