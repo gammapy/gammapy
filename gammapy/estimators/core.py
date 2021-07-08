@@ -340,7 +340,7 @@ class FluxEstimate:
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
 
-        if "ts" in self._data:
+        if "ts" in self._data and "norm_ul" in self._data:
             is_ul.data = self.ts.data < self.ts_threshold_ul
         elif "norm_ul" in self._data:
             is_ul.data = np.isfinite(self.norm_ul)
