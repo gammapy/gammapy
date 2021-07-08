@@ -274,8 +274,10 @@ class SafeMaskMaker(Maker):
         bkg[bkg == 0.0] = np.nan
         mask = np.isfinite(bkg)
         if self.n_95percentile is not None:
-            thr = self.n_95percentile * np.nanpercentile(bkg, 95, axis=(1,2))
-            mask = np.abs(bkg) < thr[:, None, None]
+            thr = self.n_95percentile * np.nanpercentile(
+                bkg, 95, axis=(1, 2), keepdims=True
+            )
+            mask = np.abs(bkg) < thr
         if np.any(~mask):
             bad_values = np.unique(bkg[~mask & np.isfinite(bkg)])
             log.warning(f"Invalid values found in background masked \n {bad_values}")
