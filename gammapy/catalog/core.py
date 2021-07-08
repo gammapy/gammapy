@@ -6,6 +6,8 @@ import numpy as np
 from copy import deepcopy
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
+from astropy.table import Table
+import astropy.units as u
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
 from gammapy.modeling.models import Models
 
@@ -24,7 +26,7 @@ def format_flux_points_table(table):
         if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
             table[column].format = ".3e"
         elif column.startswith(
-                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
+            ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
         ):
             table[column].format = ".3f"
 
@@ -93,7 +95,6 @@ class SourceCatalog(abc.ABC):
     """
 
     @classmethod
-    @abc.abstractmethod
     def description(cls):
         """Catalog description (str)."""
         pass
@@ -238,12 +239,61 @@ class SourceCatalog(abc.ABC):
         """ Create Models object from catalogue"""
         return Models([_.sky_model(**kwargs) for _ in self])
 
+    def deduplicate(self, min_distance):
+        """ Return a new catalogue merging entries within a given radius.
+            Positions of the merged objects are set to the coordinates mean.
+
+        Parameters
+        ----------
+        min_distance : `~astropy.units.Quantity`
+            Minimum distance between peaks.
+    
+        Returns
+        -------
+        catalogue : `SourceCatalog`
+            Simplified catalogue containing only the coordinates columns
+            of deduplicated objects.
+        """
+        run = True
+        positions = self.positions
+        lon = u.Quantity([pos.galactic.l for pos in positions])
+        lat = u.Quantity([pos.galactic.b for pos in positions])
+        while run:
+            duplicates = []
+            nobj = len(lon)
+            for k in range(nobj):
+                if k in duplicates:
+                    continue
+                dist = self.positions[k].separation(positions)
+                ind = np.where((dist <= min_distance))[0]  #
+                ind = list(ind[ind > k])
+                if ind != []:
+                    lon[k] = np.mean(lon[[k] + ind])
+                    lat[k] = np.mean(lat[[k] + ind])
+                    for v in ind:
+                        duplicates.append(v)
+            ind = np.ones(nobj, dtype=bool)
+            ind[duplicates] = False
+            lon = lon[ind]
+            lat = lat[ind]
+            positions = positions[ind]
+            if nobj == len(lon):
+                run = False
+        table = Table()
+        table["GLON"] = lon
+        table["GLAT"] = lat
+        return self.__class__(table)
+
 
 def _skycoord_from_table(table):
     keys = table.colnames
 
     if {"RAJ2000", "DEJ2000"}.issubset(keys):
         lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
+    elif {"GLON", "GLAT"}.issubset(keys):
+        lon, lat, frame = "GLON", "GLAT", "galactic"
+    elif {"glon", "glat"}.issubset(keys):
+        lon, lat, frame = "glon", "glat", "galactic"
     elif {"RA", "DEC"}.issubset(keys):
         lon, lat, frame = "RA", "DEC", "icrs"
     elif {"ra", "dec"}.issubset(keys):

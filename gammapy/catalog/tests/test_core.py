@@ -3,9 +3,11 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Column, Table
-from astropy.units import Quantity
+import astropy.units as u
 from gammapy.catalog import SourceCatalog
 from gammapy.utils.testing import assert_quantity_allclose
+from gammapy.maps import Map
+from gammapy.estimators.utils import find_peaks
 
 
 class SomeSourceCatalog(SourceCatalog):
@@ -78,6 +80,25 @@ class TestSourceCatalog:
         assert len(new.table) == 2
 
 
+def test_catalog_deduplicate():
+    image = Map.create(npix=(10, 5), unit="s")
+    image.data[3, 3] = 11
+    image.data[3, 4] = 12
+    image.data[3, 5] = 12
+    image.data[3, 6] = np.nan
+    image.data[0, 9] = 1e20
+
+    min_distance = 0.3 * u.deg
+    table = find_peaks(image, threshold=3, min_distance=min_distance)
+    catalog = SourceCatalog(table)
+    assert len(catalog.table) == 3
+
+    catalog_redu = catalog.deduplicate(min_distance=min_distance)
+    assert len(catalog_redu.table) == 2
+    lon = u.Quantity([pos.galactic.l for pos in catalog_redu.positions])
+    assert_allclose(lon, [95.34673, 96.41725] * u.deg)
+
+
 class TestSourceCatalogObject:
     def setup(self):
         self.cat = make_test_catalog()
@@ -93,11 +114,11 @@ class TestSourceCatalogObject:
         d = self.source.data
         assert isinstance(d, dict)
 
-        assert isinstance(d["RA"], Quantity)
-        assert_quantity_allclose(d["RA"], Quantity(43.3, "deg"))
+        assert isinstance(d["RA"], u.Quantity)
+        assert_quantity_allclose(d["RA"], u.Quantity(43.3, "deg"))
 
-        assert isinstance(d["DEC"], Quantity)
-        assert_quantity_allclose(d["DEC"], Quantity(2, "deg"))
+        assert isinstance(d["DEC"], u.Quantity)
+        assert_quantity_allclose(d["DEC"], u.Quantity(2, "deg"))
 
     def test_position(self):
         position = self.source.position
