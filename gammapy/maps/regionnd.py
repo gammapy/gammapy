@@ -468,7 +468,7 @@ class RegionNDMap(Map):
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
 
-    def stack(self, other, weights=None):
+    def stack(self, other, weights=None, fill_value=0):
         """Stack other region map into map.
 
         Parameters
@@ -478,12 +478,15 @@ class RegionNDMap(Map):
         weights : `RegionNDMap`
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
+        fill_value: float
+            Non-finite values are replaced by the fill_value.
         """
-        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
+        data = other.quantity.to_value(self.unit).astype(self.data.dtype).copy()
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
 
+        data[~np.isfinite(data)] = fill_value
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible geoms between map and weights")

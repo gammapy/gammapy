@@ -650,7 +650,8 @@ class IRFMap:
             IRF map to be stacked with this one.
         weights : `~gammapy.maps.Map`
             Map with stacking weights.
-
+        fill_value: float
+            Non-finite values are replaced by the fill_value.
         """
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError(

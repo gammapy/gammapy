@@ -359,7 +359,7 @@ class HpxNDMap(HpxMap):
             geom=geom, data=data, unit=self.unit, meta=self.meta
         )
 
-    def stack(self, other, weights=None):
+    def stack(self, other, weights=None, fill_value=0):
         """Stack cutout into map.
 
         Parameters
@@ -369,6 +369,8 @@ class HpxNDMap(HpxMap):
         weights : `HpxNDMap`
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
+        fill_value: float
+            Non-finite values are replaced by the fill_value.
         """
         if self.geom == other.geom:
             idx = None
@@ -382,8 +384,8 @@ class HpxNDMap(HpxMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.quantity.to_value(self.unit)
-
+        data = other.quantity.to_value(self.unit).copy()
+        data[~np.isfinite(data)] = fill_value
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible spatial geoms between map and weights")

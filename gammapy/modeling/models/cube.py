@@ -831,7 +831,7 @@ class TemplateNPredModel(Model):
         spectral_model = self.spectral_model.copy()
         return self.__class__(bkg_map, spectral_model=spectral_model, name=name)
 
-    def stack(self, other, weights=None):
+    def stack(self, other, weights=None, fill_value=0):
         """Stack background model in place.
 
         Stacking the background model resets the current parameters values.
@@ -842,8 +842,9 @@ class TemplateNPredModel(Model):
             Other background model.
         """
         bkg = self.evaluate()
+        bkg.data[~np.isfinite(bkg.data)] = fill_value
         other_bkg = other.evaluate()
-        bkg.stack(other_bkg, weights=weights)
+        bkg.stack(other_bkg, weights=weights, fill_value=fill_value)
         self.map = bkg
 
         # reset parameter values
