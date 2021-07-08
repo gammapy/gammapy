@@ -591,8 +591,8 @@ class DiskSpatialModel(SpatialModel):
         Rotation angle :math:`\phi`: of the major semiaxis.
         Increases counter-clockwise from the North direction.
     edge_width : float
-        Width of the edge. The width is defined as the range within the
-        smooth edge of the model drops from 95% to 5% of its amplitude.
+        Width of the edge. The width is defined as the range within which
+        the smooth edge of the model drops from 95% to 5% of its amplitude.
         It is given as fraction of r_0.
     frame : {"icrs", "galactic"}
         Center position coordinate frame
