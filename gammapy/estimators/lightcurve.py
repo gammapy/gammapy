@@ -406,7 +406,11 @@ class LightCurveEstimator(FluxPointsEstimator):
             fp_table = fp.to_table()
 
             for column in fp_table.colnames:
-                row[column] = fp_table[column].quantity
+                if column == "counts":
+                    data = fp_table[column].quantity.sum(axis=1)
+                else:
+                    data = fp_table[column].quantity
+                row[column] = data
 
             fp_table_flux = fp.to_table(sed_type="flux")
             for column in fp_table_flux.colnames:
