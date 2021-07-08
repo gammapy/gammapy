@@ -2,11 +2,11 @@
 import copy
 import logging
 import numpy as np
-import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
@@ -128,6 +128,10 @@ class ExcessMapEstimator(Estimator):
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
         self.correlate_off = correlate_off
+
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel()
+
         self.spectral_model = spectral_model
 
     @property

@@ -137,13 +137,8 @@ class Estimator(abc.ABC):
     @property
     def config_parameters(self):
         """Config parameters"""
-        pars = {}
-        names = self.__init__.__code__.co_varnames
-        for name in names:
-            if name == "self":
-                continue
-
-            pars[name] = getattr(self, name)
+        pars = self.__dict__.copy()
+        pars = {key.strip("_"): value for key, value in pars.items()}
         return pars
 
     def __str__(self):
@@ -155,10 +150,15 @@ class Estimator(abc.ABC):
 
         for name, value in sorted(pars.items()):
             if isinstance(value, Model):
-                s += f"\t{name:{max_len}s}: {value.__class__.__name__}\n"
+                s += f"\t{name:{max_len}s}: {value.tag[0]}\n"
             elif inspect.isclass(value):
                 s += f"\t{name:{max_len}s}: {value.__name__}\n"
+            elif isinstance(value, u.Quantity):
+                s += f"\t{name:{max_len}s}: {value}\n"
+            elif isinstance(value, Estimator):
+                pass
             elif isinstance(value, np.ndarray):
+                value = np.array_str(value, precision=2, suppress_small=True)
                 s += f"\t{name:{max_len}s}: {value}\n"
             else:
                 s += f"\t{name:{max_len}s}: {value}\n"
