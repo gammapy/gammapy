@@ -44,8 +44,6 @@ class SafeMaskMaker(Maker):
         If not None the `bkg-clip` method will mask the values larger than 
         `n_95percentile` times the 95% percentile value.
         Default is None then only non-finite values are masked.
-    force_clipping : bool
-       If True (default), the aberrant value found by `bkg-clip` method will be set to zero.
     """
 
     tag = "SafeMaskMaker"
@@ -67,7 +65,6 @@ class SafeMaskMaker(Maker):
         fixed_offset=None,
         offset_max="3 deg",
         n_95percentile=None,
-        force_clipping=True,
     ):
         methods = set(methods)
 
@@ -82,7 +79,6 @@ class SafeMaskMaker(Maker):
         self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
         self.n_95percentile = n_95percentile
-        self.force_clipping = force_clipping
         if self.position and self.fixed_offset:
             raise ValueError(
                 "`position` and `fixed_offset` attributes are mutually exclusive"
@@ -258,7 +254,7 @@ class SafeMaskMaker(Maker):
     def make_mask_bkg_clip(self, dataset):
         """Mask aberrant values in background maps
 
-        By default only non-finite values are masked.
+        By default only non-finite values and zeros are masked.
         If`n_95percentile` is not None then the values larger than 
         `n_95percentile` times the 95% percentile value will also be masked.
        
@@ -274,20 +270,15 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
 
-        bkg = dataset.background.data
+        bkg = dataset.background.data.copy()
+        bkg[bkg == 0.0] = np.nan
         mask = np.isfinite(bkg)
         if self.n_95percentile is not None:
-            for k in range(bkg.shape[0]):
-                data = bkg[k, :, :]
-                thr = self.n_95percentile * np.nanpercentile(data[data > 0], 95)
-                mask[k, :, :] = np.abs(bkg[k, :, :]) < thr
-        if self.force_clipping:
-            dataset.background.data[~mask] = 0.0
+            thr = self.n_95percentile * np.nanpercentile(bkg, 95, axis=(1,2))
+            mask = np.abs(bkg) < thr[:, None, None]
         if np.any(~mask):
-            bad_values = np.unique(bkg[~mask])
+            bad_values = np.unique(bkg[~mask & np.isfinite(bkg)])
             log.warning(f"Invalid values found in background masked \n {bad_values}")
-            # TODO: maybe we should store the bad values and their coord somewhere,
-            # in the metadata of the dataset ?
         return mask
 
     def run(self, dataset, observation=None):
