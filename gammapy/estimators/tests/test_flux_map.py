@@ -113,7 +113,7 @@ def test_flux_map_str(wcs_flux_map, reference_model):
     assert "WcsGeom" in fm_str
     assert "errn" in fm_str
     assert "sqrt_ts" in fm_str
-    assert "PowerLawSpectralModel" in fm_str
+    assert "pl" in fm_str
 
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
