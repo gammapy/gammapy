@@ -7,6 +7,7 @@ from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
 from gammapy.datasets import Datasets
 from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
+from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.utils.interpolation import interpolate_profile
@@ -401,14 +402,6 @@ class FluxPoints(FluxEstimate):
             if unit.is_equivalent(default_unit):
                 return sed_type
 
-    @staticmethod
-    def _get_y_energy_unit(y_unit):
-        """Get energy part of the given y unit."""
-        try:
-            return [_ for _ in y_unit.bases if _.physical_type == "energy"][0]
-        except IndexError:
-            return u.Unit("TeV")
-
     def _plot_get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""
         try:
@@ -420,7 +413,7 @@ class FluxPoints(FluxEstimate):
             try:
                 # symmetric error
                 y_err = getattr(self, sed_type + "_err").quantity.squeeze()
-                y_err = (y_err, y_err)
+                y_err = (y_err, y_err.copy())
             except AttributeError:
                 # no error at all
                 y_err = None
@@ -459,71 +452,52 @@ class FluxPoints(FluxEstimate):
         if ax is None:
             ax = plt.gca()
 
-        y_unit = u.Unit(flux_unit or DEFAULT_UNIT[sed_type])
+        if flux_unit is None:
+            flux_unit = DEFAULT_UNIT[sed_type]
 
-        y = getattr(self, sed_type).quantity.squeeze().to(y_unit)
-        x = self.energy_ref.to(energy_unit)
+        flux = getattr(self, sed_type).quantity[:, 0, 0]
+        energy = self.energy_ref.to(energy_unit)
 
         # get errors and ul
         is_ul = self.is_ul.data.squeeze()
-        x_err_all = self.energy_axis.as_xerr
-        y_err_all = self._plot_get_flux_err(sed_type=sed_type)
+        x_err = self.energy_axis.as_xerr
+        y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
 
-        # handle energy power
-        energy_unit_y = self._get_y_energy_unit(y_unit)
-        y_unit = y.unit * energy_unit_y ** energy_power
-        y = (y * np.power(x, energy_power)).to(y_unit)
+        if y_errn:
+            if is_ul.any():
+                flux_ul = getattr(self, sed_type + "_ul").quantity[:, 0, 0]
+                y_errn[is_ul] = 0.5 * flux_ul[is_ul]
+                y_errp[is_ul] = 0
+                flux[is_ul] = flux_ul[is_ul]
 
-        y_err, x_err = None, None
-
-        if y_err_all:
-            y_errn = (y_err_all[0] * np.power(x, energy_power)).to(y_unit)
-            y_errp = (y_err_all[1] * np.power(x, energy_power)).to(y_unit)
-            y_err = (y_errn[~is_ul], y_errp[~is_ul])
-
-        if x_err_all:
-            x_errn, x_errp = x_err_all
-            x_err = (x_errn[~is_ul], x_errp[~is_ul])
+            y_errn = scale_plot_flux(
+                energy=energy,
+                flux=y_errn.to(flux_unit),
+                energy_power=energy_power
+            )
+            y_errp = scale_plot_flux(
+                energy=energy,
+                flux=y_errp.to(flux_unit),
+                energy_power=energy_power
+            )
 
         # set flux points plotting defaults
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
 
+        flux = scale_plot_flux(
+            energy=energy, flux=flux.to(flux_unit), energy_power=energy_power
+        )
+
         with quantity_support():
-            ebar = ax.errorbar(
-                x[~is_ul], y[~is_ul], yerr=y_err, xerr=x_err, **kwargs
-            )
-
-        if is_ul.any():
-            if x_err_all:
-                x_errn, x_errp = x_err_all
-                x_err = (
-                    x_errn[is_ul].to_value(energy_unit),
-                    x_errp[is_ul].to_value(energy_unit),
-                )
-
-            y_ul = getattr(self, sed_type + "_ul").quantity.squeeze()
-            y_ul = (y_ul * np.power(x, energy_power)).to(y_unit)
-
-            y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))
-
-            kwargs.setdefault("color", ebar[0].get_color())
-
-            # pop label keyword to avoid that it appears twice in the legend
-            kwargs.pop("label", None)
             ax.errorbar(
-                x[is_ul].value,
-                y_ul[is_ul].value,
-                xerr=x_err,
-                yerr=y_err,
-                uplims=True,
-                **kwargs,
+                energy, flux, yerr=(y_errn, y_errp), xerr=x_err, uplims=is_ul, **kwargs
             )
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
-        ax.set_ylabel(f"{sed_type} ({y_unit})")
+        ax.set_ylabel(f"{sed_type} ({flux.unit})")
         return ax
 
     def plot_ts_profiles(

@@ -21,6 +21,16 @@ from .core import Model
 from gammapy.utils.roots import find_roots
 
 
+def scale_plot_flux(energy, flux, energy_power):
+    """Scale flux to plot"""
+    try:
+        eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
+    except IndexError:
+        eunit = energy.unit
+    y = flux * np.power(energy, energy_power)
+    return y.to(flux.unit * eunit ** energy_power)
+
+
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     """Integrate 1d function using the log-log trapezoidal rule.
 
@@ -345,7 +355,7 @@ class SpectralModel(Model):
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
 
-        y = self._plot_scale_flux(energy, flux, energy_power).to(flux_unit)
+        y = scale_plot_flux(energy, flux.to(flux_unit), energy_power)
 
         with quantity_support():
             ax.plot(energy, y, **kwargs)
@@ -440,8 +450,8 @@ class SpectralModel(Model):
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
 
-        y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power).to(flux_unit)
-        y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power).to(flux_unit)
+        y_lo = scale_plot_flux(energy, (flux - flux_err).to(flux_unit), energy_power)
+        y_hi = scale_plot_flux(energy, (flux + flux_err).to(flux_unit), energy_power)
 
         where = (energy >= energy_bounds[0]) & (energy <= energy_bounds[1])
 
@@ -463,15 +473,6 @@ class SpectralModel(Model):
 
         if "norm" in self.__class__.__name__.lower():
             ax.set_ylabel(f"Norm [A.U.]")
-
-    @staticmethod
-    def _plot_scale_flux(energy, flux, energy_power):
-        try:
-            eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
-        except IndexError:
-            eunit = energy.unit
-        y = flux * np.power(energy, energy_power)
-        return y.to(flux.unit * eunit ** energy_power)
 
     def spectral_index(self, energy, epsilon=1e-5):
         """Compute spectral index at given energy.
