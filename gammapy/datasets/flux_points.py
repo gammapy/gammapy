@@ -392,20 +392,18 @@ class FluxPointsDataset(Dataset):
         kwargs_fp = kwargs_fp or {}
         kwargs_model = kwargs_model or {}
 
-        kwargs.setdefault("energy_power", 2)
-        kwargs.setdefault("energy_unit", "TeV")
-        kwargs.setdefault("flux_unit", "erg-1 cm-2 s-1")
-
         # plot flux points
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_fp)
         plot_kwargs.setdefault("label", "Flux points")
+        plot_kwargs.setdefault("sed_type", "e2dnde")
         ax = self.data.plot(ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_model)
         plot_kwargs.setdefault("energy_bounds", self._energy_bounds)
         plot_kwargs.setdefault("label", "Best fit model")
+        plot_kwargs.setdefault("sed_type", "e2dnde")
         plot_kwargs.setdefault("zorder", 10)
 
         for model in self.models:
@@ -417,9 +415,6 @@ class FluxPointsDataset(Dataset):
 
         for model in self.models:
             if model.datasets_names is None or self.name in model.datasets_names:
-                if not np.all(model == 0):
-                    model.spectral_model.plot_error(ax=ax, **plot_kwargs)
+                model.spectral_model.plot_error(ax=ax, **plot_kwargs)
 
-        # format axes
-        ax.set_xlim(self._energy_bounds.to_value(self._energy_unit))
         return ax
