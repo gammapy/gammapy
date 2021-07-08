@@ -4,6 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
+from astropy.visualization import quantity_support
 from gammapy.datasets import Datasets
 from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
 from gammapy.modeling import Fit
@@ -478,22 +479,20 @@ class FluxPoints(FluxEstimate):
         if y_err_all:
             y_errn = (y_err_all[0] * np.power(x, energy_power)).to(y_unit)
             y_errp = (y_err_all[1] * np.power(x, energy_power)).to(y_unit)
-            y_err = (y_errn[~is_ul].to_value(y_unit), y_errp[~is_ul].to_value(y_unit))
+            y_err = (y_errn[~is_ul], y_errp[~is_ul])
 
         if x_err_all:
             x_errn, x_errp = x_err_all
-            x_err = (
-                x_errn[~is_ul].to_value(energy_unit),
-                x_errp[~is_ul].to_value(energy_unit),
-            )
+            x_err = (x_errn[~is_ul], x_errp[~is_ul])
 
         # set flux points plotting defaults
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
 
-        ebar = ax.errorbar(
-            x[~is_ul].value, y[~is_ul].value, yerr=y_err, xerr=x_err, **kwargs
-        )
+        with quantity_support():
+            ebar = ax.errorbar(
+                x[~is_ul], y[~is_ul], yerr=y_err, xerr=x_err, **kwargs
+            )
 
         if is_ul.any():
             if x_err_all:

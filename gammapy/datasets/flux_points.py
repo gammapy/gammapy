@@ -26,7 +26,7 @@ class FluxPointsDataset(Dataset):
     mask_fit : `numpy.ndarray`
         Mask to apply for fitting
     mask_safe : `numpy.ndarray`
-        Mask defining the safe data range.
+        Mask defining the safe data range. By default upper limit values are excluded.
     meta_table : `~astropy.table.Table`
         Table listing informations on observations used to create the dataset.
         One line per observation for stacked datasets.
@@ -75,7 +75,7 @@ class FluxPointsDataset(Dataset):
         self.meta_table = meta_table
 
         if mask_safe is None:
-            mask_safe = np.isfinite(data.dnde.quantity[:, 0, 0])
+            mask_safe = (~data.is_ul).data[:, 0, 0]
 
         self.mask_safe = mask_safe
 
@@ -206,8 +206,11 @@ class FluxPointsDataset(Dataset):
         """Fit statistic array."""
         model = self.flux_pred()
         data = self.data.dnde.quantity[:, 0, 0]
-        sigma = self.data.dnde_err.quantity[:, 0, 0]
-        return ((data - model) / sigma).to_value("") ** 2
+        try:
+            sigma = self.data.dnde_err
+        except AttributeError:
+            sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
+        return ((data - model) / sigma.quantity[:, 0, 0]).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute the flux point residuals ().

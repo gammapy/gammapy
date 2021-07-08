@@ -337,10 +337,14 @@ class FluxEstimate:
     @property
     def is_ul(self):
         """Whether data is an upper limit"""
-        try:
-            is_ul = self.ts < self.ts_threshold_ul
-        except AttributeError:
-            is_ul = self.norm.copy()
+        # TODO: make this a well defined behaviour
+        is_ul = self.norm.copy()
+
+        if "ts" in self._data:
+            is_ul.data = self.ts.data < self.ts_threshold_ul
+        elif "norm_ul" in self._data:
+            is_ul.data = np.isfinite(self.norm_ul)
+        else:
             is_ul.data = np.isnan(self.norm)
 
         return is_ul
