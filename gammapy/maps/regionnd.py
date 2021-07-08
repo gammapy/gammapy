@@ -418,7 +418,22 @@ class RegionNDMap(Map):
 
     @classmethod
     def from_table(cls, table, format="", colname=None):
-        """"""
+        """Create region map from table
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table with input data
+        format : {"gadf-sed}
+            Format to use
+        colname : str
+            Column name to take the data from.
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region map
+        """
         if format == "gadf-sed":
             if colname is None:
                 raise ValueError(f"Column name required")
@@ -442,7 +457,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Format not supported {format}")
 
         geom = RegionGeom.create(region=None, axes=axes)
-        return cls(geom=geom, data=data, unit=unit)
+        return cls(geom=geom, data=data, unit=unit, meta=table.meta)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
@@ -480,14 +495,13 @@ class RegionNDMap(Map):
 
         table = Table.read(hdulist[hdu])
         quantity = table[ogip_column].quantity
-        meta = table.meta
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=meta, unit=unit)
+        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
 
     def _pad_spatial(self, *args, **kwargs):
         raise NotImplementedError("Spatial padding is not supported by RegionNDMap")
