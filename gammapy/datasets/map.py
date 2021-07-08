@@ -337,15 +337,10 @@ class MapDataset(Dataset):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
 
-    def _energy_range(self, use_mask_fit = True):
+    def _energy_range(self, mask = None):
         """Compute the energy range with or without the mask fit."""
         energy = self._geom.axes["energy"].edges
         energy_min, energy_max = energy[:-1], energy[1:]
-
-        if use_mask_fit:
-            mask = self.mask
-        else:
-            mask = self.safe_mask
 
         if mask is not None:
             if mask.data.any():
@@ -360,13 +355,17 @@ class MapDataset(Dataset):
     @property
     def energy_range(self):
         """Energy range defined by the full mask (mask_safe and mask_fit)."""
-        return self._energy_range(use_mask_fit=True)
-    
-    @property
-    def safe_energy_range(self):
-        """Energy range defined by the full mask (mask_safe and mask_fit)."""
-        return self._energy_range(use_mask_fit=False)
+        return self._energy_range(mask=self.mask)
 
+    @property
+    def energy_range_safe(self):
+        """Energy range defined by the mask_safe only."""
+        return self._energy_range(self.mask_safe)
+
+    @property
+    def energy_range_safe(self):
+        """Energy range defined by the mask_fit only."""
+        return self._energy_range(self.mask_fit)
 
     def npred(self):
         """Predicted source and background counts
