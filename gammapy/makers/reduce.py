@@ -55,7 +55,7 @@ class DatasetsMaker(Maker):
         self.stack_datasets = stack_datasets
 
         self._datasets = []
-        self._order = []
+        self._error = False
 
     @property
     def offset_max(self):
@@ -106,6 +106,10 @@ class DatasetsMaker(Maker):
         else:
             self._datasets.append(dataset)
 
+    def error_callback(self, dataset):
+        # parralel run could cause a memory error with non-explicit message.
+        self._error = True
+
     def run(self, dataset, observations, datasets=None):
         """Run data reduction
 
@@ -146,11 +150,16 @@ class DatasetsMaker(Maker):
                 results = []
                 for base, obs in zip(datasets, observations):
                     result = pool.apply_async(
-                        self.make_dataset, (base, obs,), callback=self.callback
+                        self.make_dataset,
+                        (base, obs,),
+                        callback=self.callback,
+                        error_callback=self.error_callback,
                     )
                     results.append(result)
                 # wait async run is done
                 [result.wait() for result in results]
+            if self._error:
+                raise RuntimeError("Execution of a sub-process failed")
         else:
             for base, obs in zip(datasets, observations):
                 dataset = self.make_dataset(base, obs)
