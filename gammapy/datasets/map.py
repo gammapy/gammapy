@@ -941,7 +941,7 @@ class MapDataset(Dataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred()
-        data = npred.data.nan_to_num(copy=True, nan=0., posinf=0., neginf=0.)
+        data = np.nan_to_num(npred.data, copy=True, nan=0., posinf=0., neginf=0.)
         npred.data = random_state.poisson(data)
         self.counts = npred
 
@@ -2088,7 +2088,7 @@ class MapDatasetOnOff(MapDataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
-        data = npred.data.nan_to_num(copy=True, nan=0., posinf=0., neginf=0.)
+        data = np.nan_to_num(npred.data, copy=True, nan=0., posinf=0., neginf=0.)
         npred.data = random_state.poisson(data)
 
         npred_bkg = random_state.poisson(npred_background.data)
@@ -2096,7 +2096,7 @@ class MapDatasetOnOff(MapDataset):
         self.counts = npred + npred_bkg
 
         npred_off = npred_background / self.alpha
-        data_off = npred_off.data.nan_to_num(copy=True, nan=0., posinf=0., neginf=0.)
+        data_off = np.nan_to_num(npred_off.data, copy=True, nan=0., posinf=0., neginf=0.)
         npred_off.data = random_state.poisson(data_off)
         self.counts_off = npred_off
 
