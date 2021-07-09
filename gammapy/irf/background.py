@@ -4,6 +4,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
+from gammapy.utils.interpolation import LogScale
 from .core import IRF
 
 __all__ = ["Background3D", "Background2D"]
@@ -15,7 +16,7 @@ class BackgroundIRF(IRF):
     """Background IRF base class"""
 
     default_interp_kwargs = dict(
-        bounds_error=False, fill_value=None, values_scale="log"
+        bounds_error=False, fill_value=np.nan, values_scale="log"
     )
     """Default Interpolation kwargs to extrapolate."""
 
