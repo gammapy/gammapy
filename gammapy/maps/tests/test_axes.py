@@ -86,7 +86,7 @@ def test_incorrect_time_axis():
     tmax = np.linspace(1,11, 20)*u.h
 
     # incorrect reference time
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         TimeMapAxis(tmin, tmax, reference_time=51000*u.d, name="time")
 
     # overlapping time intervals

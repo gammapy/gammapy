@@ -39,8 +39,7 @@ class TimeMapAxis:
         edges_min = u.Quantity(edges_min, ndmin=1)
         edges_max = u.Quantity(edges_max, ndmin=1)
 
-        if not isinstance(reference_time, Time):
-            raise TypeError(f"TimeAxis reference time must be Time object. Got {type(reference_time).__name__}.")
+        reference_time = Time(reference_time)
 
         invalid = [_.unit.name for _ in (edges_min, edges_max) if not _.unit.is_equivalent("d")]
         if len(invalid)>0:
