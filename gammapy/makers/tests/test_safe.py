@@ -111,7 +111,10 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
 
     assert mask_nonan[0, 0, 0] == False
 
-    assert_allclose(bkg[mask_nonan].max(), 20.656366)
+    assert_allclose(bkg[mask_nonan].max(), 3.615932e+28)
+
+    #TODO: change after disable IRF extrapolation:
+    #assert_allclose(bkg[mask_nonan].max(), 20.656366)
 
     dataset = safe_mask_maker_nonan.run(dataset, obs)
     assert_allclose(dataset.mask_safe, mask_nonan)
