@@ -941,7 +941,8 @@ class MapDataset(Dataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred()
-        npred.data = random_state.poisson(npred.data)
+        data = npred.data.nan_to_num(copy=True, nan=0., posinf=0., neginf=0.)
+        npred.data = random_state.poisson(data)
         self.counts = npred
 
     def to_hdulist(self):
@@ -2087,14 +2088,16 @@ class MapDatasetOnOff(MapDataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
-        npred.data = random_state.poisson(npred.data)
+        data = npred.data.nan_to_num(copy=True, nan=0., posinf=0., neginf=0.)
+        npred.data = random_state.poisson(data)
 
         npred_bkg = random_state.poisson(npred_background.data)
 
         self.counts = npred + npred_bkg
 
         npred_off = npred_background / self.alpha
-        npred_off.data = random_state.poisson(npred_off.data)
+        data_off = npred_off.data.nan_to_num(copy=True, nan=0., posinf=0., neginf=0.)
+        npred_off.data = random_state.poisson(data_off)
         self.counts_off = npred_off
 
     def to_hdulist(self):
