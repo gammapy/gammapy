@@ -59,7 +59,6 @@ class SafeMaskMaker(Maker):
         position=None,
         fixed_offset=None,
         offset_max="3 deg",
-        n_95percentile=None,
     ):
         methods = set(methods)
 
@@ -73,7 +72,6 @@ class SafeMaskMaker(Maker):
         self.position = position
         self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
-        self.n_95percentile = n_95percentile
         if self.position and self.fixed_offset:
             raise ValueError(
                 "`position` and `fixed_offset` attributes are mutually exclusive"
@@ -261,7 +259,7 @@ class SafeMaskMaker(Maker):
         """
 
         bkg = dataset.background.data
-        mask = np.isfinite(bkg) | (bkg == 0.0)
+        mask = np.isfinite(bkg) & (bkg > 0.0)
         return mask
 
     def run(self, dataset, observation=None):
