@@ -641,7 +641,7 @@ class IRFMap:
         hdulist = self.to_hdulist(format=format)
         hdulist.writeto(str(filename), overwrite=overwrite)
 
-    def stack(self, other, weights=None):
+    def stack(self, other, weights=None, nan_to_num=True):
         """Stack IRF map with another one in place.
 
         Parameters
@@ -650,8 +650,8 @@ class IRFMap:
             IRF map to be stacked with this one.
         weights : `~gammapy.maps.Map`
             Map with stacking weights.
-        fill_value: float
-            Non-finite values are replaced by the fill_value.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
         """
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError(
@@ -667,14 +667,14 @@ class IRFMap:
             parent_slices = slice(None)
 
         self._irf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights)
+        self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights, nan_to_num=nan_to_num)
 
         # stack exposure map
         if weights and "energy" in weights.geom.axes.names:
             weights = weights.reduce(
                 axis_name="energy", func=np.logical_or, keepdims=True
             )
-        self.exposure_map.stack(other.exposure_map, weights=weights)
+        self.exposure_map.stack(other.exposure_map, weights=weights, nan_to_num=nan_to_num)
 
         with np.errstate(invalid="ignore"):
             self._irf_map.data[parent_slices] /= self.exposure_map.data[parent_slices]

@@ -392,7 +392,7 @@ class Datasets(collections.abc.MutableSequence):
                 filename_models, overwrite=overwrite, write_covariance=write_covariance,
             )
 
-    def stack_reduce(self, name=None, fill_value=0):
+    def stack_reduce(self, name=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
         This works only if all Dataset are of the same type and if a proper
@@ -402,8 +402,8 @@ class Datasets(collections.abc.MutableSequence):
         ----------
         name : str
             Name of the stacked dataset.
-        fill_value: float
-            Non-finite values are replaced by the fill_value.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
 
         Returns
         -------
@@ -415,10 +415,10 @@ class Datasets(collections.abc.MutableSequence):
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        stacked = self[0].to_masked(name=name, fill_value=fill_value)
+        stacked = self[0].to_masked(name=name, nan_to_num=nan_to_num)
 
         for dataset in self[1:]:
-            stacked.stack(dataset, fill_value=fill_value)
+            stacked.stack(dataset, nan_to_num=nan_to_num)
 
         return stacked
 

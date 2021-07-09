@@ -783,7 +783,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(geom=geom_cutout, data=data)
 
-    def stack(self, other, weights=None, fill_value=0):
+    def stack(self, other, weights=None, nan_to_num=True):
         """Stack cutout into map.
 
         Parameters
@@ -793,8 +793,8 @@ class WcsNDMap(WcsMap):
         weights : `WcsNDMap`
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
-        fill_value: float
-            Non-finite values are replaced by the fill_value.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
         """
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None
@@ -812,7 +812,8 @@ class WcsNDMap(WcsMap):
             )
 
         data = other.quantity[cutout_slices].to_value(self.unit).copy()
-        data[~np.isfinite(data)] = fill_value
+        if nan_to_num:
+            data[~np.isfinite(data)] = 0
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible spatial geoms between map and weights")
