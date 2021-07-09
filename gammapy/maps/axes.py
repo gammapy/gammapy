@@ -63,9 +63,6 @@ class TimeMapAxis:
             delta = self._edges_min[1:] - self._edges_max[:-1]
             if np.any(delta.to_value("s")<0):
                 raise ValueError("TimeMapAxis: time intervals must not overlap.")
-#        else:
-#            self._edges_min.reshape((1,))
-#            self._edges_max.reshape((1,))
 
         if interp != "lin":
             raise ValueError("TimeMapAxis: non-linear scaling scheme are not supported yet.")
@@ -199,10 +196,9 @@ class TimeMapAxis:
         idx = np.atleast_1d(self.coord_to_idx(coord))
 
         valid_pix = np.where(idx!=INVALID_INDEX.int)
-        pix = np.asarray(idx, dtype = 'float')
-        if pix.shape == ():
-            pix = pix.reshape((1,))
+        pix = np.atleast_1d(idx).astype('float')
 
+        # TODO: is there the equivalent of np.atleast1d for astropy.time.Time?
         if coord.shape == ():
             coord = coord.reshape((1,))
         relative_time = coord[valid_pix]-self.reference_time
