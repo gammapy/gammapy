@@ -87,7 +87,7 @@ def test_safe_mask_maker(observations, caplog):
 
 
 @requires_data()
-def test_safe_mask_maker_bkg_clip(observations_hess_dl3):
+def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
     obs = observations_hess_dl3[0]
 
     axis = MapAxis.from_bounds(
@@ -101,23 +101,17 @@ def test_safe_mask_maker_bkg_clip(observations_hess_dl3):
     empty_dataset = MapDataset.create(geom=geom, energy_axis_true=axis_true)
     dataset_maker = MapDatasetMaker()
 
-    safe_mask_maker_nonan = SafeMaskMaker(["bkg-clip"])
-    safe_mask_maker_nolarge = SafeMaskMaker(["bkg-clip"], n_95percentile=10)
+    safe_mask_maker_nonan = SafeMaskMaker([])
 
     dataset = dataset_maker.run(empty_dataset, obs)
     bkg = dataset.background.data
     bkg[0, 0, 0] = np.nan
 
-    mask_nonan = safe_mask_maker_nonan.make_mask_bkg_clip(dataset)
-    mask_nolarge = safe_mask_maker_nolarge.make_mask_bkg_clip(dataset)
+    mask_nonan = safe_mask_maker_nonan.make_mask_bkg_invalid(dataset)
 
     assert mask_nonan[0, 0, 0] == False
 
-    assert_allclose(bkg[mask_nonan].max(), 3.615932095e28)
-    assert_allclose(bkg[mask_nolarge].max(), 20.656366)
-    # the value of n_95percentile requires some tuning...
-    # using reasonnale parameters for the other masks, n_95percentile may not be needed
-    # but this must be checked as aberrant values would bias the fov-bkg-maker scaling.
+    assert_allclose(bkg[mask_nonan].max(), 20.656366)
 
-    dataset = safe_mask_maker_nolarge.run(dataset)
-    assert_allclose(dataset.mask_safe, mask_nolarge)
+    dataset = safe_mask_maker_nonan.run(dataset, obs)
+    assert_allclose(dataset.mask_safe, mask_nonan)

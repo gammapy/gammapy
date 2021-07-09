@@ -40,10 +40,6 @@ class SafeMaskMaker(Maker):
         the `aeff_percent` or `bias_percent` are computed.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
-    n_95percentile : float
-        If not None the `bkg-clip` method will mask the values larger than 
-        `n_95percentile` times the 95% percentile value.
-        Default is None then only non-finite values are masked.
     """
 
     tag = "SafeMaskMaker"
@@ -53,7 +49,6 @@ class SafeMaskMaker(Maker):
         "edisp-bias",
         "offset-max",
         "bkg-peak",
-        "bkg-clip",
     }
 
     def __init__(
@@ -251,13 +246,8 @@ class SafeMaskMaker(Maker):
         energy_min = energy_axis.pix_to_coord(idx)
         return geom.energy_mask(energy_min=energy_min)
 
-    def make_mask_bkg_clip(self, dataset):
-        """Mask aberrant values in background maps
-
-        By default only non-finite values and zeros are masked.
-        If`n_95percentile` is not None then the values larger than 
-        `n_95percentile` times the 95% percentile value will also be masked.
-       
+    def make_mask_bkg_invalid(self, dataset):
+        """Mask non-finite values and zeros values in background maps
  
         Parameters
         ----------
@@ -270,17 +260,8 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
 
-        bkg = dataset.background.data.copy()
-        bkg[bkg == 0.0] = np.nan
-        mask = np.isfinite(bkg)
-        if self.n_95percentile is not None:
-            thr = self.n_95percentile * np.nanpercentile(
-                bkg, 95, axis=(1, 2), keepdims=True
-            )
-            mask = np.abs(bkg) < thr
-        if np.any(~mask):
-            bad_values = np.unique(bkg[~mask & np.isfinite(bkg)])
-            log.warning(f"Invalid values found in background masked \n {bad_values}")
+        bkg = dataset.background.data
+        mask = np.isfinite(bkg) | (bkg == 0.0)
         return mask
 
     def run(self, dataset, observation=None):
@@ -300,9 +281,9 @@ class SafeMaskMaker(Maker):
         """
         mask_safe = np.ones(dataset._geom.data_shape, dtype=bool)
 
-        if "bkg-clip" in self.methods:
+        if dataset.background is not None and np.any(dataset.background.data):
             # apply it first so only clipped values are removed for "bkg-peak"
-            mask_safe &= self.make_mask_bkg_clip(dataset)
+            mask_safe &= self.make_mask_bkg_invalid(dataset)
             dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
 
         if "offset-max" in self.methods:
