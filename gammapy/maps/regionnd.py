@@ -481,11 +481,12 @@ class RegionNDMap(Map):
         nan_to_num: bool
             Non-finite values are replaced by zero if True (default).
         """
-        data = other.quantity.to_value(self.unit).astype(self.data.dtype).copy()
+        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
         if nan_to_num:
+            data = data.copy()
             data[~np.isfinite(data)] = 0
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
