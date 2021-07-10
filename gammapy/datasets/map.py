@@ -592,7 +592,7 @@ class MapDataset(Dataset):
 
         return self.mask_safe.interp_to_geom(geom)
 
-    def to_masked(self, name=None):
+    def to_masked(self, name=None, nan_to_num=True):
         """Return masked dataset
 
         Parameters
@@ -606,10 +606,10 @@ class MapDataset(Dataset):
             Masked dataset
         """
         dataset = self.__class__.from_geoms(**self.geoms, name=name)
-        dataset.stack(self)
+        dataset.stack(self, nan_to_num=nan_to_num)
         return dataset
 
-    def stack(self, other):
+    def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place.
 
         Safe mask is applied to compute the stacked counts data. Counts outside
@@ -647,13 +647,16 @@ class MapDataset(Dataset):
         ----------
         other: `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             Map dataset to be stacked with this one. If other is an on-off
-            dataset alpha * counts_off is used as a background model.
+            dataset alpha * counts_off is used as a background model.        
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
+
         """
         if self.counts and other.counts:
-            self.counts.stack(other.counts, weights=other.mask_safe)
+            self.counts.stack(other.counts, weights=other.mask_safe, nan_to_num=nan_to_num)
 
         if self.exposure and other.exposure:
-            self.exposure.stack(other.exposure, weights=other.mask_safe_image)
+            self.exposure.stack(other.exposure, weights=other.mask_safe_image, nan_to_num=nan_to_num)
             # TODO: check whether this can be improved e.g. handling this in GTI
 
             if "livetime" in other.exposure.meta and np.any(other.mask_safe_image):
@@ -667,7 +670,7 @@ class MapDataset(Dataset):
         if self.stat_type == "cash":
             if self.background and other.background:
                 background = self.npred_background() * self.mask_safe
-                background.stack(other.npred_background(), other.mask_safe)
+                background.stack(other.npred_background(), weights=other.mask_safe, nan_to_num=nan_to_num)
                 self.background = background
 
         if self.psf and other.psf:
@@ -2014,7 +2017,7 @@ class MapDatasetOnOff(MapDataset):
         else:
             return True
 
-    def stack(self, other):
+    def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place.
 
         The ``acceptance`` of the stacked dataset is normalized to 1,
@@ -2029,6 +2032,8 @@ class MapDatasetOnOff(MapDataset):
         ----------
         other : `MapDatasetOnOff`
             Other dataset
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
         """
         if not isinstance(other, MapDatasetOnOff):
             raise TypeError("Incompatible types for MapDatasetOnOff stacking")
@@ -2041,11 +2046,11 @@ class MapDatasetOnOff(MapDataset):
         total_alpha = Map.from_geom(geom)
 
         if self.counts_off:
-            total_off.stack(self.counts_off, weights=self.mask_safe)
-            total_alpha.stack(self.alpha * self.counts_off, weights=self.mask_safe)
+            total_off.stack(self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num)
+            total_alpha.stack(self.alpha * self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num)
         if other.counts_off:
-            total_off.stack(other.counts_off, weights=other.mask_safe)
-            total_alpha.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+            total_off.stack(other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num)
+            total_alpha.stack(other.alpha * other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             acceptance_off = total_off / total_alpha
@@ -2061,7 +2066,7 @@ class MapDatasetOnOff(MapDataset):
 
         self.counts_off = total_off
 
-        super().stack(other)
+        super().stack(other, nan_to_num=nan_to_num)
 
     def stat_sum(self):
         """Total likelihood given the current model parameters."""
