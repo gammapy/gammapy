@@ -66,50 +66,63 @@ class Analysis:
         else:
             raise TypeError("config must be dict or AnalysisConfig.")
 
-    def get_observations(self):
-        """Fetch observations from the data store according to criteria defined in the configuration."""
-        observations_settings = self.config.observations
-        path = make_path(observations_settings.datastore)
+    def _set_data_store(self):
+        """Set the datastore on the Analysis object."""
+        path = make_path(self.config.observations.datastore)
         if path.is_file():
+            log.debug(f"Setting datastore from file: {path}")
             self.datastore = DataStore.from_file(path)
         elif path.is_dir():
+            log.debug(f"Setting datastore from directory: {path}")
             self.datastore = DataStore.from_dir(path)
         else:
             raise FileNotFoundError(f"Datastore not found: {path}")
 
-        log.info("Fetching observations.")
-        if (
-            len(observations_settings.obs_ids)
-            and observations_settings.obs_file is not None
-        ):
+
+    def _make_obs_table_selection(self):
+        """Return list of obs_ids after filtering on datastore observation table."""
+        obs_settings = self.config.observations
+
+        # Reject configs with list of obs_ids and obs_file set at the same time
+        if (len(obs_settings.obs_ids) and obs_settings.obs_file is not None):
             raise ValueError(
                 "Values for both parameters obs_ids and obs_file are not accepted."
             )
-        elif (
-            not len(observations_settings.obs_ids)
-            and observations_settings.obs_file is None
-        ):
-            obs_list = self.datastore.get_observations()
-            ids = [obs.obs_id for obs in obs_list]
-        elif len(observations_settings.obs_ids):
-            obs_list = self.datastore.get_observations(observations_settings.obs_ids)
-            ids = [obs.obs_id for obs in obs_list]
-        else:
-            path = make_path(observations_settings.obs_file)
-            ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
 
-        if observations_settings.obs_cone.lon is not None:
+        # First select input list of observations from obs_table
+        if len(obs_settings.obs_ids):
+            selected_obs_table = self.datastore.obs_table.select_obs_id(obs_settings.obs_ids)
+        elif obs_settings.obs_file is not None:
+            path = make_path(obs_settings.obs_file)
+            ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
+            selected_obs_table = self.datastore.obs_table.select_obs_id(ids)
+        else:
+            selected_obs_table = self.datastore.obs_table
+
+        # Apply cone selection
+        if obs_settings.obs_cone.lon is not None:
             cone = dict(
                 type="sky_circle",
-                frame=observations_settings.obs_cone.frame,
-                lon=observations_settings.obs_cone.lon,
-                lat=observations_settings.obs_cone.lat,
-                radius=observations_settings.obs_cone.radius,
+                frame=obs_settings.obs_cone.frame,
+                lon=obs_settings.obs_cone.lon,
+                lat=obs_settings.obs_cone.lat,
+                radius=obs_settings.obs_cone.radius,
                 border="0 deg",
             )
-            selected_cone = self.datastore.obs_table.select_observations(cone)
-            ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
+            selected_obs_table = selected_obs_table.select_observations(cone)
+
+        return selected_obs_table["OBS_ID"].tolist()
+
+    def get_observations(self):
+        """Fetch observations from the data store according to criteria defined in the configuration."""
+        observations_settings = self.config.observations
+        self._set_data_store()
+
+        log.info("Fetching observations.")
+        ids = self._make_obs_table_selection()
+
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
+
         if observations_settings.obs_time.start is not None:
             start = observations_settings.obs_time.start
             stop = observations_settings.obs_time.stop
@@ -118,7 +131,9 @@ class Analysis:
             else:
                 time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
             self.observations = self.observations.select_time(time_intervals)
+
         log.info(f"Number of selected observations: {len(self.observations)}")
+
         for obs in self.observations:
             log.debug(obs)
 

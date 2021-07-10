@@ -115,7 +115,7 @@ def test_get_observations_obs_time(tmp_path):
     analysis.get_observations()
     assert len(analysis.observations) == 40
     analysis.config.observations.obs_ids = [0]
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         analysis.get_observations()
 
 
