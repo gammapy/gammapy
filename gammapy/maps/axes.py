@@ -2172,7 +2172,7 @@ class TimeMapAxis:
         for time_min, time_max in zip(self.time_min, self.time_max):
             yield (time_min, time_max)
 
-    def coord_to_idx(self, coord):
+    def coord_to_idx(self, coord,**kwargs):
         """Transform from axis time coordinate to bin index.
 
         Indices of time values falling outside time bins will be
@@ -2201,7 +2201,7 @@ class TimeMapAxis:
         idx[~np.any(mask, axis=-1)] = INVALID_INDEX.int
         return idx
 
-    def coord_to_pix(self, coord):
+    def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.
 
         Pixels of time values falling outside time bins will be
