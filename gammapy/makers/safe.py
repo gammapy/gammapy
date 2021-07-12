@@ -249,7 +249,7 @@ class SafeMaskMaker(Maker):
  
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
 
         Returns
@@ -259,7 +259,9 @@ class SafeMaskMaker(Maker):
         """
 
         bkg = dataset.background.data
-        mask = np.isfinite(bkg) & (bkg > 0.0)
+        mask = np.isfinite(bkg)
+        if "OnOff" not in dataset.tag:
+            mask &= (bkg > 0.0)
         return mask
 
     def run(self, dataset, observation=None):
