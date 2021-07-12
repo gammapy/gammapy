@@ -14,7 +14,7 @@ from gammapy.utils.time import time_ref_to_dict, time_ref_from_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
 
 
-__all__ = ["MapAxes", "MapAxis", "TimeMapAxis"]
+__all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
 
 def flat_if_equal(array):
@@ -2439,3 +2439,164 @@ class TimeMapAxis:
             raise ValueError(f"Unknown format {format}")
 
         return header
+
+class LabelMapAxis:
+    """Map axis using labels
+
+    Parameters
+    ----------
+    labels : list of str
+        Labels to be used for the axis nodes.
+    name : str
+        Name of the axis.
+
+    """
+    node_type = "label"
+
+    def __init__(self, labels, name=""):
+        unique_labels = set(labels)
+
+        if not len(unique_labels) == len(labels):
+            raise ValueError("Node labels must be unique")
+
+        self._labels = np.array(labels)
+        self._name = name
+
+    @property
+    def name(self):
+        """Name of the axis"""
+        return self._name
+
+    @property
+    def nbin(self):
+        """Number of bins"""
+        return len(self._labels)
+
+    def pix_to_coord(self, pix):
+        """Transform from pixel to axis coordinates.
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Array of pixel coordinate values.
+
+        Returns
+        -------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+        """
+        idx = np.round(pix).astype(int)
+        return self._labels[idx]
+
+    def coord_to_idx(self, coord, **kwargs):
+        """Transform labels to indices
+
+        If the label is not present an error is raised.
+
+        Parameters
+        ----------
+        coord : `~astropy.time.Time`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        idx : `~numpy.ndarray`
+            Array of bin indices.
+        """
+        coord = np.array(coord)[..., np.newaxis]
+        is_equal = coord == self._labels
+
+        if not np.all(np.any(is_equal, axis=-1)):
+            label = coord[~np.any(is_equal, axis=-1)]
+            raise ValueError(f"Not a valid label: {label}")
+
+        return np.argmax(is_equal, axis=-1)
+
+    def coord_to_pix(self, coord):
+        """Transform from axis labels to pixel coordinates.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis label values.
+
+        Returns
+        -------
+        pix : `~numpy.ndarray`
+            Array of pixel coordinate values.
+        """
+        return self.coord_to_idx(coord).astype("float")
+
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : tuple of `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : tuple `~numpy.ndarray`
+            Pixel indices.
+        """
+        if clip:
+            idx = np.clip(pix, 0, self.nbin - 1)
+        else:
+            condition = (pix < 0) | (pix >= self.nbin)
+            idx = np.where(condition, -1, pix)
+
+        return idx
+
+    @property
+    def center(self):
+        """Center of the label axis"""
+        return self._labels
+
+    @property
+    def edges(self):
+        """Edges of the label axis"""
+        raise ValueError("A LabelMapAxis does not define edges")
+
+    @property
+    def bin_width(self):
+        """Bin width is unity """
+        return np.ones(self.nbin)
+
+    def __repr__(self):
+        str_ = self.__class__.__name__ + "\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n\n"
+        fmt = "\t{:<10s} : {:<10s}\n"
+        str_ += fmt.format("name", self.name)
+        str_ += fmt.format("nbins", str(self.nbin))
+        str_ += fmt.format("node type", self.node_type)
+        str_ += fmt.format(f"labels", "{0}".format(list(self._labels)))
+        return str_.expandtabs(tabsize=2)
+
+    # TODO: could create sub-labels here using dashes like "label-1-a", etc.
+    def upsample(self, *args, **kwargs):
+        """Upsample axis"""
+        raise NotImplementedError("Upsampling a LabelMapAxis is not supported")
+
+    # TODO: could merge labels here like "label-1-label2", etc.
+    def downsample(self, *args, **kwargs):
+        """Downsample axis"""
+        raise NotImplementedError("Downsampling a LabelMapAxis is not supported")
+
+    # TODO: could merge labels here like "label-1-label2", etc.
+    def resample(self, *args, **kwargs):
+        """Resample axis"""
+        raise NotImplementedError("Resampling a LabelMapAxis is not supported")
+
+    # TODO: could create new labels here like "label-10-a"
+    def pad(self, *args, **kwargs):
+        """Resample axis"""
+        raise NotImplementedError("Padding a LabelMapAxis is not supported")
+
+    def copy(self):
+        """Copy axis"""
+        return copy.deepcopy(self)
