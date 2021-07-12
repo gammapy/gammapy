@@ -334,12 +334,12 @@ class HpxNDMap(HpxMap):
         geom : `~HpxGeom`
             A HEALPix geometry object.
         """
-        factor = nside // self.geom.nside
+        factor = nside / self.geom.nside
 
         if factor > 1:
-            return self.upsample(factor=factor, preserve_counts=preserve_counts)
+            return self.upsample(factor=int(factor), preserve_counts=preserve_counts)
         elif factor < 1:
-            return self.downsample(factor=factor, preserve_counts=preserve_counts)
+            return self.downsample(factor=int(1 / factor), preserve_counts=preserve_counts)
         else:
             return self.copy()
 

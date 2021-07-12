@@ -349,6 +349,20 @@ def test_hpxndmap_resample_axis():
     assert_allclose(m3.data, 2)
 
 
+def test_hpx_nd_map_to_nside():
+    axis = MapAxis.from_edges([1, 2, 3], name="test-1")
+
+    geom = HpxGeom.create(nside=64, axes=[axis])
+    m = HpxNDMap(geom, unit="m2")
+    m.data += 1
+
+    m2 = m.to_nside(nside=32)
+    assert_allclose(m2.data, 4)
+
+    m3 = m.to_nside(nside=128)
+    assert_allclose(m3.data, 0.25)
+
+
 def test_hpx_nd_map_to_wcs_tiles():
     m = HpxNDMap.create(nside=8, frame="galactic")
     m.data += 1
