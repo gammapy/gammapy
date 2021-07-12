@@ -8,8 +8,9 @@ from astropy import units as u
 from astropy.io import fits
 from gammapy.maps.hpx import HpxGeom
 from gammapy.utils.scripts import make_path
-from .geom import MapAxis, MapCoord, pix_tuple_to_idx
-from .utils import INVALID_VALUE, JsonQuantityDecoder
+from .geom import MapCoord, pix_tuple_to_idx
+from .axes import MapAxis
+from .utils import JsonQuantityDecoder
 
 __all__ = ["Map"]
 
