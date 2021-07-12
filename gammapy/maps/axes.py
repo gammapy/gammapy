@@ -1684,7 +1684,8 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip",
+                  "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -2337,8 +2338,8 @@ class TimeMapAxis:
         )
 
     # TODO: if we are to allow log or sqrt bins the reference time should always
-    # be strictly lower than all times
-    # Should we define a mechanism to ensure this is always correct?
+    #  be strictly lower than all times
+    #  Should we define a mechanism to ensure this is always correct?
     @classmethod
     def from_time_edges(cls, time_min, time_max, unit="d", interp="lin", name="time"):
         """Create TimeMapAxis from the time interval edges defined as `~astropy.time.Time`.
