@@ -600,3 +600,26 @@ def test_label_map_axis_basics():
 
     with pytest.raises(ValueError):
         axis.edges
+
+
+def test_label_map_axis():
+    axis = LabelMapAxis(labels=["label-1", "label-2", "label-3"], name="label-axis")
+
+    labels = "label-1"
+    idx = axis.coord_to_idx(coord=labels)
+    assert_allclose(idx, 0)
+
+    labels = ["label-1", "label-3"]
+    idx = axis.coord_to_idx(coord=labels)
+    assert_allclose(idx, [0, 2])
+
+    labels = [["label-1"], ["label-2"]]
+    idx = axis.coord_to_idx(coord=labels)
+    assert_allclose(idx, [[0], [1]])
+
+    with pytest.raises(ValueError):
+        labels = [["bad-label"], ["label-2"]]
+        _ = axis.coord_to_idx(coord=labels)
+
+
+
