@@ -5,12 +5,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.time import Time
 from astropy.table import Table
 import astropy.units as u
-<<<<<<< HEAD
-from gammapy.maps import RegionNDMap, MapAxis, TimeMapAxis, MapAxes
-=======
-from gammapy.maps import RegionNDMap, MapAxis
-from gammapy.maps.axes import TimeMapAxis, LabelMapAxis
->>>>>>> c8727de10... Add basic LabelMapAxis tests
+from gammapy.maps import RegionNDMap, MapAxis, TimeMapAxis, MapAxes, LabelMapAxis
 from gammapy.data import GTI
 from gammapy.utils.testing import assert_allclose, requires_data, assert_time_allclose
 from gammapy.utils.scripts import make_path
@@ -601,8 +596,11 @@ def test_label_map_axis_basics():
     with pytest.raises(ValueError):
         axis.edges
 
+    axis_copy = axis.copy()
+    assert axis_copy.name == "label-axis"
 
-def test_label_map_axis():
+
+def test_label_map_axis_coord_to_idx():
     axis = LabelMapAxis(labels=["label-1", "label-2", "label-3"], name="label-axis")
 
     labels = "label-1"
@@ -622,4 +620,21 @@ def test_label_map_axis():
         _ = axis.coord_to_idx(coord=labels)
 
 
+def test_mixed_axes():
+    label_axis = LabelMapAxis(labels=["label-1", "label-2", "label-3"], name="label")
 
+    time_axis = TimeMapAxis(
+        edges_min=[1, 10] * u.day,
+        edges_max=[2, 13] * u.day,
+        reference_time=Time("2020-03-19")
+    )
+
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4)
+
+    axes = MapAxes(axes=[energy_axis, time_axis, label_axis])
+
+    coords = axes.get_coord()
+
+    assert coords["label"].shape == (1, 1, 3)
+    assert coords["energy"].shape == (4, 1, 1)
+    assert coords["time"].shape == (1, 2, 1)
