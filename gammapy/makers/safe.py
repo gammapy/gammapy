@@ -244,8 +244,9 @@ class SafeMaskMaker(Maker):
         energy_min = energy_axis.pix_to_coord(idx)
         return geom.energy_mask(energy_min=energy_min)
 
-    def make_mask_bkg_invalid(self, dataset):
-        """Mask non-finite values and zeros values in background maps
+    @staticmethod
+    def make_mask_bkg_invalid(dataset):
+        """Mask non-finite values and zeros values in background maps.
  
         Parameters
         ----------
@@ -257,11 +258,12 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-
         bkg = dataset.background.data
         mask = np.isfinite(bkg)
-        if "OnOff" not in dataset.tag:
+
+        if not dataset.stat_type == "wstat":
             mask &= (bkg > 0.0)
+
         return mask
 
     def run(self, dataset, observation=None):
@@ -281,10 +283,9 @@ class SafeMaskMaker(Maker):
         """
         mask_safe = np.ones(dataset._geom.data_shape, dtype=bool)
 
-        if dataset.background is not None and np.any(dataset.background.data):
+        if dataset.background is not None:
             # apply it first so only clipped values are removed for "bkg-peak"
             mask_safe &= self.make_mask_bkg_invalid(dataset)
-            dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
 
         if "offset-max" in self.methods:
             mask_safe &= self.make_mask_offset_max(dataset, observation)
