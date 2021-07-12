@@ -72,7 +72,6 @@ class SafeMaskMaker(Maker):
         self.position = position
         self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
-
         if self.position and self.fixed_offset:
             raise ValueError(
                 "`position` and `fixed_offset` attributes are mutually exclusive"
@@ -125,9 +124,7 @@ class SafeMaskMaker(Maker):
             log.warning(f"No default thresholds defined for obs {observation.obs_id}")
             energy_min, energy_max = None, None
 
-        return dataset._geom.energy_mask(
-            energy_min=energy_min, energy_max=energy_max
-        )
+        return dataset._geom.energy_mask(energy_min=energy_min, energy_max=energy_max)
 
     def make_mask_energy_aeff_max(self, dataset, observation=None):
         """Make safe energy mask from effective area maximum value.
@@ -247,6 +244,28 @@ class SafeMaskMaker(Maker):
         energy_min = energy_axis.pix_to_coord(idx)
         return geom.energy_mask(energy_min=energy_min)
 
+    @staticmethod
+    def make_mask_bkg_invalid(dataset):
+        """Mask non-finite values and zeros values in background maps.
+ 
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+            Dataset to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Safe data range mask.
+        """
+        bkg = dataset.background.data
+        mask = np.isfinite(bkg)
+
+        if not dataset.stat_type == "wstat":
+            mask &= (bkg > 0.0)
+
+        return mask
+
     def run(self, dataset, observation=None):
         """Make safe data range mask.
 
@@ -263,6 +282,10 @@ class SafeMaskMaker(Maker):
             Dataset with defined safe range mask.
         """
         mask_safe = np.ones(dataset._geom.data_shape, dtype=bool)
+
+        if dataset.background is not None:
+            # apply it first so only clipped values are removed for "bkg-peak"
+            mask_safe &= self.make_mask_bkg_invalid(dataset)
 
         if "offset-max" in self.methods:
             mask_safe &= self.make_mask_offset_max(dataset, observation)
