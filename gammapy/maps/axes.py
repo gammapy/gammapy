@@ -2468,6 +2468,20 @@ class LabelMapAxis:
         """Name of the axis"""
         return self._name
 
+    def assert_name(self, required_name):
+        """Assert axis name if a specific one is required.
+
+        Parameters
+        ----------
+        required_name : str
+            Required
+        """
+        if self.name != required_name:
+            raise ValueError(
+                "Unexpected axis name,"
+                f' expected "{required_name}", got: "{self.name}"'
+            )
+
     @property
     def nbin(self):
         """Number of bins"""

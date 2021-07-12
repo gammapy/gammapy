@@ -5,7 +5,12 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.time import Time
 from astropy.table import Table
 import astropy.units as u
+<<<<<<< HEAD
 from gammapy.maps import RegionNDMap, MapAxis, TimeMapAxis, MapAxes
+=======
+from gammapy.maps import RegionNDMap, MapAxis
+from gammapy.maps.axes import TimeMapAxis, LabelMapAxis
+>>>>>>> c8727de10... Add basic LabelMapAxis tests
 from gammapy.data import GTI
 from gammapy.utils.testing import assert_allclose, requires_data, assert_time_allclose
 from gammapy.utils.scripts import make_path
@@ -574,3 +579,24 @@ def test_axes_basics():
     assert not axes.is_flat
 
     assert axes.primary_axis.name == "time"
+
+def test_label_map_axis_basics():
+    axis = LabelMapAxis(labels=["label-1", "label-2"], name="label-axis")
+
+    axis_str = str(axis)
+    assert "node type" in axis_str
+    assert "labels" in axis_str
+    assert "label-2" in axis_str
+
+    with pytest.raises(ValueError):
+        axis.assert_name("time")
+
+    assert axis.nbin == 2
+    assert axis.node_type == "label"
+
+    assert_allclose(axis.bin_width, 1)
+
+    assert axis.name == "label-axis"
+
+    with pytest.raises(ValueError):
+        axis.edges
