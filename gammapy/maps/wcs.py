@@ -17,12 +17,12 @@ from astropy.wcs.utils import (
 from gammapy.utils.array import round_up_to_odd
 from .geom import (
     Geom,
-    MapAxes,
     MapCoord,
     get_shape,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
+from .axes import MapAxes
 from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]

@@ -9,7 +9,8 @@ from astropy.units import Quantity
 from astropy import units as u
 from astropy.utils import lazyproperty
 from gammapy.utils.array import is_power2
-from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
+from .geom import Geom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
+from .axes import MapAxes
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
 
