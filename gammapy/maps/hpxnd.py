@@ -331,8 +331,8 @@ class HpxNDMap(HpxMap):
 
         Returns
         -------
-        geom : `~HpxGeom`
-            A HEALPix geometry object.
+        geom : `~HpxNDMap`
+            Healpix map with new nside.
         """
         factor = nside / self.geom.nside
 
