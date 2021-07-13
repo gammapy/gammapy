@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.utils import lazyproperty
 from regions import PixCoord
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsNDMap, WcsGeom
@@ -79,6 +80,7 @@ class ReflectedRegionsFinder:
         self.center = center
 
         self.angle_increment = Angle(angle_increment)
+
         if self.angle_increment <= Angle(0, "deg"):
             raise ValueError("angle_increment is too small")
 
@@ -86,10 +88,9 @@ class ReflectedRegionsFinder:
         self.min_distance_input = Angle(min_distance_input)
         self.exclusion_mask = exclusion_mask
         self.max_region_number = max_region_number
-        self.reflected_regions = None
         self.binsz = Angle(binsz)
 
-    @property
+    @lazyproperty
     def exclusion_mask_ref(self):
         """Exlcusion mask reprojected"""
         if self.exclusion_mask:
@@ -99,7 +100,7 @@ class ReflectedRegionsFinder:
 
         return mask
 
-    @property
+    @lazyproperty
     def geom_ref(self):
         """Reference geometry
 
@@ -127,27 +128,24 @@ class ReflectedRegionsFinder:
             proj="TAN"
         )
 
-    @property
+    @lazyproperty
     def region_pix(self):
         """Pixel region"""
         return self.region.to_pixel(self.geom_ref.wcs)
 
-    @property
+    @lazyproperty
     def center_pix(self):
         """Center pix coordinate"""
         return PixCoord.from_sky(self.center, self.geom_ref.wcs)
 
-    @property
+    @lazyproperty
     def excluded_pix_coords(self):
         """Excluded pix coords"""
-        # Extract all pixcoords in the geom
-        pix_x, pix_y = self.geom_ref.get_pix()
-
         # find excluded PixCoords
-        mask = self.exclusion_mask_ref.data == 0
-        return PixCoord(pix_x[mask], pix_y[mask])
+        pix_y, pix_x = np.where(~self.exclusion_mask_ref.data)
+        return PixCoord(pix_x, pix_y)
 
-    @property
+    @lazyproperty
     def region_angular_size(self):
         """Compute maximum angular size of a group of pixels as seen from center.
 
@@ -159,9 +157,9 @@ class ReflectedRegionsFinder:
             the maximum angular size
         """
         mask = self.geom_ref.region_mask([self.region]).data
-        pix_x, pix_y = self.geom_ref.get_pix()
+        pix_y, pix_x = np.where(mask)
 
-        pixels = PixCoord(pix_x[mask], pix_y[mask])
+        pixels = PixCoord(pix_x, pix_y)
 
         newX, newY = self.center_pix.x - pixels.x, self.center_pix.y - pixels.y
         angles = Angle(np.arctan2(newX, newY), "rad")
@@ -174,20 +172,27 @@ class ReflectedRegionsFinder:
 
         return angular_size
 
-    @property
+    @lazyproperty
     def angle_min(self):
         """Minimum angle"""
         # Minimum angle a region has to be moved to not overlap with previous one
         # Add required minimal distance between two off regions
         return self.region_angular_size + self.min_distance
 
-    @property
+    @lazyproperty
     def angle_max(self):
         """"""
         return Angle("360deg") - self.angle_min - self.min_distance_input
 
-    def find_regions(self):
+    def reset(self):
+        """Reset cached properties"""
+        for name, value in self.__class__.__dict__.items():
+            if isinstance(value, lazyproperty):
+                self.__dict__.pop(name, None)
+
+    def run(self):
         """Find reflected regions."""
+        self.reset()
         curr_angle = self.angle_min + self.min_distance_input
         reflected_regions = []
 
@@ -203,7 +208,7 @@ class ReflectedRegionsFinder:
             else:
                 curr_angle = curr_angle + self.angle_increment
 
-        self.reflected_regions = reflected_regions
+        return reflected_regions
 
     def plot(self, fig=None, ax=None):
         """Standard debug plot.
@@ -295,20 +300,20 @@ class ReflectedRegionsBackgroundMaker(Maker):
             Off counts.
         """
         finder = self._get_finder(dataset, observation)
-        finder.run()
+        regions = finder.run()
 
         energy_axis = dataset.counts.geom.axes["energy"]
 
-        if len(finder.reflected_regions) > 0:
+        if len(regions) > 0:
             geom = RegionGeom.from_regions(
-                regions=finder.reflected_regions,
+                regions=regions,
                 axes=[energy_axis],
-                wcs=finder.reference_map.geom.wcs
+                wcs=finder.geom_ref.wcs
             )
 
             counts_off = RegionNDMap.from_geom(geom=geom)
             counts_off.fill_events(observation.events)
-            acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(finder.reflected_regions))
+            acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(regions))
         else:
             # if no OFF regions are found, off is set to None and acceptance_off to zero
             log.warning(
