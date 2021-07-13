@@ -316,6 +316,33 @@ class HpxNDMap(HpxMap):
 
         return map_out
 
+    def to_nside(self, nside, preserve_counts=True):
+        """Upsample or downsample the map to a given nside
+
+        Parameters
+        ----------
+        nside : int
+            Nside
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity).
+
+
+        Returns
+        -------
+        geom : `~HpxNDMap`
+            Healpix map with new nside.
+        """
+        factor = nside / self.geom.nside
+
+        if factor > 1:
+            return self.upsample(factor=int(factor), preserve_counts=preserve_counts)
+        elif factor < 1:
+            return self.downsample(factor=int(1 / factor), preserve_counts=preserve_counts)
+        else:
+            return self.copy()
+
     def interp_by_coord(self, coords, method="linear"):
         # inherited docstring
         coords = MapCoord.create(coords, frame=self.geom.frame)
