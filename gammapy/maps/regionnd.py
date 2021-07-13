@@ -1,14 +1,15 @@
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table, hstack
+from astropy.table import Table
 from astropy.visualization import quantity_support
 from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Map
-from .geom import pix_tuple_to_idx, MapAxes, MapAxis
+from .geom import pix_tuple_to_idx
+from .axes import MapAxes, MapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
