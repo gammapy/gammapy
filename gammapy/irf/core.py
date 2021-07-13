@@ -33,7 +33,7 @@ class IRF:
         Meta data
     """
 
-    default_interp_kwargs = dict(bounds_error=False, fill_value=np.nan,)
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None,)
 
     def __init__(self, axes, data=0, unit="", meta=None):
         axes = MapAxes(axes)

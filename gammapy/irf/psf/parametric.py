@@ -360,7 +360,7 @@ class PSFKing(ParametricPSF):
     required_axes = ["energy_true", "offset"]
     required_parameters = ["gamma", "sigma"]
     default_interp_kwargs = dict(
-        bounds_error=False, fill_value=np.nan
+        bounds_error=False, fill_value=None
     )
 
     @staticmethod
