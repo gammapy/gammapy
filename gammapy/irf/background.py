@@ -16,7 +16,7 @@ class BackgroundIRF(IRF):
     """Background IRF base class"""
 
     default_interp_kwargs = dict(
-        bounds_error=False, fill_value=np.nan, values_scale="log"
+        bounds_error=False, fill_value=None, values_scale="log"
     )
     """Default Interpolation kwargs to extrapolate."""
 
@@ -156,7 +156,7 @@ class Background2D(BackgroundIRF):
 
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
-    default_interp_kwargs = dict(bounds_error=False, fill_value=np.nan)
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs."""
 
     def plot(self, ax=None, add_cbar=True, **kwargs):

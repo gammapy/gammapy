@@ -130,10 +130,14 @@ def test_background_3d_missing_values(bkg_3d_interp):
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
     )
-    assert res.value != 1
-    assert_allclose(res.value, 1.727394e33, atol=1e-1)
-    # without missing values interpolation
-    # extrolation would give too high value (1e33 here)
+    assert np.isnan(res.value)
+
+    res = bkg_3d_interp.evaluate(
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=1000 * u.TeV,
+    )
+    assert_allclose(res.value, 9.223372036854745e18)
+    # without missing value interplation
+    # extrapolation within the last bin would give too high value
 
     bkg_3d_interp.interp_missing_data(axis_name="energy")
     assert np.all(bkg_3d_interp.data != 0)
@@ -141,7 +145,7 @@ def test_background_3d_missing_values(bkg_3d_interp):
     bkg_3d_interp.interp_missing_data(axis_name="energy")
 
     res = bkg_3d_interp.evaluate(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=1000 * u.TeV,
     )
     assert_allclose(res.value, 1.0)
 

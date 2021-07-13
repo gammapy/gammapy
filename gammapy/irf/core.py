@@ -201,8 +201,18 @@ class IRF:
             coord = kwargs.get(key, value)
             if coord is not None:
                 coords_default[key] = u.Quantity(coord, copy=False)
+        data = self._interpolate(coords_default.values(), method=method)
 
-        return self._interpolate(coords_default.values(), method=method)
+        eps = 1e-5
+        coords = [val for key, val in coords_default.items()]
+        for k, ax in enumerate(self.axes):
+            axmin = ax.edges.min()
+            axmax = ax.edges.max()
+            mask = (coords[k] < (1 - eps * np.sign(axmin)) * axmin) | (
+                coords[k] > (1 + eps * np.sign(axmax)) * axmax
+            )
+            data[mask] = np.nan
+        return data
 
     def integrate_log_log(self, axis_name, **kwargs):
         """Integrate along a given axis.
@@ -363,7 +373,7 @@ class IRF:
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
 
-        if "HDUCLAS3" in table.meta and table.meta["HDUCLAS3"]=="POINT-LIKE":
+        if "HDUCLAS3" in table.meta and table.meta["HDUCLAS3"] == "POINT-LIKE":
             table.meta["is_pointlike"] = True
         return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
 
@@ -563,14 +573,19 @@ class IRFMap:
             if hdu is None:
                 hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
 
-            irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
+            irf_map = Map.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
+            )
 
             if exposure_hdu is None:
                 exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
 
             if exposure_hdu in hdulist:
                 exposure_map = Map.from_hdulist(
-                    hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands, format=format
+                    hdulist,
+                    hdu=exposure_hdu,
+                    hdu_bands=exposure_hdu_bands,
+                    format=format,
                 )
             else:
                 exposure_map = None
@@ -636,7 +651,9 @@ class IRFMap:
             exposure_hdu = hdu + "_exposure"
 
             if self.exposure_map is not None:
-                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu, format=format)
+                new_hdulist = self.exposure_map.to_hdulist(
+                    hdu=exposure_hdu, format=format
+                )
                 hdulist.extend(new_hdulist[1:])
 
         elif format == "gtpsf":
@@ -698,14 +715,20 @@ class IRFMap:
             parent_slices = slice(None)
 
         self._irf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights, nan_to_num=nan_to_num)
+        self._irf_map.stack(
+            other._irf_map * other.exposure_map.data,
+            weights=weights,
+            nan_to_num=nan_to_num,
+        )
 
         # stack exposure map
         if weights and "energy" in weights.geom.axes.names:
             weights = weights.reduce(
                 axis_name="energy", func=np.logical_or, keepdims=True
             )
-        self.exposure_map.stack(other.exposure_map, weights=weights, nan_to_num=nan_to_num)
+        self.exposure_map.stack(
+            other.exposure_map, weights=weights, nan_to_num=nan_to_num
+        )
 
         with np.errstate(invalid="ignore"):
             self._irf_map.data[parent_slices] /= self.exposure_map.data[parent_slices]
