@@ -204,13 +204,20 @@ class IRF:
         data = self._interpolate(coords_default.values(), method=method)
 
         eps = 1e-5
-        coords_grid = np.meshgrid(
-            *[val for key, val in coords_default.items()], indexing="ij"
-        )
         for k, ax in enumerate(self.axes):
             coords = coords_default[ax.name]
+            ndim = len(np.atleast_1d(coords))
+            unit = coords.unit
+            if ndim == 0:
+                continue
+            if ndim > 1:
+                coords = coords.squeeze()
             if coords.shape != data.shape:
-                coords = coords_grid[k].squeeze()
+                axis = tuple(
+                    [idx for idx in range(len(data.shape)) if idx != k]
+                )  # simpler solution ?
+                coords = np.expand_dims(coords, axis=axis)
+                coords = np.broadcast_to(coords, data.shape) * unit
             axmin = ax.edges.min()
             axmax = ax.edges.max()
             mask = (coords < (1 - eps * np.sign(axmin)) * axmin) | (
