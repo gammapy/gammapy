@@ -199,22 +199,25 @@ class ReflectedRegionsFinder:
             Reflected regions
         """
         self.reset_cache()
-        curr_angle = self.angle_min + self.min_distance_input
-        reflected_regions = []
+        regions = []
 
-        while curr_angle < self.angle_max:
-            test_reg = self.region_pix.rotate(self.center_pix, curr_angle)
-            if not np.any(test_reg.contains(self.excluded_pix_coords)):
-                region = test_reg.to_sky(self.geom_ref.wcs)
-                reflected_regions.append(region)
+        angle = self.angle_min + self.min_distance_input
 
-                curr_angle += self.angle_min
-                if self.max_region_number <= len(reflected_regions):
+        while angle < self.angle_max:
+            region_test = self.region_pix.rotate(self.center_pix, angle)
+
+            if not np.any(region_test.contains(self.excluded_pix_coords)):
+                region = region_test.to_sky(self.geom_ref.wcs)
+                regions.append(region)
+
+                if len(regions) >= self.max_region_number:
                     break
-            else:
-                curr_angle = curr_angle + self.angle_increment
 
-        return reflected_regions
+                angle += self.angle_min
+            else:
+                angle += self.angle_increment
+
+        return regions
 
 
 class ReflectedRegionsBackgroundMaker(Maker):
