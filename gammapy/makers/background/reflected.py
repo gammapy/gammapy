@@ -91,16 +91,6 @@ class ReflectedRegionsFinder:
         self.binsz = Angle(binsz)
 
     @lazyproperty
-    def exclusion_mask_ref(self):
-        """Exlcusion mask reprojected"""
-        if self.exclusion_mask:
-            mask = self.exclusion_mask.interp_to_geom(self.geom_ref)
-        else:
-            mask = WcsNDMap.from_geom(geom=self.geom_ref, data=1)
-
-        return mask
-
-    @lazyproperty
     def geom_ref(self):
         """Reference geometry
 
@@ -129,21 +119,14 @@ class ReflectedRegionsFinder:
         )
 
     @lazyproperty
-    def region_pix(self):
-        """Pixel region"""
-        return self.region.to_pixel(self.geom_ref.wcs)
-
-    @lazyproperty
     def center_pix(self):
         """Center pix coordinate"""
         return PixCoord.from_sky(self.center, self.geom_ref.wcs)
 
     @lazyproperty
-    def excluded_pix_coords(self):
-        """Excluded pix coords"""
-        # find excluded PixCoords
-        pix_y, pix_x = np.where(~self.exclusion_mask_ref.data)
-        return PixCoord(pix_x, pix_y)
+    def region_pix(self):
+        """Pixel region"""
+        return self.region.to_pixel(self.geom_ref.wcs)
 
     @lazyproperty
     def region_angular_size(self):
@@ -173,6 +156,23 @@ class ReflectedRegionsFinder:
         return angular_size
 
     @lazyproperty
+    def exclusion_mask_ref(self):
+        """Exlcusion mask reprojected"""
+        if self.exclusion_mask:
+            mask = self.exclusion_mask.interp_to_geom(self.geom_ref)
+        else:
+            mask = WcsNDMap.from_geom(geom=self.geom_ref, data=1)
+
+        return mask
+
+    @lazyproperty
+    def excluded_pix_coords(self):
+        """Excluded pix coords"""
+        # find excluded PixCoords
+        pix_y, pix_x = np.where(~self.exclusion_mask_ref.data)
+        return PixCoord(pix_x, pix_y)
+
+    @lazyproperty
     def angle_min(self):
         """Minimum angle"""
         # Minimum angle a region has to be moved to not overlap with previous one
@@ -181,18 +181,24 @@ class ReflectedRegionsFinder:
 
     @lazyproperty
     def angle_max(self):
-        """"""
+        """Maximum angle"""
         return Angle("360deg") - self.angle_min - self.min_distance_input
 
-    def reset(self):
+    def reset_cache(self):
         """Reset cached properties"""
         for name, value in self.__class__.__dict__.items():
             if isinstance(value, lazyproperty):
                 self.__dict__.pop(name, None)
 
     def run(self):
-        """Find reflected regions."""
-        self.reset()
+        """Find reflected regions.
+
+        Returns
+        -------
+        regions : list of `SkyRegion`
+            Reflected regions
+        """
+        self.reset_cache()
         curr_angle = self.angle_min + self.min_distance_input
         reflected_regions = []
 
