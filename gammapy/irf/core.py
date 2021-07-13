@@ -204,12 +204,11 @@ class IRF:
         data = self._interpolate(coords_default.values(), method=method)
 
         eps = 1e-5
-        coords = [val for key, val in coords_default.items()]
-        for k, ax in enumerate(self.axes):
+        for ax in self.axes:
             axmin = ax.edges.min()
             axmax = ax.edges.max()
-            mask = (coords[k] < (1 - eps * np.sign(axmin)) * axmin) | (
-                coords[k] > (1 + eps * np.sign(axmax)) * axmax
+            mask = (coords_default[ax.name] < (1 - eps * np.sign(axmin)) * axmin) | (
+                coords_default[ax.name] > (1 + eps * np.sign(axmax)) * axmax
             )
             data[mask] = np.nan
         return data
