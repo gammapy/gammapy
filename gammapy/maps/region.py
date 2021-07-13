@@ -122,6 +122,28 @@ class RegionGeom(Geom):
         rectangle = rectangle_pix.to_sky(self.wcs)
         return u.Quantity([rectangle.width, rectangle.height])
 
+    def rotate(self, center, angle):
+        """Rotate region geom around a given center.
+
+        Parameters
+        ----------
+        center : `SkyCoord`
+            Rotation center coordinate
+        angle : `Angle`
+            Rotation angle
+
+        Returns
+        -------
+        geom : `RegionGeom`
+            Rotated region geom.
+        """
+        pix_region = self.region.to_pixel(self.wcs)
+        center_pix = center.to_pixel(wcs=self.wcs)
+
+        pix_region = pix_region.rotate(center_pix, angle)
+        region = pix_region.to_sky(wcs=self.wcs)
+        return self.__class__(region=region, wcs=self.wcs, axes=self.axes)
+
     @property
     def region(self):
         """`~regions.SkyRegion` object that defines the spatial component
