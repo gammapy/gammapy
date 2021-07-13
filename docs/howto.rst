@@ -23,21 +23,33 @@ pronunciation is [ɡæməpaɪ] where the syllable "py" is pronounced like
 the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=ˈ%C9%A1æməpaɪ&voice=Amy>`__.
 
 
-Access IACT data
-++++++++++++++++
+Access IACT DL3 data
+++++++++++++++++++++
 
-To access IACT data use the `~gammapy.data.DataStore`. You can see how to create
-one with the high level interface `~gammapy.analysis.Analysis` `here
-<tutorials/analysis_1.html#Setting-the-data-to-use>`__. You can also create it
-directly, see `here
+To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
+easy access to observations stored in the DL3 data library. You can create it directly
+as in `this example<tutorials/data/hess.html#Datastore>`__.
+It is also internally used by the high level interface `~gammapy.analysis.Analysis`. You
+can see how to properly set it `here
+<tutorials/starting/analysis_1.html#Setting-the-data-to-use>`__.
+
+
+Select observations
++++++++++++++++++++
+
+The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
+It can be used to select observations with various criterion.
+You can for instance apply a cone search as shown `here
 <tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
+You can also select observations based on other informations available using the
+`~gammapy.data.ObservationTable.select_observations` method.
 
 Check IRFs
 ++++++++++
 
 Gammapy offers a number of methods to explore the content of the various IRFs
 contained in an observation. This is usually done thanks to their ``peek()``
-methods. See example for CTA `here <tutorials/cta.html#IRFs>`__ and for H.E.S.S.
+methods. See example for CTA `here <tutorials/data/cta.html#IRFs>`__ and for H.E.S.S.
 `here <tutorials/data/hess.html#DL3-DR1>`__.
 
 Model 2D images
