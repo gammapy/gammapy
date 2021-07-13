@@ -79,28 +79,24 @@ def test_find_reflected_regions(
         exclusion_mask=exclusion_mask,
         min_distance_input="0 deg",
     )
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg1
     assert_quantity_allclose(regions[3].center.icrs.ra, reg3_ra, rtol=1e-2)
 
     # Test without exclusion
     finder.exclusion_mask = None
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg2
 
     # Test with too small exclusion
     small_mask = exclusion_mask.cutout(pointing, Angle("0.1 deg"))
     finder.exclusion_mask = small_mask
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg3
 
     # Test with maximum number of regions
     finder.max_region_number = 5
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == 5
 
     # Test with an other type of region
@@ -114,8 +110,7 @@ def test_find_reflected_regions(
     )
     finder.region = on_ellipse_annulus
     finder.reference_map = None
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == 5
 
 

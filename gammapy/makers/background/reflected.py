@@ -86,6 +86,10 @@ class ReflectedRegionsFinder:
 
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
+
+        if not exclusion_mask.is_mask:
+            raise ValueError("Exclusion mask must contain boolean values")
+
         self.exclusion_mask = exclusion_mask
         self.max_region_number = max_region_number
         self.binsz = Angle(binsz)
@@ -144,8 +148,8 @@ class ReflectedRegionsFinder:
 
         pixels = PixCoord(pix_x, pix_y)
 
-        newX, newY = self.center_pix.x - pixels.x, self.center_pix.y - pixels.y
-        angles = Angle(np.arctan2(newX, newY), "rad")
+        dx, dy = self.center_pix.x - pixels.x, self.center_pix.y - pixels.y
+        angles = Angle(np.arctan2(dx, dy), "rad")
         angular_size = np.max(angles) - np.min(angles)
 
         if angular_size.value > np.pi:
@@ -157,12 +161,12 @@ class ReflectedRegionsFinder:
 
     @lazyproperty
     def exclusion_mask_ref(self):
-        """Exlcusion mask reprojected"""
+        """Exclusion mask reprojected"""
         if self.exclusion_mask:
-            mask = self.exclusion_mask.interp_to_geom(self.geom_ref)
+            mask = self.exclusion_mask.interp_to_geom(self.geom_ref, fill_value=True)
         else:
             mask = WcsNDMap.from_geom(geom=self.geom_ref, data=1)
-
+            mask.data = mask.data.astype(bool)
         return mask
 
     @lazyproperty

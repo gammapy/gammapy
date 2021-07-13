@@ -831,7 +831,7 @@ class Map(abc.ABC):
         """
         pass
 
-    def interp_to_geom(self, geom, preserve_counts=False, **kwargs):
+    def interp_to_geom(self, geom, preserve_counts=False, fill_value=0, **kwargs):
         """Interpolate map to input geometry.
 
         Parameters
@@ -861,7 +861,7 @@ class Map(abc.ABC):
         if map_copy.is_mask:
             # TODO: check this NaN handling is needed
             data = map_copy.get_by_coord(coords)
-            data = np.nan_to_num(data).astype(bool)
+            data = np.nan_to_num(data, nan=fill_value).astype(bool)
         else:
             data = map_copy.interp_by_coord(coords, **kwargs)
 
