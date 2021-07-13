@@ -115,7 +115,7 @@ def test_get_observations_obs_time(tmp_path):
     analysis.get_observations()
     assert len(analysis.observations) == 40
     analysis.config.observations.obs_ids = [0]
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         analysis.get_observations()
 
 
@@ -327,7 +327,7 @@ def test_analysis_no_bkg_1d(caplog):
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
     assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "No background maker set for 1d analysis. Check configuration."
+    assert caplog.records[-1].message == "No background maker set. Check configuration."
 
 
 
@@ -340,7 +340,7 @@ def test_analysis_no_bkg_3d(caplog):
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], MapDataset) is True
     assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "No background maker set for 3d analysis. Check configuration."
+    assert caplog.records[-1].message == "No background maker set. Check configuration."
 
 
 @requires_dependency("iminuit")
