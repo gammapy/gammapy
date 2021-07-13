@@ -130,7 +130,7 @@ class ExcessMapEstimator(Estimator):
         self.correlate_off = correlate_off
 
         if spectral_model is None:
-            spectral_model = PowerLawSpectralModel()
+            spectral_model = PowerLawSpectralModel(index=2)
 
         self.spectral_model = spectral_model
 

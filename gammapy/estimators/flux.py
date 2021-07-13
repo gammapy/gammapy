@@ -45,11 +45,11 @@ class FluxEstimator(ParameterEstimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        Re-optimize other free model parameters. Default is True.
+        Re-optimize other free model parameters. Default is False.
     """
     tag = "FluxEstimator"
     _available_selection_optional = ["errn-errp", "ul", "scan"]
@@ -65,7 +65,6 @@ class FluxEstimator(ParameterEstimator):
         n_sigma_ul=2,
         selection_optional=None,
         fit=None,
-        # TODO: why the different default here?
         reoptimize=False
     ):
         self.norm_values = norm_values
