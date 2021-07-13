@@ -216,29 +216,6 @@ class ReflectedRegionsFinder:
 
         return reflected_regions
 
-    def plot(self, fig=None, ax=None):
-        """Standard debug plot.
-
-        See example here: :ref:'regions_reflected'.
-        """
-        fig, ax, cbar = self.reference_map.plot(
-            fig=fig, ax=ax, cmap="gray", vmin=0, vmax=1
-        )
-        wcs = self.reference_map.geom.wcs
-
-        on_patch = self.region.to_pixel(wcs=wcs).as_artist(edgecolor="red", alpha=0.6)
-        ax.add_patch(on_patch)
-
-        for off in self.reflected_regions:
-            tmp = off.to_pixel(wcs=wcs)
-            off_patch = tmp.as_artist(edgecolor="blue", alpha=0.6)
-            ax.add_patch(off_patch)
-
-            xx, yy = self.center.to_pixel(wcs)
-            ax.plot(xx, yy, marker="+", color="green", markersize=20, linewidth=5)
-
-        return fig, ax
-
 
 class ReflectedRegionsBackgroundMaker(Maker):
     """Reflected regions background maker.
