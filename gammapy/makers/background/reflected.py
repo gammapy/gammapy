@@ -57,8 +57,8 @@ class ReflectedRegionsFinder:
     >>> theta = Angle(0.4, 'deg')
     >>> on_region = CircleSkyRegion(target_position, theta)
     >>> finder = ReflectedRegionsFinder(min_distance_input='1 rad', region=on_region, center=pointing)
-    >>> finder.run()
-    >>> print(finder.reflected_regions[0])
+    >>> regions = finder.run()
+    >>> print(regions[0])
     Region: CircleSkyRegion
     center: <SkyCoord (ICRS): (ra, dec) in deg
         (83.19879005, 25.57300957)>
