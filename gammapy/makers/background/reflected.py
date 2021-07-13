@@ -87,7 +87,7 @@ class ReflectedRegionsFinder:
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
 
-        if not exclusion_mask.is_mask:
+        if exclusion_mask and not exclusion_mask.is_mask:
             raise ValueError("Exclusion mask must contain boolean values")
 
         self.exclusion_mask = exclusion_mask

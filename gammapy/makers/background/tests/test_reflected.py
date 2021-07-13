@@ -132,8 +132,7 @@ def test_non_circular_regions(region, nreg):
     finder = ReflectedRegionsFinder(
         center=pointing, region=region, min_distance_input="0 deg"
     )
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg
 
 
@@ -146,13 +145,8 @@ def test_bad_on_region(exclusion_mask, on_region):
         exclusion_mask=exclusion_mask,
         min_distance_input="0 deg",
     )
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == 0
-
-    # try plotting
-    with mpl_plot_check():
-        finder.plot()
 
 
 @requires_data()
