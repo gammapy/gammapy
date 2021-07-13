@@ -1594,6 +1594,8 @@ class MapDataset(Dataset):
 
         """
         name = make_name(name)
+
+        energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
         energy_axis = self._geom.axes["energy"]
 
         group = energy_axis.group_table(edges=[energy_min, energy_max])

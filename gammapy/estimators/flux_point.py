@@ -692,7 +692,7 @@ class FluxPoints(FluxEstimate):
         return ax
 
 
-class FluxPointsEstimator(Estimator):
+class FluxPointsEstimator(FluxEstimator):
     """Flux points estimator.
 
     Estimates flux points for a given list of datasets, energies and spectral model.
@@ -748,48 +748,13 @@ class FluxPointsEstimator(Estimator):
     def __init__(
         self,
         energy_edges=[1, 10] * u.TeV,
-        source=0,
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
-        n_sigma=1,
-        n_sigma_ul=2,
-        selection_optional=None,
-        fit=None,
-        reoptimize=False
+        **kwargs
     ):
         self.energy_edges = energy_edges
-        self.source = source
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
-        self.norm_values = norm_values
-        self.n_sigma = n_sigma
-        self.n_sigma_ul = n_sigma_ul
-        self.selection_optional = selection_optional
 
-        if fit is None:
-            fit = Fit(confidence_opts={"backend": "scipy"})
-
-        self.fit = fit
-        self.reoptimize = reoptimize
-
-    def _flux_estimator(self, energy_min, energy_max):
-        return FluxEstimator(
-            source=self.source,
-            energy_min=energy_min,
-            energy_max=energy_max,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
-            norm_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            selection_optional=self.selection_optional,
-            fit=self.fit,
-            reoptimize=self.reoptimize
-        )
+        fit = Fit(confidence_opts={"backend": "scipy"})
+        kwargs.setdefault("fit", fit)
+        super().__init__(**kwargs)
 
     def run(self, datasets):
         """Run the flux point estimator for all energy groups.
@@ -836,12 +801,17 @@ class FluxPointsEstimator(Estimator):
         result : dict
             Dict with results for the flux point.
         """
+        datasets_sliced = datasets.slice_by_energy(
+            energy_min=energy_min, energy_max=energy_max
+        )
+
+        datasets_sliced.models = datasets.models.copy()
+
         result = self.estimate_counts(
             datasets, energy_min=energy_min, energy_max=energy_max
         )
-        fe = self._flux_estimator(energy_min=energy_min, energy_max=energy_max)
 
-        result.update(fe.run(datasets=datasets))
+        result.update(super().run(datasets=datasets_sliced))
 
         return result
 
