@@ -10,6 +10,7 @@ from astropy.io import fits
 from astropy.table import Column, Table, hstack
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
+from gammapy.utils.time import time_ref_to_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
 
 
@@ -1627,6 +1628,11 @@ class MapAxes(Sequence):
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
                     table[colname] = np.ravel(v[idx]).astype(np.float32)
+
+                if isinstance(ax, TimeMapAxis):
+                    ref_dict = time_ref_to_dict(ax.reference_time)
+                    table.meta.update(ref_dict)
+
         elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
             energy_axis = self["energy"]
             table = energy_axis.to_table(format=format)
@@ -1784,6 +1790,7 @@ class MapAxes(Sequence):
         """Center coordinates"""
         return tuple([ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self])
 
+
 class TimeMapAxis:
     """Class representing a time axis.
 
@@ -1807,6 +1814,7 @@ class TimeMapAxis:
         coordinates.  For now only 'lin' is supported.
     """
     node_type = "intervals"
+
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
 
@@ -1842,6 +1850,9 @@ class TimeMapAxis:
             raise ValueError("TimeMapAxis: non-linear scaling scheme are not supported yet.")
         self._interp = interp
 
+    @property
+    def interp(self):
+        return self._interp
 
     @property
     def reference_time(self):
@@ -1925,7 +1936,6 @@ class TimeMapAxis:
     def __hash__(self):
         return id(self)
 
-
     def is_aligned(self, other, atol=2e-2):
         raise NotImplementedError
 
@@ -2002,7 +2012,7 @@ class TimeMapAxis:
     @property
     def center(self):
         """Return `~astropy.time.Time` at interval centers."""
-        return self.time_mid
+        return self.edges_min + 0.5 * self.time_delta
 
     @property
     def bin_width(self):
@@ -2119,7 +2129,7 @@ class TimeMapAxis:
 
         return cls(edges_min.to(unit), edges_max.to(unit), reference_time, interp=interp, name=name)
 
-    #TODO: how configurable should that be? column names?
+    # TODO: how configurable should that be? column names?
     @classmethod
     def from_table(cls, table, reference_time=None, name="time"):
         if "TIMESYS" not in table.meta:
@@ -2144,4 +2154,33 @@ class TimeMapAxis:
 
         return cls(tmin.to('s'), tmax.to('s'), gti.time_ref, name)
 
+    def to_header(self, format="gadf", idx=0):
+        """Create FITS header
 
+        Parameters
+        ----------
+        format : {"ogip"}
+            Format specification
+        idx : int
+            Column index of the axis.
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            Header to extend.
+        """
+        header = fits.Header()
+
+        if format == "gadf":
+            key = f"AXCOLS{idx}"
+            name = self.name.upper()
+            header[key] = f"{name}_MIN,{name}_MAX"
+            key_interp = f"INTERP{idx}"
+            header[key_interp] = self.interp
+
+            ref_dict = time_ref_to_dict(self.reference_time)
+            header.update(ref_dict)
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        return header
