@@ -573,6 +573,11 @@ class RegionNDMap(Map):
             data = self.quantity.flatten()
             table["CHANNEL"] = np.arange(len(data), dtype=np.int16)
             table["DATA"] = data
+        elif format == "gadf-sed":
+            table = self.geom.axes.to_table()
+            data = self.quantity.flatten()
+            table["CHANNEL"] = np.arange(len(data), dtype=np.int16)
+            table["DATA"] = data
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 

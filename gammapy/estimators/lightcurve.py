@@ -416,6 +416,7 @@ class LightCurveEstimator(Estimator):
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
+
         Returns
         -------
         lightcurve : `~gammapy.estimators.LightCurve`
