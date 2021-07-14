@@ -133,9 +133,9 @@ def test_background_3d_missing_values(bkg_3d_interp):
     assert np.isnan(res.value)
 
     res = bkg_3d_interp.evaluate(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=1000 * u.TeV,
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=999 * u.TeV,
     )
-    assert_allclose(res.value, 9.223372036854745e18)
+    assert_allclose(res.value, 8.796068e+18)
     # without missing value interplation
     # extrapolation within the last bin would give too high value
 
@@ -145,7 +145,7 @@ def test_background_3d_missing_values(bkg_3d_interp):
     bkg_3d_interp.interp_missing_data(axis_name="energy")
 
     res = bkg_3d_interp.evaluate(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=1000 * u.TeV,
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=999 * u.TeV,
     )
     assert_allclose(res.value, 1.0)
 
@@ -298,7 +298,7 @@ def test_background_2d_integrate(bkg_2d):
     # e.g. constant spectrum or power-law.
 
     rate = bkg_2d.integrate_log_log(
-        offset=[1, 0.5] * u.deg, energy=[0.1, 0.5] * u.TeV, axis_name="energy"
+        offset=[1, 0.51] * u.deg, energy=[0.11, 0.5] * u.TeV, axis_name="energy"
     )
 
     assert rate.shape == (1,)
