@@ -203,28 +203,12 @@ class IRF:
                 coords_default[key] = u.Quantity(coord, copy=False)
         data = self._interpolate(coords_default.values(), method=method)
 
-        eps = 1e-5
-        for k, ax in enumerate(self.axes):
-            coords = coords_default[ax.name]
-            unit = coords.unit
-            if not coords.shape:
-                continue
-            coords = coords.squeeze()
-            if len(np.atleast_1d(coords)) != 1 and coords.shape != data.shape:
-                ind = []
-                for s in coords.shape:
-                    ind.extend(np.where(np.array(data.shape)==s)[0])
-                axis = tuple(
-                    [idx for idx in range(len(data.shape)) if idx not in ind]
-                )  # simpler solution ?
-                coords = np.expand_dims(coords, axis=axis)
-                coords = np.broadcast_to(coords, data.shape) * unit
-            axmin = ax.edges.min()
-            axmax = ax.edges.max()
-            mask = (coords < (1 - eps * np.sign(axmin)) * axmin) | (
-                coords > (1 + eps * np.sign(axmax)) * axmax
-            )
-            data[mask] = np.nan
+        idxs = self.axes.coord_to_idx(coords_default, clip=False)
+        invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
+        mask = np.any(invalid, axis=0)
+        if not data.shape:
+            mask = mask.squeeze()
+        data[mask] = np.nan
         return data
 
     def integrate_log_log(self, axis_name, **kwargs):
