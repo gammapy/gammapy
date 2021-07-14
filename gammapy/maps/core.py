@@ -76,7 +76,7 @@ class Map(abc.ABC):
     @data.setter
     def data(self, value):
         if np.isscalar(value):
-            value = value * np.ones(self.geom.data_shape)
+            value = value * np.ones(self.geom.data_shape, dtype=type(value))
 
         if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")

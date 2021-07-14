@@ -165,8 +165,7 @@ class ReflectedRegionsFinder:
         if self.exclusion_mask:
             mask = self.exclusion_mask.interp_to_geom(self.geom_ref, fill_value=True)
         else:
-            mask = WcsNDMap.from_geom(geom=self.geom_ref, data=1)
-            mask.data = mask.data.astype(bool)
+            mask = WcsNDMap.from_geom(geom=self.geom_ref, data=True)
         return mask
 
     @lazyproperty
