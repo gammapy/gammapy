@@ -1850,7 +1850,8 @@ class TimeMapAxis:
         self._pix_offset = -0.5
         self._interp = interp
 
-        if np.any(self.time_delta < 0 * u.s):
+        delta = edges_min[1:] - edges_max[:-1]
+        if np.any(delta < 0 * u.s):
             raise ValueError("Time intervals must not overlap.")
 
     @property
