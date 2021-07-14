@@ -206,15 +206,16 @@ class IRF:
         eps = 1e-5
         for k, ax in enumerate(self.axes):
             coords = coords_default[ax.name]
-            ndim = len(np.atleast_1d(coords))
             unit = coords.unit
-            if ndim == 0:
+            if not coords.shape:
                 continue
-            if ndim > 1:
-                coords = coords.squeeze()
-            if coords.shape != data.shape:
+            coords = coords.squeeze()
+            if len(np.atleast_1d(coords)) != 1 and coords.shape != data.shape:
+                ind = []
+                for s in coords.shape:
+                    ind.extend(np.where(np.array(data.shape)==s)[0])
                 axis = tuple(
-                    [idx for idx in range(len(data.shape)) if idx != k]
+                    [idx for idx in range(len(data.shape)) if idx not in ind]
                 )  # simpler solution ?
                 coords = np.expand_dims(coords, axis=axis)
                 coords = np.broadcast_to(coords, data.shape) * unit
