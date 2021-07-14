@@ -193,7 +193,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confi
     excess = count_statistic.n_sig
     errn = count_statistic.compute_errn(1.)
     errp = count_statistic.compute_errp(1.)
-    print(f"68% confidence range: {excess+errn:.3f} < mu < {excess+errp:.3f}")
+    print(f"68% confidence range: {excess + errn:.3f} < mu < {excess + errp:.3f}")
 
 .. testoutput::
 
@@ -203,7 +203,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confi
 
     errn_2sigma = count_statistic.compute_errn(2.)
     errp_2sigma = count_statistic.compute_errp(2.)
-    print(f"95% confidence range: {excess+errn_2sigma:.3f} < mu < {excess+errp_2sigma:.3f}")
+    print(f"95% confidence range: {excess + errn_2sigma:.3f} < mu < {excess + errp_2sigma:.3f}")
 
 .. testoutput::
 
@@ -239,13 +239,13 @@ Here's how you compute the statistical significance of your detection:
 
     from gammapy.stats import WStatCountsStatistic
     stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
-    print(stat.n_sig)
-    print(stat.sqrt_ts)
+    print(f"Excess  : {stat.n_sig:.2f}")
+    print(f"sqrt(TS): {stat.sqrt_ts:.2f}")
 
 .. testoutput::
 
-    7.5
-    2.09283236849328
+    Excess  : 7.50
+    sqrt(TS): 2.09
 
 .. plot:: stats/plot_wstat_significance.py
 
@@ -256,13 +256,13 @@ the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for k
 
     from gammapy.stats import CashCountsStatistic
     stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(stat.n_sig)
-    print(stat.sqrt_ts)
+    print(f"Excess  : {stat.n_sig:.2f}")
+    print(f"sqrt(TS): {stat.sqrt_ts:.2f}")
 
 .. testoutput::
 
-    7.5
-    2.7138962573762653
+    Excess  : 7.50
+    sqrt(TS): 2.71
 
 .. plot:: stats/plot_cash_significance.py
 
@@ -277,17 +277,17 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
 
     from gammapy.stats import CashCountsStatistic
     stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(stat.compute_errn(1.))
-    print(stat.compute_errp(1.))
-    print(stat.compute_errn(2.))
-    print(stat.compute_errp(2.))
+    print(f"{stat.compute_errn(1.):.2f}")
+    print(f"{stat.compute_errp(1.):.2f}")
+    print(f"{stat.compute_errn(2.):.2f}")
+    print(f"{stat.compute_errp(2.):.2f}")
 
 .. testoutput::
 
-    -3.280211558352333
-    3.9463091246231023
-    -5.94409080573643
-    8.60168631791818
+    -3.28
+    3.95
+    -5.94
+    8.60
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values
