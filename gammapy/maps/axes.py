@@ -10,7 +10,7 @@ from astropy.io import fits
 from astropy.table import Column, Table, hstack
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
-from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.time import time_ref_to_dict, time_ref_from_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
 
 
@@ -1730,7 +1730,11 @@ class MapAxes(Sequence):
                 if axcols is None:
                     break
 
-                axis = MapAxis.from_table(table, format=format, idx=idx)
+                # TODO: what is good way to check whether it is a time axis?
+                try:
+                    axis = TimeMapAxis.from_table(table, format=format, idx=idx)
+                except (KeyError, ValueError):
+                    axis = MapAxis.from_table(table, format=format, idx=idx)
                 axes.append(axis)
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
@@ -1821,34 +1825,33 @@ class TimeMapAxis:
         edges_min = u.Quantity(edges_min, ndmin=1)
         edges_max = u.Quantity(edges_max, ndmin=1)
 
-        reference_time = Time(reference_time)
+        if not edges_min.unit.is_equivalent("s"):
+            raise ValueError(f"Time edges min must have a valid time unit, got {edges_min.unit}")
 
-        invalid = [_.unit.name for _ in (edges_min, edges_max) if not _.unit.is_equivalent("d")]
-        if len(invalid)>0:
-            raise TypeError(f"TimeAxis edges must be time-like quantities. Got {invalid}")
+        if not edges_max.unit.is_equivalent("s"):
+            raise ValueError(f"Time edges max must have a valid time unit, got {edges_max.unit}")
 
-        # Note: flatten is there to deal with scalr Time objects
-        if not len(edges_min.flatten()) == len(edges_max.flatten()):
-            raise ValueError("Time min and time max must have the same length.")
+        if not edges_min.shape == edges_max.shape:
+            raise ValueError("Time min and time max must have the same shape,"
+                             f" got {edges_min.shape} and {edges_max.shape}.")
 
-        if not (np.all(edges_min == np.sort(edges_min))
-                and np.all(edges_max == np.sort(edges_max))):
-            raise ValueError("TimeAxis: edges values must be sorted")
+        if not np.all(edges_min == np.sort(edges_min)):
+            raise ValueError("Time edges min values must be sorted")
 
-        self._edges_min = u.Quantity(edges_min)
-        self._edges_max = u.Quantity(edges_max)
-        self._reference_time = reference_time
-        self._pix_offset = -0.5
-        self._nbin = len(edges_min.flatten())
-
-        if self.nbin>1:
-            delta = self._edges_min[1:] - self._edges_max[:-1]
-            if np.any(delta.to_value("s")<0):
-                raise ValueError("TimeMapAxis: time intervals must not overlap.")
+        if not np.all(edges_max == np.sort(edges_max)):
+            raise ValueError("Time edges max values must be sorted")
 
         if interp != "lin":
-            raise ValueError("TimeMapAxis: non-linear scaling scheme are not supported yet.")
+            raise NotImplementedError(f"Non-linear scaling scheme are not supported yet, got {interp}")
+
+        self._edges_min = edges_min
+        self._edges_max = edges_max
+        self._reference_time = Time(reference_time)
+        self._pix_offset = -0.5
         self._interp = interp
+
+        if np.any(self.time_delta < 0 * u.s):
+            raise ValueError("Time intervals must not overlap.")
 
     @property
     def interp(self):
@@ -1867,7 +1870,7 @@ class TimeMapAxis:
     @property
     def nbin(self):
         """Return number of bins in the axis."""
-        return self._nbin
+        return len(self.edges_min.flatten())
 
     @property
     def edges_min(self):
@@ -1919,6 +1922,7 @@ class TimeMapAxis:
 
         if self._edges_min.shape != other._edges_min.shape:
             return False
+
         # This will test equality at microsec level.
         delta_min = self.time_min - other.time_min
         delta_max = self.time_max - other.time_max
@@ -2022,10 +2026,13 @@ class TimeMapAxis:
     def __repr__(self):
         str_ = self.__class__.__name__ + "\n"
         str_ += "-" * len(self.__class__.__name__) + "\n\n"
-        fmt = "\t{:<10s} : {:<10s}\n"
+        fmt = "\t{:<14s} : {:<10s}\n"
         str_ += fmt.format("name", self.name)
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("reference time", self.reference_time.iso)
+        str_ += fmt.format("scale", self.reference_time.scale)
+        str_ += fmt.format("time min.", self.time_min.min().iso)
+        str_ += fmt.format("time max.", self.time_max.max().iso)
         str_ += fmt.format("total time", self.time_delta.sum())
         return str_.expandtabs(tabsize=2)
 
@@ -2131,20 +2138,38 @@ class TimeMapAxis:
 
     # TODO: how configurable should that be? column names?
     @classmethod
-    def from_table(cls, table, reference_time=None, name="time"):
-        if "TIMESYS" not in table.meta:
-            print("No TIMESYS information. Assuming UTC scale.")
-            scale = "utc"
-        else:
-            scale = table.meta["TIMESYS"]
-        format = "mjd"
+    def from_table(cls, table, format="gadf", idx=0):
+        """Create time map axis from table
 
-        # TODO: improve and correct
-        tmin = Time(table["time_min"], scale=scale, format=format)
-        tmax = Time(table["time_max"], scale=scale, format=format)
-        if not reference_time:
-            reference_time = tmin[0]
-        return cls((tmin-reference_time).to('d'), (tmax-reference_time).to('d'), reference_time, name)
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Bin table HDU
+        format : {"gadf"}
+            Format to use.
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+        """
+        if format == "gadf":
+            axcols = table.meta.get("AXCOLS{}".format(idx + 1))
+            colnames = axcols.split(",")
+            name = colnames[0].replace("_MIN", "").lower()
+
+            reference_time = time_ref_from_dict(table.meta)
+            edges_min = np.unique(table[colnames[0]].quantity)
+            edges_max = np.unique(table[colnames[1]].quantity)
+        else:
+            raise ValueError(f"Not a supported format: {format}")
+
+        return cls(
+            edges_min=edges_min,
+            edges_max=edges_max,
+            reference_time=reference_time,
+            name=name
+        )
 
     @classmethod
     def from_gti(cls, gti, name="time"):
