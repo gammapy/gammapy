@@ -349,7 +349,7 @@ class PSFMap(IRFMap):
         psf_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
 
         exposure_map = Map.from_geom(
-            geom=geom.squash(axis_name="rad"), unit="m2 s", data=1
+            geom=geom.squash(axis_name="rad"), unit="m2 s", data=1.
         )
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 

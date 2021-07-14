@@ -1074,7 +1074,6 @@ def test_map_dataset_onoff_str(images):
 def test_stack_onoff(images):
     dataset = get_map_dataset_onoff(images)
     stacked = dataset.copy()
-
     stacked.stack(dataset)
 
     assert_allclose(stacked.counts.data.sum(), 2 * dataset.counts.data.sum())
