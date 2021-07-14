@@ -207,11 +207,21 @@ class MapAxis:
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
     @property
+    def edges_min(self):
+        """Return array of bin edges max values."""
+        return self.edges[:-1]
+
+    @property
+    def edges_max(self):
+        """Return array of bin edges min values."""
+        return self.edges[1:]
+
+    @property
     def as_xerr(self):
         """Return tuple of xerr to be used with plt.errorbar()"""
         return (
-            self.center - self.edges[:-1],
-            self.edges[1:] - self.center,
+            self.center - self.edges_min,
+            self.edges_max - self.center,
         )
 
     @property
@@ -1604,8 +1614,8 @@ class MapAxes(Sequence):
             table["CHANNEL"] = np.arange(np.prod(self.shape))
 
             axes_ctr = np.meshgrid(*[ax.center for ax in self])
-            axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
-            axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
+            axes_min = np.meshgrid(*[ax.edges_min for ax in self])
+            axes_max = np.meshgrid(*[ax.edges_max for ax in self])
 
             for idx, ax in enumerate(self):
                 name = ax.name.upper()
@@ -1847,6 +1857,16 @@ class TimeMapAxis:
     def nbin(self):
         """Return number of bins in the axis."""
         return self._nbin
+
+    @property
+    def edges_min(self):
+        """Return array of bin edges max values."""
+        return self._edges_min
+
+    @property
+    def edges_max(self):
+        """Return array of bin edges min values."""
+        return self._edges_max
 
     @property
     def time_min(self):
