@@ -155,7 +155,9 @@ def bkg_3d_custom(symmetry="constant"):
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
     fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
     fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
-    return Background3D(
+    Background3D_extra = Background3D
+    Background3D_extra.fill_value = None #allow extrapolation for symetry tests
+    return Background3D_extra(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
         unit=u.Unit("s-1 MeV-1 sr-1")

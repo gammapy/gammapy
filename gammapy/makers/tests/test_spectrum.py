@@ -314,4 +314,4 @@ class TestSpectrumMakerChain:
         dataset = safe_mask_maker.run(dataset, obs)
 
         actual = dataset.energy_range[0]
-        assert_quantity_allclose(actual, 0.774264 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(actual, 0.681292 * u.TeV, rtol=1e-3)
