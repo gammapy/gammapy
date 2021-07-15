@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
-from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, WcsGeom, WcsNDMap, TimeMapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 pytest.importorskip("healpy")
@@ -157,6 +157,34 @@ def test_map_meta_read_write(map_type):
 
     m2 = Map.from_hdulist(hdulist)
     assert m2.meta == meta
+
+
+@pytest.mark.parametrize("map_type", ["wcs", "hpx"])
+def test_map_time_axis_read_write(map_type):
+    time_axis = TimeMapAxis(
+        edges_min=[0, 2, 4] * u.d,
+        edges_max=[1, 3, 5] * u.d,
+        reference_time="2000-01-01"
+    )
+
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+
+    m = Map.create(
+        binsz=0.1,
+        width=10.0,
+        map_type=map_type,
+        skydir=SkyCoord(0.0, 30.0, unit="deg"),
+        axes=[energy_axis, time_axis]
+    )
+
+    hdulist = m.to_hdulist(hdu="COUNTS")
+
+    m2 = Map.from_hdulist(hdulist)
+
+    time_axis_new = m2.geom.axes["time"]
+    assert time_axis_new == time_axis
+    assert time_axis.reference_time.scale == "utc"
+    assert time_axis_new.reference_time.scale == "tt"
 
 
 unit_args = [("wcs", "s"), ("wcs", ""), ("wcs", Unit("sr")), ("hpx", "m^2")]

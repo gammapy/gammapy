@@ -10,6 +10,7 @@ from astropy.io import fits
 from astropy.table import Column, Table, hstack
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
+from gammapy.utils.time import time_ref_to_dict, time_ref_from_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
 
 
@@ -207,11 +208,21 @@ class MapAxis:
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
     @property
+    def edges_min(self):
+        """Return array of bin edges max values."""
+        return self.edges[:-1]
+
+    @property
+    def edges_max(self):
+        """Return array of bin edges min values."""
+        return self.edges[1:]
+
+    @property
     def as_xerr(self):
         """Return tuple of xerr to be used with plt.errorbar()"""
         return (
-            self.center - self.edges[:-1],
-            self.edges[1:] - self.center,
+            self.center - self.edges_min,
+            self.edges_max - self.center,
         )
 
     @property
@@ -1604,8 +1615,8 @@ class MapAxes(Sequence):
             table["CHANNEL"] = np.arange(np.prod(self.shape))
 
             axes_ctr = np.meshgrid(*[ax.center for ax in self])
-            axes_min = np.meshgrid(*[ax.edges[:-1] for ax in self])
-            axes_max = np.meshgrid(*[ax.edges[1:] for ax in self])
+            axes_min = np.meshgrid(*[ax.edges_min for ax in self])
+            axes_max = np.meshgrid(*[ax.edges_max for ax in self])
 
             for idx, ax in enumerate(self):
                 name = ax.name.upper()
@@ -1617,6 +1628,11 @@ class MapAxes(Sequence):
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
                     table[colname] = np.ravel(v[idx]).astype(np.float32)
+
+                if isinstance(ax, TimeMapAxis):
+                    ref_dict = time_ref_to_dict(ax.reference_time)
+                    table.meta.update(ref_dict)
+
         elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
             energy_axis = self["energy"]
             table = energy_axis.to_table(format=format)
@@ -1714,7 +1730,11 @@ class MapAxes(Sequence):
                 if axcols is None:
                     break
 
-                axis = MapAxis.from_table(table, format=format, idx=idx)
+                # TODO: what is good way to check whether it is a time axis?
+                try:
+                    axis = TimeMapAxis.from_table(table, format=format, idx=idx)
+                except (KeyError, ValueError):
+                    axis = MapAxis.from_table(table, format=format, idx=idx)
                 axes.append(axis)
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
@@ -1774,6 +1794,7 @@ class MapAxes(Sequence):
         """Center coordinates"""
         return tuple([ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self])
 
+
 class TimeMapAxis:
     """Class representing a time axis.
 
@@ -1797,41 +1818,48 @@ class TimeMapAxis:
         coordinates.  For now only 'lin' is supported.
     """
     node_type = "intervals"
+
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
 
         edges_min = u.Quantity(edges_min, ndmin=1)
         edges_max = u.Quantity(edges_max, ndmin=1)
 
-        reference_time = Time(reference_time)
+        if not edges_min.unit.is_equivalent("s"):
+            raise ValueError(f"Time edges min must have a valid time unit, got {edges_min.unit}")
 
-        invalid = [_.unit.name for _ in (edges_min, edges_max) if not _.unit.is_equivalent("d")]
-        if len(invalid)>0:
-            raise TypeError(f"TimeAxis edges must be time-like quantities. Got {invalid}")
+        if not edges_max.unit.is_equivalent("s"):
+            raise ValueError(f"Time edges max must have a valid time unit, got {edges_max.unit}")
 
-        # Note: flatten is there to deal with scalr Time objects
-        if not len(edges_min.flatten()) == len(edges_max.flatten()):
-            raise ValueError("Time min and time max must have the same length.")
+        if not edges_min.shape == edges_max.shape:
+            raise ValueError("Edges min and edges max must have the same shape,"
+                             f" got {edges_min.shape} and {edges_max.shape}.")
 
-        if not (np.all(edges_min == np.sort(edges_min))
-                and np.all(edges_max == np.sort(edges_max))):
-            raise ValueError("TimeAxis: edges values must be sorted")
+        if not np.all(edges_max > edges_min):
+            raise ValueError("Edges max must all be larger than edge min")
 
-        self._edges_min = u.Quantity(edges_min)
-        self._edges_max = u.Quantity(edges_max)
-        self._reference_time = reference_time
-        self._pix_offset = -0.5
-        self._nbin = len(edges_min.flatten())
+        if not np.all(edges_min == np.sort(edges_min)):
+            raise ValueError("Time edges min values must be sorted")
 
-        if self.nbin>1:
-            delta = self._edges_min[1:] - self._edges_max[:-1]
-            if np.any(delta.to_value("s")<0):
-                raise ValueError("TimeMapAxis: time intervals must not overlap.")
+        if not np.all(edges_max == np.sort(edges_max)):
+            raise ValueError("Time edges max values must be sorted")
 
         if interp != "lin":
-            raise ValueError("TimeMapAxis: non-linear scaling scheme are not supported yet.")
+            raise NotImplementedError(f"Non-linear scaling scheme are not supported yet, got {interp}")
+
+        self._edges_min = edges_min
+        self._edges_max = edges_max
+        self._reference_time = Time(reference_time)
+        self._pix_offset = -0.5
         self._interp = interp
 
+        delta = edges_min[1:] - edges_max[:-1]
+        if np.any(delta < 0 * u.s):
+            raise ValueError("Time intervals must not overlap.")
+
+    @property
+    def interp(self):
+        return self._interp
 
     @property
     def reference_time(self):
@@ -1846,7 +1874,17 @@ class TimeMapAxis:
     @property
     def nbin(self):
         """Return number of bins in the axis."""
-        return self._nbin
+        return len(self.edges_min.flatten())
+
+    @property
+    def edges_min(self):
+        """Return array of bin edges max values."""
+        return self._edges_min
+
+    @property
+    def edges_max(self):
+        """Return array of bin edges min values."""
+        return self._edges_max
 
     @property
     def time_min(self):
@@ -1861,7 +1899,7 @@ class TimeMapAxis:
     @property
     def time_delta(self):
         """Return axis time bin width (`~astropy.time.TimeDelta`)."""
-        return self._edges_max - self._edges_min
+        return self.time_max - self.time_min
 
     @property
     def time_mid(self):
@@ -1888,6 +1926,7 @@ class TimeMapAxis:
 
         if self._edges_min.shape != other._edges_min.shape:
             return False
+
         # This will test equality at microsec level.
         delta_min = self.time_min - other.time_min
         delta_max = self.time_max - other.time_max
@@ -1904,7 +1943,6 @@ class TimeMapAxis:
 
     def __hash__(self):
         return id(self)
-
 
     def is_aligned(self, other, atol=2e-2):
         raise NotImplementedError
@@ -1981,22 +2019,25 @@ class TimeMapAxis:
 
     @property
     def center(self):
-        """Return `~astropy.time.Time` at interval centers."""
-        return self.time_mid
+        """Return `~astropy.units.Quantity` at interval centers."""
+        return self.edges_min + 0.5 * self.bin_width
 
     @property
     def bin_width(self):
-        """Return time interval width."""
-        return self.time_delta
+        """Return time interval width (`~astropy.units.Quantity`)."""
+        return self.time_delta.to("h")
 
     def __repr__(self):
         str_ = self.__class__.__name__ + "\n"
         str_ += "-" * len(self.__class__.__name__) + "\n\n"
-        fmt = "\t{:<10s} : {:<10s}\n"
+        fmt = "\t{:<14s} : {:<10s}\n"
         str_ += fmt.format("name", self.name)
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("reference time", self.reference_time.iso)
-        str_ += fmt.format("total time", self.time_delta.sum())
+        str_ += fmt.format("scale", self.reference_time.scale)
+        str_ += fmt.format("time min.", self.time_min.min().iso)
+        str_ += fmt.format("time max.", self.time_max.max().iso)
+        str_ += fmt.format("total time", np.sum(self.bin_width))
         return str_.expandtabs(tabsize=2)
 
     def upsample(self):
@@ -2099,22 +2140,40 @@ class TimeMapAxis:
 
         return cls(edges_min.to(unit), edges_max.to(unit), reference_time, interp=interp, name=name)
 
-    #TODO: how configurable should that be? column names?
+    # TODO: how configurable should that be? column names?
     @classmethod
-    def from_table(cls, table, reference_time=None, name="time"):
-        if "TIMESYS" not in table.meta:
-            print("No TIMESYS information. Assuming UTC scale.")
-            scale = "utc"
-        else:
-            scale = table.meta["TIMESYS"]
-        format = "mjd"
+    def from_table(cls, table, format="gadf", idx=0):
+        """Create time map axis from table
 
-        # TODO: improve and correct
-        tmin = Time(table["time_min"], scale=scale, format=format)
-        tmax = Time(table["time_max"], scale=scale, format=format)
-        if not reference_time:
-            reference_time = tmin[0]
-        return cls((tmin-reference_time).to('d'), (tmax-reference_time).to('d'), reference_time, name)
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Bin table HDU
+        format : {"gadf"}
+            Format to use.
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+        """
+        if format == "gadf":
+            axcols = table.meta.get("AXCOLS{}".format(idx + 1))
+            colnames = axcols.split(",")
+            name = colnames[0].replace("_MIN", "").lower()
+
+            reference_time = time_ref_from_dict(table.meta)
+            edges_min = np.unique(table[colnames[0]].quantity)
+            edges_max = np.unique(table[colnames[1]].quantity)
+        else:
+            raise ValueError(f"Not a supported format: {format}")
+
+        return cls(
+            edges_min=edges_min,
+            edges_max=edges_max,
+            reference_time=reference_time,
+            name=name
+        )
 
     @classmethod
     def from_gti(cls, gti, name="time"):
@@ -2124,4 +2183,33 @@ class TimeMapAxis:
 
         return cls(tmin.to('s'), tmax.to('s'), gti.time_ref, name)
 
+    def to_header(self, format="gadf", idx=0):
+        """Create FITS header
 
+        Parameters
+        ----------
+        format : {"ogip"}
+            Format specification
+        idx : int
+            Column index of the axis.
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            Header to extend.
+        """
+        header = fits.Header()
+
+        if format == "gadf":
+            key = f"AXCOLS{idx}"
+            name = self.name.upper()
+            header[key] = f"{name}_MIN,{name}_MAX"
+            key_interp = f"INTERP{idx}"
+            header[key_interp] = self.interp
+
+            ref_dict = time_ref_to_dict(self.reference_time)
+            header.update(ref_dict)
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        return header

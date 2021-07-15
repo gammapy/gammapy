@@ -483,7 +483,7 @@ class RegionGeom(Geom):
         return np.meshgrid(*idxs[::-1], indexing="ij")[::-1]
 
     def _make_bands_cols(self):
-        pass
+        return []
 
     @classmethod
     def create(cls, region, **kwargs):
