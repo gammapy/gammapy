@@ -211,7 +211,7 @@ class IRF:
             if not data.shape:
                 mask = mask.squeeze()
             data[mask] = self.fill_value
-            data[np.isnan(data)] = self.fill_value
+            data[~np.isfinite(data)] = self.fill_value
         return data
 
     def integrate_log_log(self, axis_name, **kwargs):
