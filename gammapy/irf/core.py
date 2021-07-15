@@ -34,6 +34,7 @@ class IRF:
     """
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=None,)
+    fill_value = 0.
 
     def __init__(self, axes, data=0, unit="", meta=None):
         axes = MapAxes(axes)
@@ -203,12 +204,14 @@ class IRF:
                 coords_default[key] = u.Quantity(coord, copy=False)
         data = self._interpolate(coords_default.values(), method=method)
 
-        idxs = self.axes.coord_to_idx(coords_default, clip=False)
-        invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
-        mask = np.any(invalid, axis=0)
-        if not data.shape:
-            mask = mask.squeeze()
-        data[mask] = np.nan
+        if self.fill_value != self.default_interp_kwargs["fill_value"]:
+            idxs = self.axes.coord_to_idx(coords_default, clip=False)
+            invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
+            mask = np.any(invalid, axis=0)
+            if not data.shape:
+                mask = mask.squeeze()
+            data[mask] = self.fill_value
+            data[np.isnan(data)] = self.fill_value
         return data
 
     def integrate_log_log(self, axis_name, **kwargs):

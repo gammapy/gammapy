@@ -8,6 +8,8 @@ from ..core import IRF
 class PSF(IRF):
     """PSF base class"""
 
+    fill_value = 0.
+
     def normalize(self):
         """Normalise psf"""
         super().normalize(axis_name="rad")

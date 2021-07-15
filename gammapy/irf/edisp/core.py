@@ -48,6 +48,7 @@ class EnergyDispersion2D(IRF):
 
     tag = "edisp_2d"
     required_axes = ["energy_true", "migra", "offset"]
+    fill_value = None #allow extrapolation
 
     @classmethod
     def from_gauss(cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6):
