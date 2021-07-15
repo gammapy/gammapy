@@ -189,8 +189,8 @@ class ObservationTable(Table):
 
         return self[mask]
 
-    def select_observations(self, selection=None):
-        """Select subset of observations.
+    def select_observations(self, selections=None):
+        """Select subset of observations from a list of selection criteria.
 
         Returns a new observation table representing the subset.
 
@@ -233,8 +233,8 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selection : dict
-            Dictionary with a few keywords for applying selection cuts.
+        selection : list of dict
+            List of selection cuts dictionaries.
 
         Returns
         -------
@@ -266,6 +266,17 @@ class ObservationTable(Table):
         >>> selection = dict(type='par_box', variable='N_TELS', value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
+        if isinstance(selections, dict):
+            selections = [selections]
+
+        obs_table = self
+        for selection in selections:
+            obs_table = obs_table._apply_simple_selection(selection)
+
+        return obs_table
+
+    def _apply_simple_selection(self, selection):
+        """Select subset of observations from a single selection criterion."""
         if "inverted" not in selection:
             selection["inverted"] = False
         if "partial_overlap" not in selection:
