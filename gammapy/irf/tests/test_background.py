@@ -130,7 +130,7 @@ def test_background_3d_missing_values(bkg_3d_interp):
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
     )
-    assert np.isnan(res.value)
+    assert_allclose(res.value, 0.)
 
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=999 * u.TeV,
@@ -218,12 +218,6 @@ def test_background_2d_read_missing_hducls():
     bkg = Background2D.from_table(table)
 
     assert bkg.axes[0].name == "energy"
-
-
-@requires_dependency("matplotlib")
-def test_plot(bkg_2d):
-    with mpl_plot_check():
-        bkg_2d.peek()
 
 
 @pytest.fixture(scope="session")
@@ -329,3 +323,6 @@ def test_plot(bkg_2d):
 
     with mpl_plot_check():
         bkg_2d.plot_spectrum()
+
+    with mpl_plot_check():
+        bkg_2d.peek()

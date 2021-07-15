@@ -194,7 +194,8 @@ def test_psfmap_stacking():
 
     psfmap_stack = psfmap1.copy()
     psfmap_stack.stack(psfmap2)
-    assert_allclose(psfmap_stack.psf_map.data, psfmap1.psf_map.data)
+    mask =  psfmap_stack.psf_map.data>0
+    assert_allclose(psfmap_stack.psf_map.data[mask], psfmap1.psf_map.data[mask])
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
     psfmap3 = make_test_psfmap(0.3 * u.deg, shape="flat")
@@ -288,7 +289,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.000524,
             "psf_exposure": 3.14711e12 * u.Unit("cm2 s"),
             "psf_value_shape": (32, 1000),
-            "psf_value": 2.619861 * u.Unit("deg-2"),
+            "psf_value": 7.902016 * u.Unit("deg-2"),
         },
         {
             "energy": MapAxis.from_energy_bounds(1, 10, 100, "TeV", name="energy_true"),
@@ -299,7 +300,7 @@ def make_psf_map_obs(geom, obs):
             "psf_rad": 0.000524,
             "psf_exposure": 4.723409e12 * u.Unit("cm2 s"),
             "psf_value_shape": (100, 1000),
-            "psf_value": 2.238232 * u.Unit("deg-2"),
+            "psf_value": 6.868102 * u.Unit("deg-2"),
         },
     ],
 )
