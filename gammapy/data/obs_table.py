@@ -189,7 +189,7 @@ class ObservationTable(Table):
 
         return self[mask]
 
-    def select_cone(self, center, radius, inverted=False):
+    def select_sky_circle(self, center, radius, inverted=False):
         """Make an observation table, applying a cone selection.
 
         Apply a selection based on the separation between the cone center
@@ -306,35 +306,23 @@ class ObservationTable(Table):
 
     def _apply_simple_selection(self, selection):
         """Select subset of observations from a single selection criterion."""
-        if "inverted" not in selection:
-            selection["inverted"] = False
-        if "partial_overlap" not in selection:
-            selection["partial_overlap"] = False
-
-        if selection["type"] == "sky_circle":
-            lon = Angle(selection["lon"], "deg")
-            lat = Angle(selection["lat"], "deg")
-            radius = Angle(selection["radius"])
-            if "border" in selection:
-                border = Angle(selection["border"])
-            else:
-                border = Angle(0, "deg")
-            center=SkyCoord(lon, lat, frame=selection["frame"])
-            radius=radius + border
-            inverted = selection.get("inverted", False)
-            return self.select_cone(center, radius, inverted)
-        elif selection["type"] == "time_box":
-            return self.select_time_range(
-                selection["time_range"],
-                selection["partial_overlap"],
-                selection["inverted"],
-            )
-        elif selection["type"] == "par_box":
-            return self.select_range(
-                selection["variable"], selection["value_range"], selection["inverted"]
-            )
+        selection = selection.copy()
+        type = selection.pop("type")
+        if type == "sky_circle":
+            lon = Angle(selection.pop("lon"), "deg")
+            lat = Angle(selection.pop("lat"), "deg")
+            radius = Angle(selection.pop("radius"), "deg")
+            radius += Angle(selection.pop("border", 0), "deg")
+            center = SkyCoord(lon, lat, frame=selection.pop("frame"))
+            return self.select_sky_circle(center, radius, **selection)
+        elif type == "time_box":
+            time_range = selection.pop("time_range")
+            return self.select_time_range(time_range, **selection)
+        elif type == "par_box":
+            variable = selection.pop("variable")
+            return self.select_range(variable, **selection)
         else:
-            raise ValueError(f"Invalid selection type: {selection['type']}")
+            raise ValueError(f"Invalid selection type: {type}")
 
 
 class ObservationTableChecker(Checker):
