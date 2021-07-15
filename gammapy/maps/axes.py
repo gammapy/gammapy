@@ -1832,8 +1832,11 @@ class TimeMapAxis:
             raise ValueError(f"Time edges max must have a valid time unit, got {edges_max.unit}")
 
         if not edges_min.shape == edges_max.shape:
-            raise ValueError("Time min and time max must have the same shape,"
+            raise ValueError("Edges min and edges max must have the same shape,"
                              f" got {edges_min.shape} and {edges_max.shape}.")
+
+        if not np.all(edges_max > edges_min):
+            raise ValueError("Edges max must all be larger than edge min")
 
         if not np.all(edges_min == np.sort(edges_min)):
             raise ValueError("Time edges min values must be sorted")
@@ -1896,7 +1899,7 @@ class TimeMapAxis:
     @property
     def time_delta(self):
         """Return axis time bin width (`~astropy.time.TimeDelta`)."""
-        return self._edges_max - self._edges_min
+        return self.time_max - self.time_min
 
     @property
     def time_mid(self):
@@ -2016,13 +2019,13 @@ class TimeMapAxis:
 
     @property
     def center(self):
-        """Return `~astropy.time.Time` at interval centers."""
-        return self.edges_min + 0.5 * self.time_delta
+        """Return `~astropy.units.Quantity` at interval centers."""
+        return self.edges_min + 0.5 * self.bin_width
 
     @property
     def bin_width(self):
-        """Return time interval width."""
-        return self.time_delta
+        """Return time interval width (`~astropy.units.Quantity`)."""
+        return self.time_delta.to("h")
 
     def __repr__(self):
         str_ = self.__class__.__name__ + "\n"
@@ -2034,7 +2037,7 @@ class TimeMapAxis:
         str_ += fmt.format("scale", self.reference_time.scale)
         str_ += fmt.format("time min.", self.time_min.min().iso)
         str_ += fmt.format("time max.", self.time_max.max().iso)
-        str_ += fmt.format("total time", self.time_delta.sum())
+        str_ += fmt.format("total time", np.sum(self.bin_width))
         return str_.expandtabs(tabsize=2)
 
     def upsample(self):
