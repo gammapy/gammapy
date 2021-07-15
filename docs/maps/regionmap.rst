@@ -337,7 +337,7 @@ created from an existing `~RegionGeom`, this can be done in the same step:
     # Create another region map with the same RegionGeom but different data,
     # with the same value for each of the 12 energy bins
     geom = region_map.geom
-    region_map_1 = RegionNDMap.from_geom(geom, data = 1)
+    region_map_1 = RegionNDMap.from_geom(geom, data=1.)
 
     # Access the data
     print(region_map_1.data)

@@ -78,7 +78,6 @@ class Analysis:
         else:
             raise FileNotFoundError(f"Datastore not found: {path}")
 
-
     def _make_obs_table_selection(self):
         """Return list of obs_ids after filtering on datastore observation table."""
         obs_settings = self.config.observations
@@ -348,7 +347,6 @@ class Analysis:
         else:
             return MapDataset.create(geom, name=name, **geom_irf)
 
-
     def _create_dataset_maker(self):
         """Create the Dataset Maker."""
         log.debug("Creating the target Dataset Maker.")
@@ -385,8 +383,9 @@ class Analysis:
         bkg_maker_config = {}
         if datasets_settings.background.exclusion:
             path = make_path(datasets_settings.background.exclusion)
-            exclusion_region = Map.read(path)
-            bkg_maker_config["exclusion_mask"] = exclusion_region
+            exclusion_mask = Map.read(path)
+            exclusion_mask.data = exclusion_mask.data.astype(bool)
+            bkg_maker_config["exclusion_mask"] = exclusion_mask
         bkg_maker_config.update(datasets_settings.background.parameters)
 
         bkg_method = datasets_settings.background.method
@@ -410,7 +409,6 @@ class Analysis:
         else:
             log.warning(f"No background maker set. Check configuration.")
         return bkg_maker
-
 
     def _map_making(self):
         """Make maps and datasets for 3d analysis"""
@@ -465,8 +463,7 @@ class Analysis:
         """Run all steps for the spectrum extraction."""
         log.info("Reducing spectrum datasets.")
         datasets_settings = self.config.datasets
-
-        dataset_maker =  self._create_dataset_maker()
+        dataset_maker = self._create_dataset_maker()
         safe_mask_maker = self._create_safe_mask_maker()
         bkg_maker = self._create_background_maker()
 
