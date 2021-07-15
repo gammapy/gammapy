@@ -189,6 +189,36 @@ class ObservationTable(Table):
 
         return self[mask]
 
+    def select_cone(self, center, radius, inverted=False):
+        """Make an observation table, applying a cone selection.
+
+        Apply a selection based on the separation between the cone center
+        and the observation pointing stored in the table.
+
+        If the inverted flag is activated, the selection is applied to
+        keep all elements outside the selected range.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinate.SkyCoord`
+            Cone center coordinate.
+        radius : `~astropy.coordinate.Angle`
+            Cone opening angle. The maximal separation allowed between the center and the observation
+            pointing direction.
+        inverted : bool, optional
+            Invert selection: keep all entries outside the cone.
+
+        Returns
+        -------
+        obs_table : `~gammapy.data.ObservationTable`
+            Observation table after selection.
+        """
+        region = SphericalCircleSkyRegion(center=center, radius=radius)
+        mask = region.contains(self.pointing_radec)
+        if inverted:
+            mask = np.invert(mask)
+        return self[mask]
+
     def select_observations(self, selections=None):
         """Select subset of observations from a list of selection criteria.
 
@@ -197,7 +227,7 @@ class ObservationTable(Table):
         There are 3 main kinds of selection criteria, according to the
         value of the **type** keyword in the **selection** dictionary:
 
-        - sky regions
+        - circular region
 
         - time intervals (min, max)
 
@@ -209,8 +239,7 @@ class ObservationTable(Table):
         keywords in the **selection** dictionary under the **type** key.
 
         - ``sky_circle`` is a circular region centered in the coordinate
-           marked by the **lon** and **lat** keywords, and radius **radius**;
-           uses `~gammapy.catalog.select_sky_circle`
+           marked by the **lon** and **lat** keywords, and radius **radius**
 
         - ``time_box`` is a 1D selection criterion acting on the observation
           start time (**TSTART**); the interval is set via the
@@ -290,14 +319,10 @@ class ObservationTable(Table):
                 border = Angle(selection["border"])
             else:
                 border = Angle(0, "deg")
-            region = SphericalCircleSkyRegion(
-                center=SkyCoord(lon, lat, frame=selection["frame"]),
-                radius=radius + border,
-            )
-            mask = region.contains(self.pointing_radec)
-            if selection["inverted"]:
-                mask = np.invert(mask)
-            return self[mask]
+            center=SkyCoord(lon, lat, frame=selection["frame"])
+            radius=radius + border
+            inverted = selection.get("inverted", False)
+            return self.select_cone(center, radius, inverted)
         elif selection["type"] == "time_box":
             return self.select_time_range(
                 selection["time_range"],
