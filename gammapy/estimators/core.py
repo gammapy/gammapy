@@ -6,7 +6,7 @@ import numpy as np
 from astropy.table import Table
 from astropy import units as u
 from gammapy.modeling.models import Model
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, Map
 
 __all__ = ["Estimator", "FluxEstimate"]
 
@@ -32,10 +32,11 @@ REQUIRED_COLUMNS = {
     "flux": ["e_min", "e_max", "flux"],
     "eflux": ["e_min", "e_max", "eflux"],
     # TODO: extend required columns
-    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "norm"],
+    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "ref_flux", "ref_eflux", "norm"],
 }
 
-REQUIRED_QUANTITIES_SCAN = ["norm_scan", "stat_scan", "stat"]
+
+REQUIRED_QUANTITIES_SCAN = ["stat_scan", "stat"]
 
 OPTIONAL_QUANTITIES = {
     "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
@@ -44,6 +45,26 @@ OPTIONAL_QUANTITIES = {
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
     "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul"],
 }
+
+VALID_QUANTITIES = [
+    "norm",
+    "norm_err",
+    "norm_errn",
+    "norm_errp",
+    "norm_ul",
+    "ts",
+    "sqrt_ts",
+    "npred",
+    "npred_excess",
+    "npred_null",
+    "stat",
+    "stat_scan",
+    "stat_null",
+    "niter",
+    "is_ul",
+    "counts"
+]
+
 
 OPTIONAL_QUANTITIES_COMMON = [
     "ts",
@@ -54,7 +75,8 @@ OPTIONAL_QUANTITIES_COMMON = [
     "stat",
     "stat_null",
     "niter",
-    "is_ul"
+#    "is_ul",
+    "counts"
 ]
 
 
@@ -181,29 +203,37 @@ class FluxEstimate:
 
     Parameters
     ----------
-    data : dict of `Map` or `Table`
+    data : dict of `Map`
         Mappable containing the sed data with at least a 'norm' entry.
         If data is a Table, it should contain 'e_min' and 'e_max' columns.
     reference_spectral_model : `SpectralModel`
         Reference spectral model used to produce the input data.
+    meta : dict
+        Flux maps meta data.
     """
+    _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
-    def __init__(self, data, reference_spectral_model):
-        # TODO: Check data
+    def __init__(self, data, reference_spectral_model, meta=None):
         self._data = data
-
-        if hasattr(self._data["norm"], "geom"):
-            self._energy_axis = self.data["norm"].geom.axes["energy"]
-            self._expand_slice = (slice(None), np.newaxis, np.newaxis)
-        else:
-            # Here we assume there is only one row per energy
-            self._energy_axis = MapAxis.from_table(table=data, format="gadf-sed")
-            self._expand_slice = slice(None)
-
-        # Note that here we could use the specification from dnde_ref to build piecewise PL
-        # But does it work beyond min and max centers?
-
         self._reference_spectral_model = reference_spectral_model
+
+        if meta is None:
+            meta = {}
+
+        self.meta = meta
+
+    @property
+    def available_quantities(self):
+        """Available quantities"""
+        keys = self._data.keys()
+
+        available_quantities = []
+
+        for quantity in VALID_QUANTITIES:
+            if quantity in keys:
+                available_quantities.append(quantity)
+
+        return available_quantities
 
     @staticmethod
     def _validate_data(data, sed_type, check_scan=False):
@@ -211,9 +241,6 @@ class FluxEstimate:
         try:
             keys = data.keys()
             required = set(REQUIRED_MAPS[sed_type])
-        except AttributeError:
-            keys = data.columns
-            required = set(REQUIRED_COLUMNS[sed_type])
         except KeyError:
             raise ValueError(f"Unknown SED type: '{sed_type}'")
 
@@ -226,10 +253,42 @@ class FluxEstimate:
                 "Missing data / column for sed type '{}':" " {}".format(sed_type, missing)
             )
 
+    # TODO: add support for scan
+    def _check_quantity(self, quantity):
+        if quantity not in self.available_quantities:
+            raise AttributeError(
+                f"Quantity '{quantity}' is not defined on current flux estimate."
+            )
+
+    @property
+    def n_sigma(self):
+        """n sigma UL"""
+        return self.meta.get("n_sigma", 1)
+
+    @property
+    def n_sigma_ul(self):
+        """n sigma UL"""
+        return self.meta.get("n_sigma_ul")
+
+    @property
+    def ts_threshold_ul(self):
+        """TS threshold for upper limits"""
+        return self.meta.get("ts_threshold_ul", 4)
+
+    @property
+    def sed_type_init(self):
+        """Initial sed type"""
+        return self.meta.get("sed_type_init")
+
+    @property
+    def geom(self):
+        """Reference map geometry (`Geom`)"""
+        return self.norm.geom
+
     @property
     def energy_axis(self):
         """Energy axis (`MapAxis`)"""
-        return self._energy_axis
+        return self.geom.axes["energy"]
 
     @property
     def reference_spectral_model(self):
@@ -237,46 +296,39 @@ class FluxEstimate:
         return self._reference_spectral_model
 
     @property
-    def data(self):
-        return self._data
-
-    @property
-    def available_quantities(self):
-        """Available quantities"""
-        try:
-            keys = self.data.keys()
-        except AttributeError:
-            keys = self.data.columns
-
-        available_quantities = []
-
-        for quantity in OPTIONAL_QUANTITIES["likelihood"] + OPTIONAL_QUANTITIES_COMMON:
-            if quantity in keys:
-                available_quantities.append(quantity)
-
-        return available_quantities
-
-    # TODO: add support for scan
-    def _check_quantity(self, quantity):
-        if quantity not in self.available_quantities:
-            raise KeyError(
-                f"Cannot compute required flux quantity. {quantity} "
-                "is not defined on current flux estimate."
-            )
-
-    @property
     def energy_ref(self):
-        """Reference energy"""
+        """Reference energy.
+
+        Defined by `energy_ref` column in `FluxPoints.table` or computed as log
+        center, if `energy_min` and `energy_max` columns are present in `FluxEstimate.data`.
+
+        Returns
+        -------
+        energy_ref : `~astropy.units.Quantity`
+            Reference energy.
+        """
         return self.energy_axis.center
 
     @property
     def energy_min(self):
-        """Energy min"""
+        """Energy min
+
+        Returns
+        -------
+        energy_min : `~astropy.units.Quantity`
+            Lower bound of energy bin.
+        """
         return self.energy_axis.edges[:-1]
 
     @property
     def energy_max(self):
-        """Energy max"""
+        """Energy max
+
+        Returns
+        -------
+        energy_max : `~astropy.units.Quantity`
+            Upper bound of energy bin.
+        """
         return self.energy_axis.edges[1:]
 
     # TODO: keep or remove?
@@ -284,52 +336,72 @@ class FluxEstimate:
     def niter(self):
         """Number of iterations of fit"""
         self._check_quantity("niter")
-        return self.data["niter"]
+        return self._data["niter"]
 
     @property
     def is_ul(self):
-        """Number of iterations of fit"""
-        self._check_quantity("is_ul")
-        return self.data["is_ul"]
+        """Whether data is an upper limit"""
+        # TODO: make this a well defined behaviour
+        is_ul = self.norm.copy()
+
+        if "ts" in self._data and "norm_ul" in self._data:
+            is_ul.data = self.ts.data < self.ts_threshold_ul
+        elif "norm_ul" in self._data:
+            is_ul.data = np.isfinite(self.norm_ul)
+        else:
+            is_ul.data = np.isnan(self.norm)
+
+        return is_ul
+
+    @property
+    def counts(self):
+        """Predicted counts null hypothesis"""
+        self._check_quantity("counts")
+        return self._data["counts"]
 
     @property
     def npred(self):
         """Predicted counts"""
         self._check_quantity("npred")
-        return self.data["npred"]
+        return self._data["npred"]
 
     @property
     def npred_null(self):
         """Predicted counts null hypothesis"""
         self._check_quantity("npred_null")
-        return self.data["npred_null"]
+        return self._data["npred_null"]
 
     @property
     def npred_excess(self):
         """Predicted excess counts"""
         self._check_quantity("npred")
         self._check_quantity("npred_null")
-        return self.data["npred"] - self.data["npred_null"]
+        return self._data["npred"] - self._data["npred_null"]
+
+    @property
+    def stat_scan(self):
+        """Fit statistic value"""
+        self._check_quantity("stat_scan")
+        return self._data["stat_scan"]
 
     @property
     def stat(self):
         """Fit statistic value"""
         self._check_quantity("stat")
-        return self.data["stat"]
+        return self._data["stat"]
 
     @property
     def stat_null(self):
-        """Fit statistic value for thenull hypothesis"""
+        """Fit statistic value for the null hypothesis"""
         self._check_quantity("stat_null")
-        return self.data["stat_null"]
+        return self._data["stat_null"]
 
     @property
     def ts(self):
         """ts map (`Map`)"""
         self._check_quantity("ts")
-        return self.data["ts"]
+        return self._data["ts"]
 
-    # TODO: just always derive from ts?
     @property
     def sqrt_ts(self):
         """sqrt(TS) as defined by:
@@ -344,36 +416,41 @@ class FluxEstimate:
             \right.
 
         """
-        return self.data["sqrt_ts"]
+        if "sqrt_ts" in self._data:
+            return self._data["sqrt_ts"]
+        else:
+            with np.errstate(invalid="ignore", divide="ignore"):
+                data = np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
+                return Map.from_geom(geom=self.geom, data=data)
 
     @property
     def norm(self):
         """Norm values"""
-        return self.data["norm"]
+        return self._data["norm"]
 
     @property
     def norm_err(self):
         """Norm error"""
         self._check_quantity("norm_err")
-        return self.data["norm_err"]
+        return self._data["norm_err"]
 
     @property
     def norm_errn(self):
         """Negative norm error"""
         self._check_quantity("norm_errn")
-        return self.data["norm_errn"]
+        return self._data["norm_errn"]
 
     @property
     def norm_errp(self):
         """Positive norm error"""
         self._check_quantity("norm_errp")
-        return self.data["norm_errp"]
+        return self._data["norm_errp"]
 
     @property
     def norm_ul(self):
         """Norm upper limit"""
         self._check_quantity("norm_ul")
-        return self.data["norm_ul"]
+        return self._data["norm_ul"]
 
     @property
     def dnde_ref(self):
@@ -505,3 +582,99 @@ class FluxEstimate:
     def eflux_ul(self):
         """Return energy flux (eflux) SED upper limits."""
         return self.norm_ul * self.eflux_ref
+
+    def to_dict(self, sed_type="likelihood"):
+        """Return maps in a given SED type in the form of a dictionary.
+
+        Parameters
+        ----------
+        sed_type : str
+            sed type to convert to. Default is `Likelihood`
+
+        Returns
+        -------
+        map_dict : dict
+            Dictionary containing the requested maps.
+        """
+        data = {}
+        all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
+
+        for quantity in all_maps:
+            try:
+                data[quantity] = getattr(self, quantity)
+            except AttributeError:
+                pass
+
+        return data
+
+    @classmethod
+    def from_dict(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
+        """Create FluxMaps from a dictionary of maps.
+
+        Parameters
+        ----------
+        maps : dict
+            Dictionary containing the input maps.
+        sed_type : str
+            SED type of the input maps. Default is `Likelihood`
+        reference_model : `~gammapy.modeling.models.SkyModel`, optional
+            Reference model to use for conversions. Default in None.
+            If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
+        gti : `~gammapy.data.GTI`
+            Maps GTI information. Default is None.
+
+        Returns
+        -------
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
+        """
+        cls._validate_data(data=maps, sed_type=sed_type)
+
+        if sed_type == "likelihood":
+            return cls(data=maps, reference_model=reference_model)
+
+        if reference_model is None:
+            log.warning(
+                "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
+            )
+            reference_model = cls.default_model
+
+        map_ref = maps[sed_type]
+
+        energy_axis = map_ref.geom.axes["energy"]
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            fluxes = reference_model.spectral_model.reference_fluxes(energy_axis=energy_axis)
+
+        # TODO: handle reshaping in MapAxis
+        factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[:, np.newaxis, np.newaxis]
+
+        data = dict()
+        data["norm"] = map_ref / factor
+
+        for key in OPTIONAL_QUANTITIES[sed_type]:
+            if key in maps:
+                norm_type = key.replace(sed_type, "norm")
+                data[norm_type] = maps[key] / factor
+
+        # We add the remaining maps
+        for key in OPTIONAL_QUANTITIES_COMMON:
+            if key in maps:
+                data[key] = maps[key]
+
+        return cls(data=data, reference_model=reference_model, gti=gti)
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__)
+        str_ += "\n\n"
+        str_ += "\t" + f"geom            : {self.geom.__class__.__name__}\n"
+        str_ += "\t" + f"axes            : {self.geom.axes_names}\n"
+        str_ += "\t" + f"shape           : {self.geom.data_shape[::-1]}\n"
+        str_ += "\t" + f"quantities      : {list(self.available_quantities)}\n"
+        str_ += "\t" + f"ref. model      : {self.reference_spectral_model.tag[-1]}\n"
+        str_ += "\t" + f"n_sigma         : {self.n_sigma}\n"
+        str_ += "\t" + f"n_sigma_ul      : {self.n_sigma_ul}\n"
+        str_ += "\t" + f"ts_threshold_ul : {self.ts_threshold_ul}\n"
+        str_ += "\t" + f"sed type init   : {self.sed_type_init}\n"
+        return str_.expandtabs(tabsize=2)

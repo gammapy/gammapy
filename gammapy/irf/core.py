@@ -423,6 +423,37 @@ class IRF:
         """
         self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
+    def pad(self, pad_width, axis_name, **kwargs):
+        """Pad irf along a given axis.
+
+        Parameters
+        ----------
+        pad_width : {sequence, array_like, int}
+            Number of pixels padded to the edges of each axis.
+        axis_name : str
+            Which axis to downsample. By default spatial axes are padded.
+        **kwargs : dict
+            Keyword argument forwared to `~numpy.pad`
+
+        Returns
+        -------
+        irf : `IRF`
+            Padded irf
+
+        """
+        if np.isscalar(pad_width):
+            pad_width = (pad_width, pad_width)
+
+        idx = self.axes.index(axis_name)
+        pad_width_np = [(0, 0)] * self.data.ndim
+        pad_width_np[idx] = pad_width
+
+        kwargs.setdefault("mode", "constant")
+
+        axes = self.axes.pad(axis_name=axis_name, pad_width=pad_width)
+        data = np.pad(self.data, pad_width=pad_width_np, **kwargs)
+        return self.__class__(data=data, axes=axes, meta=self.meta.copy(), unit=self.unit)
+
 
 class IRFMap:
     """IRF map base class for DL4 instrument response functions"""

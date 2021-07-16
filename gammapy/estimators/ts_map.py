@@ -10,7 +10,7 @@ import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import Map, MapCoord, MapAxis, Maps
+from gammapy.maps import Map, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
@@ -476,7 +476,13 @@ class TSMapEstimator(Estimator):
 
             maps[name] = m.crop(crop_width=pad_width)
 
-        return FluxMaps(data=maps, reference_model=self.model, gti=dataset.gti)
+        meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
+        return FluxMaps(
+            data=maps,
+            reference_model=self.model,
+            gti=dataset.gti,
+            meta=meta
+        )
 
 
 # TODO: merge with MapDataset?

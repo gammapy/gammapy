@@ -52,46 +52,20 @@ class FluxMaps(FluxEstimate):
         the maps GTI information. Default is None.
     """
 
-    def __init__(self, data, reference_model, gti=None):
+    def __init__(self, data, reference_model, gti=None, meta=None):
         self.reference_model = reference_model
         self.gti = gti
 
-        super().__init__(data=data, reference_spectral_model=reference_model.spectral_model)
+        super().__init__(
+            data=data,
+            reference_spectral_model=reference_model.spectral_model,
+            meta=meta
+        )
 
     @classproperty
     def reference_model_default(cls):
         """Default reference model: a point source with index = 2  (`SkyModel`)"""
         return SkyModel.create("pl", "point")
-
-    @property
-    def geom(self):
-        """Reference map geometry (`Geom`)"""
-        return self.data["norm"].geom
-
-    @property
-    def sqrt_ts(self):
-        """Sqrt TS"""
-        if "sqrt_ts" in self.data:
-            return self.data["sqrt_ts"]
-        else:
-            with np.errstate(invalid="ignore", divide="ignore"):
-                data = np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
-                return Map.from_geom(geom=self.geom, data=data)
-
-    def __str__(self):
-        str_ = f"{self.__class__.__name__}\n"
-        str_ += "-" * len(self.__class__.__name__)
-        str_ += "\n\n"
-        str_ += "\t" + "\t\n".join(str(self.geom).split("\n")[:1])
-        str_ += "\n\t" + "\n\t".join(str(self.geom).split("\n")[2:])
-
-        str_ += f"\n\tAvailable quantities : {list(self.data.keys())}\n\n"
-
-        str_ += "\tReference model:\n"
-        if self.reference_model is not None:
-            str_ += "\t" + "\n\t".join(str(self.reference_model).split("\n")[2:])
-
-        return str_.expandtabs(tabsize=2)
 
     def get_flux_points(self, position=None):
         """Extract flux point at a given position.
@@ -109,49 +83,13 @@ class FluxMaps(FluxEstimate):
         if position is None:
             position = self.geom.center_skydir
 
-        with np.errstate(invalid="ignore", divide="ignore"):
-            ref_fluxes = self.reference_spectral_model.reference_fluxes(self.energy_axis)
+        data = {}
 
-        table = Table(ref_fluxes)
-        table.meta["SED_TYPE"] = "likelihood"
-
-        coords = MapCoord.create(
-            {"skycoord": position, "energy": self.energy_ref}
-        )
-
-        # TODO: add support of norm and stat scan
-        for name in self.data:
+        for name in self._data:
             m = getattr(self, name)
-            table[name] = m.get_by_coord(coords) * m.unit
+            data[name] = m.to_region_nd_map(region=position, method="nearest")
 
-        return FluxPoints(table, reference_spectral_model=self.reference_spectral_model)
-
-    def to_dict(self, sed_type="likelihood"):
-        """Return maps in a given SED type in the form of a dictionary.
-
-        Parameters
-        ----------
-        sed_type : str
-            sed type to convert to. Default is `Likelihood`
-
-        Returns
-        -------
-        map_dict : dict
-            Dictionary containing the requested maps.
-        """
-        if sed_type == "likelihood":
-            data = self.data
-        else:
-            data = {}
-            all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
-
-            for quantity in all_maps:
-                try:
-                    data[quantity] = getattr(self, quantity)
-                except KeyError:
-                    pass
-
-        return data
+        return FluxPoints(data, reference_spectral_model=self.reference_spectral_model)
 
     def write(
         self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
@@ -294,63 +232,6 @@ class FluxMaps(FluxEstimate):
         return cls.from_dict(
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
-
-    @classmethod
-    def from_dict(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
-        """Create FluxMaps from a dictionary of maps.
-
-        Parameters
-        ----------
-        maps : dict
-            Dictionary containing the input maps.
-        sed_type : str
-            SED type of the input maps. Default is `Likelihood`
-        reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            Reference model to use for conversions. Default in None.
-            If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
-        gti : `~gammapy.data.GTI`
-            Maps GTI information. Default is None.
-
-        Returns
-        -------
-        flux_maps : `~gammapy.estimators.FluxMaps`
-            Flux maps object.
-        """
-        cls._validate_data(data=maps, sed_type=sed_type)
-
-        if sed_type == "likelihood":
-            return cls(data=maps, reference_model=reference_model)
-
-        if reference_model is None:
-            log.warning(
-                "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
-            )
-            reference_model = cls.default_model
-
-        map_ref = maps[sed_type]
-
-        energy_axis = map_ref.geom.axes["energy"]
-
-        with np.errstate(invalid="ignore", divide="ignore"):
-            fluxes = reference_model.spectral_model.reference_fluxes(energy_axis=energy_axis)
-
-        # TODO: handle reshaping in MapAxis
-        factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[:, np.newaxis, np.newaxis]
-
-        data = dict()
-        data["norm"] = map_ref / factor
-
-        for key in OPTIONAL_QUANTITIES[sed_type]:
-            if key in maps:
-                norm_type = key.replace(sed_type, "norm")
-                data[norm_type] = maps[key] / factor
-
-        # We add the remaining maps
-        for key in OPTIONAL_QUANTITIES_COMMON:
-            if key in maps:
-                data[key] = maps[key]
-
-        return cls(data=data, reference_model=reference_model, gti=gti)
 
     # TODO: should we allow this?
     def __getitem__(self, item):

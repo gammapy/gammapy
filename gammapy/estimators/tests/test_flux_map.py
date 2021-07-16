@@ -113,7 +113,10 @@ def test_flux_map_str(wcs_flux_map, reference_model):
     assert "WcsGeom" in fm_str
     assert "errn" in fm_str
     assert "sqrt_ts" in fm_str
-    assert "PowerLawSpectralModel" in fm_str
+    assert "pl" in fm_str
+    assert "n_sigma" in fm_str
+    assert "n_sigma_ul" in fm_str
+    assert "ts_threshold" in fm_str
 
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
@@ -135,7 +138,7 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed
     assert new_fluxmap.reference_model.spectral_model.amplitude.value == 2e-12
 
     # check existence and content of additional map
-    assert_allclose(new_fluxmap.data["sqrt_ts"].data, 1.0)
+    assert_allclose(new_fluxmap.sqrt_ts.data, 1.0)
 
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
@@ -153,11 +156,11 @@ def test_partial_flux_map_read_write(tmp_path, partial_wcs_flux_map, reference_m
     assert new_fluxmap.reference_model.spectral_model.index.value == 2
 
     # check existence and content of additional map
-    assert_allclose(new_fluxmap.data["sqrt_ts"].data, 1.0)
+    assert_allclose(new_fluxmap._data["sqrt_ts"].data, 1.0)
 
     # the TS map shouldn't exist
-    with pytest.raises(KeyError):
-        new_fluxmap.data["ts"]
+    with pytest.raises(AttributeError):
+        new_fluxmap.ts
 
 
 def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model):
@@ -215,17 +218,18 @@ def test_get_flux_point(wcs_flux_map, reference_model):
 
     coord = SkyCoord(0., 0., unit="deg", frame="galactic")
     fp = fluxmap.get_flux_points(coord)
+    table = fp.to_table()
 
-    assert_allclose(fp.table["e_min"], [0.1, 1.0])
-    assert_allclose(fp.table["norm"], [1, 1] )
-    assert_allclose(fp.table["norm_err"], [0.1, 0.1] )
-    assert_allclose(fp.table["norm_errn"], [0.2, 0.2] )
-    assert_allclose(fp.table["norm_errp"], [0.2, 0.2])
-    assert_allclose(fp.table["norm_ul"], [2, 2])
-    assert_allclose(fp.table["sqrt_ts"], [1, 1])
-    assert_allclose(fp.table["ts"], [0, 3])
+    assert_allclose(table["e_min"], [0.1, 1.0])
+    assert_allclose(table["norm"], [1, 1] )
+    assert_allclose(table["norm_err"], [0.1, 0.1] )
+    assert_allclose(table["norm_errn"], [0.2, 0.2] )
+    assert_allclose(table["norm_errp"], [0.2, 0.2])
+    assert_allclose(table["norm_ul"], [2, 2])
+    assert_allclose(table["sqrt_ts"], [1, 1])
+    assert_allclose(table["ts"], [0, 3], atol=1e-15)
 
-    assert_allclose(fp.dnde, [1e-11, 1e-13] * u.Unit("TeV-1 cm-2 s-1"))
+    assert_allclose(fp.dnde.data.flat, [1e-11, 1e-13])
     assert fp.dnde.unit == "cm-2s-1TeV-1"
 
     with mpl_plot_check():
@@ -239,13 +243,13 @@ def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(other_data, reference_model)
 
     coord = SkyCoord(0., 0., unit="deg", frame="galactic")
-    fp = fluxmap.get_flux_points(coord)
+    table = fluxmap.get_flux_points(coord).to_table()
 
-    assert_allclose(fp.table["e_min"], [0.1, 1.0])
-    assert_allclose(fp.table["norm"], [1, 1] )
-    assert_allclose(fp.table["norm_err"], [0.1, 0.1] )
-    assert_allclose(fp.table["norm_ul"], [2, 2])
-    assert "norm_errn" not in fp.table.columns
+    assert_allclose(table["e_min"], [0.1, 1.0])
+    assert_allclose(table["norm"], [1, 1])
+    assert_allclose(table["norm_err"], [0.1, 0.1])
+    assert_allclose(table["norm_ul"], [2, 2])
+    assert "norm_errn" not in table.columns
 
 
 def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):

@@ -402,20 +402,29 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-            row.update(self.estimate_time_bin_flux(datasets_to_fit))
+            fp = self.estimate_time_bin_flux(datasets_to_fit)
+            fp_table = fp.to_table()
+
+            for column in fp_table.colnames:
+                if column == "counts":
+                    data = fp_table[column].quantity.sum(axis=1)
+                else:
+                    data = fp_table[column].quantity
+                row[column] = data
+
+            fp_table_flux = fp.to_table(sed_type="flux")
+            for column in fp_table_flux.colnames:
+                if "flux" in column:
+                    row[column] = fp_table_flux[column].quantity
+
             rows.append(row)
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
         table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        model = datasets.models[self.source]
-
-        # TODO: cleanup here...
-        fp = FluxPoints(table, reference_spectral_model=model.spectral_model.copy())
-        table_flux = fp.to_table(sed_type="flux")
-        table_flux.remove_columns(["stat", "ts", "sqrt_ts", "e_min", "e_max"])
-        return LightCurve(hstack([table, table_flux]))
+        # TODO: use FluxPoints here
+        return LightCurve(table=table)
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
@@ -430,15 +439,4 @@ class LightCurveEstimator(FluxPointsEstimator):
         result : dict
             Dict with results for the flux point.
         """
-        fp = super().run(datasets)
-
-        # TODO: remove once FluxPointsEstimator returns object with all energies in one row
-        result = {}
-        for colname in fp.table.colnames:
-            if colname != "counts":
-                result[colname] = fp.table[colname].quantity
-            else:
-                result[colname] = np.atleast_1d(fp.table[colname].quantity.sum(axis=1))
-
-        # return fp.to_sed_type("flux")#
-        return result
+        return super().run(datasets)

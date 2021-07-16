@@ -134,6 +134,11 @@ class RegionGeom(Geom):
         return self._axes
 
     @property
+    def axes_names(self):
+        """All axes names"""
+        return ["lon", "lat"] + self.axes.names
+
+    @property
     def wcs(self):
         """WCS projection object."""
         return self._wcs

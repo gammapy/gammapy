@@ -1,7 +1,7 @@
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table, hstack
+from astropy.table import Table
 from astropy.visualization import quantity_support
 from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
@@ -9,6 +9,7 @@ from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
+from .axes import MapAxes, MapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -73,10 +74,7 @@ class RegionNDMap(Map):
                 "Use `.plot_interactive()` if more the one extra axis is present."
             )
 
-        try:
-            axis = self.geom.axes["energy"]
-        except KeyError:
-            axis = self.geom.axes["energy_true"]
+        axis = self.geom.axes[0]
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
@@ -93,7 +91,9 @@ class RegionNDMap(Map):
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 
-        ax.set_yscale("log")
+        if axis.interp == "log":
+            ax.set_yscale("log")
+
         return ax
 
     def plot_hist(self, ax=None, **kwargs):
@@ -418,6 +418,49 @@ class RegionNDMap(Map):
         return hdulist
 
     @classmethod
+    def from_table(cls, table, format="", colname=None):
+        """Create region map from table
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table with input data
+        format : {"gadf-sed}
+            Format to use
+        colname : str
+            Column name to take the data from.
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region map
+        """
+        if format == "gadf-sed":
+            if colname is None:
+                raise ValueError(f"Column name required")
+
+            axes = MapAxes.from_table(table=table, format=format)
+
+            if colname == "stat_scan":
+                axes = axes
+            # TODO: this is not officially supported by GADF...
+            # replace by LabelledMapAxis
+            elif colname == "counts":
+                edges = np.arange(table[colname].shape[1] + 1) - 0.5
+                axis = MapAxis.from_edges(edges, name="dataset-idx")
+                axes = [axis, axes["energy"]]
+            else:
+                axes = [axes["energy"]]
+
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        else:
+            raise ValueError(f"Format not supported {format}")
+
+        geom = RegionGeom.create(region=None, axes=axes)
+        return cls(geom=geom, data=data, unit=unit, meta=table.meta)
+
+    @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
         """Create from `~astropy.io.fits.HDUList`.
 
@@ -453,14 +496,13 @@ class RegionNDMap(Map):
 
         table = Table.read(hdulist[hdu])
         quantity = table[ogip_column].quantity
-        meta = table.meta
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=meta, unit=unit)
+        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
 
     def _pad_spatial(self, *args, **kwargs):
         raise NotImplementedError("Spatial padding is not supported by RegionNDMap")

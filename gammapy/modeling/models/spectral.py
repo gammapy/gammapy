@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
 from astropy.utils.decorators import classproperty
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
@@ -18,6 +19,16 @@ from gammapy.utils.interpolation import (
 from gammapy.utils.scripts import make_path
 from .core import Model
 from gammapy.utils.roots import find_roots
+
+
+def scale_plot_flux(energy, flux, energy_power):
+    """Scale flux to plot"""
+    try:
+        eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
+    except IndexError:
+        eunit = energy.unit
+    y = flux * np.power(energy, energy_power)
+    return y.to(flux.unit * eunit ** energy_power)
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
@@ -272,7 +283,7 @@ class SpectralModel(Model):
         energy_bounds,
         ax=None,
         energy_unit="TeV",
-        flux_unit="cm-2 s-1 TeV-1",
+        flux_unit=None,
         energy_power=0,
         sed_type="dnde",
         n_points=100,
@@ -314,35 +325,40 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
+        from gammapy.estimators.core import DEFAULT_UNIT
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points, energy_unit
-        ).edges
+        if flux_unit is None:
+            flux_unit = DEFAULT_UNIT[sed_type]
 
+        energy_min, energy_max = energy_bounds
+        axis = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points, energy_unit
+        )
+
+        energy = axis.center
         if sed_type == "dnde":
-            flux = self(energy).to(flux_unit)
+            flux = self(axis.center)
 
         elif sed_type == "e2dnde":
-            flux = energy ** 2 * self(energy).to(flux_unit)
+            flux = energy ** 2 * self(energy)
 
         elif sed_type == "flux":
-            flux = self.integral(energy[:-1], energy[1:]).to("cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.0
+            edges = axis.edges
+            flux = self.integral(edges[:-1], edges[1:])
 
         elif sed_type == "eflux":
-            flux = self.energy_flux(energy[:-1], energy[1:]).to("TeV cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.0
-
+            edges = axis.edges
+            flux = self.energy_flux(edges[:-1], edges[1:])
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
 
-        y = self._plot_scale_flux(energy, flux, energy_power)
+        y = scale_plot_flux(energy, flux.to(flux_unit), energy_power)
 
-        ax.plot(energy.value, y.value, **kwargs)
+        with quantity_support():
+            ax.plot(energy, y, **kwargs)
 
         self._plot_format_ax(ax, energy, y, energy_power, sed_type)
         return ax
@@ -352,7 +368,7 @@ class SpectralModel(Model):
         energy_bounds,
         ax=None,
         energy_unit="TeV",
-        flux_unit="cm-2 s-1 TeV-1",
+        flux_unit=None,
         energy_power=0,
         sed_type="dnde",
         n_points=100,
@@ -398,43 +414,49 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
+        from gammapy.estimators.core import DEFAULT_UNIT
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
+
+        if flux_unit is None:
+            flux_unit = DEFAULT_UNIT[sed_type]
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
 
         energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
+        axis = MapAxis.from_energy_bounds(
             energy_min, energy_max, n_points, energy_unit
-        ).edges
+        )
+
+        energy = axis.center
 
         if sed_type == "dnde":
-            flux, flux_err = self.evaluate_error(energy).to(flux_unit)
+            flux, flux_err = self.evaluate_error(energy)
 
         elif sed_type == "e2dnde":
-            flux, flux_err = energy ** 2 * self.evaluate_error(energy).to(flux_unit)
+            flux, flux_err = energy ** 2 * self.evaluate_error(energy)
 
         elif sed_type == "flux":
-            flux, flux_err = self.integral_error(energy[:-1], energy[1:]).to("cm-2 s-1")
-            energy = (energy[:-1] + energy[1:]) / 2.0
+            edges = axis.edges
+            flux, flux_err = self.integral_error(edges[:-1], edges[1:])
 
         elif sed_type == "eflux":
-            flux, flux_err = self.energy_flux_error(energy[:-1], energy[1:]).to(
-                "TeV cm-2 s-1"
-            )
-            energy = (energy[:-1] + energy[1:]) / 2.0
+            edges = axis.edges
+            flux, flux_err = self.energy_flux_error(edges[:-1], edges[1:])
 
         else:
             raise ValueError(f"Not a valid SED type {sed_type}")
 
-        y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
-        y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
+        y_lo = scale_plot_flux(energy, (flux - flux_err).to(flux_unit), energy_power)
+        y_hi = scale_plot_flux(energy, (flux + flux_err).to(flux_unit), energy_power)
 
         where = (energy >= energy_bounds[0]) & (energy <= energy_bounds[1])
-        ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
+
+        with quantity_support():
+            ax.fill_between(energy, y_lo, y_hi, where=where, **kwargs)
 
         self._plot_format_ax(ax, energy, y_lo, energy_power, sed_type)
         return ax
@@ -451,15 +473,6 @@ class SpectralModel(Model):
 
         if "norm" in self.__class__.__name__.lower():
             ax.set_ylabel(f"Norm [A.U.]")
-
-    @staticmethod
-    def _plot_scale_flux(energy, flux, energy_power):
-        try:
-            eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
-        except IndexError:
-            eunit = energy.unit
-        y = flux * np.power(energy, energy_power)
-        return y.to(flux.unit * eunit ** energy_power)
 
     def spectral_index(self, energy, epsilon=1e-5):
         """Compute spectral index at given energy.

@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 import astropy.units as u
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.maps import MapAxis, WcsNDMap
+from gammapy.maps import MapAxis, WcsNDMap, RegionNDMap, RegionGeom, Maps
 from gammapy.estimators.core import FluxEstimate
 from gammapy.estimators import ESTIMATOR_REGISTRY
 
@@ -15,21 +15,23 @@ def test_estimator_registry():
 
 
 @pytest.fixture(scope="session")
-def table_flux_estimate():
+def region_map_flux_estimate():
     axis = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
+    geom = RegionGeom.create(
+        "galactic;circle(0, 0, 0.1)", axes=[axis]
+    )
 
-    cols = dict()
-    cols["norm"] = np.array([1.0, 1.0])
-    cols["norm_err"] = np.array([0.1, 0.1])
-    cols["norm_errn"] = np.array([0.2, 0.2])
-    cols["norm_errp"] = np.array([0.15, 0.15])
-    cols["norm_ul"] = np.array([2.0, 2.0])
-    cols["e_min"] = axis.edges[:-1]
-    cols["e_max"] = axis.edges[1:]
+    maps = Maps.from_geom(
+        geom=geom,
+        names=["norm", "norm_err", "norm_errn", "norm_errp", "norm_ul"]
+    )
 
-    table = Table(cols, names=cols.keys())
-
-    return table
+    maps["norm"].data = np.array([1.0, 1.0])
+    maps["norm_err"].data = np.array([0.1, 0.1])
+    maps["norm_errn"].data = np.array([0.2, 0.2])
+    maps["norm_errp"].data = np.array([0.15, 0.15])
+    maps["norm_ul"].data = np.array([2.0, 2.0])
+    return maps
 
 
 @pytest.fixture(scope="session")
@@ -49,33 +51,33 @@ def map_flux_estimate():
 
 
 class TestFluxEstimate:
-    def test_table_properties(self, table_flux_estimate):
+    def test_table_properties(self, region_map_flux_estimate):
         model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)
-        fe = FluxEstimate(data=table_flux_estimate, reference_spectral_model=model)
+        fe = FluxEstimate(data=region_map_flux_estimate, reference_spectral_model=model)
 
         print(fe.available_quantities)
         assert fe.dnde.unit == u.Unit("cm-2s-1TeV-1")
-        assert_allclose(fe.dnde.value, [1e-9, 1e-11])
-        assert_allclose(fe.dnde_err.value, [1e-10, 1e-12])
-        assert_allclose(fe.dnde_errn.value, [2e-10, 2e-12])
-        assert_allclose(fe.dnde_errp.value, [1.5e-10, 1.5e-12])
-        assert_allclose(fe.dnde_ul.value, [2e-9, 2e-11])
+        assert_allclose(fe.dnde.data.flat, [1e-9, 1e-11])
+        assert_allclose(fe.dnde_err.data.flat, [1e-10, 1e-12])
+        assert_allclose(fe.dnde_errn.data.flat, [2e-10, 2e-12])
+        assert_allclose(fe.dnde_errp.data.flat, [1.5e-10, 1.5e-12])
+        assert_allclose(fe.dnde_ul.data.flat, [2e-9, 2e-11])
 
         assert fe.e2dnde.unit == u.Unit("TeV cm-2s-1")
-        assert_allclose(fe.e2dnde.value, [1e-10, 1e-10])
+        assert_allclose(fe.e2dnde.data.flat, [1e-10, 1e-10])
 
         assert fe.flux.unit == u.Unit("cm-2s-1")
-        assert_allclose(fe.flux.value, [9e-10, 9e-11])
+        assert_allclose(fe.flux.data.flat, [9e-10, 9e-11])
 
         assert fe.eflux.unit == u.Unit("TeV cm-2s-1")
-        assert_allclose(fe.eflux.value, [2.302585e-10, 2.302585e-10])
+        assert_allclose(fe.eflux.data.flat, [2.302585e-10, 2.302585e-10])
 
-    def test_missing_column(self, table_flux_estimate):
-        table_flux_estimate.remove_column("norm_errn")
+    def test_missing_column(self, region_map_flux_estimate):
+        del region_map_flux_estimate["norm_errn"]
         model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)
-        fe = FluxEstimate(data=table_flux_estimate, reference_spectral_model=model)
+        fe = FluxEstimate(data=region_map_flux_estimate, reference_spectral_model=model)
 
-        with pytest.raises(KeyError):
+        with pytest.raises(AttributeError):
             fe.dnde_errn
 
     def test_map_properties(self, map_flux_estimate):

@@ -129,7 +129,7 @@ class TestSourceCatalogObjectGammaCat:
 
         flux_points = source.flux_points
 
-        assert len(flux_points.table) == ref["n_flux_points"]
+        assert flux_points.energy_axis.nbin == ref["n_flux_points"]
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_position(self, gammacat, ref):

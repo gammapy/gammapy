@@ -26,7 +26,7 @@ class FluxPointsDataset(Dataset):
     mask_fit : `numpy.ndarray`
         Mask to apply for fitting
     mask_safe : `numpy.ndarray`
-        Mask defining the safe data range.
+        Mask defining the safe data range. By default upper limit values are excluded.
     meta_table : `~astropy.table.Table`
         Table listing informations on observations used to create the dataset.
         One line per observation for stacked datasets.
@@ -75,7 +75,7 @@ class FluxPointsDataset(Dataset):
         self.meta_table = meta_table
 
         if mask_safe is None:
-            mask_safe = np.isfinite(data.dnde)
+            mask_safe = (~data.is_ul).data[:, 0, 0]
 
         self.mask_safe = mask_safe
 
@@ -107,7 +107,8 @@ class FluxPointsDataset(Dataset):
         **kwargs : dict
              Keyword arguments passed to `~astropy.table.Table.write`.
         """
-        table = self.data.table.copy()
+        table = self.data.to_table()
+
         if self.mask_fit is None:
             mask_fit = self.mask_safe
         else:
@@ -155,7 +156,7 @@ class FluxPointsDataset(Dataset):
         # data section
         n_bins = 0
         if self.data is not None:
-            n_bins = len(self.data.table)
+            n_bins = self.data.energy_axis.nbin
         str_ += "\t{:32}: {} \n".format("Number of total flux points", n_bins)
 
         n_fit_bins = 0
@@ -204,9 +205,12 @@ class FluxPointsDataset(Dataset):
     def stat_array(self):
         """Fit statistic array."""
         model = self.flux_pred()
-        data = self.data.dnde
-        sigma = self.data.dnde_err
-        return ((data - model) / sigma).to_value("") ** 2
+        data = self.data.dnde.quantity[:, 0, 0]
+        try:
+            sigma = self.data.dnde_err
+        except AttributeError:
+            sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
+        return ((data - model) / sigma.quantity[:, 0, 0]).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute the flux point residuals ().
@@ -227,9 +231,9 @@ class FluxPointsDataset(Dataset):
 
         model = self.flux_pred()
 
-        residuals = self._compute_residuals(fp.dnde, model, method)
+        residuals = self._compute_residuals(fp.dnde.quantity[:, 0, 0], model, method)
         # Remove residuals for upper_limits
-        residuals[fp.is_ul] = np.nan
+        residuals[fp.is_ul.data[:, 0, 0]] = np.nan
         return residuals
 
     def plot_fit(
@@ -325,7 +329,8 @@ class FluxPointsDataset(Dataset):
         fp = self.data
         residuals = self.residuals(method)
 
-        xerr = fp._plot_get_energy_err()
+        xerr = self.data.energy_axis.as_xerr
+
         if xerr is not None:
             xerr = (
                 xerr[0].to_value(self._energy_unit),
@@ -387,20 +392,18 @@ class FluxPointsDataset(Dataset):
         kwargs_fp = kwargs_fp or {}
         kwargs_model = kwargs_model or {}
 
-        kwargs.setdefault("energy_power", 2)
-        kwargs.setdefault("energy_unit", "TeV")
-        kwargs.setdefault("flux_unit", "erg-1 cm-2 s-1")
-
         # plot flux points
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_fp)
         plot_kwargs.setdefault("label", "Flux points")
+        plot_kwargs.setdefault("sed_type", "e2dnde")
         ax = self.data.plot(ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_model)
         plot_kwargs.setdefault("energy_bounds", self._energy_bounds)
         plot_kwargs.setdefault("label", "Best fit model")
+        plot_kwargs.setdefault("sed_type", "e2dnde")
         plot_kwargs.setdefault("zorder", 10)
 
         for model in self.models:
@@ -412,9 +415,6 @@ class FluxPointsDataset(Dataset):
 
         for model in self.models:
             if model.datasets_names is None or self.name in model.datasets_names:
-                if not np.all(model == 0):
-                    model.spectral_model.plot_error(ax=ax, **plot_kwargs)
+                model.spectral_model.plot_error(ax=ax, **plot_kwargs)
 
-        # format axes
-        ax.set_xlim(self._energy_bounds.to_value(self._energy_unit))
         return ax

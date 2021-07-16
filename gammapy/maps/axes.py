@@ -1124,7 +1124,7 @@ class MapAxis:
             except KeyError:
                 rad = table["Theta"].data * u.deg
                 axis = MapAxis.from_nodes(rad, name="rad")
-        elif format == "gadf-sed":
+        elif format == "gadf-sed-energy":
             sed_type = table.meta.get("SED_TYPE")
             if sed_type in ["dnde", "e2dnde"]:
                 e_ref = flat_if_equal(table["e_ref"].quantity)
@@ -1134,6 +1134,8 @@ class MapAxis:
                 e_max = flat_if_equal(table["e_max"].quantity)
                 edges = edges_from_lo_hi(e_min, e_max)
                 axis = MapAxis.from_energy_edges(edges)
+        elif format == "gadf-sed-norm":
+            axis = MapAxis.from_nodes(table["norm_scan"][0], name="norm")
         else:
             raise ValueError(f"Format '{format}' not supported")
 
@@ -1742,6 +1744,13 @@ class MapAxes(Sequence):
                     axis = MapAxis.from_table(
                         table, format=format, column_prefix=column_prefix
                     )
+                except KeyError:
+                    continue
+                axes.append(axis)
+        elif format == "gadf-sed":
+            for axis_format in ["gadf-sed-norm", "gadf-sed-energy"]:
+                try:
+                    axis = MapAxis.from_table(table=table, format=axis_format)
                 except KeyError:
                     continue
                 axes.append(axis)

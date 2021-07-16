@@ -419,8 +419,8 @@ def test_model_plot_sed_type():
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
-        assert(ax1.axes.axes.get_ylabel() == "e2dnde [TeV / (cm2 s)]")
-        assert(ax2.axes.axes.get_ylabel() == "e2dnde [TeV / (cm2 s)]")
+        assert(ax1.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
+        assert(ax2.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="flux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="flux")
@@ -429,8 +429,8 @@ def test_model_plot_sed_type():
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
-        assert(ax1.axes.axes.get_ylabel() == "eflux [TeV / (cm2 s)]")
-        assert(ax2.axes.axes.get_ylabel() == "eflux [TeV / (cm2 s)]")
+        assert(ax1.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]")
+        assert(ax2.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]")
 
 
 def test_to_from_dict():

@@ -180,6 +180,7 @@ class Maps(MutableMapping):
         mapdict = {}
         if kwargs_list is None:
             kwargs_list = [{}] * len(names)
+
         for name, kwargs in zip(names, kwargs_list):
             mapdict[name] = Map.from_geom(geom, **kwargs)
 
