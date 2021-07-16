@@ -67,30 +67,6 @@ class FluxMaps(FluxEstimate):
         """Default reference model: a point source with index = 2  (`SkyModel`)"""
         return SkyModel.create("pl", "point")
 
-    def get_flux_points(self, position=None):
-        """Extract flux point at a given position.
-
-        Parameters
-        ---------
-        position : `~astropy.coordinates.SkyCoord`
-            Position where the flux points are extracted.
-
-        Returns
-        -------
-        flux_points : `~gammapy.estimators.FluxPoints`
-            Flux points object
-        """
-        if position is None:
-            position = self.geom.center_skydir
-
-        data = {}
-
-        for name in self._data:
-            m = getattr(self, name)
-            data[name] = m.to_region_nd_map(region=position, method="nearest")
-
-        return FluxPoints(data, reference_spectral_model=self.reference_spectral_model)
-
     def write(
         self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
     ):

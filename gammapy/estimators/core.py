@@ -736,6 +736,37 @@ class FluxEstimate:
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
 
+    def get_flux_points(self, position=None):
+        """Extract flux point at a given position.
+
+        Parameters
+        ---------
+        position : `~astropy.coordinates.SkyCoord`
+            Position where the flux points are extracted.
+
+        Returns
+        -------
+        flux_points : `~gammapy.estimators.FluxPoints`
+            Flux points object
+        """
+        from gammapy.estimators import FluxPoints
+
+        if position is None:
+            position = self.geom.center_skydir
+
+        data = {}
+
+        for name in self._data:
+            m = getattr(self, name)
+            data[name] = m.to_region_nd_map(region=position, method="nearest")
+
+        return FluxPoints(
+            data,
+            reference_spectral_model=self.reference_spectral_model,
+            meta=self.meta.copy(),
+            gti=self.gti
+        )
+
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__)
