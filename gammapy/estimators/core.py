@@ -9,6 +9,8 @@ from astropy import units as u
 from gammapy.modeling.models import Model, Models
 from gammapy.maps import MapAxis, Map
 from gammapy.data import GTI
+from gammapy.utils.scripts import make_path
+
 
 __all__ = ["Estimator", "FluxEstimate"]
 
@@ -565,6 +567,37 @@ class FluxEstimate:
         """Return energy flux (eflux) SED upper limits."""
         return self.norm_ul * self.eflux_ref
 
+    def get_flux_points(self, position=None):
+        """Extract flux point at a given position.
+
+        Parameters
+        ---------
+        position : `~astropy.coordinates.SkyCoord`
+            Position where the flux points are extracted.
+
+        Returns
+        -------
+        flux_points : `~gammapy.estimators.FluxPoints`
+            Flux points object
+        """
+        from gammapy.estimators import FluxPoints
+
+        if position is None:
+            position = self.geom.center_skydir
+
+        data = {}
+
+        for name in self._data:
+            m = getattr(self, name)
+            data[name] = m.to_region_nd_map(region=position, method="nearest")
+
+        return FluxPoints(
+            data,
+            reference_spectral_model=self.reference_spectral_model,
+            meta=self.meta.copy(),
+            gti=self.gti
+        )
+
     def to_dict(self, sed_type="likelihood"):
         """Return maps in a given SED type in the form of a dictionary.
 
@@ -736,36 +769,61 @@ class FluxEstimate:
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
 
-    def get_flux_points(self, position=None):
-        """Extract flux point at a given position.
+    def write(
+        self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
+    ):
+        """Write flux map to file.
 
         Parameters
-        ---------
-        position : `~astropy.coordinates.SkyCoord`
-            Position where the flux points are extracted.
+        ----------
+        filename : str
+            Filename to write to.
+        filename_model : str
+            Filename of the model (yaml format).
+            If None, keep string before '.' and add '_model.yaml' suffix
+        overwrite : bool
+            Overwrite file if it exists.
+        sed_type : str
+            sed type to convert to. Default is `likelihood`
+        """
+        filename = make_path(filename)
+
+        if filename_model is None:
+            name_string = filename.as_posix()
+            for suffix in filename.suffixes:
+                name_string.replace(suffix, "")
+            filename_model = name_string + "_model.yaml"
+
+        filename_model = make_path(filename_model)
+
+        hdulist = self.to_hdulist(sed_type)
+
+        models = Models(self.reference_model)
+        models.write(filename_model, overwrite=overwrite)
+        hdulist[0].header["MODEL"] = filename_model.as_posix()
+
+        hdulist.writeto(filename, overwrite=overwrite)
+
+    @classmethod
+    def read(cls, filename):
+        """Read map dataset from file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to read from.
 
         Returns
         -------
-        flux_points : `~gammapy.estimators.FluxPoints`
-            Flux points object
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
         """
-        from gammapy.estimators import FluxPoints
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist)
 
-        if position is None:
-            position = self.geom.center_skydir
-
-        data = {}
-
-        for name in self._data:
-            m = getattr(self, name)
-            data[name] = m.to_region_nd_map(region=position, method="nearest")
-
-        return FluxPoints(
-            data,
-            reference_spectral_model=self.reference_spectral_model,
-            meta=self.meta.copy(),
-            gti=self.gti
-        )
+    # TODO: should we allow this?
+    def __getitem__(self, item):
+        return getattr(self, item)
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
