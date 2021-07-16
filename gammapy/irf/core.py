@@ -207,12 +207,15 @@ class IRF:
         if self.fill_value != self.default_interp_kwargs["fill_value"]:
             idxs = self.axes.coord_to_idx(coords_default, clip=False)
             invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
-            mask = np.any(invalid, axis=0)
+            mask = self._mask_out_bounds(invalid)
             if not data.shape:
                 mask = mask.squeeze()
             data[mask] = self.fill_value
             data[~np.isfinite(data)] = self.fill_value
         return data
+
+    def _mask_out_bounds(self, invalid):
+        return np.any(invalid, axis=0)
 
     def integrate_log_log(self, axis_name, **kwargs):
         """Integrate along a given axis.
