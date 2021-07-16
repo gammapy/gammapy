@@ -33,16 +33,18 @@ class IRF:
         Meta data
     """
 
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None,)
-    fill_value = 0.
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0.,)
 
-    def __init__(self, axes, data=0, unit="", meta=None):
+    def __init__(self, axes, data=0, unit="", meta=None, interp_kwargs=None):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
         self.data = data
         self.unit = unit
         self.meta = meta or {}
+        if interp_kwargs is None:
+            interp_kwargs = self.default_interp_kwargs.copy()
+        self.interp_kwargs = interp_kwargs
 
     @property
     @abc.abstractmethod
@@ -100,7 +102,7 @@ class IRF:
     def interp_missing_data(self, axis_name):
         """Interpolate missing data along a given axis"""
         data = self.data.copy()
-        values_scale = self.default_interp_kwargs.get("values_scale", "lin")
+        values_scale = self.interp_kwargs.get("values_scale", "lin")
         scale = interpolation_scale(values_scale)
 
         axis = self.axes.index(axis_name)
@@ -138,13 +140,16 @@ class IRF:
 
     @lazyproperty
     def _interpolate(self):
+        kwargs = self.interp_kwargs.copy()
+        # Allow extrap[olation with in bins
+        kwargs["fill_value"] = None
         points = [a.center for a in self.axes]
         points_scale = tuple([a.interp for a in self.axes])
         return ScaledRegularGridInterpolator(
             points,
             self.quantity,
             points_scale=points_scale,
-            **self.default_interp_kwargs,
+            **kwargs,
         )
 
     @property
@@ -204,14 +209,14 @@ class IRF:
                 coords_default[key] = u.Quantity(coord, copy=False)
         data = self._interpolate(coords_default.values(), method=method)
 
-        if self.fill_value != self.default_interp_kwargs["fill_value"]:
+        if self.interp_kwargs["fill_value"] is not None:
             idxs = self.axes.coord_to_idx(coords_default, clip=False)
             invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
             mask = self._mask_out_bounds(invalid)
             if not data.shape:
                 mask = mask.squeeze()
-            data[mask] = self.fill_value
-            data[~np.isfinite(data)] = self.fill_value
+            data[mask] = self.interp_kwargs["fill_value"]
+            data[~np.isfinite(data)] = self.interp_kwargs["fill_value"]
         return data
 
     def _mask_out_bounds(self, invalid):
