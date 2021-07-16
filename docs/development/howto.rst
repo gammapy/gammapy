@@ -607,7 +607,7 @@ This is a compromise between the alternatives:
 * ``bounds_error=False, fill_value=0`` -- Less "safe".
   Extrapolate with zero.
   Can be very convenient for the caller to avoid dealing with NaN,
-  but you will loose track of invalid pixels if the data values can also be 0.
+  but if the data values can also be zero you will lose track of invalid pixels.
 * ``bounds_error=False, fill_value=None`` -- "Unsafe".
   If fill_value is None, values outside the domain are extrapolated.
   Can lead to errors where e.g. stacked high level analysis results
