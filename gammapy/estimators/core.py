@@ -75,7 +75,7 @@ OPTIONAL_QUANTITIES_COMMON = [
     "stat",
     "stat_null",
     "niter",
-    "is_ul",
+#    "is_ul",
     "counts"
 ]
 
@@ -261,6 +261,11 @@ class FluxEstimate:
             )
 
     @property
+    def n_sigma(self):
+        """n sigma UL"""
+        return self.meta.get("n_sigma", 1)
+
+    @property
     def n_sigma_ul(self):
         """n sigma UL"""
         return self.meta.get("n_sigma_ul")
@@ -273,7 +278,7 @@ class FluxEstimate:
     @property
     def sed_type_init(self):
         """Initial sed type"""
-        return self.meta.get("SED_TYPE", None)
+        return self.meta.get("sed_type_init")
 
     @property
     def geom(self):
@@ -668,7 +673,8 @@ class FluxEstimate:
         str_ += "\t" + f"shape           : {self.geom.data_shape[::-1]}\n"
         str_ += "\t" + f"quantities      : {list(self.available_quantities)}\n"
         str_ += "\t" + f"ref. model      : {self.reference_spectral_model.tag[-1]}\n"
-        str_ += "\t" + f"n_sigma         : {self.meta.get('n_sigma', '')}\n"
-        str_ += "\t" + f"n_sigma_ul      : {self.meta.get('n_sigma_ul', '')}\n"
+        str_ += "\t" + f"n_sigma         : {self.n_sigma}\n"
+        str_ += "\t" + f"n_sigma_ul      : {self.n_sigma_ul}\n"
         str_ += "\t" + f"ts_threshold_ul : {self.ts_threshold_ul}\n"
+        str_ += "\t" + f"sed type init   : {self.sed_type_init}\n"
         return str_.expandtabs(tabsize=2)

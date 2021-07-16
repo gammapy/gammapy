@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from scipy import stats
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
@@ -15,7 +16,6 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
 from .core import (
-    Estimator,
     FluxEstimate,
     DEFAULT_UNIT,
     OPTIONAL_QUANTITIES_COMMON,
@@ -301,13 +301,17 @@ class FluxPoints(FluxEstimate):
             if key in table.colnames:
                 maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
 
+        meta = cls._get_meta_gadf(table)
         return cls(data=maps, reference_spectral_model=reference_model, meta=meta)
 
     @staticmethod
-    def _get_meta(table):
+    def _get_meta_gadf(table):
         meta = {}
-        conf_ul = table.meta.get()
-        meta["n_sigma_ul"] = n
+        conf_ul = table.meta.get("UL_CONF")
+        if conf_ul:
+            n_sigma_ul = np.round(stats.norm.isf(0.5 * (1 - conf_ul)), 1)
+            meta["n_sigma_ul"] = n_sigma_ul
+        meta["sed_type_init"] = table.meta.get("SED_TYPE")
         return meta
 
     @staticmethod
@@ -343,43 +347,48 @@ class FluxPoints(FluxEstimate):
         """
         table = Table()
 
-        all_quantities = (
-            REQUIRED_COLUMNS[sed_type] +
-            OPTIONAL_QUANTITIES[sed_type] +
-            OPTIONAL_QUANTITIES_COMMON
-        )
+        if format == "gadf-sed":
+            all_quantities = (
+                REQUIRED_COLUMNS[sed_type] +
+                OPTIONAL_QUANTITIES[sed_type] +
+                OPTIONAL_QUANTITIES_COMMON
+            )
 
-        idx = (Ellipsis, 0, 0)
+            idx = (Ellipsis, 0, 0)
 
-        # TODO: simplify...
-        for quantity in all_quantities:
-            if quantity == "e_ref":
-                table["e_ref"] = self.energy_ref
-            elif quantity == "e_min":
-                table["e_min"] = self.energy_min
-            elif quantity == "e_max":
-                table["e_max"] = self.energy_max
-            elif quantity == "ref_dnde":
-                table["ref_dnde"] = self.dnde_ref[idx]
-            elif quantity == "ref_flux":
-                table["ref_flux"] = self.flux_ref[idx]
-            elif quantity == "ref_eflux":
-                table["ref_eflux"] = self.eflux_ref[idx]
-            else:
-                data = getattr(self, quantity, None)
-                if data:
-                    table[quantity] = data.quantity[idx]
+            # TODO: simplify...
+            for quantity in all_quantities:
+                if quantity == "e_ref":
+                    table["e_ref"] = self.energy_ref
+                elif quantity == "e_min":
+                    table["e_min"] = self.energy_min
+                elif quantity == "e_max":
+                    table["e_max"] = self.energy_max
+                elif quantity == "ref_dnde":
+                    table["ref_dnde"] = self.dnde_ref[idx]
+                elif quantity == "ref_flux":
+                    table["ref_flux"] = self.flux_ref[idx]
+                elif quantity == "ref_eflux":
+                    table["ref_eflux"] = self.eflux_ref[idx]
+                else:
+                    data = getattr(self, quantity, None)
+                    if data:
+                        table[quantity] = data.quantity[idx]
 
-        if sed_type == "likelihood":
-            try:
-                norm_axis = self.stat_scan.geom.axes["norm"]
-                table["norm_scan"] = norm_axis.center.reshape((1, -1))
-                table["stat"] = self.stat.data[idx]
-                table["stat_scan"] = self.stat_scan.data[idx]
-            except AttributeError:
-                pass
+            if sed_type == "likelihood":
+                try:
+                    norm_axis = self.stat_scan.geom.axes["norm"]
+                    table["norm_scan"] = norm_axis.center.reshape((1, -1))
+                    table["stat"] = self.stat.data[idx]
+                    table["stat_scan"] = self.stat_scan.data[idx]
+                except AttributeError:
+                    pass
 
-        table.meta["SED_TYPE"] = sed_type
+            table.meta["SED_TYPE"] = sed_type
+            if self.n_sigma_ul:
+                table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(2), 2)
+        else:
+            raise ValueError(f"Not a supported format {format}")
 
         if formatted:
             table = self._format_table(table=table)
