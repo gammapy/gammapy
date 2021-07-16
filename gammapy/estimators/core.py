@@ -18,11 +18,6 @@ class Estimator(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def energy_edges(self):
-        pass
-
-    @property
-    @abc.abstractmethod
     def tag(self):
         pass
 

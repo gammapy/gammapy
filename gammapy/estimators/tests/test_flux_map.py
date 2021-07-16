@@ -168,7 +168,7 @@ def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model
     stop = u.Quantity([1.5, 2.5], "min")
     gti = GTI.create(start, stop)
 
-    fluxmap = FluxMaps(partial_wcs_flux_map, reference_model, gti)
+    fluxmap = FluxMaps(partial_wcs_flux_map, reference_model, gti=gti)
 
     fluxmap.write(tmp_path / "tmp.fits", sed_type='dnde')
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")

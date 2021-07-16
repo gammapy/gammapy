@@ -4,9 +4,10 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import Map
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
 
 __all__ = ["FluxMaps"]
@@ -200,6 +201,11 @@ class FluxMaps:
         """Energy axis (`MapAxis`)"""
         return self.geom.axes["energy"]
 
+    @classproperty
+    def reference_model_default(self):
+        """Reference model default (`SkyModel`) """
+        return SkyModel(PowerLawSpectralModel(index=2))
+
     @property
     def reference_spectral_model(self):
         """Reference spectral model (`SpectralModel`)"""
@@ -207,7 +213,7 @@ class FluxMaps:
 
     @property
     def reference_model(self):
-        """Reference spectral model (`SpectralModel`)"""
+        """Reference model (`SkyModel`)"""
         return self._reference_model
 
     @property
@@ -528,7 +534,7 @@ class FluxMaps:
 
         return FluxPoints(
             data,
-            reference_spectral_model=self.reference_spectral_model,
+            reference_model=self.reference_model,
             meta=self.meta.copy(),
             gti=self.gti
         )
@@ -587,7 +593,7 @@ class FluxMaps:
             log.warning(
                 "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
             )
-            reference_model = cls.default_model
+            reference_model = cls.reference_model_default
 
         map_ref = maps[sed_type]
 

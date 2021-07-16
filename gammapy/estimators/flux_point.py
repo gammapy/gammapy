@@ -15,8 +15,8 @@ from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import (
-    FluxEstimate,
+from .flux_map import (
+    FluxMaps,
     DEFAULT_UNIT,
     OPTIONAL_QUANTITIES_COMMON,
     OPTIONAL_QUANTITIES,
@@ -31,7 +31,7 @@ __all__ = ["FluxPoints", "FluxPointsEstimator"]
 log = logging.getLogger(__name__)
 
 
-class FluxPoints(FluxEstimate):
+class FluxPoints(FluxMaps):
     """Flux points container.
 
     The supported formats are described here: :ref:`gadf:flux-points`
@@ -302,7 +302,7 @@ class FluxPoints(FluxEstimate):
                 maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
 
         meta = cls._get_meta_gadf(table)
-        return cls(data=maps, reference_spectral_model=reference_model, meta=meta)
+        return cls(data=maps, reference_model=reference_model, meta=meta)
 
     @staticmethod
     def _get_meta_gadf(table):
