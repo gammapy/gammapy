@@ -225,7 +225,7 @@ class Analysis:
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]
         )
-        cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+        cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "sqrt_ts"]
         table = self.flux_points.data.to_table(sed_type="dnde")
         log.info("\n{}".format(table[cols]))
 
