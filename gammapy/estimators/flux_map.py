@@ -54,12 +54,12 @@ class FluxMaps(FluxEstimate):
 
     def __init__(self, data, reference_model, gti=None, meta=None):
         self.reference_model = reference_model
-        self.gti = gti
 
         super().__init__(
             data=data,
             reference_spectral_model=reference_model.spectral_model,
-            meta=meta
+            meta=meta,
+            gti=gti
         )
 
     @classproperty

@@ -728,7 +728,7 @@ class FluxEstimate:
             reference_model = None
 
         if "GTI" in hdulist:
-            gti = GTI.read(Table.read(hdulist["GTI"]))
+            gti = GTI(Table.read(hdulist["GTI"]))
         else:
             gti = None
 
