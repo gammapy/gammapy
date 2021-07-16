@@ -115,34 +115,6 @@ class Estimator(abc.ABC):
                 difference = set(selection).difference(set(available))
                 raise ValueError(f"{difference} is not a valid method.")
 
-    @staticmethod
-    def get_sqrt_ts(ts, norm):
-        r"""Compute sqrt(TS) value.
-
-        Compute sqrt(TS) as defined by:
-
-        .. math::
-            \sqrt{TS} = \left \{
-            \begin{array}{ll}
-              -\sqrt{TS} & : \text{if} \ norm < 0 \\
-              \sqrt{TS} & : \text{else}
-            \end{array}
-            \right.
-
-        Parameters
-        ----------
-        ts : `~numpy.ndarray`
-            TS value.
-        norm : `~numpy.ndarray`
-            norm value
-        Returns
-        -------
-        sqrt_ts : `~numpy.ndarray`
-            Sqrt(TS) value.
-        """
-        with np.errstate(invalid="ignore", divide="ignore"):
-            return np.where(norm > 0, np.sqrt(ts), -np.sqrt(ts))
-
     def _get_energy_axis(self, dataset):
         """Energy axis"""
         if self.energy_edges is None:
@@ -415,6 +387,10 @@ class FluxEstimate:
             \end{array}
             \right.
 
+        Returns
+        -------
+        sqrt_ts : `Map`
+            sqrt(TS) map
         """
         if "sqrt_ts" in self._data:
             return self._data["sqrt_ts"]

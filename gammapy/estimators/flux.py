@@ -173,7 +173,6 @@ class FluxEstimator(ParameterEstimator):
 
             datasets.models = models
             result.update(super().run(datasets, model.norm))
-            result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
 
         return result
 
