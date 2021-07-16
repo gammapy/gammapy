@@ -3,10 +3,12 @@ import abc
 import inspect
 from copy import deepcopy
 import numpy as np
+from astropy.io import fits
 from astropy.table import Table
 from astropy import units as u
-from gammapy.modeling.models import Model
+from gammapy.modeling.models import Model, Models
 from gammapy.maps import MapAxis, Map
+from gammapy.data import GTI
 
 __all__ = ["Estimator", "FluxEstimate"]
 
@@ -182,10 +184,13 @@ class FluxEstimate:
         Reference spectral model used to produce the input data.
     meta : dict
         Flux maps meta data.
+    gti : `~gammapy.data.GTI`
+        GTI information
+
     """
     _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
-    def __init__(self, data, reference_spectral_model, meta=None):
+    def __init__(self, data, reference_spectral_model, meta=None, gti=None):
         self._data = data
         self._reference_spectral_model = reference_spectral_model
 
@@ -193,6 +198,7 @@ class FluxEstimate:
             meta = {}
 
         self.meta = meta
+        self.gti = gti
 
     @property
     def available_quantities(self):
@@ -639,6 +645,96 @@ class FluxEstimate:
                 data[key] = maps[key]
 
         return cls(data=data, reference_model=reference_model, gti=gti)
+
+    def to_hdulist(self, sed_type="likelihood", hdu_bands=None):
+        """Convert flux map to list of HDUs.
+
+        For now, one cannot export the reference model.
+
+        Parameters
+        ----------
+        sed_type : str
+            sed type to convert to. Default is `Likelihood`
+        hdu_bands : str
+            Name of the HDU with the BANDS table. Default is 'BANDS'
+            If set to None, each map will have its own hdu_band
+
+        Returns
+        -------
+        hdulist : `~astropy.io.fits.HDUList`
+            Map dataset list of HDUs.
+        """
+        exclude_primary = slice(1, None)
+
+        hdu_primary = fits.PrimaryHDU()
+        hdu_primary.header["SED_TYPE"] = sed_type
+        hdulist = fits.HDUList([hdu_primary])
+
+        data = self.to_dict(sed_type)
+
+        for key, m in data.items():
+            hdulist += m.to_hdulist(hdu=key, hdu_bands=hdu_bands)[
+                exclude_primary
+            ]
+
+        if self.gti:
+            hdu = fits.BinTableHDU(self.gti.table, name="GTI")
+            hdulist.append(hdu)
+
+        return hdulist
+
+    @classmethod
+    def from_hdulist(cls, hdulist, hdu_bands=None):
+        """Create flux map dataset from list of HDUs.
+
+        Parameters
+        ----------
+        hdulist : `~astropy.io.fits.HDUList`
+            List of HDUs.
+        hdu_bands : str
+            Name of the HDU with the BANDS table. Default is 'BANDS'
+            If set to None, each map should have its own hdu_band
+
+        Returns
+        -------
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Flux maps object.
+        """
+        try:
+            sed_type = hdulist[0].header["SED_TYPE"]
+        except KeyError:
+            raise ValueError(
+                f"Cannot determine SED type of flux map from primary header."
+            )
+
+        maps = {}
+
+        for map_type in REQUIRED_MAPS[sed_type]:
+            maps[map_type] = Map.from_hdulist(
+                hdulist, hdu=map_type, hdu_bands=hdu_bands
+            )
+
+        for map_type in OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON:
+            if map_type.upper() in hdulist:
+                maps[map_type] = Map.from_hdulist(
+                    hdulist, hdu=map_type, hdu_bands=hdu_bands
+                )
+
+        filename = hdulist[0].header.get("MODEL", None)
+
+        if filename:
+            reference_model = Models.read(filename)[0]
+        else:
+            reference_model = None
+
+        if "GTI" in hdulist:
+            gti = GTI.read(Table.read(hdulist["GTI"]))
+        else:
+            gti = None
+
+        return cls.from_dict(
+            maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
+        )
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
