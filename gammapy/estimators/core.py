@@ -257,8 +257,7 @@ class FluxEstimate:
     def _check_quantity(self, quantity):
         if quantity not in self.available_quantities:
             raise AttributeError(
-                f"Cannot compute required flux quantity. {quantity} "
-                "is not defined on current flux estimate."
+                f"Quantity '{quantity}' is not defined on current flux estimate."
             )
 
     @property

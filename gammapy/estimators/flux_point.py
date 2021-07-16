@@ -235,6 +235,10 @@ class FluxPoints(FluxEstimate):
                 norm_type = key.replace(sed_type, "norm")
                 data[norm_type] = table[key] / factor
 
+        for key in OPTIONAL_QUANTITIES_COMMON:
+            if key in table.colnames:
+                data[key] = table[key]
+
         return data
 
     @classmethod
@@ -297,7 +301,14 @@ class FluxPoints(FluxEstimate):
             if key in table.colnames:
                 maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
 
-        return cls(data=maps, reference_spectral_model=reference_model, meta=table.meta)
+        return cls(data=maps, reference_spectral_model=reference_model, meta=meta)
+
+    @staticmethod
+    def _get_meta(table):
+        meta = {}
+        conf_ul = table.meta.get()
+        meta["n_sigma_ul"] = n
+        return meta
 
     @staticmethod
     def _format_table(table):

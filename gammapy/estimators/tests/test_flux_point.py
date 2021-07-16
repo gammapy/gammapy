@@ -202,6 +202,11 @@ class TestFluxPoints:
         actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
         assert str(flux_points) == str(actual)
 
+    def test_quantity_access(self, flux_points_likelihood):
+        assert flux_points_likelihood.sqrt_ts
+        assert flux_points_likelihood.ts
+        assert flux_points_likelihood.stat
+
     @requires_dependency("matplotlib")
     def test_plot(self, flux_points):
         with mpl_plot_check():
