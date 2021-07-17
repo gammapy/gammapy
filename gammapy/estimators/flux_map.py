@@ -136,15 +136,7 @@ class FluxMaps:
     @property
     def available_quantities(self):
         """Available quantities"""
-        keys = self._data.keys()
-
-        available_quantities = []
-
-        for quantity in VALID_QUANTITIES:
-            if quantity in keys:
-                available_quantities.append(quantity)
-
-        return available_quantities
+        return list(self._data.keys())
 
     @staticmethod
     def _validate_data(data, sed_type, check_scan=False):

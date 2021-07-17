@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from gammapy.data import GTI
-from gammapy.maps import MapAxis, WcsNDMap
+from gammapy.maps import MapAxis, WcsNDMap, RegionGeom, Maps
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel, LogParabolaSpectralModel
 from gammapy.estimators import FluxMaps
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
@@ -71,6 +72,112 @@ def partial_wcs_flux_map():
     map_dict["sqrt_ts"].data += 1.0
 
     return map_dict
+
+
+@pytest.fixture(scope="session")
+def region_map_flux_estimate():
+    axis = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
+    geom = RegionGeom.create(
+        "galactic;circle(0, 0, 0.1)", axes=[axis]
+    )
+
+    maps = Maps.from_geom(
+        geom=geom,
+        names=["norm", "norm_err", "norm_errn", "norm_errp", "norm_ul"]
+    )
+
+    maps["norm"].data = np.array([1.0, 1.0])
+    maps["norm_err"].data = np.array([0.1, 0.1])
+    maps["norm_errn"].data = np.array([0.2, 0.2])
+    maps["norm_errp"].data = np.array([0.15, 0.15])
+    maps["norm_ul"].data = np.array([2.0, 2.0])
+    return maps
+
+
+@pytest.fixture(scope="session")
+def map_flux_estimate():
+    axis = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
+
+    nmap = WcsNDMap.create(npix=5, axes=[axis])
+
+    cols = dict()
+    cols["norm"] = nmap.copy(data=1.0)
+    cols["norm_err"] = nmap.copy(data=0.1)
+    cols["norm_errn"] = nmap.copy(data=0.2)
+    cols["norm_errp"] = nmap.copy(data=0.15)
+    cols["norm_ul"] = nmap.copy(data=2.0)
+
+    return cols
+
+
+def test_table_properties(region_map_flux_estimate):
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
+
+    fe = FluxMaps(data=region_map_flux_estimate, reference_model=model)
+
+    assert fe.dnde.unit == u.Unit("cm-2s-1TeV-1")
+    assert_allclose(fe.dnde.data.flat, [1e-9, 1e-11])
+    assert_allclose(fe.dnde_err.data.flat, [1e-10, 1e-12])
+    assert_allclose(fe.dnde_errn.data.flat, [2e-10, 2e-12])
+    assert_allclose(fe.dnde_errp.data.flat, [1.5e-10, 1.5e-12])
+    assert_allclose(fe.dnde_ul.data.flat, [2e-9, 2e-11])
+
+    assert fe.e2dnde.unit == u.Unit("TeV cm-2s-1")
+    assert_allclose(fe.e2dnde.data.flat, [1e-10, 1e-10])
+
+    assert fe.flux.unit == u.Unit("cm-2s-1")
+    assert_allclose(fe.flux.data.flat, [9e-10, 9e-11])
+
+    assert fe.eflux.unit == u.Unit("TeV cm-2s-1")
+    assert_allclose(fe.eflux.data.flat, [2.302585e-10, 2.302585e-10])
+
+
+def test_missing_column(region_map_flux_estimate):
+    del region_map_flux_estimate["norm_errn"]
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
+    fe = FluxMaps(data=region_map_flux_estimate, reference_model=model)
+
+    with pytest.raises(AttributeError):
+        fe.dnde_errn
+
+
+def test_map_properties(map_flux_estimate):
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
+    fe = FluxMaps(data=map_flux_estimate, reference_model=model)
+
+    assert fe.dnde.unit == u.Unit("cm-2s-1TeV-1")
+    assert_allclose(fe.dnde.quantity.value[:, 2, 2], [1e-9, 1e-11])
+    assert_allclose(fe.dnde_err.quantity.value[:, 2, 2], [1e-10, 1e-12])
+    assert_allclose(fe.dnde_errn.quantity.value[:, 2, 2], [2e-10, 2e-12])
+    assert_allclose(fe.dnde_errp.quantity.value[:, 2, 2], [1.5e-10, 1.5e-12])
+    assert_allclose(fe.dnde_ul.quantity.value[:, 2, 2], [2e-9, 2e-11])
+
+    assert fe.e2dnde.unit == u.Unit("TeV cm-2s-1")
+    assert_allclose(fe.e2dnde.quantity.value[:, 2, 2], [1e-10, 1e-10])
+    assert_allclose(fe.e2dnde_err.quantity.value[:, 2, 2], [1e-11, 1e-11])
+    assert_allclose(fe.e2dnde_errn.quantity.value[:, 2, 2], [2e-11, 2e-11])
+    assert_allclose(fe.e2dnde_errp.quantity.value[:, 2, 2], [1.5e-11, 1.5e-11])
+    assert_allclose(fe.e2dnde_ul.quantity.value[:, 2, 2], [2e-10, 2e-10])
+
+    assert fe.flux.unit == u.Unit("cm-2s-1")
+    assert_allclose(fe.flux.quantity.value[:, 2, 2], [9e-10, 9e-11])
+    assert_allclose(fe.flux_err.quantity.value[:, 2, 2], [9e-11, 9e-12])
+    assert_allclose(fe.flux_errn.quantity.value[:, 2, 2], [1.8e-10, 1.8e-11])
+    assert_allclose(fe.flux_errp.quantity.value[:, 2, 2], [1.35e-10, 1.35e-11])
+    assert_allclose(fe.flux_ul.quantity.value[:, 2, 2], [1.8e-9, 1.8e-10])
+
+    assert fe.eflux.unit == u.Unit("TeV cm-2s-1")
+    assert_allclose(fe.eflux.quantity.value[:, 2, 2], [2.302585e-10, 2.302585e-10])
+    assert_allclose(
+        fe.eflux_err.quantity.value[:, 2, 2], [2.302585e-11, 2.302585e-11]
+    )
+    assert_allclose(
+        fe.eflux_errn.quantity.value[:, 2, 2], [4.60517e-11, 4.60517e-11]
+    )
+    assert_allclose(
+        fe.eflux_errp.quantity.value[:, 2, 2], [3.4538775e-11, 3.4538775e-11]
+    )
+    assert_allclose(fe.eflux_ul.quantity.value[:, 2, 2], [4.60517e-10, 4.60517e-10])
 
 
 def test_flux_map_properties(wcs_flux_map, reference_model):
@@ -202,7 +309,7 @@ def test_flux_map_read_write_missing_reference_model(tmp_path, wcs_flux_map, ref
 
 @pytest.mark.xfail
 def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
-    fluxmap = FluxMaps(wcs_flux_map)
+    fluxmap = FluxMaps(data=wcs_flux_map)
 
     assert fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
     assert fluxmap.reference_model.spatial_model.tag[0] == "PointSpatialModel"
