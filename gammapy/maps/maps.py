@@ -33,11 +33,11 @@ class Maps(MutableMapping):
                 f"MapDict can only contain Map objects, got {type(value)} instead."
             )
 
-        if len(self._data) > 0:
-            if value.geom != self._geom:
-                raise ValueError(
-                    f"MapDict items must share the same geometry. Expected {self._geom} got {value.geom}"
-                )
+        # if len(self._data) > 0:
+        #     if value.geom != self._geom:
+        #         raise ValueError(
+        #             f"MapDict items must share the same geometry. Expected {self._geom} got {value.geom}"
+        #         )
         else:
             self._geom = value.geom
 

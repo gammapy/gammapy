@@ -7,7 +7,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel, SkyModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
 from gammapy.maps import MapAxis, RegionNDMap
@@ -302,7 +302,7 @@ class FluxPoints(FluxMaps):
                 maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
 
         meta = cls._get_meta_gadf(table)
-        return cls(data=maps, reference_model=reference_model, meta=meta)
+        return cls(data=maps, reference_model=SkyModel(reference_model), meta=meta)
 
     @staticmethod
     def _get_meta_gadf(table):
