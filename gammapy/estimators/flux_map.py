@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
-from gammapy.maps import Map
+from gammapy.maps import Map, Maps
 from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
 
@@ -199,14 +199,14 @@ class FluxMaps:
         return SkyModel(PowerLawSpectralModel(index=2))
 
     @property
-    def reference_spectral_model(self):
-        """Reference spectral model (`SpectralModel`)"""
-        return self.reference_model.spectral_model
-
-    @property
     def reference_model(self):
         """Reference model (`SkyModel`)"""
         return self._reference_model
+
+    @property
+    def reference_spectral_model(self):
+        """Reference spectral model (`SpectralModel`)"""
+        return self.reference_model.spectral_model
 
     @property
     def energy_ref(self):
@@ -531,8 +531,8 @@ class FluxMaps:
             gti=self.gti
         )
 
-    def to_dict(self, sed_type="likelihood"):
-        """Return maps in a given SED type in the form of a dictionary.
+    def to_maps(self, sed_type="likelihood"):
+        """Return maps in a given SED type.
 
         Parameters
         ----------
@@ -541,19 +541,18 @@ class FluxMaps:
 
         Returns
         -------
-        map_dict : dict
-            Dictionary containing the requested maps.
+        maps : `Maps`
+            Maps object containing the requested maps.
         """
-        data = {}
-        all_maps = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
+        maps = Maps()
+        quantities = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
 
-        for quantity in all_maps:
-            try:
-                data[quantity] = getattr(self, quantity)
-            except AttributeError:
-                pass
+        for quantity in quantities:
+            m = getattr(self, quantity, None)
+            if m is not None:
+                maps[quantity] = m
 
-        return data
+        return maps
 
     @classmethod
     def from_dict(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
@@ -567,7 +566,8 @@ class FluxMaps:
             SED type of the input maps. Default is `Likelihood`
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
             Reference model to use for conversions. Default in None.
-            If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
+            If None, a model consisting of a point source with a power
+            law spectrum of index 2 is assumed.
         gti : `~gammapy.data.GTI`
             Maps GTI information. Default is None.
 
@@ -636,12 +636,8 @@ class FluxMaps:
         hdu_primary.header["SED_TYPE"] = sed_type
         hdulist = fits.HDUList([hdu_primary])
 
-        data = self.to_dict(sed_type)
-
-        for key, m in data.items():
-            hdulist += m.to_hdulist(hdu=key, hdu_bands=hdu_bands)[
-                exclude_primary
-            ]
+        maps = self.to_maps(sed_type=sed_type)
+        hdulist.extend(maps.to_hdulist(hdu_bands=hdu_bands)[exclude_primary])
 
         if self.gti:
             hdu = fits.BinTableHDU(self.gti.table, name="GTI")
