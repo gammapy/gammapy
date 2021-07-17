@@ -407,15 +407,6 @@ class FluxPoints(FluxMaps):
         return model.inverse(dnde_mean)
 
     @staticmethod
-    def _guess_sed_type(table):
-        """Guess SED type from table content."""
-        valid_sed_types = list(REQUIRED_COLUMNS.keys())
-        for sed_type in valid_sed_types:
-            required = set(REQUIRED_COLUMNS[sed_type])
-            if required.issubset(table.colnames):
-                return sed_type
-
-    @staticmethod
     def _guess_sed_type_from_unit(unit):
         """Guess SED type from unit."""
         for sed_type, default_unit in DEFAULT_UNIT.items():

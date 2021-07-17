@@ -367,7 +367,7 @@ def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
     map_dict["eflux_err"] = ref_map.eflux_err
     map_dict["eflux_err"].quantity = map_dict["eflux_err"].quantity.to("keV/m2/s")
 
-    flux_map = FluxMaps.from_dict(map_dict, "eflux", reference_model)
+    flux_map = FluxMaps.from_maps(map_dict, "eflux", reference_model)
 
     assert_allclose(flux_map.norm.data, 1)
     assert flux_map.norm.unit == ""

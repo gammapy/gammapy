@@ -163,6 +163,15 @@ class FluxMaps:
                 f"Quantity '{quantity}' is not defined on current flux estimate."
             )
 
+    @staticmethod
+    def _guess_sed_type(quantities):
+        """Guess SED type from table content."""
+        valid_sed_types = list(REQUIRED_COLUMNS.keys())
+        for sed_type in valid_sed_types:
+            required = set(REQUIRED_COLUMNS[sed_type])
+            if required.issubset(quantities):
+                return sed_type
+
     @property
     def n_sigma(self):
         """n sigma UL"""
@@ -555,7 +564,7 @@ class FluxMaps:
         return maps
 
     @classmethod
-    def from_dict(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
+    def from_maps(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
         """Create FluxMaps from a dictionary of maps.
 
         Parameters
@@ -576,10 +585,16 @@ class FluxMaps:
         flux_maps : `~gammapy.estimators.FluxMaps`
             Flux maps object.
         """
+        if sed_type is None:
+            sed_type = cls._guess_sed_type(maps)
+
+        if sed_type is None:
+            raise ValueError("Specifying the sed type is required")
+
         cls._validate_data(data=maps, sed_type=sed_type)
 
         if sed_type == "likelihood":
-            return cls(data=maps, reference_model=reference_model)
+            return cls(data=maps, reference_model=reference_model, gti=gti)
 
         if reference_model is None:
             log.warning(
@@ -646,7 +661,7 @@ class FluxMaps:
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu_bands=None):
+    def from_hdulist(cls, hdulist, hdu_bands=None, sed_type=None):
         """Create flux map dataset from list of HDUs.
 
         Parameters
@@ -656,31 +671,18 @@ class FluxMaps:
         hdu_bands : str
             Name of the HDU with the BANDS table. Default is 'BANDS'
             If set to None, each map should have its own hdu_band
+        sed_type : {"dnde", "flux", "e2dnde", "eflux", "likelihood"}
+            Sed type
 
         Returns
         -------
         flux_maps : `~gammapy.estimators.FluxMaps`
             Flux maps object.
         """
-        try:
-            sed_type = hdulist[0].header["SED_TYPE"]
-        except KeyError:
-            raise ValueError(
-                f"Cannot determine SED type of flux map from primary header."
-            )
+        maps = Maps.from_hdulist(hdulist=hdulist, hdu_bands=hdu_bands)
 
-        maps = {}
-
-        for map_type in REQUIRED_MAPS[sed_type]:
-            maps[map_type] = Map.from_hdulist(
-                hdulist, hdu=map_type, hdu_bands=hdu_bands
-            )
-
-        for map_type in OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON:
-            if map_type.upper() in hdulist:
-                maps[map_type] = Map.from_hdulist(
-                    hdulist, hdu=map_type, hdu_bands=hdu_bands
-                )
+        if sed_type is None:
+            sed_type = hdulist[0].header.get("SED_TYPE", None)
 
         filename = hdulist[0].header.get("MODEL", None)
 
@@ -694,7 +696,7 @@ class FluxMaps:
         else:
             gti = None
 
-        return cls.from_dict(
+        return cls.from_maps(
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
 
