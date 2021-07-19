@@ -324,6 +324,7 @@ class FluxMaps:
         self._check_quantity("ts")
         return self._data["ts"]
 
+    # TODO: always derive sqrt(TS) from TS?
     @property
     def sqrt_ts(self):
         """sqrt(TS) as defined by:

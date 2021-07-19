@@ -325,7 +325,7 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        from gammapy.estimators.core import DEFAULT_UNIT
+        from gammapy.estimators.flux_map import DEFAULT_UNIT
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
@@ -414,7 +414,7 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        from gammapy.estimators.core import DEFAULT_UNIT
+        from gammapy.estimators.flux_map import DEFAULT_UNIT
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax

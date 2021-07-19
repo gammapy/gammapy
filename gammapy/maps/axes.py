@@ -1125,7 +1125,7 @@ class MapAxis:
                 rad = table["Theta"].data * u.deg
                 axis = MapAxis.from_nodes(rad, name="rad")
         elif format == "gadf-sed-energy":
-            sed_type = table.meta.get("SED_TYPE")
+            sed_type = table.meta["SED_TYPE"]
             if sed_type in ["dnde", "e2dnde"]:
                 e_ref = flat_if_equal(table["e_ref"].quantity)
                 axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")

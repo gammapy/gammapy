@@ -32,7 +32,7 @@ class Maps(MutableMapping):
             raise ValueError(
                 f"MapDict can only contain Map objects, got {type(value)} instead."
             )
-
+        # TODO: which criterion to apply? Broadcastability?
         # if len(self._data) > 0:
         #     if value.geom != self._geom:
         #         raise ValueError(
@@ -178,6 +178,7 @@ class Maps(MutableMapping):
             Maps object.
         """
         mapdict = {}
+
         if kwargs_list is None:
             kwargs_list = [{}] * len(names)
 

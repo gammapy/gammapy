@@ -96,7 +96,6 @@ class FluxPoints(FluxMaps):
 
         table = Table.read(make_path('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt'),
                            format='ascii.csv', delimiter=' ', comment='#')
-        table.meta['SED_TYPE'] = 'dnde'
         table.rename_column('Differential_Flux', 'dnde')
         table['dnde'].unit = 'cm-2 s-1 TeV-1'
 
@@ -109,8 +108,9 @@ class FluxPoints(FluxMaps):
         table.rename_column('E', 'e_ref')
         table['e_ref'].unit = 'TeV'
 
-        flux_points = FluxPoints.from_table(table)
-        flux_points.plot(sed_type="eflux")
+        flux_points = FluxPoints.from_table(table, sed_type="dnde")
+        flux_points.plot(sed_type="e2dnde")
+
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
@@ -218,6 +218,7 @@ class FluxPoints(FluxMaps):
 
     @staticmethod
     def _convert_flux_columns(table, reference_model, sed_type):
+        table.meta.setdefault("SED_TYPE", sed_type)
         energy_axis = MapAxis.from_table(table, format="gadf-sed-energy")
 
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -265,7 +266,7 @@ class FluxPoints(FluxMaps):
             sed_type = table.meta.get("SED_TYPE", None)
 
         if sed_type is None:
-            sed_type = cls._guess_sed_type(table)
+            sed_type = cls._guess_sed_type(table.colnames)
 
         if sed_type is None:
             raise ValueError("Specifying the sed type is required")
