@@ -7,21 +7,17 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel
+from gammapy.modeling.models import TemplateSpectralModel, SkyModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
-from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.maps import RegionNDMap, Maps
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .core import (
-    FluxEstimate,
+from .flux_map import (
+    FluxMaps,
     DEFAULT_UNIT,
-    OPTIONAL_QUANTITIES_COMMON,
-    OPTIONAL_QUANTITIES,
-    REQUIRED_COLUMNS,
-    VALID_QUANTITIES
 )
 from. flux import FluxEstimator
 
@@ -31,7 +27,7 @@ __all__ = ["FluxPoints", "FluxPointsEstimator"]
 log = logging.getLogger(__name__)
 
 
-class FluxPoints(FluxEstimate):
+class FluxPoints(FluxMaps):
     """Flux points container.
 
     The supported formats are described here: :ref:`gadf:flux-points`
@@ -96,7 +92,6 @@ class FluxPoints(FluxEstimate):
 
         table = Table.read(make_path('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt'),
                            format='ascii.csv', delimiter=' ', comment='#')
-        table.meta['SED_TYPE'] = 'dnde'
         table.rename_column('Differential_Flux', 'dnde')
         table['dnde'].unit = 'cm-2 s-1 TeV-1'
 
@@ -109,8 +104,9 @@ class FluxPoints(FluxEstimate):
         table.rename_column('E', 'e_ref')
         table['e_ref'].unit = 'TeV'
 
-        flux_points = FluxPoints.from_table(table)
-        flux_points.plot(sed_type="eflux")
+        flux_points = FluxPoints.from_table(table, sed_type="dnde")
+        flux_points.plot(sed_type="e2dnde")
+
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
@@ -216,31 +212,6 @@ class FluxPoints(FluxEstimate):
 
         return table
 
-    @staticmethod
-    def _convert_flux_columns(table, reference_model, sed_type):
-        energy_axis = MapAxis.from_table(table, format="gadf-sed-energy")
-
-        with np.errstate(invalid="ignore", divide="ignore"):
-            fluxes = reference_model.reference_fluxes(energy_axis=energy_axis)
-
-        # TODO: handle reshaping in MapAxis
-        col_ref = table[sed_type]
-        factor = fluxes[f"ref_{sed_type}"].to(col_ref.unit)
-
-        data = Table(fluxes, meta=table.meta)
-        data["norm"] = col_ref / factor
-
-        for key in OPTIONAL_QUANTITIES[sed_type]:
-            if key in table.colnames:
-                norm_type = key.replace(sed_type, "norm")
-                data[norm_type] = table[key] / factor
-
-        for key in OPTIONAL_QUANTITIES_COMMON:
-            if key in table.colnames:
-                data[key] = table[key]
-
-        return data
-
     @classmethod
     def from_table(cls, table, sed_type=None, reference_model=None):
         """Create flux points from table
@@ -265,44 +236,35 @@ class FluxPoints(FluxEstimate):
             sed_type = table.meta.get("SED_TYPE", None)
 
         if sed_type is None:
-            sed_type = cls._guess_sed_type(table)
+            sed_type = cls._guess_sed_type(table.colnames)
 
         if sed_type is None:
             raise ValueError("Specifying the sed type is required")
 
-        cls._validate_data(data=table, sed_type=sed_type)
-
-        if sed_type in ["dnde", "eflux", "e2dnde", "flux"]:
-            if reference_model is None:
-                log.warning(
-                    "No reference model set for FluxPoints. Assuming point source with E^-2 spectrum."
-                )
-
-                reference_model = PowerLawSpectralModel()
-
-            table = cls._convert_flux_columns(
-                table=table, reference_model=reference_model, sed_type=sed_type
-            )
-
-        elif sed_type == "likelihood":
+        if sed_type == "likelihood":
             table = cls._convert_loglike_columns(table)
             if reference_model is None:
                 reference_model = TemplateSpectralModel(
                     energy=table["e_ref"].quantity,
                     values=table["ref_dnde"].quantity
                 )
-        else:
-            raise ValueError(f"Not a valid SED type {sed_type}")
 
-        maps = {}
+        maps = Maps()
+        table.meta.setdefault("SED_TYPE", sed_type)
 
-        # We add the remaining maps
-        for key in VALID_QUANTITIES:
-            if key in table.colnames:
-                maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
+        for name in cls.all_quantities(sed_type=sed_type):
+            if name in table.colnames:
+                maps[name] = RegionNDMap.from_table(
+                    table=table, colname=name, format="gadf-sed"
+                )
 
         meta = cls._get_meta_gadf(table)
-        return cls(data=maps, reference_spectral_model=reference_model, meta=meta)
+        return cls.from_maps(
+            maps=maps,
+            reference_model=reference_model,
+            meta=meta,
+            sed_type=sed_type
+        )
 
     @staticmethod
     def _get_meta_gadf(table):
@@ -345,48 +307,30 @@ class FluxPoints(FluxEstimate):
         table : `~astropy.table.Table`
             Flux points table
         """
-        table = Table()
-
         if format == "gadf-sed":
-            all_quantities = (
-                REQUIRED_COLUMNS[sed_type] +
-                OPTIONAL_QUANTITIES[sed_type] +
-                OPTIONAL_QUANTITIES_COMMON
-            )
-
             idx = (Ellipsis, 0, 0)
 
-            # TODO: simplify...
-            for quantity in all_quantities:
-                if quantity == "e_ref":
-                    table["e_ref"] = self.energy_ref
-                elif quantity == "e_min":
-                    table["e_min"] = self.energy_min
-                elif quantity == "e_max":
-                    table["e_max"] = self.energy_max
-                elif quantity == "ref_dnde":
-                    table["ref_dnde"] = self.dnde_ref[idx]
-                elif quantity == "ref_flux":
-                    table["ref_flux"] = self.flux_ref[idx]
-                elif quantity == "ref_eflux":
-                    table["ref_eflux"] = self.eflux_ref[idx]
-                else:
-                    data = getattr(self, quantity, None)
-                    if data:
-                        table[quantity] = data.quantity[idx]
-
-            if sed_type == "likelihood":
-                try:
-                    norm_axis = self.stat_scan.geom.axes["norm"]
-                    table["norm_scan"] = norm_axis.center.reshape((1, -1))
-                    table["stat"] = self.stat.data[idx]
-                    table["stat_scan"] = self.stat_scan.data[idx]
-                except AttributeError:
-                    pass
-
+            table = self.energy_axis.to_table(format="gadf-sed")
             table.meta["SED_TYPE"] = sed_type
+
             if self.n_sigma_ul:
                 table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(2), 2)
+
+            if sed_type == "likelihood":
+                table["ref_dnde"] = self.dnde_ref[idx]
+                table["ref_flux"] = self.flux_ref[idx]
+                table["ref_eflux"] = self.eflux_ref[idx]
+
+            for quantity in self.all_quantities(sed_type=sed_type):
+                data = getattr(self, quantity, None)
+                if data:
+                    table[quantity] = data.quantity[idx]
+
+            if self.has_stat_profiles:
+                norm_axis = self.stat_scan.geom.axes["norm"]
+                table["norm_scan"] = norm_axis.center.reshape((1, -1))
+                table["stat"] = self.stat.data[idx]
+                table["stat_scan"] = self.stat_scan.data[idx]
         else:
             raise ValueError(f"Not a supported format {format}")
 
@@ -405,22 +349,6 @@ class FluxPoints(FluxEstimate):
         flux = model.integral(energy_min, energy_max)
         dnde_mean = flux / (energy_max - energy_min)
         return model.inverse(dnde_mean)
-
-    @staticmethod
-    def _guess_sed_type(table):
-        """Guess SED type from table content."""
-        valid_sed_types = list(REQUIRED_COLUMNS.keys())
-        for sed_type in valid_sed_types:
-            required = set(REQUIRED_COLUMNS[sed_type])
-            if required.issubset(table.colnames):
-                return sed_type
-
-    @staticmethod
-    def _guess_sed_type_from_unit(unit):
-        """Guess SED type from unit."""
-        for sed_type, default_unit in DEFAULT_UNIT.items():
-            if unit.is_equivalent(default_unit):
-                return sed_type
 
     def _plot_get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""

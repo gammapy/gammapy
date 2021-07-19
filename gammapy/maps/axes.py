@@ -962,6 +962,11 @@ class MapAxis:
 
             table["ENERG_LO"] = edges[:-1]
             table["ENERG_HI"] = edges[1:]
+        elif format == "gadf-sed":
+            if self.is_energy_axis:
+                table["e_ref"] = self.center
+                table["e_min"] = self.edges_min
+                table["e_max"] = self.edges_max
         elif format == "gadf-dl3":
             from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
 
@@ -1125,7 +1130,7 @@ class MapAxis:
                 rad = table["Theta"].data * u.deg
                 axis = MapAxis.from_nodes(rad, name="rad")
         elif format == "gadf-sed-energy":
-            sed_type = table.meta.get("SED_TYPE")
+            sed_type = table.meta["SED_TYPE"]
             if sed_type in ["dnde", "e2dnde"]:
                 e_ref = flat_if_equal(table["e_ref"].quantity)
                 axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")

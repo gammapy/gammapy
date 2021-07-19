@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import UserDict
 from collections.abc import MutableMapping
 from astropy.io import fits
 from gammapy.maps import Map
@@ -32,12 +31,12 @@ class Maps(MutableMapping):
             raise ValueError(
                 f"MapDict can only contain Map objects, got {type(value)} instead."
             )
-
-        if len(self._data) > 0:
-            if value.geom != self._geom:
-                raise ValueError(
-                    f"MapDict items must share the same geometry. Expected {self._geom} got {value.geom}"
-                )
+        # TODO: which criterion to apply? Broadcastability?
+        # if len(self._data) > 0:
+        #     if value.geom != self._geom:
+        #         raise ValueError(
+        #             f"MapDict items must share the same geometry. Expected {self._geom} got {value.geom}"
+        #         )
         else:
             self._geom = value.geom
 
@@ -178,6 +177,7 @@ class Maps(MutableMapping):
             Maps object.
         """
         mapdict = {}
+
         if kwargs_list is None:
             kwargs_list = [{}] * len(names)
 
