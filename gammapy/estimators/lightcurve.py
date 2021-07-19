@@ -400,7 +400,7 @@ class LightCurveEstimator(FluxPointsEstimator):
                 time_min=t_min, time_max=t_max, atol=self.atol
             )
 
-            if len(datasets_to_fit) == 0:
+            if len(datasets) == 0:
                 log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
                 continue
 
