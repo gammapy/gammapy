@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from .core import Estimator
@@ -196,6 +197,29 @@ class ParameterEstimator(Estimator):
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
+    @staticmethod
+    def estimate_counts(datasets):
+        """Estimate counts for the flux point.
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with the sum of the
+            masked counts.
+        """
+        counts = []
+
+        for dataset in datasets:
+            mask = dataset.mask
+            counts.append(dataset.counts.data[mask].sum())
+
+        return {"counts": np.array(counts, dtype=int)}
+
     def run(self, datasets, parameter):
         """Run the parameter estimator.
 
@@ -232,4 +256,5 @@ class ParameterEstimator(Estimator):
             if "scan" in self.selection_optional:
                 result.update(self.estimate_scan(datasets, parameter))
 
+        result.update(self.estimate_counts(datasets))
         return result
