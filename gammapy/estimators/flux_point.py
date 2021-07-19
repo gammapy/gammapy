@@ -7,10 +7,10 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import PowerLawSpectralModel, TemplateSpectralModel, SkyModel
+from gammapy.modeling.models import TemplateSpectralModel, SkyModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
-from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.maps import RegionNDMap, Maps
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
@@ -216,32 +216,6 @@ class FluxPoints(FluxMaps):
 
         return table
 
-    @staticmethod
-    def _convert_flux_columns(table, reference_model, sed_type):
-        table.meta.setdefault("SED_TYPE", sed_type)
-        energy_axis = MapAxis.from_table(table, format="gadf-sed-energy")
-
-        with np.errstate(invalid="ignore", divide="ignore"):
-            fluxes = reference_model.reference_fluxes(energy_axis=energy_axis)
-
-        # TODO: handle reshaping in MapAxis
-        col_ref = table[sed_type]
-        factor = fluxes[f"ref_{sed_type}"].to(col_ref.unit)
-
-        data = Table(fluxes, meta=table.meta)
-        data["norm"] = col_ref / factor
-
-        for key in OPTIONAL_QUANTITIES[sed_type]:
-            if key in table.colnames:
-                norm_type = key.replace(sed_type, "norm")
-                data[norm_type] = table[key] / factor
-
-        for key in OPTIONAL_QUANTITIES_COMMON:
-            if key in table.colnames:
-                data[key] = table[key]
-
-        return data
-
     @classmethod
     def from_table(cls, table, sed_type=None, reference_model=None):
         """Create flux points from table
@@ -271,39 +245,30 @@ class FluxPoints(FluxMaps):
         if sed_type is None:
             raise ValueError("Specifying the sed type is required")
 
-        cls._validate_data(data=table, sed_type=sed_type)
-
-        if sed_type in ["dnde", "eflux", "e2dnde", "flux"]:
-            if reference_model is None:
-                log.warning(
-                    "No reference model set for FluxPoints. Assuming point source with E^-2 spectrum."
-                )
-
-                reference_model = PowerLawSpectralModel()
-
-            table = cls._convert_flux_columns(
-                table=table, reference_model=reference_model, sed_type=sed_type
-            )
-
-        elif sed_type == "likelihood":
+        if sed_type == "likelihood":
             table = cls._convert_loglike_columns(table)
             if reference_model is None:
                 reference_model = TemplateSpectralModel(
                     energy=table["e_ref"].quantity,
                     values=table["ref_dnde"].quantity
                 )
-        else:
-            raise ValueError(f"Not a valid SED type {sed_type}")
 
-        maps = {}
+        maps = Maps()
+        table.meta.setdefault("SED_TYPE", sed_type)
 
-        # We add the remaining maps
-        for key in VALID_QUANTITIES:
-            if key in table.colnames:
-                maps[key] = RegionNDMap.from_table(table=table, colname=key, format="gadf-sed")
+        for name in cls.all_quantities(sed_type=sed_type):
+            if name in table.colnames:
+                maps[name] = RegionNDMap.from_table(
+                    table=table, colname=name, format="gadf-sed"
+                )
 
         meta = cls._get_meta_gadf(table)
-        return cls(data=maps, reference_model=SkyModel(reference_model), meta=meta)
+        return cls.from_maps(
+            maps=maps,
+            reference_model=SkyModel(reference_model),
+            meta=meta,
+            sed_type=sed_type
+        )
 
     @staticmethod
     def _get_meta_gadf(table):

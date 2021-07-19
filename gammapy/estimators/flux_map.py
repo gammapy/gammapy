@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
-from gammapy.maps import Map, Maps
+from gammapy.maps import Map, Maps, MapAxis
 from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
 
@@ -137,6 +137,19 @@ class FluxMaps:
     def available_quantities(self):
         """Available quantities"""
         return list(self._data.keys())
+
+    @staticmethod
+    def all_quantities(sed_type):
+        """All quantities quantities"""
+        quantities = []
+        quantities += REQUIRED_MAPS[sed_type]
+        quantities += OPTIONAL_QUANTITIES[sed_type]
+        quantities += OPTIONAL_QUANTITIES_COMMON
+
+        if sed_type == "likelihood":
+            quantities += REQUIRED_QUANTITIES_SCAN
+
+        return quantities
 
     @staticmethod
     def _validate_data(data, sed_type, check_scan=False):
@@ -565,13 +578,13 @@ class FluxMaps:
         return maps
 
     @classmethod
-    def from_maps(cls, maps, sed_type="likelihood", reference_model=None, gti=None):
+    def from_maps(cls, maps, sed_type=None, reference_model=None, gti=None, meta=None):
         """Create FluxMaps from a dictionary of maps.
 
         Parameters
         ----------
-        maps : dict
-            Dictionary containing the input maps.
+        maps : `Maps`
+            Maps object containing the input maps.
         sed_type : str
             SED type of the input maps. Default is `Likelihood`
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
@@ -580,6 +593,8 @@ class FluxMaps:
             law spectrum of index 2 is assumed.
         gti : `~gammapy.data.GTI`
             Maps GTI information. Default is None.
+        meta : `dict`
+            Meta dict.
 
         Returns
         -------
@@ -587,7 +602,7 @@ class FluxMaps:
             Flux maps object.
         """
         if sed_type is None:
-            sed_type = cls._guess_sed_type(maps)
+            sed_type = cls._guess_sed_type(maps.keys())
 
         if sed_type is None:
             raise ValueError("Specifying the sed type is required")
@@ -595,7 +610,7 @@ class FluxMaps:
         cls._validate_data(data=maps, sed_type=sed_type)
 
         if sed_type == "likelihood":
-            return cls(data=maps, reference_model=reference_model, gti=gti)
+            return cls(data=maps, reference_model=reference_model, gti=gti, meta=meta)
 
         if reference_model is None:
             log.warning(
@@ -604,7 +619,6 @@ class FluxMaps:
             reference_model = cls.reference_model_default
 
         map_ref = maps[sed_type]
-
         energy_axis = map_ref.geom.axes["energy"]
 
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -626,7 +640,7 @@ class FluxMaps:
             if key in maps:
                 data[key] = maps[key]
 
-        return cls(data=data, reference_model=reference_model, gti=gti)
+        return cls(data=data, reference_model=reference_model, gti=gti, meta=meta)
 
     def to_hdulist(self, sed_type="likelihood", hdu_bands=None):
         """Convert flux map to list of HDUs.
