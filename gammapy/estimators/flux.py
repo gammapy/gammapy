@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy import units as u
+from gammapy.maps import MapAxis
 from gammapy.datasets import Datasets
-from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import Models, ScaleSpectralModel
 from gammapy.modeling import Fit
@@ -81,33 +80,6 @@ class FluxEstimator(ParameterEstimator):
             reoptimize=reoptimize
         )
 
-    @staticmethod
-    def get_reference_flux_values(model, energy_min, energy_max):
-        """Get reference flux values
-
-        Parameters
-        ----------
-        model : `SpectralModel`
-            Models
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Energy range
-
-        Returns
-        -------
-        values : dict
-            Dictionary with reference energies and flux values.
-        """
-        energy_ref = np.sqrt(energy_min * energy_max)
-        return {
-            "e_ref": energy_ref,
-            "e_min": energy_min,
-            "e_max": energy_max,
-            "ref_dnde": model(energy_ref),
-            "ref_flux": model.integral(energy_min, energy_max),
-            "ref_eflux": model.energy_flux(energy_min, energy_max),
-            "ref_e2dnde": model(energy_ref) * energy_ref ** 2,
-        }
-
     def get_scale_model(self, models):
         """Set scale model
 
@@ -151,11 +123,12 @@ class FluxEstimator(ParameterEstimator):
         model = self.get_scale_model(models)
 
         energy_min, energy_max = datasets.energy_ranges
+        energy_axis = MapAxis.from_energy_edges([energy_min.min(), energy_max.max()])
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            result = self.get_reference_flux_values(
-                model.model, energy_min.min(), energy_max.min()
-            )
+            result = model.reference_fluxes(energy_axis=energy_axis)
+            # convert to scalar values
+            result = {key: value.item() for key, value in result.items()}
 
         models[self.source].spectral_model = model
         datasets.models = models

@@ -267,7 +267,7 @@ class SpectralModel(Model):
             Reference fluxes
         """
         energy = energy_axis.center
-        energy_min, energy_max = energy_axis.edges[:-1], energy_axis.edges[1:]
+        energy_min, energy_max = energy_axis.edges_min, energy_axis.edges_max
         return {
             "e_ref": energy,
             "e_min": energy_min,
