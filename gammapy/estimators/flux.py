@@ -97,8 +97,8 @@ class FluxEstimator(ParameterEstimator):
         scale_model = ScaleSpectralModel(ref_model)
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
-        scale_model.norm.scan_values = self.norm_values
         scale_model.norm.interp = "log"
+        scale_model.norm.scan_values = self.norm_values
         scale_model.norm.scan_min = self.norm_min
         scale_model.norm.scan_max = self.norm_max
         scale_model.norm.scan_n_values = self.norm_n_values

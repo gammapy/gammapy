@@ -603,11 +603,13 @@ class FluxPointsEstimator(FluxEstimator):
         ----------
         datasets : list of `~gammapy.datasets.Dataset`
             Datasets
+
         Returns
         -------
         flux_points : `FluxPoints`
             Estimated flux points.
         """
+        # TODO: remove copy here...
         datasets = Datasets(datasets).copy()
 
         rows = []
@@ -629,14 +631,14 @@ class FluxPointsEstimator(FluxEstimator):
 
         table = table_from_row_data(rows=rows, meta=meta)
         model = datasets.models[self.source]
-        return FluxPoints.from_table(table, reference_model=model.spectral_model.copy())
+        return FluxPoints.from_table(table, reference_model=model.copy())
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `Datasets`
             Datasets
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.

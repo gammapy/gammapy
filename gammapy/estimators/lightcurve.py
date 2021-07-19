@@ -393,16 +393,18 @@ class LightCurveEstimator(FluxPointsEstimator):
                 gti.time_intervals,
                 desc="Time intervals"
         ):
+
+            row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
+
             datasets_to_fit = datasets.select_time(
-                t_min=t_min, t_max=t_max, atol=self.atol
+                time_min=t_min, time_max=t_max, atol=self.atol
             )
 
             if len(datasets_to_fit) == 0:
                 log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
                 continue
 
-            row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-            fp = self.estimate_time_bin_flux(datasets_to_fit)
+            fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
             fp_table = fp.to_table()
 
             for column in fp_table.colnames:

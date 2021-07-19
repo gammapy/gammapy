@@ -198,7 +198,7 @@ class Datasets(collections.abc.MutableSequence):
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
     @property
-    def stat_contributions(self):
+    def contributes_to_stat(self):
         """Stat contributions
 
         Returns
@@ -224,12 +224,12 @@ class Datasets(collections.abc.MutableSequence):
             stat_sum += dataset.stat_sum()
         return stat_sum
 
-    def select_time(self, t_min, t_max, atol="1e-6 s"):
+    def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
 
         Parameters
         ----------
-        t_min, t_max : `~astropy.time.Time`
+        time_min, time_max : `~astropy.time.Time`
             Time interval
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default 1e-6 sec.
@@ -248,7 +248,7 @@ class Datasets(collections.abc.MutableSequence):
             t_start = dataset.gti.time_start[0]
             t_stop = dataset.gti.time_stop[-1]
 
-            if t_start >= (t_min - atol) and t_stop <= (t_max + atol):
+            if t_start >= (time_min - atol) and t_stop <= (time_max + atol):
                 datasets.append(dataset)
 
         return self.__class__(datasets)

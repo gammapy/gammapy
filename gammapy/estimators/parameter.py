@@ -78,7 +78,7 @@ class ParameterEstimator(Estimator):
         """
         value, total_stat, success, error = np.nan, 0, False, np.nan
 
-        if np.any(datasets.stat_contributions):
+        if np.any(datasets.contributes_to_stat):
             result = self.fit.run(datasets=datasets)
             value, error = parameter.value, parameter.error
             total_stat = result["optimize_result"].total_stat
@@ -106,7 +106,7 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
-        if not np.any(datasets.stat_contributions):
+        if not np.any(datasets.contributes_to_stat):
             return {"ts": np.nan}
 
         stat = datasets.stat_sum()
@@ -138,7 +138,7 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
-        if not np.any(datasets.stat_contributions):
+        if not np.any(datasets.contributes_to_stat):
             return {
                 f"{parameter.name}_errp": np.nan,
                 f"{parameter.name}_errn": np.nan,
@@ -176,7 +176,7 @@ class ParameterEstimator(Estimator):
         """
         scan_values = parameter.scan_values
 
-        if not np.any(datasets.stat_contributions):
+        if not np.any(datasets.contributes_to_stat):
             return {
                 f"{parameter.name}_scan": scan_values,
                 "stat_scan": scan_values * np.nan
@@ -211,7 +211,7 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
-        if not np.any(datasets.stat_contributions):
+        if not np.any(datasets.contributes_to_stat):
             return {f"{parameter.name}_ul": np.nan}
 
         self.fit.optimize(datasets=datasets)
