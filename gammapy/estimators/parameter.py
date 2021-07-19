@@ -76,13 +76,19 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
-        result_fit = self.fit.run(datasets=datasets)
+        value, total_stat, success, error = np.nan, 0, False, np.nan
+
+        if np.any(datasets.stat_contributions):
+            result = self.fit.run(datasets=datasets)
+            value, error = parameter.value, parameter.error
+            total_stat = result["optimize_result"].total_stat
+            success = result["optimize_result"].success
 
         return {
-            f"{parameter.name}": parameter.value,
-            "stat": result_fit["optimize_result"].total_stat,
-            "success": result_fit["optimize_result"].success,
-            f"{parameter.name}_err": parameter.error * self.n_sigma,
+            f"{parameter.name}": value,
+            "stat": total_stat,
+            "success": success,
+            f"{parameter.name}_err": error * self.n_sigma,
         }
 
     def estimate_ts(self, datasets, parameter):
@@ -100,6 +106,9 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
+        if not np.any(datasets.stat_contributions):
+            return {"ts": np.nan}
+
         stat = datasets.stat_sum()
 
         with datasets.parameters.restore_status():
@@ -129,6 +138,12 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
+        if not np.any(datasets.stat_contributions):
+            return {
+                f"{parameter.name}_errp": np.nan,
+                f"{parameter.name}_errn": np.nan,
+            }
+
         self.fit.optimize(datasets=datasets)
 
         res = self.fit.confidence(
@@ -137,6 +152,7 @@ class ParameterEstimator(Estimator):
             sigma=self.n_sigma,
             reoptimize=self.reoptimize
         )
+
         return {
             f"{parameter.name}_errp": res["errp"],
             f"{parameter.name}_errn": res["errn"],
@@ -158,6 +174,14 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
+        scan_values = parameter.scan_values
+
+        if not np.any(datasets.stat_contributions):
+            return {
+                f"{parameter.name}_scan": scan_values,
+                "stat_scan": scan_values * np.nan
+            }
+
         self.fit.optimize(datasets=datasets)
 
         profile = self.fit.stat_profile(
@@ -167,7 +191,7 @@ class ParameterEstimator(Estimator):
         )
 
         return {
-            f"{parameter.name}_scan": profile[f"{parameter.name}_scan"],
+            f"{parameter.name}_scan": scan_values,
             "stat_scan": profile["stat_scan"],
         }
 
@@ -187,6 +211,9 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
+        if not np.any(datasets.stat_contributions):
+            return {f"{parameter.name}_ul": np.nan}
+
         self.fit.optimize(datasets=datasets)
 
         res = self.fit.confidence(

@@ -148,15 +148,6 @@ class FluxEstimator(ParameterEstimator):
         datasets = Datasets(datasets)
         models = datasets.models.copy()
 
-        contributions = []
-
-        for dataset in datasets:
-            if dataset.mask is not None:
-                value = dataset.mask.data.any()
-            else:
-                value = True
-            contributions.append(value)
-
         model = self.get_scale_model(models)
 
         energy_min, energy_max = datasets.energy_ranges
@@ -166,35 +157,7 @@ class FluxEstimator(ParameterEstimator):
                 model.model, energy_min.min(), energy_max.min()
             )
 
-        if len(datasets) == 0 or not np.any(contributions):
-            result.update(self.nan_result(datasets, model.norm))
-        else:
-            models[self.source].spectral_model = model
-
-            datasets.models = models
-            result.update(super().run(datasets, model.norm))
-
-        return result
-
-    def nan_result(self, datasets, norm):
-        """Nan result"""
-        result = {
-            "norm": np.nan,
-            "stat": np.nan,
-            "success": False,
-            "norm_err": np.nan,
-            "ts": np.nan,
-            "counts": np.zeros(len(datasets))
-        }
-
-        if "errn-errp" in self.selection_optional:
-            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
-
-        if "ul" in self.selection_optional:
-            result.update({"norm_ul": np.nan})
-
-        if "scan" in self.selection_optional:
-            norm_scan = norm.scan_values
-            result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
-
+        models[self.source].spectral_model = model
+        datasets.models = models
+        result.update(super().run(datasets, model.norm))
         return result

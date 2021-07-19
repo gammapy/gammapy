@@ -197,6 +197,25 @@ class Datasets(collections.abc.MutableSequence):
         axes = [d.counts.geom.axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
+    @property
+    def stat_contributions(self):
+        """Stat contributions
+
+        Returns
+        -------
+        contributions : `~numpy.array`
+            Array indicating which dataset contributes to the likelihood.
+        """
+        contributions = []
+
+        for dataset in self:
+            if dataset.mask is not None:
+                value = dataset.mask.data.any()
+            else:
+                value = True
+            contributions.append(value)
+        return np.array(contributions)
+
     def stat_sum(self):
         """Compute joint likelihood"""
         stat_sum = 0
