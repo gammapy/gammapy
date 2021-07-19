@@ -6,8 +6,8 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
-from gammapy.maps import Map, Maps, MapAxis
-from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel
+from gammapy.maps import Map, Maps
+from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel, SpectralModel
 from gammapy.utils.scripts import make_path
 
 __all__ = ["FluxMaps"]
@@ -125,6 +125,10 @@ class FluxMaps:
 
     def __init__(self, data, reference_model, meta=None, gti=None):
         self._data = data
+
+        if isinstance(reference_model, SpectralModel):
+            reference_model = SkyModel(reference_model)
+
         self._reference_model = reference_model
 
         if meta is None:
@@ -184,6 +188,11 @@ class FluxMaps:
             required = set(REQUIRED_COLUMNS[sed_type])
             if required.issubset(quantities):
                 return sed_type
+
+    @property
+    def has_stat_profiles(self):
+        """Whether the fluc estimate has stat profiles"""
+        return "stat_scan" in self._data
 
     @property
     def n_sigma(self):
@@ -616,6 +625,8 @@ class FluxMaps:
                 "No reference model set for FluxMaps. Assuming point source with E^-2 spectrum."
             )
             reference_model = cls.reference_model_default
+        elif isinstance(reference_model, SpectralModel):
+            reference_model = SkyModel(reference_model)
 
         map_ref = maps[sed_type]
         energy_axis = map_ref.geom.axes["energy"]

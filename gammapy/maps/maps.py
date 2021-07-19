@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import UserDict
 from collections.abc import MutableMapping
 from astropy.io import fits
 from gammapy.maps import Map

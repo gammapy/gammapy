@@ -290,7 +290,7 @@ class Observation:
 
         Parameters
         ----------
-        figszie : tuple
+        figsize : tuple
             Figure size
         """
         import matplotlib.pyplot as plt
@@ -305,10 +305,10 @@ class Observation:
         self.aeff.plot(ax=ax_aeff)
 
         try:
-            if isinstance(self.bkg, Background3D):
-                bkg = self.bkg.to_2d()
-            else:
-                bkg = self.bkg
+            bkg = self.bkg
+
+            if not bkg.is_offset_dependent:
+                bkg = bkg.to_2d()
 
             bkg.plot(ax=ax_bkg)
         except AttributeError:

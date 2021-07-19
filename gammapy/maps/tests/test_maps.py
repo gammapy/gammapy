@@ -28,6 +28,7 @@ def test_maps(map_dictionary):
     assert "map3" in maps.__str__()
 
 
+@pytest.mark.xfail
 def test_maps_wrong_addition(map_dictionary):
     maps = Maps(**map_dictionary)
 

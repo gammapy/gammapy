@@ -18,10 +18,6 @@ from gammapy.utils.table import table_from_row_data, table_standardise_units_cop
 from .flux_map import (
     FluxMaps,
     DEFAULT_UNIT,
-    OPTIONAL_QUANTITIES_COMMON,
-    OPTIONAL_QUANTITIES,
-    REQUIRED_COLUMNS,
-    VALID_QUANTITIES
 )
 from. flux import FluxEstimator
 
@@ -265,7 +261,7 @@ class FluxPoints(FluxMaps):
         meta = cls._get_meta_gadf(table)
         return cls.from_maps(
             maps=maps,
-            reference_model=SkyModel(reference_model),
+            reference_model=reference_model,
             meta=meta,
             sed_type=sed_type
         )
@@ -330,7 +326,7 @@ class FluxPoints(FluxMaps):
                 if data:
                     table[quantity] = data.quantity[idx]
 
-            if sed_type == "likelihood":
+            if self.has_stat_profiles:
                 norm_axis = self.stat_scan.geom.axes["norm"]
                 table["norm_scan"] = norm_axis.center.reshape((1, -1))
                 table["stat"] = self.stat.data[idx]
