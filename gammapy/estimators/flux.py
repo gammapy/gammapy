@@ -167,7 +167,7 @@ class FluxEstimator(ParameterEstimator):
             )
 
         if len(datasets) == 0 or not np.any(contributions):
-            result.update(self.nan_result)
+            result.update(self.nan_result(norm=model.norm))
         else:
             models[self.source].spectral_model = model
 
@@ -176,15 +176,14 @@ class FluxEstimator(ParameterEstimator):
 
         return result
 
-    @property
-    def nan_result(self):
+    def nan_result(self, norm):
+        """Nan result"""
         result = {
             "norm": np.nan,
             "stat": np.nan,
             "success": False,
             "norm_err": np.nan,
             "ts": np.nan,
-            "sqrt_ts": np.nan,
         }
 
         if "errn-errp" in self.selection_optional:
@@ -194,7 +193,7 @@ class FluxEstimator(ParameterEstimator):
             result.update({"norm_ul": np.nan})
 
         if "scan" in self.selection_optional:
-            nans = np.nan * np.empty_like(self.norm_values)
-            result.update({"norm_scan": nans, "stat_scan": nans})
+            norm_scan = norm.scan_values
+            result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
 
         return result

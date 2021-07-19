@@ -71,6 +71,7 @@ def _confidence_scipy_brentq(
     lower_bound = parameter.factor
     upper_bound = parameter.factor_max if upper else parameter.factor_min
     if np.isnan(upper_bound):
+        # TODO: remove hard coded limits here...
         upper_bound = parameter.factor
         if upper:
             upper_bound += 1e2 * parameter.error / parameter.scale
