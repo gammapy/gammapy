@@ -962,6 +962,11 @@ class MapAxis:
 
             table["ENERG_LO"] = edges[:-1]
             table["ENERG_HI"] = edges[1:]
+        elif format == "gadf-sed":
+            if self.is_energy_axis:
+                table["e_ref"] = self.center
+                table["e_min"] = self.edges_min
+                table["e_max"] = self.edges_max
         elif format == "gadf-dl3":
             from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
 

@@ -568,9 +568,8 @@ class FluxMaps:
             Maps object containing the requested maps.
         """
         maps = Maps()
-        quantities = REQUIRED_MAPS[sed_type] + OPTIONAL_QUANTITIES[sed_type] + OPTIONAL_QUANTITIES_COMMON
 
-        for quantity in quantities:
+        for quantity in self.all_quantities(sed_type=sed_type):
             m = getattr(self, quantity, None)
             if m is not None:
                 maps[quantity] = m
@@ -625,7 +624,7 @@ class FluxMaps:
             fluxes = reference_model.spectral_model.reference_fluxes(energy_axis=energy_axis)
 
         # TODO: handle reshaping in MapAxis
-        factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[:, np.newaxis, np.newaxis]
+        factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[cls._expand_slice]
 
         data = dict()
         data["norm"] = map_ref / factor
@@ -712,7 +711,10 @@ class FluxMaps:
             gti = None
 
         return cls.from_maps(
-            maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
+            maps=maps,
+            sed_type=sed_type,
+            reference_model=reference_model,
+            gti=gti
         )
 
     def write(

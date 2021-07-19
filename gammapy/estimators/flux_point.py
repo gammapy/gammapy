@@ -311,48 +311,30 @@ class FluxPoints(FluxMaps):
         table : `~astropy.table.Table`
             Flux points table
         """
-        table = Table()
-
         if format == "gadf-sed":
-            all_quantities = (
-                REQUIRED_COLUMNS[sed_type] +
-                OPTIONAL_QUANTITIES[sed_type] +
-                OPTIONAL_QUANTITIES_COMMON
-            )
-
             idx = (Ellipsis, 0, 0)
 
-            # TODO: simplify...
-            for quantity in all_quantities:
-                if quantity == "e_ref":
-                    table["e_ref"] = self.energy_ref
-                elif quantity == "e_min":
-                    table["e_min"] = self.energy_min
-                elif quantity == "e_max":
-                    table["e_max"] = self.energy_max
-                elif quantity == "ref_dnde":
-                    table["ref_dnde"] = self.dnde_ref[idx]
-                elif quantity == "ref_flux":
-                    table["ref_flux"] = self.flux_ref[idx]
-                elif quantity == "ref_eflux":
-                    table["ref_eflux"] = self.eflux_ref[idx]
-                else:
-                    data = getattr(self, quantity, None)
-                    if data:
-                        table[quantity] = data.quantity[idx]
-
-            if sed_type == "likelihood":
-                try:
-                    norm_axis = self.stat_scan.geom.axes["norm"]
-                    table["norm_scan"] = norm_axis.center.reshape((1, -1))
-                    table["stat"] = self.stat.data[idx]
-                    table["stat_scan"] = self.stat_scan.data[idx]
-                except AttributeError:
-                    pass
-
+            table = self.energy_axis.to_table(format="gadf-sed")
             table.meta["SED_TYPE"] = sed_type
+
             if self.n_sigma_ul:
                 table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(2), 2)
+
+            if sed_type == "likelihood":
+                table["ref_dnde"] = self.dnde_ref[idx]
+                table["ref_flux"] = self.flux_ref[idx]
+                table["ref_eflux"] = self.eflux_ref[idx]
+
+            for quantity in self.all_quantities(sed_type=sed_type):
+                data = getattr(self, quantity, None)
+                if data:
+                    table[quantity] = data.quantity[idx]
+
+            if sed_type == "likelihood":
+                norm_axis = self.stat_scan.geom.axes["norm"]
+                table["norm_scan"] = norm_axis.center.reshape((1, -1))
+                table["stat"] = self.stat.data[idx]
+                table["stat_scan"] = self.stat_scan.data[idx]
         else:
             raise ValueError(f"Not a supported format {format}")
 
@@ -371,13 +353,6 @@ class FluxPoints(FluxMaps):
         flux = model.integral(energy_min, energy_max)
         dnde_mean = flux / (energy_max - energy_min)
         return model.inverse(dnde_mean)
-
-    @staticmethod
-    def _guess_sed_type_from_unit(unit):
-        """Guess SED type from unit."""
-        for sed_type, default_unit in DEFAULT_UNIT.items():
-            if unit.is_equivalent(default_unit):
-                return sed_type
 
     def _plot_get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""
