@@ -226,6 +226,19 @@ class MapAxis:
         )
 
     @property
+    def as_labels(self):
+        """Return list of axis plot labels"""
+        if self.node_type == "edges":
+            labels = [
+                f"{val_min:.2e} - {val_max:.2e}"
+                for val_min, val_max in self.iter_by_edges
+            ]
+        else:
+            labels = [f"{val:.2e}" for val in self.center]
+
+        return labels
+
+    @property
     def iter_by_edges(self):
         """Iterate by intervals defined by the edges"""
         for value_min, value_max in zip(self.edges[:-1], self.edges[1:]):
@@ -1942,6 +1955,17 @@ class TimeMapAxis:
             raise ValueError(f"Invalid time_format: {self.time_format}")
 
         return x_errn, x_errp
+
+    @property
+    def as_labels(self):
+        """Plot labels"""
+        labels = []
+
+        for t_min, t_max in self.iter_by_edges:
+            label = f"{getattr(t_min, self.time_format)} - {getattr(t_max, self.time_format)}"
+            labels.append(label)
+
+        return labels
 
     def assert_name(self, required_name):
         """Assert axis name if a specific one is required.

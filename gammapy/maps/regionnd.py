@@ -100,9 +100,9 @@ class RegionNDMap(Map):
 
             if axis_names:
                 axis_other = self.geom.axes[axis_names[0]]
-                for idx, value in enumerate(axis_other.center):
+                for idx, label in enumerate(axis_other.as_labels):
                     data = self.slice_by_idx({axis_other.name: idx}).quantity[:, 0, 0]
-                    kwargs["label"] = f"{axis_other.name.capitalize()}: {value:.2e}"
+                    kwargs["label"] = label
                     ax.errorbar(center, data, xerr=axis.as_xerr, **kwargs)
                 plt.legend()
             else:
