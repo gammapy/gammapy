@@ -465,7 +465,7 @@ class TSMapEstimator(Estimator):
         maps = Maps()
 
         for name in self.selection_all:
-            m = Map.from_images(images=[_[name] for _ in results])
+            m = Map.from_stack(maps=[_[name] for _ in results], axis_name="energy")
 
             order = 0 if name == "niter" else 1
             m = m.upsample(
