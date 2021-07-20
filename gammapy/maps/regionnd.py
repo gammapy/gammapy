@@ -50,7 +50,7 @@ class RegionNDMap(Map):
         self.meta = meta
         self.unit = u.Unit(unit)
 
-    def plot(self, ax=None, axis_name="energy", **kwargs):
+    def plot(self, ax=None, axis_name=None, **kwargs):
         """Plot the data contained in region map along the non-spatial axis.
 
         Parameters
@@ -72,15 +72,18 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
-        if self.data.squeeze().ndim > 1:
+        if len(self.geom.axes) > 2:
             raise TypeError(
-                "Use `.plot_interactive()` if more the one extra axis is present."
+                "Use `.plot_interactive()` if more than two extra axes are present."
             )
 
         if axis_name is None:
             axis_name = 0
 
         axis = self.geom.axes[axis_name]
+
+        axis_names = self.geom.axes.names
+        axis_names.remove(axis.name)
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
@@ -95,12 +98,25 @@ class RegionNDMap(Map):
             else:
                 center = axis.center
 
-            ax.errorbar(center, self.quantity.squeeze(), xerr=axis.as_xerr, **kwargs)
+            if axis_names:
+                axis_other = self.geom.axes[axis_names[0]]
+                for idx, value in enumerate(axis_other.center):
+                    data = self.slice_by_idx({axis_other.name: idx}).quantity[:, 0, 0]
+                    kwargs["label"] = f"{axis_other.name.capitalize()}: {value:.2e}"
+                    ax.errorbar(center, data, xerr=axis.as_xerr, **kwargs)
+                plt.legend()
+            else:
+                ax.errorbar(center, self.quantity[:, 0, 0], xerr=axis.as_xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
 
-        ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+        xlabel = axis.name.capitalize() + f" [{axis.unit}]"
+
+        if isinstance(axis, TimeMapAxis):
+            xlabel = axis.name.capitalize() + f" [{axis.time_format}]"
+
+        ax.set_xlabel(xlabel)
 
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
@@ -116,9 +132,7 @@ class RegionNDMap(Map):
                 ha="right",
                 rotation_mode="anchor",
             )
-
         return ax
-
 
     def plot_hist(self, ax=None, **kwargs):
         """Plot as histogram.
