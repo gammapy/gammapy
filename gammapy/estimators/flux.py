@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy import units as u
+from gammapy.maps import MapAxis
 from gammapy.datasets import Datasets
-from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import Models, ScaleSpectralModel
 from gammapy.modeling import Fit
@@ -81,33 +80,6 @@ class FluxEstimator(ParameterEstimator):
             reoptimize=reoptimize
         )
 
-    @staticmethod
-    def get_reference_flux_values(model, energy_min, energy_max):
-        """Get reference flux values
-
-        Parameters
-        ----------
-        model : `SpectralModel`
-            Models
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Energy range
-
-        Returns
-        -------
-        values : dict
-            Dictionary with reference energies and flux values.
-        """
-        energy_ref = np.sqrt(energy_min * energy_max)
-        return {
-            "e_ref": energy_ref,
-            "e_min": energy_min,
-            "e_max": energy_max,
-            "ref_dnde": model(energy_ref),
-            "ref_flux": model.integral(energy_min, energy_max),
-            "ref_eflux": model.energy_flux(energy_min, energy_max),
-            "ref_e2dnde": model(energy_ref) * energy_ref ** 2,
-        }
-
     def get_scale_model(self, models):
         """Set scale model
 
@@ -125,8 +97,8 @@ class FluxEstimator(ParameterEstimator):
         scale_model = ScaleSpectralModel(ref_model)
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
-        scale_model.norm.scan_values = self.norm_values
         scale_model.norm.interp = "log"
+        scale_model.norm.scan_values = self.norm_values
         scale_model.norm.scan_min = self.norm_min
         scale_model.norm.scan_max = self.norm_max
         scale_model.norm.scan_n_values = self.norm_n_values
@@ -148,52 +120,17 @@ class FluxEstimator(ParameterEstimator):
         datasets = Datasets(datasets)
         models = datasets.models.copy()
 
-        contributions = []
-
-        for dataset in datasets:
-            if dataset.mask is not None:
-                value = dataset.mask.data.any()
-            else:
-                value = True
-            contributions.append(value)
-
         model = self.get_scale_model(models)
 
         energy_min, energy_max = datasets.energy_ranges
+        energy_axis = MapAxis.from_energy_edges([energy_min.min(), energy_max.max()])
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            result = self.get_reference_flux_values(
-                model.model, energy_min.min(), energy_max.min()
-            )
+            result = model.reference_fluxes(energy_axis=energy_axis)
+            # convert to scalar values
+            result = {key: value.item() for key, value in result.items()}
 
-        if len(datasets) == 0 or not np.any(contributions):
-            result.update(self.nan_result(norm=model.norm))
-        else:
-            models[self.source].spectral_model = model
-
-            datasets.models = models
-            result.update(super().run(datasets, model.norm))
-
-        return result
-
-    def nan_result(self, norm):
-        """Nan result"""
-        result = {
-            "norm": np.nan,
-            "stat": np.nan,
-            "success": False,
-            "norm_err": np.nan,
-            "ts": np.nan,
-        }
-
-        if "errn-errp" in self.selection_optional:
-            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
-
-        if "ul" in self.selection_optional:
-            result.update({"norm_ul": np.nan})
-
-        if "scan" in self.selection_optional:
-            norm_scan = norm.scan_values
-            result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
-
+        models[self.source].spectral_model = model
+        datasets.models = models
+        result.update(super().run(datasets, model.norm))
         return result

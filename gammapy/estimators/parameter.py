@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from .core import Estimator
@@ -75,13 +76,19 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
-        result_fit = self.fit.run(datasets=datasets)
+        value, total_stat, success, error = np.nan, 0, False, np.nan
+
+        if np.any(datasets.contributes_to_stat):
+            result = self.fit.run(datasets=datasets)
+            value, error = parameter.value, parameter.error
+            total_stat = result["optimize_result"].total_stat
+            success = result["optimize_result"].success
 
         return {
-            f"{parameter.name}": parameter.value,
-            "stat": result_fit["optimize_result"].total_stat,
-            "success": result_fit["optimize_result"].success,
-            f"{parameter.name}_err": parameter.error * self.n_sigma,
+            f"{parameter.name}": value,
+            "stat": total_stat,
+            "success": success,
+            f"{parameter.name}_err": error * self.n_sigma,
         }
 
     def estimate_ts(self, datasets, parameter):
@@ -99,6 +106,9 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
+        if not np.any(datasets.contributes_to_stat):
+            return {"ts": np.nan}
+
         stat = datasets.stat_sum()
 
         with datasets.parameters.restore_status():
@@ -128,6 +138,12 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the various parameter estimation values.
         """
+        if not np.any(datasets.contributes_to_stat):
+            return {
+                f"{parameter.name}_errp": np.nan,
+                f"{parameter.name}_errn": np.nan,
+            }
+
         self.fit.optimize(datasets=datasets)
 
         res = self.fit.confidence(
@@ -136,6 +152,7 @@ class ParameterEstimator(Estimator):
             sigma=self.n_sigma,
             reoptimize=self.reoptimize
         )
+
         return {
             f"{parameter.name}_errp": res["errp"],
             f"{parameter.name}_errn": res["errn"],
@@ -157,6 +174,14 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
+        scan_values = parameter.scan_values
+
+        if not np.any(datasets.contributes_to_stat):
+            return {
+                f"{parameter.name}_scan": scan_values,
+                "stat_scan": scan_values * np.nan
+            }
+
         self.fit.optimize(datasets=datasets)
 
         profile = self.fit.stat_profile(
@@ -166,7 +191,7 @@ class ParameterEstimator(Estimator):
         )
 
         return {
-            f"{parameter.name}_scan": profile[f"{parameter.name}_scan"],
+            f"{parameter.name}_scan": scan_values,
             "stat_scan": profile["stat_scan"],
         }
 
@@ -186,6 +211,9 @@ class ParameterEstimator(Estimator):
             Dict with the various parameter estimation values.
 
         """
+        if not np.any(datasets.contributes_to_stat):
+            return {f"{parameter.name}_ul": np.nan}
+
         self.fit.optimize(datasets=datasets)
 
         res = self.fit.confidence(
@@ -195,6 +223,29 @@ class ParameterEstimator(Estimator):
             reoptimize=self.reoptimize
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
+
+    @staticmethod
+    def estimate_counts(datasets):
+        """Estimate counts for the flux point.
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with the sum of the
+            masked counts.
+        """
+        counts = []
+
+        for dataset in datasets:
+            mask = dataset.mask
+            counts.append(dataset.counts.data[mask].sum())
+
+        return {"counts": np.array(counts, dtype=int)}
 
     def run(self, datasets, parameter):
         """Run the parameter estimator.
@@ -232,4 +283,5 @@ class ParameterEstimator(Estimator):
             if "scan" in self.selection_optional:
                 result.update(self.estimate_scan(datasets, parameter))
 
+        result.update(self.estimate_counts(datasets))
         return result

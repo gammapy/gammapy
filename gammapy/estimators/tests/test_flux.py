@@ -135,4 +135,4 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     assert_allclose(result["ts"], 612.50171, atol=1e-3)
     assert_allclose(result["norm_err"], 0.090744, atol=1e-3)
     assert_allclose(result["e_min"], 0.693145 * u.TeV, atol=1e-3)
-    assert_allclose(result["e_max"], 2 * u.TeV, atol=1e-3)
+    assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)

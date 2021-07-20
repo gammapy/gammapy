@@ -603,11 +603,13 @@ class FluxPointsEstimator(FluxEstimator):
         ----------
         datasets : list of `~gammapy.datasets.Dataset`
             Datasets
+
         Returns
         -------
         flux_points : `FluxPoints`
             Estimated flux points.
         """
+        # TODO: remove copy here...
         datasets = Datasets(datasets).copy()
 
         rows = []
@@ -629,14 +631,14 @@ class FluxPointsEstimator(FluxEstimator):
 
         table = table_from_row_data(rows=rows, meta=meta)
         model = datasets.models[self.source]
-        return FluxPoints.from_table(table, reference_model=model.spectral_model.copy())
+        return FluxPoints.from_table(table, reference_model=model.copy())
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `Datasets`
             Datasets
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
@@ -651,40 +653,4 @@ class FluxPointsEstimator(FluxEstimator):
         )
 
         datasets_sliced.models = datasets.models.copy()
-
-        result = self.estimate_counts(
-            datasets, energy_min=energy_min, energy_max=energy_max
-        )
-
-        result.update(super().run(datasets=datasets_sliced))
-
-        return result
-
-    @staticmethod
-    def estimate_counts(datasets, energy_min, energy_max):
-        """Estimate counts for the flux point.
-
-        Parameters
-        ----------
-        datasets : Datasets
-            Datasets
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for.
-
-        Returns
-        -------
-        result : dict
-            Dict with an array with one entry per dataset with counts for the flux point.
-        """
-        counts = []
-
-        for dataset in datasets:
-            mask = dataset.counts.geom.energy_mask(
-                energy_min=energy_min, energy_max=energy_max, round_to_edge=True
-            )
-            if dataset.mask is not None:
-                mask = mask & dataset.mask
-
-            counts.append(dataset.counts.data[mask].sum())
-
-        return {"counts": np.array(counts, dtype=int)}
+        return super().run(datasets=datasets_sliced)

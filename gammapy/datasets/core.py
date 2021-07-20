@@ -197,6 +197,25 @@ class Datasets(collections.abc.MutableSequence):
         axes = [d.counts.geom.axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
+    @property
+    def contributes_to_stat(self):
+        """Stat contributions
+
+        Returns
+        -------
+        contributions : `~numpy.array`
+            Array indicating which dataset contributes to the likelihood.
+        """
+        contributions = []
+
+        for dataset in self:
+            if dataset.mask is not None:
+                value = dataset.mask.data.any()
+            else:
+                value = True
+            contributions.append(value)
+        return np.array(contributions)
+
     def stat_sum(self):
         """Compute joint likelihood"""
         stat_sum = 0
@@ -205,12 +224,12 @@ class Datasets(collections.abc.MutableSequence):
             stat_sum += dataset.stat_sum()
         return stat_sum
 
-    def select_time(self, t_min, t_max, atol="1e-6 s"):
+    def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
 
         Parameters
         ----------
-        t_min, t_max : `~astropy.time.Time`
+        time_min, time_max : `~astropy.time.Time`
             Time interval
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default 1e-6 sec.
@@ -229,7 +248,7 @@ class Datasets(collections.abc.MutableSequence):
             t_start = dataset.gti.time_start[0]
             t_stop = dataset.gti.time_stop[-1]
 
-            if t_start >= (t_min - atol) and t_stop <= (t_max + atol):
+            if t_start >= (time_min - atol) and t_stop <= (time_max + atol):
                 datasets.append(dataset)
 
         return self.__class__(datasets)
