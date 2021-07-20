@@ -159,39 +159,39 @@ class FluxPoints(FluxMaps):
         table = self.to_table(sed_type=sed_type)
         table.write(filename, **kwargs)
 
-    @classmethod
-    def from_stack(cls, flux_points):
-        """Create flux points by stacking list of flux points.
-
-        The first `FluxPoints` object in the list is taken as a reference to infer
-        column names and units for the stacked object.
-
-        Parameters
-        ----------
-        flux_points : list of `FluxPoints`
-            List of flux points to stack.
-
-        Returns
-        -------
-        flux_points : `FluxPoints`
-            Flux points without upper limit points.
-        """
-        reference = flux_points[0].to_table(sed_type="dnde")
-
-        tables = []
-
-        for fp in flux_points:
-            table = fp.to_table(sed_type="dnde")
-            for colname in reference.colnames:
-                column = reference[colname]
-                if column.unit:
-                    table[colname] = table[colname].quantity.to(column.unit)
-            tables.append(table[reference.colnames])
-
-        table_stacked = vstack(tables)
-        table_stacked.meta["SED_TYPE"] = "dnde"
-        table_stacked.sort("e_ref")
-        return cls.from_table(table=table_stacked, sed_type="dnde")
+    # @classmethod
+    # def from_stack(cls, flux_points):
+    #     """Create flux points by stacking list of flux points.
+    #
+    #     The first `FluxPoints` object in the list is taken as a reference to infer
+    #     column names and units for the stacked object.
+    #
+    #     Parameters
+    #     ----------
+    #     flux_points : list of `FluxPoints`
+    #         List of flux points to stack.
+    #
+    #     Returns
+    #     -------
+    #     flux_points : `FluxPoints`
+    #         Flux points without upper limit points.
+    #     """
+    #     reference = flux_points[0].to_table(sed_type="dnde")
+    #
+    #     tables = []
+    #
+    #     for fp in flux_points:
+    #         table = fp.to_table(sed_type="dnde")
+    #         for colname in reference.colnames:
+    #             column = reference[colname]
+    #             if column.unit:
+    #                 table[colname] = table[colname].quantity.to(column.unit)
+    #         tables.append(table[reference.colnames])
+    #
+    #     table_stacked = vstack(tables)
+    #     table_stacked.meta["SED_TYPE"] = "dnde"
+    #     table_stacked.sort("e_ref")
+    #     return cls.from_table(table=table_stacked, sed_type="dnde")
 
     @staticmethod
     def _convert_loglike_columns(table):
@@ -596,7 +596,7 @@ class FluxPointsEstimator(FluxEstimator):
         meta = {
             "n_sigma": self.n_sigma,
             "n_sigma_ul": self.n_sigma_ul,
-            "SED_TYPE": "likelihood"
+            "sed_type_init": "likelihood"
         }
 
         table = table_from_row_data(rows=rows, meta=meta)

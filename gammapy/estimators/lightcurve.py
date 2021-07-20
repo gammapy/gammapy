@@ -2,15 +2,14 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.table import Table, hstack
+from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
+from gammapy.maps import TimeMapAxis
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
 from gammapy.modeling import Fit
-from .core import Estimator
 from .flux_point import FluxPoints, FluxPointsEstimator
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -393,14 +392,13 @@ class LightCurveEstimator(FluxPointsEstimator):
                 gti.time_intervals,
                 desc="Time intervals"
         ):
-
             row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
 
             datasets_to_fit = datasets.select_time(
                 time_min=t_min, time_max=t_max, atol=self.atol
             )
 
-            if len(datasets) == 0:
+            if len(datasets_to_fit) == 0:
                 log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
                 continue
 
@@ -419,14 +417,15 @@ class LightCurveEstimator(FluxPointsEstimator):
                 if "flux" in column:
                     row[column] = fp_table_flux[column].quantity
 
-            rows.append(row)
+            rows.append(fp)
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
-        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        # TODO: use FluxPoints here
-        return LightCurve(table=table)
+        axis = TimeMapAxis.from_gti(gti=gti)
+        return FluxPoints.from_stack(
+            maps=rows, axis=axis, gti=datasets.gti
+        )
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
