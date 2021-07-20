@@ -587,6 +587,31 @@ class FluxMaps:
         return maps
 
     @classmethod
+    def from_stack(cls, maps, axis, meta=None, gti=None):
+        """"""
+        reference = maps[0]
+
+        data = {}
+        for quantity in reference.available_quantities:
+            # TODO: make this work...
+            if quantity == "counts":
+                continue
+            data[quantity] = Map.from_images([_[quantity] for _ in maps], axis=axis)
+
+        if meta is None:
+            meta = reference.meta.copy()
+
+        if gti is None:
+            gti = GTI.from_stack([_.gti for _ in maps])
+
+        return cls(
+            data=data,
+            reference_model=reference.reference_model,
+            meta=meta,
+            gti=gti
+        )
+
+    @classmethod
     def from_maps(cls, maps, sed_type=None, reference_model=None, gti=None, meta=None):
         """Create FluxMaps from a dictionary of maps.
 
