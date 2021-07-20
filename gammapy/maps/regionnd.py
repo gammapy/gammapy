@@ -9,7 +9,7 @@ from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
-from .axes import MapAxes, MapAxis
+from .axes import MapAxes, MapAxis, TimeMapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -50,13 +50,15 @@ class RegionNDMap(Map):
         self.meta = meta
         self.unit = u.Unit(unit)
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, axis_name=None, **kwargs):
         """Plot the data contained in region map along the non-spatial axis.
 
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
+        axis_name : str
+            Which axis to plot on the x axis. Extra axes will be plotted as additional lines.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
@@ -66,27 +68,55 @@ class RegionNDMap(Map):
             Axis used for plotting
         """
         import matplotlib.pyplot as plt
+        from matplotlib.dates import DateFormatter
 
         ax = ax or plt.gca()
 
-        if self.data.squeeze().ndim > 1:
+        if len(self.geom.axes) > 2:
             raise TypeError(
-                "Use `.plot_interactive()` if more the one extra axis is present."
+                "Use `.plot_interactive()` if more than two extra axes are present."
             )
 
-        axis = self.geom.axes[0]
+        if axis_name is None:
+            axis_name = 0
+
+        axis = self.geom.axes[axis_name]
+
+        axis_names = self.geom.axes.names
+        axis_names.remove(axis.name)
 
         kwargs.setdefault("fmt", ".")
         kwargs.setdefault("capsize", 2)
         kwargs.setdefault("lw", 1)
 
         with quantity_support():
-            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=axis.as_xerr, **kwargs)
+            if isinstance(axis, TimeMapAxis):
+                if axis.time_format == "iso":
+                    center = axis.time_mid.datetime
+                else:
+                    center = axis.time_mid.mjd * u.day
+            else:
+                center = axis.center
+
+            if axis_names:
+                axis_other = self.geom.axes[axis_names[0]]
+                for idx, label in enumerate(axis_other.as_labels):
+                    data = self.slice_by_idx({axis_other.name: idx}).quantity[:, 0, 0]
+                    kwargs["label"] = label
+                    ax.errorbar(center, data, xerr=axis.as_xerr, **kwargs)
+                plt.legend()
+            else:
+                ax.errorbar(center, self.quantity[:, 0, 0], xerr=axis.as_xerr, **kwargs)
 
         if axis.interp == "log":
             ax.set_xscale("log")
 
-        ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+        xlabel = axis.name.capitalize() + f" [{axis.unit}]"
+
+        if isinstance(axis, TimeMapAxis):
+            xlabel = axis.name.capitalize() + f" [{axis.time_format}]"
+
+        ax.set_xlabel(xlabel)
 
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
@@ -94,6 +124,14 @@ class RegionNDMap(Map):
         if axis.interp == "log":
             ax.set_yscale("log")
 
+        if isinstance(axis, TimeMapAxis) and axis.time_format == "iso":
+            ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
+            plt.setp(
+                ax.xaxis.get_majorticklabels(),
+                rotation=30,
+                ha="right",
+                rotation_mode="anchor",
+            )
         return ax
 
     def plot_hist(self, ax=None, **kwargs):

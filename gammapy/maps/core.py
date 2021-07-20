@@ -1093,14 +1093,7 @@ class Map(abc.ABC):
         interact_kwargs = {}
 
         for axis in self.geom.axes:
-            if axis.node_type == "edges":
-                options = [
-                    f"{val_min:.2e} - {val_max:.2e} {axis.unit}"
-                    for val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])
-                ]
-            else:
-                options = [f"{val:.2e} {axis.unit}" for val in axis.center]
-
+            options = axis.as_labels
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
                 description=f"Select {axis.name}:",

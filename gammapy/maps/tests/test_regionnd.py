@@ -4,9 +4,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 from regions import CircleSkyRegion
 from astropy import units as u
+from astropy.time import Time
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap
+from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, TimeMapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -69,10 +70,33 @@ def test_region_nd_map_plot(region_map):
 
 
 @requires_dependency("matplotlib")
+def test_region_nd_map_plot_two_axes():
+    energy_axis = MapAxis.from_energy_edges([1, 3, 10] * u.TeV)
+
+    time_ref = Time('1999-01-01T00:00:00.123456789')
+
+    time_axis = TimeMapAxis(
+        edges_min=[0, 1, 3] * u.d,
+        edges_max=[0.8, 1.9, 5.4] * u.d,
+        reference_time=time_ref
+    )
+
+    m = RegionNDMap.create("icrs;circle(0, 0, 1)", axes=[energy_axis, time_axis])
+    m.data = 10 + np.random.random(m.data.size)
+
+    with mpl_plot_check():
+        m.plot(axis_name="energy")
+
+    with mpl_plot_check():
+        m.plot(axis_name="time")
+
+
+@requires_dependency("matplotlib")
 def test_region_plot_mask(region_map):
     mask = region_map.geom.energy_mask(2.5 * u.TeV, 6 * u.TeV)
     with mpl_plot_check():
         mask.plot_mask()
+
 
 def test_region_nd_map_misc(region_map):
     assert_allclose(region_map.sum_over_axes(), 15)
