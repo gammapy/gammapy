@@ -423,9 +423,11 @@ class LightCurveEstimator(FluxPointsEstimator):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
         axis = TimeMapAxis.from_gti(gti=gti)
-        return FluxPoints.from_stack(
-            maps=rows, axis=axis, gti=datasets.gti
+        fp = FluxPoints.from_stack(
+            maps=rows, axis=axis,
         )
+
+        return LightCurve(fp.to_table())
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.

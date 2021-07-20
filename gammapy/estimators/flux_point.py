@@ -159,40 +159,6 @@ class FluxPoints(FluxMaps):
         table = self.to_table(sed_type=sed_type)
         table.write(filename, **kwargs)
 
-    # @classmethod
-    # def from_stack(cls, flux_points):
-    #     """Create flux points by stacking list of flux points.
-    #
-    #     The first `FluxPoints` object in the list is taken as a reference to infer
-    #     column names and units for the stacked object.
-    #
-    #     Parameters
-    #     ----------
-    #     flux_points : list of `FluxPoints`
-    #         List of flux points to stack.
-    #
-    #     Returns
-    #     -------
-    #     flux_points : `FluxPoints`
-    #         Flux points without upper limit points.
-    #     """
-    #     reference = flux_points[0].to_table(sed_type="dnde")
-    #
-    #     tables = []
-    #
-    #     for fp in flux_points:
-    #         table = fp.to_table(sed_type="dnde")
-    #         for colname in reference.colnames:
-    #             column = reference[colname]
-    #             if column.unit:
-    #                 table[colname] = table[colname].quantity.to(column.unit)
-    #         tables.append(table[reference.colnames])
-    #
-    #     table_stacked = vstack(tables)
-    #     table_stacked.meta["SED_TYPE"] = "dnde"
-    #     table_stacked.sort("e_ref")
-    #     return cls.from_table(table=table_stacked, sed_type="dnde")
-
     @staticmethod
     def _convert_loglike_columns(table):
         # TODO: check sign and factor 2 here
@@ -213,7 +179,7 @@ class FluxPoints(FluxMaps):
         return table
 
     @classmethod
-    def from_table(cls, table, sed_type=None, reference_model=None):
+    def from_table(cls, table, sed_type=None, reference_model=None, gti=None):
         """Create flux points from table
 
         Parameters
@@ -224,6 +190,8 @@ class FluxPoints(FluxMaps):
             Sed type
         reference_model : `SpectralModel`
             Reference spectral model
+        gti : `GTI`
+            Good time intervals
 
         Returns
         -------
@@ -263,7 +231,8 @@ class FluxPoints(FluxMaps):
             maps=maps,
             reference_model=reference_model,
             meta=meta,
-            sed_type=sed_type
+            sed_type=sed_type,
+            gti=gti
         )
 
     @staticmethod
@@ -331,6 +300,8 @@ class FluxPoints(FluxMaps):
                 table["norm_scan"] = norm_axis.center.reshape((1, -1))
                 table["stat"] = self.stat.data[idx]
                 table["stat_scan"] = self.stat_scan.data[idx]
+        if format == "lightcurve":
+            pass
         else:
             raise ValueError(f"Not a supported format {format}")
 
@@ -601,7 +572,7 @@ class FluxPointsEstimator(FluxEstimator):
 
         table = table_from_row_data(rows=rows, meta=meta)
         model = datasets.models[self.source]
-        return FluxPoints.from_table(table, reference_model=model.copy())
+        return FluxPoints.from_table(table, reference_model=model.copy(), gti=datasets.gti)
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.

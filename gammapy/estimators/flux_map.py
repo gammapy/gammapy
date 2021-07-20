@@ -587,8 +587,26 @@ class FluxMaps:
         return maps
 
     @classmethod
-    def from_stack(cls, maps, axis, meta=None, gti=None):
-        """"""
+    def from_stack(cls, maps, axis, meta=None):
+        """Create flux points by stacking list of flux points.
+
+        The first `FluxPoints` object in the list is taken as a reference to infer
+        column names and units for the stacked object.
+
+        Parameters
+        ----------
+        maps : list of `FluxMaps`
+            List of maps to stack.
+        axis : `MapAxis`
+            New axis to create
+        meta : dict
+            Meta data
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Stacked flux maps along axis.
+        """
         reference = maps[0]
 
         data = {}
@@ -596,13 +614,12 @@ class FluxMaps:
             # TODO: make this work...
             if quantity == "counts":
                 continue
-            data[quantity] = Map.from_images([_[quantity] for _ in maps], axis=axis)
+            data[quantity] = Map.from_stack([_[quantity] for _ in maps], axis=axis)
 
         if meta is None:
             meta = reference.meta.copy()
 
-        if gti is None:
-            gti = GTI.from_stack([_.gti for _ in maps])
+        gti = GTI.from_stack([_.gti for _ in maps])
 
         return cls(
             data=data,
@@ -805,6 +822,33 @@ class FluxMaps:
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)
+
+    def slice_by_idx(self, slices):
+        """Slice flux mpas by idx
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Sliced flux maps object.
+        """
+        data = {}
+
+        for key, item in self._data:
+            data[key] = item.slice_by_idx(slices)
+
+        return self.__class__(
+            data=data,
+            reference_model=self.reference_model,
+            meta=self.meta.copy(), gti=self.gti
+        )
 
     # TODO: should we allow this?
     def __getitem__(self, item):
