@@ -1832,6 +1832,7 @@ class TimeMapAxis:
         coordinates.  For now only 'lin' is supported.
     """
     node_type = "intervals"
+    time_format = "iso"
 
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
@@ -1872,7 +1873,13 @@ class TimeMapAxis:
             raise ValueError("Time intervals must not overlap.")
 
     @property
+    def unit(self):
+        """Axes unit"""
+        return self.edges_max.unit
+
+    @property
     def interp(self):
+        """Interp"""
         return self._interp
 
     @property
@@ -1919,6 +1926,22 @@ class TimeMapAxis:
     def time_mid(self):
         """Return time bin center (`~astropy.time.Time`)."""
         return self.time_min + 0.5 * self.time_delta
+
+    @property
+    def as_xerr(self):
+        """Plot x error"""
+        xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
+
+        if self.time_format == "iso":
+            x_errn = xn.to_datetime()
+            x_errp = xp.to_datetime()
+        elif self.time_format == "mjd":
+            x_errn = xn.to("day")
+            x_errp = xp.to("day")
+        else:
+            raise ValueError(f"Invalid time_format: {self.time_format}")
+
+        return x_errn, x_errp
 
     def assert_name(self, required_name):
         """Assert axis name if a specific one is required.
