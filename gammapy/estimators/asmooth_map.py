@@ -171,7 +171,7 @@ class ASmoothMapEstimator(Estimator):
         result_all = {}
 
         for name in results[0].keys():
-            map_all = Map.from_images(images=[_[name] for _ in results])
+            map_all = Map.from_stack(maps=[_[name] for _ in results], axis_name="energy")
             result_all[name] = map_all
 
         return result_all
