@@ -1,3 +1,4 @@
+from itertools import product
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -59,6 +60,7 @@ class RegionNDMap(Map):
             Axis used for plotting
         axis_name : str
             Which axis to plot on the x axis. Extra axes will be plotted as additional lines.
+
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
@@ -72,41 +74,44 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
-        if len(self.geom.axes) > 2:
-            raise TypeError(
-                "Use `.plot_interactive()` if more than two extra axes are present."
-            )
-
         if axis_name is None:
             axis_name = 0
 
         axis = self.geom.axes[axis_name]
 
-        axis_names = self.geom.axes.names
-        axis_names.remove(axis.name)
+        kwargs.setdefault("marker", "+")
+        kwargs.setdefault("ls", "None")
 
-        kwargs.setdefault("fmt", ".")
-        kwargs.setdefault("capsize", 2)
-        kwargs.setdefault("lw", 1)
-
-        with quantity_support():
-            if isinstance(axis, TimeMapAxis):
-                if axis.time_format == "iso":
-                    center = axis.time_mid.datetime
-                else:
-                    center = axis.time_mid.mjd * u.day
+        if isinstance(axis, TimeMapAxis):
+            if axis.time_format == "iso":
+                center = axis.time_mid.datetime
             else:
-                center = axis.center
+                center = axis.time_mid.mjd * u.day
+        else:
+            center = axis.center
 
-            if axis_names:
-                axis_other = self.geom.axes[axis_names[0]]
-                for idx, label in enumerate(axis_other.as_labels):
-                    data = self.slice_by_idx({axis_other.name: idx}).quantity[:, 0, 0]
-                    kwargs["label"] = label
-                    ax.errorbar(center, data, xerr=axis.as_xerr, **kwargs)
-                plt.legend()
-            else:
-                ax.errorbar(center, self.quantity[:, 0, 0], xerr=axis.as_xerr, **kwargs)
+        yerr_nd, yerr = kwargs.pop("yerr", None), None
+        uplims_nd, uplims = kwargs.pop("uplims", None), None
+
+        labels = product(*[ax.as_labels for ax in self.geom.axes if ax.name != axis_name])
+
+        for label, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
+            if yerr_nd is not None:
+                yerr = yerr_nd[0][idx], yerr_nd[1][idx]
+
+            if uplims_nd is not None:
+                uplims = uplims_nd[idx]
+
+            with quantity_support():
+                ax.errorbar(
+                    x=center,
+                    y=quantity,
+                    xerr=axis.as_xerr,
+                    yerr=yerr,
+                    uplims=uplims,
+                    label=" ".join(label),
+                    **kwargs
+                )
 
         if axis.interp == "log":
             ax.set_xscale("log")
@@ -132,6 +137,10 @@ class RegionNDMap(Map):
                 ha="right",
                 rotation_mode="anchor",
             )
+
+        if len(self.geom.axes) > 1:
+            plt.legend()
+
         return ax
 
     def plot_hist(self, ax=None, **kwargs):
@@ -228,7 +237,6 @@ class RegionNDMap(Map):
             xmin = edges[:-1][mask].min().value
             xmax = edges[1:][mask].max().value
             ax.axvspan(xmin, xmax, **kwargs)
-            label = None
 
         return ax
 
