@@ -354,13 +354,13 @@ class FluxPoints(FluxMaps):
         """Compute flux error for given sed type"""
         try:
             # asymmetric error
-            y_errn = getattr(self, sed_type + "_errn").quantity.squeeze()
-            y_errp = getattr(self, sed_type + "_errp").quantity.squeeze()
+            y_errn = getattr(self, sed_type + "_errn").quantity
+            y_errp = getattr(self, sed_type + "_errp").quantity
             y_err = (y_errn, y_errp)
         except AttributeError:
             try:
                 # symmetric error
-                y_err = getattr(self, sed_type + "_err").quantity.squeeze()
+                y_err = getattr(self, sed_type + "_err").quantity
                 y_err = (y_err, y_err.copy())
             except AttributeError:
                 # no error at all
@@ -388,56 +388,34 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`
             Axis object
         """
+        import matplotlib.pyplot as plt
+
         if not self.norm.geom.is_region:
             raise ValueError("Plotting only supported for flux points")
-
-        import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
-        flux = getattr(self, sed_type).quantity[:, 0, 0]
-        energy = self.energy_ref
+        flux = getattr(self, sed_type).to_unit(flux_unit)
 
         # get errors and ul
-        is_ul = self.is_ul.data.squeeze()
-        x_err = self.energy_axis.as_xerr
+        is_ul = self.is_ul.data
         y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
 
         if y_errn:
             if is_ul.any():
-                flux_ul = getattr(self, sed_type + "_ul").quantity[:, 0, 0]
+                flux_ul = getattr(self, sed_type + "_ul").quantity.to(flux_unit)
                 y_errn[is_ul] = 0.5 * flux_ul[is_ul]
                 y_errp[is_ul] = 0
-                flux[is_ul] = flux_ul[is_ul]
-
-            y_errn = scale_plot_flux(
-                energy=energy,
-                flux=y_errn.to(flux_unit),
-                energy_power=energy_power
-            )
-            y_errp = scale_plot_flux(
-                energy=energy,
-                flux=y_errp.to(flux_unit),
-                energy_power=energy_power
-            )
+                flux.data[is_ul] = flux_ul[is_ul].value
 
         # set flux points plotting defaults
-        kwargs.setdefault("marker", "+")
-        kwargs.setdefault("ls", "None")
+        kwargs.setdefault("yerr", (y_errn, y_errp))
+        kwargs.setdefault("uplims", is_ul)
 
-        flux = scale_plot_flux(
-            energy=energy, flux=flux.to(flux_unit), energy_power=energy_power
-        )
-
-        with quantity_support():
-            ax.errorbar(
-                energy, flux, yerr=(y_errn, y_errp), xerr=x_err, uplims=is_ul, **kwargs
-            )
-
-        ax.set_xscale("log", nonpositive="clip")
+        ax = flux.plot(ax=ax, **kwargs)
         ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({ax.xaxis.units})")
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
@@ -448,9 +426,10 @@ class FluxPoints(FluxMaps):
         ax=None,
         sed_type="dnde",
         add_cbar=True,
-            **kwargs,
+        **kwargs,
     ):
         """Plot fit statistic SED profiles as a density plot.
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
@@ -474,7 +453,8 @@ class FluxPoints(FluxMaps):
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
-        flux_ref = getattr(self, sed_type + "_ref")
+        flux_ref = getattr(self, sed_type + "_ref").to(flux_unit)
+
         flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
 
         ts = self.stat_scan - np.expand_dims(self.stat.data, 2)

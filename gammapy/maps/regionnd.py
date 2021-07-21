@@ -116,7 +116,7 @@ class RegionNDMap(Map):
         if axis.interp == "log":
             ax.set_xscale("log")
 
-        xlabel = axis.name.capitalize() + f" [{axis.unit}]"
+        xlabel = axis.name.capitalize() + f" [{ax.xaxis.units}]"
 
         if isinstance(axis, TimeMapAxis):
             xlabel = axis.name.capitalize() + f" [{axis.time_format}]"
