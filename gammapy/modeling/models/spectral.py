@@ -282,8 +282,6 @@ class SpectralModel(Model):
         self,
         energy_bounds,
         ax=None,
-        energy_unit="TeV",
-        flux_unit=None,
         energy_power=0,
         sed_type="dnde",
         n_points=100,
@@ -309,10 +307,6 @@ class SpectralModel(Model):
             Axis
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to MapAxis.from_energy_bounds
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
         energy_power : int, optional
             Power of energy to multiply flux axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -330,11 +324,12 @@ class SpectralModel(Model):
 
         ax = plt.gca() if ax is None else ax
 
-        if flux_unit is None:
-            flux_unit = DEFAULT_UNIT[sed_type]
+        flux_unit = DEFAULT_UNIT[sed_type]
 
         energy_min, energy_max = energy_bounds
-        axis = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit)
+        axis = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points
+        )
 
         energy = axis.center
         if sed_type == "dnde":
@@ -365,8 +360,6 @@ class SpectralModel(Model):
         self,
         energy_bounds,
         ax=None,
-        energy_unit="TeV",
-        flux_unit=None,
         energy_power=0,
         sed_type="dnde",
         n_points=100,
@@ -394,10 +387,6 @@ class SpectralModel(Model):
             Axis
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to MapAxis.from_energy_bounds
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
         energy_power : int, optional
             Power of energy to multiply flux axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -417,15 +406,16 @@ class SpectralModel(Model):
 
         ax = plt.gca() if ax is None else ax
 
-        if flux_unit is None:
-            flux_unit = DEFAULT_UNIT[sed_type]
+        flux_unit = DEFAULT_UNIT[sed_type]
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
 
         energy_min, energy_max = energy_bounds
-        axis = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit)
+        axis = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points,
+        )
 
         energy = axis.center
 
@@ -460,9 +450,9 @@ class SpectralModel(Model):
     def _plot_format_ax(self, ax, energy, y, energy_power, sed_type):
         ax.set_xlabel(f"Energy [{energy.unit}]")
         if energy_power > 0:
-            ax.set_ylabel(f"E{energy_power} * {sed_type} [{y.unit}]")
+            ax.set_ylabel(f"E{energy_power} * {sed_type} [{ax.yaxis.units}]")
         else:
-            ax.set_ylabel(f"{sed_type} [{y.unit}]")
+            ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
