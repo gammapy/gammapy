@@ -453,8 +453,7 @@ class FluxPoints(FluxMaps):
         ax=None,
         energy_unit="TeV",
         add_cbar=True,
-        y_values=None,
-        y_unit=None,
+        flux_unit=None,
         sed_type="dnde",
         **kwargs,
     ):
@@ -467,9 +466,7 @@ class FluxPoints(FluxMaps):
             Unit of the energy axis
         add_cbar : bool
             Whether to add a colorbar to the plot.
-        y_values : `astropy.units.Quantity`
-            Array of y-values to use for the fit statistic profile evaluation.
-        y_unit : str or `astropy.units.Unit`
+        flux_unit : str or `astropy.units.Unit`
             Unit to use for the y-axis.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Sed type
@@ -486,28 +483,23 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
-        y_unit = u.Unit(y_unit or DEFAULT_UNIT[sed_type])
+        if flux_unit is None:
+            flux_unit = DEFAULT_UNIT[sed_type]
 
-        if y_values is None:
-            ref_values = getattr(self, sed_type + "_ref").to_value(y_unit)
-            y_values = np.geomspace(
-                0.2 * ref_values.min(), 5 * ref_values.max(), 500
-            )
-            y_values = u.Quantity(y_values, y_unit, copy=False)
+        flux_ref = getattr(self, sed_type + "_ref")
+        flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
 
-        x = self.energy_axis.edges.to(energy_unit)
+        ts = self.stat_scan - np.expand_dims(self.stat.data, 2)
+        norm_scan = ts.geom.axes["norm"].center.to_value("")
 
-        z = np.empty((len(self.norm.data), len(y_values)))
+        norm = flux / flux_ref[:, :, 0]
 
-        stat_scan = self.stat_scan
-        norm_scan = stat_scan.geom.axes["norm"].center.to_value("")
+        z = np.empty(norm.shape)
 
-        for idx in range(self.energy_axis.nbin):
-            y_ref = getattr(self, sed_type + "_ref")[idx, 0, 0]
-            norm = (y_values / y_ref).to_value("")
-            ts_scan = stat_scan.data[idx, :, 0, 0] - self.stat.data[idx, 0, 0]
-            interp = interpolate_profile(norm_scan, ts_scan)
-            z[idx] = interp((norm,))
+        for idx, profile in ts.iter_by_axis(axis_name="norm"):
+            idx = idx[:-2]
+            interp = interpolate_profile(norm_scan, profile)
+            z[idx] = interp((norm[idx],))
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
@@ -518,12 +510,16 @@ class FluxPoints(FluxMaps):
 
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
-        caxes = ax.pcolormesh(x.value, y_values.to_value(y_unit), -z.T, **kwargs)
+
+        x = self.energy_axis.edges
+
+        with quantity_support():
+            caxes = ax.pcolormesh(x.to(energy_unit), flux.to(flux_unit), -z.T, **kwargs)
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
         ax.set_xlabel(f"Energy ({energy_unit})")
-        ax.set_ylabel(f"{sed_type} ({y_values.unit})")
+        ax.set_ylabel(f"{sed_type} ({flux.unit})")
 
         if add_cbar:
             label = "Fit statistic difference"
