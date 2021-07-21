@@ -7,6 +7,7 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.units import Quantity, Unit
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
@@ -323,11 +324,11 @@ class EventList:
         if energy_edges is None:
             energy_edges = self._default_plot_energy_edges()
 
-        unit = energy_edges.unit
+        with quantity_support():
+            ax.hist(self.energy, bins=energy_edges, **kwargs)
 
-        ax.hist(self.energy.to_value(unit), bins=energy_edges.value, **kwargs)
         ax.loglog()
-        ax.set_xlabel(f"Energy ({unit})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
         ax.set_ylabel("Counts")
         return ax
 
@@ -389,7 +390,7 @@ class EventList:
             Center position for the offset^2 distribution.
             Default is the observation pointing position.
         **kwargs :
-            Extra keyword arguments are passed to `matplotlib.pyplot.hist`.
+            Extra keyword arguments are passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
@@ -429,19 +430,35 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        offset2 = center.separation(self.radec).deg ** 2
+        offset2 = center.separation(self.radec) ** 2
 
         kwargs.setdefault("histtype", "step")
         kwargs.setdefault("bins", 30)
 
-        ax.hist(offset2, **kwargs)
-        ax.set_xlabel("Offset^2 (deg^2)")
-        ax.set_ylabel("Counts")
+        with quantity_support():
+            ax.hist(offset2, **kwargs)
 
+        ax.set_xlabel(f"Offset^2 ({ax.xaxis.units})")
+        ax.set_ylabel("Counts")
         return ax
 
-    def plot_energy_offset(self, ax=None, center=None):
-        """Plot counts histogram with energy and offset axes."""
+    def plot_energy_offset(self, ax=None, center=None, **kwargs):
+        """Plot counts histogram with energy and offset axes
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis
+        center : `~astropy.coordinates.SkyCoord`
+            Sky coord from which offset is computed
+        **kwargs : dict
+            Keyword arguments forwared to `~matplotlib.pyplot.pcolormesh`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis
+        """
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
 
@@ -450,19 +467,22 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        energy_bounds = self._default_plot_energy_edges().to_value(self.energy.unit)
+        energy_edges = self._default_plot_energy_edges()
         offset = center.separation(self.radec)
-        offset_max = offset.max()
-        offset_bounds = np.linspace(0, offset_max.deg, 30)
+        offset_edges = np.linspace(0, offset.max(), 30)
 
         counts = np.histogram2d(
-            x=self.energy.value, y=offset.deg, bins=(energy_bounds, offset_bounds),
+            x=self.energy, y=offset, bins=(energy_edges, offset_edges),
         )[0]
 
-        ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
+        kwargs.setdefault("norm", LogNorm())
+
+        with quantity_support():
+            ax.pcolormesh(energy_edges, offset_edges, counts.T, **kwargs)
+
         ax.set_xscale("log")
-        ax.set_xlabel(f"Energy ({self.energy.unit})")
-        ax.set_ylabel(f"Offset ({offset.unit})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        ax.set_ylabel(f"Offset ({ax.yaxis.units})")
 
     def check(self, checks="all"):
         """Run checks.
