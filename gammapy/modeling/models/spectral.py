@@ -326,6 +326,9 @@ class SpectralModel(Model):
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
+        if self.is_norm_spectral_model:
+            flux_unit = ""
+
         energy_min, energy_max = energy_bounds
         axis = MapAxis.from_energy_bounds(
             energy_min, energy_max, n_points
@@ -353,7 +356,7 @@ class SpectralModel(Model):
         with quantity_support():
             ax.plot(energy, y, **kwargs)
 
-        self._plot_format_ax(ax, energy, y, energy_power, sed_type)
+        self._plot_format_ax(ax, energy_power, sed_type)
         return ax
 
     def plot_error(
@@ -408,6 +411,9 @@ class SpectralModel(Model):
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
+        if self.is_norm_spectral_model:
+            flux_unit = ""
+
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
@@ -444,11 +450,11 @@ class SpectralModel(Model):
         with quantity_support():
             ax.fill_between(energy, y_lo, y_hi, where=where, **kwargs)
 
-        self._plot_format_ax(ax, energy, y_lo, energy_power, sed_type)
+        self._plot_format_ax(ax, energy_power, sed_type)
         return ax
 
-    def _plot_format_ax(self, ax, energy, y, energy_power, sed_type):
-        ax.set_xlabel(f"Energy [{energy.unit}]")
+    def _plot_format_ax(self, ax, energy_power, sed_type):
+        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
         if energy_power > 0:
             ax.set_ylabel(f"E{energy_power} * {sed_type} [{ax.yaxis.units}]")
         else:

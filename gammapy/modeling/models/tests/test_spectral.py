@@ -416,16 +416,19 @@ def test_model_plot_sed_type():
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
         assert(ax1.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]")
         assert(ax2.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]")
+
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
         assert(ax1.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
         assert(ax2.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
+
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="flux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="flux")
         assert(ax1.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]")
         assert(ax2.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]")
+
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
@@ -462,7 +465,6 @@ def test_to_from_dict_partial_input(caplog):
     model_dict = model.to_dict()
     # Here we remove the reference energy
     model_dict["parameters"].remove(model_dict["parameters"][2])
-    print(model_dict["parameters"][0])
 
     model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
@@ -506,8 +508,8 @@ def test_table_model_from_file():
     absorption_z03 = TemplateSpectralModel.read_xspec_model(
         filename=filename, param=0.3
     )
-    with mpl_plot_check():
-        absorption_z03.plot(energy_bounds=(0.03, 10), energy_unit=u.TeV, flux_unit="")
+    value = absorption_z03(1 * u.TeV)
+    assert_allclose(value, 1)
 
 
 @requires_data()
