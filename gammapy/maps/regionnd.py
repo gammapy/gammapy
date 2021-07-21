@@ -333,6 +333,28 @@ class RegionNDMap(Map):
 
         return self._init_copy(geom=geom, data=data)
 
+    def iter_by_axis(self, axis_name):
+        """Iterate data by axis
+
+        Parameters
+        ----------
+        axis_name : str
+            Axis name
+
+        Returns
+        -------
+        idx, data : tuple, `~astropy.units.Quantity`
+            Data and index
+        """
+        idx_axis = self.geom.axes.index_data(axis_name)
+        shape = list(self.data.shape)
+        shape[idx_axis] = 1
+
+        for idx in np.ndindex(*shape):
+            idx = list(idx)
+            idx[idx_axis] = slice(None)
+            yield tuple(idx), self.quantity[tuple(idx)]
+
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
 

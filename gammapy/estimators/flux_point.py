@@ -489,17 +489,17 @@ class FluxPoints(FluxMaps):
         flux_ref = getattr(self, sed_type + "_ref")
         flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
 
-        z = np.empty((len(self.norm.data), len(flux)))
-
         ts = self.stat_scan - np.expand_dims(self.stat.data, 2)
-        norm_scan = self.stat_scan.geom.axes["norm"].center.to_value("")
+        norm_scan = ts.geom.axes["norm"].center.to_value("")
 
-        for idx in range(self.energy_axis.nbin):
-            y_ref = getattr(self, sed_type + "_ref")[idx, 0, 0]
-            norm = (flux / y_ref).to_value("")
-            ts_scan = ts.data[idx, :, 0, 0]
-            interp = interpolate_profile(norm_scan, ts_scan)
-            z[idx] = interp((norm,))
+        norm = flux / flux_ref[:, :, 0]
+
+        z = np.empty(norm.shape)
+
+        for idx, profile in ts.iter_by_axis(axis_name="norm"):
+            idx = idx[:-2]
+            interp = interpolate_profile(norm_scan, profile)
+            z[idx] = interp((norm[idx],))
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
