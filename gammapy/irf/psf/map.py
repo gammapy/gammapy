@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
+from astropy.visualization import quantity_support
 from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -418,17 +419,17 @@ class PSFMap(IRFMap):
         energy_true = self.psf_map.geom.axes["energy_true"].center
 
         for frac in fraction:
-            plot_kwargs = kwargs.copy()
             radius = self.containment_radius(
                 energy_true=energy_true, position=position, fraction=frac
             )
-            plot_kwargs.setdefault("label", f"Containment: {100 * frac:.1f}%")
-            ax.plot(energy_true, radius, **plot_kwargs)
+            label = f"Containment: {100 * frac:.1f}%"
+            with quantity_support():
+                ax.plot(energy_true, radius, label=label, **kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")
-        ax.set_xlabel(f"Energy ({energy_true.unit})")
-        ax.set_ylabel(f"Containment radius ({radius.unit})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
     def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
@@ -466,11 +467,12 @@ class PSFMap(IRFMap):
                 }
             )
             label = f"{value:.0f}"
-            ax.plot(rad.value, psf_value, label=label, **kwargs)
+            with quantity_support():
+                ax.plot(rad, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad ({rad.unit})")
-        ax.set_ylabel(f"PSF ({self.psf_map.unit})")
+        ax.set_xlabel(f"Rad ({ax.xaxis.units})")
+        ax.set_ylabel(f"PSF ({ax.yaxis.units})")
         plt.legend()
         return ax
 
