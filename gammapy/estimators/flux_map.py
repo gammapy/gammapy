@@ -841,7 +841,7 @@ class FluxMaps:
         """
         data = {}
 
-        for key, item in self._data:
+        for key, item in self._data.items():
             data[key] = item.slice_by_idx(slices)
 
         return self.__class__(

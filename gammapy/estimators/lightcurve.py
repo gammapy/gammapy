@@ -392,8 +392,6 @@ class LightCurveEstimator(FluxPointsEstimator):
                 gti.time_intervals,
                 desc="Time intervals"
         ):
-            row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-
             datasets_to_fit = datasets.select_time(
                 time_min=t_min, time_max=t_max, atol=self.atol
             )
@@ -403,31 +401,15 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
-            fp_table = fp.to_table()
-
-            for column in fp_table.colnames:
-                if column == "counts":
-                    data = fp_table[column].quantity.sum(axis=1)
-                else:
-                    data = fp_table[column].quantity
-                row[column] = data
-
-            fp_table_flux = fp.to_table(sed_type="flux")
-            for column in fp_table_flux.colnames:
-                if "flux" in column:
-                    row[column] = fp_table_flux[column].quantity
-
             rows.append(fp)
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
         axis = TimeMapAxis.from_gti(gti=gti)
-        fp = FluxPoints.from_stack(
+        return FluxPoints.from_stack(
             maps=rows, axis=axis,
         )
-
-        return LightCurve(fp.to_table())
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
@@ -435,11 +417,11 @@ class LightCurveEstimator(FluxPointsEstimator):
         Parameters
         ----------
         datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
+            List of dataset objects
 
         Returns
         -------
-        result : dict
-            Dict with results for the flux point.
+        result : `FluxPoints`
+            Resulting flux points.
         """
         return super().run(datasets)
