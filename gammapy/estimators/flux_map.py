@@ -20,6 +20,7 @@ DEFAULT_UNIT = {
     "e2dnde": u.Unit("erg cm-2 s-1"),
     "flux": u.Unit("cm-2 s-1"),
     "eflux": u.Unit("erg cm-2 s-1"),
+    "norm": u.Unit("")
 }
 
 REQUIRED_MAPS = {
