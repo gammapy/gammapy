@@ -94,7 +94,7 @@ def test_parameter_to_dict():
     ],
 )
 def test_parameter_autoscale(method, value, factor, scale):
-    par = Parameter("", value, scaler=method)
+    par = Parameter("", value, scale_method=method)
     par.autoscale()
     assert_allclose(par.factor, factor)
     assert_allclose(par.scale, scale)
@@ -173,7 +173,7 @@ def test_parameters_set_parameter_factors(pars):
 
 
 def test_parameters_s():
-    pars = Parameters([Parameter("", 20, scaler="scale10")])
+    pars = Parameters([Parameter("", 20, scale_method="scale10")])
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
@@ -213,7 +213,7 @@ def test_update_from_dict():
         max="nan",
         frozen=False,
         unit="TeV",
-        scaler="scale10",
+        scale_method="scale10",
     )
     par.autoscale()
     data = {

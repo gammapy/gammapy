@@ -78,7 +78,7 @@ class Parameter:
         Number of sigmas to scan.
     scan_values: `numpy.array`
         Scan values. Overwrites all of the scan keywords before.
-    scaler : {'scale10', 'factor1', None}
+    scale_method : {'scale10', 'factor1', None}
         Method used to set ``factor`` and ``scale``
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
@@ -100,7 +100,7 @@ class Parameter:
         scan_n_values=11,
         scan_n_sigma=2,
         scan_values=None,
-        scaler=None,
+        scale_method=None,
         interp="lin",
     ):
         self.name = name
@@ -109,7 +109,7 @@ class Parameter:
         self.min = min
         self.max = max
         self.frozen = frozen
-        self.scaler = scaler
+        self.scale_method = scale_method
         self._error = error
         self._type = None
 
@@ -237,15 +237,15 @@ class Parameter:
         return self.max / self.scale
 
     @property
-    def scaler(self):
+    def scale_method(self):
         """Method used to set ``factor`` and ``scale``"""
-        return self._scaler
+        return self._scale_method
 
-    @scaler.setter
-    def scaler(self, val):
+    @scale_method.setter
+    def scale_method(self, val):
         if val not in ["scale10", "factor1"] and val is not None:
             raise ValueError(f"Invalid method: {val}")
-        self._scaler = val
+        self._scale_method = val
 
     @property
     def frozen(self):
@@ -375,6 +375,7 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
+            "scale_method": self.scale_method,
             "error": self.error,
         }
 
@@ -385,9 +386,9 @@ class Parameter:
     def autoscale(self):
         """Autoscale the parameters.
 
-        Set ``factor`` and ``scale`` according to ``scaler`` attribute
+        Set ``factor`` and ``scale`` according to ``scale_method`` attribute
 
-        Available ``scaler``
+        Available ``scale_method``
 
         * ``scale10`` sets ``scale`` to power of 10,
           so that abs(factor) is in the range 1 to 10
@@ -395,17 +396,17 @@ class Parameter:
 
         In both cases the sign of value is stored in ``factor``,
         i.e. the ``scale`` is always positive. 
-        If ``scaler`` is None the scaling is ignored.
+        If ``scale_method`` is None the scaling is ignored.
 
         """
-        if self.scaler == "scale10":
+        if self.scale_method == "scale10":
             value = self.value
             if value != 0:
                 exponent = np.floor(np.log10(np.abs(value)))
                 scale = np.power(10.0, exponent)
                 self.factor = value / scale
                 self.scale = scale
-        elif self.scaler == "factor1":
+        elif self.scale_method == "factor1":
             self.factor, self.scale = 1, self.value
 
 
