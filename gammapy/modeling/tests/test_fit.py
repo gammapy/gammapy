@@ -266,7 +266,7 @@ def test_stat_contour():
     x = result["y"]
     assert_allclose(len(x), 10)
     assert_allclose(x[0], 299, rtol=1e-5)
-    assert_allclose(x[-1], 299.133975, rtol=1e-5)
+    assert_allclose(x[-1], 299.292893, rtol=1e-5)
     y = result["z"]
     assert_allclose(len(y), 10)
     assert_allclose(y[0], 0.04, rtol=1e-5)
