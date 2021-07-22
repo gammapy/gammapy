@@ -334,9 +334,7 @@ class SpectralModel(Model):
             flux_unit = DEFAULT_UNIT[sed_type]
 
         energy_min, energy_max = energy_bounds
-        axis = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points, energy_unit
-        )
+        axis = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit)
 
         energy = axis.center
         if sed_type == "dnde":
@@ -427,9 +425,7 @@ class SpectralModel(Model):
         kwargs.setdefault("linewidth", 0)
 
         energy_min, energy_max = energy_bounds
-        axis = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points, energy_unit
-        )
+        axis = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit)
 
         energy = axis.center
 
@@ -645,8 +641,8 @@ class PowerLawSpectralModel(SpectralModel):
 
     tag = ["PowerLawSpectralModel", "pl"]
     index = Parameter("index", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    reference = Parameter("reference", "1 TeV", frozen=True)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
@@ -763,7 +759,7 @@ class PowerLawNormSpectralModel(SpectralModel):
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
     norm = Parameter("norm", 1, unit="")
     tilt = Parameter("tilt", 0, frozen=True)
-    reference = Parameter("reference", "1 TeV", frozen=True)
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
 
     @staticmethod
     def evaluate(energy, tilt, norm, reference):
@@ -858,10 +854,10 @@ class PowerLaw2SpectralModel(SpectralModel):
     """
     tag = ["PowerLaw2SpectralModel", "pl-2"]
 
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1", scaler="scale10")
     index = Parameter("index", 2)
-    emin = Parameter("emin", "0.1 TeV", frozen=True)
-    emax = Parameter("emax", "100 TeV", frozen=True)
+    emin = Parameter("emin", "0.1 TeV", frozen=True, scaler="scale10")
+    emax = Parameter("emax", "100 TeV", frozen=True, scaler="scale10")
 
     @staticmethod
     def evaluate(energy, amplitude, index, emin, emax):
@@ -940,8 +936,8 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     tag = ["BrokenPowerLawSpectralModel", "bpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    ebreak = Parameter("ebreak", "1 TeV")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    ebreak = Parameter("ebreak", "1 TeV", scaler="scale10")
 
     @staticmethod
     def evaluate(energy, index1, index2, amplitude, ebreak):
@@ -982,9 +978,9 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     tag = ["SmoothBrokenPowerLawSpectralModel", "sbpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    ebreak = Parameter("ebreak", "1 TeV")
-    reference = Parameter("reference", "1 TeV", frozen=True)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    ebreak = Parameter("ebreak", "1 TeV", scaler="scale10")
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
     beta = Parameter("beta", 1, frozen=True)
 
     @staticmethod
@@ -1104,9 +1100,9 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     tag = ["ExpCutoffPowerLawSpectralModel", "ecpl"]
 
     index = Parameter("index", 1.5)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    reference = Parameter("reference", "1 TeV", frozen=True)
-    lambda_ = Parameter("lambda_", "0.1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
+    lambda_ = Parameter("lambda_", "0.1 TeV-1", scaler="scale10")
     alpha = Parameter("alpha", "1.0", frozen=True)
 
     @staticmethod
@@ -1161,7 +1157,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
 
     index = Parameter("index", 1.5)
     norm = Parameter("norm", 1, unit="")
-    reference = Parameter("reference", "1 TeV", frozen=True)
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
 
@@ -1193,9 +1189,9 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     tag = ["ExpCutoffPowerLaw3FGLSpectralModel", "ecpl-3fgl"]
     index = Parameter("index", 1.5)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    reference = Parameter("reference", "1 TeV", frozen=True)
-    ecut = Parameter("ecut", "10 TeV")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
+    ecut = Parameter("ecut", "10 TeV", scaler="scale10")
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, ecut):
@@ -1231,9 +1227,9 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     """
 
     tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    reference = Parameter("reference", "1 TeV", frozen=True)
-    ecut = Parameter("ecut", "10 TeV")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
+    ecut = Parameter("ecut", "10 TeV", scaler="scale10")
     index_1 = Parameter("index_1", 1.5)
     index_2 = Parameter("index_2", 2)
 
@@ -1266,9 +1262,9 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    reference = Parameter("reference", "1 TeV", frozen=True)
-    expfactor = Parameter("expfactor", "1e-2")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    reference = Parameter("reference", "1 TeV", frozen=True, scaler="scale10")
+    expfactor = Parameter("expfactor", "1e-2", scaler="scale10")
     index_1 = Parameter("index_1", 1.5)
     index_2 = Parameter("index_2", 2)
 
@@ -1306,8 +1302,8 @@ class LogParabolaSpectralModel(SpectralModel):
 
     """
     tag = ["LogParabolaSpectralModel", "lp"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
-    reference = Parameter("reference", "10 TeV", frozen=True)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scaler="scale10")
+    reference = Parameter("reference", "10 TeV", frozen=True, scaler="scale10")
     alpha = Parameter("alpha", 2)
     beta = Parameter("beta", 1)
 
@@ -1359,7 +1355,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
     """
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
     norm = Parameter("norm", 1, unit="")
-    reference = Parameter("reference", "10 TeV", frozen=True)
+    reference = Parameter("reference", "10 TeV", frozen=True, scaler="scale10")
     alpha = Parameter("alpha", 2)
     beta = Parameter("beta", 1)
 
