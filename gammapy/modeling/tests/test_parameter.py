@@ -32,7 +32,10 @@ def test_parameter_outside_limit(caplog):
     par = Parameter("spam", 50, min=0, max=40)
     par.check_limits()
     assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
+    assert (
+        caplog.records[-1].message
+        == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
+    )
 
 
 def test_parameter_scale():
@@ -86,12 +89,12 @@ def test_parameter_to_dict():
         # Regression test for https://github.com/gammapy/gammapy/issues/1883
         ("scale10", 9e35, 9, 1e35),
         # Checks for the simpler method="factor1"
-        ("factor1", 2e10, 2, 1e10),
-        ("factor1", -2e10, -2, 1e10),
+        ("factor1", 2e10, 1, 2e10),
+        ("factor1", -2e10, 1, -2e10),
     ],
 )
 def test_parameter_autoscale(method, value, factor, scale):
-    par = Parameter("", value)
+    par = Parameter("", value, scaler=method)
     par.autoscale()
     assert_allclose(par.factor, factor)
     assert_allclose(par.scale, scale)
@@ -169,8 +172,8 @@ def test_parameters_set_parameter_factors(pars):
     assert_allclose(pars["ham"].scale, 1)
 
 
-def test_parameters_autoscale():
-    pars = Parameters([Parameter("", 20)])
+def test_parameters_s():
+    pars = Parameters([Parameter("", 20, scaler="scale10")])
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
@@ -203,17 +206,43 @@ def test_parameter_scan_values():
 
 
 def test_update_from_dict():
-    par = Parameter("test", value=1e-10, min="nan", max="nan", frozen=False, unit="TeV")
+    par = Parameter(
+        "test",
+        value=1e-10,
+        min="nan",
+        max="nan",
+        frozen=False,
+        unit="TeV",
+        scaler="scale10",
+    )
     par.autoscale()
-    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
+    data = {
+        "model": "gc",
+        "type": "spectral",
+        "name": "test2",
+        "value": 3e-10,
+        "min": 0,
+        "max": np.nan,
+        "frozen": True,
+        "unit": "GeV",
+    }
     par.update_from_dict(data)
     assert par.name == "test"
     assert par.factor == 3
     assert par.value == 3e-10
     assert par.unit == "GeV"
     assert par.min == 0
-    assert par.max is np.nan    
+    assert par.max is np.nan
     assert par.frozen == True
-    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":'True', "unit":"GeV"}
+    data = {
+        "model": "gc",
+        "type": "spectral",
+        "name": "test2",
+        "value": 3e-10,
+        "min": 0,
+        "max": np.nan,
+        "frozen": "True",
+        "unit": "GeV",
+    }
     par.update_from_dict(data)
     assert par.frozen == True
