@@ -78,6 +78,8 @@ class Parameter:
         Number of sigmas to scan.
     scan_values: `numpy.array`
         Scan values. Overwrites all of the scan keywords before.
+    scaler : {'scale10', 'factor1', None}
+        Method used to set ``factor`` and ``scale``
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
 
@@ -98,6 +100,7 @@ class Parameter:
         scan_n_values=11,
         scan_n_sigma=2,
         scan_values=None,
+        scaler=None,
         interp="lin",
     ):
         self.name = name
@@ -106,6 +109,7 @@ class Parameter:
         self.min = min
         self.max = max
         self.frozen = frozen
+        self.scaler = scaler
         self._error = error
         self._type = None
 
@@ -233,14 +237,25 @@ class Parameter:
         return self.max / self.scale
 
     @property
+    def scaler(self):
+        """Method used to set ``factor`` and ``scale``"""
+        return self._scaler
+
+    @scaler.setter
+    def scaler(self, val):
+        if val not in ["scale10", "factor1"] and val is not None:
+            raise ValueError(f"Invalid method: {val}")
+        self._scaler = val
+
+    @property
     def frozen(self):
         """Frozen? (used in fitting) (bool)."""
         return self._frozen
 
     @frozen.setter
     def frozen(self, val):
-        if val in ['True', 'False']:
-            val=bool(val)
+        if val in ["True", "False"]:
+            val = bool(val)
         if not isinstance(val, bool) and not isinstance(val, np.bool_):
             raise TypeError(f"Invalid type: {val}, {type(val)}")
         self._frozen = val
@@ -264,7 +279,9 @@ class Parameter:
         val = u.Quantity(val)
 
         if not val.unit.is_equivalent(self.unit):
-            raise u.UnitConversionError(f"Unit must be equivalent to {self.unit} for parameter {self.name}")
+            raise u.UnitConversionError(
+                f"Unit must be equivalent to {self.unit} for parameter {self.name}"
+            )
 
         self.value = val.value
         self.unit = val.unit
@@ -345,8 +362,9 @@ class Parameter:
     def update_from_dict(self, data):
         """Update parameters from a dict.
            Protection against changing parameter model, type, name."""
-        keys=["value", "unit", "min", "max", "frozen"]
-        for k in keys: setattr(self, k, data[k])
+        keys = ["value", "unit", "min", "max", "frozen"]
+        for k in keys:
+            setattr(self, k, data[k])
 
     def to_dict(self):
         """Convert to dict."""
@@ -364,36 +382,31 @@ class Parameter:
             output["link"] = self._link_label_io
         return output
 
-    def autoscale(self, method="scale10"):
+    def autoscale(self):
         """Autoscale the parameters.
 
-        Set ``factor`` and ``scale`` according to ``method``
+        Set ``factor`` and ``scale`` according to ``scaler`` attribute
 
-        Available methods:
+        Available ``scaler``
 
         * ``scale10`` sets ``scale`` to power of 10,
           so that abs(factor) is in the range 1 to 10
         * ``factor1`` sets ``factor, scale = 1, value``
 
         In both cases the sign of value is stored in ``factor``,
-        i.e. the ``scale`` is always positive.
+        i.e. the ``scale`` is always positive. 
+        If ``scaler`` is None the scaling is ignored.
 
-        Parameters
-        ----------
-        method : {'factor1', 'scale10'}
-            Method to apply
         """
-        if method == "scale10":
+        if self.scaler == "scale10":
             value = self.value
             if value != 0:
                 exponent = np.floor(np.log10(np.abs(value)))
                 scale = np.power(10.0, exponent)
                 self.factor = value / scale
                 self.scale = scale
-        elif method == "factor1":
+        elif self.scaler == "factor1":
             self.factor, self.scale = 1, self.value
-        else:
-            raise ValueError(f"Invalid method: {method}")
 
 
 class Parameters(collections.abc.Sequence):
@@ -544,7 +557,7 @@ class Parameters(collections.abc.Sequence):
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        rows=[]
+        rows = []
         for p in self._parameters:
             d = p.to_dict()
             rows.append({**dict(type=p.type), **d})
@@ -581,18 +594,14 @@ class Parameters(collections.abc.Sequence):
                 parameter.factor = factors[idx]
                 idx += 1
 
-    def autoscale(self, method="scale10"):
+    def autoscale(self):
         """Autoscale all parameters.
 
         See :func:`~gammapy.modeling.Parameter.autoscale`
 
-        Parameters
-        ----------
-        method : {'factor1', 'scale10'}
-            Method to apply
         """
         for par in self._parameters:
-            par.autoscale(method)
+            par.autoscale()
 
     def select(
         self, name=None, type=None, frozen=None,
