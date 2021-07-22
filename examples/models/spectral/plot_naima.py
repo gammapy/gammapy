@@ -46,8 +46,7 @@ model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
 
 opts = {
     "energy_bounds": [10 * u.GeV, 80 * u.TeV],
-    "energy_power": 2,
-    "flux_unit": "erg-1 cm-2 s-1",
+    "sed_type": "e2dnde",
 }
 
 # Plot the total inverse Compton emission

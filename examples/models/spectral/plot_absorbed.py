@@ -43,7 +43,7 @@ finke = EBLAbsorptionNormSpectralModel.read_builtin("finke", redshift=redshift)
 
 plt.figure()
 energy_bounds = [0.08, 3] * u.TeV
-opts = dict(energy_bounds=energy_bounds, energy_unit="TeV", flux_unit="")
+opts = dict(energy_bounds=energy_bounds, xunits=u.TeV)
 franceschini.plot(label="Franceschini 2008", **opts)
 finke.plot(label="Finke 2010", **opts)
 dominguez.plot(label="Dominguez 2011", **opts)
