@@ -173,10 +173,24 @@ def test_parameters_set_parameter_factors(pars):
 
 
 def test_parameters_s():
-    pars = Parameters([Parameter("", 20, scale_method="scale10")])
+    pars = Parameters([Parameter("", 20, scale_method="scale10"),
+                       Parameter("", 20, scale_method=None)])
+    pars_dict = pars.to_dict()
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
+
+    assert pars_dict[0]["scale_method"] == "scale10"
+    assert "scale_method" not in pars_dict[1]
+    pars = Parameters.from_dict(pars_dict)
+    pars.autoscale()
+    assert_allclose(pars[0].factor, 2)
+    assert_allclose(pars[0].scale, 10)
+    assert pars[1].scale_method is None
+    pars.autoscale()
+    assert_allclose(pars[1].factor, 20)
+    assert_allclose(pars[1].scale, 1)    
+
 
 
 def test_parameter_scan_values():

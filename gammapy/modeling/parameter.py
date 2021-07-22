@@ -372,12 +372,14 @@ class Parameter:
             "name": self.name,
             "value": self.value,
             "unit": self.unit.to_string("fits"),
+            "error": self.error,
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
-            "scale_method": self.scale_method,
-            "error": self.error,
+            "interp": self.interp
         }
+        if self.scale_method is not None:
+            output["scale_method"] = self.scale_method
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
@@ -561,6 +563,9 @@ class Parameters(collections.abc.Sequence):
         rows = []
         for p in self._parameters:
             d = p.to_dict()
+            for key in ["scale_method", "interp"]:
+                if key in d:
+                    del d[key]
             rows.append({**dict(type=p.type), **d})
         table = table_from_row_data(rows)
 
