@@ -97,8 +97,6 @@ class Fit:
         interval can be adapted by modifying the the upper bound of the interval (``b``) value.
     store_trace : bool
         Whether to store the trace of the fit
-    scale_parameters : bool
-        Whether to scale parameters prior to the fit.
     """
 
     def __init__(
@@ -108,7 +106,6 @@ class Fit:
         covariance_opts=None,
         confidence_opts=None,
         store_trace=False,
-        scale_parameters=True
     ):
         self.store_trace = store_trace
         self.backend = backend
@@ -125,7 +122,6 @@ class Fit:
         self.optimize_opts = optimize_opts
         self.covariance_opts = covariance_opts
         self.confidence_opts = confidence_opts
-        self.scale_parameters = scale_parameters
         self._minuit = None
 
     @property
@@ -136,6 +132,7 @@ class Fit:
     @staticmethod
     def _parse_datasets(datasets):
         from gammapy.datasets import Datasets
+
         datasets = Datasets(datasets)
         return datasets, datasets.parameters
 
@@ -157,8 +154,10 @@ class Fit:
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
 
-        return {"optimize_result": optimize_result,
-                "covariance_result": covariance_result}
+        return {
+            "optimize_result": optimize_result,
+            "covariance_result": covariance_result,
+        }
 
     def optimize(self, datasets):
         """Run the optimization.
@@ -176,8 +175,7 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
 
-        if self.scale_parameters:
-            parameters.autoscale()
+        parameters.autoscale()
 
         kwargs = self.optimize_opts.copy()
         backend = kwargs.pop("backend", self.backend)
@@ -199,7 +197,10 @@ class Fit:
         trace = table_from_row_data(info.pop("trace"))
 
         if self.store_trace:
-            idx = [parameters.index(par) for par in parameters.unique_parameters.free_parameters]
+            idx = [
+                parameters.index(par)
+                for par in parameters.unique_parameters.free_parameters
+            ]
             unique_names = np.array(datasets.models.parameters_unique_names)[idx]
             trace.rename_columns(trace.colnames[1:], list(unique_names))
 
@@ -243,9 +244,7 @@ class Fit:
                 method = ""
 
             factor_matrix, info = compute(
-                parameters=parameters,
-                function=datasets.stat_sum,
-                **kwargs
+                parameters=parameters, function=datasets.stat_sum, **kwargs
             )
 
             datasets.models.covariance = Covariance.from_factor_matrix(
@@ -309,12 +308,7 @@ class Fit:
         result["errn"] *= parameter.scale
         return result
 
-    def stat_profile(
-        self,
-        datasets,
-        parameter,
-        reoptimize=False
-    ):
+    def stat_profile(self, datasets, parameter, reoptimize=False):
         """Compute fit statistic profile.
 
         The method used is to vary one parameter, keeping all others fixed.
@@ -394,8 +388,7 @@ class Fit:
 
         with parameters.restore_status():
             for x_value, y_value in progress_bar(
-                itertools.product(x.scan_values, y.scan_values),
-                desc="Trial values"
+                itertools.product(x.scan_values, y.scan_values), desc="Trial values"
             ):
                 x.value, y.value = x_value, y_value
 
