@@ -2770,7 +2770,7 @@ class MapEvaluator:
             binz = self.model.spatial_model.evaluation_bin_size_min
         else:
             binz = 0 * u.deg
-        res_scale = np.sqrt(binz.value ** 2 + self._psf_r68_min.value ** 2)
+        res_scale = np.sqrt(binz ** 2 + self._psf_r68_min ** 2).to_value("deg")
         if res_scale != 0:
             if geom.is_region or geom.is_hpx:
                 geom = geom.to_wcs_geom()
