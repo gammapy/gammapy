@@ -630,7 +630,7 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_bin_size_min(self):
         """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
-        return self.r_0.quantity / 2.
+        return self.r_0.quantity * (1 - self.edge_width.quantity)
 
     @property
     def evaluation_radius(self):
