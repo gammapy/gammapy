@@ -2851,7 +2851,10 @@ class MapEvaluator:
 
         value = self.model.spatial_model.integrate_geom(geom)
         if self.psf and self.model.apply_irf["psf"]:
+            psf_kernel_map = self.psf._psf_kernel_map.copy()
+            self.psf._psf_kernel_map = self.psf._psf_kernel_map.upsample(factor)
             value = self.apply_psf(value)
+            self.psf._psf_kernel_map = psf_kernel_map
 
         if factor > 1:
             value = value.downsample(factor)
