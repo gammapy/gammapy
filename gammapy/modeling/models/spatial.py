@@ -360,6 +360,11 @@ class PointSpatialModel(SpatialModel):
     is_energy_dependent = False
 
     @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        return 0 * u.deg
+
+    @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
 
@@ -439,6 +444,12 @@ class GaussianSpatialModel(SpatialModel):
     sigma = Parameter("sigma", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
+
+    @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        return self.parameters["sigma"].quantity / 3.
+
 
     @property
     def evaluation_radius(self):
@@ -538,6 +549,12 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
 
     @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        return self.r_0.quantity / (1 + 8 * self.eta.value)
+
+
+    @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
         The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
@@ -609,6 +626,11 @@ class DiskSpatialModel(SpatialModel):
     e = Parameter("e", 0, min=0, max=1, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
     edge_width = Parameter("edge_width", value=0.01, min=0, max=1, frozen=True)
+
+    @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        return self.r_0.quantity / 2.
 
     @property
     def evaluation_radius(self):
@@ -698,6 +720,11 @@ class ShellSpatialModel(SpatialModel):
     width = Parameter("width", "0.2 deg")
 
     @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        return self.width.quantity
+
+    @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
 
@@ -759,6 +786,11 @@ class Shell2SpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     r_0 = Parameter("r_0", "1 deg")
     eta = Parameter("eta", 0.2, min=0.02, max=1)
+
+    @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        return self.eta.value * self.r_0
 
     @property
     def evaluation_radius(self):
