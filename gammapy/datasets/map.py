@@ -2624,6 +2624,8 @@ class MapEvaluator:
         self._computation_cache = None
         self._neval = 0  # for debugging
         self._renorm = 1
+        self._psf_r68_min = 0 * u.deg
+        self._spatial_oversampling_factor = 1
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -2736,6 +2738,11 @@ class MapEvaluator:
                 self.psf = psf.get_psf_kernel(
                     position=self.model.position, geom=geom, containment=PSF_CONTAINMENT
                 )
+            self._psf_r68_min = psf.containment_radius(
+                fraction=0.68,
+                energy_true=geom.axes["energy_true"].center,
+                position=self.model.position,
+            ).min()
 
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
@@ -2747,10 +2754,28 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
+        self.update_spatial_oversampling_factor(geom)
+
         self._compute_npred.cache_clear()
         self._compute_flux_spatial.cache_clear()
         self._computation_cache = None
         self._cached_parameter_previous = None
+
+    def update_spatial_oversampling_factor(self, geom):
+        """Update spatial oversampling_factor for model evaluation"""
+        if (
+            self.model.spatial_model is not None
+            and self.model.spatial_model.evaluation_bin_size_min is not None
+        ):
+            binz = self.model.spatial_model.evaluation_bin_size_min
+        else:
+            binz = 0 * u.deg
+        res_scale = np.sqrt(binz.value ** 2 + self._psf_r68_min.value ** 2)
+        if res_scale != 0:
+            if geom.is_region or geom.is_hpx:
+                geom = geom.to_wcs_geom()
+            factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
+            self._spatial_oversampling_factor = factor
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -2820,7 +2845,7 @@ class MapEvaluator:
 
     def _compute_flux_spatial_geom(self, geom):
         """Compute spatial flux oversampling geom if necessary"""
-        factor = self.spatial_oversampling_factor(geom)
+        factor = self._spatial_oversampling_factor
         if factor > 1:
             geom = geom.upsample(factor)
 
@@ -2829,15 +2854,8 @@ class MapEvaluator:
             value = self.apply_psf(value)
 
         if factor > 1:
-            value.downsample(factor)
+            value = value.downsample(factor)
         return value
-
-    def spatial_oversampling_factor(self, geom):
-        factor = 1
-        binz = self.model.spatial_model.evaluation_bin_size_min
-        if binz is not None:
-            factor = int(np.ceil(np.max(geom.pixel_scales.deg) / binz))
-        return factor
 
     def compute_flux_spectral(self):
         """Compute spectral flux"""
