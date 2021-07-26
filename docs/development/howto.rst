@@ -124,7 +124,7 @@ the code as well as the output value produced.
         >>> from gammapy.utils.regions import make_pixel_region
         >>> wcs = WcsGeom.create().wcs
         >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
-        >>> region
+        >>> print(region)
         <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
 
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the

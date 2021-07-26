@@ -65,9 +65,9 @@ def make_region(region):
 
     >>> from gammapy.utils.regions import make_region
     >>> make_region("image;circle(10,20,3)")
-    <CirclePixelRegion(PixCoord(x=9.0, y=19.0), radius=3.0)>
+    <CirclePixelRegion(center=PixCoord(x=9.0, y=19.0), radius=3.0)>
     >>> make_region("galactic;circle(10,20,3)")
-    <CircleSkyRegion(<SkyCoord (Galactic): (l, b) in deg
+    <CircleSkyRegion(center=<SkyCoord (Galactic): (l, b) in deg
         (10., 20.)>, radius=3.0 deg)>
 
     If a region object is passed in, it is returned unchanged:
@@ -107,7 +107,7 @@ def make_pixel_region(region, wcs=None):
     >>> wcs = WcsGeom.create().wcs
     >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
     >>> region
-    <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
+    <CirclePixelRegion(center=PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376991980699)>
     """
     if isinstance(region, str):
         region = make_region(region)
