@@ -103,6 +103,9 @@ class Parameter:
         scale_method=None,
         interp="lin",
     ):
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be string, got '{type(name)}' instead")
+
         self._name = name
         self._link_label_io = None
         self.scale = scale
