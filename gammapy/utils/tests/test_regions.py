@@ -78,6 +78,14 @@ def test_compound_region_center():
     assert_allclose(center.galactic.b, 0 * u.deg, atol=1e-6)
 
 
+def test_compound_region_center_single():
+    region = make_region("galactic;circle(1,1,0.1)")
+    center = compound_region_center(region)
+
+    assert_allclose(center.galactic.l.wrap_at("180d"), 1 * u.deg, atol=1e-6)
+    assert_allclose(center.galactic.b, 1 * u.deg, atol=1e-6)
+
+
 class TestSphericalCircleSkyRegion:
     def setup(self):
         self.region = SphericalCircleSkyRegion(
