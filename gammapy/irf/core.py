@@ -33,15 +33,18 @@ class IRF:
         Meta data
     """
 
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None,)
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0.,)
 
-    def __init__(self, axes, data=0, unit="", meta=None):
+    def __init__(self, axes, data=0, unit="", meta=None, interp_kwargs=None):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
         self.data = data
         self.unit = unit
         self.meta = meta or {}
+        if interp_kwargs is None:
+            interp_kwargs = self.default_interp_kwargs.copy()
+        self.interp_kwargs = interp_kwargs
 
     @property
     @abc.abstractmethod
@@ -99,7 +102,7 @@ class IRF:
     def interp_missing_data(self, axis_name):
         """Interpolate missing data along a given axis"""
         data = self.data.copy()
-        values_scale = self.default_interp_kwargs.get("values_scale", "lin")
+        values_scale = self.interp_kwargs.get("values_scale", "lin")
         scale = interpolation_scale(values_scale)
 
         axis = self.axes.index(axis_name)
@@ -137,13 +140,16 @@ class IRF:
 
     @lazyproperty
     def _interpolate(self):
+        kwargs = self.interp_kwargs.copy()
+        # Allow extrap[olation with in bins
+        kwargs["fill_value"] = None
         points = [a.center for a in self.axes]
         points_scale = tuple([a.interp for a in self.axes])
         return ScaledRegularGridInterpolator(
             points,
             self.quantity,
             points_scale=points_scale,
-            **self.default_interp_kwargs,
+            **kwargs,
         )
 
     @property
@@ -201,8 +207,20 @@ class IRF:
             coord = kwargs.get(key, value)
             if coord is not None:
                 coords_default[key] = u.Quantity(coord, copy=False)
+        data = self._interpolate(coords_default.values(), method=method)
 
-        return self._interpolate(coords_default.values(), method=method)
+        if self.interp_kwargs["fill_value"] is not None:
+            idxs = self.axes.coord_to_idx(coords_default, clip=False)
+            invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
+            mask = self._mask_out_bounds(invalid)
+            if not data.shape:
+                mask = mask.squeeze()
+            data[mask] = self.interp_kwargs["fill_value"]
+            data[~np.isfinite(data)] = self.interp_kwargs["fill_value"]
+        return data
+
+    def _mask_out_bounds(self, invalid):
+        return np.any(invalid, axis=0)
 
     def integrate_log_log(self, axis_name, **kwargs):
         """Integrate along a given axis.
@@ -363,7 +381,7 @@ class IRF:
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
 
-        if "HDUCLAS3" in table.meta and table.meta["HDUCLAS3"]=="POINT-LIKE":
+        if "HDUCLAS3" in table.meta and table.meta["HDUCLAS3"] == "POINT-LIKE":
             table.meta["is_pointlike"] = True
         return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
 
@@ -563,14 +581,19 @@ class IRFMap:
             if hdu is None:
                 hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
 
-            irf_map = Map.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format)
+            irf_map = Map.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
+            )
 
             if exposure_hdu is None:
                 exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"
 
             if exposure_hdu in hdulist:
                 exposure_map = Map.from_hdulist(
-                    hdulist, hdu=exposure_hdu, hdu_bands=exposure_hdu_bands, format=format
+                    hdulist,
+                    hdu=exposure_hdu,
+                    hdu_bands=exposure_hdu_bands,
+                    format=format,
                 )
             else:
                 exposure_map = None
@@ -636,7 +659,9 @@ class IRFMap:
             exposure_hdu = hdu + "_exposure"
 
             if self.exposure_map is not None:
-                new_hdulist = self.exposure_map.to_hdulist(hdu=exposure_hdu, format=format)
+                new_hdulist = self.exposure_map.to_hdulist(
+                    hdu=exposure_hdu, format=format
+                )
                 hdulist.extend(new_hdulist[1:])
 
         elif format == "gtpsf":
@@ -698,14 +723,20 @@ class IRFMap:
             parent_slices = slice(None)
 
         self._irf_map.data[parent_slices] *= self.exposure_map.data[parent_slices]
-        self._irf_map.stack(other._irf_map * other.exposure_map.data, weights=weights, nan_to_num=nan_to_num)
+        self._irf_map.stack(
+            other._irf_map * other.exposure_map.data,
+            weights=weights,
+            nan_to_num=nan_to_num,
+        )
 
         # stack exposure map
         if weights and "energy" in weights.geom.axes.names:
             weights = weights.reduce(
                 axis_name="energy", func=np.logical_or, keepdims=True
             )
-        self.exposure_map.stack(other.exposure_map, weights=weights, nan_to_num=nan_to_num)
+        self.exposure_map.stack(
+            other.exposure_map, weights=weights, nan_to_num=nan_to_num
+        )
 
         with np.errstate(invalid="ignore"):
             self._irf_map.data[parent_slices] /= self.exposure_map.data[parent_slices]

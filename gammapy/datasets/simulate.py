@@ -27,7 +27,8 @@ class MapDatasetEventSampler:
         self.random_state = get_random_state(random_state)
 
     def _sample_coord_time(self, npred, temporal_model, gti):
-        n_events = self.random_state.poisson(np.sum(npred.data))
+        data = npred.data[np.isfinite(npred.data)]
+        n_events = self.random_state.poisson(np.sum(data))
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 

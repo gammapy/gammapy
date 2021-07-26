@@ -49,8 +49,15 @@ class EnergyDispersion2D(IRF):
     tag = "edisp_2d"
     required_axes = ["energy_true", "migra", "offset"]
 
+    def _mask_out_bounds(self, invalid):
+        return (
+            invalid[self.axes.index("energy_true")] & invalid[self.axes.index("migra")]
+        ) | invalid[self.axes.index("offset")]
+
     @classmethod
-    def from_gauss(cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6):
+    def from_gauss(
+        cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6
+    ):
         """Create Gaussian energy dispersion matrix (`EnergyDispersion2D`).
 
         The output matrix will be Gaussian in (energy_true / energy).
@@ -93,10 +100,7 @@ class EnergyDispersion2D(IRF):
         data = pdf * np.ones(axes.shape)
         data[data < pdf_threshold] = 0
 
-        return cls(
-            axes=axes,
-            data=data.value,
-        )
+        return cls(axes=axes, data=data.value,)
 
     def to_edisp_kernel(self, offset, energy_true=None, energy=None):
         """Detector response R(Delta E_reco, Delta E_true)
@@ -148,10 +152,7 @@ class EnergyDispersion2D(IRF):
 
         data = np.diff(values)
 
-        return EDispKernel(
-            axes=axes,
-            data=data.to_value(""),
-        )
+        return EDispKernel(axes=axes, data=data.to_value(""),)
 
     def normalize(self):
         """Normalise energy dispersion"""
