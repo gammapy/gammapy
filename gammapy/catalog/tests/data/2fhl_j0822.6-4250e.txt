@@ -3,9 +3,9 @@
 
 Catalog row index (zero-based) : 134
 Source name          : 2FHL J0822.6-4250e
-Associations     : Puppis A, 3FGL J0822.6-4250e, 1FHL J0822.6-4250e
-ASSOC_PROB_BAY   : nan
-ASSOC_PROB_LR    : nan
+Associations     : Puppis A, 3FGL J0822.6-4250e, 1FHL J0822.6-4250e, --
+ASSOC_PROB_BAY   : --
+ASSOC_PROB_LR    : --
 Class            : snr
 TeVCat flag      : N/A
 

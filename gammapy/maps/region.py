@@ -98,15 +98,7 @@ class RegionGeom(Geom):
         return Angle(proj_plane_pixel_scales(self.wcs), unit="deg")
 
     @property
-    def width(self):
-        """Width of bounding box of the region.
-
-        Returns
-        -------
-        width : `~astropy.units.Quantity`
-            Dimensions of the region in both spatial dimensions.
-            Units: ``deg``
-        """
+    def _rectangle_bbox(self):
         if self.region is None:
             raise ValueError("Region definition required.")
 
@@ -119,8 +111,20 @@ class RegionGeom(Geom):
             bbox = bbox.union(region_pix.bounding_box)
 
         rectangle_pix = bbox.to_region()
-        rectangle = rectangle_pix.to_sky(self.wcs)
-        return u.Quantity([rectangle.width, rectangle.height])
+        return rectangle_pix.to_sky(self.wcs)
+
+    @property
+    def width(self):
+        """Width of bounding box of the region.
+
+        Returns
+        -------
+        width : `~astropy.units.Quantity`
+            Dimensions of the region in both spatial dimensions.
+            Units: ``deg``
+        """
+        rectangle = self._rectangle_bbox
+        return u.Quantity([rectangle.width.to("deg"), rectangle.height.to("deg")])
 
     @property
     def region(self):
@@ -158,11 +162,8 @@ class RegionGeom(Geom):
         """Sky coordinate of the center of the region"""
         if self.region is None:
             return SkyCoord(np.nan * u.deg, np.nan * u.deg)
-        try:
-            return self.region.center
-        except AttributeError:
-            xp, yp = self.wcs.wcs.crpix
-            return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
+
+        return self._rectangle_bbox.center
 
     @property
     def npix(self):

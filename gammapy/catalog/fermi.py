@@ -87,7 +87,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
 
         def get_nonentry_keys(keys):
-            vals = [d[_].strip() for _ in keys]
+            vals = [str(d[_]).strip() for _ in keys]
             return ", ".join([_ for _ in vals if _ != ""])
 
         associations = get_nonentry_keys(keys)
@@ -256,11 +256,11 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         elif spec_type == "PLSuperExpCutoff":
             tag = "PLEC"
-            fmt = "{:<45s} : {} +- {}\n"
+            fmt = "{:<45s} : {:.4f} +- {:.4f}\n"
             ss += fmt.format(
                 "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
             )
-            ss += "{:<45s} : {} +- {}\n".format(
+            ss += "{:<45s} : {:.4f} +- {:.4f}\n".format(
                 "Super-exponential cutoff index",
                 d["PLEC_Exp_Index"],
                 d["Unc_PLEC_Exp_Index"],
@@ -415,7 +415,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             errs = {
                 "amplitude": self.data["Unc_PLEC_Flux_Density"],
                 "index_1": self.data["Unc_PLEC_Index"],
-                "index_2": np.nan_to_num(self.data["Unc_PLEC_Exp_Index"]),
+                "index_2": np.nan_to_num(float(self.data["Unc_PLEC_Exp_Index"])),
                 "expfactor": self.data["Unc_PLEC_Expfactor"],
             }
         else:

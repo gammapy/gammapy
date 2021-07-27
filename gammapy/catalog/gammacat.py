@@ -194,7 +194,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         elif spec_type == "pl2":
             e_max = data["spec_pl2_e_max"]
             DEFAULT_E_MAX = u.Quantity(1e5, "TeV")
-            if np.isnan(e_max.value):
+
+            if np.isnan(e_max.value) or e_max.value == 0:
                 e_max = DEFAULT_E_MAX
 
             tag = "PowerLaw2SpectralModel"
