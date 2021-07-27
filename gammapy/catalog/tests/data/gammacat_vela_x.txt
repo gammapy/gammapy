@@ -4,8 +4,8 @@
 Catalog row index (zero-based): 36
 Common name: Vela X
 Gamma names: HESS J0835-455
-Fermi names: 
-Other names: 
+Fermi names: --
+Other names: --
 Location: gal
 Class: pwn
 
@@ -34,7 +34,7 @@ RA: 128.750 deg
 DEC: -45.600 deg
 GLON: 263.856 deg
 GLAT: -3.089 deg
-Position error: nan deg
+Position error: 0.000 deg
 
 *** Morphology info ***
 
@@ -58,7 +58,7 @@ index: 1.32 +- 0.06 (stat) +- 0.12 (sys)
 e_cut: 14.0 +- 1.6 (stat) +- 2.6 (sys) TeV
 reference: 1.0 TeV
 
-Energy range: (0.75, nan) TeV
+Energy range: (0.75, 0.0) TeV
 theta: 1.2 deg
 
 

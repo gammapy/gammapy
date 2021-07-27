@@ -107,6 +107,7 @@ class TestSourceCatalogObjectGammaCat:
             "erg cm-2 s-1"
         )
 
+        print(spectral_model)
         assert_quantity_allclose(dne, ref["dnde_1TeV"], rtol=1e-3)
         assert_quantity_allclose(flux, ref["flux_1TeV"], rtol=1e-3)
         assert_quantity_allclose(eflux, ref["eflux_1_10TeV"], rtol=1e-3)

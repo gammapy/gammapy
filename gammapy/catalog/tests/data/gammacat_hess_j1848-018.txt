@@ -4,7 +4,7 @@
 Catalog row index (zero-based): 134
 Common name: HESS J1848-018
 Gamma names: HESS J1848-018,1HWC J1849-017c
-Fermi names: 
+Fermi names: --
 Other names: WR121a,W43
 Location: gal
 Class: unid
@@ -34,18 +34,18 @@ RA: 282.121 deg
 DEC: -1.792 deg
 GLON: 31.000 deg
 GLAT: -0.160 deg
-Position error: nan deg
+Position error: 0.000 deg
 
 *** Morphology info ***
 
 Morphology model type: gauss
 Sigma: 0.320 deg
 Sigma error: 0.020 deg
-Sigma2: nan deg
-Sigma2 error: nan deg
-Position angle: nan deg
-Position angle error: nan deg
-Position angle frame: 
+Sigma2: 0.000 deg
+Sigma2 error: 0.000 deg
+Position angle: 0.000 deg
+Position angle error: 0.000 deg
+Position angle frame: --
 
 *** Spectral info ***
 

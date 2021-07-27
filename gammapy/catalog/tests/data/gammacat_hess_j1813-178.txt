@@ -4,7 +4,7 @@
 Catalog row index (zero-based): 118
 Common name: HESS J1813-178
 Gamma names: HESS J1813-178
-Fermi names: 
+Fermi names: --
 Other names: G12.82-0.02,PSR J1813-1749,CXOU J181335.1-174957,IGR J18135-1751,W33
 Location: gal
 Class: pwn
@@ -41,11 +41,11 @@ Position error: 0.005 deg
 Morphology model type: gauss
 Sigma: 0.036 deg
 Sigma error: 0.006 deg
-Sigma2: nan deg
-Sigma2 error: nan deg
-Position angle: nan deg
-Position angle error: nan deg
-Position angle frame: 
+Sigma2: 0.000 deg
+Sigma2 error: 0.000 deg
+Position angle: 0.000 deg
+Position angle error: 0.000 deg
+Position angle frame: --
 
 *** Spectral info ***
 
@@ -56,9 +56,9 @@ Spectrum type: pl2
 flux: 1.42e-11 +- 1.1e-12 (stat) +- 3e-13 (sys) cm-2 s-1
 index: 2.09 +- 0.08 (stat) +- 0.2 (sys)
 e_min: 0.2 TeV
-e_max: nan TeV
+e_max: 0.0 TeV
 
-Energy range: (nan, nan) TeV
+Energy range: (0.0, 0.0) TeV
 theta: 0.15 deg
 
 
