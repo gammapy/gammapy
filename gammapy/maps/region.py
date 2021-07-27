@@ -60,7 +60,6 @@ class RegionGeom(Geom):
         if wcs is None and region is not None:
             if isinstance(region, CompoundSkyRegion):
                 center = compound_region_center(region)
-                print(f"Center: {center}")
             else:
                 center = region.center
 

@@ -122,7 +122,7 @@ class SourceCatalog(abc.ABC):
             name = row[self._source_name_key]
             names[name.strip()] = idx
             for alias_column in self._source_name_alias:
-                for alias in row[alias_column].split(","):
+                for alias in str(row[alias_column]).split(","):
                     if not alias == "":
                         names[alias.strip()] = idx
         return names
@@ -146,7 +146,7 @@ class SourceCatalog(abc.ABC):
 
         possible_names = [row[self._source_name_key]]
         for alias_column in self._source_name_alias:
-            possible_names += row[alias_column].split(",")
+            possible_names += str(row[alias_column]).split(",")
 
         if name not in possible_names:
             self.__dict__.pop("_name_to_index_cache")
