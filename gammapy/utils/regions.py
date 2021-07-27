@@ -107,7 +107,7 @@ def make_pixel_region(region, wcs=None):
     >>> wcs = WcsGeom.create().wcs
     >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
     >>> region
-    <CirclePixelRegion(center=PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376991980699)>
+    <CirclePixelRegion(center=PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149381)>
     """
     if isinstance(region, str):
         region = make_region(region)

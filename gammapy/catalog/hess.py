@@ -652,7 +652,7 @@ class SourceCatalogHGPS(SourceCatalog):
     Source name          : HESS J1843-033
     Analysis reference   : HGPS
     Source class         : Unid
-    Identified object    :
+    Identified object    : --
     Gamma-Cat id         : 126
     <BLANKLINE>
     <BLANKLINE>
@@ -669,7 +669,7 @@ class SourceCatalogHGPS(SourceCatalog):
     Spatial components   : HGPSC 083, HGPSC 084
     TS                   : 256.6
     sqrt(TS)             : 16.0
-    Size                 : 0.239 +/- 0.063 (UL: nan) deg
+    Size                 : 0.239 +/- 0.063 (UL: 0.000) deg
     R70                  : 0.376 deg
     RSpec                : 0.376 deg
     Total model excess   : 979.5
@@ -698,7 +698,7 @@ class SourceCatalogHGPS(SourceCatalog):
     Background           : 5126.9
     Excess               : 980.1
     Spectral model       : PL
-    TS ECPL over PL      : nan
+    TS ECPL over PL      : --
     Best-fit model flux(> 1 TeV) : (3.043 +/- 0.196) x 10^-12 cm^-2 s^-1  = (13.47 +/- 0.87) % Crab
     Best-fit model energy flux(1 to 10 TeV) : (10.918 +/- 0.733) x 10^-12 erg cm^-2 s^-1
     Pivot energy         : 1.87 TeV
@@ -706,11 +706,11 @@ class SourceCatalogHGPS(SourceCatalog):
     PL   Flux(> 1 TeV)   : (3.043 +/- 0.196) x 10^-12 cm^-2 s^-1  = (13.47 +/- 0.87) % Crab
     PL   Flux(@ 1 TeV)   : (3.505 +/- 0.247) x 10^-12 cm^-2 s^-1 TeV^-1  = (15.51 +/- 0.70) % Crab
     PL   Index           : 2.15 +/- 0.05
-    ECPL   Flux(@ 1 TeV) : (nan +/- nan) x 10^-12 cm^-2 s^-1 TeV^-1  = (nan +/- nan) % Crab
-    ECPL   Flux(> 1 TeV) : (nan +/- nan) x 10^-12 cm^-2 s^-1  = (nan +/- nan) % Crab
-    ECPL Index           : nan +/- nan
-    ECPL Lambda          : nan +/- nan TeV^-1
-    ECPL E_cut           : nan +/- nan TeV
+    ECPL   Flux(@ 1 TeV) : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1 TeV^-1  = (0.00 +/- 0.00) % Crab
+    ECPL   Flux(> 1 TeV) : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1  = (0.00 +/- 0.00) % Crab
+    ECPL Index           : -- +/- --
+    ECPL Lambda          : 0.000 +/- 0.000 TeV^-1
+    ECPL E_cut           : inf +/- nan TeV
     <BLANKLINE>
     *** Flux points info ***
     <BLANKLINE>
