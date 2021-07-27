@@ -368,7 +368,7 @@ class FluxPoints(FluxMaps):
         return y_err
 
     def plot(
-        self, ax=None, energy_unit="TeV", flux_unit=None, energy_power=0, sed_type="dnde", **kwargs
+        self, ax=None, energy_power=0, sed_type="dnde", **kwargs
     ):
         """Plot flux points.
 
@@ -376,16 +376,12 @@ class FluxPoints(FluxMaps):
         ----------
         ax : `~matplotlib.axes.Axes`
             Axis object to plot on.
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
         energy_power : int
             Power of energy to multiply y axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Sed type
-        kwargs : dict
-            Keyword arguments passed to :func:`matplotlib.pyplot.errorbar`
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
         Returns
         -------
@@ -400,11 +396,10 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
-        if flux_unit is None:
-            flux_unit = DEFAULT_UNIT[sed_type]
+        flux_unit = DEFAULT_UNIT[sed_type]
 
         flux = getattr(self, sed_type).quantity[:, 0, 0]
-        energy = self.energy_ref.to(energy_unit)
+        energy = self.energy_ref
 
         # get errors and ul
         is_ul = self.is_ul.data.squeeze()
@@ -444,34 +439,28 @@ class FluxPoints(FluxMaps):
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
-        ax.set_xlabel(f"Energy ({energy_unit})")
-        ax.set_ylabel(f"{sed_type} ({flux.unit})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
         return ax
 
     def plot_ts_profiles(
         self,
         ax=None,
-        energy_unit="TeV",
-        add_cbar=True,
-        flux_unit=None,
         sed_type="dnde",
-        **kwargs,
+        add_cbar=True,
+            **kwargs,
     ):
         """Plot fit statistic SED profiles as a density plot.
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
             Axis object to plot on.
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        add_cbar : bool
-            Whether to add a colorbar to the plot.
-        flux_unit : str or `astropy.units.Unit`
-            Unit to use for the y-axis.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Sed type
-        kwargs : dict
-            Keyword arguments passed to :func:`matplotlib.pyplot.pcolormesh`
+        add_cbar : bool
+            Whether to add a colorbar to the plot.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`
 
         Returns
         -------
@@ -483,8 +472,7 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
-        if flux_unit is None:
-            flux_unit = DEFAULT_UNIT[sed_type]
+        flux_unit = DEFAULT_UNIT[sed_type]
 
         flux_ref = getattr(self, sed_type + "_ref")
         flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
@@ -492,7 +480,7 @@ class FluxPoints(FluxMaps):
         ts = self.stat_scan - np.expand_dims(self.stat.data, 2)
         norm_scan = ts.geom.axes["norm"].center.to_value("")
 
-        norm = flux / flux_ref[:, :, 0]
+        norm = np.sqrt(flux[:-1] * flux[1:]) / flux_ref[:, :, 0]
 
         z = np.empty(norm.shape)
 
@@ -511,15 +499,13 @@ class FluxPoints(FluxMaps):
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
 
-        x = self.energy_axis.edges
-
         with quantity_support():
-            caxes = ax.pcolormesh(x.to(energy_unit), flux.to(flux_unit), -z.T, **kwargs)
+            caxes = ax.pcolormesh(self.energy_axis.edges, flux.to(flux_unit), -z.T, **kwargs)
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
-        ax.set_xlabel(f"Energy ({energy_unit})")
-        ax.set_ylabel(f"{sed_type} ({flux.unit})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
 
         if add_cbar:
             label = "Fit statistic difference"

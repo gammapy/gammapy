@@ -3,6 +3,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
 from ..core import IRF
@@ -555,19 +556,27 @@ class EDispKernel(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Plot axis
+        **kwargs : dict
+            Kwyrow
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Plot axis
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy_axis_true = self.axes["energy_true"]
-        x = energy_axis_true.center.to_value("TeV")
-        y = self.get_bias(energy_axis_true.center)
+        energy = self.axes["energy_true"].center
+        bias = self.get_bias(energy)
 
-        ax.plot(x, y, **kwargs)
-        ax.set_xlabel(r"$E_\mathrm{{True}}$ [TeV]")
-        ax.set_ylabel(r"($E_\mathrm{{Reco}} - E_\mathrm{{True}}) / E_\mathrm{{True}}$")
+        with quantity_support():
+            ax.plot(energy, bias, **kwargs)
+
+        ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units}]")
+        ax.set_ylabel("($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$")
         ax.set_xscale("log")
         return ax
 

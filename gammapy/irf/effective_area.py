@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from astropy.io import fits
-from astropy.table import Table
 from astropy.visualization import quantity_support
-from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
-from gammapy.utils.scripts import make_path
+from gammapy.maps import MapAxis, MapAxes
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -98,11 +95,12 @@ class EffectiveAreaTable2D(IRF):
         for off in offset:
             area = self.evaluate(offset=off, energy_true=energy)
             kwargs.setdefault("label", f"offset = {off:.1f}")
-            ax.plot(energy, area.value, **kwargs)
+            with quantity_support():
+                ax.plot(energy, area.value, **kwargs)
 
         ax.set_xscale("log")
-        ax.set_xlabel(f"Energy [{energy.unit}]")
-        ax.set_ylabel(f"Effective Area [{self.unit}]")
+        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
+        ax.set_ylabel(f"Effective Area [{ax.yaxis.units}]")
         ax.set_xlim(min(energy.value), max(energy.value))
         return ax
 
@@ -141,10 +139,11 @@ class EffectiveAreaTable2D(IRF):
             if np.isnan(area).all():
                 continue
             label = f"energy = {ee:.1f}"
-            ax.plot(offset, area, label=label, **kwargs)
+            with quantity_support():
+                ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel(f"Offset ({self.axes['offset'].unit})")
+        ax.set_xlabel(f"Offset ({ax.xaxis.units})")
         ax.set_ylabel("Relative Effective Area")
         ax.legend(loc="best")
 
@@ -171,14 +170,13 @@ class EffectiveAreaTable2D(IRF):
 
         energy = self.axes["energy_true"].edges
         offset = self.axes["offset"].edges
-        caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
+
+        with quantity_support():
+            caxes = ax.pcolormesh(energy, offset, aeff.value.T, **kwargs)
 
         ax.set_xscale("log")
         ax.set_ylabel(f"Offset ({offset.unit})")
         ax.set_xlabel(f"Energy ({energy.unit})")
-
-        xmin, xmax = energy.value.min(), energy.value.max()
-        ax.set_xlim(xmin, xmax)
 
         if add_cbar:
             label = f"Effective Area ({aeff.unit})"

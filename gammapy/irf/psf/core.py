@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
+from astropy.visualization import quantity_support
 from gammapy.utils.array import array_stats_str
 from ..core import IRF
 
@@ -152,12 +153,13 @@ class PSF(IRF):
                 plot_kwargs.setdefault(
                     "label", f"{theta}, {100 * frac:.1f}%"
                 )
-                ax.plot(energy_true, radius, **plot_kwargs)
+                with quantity_support():
+                    ax.plot(energy_true, radius, **plot_kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")
-        ax.set_xlabel(f"Energy ({energy_true.unit})")
-        ax.set_ylabel(f"Containment radius ({radius.unit})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
     def plot_containment_radius(self, ax=None, fraction=0.68,  add_cbar=True, **kwargs):
@@ -197,16 +199,13 @@ class PSF(IRF):
         kwargs.setdefault("vmax", np.nanmax(containment.value))
 
         # Plotting
-        x = energy.value
-        y = offset.value
-        caxes = ax.pcolormesh(x, y, containment.value.T, **kwargs)
+        with quantity_support():
+            caxes = ax.pcolormesh(energy, offset, containment.value.T, **kwargs)
 
         # Axes labels and ticks, colobar
         ax.semilogx()
-        ax.set_ylabel(f"Offset ({offset.unit})")
-        ax.set_xlabel(f"Energy ({energy.unit})")
-        ax.set_xlim(x.min(), x.max())
-        ax.set_ylim(y.min(), y.max())
+        ax.set_ylabel(f"Offset ({ax.xaxis.units})")
+        ax.set_xlabel(f"Energy ({ax.yaxis.units})")
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
@@ -233,20 +232,20 @@ class PSF(IRF):
         ax = plt.gca() if ax is None else ax
 
         try:
-            rad_axis = self.axes["rad"]
+            rad = self.axes["rad"].center
         except KeyError:
-            rad_axis = RAD_AXIS_DEFAULT
+            rad = RAD_AXIS_DEFAULT.center
 
-        rad = rad_axis.center
         for theta in offset:
             for energy in energy_true:
                 psf_value = self.evaluate(rad=rad, energy_true=energy, offset=theta)
                 label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
-                ax.plot(rad.value, psf_value.value, label=label, **kwargs)
+                with quantity_support():
+                    ax.plot(rad, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad ({rad.unit})")
-        ax.set_ylabel(f"PSF ({psf_value.unit})")
+        ax.set_xlabel(f"Rad ({ax.xaxis.units})")
+        ax.set_ylabel(f"PSF ({ax.yaxis.units})")
         plt.legend()
         return ax
 

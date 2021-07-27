@@ -282,8 +282,6 @@ class SpectralModel(Model):
         self,
         energy_bounds,
         ax=None,
-        energy_unit="TeV",
-        flux_unit=None,
         energy_power=0,
         sed_type="dnde",
         n_points=100,
@@ -309,16 +307,14 @@ class SpectralModel(Model):
             Axis
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to MapAxis.from_energy_bounds
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
         energy_power : int, optional
             Power of energy to multiply flux axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Evaluation methods of the model
         n_points : int, optional
             Number of evaluation nodes
+        **kwargs : dict
+            Keyword arguments forwared to `~matplotlib.pyplot.plot`
 
         Returns
         -------
@@ -330,43 +326,43 @@ class SpectralModel(Model):
 
         ax = plt.gca() if ax is None else ax
 
-        if flux_unit is None:
-            flux_unit = DEFAULT_UNIT[sed_type]
+        if self.is_norm_spectral_model:
+            sed_type = "norm"
+
+        # TODO: remove energy_power option completely and just suppord sed_type?
+        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy_bounds[0].unit ** energy_power)
 
         energy_min, energy_max = energy_bounds
-        axis = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit)
+        energy = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points
+        )
 
-        energy = axis.center
-        if sed_type == "dnde":
-            flux = self(axis.center)
+        if sed_type in ["dnde", "norm"]:
+            flux = self(energy.center)
 
         elif sed_type == "e2dnde":
-            flux = energy ** 2 * self(energy)
+            flux = energy.center ** 2 * self(energy.center)
 
         elif sed_type == "flux":
-            edges = axis.edges
-            flux = self.integral(edges[:-1], edges[1:])
+            flux = self.integral(energy.edges_min, energy.edges_max)
 
         elif sed_type == "eflux":
-            edges = axis.edges
-            flux = self.energy_flux(edges[:-1], edges[1:])
+            flux = self.energy_flux(energy.edges_min, energy.edges_max)
         else:
-            raise ValueError(f"Not a valid SED type {sed_type}")
+            raise ValueError(f"Not a valid SED type: '{sed_type}'")
 
-        y = scale_plot_flux(energy, flux.to(flux_unit), energy_power)
+        y = scale_plot_flux(energy.center, flux, energy_power)
 
         with quantity_support():
-            ax.plot(energy, y, **kwargs)
+            ax.plot(energy.center, y, **kwargs)
 
-        self._plot_format_ax(ax, energy, y, energy_power, sed_type)
+        self._plot_format_ax(ax, energy_power, sed_type)
         return ax
 
     def plot_error(
         self,
         energy_bounds,
         ax=None,
-        energy_unit="TeV",
-        flux_unit=None,
         energy_power=0,
         sed_type="dnde",
         n_points=100,
@@ -394,10 +390,6 @@ class SpectralModel(Model):
             Axis
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to MapAxis.from_energy_bounds
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
         energy_power : int, optional
             Power of energy to multiply flux axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -417,58 +409,56 @@ class SpectralModel(Model):
 
         ax = plt.gca() if ax is None else ax
 
-        if flux_unit is None:
-            flux_unit = DEFAULT_UNIT[sed_type]
+        if self.is_norm_spectral_model:
+            sed_type = "norm"
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
+        # TODO: remove energy_power option completely and just suppord sed_type?
+        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy_bounds[0].unit ** energy_power)
 
         energy_min, energy_max = energy_bounds
-        axis = MapAxis.from_energy_bounds(energy_min, energy_max, n_points, energy_unit)
+        energy = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points,
+        )
 
-        energy = axis.center
-
-        if sed_type == "dnde":
-            flux, flux_err = self.evaluate_error(energy)
+        if sed_type in ["dnde", "norm"]:
+            flux, flux_err = self.evaluate_error(energy.center)
 
         elif sed_type == "e2dnde":
-            flux, flux_err = energy ** 2 * self.evaluate_error(energy)
+            flux, flux_err = energy.center ** 2 * self.evaluate_error(energy.center)
 
         elif sed_type == "flux":
-            edges = axis.edges
-            flux, flux_err = self.integral_error(edges[:-1], edges[1:])
+            flux, flux_err = self.integral_error(energy.edges_min, energy.edges_max)
 
         elif sed_type == "eflux":
-            edges = axis.edges
-            flux, flux_err = self.energy_flux_error(edges[:-1], edges[1:])
+            flux, flux_err = self.energy_flux_error(energy.edges_min, energy.edges_max)
 
         else:
-            raise ValueError(f"Not a valid SED type {sed_type}")
+            raise ValueError(f"Not a valid SED type: '{sed_type}'")
 
-        y_lo = scale_plot_flux(energy, (flux - flux_err).to(flux_unit), energy_power)
-        y_hi = scale_plot_flux(energy, (flux + flux_err).to(flux_unit), energy_power)
+        y_lo = scale_plot_flux(energy.center, (flux - flux_err), energy_power)
+        y_hi = scale_plot_flux(energy.center, (flux + flux_err), energy_power)
 
-        where = (energy >= energy_bounds[0]) & (energy <= energy_bounds[1])
+        where = (energy.center >= energy_bounds[0]) & (energy.center <= energy_bounds[1])
 
         with quantity_support():
-            ax.fill_between(energy, y_lo, y_hi, where=where, **kwargs)
+            ax.fill_between(energy.center, y_lo, y_hi, where=where, **kwargs)
 
-        self._plot_format_ax(ax, energy, y_lo, energy_power, sed_type)
+        self._plot_format_ax(ax, energy_power, sed_type)
         return ax
 
-    def _plot_format_ax(self, ax, energy, y, energy_power, sed_type):
-        ax.set_xlabel(f"Energy [{energy.unit}]")
+    @staticmethod
+    def _plot_format_ax(ax, energy_power, sed_type):
+        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
         if energy_power > 0:
-            ax.set_ylabel(f"E{energy_power} * {sed_type} [{y.unit}]")
+            ax.set_ylabel(f"e{energy_power} * {sed_type} [{ax.yaxis.units}]")
         else:
-            ax.set_ylabel(f"{sed_type} [{y.unit}]")
+            ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
-
-        if "norm" in self.__class__.__name__.lower():
-            ax.set_ylabel(f"Norm [A.U.]")
 
     def spectral_index(self, energy, epsilon=1e-5):
         """Compute spectral index at given energy.

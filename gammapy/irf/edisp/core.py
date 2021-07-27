@@ -3,6 +3,7 @@ import numpy as np
 import scipy.special
 from astropy.coordinates import Angle
 from astropy.units import Quantity
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapAxes
 from .kernel import EDispKernel
 from ..core import IRF
@@ -195,11 +196,12 @@ class EnergyDispersion2D(IRF):
 
         migra = self.axes["migra"].center if migra is None else migra
 
-        for ener in energy_true:
-            for off in offset:
-                disp = self.evaluate(offset=off, energy_true=ener, migra=migra)
-                label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
-                ax.plot(migra, disp, label=label, **kwargs)
+        with quantity_support():
+            for ener in energy_true:
+                for off in offset:
+                    disp = self.evaluate(offset=off, energy_true=ener, migra=migra)
+                    label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
+                    ax.plot(migra, disp, label=label, **kwargs)
 
         ax.set_xlabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
         ax.set_ylabel("Probability density")
@@ -240,8 +242,8 @@ class EnergyDispersion2D(IRF):
         energy_true = self.axes["energy_true"]
         migra = self.axes["migra"]
 
-        x = energy_true.edges.value
-        y = migra.edges.value
+        x = energy_true.edges
+        y = migra.edges.to("")
 
         z = self.evaluate(
             offset=offset,
@@ -249,13 +251,14 @@ class EnergyDispersion2D(IRF):
             migra=migra.center.reshape(1, 1, -1),
         ).value[0]
 
-        caxes = ax.pcolormesh(x, y, z.T, **kwargs)
+        with quantity_support():
+            caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
         if add_cbar:
             label = "Probability density (A.U.)"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{energy_true.unit}]")
+        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{ax.xaxis.units}]")
         ax.set_ylabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
