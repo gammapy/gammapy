@@ -308,37 +308,51 @@ class EventList:
         mask &= self.table[parameter].quantity < band[1]
         return self.select_row_subset(mask)
 
+    @property
     def _default_plot_energy_edges(self):
         energy = self.energy
-        return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
+        return np.geomspace(energy.min(), energy.max(), 50)
 
-    def plot_energy(self, ax=None, energy_edges=None, **kwargs):
-        """Plot counts as a function of energy."""
+    def plot_energy(self, ax=None,  **kwargs):
+        """Plot counts as a function of energy.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.hist`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+        """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
         kwargs.setdefault("log", True)
         kwargs.setdefault("histtype", "step")
-
-        if energy_edges is None:
-            energy_edges = self._default_plot_energy_edges()
+        kwargs.setdefault("bins", self._default_plot_energy_edges)
 
         with quantity_support():
-            ax.hist(self.energy, bins=energy_edges, **kwargs)
+            ax.hist(self.energy, **kwargs)
 
         ax.loglog()
         ax.set_xlabel(f"Energy ({ax.xaxis.units})")
         ax.set_ylabel("Counts")
         return ax
 
-    def plot_time(self, ax=None):
+    def plot_time(self, ax=None, **kwargs):
         """Plots an event rate time curve.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` or None
             Axes
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
         Returns
         -------
@@ -361,7 +375,9 @@ class EventList:
         x = x_edges[:-1] + xerr
         yerr = np.sqrt(y)
 
-        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, fmt="none")
+        kwargs.setdefault("fmt", "none")
+
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, **kwargs)
 
         return ax
 
@@ -402,13 +418,16 @@ class EventList:
         Load an example event list:
 
         >>> from gammapy.data import EventList
+        >>> from astropy import units as u
+        >>> import matplotlib.pyplot as plt
         >>> events = EventList.read('$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
 
         Plot the offset^2 distribution wrt. the observation pointing position
         (this is a commonly used plot to check the background spatial distribution):
 
+        >>> plt.cla()
         >>> events.plot_offset2_distribution()
-        <AxesSubplot:xlabel='Offset^2 (deg^2)', ylabel='Counts'>
+        <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
 
         Plot the offset^2 distribution wrt. the Crab pulsar position
         (this is commonly used to check both the gamma-ray signal and the background spatial distribution):
@@ -416,9 +435,10 @@ class EventList:
         >>> import numpy as np
         >>> from astropy.coordinates import SkyCoord
         >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
-        >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30)
+        >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30) * u.deg ** 2
+        >>> plt.cla()
         >>> events.plot_offset2_distribution(center=center, bins=bins)
-        <AxesSubplot:xlabel='Offset^2 (deg^2)', ylabel='Counts'>
+        <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
 
         Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
         in this case 30 bins ranging from 0 to (0.3 deg)^2.
@@ -467,7 +487,7 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        energy_edges = self._default_plot_energy_edges()
+        energy_edges = self._default_plot_energy_edges
         offset = center.separation(self.radec)
         offset_edges = np.linspace(0, offset.max(), 30)
 
