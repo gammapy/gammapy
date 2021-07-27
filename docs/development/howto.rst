@@ -125,7 +125,9 @@ the code as well as the output value produced.
         >>> wcs = WcsGeom.create().wcs
         >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
         >>> print(region)
-        <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
+        Region: CirclePixelRegion
+        center: PixCoord(x=570.9301128316974, y=159.935542455567)
+        radius: 6.061376992149381
 
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
 following command.
@@ -636,7 +638,7 @@ Sometimes putting this in ``gammapy/__init__.py`` can help:
 Following the advice `here <http://stackoverflow.com/questions/22373927/get-traceback-of-warnings/22376126#22376126>`__,
 putting this in ``docs/conf.py`` can also help sometimes:
 
-.. testcode::
+.. code::
 
     import traceback
     import warnings

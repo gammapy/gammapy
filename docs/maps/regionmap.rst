@@ -63,7 +63,7 @@ in DS9. Hence only certain shapes are supported for constructing a `~RegionGeom`
 
     # Equivalent factory method call
     geom = RegionGeom.create(region)
-    
+
     # Something a bit more complicated: an elliptical annulus
     center_sky = SkyCoord(42, 43, unit='deg', frame='fk5')
     region = EllipseAnnulusSkyRegion(center=center_sky,
