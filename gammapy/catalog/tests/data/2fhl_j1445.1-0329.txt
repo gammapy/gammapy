@@ -3,7 +3,7 @@
 
 Catalog row index (zero-based) : 221
 Source name          : 2FHL J1445.1-0329
-Associations     : RBS 1424, 3FGL J1445.0-0328
+Associations     : RBS 1424, 3FGL J1445.0-0328, --, --
 ASSOC_PROB_BAY   : 0.997
 ASSOC_PROB_LR    : 0.944
 Class            : bll

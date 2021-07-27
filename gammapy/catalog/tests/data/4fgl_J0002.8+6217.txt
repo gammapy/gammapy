@@ -37,8 +37,8 @@ ROI number           : 1389
 
 Spectrum type                                 : PLSuperExpCutoff 
 Detection significance (100 MeV - 1 TeV)      : 27.669
-Exponential factor                            : 0.013006397522985935 +- 0.0018857797840610147
-Super-exponential cutoff index                : 0.6666666865348816 +- nan
+Exponential factor                            : 0.0130 +- 0.0019
+Super-exponential cutoff index                : 0.6667 +- --
 Significance curvature                        : 9.7
 Pivot energy                                  : 1327 MeV
 Spectral index                                : 1.181 +- 0.191
