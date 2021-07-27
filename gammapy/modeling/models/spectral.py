@@ -329,13 +329,12 @@ class SpectralModel(Model):
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        # TODO: remove energy_power option completely and just suppord sed_type?
-        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy_bounds[0].unit ** energy_power)
-
         energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
             energy_min, energy_max, n_points
         )
+
+        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
         if sed_type in ["dnde", "norm"]:
             flux = self(energy.center)
@@ -412,16 +411,15 @@ class SpectralModel(Model):
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        kwargs.setdefault("facecolor", "black")
-        kwargs.setdefault("alpha", 0.2)
-        kwargs.setdefault("linewidth", 0)
-        # TODO: remove energy_power option completely and just suppord sed_type?
-        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy_bounds[0].unit ** energy_power)
-
         energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
             energy_min, energy_max, n_points,
         )
+
+        kwargs.setdefault("facecolor", "black")
+        kwargs.setdefault("alpha", 0.2)
+        kwargs.setdefault("linewidth", 0)
+        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
         if sed_type in ["dnde", "norm"]:
             flux, flux_err = self.evaluate_error(energy.center)
@@ -441,10 +439,8 @@ class SpectralModel(Model):
         y_lo = scale_plot_flux(energy.center, (flux - flux_err), energy_power)
         y_hi = scale_plot_flux(energy.center, (flux + flux_err), energy_power)
 
-        where = (energy.center >= energy_bounds[0]) & (energy.center <= energy_bounds[1])
-
         with quantity_support():
-            ax.fill_between(energy.center, y_lo, y_hi, where=where, **kwargs)
+            ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
 
         self._plot_format_ax(ax, energy_power, sed_type)
         return ax

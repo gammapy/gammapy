@@ -81,6 +81,7 @@ class RegionNDMap(Map):
 
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
+        kwargs.setdefault("xerr", axis.as_xerr)
 
         if isinstance(axis, TimeMapAxis):
             if axis.time_format == "iso":
@@ -106,7 +107,6 @@ class RegionNDMap(Map):
                 ax.errorbar(
                     x=center,
                     y=quantity,
-                    xerr=axis.as_xerr,
                     yerr=yerr,
                     uplims=uplims,
                     label=" ".join(label),
