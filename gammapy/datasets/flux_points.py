@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+from astropy.visualization import quantity_support
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
@@ -331,21 +332,13 @@ class FluxPointsDataset(Dataset):
 
         xerr = self.data.energy_axis.as_xerr
 
-        if xerr is not None:
-            xerr = (
-                xerr[0].to_value(self._energy_unit),
-                xerr[1].to_value(self._energy_unit),
-            )
-
         yerr = fp._plot_get_flux_err(sed_type="dnde")
 
-        if method == "diff":
-            unit = yerr[0].unit
-            yerr = yerr[0].to_value(unit), yerr[1].to_value(unit)
-        elif method == "diff/model":
+        if method == "diff/model":
             model = self.flux_pred()
-            unit = ""
-            yerr = (yerr[0] / model).to_value(unit), (yerr[1] / model).to_value(unit)
+            yerr = (yerr[0].quantity[:, 0, 0] / model), (yerr[1].quantity[:, 0, 0] / model)
+        elif method == "diff":
+            yerr = yerr[0].quantity[:, 0, 0], yerr[1].quantity[:, 0, 0]
         else:
             raise ValueError('Invalid method, choose between "diff" and "diff/model"')
 
@@ -353,19 +346,20 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
 
-        ax.errorbar(
-            fp.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
-        )
+        with quantity_support():
+            ax.errorbar(
+                fp.energy_ref, residuals, xerr=xerr, yerr=yerr, **kwargs
+            )
+
         ax.axhline(0, color=kwargs["color"], lw=0.5)
 
         # format axes
         ax.set_xlabel(f"Energy [{self._energy_unit}]")
         ax.set_xscale("log")
-        ax.set_xlim(self._energy_bounds.to_value(self._energy_unit))
         label = self._residuals_labels[method]
-        ax.set_ylabel(f"Residuals ({label}){f' [{unit}]' if unit else ''}")
-        ymin = 1.05 * np.nanmin(residuals.value - yerr[0])
-        ymax = 1.05 * np.nanmax(residuals.value + yerr[1])
+        ax.set_ylabel(f"Residuals ({label}) [{ax.yaxis.units}]")
+        ymin = 1.05 * np.nanmin(residuals - yerr[0])
+        ymax = 1.05 * np.nanmax(residuals + yerr[1])
         ax.set_ylim(ymin, ymax)
         return ax
 

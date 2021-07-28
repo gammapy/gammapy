@@ -59,8 +59,8 @@ class RegionNDMap(Map):
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
         axis_name : str
-            Which axis to plot on the x axis. Extra axes will be plotted as additional lines.
-
+            Which axis to plot on the x axis. Extra axes will be plotted as
+            additional lines.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
@@ -93,15 +93,20 @@ class RegionNDMap(Map):
 
         yerr_nd, yerr = kwargs.pop("yerr", None), None
         uplims_nd, uplims = kwargs.pop("uplims", None), None
+        label_default = kwargs.pop("label", None)
 
         labels = product(*[ax.as_labels for ax in self.geom.axes if ax.name != axis_name])
 
-        for label, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
-            if yerr_nd is not None:
+        for label_axis, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
+            if isinstance(yerr_nd, tuple):
                 yerr = yerr_nd[0][idx], yerr_nd[1][idx]
+            elif isinstance(yerr_nd, np.ndarray):
+                yerr = yerr_nd[idx]
 
             if uplims_nd is not None:
                 uplims = uplims_nd[idx]
+
+            label = " ".join(label_axis) if label_default is None else label_default
 
             with quantity_support():
                 ax.errorbar(
@@ -109,7 +114,7 @@ class RegionNDMap(Map):
                     y=quantity,
                     yerr=yerr,
                     uplims=uplims,
-                    label=" ".join(label),
+                    label=label,
                     **kwargs
                 )
 
