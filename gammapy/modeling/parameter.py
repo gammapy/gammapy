@@ -103,13 +103,15 @@ class Parameter:
         scale_method=None,
         interp="lin",
     ):
-        self.name = name
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be string, got '{type(name)}' instead")
+
+        self._name = name
         self._link_label_io = None
         self.scale = scale
         self.min = min
         self.max = max
         self.frozen = frozen
-        self.scale_method = scale_method
         self._error = error
         self._type = None
 
@@ -129,6 +131,7 @@ class Parameter:
         self.scan_n_values = scan_n_values
         self.scan_n_sigma = scan_n_sigma
         self.interp = interp
+        self.scale_method = scale_method
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -160,12 +163,6 @@ class Parameter:
     def name(self):
         """Name (str)."""
         return self._name
-
-    @name.setter
-    def name(self, val):
-        if not isinstance(val, str):
-            raise TypeError(f"Invalid type: {val}, {type(val)}")
-        self._name = val
 
     @property
     def factor(self):
