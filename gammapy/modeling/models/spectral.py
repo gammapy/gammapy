@@ -9,7 +9,7 @@ from astropy import constants as const
 from astropy.table import Table
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -292,12 +292,32 @@ class SpectralModel(Model):
             "ref_e2dnde": self(energy) * energy ** 2,
         }
 
+    def _get_plot_flux(self, energy, sed_type):
+        flux = RegionNDMap.create(region=None, axes=[energy])
+        flux_err = RegionNDMap.create(region=None, axes=[energy])
+
+        if sed_type in ["dnde", "norm"]:
+            flux.quantity, flux_err.quantity = self.evaluate_error(energy.center)
+
+        elif sed_type == "e2dnde":
+            flux.quantity, flux_err.quantity = energy.center ** 2 * self.evaluate_error(energy.center)
+
+        elif sed_type == "flux":
+            flux.quantity, flux_err.quantity = self.integral_error(energy.edges_min, energy.edges_max)
+
+        elif sed_type == "eflux":
+            flux.quantity, flux_err.quantity = self.energy_flux_error(energy.edges_min, energy.edges_max)
+        else:
+            raise ValueError(f"Not a valid SED type: '{sed_type}'")
+
+        return flux, flux_err
+
     def plot(
         self,
         energy_bounds,
         ax=None,
-        energy_power=0,
         sed_type="dnde",
+        energy_power=0,
         n_points=100,
         **kwargs,
     ):
@@ -321,10 +341,10 @@ class SpectralModel(Model):
             Axis
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to MapAxis.from_energy_bounds
-        energy_power : int, optional
-            Power of energy to multiply flux axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Evaluation methods of the model
+        energy_power : int, optional
+            Power of energy to multiply flux axis with
         n_points : int, optional
             Number of evaluation nodes
         **kwargs : dict
@@ -345,29 +365,17 @@ class SpectralModel(Model):
 
         energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points
+            energy_min, energy_max, n_points,
         )
 
         kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
-        if sed_type in ["dnde", "norm"]:
-            flux = self(energy.center)
+        flux, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
 
-        elif sed_type == "e2dnde":
-            flux = energy.center ** 2 * self(energy.center)
-
-        elif sed_type == "flux":
-            flux = self.integral(energy.edges_min, energy.edges_max)
-
-        elif sed_type == "eflux":
-            flux = self.energy_flux(energy.edges_min, energy.edges_max)
-        else:
-            raise ValueError(f"Not a valid SED type: '{sed_type}'")
-
-        y = scale_plot_flux(energy.center, flux, energy_power)
+        flux = scale_plot_flux(flux, energy_power=energy_power)
 
         with quantity_support():
-            ax.plot(energy.center, y, **kwargs)
+            ax.plot(energy.center, flux.quantity[:, 0, 0], **kwargs)
 
         self._plot_format_ax(ax, energy_power, sed_type)
         return ax
@@ -376,8 +384,8 @@ class SpectralModel(Model):
         self,
         energy_bounds,
         ax=None,
-        energy_power=0,
         sed_type="dnde",
+        energy_power=0,
         n_points=100,
         **kwargs,
     ):
@@ -403,10 +411,10 @@ class SpectralModel(Model):
             Axis
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to MapAxis.from_energy_bounds
-        energy_power : int, optional
-            Power of energy to multiply flux axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Evaluation methods of the model
+        energy_power : int, optional
+            Power of energy to multiply flux axis with
         n_points : int, optional
             Number of evaluation nodes
         **kwargs : dict
@@ -435,23 +443,9 @@ class SpectralModel(Model):
         kwargs.setdefault("linewidth", 0)
         kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
-        if sed_type in ["dnde", "norm"]:
-            flux, flux_err = self.evaluate_error(energy.center)
-
-        elif sed_type == "e2dnde":
-            flux, flux_err = energy.center ** 2 * self.evaluate_error(energy.center)
-
-        elif sed_type == "flux":
-            flux, flux_err = self.integral_error(energy.edges_min, energy.edges_max)
-
-        elif sed_type == "eflux":
-            flux, flux_err = self.energy_flux_error(energy.edges_min, energy.edges_max)
-
-        else:
-            raise ValueError(f"Not a valid SED type: '{sed_type}'")
-
-        y_lo = scale_plot_flux(energy.center, (flux - flux_err), energy_power)
-        y_hi = scale_plot_flux(energy.center, (flux + flux_err), energy_power)
+        flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
+        y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
+        y_hi = scale_plot_flux(flux + flux_err, energy_power).quantity[:, 0, 0]
 
         with quantity_support():
             ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
