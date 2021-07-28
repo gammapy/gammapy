@@ -21,14 +21,28 @@ from .core import Model
 from gammapy.utils.roots import find_roots
 
 
-def scale_plot_flux(energy, flux, energy_power):
-    """Scale flux to plot"""
+def scale_plot_flux(flux, energy_power=0):
+    """Scale flux to plot
+
+    Parameters
+    ----------
+    flux : `Map`
+        Flux map
+    energy_power : int, optional
+        Power of energy to multiply flux axis with
+
+    Returns
+    -------
+    flux : `Map`
+        Scaled flux map
+    """
+    energy = flux.geom.get_coord(sparse=True)["energy"]
     try:
         eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
     except IndexError:
         eunit = energy.unit
     y = flux * np.power(energy, energy_power)
-    return y.to(flux.unit * eunit ** energy_power)
+    return y.to_unit(flux.unit * eunit ** energy_power)
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):

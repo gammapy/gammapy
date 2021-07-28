@@ -7,7 +7,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import TemplateSpectralModel, SkyModel
+from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
 from gammapy.maps import RegionNDMap, Maps
@@ -356,12 +356,12 @@ class FluxPoints(FluxMaps):
 
         if "norm_err" in self.available_quantities:
             # symmetric error
-            y_errn = getattr(self, sed_type + "_err").quantity
+            y_errn = getattr(self, sed_type + "_err")
             y_errp = y_errn.copy()
 
         if "norm_errp" in self.available_quantities:
-            y_errn = getattr(self, sed_type + "_errn").quantity
-            y_errp = getattr(self, sed_type + "_errp").quantity
+            y_errn = getattr(self, sed_type + "_errn")
+            y_errp = getattr(self, sed_type + "_errp")
 
         return y_errn, y_errp
 
@@ -396,22 +396,29 @@ class FluxPoints(FluxMaps):
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
-        flux = getattr(self, sed_type).to_unit(flux_unit)
+        flux = getattr(self, sed_type)
 
         # get errors and ul
         y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
 
         is_ul = self.is_ul.data
         if y_errn and is_ul.any():
-            flux_ul = getattr(self, sed_type + "_ul").quantity.to(flux_unit)
-            y_errn[is_ul] = 0.5 * flux_ul[is_ul]
-            y_errp[is_ul] = 0
-            flux.data[is_ul] = flux_ul[is_ul].value
+            flux_ul = getattr(self, sed_type + "_ul").quantity
+            y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
+            y_errp.data[is_ul] = 0
+            flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
 
         # set flux points plotting defaults
+        if y_errp:
+            y_errp = scale_plot_flux(y_errp, energy_power=energy_power).quantity
+
+        if y_errn:
+            y_errn = scale_plot_flux(y_errn, energy_power=energy_power).quantity
+
         kwargs.setdefault("yerr", (y_errn, y_errp))
         kwargs.setdefault("uplims", is_ul)
 
+        flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
         ax.set_yscale("log", nonpositive="clip")
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
