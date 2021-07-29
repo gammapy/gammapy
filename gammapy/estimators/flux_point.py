@@ -307,11 +307,17 @@ class FluxPoints(FluxMaps):
 
             tables = []
             for idx, (time_min, time_max) in enumerate(time_axis.iter_by_edges):
+                table_flat = Table()
+                table_flat["time_min"] = [time_min.mjd]
+                table_flat["time_max"] = [time_max.mjd]
+
                 fp = self.slice_by_idx(slices={"time": idx})
                 table = fp.to_table(sed_type=sed_type, format="gadf-sed")
-                table["time_min"] = time_min.mjd
-                table["time_max"] = time_max.mjd
-                tables.append(table)
+
+                for column in table.columns:
+                    table_flat[column] = table[column][np.newaxis]
+
+                tables.append(table_flat)
 
             table = vstack(tables)
         else:

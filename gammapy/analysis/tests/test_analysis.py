@@ -184,9 +184,12 @@ def test_analysis_1d():
     assert_allclose(dnde[0].value, 8.116854e-12, rtol=1e-2)
     assert_allclose(dnde[2].value, 3.444475e-14, rtol=1e-2)
 
-    assert len(analysis.light_curve.table) == 3
-    assert_allclose(analysis.light_curve.time_min.mjd, [53343.92, 53343.935, 53343.954])
-    assert_allclose(analysis.light_curve.table["flux"], [[1.688954e-11], [2.347870e-11], [1.604152e-11]], rtol=1e-4)
+    axis = analysis.light_curve.geom.axes["time"]
+    assert axis.nbin == 3
+    assert_allclose(axis.time_min.mjd, [53343.92, 53343.935, 53343.954])
+
+    flux = analysis.light_curve.flux.data[:, :, 0, 0]
+    assert_allclose(flux, [[1.688954e-11], [2.347870e-11], [1.604152e-11]], rtol=1e-4)
 
 
 @requires_data()

@@ -273,9 +273,8 @@ class Analysis:
             **lc_settings.parameters,
         )
         lc = light_curve_estimator.run(datasets=self.datasets)
-        lc.table["is_ul"] = lc.table["ts"] < 4
         self.light_curve = lc
-        log.info("\n{}".format(self.light_curve.table))
+        log.info("\n{}".format(self.light_curve.to_table(format="lightcurve", sed_type="flux")))
 
     def update_config(self, config):
         self.config = self.config.update(config=config)
