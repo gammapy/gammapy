@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
 from gammapy.modeling.models import Models
+from gammapy.maps import TimeMapAxis
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
@@ -207,6 +208,15 @@ class SourceCatalog(abc.ABC):
         """
         data = table_row_to_dict(self.table[index])
         data[SourceCatalogObject._row_index_key] = index
+
+        hist_table = getattr(self, "hist_table", None)
+        hist2_table = getattr(self, "hist2_table", None)
+
+        if hist_table:
+            data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-4fgl")
+
+        if hist2_table:
+            data["time_axis_2"] = TimeMapAxis.from_table(hist2_table, format="fermi-4fgl")
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()
