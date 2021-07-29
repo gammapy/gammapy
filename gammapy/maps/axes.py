@@ -2384,7 +2384,7 @@ class TimeMapAxis:
         ----------
         table : `~astropy.table.Table`
             Bin table HDU
-        format : {"gadf"}
+        format : {"gadf", "fermi-4fgl"}
             Format to use.
 
         Returns
@@ -2400,6 +2400,11 @@ class TimeMapAxis:
             reference_time = time_ref_from_dict(table.meta)
             edges_min = np.unique(table[colnames[0]].quantity)
             edges_max = np.unique(table[colnames[1]].quantity)
+        elif format == "fermi-4fgl":
+            reference_time = Time("2001-01-01T00:00:00")
+            name = "time"
+            edges_min = table["Hist_Start"][:-1]
+            edges_max = table["Hist_Start"][1:]
         else:
             raise ValueError(f"Not a supported format: {format}")
 
