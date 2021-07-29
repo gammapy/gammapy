@@ -611,12 +611,7 @@ class FluxMaps:
 
         data = {}
         for quantity in reference.available_quantities:
-            m = Map.from_stack([_[quantity] for _ in maps], axis=axis)
-
-            if quantity == "counts":
-                m = m.sum_over_axes(keepdims=False, axes_names=["dataset-idx"])
-
-            data[quantity] = m
+            data[quantity] = Map.from_stack([_[quantity] for _ in maps], axis=axis)
 
         if meta is None:
             meta = reference.meta.copy()

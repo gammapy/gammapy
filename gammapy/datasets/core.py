@@ -441,7 +441,7 @@ class Datasets(collections.abc.MutableSequence):
 
         return stacked
 
-    def info_table(self, cumulative=False, region=None):
+    def info_table(self, cumulative=False):
         """Get info table for datasets.
 
         Parameters
@@ -479,7 +479,7 @@ class Datasets(collections.abc.MutableSequence):
         time_intervals = []
 
         for dataset in self:
-            if dataset.gti is not None:
+            if dataset.gti is not None and len(dataset.gti.table) > 0:
                 interval = (dataset.gti.time_start[0], dataset.gti.time_stop[-1])
                 time_intervals.append(interval)
 

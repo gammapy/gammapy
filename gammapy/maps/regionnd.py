@@ -132,7 +132,7 @@ class RegionNDMap(Map):
             ax.set_ylabel(f"Data [{self.unit}]")
 
         if axis.interp == "log":
-            ax.set_yscale("log")
+            ax.set_xscale("log")
 
         if isinstance(axis, TimeMapAxis) and axis.time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))

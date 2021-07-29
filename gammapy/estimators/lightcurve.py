@@ -401,6 +401,10 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
+            # TODO: find a way to handle counts per dataset
+            fp._data["counts"] = fp._data["counts"].sum_over_axes(
+                keepdims=False, axes_names=["dataset-idx"]
+            )
             rows.append(fp)
 
         if len(rows) == 0:
