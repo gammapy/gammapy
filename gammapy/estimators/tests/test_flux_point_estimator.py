@@ -370,6 +370,8 @@ def test_mask_shape():
 
     dataset_1 = MapDataset.create(geom_1)
     dataset_2 = MapDataset.create(geom_2)
+    dataset_1.gti = None
+    dataset_2.gti = None
     dataset_1.psf = None
     dataset_2.psf = None
     dataset_1.edisp = None
@@ -387,7 +389,6 @@ def test_mask_shape():
     fpe = FluxPointsEstimator(energy_edges=[1, 10] * u.TeV, source="source")
 
     fp = fpe.run([dataset_2, dataset_1])
-    print(fp.counts)
     table = fp.to_table()
 
     assert_allclose(table["counts"], 0)

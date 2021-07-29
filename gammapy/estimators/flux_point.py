@@ -277,7 +277,9 @@ class FluxPoints(FluxMaps):
             Flux points table
         """
         if format == "gadf-sed":
-            idx = (Ellipsis, 0, 0)
+            # TODO: what to do with GTI info?
+            if self.geom.axes.names == ["energy"]:
+                idx = (Ellipsis, 0, 0)
 
             table = self.energy_axis.to_table(format="gadf-sed")
             table.meta["SED_TYPE"] = sed_type
@@ -300,8 +302,18 @@ class FluxPoints(FluxMaps):
                 table["norm_scan"] = norm_axis.center.reshape((1, -1))
                 table["stat"] = self.stat.data[idx]
                 table["stat_scan"] = self.stat_scan.data[idx]
-        if format == "lightcurve":
-            pass
+        elif format == "lightcurve":
+            time_axis = self.geom.axes["time"]
+
+            tables = []
+            for idx, (time_min, time_max) in enumerate(time_axis.iter_by_edges):
+                fp = self.slice_by_idx(slices={"time": idx})
+                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
+                table["time_min"] = time_min.mjd
+                table["time_max"] = time_max.mjd
+                tables.append(table)
+
+            table = vstack(tables)
         else:
             raise ValueError(f"Not a supported format {format}")
 
@@ -350,7 +362,7 @@ class FluxPoints(FluxMaps):
         energy_power : float
             Power of energy to multiply flux axis with
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
+            Keyword arguments passed to `~RegionNDMap.plot`
 
         Returns
         -------
@@ -388,6 +400,11 @@ class FluxPoints(FluxMaps):
 
         kwargs.setdefault("yerr", (y_errn, y_errp))
         kwargs.setdefault("uplims", is_ul)
+
+        # set longest axis as default
+        idx = np.argmax(self.geom.axes.shape)
+        axis_name = self.geom.axes.names[idx]
+        kwargs.setdefault("axis_name", axis_name)
 
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)

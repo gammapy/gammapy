@@ -483,6 +483,9 @@ class Datasets(collections.abc.MutableSequence):
                 interval = (dataset.gti.time_start[0], dataset.gti.time_stop[-1])
                 time_intervals.append(interval)
 
+        if len(time_intervals) == 0:
+            return None
+
         return GTI.from_time_intervals(time_intervals)
 
     @property

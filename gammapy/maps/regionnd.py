@@ -79,7 +79,7 @@ class RegionNDMap(Map):
 
         axis = self.geom.axes[axis_name]
 
-        kwargs.setdefault("marker", "+")
+        kwargs.setdefault("marker", "o")
         kwargs.setdefault("ls", "None")
         kwargs.setdefault("xerr", axis.as_xerr)
 
