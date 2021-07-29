@@ -147,7 +147,7 @@ class PlotMixin:
         plot_kwargs.update(kwargs_excess)
         plot_kwargs.setdefault("label", "Excess counts")
         ax = self.excess.plot(
-            ax, yerr=np.sqrt(np.abs(self.excess.data.flatten())), **plot_kwargs
+            ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs
         )
 
         plot_kwargs = kwargs.copy()

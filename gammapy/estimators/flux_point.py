@@ -7,7 +7,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
 from gammapy.datasets import Datasets
-from gammapy.modeling.models import TemplateSpectralModel, SkyModel
+from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
 from gammapy.maps import RegionNDMap, Maps
@@ -352,23 +352,21 @@ class FluxPoints(FluxMaps):
 
     def _plot_get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""
-        try:
-            # asymmetric error
-            y_errn = getattr(self, sed_type + "_errn").quantity.squeeze()
-            y_errp = getattr(self, sed_type + "_errp").quantity.squeeze()
-            y_err = (y_errn, y_errp)
-        except AttributeError:
-            try:
-                # symmetric error
-                y_err = getattr(self, sed_type + "_err").quantity.squeeze()
-                y_err = (y_err, y_err.copy())
-            except AttributeError:
-                # no error at all
-                y_err = None
-        return y_err
+        y_errn, y_errp = None, None
+
+        if "norm_err" in self.available_quantities:
+            # symmetric error
+            y_errn = getattr(self, sed_type + "_err")
+            y_errp = y_errn.copy()
+
+        if "norm_errp" in self.available_quantities:
+            y_errn = getattr(self, sed_type + "_errn")
+            y_errp = getattr(self, sed_type + "_errp")
+
+        return y_errn, y_errp
 
     def plot(
-        self, ax=None, energy_power=0, sed_type="dnde", **kwargs
+        self, ax=None, sed_type="dnde", energy_power=0, **kwargs
     ):
         """Plot flux points.
 
@@ -376,10 +374,10 @@ class FluxPoints(FluxMaps):
         ----------
         ax : `~matplotlib.axes.Axes`
             Axis object to plot on.
-        energy_power : int
-            Power of energy to multiply y axis with
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Sed type
+        energy_power : float
+            Power of energy to multiply flux axis with
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
@@ -388,58 +386,41 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`
             Axis object
         """
-        if not self.norm.geom.is_region:
-            raise ValueError("Plotting only supported for flux points")
-
         import matplotlib.pyplot as plt
+
+        if not self.norm.geom.is_region:
+            raise ValueError("Plotting only supported for region based flux points")
 
         if ax is None:
             ax = plt.gca()
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
-        flux = getattr(self, sed_type).quantity[:, 0, 0]
-        energy = self.energy_ref
+        flux = getattr(self, sed_type)
 
         # get errors and ul
-        is_ul = self.is_ul.data.squeeze()
-        x_err = self.energy_axis.as_xerr
         y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
 
-        if y_errn:
-            if is_ul.any():
-                flux_ul = getattr(self, sed_type + "_ul").quantity[:, 0, 0]
-                y_errn[is_ul] = 0.5 * flux_ul[is_ul]
-                y_errp[is_ul] = 0
-                flux[is_ul] = flux_ul[is_ul]
-
-            y_errn = scale_plot_flux(
-                energy=energy,
-                flux=y_errn.to(flux_unit),
-                energy_power=energy_power
-            )
-            y_errp = scale_plot_flux(
-                energy=energy,
-                flux=y_errp.to(flux_unit),
-                energy_power=energy_power
-            )
+        is_ul = self.is_ul.data
+        if y_errn and is_ul.any():
+            flux_ul = getattr(self, sed_type + "_ul").quantity
+            y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
+            y_errp.data[is_ul] = 0
+            flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
 
         # set flux points plotting defaults
-        kwargs.setdefault("marker", "+")
-        kwargs.setdefault("ls", "None")
+        if y_errp:
+            y_errp = scale_plot_flux(y_errp, energy_power=energy_power).quantity
 
-        flux = scale_plot_flux(
-            energy=energy, flux=flux.to(flux_unit), energy_power=energy_power
-        )
+        if y_errn:
+            y_errn = scale_plot_flux(y_errn, energy_power=energy_power).quantity
 
-        with quantity_support():
-            ax.errorbar(
-                energy, flux, yerr=(y_errn, y_errp), xerr=x_err, uplims=is_ul, **kwargs
-            )
+        kwargs.setdefault("yerr", (y_errn, y_errp))
+        kwargs.setdefault("uplims", is_ul)
 
-        ax.set_xscale("log", nonpositive="clip")
+        flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
+        ax = flux.plot(ax=ax, **kwargs)
         ax.set_yscale("log", nonpositive="clip")
-        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
         return ax
 
@@ -448,9 +429,10 @@ class FluxPoints(FluxMaps):
         ax=None,
         sed_type="dnde",
         add_cbar=True,
-            **kwargs,
+        **kwargs,
     ):
         """Plot fit statistic SED profiles as a density plot.
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
@@ -474,7 +456,8 @@ class FluxPoints(FluxMaps):
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
-        flux_ref = getattr(self, sed_type + "_ref")
+        flux_ref = getattr(self, sed_type + "_ref").to(flux_unit)
+
         flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
 
         ts = self.stat_scan - np.expand_dims(self.stat.data, 2)
@@ -500,7 +483,12 @@ class FluxPoints(FluxMaps):
         z[-z < kwargs["vmin"]] = np.nan
 
         with quantity_support():
-            caxes = ax.pcolormesh(self.energy_axis.edges, flux.to(flux_unit), -z.T, **kwargs)
+            caxes = ax.pcolormesh(
+                self.energy_axis.edges,
+                flux.to(flux_unit),
+                -z.T,
+                **kwargs
+            )
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")

@@ -848,9 +848,9 @@ class MapDataset(Dataset):
                 )
             elif self.stat_type == "cash":
                 stat = CashCountsStatistic(counts_spec.data, npred_spec.data)
-            yerr = stat.error.flatten()
+            yerr = stat.error
         elif method == "diff/sqrt(model)":
-            yerr = np.ones_like(residuals.data.flatten())
+            yerr = np.ones_like(residuals.data)
         else:
             raise ValueError(
                 'Invalid method, choose between "diff" and "diff/sqrt(model)"'
