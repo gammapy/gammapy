@@ -762,7 +762,7 @@ class SourceCatalogHGPS(SourceCatalog):
     >>> source.spectral_model().plot_error(source.energy_range)
     <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
     >>> source.flux_points.plot()
-    <AxesSubplot:xlabel='Energy (TeV)', ylabel='dnde (1 / (cm2 s TeV))'>
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde (1 / (cm2 s TeV))'>
 
     Gaussian component information can be accessed as well,
     either via the source, or via the catalog:

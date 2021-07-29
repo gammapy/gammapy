@@ -363,7 +363,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     >>> source.spectral_model().plot_error(energy_range)
     <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
     >>> source.flux_points.plot()
-    <AxesSubplot:xlabel='Energy (TeV)', ylabel='dnde (1 / (cm2 s TeV))'>
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde (1 / (cm2 s TeV))'>
     """
 
     tag = "gamma-cat"
