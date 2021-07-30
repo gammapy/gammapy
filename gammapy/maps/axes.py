@@ -218,7 +218,7 @@ class MapAxis:
         return self.edges[1:]
 
     @property
-    def as_xerr(self):
+    def as_plot_xerr(self):
         """Return tuple of xerr to be used with plt.errorbar()"""
         return (
             self.center - self.edges_min,
@@ -226,7 +226,7 @@ class MapAxis:
         )
 
     @property
-    def as_labels(self):
+    def as_plot_labels(self):
         """Return list of axis plot labels"""
         if self.node_type == "edges":
             labels = [
@@ -2029,7 +2029,7 @@ class TimeMapAxis:
         return self.reference_time + self.edges
 
     @property
-    def as_xerr(self):
+    def as_plot_xerr(self):
         """Plot x error"""
         xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
 
@@ -2045,7 +2045,7 @@ class TimeMapAxis:
         return x_errn, x_errp
 
     @property
-    def as_labels(self):
+    def as_plot_labels(self):
         """Plot labels"""
         labels = []
 

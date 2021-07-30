@@ -81,13 +81,13 @@ class RegionNDMap(Map):
         kwargs.setdefault("marker", "o")
         kwargs.setdefault("markersize", 4)
         kwargs.setdefault("ls", "None")
-        kwargs.setdefault("xerr", axis.as_xerr)
+        kwargs.setdefault("xerr", axis.as_plot_xerr)
 
         yerr_nd, yerr = kwargs.pop("yerr", None), None
         uplims_nd, uplims = kwargs.pop("uplims", None), None
         label_default = kwargs.pop("label", None)
 
-        labels = product(*[ax.as_labels for ax in self.geom.axes if ax.name != axis.name])
+        labels = product(*[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name])
 
         for label_axis, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
             if isinstance(yerr_nd, tuple):
