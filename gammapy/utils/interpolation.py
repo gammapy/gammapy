@@ -182,6 +182,22 @@ class SqrtScale(InterpolationScale):
         return np.power(values, 2)
 
 
+class StatProfileScale(InterpolationScale):
+    """Sqrt scaling"""
+
+    def __init__(self, axis=0):
+        self.axis = axis
+
+    def _scale(self, values):
+        values = np.sign(np.gradient(values, axis=self.axis)) * values
+        sign = np.sign(values)
+        return sign * np.sqrt(sign * values)
+
+    @staticmethod
+    def _inverse(self, values):
+        return np.power(values, 2)
+
+
 class LinearScale(InterpolationScale):
     """Linear scaling"""
 
