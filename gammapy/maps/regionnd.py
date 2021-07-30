@@ -74,15 +74,11 @@ class RegionNDMap(Map):
         ax = ax or plt.gca()
 
         if axis_name is None:
-            if self.geom.axes.is_unidimensional:
-                axis = self.geom.axes.primary_axis
-            else:
-                raise ValueError(
-                    "Plotting a region map with multiple extra axes requires "
-                    "specifying the 'axis_name' keyword."
-                )
-        else:
-            axis = self.geom.axes[axis_name]
+            # set longest axis as default
+            idx = np.argmax(self.geom.axes.shape)
+            axis_name = self.geom.axes.names[idx]
+
+        axis = self.geom.axes[axis_name]
 
         kwargs.setdefault("marker", "o")
         kwargs.setdefault("markersize", 4)
@@ -117,6 +113,9 @@ class RegionNDMap(Map):
                 )
 
         axis.format_plot_axis(ax=ax)
+
+        if "energy" in axis_name:
+            ax.set_yscale("log", nonpositive="clip")
 
         if len(self.geom.axes) > 1:
             plt.legend()

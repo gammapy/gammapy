@@ -277,9 +277,13 @@ class FluxPoints(FluxMaps):
         """
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
-            if self.geom.axes.names == ["energy"]:
-                idx = (Ellipsis, 0, 0)
+            if not self.geom.axes.names == ["energy"]:
+                raise ValueError(
+                    "Only flux points with a single energy axis "
+                    "can be converted to 'gadf-sed'"
+                )
 
+            idx = (Ellipsis, 0, 0)
             table = self.energy_axis.to_table(format="gadf-sed")
             table.meta["SED_TYPE"] = sed_type
 

@@ -495,21 +495,25 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         else:
             raise ValueError("Time intervals available are '1-year' or '2-month'")
 
-        energy_axis = MapAxis.from_energy_edges(self._energy_edges).squash()
+        energy_axis = MapAxis.from_energy_edges([50, 300000] * u.MeV).squash()
         geom = RegionGeom(region=None, axes=[energy_axis, time_axis])
 
-        names = ["flux", "flux_errp", "flux_errn", "ts"]
+        names = ["flux", "flux_errp", "flux_errn", "flux_ul", "ts"]
         maps = Maps.from_geom(geom=geom, names=names)
+
         maps["flux"].quantity = self.data[tag]
         maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
         maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux_ul"].quantity = compute_flux_points_ul(
+            maps["flux"].quantity, maps["flux_errp"].quantity
+        )
         maps["ts"].quantity = self.data[tag_sqrt_ts] ** 2
 
         return FluxPoints.from_maps(
             maps=maps,
             sed_type="flux",
             reference_model=self.spectral_model(),
-            meta={"sed_type_init": "flux", "n_sigma": 1}
+            meta={"sed_type_init": "flux", "n_sigma": 1, "ts_threshold_ul": 1, "n_sigma_ul": 2}
         )
 
 
