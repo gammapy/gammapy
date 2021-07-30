@@ -442,6 +442,9 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
+        if not self.geom.axes.is_unidimensional:
+            raise ValueError("Profile plotting is only support for unidimensional data")
+
         axis = self.geom.axes.primary_axis
 
         if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
