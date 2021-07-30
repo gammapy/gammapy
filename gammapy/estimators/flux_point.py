@@ -442,9 +442,7 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
-        # set longest axis as default
-        idx = int(np.argmax(self.geom.axes.shape))
-        axis = self.geom.axes[idx]
+        axis = self.geom.axes.primary_axis
 
         if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
             axis = axis.contiguous
@@ -478,34 +476,15 @@ class FluxPoints(FluxMaps):
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
 
-        if isinstance(axis, TimeMapAxis):
-            if axis.time_format == "iso":
-                edges = axis.time_edges.to_datetime()
-            elif self.time_format == "mjd":
-                edges = axis.time_edges.mjd * u.day
-        else:
-            edges = axis.edges
-
         with quantity_support():
             caxes = ax.pcolormesh(
-                edges,
+                axis.as_plot_edges,
                 flux.to(flux_unit),
                 -z.T,
                 **kwargs
             )
 
-        if axis.interp == "log":
-            ax.set_xscale("log")
-
-        if "energy" in axis.name:
-            ax.set_yscale("log", nonpositive="clip")
-
-        xlabel = axis.name.capitalize() + f" [{ax.xaxis.units}]"
-
-        if isinstance(axis, TimeMapAxis):
-            xlabel = axis.name.capitalize() + f" [{axis.time_format}]"
-
-        ax.set_xlabel(xlabel)
+        axis.format_plot_axis(ax=ax)
 
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
 

@@ -239,6 +239,40 @@ class MapAxis:
         return labels
 
     @property
+    def as_plot_edges(self):
+        """Plot edges"""
+        return self.edges
+
+    @property
+    def as_plot_center(self):
+        """Plot center"""
+        return self.center
+
+    def format_plot_axis(self, ax):
+        """Format plot axis
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis
+        """
+        if self.interp == "log":
+            ax.set_xscale("log")
+
+        xlabel = self.name.capitalize() + f" [{ax.xaxis.units}]"
+        ax.set_xlabel(xlabel)
+
+        if "energy" in self.name:
+            ax.set_yscale("log", nonpositive="clip")
+
+        return ax
+
+    @property
     def iter_by_edges(self):
         """Iterate by intervals defined by the edges"""
         for value_min, value_max in zip(self.edges[:-1], self.edges[1:]):
@@ -1206,6 +1240,19 @@ class MapAxes(Sequence):
         self._n_spatial_axes = n_spatial_axes
 
     @property
+    def primary_axis(self):
+        """Primary extra axis, defined as the one longest
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Map axis
+        """
+        # get longest axis
+        idx = np.argmax(self.shape)
+        return self[int(idx)]
+
+    @property
     def reverse(self):
         """Reverse axes order"""
         return MapAxes(self[::-1])
@@ -2007,6 +2054,59 @@ class TimeMapAxis:
             labels.append(label)
 
         return labels
+
+    @property
+    def as_plot_edges(self):
+        """Plot edges"""
+        if self.time_format == "iso":
+            edges = self.time_edges.to_datetime()
+        elif self.time_format == "mjd":
+            edges = self.time_edges.mjd * u.day
+        else:
+            raise ValueError(f"Invalid time_format: {self.time_format}")
+
+        return edges
+
+    @property
+    def as_plot_center(self):
+        """Plot center"""
+        if self.time_format == "iso":
+            center = self.time_mid.datetime
+        elif self.time_format == "mjd":
+            center = self.time_mid.mjd * u.day
+
+        return center
+
+    def format_plot_axis(self, ax):
+        """Format plot axis
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.dates import DateFormatter
+
+        xlabel = self.name.capitalize() + f" [{self.time_format}]"
+
+        ax.set_xlabel(xlabel)
+
+        if self.time_format == "iso":
+            ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
+            plt.setp(
+                ax.xaxis.get_majorticklabels(),
+                rotation=30,
+                ha="right",
+                rotation_mode="anchor",
+            )
+
+        return ax
 
     def assert_name(self, required_name):
         """Assert axis name if a specific one is required.

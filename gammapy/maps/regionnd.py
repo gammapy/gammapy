@@ -70,35 +70,24 @@ class RegionNDMap(Map):
             Axis used for plotting
         """
         import matplotlib.pyplot as plt
-        from matplotlib.dates import DateFormatter
 
         ax = ax or plt.gca()
 
         if axis_name is None:
-            # set longest axis as default
-            idx = np.argmax(self.geom.axes.shape)
-            axis_name = self.geom.axes.names[idx]
-
-        axis = self.geom.axes[axis_name]
+            axis = self.geom.axes.primary_axis
+        else:
+            axis = self.geom.axes[axis_name]
 
         kwargs.setdefault("marker", "o")
         kwargs.setdefault("markersize", 4)
         kwargs.setdefault("ls", "None")
         kwargs.setdefault("xerr", axis.as_xerr)
 
-        if isinstance(axis, TimeMapAxis):
-            if axis.time_format == "iso":
-                center = axis.time_mid.datetime
-            else:
-                center = axis.time_mid.mjd * u.day
-        else:
-            center = axis.center
-
         yerr_nd, yerr = kwargs.pop("yerr", None), None
         uplims_nd, uplims = kwargs.pop("uplims", None), None
         label_default = kwargs.pop("label", None)
 
-        labels = product(*[ax.as_labels for ax in self.geom.axes if ax.name != axis_name])
+        labels = product(*[ax.as_labels for ax in self.geom.axes if ax.name != axis.name])
 
         for label_axis, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
             if isinstance(yerr_nd, tuple):
@@ -113,7 +102,7 @@ class RegionNDMap(Map):
 
             with quantity_support():
                 ax.errorbar(
-                    x=center,
+                    x=axis.as_plot_center,
                     y=quantity,
                     yerr=yerr,
                     uplims=uplims,
@@ -121,33 +110,7 @@ class RegionNDMap(Map):
                     **kwargs
                 )
 
-        if axis.interp == "log":
-            ax.set_xscale("log")
-
-        xlabel = axis.name.capitalize() + f" [{ax.xaxis.units}]"
-
-        if isinstance(axis, TimeMapAxis):
-            xlabel = axis.name.capitalize() + f" [{axis.time_format}]"
-
-        ax.set_xlabel(xlabel)
-
-        if not self.unit.is_unity():
-            ax.set_ylabel(f"Data [{self.unit}]")
-
-        if axis.interp == "log":
-            ax.set_xscale("log")
-
-        if isinstance(axis, TimeMapAxis) and axis.time_format == "iso":
-            ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
-            plt.setp(
-                ax.xaxis.get_majorticklabels(),
-                rotation=30,
-                ha="right",
-                rotation_mode="anchor",
-            )
-
-        if "energy" in axis_name:
-            ax.set_yscale("log", nonpositive="clip")
+        axis.format_plot_axis(ax=ax)
 
         if len(self.geom.axes) > 1:
             plt.legend()
