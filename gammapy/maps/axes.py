@@ -1949,6 +1949,14 @@ class TimeMapAxis:
         return self._edges_max
 
     @property
+    def edges(self):
+        """Return array of bin edges values."""
+        if not self.is_contiguous:
+            raise ValueError("Time axis is not contiguous")
+
+        return edges_from_lo_hi(self.edges_min, self.edges_max)
+
+    @property
     def time_min(self):
         """Return axis lower edges as Time objects."""
         return self._edges_min + self.reference_time
@@ -1967,6 +1975,11 @@ class TimeMapAxis:
     def time_mid(self):
         """Return time bin center (`~astropy.time.Time`)."""
         return self.time_min + 0.5 * self.time_delta
+
+    @property
+    def time_edges(self):
+        """Time edges"""
+        return self.reference_time + self.edges
 
     @property
     def as_xerr(self):
