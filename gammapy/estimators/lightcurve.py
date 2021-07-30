@@ -2,15 +2,14 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.table import Table, hstack
+from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
+from gammapy.maps import TimeMapAxis
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
 from gammapy.modeling import Fit
-from .core import Estimator
 from .flux_point import FluxPoints, FluxPointsEstimator
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -393,9 +392,6 @@ class LightCurveEstimator(FluxPointsEstimator):
                 gti.time_intervals,
                 desc="Time intervals"
         ):
-
-            row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-
             datasets_to_fit = datasets.select_time(
                 time_min=t_min, time_max=t_max, atol=self.atol
             )
@@ -405,28 +401,19 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
-            fp_table = fp.to_table()
-
-            for column in fp_table.colnames:
-                if column == "counts":
-                    data = fp_table[column].quantity.sum(axis=1)
-                else:
-                    data = fp_table[column].quantity
-                row[column] = data
-
-            fp_table_flux = fp.to_table(sed_type="flux")
-            for column in fp_table_flux.colnames:
-                if "flux" in column:
-                    row[column] = fp_table_flux[column].quantity
-
-            rows.append(row)
+            # TODO: find a way to handle counts per dataset
+            fp._data["counts"] = fp._data["counts"].sum_over_axes(
+                keepdims=False, axes_names=["dataset-idx"]
+            )
+            rows.append(fp)
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
-        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        # TODO: use FluxPoints here
-        return LightCurve(table=table)
+        axis = TimeMapAxis.from_gti(gti=gti)
+        return FluxPoints.from_stack(
+            maps=rows, axis=axis,
+        )
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
@@ -434,11 +421,11 @@ class LightCurveEstimator(FluxPointsEstimator):
         Parameters
         ----------
         datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
+            List of dataset objects
 
         Returns
         -------
-        result : dict
-            Dict with results for the flux point.
+        result : `FluxPoints`
+            Resulting flux points.
         """
         return super().run(datasets)

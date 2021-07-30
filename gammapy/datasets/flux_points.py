@@ -85,6 +85,11 @@ class FluxPointsDataset(Dataset):
         return self._name
 
     @property
+    def gti(self):
+        """Good time interval info (`GTI`)"""
+        return self.data.gti
+
+    @property
     def models(self):
         return self._models
 

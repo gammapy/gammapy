@@ -79,7 +79,7 @@ class RegionNDMap(Map):
 
         axis = self.geom.axes[axis_name]
 
-        kwargs.setdefault("marker", "+")
+        kwargs.setdefault("marker", "o")
         kwargs.setdefault("ls", "None")
         kwargs.setdefault("xerr", axis.as_xerr)
 
@@ -132,7 +132,7 @@ class RegionNDMap(Map):
             ax.set_ylabel(f"Data [{self.unit}]")
 
         if axis.interp == "log":
-            ax.set_yscale("log")
+            ax.set_xscale("log")
 
         if isinstance(axis, TimeMapAxis) and axis.time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
