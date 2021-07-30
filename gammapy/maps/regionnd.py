@@ -74,6 +74,7 @@ class RegionNDMap(Map):
         ax = ax or plt.gca()
 
         if axis_name is None:
+<<<<<<< HEAD
             if self.geom.axes.is_unidimensional:
                 axis_name = self.geom.axes.primary_axis.name
             else:
@@ -81,6 +82,10 @@ class RegionNDMap(Map):
                     "Plotting a region map with multiple extra axes requires "
                     "specifying the 'axis_name' keyword."
                 )
+=======
+            idx = np.argmax(self.geom.axes.shape)
+            axis_name = self.geom.axes.names[idx]
+>>>>>>> cd82b2d73... Adapt Fermi catalog
 
         axis = self.geom.axes[axis_name]
 
@@ -117,6 +122,9 @@ class RegionNDMap(Map):
                 )
 
         axis.format_plot_xaxis(ax=ax)
+
+        if "energy" in axis_name:
+            ax.set_yscale("log", nonpositive="clip")
 
         if "energy" in axis_name:
             ax.set_yscale("log", nonpositive="clip")
