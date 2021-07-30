@@ -2232,7 +2232,7 @@ class TimeMapAxis:
         s_coord = scale(relative_time.to(self._edges_min.unit))
 
         pix[valid_pix] += (s_coord - s_min) / (s_max - s_min)
-        pix[~valid_pix] = np.nan
+        pix[~valid_pix] = INVALID_INDEX.float
         return pix - 0.5
 
     def pix_to_idx(self, pix, clip=False):
