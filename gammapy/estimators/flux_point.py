@@ -10,7 +10,7 @@ from gammapy.datasets import Datasets
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
-from gammapy.maps import RegionNDMap, Maps, TimeMapAxis
+from gammapy.maps import RegionNDMap, Maps, TimeMapAxis, MapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -436,7 +436,6 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`
             Axis object
         """
-        from gammapy.utils.interpolation import StatProfileScale
         import matplotlib.pyplot as plt
 
         if ax is None:
@@ -453,13 +452,19 @@ class FluxPoints(FluxMaps):
         if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
             axis = axis.contiguous
 
-        flux_unit = DEFAULT_UNIT[sed_type]
+        yunits = kwargs.pop("yunits", DEFAULT_UNIT[sed_type])
 
-        flux_ref = getattr(self, sed_type + "_ref").to(flux_unit)
+        flux_ref = getattr(self, sed_type + "_ref").to(yunits)
 
-        flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
+        flux = MapAxis.from_bounds(
+            0.2 * flux_ref.value.min(),
+            5 * flux_ref.value.max(),
+            nbin=500,
+            interp=axis.interp,
+            unit=flux_ref.unit
+        )
 
-        norm = np.sqrt(flux[:-1] * flux[1:]) / flux_ref.reshape((-1, 1))
+        norm = flux.center / flux_ref.reshape((-1, 1))
 
         ts = self.ts_scan
         coords = ts.geom.get_coord()
@@ -480,10 +485,7 @@ class FluxPoints(FluxMaps):
 
         with quantity_support():
             caxes = ax.pcolormesh(
-                axis.as_plot_edges,
-                flux.to(flux_unit),
-                -z.T,
-                **kwargs
+                axis.as_plot_edges, flux.edges, -z.T, **kwargs
             )
 
         axis.format_plot_axis(ax=ax)
