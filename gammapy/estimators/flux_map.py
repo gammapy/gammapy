@@ -347,6 +347,11 @@ class FluxMaps:
         self._check_quantity("ts")
         return self._data["ts"]
 
+    @property
+    def ts_scan(self):
+        """ts scan (`Map`)"""
+        return self.stat_scan - np.expand_dims(self.stat.data, 2)
+
     # TODO: always derive sqrt(TS) from TS?
     @property
     def sqrt_ts(self):
