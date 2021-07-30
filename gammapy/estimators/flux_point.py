@@ -10,8 +10,7 @@ from gammapy.datasets import Datasets
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
-from gammapy.maps import RegionNDMap, Maps
-from gammapy.utils.interpolation import interpolate_profile
+from gammapy.maps import RegionNDMap, Maps, TimeMapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -437,10 +436,18 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`
             Axis object
         """
+        from gammapy.utils.interpolation import StatProfileScale
         import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
+
+        # set longest axis as default
+        idx = int(np.argmax(self.geom.axes.shape))
+        axis = self.geom.axes[idx]
+
+        if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
+            axis = axis.contiguous
 
         flux_unit = DEFAULT_UNIT[sed_type]
 
@@ -448,17 +455,18 @@ class FluxPoints(FluxMaps):
 
         flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
 
-        ts = self.stat_scan - np.expand_dims(self.stat.data, 2)
-        norm_scan = ts.geom.axes["norm"].center.to_value("")
+        norm = np.sqrt(flux[:-1] * flux[1:]) / flux_ref.reshape((-1, 1))
 
-        norm = np.sqrt(flux[:-1] * flux[1:]) / flux_ref[:, :, 0]
+        scale = StatProfileScale(axis=-3)
+        ts = self.ts_scan
+        ts.data = scale(ts.data)
 
-        z = np.empty(norm.shape)
+        coords = ts.geom.get_coord()
+        coords._data["norm"] = norm
+        coords._data[axis.name] = axis.center.reshape((-1, 1))
 
-        for idx, profile in ts.iter_by_axis(axis_name="norm"):
-            idx = idx[:-2]
-            interp = interpolate_profile(norm_scan, profile)
-            z[idx] = interp((norm[idx],))
+        z = ts.interp_by_coord(coords)
+        z = scale.inverse(z)
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
@@ -470,17 +478,35 @@ class FluxPoints(FluxMaps):
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
 
+        if isinstance(axis, TimeMapAxis):
+            if axis.time_format == "iso":
+                edges = axis.time_edges.to_datetime()
+            elif self.time_format == "mjd":
+                edges = axis.time_edges.mjd * u.day
+        else:
+            edges = axis.edges
+
         with quantity_support():
             caxes = ax.pcolormesh(
-                self.energy_axis.edges,
+                edges,
                 flux.to(flux_unit),
                 -z.T,
                 **kwargs
             )
 
-        ax.set_xscale("log", nonpositive="clip")
-        ax.set_yscale("log", nonpositive="clip")
-        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        if axis.interp == "log":
+            ax.set_xscale("log")
+
+        if "energy" in axis.name:
+            ax.set_yscale("log", nonpositive="clip")
+
+        xlabel = axis.name.capitalize() + f" [{ax.xaxis.units}]"
+
+        if isinstance(axis, TimeMapAxis):
+            xlabel = axis.name.capitalize() + f" [{axis.time_format}]"
+
+        ax.set_xlabel(xlabel)
+
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
 
         if add_cbar:
