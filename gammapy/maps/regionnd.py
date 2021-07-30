@@ -76,11 +76,13 @@ class RegionNDMap(Map):
 
         if axis_name is None:
             # set longest axis as default
-            axis_name = np.argmax(self.geom.axes.shape)
+            idx = np.argmax(self.geom.axes.shape)
+            axis_name = self.geom.axes.names[idx]
 
         axis = self.geom.axes[axis_name]
 
         kwargs.setdefault("marker", "o")
+        kwargs.setdefault("markersize", 4)
         kwargs.setdefault("ls", "None")
         kwargs.setdefault("xerr", axis.as_xerr)
 
