@@ -421,6 +421,7 @@ class MapAxis:
             node_type=node_type,
         )
 
+
     @classmethod
     def from_nodes(cls, nodes, **kwargs):
         """Generate an axis object from a sequence of nodes (bin centers).
@@ -1153,6 +1154,7 @@ class MapAxis:
                 edges = edges_from_lo_hi(e_min, e_max)
                 axis = MapAxis.from_energy_edges(edges)
         elif format == "gadf-sed-norm":
+            # TODO: guess interp here
             axis = MapAxis.from_nodes(table["norm_scan"][0], name="norm")
         else:
             raise ValueError(f"Format '{format}' not supported")
@@ -1884,6 +1886,32 @@ class TimeMapAxis:
         delta = edges_min[1:] - edges_max[:-1]
         if np.any(delta < 0 * u.s):
             raise ValueError("Time intervals must not overlap.")
+
+    @property
+    def is_contiguous(self):
+        """Whether the axis is contiguous"""
+        return np.all(self.edges_min[1:] == self.edges_max[:-1])
+
+    @property
+    def contiguous(self):
+        """Make the time axis contiguous
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Contiguous time axis
+        """
+        values = np.unique(
+            [self.edges_min.to_value("s"), self.edges_max.to_value("s")]
+        )
+        edges = u.Quantity(values, unit="s")
+        return self.__class__(
+            edges_min=edges[:-1],
+            edges_max=edges[1:],
+            reference_time=self.reference_time,
+            name=self.name,
+            interp=self.interp
+        )
 
     @property
     def unit(self):
