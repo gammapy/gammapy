@@ -204,8 +204,8 @@ class PSF(IRF):
 
         # Axes labels and ticks, colobar
         ax.semilogx()
-        ax.set_ylabel(f"Offset ({ax.xaxis.units})")
-        ax.set_xlabel(f"Energy ({ax.yaxis.units})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        ax.set_ylabel(f"Offset ({ax.yaxis.units})")
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
