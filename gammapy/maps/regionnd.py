@@ -6,11 +6,11 @@ from astropy.table import Table
 from astropy.visualization import quantity_support
 from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
-from .axes import MapAxes, MapAxis, TimeMapAxis
+from .axes import MapAxes, MapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -356,11 +356,11 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords, method="linear", fill_value=None):
+    def interp_by_coord(self, coords, **kwargs):
         pix = self.geom.coord_to_pix(coords)
-        return self.interp_by_pix(pix, method=method, fill_value=fill_value)
+        return self.interp_by_pix(pix, **kwargs)
 
-    def interp_by_pix(self, pix, method="linear", fill_value=None):
+    def interp_by_pix(self, pix, **kwargs):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
         if np.any(np.isfinite(self.data)):
@@ -369,8 +369,14 @@ class RegionNDMap(Map):
         else:
             data = self.data.T
 
+        scale = kwargs.get("values_scale", "lin")
+
+        if scale == "stat-profile":
+            # TODO: don't hard-code axis index of norm
+            kwargs["values_scale"] = StatProfileScale(axis=2)
+
         fn = ScaledRegularGridInterpolator(
-            grid_pix, data, fill_value=fill_value, method=method
+            grid_pix, data, **kwargs
         )
         return fn(tuple(pix), clip=False)
 

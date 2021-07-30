@@ -130,6 +130,10 @@ def interpolation_scale(scale="lin"):
         return LogScale()
     elif scale == "sqrt":
         return SqrtScale()
+    elif scale == "stat-profile":
+        return StatProfileScale()
+    elif isinstance(scale, InterpolationScale):
+        return scale
     else:
         raise ValueError(f"Not a valid value scaling mode: '{scale}'.")
 

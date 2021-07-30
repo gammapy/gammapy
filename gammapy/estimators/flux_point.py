@@ -442,8 +442,11 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
+        if not self.norm.geom.is_region:
+            raise ValueError("Plotting only supported for region based flux points")
+
         if not self.geom.axes.is_unidimensional:
-            raise ValueError("Profile plotting is only support for unidimensional data")
+            raise ValueError("Profile plotting is only support for unidimensional maps")
 
         axis = self.geom.axes.primary_axis
 
@@ -458,16 +461,12 @@ class FluxPoints(FluxMaps):
 
         norm = np.sqrt(flux[:-1] * flux[1:]) / flux_ref.reshape((-1, 1))
 
-        scale = StatProfileScale(axis=-3)
         ts = self.ts_scan
-        ts.data = scale(ts.data)
-
         coords = ts.geom.get_coord()
         coords._data["norm"] = norm
         coords._data[axis.name] = axis.center.reshape((-1, 1))
 
-        z = ts.interp_by_coord(coords)
-        z = scale.inverse(z)
+        z = ts.interp_by_coord(coords, values_scale="stat-profile")
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
