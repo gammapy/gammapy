@@ -2063,14 +2063,17 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        coord : `~astropy.time.Time`
-            Array of axis coordinate values.
+        coord : `~astropy.time.Time` or `~astropy.units.Quantity`
+            Array of axis coordinate values. The quantity is assumed
+            to be relative to the reference time.
 
         Returns
         -------
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
+        if isinstance(coord, u.Quantity):
+            coord = self.reference_time + coord
 
         time = Time(coord[..., np.newaxis])
         delta_plus = (time - self.time_min).value > 0.
@@ -2097,15 +2100,19 @@ class TimeMapAxis:
         pix : `~numpy.ndarray`
             Array of pixel positions.
         """
+        if isinstance(coord, u.Quantity):
+            coord = self.reference_time + coord
+
         idx = np.atleast_1d(self.coord_to_idx(coord))
 
-        valid_pix = np.where(idx!=INVALID_INDEX.int)
+        valid_pix = idx != INVALID_INDEX.int
         pix = np.atleast_1d(idx).astype('float')
 
         # TODO: is there the equivalent of np.atleast1d for astropy.time.Time?
         if coord.shape == ():
             coord = coord.reshape((1,))
-        relative_time = coord[valid_pix]-self.reference_time
+
+        relative_time = coord[valid_pix] - self.reference_time
 
         scale = interpolation_scale(self._interp)
         valid_idx = idx[valid_pix]
@@ -2114,7 +2121,8 @@ class TimeMapAxis:
         s_coord = scale(relative_time.to(self._edges_min.unit))
 
         pix[valid_pix] += (s_coord - s_min) / (s_max - s_min)
-        return pix
+        pix[~valid_pix] = np.nan
+        return pix - 0.5
 
     def pix_to_idx(self, pix, clip=False):
         return pix
