@@ -372,8 +372,8 @@ class RegionNDMap(Map):
         scale = kwargs.get("values_scale", "lin")
 
         if scale == "stat-profile":
-            # TODO: don't hard-code axis index of norm
-            kwargs["values_scale"] = StatProfileScale(axis=2)
+            axis = 2 + self.geom.axes.index("norm")
+            kwargs["values_scale"] = StatProfileScale(axis=axis)
 
         fn = ScaledRegularGridInterpolator(
             grid_pix, data, **kwargs

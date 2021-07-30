@@ -463,8 +463,8 @@ class FluxPoints(FluxMaps):
 
         ts = self.ts_scan
         coords = ts.geom.get_coord()
-        coords._data["norm"] = norm
-        coords._data[axis.name] = axis.center.reshape((-1, 1))
+        coords["norm"] = norm
+        coords[axis.name] = axis.center.reshape((-1, 1))
 
         z = ts.interp_by_coord(coords, values_scale="stat-profile")
 
