@@ -75,7 +75,8 @@ class RegionNDMap(Map):
         ax = ax or plt.gca()
 
         if axis_name is None:
-            axis_name = 0
+            # set longest axis as default
+            axis_name = np.argmax(self.geom.axes.shape)
 
         axis = self.geom.axes[axis_name]
 
@@ -142,6 +143,9 @@ class RegionNDMap(Map):
                 ha="right",
                 rotation_mode="anchor",
             )
+
+        if "energy" in axis_name:
+            ax.set_yscale("log", nonpositive="clip")
 
         if len(self.geom.axes) > 1:
             plt.legend()

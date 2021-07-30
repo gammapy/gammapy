@@ -407,17 +407,8 @@ class FluxPoints(FluxMaps):
         kwargs.setdefault("yerr", (y_errn, y_errp))
         kwargs.setdefault("uplims", is_ul)
 
-        # set longest axis as default
-        idx = np.argmax(self.geom.axes.shape)
-        axis_name = self.geom.axes.names[idx]
-        kwargs.setdefault("axis_name", axis_name)
-
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
-
-        if axis_name == "energy":
-            ax.set_yscale("log", nonpositive="clip")
-
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
         return ax
 
