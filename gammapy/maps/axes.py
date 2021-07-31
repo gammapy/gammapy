@@ -2441,6 +2441,7 @@ class TimeMapAxis:
 
         return header
 
+
 class LabelMapAxis:
     """Map axis using labels
 
@@ -2462,6 +2463,11 @@ class LabelMapAxis:
 
         self._labels = np.array(labels)
         self._name = name
+
+    @property
+    def unit(self):
+        """Unit"""
+        return u.Unit("")
 
     @property
     def name(self):
@@ -2581,6 +2587,38 @@ class LabelMapAxis:
     def bin_width(self):
         """Bin width is unity """
         return np.ones(self.nbin)
+
+    @property
+    def as_plot_labels(self):
+        """Plot labels"""
+        return self._labels.tolist()
+
+    @property
+    def as_plot_center(self):
+        """Plot labels"""
+        return np.arange(self.nbin)
+
+    @property
+    def as_plot_edges(self):
+        """Plot labels"""
+        return np.arange(self.nbin + 1) - 0.5
+
+    @staticmethod
+    def format_plot_axis(ax):
+        """Format plot axis.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format.
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis.
+        """
+        # TODO: tilt labels 30 deg?
+        return ax
 
     def __repr__(self):
         str_ = self.__class__.__name__ + "\n"
