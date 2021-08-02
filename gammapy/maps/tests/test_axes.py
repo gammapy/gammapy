@@ -347,6 +347,16 @@ def test_mapaxis_slice(nodes, interp, node_type):
     assert_allclose(saxis.center, axis.center[slice(None, -1)])
 
 
+def test_map_axis_plot_helpers():
+    axis = MapAxis.from_nodes([0, 1, 2], unit="deg", name="offset")
+    labels = axis.as_plot_labels
+
+    assert labels[0] == "0.00e+00 deg"
+
+    assert_allclose(axis.center, axis.as_plot_center)
+    assert_allclose(axis.edges, axis.as_plot_edges)
+
+
 def test_time_axis(time_intervals):
     axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
 
@@ -525,6 +535,25 @@ def test_map_with_time_axis(time_intervals):
     region_map = RegionNDMap.create(region="fk5; circle(0,0,0.1)", axes=[energy_axis, time_axis])
 
     assert region_map.geom.data_shape == (20, 2, 1, 1)
+
+
+def test_time_axis_plot_helpers():
+    time_ref = Time('1999-01-01T00:00:00.123456789')
+
+    time_axis = TimeMapAxis(
+        edges_min=[0, 1, 3] * u.d,
+        edges_max=[0.8, 1.9, 5.4] * u.d,
+        reference_time=time_ref
+    )
+
+    labels = time_axis.as_plot_labels
+    assert labels[0] == "1999-01-01 00:00:00.123 - 1999-01-01 19:12:00.123"
+
+    center = time_axis.as_plot_center
+    assert center[0].year == 1999
+
+    edges = time_axis.contiguous.as_plot_edges
+    assert edges[0].year == 1999
 
 
 def test_axes_basics():
