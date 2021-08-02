@@ -213,10 +213,10 @@ class SourceCatalog(abc.ABC):
         hist2_table = getattr(self, "hist2_table", None)
 
         if hist_table:
-            data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-4fgl")
+            data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-fgl")
 
         if hist2_table:
-            data["time_axis_2"] = TimeMapAxis.from_table(hist2_table, format="fermi-4fgl")
+            data["time_axis_2"] = TimeMapAxis.from_table(hist2_table, format="fermi-fgl")
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()

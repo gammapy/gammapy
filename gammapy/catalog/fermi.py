@@ -4,10 +4,9 @@ import abc
 import warnings
 import numpy as np
 import astropy.units as u
-from astropy.table import Column, Table
-from astropy.time import Time
+from astropy.table import Table
 from astropy.wcs import FITSFixedWarning
-from gammapy.estimators import FluxPoints, LightCurve
+from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
@@ -496,7 +495,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             raise ValueError("Time intervals available are '1-year' or '2-month'")
 
         energy_axis = MapAxis.from_energy_edges([50, 300000] * u.MeV)
-        geom = RegionGeom(region=None, axes=[energy_axis, time_axis])
+        geom = RegionGeom.create(region=self.position, axes=[energy_axis, time_axis])
 
         names = ["flux", "flux_errp", "flux_errn", "flux_ul", "ts"]
         maps = Maps.from_geom(geom=geom, names=names)
@@ -798,7 +797,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         tag = "Flux_History"
 
         energy_axis = MapAxis.from_energy_edges(self.energy_range)
-        geom = RegionGeom(region=None, axes=[energy_axis, time_axis])
+        geom = RegionGeom.create(region=self.position, axes=[energy_axis, time_axis])
 
         names = ["flux", "flux_errp", "flux_errn", "flux_ul"]
         maps = Maps.from_geom(geom=geom, names=names)
