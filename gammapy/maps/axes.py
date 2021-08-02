@@ -1959,10 +1959,7 @@ class TimeMapAxis:
         axis : `TimeMapAxis`
             Contiguous time axis
         """
-        values = np.unique(
-            [self.edges_min.to_value("s"), self.edges_max.to_value("s")]
-        )
-        edges = u.Quantity(values, unit="s")
+        edges = np.unique(np.stack([self.edges_min, self.edges_max]))
         return self.__class__(
             edges_min=edges[:-1],
             edges_max=edges[1:],
