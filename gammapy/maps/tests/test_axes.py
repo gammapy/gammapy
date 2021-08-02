@@ -5,8 +5,7 @@ import numpy as np
 from astropy.time import Time
 from astropy.table import Table
 import astropy.units as u
-from gammapy.maps import RegionNDMap, MapAxis
-from gammapy.maps.axes import TimeMapAxis
+from gammapy.maps import RegionNDMap, MapAxis, TimeMapAxis, MapAxes
 from gammapy.data import GTI
 from gammapy.utils.testing import assert_allclose, requires_data, assert_time_allclose
 from gammapy.utils.scripts import make_path
@@ -48,6 +47,11 @@ def test_time_axis(time_intervals):
         axis.assert_name("bad")
 
     assert axis_copy == axis
+
+    assert not axis.is_contiguous
+
+    ax_cont = axis.contiguous
+    assert_allclose(ax_cont.nbin, 39)
 
 
 def test_single_interval_time_axis(time_interval):
@@ -202,3 +206,25 @@ def test_map_with_time_axis(time_intervals):
     region_map = RegionNDMap.create(region="fk5; circle(0,0,0.1)", axes=[energy_axis, time_axis])
 
     assert region_map.geom.data_shape == (20, 2, 1, 1)
+
+
+def test_axes_basics():
+    energy_axis = MapAxis.from_energy_edges([1, 3] * u.TeV)
+
+    time_ref = Time('1999-01-01T00:00:00.123456789')
+
+    time_axis = TimeMapAxis(
+        edges_min=[0, 1, 3] * u.d,
+        edges_max=[0.8, 1.9, 5.4] * u.d,
+        reference_time=time_ref
+    )
+
+    axes = MapAxes([energy_axis, time_axis])
+
+    assert axes.shape == (1, 3)
+    assert axes.is_unidimensional
+    assert not axes.is_flat
+
+    assert axes.primary_axis.name == "time"
+
+
