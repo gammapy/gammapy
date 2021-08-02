@@ -2401,7 +2401,9 @@ class TimeMapAxis:
             edges_min = np.unique(table[colnames[0]].quantity)
             edges_max = np.unique(table[colnames[1]].quantity)
         elif format == "fermi-fgl":
-            reference_time = Time("2001-01-01T00:00:00")
+            meta = table.meta.copy()
+            meta["MJDREFF"] = str(meta["MJDREFF"]).replace("D-4", "e-4")
+            reference_time = time_ref_from_dict(meta=meta)
             name = "time"
             edges_min = table["Hist_Start"][:-1]
             edges_max = table["Hist_Start"][1:]
