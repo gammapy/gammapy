@@ -178,7 +178,7 @@ class FluxPoints(FluxMaps):
         return table
 
     @classmethod
-    def from_table(cls, table, sed_type=None, reference_model=None, gti=None):
+    def from_table(cls, table, sed_type=None, format=None, reference_model=None, gti=None):
         """Create flux points from table
 
         Parameters
@@ -187,6 +187,8 @@ class FluxPoints(FluxMaps):
             Table
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             Sed type
+        format : {"lightcurve", "gadf"}
+            Table format.
         reference_model : `SpectralModel`
             Reference spectral model
         gti : `GTI`
@@ -222,7 +224,7 @@ class FluxPoints(FluxMaps):
         for name in cls.all_quantities(sed_type=sed_type):
             if name in table.colnames:
                 maps[name] = RegionNDMap.from_table(
-                    table=table, colname=name, format="gadf-sed"
+                    table=table, colname=name, format=format
                 )
 
         meta = cls._get_meta_gadf(table)

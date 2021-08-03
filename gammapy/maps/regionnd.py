@@ -531,8 +531,12 @@ class RegionNDMap(Map):
             unit = table[colname].unit or ""
         elif format == "lightcurve":
             axes = MapAxes.from_table(table=table, format=format)
+<<<<<<< HEAD
             data = table[colname].data
             unit = table[colname].unit or ""
+=======
+
+>>>>>>> 4347d3bdd... Remove LigtCurve class
         else:
             raise ValueError(f"Format not supported {format}")
 

@@ -7,7 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
-from gammapy.estimators import LightCurve, LightCurveEstimator
+from gammapy.estimators import FluxPoints, LightCurveEstimator
 from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -33,7 +33,7 @@ def lc():
         ],
     )
 
-    return LightCurve(table=table)
+    return FluxPoints.from_table(table, format="lightcurve")
 
 
 @pytest.fixture(scope="session")
@@ -54,7 +54,7 @@ def lc_2d():
         ],
     )
 
-    return LightCurve(table=table)
+    return FluxPoints.from_table(table, format="lightcurve")
 
 
 def test_lightcurve_repr(lc):
