@@ -218,6 +218,15 @@ class MapAxis:
         return self.edges[1:]
 
     @property
+    def bounds(self):
+        """Bounds of the axis (~astropy.units.Quantity)"""
+        idx = [0, -1]
+        if self.node_type == "edge":
+            return self.edges[idx]
+        else:
+            return self.center[idx]
+
+    @property
     def as_plot_xerr(self):
         """Return tuple of xerr to be used with plt.errorbar()"""
         return (

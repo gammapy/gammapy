@@ -456,9 +456,13 @@ class FluxPoints(FluxMaps):
 
         flux_ref = getattr(self, sed_type + "_ref").to(yunits)
 
+        ts = self.ts_scan
+
+        norm_min, norm_max = ts.geom.axes["norm"].bounds
+
         flux = MapAxis.from_bounds(
-            0.2 * flux_ref.value.min(),
-            5 * flux_ref.value.max(),
+            norm_min * flux_ref.value.min(),
+            norm_max * flux_ref.value.max(),
             nbin=500,
             interp=axis.interp,
             unit=flux_ref.unit
@@ -466,7 +470,6 @@ class FluxPoints(FluxMaps):
 
         norm = flux.center / flux_ref.reshape((-1, 1))
 
-        ts = self.ts_scan
         coords = ts.geom.get_coord()
         coords["norm"] = norm
         coords[axis.name] = axis.center.reshape((-1, 1))
