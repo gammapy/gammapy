@@ -9,15 +9,15 @@ from astropy.table import Table
 from regions import CircleAnnulusSkyRegion
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from .flux_point import FluxPoints, FluxPointsEstimator
 from .core import Estimator
-from .flux_point import FluxPoints
 
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
 
 
-class FluxProfileEstimator(Estimator):
+class FluxProfileEstimator(FluxPointsEstimator):
     """Estimate flux profiles
 
     Parameters
@@ -84,10 +84,12 @@ class FluxProfileEstimator(Estimator):
         profile : `~gammapy.estimators.FluxPoints`
             Profile flux points.
         """
+        datasets = Datasets(datasets=datasets)
         maps = []
 
         for region in self.regions:
             datasets_to_fit = datasets.to_spectrum_datasets(region=region)
+            datasets_to_fit.models = SkyModel(self.spectrum, name="test-source")
             fp = super().run(datasets_to_fit)
             maps.append(fp)
 
