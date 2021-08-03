@@ -5,12 +5,13 @@ import scipy.ndimage
 from astropy import units as u
 from astropy.convolution import Box1DKernel, Gaussian1DKernel
 from astropy.coordinates import Angle
-from astropy.table import Table, vstack
-from .core import Estimator
-from .flux_point import FluxPointsEstimator
+from astropy.table import Table
+from regions import CircleAnnulusSkyRegion
 from gammapy.datasets import Datasets
+from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel
-from regions import ds9_objects_to_string
+from .core import Estimator
+from .flux_point import FluxPoints
 
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
@@ -21,7 +22,7 @@ class FluxProfileEstimator(Estimator):
 
     Parameters
     ----------
-    regions : list of `regions`
+    regions : list of `SkyRegion`
         regions to use
     spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
         Spectral model to compute the fluxes or brightness.
@@ -40,57 +41,59 @@ class FluxProfileEstimator(Estimator):
             spectrum = PowerLawSpectralModel()
 
         self.spectrum = spectrum
-        self.fpe = FluxPointsEstimator(**kwargs)
+        super().__init__(**kwargs)
 
-    def get_spectrum_datasets(self, dataset):
-        """Extract spectrum datasets for the given regions.
+    @property
+    def projected_distance_axis(self):
+        """Get projected distance from the first region.
+
+        For normal region this is defined as the distance form the
+        center of the region. For annulus shaped regions it is the
+        mean between the inner and outer radius.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Projected distance axis
+        """
+        distances = []
+        center = self.regions[0].center
+
+        for idx, region in enumerate(self.regions):
+            if isinstance(region, CircleAnnulusSkyRegion):
+                distance = (region.inner_radius + region.outer_radius) / 2.0
+            else:
+                distance = center.separation(region.center)
+
+            distances.append(distance)
+
+        return MapAxis.from_nodes(
+            u.Quantity(distances, "deg"), name="projected distance"
+        )
+
+    def run(self, datasets):
+        """Run flux profile estimation
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-            the dataset to use for profile extraction
+        datasets : list of `~gammapy.datasets.MapDataset`
+            Map datasets.
 
         Returns
-        --------
-        datasets : `Datasets`
-            List of `~gammapy.datasets.SpectrumDataset` computed in each box
+        -------
+        profile : `~gammapy.estimators.FluxPoints`
+            Profile flux points.
         """
-        datasets = Datasets()
+        maps = []
 
-        for reg in self.regions:
-            spectrum_dataset = dataset.to_spectrum_dataset(reg)
-            spectrum_dataset.models = dataset.models.copy()
-            datasets.append(spectrum_dataset)
+        for region in self.regions:
+            datasets_to_fit = datasets.to_spectrum_datasets(region=region)
+            fp = super().run(datasets_to_fit)
+            maps.append(fp)
 
-        return datasets
-
-    @staticmethod
-    def _flat_table(table):
-        table_flat = Table()
-
-        for column in table.columns:
-            table_flat[column] = table[column].reshape((1, -1))
-
-        return table_flat
-
-    @staticmethod
-    def _get_ds9_string(region):
-        header, frame, region, _ = ds9_objects_to_string([region]).split("\n")
-        return ";".join([frame, region])
-
-    def run(self, dataset):
-        """"""
-        results = []
-
-        datasets = self.get_spectrum_datasets(dataset)
-
-        for region, dataset in zip(self.regions, datasets):
-            fp = self.fpe.run(dataset)
-            row = self._flat_table(fp.table)
-            row["region"] = self._get_ds9_string(region)
-            results.append(row)
-
-        return vstack(results)
+        return FluxPoints.from_stack(
+            maps=maps, axis=self.projected_distance_axis,
+        )
 
 
 # TODO: implement measuring profile along arbitrary directions
