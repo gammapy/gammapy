@@ -205,7 +205,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
         return FluxPoints.from_table(
             table=self.flux_points_table,
-            reference_model=self.spectral_model(),
+            reference_model=self.sky_model(),
             format="gadf-sed"
         )
 
@@ -521,7 +521,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return FluxPoints.from_maps(
             maps=maps,
             sed_type="flux",
-            reference_model=self.spectral_model(),
+            reference_model=self.sky_model(),
             meta=meta
         )
 
@@ -824,7 +824,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return FluxPoints.from_maps(
             maps=maps,
             sed_type="flux",
-            reference_model=self.spectral_model(),
+            reference_model=self.sky_model(),
             meta=meta
         )
 
