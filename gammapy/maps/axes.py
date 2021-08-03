@@ -18,7 +18,7 @@ __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
 
 def flat_if_equal(array):
-    if array.ndim == 2:
+    if array.ndim == 2 and np.all(array == array[0]):
         return array[0]
     else:
         return array
@@ -2448,6 +2448,7 @@ class TimeMapAxis:
             time_min = Time(table["time_min"].data, format="mjd", scale=scale)
             time_max = Time(table["time_max"].data, format="mjd", scale=scale)
             reference_time = Time("2001-01-01T00:00:00")
+            reference_time.format = "mjd"
             edges_min = (time_min - reference_time).to("s")
             edges_max = (time_max - reference_time).to("s")
         else:

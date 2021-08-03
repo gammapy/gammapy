@@ -4,13 +4,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Column, Table
 from astropy.time import Time
-from gammapy.estimators import LightCurve
 from gammapy.stats.variability import compute_chisq, compute_fvar
 from gammapy.utils.testing import assert_quantity_allclose
 
 
 @pytest.fixture(scope="session")
-def lc():
+def lc_table():
     meta = dict(TIMESYS="utc")
 
     table = Table(
@@ -25,12 +24,12 @@ def lc():
         ],
     )
 
-    return LightCurve(table=table)
+    return table
 
 
-def test_lightcurve_fvar(lc):
-    flux = lc.table["flux"].astype("float64")
-    flux_err = lc.table["flux_err"].astype("float64")
+def test_lightcurve_fvar(lc_table):
+    flux = lc_table["flux"].astype("float64")
+    flux_err = lc_table["flux_err"].astype("float64")
     fvar, fvar_err = compute_fvar(flux, flux_err)
     assert_allclose(fvar, 0.69821, rtol=1e-5)
     # Note: the following tolerance is very low in the next assert,
@@ -38,8 +37,8 @@ def test_lightcurve_fvar(lc):
     assert_allclose(fvar_err, 0.07956, rtol=1e-3)
 
 
-def test_lightcurve_chisq(lc):
-    flux = lc.table["flux"].astype("float64")
+def test_lightcurve_chisq(lc_table):
+    flux = lc_table["flux"].astype("float64")
     chi2, pval = compute_chisq(flux)
     assert_quantity_allclose(chi2, 1e-11)
     assert_quantity_allclose(pval, 0.999997476867478)

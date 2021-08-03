@@ -147,7 +147,7 @@ class FluxPointsDataset(Dataset):
         table.remove_columns(["mask_fit", "mask_safe"])
         return cls(
             name=data["name"],
-            data=FluxPoints.from_table(table),
+            data=FluxPoints.from_table(table, format="gadf-sed"),
             mask_fit=mask_fit,
             mask_safe=mask_safe,
         )

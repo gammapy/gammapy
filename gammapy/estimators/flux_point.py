@@ -11,6 +11,7 @@ from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
 from gammapy.maps import RegionNDMap, Maps, TimeMapAxis, MapAxis
+from gammapy.maps.axes import flat_if_equal
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -113,7 +114,7 @@ class FluxPoints(FluxMaps):
     """
 
     @classmethod
-    def read(cls, filename, sed_type=None, reference_model=None, **kwargs):
+    def read(cls, filename, sed_type=None, format="gadf-sed", reference_model=None, **kwargs):
         """Read flux points.
 
         Parameters
@@ -122,6 +123,8 @@ class FluxPoints(FluxMaps):
             Filename
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             Sed type
+        format : {"gadf-sed", "lightcurve"}
+            Format string.
         reference_model : `SpectralModel`
             Reference spectral model
         **kwargs : dict
@@ -140,9 +143,14 @@ class FluxPoints(FluxMaps):
             kwargs.setdefault("format", "ascii.ecsv")
             table = Table.read(filename, **kwargs)
 
-        return cls.from_table(table=table, sed_type=sed_type, reference_model=reference_model)
+        return cls.from_table(
+            table=table,
+            sed_type=sed_type,
+            reference_model=reference_model,
+            format=format
+        )
 
-    def write(self, filename, sed_type="likelihood", **kwargs):
+    def write(self, filename, sed_type="likelihood", format="gadf-sed", **kwargs):
         """Write flux points.
 
         Parameters
@@ -151,11 +159,13 @@ class FluxPoints(FluxMaps):
             Filename
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             Sed type
-        kwargs : dict
+        format : {"gadf-sed", "lightcurve"}
+            Format string.
+        **kwargs : dict
             Keyword arguments passed to `astropy.table.Table.write`.
         """
         filename = make_path(filename)
-        table = self.to_table(sed_type=sed_type)
+        table = self.to_table(sed_type=sed_type, format=format)
         table.write(filename, **kwargs)
 
     @staticmethod
@@ -178,7 +188,7 @@ class FluxPoints(FluxMaps):
         return table
 
     @classmethod
-    def from_table(cls, table, sed_type=None, format=None, reference_model=None, gti=None):
+    def from_table(cls, table, sed_type=None, format="gadf-sed", reference_model=None, gti=None):
         """Create flux points from table
 
         Parameters
@@ -187,7 +197,7 @@ class FluxPoints(FluxMaps):
             Table
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             Sed type
-        format : {"lightcurve", "gadf"}
+        format : {"gadf-sed", "lightcurve"}
             Table format.
         reference_model : `SpectralModel`
             Reference spectral model
@@ -214,8 +224,8 @@ class FluxPoints(FluxMaps):
             table = cls._convert_loglike_columns(table)
             if reference_model is None:
                 reference_model = TemplateSpectralModel(
-                    energy=table["e_ref"].quantity,
-                    values=table["ref_dnde"].quantity
+                    energy=flat_if_equal(table["e_ref"].quantity),
+                    values=flat_if_equal(table["ref_dnde"].quantity)
                 )
 
         maps = Maps()
@@ -608,7 +618,12 @@ class FluxPointsEstimator(FluxEstimator):
 
         table = table_from_row_data(rows=rows, meta=meta)
         model = datasets.models[self.source]
-        return FluxPoints.from_table(table, reference_model=model.copy(), gti=datasets.gti)
+        return FluxPoints.from_table(
+            table=table,
+            reference_model=model.copy(),
+            gti=datasets.gti,
+            format="gadf-sed"
+        )
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.
