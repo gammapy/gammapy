@@ -450,7 +450,7 @@ class FluxPoints(FluxMaps):
         axis = self.geom.axes.primary_axis
 
         if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
-            axis = axis.contiguous
+            axis = axis.to_contiguous()
 
         yunits = kwargs.pop("yunits", DEFAULT_UNIT[sed_type])
 

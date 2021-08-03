@@ -1950,8 +1950,7 @@ class TimeMapAxis:
         """Whether the axis is contiguous"""
         return np.all(self.edges_min[1:] == self.edges_max[:-1])
 
-    @property
-    def contiguous(self):
+    def to_contiguous(self):
         """Make the time axis contiguous
 
         Returns
