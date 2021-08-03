@@ -458,7 +458,7 @@ class FluxPoints(FluxMaps):
 
         ts = self.ts_scan
 
-        norm_min, norm_max = ts.geom.axes["norm"].bounds
+        norm_min, norm_max = ts.geom.axes["norm"].bounds.to_value("")
 
         flux = MapAxis.from_bounds(
             norm_min * flux_ref.value.min(),

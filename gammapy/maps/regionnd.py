@@ -74,7 +74,13 @@ class RegionNDMap(Map):
         ax = ax or plt.gca()
 
         if axis_name is None:
-            axis = self.geom.axes.primary_axis
+            if self.geom.axes.is_unidimensional:
+                axis = self.geom.axes.primary_axis
+            else:
+                raise ValueError(
+                    "Plotting a region map with multiple extra axes requires "
+                    "specifying the 'axis_name' keyword."
+                )
         else:
             axis = self.geom.axes[axis_name]
 

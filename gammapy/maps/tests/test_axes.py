@@ -379,7 +379,7 @@ def test_time_axis(time_intervals):
 
     assert not axis.is_contiguous
 
-    ax_cont = axis.contiguous
+    ax_cont = axis.to_contiguous()
     assert_allclose(ax_cont.nbin, 39)
 
 
@@ -552,7 +552,7 @@ def test_time_axis_plot_helpers():
     center = time_axis.as_plot_center
     assert center[0].year == 1999
 
-    edges = time_axis.contiguous.as_plot_edges
+    edges = time_axis.to_contiguous().as_plot_edges
     assert edges[0].year == 1999
 
 
