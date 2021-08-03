@@ -1877,6 +1877,9 @@ class MapAxes(Sequence):
                 except KeyError:
                     continue
                 axes.append(axis)
+        elif format == "lightcurve":
+            axes.extend(cls.from_table(table=table, format="gadf-sed"))
+            axes.append(TimeMapAxis.from_table(table, format="lightcurve"))
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 
