@@ -72,6 +72,7 @@ clean:
 	  docs/modeling/gallery
 	find . -name ".ipynb_checkpoints" -prune -exec rm -rf {} \;
 	find . -name "*.pyc" -exec rm {} \;
+	find . -name "*.reg" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
 	find . -name __pycache__ | xargs rm -fr
