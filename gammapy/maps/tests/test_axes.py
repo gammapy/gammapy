@@ -644,3 +644,10 @@ def test_mixed_axes():
     assert_allclose(idx[0], np.arange(4).reshape((4, 1, 1)))
     assert_allclose(idx[1], np.arange(2).reshape((1, 2, 1)))
     assert_allclose(idx[2], np.arange(3).reshape((1, 1, 3)))
+
+    hdu = axes.to_table_hdu(format="gadf")
+
+    table = Table.read(hdu)
+
+    assert table["LABEL"].dtype == np.dtype("<U7")
+    assert len(table) == 24
