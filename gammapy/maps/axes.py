@@ -2712,6 +2712,17 @@ class LabelMapAxis:
         str_ += fmt.format(f"labels", "{0}".format(list(self._labels)))
         return str_.expandtabs(tabsize=2)
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        name_equal = self.name.upper() == other.name.upper()
+        labels_equal = np.all(self.center == other.center)
+        return name_equal & labels_equal
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     # TODO: could create sub-labels here using dashes like "label-1-a", etc.
     def upsample(self, *args, **kwargs):
         """Upsample axis"""

@@ -100,13 +100,29 @@ def test_region_nd_map_plot_label_axis():
     label_axis = LabelMapAxis(labels=["dataset-1", "dataset-2"], name="dataset")
 
     m = RegionNDMap.create(region=None, axes=[energy_axis, label_axis])
-    m.data = np.random.random(m.data.shape)
 
     with mpl_plot_check():
         m.plot(axis_name="energy")
 
     with mpl_plot_check():
         m.plot(axis_name="dataset")
+
+
+def test_label_axis_io(tmpdir):
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+    label_axis = LabelMapAxis(labels=["dataset-1", "dataset-2"], name="dataset")
+
+    m = RegionNDMap.create(region=None, axes=[energy_axis, label_axis])
+    m.data = np.arange(m.data.size)
+
+    filename = tmpdir / "test.fits"
+
+    m.write(filename, format="gadf")
+
+    m_new = RegionNDMap.read(filename, format="gadf")
+
+    assert m.geom.axes["dataset"] == m_new.geom.axes["dataset"]
+    assert m.geom.axes["energy"] == m_new.geom.axes["energy"]
 
 
 @requires_dependency("matplotlib")
