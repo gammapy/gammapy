@@ -14,7 +14,7 @@ from gammapy.utils.time import time_ref_to_dict, time_ref_from_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
 
 
-__all__ = ["MapAxes", "MapAxis", "TimeMapAxis"]
+__all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
 
 def flat_if_equal(array):
@@ -1684,7 +1684,8 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip",
+                  "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -1716,7 +1717,11 @@ class MapAxes(Sequence):
                     colnames = [name, name + "_MIN", name + "_MAX"]
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-                    table[colname] = np.ravel(v[idx]).astype(np.float32)
+                    # do not store edges for lable axis
+                    if ax.node_type == "label" and colname != name:
+                        continue
+
+                    table[colname] = np.ravel(v[idx])
 
                 if isinstance(ax, TimeMapAxis):
                     ref_dict = time_ref_to_dict(ax.reference_time)
@@ -1819,11 +1824,15 @@ class MapAxes(Sequence):
                 if axcols is None:
                     break
 
-                # TODO: what is good way to check whether it is a time axis?
+                # TODO: what is good way to check whether it is a given axis type?
                 try:
-                    axis = TimeMapAxis.from_table(table, format=format, idx=idx)
-                except (KeyError, ValueError):
-                    axis = MapAxis.from_table(table, format=format, idx=idx)
+                    axis = LabelMapAxis.from_table(table, format=format, idx=idx)
+                except (KeyError, TypeError):
+                    try:
+                        axis = TimeMapAxis.from_table(table, format=format, idx=idx)
+                    except (KeyError, ValueError):
+                        axis = MapAxis.from_table(table, format=format, idx=idx)
+
                 axes.append(axis)
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
@@ -2171,7 +2180,7 @@ class TimeMapAxis:
         for time_min, time_max in zip(self.time_min, self.time_max):
             yield (time_min, time_max)
 
-    def coord_to_idx(self, coord):
+    def coord_to_idx(self, coord,**kwargs):
         """Transform from axis time coordinate to bin index.
 
         Indices of time values falling outside time bins will be
@@ -2200,7 +2209,7 @@ class TimeMapAxis:
         idx[~np.any(mask, axis=-1)] = INVALID_INDEX.int
         return idx
 
-    def coord_to_pix(self, coord):
+    def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.
 
         Pixels of time values falling outside time bins will be
@@ -2337,8 +2346,8 @@ class TimeMapAxis:
         )
 
     # TODO: if we are to allow log or sqrt bins the reference time should always
-    # be strictly lower than all times
-    # Should we define a mechanism to ensure this is always correct?
+    #  be strictly lower than all times
+    #  Should we define a mechanism to ensure this is always correct?
     @classmethod
     def from_time_edges(cls, time_min, time_max, unit="d", interp="lin", name="time"):
         """Create TimeMapAxis from the time interval edges defined as `~astropy.time.Time`.
@@ -2439,3 +2448,301 @@ class TimeMapAxis:
             raise ValueError(f"Unknown format {format}")
 
         return header
+
+
+class LabelMapAxis:
+    """Map axis using labels
+
+    Parameters
+    ----------
+    labels : list of str
+        Labels to be used for the axis nodes.
+    name : str
+        Name of the axis.
+
+    """
+    node_type = "label"
+
+    def __init__(self, labels, name=""):
+        unique_labels = set(labels)
+
+        if not len(unique_labels) == len(labels):
+            raise ValueError("Node labels must be unique")
+
+        self._labels = np.array(labels)
+        self._name = name
+
+    @property
+    def unit(self):
+        """Unit"""
+        return u.Unit("")
+
+    @property
+    def name(self):
+        """Name of the axis"""
+        return self._name
+
+    def assert_name(self, required_name):
+        """Assert axis name if a specific one is required.
+
+        Parameters
+        ----------
+        required_name : str
+            Required
+        """
+        if self.name != required_name:
+            raise ValueError(
+                "Unexpected axis name,"
+                f' expected "{required_name}", got: "{self.name}"'
+            )
+
+    @property
+    def nbin(self):
+        """Number of bins"""
+        return len(self._labels)
+
+    def pix_to_coord(self, pix):
+        """Transform from pixel to axis coordinates.
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Array of pixel coordinate values.
+
+        Returns
+        -------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+        """
+        idx = np.round(pix).astype(int)
+        return self._labels[idx]
+
+    def coord_to_idx(self, coord, **kwargs):
+        """Transform labels to indices
+
+        If the label is not present an error is raised.
+
+        Parameters
+        ----------
+        coord : `~astropy.time.Time`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        idx : `~numpy.ndarray`
+            Array of bin indices.
+        """
+        coord = np.array(coord)[..., np.newaxis]
+        is_equal = coord == self._labels
+
+        if not np.all(np.any(is_equal, axis=-1)):
+            label = coord[~np.any(is_equal, axis=-1)]
+            raise ValueError(f"Not a valid label: {label}")
+
+        return np.argmax(is_equal, axis=-1)
+
+    def coord_to_pix(self, coord):
+        """Transform from axis labels to pixel coordinates.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis label values.
+
+        Returns
+        -------
+        pix : `~numpy.ndarray`
+            Array of pixel coordinate values.
+        """
+        return self.coord_to_idx(coord).astype("float")
+
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pix to idx
+
+        Parameters
+        ----------
+        pix : tuple of `~numpy.ndarray`
+            Pixel coordinates.
+        clip : bool
+            Choose whether to clip indices to the valid range of the
+            axis.  If false then indices for coordinates outside
+            the axi range will be set -1.
+
+        Returns
+        -------
+        idx : tuple `~numpy.ndarray`
+            Pixel indices.
+        """
+        if clip:
+            idx = np.clip(pix, 0, self.nbin - 1)
+        else:
+            condition = (pix < 0) | (pix >= self.nbin)
+            idx = np.where(condition, -1, pix)
+
+        return idx
+
+    @property
+    def center(self):
+        """Center of the label axis"""
+        return self._labels
+
+    @property
+    def edges(self):
+        """Edges of the label axis"""
+        raise ValueError("A LabelMapAxis does not define edges")
+
+    @property
+    def edges_min(self):
+        """Edges of the label axis"""
+        return self._labels
+
+    @property
+    def edges_max(self):
+        """Edges of the label axis"""
+        return self._labels
+
+    @property
+    def bin_width(self):
+        """Bin width is unity """
+        return np.ones(self.nbin)
+
+    @property
+    def as_plot_xerr(self):
+        """Plot labels"""
+        return 0.5 * np.ones(self.nbin)
+
+    @property
+    def as_plot_labels(self):
+        """Plot labels"""
+        return self._labels.tolist()
+
+    @property
+    def as_plot_center(self):
+        """Plot labels"""
+        return np.arange(self.nbin)
+
+    @property
+    def as_plot_edges(self):
+        """Plot labels"""
+        return np.arange(self.nbin + 1) - 0.5
+
+    def format_plot_axis(self, ax):
+        """Format plot axis.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format.
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis.
+        """
+        # TODO: tilt labels 30 deg?
+        ax.set_xticks(self.as_plot_center)
+        ax.set_xticklabels(
+            self.as_plot_labels,
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
+        return ax
+
+    def to_header(self, format="gadf", idx=0):
+        """Create FITS header
+
+        Parameters
+        ----------
+        format : {"ogip"}
+            Format specification
+        idx : int
+            Column index of the axis.
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            Header to extend.
+        """
+        header = fits.Header()
+
+        if format == "gadf":
+            key = f"AXCOLS{idx}"
+            header[key] = self.name.upper()
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        return header
+
+    # TODO: how configurable should that be? column names?
+    @classmethod
+    def from_table(cls, table, format="gadf", idx=0):
+        """Create time map axis from table
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Bin table HDU
+        format : {"gadf"}
+            Format to use.
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+        """
+        if format == "gadf":
+            colname = table.meta.get("AXCOLS{}".format(idx + 1))
+            column = table[colname]
+            if not np.issubdtype(column.dtype, np.str_):
+                raise TypeError(f"Not a valid dtype for label axis: '{column.dtype}'")
+            labels = np.unique(column.data)
+        else:
+            raise ValueError(f"Not a supported format: {format}")
+
+        return cls(labels=labels, name=colname.lower())
+
+    def __repr__(self):
+        str_ = self.__class__.__name__ + "\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n\n"
+        fmt = "\t{:<10s} : {:<10s}\n"
+        str_ += fmt.format("name", self.name)
+        str_ += fmt.format("nbins", str(self.nbin))
+        str_ += fmt.format("node type", self.node_type)
+        str_ += fmt.format(f"labels", "{0}".format(list(self._labels)))
+        return str_.expandtabs(tabsize=2)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        name_equal = self.name.upper() == other.name.upper()
+        labels_equal = np.all(self.center == other.center)
+        return name_equal & labels_equal
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    # TODO: could create sub-labels here using dashes like "label-1-a", etc.
+    def upsample(self, *args, **kwargs):
+        """Upsample axis"""
+        raise NotImplementedError("Upsampling a LabelMapAxis is not supported")
+
+    # TODO: could merge labels here like "label-1-label2", etc.
+    def downsample(self, *args, **kwargs):
+        """Downsample axis"""
+        raise NotImplementedError("Downsampling a LabelMapAxis is not supported")
+
+    # TODO: could merge labels here like "label-1-label2", etc.
+    def resample(self, *args, **kwargs):
+        """Resample axis"""
+        raise NotImplementedError("Resampling a LabelMapAxis is not supported")
+
+    # TODO: could create new labels here like "label-10-a"
+    def pad(self, *args, **kwargs):
+        """Resample axis"""
+        raise NotImplementedError("Padding a LabelMapAxis is not supported")
+
+    def copy(self):
+        """Copy axis"""
+        return copy.deepcopy(self)

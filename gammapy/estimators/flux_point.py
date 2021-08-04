@@ -445,7 +445,7 @@ class FluxPoints(FluxMaps):
             raise ValueError("Plotting only supported for region based flux points")
 
         if not self.geom.axes.is_unidimensional:
-            raise ValueError("Profile plotting is only support for unidimensional maps")
+            raise ValueError("Profile plotting is only supported for unidimensional maps")
 
         axis = self.geom.axes.primary_axis
 
