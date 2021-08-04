@@ -110,6 +110,7 @@ class ParameterEstimator(Estimator):
             return {"ts": np.nan}
 
         stat = datasets.stat_sum()
+        npred = self.estimate_npred(datasets=datasets)
 
         with datasets.parameters.restore_status():
             # compute ts value
@@ -120,8 +121,13 @@ class ParameterEstimator(Estimator):
                 _ = self.fit.optimize(datasets=datasets)
 
             ts = datasets.stat_sum() - stat
+            npred_null = self.estimate_npred(datasets=datasets)
 
-        return {"ts": ts}
+        return {
+            "ts": ts,
+            "npred": npred["npred"],
+            "npred_null": npred_null["npred"]
+        }
 
     def estimate_errn_errp(self, datasets, parameter):
         """Estimate parameter assymetric errors
@@ -245,7 +251,30 @@ class ParameterEstimator(Estimator):
             mask = dataset.mask
             counts.append(dataset.counts.data[mask].sum())
 
-        return {"counts": np.array(counts, dtype=int)}
+        return {"counts": np.array(counts, dtype=int), "datasets": datasets.names}
+
+    @staticmethod
+    def estimate_npred(datasets):
+        """Estimate npred for the flux point.
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with the sum of the
+            masked npred.
+        """
+        npred = []
+
+        for dataset in datasets:
+            mask = dataset.mask
+            npred.append(dataset.npred().data[mask].sum())
+
+        return {"npred": np.array(npred, dtype=int), "datasets": datasets.names}
 
     def run(self, datasets, parameter):
         """Run the parameter estimator.

@@ -10,7 +10,7 @@ from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfi
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
-from .axes import MapAxes, MapAxis
+from .axes import MapAxes, MapAxis, LabelMapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -504,10 +504,13 @@ class RegionNDMap(Map):
             if colname == "stat_scan":
                 axes = axes
             # TODO: this is not officially supported by GADF...
-            # replace by LabelledMapAxis
-            elif colname == "counts":
-                edges = np.arange(table[colname].shape[1] + 1) - 0.5
-                axis = MapAxis.from_edges(edges, name="dataset-idx")
+            elif colname in ["counts", "npred", "npred_null"]:
+                if "datasets" in table.colnames:
+                    labels = np.unique(table["datasets"])
+                    axis = LabelMapAxis(labels=labels, name="dataset")
+                else:
+                    edges = np.arange(table[colname].shape[1] + 1) - 0.5
+                    axis = MapAxis.from_edges(edges, name="dataset-idx")
                 axes = [axis, axes["energy"]]
             else:
                 axes = [axes["energy"]]
