@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
-from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel, PSFMap
+from gammapy.irf import PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     GaussianSpatialModel,

@@ -506,7 +506,7 @@ class HpxNDMap(HpxMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def convolve(self, kernel, use_fft=True, method="wcs-tan", **kwargs):
+    def convolve(self, kernel, method="wcs-tan", **kwargs):
         """Convolve map with a WCS kernel.
 
         It projects the map into a WCS geometry, convolves with a WCS kernel and
@@ -534,13 +534,13 @@ class HpxNDMap(HpxMap):
             Convolved map.
         """
         if method == "wcs-tan":
-            return self.convolve_wcs(kernel, use_fft, **kwargs)
+            return self.convolve_wcs(kernel, **kwargs)
         elif method == "":
             return self.convolve_full(kernel)
         else:
             raise ValueError(f"Not a valid method for HPX convolution {method}")
 
-    def convolve_wcs(self, kernel, use_fft=True, **kwargs):
+    def convolve_wcs(self, kernel, **kwargs):
         """Convolve map with a WCS kernel.
 
         It projects the map into a WCS geometry, convolves with a WCS kernel and
@@ -557,9 +557,6 @@ class HpxNDMap(HpxMap):
         kernel : `~gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `ndi.convolve` otherwise.
         kwargs : dict
             Keyword arguments passed to `scipy.signal.fftconvolve` or
             `ndi.convolve`.
@@ -595,7 +592,7 @@ class HpxNDMap(HpxMap):
 
         # Project to WCS and convolve
         wcs_map = self.to_wcs(hpx2wcs=hpx2wcs, fill_nan=False)
-        conv_wcs_map = wcs_map.convolve(kernel=kernel, use_fft=use_fft, **kwargs)
+        conv_wcs_map = wcs_map.convolve(kernel=kernel, **kwargs)
 
         if self.geom.is_image and geom_kernel.ndim > 2:
             target_geom = self.geom.to_cube(geom_kernel.axes)

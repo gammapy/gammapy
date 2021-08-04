@@ -590,7 +590,7 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure.squeeze(), use_fft=use_fft) > (structure.sum() - 1)
+            return self.convolve(structure.squeeze(), convolve_method="fft") > (structure.sum() - 1)
 
         data = ndi.binary_erosion(self.data, structure=structure)
         return self._init_copy(data=data)
@@ -620,16 +620,16 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure.squeeze(), use_fft=use_fft) > 1
+            return self.convolve(structure.squeeze(), convolve_method="fft") > 1
 
         data = ndi.binary_dilation(self.data, structure=structure)
         return self._init_copy(data=data)
 
-    def convolve(self, kernel, use_fft=True, **kwargs):
+    def convolve(self, kernel, convolve_method="fft", mode="same"):
         """Convolve map with a kernel.
 
         If the kernel is two dimensional, it is applied to all image planes likewise.
-        If the kernel is higher dimensional should either match the map in the number of
+        If the kernel is higher dimensional, it should either match the map in the number of
         dimensions or the map must be an image (no non-spatial axes). In that case, the
         corresponding kernel is selected and applied to every image plane or to the single
         input image respectively.
@@ -638,12 +638,9 @@ class WcsNDMap(WcsMap):
         ----------
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `ndi.convolve` otherwise.
         kwargs : dict
-            Keyword arguments passed to `scipy.signal.fftconvolve` or
-            `ndi.convolve`.
+            Keyword arguments passed to `scipy.signal.convolve`
+            Default values are method = 'fft' and mode = 'same'
 
         Returns
         -------
@@ -652,10 +649,7 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.irf import PSFKernel
 
-        convolve = scipy.signal.fftconvolve if use_fft else ndi.convolve
-
-        if use_fft:
-            kwargs.setdefault("mode", "same")
+        convolve = scipy.signal.convolve
 
         if self.geom.is_image and not isinstance(kernel, PSFKernel):
             if kernel.ndim > 2:
@@ -688,13 +682,13 @@ class WcsNDMap(WcsMap):
         if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
                 data[idx] = convolve(
-                    self.data.astype(np.float32), kernel[idx], **kwargs
+                    self.data.astype(np.float32), kernel[idx], method=convolve_method, mode=mode
                 )
         else:
             for img, idx in self.iter_by_image():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
                 data[idx] = convolve(
-                    img.astype(np.float32), kernel[ikern], **kwargs
+                    img.astype(np.float32), kernel[ikern],  method=convolve_method, mode=mode
                 )
         return self._init_copy(data=data, geom=geom)
 
