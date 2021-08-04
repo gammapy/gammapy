@@ -147,18 +147,24 @@ class RegionNDMap(Map):
         kwargs.setdefault("histtype", "step")
         kwargs.setdefault("lw", 1)
 
+        if not self.geom.axes.is_unidimensional:
+            raise ValueError("Plotting is only supported for unidimensional maps")
+
         axis = self.geom.axes[0]
 
         with quantity_support():
             weights = self.data[:, 0, 0]
-            ax.hist(axis.center.value, bins=axis.edges.value, weights=weights, **kwargs)
-
-        ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+            ax.hist(
+                axis.as_plot_center,
+                bins=axis.as_plot_center,
+                weights=weights,
+                **kwargs
+            )
 
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 
-        ax.set_xscale("log")
+        axis.format_plot_axis(ax=ax)
         ax.set_yscale("log")
         return ax
 
