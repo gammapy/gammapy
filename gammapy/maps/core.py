@@ -1093,7 +1093,7 @@ class Map(abc.ABC):
         interact_kwargs = {}
 
         for axis in self.geom.axes:
-            options = axis.as_labels
+            options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
                 description=f"Select {axis.name}:",

@@ -130,6 +130,10 @@ def interpolation_scale(scale="lin"):
         return LogScale()
     elif scale == "sqrt":
         return SqrtScale()
+    elif scale == "stat-profile":
+        return StatProfileScale()
+    elif isinstance(scale, InterpolationScale):
+        return scale
     else:
         raise ValueError(f"Not a valid value scaling mode: '{scale}'.")
 
@@ -174,6 +178,22 @@ class SqrtScale(InterpolationScale):
 
     @staticmethod
     def _scale(values):
+        sign = np.sign(values)
+        return sign * np.sqrt(sign * values)
+
+    @staticmethod
+    def _inverse(self, values):
+        return np.power(values, 2)
+
+
+class StatProfileScale(InterpolationScale):
+    """Sqrt scaling"""
+
+    def __init__(self, axis=0):
+        self.axis = axis
+
+    def _scale(self, values):
+        values = np.sign(np.gradient(values, axis=self.axis)) * values
         sign = np.sign(values)
         return sign * np.sqrt(sign * values)
 

@@ -324,7 +324,7 @@ class FluxPointsDataset(Dataset):
         fp = self.data
         residuals = self.residuals(method)
 
-        xerr = self.data.energy_axis.as_xerr
+        xerr = self.data.energy_axis.as_plot_xerr
 
         yerr = fp._plot_get_flux_err(sed_type="dnde")
 

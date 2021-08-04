@@ -6,11 +6,11 @@ from astropy.table import Table
 from astropy.visualization import quantity_support
 from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
-from .axes import MapAxes, MapAxis, TimeMapAxis
+from .axes import MapAxes, MapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -70,32 +70,30 @@ class RegionNDMap(Map):
             Axis used for plotting
         """
         import matplotlib.pyplot as plt
-        from matplotlib.dates import DateFormatter
 
         ax = ax or plt.gca()
 
         if axis_name is None:
-            axis_name = 0
-
-        axis = self.geom.axes[axis_name]
+            if self.geom.axes.is_unidimensional:
+                axis = self.geom.axes.primary_axis
+            else:
+                raise ValueError(
+                    "Plotting a region map with multiple extra axes requires "
+                    "specifying the 'axis_name' keyword."
+                )
+        else:
+            axis = self.geom.axes[axis_name]
 
         kwargs.setdefault("marker", "o")
+        kwargs.setdefault("markersize", 4)
         kwargs.setdefault("ls", "None")
-        kwargs.setdefault("xerr", axis.as_xerr)
-
-        if isinstance(axis, TimeMapAxis):
-            if axis.time_format == "iso":
-                center = axis.time_mid.datetime
-            else:
-                center = axis.time_mid.mjd * u.day
-        else:
-            center = axis.center
+        kwargs.setdefault("xerr", axis.as_plot_xerr)
 
         yerr_nd, yerr = kwargs.pop("yerr", None), None
         uplims_nd, uplims = kwargs.pop("uplims", None), None
         label_default = kwargs.pop("label", None)
 
-        labels = product(*[ax.as_labels for ax in self.geom.axes if ax.name != axis_name])
+        labels = product(*[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name])
 
         for label_axis, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
             if isinstance(yerr_nd, tuple):
@@ -110,7 +108,7 @@ class RegionNDMap(Map):
 
             with quantity_support():
                 ax.errorbar(
-                    x=center,
+                    x=axis.as_plot_center,
                     y=quantity,
                     yerr=yerr,
                     uplims=uplims,
@@ -118,30 +116,7 @@ class RegionNDMap(Map):
                     **kwargs
                 )
 
-        if axis.interp == "log":
-            ax.set_xscale("log")
-
-        xlabel = axis.name.capitalize() + f" [{ax.xaxis.units}]"
-
-        if isinstance(axis, TimeMapAxis):
-            xlabel = axis.name.capitalize() + f" [{axis.time_format}]"
-
-        ax.set_xlabel(xlabel)
-
-        if not self.unit.is_unity():
-            ax.set_ylabel(f"Data [{self.unit}]")
-
-        if axis.interp == "log":
-            ax.set_xscale("log")
-
-        if isinstance(axis, TimeMapAxis) and axis.time_format == "iso":
-            ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
-            plt.setp(
-                ax.xaxis.get_majorticklabels(),
-                rotation=30,
-                ha="right",
-                rotation_mode="anchor",
-            )
+        axis.format_plot_axis(ax=ax)
 
         if len(self.geom.axes) > 1:
             plt.legend()
@@ -387,11 +362,11 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords, method="linear", fill_value=None):
+    def interp_by_coord(self, coords, **kwargs):
         pix = self.geom.coord_to_pix(coords)
-        return self.interp_by_pix(pix, method=method, fill_value=fill_value)
+        return self.interp_by_pix(pix, **kwargs)
 
-    def interp_by_pix(self, pix, method="linear", fill_value=None):
+    def interp_by_pix(self, pix, **kwargs):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
         if np.any(np.isfinite(self.data)):
@@ -400,8 +375,14 @@ class RegionNDMap(Map):
         else:
             data = self.data.T
 
+        scale = kwargs.get("values_scale", "lin")
+
+        if scale == "stat-profile":
+            axis = 2 + self.geom.axes.index("norm")
+            kwargs["values_scale"] = StatProfileScale(axis=axis)
+
         fn = ScaledRegularGridInterpolator(
-            grid_pix, data, fill_value=fill_value, method=method
+            grid_pix, data, **kwargs
         )
         return fn(tuple(pix), clip=False)
 

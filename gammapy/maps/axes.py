@@ -218,7 +218,16 @@ class MapAxis:
         return self.edges[1:]
 
     @property
-    def as_xerr(self):
+    def bounds(self):
+        """Bounds of the axis (~astropy.units.Quantity)"""
+        idx = [0, -1]
+        if self.node_type == "edge":
+            return self.edges[idx]
+        else:
+            return self.center[idx]
+
+    @property
+    def as_plot_xerr(self):
         """Return tuple of xerr to be used with plt.errorbar()"""
         return (
             self.center - self.edges_min,
@@ -226,7 +235,7 @@ class MapAxis:
         )
 
     @property
-    def as_labels(self):
+    def as_plot_labels(self):
         """Return list of axis plot labels"""
         if self.node_type == "edges":
             labels = [
@@ -237,6 +246,40 @@ class MapAxis:
             labels = [f"{val:.2e}" for val in self.center]
 
         return labels
+
+    @property
+    def as_plot_edges(self):
+        """Plot edges"""
+        return self.edges
+
+    @property
+    def as_plot_center(self):
+        """Plot center"""
+        return self.center
+
+    def format_plot_axis(self, ax):
+        """Format plot axis
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis
+        """
+        if self.interp == "log":
+            ax.set_xscale("log")
+
+        xlabel = self.name.capitalize() + f" [{ax.xaxis.units}]"
+        ax.set_xlabel(xlabel)
+
+        if "energy" in self.name:
+            ax.set_yscale("log", nonpositive="clip")
+
+        return ax
 
     @property
     def iter_by_edges(self):
@@ -420,6 +463,7 @@ class MapAxis:
             name=name,
             node_type=node_type,
         )
+
 
     @classmethod
     def from_nodes(cls, nodes, **kwargs):
@@ -1153,6 +1197,7 @@ class MapAxis:
                 edges = edges_from_lo_hi(e_min, e_max)
                 axis = MapAxis.from_energy_edges(edges)
         elif format == "gadf-sed-norm":
+            # TODO: guess interp here
             axis = MapAxis.from_nodes(table["norm_scan"][0], name="norm")
         else:
             raise ValueError(f"Format '{format}' not supported")
@@ -1202,6 +1247,30 @@ class MapAxes(Sequence):
 
         self._axes = axes
         self._n_spatial_axes = n_spatial_axes
+
+    @property
+    def primary_axis(self):
+        """Primary extra axis, defined as the one longest
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Map axis
+        """
+        # get longest axis
+        idx = np.argmax(self.shape)
+        return self[int(idx)]
+
+    @property
+    def is_flat(self):
+        """Whether axes is flat"""
+        return np.all(self.shape == 1)
+
+    @property
+    def is_unidimensional(self):
+        """Whether axes is unidimensional"""
+        value = (np.array(self.shape) > 1).sum()
+        return value == 1
 
     @property
     def reverse(self):
@@ -1886,6 +1955,28 @@ class TimeMapAxis:
             raise ValueError("Time intervals must not overlap.")
 
     @property
+    def is_contiguous(self):
+        """Whether the axis is contiguous"""
+        return np.all(self.edges_min[1:] == self.edges_max[:-1])
+
+    def to_contiguous(self):
+        """Make the time axis contiguous
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Contiguous time axis
+        """
+        edges = np.unique(np.stack([self.edges_min, self.edges_max]))
+        return self.__class__(
+            edges_min=edges[:-1],
+            edges_max=edges[1:],
+            reference_time=self.reference_time,
+            name=self.name,
+            interp=self.interp
+        )
+
+    @property
     def unit(self):
         """Axes unit"""
         return self.edges_max.unit
@@ -1921,6 +2012,14 @@ class TimeMapAxis:
         return self._edges_max
 
     @property
+    def edges(self):
+        """Return array of bin edges values."""
+        if not self.is_contiguous:
+            raise ValueError("Time axis is not contiguous")
+
+        return edges_from_lo_hi(self.edges_min, self.edges_max)
+
+    @property
     def time_min(self):
         """Return axis lower edges as Time objects."""
         return self._edges_min + self.reference_time
@@ -1941,7 +2040,12 @@ class TimeMapAxis:
         return self.time_min + 0.5 * self.time_delta
 
     @property
-    def as_xerr(self):
+    def time_edges(self):
+        """Time edges"""
+        return self.reference_time + self.edges
+
+    @property
+    def as_plot_xerr(self):
         """Plot x error"""
         xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
 
@@ -1957,7 +2061,7 @@ class TimeMapAxis:
         return x_errn, x_errp
 
     @property
-    def as_labels(self):
+    def as_plot_labels(self):
         """Plot labels"""
         labels = []
 
@@ -1966,6 +2070,59 @@ class TimeMapAxis:
             labels.append(label)
 
         return labels
+
+    @property
+    def as_plot_edges(self):
+        """Plot edges"""
+        if self.time_format == "iso":
+            edges = self.time_edges.to_datetime()
+        elif self.time_format == "mjd":
+            edges = self.time_edges.mjd * u.day
+        else:
+            raise ValueError(f"Invalid time_format: {self.time_format}")
+
+        return edges
+
+    @property
+    def as_plot_center(self):
+        """Plot center"""
+        if self.time_format == "iso":
+            center = self.time_mid.datetime
+        elif self.time_format == "mjd":
+            center = self.time_mid.mjd * u.day
+
+        return center
+
+    def format_plot_axis(self, ax):
+        """Format plot axis
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.dates import DateFormatter
+
+        xlabel = self.name.capitalize() + f" [{self.time_format}]"
+
+        ax.set_xlabel(xlabel)
+
+        if self.time_format == "iso":
+            ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
+            plt.setp(
+                ax.xaxis.get_majorticklabels(),
+                rotation=30,
+                ha="right",
+                rotation_mode="anchor",
+            )
+
+        return ax
 
     def assert_name(self, required_name):
         """Assert axis name if a specific one is required.
@@ -2022,14 +2179,17 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        coord : `~astropy.time.Time`
-            Array of axis coordinate values.
+        coord : `~astropy.time.Time` or `~astropy.units.Quantity`
+            Array of axis coordinate values. The quantity is assumed
+            to be relative to the reference time.
 
         Returns
         -------
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
+        if isinstance(coord, u.Quantity):
+            coord = self.reference_time + coord
 
         time = Time(coord[..., np.newaxis])
         delta_plus = (time - self.time_min).value > 0.
@@ -2056,15 +2216,19 @@ class TimeMapAxis:
         pix : `~numpy.ndarray`
             Array of pixel positions.
         """
+        if isinstance(coord, u.Quantity):
+            coord = self.reference_time + coord
+
         idx = np.atleast_1d(self.coord_to_idx(coord))
 
-        valid_pix = np.where(idx!=INVALID_INDEX.int)
+        valid_pix = idx != INVALID_INDEX.int
         pix = np.atleast_1d(idx).astype('float')
 
         # TODO: is there the equivalent of np.atleast1d for astropy.time.Time?
         if coord.shape == ():
             coord = coord.reshape((1,))
-        relative_time = coord[valid_pix]-self.reference_time
+
+        relative_time = coord[valid_pix] - self.reference_time
 
         scale = interpolation_scale(self._interp)
         valid_idx = idx[valid_pix]
@@ -2073,7 +2237,8 @@ class TimeMapAxis:
         s_coord = scale(relative_time.to(self._edges_min.unit))
 
         pix[valid_pix] += (s_coord - s_min) / (s_max - s_min)
-        return pix
+        pix[~valid_pix] = INVALID_INDEX.float
+        return pix - 0.5
 
     def pix_to_idx(self, pix, clip=False):
         return pix

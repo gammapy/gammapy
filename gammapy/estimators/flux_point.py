@@ -10,8 +10,7 @@ from gammapy.datasets import Datasets
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling import Fit
-from gammapy.maps import RegionNDMap, Maps
-from gammapy.utils.interpolation import interpolate_profile
+from gammapy.maps import RegionNDMap, Maps, TimeMapAxis, MapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -407,17 +406,8 @@ class FluxPoints(FluxMaps):
         kwargs.setdefault("yerr", (y_errn, y_errp))
         kwargs.setdefault("uplims", is_ul)
 
-        # set longest axis as default
-        idx = np.argmax(self.geom.axes.shape)
-        axis_name = self.geom.axes.names[idx]
-        kwargs.setdefault("axis_name", axis_name)
-
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
-
-        if axis_name == "energy":
-            ax.set_yscale("log", nonpositive="clip")
-
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
         return ax
 
@@ -451,23 +441,40 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
-        flux_unit = DEFAULT_UNIT[sed_type]
+        if not self.norm.geom.is_region:
+            raise ValueError("Plotting only supported for region based flux points")
 
-        flux_ref = getattr(self, sed_type + "_ref").to(flux_unit)
+        if not self.geom.axes.is_unidimensional:
+            raise ValueError("Profile plotting is only support for unidimensional maps")
 
-        flux = np.geomspace(0.2 * flux_ref.min(), 5 * flux_ref.max(), 500)
+        axis = self.geom.axes.primary_axis
 
-        ts = self.stat_scan - np.expand_dims(self.stat.data, 2)
-        norm_scan = ts.geom.axes["norm"].center.to_value("")
+        if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
+            axis = axis.to_contiguous()
 
-        norm = np.sqrt(flux[:-1] * flux[1:]) / flux_ref[:, :, 0]
+        yunits = kwargs.pop("yunits", DEFAULT_UNIT[sed_type])
 
-        z = np.empty(norm.shape)
+        flux_ref = getattr(self, sed_type + "_ref").to(yunits)
 
-        for idx, profile in ts.iter_by_axis(axis_name="norm"):
-            idx = idx[:-2]
-            interp = interpolate_profile(norm_scan, profile)
-            z[idx] = interp((norm[idx],))
+        ts = self.ts_scan
+
+        norm_min, norm_max = ts.geom.axes["norm"].bounds.to_value("")
+
+        flux = MapAxis.from_bounds(
+            norm_min * flux_ref.value.min(),
+            norm_max * flux_ref.value.max(),
+            nbin=500,
+            interp=axis.interp,
+            unit=flux_ref.unit
+        )
+
+        norm = flux.center / flux_ref.reshape((-1, 1))
+
+        coords = ts.geom.get_coord()
+        coords["norm"] = norm
+        coords[axis.name] = axis.center.reshape((-1, 1))
+
+        z = ts.interp_by_coord(coords, values_scale="stat-profile")
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
@@ -481,15 +488,11 @@ class FluxPoints(FluxMaps):
 
         with quantity_support():
             caxes = ax.pcolormesh(
-                self.energy_axis.edges,
-                flux.to(flux_unit),
-                -z.T,
-                **kwargs
+                axis.as_plot_edges, flux.edges, -z.T, **kwargs
             )
 
-        ax.set_xscale("log", nonpositive="clip")
-        ax.set_yscale("log", nonpositive="clip")
-        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        axis.format_plot_axis(ax=ax)
+
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
 
         if add_cbar:

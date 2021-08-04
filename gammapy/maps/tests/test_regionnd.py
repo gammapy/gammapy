@@ -90,6 +90,9 @@ def test_region_nd_map_plot_two_axes():
     with mpl_plot_check():
         m.plot(axis_name="time")
 
+    with pytest.raises(ValueError):
+        m.plot()
+
 
 @requires_dependency("matplotlib")
 def test_region_plot_mask(region_map):
@@ -111,7 +114,7 @@ def test_region_nd_map_misc(region_map):
     assert_allclose(stacked.data.sum(), 15)
 
 
-def test_stack_differen_unit():
+def test_stack_different_unit():
     region = "icrs;circle(0, 0, 1)"
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
     region_map = RegionNDMap.create(axes=[axis], unit="m2 s", region=region)

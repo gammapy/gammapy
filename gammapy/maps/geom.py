@@ -102,6 +102,10 @@ class MapCoord:
         else:
             return list(self._data.values())[key]
 
+    def __setitem__(self, key, value):
+        # TODO: check for broadcastability?
+        self._data[key] = value
+
     def __iter__(self):
         return iter(self._data.values())
 
