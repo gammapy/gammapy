@@ -7,7 +7,7 @@ from astropy import units as u
 from astropy.time import Time
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, TimeMapAxis
+from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, TimeMapAxis, LabelMapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -92,6 +92,21 @@ def test_region_nd_map_plot_two_axes():
 
     with pytest.raises(ValueError):
         m.plot()
+
+
+@requires_dependency("matplotlib")
+def test_region_nd_map_plot_label_axis():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+    label_axis = LabelMapAxis(labels=["dataset-1", "dataset-2"], name="dataset")
+
+    m = RegionNDMap.create(region=None, axes=[energy_axis, label_axis])
+    m.data = np.random.random(m.data.shape)
+
+    with mpl_plot_check():
+        m.plot(axis_name="energy")
+
+    with mpl_plot_check():
+        m.plot(axis_name="dataset")
 
 
 @requires_dependency("matplotlib")
