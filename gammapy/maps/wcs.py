@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 from functools import lru_cache
+import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -27,6 +28,7 @@ from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]
 
+log = logging.getLogger(__name__)
 
 def _check_width(width):
     """Check and normalise width argument.
@@ -913,9 +915,15 @@ class WcsGeom(Geom):
         """
         width = _check_width(width) * u.deg
 
+        binsz = self.pixel_scales
+        width_npix = (width / binsz).to_value("")
+
+        invalid_size = width_npix<1
+        if np.any(invalid_size):
+            width_npix[invalid_size] = 1
+            width[invalid_size] = binsz[invalid_size]
+            log.warning("Cutout size smaller than bin size. Setting size to {width}.")
         if odd_npix:
-            binsz = self.pixel_scales
-            width_npix = (width / binsz).to_value("")
             width = round_up_to_odd(width_npix)
 
         dummy_data = np.empty(self.to_image().data_shape)

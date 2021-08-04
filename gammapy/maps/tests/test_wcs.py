@@ -303,6 +303,14 @@ def test_cutout_info():
     assert cutout_info["cutout-slices"][0].start == 0
     assert cutout_info["cutout-slices"][1].start == 0
 
+def test_cutout_min_size(caplog):
+    geom = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.5)
+    position = SkyCoord(0, 0, unit="deg")
+    cutout_geom = geom.cutout(position=position, width=["2 deg", "0.1 deg"])
+
+    assert cutout_geom.data_shape == (1, 4)
+    assert caplog.records[-1].levelname == "WARNING"
+    assert f"Cutout size smaller than bin size." in caplog.records[-1].message
 
 def test_wcsgeom_get_coord():
     geom = WcsGeom.create(
