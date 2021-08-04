@@ -638,9 +638,10 @@ class WcsNDMap(WcsMap):
         ----------
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
-        kwargs : dict
-            Keyword arguments passed to `scipy.signal.convolve`
-            Default values are method = 'fft' and mode = 'same'
+        convolve_method : str
+            The method used by `~scipy.signal.convolve`. Default is 'fft'.
+        mode : str
+            The convolution mode used by `~scipy.signal.convolve`. Default is 'same'.
 
         Returns
         -------

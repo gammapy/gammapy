@@ -521,12 +521,8 @@ class HpxNDMap(HpxMap):
         kernel : `~gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `ndi.convolve` otherwise.
         **kwargs : dict
-            Keyword arguments passed to `scipy.signal.fftconvolve` or
-            `ndi.convolve`.
+            Keyword arguments passed to `~gammapy.maps.WcsNDMap.convolve`.
 
         Returns
         -------
@@ -557,9 +553,8 @@ class HpxNDMap(HpxMap):
         kernel : `~gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
-        kwargs : dict
-            Keyword arguments passed to `scipy.signal.fftconvolve` or
-            `ndi.convolve`.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsNDMap.convolve`.
 
         Returns
         -------
