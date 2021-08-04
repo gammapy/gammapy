@@ -1717,7 +1717,11 @@ class MapAxes(Sequence):
                     colnames = [name, name + "_MIN", name + "_MAX"]
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-                    table[colname] = np.ravel(v[idx]).astype(np.float32)
+                    # do not store edges for lable axis
+                    if ax.node_type == "label" and colname != name:
+                        continue
+
+                    table[colname] = np.ravel(v[idx])
 
                 if isinstance(ax, TimeMapAxis):
                     ref_dict = time_ref_to_dict(ax.reference_time)
@@ -1820,11 +1824,15 @@ class MapAxes(Sequence):
                 if axcols is None:
                     break
 
-                # TODO: what is good way to check whether it is a time axis?
+                # TODO: what is good way to check whether it is a given axis type?
                 try:
-                    axis = TimeMapAxis.from_table(table, format=format, idx=idx)
-                except (KeyError, ValueError):
-                    axis = MapAxis.from_table(table, format=format, idx=idx)
+                    axis = LabelMapAxis.from_table(table, format=format, idx=idx)
+                except (KeyError, TypeError):
+                    try:
+                        axis = TimeMapAxis.from_table(table, format=format, idx=idx)
+                    except (KeyError, ValueError):
+                        axis = MapAxis.from_table(table, format=format, idx=idx)
+
                 axes.append(axis)
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
@@ -2584,6 +2592,16 @@ class LabelMapAxis:
         raise ValueError("A LabelMapAxis does not define edges")
 
     @property
+    def edges_min(self):
+        """Edges of the label axis"""
+        return self._labels
+
+    @property
+    def edges_max(self):
+        """Edges of the label axis"""
+        return self._labels
+
+    @property
     def bin_width(self):
         """Bin width is unity """
         return np.ones(self.nbin)
@@ -2630,6 +2648,59 @@ class LabelMapAxis:
             rotation_mode="anchor",
         )
         return ax
+
+    def to_header(self, format="gadf", idx=0):
+        """Create FITS header
+
+        Parameters
+        ----------
+        format : {"ogip"}
+            Format specification
+        idx : int
+            Column index of the axis.
+
+        Returns
+        -------
+        header : `~astropy.io.fits.Header`
+            Header to extend.
+        """
+        header = fits.Header()
+
+        if format == "gadf":
+            key = f"AXCOLS{idx}"
+            header[key] = self.name.upper()
+        else:
+            raise ValueError(f"Unknown format {format}")
+
+        return header
+
+    # TODO: how configurable should that be? column names?
+    @classmethod
+    def from_table(cls, table, format="gadf", idx=0):
+        """Create time map axis from table
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Bin table HDU
+        format : {"gadf"}
+            Format to use.
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+        """
+        if format == "gadf":
+            colname = table.meta.get("AXCOLS{}".format(idx + 1))
+            column = table[colname]
+            if not np.issubdtype(column.dtype, np.str_):
+                raise TypeError(f"Not a valid dtype for label axis: '{column.dtype}'")
+            labels = np.unique(column.data)
+        else:
+            raise ValueError(f"Not a supported format: {format}")
+
+        return cls(labels=labels, name=colname.lower())
 
     def __repr__(self):
         str_ = self.__class__.__name__ + "\n"
