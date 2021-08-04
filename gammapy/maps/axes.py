@@ -2589,6 +2589,11 @@ class LabelMapAxis:
         return np.ones(self.nbin)
 
     @property
+    def as_plot_xerr(self):
+        """Plot labels"""
+        return 0.5 * np.ones(self.nbin)
+
+    @property
     def as_plot_labels(self):
         """Plot labels"""
         return self._labels.tolist()
@@ -2603,8 +2608,7 @@ class LabelMapAxis:
         """Plot labels"""
         return np.arange(self.nbin + 1) - 0.5
 
-    @staticmethod
-    def format_plot_axis(ax):
+    def format_plot_axis(self, ax):
         """Format plot axis.
 
         Parameters
@@ -2618,6 +2622,13 @@ class LabelMapAxis:
             Formatted plot axis.
         """
         # TODO: tilt labels 30 deg?
+        ax.set_xticks(self.as_plot_center)
+        ax.set_xticklabels(
+            self.as_plot_labels,
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
         return ax
 
     def __repr__(self):
