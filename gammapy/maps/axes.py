@@ -1391,7 +1391,7 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def replace(self, axis):
-        """Replace a give axis
+        """Replace a given axis
 
         Parameters
         ----------
@@ -2746,3 +2746,21 @@ class LabelMapAxis:
     def copy(self):
         """Copy axis"""
         return copy.deepcopy(self)
+
+    def slice(self, idx):
+        """Create a new axis object by extracting a slice from this axis.
+
+        Parameters
+        ----------
+        idx : slice
+            Slice object selecting a subselection of the axis.
+
+        Returns
+        -------
+        axis : `~LabelMapAxis`
+            Sliced axis object.
+        """
+        return self.__class__(
+            labels=self._labels[idx],
+            name=self.name,
+        )
