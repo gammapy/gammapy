@@ -916,13 +916,9 @@ class WcsGeom(Geom):
         width = _check_width(width) * u.deg
 
         binsz = self.pixel_scales
-        width_npix = (width / binsz).to_value("")
+        width_npix = np.clip((width / binsz).to_value(""), 1, None)
+        width = width_npix*binsz
 
-        invalid_size = width_npix<1
-        if np.any(invalid_size):
-            width_npix[invalid_size] = 1
-            width[invalid_size] = binsz[invalid_size]
-            log.warning("Cutout size smaller than bin size. Setting size to {width}.")
         if odd_npix:
             width = round_up_to_odd(width_npix)
 
