@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 from functools import lru_cache
-import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -27,8 +26,6 @@ from .axes import MapAxes
 from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]
-
-log = logging.getLogger(__name__)
 
 def _check_width(width):
     """Check and normalise width argument.
