@@ -6,7 +6,7 @@ from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
-from astropy.units import Quantity, Unit
+from astropy import units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
@@ -146,18 +146,18 @@ class EventList:
         With 32-bit floats times will be incorrect by a few seconds
         when e.g. adding them to the reference time.
         """
-        met = Quantity(self.table["TIME"].astype("float64"), "second")
+        met = u.Quantity(self.table["TIME"].astype("float64"), "second")
         return self.time_ref + met
 
     @property
     def observation_time_start(self):
         """Observation start time (`~astropy.time.Time`)."""
-        return self.time_ref + Quantity(self.table.meta["TSTART"], "second")
+        return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
 
     @property
     def observation_time_stop(self):
         """Observation stop time (`~astropy.time.Time`)."""
-        return self.time_ref + Quantity(self.table.meta["TSTOP"], "second")
+        return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
 
     @property
     def radec(self):
@@ -230,10 +230,10 @@ class EventList:
 
         Examples
         --------
-        >>> from astropy.units import Quantity
+        >>> from astropy import units as u
         >>> from gammapy.data import EventList
         >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
-        >>> energy_range = Quantity([1, 20], 'TeV')
+        >>> energy_range =[1, 20] * u.TeV
         >>> event_list = event_list.select_energy(energy_range=energy_range)
         """
         energy = self.energy
@@ -309,9 +309,11 @@ class EventList:
         return self.select_row_subset(mask)
 
     @property
-    def _default_plot_energy_edges(self):
+    def _default_plot_energy_axis(self):
         energy = self.energy
-        return np.geomspace(energy.min(), energy.max(), 50)
+        return MapAxis.from_energy_bounds(
+            energy_min=energy.min(), energy_max=energy.max(), nbin=50
+        )
 
     def plot_energy(self, ax=None,  **kwargs):
         """Plot counts as a function of energy.
@@ -332,16 +334,18 @@ class EventList:
 
         ax = plt.gca() if ax is None else ax
 
+        energy_axis = self._default_plot_energy_axis
+
         kwargs.setdefault("log", True)
         kwargs.setdefault("histtype", "step")
-        kwargs.setdefault("bins", self._default_plot_energy_edges)
+        kwargs.setdefault("bins", energy_axis.edges)
 
         with quantity_support():
             ax.hist(self.energy, **kwargs)
 
-        ax.loglog()
-        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        energy_axis.format_plot_xaxis(ax=ax)
         ax.set_ylabel("Counts")
+        ax.set_yscale("log")
         return ax
 
     def plot_time(self, ax=None, **kwargs):
@@ -472,7 +476,7 @@ class EventList:
         center : `~astropy.coordinates.SkyCoord`
             Sky coord from which offset is computed
         **kwargs : dict
-            Keyword arguments forwared to `~matplotlib.pyplot.pcolormesh`
+            Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`
 
         Returns
         -------
@@ -487,22 +491,23 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        energy_edges = self._default_plot_energy_edges
+        energy_axis = self._default_plot_energy_axis
+        
         offset = center.separation(self.radec)
-        offset_edges = np.linspace(0, offset.max(), 30)
+        offset_axis = MapAxis.from_bounds(0 * u.deg, offset.max(), nbin=30, name="offset")
 
         counts = np.histogram2d(
-            x=self.energy, y=offset, bins=(energy_edges, offset_edges),
+            x=self.energy, y=offset, bins=(energy_axis.edges, offset_axis.edges),
         )[0]
 
         kwargs.setdefault("norm", LogNorm())
 
         with quantity_support():
-            ax.pcolormesh(energy_edges, offset_edges, counts.T, **kwargs)
+            ax.pcolormesh(energy_axis.edges, offset_axis.edges, counts.T, **kwargs)
 
-        ax.set_xscale("log")
-        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
-        ax.set_ylabel(f"Offset ({ax.yaxis.units})")
+        energy_axis.format_plot_xaxis(ax=ax)
+        offset_axis.format_plot_yaxis(ax=ax)
+        return ax
 
     def check(self, checks="all"):
         """Run checks.
@@ -532,7 +537,7 @@ class EventList:
         for axis in geom.axes:
             try:
                 col = cols[axis.name.upper()]
-                coord[axis.name] = Quantity(col).to(axis.unit)
+                coord[axis.name] = u.Quantity(col).to(axis.unit)
             except KeyError:
                 raise KeyError(f"Column not found in event list: {axis.name!r}")
 
@@ -564,7 +569,7 @@ class EventList:
         The wall time, including dead-time.
         """
         time_delta = (self.observation_time_stop - self.observation_time_start).sec
-        return Quantity(time_delta, "s")
+        return u.Quantity(time_delta, "s")
 
     @property
     def observation_live_time_duration(self):
@@ -577,7 +582,7 @@ class EventList:
 
         where ``f_dead`` is the dead-time fraction.
         """
-        return Quantity(self.table.meta["LIVETIME"], "second")
+        return u.Quantity(self.table.meta["LIVETIME"], "second")
 
     @property
     def observation_dead_time_fraction(self):
@@ -764,7 +769,7 @@ class EventListChecker(Checker):
         "coordinates_altaz": "check_coordinates_altaz",
     }
 
-    accuracy = {"angle": Angle("1 arcsec"), "time": Quantity(1, "microsecond")}
+    accuracy = {"angle": Angle("1 arcsec"), "time": u.Quantity(1, "microsecond")}
 
     # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
     meta_required = [
@@ -835,7 +840,7 @@ class EventListChecker(Checker):
             if name not in t.colnames:
                 yield self._record(level="error", msg=f"Missing table column: {name!r}")
             else:
-                if Unit(unit) != (t[name].unit or ""):
+                if u.Unit(unit) != (t[name].unit or ""):
                     yield self._record(
                         level="error", msg=f"Invalid unit for column: {name!r}"
                     )

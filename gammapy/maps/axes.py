@@ -221,7 +221,7 @@ class MapAxis:
     def bounds(self):
         """Bounds of the axis (~astropy.units.Quantity)"""
         idx = [0, -1]
-        if self.node_type == "edge":
+        if self.node_type == "edges":
             return self.edges[idx]
         else:
             return self.center[idx]
@@ -285,10 +285,6 @@ class MapAxis:
 
         xlabel = self.name.capitalize() + f" [{ax.xaxis.units}]"
         ax.set_xlabel(xlabel)
-
-        if "energy" in self.name:
-            ax.set_yscale("log", nonpositive="clip")
-
         ax.set_xlim(self.bounds)
         return ax
 
@@ -2398,6 +2394,11 @@ class TimeMapAxis:
             coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
         name : str
             Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
         """
         unit = u.Unit(unit)
         reference_time = time_min[0]
@@ -2443,11 +2444,30 @@ class TimeMapAxis:
 
     @classmethod
     def from_gti(cls, gti, name="time"):
-        """Create a time axis from an input GTI."""
+        """Create a time axis from an input GTI.
+
+        Parameters
+        ----------
+        gti : `GTI`
+            GTI table
+        name : str
+            Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+
+        """
         tmin = gti.time_start - gti.time_ref
         tmax = gti.time_stop - gti.time_ref
 
-        return cls(tmin.to('s'), tmax.to('s'), gti.time_ref, name)
+        return cls(
+            edges_min=tmin.to('s'),
+            edges_max=tmax.to('s'),
+            reference_time=gti.time_ref,
+            name=name
+        )
 
     def to_header(self, format="gadf", idx=0):
         """Create FITS header
@@ -2670,7 +2690,6 @@ class LabelMapAxis:
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
-        # TODO: tilt labels 30 deg?
         ax.set_xticks(self.as_plot_center)
         ax.set_xticklabels(
             self.as_plot_labels,

@@ -350,6 +350,7 @@ class RegionNDMap(Map):
             yield tuple(idx), self.quantity[tuple(idx)]
 
     def fill_by_idx(self, idx, weights=None):
+        #TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
 
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
