@@ -142,23 +142,22 @@ class PSF(IRF):
 
         ax = plt.gca() if ax is None else ax
 
-        energy_true = self.axes["energy_true"].center
+        energy_true = self.axes["energy_true"]
 
         for theta in offset:
             for frac in fraction:
                 plot_kwargs = kwargs.copy()
                 radius = self.containment_radius(
-                    energy_true=energy_true, offset=theta, fraction=frac
+                    energy_true=energy_true.center, offset=theta, fraction=frac
                 )
                 plot_kwargs.setdefault(
                     "label", f"{theta}, {100 * frac:.1f}%"
                 )
                 with quantity_support():
-                    ax.plot(energy_true, radius, **plot_kwargs)
+                    ax.plot(energy_true.center, radius, **plot_kwargs)
 
-        ax.semilogx()
+        energy_true.format_plot_xaxis(ax=ax)
         ax.legend(loc="best")
-        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
         ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
@@ -185,12 +184,12 @@ class PSF(IRF):
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.axes["energy_true"].center
-        offset = self.axes["offset"].center
+        energy = self.axes["energy_true"]
+        offset = self.axes["offset"]
 
         # Set up and compute data
         containment = self.containment_radius(
-            energy_true=energy[:, np.newaxis], offset=offset, fraction=fraction
+            energy_true=energy.center[:, np.newaxis], offset=offset.center, fraction=fraction
         )
 
         # plotting defaults
@@ -200,12 +199,10 @@ class PSF(IRF):
 
         # Plotting
         with quantity_support():
-            caxes = ax.pcolormesh(energy, offset, containment.value.T, **kwargs)
+            caxes = ax.pcolormesh(energy.edges, offset.edges, containment.value.T, **kwargs)
 
-        # Axes labels and ticks, colobar
-        ax.semilogx()
-        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
-        ax.set_ylabel(f"Offset ({ax.yaxis.units})")
+        energy.format_plot_xaxis(ax=ax)
+        offset.format_plot_yaxis(ax=ax)
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
@@ -232,19 +229,20 @@ class PSF(IRF):
         ax = plt.gca() if ax is None else ax
 
         try:
-            rad = self.axes["rad"].center
+            rad = self.axes["rad"]
         except KeyError:
-            rad = RAD_AXIS_DEFAULT.center
+            rad = RAD_AXIS_DEFAULT
 
         for theta in offset:
             for energy in energy_true:
-                psf_value = self.evaluate(rad=rad, energy_true=energy, offset=theta)
+                psf_value = self.evaluate(rad=rad.center, energy_true=energy, offset=theta)
                 label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
                 with quantity_support():
-                    ax.plot(rad, psf_value, label=label, **kwargs)
+                    ax.plot(rad.center, psf_value, label=label, **kwargs)
+
+        rad.format_plot_xaxis(ax=ax)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad ({ax.xaxis.units})")
         ax.set_ylabel(f"PSF ({ax.yaxis.units})")
         plt.legend()
         return ax
