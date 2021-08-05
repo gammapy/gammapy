@@ -257,6 +257,17 @@ class MapAxis:
         """Plot center"""
         return self.center
 
+    @property
+    def as_plot_scale(self):
+        """Plot axis scale"""
+        mpl_scale = {
+            "lin": "linear",
+            "sqrt": "linear",
+            "log": "log"
+        }
+
+        return mpl_scale[self.interp]
+
     def format_plot_xaxis(self, ax):
         """Format plot axis
 
@@ -270,8 +281,7 @@ class MapAxis:
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis
         """
-        if self.interp == "log":
-            ax.set_xscale("log")
+        ax.set_xscale(self.as_plot_scale)
 
         xlabel = self.name.capitalize() + f" [{ax.xaxis.units}]"
         ax.set_xlabel(xlabel)
@@ -279,6 +289,7 @@ class MapAxis:
         if "energy" in self.name:
             ax.set_yscale("log", nonpositive="clip")
 
+        ax.set_xlim(self.bounds)
         return ax
 
     def format_plot_yaxis(self, ax):
@@ -294,11 +305,11 @@ class MapAxis:
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis
         """
-        if self.interp == "log":
-            ax.set_yscale("log")
+        ax.set_yscale(self.as_plot_scale)
 
         ylabel = self.name.capitalize() + f" [{ax.yaxis.units}]"
         ax.set_ylabel(ylabel)
+        ax.set_ylim(self.bounds)
         return ax
 
     @property
@@ -2122,7 +2133,7 @@ class TimeMapAxis:
 
         return center
 
-    def format_plot_axis(self, ax):
+    def format_plot_xaxis(self, ax):
         """Format plot axis
 
         Parameters
@@ -2646,7 +2657,7 @@ class LabelMapAxis:
         """Plot labels"""
         return np.arange(self.nbin + 1) - 0.5
 
-    def format_plot_axis(self, ax):
+    def format_plot_xaxis(self, ax):
         """Format plot axis.
 
         Parameters
