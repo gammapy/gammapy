@@ -520,7 +520,7 @@ class EDispKernel(IRF):
         from matplotlib.colors import PowerNorm
 
         kwargs.setdefault("cmap", "GnBu")
-        norm = PowerNorm(gamma=0.5)
+        norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
 
         ax = plt.gca() if ax is None else ax
