@@ -25,7 +25,7 @@ from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
     CompoundSkyRegion,
-    DS9Parser,
+    Regions,
     PixelRegion,
     RectangleSkyRegion,
     Region,
@@ -81,7 +81,7 @@ def make_region(region):
         # This is basic and works for simple regions
         # It could be extended to cover more things,
         # like e.g. compound regions, exclusion regions, ....
-        return DS9Parser(region).shapes[0].to_region()
+        return Regions.parse(region, format="ds9")[0]
     elif isinstance(region, Region):
         return region
     else:

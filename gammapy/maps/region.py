@@ -6,12 +6,12 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
-from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
+from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
 from gammapy.utils.regions import (
     compound_region_to_list,
     list_to_compound_region,
     make_region,
-    compound_region_center
+    compound_region_center,
 )
 from gammapy.maps.wcs import _check_width
 from .core import MapCoord, Map
@@ -555,7 +555,7 @@ class RegionGeom(Geom):
         pixel_region_list = []
         for reg in region_list:
             pixel_region_list.append(reg.to_pixel(self.wcs))
-        table = fits_region_objects_to_table(pixel_region_list)
+        table = Regions(pixel_region_list).serialize(format="fits")
 
         header = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape).to_header()
         table.meta.update(header)
@@ -645,12 +645,11 @@ class RegionGeom(Geom):
 
         if region_hdu in hdulist:
             region_table = Table.read(hdulist[region_hdu])
-            parser = FITSRegionParser(region_table)
-            pix_region = parser.shapes.to_regions()
             wcs = WcsGeom.from_header(region_table.meta).wcs
 
             regions = []
-            for reg in pix_region:
+
+            for reg in Regions.parse(data=region_table, format="fits"):
                 regions.append(reg.to_sky(wcs))
             region = list_to_compound_region(regions)
         else:
