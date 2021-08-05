@@ -501,15 +501,13 @@ class EDispKernel(IRF):
 
         return var / norm
 
-    def plot_matrix(self, ax=None, show_energy=None, add_cbar=False, **kwargs):
+    def plot_matrix(self, ax=None, add_cbar=False, **kwargs):
         """Plot PDF matrix.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        show_energy : `~astropy.units.Quantity`, optional
-            Show energy, e.g. threshold, as vertical line
         add_cbar : bool
             Add a colorbar to the plot.
 
@@ -522,30 +520,25 @@ class EDispKernel(IRF):
         from matplotlib.colors import PowerNorm
 
         kwargs.setdefault("cmap", "GnBu")
-        norm = PowerNorm(gamma=0.5)
+        norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
 
         ax = plt.gca() if ax is None else ax
 
-        energy_true = self.axes["energy_true"].edges
-        energy = self.axes["energy"].edges
+        energy_axis_true = self.axes["energy_true"]
+        energy_axis = self.axes["energy"]
 
-        caxes = ax.pcolormesh(energy_true.value, energy.value, self.data.T, **kwargs)
-
-        if show_energy is not None:
-            ener_val = show_energy.to_value(self.axes["energy"].unit)
-            ax.hlines(ener_val, 0, 200200, linestyles="dashed")
+        with quantity_support():
+            caxes = ax.pcolormesh(
+                energy_axis_true.edges, energy_axis.edges, self.data.T, **kwargs
+            )
 
         if add_cbar:
             label = "Probability density (A.U.)"
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{energy_true.unit}]")
-        ax.set_ylabel(fr"$E_\mathrm{{Reco}}$ [{energy.unit}]")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_xlim(energy_true.value.min(), energy_true.value.max())
-        ax.set_ylim(energy.value.min(), energy.value.max())
+        energy_axis_true.format_plot_xaxis(ax=ax)
+        energy_axis.format_plot_yaxis(ax=ax)
         return ax
 
     def plot_bias(self, ax=None, **kwargs):

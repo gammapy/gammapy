@@ -1578,7 +1578,7 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
-    def slice_by_energy(self, energy_min, energy_max, name=None):
+    def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
         """Select and slice datasets in energy range
 
         Parameters
@@ -1596,8 +1596,15 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
 
-        energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
         energy_axis = self._geom.axes["energy"]
+
+        if energy_min is None:
+            energy_min = energy_axis.bounds[0]
+
+        if energy_max is None:
+            energy_max = energy_axis.bounds[1]
+
+        energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
 
         group = energy_axis.group_table(edges=[energy_min, energy_max])
 

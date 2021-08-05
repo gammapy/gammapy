@@ -167,20 +167,20 @@ class Background2D(BackgroundIRF):
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.axes["energy"].edges.to_value("TeV")
-        y = self.axes["offset"].edges.to_value("deg")
-        z = self.quantity.T.value
+        energy_axis, offset_axis = self.axes["energy"], self.axes["offset"]
+        data = self.quantity.value
 
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("edgecolors", "face")
+        kwargs.setdefault("norm", LogNorm())
 
-        caxes = ax.pcolormesh(x, y, z, norm=LogNorm(), **kwargs)
-        ax.set_xscale("log")
-        ax.set_ylabel(f"Offset (deg)")
-        ax.set_xlabel(f"Energy (TeV)")
+        with quantity_support():
+            caxes = ax.pcolormesh(
+                energy_axis.edges, offset_axis.edges, data.T, **kwargs
+            )
 
-        xmin, xmax = x.min(), x.max()
-        ax.set_xlim(xmin, xmax)
+        energy_axis.format_plot_xaxis(ax=ax)
+        offset_axis.format_plot_yaxis(ax=ax)
 
         if add_cbar:
             label = f"Background rate ({self.unit})"
@@ -210,17 +210,17 @@ class Background2D(BackgroundIRF):
             e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
             energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
 
-        offset = self.axes["offset"].center
+        offset_axis = self.axes["offset"]
 
         for ee in energy:
-            bkg = self.evaluate(offset=offset, energy=ee)
+            bkg = self.evaluate(offset=offset_axis.center, energy=ee)
             if np.isnan(bkg).all():
                 continue
             label = f"energy = {ee:.1f}"
             with quantity_support():
-                ax.plot(offset, bkg, label=label, **kwargs)
+                ax.plot(offset_axis.center, bkg, label=label, **kwargs)
 
-        ax.set_xlabel(f"Offset ({ax.xaxis.units})")
+        offset_axis.format_plot_xaxis(ax=ax)
         ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
         ax.set_yscale("log")
         ax.legend(loc="upper right")
@@ -252,21 +252,18 @@ class Background2D(BackgroundIRF):
             off_min, off_max = offset_axis.center.value[[0, -1]]
             offset = np.linspace(off_min, off_max, 4) * offset_axis.unit
 
-        energy = self.axes["energy"].center
+        energy_axis = self.axes["energy"]
 
         for off in offset:
-            bkg = self.evaluate(offset=off, energy=energy)
+            bkg = self.evaluate(offset=off, energy=energy_axis.center)
             label = f"offset = {off:.2f}"
             with quantity_support():
-                ax.plot(energy, bkg, label=label, **kwargs)
+                ax.plot(energy_axis.center, bkg, label=label, **kwargs)
 
-        ax.set_xscale("log")
+        energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
         ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
-        ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc="best")
-
         return ax
 
     def plot_spectrum(self, ax=None, **kwargs):
@@ -288,21 +285,18 @@ class Background2D(BackgroundIRF):
 
         ax = plt.gca() if ax is None else ax
 
-        offset = self.axes["offset"].edges
-        energy = self.axes["energy"].center
+        offset_axis = self.axes["offset"]
+        energy_axis = self.axes["energy"]
 
-        bkg = []
-        for ee in energy:
-            data = self.evaluate(offset=offset, energy=ee)
-            val = np.nansum(trapz_loglog(data, offset, axis=0))
-            bkg.append(val.value)
+        bkg = self.integral(
+            offset=offset_axis.bounds[1], axis_name="offset"
+        )
 
         with quantity_support():
-            ax.plot(energy, bkg, label="integrated spectrum", **kwargs)
+            ax.plot(energy_axis.center, bkg, label="integrated spectrum", **kwargs)
 
-        ax.set_xscale("log")
+        energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
         ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
         ax.legend(loc="best")
         return ax

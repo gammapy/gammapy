@@ -116,7 +116,7 @@ class RegionNDMap(Map):
                     **kwargs
                 )
 
-        axis.format_plot_axis(ax=ax)
+        axis.format_plot_xaxis(ax=ax)
 
         if len(self.geom.axes) > 1:
             plt.legend()
@@ -164,7 +164,7 @@ class RegionNDMap(Map):
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 
-        axis.format_plot_axis(ax=ax)
+        axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
         return ax
 
@@ -350,6 +350,7 @@ class RegionNDMap(Map):
             yield tuple(idx), self.quantity[tuple(idx)]
 
     def fill_by_idx(self, idx, weights=None):
+        #TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
 
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)

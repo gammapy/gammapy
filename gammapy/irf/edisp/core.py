@@ -160,7 +160,7 @@ class EnergyDispersion2D(IRF):
         super().normalize(axis_name="migra")
 
     def plot_migration(
-        self, ax=None, offset=None, energy_true=None, migra=None, **kwargs
+        self, ax=None, offset=None, energy_true=None, **kwargs
     ):
         """Plot energy dispersion for given offset and true energy.
 
@@ -172,8 +172,8 @@ class EnergyDispersion2D(IRF):
             Offset
         energy_true : `~astropy.units.Quantity`, optional
             True energy
-        migra : `~numpy.ndarray`, optional
-            Migration nodes
+        **kwargs : dict
+            Keyword arguments forwarded to `~matplotlib.pyplot.plot`
 
         Returns
         -------
@@ -194,19 +194,18 @@ class EnergyDispersion2D(IRF):
         else:
             energy_true = np.atleast_1d(Quantity(energy_true))
 
-        migra = self.axes["migra"].center if migra is None else migra
+        migra = self.axes["migra"]
 
         with quantity_support():
             for ener in energy_true:
                 for off in offset:
-                    disp = self.evaluate(offset=off, energy_true=ener, migra=migra)
+                    disp = self.evaluate(offset=off, energy_true=ener, migra=migra.center)
                     label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
-                    ax.plot(migra, disp, label=label, **kwargs)
+                    ax.plot(migra.center, disp, label=label, **kwargs)
 
-        ax.set_xlabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
+        migra.format_plot_xaxis(ax=ax)
         ax.set_ylabel("Probability density")
         ax.legend(loc="upper left")
-
         return ax
 
     def plot_bias(self, ax=None, offset=None, add_cbar=False, **kwargs):
@@ -242,9 +241,6 @@ class EnergyDispersion2D(IRF):
         energy_true = self.axes["energy_true"]
         migra = self.axes["migra"]
 
-        x = energy_true.edges
-        y = migra.edges.to("")
-
         z = self.evaluate(
             offset=offset,
             energy_true=energy_true.center.reshape(1, -1, 1),
@@ -252,17 +248,15 @@ class EnergyDispersion2D(IRF):
         ).value[0]
 
         with quantity_support():
-            caxes = ax.pcolormesh(x, y, z.T, **kwargs)
+            caxes = ax.pcolormesh(energy_true.edges, migra.edges, z.T, **kwargs)
+
+        energy_true.format_plot_xaxis(ax=ax)
+        migra.format_plot_yaxis(ax=ax)
 
         if add_cbar:
             label = "Probability density (A.U.)"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{ax.xaxis.units}]")
-        ax.set_ylabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
-        ax.set_xlim(x.min(), x.max())
-        ax.set_ylim(y.min(), y.max())
-        ax.set_xscale("log")
         return ax
 
     def peek(self, figsize=(15, 5)):

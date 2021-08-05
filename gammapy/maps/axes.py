@@ -221,7 +221,7 @@ class MapAxis:
     def bounds(self):
         """Bounds of the axis (~astropy.units.Quantity)"""
         idx = [0, -1]
-        if self.node_type == "edge":
+        if self.node_type == "edges":
             return self.edges[idx]
         else:
             return self.center[idx]
@@ -257,7 +257,18 @@ class MapAxis:
         """Plot center"""
         return self.center
 
-    def format_plot_axis(self, ax):
+    @property
+    def as_plot_scale(self):
+        """Plot axis scale"""
+        mpl_scale = {
+            "lin": "linear",
+            "sqrt": "linear",
+            "log": "log"
+        }
+
+        return mpl_scale[self.interp]
+
+    def format_plot_xaxis(self, ax):
         """Format plot axis
 
         Parameters
@@ -270,15 +281,31 @@ class MapAxis:
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis
         """
-        if self.interp == "log":
-            ax.set_xscale("log")
+        ax.set_xscale(self.as_plot_scale)
 
         xlabel = self.name.capitalize() + f" [{ax.xaxis.units}]"
         ax.set_xlabel(xlabel)
+        ax.set_xlim(self.bounds)
+        return ax
 
-        if "energy" in self.name:
-            ax.set_yscale("log", nonpositive="clip")
+    def format_plot_yaxis(self, ax):
+        """Format plot axis
 
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis
+        """
+        ax.set_yscale(self.as_plot_scale)
+
+        ylabel = self.name.capitalize() + f" [{ax.yaxis.units}]"
+        ax.set_ylabel(ylabel)
+        ax.set_ylim(self.bounds)
         return ax
 
     @property
@@ -2102,7 +2129,7 @@ class TimeMapAxis:
 
         return center
 
-    def format_plot_axis(self, ax):
+    def format_plot_xaxis(self, ax):
         """Format plot axis
 
         Parameters
@@ -2367,6 +2394,11 @@ class TimeMapAxis:
             coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
         name : str
             Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
         """
         unit = u.Unit(unit)
         reference_time = time_min[0]
@@ -2412,11 +2444,30 @@ class TimeMapAxis:
 
     @classmethod
     def from_gti(cls, gti, name="time"):
-        """Create a time axis from an input GTI."""
+        """Create a time axis from an input GTI.
+
+        Parameters
+        ----------
+        gti : `GTI`
+            GTI table
+        name : str
+            Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+
+        """
         tmin = gti.time_start - gti.time_ref
         tmax = gti.time_stop - gti.time_ref
 
-        return cls(tmin.to('s'), tmax.to('s'), gti.time_ref, name)
+        return cls(
+            edges_min=tmin.to('s'),
+            edges_max=tmax.to('s'),
+            reference_time=gti.time_ref,
+            name=name
+        )
 
     def to_header(self, format="gadf", idx=0):
         """Create FITS header
@@ -2626,7 +2677,7 @@ class LabelMapAxis:
         """Plot labels"""
         return np.arange(self.nbin + 1) - 0.5
 
-    def format_plot_axis(self, ax):
+    def format_plot_xaxis(self, ax):
         """Format plot axis.
 
         Parameters
@@ -2639,7 +2690,6 @@ class LabelMapAxis:
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
-        # TODO: tilt labels 30 deg?
         ax.set_xticks(self.as_plot_center)
         ax.set_xticklabels(
             self.as_plot_labels,
