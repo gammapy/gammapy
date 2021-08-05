@@ -74,9 +74,13 @@ class RegionNDMap(Map):
         ax = ax or plt.gca()
 
         if axis_name is None:
-            # set longest axis as default
-            idx = np.argmax(self.geom.axes.shape)
-            axis_name = self.geom.axes.names[idx]
+            if self.geom.axes.is_unidimensional:
+                axis_name = self.geom.axes.primary_axis.name
+            else:
+                raise ValueError(
+                    "Plotting a region map with multiple extra axes requires "
+                    "specifying the 'axis_name' keyword."
+                )
 
         axis = self.geom.axes[axis_name]
 
@@ -484,7 +488,7 @@ class RegionNDMap(Map):
         ----------
         table : `~astropy.table.Table`
             Table with input data
-        format : {"gadf-sed}
+        format : {"gadf-sed", "lightcurve"}
             Format to use
         colname : str
             Column name to take the data from.
@@ -511,6 +515,10 @@ class RegionNDMap(Map):
             else:
                 axes = [axes["energy"]]
 
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        elif format == "lightcurve":
+            axes = MapAxes.from_table(table=table, format=format)
             data = table[colname].data
             unit = table[colname].unit or ""
         else:
