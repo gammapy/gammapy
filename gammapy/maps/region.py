@@ -10,7 +10,6 @@ from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyReg
 from gammapy.utils.regions import (
     compound_region_to_regions,
     regions_to_compound_region,
-    make_region,
     compound_region_center,
 )
 from gammapy.maps.wcs import _check_width
@@ -507,12 +506,7 @@ class RegionGeom(Geom):
         geom : `RegionGeom`
             Region geometry
         """
-        if isinstance(region, str):
-            region = make_region(region)
-        elif isinstance(region, SkyCoord):
-            region = PointSkyRegion(center=region)
-
-        return cls(region, **kwargs)
+        return cls.from_regions(regions=region, **kwargs)
 
     def __repr__(self):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
@@ -605,7 +599,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        regions : `~regions.SkyRegion`
+        regions : list of `~regions.SkyRegion` or str
             Regions
         **kwargs: dict
             Keyword arguments forwarded to `RegionGeom`
@@ -615,11 +609,15 @@ class RegionGeom(Geom):
         geom : `RegionGeom`
             Region map geometry
         """
-        if isinstance(regions, (SkyRegion, str)):
-            regions = [make_region(regions)]
+        if isinstance(regions, str):
+            regions = Regions.parse(data=regions, format="ds9")
+        elif isinstance(regions, SkyRegion):
+            regions = [regions]
+        elif isinstance(regions, SkyCoord):
+            regions = [PointSkyRegion(center=regions)]
 
         region = regions_to_compound_region(regions)
-        return cls(region, **kwargs)
+        return cls(region=region, **kwargs)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", hdu=None):
