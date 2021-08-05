@@ -116,7 +116,7 @@ class RegionNDMap(Map):
                     **kwargs
                 )
 
-        axis.format_plot_axis(ax=ax)
+        axis.format_plot_xaxis(ax=ax)
 
         if len(self.geom.axes) > 1:
             plt.legend()
@@ -164,7 +164,7 @@ class RegionNDMap(Map):
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 
-        axis.format_plot_axis(ax=ax)
+        axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
         return ax
 
