@@ -491,7 +491,7 @@ class FluxPoints(FluxMaps):
                 axis.as_plot_edges, flux.edges, -z.T, **kwargs
             )
 
-        axis.format_plot_axis(ax=ax)
+        axis.format_plot_xaxis(ax=ax)
 
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
 
