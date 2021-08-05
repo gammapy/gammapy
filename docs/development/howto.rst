@@ -120,9 +120,9 @@ the code as well as the output value produced.
 
         Examples
         --------
-        >>> from gammapy.utils.regions import make_region
-        >>> region = make_region("galactic;circle(10,20,3)")
-        >>> print(region)
+        >>> from regions import Regions
+        >>> regions = Regions.parse("galactic;circle(10,20,3)", format="ds9")
+        >>> print(regions[0])
         Region: CircleSkyRegion
         center: <SkyCoord (Galactic): (l, b) in deg
             (10., 20.)>

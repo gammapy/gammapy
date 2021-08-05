@@ -492,14 +492,14 @@ class RegionGeom(Geom):
 
     @classmethod
     def create(cls, region, **kwargs):
-        """Create region.
+        """Create region geometry.
 
         Parameters
         ----------
         region : str or `~regions.SkyRegion`
-            Region
-        axes : list of `MapAxis`
-            Non spatial axes.
+            Region definition
+        **kwargs : dict
+            Keyword arguments passed to `RegionGeom.__init__`
 
         Returns
         -------
@@ -616,8 +616,10 @@ class RegionGeom(Geom):
         elif isinstance(regions, SkyCoord):
             regions = [PointSkyRegion(center=regions)]
 
-        region = regions_to_compound_region(regions)
-        return cls(region=region, **kwargs)
+        if regions:
+            regions = regions_to_compound_region(regions)
+
+        return cls(region=regions, **kwargs)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", hdu=None):
@@ -686,6 +688,11 @@ class RegionGeom(Geom):
             equivalent WCS geometry.
         **kwargs : dict
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
+
+        Returns
+        -------
+        ax : `~astropy.vizualisation.WCSAxes`
+            Axes to plot on.
         """
         import matplotlib.pyplot as plt
         from matplotlib.collections import PatchCollection
