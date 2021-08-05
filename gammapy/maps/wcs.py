@@ -27,7 +27,6 @@ from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]
 
-
 def _check_width(width):
     """Check and normalise width argument.
 
@@ -913,9 +912,11 @@ class WcsGeom(Geom):
         """
         width = _check_width(width) * u.deg
 
+        binsz = self.pixel_scales
+        width_npix = np.clip((width / binsz).to_value(""), 1, None)
+        width = width_npix*binsz
+
         if odd_npix:
-            binsz = self.pixel_scales
-            width_npix = (width / binsz).to_value("")
             width = round_up_to_odd(width_npix)
 
         dummy_data = np.empty(self.to_image().data_shape)
