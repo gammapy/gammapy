@@ -590,7 +590,7 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure.squeeze(), convolve_method="fft") > (structure.sum() - 1)
+            return self.convolve(structure.squeeze(), method="fft") > (structure.sum() - 1)
 
         data = ndi.binary_erosion(self.data, structure=structure)
         return self._init_copy(data=data)
@@ -620,12 +620,12 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure.squeeze(), convolve_method="fft") > 1
+            return self.convolve(structure.squeeze(), method="fft") > 1
 
         data = ndi.binary_dilation(self.data, structure=structure)
         return self._init_copy(data=data)
 
-    def convolve(self, kernel, convolve_method="fft", mode="same"):
+    def convolve(self, kernel, method="fft", mode="same"):
         """Convolve map with a kernel.
 
         If the kernel is two dimensional, it is applied to all image planes likewise.
@@ -638,7 +638,7 @@ class WcsNDMap(WcsMap):
         ----------
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
-        convolve_method : str
+        method : str
             The method used by `~scipy.signal.convolve`. Default is 'fft'.
         mode : str
             The convolution mode used by `~scipy.signal.convolve`. Default is 'same'.
@@ -689,13 +689,13 @@ class WcsNDMap(WcsMap):
         if self.geom.is_image and kernel.ndim == 3:
             for idx in range(kernel.shape[0]):
                 data[idx] = convolve(
-                    self.data.astype(np.float32), kernel[idx], method=convolve_method, mode=mode
+                    self.data.astype(np.float32), kernel[idx], method=method, mode=mode
                 )
         else:
             for img, idx in self.iter_by_image():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
                 data[idx] = convolve(
-                    img.astype(np.float32), kernel[ikern],  method=convolve_method, mode=mode
+                    img.astype(np.float32), kernel[ikern],  method=method, mode=mode
                 )
         return self._init_copy(data=data, geom=geom)
 
