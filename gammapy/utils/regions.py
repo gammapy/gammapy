@@ -5,10 +5,6 @@ Throughout Gammapy, we use `regions` to represent and work with regions.
 
 https://astropy-regions.readthedocs.io
 
-The function ``make_region`` should be used
-throughout Gammapy in all functions that take ``region`` objects as input.
-They do conversion to a standard form, and some validation.
-
 We might add in other conveniences and features here, e.g. sky coord contains
 without a WCS (see "sky and pixel regions" in PIG 10), or some HEALPix integration.
 
@@ -27,62 +23,14 @@ from regions import (
     CompoundSkyRegion,
     Regions,
     RectangleSkyRegion,
-    Region,
 )
 
 __all__ = [
-    "make_region",
     "make_orthogonal_rectangle_sky_regions",
     "make_concentric_annulus_sky_regions",
     "compound_region_to_regions",
     "regions_to_compound_region",
 ]
-
-
-def make_region(region):
-    """Make region object (`regions.Region`).
-
-    See also:
-
-    * `gammapy.utils.regions.make_pixel_region`
-    * https://astropy-regions.readthedocs.io/en/latest/ds9.html
-    * http://ds9.si.edu/doc/ref/region.html
-
-    Parameters
-    ----------
-    region : `regions.Region` or str
-        Region object or DS9 string representation
-
-    Examples
-    --------
-    If a region object in DS9 string format is given, the corresponding
-    region object is created. Note that in the DS9 format "image"
-    or "physical" coordinates start at 1, whereas `regions.PixCoord`
-    starts at 0 (as does Python, Numpy, Astropy, Gammapy, ...).
-
-    >>> from gammapy.utils.regions import make_region
-    >>> make_region("image;circle(10,20,3)")
-    <CirclePixelRegion(center=PixCoord(x=9.0, y=19.0), radius=3.0)>
-    >>> make_region("galactic;circle(10,20,3)")
-    <CircleSkyRegion(center=<SkyCoord (Galactic): (l, b) in deg
-        (10., 20.)>, radius=3.0 deg)>
-
-    If a region object is passed in, it is returned unchanged:
-
-    >>> region = make_region("image;circle(10,20,3)")
-    >>> region2 = make_region(region)
-    >>> region is region2
-    True
-    """
-    if isinstance(region, str):
-        # This is basic and works for simple regions
-        # It could be extended to cover more things,
-        # like e.g. compound regions, exclusion regions, ....
-        return Regions.parse(region, format="ds9")[0]
-    elif isinstance(region, Region):
-        return region
-    else:
-        raise TypeError(f"Invalid type: {region!r}")
 
 
 def compound_region_center(compound_region):
@@ -137,7 +85,7 @@ def compound_region_to_regions(region):
     regions : `~regions.Regions`
         List of regions.
     """
-    regions = Regions()
+    regions = Regions([])
 
     if isinstance(region, CompoundSkyRegion):
         if region.operator is operator.or_:
