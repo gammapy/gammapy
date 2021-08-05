@@ -6,7 +6,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
-from gammapy.maps import TimeMapAxis
+from gammapy.maps import TimeMapAxis, LabelMapAxis, Map
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.modeling import Fit
@@ -401,10 +401,11 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
-            # TODO: find a way to handle counts per dataset
-            fp._data["counts"] = fp._data["counts"].sum_over_axes(
-                keepdims=False, axes_names=["dataset-idx"]
-            )
+
+            for name in ["counts", "npred", "npred_null"]:
+                fp._data[name] = self.expand_map(
+                    fp._data[name], dataset_names=datasets.names
+                )
             rows.append(fp)
 
         if len(rows) == 0:
@@ -414,6 +415,30 @@ class LightCurveEstimator(FluxPointsEstimator):
         return FluxPoints.from_stack(
             maps=rows, axis=axis,
         )
+
+    @staticmethod
+    def expand_map(m, dataset_names):
+        """Expand map in dataset axis
+
+        Parameters
+        ----------
+        map : `Map`
+            Map to expand.
+        dataset_names : list of str
+            Dataset names
+
+        Returns
+        -------
+        map : `Map`
+            Expanded map.
+        """
+        label_axis = LabelMapAxis(labels=dataset_names, name="dataset")
+        geom = m.geom.replace_axis(axis=label_axis)
+        result = Map.from_geom(geom)
+
+        coords = m.geom.get_coord(sparse=True)
+        result.set_by_coord(coords, vals=m.data)
+        return result
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.

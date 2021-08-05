@@ -805,6 +805,22 @@ class Geom(abc.ABC):
         axes = self.axes.resample(axis=axis)
         return self._init_copy(axes=axes)
 
+    def replace_axis(self, axis):
+        """Replace axis with a new one.
+
+        Parameters
+        ----------
+        axis : `MapAxis`
+            New map axis.
+
+        Returns
+        -------
+        map : `Geom`
+            Geom with replaced axis.
+        """
+        axes = self.axes.replace(axis=axis)
+        return self._init_copy(axes=axes)
+
     @abc.abstractmethod
     def solid_angle(self):
         """Solid angle (`~astropy.units.Quantity` in ``sr``)."""

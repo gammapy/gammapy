@@ -226,6 +226,12 @@ def test_run_pwl(fpe_pwl):
     actual = table["stat_scan"][0][[0, 5, -1]]
     assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-2)
 
+    actual = table["npred"].data
+    assert_allclose(actual, [[1492.], [749.], [43.]])
+
+    actual = table["npred_null"].data
+    assert_allclose(actual, [[942.], [398.], [14.]])
+
 
 @requires_dependency("iminuit")
 def test_run_ecpl(fpe_ecpl):
