@@ -870,7 +870,7 @@ class DatasetModels(collections.abc.Sequence):
         except IndexError:
             log.error("No spatial component in any model. Geom not defined")
 
-    def plot_regions(self, ax=None, **kwargs):
+    def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
         """ Plot extent of the spatial models on a given wcs axis
 
         Parameters
@@ -878,6 +878,11 @@ class DatasetModels(collections.abc.Sequence):
         ax : `~astropy.visualization.WCSAxes`
             Axes to plot on. If no axes are given, an all-sky wcs
             is chosen using a CAR projection
+        kwargs_point : dict
+            Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
+            of point sources
+        path_effect : `~matplotlib.patheffects.PathEffect`
+            Path effect applied to artists and lines.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`
 
@@ -889,20 +894,26 @@ class DatasetModels(collections.abc.Sequence):
         """
         from astropy.visualization.wcsaxes import WCSAxes
 
+        kwargs_point = kwargs_point or {}
+
         if ax is None or not isinstance(ax, WCSAxes):
             fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
 
         kwargs.setdefault("color", "tab:blue")
-        path_effects = kwargs.get('path_effects', None)
+        kwargs.setdefault("fc", "None")
+        kwargs_point.setdefault("marker", "*")
+        kwargs_point.setdefault("markersize", 10)
+        kwargs_point.setdefault("markeredgecolor", "None")
+        kwargs_point.setdefault("color", kwargs["color"])
 
         for region in self.to_regions():
             if isinstance(region, PointSkyRegion):
-                artist = region.to_pixel(ax.wcs).as_artist(**kwargs, marker="*")
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs_point)
             else:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
 
-            if path_effects:
-                artist.set_path_effects([path_effects])
+            if path_effect:
+                artist.set_path_effects([path_effect])
 
             ax.add_artist(artist)
 
