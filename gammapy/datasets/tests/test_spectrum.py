@@ -20,7 +20,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.random import get_random_state
-from gammapy.utils.regions import compound_region_to_list, make_region
+from gammapy.utils.regions import compound_region_to_regions, make_region
 from gammapy.utils.testing import (
     assert_time_allclose,
     mpl_plot_check,
@@ -503,8 +503,8 @@ class TestSpectrumOnOff:
         dataset.write(tmp_path / "test.fits")
         newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
 
-        expected_regions = compound_region_to_list(self.off_counts.geom.region)
-        regions = compound_region_to_list(newdataset.counts_off.geom.region)
+        expected_regions = compound_region_to_regions(self.off_counts.geom.region)
+        regions = compound_region_to_regions(newdataset.counts_off.geom.region)
 
         assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits"
         assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits"

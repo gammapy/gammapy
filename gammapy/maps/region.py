@@ -8,8 +8,8 @@ from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
 from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
 from gammapy.utils.regions import (
-    compound_region_to_list,
-    list_to_compound_region,
+    compound_region_to_regions,
+    regions_to_compound_region,
     make_region,
     compound_region_center,
 )
@@ -102,7 +102,7 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        regions = compound_region_to_list(self.region)
+        regions = compound_region_to_regions(self.region)
         regions_pix = [_.to_pixel(self.wcs) for _ in regions]
 
         bbox = regions_pix[0].bounding_box
@@ -551,7 +551,7 @@ class RegionGeom(Geom):
             raise ValueError("Region definition required.")
 
         # TODO: make this a to_hdulist() method
-        region_list = compound_region_to_list(self.region)
+        region_list = compound_region_to_regions(self.region)
         pixel_region_list = []
         for reg in region_list:
             pixel_region_list.append(reg.to_pixel(self.wcs))
@@ -618,7 +618,7 @@ class RegionGeom(Geom):
         if isinstance(regions, (SkyRegion, str)):
             regions = [make_region(regions)]
 
-        region = list_to_compound_region(regions)
+        region = regions_to_compound_region(regions)
         return cls(region, **kwargs)
 
     @classmethod
@@ -651,7 +651,7 @@ class RegionGeom(Geom):
 
             for reg in Regions.parse(data=region_table, format="fits"):
                 regions.append(reg.to_sky(wcs))
-            region = list_to_compound_region(regions)
+            region = regions_to_compound_region(regions)
         else:
             region, wcs = None, None
 
@@ -702,7 +702,7 @@ class RegionGeom(Geom):
                 m = Map.from_geom(wcs_geom.to_image())
                 fig, ax, cbar = m.plot(add_cbar=False)
 
-        regions = compound_region_to_list(self.region)
+        regions = compound_region_to_regions(self.region)
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         kwargs.setdefault("fc", "None")

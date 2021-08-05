@@ -120,14 +120,13 @@ the code as well as the output value produced.
 
         Examples
         --------
-        >>> from gammapy.maps import WcsGeom
-        >>> from gammapy.utils.regions import make_pixel_region
-        >>> wcs = WcsGeom.create().wcs
-        >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
+        >>> from gammapy.utils.regions import make_region
+        >>> region = make_region("galactic;circle(10,20,3)")
         >>> print(region)
-        Region: CirclePixelRegion
-        center: PixCoord(x=570.9301128316974, y=159.935542455567)
-        radius: 6.061376992149381
+        Region: CircleSkyRegion
+        center: <SkyCoord (Galactic): (l, b) in deg
+            (10., 20.)>
+        radius: 3.0 deg
 
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
 following command.

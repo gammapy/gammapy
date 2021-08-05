@@ -5,7 +5,7 @@ Throughout Gammapy, we use `regions` to represent and work with regions.
 
 https://astropy-regions.readthedocs.io
 
-The functions ``make_region`` and ``make_pixel_region`` should be used
+The function ``make_region`` should be used
 throughout Gammapy in all functions that take ``region`` objects as input.
 They do conversion to a standard form, and some validation.
 
@@ -26,19 +26,16 @@ from regions import (
     CircleSkyRegion,
     CompoundSkyRegion,
     Regions,
-    PixelRegion,
     RectangleSkyRegion,
     Region,
-    SkyRegion,
 )
 
 __all__ = [
     "make_region",
-    "make_pixel_region",
     "make_orthogonal_rectangle_sky_regions",
     "make_concentric_annulus_sky_regions",
-    "compound_region_to_list",
-    "list_to_compound_region",
+    "compound_region_to_regions",
+    "regions_to_compound_region",
 ]
 
 
@@ -88,40 +85,6 @@ def make_region(region):
         raise TypeError(f"Invalid type: {region!r}")
 
 
-def make_pixel_region(region, wcs=None):
-    """Make pixel region object (`regions.PixelRegion`).
-
-    See also: `gammapy.utils.regions.make_region`
-
-    Parameters
-    ----------
-    region : `regions.Region` or str
-        Region object or DS9 string representation
-    wcs : `astropy.wcs.WCS`
-        WCS
-
-    Examples
-    --------
-    >>> from gammapy.maps import WcsGeom
-    >>> from gammapy.utils.regions import make_pixel_region
-    >>> wcs = WcsGeom.create().wcs
-    >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
-    >>> region
-    <CirclePixelRegion(center=PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149381)>
-    """
-    if isinstance(region, str):
-        region = make_region(region)
-
-    if isinstance(region, SkyRegion):
-        if wcs is None:
-            raise ValueError("Need wcs to convert to pixel region")
-        return region.to_pixel(wcs)
-    elif isinstance(region, PixelRegion):
-        return region
-    else:
-        raise TypeError(f"Invalid type: {region!r}")
-
-
 def compound_region_center(compound_region):
     """Compute center for a CompoundRegion
 
@@ -139,7 +102,7 @@ def compound_region_center(compound_region):
     center : `SkyCoord`
         Geometric median of the positions of the individual regions
     """
-    regions = compound_region_to_list(compound_region)
+    regions = compound_region_to_regions(compound_region)
     positions = SkyCoord([region.center for region in regions])
 
     def f(x, coords):
@@ -161,42 +124,42 @@ def compound_region_center(compound_region):
     return SkyCoord(result.x[0], result.x[1], frame="icrs", unit="deg")
 
 
-def compound_region_to_list(region):
+def compound_region_to_regions(region):
     """Create list of regions from compound regions.
 
     Parameters
     ----------
-    regions : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
+    region : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
         Compound sky region
 
     Returns
     -------
-    regions : list of `~regions.SkyRegion`
+    regions : `~regions.Regions`
         List of regions.
     """
-    regions = []
+    regions = Regions()
 
     if isinstance(region, CompoundSkyRegion):
         if region.operator is operator.or_:
-            regions_1 = compound_region_to_list(region.region1)
+            regions_1 = compound_region_to_regions(region.region1)
             regions.extend(regions_1)
 
-            regions_2 = compound_region_to_list(region.region2)
+            regions_2 = compound_region_to_regions(region.region2)
             regions.extend(regions_2)
         else:
             raise ValueError("Only union operator supported")
     else:
-        return [region]
+        return Regions([region])
 
     return regions
 
 
-def list_to_compound_region(regions):
+def regions_to_compound_region(regions):
     """Create compound region from list of regions, by creating the union.
 
     Parameters
     ----------
-    regions : list of `~regions.SkyRegion`
+    regions : `~regions.Regions`
         List of regions.
 
     Returns
