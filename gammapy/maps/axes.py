@@ -257,7 +257,7 @@ class MapAxis:
         """Plot center"""
         return self.center
 
-    def format_plot_axis(self, ax):
+    def format_plot_xaxis(self, ax):
         """Format plot axis
 
         Parameters
@@ -279,6 +279,26 @@ class MapAxis:
         if "energy" in self.name:
             ax.set_yscale("log", nonpositive="clip")
 
+        return ax
+
+    def format_plot_yaxis(self, ax):
+        """Format plot axis
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis
+        """
+        if self.interp == "log":
+            ax.set_yscale("log")
+
+        ylabel = self.name.capitalize() + f" [{ax.yaxis.units}]"
+        ax.set_ylabel(ylabel)
         return ax
 
     @property
