@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
-from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKernel, PSFMap
+from gammapy.irf import PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -550,6 +550,17 @@ def test_convolve_nd():
     assert_allclose(mc.data[0, :, :].sum(), 0, atol=1e-5)
     assert_allclose(mc.data[1, :, :].sum(), 9, atol=1e-5)
 
+    kernel_2d = Gaussian2DKernel(15, mode="center")
+    kernel_2d.normalize("peak")
+    mc_full = m.convolve(kernel_2d.array, mode="full")
+    mc_same = m.convolve(kernel_2d.array, mode="same")
+    coords = [[0.2, 0.1, 0.4, 0.44, -1.3], [-0.1, -0.13, 0.6, 0.57, 0.91], [0.5, 0.5, 3.6, 3.6, 0.5]]
+    values_full = mc_full.get_by_coord(coords)
+    values_same = mc_same.get_by_coord(coords)
+
+    assert mc_same.data.shape == (3, 200, 200)
+    assert mc_full.data.shape == (3, 320, 320)
+    assert_allclose(values_full, values_same, rtol=1e-5)
 
 def test_convolve_pixel_scale_error():
     m = WcsNDMap.create(binsz=0.05 * u.deg, width=5 * u.deg)
