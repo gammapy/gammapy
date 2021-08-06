@@ -167,8 +167,7 @@ class SpatialModel(Model):
         and an oversampling factor is automatically estimated based on the model estimation maximal
         bin width.
 
-        For a RegionGeom, the model is estimated at the center of the region and mutliplied by
-        the region solid angle.
+        For a RegionGeom, the model is integrated on a tangent WCS projection in the region.
 
         Parameters
         ----------
@@ -188,11 +187,35 @@ class SpatialModel(Model):
             mask = geom.contains(wcs_geom.get_coord())
             values = self.evaluate_geom(wcs_geom)
             data = ((values * wcs_geom.solid_angle())[mask]).sum()
+            result = Map.from_geom(geom=geom, data=data.value, unit=data.unit)
         else:
-            values = self.evaluate_geom(geom)
-            data = values * geom.solid_angle()
+            result = Map.from_geom(geom=geom, unit='1/sr')
+            if oversampling_factor is None:
+                res_scale = self.evaluation_bin_size_min.to_value("deg")
+                oversampling_factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
+            if oversampling_factor > 1:
 
-        return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
+                if self.evaluation_radius is not None:
+                    #Is it still needed?
+                    width = np.maximum(2 * self.evaluation_radius, 2 * np.max(geom.pixel_scales))
+                    geom = geom.cutout(self.position, width)
+
+                upsampled_geom = geom.upsample(oversampling_factor)
+
+                # assume the upsampled solid angles are approximately factor**2 smaller
+                values = self.evaluate_geom(upsampled_geom) / oversampling_factor ** 2
+                upsampled = Map.from_geom(upsampled_geom, data=values.value, unit=values.unit)
+
+                integrated = upsampled.downsample(oversampling_factor, preserve_counts=True)
+
+                # Finally stack result
+                result.stack(integrated)
+
+            else:
+                values = self.evaluate_geom(geom)
+                data = values * geom.solid_angle()
+            result *= result.geom.solid_angle()
+        return result
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""

@@ -407,8 +407,8 @@ def test_integrate_wcs_geom():
     integrated_0_01d = model_0_01d.integrate_geom(geom)
     integrated_0_005d = model_0_005d.integrate_geom(geom)
 
-    assert_allclose(integrated_0_01d.data.sum(), 1, atol=1e-4)
-    assert_allclose(integrated_0_005d.data.sum(), 1, atol=1e-4)
+    assert_allclose(integrated_0_01d.data.sum(), 1, atol=2e-4)
+    assert_allclose(integrated_0_005d.data.sum(), 1, atol=2e-4)
 
 def test_integrate_geom_energy_axis():
     center = SkyCoord("0d", "0d", frame="icrs")
