@@ -277,8 +277,8 @@ class FluxPoints(FluxMaps):
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
             sed type to convert to. Default is `likelihood`
-        format : {"gadf-sed"}
-            Format
+        format : {"gadf-sed", "lightcurve", "binned-time-series"}
+            Format specification.
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
             formatted to .3f and .3e respectively.
@@ -336,6 +336,28 @@ class FluxPoints(FluxMaps):
                 tables.append(table_flat)
 
             table = vstack(tables)
+        elif format == "binned-time-series":
+            message = (
+                "Format 'binned-time-series' support a single time axis "
+                f"only. Got {self.geom.axes.names}"
+            )
+
+            if not self.geom.axes.is_unidimensional:
+                raise ValueError(message)
+
+            axis = self.geom.axes.primary_axis
+
+            if not isinstance(axis, TimeMapAxis):
+                raise ValueError(message)
+
+            table = Table()
+            table["time_bin_start"] = axis.time_min
+            table["time_bin_size"] = axis.time_delta
+
+            for quantity in self.all_quantities(sed_type=sed_type):
+                data = getattr(self, quantity, None)
+                if data:
+                    table[quantity] = data.quantity.squeeze()
         else:
             raise ValueError(f"Not a supported format {format}")
 
