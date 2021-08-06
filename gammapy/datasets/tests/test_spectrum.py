@@ -511,8 +511,6 @@ class TestSpectrumOnOff:
         assert_allclose(self.edisp.edisp_map.data, newdataset.edisp.edisp_map.data)
         assert_time_allclose(newdataset.gti.time_start, dataset.gti.time_start)
 
-        #print(self.off_counts.geom.region)
-        #print(expected_regions)
         assert len(regions) == len(expected_regions)
         assert regions[0].center.is_equivalent_frame(expected_regions[0].center)
         assert_allclose(regions[1].angle, expected_regions[1].angle)
