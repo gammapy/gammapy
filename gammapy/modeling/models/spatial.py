@@ -188,9 +188,12 @@ class SpatialModel(Model):
             wcs_geom = geom.to_wcs_geom().to_image()
 
         result = Map.from_geom(geom=wcs_geom, unit='1/sr')
-        if oversampling_factor is None:
+
+        if oversampling_factor is None and self.evaluation_bin_size_min:
             res_scale = self.evaluation_bin_size_min.to_value("deg")
             oversampling_factor = int(np.ceil(np.max(wcs_geom.pixel_scales.deg) / res_scale))
+        else:
+            oversampling_factor=1
 
         if oversampling_factor > 1:
             if self.evaluation_radius is not None:
@@ -670,7 +673,7 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_bin_size_min(self):
         """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
-        return self.r_0.quantity * (1 - self.edge_width.quantity)
+        return self.r_0.quantity * (1 - self.edge_width.quantity) /10.
 
     @property
     def evaluation_radius(self):
@@ -678,7 +681,7 @@ class DiskSpatialModel(SpatialModel):
     
         Set to the length of the semi-major axis plus the edge width.
         """
-        return self.r_0.quantity * (1 + self.edge_width.quantity)
+        return 1.1*self.r_0.quantity * (1 + self.edge_width.quantity)
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
