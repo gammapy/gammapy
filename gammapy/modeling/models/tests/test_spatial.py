@@ -375,7 +375,7 @@ def test_spatial_model_plot():
         model.plot_error(ax=ax)
 
 
-def test_integrate_geom():
+def test_integrate_region_geom():
     center = SkyCoord("0d", "0d", frame="icrs")
     model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
 
@@ -397,6 +397,18 @@ def test_integrate_geom():
     assert_allclose(integral_large[0], 1, rtol=0.01)
     assert_allclose(integral_small[0], 0.3953, rtol=0.01)
 
+def test_integrate_wcs_geom():
+    center = SkyCoord("0d", "0d", frame="icrs")
+    model_0_01d = GaussianSpatialModel(lon="0.234d", lat="-0.172d", sigma=0.01 * u.deg, frame="icrs")
+    model_0_005d = GaussianSpatialModel(lon="0.234d", lat="-0.172d", sigma=0.005 * u.deg, frame="icrs")
+
+    geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
+
+    integrated_0_01d = model_0_01d.integrate_geom(geom)
+    integrated_0_005d = model_0_005d.integrate_geom(geom)
+
+    assert_allclose(integrated_0_01d.data.sum(), 1, atol=1e-4)
+    assert_allclose(integrated_0_005d.data.sum(), 1, atol=1e-4)
 
 def test_integrate_geom_energy_axis():
     center = SkyCoord("0d", "0d", frame="icrs")

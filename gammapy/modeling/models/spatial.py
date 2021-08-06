@@ -158,12 +158,25 @@ class SpatialModel(Model):
         else:
             return self(coords.lon, coords.lat)
 
-    def integrate_geom(self, geom):
+    def integrate_geom(self, geom, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom` or `~gammapy.maps.RegionGeom`.
-        
+
+        Integration is performed by simple rectangle approximation, the pixel center model value
+        is multiplied by the pixel solid angle.
+        An oversampling factor can be used for precision. By default, this parameter is set to None
+        and an oversampling factor is automatically estimated based on the model estimation maximal
+        bin width.
+
+        For a RegionGeom, the model is estimated at the center of the region and mutliplied by
+        the region solid angle.
+
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom` or `~gammapy.maps.RegionGeom`
+            The geom on which the integration is performed
+        oversampling_factor : int or None
+            The oversampling factor to use for integration.
+            Default is None: the factor is estimated from the model minimimal bin size
 
         Returns
         ---------
