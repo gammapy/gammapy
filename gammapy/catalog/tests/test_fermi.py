@@ -236,22 +236,28 @@ class TestFermi4FGLObject:
 
     def test_lightcurve_dr1(self):
         lc = self.source.lightcurve(interval="1-year")
-        table = lc.table
+        table = lc.to_table(format="lightcurve", sed_type="flux")
 
         assert len(table) == 8
         assert table.colnames == [
             "time_min",
             "time_max",
+            "e_ref",
+            "e_min",
+            "e_max",
             "flux",
             "flux_errp",
             "flux_errn",
+            "flux_ul",
+            "ts",
+            "sqrt_ts"
         ]
+        axis = lc.geom.axes["time"]
+        expected = Time(54682.6552835, format="mjd", scale="utc")
+        assert_time_allclose(axis.time_min[0].utc, expected)
 
-        expected = Time(54682.655277777776, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_min[0], expected)
-
-        expected = Time(55047.603239293836, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_max[0], expected)
+        expected = Time(55045.30090278, format="mjd", scale="utc")
+        assert_time_allclose(axis.time_max[0].utc, expected)
 
         assert table["flux"].unit == "cm-2 s-1"
         assert_allclose(table["flux"][0], 2.2122326e-06, rtol=1e-3)
@@ -262,7 +268,9 @@ class TestFermi4FGLObject:
         assert table["flux_errn"].unit == "cm-2 s-1"
         assert_allclose(table["flux_errn"][0], 2.3099371e-08, rtol=1e-3)
 
-        table = self.source.lightcurve(interval="2-month").table
+        table = self.source.lightcurve(interval="2-month").to_table(
+            format="lightcurve", sed_type="flux"
+        )
         assert len(table) == 48  # (12 month/year / 2month) * 8 years
 
         assert table["flux"].unit == "cm-2 s-1"
@@ -277,7 +285,9 @@ class TestFermi4FGLObject:
     def test_lightcurve_dr2(self):
         dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz")
         source_dr2 = dr2[self.source_name]
-        table = source_dr2.lightcurve(interval="1-year").table
+        table = source_dr2.lightcurve(interval="1-year").to_table(
+            format="lightcurve", sed_type="flux"
+        )
 
         assert table["flux"].unit == "cm-2 s-1"
         assert_allclose(table["flux"][0], 2.196788e-6, rtol=1e-3)
@@ -390,22 +400,27 @@ class TestFermi3FGLObject:
 
     def test_lightcurve(self):
         lc = self.source.lightcurve()
-        table = lc.table
+        table = lc.to_table(format="lightcurve", sed_type="flux")
 
         assert len(table) == 48
         assert table.colnames == [
             "time_min",
             "time_max",
+            "e_ref",
+            "e_min",
+            "e_max",
             "flux",
             "flux_errp",
             "flux_errn",
+            "flux_ul"
         ]
 
         expected = Time(54680.02313657408, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_min[0], expected)
+        axis = lc.geom.axes["time"]
+        assert_time_allclose(axis.time_min[0].utc, expected)
 
-        expected = Time(54710.43824797454, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_max[0], expected)
+        expected = Time(54710.46295139, format="mjd", scale="utc")
+        assert_time_allclose(axis.time_max[0].utc, expected)
 
         assert table["flux"].unit == "cm-2 s-1"
         assert_allclose(table["flux"][0], 2.384e-06, rtol=1e-3)

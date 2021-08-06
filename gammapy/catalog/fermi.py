@@ -4,10 +4,9 @@ import abc
 import warnings
 import numpy as np
 import astropy.units as u
-from astropy.table import Column, Table
-from astropy.time import Time
+from astropy.table import Table
 from astropy.wcs import FITSFixedWarning
-from gammapy.estimators import FluxPoints, LightCurve
+from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
@@ -16,6 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.maps import Maps, MapAxis, RegionGeom
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace
@@ -470,7 +470,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return u.Quantity(values, unit)
 
     def lightcurve(self, interval="1-year"):
-        """Lightcurve (`~gammapy.estimators.LightCurve`).
+        """Lightcurve (`~gammapy.estimators.FluxPoints`).
 
         Parameters
         ----------
@@ -481,51 +481,47 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         if interval == "1-year":
             tag = "Flux_History"
+            time_axis = self.data["time_axis"]
+            tag_sqrt_ts = "Sqrt_TS_History"
         elif interval == "2-month":
             tag = "Flux2_History"
             if tag not in self.data:
                 raise ValueError(
                     "Only '1-year' interval is available for this catalogue version"
                 )
+
+            time_axis = self.data["time_axis_2"]
+            tag_sqrt_ts = "Sqrt_TS2_History"
         else:
             raise ValueError("Time intervals available are '1-year' or '2-month'")
 
-        flux = self.data[tag]
-        # Flux error is given as asymmetric high/low
-        flux_errn = -self.data[f"Unc_{tag}"][:, 0]
-        flux_errp = self.data[f"Unc_{tag}"][:, 1]
+        energy_axis = MapAxis.from_energy_edges([50, 300000] * u.MeV)
+        geom = RegionGeom.create(region=self.position, axes=[energy_axis, time_axis])
 
-        # Really the time binning is stored in a separate HDU in the FITS
-        # catalog file called `Hist_Start`, with a single column `Hist_Start`
-        # giving the time binning in MET (mission elapsed time)
-        # This is not available here for now.
-        # TODO: read that info in `SourceCatalog3FGL` and pass it down to the
-        # `SourceCatalogObject3FGL` object somehow.
+        names = ["flux", "flux_errp", "flux_errn", "flux_ul", "ts"]
+        maps = Maps.from_geom(geom=geom, names=names)
 
-        # For now, we just hard-code the start and stop time and assume
-        # equally-spaced time intervals. This is roughly correct,
-        # for plotting the difference doesn't matter, only for analysis
-        time_start = Time("2008-08-04T15:43:36.0000")
-        n_points = len(flux)
-        if n_points in [8, 48]:
-            # 8 = 1/years * 8 years
-            # 48 = (12 month/year / 2month) * 8 years
-            time_end = Time("2016-08-02T05:44:11.9999")
-        else:
-            time_end = Time("2018-08-02T05:44:11.9999")
-        time_step = (time_end - time_start) / n_points
-        time_bounds = time_start + np.arange(n_points + 1) * time_step
-
-        table = Table(
-            [
-                Column(time_bounds[:-1].utc.mjd, "time_min"),
-                Column(time_bounds[1:].utc.mjd, "time_max"),
-                Column(flux, "flux"),
-                Column(flux_errp, "flux_errp"),
-                Column(flux_errn, "flux_errn"),
-            ]
+        maps["flux"].quantity = self.data[tag]
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux_ul"].quantity = compute_flux_points_ul(
+            maps["flux"].quantity, maps["flux_errp"].quantity
         )
-        return LightCurve(table)
+        maps["ts"].quantity = self.data[tag_sqrt_ts] ** 2
+
+        meta = {
+            "sed_type_init": "flux",
+            "n_sigma": 1,
+            "ts_threshold_ul": 1,
+            "n_sigma_ul": 2
+        }
+
+        return FluxPoints.from_maps(
+            maps=maps,
+            sed_type="flux",
+            reference_model=self.spectral_model(),
+            meta=meta
+        )
 
 
 class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
@@ -798,38 +794,37 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
     def lightcurve(self):
         """Lightcurve (`~gammapy.estimators.LightCurve`)."""
-        flux = self.data["Flux_History"]
+        time_axis = self.data["time_axis"]
+        tag = "Flux_History"
 
-        # Flux error is given as asymmetric high/low
-        flux_errn = -self.data["Unc_Flux_History"][:, 0]
-        flux_errp = self.data["Unc_Flux_History"][:, 1]
+        energy_axis = MapAxis.from_energy_edges(self.energy_range)
+        geom = RegionGeom.create(region=self.position, axes=[energy_axis, time_axis])
 
-        # Really the time binning is stored in a separate HDU in the FITS
-        # catalog file called `Hist_Start`, with a single column `Hist_Start`
-        # giving the time binning in MET (mission elapsed time)
-        # This is not available here for now.
-        # TODO: read that info in `SourceCatalog3FGL` and pass it down to the
-        # `SourceCatalogObject3FGL` object somehow.
+        names = ["flux", "flux_errp", "flux_errn", "flux_ul"]
+        maps = Maps.from_geom(geom=geom, names=names)
 
-        # For now, we just hard-code the start and stop time and assume
-        # equally-spaced time intervals. This is roughly correct,
-        # for plotting the difference doesn't matter, only for analysis
-        time_start = Time("2008-08-02T00:33:19")
-        time_end = Time("2012-07-31T22:45:47")
-        n_points = len(flux)
-        time_step = (time_end - time_start) / n_points
-        time_bounds = time_start + np.arange(n_points + 1) * time_step
-
-        table = Table(
-            [
-                Column(time_bounds[:-1].utc.mjd, "time_min"),
-                Column(time_bounds[1:].utc.mjd, "time_max"),
-                Column(flux, "flux"),
-                Column(flux_errp, "flux_errp"),
-                Column(flux_errn, "flux_errn"),
-            ]
+        maps["flux"].quantity = self.data[tag]
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux_ul"].quantity = compute_flux_points_ul(
+            maps["flux"].quantity, maps["flux_errp"].quantity
         )
-        return LightCurve(table)
+        is_ul = np.isnan(maps["flux_errn"])
+        maps["flux_ul"].data[~is_ul] = np.nan
+
+        meta = {
+            "sed_type_init": "flux",
+            "n_sigma": 1,
+            "ts_threshold_ul": 1,
+            "n_sigma_ul": 2
+        }
+
+        return FluxPoints.from_maps(
+            maps=maps,
+            sed_type="flux",
+            reference_model=self.spectral_model(),
+            meta=meta
+        )
 
 
 class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
@@ -1234,6 +1229,7 @@ class SourceCatalog3FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+        self.hist_table = Table.read(filename, hdu="Hist_Start")
 
 
 class SourceCatalog4FGL(SourceCatalog):
@@ -1274,6 +1270,11 @@ class SourceCatalog4FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+        self.hist_table = Table.read(filename, hdu="Hist_Start")
+        try:
+            self.hist2_table = Table.read(filename, hdu="Hist2_Start")
+        except KeyError:
+            pass
 
 
 class SourceCatalog2FHL(SourceCatalog):

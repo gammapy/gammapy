@@ -75,14 +75,14 @@ class RegionNDMap(Map):
 
         if axis_name is None:
             if self.geom.axes.is_unidimensional:
-                axis = self.geom.axes.primary_axis
+                axis_name = self.geom.axes.primary_axis.name
             else:
                 raise ValueError(
                     "Plotting a region map with multiple extra axes requires "
                     "specifying the 'axis_name' keyword."
                 )
-        else:
-            axis = self.geom.axes[axis_name]
+
+        axis = self.geom.axes[axis_name]
 
         kwargs.setdefault("marker", "o")
         kwargs.setdefault("markersize", 4)
@@ -117,6 +117,9 @@ class RegionNDMap(Map):
                 )
 
         axis.format_plot_xaxis(ax=ax)
+
+        if "energy" in axis_name:
+            ax.set_yscale("log", nonpositive="clip")
 
         if len(self.geom.axes) > 1:
             plt.legend()
@@ -486,7 +489,7 @@ class RegionNDMap(Map):
         ----------
         table : `~astropy.table.Table`
             Table with input data
-        format : {"gadf-sed}
+        format : {"gadf-sed", "lightcurve"}
             Format to use
         colname : str
             Column name to take the data from.
@@ -516,6 +519,10 @@ class RegionNDMap(Map):
             else:
                 axes = [axes["energy"]]
 
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        elif format == "lightcurve":
+            axes = MapAxes.from_table(table=table, format=format)
             data = table[colname].data
             unit = table[colname].unit or ""
         else:
