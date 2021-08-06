@@ -351,7 +351,6 @@ class LightCurveEstimator(FluxPointsEstimator):
     """
 
     tag = "LightCurveEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,

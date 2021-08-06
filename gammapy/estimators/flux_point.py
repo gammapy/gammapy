@@ -237,6 +237,7 @@ class FluxPoints(FluxMaps):
     @staticmethod
     def _get_meta_gadf(table):
         meta = {}
+        meta.update(table.meta)
         conf_ul = table.meta.get("UL_CONF")
         if conf_ul:
             n_sigma_ul = np.round(stats.norm.isf(0.5 * (1 - conf_ul)), 1)
@@ -409,6 +410,7 @@ class FluxPoints(FluxMaps):
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
+        ax.set_yscale("log")
         return ax
 
     def plot_ts_profiles(
@@ -494,6 +496,7 @@ class FluxPoints(FluxMaps):
         axis.format_plot_xaxis(ax=ax)
 
         ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
+        ax.set_yscale("log")
 
         if add_cbar:
             label = "Fit statistic difference"
@@ -551,9 +554,7 @@ class FluxPointsEstimator(FluxEstimator):
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
     """
-
     tag = "FluxPointsEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
