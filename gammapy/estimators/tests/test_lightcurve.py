@@ -117,7 +117,7 @@ def test_lightcurve_plot(lc, lc_2d):
         lc.plot()
 
     with mpl_plot_check():
-        lc_2d.plot()
+        lc_2d.plot(axis_name="time")
 
 
 def get_spectrum_datasets():
