@@ -182,39 +182,43 @@ class SpatialModel(Model):
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
                 the integral value in each spatial bin.
         """
+        wcs_geom = geom
+        mask = None
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
-            mask = geom.contains(wcs_geom.get_coord())
-            values = self.evaluate_geom(wcs_geom)
-            data = ((values * wcs_geom.solid_angle())[mask]).sum()
-            result = Map.from_geom(geom=geom, data=data.value, unit=data.unit)
+
+        result = Map.from_geom(geom=wcs_geom, unit='1/sr')
+        if oversampling_factor is None:
+            res_scale = self.evaluation_bin_size_min.to_value("deg")
+            oversampling_factor = int(np.ceil(np.max(wcs_geom.pixel_scales.deg) / res_scale))
+
+        if oversampling_factor > 1:
+            if self.evaluation_radius is not None:
+                # Is it still needed?
+                width = np.maximum(2 * self.evaluation_radius, 2 * np.max(wcs_geom.pixel_scales))
+                wcs_geom = wcs_geom.cutout(self.position, width)
+
+            upsampled_geom = wcs_geom.upsample(oversampling_factor)
+
+            # assume the upsampled solid angles are approximately factor**2 smaller
+            values = self.evaluate_geom(upsampled_geom)/oversampling_factor**2
+            upsampled = Map.from_geom(upsampled_geom, data=values.value, unit=values.unit)
+
+            if geom.is_region:
+                mask = geom.contains(upsampled_geom.get_coord()).astype('int')
+
+            integrated = upsampled.downsample(oversampling_factor, preserve_counts=True, weights=mask)
+
+            # Finally stack result
+            result.stack(integrated)
         else:
-            result = Map.from_geom(geom=geom, unit='1/sr')
-            if oversampling_factor is None:
-                res_scale = self.evaluation_bin_size_min.to_value("deg")
-                oversampling_factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
-            if oversampling_factor > 1:
+            result.quantity = self.evaluate_geom(wcs_geom)
 
-                if self.evaluation_radius is not None:
-                    #Is it still needed?
-                    width = np.maximum(2 * self.evaluation_radius, 2 * np.max(geom.pixel_scales))
-                    geom = geom.cutout(self.position, width)
+        result *= result.geom.solid_angle()
 
-                upsampled_geom = geom.upsample(oversampling_factor)
-
-                # assume the upsampled solid angles are approximately factor**2 smaller
-                values = self.evaluate_geom(upsampled_geom) / oversampling_factor ** 2
-                upsampled = Map.from_geom(upsampled_geom, data=values.value, unit=values.unit)
-
-                integrated = upsampled.downsample(oversampling_factor, preserve_counts=True)
-
-                # Finally stack result
-                result.stack(integrated)
-
-            else:
-                values = self.evaluate_geom(geom)
-                data = values * geom.solid_angle()
-            result *= result.geom.solid_angle()
+        if geom.is_region:
+            mask = result.geom.region_mask([geom.region])
+            result = Map.from_geom(geom, data=np.sum(result.data[mask]), unit=result.unit)
         return result
 
     def to_dict(self, full_output=False):
