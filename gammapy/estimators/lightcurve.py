@@ -351,7 +351,6 @@ class LightCurveEstimator(FluxPointsEstimator):
     """
 
     tag = "LightCurveEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
@@ -434,7 +433,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         """
         label_axis = LabelMapAxis(labels=dataset_names, name="dataset")
         geom = m.geom.replace_axis(axis=label_axis)
-        result = Map.from_geom(geom)
+        result = Map.from_geom(geom, data=np.nan)
 
         coords = m.geom.get_coord(sparse=True)
         result.set_by_coord(coords, vals=m.data)

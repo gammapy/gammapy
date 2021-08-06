@@ -51,7 +51,6 @@ class FluxEstimator(ParameterEstimator):
         Re-optimize other free model parameters. Default is False.
     """
     tag = "FluxEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
