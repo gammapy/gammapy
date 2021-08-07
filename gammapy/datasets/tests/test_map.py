@@ -351,12 +351,17 @@ def test_energy_range(sky_model, geom10, geom_etrue):
     dataset = get_map_dataset(geom10, geom_etrue, edisp=None, mask_safe=mask_safe)
     energy = geom10.axes["energy"]
 
-    assert_allclose(dataset.energy_range(region=SkyCoord(267, -29, unit="deg")), u.Quantity([energy.edges[15], energy.edges[17]]))
-    assert_allclose(dataset.energy_range(region=sky_coord1), u.Quantity([energy.edges[10], energy.edges[18]]))
-    assert_allclose(dataset.energy_range(region=sky_coord2), u.Quantity([energy.edges[14], energy.edges[19]]))
+    assert_allclose(dataset._energy_range(mask=dataset.mask_safe, region=SkyCoord(267, -29, unit="deg")), u.Quantity([energy.edges[15], energy.edges[17]]))
+    assert_allclose(dataset._energy_range(mask=dataset.mask_safe, region=sky_coord1), u.Quantity([energy.edges[10], energy.edges[18]]))
+    assert_allclose(dataset._energy_range(mask=dataset.mask_safe, region=sky_coord2), u.Quantity([energy.edges[14], energy.edges[19]]))
     region = RectangleSkyRegion(SkyCoord(265.75, -29, unit="deg"), 0.5 * u.deg, 1 * u.deg)
-    assert_allclose(dataset.energy_range(region=region), u.Quantity([energy.edges[10], energy.edges[19]]))
-    assert_allclose(dataset.energy_range(), u.Quantity([energy.edges[10], energy.edges[19]]))
+    assert_allclose(dataset._energy_range(mask=dataset.mask_safe, region=region), u.Quantity([energy.edges[10], energy.edges[19]]))
+    assert_allclose(dataset._energy_range(region=region1), u.Quantity([energy.edges[0], energy.edges[20]]))
+    assert_allclose(dataset._energy_range(), u.Quantity([energy.edges[0], energy.edges[20]]))
+
+    assert_allclose(dataset.energy_range, u.Quantity([energy.edges[10], energy.edges[19]]))
+    assert_allclose(dataset.energy_range_safe, u.Quantity([energy.edges[10], energy.edges[19]]))
+    assert_allclose(dataset.energy_range_fit, u.Quantity([energy.edges[0], energy.edges[20]]))
 
 
 @requires_data()
