@@ -6,7 +6,6 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.irf import Background3D
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
 from .event_list import EventListChecker
@@ -72,6 +71,20 @@ class Observation:
         self._gti = gti
         self._events = events
         self.obs_filter = obs_filter or ObservationFilter()
+
+    @property
+    def available_irfs(self):
+        """Which irfs are available"""
+        available_irf = []
+
+        for irf in ["aeff", "edisp", "psf", "bkg"]:
+            available = self.__dict__.get(irf, False)
+            available_hdu = self.__dict__.get(f"_{irf}_hdu", False)
+
+            if available or available_hdu:
+                available_irf.append(irf)
+
+        return available_irf
 
     @property
     def events(self):
@@ -277,7 +290,7 @@ class Observation:
 
         Parameters
         ----------
-        figszie : tuple
+        figsize : tuple
             Figure size
         """
         import matplotlib.pyplot as plt
@@ -292,10 +305,10 @@ class Observation:
         self.aeff.plot(ax=ax_aeff)
 
         try:
-            if isinstance(self.bkg, Background3D):
-                bkg = self.bkg.to_2d()
-            else:
-                bkg = self.bkg
+            bkg = self.bkg
+
+            if not bkg.is_offset_dependent:
+                bkg = bkg.to_2d()
 
             bkg.plot(ax=ax_bkg)
         except AttributeError:

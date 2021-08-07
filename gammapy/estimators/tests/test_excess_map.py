@@ -89,7 +89,7 @@ def test_compute_lima_on_off_image():
 
     significance = Map.read(filename, hdu="SIGNIFICANCE")
     significance = image_to_cube(significance, "1 TeV", "10 TeV")
-    estimator = ExcessMapEstimator("0.1 deg")
+    estimator = ExcessMapEstimator("0.1 deg", correlate_off=False)
     results = estimator.run(dataset)
 
     # Reproduce safe significance threshold from HESS software
@@ -138,9 +138,9 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional="all")
     result = estimator.run(simple_dataset)
 
-    assert_allclose(result["excess"].data.sum(), 19733.602)
-    assert_allclose(result["background"].data.sum(), 31818.398)
-    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, atol=1e-5)
+    assert_allclose(result["excess"].data.sum(), 19733.602, rtol=1e-3)
+    assert_allclose(result["background"].data.sum(), 31818.398, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, rtol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_on_off_no_correlation(
@@ -246,15 +246,15 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     result_mod = estimator_mod.run(simple_dataset_on_off)
     assert result_mod["counts"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 6.240846, atol=1e-3)
+    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 8.899278, atol=1e-3)
 
     assert_allclose(result_mod["counts"].data[0, 10, 10], 388)
-    assert_allclose(result_mod["excess"].data[0, 10, 10], 148.68057)
-    assert_allclose(result_mod["background"].data[0, 10, 10], 239.31943)
+    assert_allclose(result_mod["excess"].data[0, 10, 10], 190.68057)
+    assert_allclose(result_mod["background"].data[0, 10, 10], 197.31943)
 
     assert result_mod["flux"].unit == "cm-2s-1"
-    assert_allclose(result_mod["flux"].data[0, 10, 10], 1.486806e-08, rtol=1e-3)
-    assert_allclose(result_mod["flux"].data.sum(), 5.254442192077636e-06, rtol=1e-8)
+    assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)
+    assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06 , rtol=1e-3)
 
     spectral_model=PowerLawSpectralModel(index=15)
     estimator_mod = ExcessMapEstimator(
@@ -266,7 +266,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     result_mod = estimator_mod.run(simple_dataset_on_off)
 
     assert result_mod["flux"].unit == "cm-2s-1"
-    assert_allclose(result_mod["flux"].data.sum(), 5.254442192077636e-06, rtol=1e-8)
+    assert_allclose(result_mod["flux"].data.sum(),5.920642e-06, rtol=1e-3)
 
     reco_exposure=estimate_exposure_reco_energy(simple_dataset_on_off, spectral_model=spectral_model)
     assert_allclose(reco_exposure.data.sum(), 7.977796e+12, rtol=0.001)

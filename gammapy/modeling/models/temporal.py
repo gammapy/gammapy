@@ -282,12 +282,15 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     Compute ``norm`` at a given time:
 
-    >>> light_curve.evaluate(46300) # doctest: +SKIP
-    0.49059393580053845
+    >>> light_curve.evaluate(60000)
+    array(0.01551196)
 
     Compute mean ``norm`` in a given time interval:
 
-    >>> light_curve.mean_norm_in_time_interval(46300, 46301) # doctest: +SKIP
+    >>> from astropy.time import Time
+    >>> times = Time([60000, 61000], format='mjd')
+    >>> light_curve.integral(times[0], times[1])
+    <Quantity 0.01721725>
     """
 
     tag = ["LightCurveTemplateTemporalModel", "template"]

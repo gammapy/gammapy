@@ -23,6 +23,12 @@ def observations_hess_dl3():
     obs_ids = [23523, 23526]
     return datastore.get_observations(obs_ids)
 
+@pytest.fixture
+def observations_magic_dl3():
+    """MAGIC DL3 observation list."""
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic/")
+    obs_ids = [5029748]
+    return datastore.get_observations(obs_ids, required_irf=["aeff", "edisp"])
 
 @pytest.fixture
 def observations_cta_dc1():
@@ -37,6 +43,14 @@ def spectrum_dataset_gc():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-1, 2, 13) * u.TeV, name="energy_true")
     geom = RegionGeom.create("galactic;circle(0, 0, 0.11)", axes=[e_reco])
+    return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+
+
+@pytest.fixture()
+def spectrum_dataset_magic_crab():
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
+    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.14)", axes=[e_reco], binsz_wcs="0.01deg")
     return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
@@ -78,6 +92,7 @@ def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, ob
         datasets.append(dataset)
 
     assert isinstance(datasets[0], SpectrumDataset)
+    assert datasets[0].exposure.meta["is_pointlike"] is False
 
     assert_allclose(datasets[0].counts.data.sum(), 100)
     assert_allclose(datasets[1].counts.data.sum(), 92)
@@ -165,7 +180,7 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert mask_safe.data.sum() == 4
 
     mask_safe = safe_mask_maker.make_mask_energy_edisp_bias(dataset)
-    assert mask_safe.data.sum() == 2
+    assert mask_safe.data.sum() == 3
 
     mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert mask_safe.data.sum() == 3
@@ -193,6 +208,28 @@ def test_make_meta_table(observations_hess_dl3):
     assert_allclose(map_spectrumdataset_meta_table["RA_PNT"], 83.63333129882812)
     assert_allclose(map_spectrumdataset_meta_table["DEC_PNT"], 21.51444435119629)
     assert_allclose(map_spectrumdataset_meta_table["OBS_ID"], 23523)
+
+@requires_data()
+def test_region_center_spectrum_dataset_maker_magic_dl3(spectrum_dataset_magic_crab, observations_magic_dl3, caplog):
+    maker = SpectrumDatasetMaker(use_region_center=True, selection=["exposure"])
+    maker_average = SpectrumDatasetMaker(use_region_center=False, selection=[ "exposure"])
+    maker_correction = SpectrumDatasetMaker(containment_correction=True, selection=["exposure"])
+
+    dataset = maker.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
+    dataset_average = maker_average.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
+    with pytest.raises(ValueError):
+        maker_correction.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
+
+    assert isinstance(dataset, SpectrumDataset)
+    assert dataset.exposure.meta["is_pointlike"]
+    assert dataset_average.exposure.meta["is_pointlike"]
+
+    assert "WARNING" in [record.levelname for record in caplog.records]
+
+    message = "MapMaker: use_region_center=False should not be used with point-like IRF. "\
+              "Results are likely inaccurate."
+
+    assert message in [record.message for record in caplog.records]
 
 
 @requires_data()
@@ -277,4 +314,4 @@ class TestSpectrumMakerChain:
         dataset = safe_mask_maker.run(dataset, obs)
 
         actual = dataset.energy_range[0]
-        assert_quantity_allclose(actual, 0.774264 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(actual, 0.681292 * u.TeV, rtol=1e-3)

@@ -22,7 +22,7 @@ Spatial model        : 3-Gaussian
 Spatial components   : HGPSC 065, HGPSC 066, HGPSC 067
 TS                   : 5846.8
 sqrt(TS)             : 76.5
-Size                 : 0.461 +/- 0.032 (UL: nan) deg
+Size                 : 0.461 +/- 0.032 (UL: 0.000) deg
 R70                  : 0.709 deg
 RSpec                : 0.500 deg
 Total model excess   : 18291.5

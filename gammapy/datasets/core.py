@@ -197,6 +197,25 @@ class Datasets(collections.abc.MutableSequence):
         axes = [d.counts.geom.axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
+    @property
+    def contributes_to_stat(self):
+        """Stat contributions
+
+        Returns
+        -------
+        contributions : `~numpy.array`
+            Array indicating which dataset contributes to the likelihood.
+        """
+        contributions = []
+
+        for dataset in self:
+            if dataset.mask is not None:
+                value = dataset.mask.data.any()
+            else:
+                value = True
+            contributions.append(value)
+        return np.array(contributions)
+
     def stat_sum(self):
         """Compute joint likelihood"""
         stat_sum = 0
@@ -205,12 +224,12 @@ class Datasets(collections.abc.MutableSequence):
             stat_sum += dataset.stat_sum()
         return stat_sum
 
-    def select_time(self, t_min, t_max, atol="1e-6 s"):
+    def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
 
         Parameters
         ----------
-        t_min, t_max : `~astropy.time.Time`
+        time_min, time_max : `~astropy.time.Time`
             Time interval
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default 1e-6 sec.
@@ -229,7 +248,7 @@ class Datasets(collections.abc.MutableSequence):
             t_start = dataset.gti.time_start[0]
             t_stop = dataset.gti.time_stop[-1]
 
-            if t_start >= (t_min - atol) and t_stop <= (t_max + atol):
+            if t_start >= (time_min - atol) and t_stop <= (time_max + atol):
                 datasets.append(dataset)
 
         return self.__class__(datasets)
@@ -392,7 +411,7 @@ class Datasets(collections.abc.MutableSequence):
                 filename_models, overwrite=overwrite, write_covariance=write_covariance,
             )
 
-    def stack_reduce(self, name=None):
+    def stack_reduce(self, name=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
         This works only if all Dataset are of the same type and if a proper
@@ -402,6 +421,8 @@ class Datasets(collections.abc.MutableSequence):
         ----------
         name : str
             Name of the stacked dataset.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
 
         Returns
         -------
@@ -413,14 +434,14 @@ class Datasets(collections.abc.MutableSequence):
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
 
-        stacked = self[0].to_masked(name=name)
+        stacked = self[0].to_masked(name=name, nan_to_num=nan_to_num)
 
         for dataset in self[1:]:
-            stacked.stack(dataset)
+            stacked.stack(dataset, nan_to_num=nan_to_num)
 
         return stacked
 
-    def info_table(self, cumulative=False, region=None):
+    def info_table(self, cumulative=False):
         """Get info table for datasets.
 
         Parameters
@@ -458,9 +479,12 @@ class Datasets(collections.abc.MutableSequence):
         time_intervals = []
 
         for dataset in self:
-            if dataset.gti is not None:
+            if dataset.gti is not None and len(dataset.gti.table) > 0:
                 interval = (dataset.gti.time_start[0], dataset.gti.time_stop[-1])
                 time_intervals.append(interval)
+
+        if len(time_intervals) == 0:
+            return None
 
         return GTI.from_time_intervals(time_intervals)
 

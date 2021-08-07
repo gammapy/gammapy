@@ -5,8 +5,8 @@ Catalog row index (zero-based) : 1500
 Source name          : 3FHL J2301.9+5855e
 Extended name        : FGES J2301.9+5855 
 Associations     : CTB 109, 3FGL J2301.2+5853
-ASSOC_PROB_BAY   : nan
-ASSOC_PROB_LR    : nan
+ASSOC_PROB_BAY   : --
+ASSOC_PROB_LR    : --
 Class            : SNR    
 TeVCat flag      : N
 
@@ -18,8 +18,8 @@ Npred                            : 53.1
 HEP Energy       : 364.828 GeV
 HEP Probability  : 0.849
 Bayesian Blocks  : 1
-Redshift         : nan
-NuPeak_obs       : nan Hz
+Redshift         : --
+NuPeak_obs       : 0.0 Hz
 
 *** Position info ***
 
@@ -28,9 +28,9 @@ DEC                  : 58.920 deg
 GLON                 : 109.203 deg
 GLAT                 : -1.003 deg
 
-Semimajor (95%)      : nan deg
-Semiminor (95%)      : nan deg
-Position angle (95%) : nan deg
+Semimajor (95%)      : 0.0000 deg
+Semiminor (95%)      : 0.0000 deg
+Position angle (95%) : 0.00 deg
 ROI number           : 479
 
 *** Extended source information ***

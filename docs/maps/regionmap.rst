@@ -63,7 +63,7 @@ in DS9. Hence only certain shapes are supported for constructing a `~RegionGeom`
 
     # Equivalent factory method call
     geom = RegionGeom.create(region)
-    
+
     # Something a bit more complicated: an elliptical annulus
     center_sky = SkyCoord(42, 43, unit='deg', frame='fk5')
     region = EllipseAnnulusSkyRegion(center=center_sky,
@@ -95,20 +95,21 @@ by passing a list of `~MapAxis` objects for non-spatial dimensions with the axes
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     region =  CircleSkyRegion(center=center, radius=1*u.deg)
     geom = RegionGeom(region, axes=[energy_axis])
+    print(geom)
 
-The resulting `~RegionGeom` object has `ndim = 3`, two spatial dimensions with one single bin and the chosen energy axis with 12 bins:
-
-.. code-block:: python
-
-    geom
+.. testoutput::
 
     RegionGeom
-            region     : CircleSkyRegion
-            axes       : ['lon', 'lat', 'energy']
-            shape      : (1, 1, 12)
-            ndim       : 3
-            frame      : galactic
-            center     : 0.0 deg, 0.0 deg
+    <BLANKLINE>
+       region     : CircleSkyRegion
+       axes       : ['lon', 'lat', 'energy']
+       shape      : (1, 1, 12)
+       ndim       : 3
+       frame      : galactic
+       center     : 0.0 deg, 0.0 deg
+    <BLANKLINE>
+
+The resulting `~RegionGeom` object has `ndim = 3`, two spatial dimensions with one single bin and the chosen energy axis with 12 bins.
 
 RegionGeom and coordinates
 --------------------------
@@ -336,7 +337,7 @@ created from an existing `~RegionGeom`, this can be done in the same step:
     # Create another region map with the same RegionGeom but different data,
     # with the same value for each of the 12 energy bins
     geom = region_map.geom
-    region_map_1 = RegionNDMap.from_geom(geom, data = 1)
+    region_map_1 = RegionNDMap.from_geom(geom, data=1.)
 
     # Access the data
     print(region_map_1.data)

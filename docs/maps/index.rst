@@ -152,14 +152,15 @@ broadcast a given operation across a grid of coordinate values.
 The ``set`` and ``fill`` methods can both be used to set pixel values. The
 following demonstrates how one can set pixel values:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map
+    import numpy as np
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
     m.set_by_coord(([-0.05, -0.05], [0.05, 0.05]), [0.5, 1.5])
-    m.fill_by_coord( ([-0.05, -0.05], [0.05, 0.05]), weights=[0.5, 1.5])
+    m.fill_by_coord( ([-0.05, -0.05], [0.05, 0.05]), weights=np.array([0.5, 1.5]))
 
 Interface with `~MapCoord` and `~astropy.coordinates.SkyCoord`
 --------------------------------------------------------------

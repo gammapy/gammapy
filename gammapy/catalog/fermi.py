@@ -4,10 +4,9 @@ import abc
 import warnings
 import numpy as np
 import astropy.units as u
-from astropy.table import Column, Table
-from astropy.time import Time
+from astropy.table import Table
 from astropy.wcs import FITSFixedWarning
-from gammapy.estimators import FluxPoints, LightCurve
+from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
@@ -16,10 +15,11 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.maps import Maps, MapAxis, RegionGeom
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace
-from .core import SourceCatalog, SourceCatalogObject
+from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = [
     "SourceCatalogObject4FGL",
@@ -87,7 +87,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
 
         def get_nonentry_keys(keys):
-            vals = [d[_].strip() for _ in keys]
+            vals = [str(d[_]).strip() for _ in keys]
             return ", ".join([_ for _ in vals if _ != ""])
 
         associations = get_nonentry_keys(keys)
@@ -149,7 +149,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
     def _info_spectral_points(self):
         ss = "\n*** Spectral points ***\n\n"
-        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+        lines = format_flux_points_table(self.flux_points_table).pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss
 
@@ -198,6 +198,13 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             spatial_model=self.spatial_model(),
             spectral_model=self.spectral_model(),
             name=name,
+        )
+
+    @property
+    def flux_points(self):
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        return FluxPoints.from_table(
+            self.flux_points_table, reference_model=self.spectral_model()
         )
 
 
@@ -249,11 +256,11 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         elif spec_type == "PLSuperExpCutoff":
             tag = "PLEC"
-            fmt = "{:<45s} : {} +- {}\n"
+            fmt = "{:<45s} : {:.4f} +- {:.4f}\n"
             ss += fmt.format(
                 "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
             )
-            ss += "{:<45s} : {} +- {}\n".format(
+            ss += "{:<45s} : {:.4f} +- {:.4f}\n".format(
                 "Super-exponential cutoff index",
                 d["PLEC_Exp_Index"],
                 d["Unc_PLEC_Exp_Index"],
@@ -408,7 +415,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             errs = {
                 "amplitude": self.data["Unc_PLEC_Flux_Density"],
                 "index_1": self.data["Unc_PLEC_Index"],
-                "index_2": np.nan_to_num(self.data["Unc_PLEC_Exp_Index"]),
+                "index_2": np.nan_to_num(float(self.data["Unc_PLEC_Exp_Index"])),
                 "expfactor": self.data["Unc_PLEC_Expfactor"],
             }
         else:
@@ -422,8 +429,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
@@ -455,15 +462,15 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
-        table["sqrt_TS"] = self.data["Sqrt_TS_Band"]
-        return FluxPoints(table)
+        table["sqrt_ts"] = self.data["Sqrt_TS_Band"]
+        return table
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = self.data[prefix]
         return u.Quantity(values, unit)
 
     def lightcurve(self, interval="1-year"):
-        """Lightcurve (`~gammapy.estimators.LightCurve`).
+        """Lightcurve (`~gammapy.estimators.FluxPoints`).
 
         Parameters
         ----------
@@ -474,51 +481,47 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         if interval == "1-year":
             tag = "Flux_History"
+            time_axis = self.data["time_axis"]
+            tag_sqrt_ts = "Sqrt_TS_History"
         elif interval == "2-month":
             tag = "Flux2_History"
             if tag not in self.data:
                 raise ValueError(
                     "Only '1-year' interval is available for this catalogue version"
                 )
+
+            time_axis = self.data["time_axis_2"]
+            tag_sqrt_ts = "Sqrt_TS2_History"
         else:
             raise ValueError("Time intervals available are '1-year' or '2-month'")
 
-        flux = self.data[tag]
-        # Flux error is given as asymmetric high/low
-        flux_errn = -self.data[f"Unc_{tag}"][:, 0]
-        flux_errp = self.data[f"Unc_{tag}"][:, 1]
+        energy_axis = MapAxis.from_energy_edges([50, 300000] * u.MeV)
+        geom = RegionGeom.create(region=self.position, axes=[energy_axis, time_axis])
 
-        # Really the time binning is stored in a separate HDU in the FITS
-        # catalog file called `Hist_Start`, with a single column `Hist_Start`
-        # giving the time binning in MET (mission elapsed time)
-        # This is not available here for now.
-        # TODO: read that info in `SourceCatalog3FGL` and pass it down to the
-        # `SourceCatalogObject3FGL` object somehow.
+        names = ["flux", "flux_errp", "flux_errn", "flux_ul", "ts"]
+        maps = Maps.from_geom(geom=geom, names=names)
 
-        # For now, we just hard-code the start and stop time and assume
-        # equally-spaced time intervals. This is roughly correct,
-        # for plotting the difference doesn't matter, only for analysis
-        time_start = Time("2008-08-04T15:43:36.0000")
-        n_points = len(flux)
-        if n_points in [8, 48]:
-            # 8 = 1/years * 8 years
-            # 48 = (12 month/year / 2month) * 8 years
-            time_end = Time("2016-08-02T05:44:11.9999")
-        else:
-            time_end = Time("2018-08-02T05:44:11.9999")
-        time_step = (time_end - time_start) / n_points
-        time_bounds = time_start + np.arange(n_points + 1) * time_step
-
-        table = Table(
-            [
-                Column(time_bounds[:-1].utc.mjd, "time_min"),
-                Column(time_bounds[1:].utc.mjd, "time_max"),
-                Column(flux, "flux"),
-                Column(flux_errp, "flux_errp"),
-                Column(flux_errn, "flux_errn"),
-            ]
+        maps["flux"].quantity = self.data[tag]
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux_ul"].quantity = compute_flux_points_ul(
+            maps["flux"].quantity, maps["flux_errp"].quantity
         )
-        return LightCurve(table)
+        maps["ts"].quantity = self.data[tag_sqrt_ts] ** 2
+
+        meta = {
+            "sed_type_init": "flux",
+            "n_sigma": 1,
+            "ts_threshold_ul": 1,
+            "n_sigma_ul": 2
+        }
+
+        return FluxPoints.from_maps(
+            maps=maps,
+            sed_type="flux",
+            reference_model=self.spectral_model(),
+            meta=meta
+        )
 
 
 class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
@@ -749,8 +752,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
 
@@ -782,8 +785,8 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
         # Square root of test statistic
-        table["sqrt_TS"] = [self.data["Sqrt_TS" + _] for _ in self._energy_edges_suffix]
-        return FluxPoints(table)
+        table["sqrt_ts"] = [self.data["Sqrt_TS" + _] for _ in self._energy_edges_suffix]
+        return table
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = [self.data[prefix + _] for _ in self._energy_edges_suffix]
@@ -791,38 +794,37 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
     def lightcurve(self):
         """Lightcurve (`~gammapy.estimators.LightCurve`)."""
-        flux = self.data["Flux_History"]
+        time_axis = self.data["time_axis"]
+        tag = "Flux_History"
 
-        # Flux error is given as asymmetric high/low
-        flux_errn = -self.data["Unc_Flux_History"][:, 0]
-        flux_errp = self.data["Unc_Flux_History"][:, 1]
+        energy_axis = MapAxis.from_energy_edges(self.energy_range)
+        geom = RegionGeom.create(region=self.position, axes=[energy_axis, time_axis])
 
-        # Really the time binning is stored in a separate HDU in the FITS
-        # catalog file called `Hist_Start`, with a single column `Hist_Start`
-        # giving the time binning in MET (mission elapsed time)
-        # This is not available here for now.
-        # TODO: read that info in `SourceCatalog3FGL` and pass it down to the
-        # `SourceCatalogObject3FGL` object somehow.
+        names = ["flux", "flux_errp", "flux_errn", "flux_ul"]
+        maps = Maps.from_geom(geom=geom, names=names)
 
-        # For now, we just hard-code the start and stop time and assume
-        # equally-spaced time intervals. This is roughly correct,
-        # for plotting the difference doesn't matter, only for analysis
-        time_start = Time("2008-08-02T00:33:19")
-        time_end = Time("2012-07-31T22:45:47")
-        n_points = len(flux)
-        time_step = (time_end - time_start) / n_points
-        time_bounds = time_start + np.arange(n_points + 1) * time_step
-
-        table = Table(
-            [
-                Column(time_bounds[:-1].utc.mjd, "time_min"),
-                Column(time_bounds[1:].utc.mjd, "time_max"),
-                Column(flux, "flux"),
-                Column(flux_errp, "flux_errp"),
-                Column(flux_errn, "flux_errn"),
-            ]
+        maps["flux"].quantity = self.data[tag]
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux_ul"].quantity = compute_flux_points_ul(
+            maps["flux"].quantity, maps["flux_errp"].quantity
         )
-        return LightCurve(table)
+        is_ul = np.isnan(maps["flux_errn"])
+        maps["flux_ul"].data[~is_ul] = np.nan
+
+        meta = {
+            "sed_type_init": "flux",
+            "n_sigma": 1,
+            "ts_threshold_ul": 1,
+            "n_sigma_ul": 2
+        }
+
+        return FluxPoints.from_maps(
+            maps=maps,
+            sed_type="flux",
+            reference_model=self.spectral_model(),
+            meta=meta
+        )
 
 
 class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
@@ -944,8 +946,8 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Integral flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
         table["e_min"] = self._energy_edges[:-1]
@@ -961,7 +963,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         table["flux_ul"] = np.nan * flux_err.unit
         flux_ul = compute_flux_points_ul(table["flux"], table["flux_errp"])
         table["flux_ul"][is_ul] = flux_ul[is_ul]
-        return FluxPoints(table)
+        return table
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
         values = [self.data[prefix + _ + "GeV"] for _ in self._energy_edges_suffix]
@@ -1117,8 +1119,8 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return model
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
         table["e_min"] = self._energy_edges[:-1]
@@ -1150,7 +1152,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
         # Square root of test statistic
         table["sqrt_ts"] = self.data["Sqrt_TS_Band"]
-        return FluxPoints(table)
+        return table
 
     def spatial_model(self):
         """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
@@ -1227,6 +1229,7 @@ class SourceCatalog3FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+        self.hist_table = Table.read(filename, hdu="Hist_Start")
 
 
 class SourceCatalog4FGL(SourceCatalog):
@@ -1267,6 +1270,11 @@ class SourceCatalog4FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+        self.hist_table = Table.read(filename, hdu="Hist_Start")
+        try:
+            self.hist2_table = Table.read(filename, hdu="Hist2_Start")
+        except KeyError:
+            pass
 
 
 class SourceCatalog2FHL(SourceCatalog):

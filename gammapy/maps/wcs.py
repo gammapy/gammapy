@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
+from astropy.nddata.utils import overlap_slices
 from astropy.convolution import Tophat2DKernel
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
@@ -16,16 +17,15 @@ from astropy.wcs.utils import (
 from gammapy.utils.array import round_up_to_odd
 from .geom import (
     Geom,
-    MapAxes,
     MapCoord,
     get_shape,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
-from .utils import INVALID_INDEX, slice_to_str, str_to_slice
+from .axes import MapAxes
+from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]
-
 
 def _check_width(width):
     """Check and normalise width argument.
@@ -118,8 +118,6 @@ class WcsGeom(Geom):
         Reference pixel coordinate in each image plane.
     axes : list
         Axes for non-spatial dimensions
-    cutout_info : dict
-        Dict with cutout info, if the `WcsGeom` was created by `WcsGeom.cutout()`
     """
 
     _slice_spatial_axes = slice(0, 2)
@@ -127,11 +125,11 @@ class WcsGeom(Geom):
     is_hpx = False
     is_region = False
 
-    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, cutout_info=None):
+    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
-        self._axes = MapAxes.from_default(axes)
+        self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
@@ -146,7 +144,6 @@ class WcsGeom(Geom):
             crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.0)
 
         self._crpix = crpix
-        self._cutout_info = cutout_info
 
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
@@ -177,6 +174,11 @@ class WcsGeom(Geom):
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
         return self._shape[::-1]
+
+    @property
+    def axes_names(self):
+        """All axes names"""
+        return ["lon", "lat"] + self.axes.names
 
     @property
     def data_shape_axes(self):
@@ -211,10 +213,32 @@ class WcsGeom(Geom):
         """
         return self._frame
 
-    @property
-    def cutout_info(self):
-        """Cutout info dict."""
-        return self._cutout_info
+    def cutout_slices(self, geom, mode="partial"):
+        """Compute cutout slices.
+
+        Parameters
+        ----------
+        geom : `WcsGeom`
+            Parent geometry
+        mode : {"trim", "partial", "strict"}
+            Cutout slices mode.
+
+        Returns
+        -------
+        slices : dict
+            Dictionary containing "parent-slices" and "cutout-slices".
+        """
+        position = geom.to_image().coord_to_pix(self.center_skydir)
+        slices = overlap_slices(
+            large_array_shape=geom.data_shape[-2:],
+            small_array_shape=self.data_shape[-2:],
+            position=position[::-1],
+            mode=mode
+        )
+        return {
+            "parent-slices": slices[0],
+            "cutout-slices": slices[1],
+        }
 
     @property
     def projection(self):
@@ -433,6 +457,51 @@ class WcsGeom(Geom):
         wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
+    @property
+    def footprint(self):
+        """Footprint of the geometry"""
+        coords = self.wcs.calc_footprint()
+        return SkyCoord(coords, frame=self.frame, unit="deg")
+
+    @classmethod
+    def from_aligned(cls, geom, skydir, width):
+        """Create an aligned geometry from an existing one
+
+        Parameters
+        ----------
+        geom : `~WcsGeom`
+            A reference WCS geometry object.
+        skydir : tuple or `~astropy.coordinates.SkyCoord`
+            Sky position of map center.  Can be either a SkyCoord
+            object or a tuple of longitude and latitude in deg in the
+            coordinate system of the map.
+        width : float or tuple or list or string
+            Width of the map in degrees.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.  For maps
+            with non-spatial dimensions, list input can be used to
+            define a different map width in each image plane.
+
+        Returns
+        -------
+        geom : `~WcsGeom`
+            An aligned WCS geometry object with specified size and center.
+
+        """
+        width = _check_width(width) * u.deg
+        npix = tuple(np.round(width / geom.pixel_scales).astype(int))
+        xref, yref = geom.to_image().coord_to_pix(skydir)
+        xref = int(np.floor(-xref + npix[0] / 2.)) + geom.wcs.wcs.crpix[0]
+        yref = int(np.floor(-yref + npix[1] / 2.)) + geom.wcs.wcs.crpix[1]
+        return cls.create(
+            skydir=tuple(geom.wcs.wcs.crval),
+            npix=npix,
+            refpix=(xref, yref),
+            frame=geom.frame,
+            binsz=tuple(geom.pixel_scales.deg),
+            axes=geom.axes,
+            proj=geom.projection
+        )
+
     @classmethod
     def from_header(cls, header, hdu_bands=None, format="gadf"):
         """Create a WCS geometry object from a FITS header.
@@ -472,20 +541,7 @@ class WcsGeom(Geom):
             npix = (header["NAXIS1"], header["NAXIS2"])
             cdelt = None
 
-        if "PSLICE1" in header:
-            cutout_info = {}
-            cutout_info["parent-slices"] = (
-                str_to_slice(header["PSLICE2"]),
-                str_to_slice(header["PSLICE1"]),
-            )
-            cutout_info["cutout-slices"] = (
-                str_to_slice(header["CSLICE2"]),
-                str_to_slice(header["CSLICE1"]),
-            )
-        else:
-            cutout_info = None
-
-        return cls(wcs, npix, cdelt=cdelt, axes=axes, cutout_info=cutout_info)
+        return cls(wcs, npix, cdelt=cdelt, axes=axes)
 
     def _make_bands_cols(self):
 
@@ -527,17 +583,8 @@ class WcsGeom(Geom):
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))
         for ax in self.axes:
             shape += f",{ax.nbin}"
+
         header["WCSSHAPE"] = f"({shape})"
-
-        if self.cutout_info is not None:
-            slices_parent = self.cutout_info["parent-slices"]
-            slices_cutout = self.cutout_info["cutout-slices"]
-
-            header["PSLICE1"] = (slice_to_str(slices_parent[1]), "Parent slice")
-            header["PSLICE2"] = (slice_to_str(slices_parent[0]), "Parent slice")
-            header["CSLICE1"] = (slice_to_str(slices_cutout[1]), "Cutout slice")
-            header["CSLICE2"] = (slice_to_str(slices_cutout[0]), "Cutout slice")
-
         return header
 
     def get_idx(self, idx=None, flat=False):
@@ -546,24 +593,23 @@ class WcsGeom(Geom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_all(self, idx=None, mode="center"):
+    def _get_pix_all(self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")):
         """Get idx coordinate array without footprint of the projection applied"""
-        if mode == "edges":
-            shape = self._shape_edges
-        else:
-            shape = self._shape
+        pix_all = []
 
-        if idx is None:
-            pix = [np.arange(n, dtype=float) for n in shape]
-        else:
-            pix = [np.arange(n, dtype=float) for n in shape[self._slice_spatial_axes]]
-            pix += [float(t) for t in idx]
+        for name, nbin in zip(self.axes_names, self._shape):
+            if mode == "edges" and name in axis_name:
+                pix = np.arange(-0.5, nbin, dtype=float)
+            else:
+                pix = np.arange(nbin, dtype=float)
 
-        if mode == "edges":
-            for pix_array in pix[self._slice_spatial_axes]:
-                pix_array -= 0.5
+            pix_all.append(pix)
 
-        return np.meshgrid(*pix[::-1], indexing="ij")[::-1]
+        # TODO: improve varying bin size coordinate handling
+        if idx is not None:
+            pix_all = pix_all[self._slice_spatial_axes] + [float(t) for t in idx]
+
+        return np.meshgrid(*pix_all[::-1], indexing="ij", sparse=sparse)[::-1]
 
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
@@ -585,29 +631,41 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, mode="center", frame=None):
+    def get_coord(self, idx=None, mode="center", frame=None, sparse=False, axis_name=None):
         """Get map coordinates from the geometry.
 
         Parameters
         ----------
         mode : {'center', 'edges'}
             Get center or edge coordinates for the spatial axes.
+        frame : str or `~astropy.coordinates.Frame`
+            Coordinate frame
+        sparse : bool
+            Compute sparse coordinates
+        axis_name : str
+            If mode = "edges", the edges will be returned for this axis.
 
         Returns
         -------
         coord : `~MapCoord`
             Map coordinate object.
         """
-        pix = self._get_pix_all(idx=idx, mode=mode)
-        coords = self.pix_to_coord(pix)
-
-        axes_names = ["lon", "lat"] + self.axes.names
-        cdict = dict(zip(axes_names, coords))
+        if axis_name is None:
+            axis_name = ("lon", "lat")
 
         if frame is None:
             frame = self.frame
 
-        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
+        pix = self._get_pix_all(
+            idx=idx, mode=mode, sparse=sparse, axis_name=axis_name
+        )
+
+        data = self.pix_to_coord(pix)
+
+        coords = MapCoord.create(
+            data=data, frame=self.frame, axis_names=self.axes.names
+        )
+        return coords.to_frame(frame)
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
@@ -678,7 +736,7 @@ class WcsGeom(Geom):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
         return self.__class__(
-            self._wcs, npix, cdelt=cdelt, cutout_info=self.cutout_info
+            self._wcs, npix, cdelt=cdelt
         )
 
     def to_cube(self, axes):
@@ -690,7 +748,6 @@ class WcsGeom(Geom):
             npix,
             cdelt=cdelt,
             axes=axes,
-            cutout_info=self.cutout_info,
         )
 
     def _pad_spatial(self, pad_width):
@@ -812,7 +869,7 @@ class WcsGeom(Geom):
         value = self.to_image().solid_angle()
 
         if not self.is_image:
-            value = value * self.axes.bin_volume().T[..., np.newaxis, np.newaxis]
+            value = value * self.axes.bin_volume()
 
         return value
 
@@ -832,7 +889,7 @@ class WcsGeom(Geom):
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
 
-    def cutout(self, position, width, mode="trim"):
+    def cutout(self, position, width, mode="trim", odd_npix=False):
         """
         Create a cutout around a given position.
 
@@ -845,31 +902,33 @@ class WcsGeom(Geom):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        odd_npix : bool
+            Force width to odd number of pixels.
 
         Returns
         -------
         cutout : `~gammapy.maps.WcsNDMap`
             Cutout map
         """
-        width = _check_width(width)
+        width = _check_width(width) * u.deg
+
+        binsz = self.pixel_scales
+        width_npix = np.clip((width / binsz).to_value(""), 1, None)
+        width = width_npix*binsz
+
+        if odd_npix:
+            width = round_up_to_odd(width_npix)
+
         dummy_data = np.empty(self.to_image().data_shape)
         c2d = Cutout2D(
             data=dummy_data,
             wcs=self.wcs,
             position=position,
             # Cutout2D takes size with order (lat, lon)
-            size=width[::-1] * u.deg,
+            size=width[::-1],
             mode=mode,
         )
-
-        cutout_info = {
-            "parent-slices": c2d.slices_original,
-            "cutout-slices": c2d.slices_cutout,
-        }
-
-        return self._init_copy(
-            wcs=c2d.wcs, npix=c2d.shape[::-1], cutout_info=cutout_info
-        )
+        return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1])
 
     def boundary_mask(self, width):
         """Create a mask applying binary erosion with a given width from geom edges
@@ -1011,19 +1070,20 @@ class WcsGeom(Geom):
         return structure.reshape(shape)
 
     def __repr__(self):
-        axes = ["lon", "lat"] + [_.name for _ in self.axes]
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
+        lon_ref, lat_ref = self.wcs.wcs.crval
 
         return (
             f"{self.__class__.__name__}\n\n"
-            f"\taxes       : {axes}\n"
+            f"\taxes       : {self.axes_names}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
             f"\tframe      : {self.frame}\n"
             f"\tprojection : {self.projection}\n"
             f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
             f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
+            f"\twcs ref    : {lon_ref:.1f} deg, {lat_ref:.1f} deg\n"
         )
 
     def to_odd_npix(self, max_radius=None):

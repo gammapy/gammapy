@@ -1,7 +1,7 @@
 components:
 - name: background_irf
   datasets_names: CTA-gc
-  type: BackgroundModel
+  type: TemplateNPredModel
   parameters:
   - name: norm
     value: 1.01

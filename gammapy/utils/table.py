@@ -103,10 +103,12 @@ def table_from_row_data(rows, **kwargs):
         List of row data (each row a dict)
     """
     table = Table(**kwargs)
+
     if len(rows) == 0:
         return table
 
     colnames = list(rows[0].keys())
+
     for name in colnames:
         coldata = [_[name] for _ in rows]
         if isinstance(rows[0][name], Quantity):

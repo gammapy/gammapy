@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from astropy.io import fits
-from astropy.table import Table
 from astropy.visualization import quantity_support
-from gammapy.maps import MapAxis, MapAxes, RegionGeom, RegionNDMap
-from gammapy.utils.scripts import make_path
+from gammapy.maps import MapAxis, MapAxes
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -90,33 +87,33 @@ class EffectiveAreaTable2D(IRF):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.axes["offset"].center[[0, -1]]
-            offset = np.linspace(off_min.value, off_max.value, 4) * off_min.unit
+            off_min, off_max = self.axes["offset"].bounds
+            offset = np.linspace(off_min, off_max, 4)
 
-        energy = self.axes["energy_true"].center
+        energy_axis = self.axes["energy_true"]
 
         for off in offset:
-            area = self.evaluate(offset=off, energy_true=energy)
-            kwargs.setdefault("label", f"offset = {off:.1f}")
-            ax.plot(energy, area.value, **kwargs)
+            area = self.evaluate(offset=off, energy_true=energy_axis.center)
+            label = f"offset = {off:.1f}"
+            with quantity_support():
+                ax.plot(energy_axis.center, area, label=label, **kwargs)
 
-        ax.set_xscale("log")
-        ax.set_xlabel(f"Energy [{energy.unit}]")
-        ax.set_ylabel(f"Effective Area [{self.unit}]")
-        ax.set_xlim(min(energy.value), max(energy.value))
+        energy_axis.format_plot_xaxis(ax=ax)
+        ax.set_ylabel(f"Effective Area [{ax.yaxis.units}]")
+        ax.legend()
         return ax
 
-    def plot_offset_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+    def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
         """Plot effective area versus offset for a given energy.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        offset : `~astropy.coordinates.Angle`
-            Offset axis
         energy : `~astropy.units.Quantity`
             Energy
+        **kwargs : dict
+            Keyword argument passed to `~matplotlib.pyplot.plot`
 
         Returns
         -------
@@ -132,22 +129,21 @@ class EffectiveAreaTable2D(IRF):
             e_min, e_max = energy_axis.center[[0, -1]]
             energy = np.geomspace(e_min, e_max, 4)
 
-        if offset is None:
-            offset = self.axes["offset"].center
+        offset_axis = self.axes["offset"]
 
         for ee in energy:
-            area = self.evaluate(offset=offset, energy_true=ee)
+            area = self.evaluate(offset=offset_axis.center, energy_true=ee)
             area /= np.nanmax(area)
             if np.isnan(area).all():
                 continue
             label = f"energy = {ee:.1f}"
-            ax.plot(offset, area, label=label, **kwargs)
+            with quantity_support():
+                ax.plot(offset_axis.center, area, label=label, **kwargs)
 
+        offset_axis.format_plot_xaxis(ax=ax)
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel(f"Offset ({self.axes['offset'].unit})")
         ax.set_ylabel("Relative Effective Area")
         ax.legend(loc="best")
-
         return ax
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
@@ -169,19 +165,14 @@ class EffectiveAreaTable2D(IRF):
         kwargs.setdefault("vmin", vmin)
         kwargs.setdefault("vmax", vmax)
 
-        energy = self.axes["energy_true"].edges
-        offset = self.axes["offset"].edges
-        caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
+        with quantity_support():
+            caxes = ax.pcolormesh(energy.edges, offset.edges, aeff.value.T, **kwargs)
 
-        ax.set_xscale("log")
-        ax.set_ylabel(f"Offset ({offset.unit})")
-        ax.set_xlabel(f"Energy ({energy.unit})")
-
-        xmin, xmax = energy.value.min(), energy.value.max()
-        ax.set_xlim(xmin, xmax)
+        energy.format_plot_xaxis(ax=ax)
+        offset.format_plot_yaxis(ax=ax)
 
         if add_cbar:
-            label = f"Effective Area ({aeff.unit})"
+            label = f"Effective Area [{aeff.unit}]"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -242,10 +233,13 @@ class EffectiveAreaTable2D(IRF):
 
         g1, g2, g3 = pars[instrument]
 
-        energy = energy_axis_true.center.to_value("MeV")
-        data = g1 * energy ** (-g2) * np.exp(-g3 / energy)
+        offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
+        axes = MapAxes([energy_axis_true, offset_axis])
+        coords = axes.get_coord()
+
+        energy, offset = coords["energy_true"].to_value("MeV"), coords["offset"]
+        data = np.ones_like(offset.value) * g1 * energy ** (-g2) * np.exp(-g3 / energy)
 
         # TODO: fake offset dependence?
-        offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
         meta = {"TELESCOP": instrument}
-        return cls(axes=[energy_axis_true, offset_axis], data=data[:, np.newaxis], unit="cm2", meta=meta)
+        return cls(axes=axes, data=data, unit="cm2", meta=meta)

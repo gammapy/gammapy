@@ -2,11 +2,11 @@
 import copy
 import logging
 import numpy as np
-import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
@@ -36,13 +36,20 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
         acceptance_off = dataset.acceptance_off * mask
 
         npred_sig_convolve = npred_sig.convolve(kernel.array)
-        acceptance_on_convolve = acceptance_on.convolve(kernel.array)
         if correlate_off:
-            n_off = n_off.convolve(kernel.array)
-            acceptance_off = acceptance_off.convolve(kernel.array)
+            background = dataset.background * dataset.mask
+            background.data[dataset.acceptance_off == 0] = 0.
+            background_conv = background.convolve(kernel.array)
 
-        with np.errstate(invalid="ignore", divide="ignore"):
-            alpha = acceptance_on_convolve / acceptance_off
+            n_off = n_off.convolve(kernel.array)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                alpha = background_conv / n_off
+
+        else:
+            acceptance_on_convolve = acceptance_on.convolve(kernel.array)
+
+            with np.errstate(invalid="ignore", divide="ignore"):
+                alpha = acceptance_on_convolve / acceptance_off
 
         return WStatCountsStatistic(
             n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
@@ -55,14 +62,19 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
 
 
 class ExcessMapEstimator(Estimator):
-    """Computes correlated excess, sqrt TS (i.e. Li-Ma significance) and errors for MapDatasets.
+    """Computes correlated excess, significance and error maps from a map dataset.
 
-    If a model is set on the dataset the excess map estimator will compute the excess taking into account
-    the predicted counts of the model.
+    If a model is set on the dataset the excess map estimator will compute the
+    excess taking into account the predicted counts of the model.
 
-    Some background estimation techniques like ring background or adaptive ring background will provide already
-    correlated data for OFF. In the case of already correlated OFF data, the OFF data should not be correlated again,
-    and so the option correlate_off should set to False (default).
+    ..note::
+        By default the excess estimator correlates the off counts as well to avoid
+        artifacts at the edges of the :term:`FoV` for stacked on-off datasets.
+        However when the on-off dataset has been derived from a ring background
+        estimate, this leads to the off counts being correlated twice. To avoid
+        artifacts and the double correlation, the `ExcessMapEstimator` has to
+        be applied per dataset and the resulting maps need to be stacked, taking
+        the :term:`FoV` cut into account.
 
     Parameters
     ----------
@@ -85,11 +97,11 @@ class ExcessMapEstimator(Estimator):
         Default is None so the optionnal steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
-    apply_mask_fit : Bool
+    apply_mask_fit : bool
         Apply a mask for the computation.
         A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
-    correlate_off : Bool
-        Correlate OFF events in the case of a MapDatasetOnOff
+    correlate_off : bool
+        Correlate OFF events in the case of a `MapDatasetOnOff`. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map. 
         If None, a Power Law of index 2 is assumed (default). 
@@ -106,7 +118,7 @@ class ExcessMapEstimator(Estimator):
         selection_optional=None,
         energy_edges=None,
         apply_mask_fit=False,
-        correlate_off=False,
+        correlate_off=True,
         spectral_model=None,
     ):
         self.correlation_radius = correlation_radius
@@ -116,6 +128,10 @@ class ExcessMapEstimator(Estimator):
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
         self.correlate_off = correlate_off
+
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(index=2)
+
         self.spectral_model = spectral_model
 
     @property
@@ -158,13 +174,7 @@ class ExcessMapEstimator(Estimator):
         if not isinstance(dataset, MapDataset):
             raise ValueError("Unsupported dataset type. Excess map is not applicable to 1D datasets.")
 
-        if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"]
-            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
-        else:
-            energy_edges = self.energy_edges
-
-        axis = MapAxis.from_energy_edges(energy_edges)
+        axis = self._get_energy_axis(dataset)
 
         resampled_dataset = dataset.resample_energy_axis(
             energy_axis=axis, name=dataset.name

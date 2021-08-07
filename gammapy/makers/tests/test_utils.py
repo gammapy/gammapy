@@ -155,10 +155,13 @@ def bkg_3d_custom(symmetry="constant"):
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
     fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
     fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
+
     return Background3D(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
-        unit=u.Unit("s-1 MeV-1 sr-1")
+        unit=u.Unit("s-1 MeV-1 sr-1"),
+        interp_kwargs = dict(bounds_error=False, fill_value=None, values_scale="log")
+        #allow extrapolation for symmetry tests
     )
 
 
@@ -307,27 +310,28 @@ def test_make_edisp_kernel_map():
 
 class TestTheta2Table:
     def setup_class(self):
-        table = Table()
-        table["RA"] = [0.0, 0.0, 0.0, 0.0, 10.0] * u.deg
-        table["DEC"] = [0.0, 0.05, 0.9, 10.0, 10.0] * u.deg
-        table["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
-        table["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
+        self.observations = []
+        for sign in [-1, 1]:
+            events = Table()
+            events["RA"] = [0.0, 0.0, 0.0, 0.0, 10.0] * u.deg
+            events["DEC"] = sign * ([0.0, 0.05, 0.9, 10.0, 10.0] * u.deg)
+            events["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
+            events["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
 
-        table.meta["RA_PNT"] = 0 * u.deg
-        table.meta["DEC_PNT"] = 0.5 * u.deg
 
-        meta_obs = dict()
-        meta_obs["RA_PNT"] = 0 * u.deg
-        meta_obs["DEC_PNT"] = 0.5 * u.deg
-        meta_obs["DEADC"] = 1
+            obs_info = dict(
+                RA_PNT=0 * u.deg,
+                DEC_PNT=sign * 0.5 * u.deg,
+                DEADC=1,
+            )
+            events.meta.update(obs_info)
+            meta = time_ref_to_dict("2010-01-01")
+            gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
+            gti = GTI(gti_table)
 
-        meta = time_ref_to_dict("2010-01-01")
-        gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
-        gti = GTI(gti_table)
-
-        self.observation = Observation(
-            events=EventList(table), obs_info=meta_obs, gti=gti
-        )
+            self.observations.append(Observation(
+                events=EventList(events), obs_info=obs_info, gti=gti
+            ))
 
     def test_make_theta_squared_table(self):
         # pointing position: (0,0.5) degree in ra/dec
@@ -336,7 +340,7 @@ class TestTheta2Table:
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
         axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
         theta2_table = make_theta_squared_table(
-            observations=[self.observation], position=position, theta_squared_axis=axis
+            observations=[self.observations[0]], position=position, theta_squared_axis=axis
         )
         theta2_lo = [0, 0.05, 0.1, 0.15]
         theta2_hi = [0.05, 0.1, 0.15, 0.2]
@@ -360,7 +364,7 @@ class TestTheta2Table:
         # Taking the off position as the on one
         off_position = position
         theta2_table2 = make_theta_squared_table(
-            observations=[self.observation],
+            observations=[self.observations[0]],
             position=position,
             theta_squared_axis=axis,
             position_off=off_position,
@@ -370,7 +374,7 @@ class TestTheta2Table:
 
         # Test for two observations, here identical
         theta2_table_two_obs = make_theta_squared_table(
-            observations=[self.observation, self.observation],
+            observations=self.observations,
             position=position,
             theta_squared_axis=axis,
         )

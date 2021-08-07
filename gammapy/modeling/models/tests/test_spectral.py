@@ -322,8 +322,12 @@ TEST_MODELS.append(
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
 def test_models(spectrum):
     model = spectrum["model"]
+    for p in model.parameters:
+        assert p._type == 'spectral'
     energy = 2 * u.TeV
     value = model(energy)
+    energies =  [2, 3] * u.TeV
+    values = model(energies)
     assert_quantity_allclose(value, spectrum["val_at_2TeV"], rtol=1e-7)
     if "val_at_3TeV" in spectrum:
         energy = 3 * u.TeV
@@ -354,7 +358,11 @@ def test_models(spectrum):
         or spectrum["name"] == "GaussianSpectralModel"
         or spectrum["name"] == "pbpl"
     ):
-        assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
+        assert_quantity_allclose(model.inverse(value), energy, rtol=0.01)
+        inverse = model.inverse_all(values)
+        for ke, ener in enumerate(energies):
+            assert_quantity_allclose(inverse[ke], energies[ke], rtol=0.01)
+
 
     if "integral_infinity" in spectrum:
         energy_min = 0 * u.TeV
@@ -396,6 +404,38 @@ def test_model_plot():
         pwl.plot_error((1 * u.TeV, 10 * u.TeV))
 
 
+@requires_dependency("matplotlib")
+def test_model_plot_sed_type():
+    pwl = PowerLawSpectralModel(
+                                amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
+                                )
+    pwl.amplitude.error = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
+                                
+    with mpl_plot_check():
+        ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
+        ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
+        assert(ax1.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]")
+        assert(ax2.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]")
+
+    with mpl_plot_check():
+        ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
+        ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
+        assert(ax1.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
+        assert(ax2.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
+
+    with mpl_plot_check():
+        ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="flux")
+        ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="flux")
+        assert(ax1.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]")
+        assert(ax2.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]")
+
+    with mpl_plot_check():
+        ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
+        ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
+        assert(ax1.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]")
+        assert(ax2.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]")
+
+
 def test_to_from_dict():
     spectrum = TEST_MODELS[0]
     model = spectrum["model"]
@@ -425,7 +465,6 @@ def test_to_from_dict_partial_input(caplog):
     model_dict = model.to_dict()
     # Here we remove the reference energy
     model_dict["parameters"].remove(model_dict["parameters"][2])
-    print(model_dict["parameters"][0])
 
     model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
     new_model = model_class.from_dict(model_dict)
@@ -469,8 +508,8 @@ def test_table_model_from_file():
     absorption_z03 = TemplateSpectralModel.read_xspec_model(
         filename=filename, param=0.3
     )
-    with mpl_plot_check():
-        absorption_z03.plot(energy_range=(0.03, 10), energy_unit=u.TeV, flux_unit="")
+    value = absorption_z03(1 * u.TeV)
+    assert_allclose(value, 1)
 
 
 @requires_data()
@@ -604,6 +643,8 @@ class TestNaimaModel:
             particle_distribution, nh=1 * u.cm ** -3
         )
         model = NaimaSpectralModel(radiative_model)
+        for p in model.parameters:
+            assert p._type == 'spectral'
 
         val_at_2TeV = 9.725347355450884e-14 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 3.530537143620737e-13 * u.Unit("cm-2 s-1")
@@ -643,6 +684,8 @@ class TestNaimaModel:
         )
 
         model = NaimaSpectralModel(radiative_model)
+        for p in model.parameters:
+            assert p._type == 'spectral'
 
         val_at_2TeV = 4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 1.595813e-11 * u.Unit("cm-2 s-1")
@@ -672,6 +715,8 @@ class TestNaimaModel:
         radiative_model = naima.radiative.Synchrotron(particle_distribution, B=2 * u.G)
 
         model = NaimaSpectralModel(radiative_model)
+        for p in model.parameters:
+            assert p._type == 'spectral'
 
         val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 4.449186e-13 * u.Unit("cm-2 s-1")

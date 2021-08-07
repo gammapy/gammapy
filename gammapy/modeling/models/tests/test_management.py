@@ -6,7 +6,7 @@ from regions import CircleSkyRegion
 from numpy.testing import assert_allclose
 from gammapy.modeling import Covariance
 from gammapy.modeling.models import (
-    BackgroundModel,
+    TemplateNPredModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
@@ -23,8 +23,8 @@ def backgrounds():
     geom = WcsGeom.create(skydir=(0, 0), npix=(5, 4), frame="galactic", axes=[axis])
     m = Map.from_geom(geom)
     m.quantity = np.ones(geom.data_shape) * 1e-7
-    background1 = BackgroundModel(m, name="bkg1", datasets_names="dataset-1")
-    background2 = BackgroundModel(m, name="bkg2", datasets_names=["dataset-2"])
+    background1 = TemplateNPredModel(m, name="bkg1", datasets_names="dataset-1")
+    background2 = TemplateNPredModel(m, name="bkg2", datasets_names=["dataset-2"])
     backgrounds = [background1, background2]
     return backgrounds
 
@@ -130,8 +130,8 @@ def test_select(models):
         {"datasets_names": "dataset-2"},
         {"datasets_names": ["dataset-1", "dataset-2"]},
         {"datasets_names": None},
-        {"tag": "BackgroundModel"},
-        {"tag": ["SkyModel", "BackgroundModel"]},
+        {"tag": "TemplateNPredModel"},
+        {"tag": ["SkyModel", "TemplateNPredModel"]},
         {"tag": "point", "model_type": "spatial"},
         {"tag": ["point", "gauss"], "model_type": "spatial"},
         {"tag": "pl", "model_type": "spectral"},
@@ -160,7 +160,6 @@ def test_select(models):
     ]
     for cdt, xp in zip(conditions, expected):
         selected = models.select(**cdt)
-        print(selected.names)
         assert selected.names == xp
 
     mask = models.selection_mask(**conditions[4]) | models.selection_mask(
@@ -230,7 +229,7 @@ def test_bounds(models):
         min=0,
         max=None,
     )
-    bkg_mask = models.selection_mask(tag="BackgroundModel")
+    bkg_mask = models.selection_mask(tag="TemplateNPredModel")
     assert np.all([m.spectral_model.amplitude.min == 0 for m in models[pl_mask]])
     assert np.all([m._spectral_model.norm.min == 0 for m in models[bkg_mask]])
 

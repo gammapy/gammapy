@@ -3,9 +3,10 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.utils import lazyproperty
 from regions import PixCoord
 from gammapy.datasets import SpectrumDatasetOnOff
-from gammapy.maps import RegionGeom, RegionNDMap, WcsNDMap
+from gammapy.maps import RegionGeom, RegionNDMap, WcsNDMap, WcsGeom
 from ..core import Maker
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
@@ -56,12 +57,12 @@ class ReflectedRegionsFinder:
     >>> theta = Angle(0.4, 'deg')
     >>> on_region = CircleSkyRegion(target_position, theta)
     >>> finder = ReflectedRegionsFinder(min_distance_input='1 rad', region=on_region, center=pointing)
-    >>> finder.run()
-    >>> print(finder.reflected_regions[0])
+    >>> regions = finder.run()
+    >>> print(regions[0])
     Region: CircleSkyRegion
     center: <SkyCoord (ICRS): (ra, dec) in deg
         (83.19879005, 25.57300957)>
-    radius: 0.39953342830756855 deg
+    radius: 1438.3203419072468 arcsec
     """
 
     def __init__(
@@ -79,40 +80,23 @@ class ReflectedRegionsFinder:
         self.center = center
 
         self.angle_increment = Angle(angle_increment)
+
         if self.angle_increment <= Angle(0, "deg"):
             raise ValueError("angle_increment is too small")
 
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
+
+        if exclusion_mask and not exclusion_mask.is_mask:
+            raise ValueError("Exclusion mask must contain boolean values")
+
         self.exclusion_mask = exclusion_mask
         self.max_region_number = max_region_number
-        self.reflected_regions = None
-        self.reference_map = None
         self.binsz = Angle(binsz)
 
-    def run(self):
-        """Run all steps.
-        """
-        self.reference_map = self.make_reference_map(
-            self.region, self.center, self.binsz
-        )
-        if self.exclusion_mask:
-            coords = self.reference_map.geom.get_coord()
-            vals = self.exclusion_mask.get_by_coord(coords)
-            self.reference_map.data += vals
-        else:
-            self.reference_map.data += 1
-
-        # Check if center is contained in region
-        if self.region.contains(self.center, self.reference_map.geom.wcs):
-            self.reflected_regions = []
-        else:
-            self.setup()
-            self.find_regions()
-
-    @staticmethod
-    def make_reference_map(region, center, binsz="0.01 deg", min_width="0.3 deg"):
-        """Create empty reference map.
+    @lazyproperty
+    def geom_ref(self):
+        """Reference geometry
 
         The size of the map is chosen such that all reflected regions are
         contained on the image.
@@ -124,52 +108,48 @@ class ReflectedRegionsFinder:
 
         The WCS of the map is the TAN projection at the `center` in the coordinate
         system used by the `region` center.
-
-        Parameters
-        ----------
-        region : `~regions.SkyRegion`
-            Region to rotate
-        center : `~astropy.coordinates.SkyCoord`
-            Rotation point
-        binsz : `~astropy.coordinates.Angle`
-            Reference map bin size.
-        min_width : `~astropy.coordinates.Angle`
-            Minimal map width.
-
-        Returns
-        -------
-        reference_map : `~gammapy.maps.WcsNDMap`
-            Map containing the region
         """
-        frame = region.center.frame.name
+        frame = self.region.center.frame.name
 
         # width is the full width of an image (not the radius)
-        width = 4 * region.center.separation(center) + Angle(min_width)
+        width = 4 * self.region.center.separation(self.center) + Angle("0.3 deg")
 
-        return WcsNDMap.create(
-            skydir=center, binsz=binsz, width=width, frame=frame, proj="TAN"
+        return WcsGeom.create(
+            skydir=self.center,
+            binsz=self.binsz,
+            width=width,
+            frame=frame,
+            proj="TAN"
         )
 
-    @staticmethod
-    def _region_angular_size(pixels, center):
+    @lazyproperty
+    def center_pix(self):
+        """Center pix coordinate"""
+        return PixCoord.from_sky(self.center, self.geom_ref.wcs)
+
+    @lazyproperty
+    def region_pix(self):
+        """Pixel region"""
+        return self.region.to_pixel(self.geom_ref.wcs)
+
+    @lazyproperty
+    def region_angular_size(self):
         """Compute maximum angular size of a group of pixels as seen from center.
 
         This assumes that the center lies outside the group of pixel
-
-        Parameters
-        ----------
-        pixels : `~astropy.regions.PixCoord`
-            the pixels coordinates
-        center : `~astropy.regions.PixCoord`
-            the center coordinate in pixels
 
         Returns
         -------
         angular_size : `~astropy.coordinates.Angle`
             the maximum angular size
         """
-        newX, newY = center.x - pixels.x, center.y - pixels.y
-        angles = Angle(np.arctan2(newX, newY), "rad")
+        mask = self.geom_ref.region_mask([self.region]).data
+        pix_y, pix_x = np.where(mask)
+
+        pixels = PixCoord(pix_x, pix_y)
+
+        dx, dy = self.center_pix.x - pixels.x, self.center_pix.y - pixels.y
+        angles = Angle(np.arctan2(dx, dy), "rad")
         angular_size = np.max(angles) - np.min(angles)
 
         if angular_size.value > np.pi:
@@ -179,74 +159,68 @@ class ReflectedRegionsFinder:
 
         return angular_size
 
-    def setup(self):
-        """Compute parameters for reflected regions algorithm."""
-        geom = self.reference_map.geom
-        self._pix_region = self.region.to_pixel(geom.wcs)
-        self._pix_center = PixCoord.from_sky(self.center, geom.wcs)
+    @lazyproperty
+    def exclusion_mask_ref(self):
+        """Exclusion mask reprojected"""
+        if self.exclusion_mask:
+            mask = self.exclusion_mask.interp_to_geom(self.geom_ref, fill_value=True)
+        else:
+            mask = WcsNDMap.from_geom(geom=self.geom_ref, data=True)
+        return mask
 
-        # Make the ON reference map
-        mask = geom.region_mask([self.region]).data
-        # on_reference_map = WcsNDMap(geom=geom, data=mask)
-
-        # Extract all pixcoords in the geom
-        X, Y = geom.get_pix()
-        ONpixels = PixCoord(X[mask], Y[mask])
-
+    @lazyproperty
+    def excluded_pix_coords(self):
+        """Excluded pix coords"""
         # find excluded PixCoords
-        mask = self.reference_map.data == 0
-        self.excluded_pixcoords = PixCoord(X[mask], Y[mask])
+        pix_y, pix_x = np.where(~self.exclusion_mask_ref.data)
+        return PixCoord(pix_x, pix_y)
 
+    @lazyproperty
+    def angle_min(self):
+        """Minimum angle"""
         # Minimum angle a region has to be moved to not overlap with previous one
-        min_ang = self._region_angular_size(ONpixels, self._pix_center)
-
         # Add required minimal distance between two off regions
-        self._min_ang = min_ang + self.min_distance
+        return self.region_angular_size + self.min_distance
 
-        # Maximum possible angle before regions is reached again
-        self._max_angle = Angle("360deg") - self._min_ang - self.min_distance_input
+    @lazyproperty
+    def angle_max(self):
+        """Maximum angle"""
+        return Angle("360deg") - self.angle_min - self.min_distance_input
 
-    def find_regions(self):
-        """Find reflected regions."""
-        curr_angle = self._min_ang + self.min_distance_input
-        reflected_regions = []
+    def reset_cache(self):
+        """Reset cached properties"""
+        for name, value in self.__class__.__dict__.items():
+            if isinstance(value, lazyproperty):
+                self.__dict__.pop(name, None)
 
-        while curr_angle < self._max_angle:
-            test_reg = self._pix_region.rotate(self._pix_center, curr_angle)
-            if not np.any(test_reg.contains(self.excluded_pixcoords)):
-                region = test_reg.to_sky(self.reference_map.geom.wcs)
-                reflected_regions.append(region)
+    def run(self):
+        """Find reflected regions.
 
-                curr_angle += self._min_ang
-                if self.max_region_number <= len(reflected_regions):
-                    break
-            else:
-                curr_angle = curr_angle + self.angle_increment
-
-        self.reflected_regions = reflected_regions
-
-    def plot(self, fig=None, ax=None):
-        """Standard debug plot.
-
-        See example here: :ref:'regions_reflected'.
+        Returns
+        -------
+        regions : list of `SkyRegion`
+            Reflected regions
         """
-        fig, ax, cbar = self.reference_map.plot(
-            fig=fig, ax=ax, cmap="gray", vmin=0, vmax=1
-        )
-        wcs = self.reference_map.geom.wcs
+        self.reset_cache()
+        regions = []
 
-        on_patch = self.region.to_pixel(wcs=wcs).as_artist(edgecolor="red", alpha=0.6)
-        ax.add_patch(on_patch)
+        angle = self.angle_min + self.min_distance_input
 
-        for off in self.reflected_regions:
-            tmp = off.to_pixel(wcs=wcs)
-            off_patch = tmp.as_artist(edgecolor="blue", alpha=0.6)
-            ax.add_patch(off_patch)
+        while angle < self.angle_max:
+            region_test = self.region_pix.rotate(self.center_pix, angle)
 
-            xx, yy = self.center.to_pixel(wcs)
-            ax.plot(xx, yy, marker="+", color="green", markersize=20, linewidth=5)
+            if not np.any(region_test.contains(self.excluded_pix_coords)):
+                region = region_test.to_sky(self.geom_ref.wcs)
+                regions.append(region)
 
-        return fig, ax
+                if len(regions) >= self.max_region_number:
+                    break
+
+                angle += self.angle_min
+            else:
+                angle += self.angle_increment
+
+        return regions
 
 
 class ReflectedRegionsBackgroundMaker(Maker):
@@ -315,20 +289,20 @@ class ReflectedRegionsBackgroundMaker(Maker):
             Off counts.
         """
         finder = self._get_finder(dataset, observation)
-        finder.run()
+        regions = finder.run()
 
         energy_axis = dataset.counts.geom.axes["energy"]
 
-        if len(finder.reflected_regions) > 0:
+        if len(regions) > 0:
             geom = RegionGeom.from_regions(
-                regions=finder.reflected_regions,
+                regions=regions,
                 axes=[energy_axis],
-                wcs=finder.reference_map.geom.wcs
+                wcs=finder.geom_ref.wcs
             )
 
             counts_off = RegionNDMap.from_geom(geom=geom)
             counts_off.fill_events(observation.events)
-            acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(finder.reflected_regions))
+            acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(regions))
         else:
             # if no OFF regions are found, off is set to None and acceptance_off to zero
             log.warning(

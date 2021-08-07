@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy import units as u
+from gammapy.maps import MapAxis
 from gammapy.datasets import Datasets
-from gammapy.estimators import Estimator
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import Models, ScaleSpectralModel
+from gammapy.modeling import Fit
 
 log = logging.getLogger(__name__)
 
 
-class FluxEstimator(Estimator):
+class FluxEstimator(ParameterEstimator):
     """Flux estimator.
 
     Estimates flux for a given list of datasets with their model in a given energy range.
@@ -24,8 +24,6 @@ class FluxEstimator(Estimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    energy_min, energy_max: `~astropy.units.Quantity`
-        The energy interval on which to compute the flux
     norm_min : float
         Minimum value for the norm used for the fit statistic profile evaluation.
     norm_max : float
@@ -38,8 +36,6 @@ class FluxEstimator(Estimator):
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
         Sigma to use for upper limit computation.
-    reoptimize : bool
-        Re-optimize other free model parameters.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
@@ -48,79 +44,40 @@ class FluxEstimator(Estimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
+    reoptimize : bool
+        Re-optimize other free model parameters. Default is False.
     """
-
     tag = "FluxEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
-        source,
-        energy_min,
-        energy_max,
+        source=0,
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
         norm_values=None,
         n_sigma=1,
-        n_sigma_ul=3,
-        reoptimize=True,
+        n_sigma_ul=2,
         selection_optional=None,
+        fit=None,
+        reoptimize=False
     ):
-
-        if norm_values is None:
-            norm_values = np.logspace(
-                np.log10(norm_min), np.log10(norm_max), norm_n_values
-            )
         self.norm_values = norm_values
+        self.norm_min = norm_min
+        self.norm_max = norm_max
+        self.norm_n_values = norm_n_values
         self.source = source
-        self.energy_min = u.Quantity(energy_min)
-        self.energy_max = u.Quantity(energy_max)
-
-        if self.energy_min >= self.energy_max:
-            raise ValueError("Incorrect energy_range for Flux Estimator")
-
-        self.selection_optional = selection_optional
-        self.n_sigma = n_sigma
-        self.n_sigma_ul = n_sigma_ul
-        self.reoptimize = reoptimize
-
-        self._parameter_estimator = ParameterEstimator(
+        super().__init__(
             null_value=0,
-            scan_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            reoptimize=self.reoptimize,
-            selection_optional=self.selection_optional,
+            n_sigma=n_sigma,
+            n_sigma_ul=n_sigma_ul,
+            selection_optional=selection_optional,
+            fit=fit,
+            reoptimize=reoptimize
         )
-
-    @staticmethod
-    def get_reference_flux_values(model, energy_min, energy_max):
-        """Get reference flux values
-
-        Parameters
-        ----------
-        model : `SpectralModel`
-            Models
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Energy range
-
-        Returns
-        -------
-        values : dict
-            Dictionary with reference energies and flux values.
-        """
-        energy_ref = np.sqrt(energy_min * energy_max)
-        return {
-            "e_ref": energy_ref,
-            "e_min": energy_min,
-            "e_max": energy_max,
-            "ref_dnde": model(energy_ref),
-            "ref_flux": model.integral(energy_min, energy_max),
-            "ref_eflux": model.energy_flux(energy_min, energy_max),
-            "ref_e2dnde": model(energy_ref) * energy_ref ** 2,
-        }
 
     def get_scale_model(self, models):
         """Set scale model
@@ -137,10 +94,13 @@ class FluxEstimator(Estimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
-        scale_model.norm.min = -1e5
-        scale_model.norm.max = 1e5
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
+        scale_model.norm.interp = "log"
+        scale_model.norm.scan_values = self.norm_values
+        scale_model.norm.scan_min = self.norm_min
+        scale_model.norm.scan_max = self.norm_max
+        scale_model.norm.scan_n_values = self.norm_n_values
         return scale_model
 
     def run(self, datasets):
@@ -157,65 +117,19 @@ class FluxEstimator(Estimator):
             Dict with results for the flux point.
         """
         datasets = Datasets(datasets)
-
-        datasets_sliced = datasets.slice_by_energy(
-            energy_min=self.energy_min, energy_max=self.energy_max
-        )
-
         models = datasets.models.copy()
-        datasets_sliced.models = models
-
-        if len(datasets_sliced) > 0:
-            # TODO: this relies on the energy binning of the first dataset
-            energy_axis = datasets_sliced[0].counts.geom.axes["energy"]
-            energy_min, energy_max = energy_axis.edges.min(), energy_axis.edges.max()
-        else:
-            energy_min, energy_max = self.energy_min, self.energy_max
-
-        contributions = []
-
-        for dataset in datasets_sliced:
-            if dataset.mask is not None:
-                value = dataset.mask.data.any()
-            else:
-                value = True
-            contributions.append(value)
 
         model = self.get_scale_model(models)
 
+        energy_min, energy_max = datasets.energy_ranges
+        energy_axis = MapAxis.from_energy_edges([energy_min.min(), energy_max.max()])
+
         with np.errstate(invalid="ignore", divide="ignore"):
-            result = self.get_reference_flux_values(model.model, energy_min, energy_max)
+            result = model.reference_fluxes(energy_axis=energy_axis)
+            # convert to scalar values
+            result = {key: value.item() for key, value in result.items()}
 
-        if len(datasets) == 0 or not np.any(contributions):
-            result.update(self.nan_result)
-        else:
-            models[self.source].spectral_model = model
-
-            datasets_sliced.models = models
-            result.update(self._parameter_estimator.run(datasets_sliced, model.norm))
-            result["sqrt_ts"] = self.get_sqrt_ts(result["ts"], result["norm"])
-
-        return result
-
-    @property
-    def nan_result(self):
-        result = {
-            "norm": np.nan,
-            "stat": np.nan,
-            "success": False,
-            "norm_err": np.nan,
-            "ts": np.nan,
-            "sqrt_ts": np.nan,
-        }
-
-        if "errn-errp" in self.selection_optional:
-            result.update({"norm_errp": np.nan, "norm_errn": np.nan})
-
-        if "ul" in self.selection_optional:
-            result.update({"norm_ul": np.nan})
-
-        if "scan" in self.selection_optional:
-            nans = np.nan * np.empty_like(self.norm_values)
-            result.update({"norm_scan": nans, "stat_scan": nans})
-
+        models[self.source].spectral_model = model
+        datasets.models = models
+        result.update(super().run(datasets, model.norm))
         return result

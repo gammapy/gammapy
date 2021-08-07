@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from regions import CircleSkyRegion
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -9,7 +10,7 @@ from astropy.time import Time
 from gammapy.data import GTI, DataStore, EventList, Observation
 from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker
+from gammapy.makers import MapDatasetMaker, SafeMaskMaker, FoVBackgroundMaker
 from gammapy.maps import Map, MapAxis, WcsGeom, HpxGeom
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -34,18 +35,11 @@ def geom_config_hpx():
     energy_axis = MapAxis.from_energy_bounds("0.5 TeV", "30 TeV", nbin=3)
 
     energy_axis_true = MapAxis.from_energy_bounds(
-        "0.3 TeV",
-        "30 TeV",
-        nbin=3,
-        per_decade=True,
-        name="energy_true"
+        "0.3 TeV", "30 TeV", nbin=3, per_decade=True, name="energy_true"
     )
 
     geom_hpx = HpxGeom.create(
-        binsz=0.1,
-        frame="galactic",
-        axes=[energy_axis],
-        region="DISK(0, 0, 5.)"
+        binsz=0.1, frame="galactic", axes=[energy_axis], region="DISK(0, 0, 5.)"
     )
     return {"geom": geom_hpx, "energy_axis_true": energy_axis_true}
 
@@ -251,7 +245,7 @@ def test_map_dataset_maker_hpx(geom_config_hpx, observations):
 
     assert_allclose(dataset.counts.data.sum(), 4264)
     assert_allclose(dataset.background.data.sum(), 2964.5369, rtol=1e-5)
-    assert_allclose(dataset.exposure.data[4, 1000], 5.987e+09, rtol=1e-4)
+    assert_allclose(dataset.exposure.data[4, 1000], 5.987e09, rtol=1e-4)
 
     coords = SkyCoord([0, 3], [0, 0], frame="galactic", unit="deg")
     coords = {"skycoord": coords, "energy": 1 * u.TeV}
@@ -386,3 +380,44 @@ def test_interpolate_map_dataset():
         position=SkyCoord("0 deg", "0 deg"), geom=geom_psf, max_radius=2 * u.deg
     ).data
     assert_allclose(psfkernel_preinterp, psfkernel_postinterp, atol=1e-4)
+
+
+@requires_data()
+@pytest.mark.xfail
+def test_minimal_datastore():
+    """"Check that a standard analysis runs on a minimal datastore"""
+
+    energy_axis = MapAxis.from_energy_bounds(
+        1, 10, nbin=3, per_decade=False, unit="TeV", name="energy"
+    )
+    geom = WcsGeom.create(
+        skydir=(83.633, 22.014),
+        binsz=0.5,
+        width=(2, 2),
+        frame="icrs",
+        proj="CAR",
+        axes=[energy_axis],
+    )
+
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/tests/minimal_datastore")
+
+    observations = data_store.get_observations()
+    maker = MapDatasetMaker()
+    offset_max = 2.3 * u.deg
+    maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=offset_max)
+    circle = CircleSkyRegion(
+        center=SkyCoord("83.63 deg", "22.14 deg"), radius=0.2 * u.deg
+    )
+    exclusion_mask = ~geom.region_mask(regions=[circle])
+    maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
+
+    stacked = MapDataset.create(geom=geom, name="crab-stacked")
+    for obs in observations:
+        dataset = maker.run(stacked, obs)
+        dataset = maker_safe_mask.run(dataset, obs)
+        dataset = maker_fov.run(dataset)
+        stacked.stack(dataset)
+
+    assert_allclose(stacked.exposure.data.sum(), 6.01909e10)
+    assert_allclose(stacked.counts.data.sum(), 1446)
+    assert_allclose(stacked.background.data.sum(), 1445.9841)

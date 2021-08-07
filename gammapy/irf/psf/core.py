@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from gammapy.maps import MapAxes, MapAxis
+from astropy.visualization import quantity_support
 from gammapy.utils.array import array_stats_str
 from ..core import IRF
 
@@ -142,23 +142,23 @@ class PSF(IRF):
 
         ax = plt.gca() if ax is None else ax
 
-        energy_true = self.axes["energy_true"].center
+        energy_true = self.axes["energy_true"]
 
         for theta in offset:
             for frac in fraction:
                 plot_kwargs = kwargs.copy()
                 radius = self.containment_radius(
-                    energy_true=energy_true, offset=theta, fraction=frac
+                    energy_true=energy_true.center, offset=theta, fraction=frac
                 )
                 plot_kwargs.setdefault(
                     "label", f"{theta}, {100 * frac:.1f}%"
                 )
-                ax.plot(energy_true, radius, **plot_kwargs)
+                with quantity_support():
+                    ax.plot(energy_true.center, radius, **plot_kwargs)
 
-        ax.semilogx()
+        energy_true.format_plot_xaxis(ax=ax)
         ax.legend(loc="best")
-        ax.set_xlabel(f"Energy ({energy_true.unit})")
-        ax.set_ylabel(f"Containment radius ({radius.unit})")
+        ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
     def plot_containment_radius(self, ax=None, fraction=0.68,  add_cbar=True, **kwargs):
@@ -184,12 +184,12 @@ class PSF(IRF):
 
         ax = plt.gca() if ax is None else ax
 
-        energy = self.axes["energy_true"].center
-        offset = self.axes["offset"].center
+        energy = self.axes["energy_true"]
+        offset = self.axes["offset"]
 
         # Set up and compute data
         containment = self.containment_radius(
-            energy_true=energy[:, np.newaxis], offset=offset, fraction=fraction
+            energy_true=energy.center[:, np.newaxis], offset=offset.center, fraction=fraction
         )
 
         # plotting defaults
@@ -198,16 +198,11 @@ class PSF(IRF):
         kwargs.setdefault("vmax", np.nanmax(containment.value))
 
         # Plotting
-        x = energy.value
-        y = offset.value
-        caxes = ax.pcolormesh(x, y, containment.value.T, **kwargs)
+        with quantity_support():
+            caxes = ax.pcolormesh(energy.edges, offset.edges, containment.value.T, **kwargs)
 
-        # Axes labels and ticks, colobar
-        ax.semilogx()
-        ax.set_ylabel(f"Offset ({offset.unit})")
-        ax.set_xlabel(f"Energy ({energy.unit})")
-        ax.set_xlim(x.min(), x.max())
-        ax.set_ylim(y.min(), y.max())
+        energy.format_plot_xaxis(ax=ax)
+        offset.format_plot_yaxis(ax=ax)
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
@@ -234,20 +229,21 @@ class PSF(IRF):
         ax = plt.gca() if ax is None else ax
 
         try:
-            rad_axis = self.axes["rad"]
+            rad = self.axes["rad"]
         except KeyError:
-            rad_axis = RAD_AXIS_DEFAULT
+            rad = RAD_AXIS_DEFAULT
 
-        rad = rad_axis.center
         for theta in offset:
             for energy in energy_true:
-                psf_value = self.evaluate(rad=rad, energy_true=energy, offset=theta)
+                psf_value = self.evaluate(rad=rad.center, energy_true=energy, offset=theta)
                 label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
-                ax.plot(rad.value, psf_value.value, label=label, **kwargs)
+                with quantity_support():
+                    ax.plot(rad.center, psf_value, label=label, **kwargs)
+
+        rad.format_plot_xaxis(ax=ax)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad ({rad.unit})")
-        ax.set_ylabel(f"PSF ({psf_value.unit})")
+        ax.set_ylabel(f"PSF ({ax.yaxis.units})")
         plt.legend()
         return ax
 

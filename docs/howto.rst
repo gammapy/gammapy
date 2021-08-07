@@ -15,25 +15,45 @@ it's not a complete list of how to do everything in Gammapy.
 
 Please give feedback and suggest additions to this page!
 
-Access IACT data
-++++++++++++++++
 
-To access IACT data use the `~gammapy.data.DataStore`. You can see how to create
-one with the high level interface `~gammapy.analysis.Analysis` `here
-<tutorials/analysis_1.html#Setting-the-data-to-use>`__. You can also create it
-directly, see `here
-<tutorials/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
+Spell and pronounce Gammapy
++++++++++++++++++++++++++++
+The recommended spelling is "Gammapy" as proper name. The recommended
+pronunciation is [ɡæməpaɪ] where the syllable "py" is pronounced like
+the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=ˈ%C9%A1æməpaɪ&voice=Amy>`__.
+
+
+Access IACT DL3 data
+++++++++++++++++++++
+
+To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
+easy access to observations stored in the DL3 data library. You can create it directly
+as in `this example<tutorials/data/hess.html#Datastore>`__.
+It is also internally used by the high level interface `~gammapy.analysis.Analysis`. You
+can see how to properly set it `here
+<tutorials/starting/analysis_1.html#Setting-the-data-to-use>`__.
+
+
+Select observations
++++++++++++++++++++
+
+The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
+It can be used to select observations with various criterion.
+You can for instance apply a cone search as shown `here
+<tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
+You can also select observations based on other informations available using the
+`~gammapy.data.ObservationTable.select_observations` method.
 
 Check IRFs
 ++++++++++
 
 Gammapy offers a number of methods to explore the content of the various IRFs
 contained in an observation. This is usually done thanks to their ``peek()``
-methods. See example for CTA `here <tutorials/cta.html#IRFs>`__ and for H.E.S.S.
-`here <tutorials/hess.html#DL3-DR1>`__.
+methods. See example for CTA `here <tutorials/data/cta.html#IRFs>`__ and for H.E.S.S.
+`here <tutorials/data/hess.html#DL3-DR1>`__.
 
-Use gammapy for modeling 2D images
-++++++++++++++++++++++++++++++++++
+Model 2D images
++++++++++++++++
 
 Gammapy treats 2D maps as 3D cubes with one bin in energy. To see an example of the relevant data reduction, see
 `2-dim sky image analysis <tutorials#core-tutorials>`
@@ -49,7 +69,7 @@ Extract 1D spectra
 The `~gammapy.analysis.Analysis` class can perform spectral extraction. The
 `~gammapy.analysis.AnalysisConfig` must be defined to produce '1d' datasets.
 Alternatively, you can follow the `spectrum extraction notebook
-<tutorials/spectrum_analysis.html>`__.
+<tutorials/analysis/1D/spectrum_analysis.html>`__.
 
 Extract a lightcurve
 ++++++++++++++++++++
@@ -64,7 +84,23 @@ an new observation containing events in the specified time range. With the new
 reduction which will produce datasets in the correct time range. The light curve
 extraction can then be performed as usual with the
 `~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the `Light curve -
-Flare <tutorials/light_curve_flare.html>`__ tutorial.
+Flare <tutorials/time/light_curve_flare.html>`__ tutorial.
+
+Choose units for plotting
++++++++++++++++++++++++++
+Units for plotting are handled with a combination of `matplotlib` and `astropy.units`.
+For most plotting methods Gammapy forwards additional keywords to the corresponding
+matplotlib plot method, including the `xunits` and `yunits` keywords, which allows
+you to define the x and y axis units using `astropy.units`. Here is a minimal example:
+
+.. code::
+
+    from gammapy.estimators import FluxPoints
+    from astropy import units as u
+
+    filename = "$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits"
+    fp = FluxPoints.read(filename)
+    fp.plot(sed_type="e2dnde", xunits=u.erg, yunits=u.Unit("erg cm-2 s-1"))
 
 Compute source significance
 +++++++++++++++++++++++++++
@@ -88,7 +124,7 @@ source as a function of observing time. In Gammapy, you can produce it with 1D
 (spectral) analysis. Once datasets are produced for a given ON region, you can
 access the total statistics with the ``info_table(cumulative=True)`` method of
 `~gammapy.modeling.Datasets`. See example `here
-<tutorials/spectrum_analysis.html#Source-statistic>`__.
+<tutorials/analysis/1D/spectrum_analysis.html#Source-statistic>`__.
 
 Detect sources in a map
 +++++++++++++++++++++++
@@ -100,7 +136,7 @@ measured at each position is a background fluctuation. For a
 used. A simple correlated Li & Ma significance can be used, in particular for
 ON-OFF datasets. The second step consists in applying a peak finer algorithm,
 such as `~gammapy.estimators.utils.find_peaks`. This is demonstrated in the `Source
-detection tutorial <tutorials/detect.html>`__.
+detection tutorial <tutorials/analysis/2D/detect.html>`__.
 
 Astrophysical source modeling
 +++++++++++++++++++++++++++++
@@ -116,14 +152,14 @@ Implement a custom model
 ++++++++++++++++++++++++
 Gammapy allows the flexibility of using user-defined models for analysis.
 For an example, see `Implementing a Custom Model
-<tutorials/models.html#Implementing-a-Custom-Model>`__.
+<tutorials/api/models.html#Implementing-a-Custom-Model>`__.
 
-Energy dependent spatial models
-+++++++++++++++++++++++++++++++
+Implement an energy dependent spatial models
+++++++++++++++++++++++++++++++++++++++++++++
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.
 For an example, see `here
-<tutorials/models.html#Models-with-Energy-dependent-morphologyl>`__.
+<tutorials/api/models.html#Models-with-Energy-dependent-morphologyl>`__.
 
 Reduce memory budget for large datasets
 +++++++++++++++++++++++++++++++++++++++
@@ -141,11 +177,17 @@ used to sample the PSF. This will reduce the quality of the PSF description.
 - If one or several IRFs are not required for the study at hand, it is possible not to build them
 by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
 
-Copy part of a datastore
-++++++++++++++++++++++++
+Copy part of a data store
++++++++++++++++++++++++++
 
 To share specific data from a database, it might be necessary to create a new data storage with
 a limited set of observations and summary files following the scheme described in gadf_.
 This is possible with the method `~gammapy.data.DataStore.copy_obs` provided by the
 `~gammapy.data.DataStore`. It allows to copy individual observations files in a given directory
 and build the associated observation and HDU tables.
+
+Interpolate maps onto a different geometry
+++++++++++++++++++++++++++++++++++++++++++
+
+To interpolate maps onto a different geometry, use `Map.interp_to_geom`,
+see `here <tutorials/api/maps.html#Filling-maps-from-interpolation>`__.

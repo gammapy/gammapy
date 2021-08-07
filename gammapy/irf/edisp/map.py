@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.interpolate import interp1d
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, MapAxes, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
-from .edisp_kernel import EDispKernel
-from .core import IRFMap
+from .kernel import EDispKernel
+from ..core import IRFMap
 
 __all__ = ["EDispMap", "EDispKernelMap"]
 
@@ -119,23 +118,69 @@ class EDispMap(IRFMap):
         position = self._get_nearest_valid_position(position)
         energy_axis_true = self.edisp_map.geom.axes["energy_true"]
 
+        axes = MapAxes([energy_axis_true, energy_axis])
+
+        coords = axes.get_coord(mode="edges", axis_name="energy")
+
         # migration value of energy bounds
-        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+        migra = coords["energy"] / coords["energy_true"]
 
         coords = {
             "skycoord": position,
-            "energy_true": energy_axis_true.center[:, np.newaxis],
+            "energy_true": coords["energy_true"],
             "migra": migra,
         }
 
-        values = self.edisp_map.integral(
-            axis_name="migra", coords=coords
-        )
-
-        data = np.diff(np.clip(values, 0, 1))
+        values = self.edisp_map.integral(axis_name="migra", coords=coords)
+        data = np.diff(np.clip(values, 0, np.inf))
 
         return EDispKernel(
-            axes=[energy_axis_true, energy_axis], data=data.to_value("")
+            axes=axes, data=data.to_value("")
+        )
+
+    def to_edisp_kernel_map(self, energy_axis):
+        """Convert to map with edisp kernels
+
+        Parameters
+        ----------
+        energy_axis : `~gammapy.maps.MapAxis`
+            Reconstructed energy axis.
+
+        Returns
+        -------
+        edisp : `~gammapy.maps.EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        energy_axis_true = self.edisp_map.geom.axes["energy_true"]
+
+        geom_image = self.edisp_map.geom.to_image()
+        geom = geom_image.to_cube([energy_axis, energy_axis_true])
+
+        coords = geom.get_coord(sparse=True, mode="edges", axis_name="energy")
+
+        migra = coords["energy"] / coords["energy_true"]
+
+        coords = {
+            "skycoord": coords.skycoord,
+            "energy_true": coords["energy_true"],
+            "migra": migra,
+        }
+
+        values = self.edisp_map.integral(axis_name="migra", coords=coords)
+
+        axis = self.edisp_map.geom.axes.index_data("migra")
+        data = np.clip(np.diff(values, axis=axis), 0, np.inf)
+
+        edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(""), unit="")
+
+        if self.exposure_map:
+            geom = geom.squash(axis_name=energy_axis.name)
+            exposure_map = self.exposure_map.copy(geom=geom)
+        else:
+            exposure_map = None
+
+        return EDispKernelMap(
+            edisp_kernel_map=edisp_kernel_map, exposure_map=exposure_map
         )
 
     @classmethod
@@ -235,49 +280,6 @@ class EDispMap(IRFMap):
         )
 
         return cls.from_geom(geom)
-
-    def to_edisp_kernel_map(self, energy_axis):
-        """Convert to map with edisp kernels
-
-        Parameters
-        ----------
-        energy_axis : `~gammapy.maps.MapAxis`
-            Reconstructed energy axis.
-
-        Returns
-        -------
-        edisp : `~gammapy.maps.EDispKernelMap`
-            Energy dispersion kernel map.
-        """
-        energy_axis_true = self.edisp_map.geom.axes["energy_true"]
-        geom_image = self.edisp_map.geom.to_image()
-
-        # migration value of energy bounds
-        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
-
-        coords = {
-            "energy_true": energy_axis_true.center[:, np.newaxis, np.newaxis, np.newaxis],
-            "migra": migra[:, :, np.newaxis, np.newaxis],
-            "skycoord": geom_image.get_coord().skycoord
-        }
-
-        values = self.edisp_map.integral(axis_name="migra", coords=coords)
-
-        axis = self.edisp_map.geom.axes.index_data("migra")
-        data = np.clip(np.diff(values, axis=axis), 0, np.inf)
-
-        geom = geom_image.to_cube([energy_axis, energy_axis_true])
-        edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(""), unit="")
-
-        if self.exposure_map:
-            geom = geom.squash(axis_name=energy_axis.name)
-            exposure_map = self.exposure_map.copy(geom=geom)
-        else:
-            exposure_map = None
-
-        return EDispKernelMap(
-            edisp_kernel_map=edisp_kernel_map, exposure_map=exposure_map
-        )
 
 
 class EDispKernelMap(IRFMap):

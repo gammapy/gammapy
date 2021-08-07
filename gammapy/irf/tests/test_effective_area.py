@@ -104,3 +104,14 @@ def test_wrong_axis_order():
         EffectiveAreaTable2D(
             axes=[energy_axis_true, offset_axis], data=data, unit="cm2"
         )
+
+
+@requires_data("gammapy-data")
+def test_aeff2d_pointlike():
+    filename = "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"
+
+    aeff = EffectiveAreaTable2D.read(filename)
+    hdu = aeff.to_table_hdu()
+
+    assert aeff.is_pointlike
+    assert hdu.header["HDUCLAS3"] == "POINT-LIKE"

@@ -1,13 +1,16 @@
+from itertools import product
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table, hstack
+from astropy.table import Table
 from astropy.visualization import quantity_support
+from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
-from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
 from .core import Map
 from .geom import pix_tuple_to_idx
+from .axes import MapAxes, MapAxis, LabelMapAxis
 from .region import RegionGeom
 from .utils import INVALID_INDEX
 
@@ -48,13 +51,16 @@ class RegionNDMap(Map):
         self.meta = meta
         self.unit = u.Unit(unit)
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, axis_name=None, **kwargs):
         """Plot the data contained in region map along the non-spatial axis.
 
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
+        axis_name : str
+            Which axis to plot on the x axis. Extra axes will be plotted as
+            additional lines.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
@@ -67,32 +73,57 @@ class RegionNDMap(Map):
 
         ax = ax or plt.gca()
 
-        if self.data.squeeze().ndim > 1:
-            raise TypeError(
-                "Use `.plot_interactive()` if more the one extra axis is present."
-            )
+        if axis_name is None:
+            if self.geom.axes.is_unidimensional:
+                axis_name = self.geom.axes.primary_axis.name
+            else:
+                raise ValueError(
+                    "Plotting a region map with multiple extra axes requires "
+                    "specifying the 'axis_name' keyword."
+                )
 
-        try:
-            axis = self.geom.axes["energy"]
-        except KeyError:
-            axis = self.geom.axes["energy_true"]
+        axis = self.geom.axes[axis_name]
 
-        kwargs.setdefault("fmt", ".")
-        kwargs.setdefault("capsize", 2)
-        kwargs.setdefault("lw", 1)
+        kwargs.setdefault("marker", "o")
+        kwargs.setdefault("markersize", 4)
+        kwargs.setdefault("ls", "None")
+        kwargs.setdefault("xerr", axis.as_plot_xerr)
 
-        with quantity_support():
-            ax.errorbar(axis.center, self.quantity.squeeze(), xerr=axis.as_xerr, **kwargs)
+        yerr_nd, yerr = kwargs.pop("yerr", None), None
+        uplims_nd, uplims = kwargs.pop("uplims", None), None
+        label_default = kwargs.pop("label", None)
 
-        if axis.interp == "log":
-            ax.set_xscale("log")
+        labels = product(*[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name])
 
-        ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+        for label_axis, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
+            if isinstance(yerr_nd, tuple):
+                yerr = yerr_nd[0][idx], yerr_nd[1][idx]
+            elif isinstance(yerr_nd, np.ndarray):
+                yerr = yerr_nd[idx]
 
-        if not self.unit.is_unity():
-            ax.set_ylabel(f"Data [{self.unit}]")
+            if uplims_nd is not None:
+                uplims = uplims_nd[idx]
 
-        ax.set_yscale("log")
+            label = " ".join(label_axis) if label_default is None else label_default
+
+            with quantity_support():
+                ax.errorbar(
+                    x=axis.as_plot_center,
+                    y=quantity,
+                    yerr=yerr,
+                    uplims=uplims,
+                    label=label,
+                    **kwargs
+                )
+
+        axis.format_plot_xaxis(ax=ax)
+
+        if "energy" in axis_name:
+            ax.set_yscale("log", nonpositive="clip")
+
+        if len(self.geom.axes) > 1:
+            plt.legend()
+
         return ax
 
     def plot_hist(self, ax=None, **kwargs):
@@ -119,18 +150,24 @@ class RegionNDMap(Map):
         kwargs.setdefault("histtype", "step")
         kwargs.setdefault("lw", 1)
 
+        if not self.geom.axes.is_unidimensional:
+            raise ValueError("Plotting is only supported for unidimensional maps")
+
         axis = self.geom.axes[0]
 
         with quantity_support():
             weights = self.data[:, 0, 0]
-            ax.hist(axis.center.value, bins=axis.edges.value, weights=weights, **kwargs)
-
-        ax.set_xlabel(axis.name.capitalize() + f" [{axis.unit}]")
+            ax.hist(
+                axis.as_plot_center,
+                bins=axis.as_plot_center,
+                weights=weights,
+                **kwargs
+            )
 
         if not self.unit.is_unity():
             ax.set_ylabel(f"Data [{self.unit}]")
 
-        ax.set_xscale("log")
+        axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
         return ax
 
@@ -152,6 +189,44 @@ class RegionNDMap(Map):
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
         """
         ax = self.geom.plot_region(ax, **kwargs)
+        return ax
+
+    def plot_mask(self, ax=None, **kwargs):
+        """Plot the mask as a shaded area in a xmin-xmax range
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axis` 
+            Axis instance to be used for the plot.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.axvspan`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Axis used for plotting
+        """
+        import matplotlib.pyplot as plt
+
+        if not self.is_mask:
+            raise ValueError("This is not a mask and cannot be plotted")
+
+        kwargs.setdefault("color", "k")
+        kwargs.setdefault("alpha", 0.05)
+        kwargs.setdefault("label", "mask")
+
+        ax = plt.gca() if ax is None else ax
+
+        edges = self.geom.axes["energy"].edges.reshape((-1, 1, 1))
+
+        labels, nlabels = ndi_label(self.data)
+
+        for idx in range(1, nlabels + 1):
+            mask = (labels == idx)
+            xmin = edges[:-1][mask].min().value
+            xmax = edges[1:][mask].max().value
+            ax.axvspan(xmin, xmax, **kwargs)
+
         return ax
 
     @classmethod
@@ -255,7 +330,30 @@ class RegionNDMap(Map):
 
         return self._init_copy(geom=geom, data=data)
 
+    def iter_by_axis(self, axis_name):
+        """Iterate data by axis
+
+        Parameters
+        ----------
+        axis_name : str
+            Axis name
+
+        Returns
+        -------
+        idx, data : tuple, `~astropy.units.Quantity`
+            Data and index
+        """
+        idx_axis = self.geom.axes.index_data(axis_name)
+        shape = list(self.data.shape)
+        shape[idx_axis] = 1
+
+        for idx in np.ndindex(*shape):
+            idx = list(idx)
+            idx[idx_axis] = slice(None)
+            yield tuple(idx), self.quantity[tuple(idx)]
+
     def fill_by_idx(self, idx, weights=None):
+        #TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
 
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
@@ -274,11 +372,11 @@ class RegionNDMap(Map):
     def get_by_idx(self, idxs):
         return self.data[idxs[::-1]]
 
-    def interp_by_coord(self, coords, method="linear", fill_value=None):
+    def interp_by_coord(self, coords, **kwargs):
         pix = self.geom.coord_to_pix(coords)
-        return self.interp_by_pix(pix, method=method, fill_value=fill_value)
+        return self.interp_by_pix(pix, **kwargs)
 
-    def interp_by_pix(self, pix, method="linear", fill_value=None):
+    def interp_by_pix(self, pix, **kwargs):
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
         if np.any(np.isfinite(self.data)):
@@ -287,8 +385,14 @@ class RegionNDMap(Map):
         else:
             data = self.data.T
 
+        scale = kwargs.get("values_scale", "lin")
+
+        if scale == "stat-profile":
+            axis = 2 + self.geom.axes.index("norm")
+            kwargs["values_scale"] = StatProfileScale(axis=axis)
+
         fn = ScaledRegularGridInterpolator(
-            grid_pix, data, fill_value=fill_value, method=method
+            grid_pix, data, **kwargs
         )
         return fn(tuple(pix), clip=False)
 
@@ -378,6 +482,56 @@ class RegionNDMap(Map):
         return hdulist
 
     @classmethod
+    def from_table(cls, table, format="", colname=None):
+        """Create region map from table
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table with input data
+        format : {"gadf-sed", "lightcurve"}
+            Format to use
+        colname : str
+            Column name to take the data from.
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region map
+        """
+        if format == "gadf-sed":
+            if colname is None:
+                raise ValueError(f"Column name required")
+
+            axes = MapAxes.from_table(table=table, format=format)
+
+            if colname == "stat_scan":
+                axes = axes
+            # TODO: this is not officially supported by GADF...
+            elif colname in ["counts", "npred", "npred_null"]:
+                if "datasets" in table.colnames:
+                    labels = np.unique(table["datasets"])
+                    axis = LabelMapAxis(labels=labels, name="dataset")
+                else:
+                    edges = np.arange(table[colname].shape[1] + 1) - 0.5
+                    axis = MapAxis.from_edges(edges, name="dataset-idx")
+                axes = [axis, axes["energy"]]
+            else:
+                axes = [axes["energy"]]
+
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        elif format == "lightcurve":
+            axes = MapAxes.from_table(table=table, format=format)
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        else:
+            raise ValueError(f"Format not supported {format}")
+
+        geom = RegionGeom.create(region=None, axes=axes)
+        return cls(geom=geom, data=data, unit=unit, meta=table.meta)
+
+    @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
         """Create from `~astropy.io.fits.HDUList`.
 
@@ -413,14 +567,13 @@ class RegionNDMap(Map):
 
         table = Table.read(hdulist[hdu])
         quantity = table[ogip_column].quantity
-        meta = table.meta
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=meta, unit=unit)
+        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
 
     def _pad_spatial(self, *args, **kwargs):
         raise NotImplementedError("Spatial padding is not supported by RegionNDMap")
@@ -428,7 +581,7 @@ class RegionNDMap(Map):
     def crop(self):
         raise NotImplementedError("Crop is not supported by RegionNDMap")
 
-    def stack(self, other, weights=None):
+    def stack(self, other, weights=None, nan_to_num=True):
         """Stack other region map into map.
 
         Parameters
@@ -438,12 +591,16 @@ class RegionNDMap(Map):
         weights : `RegionNDMap`
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
         """
         data = other.quantity.to_value(self.unit).astype(self.data.dtype)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
-
+        if nan_to_num:
+            data = data.copy()
+            data[~np.isfinite(data)] = 0
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible geoms between map and weights")

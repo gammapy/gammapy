@@ -47,9 +47,9 @@ class TestFindPeaks:
 
     def test_flat_map(self):
         """Test a simple example"""
-        axis1 = MapAxis.from_edges([1,2],name='axis1')
-        axis2 = MapAxis.from_edges([9,10],name='axis2')
-        image = Map.create(npix=(10, 5), unit="s", axes=[axis1,axis2])
+        axis1 = MapAxis.from_edges([1, 2], name="axis1")
+        axis2 = MapAxis.from_edges([9, 10], name="axis2")
+        image = Map.create(npix=(10, 5), unit="s", axes=[axis1, axis2])
         image.data[..., 3, 3] = 11
         image.data[..., 3, 4] = 10
         image.data[..., 3, 5] = 12

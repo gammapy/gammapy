@@ -8,7 +8,8 @@ import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
 from astropy.utils.decorators import classproperty
-from gammapy.maps import MapAxis
+from astropy.visualization import quantity_support
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -17,6 +18,31 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.scripts import make_path
 from .core import Model
+from gammapy.utils.roots import find_roots
+
+
+def scale_plot_flux(flux, energy_power=0):
+    """Scale flux to plot
+
+    Parameters
+    ----------
+    flux : `Map`
+        Flux map
+    energy_power : int, optional
+        Power of energy to multiply flux axis with
+
+    Returns
+    -------
+    flux : `Map`
+        Scaled flux map
+    """
+    energy = flux.geom.get_coord(sparse=True)["energy"]
+    try:
+        eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
+    except IndexError:
+        eunit = energy.unit
+    y = flux * np.power(energy, energy_power)
+    return y.to_unit(flux.unit * eunit ** energy_power)
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
@@ -241,7 +267,7 @@ class SpectralModel(Model):
             **kwargs,
         )
 
-    def reference_fluxes(self,  energy_axis):
+    def reference_fluxes(self, energy_axis):
         """Get reference fluxes for a given energy axis.
 
         Parameters
@@ -255,7 +281,7 @@ class SpectralModel(Model):
             Reference fluxes
         """
         energy = energy_axis.center
-        energy_min, energy_max = energy_axis.edges[:-1], energy_axis.edges[1:]
+        energy_min, energy_max = energy_axis.edges_min, energy_axis.edges_max
         return {
             "e_ref": energy,
             "e_min": energy_min,
@@ -266,12 +292,31 @@ class SpectralModel(Model):
             "ref_e2dnde": self(energy) * energy ** 2,
         }
 
+    def _get_plot_flux(self, energy, sed_type):
+        flux = RegionNDMap.create(region=None, axes=[energy])
+        flux_err = RegionNDMap.create(region=None, axes=[energy])
+
+        if sed_type in ["dnde", "norm"]:
+            flux.quantity, flux_err.quantity = self.evaluate_error(energy.center)
+
+        elif sed_type == "e2dnde":
+            flux.quantity, flux_err.quantity = energy.center ** 2 * self.evaluate_error(energy.center)
+
+        elif sed_type == "flux":
+            flux.quantity, flux_err.quantity = self.integral_error(energy.edges_min, energy.edges_max)
+
+        elif sed_type == "eflux":
+            flux.quantity, flux_err.quantity = self.energy_flux_error(energy.edges_min, energy.edges_max)
+        else:
+            raise ValueError(f"Not a valid SED type: '{sed_type}'")
+
+        return flux, flux_err
+
     def plot(
         self,
-        energy_range,
+        energy_bounds,
         ax=None,
-        energy_unit="TeV",
-        flux_unit="cm-2 s-1 TeV-1",
+        sed_type="dnde",
         energy_power=0,
         n_points=100,
         **kwargs,
@@ -287,54 +332,59 @@ class SpectralModel(Model):
             from astropy import units as u
 
             pwl = ExpCutoffPowerLawSpectralModel()
-            ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
+            ax = pwl.plot(energy_bounds=(0.1, 100) * u.TeV)
             ax.set_yscale('linear')
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        energy_range : `~astropy.units.Quantity`
-            Plot range
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
+        energy_bounds : `~astropy.units.Quantity`
+            Plot energy bounds passed to MapAxis.from_energy_bounds
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+            Evaluation methods of the model
         energy_power : int, optional
             Power of energy to multiply flux axis with
         n_points : int, optional
             Number of evaluation nodes
+        **kwargs : dict
+            Keyword arguments forwared to `~matplotlib.pyplot.plot`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
+        from gammapy.estimators.flux_map import DEFAULT_UNIT
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy_min, energy_max = energy_range
+        if self.is_norm_spectral_model:
+            sed_type = "norm"
+
+        energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points, energy_unit
-        ).edges
+            energy_min, energy_max, n_points,
+        )
 
-        # evaluate model
-        flux = self(energy).to(flux_unit)
+        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
-        y = self._plot_scale_flux(energy, flux, energy_power)
+        flux, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
 
-        ax.plot(energy.value, y.value, **kwargs)
+        flux = scale_plot_flux(flux, energy_power=energy_power)
 
-        self._plot_format_ax(ax, energy, y, energy_power)
+        with quantity_support():
+            ax.plot(energy.center, flux.quantity[:, 0, 0], **kwargs)
+
+        self._plot_format_ax(ax, energy_power, sed_type)
         return ax
 
     def plot_error(
         self,
-        energy_range,
+        energy_bounds,
         ax=None,
-        energy_unit="TeV",
-        flux_unit="cm-2 s-1 TeV-1",
+        sed_type="dnde",
         energy_power=0,
         n_points=100,
         **kwargs,
@@ -359,12 +409,10 @@ class SpectralModel(Model):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        energy_range : `~astropy.units.Quantity`
-            Plot range
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
+        energy_bounds : `~astropy.units.Quantity`
+            Plot energy bounds passed to MapAxis.from_energy_bounds
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+            Evaluation methods of the model
         energy_power : int, optional
             Power of energy to multiply flux axis with
         n_points : int, optional
@@ -377,51 +425,44 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
+        from gammapy.estimators.flux_map import DEFAULT_UNIT
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
+        if self.is_norm_spectral_model:
+            sed_type = "norm"
+
+        energy_min, energy_max = energy_bounds
+        energy = MapAxis.from_energy_bounds(
+            energy_min, energy_max, n_points,
+        )
+
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
+        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
-        energy_min, energy_max = energy_range
-        energy = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points, energy_unit
-        ).edges
+        flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
+        y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
+        y_hi = scale_plot_flux(flux + flux_err, energy_power).quantity[:, 0, 0]
 
-        flux, flux_err = self.evaluate_error(energy).to(flux_unit)
+        with quantity_support():
+            ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
 
-        y_lo = self._plot_scale_flux(energy, flux - flux_err, energy_power)
-        y_hi = self._plot_scale_flux(energy, flux + flux_err, energy_power)
-
-        where = (energy >= energy_range[0]) & (energy <= energy_range[1])
-        ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
-
-        self._plot_format_ax(ax, energy, y_lo, energy_power)
+        self._plot_format_ax(ax, energy_power, sed_type)
         return ax
 
-    def _plot_format_ax(self, ax, energy, y, energy_power):
-        ax.set_xlabel(f"Energy [{energy.unit}]")
+    @staticmethod
+    def _plot_format_ax(ax, energy_power, sed_type):
+        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
         if energy_power > 0:
-            ax.set_ylabel(f"E{energy_power} * Flux [{y.unit}]")
+            ax.set_ylabel(f"e{energy_power} * {sed_type} [{ax.yaxis.units}]")
         else:
-            ax.set_ylabel(f"Flux [{y.unit}]")
+            ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
-
-        if "norm" in self.__class__.__name__.lower():
-            ax.set_ylabel(f"Norm [A.U.]")
-
-    @staticmethod
-    def _plot_scale_flux(energy, flux, energy_power):
-        try:
-            eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
-        except IndexError:
-            eunit = energy.unit
-        y = flux * np.power(energy, energy_power)
-        return y.to(flux.unit * eunit ** energy_power)
 
     def spectral_index(self, energy, epsilon=1e-5):
         """Compute spectral index at given energy.
@@ -452,32 +493,54 @@ class SpectralModel(Model):
         value : `~astropy.units.Quantity`
             Function value of the spectral model.
         energy_min : `~astropy.units.Quantity`
-            Lower bracket value in case solution is not unique.
+            Lower energy bound of the roots finding
         energy_max : `~astropy.units.Quantity`
-            Upper bracket value in case solution is not unique.
+            Upper energy bound of the roots finding
 
         Returns
         -------
         energy : `~astropy.units.Quantity`
             Energies at which the model has the given ``value``.
         """
+
         eunit = "TeV"
+        energy_min = energy_min.to(eunit)
+        energy_max = energy_max.to(eunit)
 
+        def f(x):
+            # scale by 1e12 to achieve better precision
+            energy = u.Quantity(x, eunit, copy=False)
+            y = self(energy).to_value(value.unit)
+            return 1e12 * (y - value.value)
+
+        roots, res = find_roots(f, energy_min, energy_max, points_scale="log")
+        return roots
+
+    def inverse_all(self, values, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
+        """Return energies for multiple function values of the spectral model.
+
+        Calls the `scipy.optimize.brentq` numerical root finding method.
+
+        Parameters
+        ----------
+        values : `~astropy.units.Quantity`
+            Function values of the spectral model.
+        energy_min : `~astropy.units.Quantity`
+            Lower energy bound of the roots finding
+        energy_max : `~astropy.units.Quantity`
+            Upper energy bound of the roots finding
+
+        Returns
+        -------
+        energy : list of `~astropy.units.Quantity`
+            each element contain the energies at which the model
+            has corresponding value of ``values``.
+        """
         energies = []
-        for val in np.atleast_1d(value):
-
-            def f(x):
-                # scale by 1e12 to achieve better precision
-                energy = u.Quantity(x, eunit, copy=False)
-                y = self(energy).to_value(value.unit)
-                return 1e12 * (y - val.value)
-
-            energy = scipy.optimize.brentq(
-                f, energy_min.to_value(eunit), energy_max.to_value(eunit)
-            )
-            energies.append(energy)
-
-        return u.Quantity(energies, eunit, copy=False)
+        for val in np.atleast_1d(values):
+            res = self.inverse(val, energy_min, energy_max)
+            energies.append(res)
+        return energies
 
 
 class ConstantSpectralModel(SpectralModel):
@@ -572,7 +635,7 @@ class PowerLawSpectralModel(SpectralModel):
 
     tag = ["PowerLawSpectralModel", "pl"]
     index = Parameter("index", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
@@ -642,7 +705,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         return energy_flux
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
@@ -735,7 +798,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
         return energy_flux
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
@@ -785,7 +848,7 @@ class PowerLaw2SpectralModel(SpectralModel):
     """
     tag = ["PowerLaw2SpectralModel", "pl-2"]
 
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1", scale_method="scale10")
     index = Parameter("index", 2)
     emin = Parameter("emin", "0.1 TeV", frozen=True)
     emax = Parameter("emax", "100 TeV", frozen=True)
@@ -823,7 +886,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
         return amplitude * top / bottom
 
-    def inverse(self, value):
+    def inverse(self, value, *args):
         """Return energy for a given function value of the spectral model.
 
         Parameters
@@ -867,7 +930,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     tag = ["BrokenPowerLawSpectralModel", "bpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     ebreak = Parameter("ebreak", "1 TeV")
 
     @staticmethod
@@ -909,7 +972,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     tag = ["SmoothBrokenPowerLawSpectralModel", "sbpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     ebreak = Parameter("ebreak", "1 TeV")
     reference = Parameter("reference", "1 TeV", frozen=True)
     beta = Parameter("beta", 1, frozen=True)
@@ -1031,7 +1094,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     tag = ["ExpCutoffPowerLawSpectralModel", "ecpl"]
 
     index = Parameter("index", 1.5)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
@@ -1120,7 +1183,7 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     tag = ["ExpCutoffPowerLaw3FGLSpectralModel", "ecpl-3fgl"]
     index = Parameter("index", 1.5)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
 
@@ -1158,7 +1221,7 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     """
 
     tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
     index_1 = Parameter("index_1", 1.5)
@@ -1193,7 +1256,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
     index_1 = Parameter("index_1", 1.5)
@@ -1233,7 +1296,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     """
     tag = ["LogParabolaSpectralModel", "lp"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1")
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10")
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 2)
     beta = Parameter("beta", 1)
@@ -1692,6 +1755,9 @@ class NaimaSpectralModel(SpectralModel):
             radius = self.nested_models["SSC"]["radius"]
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
+
+        for p in parameters:
+            p.scale_method = "scale10"
 
         self.default_parameters = Parameters(parameters)
         super().__init__()

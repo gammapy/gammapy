@@ -3,6 +3,7 @@ import numpy as np
 import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from .likelihood import Likelihood
+from gammapy.utils.roots import find_roots
 
 __all__ = [
     "optimize_scipy",
@@ -62,45 +63,38 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
+
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
     )
 
-    kwargs.setdefault("a", parameter.factor)
-
-    bound = parameter.factor_max if upper else parameter.factor_min
-
-    if np.isnan(bound):
-        bound = parameter.factor
+    lower_bound = parameter.factor
+    upper_bound = parameter.factor_max if upper else parameter.factor_min
+    if np.isnan(upper_bound):
+        # TODO: remove hard coded limits here...
+        upper_bound = parameter.factor
         if upper:
-            bound += 1e2 * parameter.error / parameter.scale
+            upper_bound += 1e2 * parameter.error / parameter.scale
         else:
-            bound -= 1e2 * parameter.error / parameter.scale
-
-    kwargs.setdefault("b", bound)
+            upper_bound -= 1e2 * parameter.error / parameter.scale
 
     message, success = "Confidence terminated successfully.", True
+    kwargs.setdefault("nbin", 1)
 
-    try:
-        result = scipy.optimize.brentq(ts_diff.fcn, full_output=True, **kwargs)
-    except ValueError:
+    roots, res = find_roots(
+        ts_diff.fcn, lower_bound=lower_bound, upper_bound=upper_bound, **kwargs
+    )
+    result = (roots[0], res[0])
+    if np.isnan(roots[0]):
         message = (
-            "Confidence estimation failed, because bracketing interval"
-            " does not contain a unique solution. Try setting the interval by hand."
+            "Confidence estimation failed. Try to set the parameter.min/max by hand."
         )
         success = False
-        result = (
-            np.nan,
-            scipy.optimize.RootResults(
-                root=np.nan, iterations=0, function_calls=0, flag=0
-            ),
-        )
-
     suffix = "errp" if upper else "errn"
 
     return {
         "nfev_" + suffix: result[1].iterations,
-        suffix: np.abs(result[0] - kwargs["a"]),
+        suffix: np.abs(result[0] - lower_bound),
         "success_" + suffix: success,
         "message_" + suffix: message,
         "stat_null": ts_diff.stat_null,
@@ -168,6 +162,7 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
+
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
     def f(x):
@@ -175,6 +170,7 @@ def stat_profile_ul_scipy(
 
     idx = np.argmin(stat_scan)
     norm_best_fit = value_scan[idx]
-    ul = scipy.optimize.brentq(f, a=norm_best_fit, b=value_scan[-1], **kwargs)
-
-    return ul
+    roots, res = find_roots(
+        f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs
+    )
+    return roots[0]

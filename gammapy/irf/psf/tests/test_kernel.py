@@ -46,13 +46,13 @@ def test_psf_kernel_to_image():
     kernel_image_2 = kernel1.to_image(exposure=[1, 2])
 
     assert_allclose(kernel_image_1.psf_kernel_map.data.sum(), 1.0, atol=1e-5)
-    assert_allclose(kernel_image_1.psf_kernel_map.data[0, 25, 25], 0.02844, atol=1e-5)
-    assert_allclose(kernel_image_1.psf_kernel_map.data[0, 22, 22], 0.009636, atol=1e-5)
+    assert_allclose(kernel_image_1.psf_kernel_map.data[0, 25, 25], 0.028096, atol=1e-5)
+    assert_allclose(kernel_image_1.psf_kernel_map.data[0, 22, 22], 0.009615, atol=1e-5)
     assert_allclose(kernel_image_1.psf_kernel_map.data[0, 20, 20], 0.0, atol=1e-5)
 
     assert_allclose(kernel_image_2.psf_kernel_map.data.sum(), 1.0, atol=1e-5)
     assert_allclose(
-        kernel_image_2.psf_kernel_map.data[0, 25, 25], 0.038091, atol=1e-5
+        kernel_image_2.psf_kernel_map.data[0, 25, 25], 0.037555, atol=1e-5
     )
-    assert_allclose(kernel_image_2.psf_kernel_map.data[0, 22, 22], 0.00777, atol=1e-5)
+    assert_allclose(kernel_image_2.psf_kernel_map.data[0, 22, 22], 0.007752, atol=1e-5)
     assert_allclose(kernel_image_2.psf_kernel_map.data[0, 20, 20], 0.0, atol=1e-5)

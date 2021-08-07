@@ -37,7 +37,20 @@ class DataStore:
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
-    >>> data_store.info() # doctest: +SKIP
+    >>> data_store.info()
+    Data store:
+    HDU index table:
+    BASE_DIR: /home/runner/work/gammapy/gammapy/gammapy-datasets/hess-dl3-dr1
+    Rows: 630
+    OBS_ID: 20136 -- 47829
+    HDU_TYPE: ['aeff', 'bkg', 'edisp', 'events', 'gti', 'psf']
+    HDU_CLASS: ['aeff_2d', 'bkg_3d', 'edisp_2d', 'events', 'gti', 'psf_table']
+    <BLANKLINE>
+    <BLANKLINE>
+    Observation table:
+    Observatory name: 'N/A'
+    Number of observations: 105
+    <BLANKLINE>
     """
 
     DEFAULT_HDU_TABLE = "hdu-index.fits.gz"
@@ -243,19 +256,21 @@ class DataStore:
             Container holding a list of `~gammapy.data.Observation`
         """
         available_irf = ["aeff", "edisp", "psf", "bkg"]
-        if required_irf is "all":
+
+        if required_irf == "all":
             required_irf = available_irf
-        if required_irf is None:
+        elif required_irf is None:
             required_irf = []
 
         if not set(required_irf).issubset(available_irf):
             difference = set(required_irf).difference(available_irf)
-            raise ValueError(f"{difference} is not a valid method.")
+            raise ValueError(f"{difference} is not a valid irf key. Choose from: {available_irf}")
 
         if obs_id is None:
             obs_id = self.obs_table["OBS_ID"].data
 
         obs_list = []
+
         for _ in obs_id:
             try:
                 obs = self.obs(_)
@@ -265,16 +280,12 @@ class DataStore:
                     continue
                 else:
                     raise err
+
+            if set(required_irf).issubset(obs.available_irfs):
+                obs_list.append(obs)
             else:
-                flag = True
-                for irf in required_irf:
-                    if obs.__dict__.get(irf, False) is None:
-                        flag = False
-                        continue
-                if flag is False:
-                    log.warning(f"Skipping run with missing IRFs; obs_id: {_!r}")
-                else:
-                    obs_list.append(obs)
+                log.warning(f"Skipping run with missing IRFs; obs_id: {_!r}")
+
         return Observations(obs_list)
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):

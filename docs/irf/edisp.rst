@@ -38,3 +38,36 @@ Such an energy dispersion can be obtained for example:
 
 .. plot:: irf/plot_edisp_kernel_param.py
     :include-source:
+
+Storing the energy dispersion information as a function of sky position
+-----------------------------------------------------------------------
+The `gammapy.irf.EDispKernelMap` is a four-dimensional `~gammapy.maps.Map` that stores, for each position in the sky,
+an `~gammapy.irf.EDispKernel`, which, as described above, depends on true energy.
+
+The `~gammapy.irf.EDispKernel` at a given position can be extracted with `~gammapy.irf.EDispKernelMap.get_edisp_kernel()` by
+providing a `~astropy.coordinates.SkyCoord` or `~regions.SkyRegion`.
+
+.. plot::
+    :include-source:
+
+    from gammapy.irf import EDispKernelMap
+    from gammapy.maps import MapAxis
+    from astropy.coordinates import SkyCoord
+
+    # Create a test EDispKernelMap from a gaussian distribution
+    energy_axis_true = MapAxis.from_energy_bounds(1,10, 8, unit="TeV", name="energy_true")
+    energy_axis = MapAxis.from_energy_bounds(1,10, 5, unit="TeV", name="energy")
+
+    edisp_map = EDispKernelMap.from_gauss(energy_axis, energy_axis_true, 0.3, 0)
+    position = SkyCoord(ra=83, dec=22, unit='deg', frame='icrs')
+
+    edisp_kernel = edisp_map.get_edisp_kernel(position)
+
+    # We can quickly check the edisp kernel via the peek() method
+    edisp_kernel.peek()
+
+The `gammapy.irf.EDispMap` serves a similar purpose but instead of a true energy axis,
+it contains the information of the energy dispersion as a function of the energy migration (:math:`E/ E_{\rm true}`).
+It can be converted into a `gammapy.irf.EDispKernelMap` with `gammapy.irf.EDispMap.to_edisp_kernel_map()` and the
+`gammapy.irf.EDispKernelMap` at a given position can be extracted in the same way as described above, using `~gammapy.irf.EDispMap.get_edisp_kernel()`
+and providing a `~astropy.coordinates.SkyCoord`.

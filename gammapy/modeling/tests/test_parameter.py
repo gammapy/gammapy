@@ -32,7 +32,10 @@ def test_parameter_outside_limit(caplog):
     par = Parameter("spam", 50, min=0, max=40)
     par.check_limits()
     assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
+    assert (
+        caplog.records[-1].message
+        == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
+    )
 
 
 def test_parameter_scale():
@@ -86,12 +89,12 @@ def test_parameter_to_dict():
         # Regression test for https://github.com/gammapy/gammapy/issues/1883
         ("scale10", 9e35, 9, 1e35),
         # Checks for the simpler method="factor1"
-        ("factor1", 2e10, 2, 1e10),
-        ("factor1", -2e10, -2, 1e10),
+        ("factor1", 2e10, 1, 2e10),
+        ("factor1", -2e10, 1, -2e10),
     ],
 )
 def test_parameter_autoscale(method, value, factor, scale):
-    par = Parameter("", value)
+    par = Parameter("", value, scale_method=method)
     par.autoscale()
     assert_allclose(par.factor, factor)
     assert_allclose(par.scale, scale)
@@ -103,7 +106,6 @@ def pars():
     return Parameters([Parameter("spam", 42, "deg"), Parameter("ham", 99, "TeV")])
 
 
-@pytest.mark.xfail
 def test_parameters_basics(pars):
     # This applies a unit transformation
     pars["ham"].error = "10000 GeV"
@@ -170,24 +172,91 @@ def test_parameters_set_parameter_factors(pars):
     assert_allclose(pars["ham"].scale, 1)
 
 
-def test_parameters_autoscale():
-    pars = Parameters([Parameter("", 20)])
+def test_parameters_s():
+    pars = Parameters([Parameter("", 20, scale_method="scale10"),
+                       Parameter("", 20, scale_method=None)])
+    pars_dict = pars.to_dict()
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
 
+    assert pars_dict[0]["scale_method"] == "scale10"
+    assert "scale_method" not in pars_dict[1]
+    pars = Parameters.from_dict(pars_dict)
+    pars.autoscale()
+    assert_allclose(pars[0].factor, 2)
+    assert_allclose(pars[0].scale, 10)
+    assert pars[1].scale_method is None
+    pars.autoscale()
+    assert_allclose(pars[1].factor, 20)
+    assert_allclose(pars[1].scale, 1)    
+
+
+
+def test_parameter_scan_values():
+    p = Parameter(name="test", value=0, error=1)
+
+    values = p.scan_values
+
+    assert len(values) == 11
+    assert_allclose(values[[0, -1]], [-2, 2])
+    assert_allclose(values[5], 0)
+
+    p.scan_n_sigma = 3
+    assert_allclose(p.scan_values[[0, -1]], [-3, 3])
+
+    p.scan_min = -2
+    p.scan_max = 3
+    assert_allclose(p.scan_values[[0, -1]], [-2, 3])
+
+    p.scan_n_values = 5
+    assert len(p.scan_values) == 5
+
+    p.interp = "log"
+    p.scan_n_values = 3
+    p.scan_min = 0.1
+    p.scan_max = 10
+    assert_allclose(p.scan_values, [0.1, 1, 10])
+
+
 def test_update_from_dict():
-    par = Parameter("test", value=1e-10, min="nan", max="nan", frozen=False, unit="TeV")
+    par = Parameter(
+        "test",
+        value=1e-10,
+        min="nan",
+        max="nan",
+        frozen=False,
+        unit="TeV",
+        scale_method="scale10",
+    )
     par.autoscale()
-    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":True, "unit":"GeV"}
+    data = {
+        "model": "gc",
+        "type": "spectral",
+        "name": "test2",
+        "value": 3e-10,
+        "min": 0,
+        "max": np.nan,
+        "frozen": True,
+        "unit": "GeV",
+    }
     par.update_from_dict(data)
     assert par.name == "test"
     assert par.factor == 3
     assert par.value == 3e-10
     assert par.unit == "GeV"
     assert par.min == 0
-    assert par.max is np.nan    
+    assert par.max is np.nan
     assert par.frozen == True
-    data={"model":"gc", "type":"spectral", "name": "test2", "value":3e-10, "min":0, "max":np.nan, "frozen":'True', "unit":"GeV"}
+    data = {
+        "model": "gc",
+        "type": "spectral",
+        "name": "test2",
+        "value": 3e-10,
+        "min": 0,
+        "max": np.nan,
+        "frozen": "True",
+        "unit": "GeV",
+    }
     par.update_from_dict(data)
     assert par.frozen == True

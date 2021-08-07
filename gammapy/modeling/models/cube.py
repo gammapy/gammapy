@@ -17,7 +17,7 @@ from .temporal import TemporalModel
 __all__ = [
     "SkyModel",
     "FoVBackgroundModel",
-    "BackgroundModel",
+    "TemplateNPredModel",
     "create_fermi_isotropic_diffuse_model",
 ]
 
@@ -186,6 +186,11 @@ class SkyModel(Model):
         return getattr(self.spatial_model, "position", None)
 
     @property
+    def position_lonlat(self):
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
+        return getattr(self.spatial_model, "position_lonlat", None)
+
+    @property
     def evaluation_radius(self):
         """`~astropy.coordinates.Angle`"""
         return self.spatial_model.evaluation_radius
@@ -202,7 +207,7 @@ class SkyModel(Model):
     def __add__(self, other):
         if isinstance(other, (Models, list)):
             return Models([self, *other])
-        elif isinstance(other, (SkyModel, BackgroundModel)):
+        elif isinstance(other, (SkyModel, TemplateNPredModel)):
             return Models([self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
@@ -300,8 +305,8 @@ class SkyModel(Model):
 
     def evaluate_geom(self, geom, gti=None):
         """Evaluate model on `~gammapy.maps.Geom`."""
-        energy = geom.axes["energy_true"].center[:, np.newaxis, np.newaxis]
-        value = self.spectral_model(energy)
+        coords = geom.get_coord(sparse=True)
+        value = self.spectral_model(coords["energy_true"])
 
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
@@ -593,8 +598,8 @@ class FoVBackgroundModel(Model):
 
     def evaluate_geom(self, geom):
         """Evaluate map"""
-        energy = geom.axes["energy"].center[:, np.newaxis, np.newaxis]
-        return self.evaluate(energy=energy)
+        coords = geom.get_coord(sparse=True)
+        return self.evaluate(energy=coords["energy"])
 
     def evaluate(self, energy):
         """Evaluate model"""
@@ -660,7 +665,7 @@ class FoVBackgroundModel(Model):
             self._spectral_model.unfreeze()
 
 
-class BackgroundModel(Model):
+class TemplateNPredModel(Model):
     """Background model.
 
     Create a new map by a tilt and normalization on the available map
@@ -674,7 +679,7 @@ class BackgroundModel(Model):
         default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     """
 
-    tag = "BackgroundModel"
+    tag = "TemplateNPredModel"
     map = LazyFitsData(cache=True)
 
     def __init__(
@@ -817,7 +822,7 @@ class BackgroundModel(Model):
 
         Returns
         -------
-        cutout : `BackgroundModel`
+        cutout : `TemplateNPredModel`
             Cutout background model.
         """
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
@@ -826,19 +831,23 @@ class BackgroundModel(Model):
         spectral_model = self.spectral_model.copy()
         return self.__class__(bkg_map, spectral_model=spectral_model, name=name)
 
-    def stack(self, other, weights=None):
+    def stack(self, other, weights=None, nan_to_num=True):
         """Stack background model in place.
 
         Stacking the background model resets the current parameters values.
 
         Parameters
         ----------
-        other : `BackgroundModel`
+        other : `TemplateNPredModel`
             Other background model.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
         """
         bkg = self.evaluate()
+        if nan_to_num:
+            bkg.data[~np.isfinite(bkg.data)] = 0
         other_bkg = other.evaluate()
-        bkg.stack(other_bkg, weights=weights)
+        bkg.stack(other_bkg, weights=weights, nan_to_num=nan_to_num)
         self.map = bkg
 
         # reset parameter values

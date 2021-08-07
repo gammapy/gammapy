@@ -20,6 +20,7 @@ from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
+from gammapy.utils.pbar import progress_bar
 
 __all__ = ["Analysis"]
 
@@ -47,7 +48,7 @@ class Analysis:
         self.observations = None
         self.datasets = None
         self.models = None
-        self.fit = None
+        self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
 
@@ -65,50 +66,62 @@ class Analysis:
         else:
             raise TypeError("config must be dict or AnalysisConfig.")
 
-    def get_observations(self):
-        """Fetch observations from the data store according to criteria defined in the configuration."""
-        observations_settings = self.config.observations
-        path = make_path(observations_settings.datastore)
+    def _set_data_store(self):
+        """Set the datastore on the Analysis object."""
+        path = make_path(self.config.observations.datastore)
         if path.is_file():
+            log.debug(f"Setting datastore from file: {path}")
             self.datastore = DataStore.from_file(path)
         elif path.is_dir():
+            log.debug(f"Setting datastore from directory: {path}")
             self.datastore = DataStore.from_dir(path)
         else:
             raise FileNotFoundError(f"Datastore not found: {path}")
 
-        log.info("Fetching observations.")
-        if (
-            len(observations_settings.obs_ids)
-            and observations_settings.obs_file is not None
-        ):
+    def _make_obs_table_selection(self):
+        """Return list of obs_ids after filtering on datastore observation table."""
+        obs_settings = self.config.observations
+
+        # Reject configs with list of obs_ids and obs_file set at the same time
+        if (len(obs_settings.obs_ids) and obs_settings.obs_file is not None):
             raise ValueError(
                 "Values for both parameters obs_ids and obs_file are not accepted."
             )
-        elif (
-            not len(observations_settings.obs_ids)
-            and observations_settings.obs_file is None
-        ):
-            obs_list = self.datastore.get_observations()
-            ids = [obs.obs_id for obs in obs_list]
-        elif len(observations_settings.obs_ids):
-            obs_list = self.datastore.get_observations(observations_settings.obs_ids)
-            ids = [obs.obs_id for obs in obs_list]
-        else:
-            path = make_path(observations_settings.obs_file)
-            ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
 
-        if observations_settings.obs_cone.lon is not None:
+        # First select input list of observations from obs_table
+        if len(obs_settings.obs_ids):
+            selected_obs_table = self.datastore.obs_table.select_obs_id(obs_settings.obs_ids)
+        elif obs_settings.obs_file is not None:
+            path = make_path(obs_settings.obs_file)
+            ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
+            selected_obs_table = self.datastore.obs_table.select_obs_id(ids)
+        else:
+            selected_obs_table = self.datastore.obs_table
+
+        # Apply cone selection
+        if obs_settings.obs_cone.lon is not None:
             cone = dict(
                 type="sky_circle",
-                frame=observations_settings.obs_cone.frame,
-                lon=observations_settings.obs_cone.lon,
-                lat=observations_settings.obs_cone.lat,
-                radius=observations_settings.obs_cone.radius,
+                frame=obs_settings.obs_cone.frame,
+                lon=obs_settings.obs_cone.lon,
+                lat=obs_settings.obs_cone.lat,
+                radius=obs_settings.obs_cone.radius,
                 border="0 deg",
             )
-            selected_cone = self.datastore.obs_table.select_observations(cone)
-            ids = list(set(ids) & set(selected_cone["OBS_ID"].tolist()))
+            selected_obs_table = selected_obs_table.select_observations(cone)
+
+        return selected_obs_table["OBS_ID"].tolist()
+
+    def get_observations(self):
+        """Fetch observations from the data store according to criteria defined in the configuration."""
+        observations_settings = self.config.observations
+        self._set_data_store()
+
+        log.info("Fetching observations.")
+        ids = self._make_obs_table_selection()
+
         self.observations = self.datastore.get_observations(ids, skip_missing=True)
+
         if observations_settings.obs_time.start is not None:
             start = observations_settings.obs_time.start
             stop = observations_settings.obs_time.stop
@@ -117,7 +130,9 @@ class Analysis:
             else:
                 time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
             self.observations = self.observations.select_time(time_intervals)
+
         log.info(f"Number of selected observations: {len(self.observations)}")
+
         for obs in self.observations:
             log.debug(obs)
 
@@ -172,7 +187,7 @@ class Analysis:
         models = Models.read(path)
         self.set_models(models)
 
-    def run_fit(self, optimize_opts=None):
+    def run_fit(self):
         """Fitting reduced datasets to model."""
         if not self.models:
             raise RuntimeError("Missing models")
@@ -185,15 +200,15 @@ class Analysis:
                 geom = dataset.counts.geom
                 dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
-        log.info("Fitting datasets.")
-        self.fit = Fit(self.datasets)
-        self.fit_result = self.fit.run(optimize_opts=optimize_opts)
+        log.info("Fitting datasets.") 
+        result = self.fit.run(datasets=self.datasets)
+        self.fit_result = result["optimize_result"]
         log.info(self.fit_result)
 
     def get_flux_points(self):
         """Calculate flux points for a specific model component."""
-        if not self.fit:
-            raise RuntimeError("No results available from Fit.")
+        if not self.datasets:
+            raise RuntimeError("No datasets set.")
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
@@ -201,15 +216,18 @@ class Analysis:
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
+            fit=self.fit,
             **fp_settings.parameters,
         )
+
         fp = flux_point_estimator.run(datasets=self.datasets)
-        fp.table["is_ul"] = fp.table["ts"] < 4
+
         self.flux_points = FluxPointsDataset(
             data=fp, models=self.models[fp_settings.source]
         )
-        cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-        log.info("\n{}".format(self.flux_points.data.table[cols]))
+        cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "sqrt_ts"]
+        table = self.flux_points.data.to_table(sed_type="dnde")
+        log.info("\n{}".format(table[cols]))
 
     def get_excess_map(self):
         """Calculate excess map with respect to the current model."""
@@ -251,68 +269,127 @@ class Analysis:
             time_intervals=time_intervals,
             energy_edges=energy_edges,
             source=lc_settings.source,
+            fit=self.fit,
             **lc_settings.parameters,
         )
         lc = light_curve_estimator.run(datasets=self.datasets)
-        lc.table["is_ul"] = lc.table["ts"] < 4
         self.light_curve = lc
-        log.info("\n{}".format(self.light_curve.table))
+        log.info("\n{}".format(self.light_curve.to_table(format="lightcurve", sed_type="flux")))
 
     def update_config(self, config):
         self.config = self.config.update(config=config)
 
-    def _create_geometry(self):
-        """Create the geometry."""
+    @staticmethod
+    def _create_wcs_geometry(wcs_geom_settings, axes):
+        """Create the WCS geometry."""
         geom_params = {}
-        geom_settings = self.config.datasets.geom
-        skydir_settings = geom_settings.wcs.skydir
+        skydir_settings = wcs_geom_settings.skydir
         if skydir_settings.lon is not None:
             skydir = SkyCoord(
                 skydir_settings.lon, skydir_settings.lat, frame=skydir_settings.frame
             )
             geom_params["skydir"] = skydir
-        if skydir_settings.frame == "icrs":
-            geom_params["frame"] = "icrs"
-        if skydir_settings.frame == "galactic":
-            geom_params["frame"] = "galactic"
-        axes = [self._make_energy_axis(geom_settings.axes.energy)]
+
+        if skydir_settings.frame in ["icrs", "galactic"]:
+            geom_params["frame"] = skydir_settings.frame
+        else:
+            raise ValueError(f"Incorrect skydir frame: expect 'icrs' or 'galactic'. Got {skydir_settings.frame}")
+
         geom_params["axes"] = axes
-        geom_params["binsz"] = geom_settings.wcs.binsize
-        width = geom_settings.wcs.fov.width.to("deg").value
-        height = geom_settings.wcs.fov.height.to("deg").value
+        geom_params["binsz"] = wcs_geom_settings.binsize
+        width = wcs_geom_settings.width.width.to("deg").value
+        height = wcs_geom_settings.width.height.to("deg").value
         geom_params["width"] = (width, height)
+
         return WcsGeom.create(**geom_params)
 
-    def _map_making(self):
-        """Make maps and datasets for 3d analysis."""
+    @staticmethod
+    def _create_region_geometry(on_region_settings, axes):
+        """Create the region geometry."""
+        on_lon = on_region_settings.lon
+        on_lat = on_region_settings.lat
+        on_center = SkyCoord(on_lon, on_lat, frame=on_region_settings.frame)
+        on_region = CircleSkyRegion(on_center, on_region_settings.radius)
+
+        return RegionGeom.create(region=on_region, axes=axes)
+
+    def _create_geometry(self):
+        """Create the geometry."""
+        log.debug("Creating geometry.")
         datasets_settings = self.config.datasets
-        log.info("Creating geometry.")
-        geom = self._create_geometry()
         geom_settings = datasets_settings.geom
+        axes = [self._make_energy_axis(geom_settings.axes.energy)]
+        if datasets_settings.type == "3d":
+            geom = self._create_wcs_geometry(geom_settings.wcs, axes)
+        elif datasets_settings.type == "1d":
+            geom = self._create_region_geometry(datasets_settings.on_region, axes)
+        else:
+            raise ValueError(f"Incorrect dataset type. Expect '1d' or '3d'. Got {datasets_settings.type}.")
+        return geom
+
+    def _create_reference_dataset(self, name=None):
+        """Create the reference dataset for the current analysis."""
+        log.debug("Creating target Dataset.")
+        geom = self._create_geometry()
+
+        geom_settings = self.config.datasets.geom
         geom_irf = dict(energy_axis_true=None, binsz_irf=None)
         if geom_settings.axes.energy_true.min is not None:
             geom_irf["energy_axis_true"] = self._make_energy_axis(
                 geom_settings.axes.energy_true, name="energy_true"
             )
-        geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
-        offset_max = geom_settings.selection.offset_max
-        log.info("Creating datasets.")
+        if geom_settings.wcs.binsize_irf is not None:
+            geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
 
-        maker = MapDatasetMaker(selection=datasets_settings.map_selection)
+        if self.config.datasets.type == '1d':
+            return SpectrumDataset.create(geom, name=name, **geom_irf)
+        else:
+            return MapDataset.create(geom, name=name, **geom_irf)
 
-        safe_mask_selection = datasets_settings.safe_mask.methods
-        safe_mask_settings = datasets_settings.safe_mask.parameters
-        maker_safe_mask = SafeMaskMaker(
+    def _create_dataset_maker(self):
+        """Create the Dataset Maker."""
+        log.debug("Creating the target Dataset Maker.")
+
+        datasets_settings = self.config.datasets
+        if datasets_settings.type == "3d":
+            maker = MapDatasetMaker(selection=datasets_settings.map_selection)
+        elif datasets_settings.type == "1d":
+            maker_config = {}
+            if datasets_settings.containment_correction:
+                maker_config["containment_correction"] = datasets_settings.containment_correction
+
+            maker_config["selection"] = ["counts", "exposure", "edisp"]
+
+            maker = SpectrumDatasetMaker(**maker_config)
+
+        return maker
+
+    def _create_safe_mask_maker(self):
+        """Create the SafeMaskMaker."""
+        log.debug("Creating the mask_safe Maker.")
+
+        safe_mask_selection = self.config.datasets.safe_mask.methods
+        safe_mask_settings = self.config.datasets.safe_mask.parameters
+        return SafeMaskMaker(
             methods=safe_mask_selection, **safe_mask_settings
         )
 
+    def _create_background_maker(self):
+        """Create the Background maker."""
+        log.info("Creating the background Maker.")
+
+        datasets_settings = self.config.datasets
         bkg_maker_config = {}
         if datasets_settings.background.exclusion:
-            exclusion_region = Map.read(datasets_settings.background.exclusion)
-            bkg_maker_config["exclusion_mask"] = exclusion_region
+            path = make_path(datasets_settings.background.exclusion)
+            exclusion_mask = Map.read(path)
+            exclusion_mask.data = exclusion_mask.data.astype(bool)
+            bkg_maker_config["exclusion_mask"] = exclusion_mask
         bkg_maker_config.update(datasets_settings.background.parameters)
 
         bkg_method = datasets_settings.background.method
+
+        bkg_maker = None
         if bkg_method == "fov_background":
             log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
             bkg_maker = FoVBackgroundMaker(**bkg_maker_config)
@@ -323,25 +400,43 @@ class Analysis:
                 raise ValueError(
                     "You need to define a single-bin energy geometry for your dataset."
                 )
-        else:
-            bkg_maker = None
-            log.warning(
-                f"No background maker set for 3d analysis. Check configuration."
+        elif bkg_method == "reflected":
+            bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
+            log.debug(
+                f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
             )
+        else:
+            log.warning(f"No background maker set. Check configuration.")
+        return bkg_maker
 
-        stacked = MapDataset.create(geom=geom, name="stacked", **geom_irf)
+    def _map_making(self):
+        """Make maps and datasets for 3d analysis"""
+        datasets_settings = self.config.datasets
+        offset_max = datasets_settings.geom.selection.offset_max
+
+        log.info("Creating reference dataset and makers.")
+        stacked = self._create_reference_dataset(name="stacked")
+
+        maker = self._create_dataset_maker()
+        maker_safe_mask = self._create_safe_mask_maker()
+        bkg_maker = self._create_background_maker()
+
+        log.info("Start the data reduction loop.")
 
         if datasets_settings.stack:
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
+            for obs in progress_bar(
+                self.observations,
+                desc="Observations"
+            ):
+                log.debug(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
                 if bkg_maker is not None:
                     dataset = bkg_maker.run(dataset)
 
-                if bkg_method == "ring":
-                    dataset = dataset.to_map_dataset()
+                    if bkg_maker.tag == "RingBackgroundMaker":
+                        dataset = dataset.to_map_dataset()
 
                 log.debug(dataset)
                 stacked.stack(dataset)
@@ -349,8 +444,11 @@ class Analysis:
         else:
             datasets = []
 
-            for obs in self.observations:
-                log.info(f"Processing observation {obs.obs_id}")
+            for obs in progress_bar(
+                    self.observations,
+                    desc="Observations"
+            ):
+                log.debug(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
                 dataset = maker_safe_mask.run(dataset, obs)
@@ -358,80 +456,40 @@ class Analysis:
                     dataset = bkg_maker.run(dataset)
                 log.debug(dataset)
                 datasets.append(dataset)
-
         self.datasets = Datasets(datasets)
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
         log.info("Reducing spectrum datasets.")
         datasets_settings = self.config.datasets
-        on_lon = datasets_settings.on_region.lon
-        on_lat = datasets_settings.on_region.lat
-        on_center = SkyCoord(on_lon, on_lat, frame=datasets_settings.on_region.frame)
-        on_region = CircleSkyRegion(on_center, datasets_settings.on_region.radius)
+        dataset_maker = self._create_dataset_maker()
+        safe_mask_maker = self._create_safe_mask_maker()
+        bkg_maker = self._create_background_maker()
 
-        maker_config = {}
-        if datasets_settings.containment_correction:
-            maker_config[
-                "containment_correction"
-            ] = datasets_settings.containment_correction
-        e_reco = self._make_energy_axis(datasets_settings.geom.axes.energy)
-
-        maker_config["selection"] = ["counts", "exposure", "edisp"]
-        dataset_maker = SpectrumDatasetMaker(**maker_config)
-
-        bkg_maker_config = {}
-        if datasets_settings.background.exclusion:
-            exclusion_region = Map.read(datasets_settings.background.exclusion)
-            bkg_maker_config["exclusion_mask"] = exclusion_region
-        bkg_maker_config.update(datasets_settings.background.parameters)
-        bkg_method = datasets_settings.background.method
-        if bkg_method == "reflected":
-            bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
-            log.debug(
-                f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
-            )
-        else:
-            bkg_maker = None
-            log.warning(
-                f"No background maker set for 1d analysis. Check configuration."
-            )
-
-        safe_mask_selection = datasets_settings.safe_mask.methods
-        safe_mask_settings = datasets_settings.safe_mask.parameters
-        safe_mask_maker = SafeMaskMaker(
-            methods=safe_mask_selection, **safe_mask_settings
-        )
-
-        e_true = self._make_energy_axis(
-            datasets_settings.geom.axes.energy_true, name="energy_true"
-        )
-
-        geom = RegionGeom.create(region=on_region, axes=[e_reco])
-        reference = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+        reference = self._create_reference_dataset()
 
         datasets = []
-        for obs in self.observations:
-            log.info(f"Processing observation {obs.obs_id}")
+        for obs in progress_bar(
+                self.observations,
+                desc="Observations"
+        ):
+            log.debug(f"Processing observation {obs.obs_id}")
             dataset = dataset_maker.run(reference.copy(), obs)
             if bkg_maker is not None:
                 dataset = bkg_maker.run(dataset, obs)
                 if dataset.counts_off is None:
-                    log.info(
+                    log.debug(
                         f"No OFF region found for observation {obs.obs_id}. Discarding."
                     )
                     continue
             dataset = safe_mask_maker.run(dataset, obs)
             log.debug(dataset)
             datasets.append(dataset)
-
         self.datasets = Datasets(datasets)
 
         if datasets_settings.stack:
             stacked = self.datasets.stack_reduce(name="stacked")
             self.datasets = Datasets([stacked])
-
-
 
     @staticmethod
     def _make_energy_axis(axis, name="energy"):

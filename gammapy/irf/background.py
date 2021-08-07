@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.integrate import trapz_loglog
 from .core import IRF
@@ -15,7 +16,7 @@ class BackgroundIRF(IRF):
     """Background IRF base class"""
 
     default_interp_kwargs = dict(
-        bounds_error=False, fill_value=None, values_scale="log"
+        bounds_error=False, fill_value=0.0, values_scale="log"
     )
     """Default Interpolation kwargs to extrapolate."""
 
@@ -155,7 +156,7 @@ class Background2D(BackgroundIRF):
 
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0.)
     """Default Interpolation kwargs."""
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
@@ -166,20 +167,20 @@ class Background2D(BackgroundIRF):
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.axes["energy"].edges.to_value("TeV")
-        y = self.axes["offset"].edges.to_value("deg")
-        z = self.quantity.T.value
+        energy_axis, offset_axis = self.axes["energy"], self.axes["offset"]
+        data = self.quantity.value
 
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("edgecolors", "face")
+        kwargs.setdefault("norm", LogNorm())
 
-        caxes = ax.pcolormesh(x, y, z, norm=LogNorm(), **kwargs)
-        ax.set_xscale("log")
-        ax.set_ylabel(f"Offset (deg)")
-        ax.set_xlabel(f"Energy (TeV)")
+        with quantity_support():
+            caxes = ax.pcolormesh(
+                energy_axis.edges, offset_axis.edges, data.T, **kwargs
+            )
 
-        xmin, xmax = x.min(), x.max()
-        ax.set_xlim(xmin, xmax)
+        energy_axis.format_plot_xaxis(ax=ax)
+        offset_axis.format_plot_yaxis(ax=ax)
 
         if add_cbar:
             label = f"Background rate ({self.unit})"
@@ -209,17 +210,18 @@ class Background2D(BackgroundIRF):
             e_min, e_max = np.log10(energy_axis.center.value[[0, -1]])
             energy = np.logspace(e_min, e_max, 4) * energy_axis.unit
 
-        offset = self.axes["offset"].center
+        offset_axis = self.axes["offset"]
 
         for ee in energy:
-            bkg = self.evaluate(offset=offset, energy=ee)
+            bkg = self.evaluate(offset=offset_axis.center, energy=ee)
             if np.isnan(bkg).all():
                 continue
             label = f"energy = {ee:.1f}"
-            ax.plot(offset, bkg.value, label=label, **kwargs)
+            with quantity_support():
+                ax.plot(offset_axis.center, bkg, label=label, **kwargs)
 
-        ax.set_xlabel(f"Offset ({self.axes['offset'].unit})")
-        ax.set_ylabel(f"Background rate ({self.unit})")
+        offset_axis.format_plot_xaxis(ax=ax)
+        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
         ax.set_yscale("log")
         ax.legend(loc="upper right")
         return ax
@@ -250,20 +252,18 @@ class Background2D(BackgroundIRF):
             off_min, off_max = offset_axis.center.value[[0, -1]]
             offset = np.linspace(off_min, off_max, 4) * offset_axis.unit
 
-        energy = self.axes["energy"].center
+        energy_axis = self.axes["energy"]
 
         for off in offset:
-            bkg = self.evaluate(offset=off, energy=energy)
+            bkg = self.evaluate(offset=off, energy=energy_axis.center)
             label = f"offset = {off:.2f}"
-            ax.plot(energy, bkg.value, label=label, **kwargs)
+            with quantity_support():
+                ax.plot(energy_axis.center, bkg, label=label, **kwargs)
 
-        ax.set_xscale("log")
+        energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_xlabel(f"Energy [{energy.unit}]")
-        ax.set_ylabel(f"Background rate ({self.unit})")
-        ax.set_xlim(min(energy.value), max(energy.value))
+        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
         ax.legend(loc="best")
-
         return ax
 
     def plot_spectrum(self, ax=None, **kwargs):
@@ -273,8 +273,8 @@ class Background2D(BackgroundIRF):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        kwargs : dict
-            Forwarded tp plt.plot()
+        **kwargs : dict
+            Keyword arguments forwarded to `~matplotib.pyplot.plot`
 
         Returns
         -------
@@ -284,24 +284,20 @@ class Background2D(BackgroundIRF):
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-        offset = self.axes["offset"].edges
-        energy = self.axes["energy"].center
 
-        bkg = []
-        for ee in energy:
-            data = self.evaluate(offset=offset, energy=ee)
-            val = np.nansum(trapz_loglog(data, offset, axis=0))
-            bkg.append(val.value)
+        offset_axis = self.axes["offset"]
+        energy_axis = self.axes["energy"]
 
-        ax.plot(energy, bkg, label="integrated spectrum", **kwargs)
+        bkg = self.integral(
+            offset=offset_axis.bounds[1], axis_name="offset"
+        )
 
-        unit = self.unit * offset.unit ** 2
+        with quantity_support():
+            ax.plot(energy_axis.center, bkg, label="integrated spectrum", **kwargs)
 
-        ax.set_xscale("log")
+        energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_xlabel(f"Energy [{energy.unit}]")
-        ax.set_ylabel(f"Background rate ({unit})")
-        ax.set_xlim(min(energy.value), max(energy.value))
+        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
         ax.legend(loc="best")
         return ax
 

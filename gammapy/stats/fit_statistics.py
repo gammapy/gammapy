@@ -4,13 +4,11 @@
 see :ref:`fit-statistics`
 """
 import numpy as np
+from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
 
 __all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
-N_ON_MIN = 1e-25
-
-
-def cash(n_on, mu_on):
+def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     r"""Cash statistic, for Poisson data.
 
     The Cash statistic is defined as:
@@ -27,6 +25,10 @@ def cash(n_on, mu_on):
         Observed counts
     mu_on : array_like
         Expected counts
+    truncation_value : array_like
+        Minimum value use for ``mu_on``
+        ``mu_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value``
+        Default is 1e-25.
 
     Returns
     -------
@@ -44,15 +46,19 @@ def cash(n_on, mu_on):
     """
     n_on = np.asanyarray(n_on)
     mu_on = np.asanyarray(mu_on)
+    truncation_value = np.asanyarray(truncation_value)
+    if np.any(truncation_value)<=0:
+        raise ValueError("Cash statistic truncation value must be positive.")
+
+    mu_on = np.where(mu_on <= truncation_value, truncation_value, mu_on)
 
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide="ignore", invalid="ignore"):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
-        stat = np.where(mu_on > 0, stat, 0)
     return stat
 
 
-def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
+def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     r"""C statistic, for Poisson data.
 
     The C statistic is defined as
@@ -63,7 +69,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
 
     and :math:`C = 0` where :math:`\mu_{on} <= 0`.
 
-    ``n_on_min`` handles the case where ``n_on`` is 0 or less and
+    ``truncation_value`` handles the case where ``n_on`` or ``mu_on`` is 0 or less and
     the log cannot be taken.
     For more information see :ref:`fit-statistics`
 
@@ -73,8 +79,10 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
         Observed counts
     mu_on : array_like
         Expected counts
-    n_on_min : array_like
-        ``n_on`` = ``n_on_min`` where ``n_on`` <= ``n_on_min.``
+    truncation_value : array_like
+        ``n_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value.``
+        ``mu_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value``
+        Default is 1e-25.
 
     Returns
     -------
@@ -92,9 +100,13 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     """
     n_on = np.asanyarray(n_on, dtype=np.float64)
     mu_on = np.asanyarray(mu_on, dtype=np.float64)
-    n_on_min = np.asanyarray(n_on_min, dtype=np.float64)
+    truncation_value = np.asanyarray(truncation_value, dtype=np.float64)
 
-    n_on = np.where(n_on <= n_on_min, n_on_min, n_on)
+    if np.any(truncation_value)<=0:
+        raise ValueError("Cstat statistic truncation value must be positive.")
+
+    n_on = np.where(n_on <= truncation_value, truncation_value, n_on)
+    mu_on = np.where(mu_on <= truncation_value, truncation_value, mu_on)
 
     term1 = np.log(n_on) - np.log(mu_on)
     stat = 2 * (mu_on - n_on + n_on * term1)
@@ -194,7 +206,8 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
     # NOTE: Corner cases in the docs are all handled correcty by this formula
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
-    mu_bkg = (C + D) / (2 * alpha * (alpha + 1))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        mu_bkg = (C + D) / (2 * alpha * (alpha + 1))
 
     return mu_bkg
 

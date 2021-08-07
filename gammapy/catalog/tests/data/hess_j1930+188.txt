@@ -22,7 +22,7 @@ Spatial model        : Gaussian
 Spatial components   : HGPSC 097
 TS                   : 33.6
 sqrt(TS)             : 5.8
-Size                 : nan +/- nan (UL: 0.072) deg
+Size                 : 0.000 +/- 0.000 (UL: 0.072) deg
 R70                  : 0.083 deg
 RSpec                : 0.150 deg
 Total model excess   : 64.6
@@ -51,7 +51,7 @@ Energy range:        : 0.46 to 90.85 TeV
 Background           : 611.9
 Excess               : 155.1
 Spectral model       : PL
-TS ECPL over PL      : nan
+TS ECPL over PL      : --
 Best-fit model flux(> 1 TeV) : (0.318 +/- 0.068) x 10^-12 cm^-2 s^-1  = (1.41 +/- 0.30) % Crab
 Best-fit model energy flux(1 to 10 TeV) : (1.019 +/- 0.236) x 10^-12 erg cm^-2 s^-1
 Pivot energy         : 1.70 TeV
@@ -59,11 +59,11 @@ Flux at pivot energy : (0.128 +/- 0.027) x 10^-12 cm^-2 s^-1 TeV^-1  = (0.57 +/-
 PL   Flux(> 1 TeV)   : (0.318 +/- 0.068) x 10^-12 cm^-2 s^-1  = (1.41 +/- 0.30) % Crab
 PL   Flux(@ 1 TeV)   : (0.506 +/- 0.124) x 10^-12 cm^-2 s^-1 TeV^-1  = (2.24 +/- 0.35) % Crab
 PL   Index           : 2.59 +/- 0.26
-ECPL   Flux(@ 1 TeV) : (nan +/- nan) x 10^-12 cm^-2 s^-1 TeV^-1  = (nan +/- nan) % Crab
-ECPL   Flux(> 1 TeV) : (nan +/- nan) x 10^-12 cm^-2 s^-1  = (nan +/- nan) % Crab
-ECPL Index           : nan +/- nan
-ECPL Lambda          : nan +/- nan TeV^-1
-ECPL E_cut           : nan +/- nan TeV
+ECPL   Flux(@ 1 TeV) : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1 TeV^-1  = (0.00 +/- 0.00) % Crab
+ECPL   Flux(> 1 TeV) : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1  = (0.00 +/- 0.00) % Crab
+ECPL Index           : -- +/- --
+ECPL Lambda          : 0.000 +/- 0.000 TeV^-1
+ECPL E_cut           : inf +/- nan TeV
 
 *** Flux points info ***
 

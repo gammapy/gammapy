@@ -2,17 +2,16 @@
 """HESS Galactic plane survey (HGPS) catalog."""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.maps import WcsGeom, MapAxis, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import Model, Models, SkyModel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.regions import list_to_compound_region, compound_region_center
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict
-from .core import SourceCatalog, SourceCatalogObject
+from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = [
     "SourceCatalogHGPS",
@@ -99,6 +98,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def __str__(self):
         return self.info()
+
+    @property
+    def flux_points(self):
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        return FluxPoints.from_table(
+            self.flux_points_table, reference_model=self.spectral_model()
+        )
 
     def info(self, info="all"):
         """Info string.
@@ -386,7 +392,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = "\n*** Flux points info ***\n\n"
         ss += "Number of flux points: {}\n".format(d["N_Flux_Points"])
         ss += "Flux points table: \n\n"
-        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+        lines = format_flux_points_table(self.flux_points_table).pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss + "\n"
 
@@ -596,8 +602,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return geom.to_wcs_geom()
 
     @property
-    def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+    def flux_points_table(self):
+        """Flux points table (`~astropy.table.Table)."""
         table = Table()
         table.meta["SED_TYPE"] = "dnde"
         mask = ~np.isnan(self.data["Flux_Points_Energy"])
@@ -611,8 +617,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table["dnde_errp"] = self.data["Flux_Points_Flux_Err_Hi"][mask]
         table["dnde_ul"] = self.data["Flux_Points_Flux_UL"][mask]
         table["is_ul"] = self.data["Flux_Points_Flux_Is_UL"][mask].astype("bool")
-
-        return FluxPoints(table)
+        return table
 
 
 class SourceCatalogHGPS(SourceCatalog):
@@ -633,25 +638,140 @@ class SourceCatalogHGPS(SourceCatalog):
     Then you can load it up like this:
 
     >>> from gammapy.catalog import SourceCatalogHGPS
-    >>> filename = 'hgps_catalog_v1.fits.gz'
-    >>> cat = SourceCatalogHGPS(filename) # doctest: +SKIP
+    >>> filename = '$GAMMAPY_DATA/catalogs/hgps_catalog_v1.fits.gz'
+    >>> cat = SourceCatalogHGPS(filename)
 
     Access a source by name:
 
-    >>> source = cat['HESS J1843-033'] # doctest: +SKIP
-    >>> print(source) # doctest: +SKIP
+    >>> source = cat['HESS J1843-033']
+    >>> print(source)
+    <BLANKLINE>
+    *** Basic info ***
+    <BLANKLINE>
+    Catalog row index (zero-based) : 64
+    Source name          : HESS J1843-033
+    Analysis reference   : HGPS
+    Source class         : Unid
+    Identified object    : --
+    Gamma-Cat id         : 126
+    <BLANKLINE>
+    <BLANKLINE>
+    *** Info from map analysis ***
+    <BLANKLINE>
+    RA                   :  280.952 deg = 18h43m48s
+    DEC                  :   -3.554 deg = -3d33m15s
+    GLON                 :   28.899 +/- 0.072 deg
+    GLAT                 :    0.075 +/- 0.036 deg
+    Position Error (68%) : 0.122 deg
+    Position Error (95%) : 0.197 deg
+    ROI number           : 3
+    Spatial model        : 2-Gaussian
+    Spatial components   : HGPSC 083, HGPSC 084
+    TS                   : 256.6
+    sqrt(TS)             : 16.0
+    Size                 : 0.239 +/- 0.063 (UL: 0.000) deg
+    R70                  : 0.376 deg
+    RSpec                : 0.376 deg
+    Total model excess   : 979.5
+    Excess in RSpec      : 775.6
+    Model Excess in RSpec : 690.2
+    Background in RSpec  : 1742.4
+    Livetime             : 41.8 hours
+    Energy threshold     : 0.38 TeV
+    Source flux (>1 TeV) : (2.882 +/- 0.305) x 10^-12 cm^-2 s^-1 = (12.75 +/- 1.35) % Crab
+    <BLANKLINE>
+    Fluxes in RSpec (> 1 TeV):
+    Map measurement                : 2.267 x 10^-12 cm^-2 s^-1 = 10.03 % Crab
+    Source model                   : 2.018 x 10^-12 cm^-2 s^-1 =  8.93 % Crab
+    Other component model          : 0.004 x 10^-12 cm^-2 s^-1 =  0.02 % Crab
+    Large scale component model    : 0.361 x 10^-12 cm^-2 s^-1 =  1.60 % Crab
+    Total model                    : 2.383 x 10^-12 cm^-2 s^-1 = 10.54 % Crab
+    Containment in RSpec                :  70.0 %
+    Contamination in RSpec              :  15.3 %
+    Flux correction (RSpec -> Total)    : 121.0 %
+    Flux correction (Total -> RSpec)    :  82.7 %
+    <BLANKLINE>
+    *** Info from spectral analysis ***
+    <BLANKLINE>
+    Livetime             : 16.8 hours
+    Energy range:        : 0.22 to 61.90 TeV
+    Background           : 5126.9
+    Excess               : 980.1
+    Spectral model       : PL
+    TS ECPL over PL      : --
+    Best-fit model flux(> 1 TeV) : (3.043 +/- 0.196) x 10^-12 cm^-2 s^-1  = (13.47 +/- 0.87) % Crab
+    Best-fit model energy flux(1 to 10 TeV) : (10.918 +/- 0.733) x 10^-12 erg cm^-2 s^-1
+    Pivot energy         : 1.87 TeV
+    Flux at pivot energy : (0.914 +/- 0.058) x 10^-12 cm^-2 s^-1 TeV^-1  = (4.04 +/- 0.17) % Crab
+    PL   Flux(> 1 TeV)   : (3.043 +/- 0.196) x 10^-12 cm^-2 s^-1  = (13.47 +/- 0.87) % Crab
+    PL   Flux(@ 1 TeV)   : (3.505 +/- 0.247) x 10^-12 cm^-2 s^-1 TeV^-1  = (15.51 +/- 0.70) % Crab
+    PL   Index           : 2.15 +/- 0.05
+    ECPL   Flux(@ 1 TeV) : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1 TeV^-1  = (0.00 +/- 0.00) % Crab
+    ECPL   Flux(> 1 TeV) : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1  = (0.00 +/- 0.00) % Crab
+    ECPL Index           : -- +/- --
+    ECPL Lambda          : 0.000 +/- 0.000 TeV^-1
+    ECPL E_cut           : inf +/- nan TeV
+    <BLANKLINE>
+    *** Flux points info ***
+    <BLANKLINE>
+    Number of flux points: 6
+    Flux points table:
+    <BLANKLINE>
+    e_ref  e_min  e_max        dnde         dnde_errn       dnde_errp        dnde_ul     is_ul
+     TeV    TeV    TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+    ------ ------ ------ --------------- --------------- --------------- --------------- -----
+     0.332  0.215  0.511       3.048e-11       6.890e-12       7.010e-12       4.455e-11 False
+     0.787  0.511  1.212       5.383e-12       6.655e-13       6.843e-13       6.739e-12 False
+     1.957  1.212  3.162       9.160e-13       9.732e-14       1.002e-13       1.120e-12 False
+     4.870  3.162  7.499       1.630e-13       2.001e-14       2.097e-14       2.054e-13 False
+    12.115  7.499 19.573       1.648e-14       3.124e-15       3.348e-15       2.344e-14 False
+    30.142 19.573 46.416       7.777e-16       4.468e-16       5.116e-16       1.883e-15 False
+    <BLANKLINE>
+    *** Gaussian component info ***
+    <BLANKLINE>
+    Number of components: 2
+    Spatial components   : HGPSC 083, HGPSC 084
+    <BLANKLINE>
+    Component HGPSC 083:
+    GLON                 :   29.047 +/- 0.026 deg
+    GLAT                 :    0.244 +/- 0.027 deg
+    Size                 : 0.125 +/- 0.021 deg
+    Flux (>1 TeV)        : (1.34 +/- 0.36) x 10^-12 cm^-2 s^-1 = (5.9 +/- 1.6) % Crab
+    <BLANKLINE>
+    Component HGPSC 084:
+    GLON                 :   28.770 +/- 0.059 deg
+    GLAT                 :   -0.073 +/- 0.069 deg
+    Size                 : 0.229 +/- 0.046 deg
+    Flux (>1 TeV)        : (1.54 +/- 0.47) x 10^-12 cm^-2 s^-1 = (6.8 +/- 2.1) % Crab
+    <BLANKLINE>
+    <BLANKLINE>
+    *** Source associations info ***
+    <BLANKLINE>
+      Source_Name    Association_Catalog    Association_Name   Separation
+                                                                  deg
+    ---------------- ------------------- --------------------- ----------
+      HESS J1843-033                3FGL     3FGL J1843.7-0322   0.178442
+      HESS J1843-033                3FGL     3FGL J1844.3-0344   0.242835
+      HESS J1843-033                 SNR             G28.6-0.1   0.330376
+    <BLANKLINE>
 
     Access source spectral data and plot it:
 
-    >>> source.spectral_model().plot(source.energy_range) # doctest: +SKIP
-    >>> source.spectral_model().plot_error(source.energy_range) # doctest: +SKIP
-    >>> source.flux_points.plot() # doctest: +SKIP
+    >>> source.spectral_model().plot(source.energy_range)
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.spectral_model().plot_error(source.energy_range)
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.flux_points.plot()
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde (1 / (cm2 s TeV))'>
 
     Gaussian component information can be accessed as well,
     either via the source, or via the catalog:
 
-    >>> source.components # doctest: +SKIP
-    >>> cat.gaussian_component(83) # doctest: +SKIP
+    >>> source.components
+    [SourceCatalogObjectHGPSComponent('HGPSC 083'), SourceCatalogObjectHGPSComponent('HGPSC 084')]
+
+    >>> cat.gaussian_component(83)
+    SourceCatalogObjectHGPSComponent('HGPSC 084')
     """
 
     tag = "hgps"

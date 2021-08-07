@@ -107,6 +107,7 @@ class TestSourceCatalogObjectGammaCat:
             "erg cm-2 s-1"
         )
 
+        print(spectral_model)
         assert_quantity_allclose(dne, ref["dnde_1TeV"], rtol=1e-3)
         assert_quantity_allclose(flux, ref["flux_1TeV"], rtol=1e-3)
         assert_quantity_allclose(eflux, ref["eflux_1_10TeV"], rtol=1e-3)
@@ -129,7 +130,7 @@ class TestSourceCatalogObjectGammaCat:
 
         flux_points = source.flux_points
 
-        assert len(flux_points.table) == ref["n_flux_points"]
+        assert flux_points.energy_axis.nbin == ref["n_flux_points"]
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_position(self, gammacat, ref):

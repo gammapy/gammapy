@@ -3,9 +3,10 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
-from .core import IRF
+from ..core import IRF
 
 __all__ = ["EDispKernel"]
 
@@ -28,21 +29,28 @@ class EDispKernel(IRF):
     --------
     Create a Gaussian energy dispersion matrix::
 
-        from gammapy.maps import MapAxis
-        from gammapy.irf import EDispKernel
-        energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
-        energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
-        edisp = EDispKernel.from_gauss(
-            energy_true=energy, energy=energy,
-            sigma=0.1, bias=0,
-        )
+    >>> from gammapy.maps import MapAxis
+    >>> from gammapy.irf import EDispKernel
+    >>> energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
+    >>> energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
+    >>> edisp = EDispKernel.from_gauss(energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0)
 
     Have a quick look:
 
-    >>> print(edisp) # doctest: +SKIP
-    >>> edisp.peek() # doctest: +SKIP
+    >>> print(edisp)
+    EDispKernel
+    -----------
+    <BLANKLINE>
+      axes  : ['energy_true', 'energy']
+      shape : (10, 10)
+      ndim  : 2
+      unit  :
+      dtype : float64
+    <BLANKLINE>
+    >>> edisp.peek()
 
     """
+
     required_axes = ["energy_true", "energy"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
     """Default Interpolation kwargs for `~IRF`. Fill zeros and do not
@@ -93,8 +101,7 @@ class EDispKernel(IRF):
         data = self.pdf_in_safe_range(lo_threshold, hi_threshold)
 
         return self.__class__(
-            axes=self.axes.squash("energy"),
-            data=np.sum(data, axis=1, keepdims=True),
+            axes=self.axes.squash("energy"), data=np.sum(data, axis=1, keepdims=True),
         )
 
     @classmethod
@@ -121,7 +128,7 @@ class EDispKernel(IRF):
         edisp : `EDispKernel`
             Edisp kernel.
         """
-        from .energy_dispersion import EnergyDispersion2D
+        from .core import EnergyDispersion2D
 
         migra_axis = MapAxis.from_bounds(1.0 / 3, 3, nbin=200, name="migra")
 
@@ -136,7 +143,9 @@ class EDispKernel(IRF):
             bias=bias,
             pdf_threshold=pdf_threshold,
         )
-        return edisp.to_edisp_kernel(offset=offset_axis.center[0], energy=energy_axis.edges)
+        return edisp.to_edisp_kernel(
+            offset=offset_axis.center[0], energy=energy_axis.edges
+        )
 
     @classmethod
     def from_diagonal_response(cls, energy_axis_true, energy_axis=None):
@@ -172,7 +181,7 @@ class EDispKernel(IRF):
             edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
             edisp.plot_matrix()
         """
-        from .edisp_map import get_overlap_fraction
+        from .map import get_overlap_fraction
 
         energy_axis_true.assert_name("energy_true")
 
@@ -438,14 +447,13 @@ class EDispKernel(IRF):
         if energy_max is None:
             energy_max = energy_true[-1]
 
-        bias_spectrum = TemplateSpectralModel(
-            energy=energy_true, values=values
-        )
+        bias_spectrum = TemplateSpectralModel(energy=energy_true, values=values)
 
         energy_true_bias = bias_spectrum.inverse(
             Quantity(bias), energy_min=energy_min, energy_max=energy_max
         )
-
+        if np.isnan(energy_true_bias[0]):
+            energy_true_bias[0] = energy_min
         # return reconstructed energy
         return energy_true_bias * (1 + bias)
 
@@ -493,15 +501,13 @@ class EDispKernel(IRF):
 
         return var / norm
 
-    def plot_matrix(self, ax=None, show_energy=None, add_cbar=False, **kwargs):
+    def plot_matrix(self, ax=None, add_cbar=False, **kwargs):
         """Plot PDF matrix.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
-        show_energy : `~astropy.units.Quantity`, optional
-            Show energy, e.g. threshold, as vertical line
         add_cbar : bool
             Add a colorbar to the plot.
 
@@ -514,30 +520,25 @@ class EDispKernel(IRF):
         from matplotlib.colors import PowerNorm
 
         kwargs.setdefault("cmap", "GnBu")
-        norm = PowerNorm(gamma=0.5)
+        norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
 
         ax = plt.gca() if ax is None else ax
 
-        energy_true = self.axes["energy_true"].edges
-        energy = self.axes["energy"].edges
+        energy_axis_true = self.axes["energy_true"]
+        energy_axis = self.axes["energy"]
 
-        caxes = ax.pcolormesh(energy_true.value, energy.value, self.data.T, **kwargs)
-
-        if show_energy is not None:
-            ener_val = show_energy.to_value(self.axes["energy"].unit)
-            ax.hlines(ener_val, 0, 200200, linestyles="dashed")
+        with quantity_support():
+            caxes = ax.pcolormesh(
+                energy_axis_true.edges, energy_axis.edges, self.data.T, **kwargs
+            )
 
         if add_cbar:
             label = "Probability density (A.U.)"
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{energy_true.unit}]")
-        ax.set_ylabel(fr"$E_\mathrm{{Reco}}$ [{energy.unit}]")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_xlim(energy_true.value.min(), energy_true.value.max())
-        ax.set_ylim(energy.value.min(), energy.value.max())
+        energy_axis_true.format_plot_xaxis(ax=ax)
+        energy_axis.format_plot_yaxis(ax=ax)
         return ax
 
     def plot_bias(self, ax=None, **kwargs):
@@ -548,19 +549,27 @@ class EDispKernel(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Plot axis
+        **kwargs : dict
+            Kwyrow
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Plot axis
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy_axis_true = self.axes["energy_true"]
-        x = energy_axis_true.center.to_value("TeV")
-        y = self.get_bias(energy_axis_true.center)
+        energy = self.axes["energy_true"].center
+        bias = self.get_bias(energy)
 
-        ax.plot(x, y, **kwargs)
-        ax.set_xlabel(r"$E_\mathrm{{True}}$ [TeV]")
-        ax.set_ylabel(r"($E_\mathrm{{Reco}} - E_\mathrm{{True}}) / E_\mathrm{{True}}$")
+        with quantity_support():
+            ax.plot(energy, bias, **kwargs)
+
+        ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units}]")
+        ax.set_ylabel("($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$")
         ax.set_xscale("log")
         return ax
 

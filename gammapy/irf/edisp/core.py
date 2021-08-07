@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.special
-from scipy.interpolate import interp1d
 from astropy.coordinates import Angle
 from astropy.units import Quantity
-from gammapy.maps import MapAxis
-from .edisp_kernel import EDispKernel
-from .core import IRF
+from astropy.visualization import quantity_support
+from gammapy.maps import MapAxis, MapAxes
+from .kernel import EDispKernel
+from ..core import IRF
 
 __all__ = ["EnergyDispersion2D"]
 
@@ -40,7 +40,7 @@ class EnergyDispersion2D(IRF):
     for a given field of view offset and energy binning:
 
     >>> energy = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log").edges
-    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', e_reco=energy, energy_true=energy) # doctest: +SKIP
+    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', energy=energy, energy_true=energy)
 
     See Also
     --------
@@ -50,8 +50,15 @@ class EnergyDispersion2D(IRF):
     tag = "edisp_2d"
     required_axes = ["energy_true", "migra", "offset"]
 
+    def _mask_out_bounds(self, invalid):
+        return (
+            invalid[self.axes.index("energy_true")] & invalid[self.axes.index("migra")]
+        ) | invalid[self.axes.index("offset")]
+
     @classmethod
-    def from_gauss(cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6):
+    def from_gauss(
+        cls, energy_axis_true, migra_axis, offset_axis, bias, sigma, pdf_threshold=1e-6
+    ):
         """Create Gaussian energy dispersion matrix (`EnergyDispersion2D`).
 
         The output matrix will be Gaussian in (energy_true / energy).
@@ -73,30 +80,28 @@ class EnergyDispersion2D(IRF):
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
         sigma : float or `~numpy.ndarray`
-            RMS width of Gaussian energy dispersion, resolution
+            RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        true2d, migra2d = np.meshgrid(energy_axis_true.center, migra_axis.edges)
+        axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
+        coords = axes.get_coord(mode="edges", axis_name="migra")
 
-        migra2d_lo = migra2d[:-1, :]
-        migra2d_hi = migra2d[1:, :]
+        migra_min = coords["migra"][:, :-1, :]
+        migra_max = coords["migra"][:, 1:, :]
 
         # Analytical formula for integral of Gaussian
         s = np.sqrt(2) * sigma
-        t1 = (migra2d_hi - 1 - bias) / s
-        t2 = (migra2d_lo - 1 - bias) / s
+        t1 = (migra_max - 1 - bias) / s
+        t2 = (migra_min - 1 - bias) / s
         pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
-        pdf = pdf / (migra2d_hi - migra2d_lo)
+        pdf = pdf / (migra_max - migra_min)
 
-        data = pdf.T[:, :, np.newaxis] * np.ones(offset_axis.nbin)
-
+        # no offset dependence
+        data = pdf * np.ones(axes.shape)
         data[data < pdf_threshold] = 0
 
-        return cls(
-            axes=[energy_axis_true, migra_axis, offset_axis],
-            data=data.value,
-        )
+        return cls(axes=axes, data=data.value,)
 
     def to_edisp_kernel(self, offset, energy_true=None, energy=None):
         """Detector response R(Delta E_reco, Delta E_true)
@@ -133,29 +138,29 @@ class EnergyDispersion2D(IRF):
                 energy_true, name="energy_true",
             )
 
+        axes = MapAxes([energy_axis_true, energy_axis])
+        coords = axes.get_coord(mode="edges", axis_name="energy")
+
         # migration value of energy bounds
-        migra = energy_axis.edges / energy_axis_true.center[:, np.newaxis]
+        migra = coords["energy"] / coords["energy_true"]
 
         values = self.integral(
             axis_name="migra",
             offset=offset,
-            energy_true=energy_axis_true.center[:, np.newaxis],
+            energy_true=coords["energy_true"],
             migra=migra,
         )
 
         data = np.diff(values)
 
-        return EDispKernel(
-            axes=[energy_axis_true, energy_axis],
-            data=data.to_value(""),
-        )
+        return EDispKernel(axes=axes, data=data.to_value(""),)
 
     def normalize(self):
         """Normalise energy dispersion"""
         super().normalize(axis_name="migra")
 
     def plot_migration(
-        self, ax=None, offset=None, energy_true=None, migra=None, **kwargs
+        self, ax=None, offset=None, energy_true=None, **kwargs
     ):
         """Plot energy dispersion for given offset and true energy.
 
@@ -167,8 +172,8 @@ class EnergyDispersion2D(IRF):
             Offset
         energy_true : `~astropy.units.Quantity`, optional
             True energy
-        migra : `~numpy.ndarray`, optional
-            Migration nodes
+        **kwargs : dict
+            Keyword arguments forwarded to `~matplotlib.pyplot.plot`
 
         Returns
         -------
@@ -189,18 +194,18 @@ class EnergyDispersion2D(IRF):
         else:
             energy_true = np.atleast_1d(Quantity(energy_true))
 
-        migra = self.axes["migra"].center if migra is None else migra
+        migra = self.axes["migra"]
 
-        for ener in energy_true:
-            for off in offset:
-                disp = self.evaluate(offset=off, energy_true=ener, migra=migra)
-                label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
-                ax.plot(migra, disp, label=label, **kwargs)
+        with quantity_support():
+            for ener in energy_true:
+                for off in offset:
+                    disp = self.evaluate(offset=off, energy_true=ener, migra=migra.center)
+                    label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
+                    ax.plot(migra.center, disp, label=label, **kwargs)
 
-        ax.set_xlabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
+        migra.format_plot_xaxis(ax=ax)
         ax.set_ylabel("Probability density")
         ax.legend(loc="upper left")
-
         return ax
 
     def plot_bias(self, ax=None, offset=None, add_cbar=False, **kwargs):
@@ -236,26 +241,22 @@ class EnergyDispersion2D(IRF):
         energy_true = self.axes["energy_true"]
         migra = self.axes["migra"]
 
-        x = energy_true.edges.value
-        y = migra.edges.value
-
         z = self.evaluate(
             offset=offset,
             energy_true=energy_true.center.reshape(1, -1, 1),
             migra=migra.center.reshape(1, 1, -1),
         ).value[0]
 
-        caxes = ax.pcolormesh(x, y, z.T, **kwargs)
+        with quantity_support():
+            caxes = ax.pcolormesh(energy_true.edges, migra.edges, z.T, **kwargs)
+
+        energy_true.format_plot_xaxis(ax=ax)
+        migra.format_plot_yaxis(ax=ax)
 
         if add_cbar:
             label = "Probability density (A.U.)"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{energy_true.unit}]")
-        ax.set_ylabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
-        ax.set_xlim(x.min(), x.max())
-        ax.set_ylim(y.min(), y.max())
-        ax.set_xscale("log")
         return ax
 
     def peek(self, figsize=(15, 5)):

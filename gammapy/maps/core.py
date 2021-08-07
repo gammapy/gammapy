@@ -8,8 +8,9 @@ from astropy import units as u
 from astropy.io import fits
 from gammapy.maps.hpx import HpxGeom
 from gammapy.utils.scripts import make_path
-from .geom import MapAxis, MapCoord, pix_tuple_to_idx
-from .utils import INVALID_VALUE, JsonQuantityDecoder
+from .geom import MapCoord, pix_tuple_to_idx
+from .axes import MapAxis
+from .utils import JsonQuantityDecoder
 
 __all__ = ["Map"]
 
@@ -75,7 +76,7 @@ class Map(abc.ABC):
     @data.setter
     def data(self, value):
         if np.isscalar(value):
-            value = value * np.ones(self.geom.data_shape)
+            value = value * np.ones(self.geom.data_shape, dtype=type(value))
 
         if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
@@ -167,7 +168,7 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None):
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
         """Read a map from a FITS file.
 
         Parameters
@@ -186,6 +187,8 @@ class Map(abc.ABC):
             with the format of the input file.  If map_type is 'auto'
             then an appropriate map type will be inferred from the
             input file.
+        colname : str, optional
+            data column name to be used of healix map.
 
         Returns
         -------
@@ -193,7 +196,7 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format, colname=colname)
 
     @staticmethod
     def from_geom(geom, meta=None, data=None, unit="", dtype="float32"):
@@ -233,14 +236,40 @@ class Map(abc.ABC):
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None):
-        """Create from `astropy.io.fits.HDUList`."""
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
+        """Create from `astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        hdulist :  `~astropy.io.fits.HDUList`
+            HDU list containing HDUs for map data and bands.
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.
+        map_type : {"auto", "wcs", "hpx", "region"}
+            Map type.
+        format : {'gadf', 'fgst-ccube', 'fgst-template'}
+            FITS format convention.
+        colname : str, optional
+            Data column name to be used for the HEALPix map.
+
+        Returns
+        -------
+        map_out : `Map`
+            Map object
+        """
         if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
-        return cls_out.from_hdulist(
-            hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
-        )
+        if map_type == "hpx":
+            return cls_out.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format, colname=colname
+            )
+        else:
+            return cls_out.from_hdulist(
+                hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
+            )
 
     @staticmethod
     def _get_meta_from_header(header):
@@ -802,7 +831,7 @@ class Map(abc.ABC):
         """
         pass
 
-    def interp_to_geom(self, geom, preserve_counts=False, **kwargs):
+    def interp_to_geom(self, geom, preserve_counts=False, fill_value=0, **kwargs):
         """Interpolate map to input geometry.
 
         Parameters
@@ -832,7 +861,7 @@ class Map(abc.ABC):
         if map_copy.is_mask:
             # TODO: check this NaN handling is needed
             data = map_copy.get_by_coord(coords)
-            data = np.nan_to_num(data).astype(bool)
+            data = np.nan_to_num(data, nan=fill_value).astype(bool)
         else:
             data = map_copy.interp_by_coord(coords, **kwargs)
 
@@ -1064,14 +1093,7 @@ class Map(abc.ABC):
         interact_kwargs = {}
 
         for axis in self.geom.axes:
-            if axis.node_type == "edges":
-                options = [
-                    f"{val_min:.2e} - {val_max:.2e} {axis.unit}"
-                    for val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])
-                ]
-            else:
-                options = [f"{val:.2e} {axis.unit}" for val in axis.center]
-
+            options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
                 description=f"Select {axis.name}:",
@@ -1345,45 +1367,51 @@ class Map(abc.ABC):
         self.quantity = np.nan_to_num(normed)
 
     @classmethod
-    def from_images(cls, images, axis=None):
+    def from_stack(cls, maps, axis=None, axis_name=None):
         """Create Map from list of images and a non-spatial axis.
 
-        If the images have a non-spatial axis of length 1 a new axes is generated
-        from by merging the individual axes. The image geometries must be aligned.
+        The image geometries must be aligned, except for the axis that is stacked.
 
         Parameters
         ----------
-        images : list of `Map` objects
-            Images
+        maps : list of `Map` objects
+            List of maps
         axis : `MapAxis`
-            Map axis
+            If a `MapAxis` is provided the maps are stacked along the last data
+            axis and the new axis is introduced.
+        axis_name : str
+            If an axis name is as string the given the maps are stacked along
+            the given axis name.
 
         Returns
         -------
         map : `Map`
             Map with additional non-spatial axis.
-
         """
-        geom_ref = images[0].geom.to_image()
+        geom = maps[0].geom
+
+        if axis_name is None and axis is None:
+            axis_name = geom.axes.names[-1]
+
+        if axis_name:
+            axis = MapAxis.from_stack(axes=[m.geom.axes[axis_name] for m in maps])
+            geom = geom.drop(axis_name=axis_name)
 
         data = []
 
-        for image in images:
-            if not image.geom.to_image() == geom_ref:
-                raise ValueError("Image geometries not aligned")
-            data.append(image.data)
+        for m in maps:
+            if axis_name:
+                m_geom = m.geom.drop(axis_name=axis_name)
+            else:
+                m_geom = m.geom
 
-        if axis is None:
-            try:
-                axis = MapAxis.from_stack(axes=[image.geom.axes[0] for image in images])
-            except IndexError:
-                ValueError(
-                    "Images don't have a non-spatial axis. Please provide"
-                    " the axis separately"
-                )
+            if not m_geom == geom:
+                raise ValueError(f"Image geometries not aligned: {m.geom} and {geom}")
+
+            data.append(m.quantity.to_value(maps[0].unit))
 
         return cls.from_geom(
-            data=np.stack(data), geom=geom_ref.to_cube(axes=[axis]), unit=images[0].unit
+            data=np.stack(data), geom=geom.to_cube(axes=[axis]), unit=maps[0].unit
         )
 
     def to_cube(self, axes):
@@ -1411,6 +1439,49 @@ class Map(abc.ABC):
         geom = self.geom.to_cube(axes)
         data = self.data.reshape((1,) * len(axes) + self.data.shape)
         return self.from_geom(data=data, geom=geom, unit=self.unit)
+
+    def get_spectrum(self, region=None, func=np.nansum, weights=None):
+        """Extract spectrum in a given region.
+
+        The spectrum can be computed by summing (or, more generally, applying ``func``)
+        along the spatial axes in each energy bin. This occurs only inside the ``region``,
+        which by default is assumed to be the whole spatial extension of the map.
+
+        Parameters
+        ----------
+        region: `~regions.Region`
+             Region (pixel or sky regions accepted).
+        func : numpy.func
+            Function to reduce the data. Default is np.nansum.
+            For a boolean Map, use np.any or np.all.
+        weights : `WcsNDMap`
+            Array to be used as weights. The geometry must be equivalent.
+
+        Returns
+        -------
+        spectrum : `~gammapy.maps.RegionNDMap`
+            Spectrum in the given region.
+        """
+        if not self.geom.has_energy_axis:
+            raise ValueError("Energy axis required")
+
+        return self.to_region_nd_map(region=region, func=func, weights=weights)
+
+    def to_unit(self, unit):
+        """Convert map to different unit
+
+        Parameters
+        ----------
+        unit : `~astropy.unit.Unit` or str
+            New unit
+
+        Returns
+        -------
+        map : `Map`
+            Map with new unit and converted data
+        """
+        data = self.quantity.to_value(unit)
+        return self.from_geom(self.geom, data=data, unit=unit)
 
     def __repr__(self):
         geom = self.geom.__class__.__name__

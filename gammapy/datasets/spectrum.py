@@ -56,29 +56,14 @@ class PlotMixin:
         kwargs_residuals = kwargs_residuals or {}
 
         self.plot_excess(ax_spectrum, **kwargs_spectrum)
-        ax_spectrum.label_outer()
 
         self.plot_residuals_spectral(ax_residuals, **kwargs_residuals)
+
         method = kwargs_residuals.get("method", "diff")
         label = self._residuals_labels[method]
         ax_residuals.set_ylabel(f"Residuals\n{label}")
 
         return ax_spectrum, ax_residuals
-
-    @property
-    def _energy_unit(self):
-        return self._geom.axes[0].unit
-
-    @property
-    def energy_range(self):
-        """Energy range defined by the safe mask"""
-        return super().energy_range()
-
-    def _plot_energy_range(self, ax):
-        energy_min, energy_max = self.energy_range
-        kwargs = {"color": "black", "linestyle": "dashed"}
-        ax.axvline(energy_min.to_value(self._energy_unit), label="fit range", **kwargs)
-        ax.axvline(energy_max.to_value(self._energy_unit), **kwargs)
 
     def plot_counts(
         self, ax=None, kwargs_counts=None, kwargs_background=None, **kwargs
@@ -107,19 +92,49 @@ class PlotMixin:
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_counts)
         plot_kwargs.setdefault("label", "Counts")
-        ax = self.counts.plot_hist(ax, **plot_kwargs)
+        ax = self.counts.plot_hist(ax=ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_background)
 
         plot_kwargs.setdefault("label", "Background")
-        self.background.plot_hist(ax, **plot_kwargs)
-
-        self._plot_energy_range(ax)
-        energy_min, energy_max = self.energy_range
-        ax.set_xlim(0.7 * energy_min.value, 1.3 * energy_max.value)
+        self.background.plot_hist(ax=ax, **plot_kwargs)
 
         ax.legend(numpoints=1)
+        return ax
+
+    def plot_masks(self, ax=None, kwargs_fit=None, kwargs_safe=None):
+        """Plot mask safe and mask fit
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on.
+        kwargs_fit: dict
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
+        kwargs_safe: dict
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for maks safe
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object.
+        """
+
+        kwargs_fit = kwargs_fit or {}
+        kwargs_safe = kwargs_safe or {}
+
+        kwargs_fit.setdefault("label", "Mask fit")
+        kwargs_fit.setdefault("color", "tab:green")
+        kwargs_safe.setdefault("label", "Mask safe")
+        kwargs_safe.setdefault("color", "black")
+
+        if self.mask_fit:
+            self.mask_fit.plot_mask(ax=ax, **kwargs_fit)
+
+        if self.mask_safe:
+            self.mask_safe.plot_mask(ax=ax, **kwargs_safe)
+
         return ax
 
     def plot_excess(
@@ -152,7 +167,7 @@ class PlotMixin:
         plot_kwargs.update(kwargs_excess)
         plot_kwargs.setdefault("label", "Excess counts")
         ax = self.excess.plot(
-            ax, yerr=np.sqrt(np.abs(self.excess.data.flatten())), **plot_kwargs
+            ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs
         )
 
         plot_kwargs = kwargs.copy()
@@ -160,7 +175,6 @@ class PlotMixin:
         plot_kwargs.setdefault("label", "Predicted signal counts")
         self.npred_signal().plot_hist(ax, **plot_kwargs)
 
-        self._plot_energy_range(ax)
         ax.legend(numpoints=1)
         return ax
 
@@ -182,20 +196,18 @@ class PlotMixin:
 
         ax1.set_title("Counts")
         self.plot_counts(ax1)
+        self.plot_masks(ax=ax1)
+        ax1.legend()
 
         ax2.set_title("Exposure")
-        self.exposure.plot(ax2)
-        self._plot_energy_range(ax2)
-        energy_min, energy_max = self.energy_range
-        ax2.set_xlim(0.7 * energy_min.value, 1.3 * energy_max.value)
+        self.exposure.plot(ax2, ls="-", markersize=0, xerr=None)
 
         ax3.set_title("Energy Dispersion")
+
         if self.edisp is not None:
             kernel = self.edisp.get_edisp_kernel()
-            kernel.plot_matrix(ax3, vmin=0, vmax=1)
+            kernel.plot_matrix(ax=ax3, add_cbar=True)
 
-        # TODO: optimize layout
-        fig.subplots_adjust(wspace=0.3)
         return ax1, ax2, ax3
 
 

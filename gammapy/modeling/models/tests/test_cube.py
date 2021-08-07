@@ -13,7 +13,7 @@ from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
-    BackgroundModel,
+    TemplateNPredModel,
     CompoundSpectralModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
@@ -192,13 +192,13 @@ def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
 
 
 def test_background_model(background):
-    bkg1 = BackgroundModel(background)
+    bkg1 = TemplateNPredModel(background)
     bkg1.spectral_model.norm.value = 2.0
     npred1 = bkg1.evaluate()
     assert_allclose(npred1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
     assert_allclose(npred1.data.sum(), background.data.sum() * 2.0, rtol=1e-3)
 
-    bkg2 = BackgroundModel(background)
+    bkg2 = TemplateNPredModel(background)
     bkg2.spectral_model.norm.value = 2.0
     bkg2.spectral_model.tilt.value = 0.2
     bkg2.spectral_model.reference.quantity = "1000 GeV"
@@ -210,7 +210,7 @@ def test_background_model(background):
 
 def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
-    bkg = BackgroundModel(background, filename=filename)
+    bkg = TemplateNPredModel(background, filename=filename)
     bkg.spectral_model.norm.value = 2.0
     bkg.map.write(filename, overwrite=True)
     bkg_dict = bkg.to_dict()

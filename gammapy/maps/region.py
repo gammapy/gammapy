@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
-from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion, PixCoord
+from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
 from gammapy.utils.regions import (
     compound_region_to_list,
     list_to_compound_region,
@@ -15,7 +15,8 @@ from gammapy.utils.regions import (
 )
 from gammapy.maps.wcs import _check_width
 from .core import MapCoord, Map
-from .geom import Geom, MapAxes, MapAxis, pix_tuple_to_idx
+from .geom import Geom, pix_tuple_to_idx
+from .axes import MapAxes, MapAxis
 from .wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -53,7 +54,7 @@ class RegionGeom(Geom):
 
     def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.1 deg"):
         self._region = region
-        self._axes = MapAxes.from_default(axes)
+        self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
         self._binsz_wcs = binsz_wcs
 
         if wcs is None and region is not None:
@@ -97,15 +98,7 @@ class RegionGeom(Geom):
         return Angle(proj_plane_pixel_scales(self.wcs), unit="deg")
 
     @property
-    def width(self):
-        """Width of bounding box of the region.
-
-        Returns
-        -------
-        width : `~astropy.units.Quantity`
-            Dimensions of the region in both spatial dimensions.
-            Units: ``deg``
-        """
+    def _rectangle_bbox(self):
         if self.region is None:
             raise ValueError("Region definition required.")
 
@@ -118,8 +111,20 @@ class RegionGeom(Geom):
             bbox = bbox.union(region_pix.bounding_box)
 
         rectangle_pix = bbox.to_region()
-        rectangle = rectangle_pix.to_sky(self.wcs)
-        return u.Quantity([rectangle.width, rectangle.height])
+        return rectangle_pix.to_sky(self.wcs)
+
+    @property
+    def width(self):
+        """Width of bounding box of the region.
+
+        Returns
+        -------
+        width : `~astropy.units.Quantity`
+            Dimensions of the region in both spatial dimensions.
+            Units: ``deg``
+        """
+        rectangle = self._rectangle_bbox
+        return u.Quantity([rectangle.width.to("deg"), rectangle.height.to("deg")])
 
     @property
     def region(self):
@@ -131,6 +136,11 @@ class RegionGeom(Geom):
     def axes(self):
         """List of non-spatial axes."""
         return self._axes
+
+    @property
+    def axes_names(self):
+        """All axes names"""
+        return ["lon", "lat"] + self.axes.names
 
     @property
     def wcs(self):
@@ -152,11 +162,8 @@ class RegionGeom(Geom):
         """Sky coordinate of the center of the region"""
         if self.region is None:
             return SkyCoord(np.nan * u.deg, np.nan * u.deg)
-        try:
-            return self.region.center
-        except AttributeError:
-            xp, yp = self.wcs.wcs.crpix
-            return SkyCoord.from_pixel(xp=xp, yp=yp, wcs=self.wcs)
+
+        return self._rectangle_bbox.center
 
     @property
     def npix(self):
@@ -234,31 +241,36 @@ class RegionGeom(Geom):
         """
         return tuple((1, 1) + self.axes.shape)
 
-    def get_coord(self, frame=None):
+    def get_coord(self, mode="center", frame=None, sparse=False, axis_name=None):
         """Get map coordinates from the geometry.
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}
+            Get center or edge coordinates for the non-spatial axes.
+        frame : str or `~astropy.coordinates.Frame`
+            Coordinate frame
+        sparse : bool
+            Compute sparse coordinates
+        axis_name : str
+            If mode = "edges", the edges will be returned for this axis only.
+
 
         Returns
         -------
         coord : `~MapCoord`
             Map coordinate object.
         """
-        # TODO: support mode=edges?
-        cdict = {}
-        cdict["skycoord"] = self.center_skydir.reshape((1, 1))
+        if mode == "edges" and axis_name is None:
+            raise ValueError("Mode 'edges' requires axis name")
 
-        if self.axes is not None:
-            coords = []
-            for ax in self.axes:
-                coords.append(ax.center)  # .reshape((-1, 1, 1)))
-
-            coords = np.meshgrid(*coords)
-            for idx, ax in enumerate(self.axes):
-                cdict[ax.name] = coords[idx].reshape(self.data_shape)
+        coords = self.axes.get_coord(mode=mode, axis_name=axis_name)
+        coords["skycoord"] = self.center_skydir.reshape((1, 1))
 
         if frame is None:
             frame = self.frame
 
-        return MapCoord.create(cdict, frame=self.frame).to_frame(frame)
+        return MapCoord.create(coords, frame=self.frame).to_frame(frame)
 
     def _pad_spatial(self, pad_width):
         raise NotImplementedError("Spatial padding of `RegionGeom` not supported")
@@ -327,15 +339,16 @@ class RegionGeom(Geom):
         return wcs_geom
 
     def to_binsz_wcs(self, binsz):
+
         """Change the bin size of the underlying WCS geometry.
 
         Parameters
         ----------
         binzs : float, string or `~astropy.quantity.Quantity`
-.
+
         Returns
         -------
-        `~RegionGeom`
+        region : `~RegionGeom`
             A RegionGeom with the same axes and region as the input,
             but different wcs pixelization.
         """
@@ -363,9 +376,9 @@ class RegionGeom(Geom):
             Weights representing the fraction of each pixel
             contained in the region.
         """
-        wcs_geom = self.to_wcs_geom().to_image()
+        wcs_geom = self.to_wcs_geom()
 
-        weights = wcs_geom.region_weights(
+        weights = wcs_geom.to_image().region_weights(
             regions=[self.region], oversampling_factor=factor
         )
 
@@ -373,9 +386,8 @@ class RegionGeom(Geom):
         weights = weights.data[mask]
 
         # Get coordinates
-        region_coord = wcs_geom.get_coord().apply_mask(mask)
-
-        return region_coord, weights
+        coords = wcs_geom.get_coord(sparse=True).apply_mask(mask)
+        return coords, weights
 
     def to_binsz(self, binsz):
         """Returns self"""
@@ -461,10 +473,10 @@ class RegionGeom(Geom):
         else:
             in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
-            x = np.zeros(coords.shape)
+            x = np.zeros(coords.skycoord.shape)
             x[~in_region] = np.nan
 
-            y = np.zeros(coords.shape)
+            y = np.zeros(coords.skycoord.shape)
             y[~in_region] = np.nan
 
             pix = (x, y)
@@ -477,7 +489,7 @@ class RegionGeom(Geom):
         return np.meshgrid(*idxs[::-1], indexing="ij")[::-1]
 
     def _make_bands_cols(self):
-        pass
+        return []
 
     @classmethod
     def create(cls, region, **kwargs):
@@ -497,6 +509,8 @@ class RegionGeom(Geom):
         """
         if isinstance(region, str):
             region = make_region(region)
+        elif isinstance(region, SkyCoord):
+            region = PointSkyRegion(center=region)
 
         return cls(region, **kwargs)
 
@@ -693,7 +707,6 @@ class RegionGeom(Geom):
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         kwargs.setdefault("fc", "None")
-        kwargs.setdefault("ec", "tab:blue")
 
         patches = PatchCollection(artists, **kwargs)
         ax.add_collection(patches)

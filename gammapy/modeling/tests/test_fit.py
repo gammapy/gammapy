@@ -53,21 +53,44 @@ class MyDataset(Dataset):
         """Statistic array, one value per data point."""
 
 
+@requires_dependency("iminuit")
 @requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["sherpa", "scipy"])
-def test_warning_no_covariance(backend, caplog):
-   dataset = MyDataset()
-   fit = Fit([dataset])
-   result = fit.run(backend=backend)
-   assert caplog.records[-1].levelname == "WARNING"
-   assert caplog.records[-1].message == "No covariance estimate - not supported by this backend."
+def test_optimize_backend_and_covariance(backend):
+    dataset = MyDataset()
+
+    if backend == "scipy":
+        kwargs = {"method": "L-BFGS-B"}
+    else:
+        kwargs = {}
+
+    kwargs["backend"] = backend
+
+    fit = Fit(optimize_opts=kwargs)
+    result = fit.run([dataset])
+    result = result["optimize_result"]
+
+    pars = result.parameters
+    assert_allclose(pars["x"].value, 2, rtol=1e-3)
+    assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
+
+    assert_allclose(pars["x"].error, 1, rtol=1e-7)
+    assert_allclose(pars["y"].error, 1, rtol=1e-7)
+    assert_allclose(pars["z"].error, 1, rtol=1e-7)
+
+    correlation = dataset.models.covariance.correlation
+    assert_allclose(correlation[0, 1], 0, atol=1e-7)
+    assert_allclose(correlation[0, 2], 0, atol=1e-7)
+    assert_allclose(correlation[1, 2], 0, atol=1e-7)
 
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
     dataset = MyDataset()
-    fit = Fit([dataset])
-    result = fit.run(backend=backend)
+    fit = Fit(backend=backend)
+    result = fit.run([dataset])
+    result = result["optimize_result"]
     pars = result.parameters
 
     assert result.success is True
@@ -90,14 +113,14 @@ def test_run(backend):
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     dataset = MyDataset()
-    fit = Fit([dataset], store_trace=True)
 
     if backend == "scipy":
         kwargs = {"method": "L-BFGS-B"}
     else:
         kwargs = {}
 
-    result = fit.optimize(backend=backend, **kwargs)
+    fit = Fit(store_trace=True, backend=backend, optimize_opts=kwargs)
+    result = fit.optimize([dataset])
     pars = dataset.models.parameters
 
     assert result.success is True
@@ -118,9 +141,9 @@ def test_optimize(backend):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.optimize(backend=backend)
-    result = fit.confidence("x")
+    fit = Fit(backend=backend)
+    fit.optimize([dataset])
+    result = fit.confidence(datasets=[dataset], parameter="x")
 
     assert result["success"] is True
     assert_allclose(result["errp"], 1)
@@ -134,9 +157,9 @@ def test_confidence(backend):
 def test_confidence_frozen(backend):
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
-    fit = Fit([dataset])
-    fit.optimize(backend=backend)
-    result = fit.confidence("y")
+    fit = Fit(backend=backend)
+    fit.optimize([dataset])
+    result = fit.confidence(datasets=[dataset], parameter="y")
 
     assert result["success"] is True
     assert_allclose(result["errp"], 1)
@@ -145,9 +168,10 @@ def test_confidence_frozen(backend):
 
 def test_stat_profile():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
-    result = fit.stat_profile("x", nvalues=3)
+    fit = Fit()
+    fit.run([dataset])
+    dataset.models.parameters["x"].scan_n_values = 3
+    result = fit.stat_profile(datasets=[dataset], parameter="x")
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -159,11 +183,12 @@ def test_stat_profile():
 
 def test_stat_profile_reoptimize():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
+    fit = Fit()
+    fit.run([dataset])
 
     dataset.models.parameters["y"].value = 0
-    result = fit.stat_profile("x", nvalues=3, reoptimize=True)
+    dataset.models.parameters["x"].scan_n_values = 3
+    result = fit.stat_profile(datasets=[dataset], parameter="x", reoptimize=True)
 
     assert_allclose(result["x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
@@ -174,11 +199,15 @@ def test_stat_profile_reoptimize():
 
 def test_stat_surface():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
+    fit = Fit()
+    fit.run([dataset])
+
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
-    result = fit.stat_surface("x", "y", x_values=x_values, y_values=y_values)
+
+    dataset.models.parameters["x"].scan_values = x_values
+    dataset.models.parameters["y"].scan_values = y_values
+    result = fit.stat_surface(datasets=[dataset], x="x", y="y")
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
     assert_allclose(result["y_scan"], y_values, atol=1e-7)
@@ -197,14 +226,18 @@ def test_stat_surface():
 
 def test_stat_surface_reoptimize():
     dataset = MyDataset()
-    fit = Fit([dataset])
-    fit.run()
+    fit = Fit()
+    fit.run([dataset])
 
-    dataset.models.parameters["z"].value = 0
     x_values = [1, 2, 3]
     y_values = [2e2, 3e2, 4e2]
+
+    dataset.models.parameters["z"].value = 0
+    dataset.models.parameters["x"].scan_values = x_values
+    dataset.models.parameters["y"].scan_values = y_values
+
     result = fit.stat_surface(
-        "x", "y", x_values=x_values, y_values=y_values, reoptimize=True
+        datasets=[dataset], x="x", y="y", reoptimize=True
     )
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
@@ -221,23 +254,23 @@ def test_stat_surface_reoptimize():
     )
 
 
-def test_minos_contour():
+def test_stat_contour():
     dataset = MyDataset()
     dataset.models.parameters["x"].frozen = True
-    fit = Fit([dataset])
-    fit.optimize(backend="minuit")
-    result = fit.minos_contour("y", "z")
+    fit = Fit(backend="minuit")
+    fit.optimize([dataset])
+    result = fit.stat_contour(datasets=[dataset], x="y", y="z")
 
     assert result["success"] is True
 
     x = result["y"]
     assert_allclose(len(x), 10)
     assert_allclose(x[0], 299, rtol=1e-5)
-    assert_allclose(x[-1], 299.133975, rtol=1e-5)
+    assert_allclose(x[-1], 299.292893, rtol=1e-5)
     y = result["z"]
     assert_allclose(len(y), 10)
     assert_allclose(y[0], 0.04, rtol=1e-5)
-    assert_allclose(y[-1], 0.54, rtol=1e-5)
+    assert_allclose(y[-1], 0.747107, rtol=1e-5)
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.models.parameters["y"].value, 300)

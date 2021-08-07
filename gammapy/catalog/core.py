@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
 from gammapy.modeling.models import Models
+from gammapy.maps import TimeMapAxis
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
@@ -17,6 +18,18 @@ class Bunch(dict):
     def __init__(self, **kw):
         dict.__init__(self, kw)
         self.__dict__.update(kw)
+
+
+def format_flux_points_table(table):
+    for column in table.colnames:
+        if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
+            table[column].format = ".3e"
+        elif column.startswith(
+                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
+        ):
+            table[column].format = ".3f"
+
+    return table
 
 
 class SourceCatalogObject:
@@ -110,7 +123,7 @@ class SourceCatalog(abc.ABC):
             name = row[self._source_name_key]
             names[name.strip()] = idx
             for alias_column in self._source_name_alias:
-                for alias in row[alias_column].split(","):
+                for alias in str(row[alias_column]).split(","):
                     if not alias == "":
                         names[alias.strip()] = idx
         return names
@@ -134,7 +147,7 @@ class SourceCatalog(abc.ABC):
 
         possible_names = [row[self._source_name_key]]
         for alias_column in self._source_name_alias:
-            possible_names += row[alias_column].split(",")
+            possible_names += str(row[alias_column]).split(",")
 
         if name not in possible_names:
             self.__dict__.pop("_name_to_index_cache")
@@ -195,6 +208,15 @@ class SourceCatalog(abc.ABC):
         """
         data = table_row_to_dict(self.table[index])
         data[SourceCatalogObject._row_index_key] = index
+
+        hist_table = getattr(self, "hist_table", None)
+        hist2_table = getattr(self, "hist2_table", None)
+
+        if hist_table:
+            data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-fgl")
+
+        if hist2_table:
+            data["time_axis_2"] = TimeMapAxis.from_table(hist2_table, format="fermi-fgl")
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()

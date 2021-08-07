@@ -124,8 +124,10 @@ the code as well as the output value produced.
         >>> from gammapy.utils.regions import make_pixel_region
         >>> wcs = WcsGeom.create().wcs
         >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
-        >>> region
-        <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
+        >>> print(region)
+        Region: CirclePixelRegion
+        center: PixCoord(x=570.9301128316974, y=159.935542455567)
+        radius: 6.061376992149381
 
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
 following command.
@@ -604,9 +606,13 @@ This is a compromise between the alternatives:
 * ``bounds_error=False, fill_value=nan`` -- Medium "safe". Always return a result, but put NaN values to make it easy
   for analysers to spot that there's an issue in their results (if pixels with NaN are used, that will usually lead
   to NaN values in high level analysis results.
-* ``bounds_error=False, fill_value=0`` or ``bounds_error=False, fill_value=None`` -- Least "safe".
-  Extrapolate with zero or edge values (this is what ``None`` means).
-  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high level analysis results
+* ``bounds_error=False, fill_value=0`` -- Less "safe".
+  Extrapolate with zero.
+  Can be very convenient for the caller to avoid dealing with NaN,
+  but if the data values can also be zero you will lose track of invalid pixels.
+* ``bounds_error=False, fill_value=None`` -- "Unsafe".
+  If fill_value is None, values outside the domain are extrapolated.
+  Can lead to errors where e.g. stacked high level analysis results
   aren't quite correct because IRFs or background models or ... were used outside their valid range.
 
 Methods that use interpolation should provide an option to the caller to pass interpolation options on to
@@ -632,7 +638,7 @@ Sometimes putting this in ``gammapy/__init__.py`` can help:
 Following the advice `here <http://stackoverflow.com/questions/22373927/get-traceback-of-warnings/22376126#22376126>`__,
 putting this in ``docs/conf.py`` can also help sometimes:
 
-.. testcode::
+.. code::
 
     import traceback
     import warnings
@@ -1048,7 +1054,7 @@ gallery, and then replace the ``"metadata": {},`` bit above the code cell with t
     "metadata": {
      "nbsphinx-thumbnail": {
       "tooltip": "Learn how to do perform a Fit in gammapy."
-     },
+     }},
 
 Note that you may write whatever you like after "tooltip".
 

@@ -60,12 +60,12 @@ def test_to_binsz_wcs(region):
 
 def test_centers(region):
     geom = RegionGeom.create(region)
-    assert_allclose(geom.center_skydir.l.deg, 0)
-    assert_allclose(geom.center_skydir.b.deg, 0)
+    assert_allclose(geom.center_skydir.l.deg, 0, atol=1e-30)
+    assert_allclose(geom.center_skydir.b.deg, 0, atol=1e-30)
     assert_allclose(geom.center_pix, (0, 0))
 
     values = [_.value for _ in geom.center_coord]
-    assert_allclose(values, (0, 0))
+    assert_allclose(values, (0, 0), atol=1e-30)
 
 
 def test_width(region):
@@ -91,20 +91,23 @@ def test_get_coord(region, energy_axis, test_axis):
     geom = RegionGeom.create(region, axes=[energy_axis])
     coords = geom.get_coord()
 
-    assert_allclose(coords.lon, 0)
-    assert_allclose(coords.lat, 0)
+    assert_allclose(coords.lon, 0, atol=1e-30)
+    assert_allclose(coords.lat, 0, atol=1e-30)
     assert_allclose(
         coords["energy"].value.squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5
     )
 
     geom = RegionGeom.create(region, axes=[energy_axis, test_axis])
-    coords = geom.get_coord()
-    assert coords["lon"].shape == (2, 3, 1, 1)
-    assert coords["test"].shape == (2, 3, 1, 1)
+    coords = geom.get_coord(sparse=True)
+    assert coords["lon"].shape == (1, 1)
+    assert coords["test"].shape == (2, 1, 1, 1)
+    assert coords["energy"].shape == (1, 3, 1, 1)
+
     assert_allclose(
-        coords["energy"].value[1].squeeze(), [1.467799, 3.162278, 6.812921], rtol=1e-5
+        coords["energy"].value[0, :, 0, 0], [1.467799, 3.162278, 6.812921], rtol=1e-5
     )
-    assert_allclose(coords["test"].value[:, 1].squeeze(), [1, 2], rtol=1e-5)
+
+    assert_allclose(coords["test"].value[:, 0, 0, 0].squeeze(), [1, 2], rtol=1e-5)
 
 
 def test_get_idx(region, energy_axis, test_axis):
@@ -150,8 +153,8 @@ def test_pix_to_coord(region, energy_axis):
 
     pix = (0, 0, 0)
     coords = geom.pix_to_coord(pix)
-    assert_allclose(coords[0].value, 0)
-    assert_allclose(coords[1].value, 0)
+    assert_allclose(coords[0].value, 0, atol=1e-30)
+    assert_allclose(coords[1].value, 0, atol=1e-30)
     assert_allclose(coords[2].value, 1.467799, rtol=1e-5)
 
     pix = (1, 1, 1)
@@ -170,8 +173,8 @@ def test_pix_to_coord_2axes(region, energy_axis, test_axis):
 
     pix = (0, 0, 0, 0)
     coords = geom.pix_to_coord(pix)
-    assert_allclose(coords[0].value, 0)
-    assert_allclose(coords[1].value, 0)
+    assert_allclose(coords[0].value, 0, atol=1e-30)
+    assert_allclose(coords[1].value, 0, atol=1e-30)
     assert_allclose(coords[2].value, 1.467799, rtol=1e-5)
     assert_allclose(coords[3].value, 1)
 
@@ -213,7 +216,7 @@ def test_separation(region):
     position = SkyCoord([0, 0], [0, 1.1], frame="galactic", unit="deg")
     separation = geom.separation(position)
 
-    assert_allclose(separation.deg, [0, 1.1])
+    assert_allclose(separation.deg, [0, 1.1], atol=1e-30)
 
 
 def test_upsample(region):

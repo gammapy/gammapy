@@ -9,7 +9,8 @@ from astropy.units import Quantity
 from astropy import units as u
 from astropy.utils import lazyproperty
 from gammapy.utils.array import is_power2
-from .geom import Geom, MapAxes, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
+from .geom import Geom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
+from .axes import MapAxes
 from .utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
 from .wcs import WcsGeom
 
@@ -122,7 +123,7 @@ HPX_FITS_CONVENTIONS["galprop2"] = HpxConv(
 HPX_FITS_CONVENTIONS["healpy"] = HpxConv(
     "healpy",
     hduname=None,
-    colstring="data map"
+    colstring=None
 )
 
 def unravel_hpx_index(idx, npix):
@@ -406,7 +407,6 @@ class HpxGeom(Geom):
     axes : list
         Axes for non-spatial dimensions.
     """
-
     is_hpx = True
     is_region = False
 
@@ -417,7 +417,7 @@ class HpxGeom(Geom):
         # FIXME: Require NSIDE to be power of two when nest=True
 
         self._nside = np.array(nside, ndmin=1)
-        self._axes = MapAxes.from_default(axes)
+        self._axes = MapAxes.from_default(axes, n_spatial_axes=1)
 
         if self.nside.size > 1 and self.nside.shape != self.shape_axes:
             raise ValueError(
@@ -433,12 +433,6 @@ class HpxGeom(Geom):
         self._region = region
         self._create_lookup(region)
         self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
-
-    @property
-    def data_shape(self):
-        """Shape of the Numpy data array matching this geometry."""
-        npix_shape = tuple([np.max(self.npix)])
-        return (npix_shape + self.axes.shape)[::-1]
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
@@ -564,7 +558,7 @@ class HpxGeom(Geom):
         position : `~astropy.coordinates.SkyCoord`
             Center position of the cutout region.
         width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
-            Radius of the circular cutout region.
+            Diameter of the circular cutout region.
 
         Returns
         -------
@@ -587,7 +581,7 @@ class HpxGeom(Geom):
     def coord_to_pix(self, coords):
         import healpy as hp
 
-        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
+        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names).broadcasted
         theta, phi = coords.theta, coords.phi
 
         if self.axes:
@@ -676,9 +670,20 @@ class HpxGeom(Geom):
         return self._axes
 
     @property
+    def axes_names(self):
+        """All axes names"""
+        return ["skycoord"] + self.axes.names
+
+    @property
     def shape_axes(self):
         """Shape of non-spatial axes."""
         return self.axes.shape
+
+    @property
+    def data_shape(self):
+        """Shape of the Numpy data array matching this geometry."""
+        npix_shape = tuple([np.max(self.npix)])
+        return (npix_shape + self.axes.shape)[::-1]
 
     @property
     def data_shape_axes(self):
@@ -827,7 +832,7 @@ class HpxGeom(Geom):
         """
         import healpy as hp
 
-        coords = MapCoord.create(coords, frame=self.frame)
+        coords = MapCoord.create(coords, frame=self.frame).broadcasted
 
         if idxs is None:
             idxs = self.coord_to_idx(coords, clip=True)[1:]
@@ -1520,19 +1525,24 @@ class HpxGeom(Geom):
 
         return wcs_tiles
 
-    def get_idx(self, idx=None, local=False, flat=False):
+    def get_idx(self, idx=None, local=False, flat=False, sparse=False, mode="center", axis_name=None):
+        # TODO: simplify this!!!
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError(f"Image index out of range: {idx!r}")
 
         # Regular all- and partial-sky maps
         if self.is_regular:
-
             pix = [np.arange(np.max(self._npix))]
             if idx is None:
-                pix += [np.arange(ax.nbin, dtype=int) for ax in self.axes]
+                for ax in self.axes:
+                    if mode == "edges" and ax.name == axis_name:
+                        pix += [np.arange(-0.5, ax.nbin, dtype=float)]
+                    else:
+                        pix += [np.arange(ax.nbin, dtype=int)]
             else:
                 pix += [t for t in idx]
-            pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=False)[::-1]
+
+            pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=sparse)[::-1]
             pix = self.local_to_global(pix)
 
         # Non-regular all-sky
@@ -1642,15 +1652,18 @@ class HpxGeom(Geom):
         mask = geom.contains(coords)
         return Map.from_geom(self, data=mask)
 
-    def get_coord(self, idx=None, flat=False):
-        pix = self.get_idx(idx=idx, flat=flat)
-        coords = self.pix_to_coord(pix)
-        cdict = {"lon": coords[0], "lat": coords[1]}
+    def get_coord(self, idx=None, flat=False, sparse=False, mode="center", axis_name=None):
+        if mode == "edges" and axis_name is None:
+            raise ValueError("Mode 'edges' requires axis name to be defined")
 
-        for i, axis in enumerate(self.axes):
-            cdict[axis.name] = coords[i + 2]
+        pix = self.get_idx(idx=idx, flat=flat, sparse=sparse, mode=mode, axis_name=axis_name)
+        data = self.pix_to_coord(pix)
 
-        return MapCoord.create(cdict, frame=self.frame)
+        coords = MapCoord.create(
+            data=data, frame=self.frame, axis_names=self.axes.names
+        )
+
+        return coords
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)
@@ -1667,12 +1680,10 @@ class HpxGeom(Geom):
         return Quantity(hp.nside2pixarea(self.nside), "sr")
 
     def __repr__(self):
-        axes = ["skycoord"] + [_.name for _ in self.axes]
         lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
-
         return (
             f"{self.__class__.__name__}\n\n"
-            f"\taxes       : {axes}\n"
+            f"\taxes       : {self.axes_names}\n"
             f"\tshape      : {self.data_shape[::-1]}\n"
             f"\tndim       : {self.ndim}\n"
             f"\tnside      : {self.nside[0]}\n"
@@ -1862,3 +1873,39 @@ class HpxToWcsMapping:
             wcs_data[~valid] = np.nan
 
         return wcs_data
+
+    def fill_hpx_map_from_wcs_data(
+        self, wcs_data, hpx_data, normalize=True
+    ):
+        """Fill the HPX map from the WCS data using the pre-calculated mappings.
+
+        Parameters
+        ----------
+        wcs_data : `~numpy.ndarray`
+            The input WCS data
+        hpx_data : `~numpy.ndarray`
+            The data array being filled
+        normalize : bool
+            True -> preserve integral by splitting HEALPIX values between bins
+        """
+
+        shape = tuple([t.flat[0] for t in self._npix])
+        if self.valid.ndim != 1:
+            shape = hpx_data.shape[:-1] + shape
+
+        valid = np.where(self.valid.reshape(shape))
+        lmap = self.lmap[self.valid]
+        mult_val = self._mult_val[self.valid]
+
+        wcs_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
+        wcs_slice = tuple(wcs_slice + list(valid)[::-1][:2])
+
+        hpx_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
+        hpx_slice = tuple(hpx_slice + [lmap])
+
+        if normalize:
+            hpx_data[hpx_slice] = 1/mult_val * wcs_data[wcs_slice]
+        else:
+            hpx_data[hpx_slice] = wcs_data[wcs_slice]
+
+        return hpx_data

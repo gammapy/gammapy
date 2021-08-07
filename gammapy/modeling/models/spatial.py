@@ -69,7 +69,7 @@ class SpatialModel(Model):
 
     @property
     def position(self):
-        """Spatial model center position"""
+        """Spatial model center position (`SkyCoord`)"""
         lon = self.lon_0.quantity
         lat = self.lat_0.quantity
         return SkyCoord(lon, lat, frame=self.frame)
@@ -80,6 +80,13 @@ class SpatialModel(Model):
         coord = skycoord.transform_to(self.frame)
         self.lon_0.quantity = coord.data.lon
         self.lat_0.quantity = coord.data.lat
+
+    @property
+    def position_lonlat(self):
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
+        lon = self.lon_0.quantity.to_value(u.rad)
+        lat = self.lat_0.quantity.to_value(u.rad)
+        return lon, lat
 
     # TODO: get rid of this!
     _phi_0 = 0.0
@@ -140,11 +147,10 @@ class SpatialModel(Model):
         `~gammapy.maps.Map`
 
         """
-        coords = geom.to_image().get_coord(frame=self.frame)
+        coords = geom.get_coord(frame=self.frame, sparse=True)
 
         if self.is_energy_dependent:
-            energy = geom.axes["energy_true"].center
-            return self(coords.lon, coords.lat, energy[:, np.newaxis, np.newaxis])
+            return self(coords.lon, coords.lat, energy=coords["energy_true"])
         else:
             return self(coords.lon, coords.lat)
 
@@ -387,9 +393,14 @@ class PointSpatialModel(SpatialModel):
             Predicted flux map
         """
         geom_image = geom.to_image()
-        x, y = geom_image.get_pix()
-        x0, y0 = self.position.to_pixel(geom.wcs)
-        data = self._grid_weights(x, y, x0, y0)
+        if geom.is_hpx:
+            idx, weights = geom_image.interp_weights({"skycoord": self.position})
+            data = np.zeros(geom_image.data_shape)
+            data[tuple(idx)] = weights
+        else:
+            x, y = geom_image.get_pix()
+            x0, y0 = self.position.to_pixel(geom.wcs)
+            data = self._grid_weights(x, y, x0, y0)
         return Map.from_geom(geom=geom_image, data=data, unit="")
 
     def to_region(self, **kwargs):
@@ -579,9 +590,10 @@ class DiskSpatialModel(SpatialModel):
     phi : `~astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semiaxis.
         Increases counter-clockwise from the North direction.
-    edge : `~astropy.coordinates.Angle`
-        Width of the edge. The width is defined as the range within the
-        smooth edges of the model drops from 95% to 5% of its amplitude.
+    edge_width : float
+        Width of the edge. The width is defined as the range within which
+        the smooth edge of the model drops from 95% to 5% of its amplitude.
+        It is given as fraction of r_0.
     frame : {"icrs", "galactic"}
         Center position coordinate frame
     """
@@ -592,7 +604,7 @@ class DiskSpatialModel(SpatialModel):
     r_0 = Parameter("r_0", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
-    edge = Parameter("edge", "0.01 deg", frozen=True)
+    edge_width = Parameter("edge_width", value=0.01, min=0, max=1, frozen=True)
 
     @property
     def evaluation_radius(self):
@@ -600,7 +612,7 @@ class DiskSpatialModel(SpatialModel):
     
         Set to the length of the semi-major axis plus the edge width.
         """
-        return self.r_0.quantity + self.edge.quantity
+        return self.r_0.quantity * (1 + self.edge_width.quantity)
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
@@ -628,8 +640,7 @@ class DiskSpatialModel(SpatialModel):
         edge_width_95 = 2.326174307353347
         return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
 
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_0, e, phi, edge):
+    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge_width):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
@@ -640,7 +651,7 @@ class DiskSpatialModel(SpatialModel):
 
         norm = DiskSpatialModel._evaluate_norm_factor(r_0, e)
 
-        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, edge)
+        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, sigma_eff * edge_width)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
     def to_region(self, **kwargs):
@@ -971,6 +982,13 @@ class TemplateSpatialModel(SpatialModel):
     def position(self):
         """`~astropy.coordinates.SkyCoord`"""
         return self.map.geom.center_skydir
+
+    @property
+    def position_lonlat(self):
+        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
+        lon = self.position.data.lon.rad
+        lat = self.position.data.lat.rad
+        return lon, lat
 
     @property
     def frame(self):

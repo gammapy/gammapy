@@ -6,9 +6,10 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
+from gammapy.maps import TimeMapAxis, LabelMapAxis, Map
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_from_row_data
-from .core import Estimator
+from gammapy.utils.pbar import progress_bar
+from gammapy.modeling import Fit
 from .flux_point import FluxPoints, FluxPointsEstimator
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -300,7 +301,7 @@ class LightCurve:
         return x, (xn, xp)
 
 
-class LightCurveEstimator(Estimator):
+class LightCurveEstimator(FluxPointsEstimator):
     """Estimate light curve.
 
     The estimator will fit the source model component to datasets in each of the
@@ -334,8 +335,6 @@ class LightCurveEstimator(Estimator):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
-    reoptimize : bool
-        reoptimize other parameters during fit statistic scan?
     selection_optional : list of str
         Which steps to execute. Available options are:
 
@@ -345,42 +344,23 @@ class LightCurveEstimator(Estimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optionnal steps are not executed.
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
+    reoptimize : bool
+        Re-optimize other free model parameters. Default is True.
     """
 
     tag = "LightCurveEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "scan"]
 
     def __init__(
         self,
         time_intervals=None,
-        source=0,
-        energy_edges=None,
         atol="1e-6 s",
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
-        n_sigma=1,
-        n_sigma_ul=2,
-        reoptimize=False,
-        selection_optional=None,
+        **kwargs
     ):
-
-        self.source = source
         self.time_intervals = time_intervals
-
         self.atol = u.Quantity(atol)
-
-        self.energy_edges = energy_edges
-
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
-        self.norm_values = norm_values
-        self.n_sigma = n_sigma
-        self.n_sigma_ul = n_sigma_ul
-        self.reoptimize = reoptimize
-        self.selection_optional = selection_optional
+        super().__init__(**kwargs)
 
     def run(self, datasets):
         """Run light curve extraction.
@@ -407,26 +387,57 @@ class LightCurveEstimator(Estimator):
         gti = gti.union(overlap_ok=False, merge_equal=False)
 
         rows = []
-
-        for t_min, t_max in gti.time_intervals:
+        for t_min, t_max in progress_bar(
+                gti.time_intervals,
+                desc="Time intervals"
+        ):
             datasets_to_fit = datasets.select_time(
-                t_min=t_min, t_max=t_max, atol=self.atol
+                time_min=t_min, time_max=t_max, atol=self.atol
             )
 
             if len(datasets_to_fit) == 0:
                 log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
                 continue
 
-            row = {"time_min": t_min.mjd, "time_max": t_max.mjd}
-            row.update(self.estimate_time_bin_flux(datasets_to_fit))
-            rows.append(row)
+            fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
+
+            for name in ["counts", "npred", "npred_null"]:
+                fp._data[name] = self.expand_map(
+                    fp._data[name], dataset_names=datasets.names
+                )
+            rows.append(fp)
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
-        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
-        table = FluxPoints(table).to_sed_type("flux").table
-        return LightCurve(table)
+        axis = TimeMapAxis.from_gti(gti=gti)
+        return FluxPoints.from_stack(
+            maps=rows, axis=axis,
+        )
+
+    @staticmethod
+    def expand_map(m, dataset_names):
+        """Expand map in dataset axis
+
+        Parameters
+        ----------
+        map : `Map`
+            Map to expand.
+        dataset_names : list of str
+            Dataset names
+
+        Returns
+        -------
+        map : `Map`
+            Expanded map.
+        """
+        label_axis = LabelMapAxis(labels=dataset_names, name="dataset")
+        geom = m.geom.replace_axis(axis=label_axis)
+        result = Map.from_geom(geom, data=np.nan)
+
+        coords = m.geom.get_coord(sparse=True)
+        result.set_by_coord(coords, vals=m.data)
+        return result
 
     def estimate_time_bin_flux(self, datasets):
         """Estimate flux point for a single energy group.
@@ -434,40 +445,11 @@ class LightCurveEstimator(Estimator):
         Parameters
         ----------
         datasets : `~gammapy.modeling.Datasets`
-            the list of dataset object
+            List of dataset objects
 
         Returns
         -------
-        result : dict
-            Dict with results for the flux point.
+        result : `FluxPoints`
+            Resulting flux points.
         """
-        if self.energy_edges is None:
-            energy_min, energy_max = datasets.energy_ranges
-            energy_edges = energy_min.min(), energy_max.max()
-        else:
-            energy_edges = self.energy_edges
-
-        fe = FluxPointsEstimator(
-            source=self.source,
-            energy_edges=energy_edges,
-            norm_min=self.norm_min,
-            norm_max=self.norm_max,
-            norm_n_values=self.norm_n_values,
-            norm_values=self.norm_values,
-            n_sigma=self.n_sigma,
-            n_sigma_ul=self.n_sigma_ul,
-            reoptimize=self.reoptimize,
-            selection_optional=self.selection_optional,
-        )
-        fp = fe.run(datasets)
-
-        # TODO: remove once FluxPointsEstimator returns object with all energies in one row
-        result = {}
-        for colname in fp.table.colnames:
-            if colname != "counts":
-                result[colname] = fp.table[colname].quantity
-            else:
-                result[colname] = np.atleast_1d(fp.table[colname].quantity.sum(axis=1))
-
-        # return fp.to_sed_type("flux")#
-        return result
+        return super().run(datasets)

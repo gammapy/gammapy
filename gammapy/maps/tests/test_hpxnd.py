@@ -6,10 +6,11 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from regions import CircleSkyRegion
-from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis
+from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.maps.utils import find_bintable_hdu
 from gammapy.maps.hpx import HpxConv
+from gammapy.irf import PSFKernel, PSFMap
 
 pytest.importorskip("healpy")
 
@@ -348,6 +349,20 @@ def test_hpxndmap_resample_axis():
     assert_allclose(m3.data, 2)
 
 
+def test_hpx_nd_map_to_nside():
+    axis = MapAxis.from_edges([1, 2, 3], name="test-1")
+
+    geom = HpxGeom.create(nside=64, axes=[axis])
+    m = HpxNDMap(geom, unit="m2")
+    m.data += 1
+
+    m2 = m.to_nside(nside=32)
+    assert_allclose(m2.data, 4)
+
+    m3 = m.to_nside(nside=128)
+    assert_allclose(m3.data, 0.25)
+
+
 def test_hpx_nd_map_to_wcs_tiles():
     m = HpxNDMap.create(nside=8, frame="galactic")
     m.data += 1
@@ -494,12 +509,67 @@ def test_smooth(kernel):
     assert_allclose(actual_ring, desired_ring)
     assert smoothed_ring.data.dtype == float
 
-    with pytest.raises(NotImplementedError):
-        cutout = m_nest.cutout(position=(0,0), width=5*u.deg)
-        cutout.smooth(0.2 * u.deg, kernel)
+    # with pytest.raises(NotImplementedError):
+    cutout = m_nest.cutout(position=(0,0), width=15*u.deg)
+    smoothed_cutout = cutout.smooth(0.1 * u.deg, kernel)
+    actual_cutout = cutout.data.sum()
+    desired_cutout = smoothed_cutout.data.sum()
+    assert_allclose(actual_cutout, desired_cutout, rtol=0.01)
 
     with pytest.raises(ValueError):
         m_nest.smooth(0.2 * u.deg, "box")
+
+
+@pytest.mark.parametrize("nest", [True, False])
+def test_convolve_wcs(nest):
+    energy = MapAxis.from_bounds(1,100, unit='TeV', nbin=2, name='energy')
+    nside = 256
+    hpx_geom = HpxGeom.create(
+        nside=nside,
+        axes=[energy],
+        region='DISK(0,0,2.5)',
+        nest=nest
+        )
+    hpx_map = Map.from_geom(hpx_geom)
+    hpx_map.set_by_coord((0, 0, [2, 90]), 1)
+    wcs_geom = WcsGeom.create(width=5, binsz=0.04, axes=[energy])
+
+    kernel = PSFKernel.from_gauss(wcs_geom, 0.4*u.deg)
+    convolved_map = hpx_map.convolve_wcs(kernel)
+    assert_allclose(convolved_map.data.sum(), 2, rtol=0.001)
+
+
+@pytest.mark.parametrize("region", [None, 'DISK(0,0,70)'])
+def test_convolve_full(region):
+    energy = MapAxis.from_bounds(1, 100, unit='TeV', nbin=2, name='energy_true')
+    nside = 256
+
+    all_sky_geom = HpxGeom(
+        nside=nside,
+        axes=[energy],
+        region=region,
+        nest=False,
+        frame='icrs'
+        )
+
+    all_sky_map = Map.from_geom(all_sky_geom)
+    all_sky_map.set_by_coord((0, 0, [2, 90]), 1)
+    all_sky_map.set_by_coord((10, 10, [2, 90]), 1)
+    all_sky_map.set_by_coord((30, 30, [2, 90]), 1)
+    all_sky_map.set_by_coord((-40, -40, [2, 90]), 1)
+    all_sky_map.set_by_coord((60, 0, [2, 90]), 1)
+    all_sky_map.set_by_coord((-45, 30, [2, 90]), 1)
+    all_sky_map.set_by_coord((30, -45, [2, 90]), 1)
+
+    wcs_geom = WcsGeom.create(width=5, binsz=0.05, axes=[energy])
+    psf = PSFMap.from_gauss(
+        energy_axis_true=energy, sigma=[0.5, 0.6] * u.deg
+    )
+
+    kernel = psf.get_psf_kernel(geom=wcs_geom, max_radius=1*u.deg)
+    convolved_map = all_sky_map.convolve_full(kernel)
+    assert_allclose(convolved_map.data.sum(), 14, rtol=1e-5)
+
 
 def test_hpxmap_read_healpy(tmp_path):
     import healpy as hp
@@ -509,7 +579,6 @@ def test_hpxmap_read_healpy(tmp_path):
     hp.write_map(
         filename=path,
         m=m, nest=False,
-        column_names=["data map", "background map", "exposure map"],
         overwrite=True
     )
     with fits.open(path, memmap=False) as hdulist:
@@ -522,7 +591,29 @@ def test_hpxmap_read_healpy(tmp_path):
         format = HpxConv.identify_hpx_format(header)
         assert format == "healpy"
 
-    m1 = Map.read(path)
+    #first column "TEMPERATURE"
+    m1 = Map.read(path, colname="TEMPERATURE")
     assert m1.data.shape[0] == npix
     diff = np.sum(m[0] - m1.data)
     assert_allclose(diff, 0.0)
+
+    #specifying the colname by default for healpy it is "Q_POLARISATION"
+    m2 = Map.read(path, colname="Q_POLARISATION")
+    assert m2.data.shape[0] == npix
+    diff = np.sum(m[1] - m2.data)
+    assert_allclose(diff, 0.0)
+
+
+@requires_dependency("matplotlib")
+def test_map_plot_mask():
+    geom = HpxGeom.create(nside=16)
+
+    region = CircleSkyRegion(
+        center=SkyCoord("0d", "0d", frame="galactic"),
+        radius=20 * u.deg
+    )
+
+    mask = geom.region_mask([region])
+
+    with mpl_plot_check():
+        mask.plot_mask()

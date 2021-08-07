@@ -87,7 +87,6 @@ time-dependent analysis with light-curves.
    analysis/3D/cta_data_analysis.ipynb
    analysis/3D/analysis_3d.ipynb
    analysis/3D/simulate_3d.ipynb
-   analysis/3D/mcmc_sampling.ipynb
    analysis/3D/analysis_mwl.ipynb
    analysis/3D/event_sampling.ipynb
 
@@ -110,6 +109,7 @@ expose how to perform more specific use cases.
 
 .. nbgallery::
 
+   api/makers.ipynb
    api/catalog.ipynb
    api/models.ipynb
    api/model_management.ipynb

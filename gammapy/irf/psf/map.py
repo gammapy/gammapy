@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
+from astropy.visualization import quantity_support
 from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -61,6 +62,7 @@ class PSFMap(IRFMap):
         geom=exposure_geom.upsample(factor=10).drop("rad")
         psf_kernel = psf_map.get_psf_kernel(geom=geom)
     """
+
     tag = "psf_map"
     required_axes = ["rad", "energy_true"]
 
@@ -108,7 +110,7 @@ class PSFMap(IRFMap):
         return IRFLikePSF(
             axes=[geom.axes["energy_true"], geom.axes["rad"], axis_lat, axis_lon],
             data=self.psf_map.data,
-            unit=self.psf_map.unit
+            unit=self.psf_map.unit,
         )
 
     def _get_irf_coords(self, **kwargs):
@@ -150,11 +152,7 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
-        coords = {
-            "skycoord": position,
-            "rad": rad,
-            "energy_true": energy_true
-        }
+        coords = {"skycoord": position, "rad": rad, "energy_true": energy_true}
 
         return self.psf_map.integral(axis_name="rad", coords=coords).to("")
 
@@ -178,9 +176,7 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
-        coords = self._get_irf_coords(
-            energy_true=energy_true, skycoord=position
-        )
+        coords = self._get_irf_coords(energy_true=energy_true, skycoord=position)
 
         return self._psf_irf.containment_radius(fraction, **coords)
 
@@ -204,15 +200,11 @@ class PSFMap(IRFMap):
         data = self.containment_radius(
             fraction=fraction,
             energy_true=energy_true,
-            position=geom.get_coord().skycoord
+            position=geom.get_coord().skycoord,
         )
-        return Map.from_geom(
-            geom=geom,
-            data=data.value,
-            unit=data.unit
-        )
+        return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    def get_psf_kernel(self,  geom, position=None, max_radius=None, factor=4):
+    def get_psf_kernel(self, geom, position=None, max_radius=None, containment=0.999, factor=4):
         """Returns a PSF kernel at the given position.
 
         The PSF is returned in the form a WcsNDMap defined by the input Geom.
@@ -226,6 +218,10 @@ class PSFMap(IRFMap):
             center position is used.
         max_radius : `~astropy.coordinates.Angle`
             maximum angular size of the kernel map
+        containment : float
+            Containment fraction to use as size of the kernel. The max. radius
+            across all energies is used. The radius can be overwritten using
+            the `max_radius` argument.
         factor : int
             oversampling factor to compute the PSF
 
@@ -241,23 +237,23 @@ class PSFMap(IRFMap):
         position = self._get_nearest_valid_position(position)
 
         if max_radius is None:
-            max_radius = np.max(self.psf_map.geom.axes["rad"].center)
-            min_radius_geom = np.min(geom.width) / 2.0
-            max_radius = min(max_radius, min_radius_geom)
+            energy_axis = self.psf_map.geom.axes["energy_true"]
+
+            radii = self.containment_radius(
+                fraction=containment,
+                position=position,
+                energy_true=energy_axis.center
+            )
+            max_radius = np.max(radii)
 
         geom = geom.to_odd_npix(max_radius=max_radius)
-
         geom_upsampled = geom.upsample(factor=factor)
-        rad = geom_upsampled.separation(geom.center_skydir)
+        coords = geom_upsampled.get_coord(sparse=True)
+        rad = coords.skycoord.separation(geom.center_skydir)
 
-        energy_axis = geom.axes["energy_true"]
+        coords = {"energy_true": coords["energy_true"], "rad": rad, "skycoord": position}
 
-        energy = energy_axis.center[:, np.newaxis, np.newaxis]
-        coords = {"energy_true": energy, "rad": rad, "skycoord": position}
-
-        data = self.psf_map.interp_by_coord(
-            coords=coords, fill_value=None, method="linear",
-        )
+        data = self.psf_map.interp_by_coord(coords=coords, method="linear",)
 
         kernel_map = Map.from_geom(geom=geom_upsampled, data=np.clip(data, 0, np.inf))
         kernel_map = kernel_map.downsample(factor, preserve_counts=True)
@@ -340,22 +336,23 @@ class PSFMap(IRFMap):
             rad_axis = RAD_AXIS_DEFAULT.copy()
 
         if geom is None:
-            geom = WcsGeom.create(
-                npix=(2, 1),
-                proj="CAR",
-                binsz=180,
-            )
+            geom = WcsGeom.create(npix=(2, 1), proj="CAR", binsz=180,)
 
-        geom = geom.to_image().to_cube([rad_axis, energy_axis_true])
+        geom = geom.to_cube([rad_axis, energy_axis_true])
 
-        coords = geom.get_coord()
+        coords = geom.get_coord(sparse=True)
 
-        sigma = np.broadcast_to(u.Quantity(sigma), energy_axis_true.nbin, subok=True)
-        gauss = Gauss2DPDF(sigma=sigma.reshape((-1, 1, 1, 1)))
-        data = gauss(coords["rad"])
+        sigma = u.Quantity(sigma).reshape((-1, 1, 1, 1))
+        gauss = Gauss2DPDF(sigma=sigma)
+
+        data = gauss(coords["rad"]) * np.ones(geom.data_shape)
 
         psf_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
-        return cls(psf_map=psf_map)
+
+        exposure_map = Map.from_geom(
+            geom=geom.squash(axis_name="rad"), unit="m2 s", data=1.
+        )
+        return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     def to_image(self, spectrum=None, keepdims=True):
         """Reduce to a 2-D map after weighing
@@ -393,7 +390,7 @@ class PSFMap(IRFMap):
         return self.__class__(psf_map=psf, exposure_map=exposure)
 
     def plot_containment_radius_vs_energy(
-            self, ax=None, fraction=[0.68, 0.95], **kwargs
+        self, ax=None, fraction=[0.68, 0.95], **kwargs
     ):
         """Plot containment fraction as a function of energy.
 
@@ -422,22 +419,20 @@ class PSFMap(IRFMap):
         energy_true = self.psf_map.geom.axes["energy_true"].center
 
         for frac in fraction:
-            plot_kwargs = kwargs.copy()
             radius = self.containment_radius(
                 energy_true=energy_true, position=position, fraction=frac
             )
-            plot_kwargs.setdefault(
-                "label", f"Containment: {100 * frac:.1f}%"
-            )
-            ax.plot(energy_true, radius, **plot_kwargs)
+            label = f"Containment: {100 * frac:.1f}%"
+            with quantity_support():
+                ax.plot(energy_true, radius, label=label, **kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")
-        ax.set_xlabel(f"Energy ({energy_true.unit})")
-        ax.set_ylabel(f"Containment radius ({radius.unit})")
+        ax.set_xlabel(f"Energy ({ax.xaxis.units})")
+        ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
-    def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV,  **kwargs):
+    def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
         """Plot PSF vs radius.
 
         The method plots the profile at the center of the map.
@@ -468,15 +463,16 @@ class PSFMap(IRFMap):
                 {
                     "skycoord": self.psf_map.geom.center_skydir,
                     "energy_true": value,
-                    "rad": rad
+                    "rad": rad,
                 }
             )
             label = f"{value:.0f}"
-            ax.plot(rad.value, psf_value, label=label, **kwargs)
+            with quantity_support():
+                ax.plot(rad, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad ({rad.unit})")
-        ax.set_ylabel(f"PSF ({self.psf_map.unit})")
+        ax.set_xlabel(f"Rad ({ax.xaxis.units})")
+        ax.set_ylabel(f"PSF ({ax.yaxis.units})")
         plt.legend()
         return ax
 

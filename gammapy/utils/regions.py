@@ -65,9 +65,9 @@ def make_region(region):
 
     >>> from gammapy.utils.regions import make_region
     >>> make_region("image;circle(10,20,3)")
-    <CirclePixelRegion(PixCoord(x=9.0, y=19.0), radius=3.0)>
+    <CirclePixelRegion(center=PixCoord(x=9.0, y=19.0), radius=3.0)>
     >>> make_region("galactic;circle(10,20,3)")
-    <CircleSkyRegion(<SkyCoord (Galactic): (l, b) in deg
+    <CircleSkyRegion(center=<SkyCoord (Galactic): (l, b) in deg
         (10., 20.)>, radius=3.0 deg)>
 
     If a region object is passed in, it is returned unchanged:
@@ -107,7 +107,7 @@ def make_pixel_region(region, wcs=None):
     >>> wcs = WcsGeom.create().wcs
     >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
     >>> region
-    <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
+    <CirclePixelRegion(center=PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149381)>
     """
     if isinstance(region, str):
         region = make_region(region)
@@ -148,14 +148,16 @@ def compound_region_center(compound_region):
         center = SkyCoord(lon * u.deg, lat * u.deg)
         return np.sum(center.separation(coords).deg)
 
-    eps = 1e-5
+    ra, dec = positions.icrs.ra.wrap_at("180d").deg, positions.icrs.dec.deg
+
     result = minimize(
         f,
-        x0=[0, 0],
+        x0=[np.mean(ra), np.mean(dec)],
         args=(positions,),
-        bounds=[(-180 + eps, 180 - eps), (-90 + eps, 90 - eps)],
+        bounds=[(np.min(ra), np.max(ra)), (np.min(dec), np.max(dec))],
         method="L-BFGS-B",
     )
+
     return SkyCoord(result.x[0], result.x[1], frame="icrs", unit="deg")
 
 
