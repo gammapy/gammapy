@@ -795,7 +795,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return u.Quantity(values, unit)
 
     def lightcurve(self):
-        """Lightcurve (`~gammapy.estimators.LightCurve`)."""
+        """Lightcurve (`~gammapy.estimators.FluxPoints`)."""
         time_axis = self.data["time_axis"]
         tag = "Flux_History"
 

@@ -98,7 +98,7 @@ def test_lightcurve_properties_flux(lc):
 # is no header info in CSV to store the time scale!
 
 
-@pytest.mark.parametrize("format", ["fits", "ascii.ecsv"])
+@pytest.mark.parametrize("format", ["fits"])
 def test_lightcurve_read_write(tmp_path, lc, format):
     table = lc.to_table(format="lightcurve", sed_type="flux")
     table.write(tmp_path / "tmp", format=format)

@@ -87,8 +87,8 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         Returns
         -------
-        lightcurve : `~gammapy.estimators.LightCurve`
-            the Light Curve object
+        lightcurve : `~gammapy.estimators.FluxPoints`
+            Light curve flux points
         """
         datasets = Datasets(datasets)
 
