@@ -594,7 +594,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     @property
     def evaluation_bin_size_min(self):
         """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
-        return self.r_0.quantity / (1 + 8 * self.eta.value)
+        return self.r_0.quantity / (3 + 8 * self.eta.value) / (self.e.value + 1)
 
 
     @property

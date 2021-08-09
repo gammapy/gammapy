@@ -109,7 +109,7 @@ def test_sky_gaussian():
 
 
 @pytest.mark.parametrize("eta", np.arange(0.1, 1.01, 0.3))
-@pytest.mark.parametrize("r_0", np.arange(0.1, 1.01, 0.3))
+@pytest.mark.parametrize("r_0", np.arange(0.01, 1.01, 0.3))
 @pytest.mark.parametrize("e", np.arange(0.0, 0.801, 0.4))
 def test_generalized_gaussian(eta, r_0, e):
     # check normalization is robust for a large set of values
@@ -117,8 +117,9 @@ def test_generalized_gaussian(eta, r_0, e):
         eta=eta, r_0=r_0 * u.deg, e=e, frame="galactic"
     )
 
+    width = np.maximum(2 * model.evaluation_radius.to_value("deg"), 0.5)
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=2 * model.evaluation_radius, frame="galactic",
+        skydir=(0, 0), binsz=0.02, width=width, frame="galactic",
     )
 
     integral = model.integrate_geom(geom)

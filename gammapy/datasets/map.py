@@ -2849,7 +2849,8 @@ class MapEvaluator:
         if factor > 1:
             geom = geom.upsample(factor)
 
-        value = self.model.spatial_model.integrate_geom(geom)
+        # for now we force the oversampling factor to be 1
+        value = self.model.spatial_model.integrate_geom(geom, oversampling_factor=1)
         if self.psf and self.model.apply_irf["psf"]:
             psf_kernel_map = self.psf._psf_kernel_map.copy()
             self.psf._psf_kernel_map = self.psf._psf_kernel_map.upsample(factor)
