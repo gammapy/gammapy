@@ -1214,15 +1214,18 @@ class MapAxis:
                 rad = table["Theta"].data * u.deg
                 axis = MapAxis.from_nodes(rad, name="rad")
         elif format == "gadf-sed-energy":
-            sed_type = table.meta["SED_TYPE"]
-            if sed_type in ["dnde", "e2dnde"]:
-                e_ref = flat_if_equal(table["e_ref"].quantity)
-                axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
-            else:
+            if "e_min" in table.colnames and "e_max" in table.colnames:
                 e_min = flat_if_equal(table["e_min"].quantity)
                 e_max = flat_if_equal(table["e_max"].quantity)
                 edges = edges_from_lo_hi(e_min, e_max)
                 axis = MapAxis.from_energy_edges(edges)
+            elif "e_ref" in table.colnames:
+                e_ref = flat_if_equal(table["e_ref"].quantity)
+                axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
+            else:
+                raise ValueError("Either 'e_ref', 'e_min' or 'e_max' column "
+                                 "names are required")
+
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
             axis = MapAxis.from_nodes(table["norm_scan"][0], name="norm")

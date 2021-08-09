@@ -203,6 +203,8 @@ class FluxPoints(FluxMaps):
             Reference spectral model
         gti : `GTI`
             Good time intervals
+        meta : dict
+            Meta data.
 
         Returns
         -------

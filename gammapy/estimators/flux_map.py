@@ -80,7 +80,7 @@ OPTIONAL_QUANTITIES_COMMON = [
     "stat",
     "stat_null",
     "niter",
-#    "is_ul",
+    "is_ul",
     "counts"
 ]
 
@@ -286,6 +286,9 @@ class FluxMaps:
     @property
     def is_ul(self):
         """Whether data is an upper limit"""
+        if "is_ul" in self._data:
+            return self._data["is_ul"]
+
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
 
