@@ -6,12 +6,11 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
-from regions import FITSRegionParser, fits_region_objects_to_table, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
+from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
 from gammapy.utils.regions import (
-    compound_region_to_list,
-    list_to_compound_region,
-    make_region,
-    compound_region_center
+    compound_region_to_regions,
+    regions_to_compound_region,
+    compound_region_center,
 )
 from gammapy.maps.wcs import _check_width
 from .core import MapCoord, Map
@@ -102,7 +101,7 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        regions = compound_region_to_list(self.region)
+        regions = compound_region_to_regions(self.region)
         regions_pix = [_.to_pixel(self.wcs) for _ in regions]
 
         bbox = regions_pix[0].bounding_box
@@ -493,26 +492,21 @@ class RegionGeom(Geom):
 
     @classmethod
     def create(cls, region, **kwargs):
-        """Create region.
+        """Create region geometry.
 
         Parameters
         ----------
         region : str or `~regions.SkyRegion`
-            Region
-        axes : list of `MapAxis`
-            Non spatial axes.
+            Region definition
+        **kwargs : dict
+            Keyword arguments passed to `RegionGeom.__init__`
 
         Returns
         -------
         geom : `RegionGeom`
             Region geometry
         """
-        if isinstance(region, str):
-            region = make_region(region)
-        elif isinstance(region, SkyCoord):
-            region = PointSkyRegion(center=region)
-
-        return cls(region, **kwargs)
+        return cls.from_regions(regions=region, **kwargs)
 
     def __repr__(self):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
@@ -551,11 +545,11 @@ class RegionGeom(Geom):
             raise ValueError("Region definition required.")
 
         # TODO: make this a to_hdulist() method
-        region_list = compound_region_to_list(self.region)
+        region_list = compound_region_to_regions(self.region)
         pixel_region_list = []
         for reg in region_list:
             pixel_region_list.append(reg.to_pixel(self.wcs))
-        table = fits_region_objects_to_table(pixel_region_list)
+        table = Regions(pixel_region_list).serialize(format="fits")
 
         header = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape).to_header()
         table.meta.update(header)
@@ -605,7 +599,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        regions : `~regions.SkyRegion`
+        regions : list of `~regions.SkyRegion` or str
             Regions
         **kwargs: dict
             Keyword arguments forwarded to `RegionGeom`
@@ -615,11 +609,17 @@ class RegionGeom(Geom):
         geom : `RegionGeom`
             Region map geometry
         """
-        if isinstance(regions, (SkyRegion, str)):
-            regions = [make_region(regions)]
+        if isinstance(regions, str):
+            regions = Regions.parse(data=regions, format="ds9")
+        elif isinstance(regions, SkyRegion):
+            regions = [regions]
+        elif isinstance(regions, SkyCoord):
+            regions = [PointSkyRegion(center=regions)]
 
-        region = list_to_compound_region(regions)
-        return cls(region, **kwargs)
+        if regions:
+            regions = regions_to_compound_region(regions)
+
+        return cls(region=regions, **kwargs)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="ogip", hdu=None):
@@ -645,14 +645,13 @@ class RegionGeom(Geom):
 
         if region_hdu in hdulist:
             region_table = Table.read(hdulist[region_hdu])
-            parser = FITSRegionParser(region_table)
-            pix_region = parser.shapes.to_regions()
             wcs = WcsGeom.from_header(region_table.meta).wcs
 
             regions = []
-            for reg in pix_region:
+
+            for reg in Regions.parse(data=region_table, format="fits"):
                 regions.append(reg.to_sky(wcs))
-            region = list_to_compound_region(regions)
+            region = regions_to_compound_region(regions)
         else:
             region, wcs = None, None
 
@@ -689,6 +688,11 @@ class RegionGeom(Geom):
             equivalent WCS geometry.
         **kwargs : dict
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
+
+        Returns
+        -------
+        ax : `~astropy.vizualisation.WCSAxes`
+            Axes to plot on.
         """
         import matplotlib.pyplot as plt
         from matplotlib.collections import PatchCollection
@@ -703,7 +707,7 @@ class RegionGeom(Geom):
                 m = Map.from_geom(wcs_geom.to_image())
                 fig, ax, cbar = m.plot(add_cbar=False)
 
-        regions = compound_region_to_list(self.region)
+        regions = compound_region_to_regions(self.region)
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
 
         kwargs.setdefault("fc", "None")

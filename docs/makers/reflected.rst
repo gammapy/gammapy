@@ -42,21 +42,18 @@ regions for a given circular on region and exclusion mask.
     from gammapy.datasets import SpectrumDataset, Datasets
     from gammapy.data import DataStore
     from gammapy.maps import MapAxis, Map, WcsGeom, RegionGeom
-    from gammapy.utils.regions import make_region
 
     data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
     observations = data_store.get_observations([23592, 23559])
 
-    on_region = make_region("icrs; circle(83.63,22.01,0.11)")
-
-    wcsgeom = WcsGeom.create(skydir=on_region.center, width=5, binsz=0.02)
-    exclusion_mask = wcsgeom.region_mask([on_region], inside=False)
-
     energy_axis = MapAxis.from_energy_bounds("0.5 TeV", "10 TeV", nbin=15)
     energy_axis_true = MapAxis.from_energy_bounds("0.3 TeV", "20 TeV", nbin=40, name="energy_true")
 
-    geom = RegionGeom.create(region=on_region, axes=[energy_axis])
+    geom = RegionGeom.create(region="icrs;circle(83.63,22.01,0.11)", axes=[energy_axis])
     dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
+
+    wcsgeom = WcsGeom.create(skydir=geom.center_skydir, width=5, binsz=0.02)
+    exclusion_mask = wcsgeom.region_mask(geom.region, inside=False)
 
     maker = SpectrumDatasetMaker()
     safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)

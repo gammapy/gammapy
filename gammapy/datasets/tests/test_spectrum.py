@@ -20,7 +20,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.random import get_random_state
-from gammapy.utils.regions import compound_region_to_list, make_region
+from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import (
     assert_time_allclose,
     mpl_plot_check,
@@ -343,7 +343,6 @@ class TestSpectrumOnOff:
         self.e_true = MapAxis.from_energy_edges(etrue, name="energy_true")
         ereco = np.logspace(-1, 1, 5) * u.TeV
         elo = ereco[:-1]
-        ehi = ereco[1:]
         self.e_reco = MapAxis.from_energy_edges(ereco, name="energy")
 
         start = u.Quantity([0], "s")
@@ -352,15 +351,10 @@ class TestSpectrumOnOff:
         self.gti = GTI.create(start, stop, time_ref)
         self.livetime = self.gti.time_sum
 
-        self.on_region = make_region("icrs;circle(0.,1.,0.1)")
-        off_region = make_region("icrs;box(0.,1.,0.1, 0.2,30)")
-        self.off_region = off_region.union(
-            make_region("icrs;box(-1.,-1.,0.1, 0.2,150)")
-        )
         self.wcs = WcsGeom.create(npix=300, binsz=0.01, frame="icrs").wcs
 
         self.aeff = RegionNDMap.create(
-            region=self.on_region, wcs=self.wcs, axes=[self.e_true], unit="cm2"
+            region="icrs;circle(0.,1.,0.1)", wcs=self.wcs, axes=[self.e_true], unit="cm2"
         )
         self.aeff.data += 1
 
@@ -369,7 +363,7 @@ class TestSpectrumOnOff:
 
         axis = MapAxis.from_edges(ereco, name="energy", interp="log")
         self.on_counts = RegionNDMap.create(
-            region=self.on_region,
+            region="icrs;circle(0.,1.,0.1)",
             wcs=self.wcs,
             axes=[axis],
             meta={"EXPOSURE": self.livetime.to_value("s")},
@@ -378,7 +372,9 @@ class TestSpectrumOnOff:
         self.on_counts.data[-1] = 0
 
         self.off_counts = RegionNDMap.create(
-            region=self.off_region, wcs=self.wcs, axes=[axis]
+            region="icrs;box(0.,1.,0.1, 0.2,30);box(-1.,-1.,0.1, 0.2,150)",
+            wcs=self.wcs,
+            axes=[axis]
         )
         self.off_counts.data += 10
 
@@ -452,7 +448,7 @@ class TestSpectrumOnOff:
         livetime = 1 * u.s
 
         aeff = RegionNDMap.create(
-            region=self.on_region,
+            region=self.aeff.geom.region,
             unit="cm2",
             axes=[self.e_reco.copy(name="energy_true")],
         )
@@ -503,8 +499,8 @@ class TestSpectrumOnOff:
         dataset.write(tmp_path / "test.fits")
         newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
 
-        expected_regions = compound_region_to_list(self.off_counts.geom.region)
-        regions = compound_region_to_list(newdataset.counts_off.geom.region)
+        expected_regions = compound_region_to_regions(self.off_counts.geom.region)
+        regions = compound_region_to_regions(newdataset.counts_off.geom.region)
 
         assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits"
         assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits"

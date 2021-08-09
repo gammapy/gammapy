@@ -18,7 +18,7 @@ from gammapy.makers import (
     SpectrumDatasetMaker,
 )
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap, RegionGeom
-from gammapy.utils.regions import compound_region_to_list
+from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -169,8 +169,8 @@ def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
     assert_allclose(datasets[0].counts_off.data.sum(), 76)
     assert_allclose(datasets[1].counts_off.data.sum(), 60)
 
-    regions_0 = compound_region_to_list(datasets[0].counts_off.geom.region)
-    regions_1 = compound_region_to_list(datasets[1].counts_off.geom.region)
+    regions_0 = compound_region_to_regions(datasets[0].counts_off.geom.region)
+    regions_1 = compound_region_to_regions(datasets[1].counts_off.geom.region)
     assert_allclose(len(regions_0), 11)
     assert_allclose(len(regions_1), 11)
 
