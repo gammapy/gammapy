@@ -7,7 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
-from gammapy.estimators import LightCurve, LightCurveEstimator
+from gammapy.estimators import FluxPoints, LightCurveEstimator
 from gammapy.estimators.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -19,13 +19,15 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 
 @pytest.fixture(scope="session")
 def lc():
-    meta = dict(TIMESYS="utc")
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
     table = Table(
         meta=meta,
         data=[
             Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
             Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0], [1.0]], "e_min", unit="TeV"),
+            Column([[2.0], [2.0]], "e_max", unit="TeV"),
             Column([1e-11, 3e-11], "flux", unit="cm-2 s-1"),
             Column([0.1e-11, 0.3e-11], "flux_err", unit="cm-2 s-1"),
             Column([np.nan, 3.6e-11], "flux_ul", unit="cm-2 s-1"),
@@ -33,12 +35,12 @@ def lc():
         ],
     )
 
-    return LightCurve(table=table)
+    return FluxPoints.from_table(table=table, format="lightcurve")
 
 
 @pytest.fixture(scope="session")
 def lc_2d():
-    meta = dict(TIMESYS="utc")
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
     table = Table(
         meta=meta,
@@ -54,37 +56,41 @@ def lc_2d():
         ],
     )
 
-    return LightCurve(table=table)
+    return FluxPoints.from_table(table=table, format="lightcurve")
 
 
-def test_lightcurve_repr(lc):
-    assert repr(lc) == "LightCurve(len=2)"
+def test_lightcurve_str(lc):
+    info_str = str(lc)
+    assert "time" in info_str
 
 
 def test_lightcurve_properties_time(lc):
-    assert lc.time_scale == "utc"
-    assert lc.time_format == "mjd"
+    axis = lc.geom.axes["time"]
+
+    assert axis.reference_time.scale == "utc"
+    assert axis.reference_time.format == "mjd"
 
     # Time-related attributes
-    time = lc.time
+    time = axis.time_mid
     assert time.scale == "utc"
     assert time.format == "mjd"
     assert_allclose(time.mjd, [55198, 55202.5])
 
-    assert_allclose(lc.time_min.mjd, [55197, 55199])
-    assert_allclose(lc.time_max.mjd, [55199, 55206])
+    assert_allclose(axis.time_min.mjd, [55197, 55199])
+    assert_allclose(axis.time_max.mjd, [55199, 55206])
 
     # Note: I'm not sure why the time delta has this scale and format
-    time_delta = lc.time_delta
+    time_delta = axis.time_delta
     assert time_delta.scale == "tai"
     assert time_delta.format == "jd"
     assert_allclose(time_delta.jd, [2, 7])
 
 
 def test_lightcurve_properties_flux(lc):
-    flux = lc.table["flux"].quantity
+    table = lc.to_table(sed_type="flux", format="lightcurve")
+    flux = table["flux"].quantity
     assert flux.unit == "cm-2 s-1"
-    assert_allclose(flux.value, [1e-11, 3e-11])
+    assert_allclose(flux.value, [[1e-11], [3e-11]])
 
 
 # TODO: extend these tests to cover other time scales.
@@ -92,56 +98,26 @@ def test_lightcurve_properties_flux(lc):
 # is no header info in CSV to store the time scale!
 
 
-@pytest.mark.parametrize("format", ["fits", "ascii.ecsv", "ascii.csv"])
+@pytest.mark.parametrize("format", ["fits"])
 def test_lightcurve_read_write(tmp_path, lc, format):
-    lc.write(tmp_path / "tmp", format=format)
-    lc = LightCurve.read(tmp_path / "tmp", format=format)
+    table = lc.to_table(format="lightcurve", sed_type="flux")
+    table.write(tmp_path / "tmp", format=format)
+    lc = FluxPoints.read(tmp_path / "tmp", format="lightcurve")
 
     # Check if time-related info round-trips
-    time = lc.time
-    assert time.scale == "utc"
-    assert time.format == "mjd"
-    assert_allclose(time.mjd, [55198, 55202.5])
+    axis = lc.geom.axes["time"]
+    assert axis.reference_time.scale == "utc"
+    assert axis.reference_time.format == "mjd"
+    assert_allclose(axis.time_mid.mjd, [55198, 55202.5])
 
 
 @requires_dependency("matplotlib")
 def test_lightcurve_plot(lc, lc_2d):
     with mpl_plot_check():
         lc.plot()
+
     with mpl_plot_check():
-        lc_2d.plot(energy_index=1)
-
-
-@pytest.mark.parametrize("flux_unit", ["cm-2 s-1"])
-def test_lightcurve_plot_flux(lc, flux_unit):
-    f, ferr = lc._get_fluxes_and_errors(flux_unit)
-    assert_allclose(f, [1e-11, 3e-11])
-    assert_allclose(ferr, ([0.1e-11, 0.3e-11], [0.1e-11, 0.3e-11]))
-
-
-@pytest.mark.parametrize("flux_unit", ["cm-2 s-1"])
-def test_lightcurve_plot_flux_ul(lc, flux_unit):
-    is_ul, ful = lc._get_flux_uls(flux_unit)
-    assert_allclose(is_ul, [False, True])
-    assert_allclose(ful, [np.nan, 3.6e-11])
-
-
-def test_lightcurve_plot_time(lc):
-    t, terr = lc._get_times_and_errors("mjd")
-    assert np.array_equal(t, [55198.0, 55202.5])
-    assert np.array_equal(terr, [[1.0, 3.5], [1.0, 3.5]])
-
-    t, terr = lc._get_times_and_errors("iso")
-    assert np.array_equal(
-        t, [datetime.datetime(2010, 1, 2), datetime.datetime(2010, 1, 6, 12)]
-    )
-    assert np.array_equal(
-        terr,
-        [
-            [datetime.timedelta(1), datetime.timedelta(3.5)],
-            [datetime.timedelta(1), datetime.timedelta(3.5)],
-        ],
-    )
+        lc_2d.plot(axis_name="time")
 
 
 def get_spectrum_datasets():

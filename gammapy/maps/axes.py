@@ -18,7 +18,7 @@ __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
 
 def flat_if_equal(array):
-    if array.ndim == 2:
+    if array.ndim == 2 and np.all(array == array[0]):
         return array[0]
     else:
         return array
@@ -1877,6 +1877,9 @@ class MapAxes(Sequence):
                 except KeyError:
                     continue
                 axes.append(axis)
+        elif format == "lightcurve":
+            axes.extend(cls.from_table(table=table, format="gadf-sed"))
+            axes.append(TimeMapAxis.from_table(table, format="lightcurve"))
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 
@@ -2416,7 +2419,7 @@ class TimeMapAxis:
         ----------
         table : `~astropy.table.Table`
             Bin table HDU
-        format : {"gadf", "fermi-4fgl"}
+        format : {"gadf", "fermi-fgl", "lightcurve"}
             Format to use.
 
         Returns
@@ -2428,7 +2431,6 @@ class TimeMapAxis:
             axcols = table.meta.get("AXCOLS{}".format(idx + 1))
             colnames = axcols.split(",")
             name = colnames[0].replace("_MIN", "").lower()
-
             reference_time = time_ref_from_dict(table.meta)
             edges_min = np.unique(table[colnames[0]].quantity)
             edges_max = np.unique(table[colnames[1]].quantity)
@@ -2439,6 +2441,16 @@ class TimeMapAxis:
             name = "time"
             edges_min = table["Hist_Start"][:-1]
             edges_max = table["Hist_Start"][1:]
+        elif format == "lightcurve":
+            # TODO: is this a good format? It just supports mjd...
+            name = "time"
+            scale = table.meta.get("TIMESYS", "utc")
+            time_min = Time(table["time_min"].data, format="mjd", scale=scale)
+            time_max = Time(table["time_max"].data, format="mjd", scale=scale)
+            reference_time = Time("2001-01-01T00:00:00")
+            reference_time.format = "mjd"
+            edges_min = (time_min - reference_time).to("s")
+            edges_max = (time_max - reference_time).to("s")
         else:
             raise ValueError(f"Not a supported format: {format}")
 

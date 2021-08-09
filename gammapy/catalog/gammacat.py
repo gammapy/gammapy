@@ -32,7 +32,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
         return FluxPoints.from_table(
-            self.flux_points_table, reference_model=self.spectral_model()
+            table=self.flux_points_table,
+            reference_model=self.sky_model(),
+            format="gadf-sed"
         )
 
     def info(self, info="all"):
