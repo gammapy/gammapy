@@ -251,6 +251,15 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(p["radius"].value, 0.95)
         assert_allclose(p["width"].value, 0.05)
 
+    @staticmethod
+    def test_flux_points_meta(cat):
+        source = cat['HESS J1843-033']
+        fp = source.flux_points
+
+        assert fp.ts_threshold_ul == 1
+        assert fp.n_sigma == 1
+        assert fp.n_sigma_ul == 2
+
 
 @requires_data()
 class TestSourceCatalogObjectHGPSComponent:
