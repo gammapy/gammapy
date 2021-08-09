@@ -121,6 +121,7 @@ def test_lightcurve_plot(lc, lc_2d):
         lc_2d.plot(axis_name="time")
 
 
+@requires_data()
 def test_lightcurve_to_time_series():
     from gammapy.catalog import SourceCatalog4FGL
 
