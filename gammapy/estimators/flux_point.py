@@ -277,11 +277,31 @@ class FluxPoints(FluxMaps):
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
             sed type to convert to. Default is `likelihood`
-        format : {"gadf-sed"}
-            Format
+        format : {"gadf-sed", "lightcurve", "binned-time-series"}
+            Format specification. The following formats are supported:
+            * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
+              for details
+            * "lightcurve": Gammapy internal format to store energy dependent
+              lightcurves. Basically a generalisation of the "gadf" format, but
+              currently there is no detailed documentation available.
+            * "binned-time-series": table format support by Astropy's
+             `~astropy.timeseries.BinnedTimeSeries`.
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
             formatted to .3f and .3e respectively.
+
+        Examples
+        --------
+
+        >>> from gammapy.estimators import FluxPoints
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
+        >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
+        >>> print(table[:2])
+        e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts
+         TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
+        ----- ----- ----- ----------- ----------- ----------- -------- -------
+        1.334 1.001 1.779   1.419e-11   3.128e-13         nan 2734.000  52.288
+        2.372 1.779 3.161   5.792e-12   1.085e-13         nan 4112.000  64.125
 
         Returns
         -------
@@ -336,6 +356,28 @@ class FluxPoints(FluxMaps):
                 tables.append(table_flat)
 
             table = vstack(tables)
+        elif format == "binned-time-series":
+            message = (
+                "Format 'binned-time-series' support a single time axis "
+                f"only. Got {self.geom.axes.names}"
+            )
+
+            if not self.geom.axes.is_unidimensional:
+                raise ValueError(message)
+
+            axis = self.geom.axes.primary_axis
+
+            if not isinstance(axis, TimeMapAxis):
+                raise ValueError(message)
+
+            table = Table()
+            table["time_bin_start"] = axis.time_min
+            table["time_bin_size"] = axis.time_delta
+
+            for quantity in self.all_quantities(sed_type=sed_type):
+                data = getattr(self, quantity, None)
+                if data:
+                    table[quantity] = data.quantity.squeeze()
         else:
             raise ValueError(f"Not a supported format {format}")
 

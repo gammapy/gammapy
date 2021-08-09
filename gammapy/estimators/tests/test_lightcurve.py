@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
+from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.estimators import FluxPoints, LightCurveEstimator
@@ -118,6 +119,35 @@ def test_lightcurve_plot(lc, lc_2d):
 
     with mpl_plot_check():
         lc_2d.plot(axis_name="time")
+
+
+@requires_data()
+def test_lightcurve_to_time_series():
+    from gammapy.catalog import SourceCatalog4FGL
+
+    catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
+    lightcurve = catalog_4fgl["FGES J1553.8-5325"].lightcurve()
+
+    table = lightcurve.to_table(sed_type="flux", format="binned-time-series")
+
+    timeseries = BinnedTimeSeries(data=table)
+
+    assert_allclose(timeseries.time_bin_center.mjd[0], 54863.97885336907)
+    assert_allclose(timeseries.time_bin_end.mjd[0], 55045.301668796295)
+
+    time_axis = lightcurve.geom.axes["time"]
+    assert_allclose(timeseries.time_bin_end.mjd[0], time_axis.time_max.mjd[0])
+
+    # assert that it interfaces with periodograms
+
+    p = BoxLeastSquares.from_timeseries(
+        timeseries=timeseries,
+        signal_column_name="flux",
+        uncertainty="flux_errp"
+    )
+
+    result = p.power(1 * u.year, 0.5 * u.year)
+    assert_allclose(result.duration, 182.625 * u.d)
 
 
 def get_spectrum_datasets():
