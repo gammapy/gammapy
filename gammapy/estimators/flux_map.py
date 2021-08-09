@@ -607,8 +607,6 @@ class FluxMaps:
             List of maps to stack.
         axis : `MapAxis`
             New axis to create
-        meta : dict
-            Meta data
 
         Returns
         -------
