@@ -145,7 +145,18 @@ class FluxMaps:
 
     @staticmethod
     def all_quantities(sed_type):
-        """All quantities quantities"""
+        """All quantities allowed for a given sed type.
+
+        Parameters
+        ----------
+        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
+            Sed type.
+
+        Returns
+        -------
+        list : list of str
+            All allowed quantities for a given sed type.
+        """
         quantities = []
         quantities += REQUIRED_MAPS[sed_type]
         quantities += OPTIONAL_QUANTITIES[sed_type]
@@ -577,7 +588,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        sed_type : str
+        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
             sed type to convert to. Default is `Likelihood`
 
         Returns
