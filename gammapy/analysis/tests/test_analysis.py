@@ -118,6 +118,15 @@ def test_get_observations_obs_time(tmp_path):
     with pytest.raises(KeyError):
         analysis.get_observations()
 
+@requires_data()
+def test_get_observations_missing_irf():
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.config.observations.datastore = "$GAMMAPY_DATA/joint-crab/dl3/magic/"
+    analysis.config.observations.obs_ids = ["05029748"]
+    analysis.config.observations.required_irf = ["aeff", "edisp"]
+    analysis.get_observations()
+    assert len(analysis.observations) == 1
 
 @requires_data()
 def test_set_models():
