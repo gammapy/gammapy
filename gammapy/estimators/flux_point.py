@@ -299,11 +299,11 @@ class FluxPoints(FluxMaps):
         >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
         >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
         >>> print(table[:2])
-        e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts
+        e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
          TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
-        ----- ----- ----- ----------- ----------- ----------- -------- -------
-        1.334 1.001 1.779   1.419e-11   3.128e-13         nan 2734.000  52.288
-        2.372 1.779 3.161   5.792e-12   1.085e-13         nan 4112.000  64.125
+        ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
+        1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
+        2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
 
         Returns
         -------
