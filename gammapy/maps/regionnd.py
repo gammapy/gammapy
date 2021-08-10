@@ -506,19 +506,14 @@ class RegionNDMap(Map):
             axes = MapAxes.from_table(table=table, format=format)
 
             if colname == "stat_scan":
-                axes = axes
+                names = ["norm", "energy"]
             # TODO: this is not officially supported by GADF...
             elif colname in ["counts", "npred", "npred_null"]:
-                if "datasets" in table.colnames:
-                    labels = np.unique(table["datasets"])
-                    axis = LabelMapAxis(labels=labels, name="dataset")
-                else:
-                    edges = np.arange(table[colname].shape[1] + 1) - 0.5
-                    axis = MapAxis.from_edges(edges, name="dataset-idx")
-                axes = [axis, axes["energy"]]
+                names = ["dataset", "energy"]
             else:
-                axes = [axes["energy"]]
+                names = ["energy"]
 
+            axes = axes[names]
             data = table[colname].data
             unit = table[colname].unit or ""
         elif format == "lightcurve":

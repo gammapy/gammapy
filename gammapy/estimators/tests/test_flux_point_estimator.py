@@ -176,7 +176,8 @@ def test_str(fpe_pwl):
 def test_run_pwl(fpe_pwl):
     datasets, fpe = fpe_pwl
 
-    table = fpe.run(datasets).to_table()
+    fp = fpe.run(datasets)
+    table = fp.to_table()
 
     actual = table["e_min"].data
     assert_allclose(actual, [0.316228, 1.0, 10.0], rtol=1e-5)

@@ -1225,10 +1225,17 @@ class MapAxis:
             else:
                 raise ValueError("Either 'e_ref', 'e_min' or 'e_max' column "
                                  "names are required")
-
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
             axis = MapAxis.from_nodes(table["norm_scan"][0], name="norm")
+        elif format == "gadf-sed-counts":
+            if "datasets" in table.colnames:
+                labels = np.unique(table["datasets"])
+                axis = LabelMapAxis(labels=labels, name="dataset")
+            else:
+                shape = table["counts"].shape
+                edges = np.arange(shape[-1] + 1) - 0.5
+                axis = MapAxis.from_edges(edges, name="dataset")
         else:
             raise ValueError(f"Format '{format}' not supported")
 
@@ -1874,7 +1881,7 @@ class MapAxes(Sequence):
                     continue
                 axes.append(axis)
         elif format == "gadf-sed":
-            for axis_format in ["gadf-sed-norm", "gadf-sed-energy"]:
+            for axis_format in ["gadf-sed-norm", "gadf-sed-energy", "gadf-sed-counts"]:
                 try:
                     axis = MapAxis.from_table(table=table, format=axis_format)
                 except KeyError:
