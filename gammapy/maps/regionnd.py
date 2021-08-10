@@ -518,6 +518,16 @@ class RegionNDMap(Map):
             unit = table[colname].unit or ""
         elif format == "lightcurve":
             axes = MapAxes.from_table(table=table, format=format)
+
+            if colname == "stat_scan":
+                names = ["norm", "energy", "time"]
+            # TODO: this is not officially supported by GADF...
+            elif colname in ["counts", "npred", "npred_null"]:
+                names = ["dataset", "energy", "time"]
+            else:
+                names = ["energy", "time"]
+
+            axes = axes[names]
             data = table[colname].data
             unit = table[colname].unit or ""
         else:
