@@ -64,6 +64,11 @@ class FrameEnum(str, Enum):
     icrs = "icrs"
     galactic = "galactic"
 
+class RequiredIRFEnum(str, Enum):
+    aeff = "aeff"
+    bkg = "bkg"
+    edisp = "edisp"
+    psf = "psf"
 
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
@@ -206,7 +211,7 @@ class ObservationsConfig(GammapyBaseConfig):
     obs_file: Path = None
     obs_cone: SpatialCircleConfig = SpatialCircleConfig()
     obs_time: TimeRangeConfig = TimeRangeConfig()
-
+    required_irf: List[RequiredIRFEnum] = ["aeff", "edisp", "psf", "bkg"]
 
 class LogConfig(GammapyBaseConfig):
     level: str = "info"
