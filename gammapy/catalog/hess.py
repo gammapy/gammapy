@@ -102,8 +102,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        reference_model = SkyModel(
+                spectral_model=self.spectral_model(),
+                name=self.name
+            )
         return FluxPoints.from_table(
-            self.flux_points_table, reference_model=self.sky_model()
+            self.flux_points_table,
+            reference_model=reference_model,
         )
 
     def info(self, info="all"):
@@ -605,7 +610,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     def flux_points_table(self):
         """Flux points table (`~astropy.table.Table)."""
         table = Table()
-        table.meta["SED_TYPE"] = "dnde"
+        table.meta["sed_type_init"] = "dnde"
+        table.meta["n_sigma_ul"] = 2
+        table.meta["n_sigma"] = 1
+        table.meta["ts_threshold_ul"] = 1
         mask = ~np.isnan(self.data["Flux_Points_Energy"])
 
         table["e_ref"] = self.data["Flux_Points_Energy"][mask]

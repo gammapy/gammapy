@@ -80,7 +80,7 @@ OPTIONAL_QUANTITIES_COMMON = [
     "stat",
     "stat_null",
     "niter",
-#    "is_ul",
+    "is_ul",
     "counts"
 ]
 
@@ -145,7 +145,18 @@ class FluxMaps:
 
     @staticmethod
     def all_quantities(sed_type):
-        """All quantities quantities"""
+        """All quantities allowed for a given sed type.
+
+        Parameters
+        ----------
+        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
+            Sed type.
+
+        Returns
+        -------
+        list : list of str
+            All allowed quantities for a given sed type.
+        """
         quantities = []
         quantities += REQUIRED_MAPS[sed_type]
         quantities += OPTIONAL_QUANTITIES[sed_type]
@@ -286,6 +297,9 @@ class FluxMaps:
     @property
     def is_ul(self):
         """Whether data is an upper limit"""
+        if "is_ul" in self._data:
+            return self._data["is_ul"]
+
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
 
@@ -574,7 +588,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        sed_type : str
+        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
             sed type to convert to. Default is `Likelihood`
 
         Returns
@@ -604,8 +618,6 @@ class FluxMaps:
             List of maps to stack.
         axis : `MapAxis`
             New axis to create
-        meta : dict
-            Meta data
 
         Returns
         -------
