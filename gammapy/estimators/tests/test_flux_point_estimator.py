@@ -232,6 +232,8 @@ def test_run_pwl(fpe_pwl):
     actual = table["npred_null"].data
     assert_allclose(actual, [[942.], [398.], [14.]])
 
+    actual = table.meta["UL_CONF"]
+    assert_allclose(actual, 0.9544997)
 
 @requires_dependency("iminuit")
 def test_run_ecpl(fpe_ecpl):
