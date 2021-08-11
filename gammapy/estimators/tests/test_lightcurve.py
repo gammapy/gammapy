@@ -277,6 +277,14 @@ def test_lightcurve_estimator_spectrum_datasets():
         table[0]["stat_scan"], [[224.058304, 19.074405, 2063.75636]], rtol=1e-5,
     )
 
+    # TODO: fix reference model I/O
+    fp = FluxPoints.from_table(
+        table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
+    )
+    assert fp.norm.geom.axes.names == ["energy", "time"]
+    assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
+    assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]
+
 
 @requires_data()
 @requires_dependency("iminuit")
@@ -354,6 +362,13 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         [[153.880281, 10.701492, 1649.609684], [70.178023, 8.372913, 414.146676]],
         rtol=1e-5,
     )
+
+    fp = FluxPoints.from_table(
+        table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
+    )
+    assert fp.norm.geom.axes.names == ["energy", "time"]
+    assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
+    assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]
 
 
 @requires_data()

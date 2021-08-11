@@ -75,7 +75,6 @@ OPTIONAL_QUANTITIES_COMMON = [
     "ts",
     "sqrt_ts",
     "npred",
-    "npred_excess",
     "npred_null",
     "stat",
     "stat_null",
