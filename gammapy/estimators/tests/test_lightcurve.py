@@ -277,6 +277,11 @@ def test_lightcurve_estimator_spectrum_datasets():
         table[0]["stat_scan"], [[224.058304, 19.074405, 2063.75636]], rtol=1e-5,
     )
 
+    fp = FluxPoints.from_table(table=table)
+    assert fp.norm.axes.names == ["energy", "time"]
+    assert fp.counts.axes.names == ["energy", "time", "dataset"]
+    assert fp.stat_scan.axes.names == ["energy", "time", "norm"]
+
 
 @requires_data()
 @requires_dependency("iminuit")
