@@ -2764,6 +2764,9 @@ class MapEvaluator:
 
             if self.psf and self.model.apply_irf["psf"]:
                 values = self.apply_psf(values)
+            else:
+                axes = [self.geom.axes["energy_true"].squash()]
+                values = values.to_cube(axes=axes)
 
             weights = wcs_geom.region_weights(regions=[self.geom.region])
             value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
