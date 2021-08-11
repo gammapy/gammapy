@@ -388,7 +388,8 @@ class FluxMaps:
             return self._data["sqrt_ts"]
         else:
             with np.errstate(invalid="ignore", divide="ignore"):
-                data = np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
+                ts = np.clip(self.ts.data, 0, None)
+                data = np.where(self.norm > 0, np.sqrt(ts), -np.sqrt(ts))
                 return Map.from_geom(geom=self.geom, data=data)
 
     @property
