@@ -1227,7 +1227,8 @@ class MapAxis:
                                  "names are required")
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
-            axis = MapAxis.from_nodes(table["norm_scan"][0], name="norm")
+            nodes = flat_if_equal(table["norm_scan"][0])
+            axis = MapAxis.from_nodes(nodes, name="norm")
         elif format == "gadf-sed-counts":
             if "datasets" in table.colnames:
                 labels = np.unique(table["datasets"])
