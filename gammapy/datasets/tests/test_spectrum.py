@@ -130,6 +130,16 @@ def test_npred_models():
     assert_allclose(npred_sig_model1.data.sum(), 32.4)
 
 
+def test_npred_spatial_model(spectrum_dataset):
+    model = SkyModel.create("pl", "point")
+
+    spectrum_dataset.models = [model]
+
+    npred = spectrum_dataset.npred()
+
+    assert_allclose(npred.data.sum(), 12)
+
+
 @requires_dependency("iminuit")
 def test_fit(spectrum_dataset):
     """Simple CASH fit to the on vector"""
