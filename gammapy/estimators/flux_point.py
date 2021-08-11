@@ -323,7 +323,7 @@ class FluxPoints(FluxMaps):
             table.meta["SED_TYPE"] = sed_type
 
             if self.n_sigma_ul:
-                table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(self.n_sigma_ul), 3)
+                table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(self.n_sigma_ul), 7)
 
             if sed_type == "likelihood":
                 table["ref_dnde"] = self.dnde_ref[idx]
