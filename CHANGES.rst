@@ -2,8 +2,8 @@
 -----------------
 
 - No changes yet
-- 16 contributors
-- 182 pull requests so far (not all listed below)
+- 17 contributors
+- 259 pull requests so far (not all listed below)
 
 **What's new?**
 
@@ -68,6 +68,7 @@ In alphabetical order by first name:
 - Maximilian Nöthe
 - Quentin Remy
 - Régis Terrier
+- Sebastian Panny
 - Vikas Joshi
 
 
@@ -76,6 +77,34 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
+- [#3458] Support binned time series format in FluxPoints.to_table() (Axel Donath)
+- [#3454] Add npred quantities to flux point computation (Axel Donath)
+- [#3453] Adapt Gammapy to regions v0.5 (Axel Donath)
+- [#3449] Remove LightCurve class (Axel Donath)
+- [#3447] Implement plotting of stat profiles for lightcurves (Axel Donath)
+- [#3446] corrected axis label units for PSF containment radius (Sebastian Panny)
+- [#3445] Use FluxPoints object in LightcurveEstimator (Axel Donath)
+- [#3439] Allow to choose scaling method per parameter (Quentin Rémy)
+- [#3438] Unify plot unit handling (Axel Donath)
+- [#3434] Time axis plotting (Axel Donath)
+- [#3428] Support serialisation of TimeMapAxis (Axel Donath)
+- [#3426] Cleanup reflected regions finder (Axel Donath)
+- [#3423] Implement LabelMapAxis (Axel Donath)
+- [#3420] Disable IRF extrapolation (Quentin Rémy)
+- [#3418] Refactor FluxPoints to rely on maps internally (Axel Donath)
+- [#3416] Mask invalid background values in SafeMaskMaker (Quentin Rémy)
+- [#3413] Introduce inheritance for Estimator classes (Axel Donath)
+- [#3406] Add scan specification to the Parameter object (Axel Donath)
+- [#3404] Add is_pointlike property on irfs (Régis Terrier)
+- [#3403] Add sparse option to get_coord() methods (Axel Donath)
+- [#3402] Rename energy_range to energy_bounds (Fabio Pintore)
+- [#3399] Implement WcsGeom.from_aligned (Axel Donath)
+- [#3397] Use string for model name in npred_signal() (Atreyee Sinha)
+- [#3395] Remove counts data caching from MapDataset (Axel Donath)
+- [#3393] Implement TimeMapAxis class  (Régis Terrier)
+- [#3392] Implement padding for TSMapEstimator (Axel Donath)
+- [#3390] Fix parameter type for PiecewiseNormSpectralModel and NaimaSpectralModel (Quentin Rémy)
+- [#3381] Fix FoVBackgroundMaker error (Atreyee Sinha)
 - [#3379] Use find_roots to call root finding methods (Quentin Rémy)
 - [#3377] Expand $GAMMAPY_DATA defined in HLI config (Jose Enrique Ruiz)
 - [#3374] Fix off position only created for first observation in make_theta_squared_table (Maximilian Nöthe)
