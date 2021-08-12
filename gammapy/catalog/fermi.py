@@ -45,6 +45,12 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     """Base class for Fermi-LAT catalogs."""
 
     asso = ["ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM1", "ASSOC_GAM2", "ASSOC_GAM3"]
+    flux_points_meta = {
+        "sed_type_init": "flux",
+        "n_sigma": 1,
+        "ts_threshold_ul": 1,
+        "n_sigma_ul": 2
+    }
 
     def __str__(self):
         return self.info()
@@ -203,10 +209,11 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     @property
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
+
         return FluxPoints.from_table(
             table=self.flux_points_table,
             reference_model=self.sky_model(),
-            format="gadf-sed"
+            format="gadf-sed",
         )
 
 
@@ -434,7 +441,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
         table = Table()
-        table.meta["SED_TYPE"] = "flux"
+        table.meta.update(self.flux_points_meta)
 
         table["e_min"] = self._energy_edges[:-1]
         table["e_max"] = self._energy_edges[1:]
@@ -511,18 +518,11 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         )
         maps["ts"].quantity = self.data[tag_sqrt_ts] ** 2
 
-        meta = {
-            "sed_type_init": "flux",
-            "n_sigma": 1,
-            "ts_threshold_ul": 1,
-            "n_sigma_ul": 2
-        }
-
         return FluxPoints.from_maps(
             maps=maps,
             sed_type="flux",
             reference_model=self.sky_model(),
-            meta=meta
+            meta=self.flux_points.meta.copy()
         )
 
 
@@ -757,7 +757,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
         table = Table()
-        table.meta["SED_TYPE"] = "flux"
+        table.meta.update(self.flux_points_meta)
 
         table["e_min"] = self._energy_edges[:-1]
         table["e_max"] = self._energy_edges[1:]
@@ -814,18 +814,11 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         is_ul = np.isnan(maps["flux_errn"])
         maps["flux_ul"].data[~is_ul] = np.nan
 
-        meta = {
-            "sed_type_init": "flux",
-            "n_sigma": 1,
-            "ts_threshold_ul": 1,
-            "n_sigma_ul": 2
-        }
-
         return FluxPoints.from_maps(
             maps=maps,
             sed_type="flux",
             reference_model=self.sky_model(),
-            meta=meta
+            meta=self.flux_points_meta.copy()
         )
 
 
@@ -951,7 +944,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
         table = Table()
-        table.meta["SED_TYPE"] = "flux"
+        table.meta.update(self.flux_points_meta)
         table["e_min"] = self._energy_edges[:-1]
         table["e_max"] = self._energy_edges[1:]
         table["flux"] = self._get_flux_values("Flux")
@@ -1124,7 +1117,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
         table = Table()
-        table.meta["SED_TYPE"] = "flux"
+        table.meta.update(self.flux_points_meta)
         table["e_min"] = self._energy_edges[:-1]
         table["e_max"] = self._energy_edges[1:]
 
