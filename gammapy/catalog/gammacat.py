@@ -322,13 +322,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         # Only keep rows that actually contain information
         table = table[valid]
 
-        # Only keep columns that actually contain information
-        def _del_nan_col(table, colname):
-            if np.isfinite(table[colname]).sum() == 0:
-                del table[colname]
-
         for colname in table.colnames:
-            _del_nan_col(table, colname)
+            if not np.isfinite(table[colname]).any():
+                table.remove_column(colname)
 
         return table
 
