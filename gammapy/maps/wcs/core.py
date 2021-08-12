@@ -3,22 +3,12 @@ import json
 import numpy as np
 from astropy.io import fits
 from .geom import WcsGeom
+from .io import identify_wcs_format
 from ..core import Map
-from ..utils import find_bands_hdu, find_hdu, JsonQuantityEncoder
+from ..io import find_bands_hdu, find_hdu, JsonQuantityEncoder
 
 
 __all__ = ["WcsMap"]
-
-
-def identify_wcs_format(hdu):
-    if hdu is None:
-        return "gadf"
-    elif hdu.name == "ENERGIES":
-        return "fgst-template"
-    elif hdu.name == "EBOUNDS":
-        return "fgst-ccube"
-    else:
-        return "gadf"
 
 
 class WcsMap(Map):

@@ -5,7 +5,7 @@ import numpy as np
 from astropy.io import fits
 from .geom import HpxGeom
 from .io import HpxConv
-from ..utils import find_bands_hdu, find_bintable_hdu
+from ..io import find_bands_hdu, find_bintable_hdu
 from ..core import Map
 
 __all__ = ["HpxMap"]

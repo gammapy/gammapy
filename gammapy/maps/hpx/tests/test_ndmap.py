@@ -8,7 +8,7 @@ from astropy.io import fits
 from regions import CircleSkyRegion
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-from gammapy.maps.utils import find_bintable_hdu
+from gammapy.maps.io import find_bintable_hdu
 from gammapy.maps.hpx.io import HpxConv
 from gammapy.irf import PSFKernel, PSFMap
 

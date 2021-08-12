@@ -10,7 +10,7 @@ from gammapy.utils.scripts import make_path
 from .geom import pix_tuple_to_idx
 from .axes import MapAxis
 from .coord import MapCoord
-from .utils import JsonQuantityDecoder
+from .io import JsonQuantityDecoder
 
 __all__ = ["Map"]
 
