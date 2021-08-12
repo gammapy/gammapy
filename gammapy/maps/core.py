@@ -6,11 +6,11 @@ import json
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from gammapy.maps.hpx import HpxGeom
 from gammapy.utils.scripts import make_path
-from .geom import MapCoord, pix_tuple_to_idx
+from .geom import pix_tuple_to_idx
 from .axes import MapAxis
-from .utils import JsonQuantityDecoder
+from .coord import MapCoord
+from .io import JsonQuantityDecoder
 
 __all__ = ["Map"]
 
@@ -152,9 +152,9 @@ class Map(abc.ABC):
         map : `Map`
             Empty map object.
         """
-        from .hpxmap import HpxMap
-        from .wcsmap import WcsMap
-        from .regionnd import RegionNDMap
+        from .hpx import HpxMap
+        from .wcs import WcsMap
+        from .region import RegionNDMap
 
         map_type = kwargs.setdefault("map_type", "wcs")
         if "wcs" in map_type.lower():
@@ -310,19 +310,19 @@ class Map(abc.ABC):
         but that's non-trivial to implement without avoiding circular imports.
         """
         if map_type == "wcs":
-            from .wcsnd import WcsNDMap
+            from .wcs import WcsNDMap
 
             return WcsNDMap
         elif map_type == "wcs-sparse":
             raise NotImplementedError()
         elif map_type == "hpx":
-            from .hpxnd import HpxNDMap
+            from .hpx import HpxNDMap
 
             return HpxNDMap
         elif map_type == "hpx-sparse":
             raise NotImplementedError()
         elif map_type == "region":
-            from .regionnd import RegionNDMap
+            from .region import RegionNDMap
 
             return RegionNDMap
         else:
@@ -536,6 +536,7 @@ class Map(abc.ABC):
         map : `Map`
             Map with resampled axis.
         """
+        from .hpx import HpxGeom
         geom = self.geom.resample_axis(axis)
 
         axis_self = self.geom.axes[axis.name]

@@ -6,9 +6,8 @@ from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.maps import MapAxis, MapCoord
-from gammapy.maps.hpx import (
-    HpxGeom,
+from gammapy.maps import MapAxis, MapCoord, HpxGeom
+from gammapy.maps.hpx.utils import (
     HpxToWcsMapping,
     get_pix_size_from_nside,
     get_subpixels,
