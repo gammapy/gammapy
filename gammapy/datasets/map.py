@@ -2756,13 +2756,14 @@ class MapEvaluator:
             Psf-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
-            if self.geom.region is None:
+            # We don't estimate spatial contributions if no psf are defined
+            if self.geom.region is None or self.psf is None:
                 return 1
 
             wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
             values = self.model.spatial_model.integrate_geom(wcs_geom)
 
-            if self.psf and self.model.apply_irf["psf"]:
+            if self.model.apply_irf["psf"]:
                 values = self.apply_psf(values)
             else:
                 axes = [self.geom.axes["energy_true"].squash()]
