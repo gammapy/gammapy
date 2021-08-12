@@ -219,6 +219,14 @@ class TestFermi4FGLObject:
         ]
         assert_allclose(flux_points.flux.data.flat, desired, rtol=1e-5)
 
+    def test_flux_points_meta(self):
+        source = self.cat["4FGL J0000.3-7355"]
+        fp = source.flux_points
+
+        assert_allclose(fp.ts_threshold_ul, 1)
+        assert_allclose(fp.n_sigma, 1)
+        assert_allclose(fp.n_sigma_ul, 2)
+
     def test_flux_points_ul(self):
         source = self.cat["4FGL J0000.3-7355"]
         flux_points = source.flux_points
