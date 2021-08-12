@@ -7,3 +7,4 @@ from .hpx import *
 from .maps import *
 from .region import *
 from .wcs import *
+from .coord import *

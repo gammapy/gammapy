@@ -17,7 +17,8 @@ from gammapy.utils.units import unit_from_fits_image_hdu
 from .geom import WcsGeom
 from .core import WcsMap
 from ..utils import INVALID_INDEX
-from ..geom import MapCoord, pix_tuple_to_idx
+from ..geom import pix_tuple_to_idx
+from ..coord import MapCoord
 
 
 __all__ = ["WcsNDMap"]

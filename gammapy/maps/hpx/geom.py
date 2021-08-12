@@ -23,7 +23,8 @@ from .utils import (
 )
 from .io import HpxConv
 from ..utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
-from ..geom import Geom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
+from ..geom import Geom, pix_tuple_to_idx
+from ..coord import MapCoord, skycoord_to_lonlat
 from ..axes import MapAxes
 
 

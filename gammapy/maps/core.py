@@ -7,8 +7,9 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
-from .geom import MapCoord, pix_tuple_to_idx
+from .geom import pix_tuple_to_idx
 from .axes import MapAxis
+from .coord import MapCoord
 from .utils import JsonQuantityDecoder
 
 __all__ = ["Map"]

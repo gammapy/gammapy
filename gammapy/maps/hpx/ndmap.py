@@ -11,7 +11,8 @@ from .core import HpxMap
 from .io import HpxConv, HPX_FITS_CONVENTIONS
 from .utils import HpxToWcsMapping, get_superpixels, get_pix_size_from_nside
 from ..utils import INVALID_INDEX
-from ..geom import MapCoord, pix_tuple_to_idx
+from ..geom import pix_tuple_to_idx
+from ..coord import MapCoord
 
 
 __all__ = ["HpxNDMap"]
