@@ -4,11 +4,6 @@ from .core import *
 from .axes import *
 from .geom import *
 from .hpx import *
-from .hpxmap import *
-from .hpxnd import *
 from .maps import *
 from .region import *
-from .regionnd import *
 from .wcs import *
-from .wcsmap import *
-from .wcsnd import *
