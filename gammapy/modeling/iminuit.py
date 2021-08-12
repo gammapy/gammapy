@@ -131,7 +131,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, maxca
     try:
         result = minuit.minos(var=var, sigma=sigma, maxcall=maxcall)
         info = result[var]
-    except AttributeError as error:
+    except (AttributeError, RuntimeError) as error:
         message, success = str(error), False
         info = {"is_valid": False, "lower": np.nan, "upper": np.nan, "nfcn": 0}
 
