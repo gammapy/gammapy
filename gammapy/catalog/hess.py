@@ -613,7 +613,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         table.meta["sed_type_init"] = "dnde"
         table.meta["n_sigma_ul"] = 2
         table.meta["n_sigma"] = 1
-        table.meta["ts_threshold_ul"] = 1
+        table.meta["sqrt_ts_threshold_ul"] = 1
         mask = ~np.isnan(self.data["Flux_Points_Energy"])
 
         table["e_ref"] = self.data["Flux_Points_Energy"][mask]

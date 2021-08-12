@@ -48,7 +48,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     flux_points_meta = {
         "sed_type_init": "flux",
         "n_sigma": 1,
-        "ts_threshold_ul": 1,
+        "sqrt_ts_threshold_ul": 1,
         "n_sigma_ul": 2
     }
 
