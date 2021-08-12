@@ -217,7 +217,7 @@ class FluxMaps:
 
     @property
     def sqrt_ts_threshold_ul(self):
-        """qsrt TS threshold for upper limits"""
+        """sqrt(TS) threshold for upper limits"""
         return self.meta.get("sqrt_ts_threshold_ul", 2)
 
     @property

@@ -256,7 +256,7 @@ class TestSourceCatalogObjectHGPS:
         source = cat['HESS J1843-033']
         fp = source.flux_points
 
-        assert fp.ts_threshold_ul == 1
+        assert fp.sqrt_ts_threshold_ul == 1
         assert fp.n_sigma == 1
         assert fp.n_sigma_ul == 2
 
