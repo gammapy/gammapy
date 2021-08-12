@@ -6,20 +6,13 @@ from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
 from gammapy.utils.units import unit_from_fits_image_hdu
 import logging
-from .region import RegionGeom
-from .regionnd import RegionNDMap
-from .geom import MapCoord, pix_tuple_to_idx
-from .hpx import (
-    HPX_FITS_CONVENTIONS,
-    HpxConv,
-    HpxGeom,
-    HpxToWcsMapping,
-    nside_to_order,
-    get_superpixels,
-    get_pix_size_from_nside,
-)
-from .hpxmap import HpxMap
-from .utils import INVALID_INDEX
+from .geom import HpxGeom
+from .core import HpxMap
+from .io import HpxConv, HPX_FITS_CONVENTIONS
+from .utils import HpxToWcsMapping, get_superpixels, get_pix_size_from_nside
+from ..utils import INVALID_INDEX
+from ..geom import MapCoord, pix_tuple_to_idx
+
 
 __all__ = ["HpxNDMap"]
 
@@ -231,7 +224,7 @@ class HpxNDMap(HpxMap):
         hpx2wcs=None,
         fill_nan=True
     ):
-        from .wcsnd import WcsNDMap
+        from gammapy.maps import WcsNDMap
 
         if sum_bands and self.geom.nside.size > 1:
             map_sum = self.sum_over_axes()
@@ -821,6 +814,8 @@ class HpxNDMap(HpxMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
+        from gammapy.maps import RegionGeom, RegionNDMap
+
         if isinstance(region, SkyCoord):
             region = PointSkyRegion(region)
 

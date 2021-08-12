@@ -14,10 +14,11 @@ from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
-from .geom import MapCoord, pix_tuple_to_idx
-from .regionnd import RegionGeom, RegionNDMap
-from .utils import INVALID_INDEX
-from .wcsmap import WcsGeom, WcsMap
+from .geom import WcsGeom
+from .core import WcsMap
+from ..utils import INVALID_INDEX
+from ..geom import MapCoord, pix_tuple_to_idx
+
 
 __all__ = ["WcsNDMap"]
 
@@ -495,6 +496,8 @@ class WcsNDMap(WcsMap):
         spectrum : `~gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
+        from gammapy.maps import RegionGeom, RegionNDMap
+
         if isinstance(region, SkyCoord):
             region = PointSkyRegion(region)
         elif region is None:

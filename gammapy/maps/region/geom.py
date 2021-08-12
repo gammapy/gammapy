@@ -12,11 +12,11 @@ from gammapy.utils.regions import (
     regions_to_compound_region,
     compound_region_center,
 )
-from gammapy.maps.wcs import _check_width
-from .core import MapCoord, Map
-from .geom import Geom, pix_tuple_to_idx
-from .axes import MapAxes, MapAxis
-from .wcs import WcsGeom
+from ..core import MapCoord, Map
+from ..utils import _check_width
+from ..geom import Geom, pix_tuple_to_idx
+from ..axes import MapAxes, MapAxis
+from ..wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
 

@@ -2,7 +2,42 @@
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
+from astropy.coordinates import Angle
 import json
+
+
+def _check_width(width):
+    """Check and normalise width argument.
+
+    Always returns tuple (lon, lat) as float in degrees.
+    """
+    if isinstance(width, tuple):
+        lon = Angle(width[0], "deg").deg
+        lat = Angle(width[1], "deg").deg
+        return lon, lat
+    else:
+        angle = Angle(width, "deg").deg
+        if np.isscalar(angle):
+            return angle, angle
+        else:
+            return tuple(angle)
+
+
+def _check_binsz(binsz):
+    """Check and normalise bin size argument.
+
+    Always returns an object with the same shape
+    as the input where the spatial coordinates
+    are a float in degrees.
+    """
+    if isinstance(binsz, tuple):
+        lon_sz = Angle(binsz[0], "deg").deg
+        lat_sz = Angle(binsz[1], "deg").deg
+        return lon_sz, lat_sz
+    elif isinstance(binsz, list):
+        binsz[:2] = Angle(binsz[:2], unit="deg").deg
+        return binsz
+    return Angle(binsz, unit="deg").deg
 
 
 def coordsys_to_frame(coordsys):

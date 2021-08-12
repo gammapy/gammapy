@@ -3,9 +3,10 @@ import abc
 import json
 import numpy as np
 from astropy.io import fits
-from .core import Map
-from .hpx import HpxConv, HpxGeom
-from .utils import find_bands_hdu, find_bintable_hdu
+from .geom import HpxGeom
+from .io import HpxConv
+from ..utils import find_bands_hdu, find_bintable_hdu
+from ..core import Map
 
 __all__ = ["HpxMap"]
 
@@ -79,7 +80,7 @@ class HpxMap(Map):
         map : `~HpxMap`
             A HPX map object.
         """
-        from .hpxnd import HpxNDMap
+        from .ndmap import HpxNDMap
 
         hpx = HpxGeom.create(
             nside=nside,

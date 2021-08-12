@@ -15,50 +15,17 @@ from astropy.wcs.utils import (
     wcs_to_celestial_frame,
 )
 from gammapy.utils.array import round_up_to_odd
-from .geom import (
+from ..geom import (
     Geom,
     MapCoord,
     get_shape,
     pix_tuple_to_idx,
     skycoord_to_lonlat,
 )
-from .axes import MapAxes
-from .utils import INVALID_INDEX
+from ..axes import MapAxes
+from ..utils import INVALID_INDEX, _check_binsz, _check_width
 
 __all__ = ["WcsGeom"]
-
-def _check_width(width):
-    """Check and normalise width argument.
-
-    Always returns tuple (lon, lat) as float in degrees.
-    """
-    if isinstance(width, tuple):
-        lon = Angle(width[0], "deg").deg
-        lat = Angle(width[1], "deg").deg
-        return lon, lat
-    else:
-        angle = Angle(width, "deg").deg
-        if np.isscalar(angle):
-            return angle, angle
-        else:
-            return tuple(angle)
-
-
-def _check_binsz(binsz):
-    """Check and normalise bin size argument.
-
-    Always returns an object with the same shape
-    as the input where the spatial coordinates
-    are a float in degrees.
-    """
-    if isinstance(binsz, tuple):
-        lon_sz = Angle(binsz[0], "deg").deg
-        lat_sz = Angle(binsz[1], "deg").deg
-        return lon_sz, lat_sz
-    elif isinstance(binsz, list):
-        binsz[:2] = Angle(binsz[:2], unit="deg").deg
-        return binsz
-    return Angle(binsz, unit="deg").deg
 
 
 def cast_to_shape(param, shape, dtype):
@@ -945,9 +912,9 @@ class WcsGeom(Geom):
             Boundary mask
 
         """
-        from . import Map
+        from .ndmap import WcsNDMap
         data = np.ones(self.data_shape, dtype=bool)
-        return Map.from_geom(self, data=data).binary_erode(
+        return WcsNDMap.from_geom(self, data=data).binary_erode(
             width=2 * u.Quantity(width), kernel="box"
         )
 
@@ -996,7 +963,7 @@ class WcsGeom(Geom):
         Note how we made a list with a single region,
         since this method expects a list of regions.
         """
-        from . import Map, RegionGeom
+        from gammapy.maps import Map, RegionGeom
 
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")

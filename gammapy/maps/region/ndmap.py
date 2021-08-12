@@ -8,11 +8,11 @@ from scipy.ndimage.measurements import label as ndi_label
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
-from .core import Map
-from .geom import pix_tuple_to_idx
-from .axes import MapAxes, MapAxis, LabelMapAxis
-from .region import RegionGeom
-from .utils import INVALID_INDEX
+from ..core import Map
+from ..geom import pix_tuple_to_idx
+from ..axes import MapAxes, MapAxis
+from ..region import RegionGeom
+from ..utils import INVALID_INDEX
 
 __all__ = ["RegionNDMap"]
 

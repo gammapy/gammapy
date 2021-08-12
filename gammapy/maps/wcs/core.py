@@ -2,9 +2,9 @@
 import json
 import numpy as np
 from astropy.io import fits
-from .core import Map
-from .utils import find_bands_hdu, find_hdu, JsonQuantityEncoder
-from .wcs import WcsGeom
+from .geom import WcsGeom
+from ..core import Map
+from ..utils import find_bands_hdu, find_hdu, JsonQuantityEncoder
 
 
 __all__ = ["WcsMap"]
@@ -96,7 +96,7 @@ class WcsMap(Map):
         map : `~WcsMap`
             A WCS map object.
         """
-        from .wcsnd import WcsNDMap
+        from .ndmap import WcsNDMap
 
         geom = WcsGeom.create(
             npix=npix,
