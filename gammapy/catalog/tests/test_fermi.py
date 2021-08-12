@@ -223,7 +223,7 @@ class TestFermi4FGLObject:
         source = self.cat["4FGL J0000.3-7355"]
         fp = source.flux_points
 
-        assert_allclose(fp.ts_threshold_ul, 1)
+        assert_allclose(fp.sqrt_ts_threshold_ul, 1)
         assert_allclose(fp.n_sigma, 1)
         assert_allclose(fp.n_sigma_ul, 2)
 

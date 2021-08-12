@@ -223,7 +223,7 @@ def test_flux_map_str(wcs_flux_map, reference_model):
     assert "pl" in fm_str
     assert "n_sigma" in fm_str
     assert "n_sigma_ul" in fm_str
-    assert "ts_threshold" in fm_str
+    assert "sqrt_ts_threshold" in fm_str
 
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])

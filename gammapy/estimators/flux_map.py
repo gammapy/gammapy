@@ -216,9 +216,9 @@ class FluxMaps:
         return self.meta.get("n_sigma_ul")
 
     @property
-    def ts_threshold_ul(self):
-        """TS threshold for upper limits"""
-        return self.meta.get("ts_threshold_ul", 4)
+    def sqrt_ts_threshold_ul(self):
+        """sqrt(TS) threshold for upper limits"""
+        return self.meta.get("sqrt_ts_threshold_ul", 2)
 
     @property
     def sed_type_init(self):
@@ -302,8 +302,8 @@ class FluxMaps:
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
 
-        if "ts" in self._data and "norm_ul" in self._data:
-            is_ul.data = self.ts.data < self.ts_threshold_ul
+        if any([_ in self._data for _ in ["ts", "sqrt_ts"]]) and "norm_ul" in self._data:
+            is_ul.data = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
         elif "norm_ul" in self._data:
             is_ul.data = np.isfinite(self.norm_ul)
         else:
@@ -388,7 +388,8 @@ class FluxMaps:
             return self._data["sqrt_ts"]
         else:
             with np.errstate(invalid="ignore", divide="ignore"):
-                data = np.where(self.norm > 0, np.sqrt(self.ts), -np.sqrt(self.ts))
+                ts = np.clip(self.ts.data, 0, None)
+                data = np.where(self.norm > 0, np.sqrt(ts), -np.sqrt(ts))
                 return Map.from_geom(geom=self.geom, data=data)
 
     @property
@@ -871,13 +872,13 @@ class FluxMaps:
         str_ = f"{self.__class__.__name__}\n"
         str_ += "-" * len(self.__class__.__name__)
         str_ += "\n\n"
-        str_ += "\t" + f"geom            : {self.geom.__class__.__name__}\n"
-        str_ += "\t" + f"axes            : {self.geom.axes_names}\n"
-        str_ += "\t" + f"shape           : {self.geom.data_shape[::-1]}\n"
-        str_ += "\t" + f"quantities      : {list(self.available_quantities)}\n"
-        str_ += "\t" + f"ref. model      : {self.reference_spectral_model.tag[-1]}\n"
-        str_ += "\t" + f"n_sigma         : {self.n_sigma}\n"
-        str_ += "\t" + f"n_sigma_ul      : {self.n_sigma_ul}\n"
-        str_ += "\t" + f"ts_threshold_ul : {self.ts_threshold_ul}\n"
-        str_ += "\t" + f"sed type init   : {self.sed_type_init}\n"
+        str_ += "\t" + f"geom                   : {self.geom.__class__.__name__}\n"
+        str_ += "\t" + f"axes                   : {self.geom.axes_names}\n"
+        str_ += "\t" + f"shape                  : {self.geom.data_shape[::-1]}\n"
+        str_ += "\t" + f"quantities             : {list(self.available_quantities)}\n"
+        str_ += "\t" + f"ref. model             : {self.reference_spectral_model.tag[-1]}\n"
+        str_ += "\t" + f"n_sigma                : {self.n_sigma}\n"
+        str_ += "\t" + f"n_sigma_ul             : {self.n_sigma_ul}\n"
+        str_ += "\t" + f"sqrt_ts_threshold_ul   : {self.sqrt_ts_threshold_ul}\n"
+        str_ += "\t" + f"sed type init          : {self.sed_type_init}\n"
         return str_.expandtabs(tabsize=2)
