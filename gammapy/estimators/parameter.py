@@ -274,7 +274,7 @@ class ParameterEstimator(Estimator):
             mask = dataset.mask
             npred.append(dataset.npred().data[mask].sum())
 
-        return {"npred": np.array(npred, dtype=int), "datasets": datasets.names}
+        return {"npred": np.array(npred), "datasets": datasets.names}
 
     def run(self, datasets, parameter):
         """Run the parameter estimator.
