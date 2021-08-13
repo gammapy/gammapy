@@ -1282,7 +1282,7 @@ class MapDataset(Dataset):
         """
         from .spectrum import SpectrumDataset
 
-        dataset = self.to_spectrum(region=on_region, name=name)
+        dataset = self.to_region_map_dataset(region=on_region, name=name)
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
@@ -1319,11 +1319,13 @@ class MapDataset(Dataset):
 
         return SpectrumDataset(**kwargs)
 
-    def to_spectrum(self, region, name=None):
-        """Return a ~gammapy.datasets.SpectrumDataset from on_region.
+    def to_region_map_dataset(self, region, name=None):
+        """Integrate the map dataset in a given region.
 
-        The model is not exported to the ~gammapy.datasets.SpectrumDataset.
-        It must be set after the dataset extraction.
+        Counts and background of the dataset are integrated in the given region,
+        taking the safe mask into accounts. The exposure is averaged in the
+        region again taking the safe mask into account. The PSF and energy
+        dispersion kernel are taken at the center of the region.
 
         Parameters
         ----------

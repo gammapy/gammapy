@@ -1624,7 +1624,7 @@ def test_map_dataset_region_geom_npred():
     region = RegionGeom.create("galactic;circle(0, 0, 0.4)").region
     npred_ref = dataset.npred().to_region_nd_map(region)
 
-    dataset_spec = dataset.to_spectrum(region)
+    dataset_spec = dataset.to_region_map_dataset(region)
     dataset_spec.models = [model_1, model_2]
 
     npred = dataset_spec.npred()
