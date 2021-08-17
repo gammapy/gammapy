@@ -2827,14 +2827,15 @@ class MapEvaluator:
                 return 1
 
             wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
-            values = self.model.spatial_model.integrate_geom(wcs_geom)
 
             if self.model.apply_irf["psf"]:
                 values = self.apply_psf(values)
+#            if self.psf and self.model.apply_irf["psf"]:
+#                values = self._compute_flux_spatial_geom(wcs_geom)
             else:
+                values = self.model.spatial_model.integrate_geom(wcs_geom, oversampling_factor=1)
                 axes = [self.geom.axes["energy_true"].squash()]
                 values = values.to_cube(axes=axes)
-#            values = self._compute_flux_spatial_geom(wcs_geom)
 
             weights = wcs_geom.region_weights(regions=[self.geom.region])
             value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
