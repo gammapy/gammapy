@@ -112,7 +112,7 @@ class PSFKernel:
         model.position = geom.center_skydir
 
         geom = geom.upsample(factor=factor)
-        map = model.integrate_geom(geom)
+        map = model.integrate_geom(geom, oversampling_factor=1)
         return cls(psf_kernel_map=map.downsample(factor=factor))
 
     @classmethod

@@ -198,7 +198,6 @@ class SpatialModel(Model):
             else:
                 oversampling_factor=1
 
-        print(oversampling_factor)
         if oversampling_factor > 1:
             if self.evaluation_radius is not None:
                 # Is it still needed?
