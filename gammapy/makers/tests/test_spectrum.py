@@ -173,7 +173,7 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     obs = observations_hess_dl3[0]
     dataset = maker.run(spectrum_dataset_crab, obs)
     dataset = safe_mask_maker.run(dataset, obs)
-    assert_allclose(dataset.energy_range[0].value, 1)
+    assert_allclose(dataset.energy_range[0], 1)
     assert dataset.energy_range[0].unit == "TeV"
 
     mask_safe = safe_mask_maker.make_mask_energy_aeff_max(dataset)
@@ -194,7 +194,7 @@ def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
     maker = SpectrumDatasetMaker()
     dataset = maker.run(spectrum_dataset_gc, obs)
     dataset = safe_mask_maker.run(dataset, obs)
-    assert_allclose(dataset.energy_range[0].value, 3.162278, rtol=1e-3)
+    assert_allclose(dataset.energy_range[0], 3.162278, rtol=1e-3)
     assert dataset.energy_range[0].unit == "TeV"
 
 
