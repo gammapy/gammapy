@@ -364,8 +364,8 @@ class MapDataset(Dataset):
                 energy_max = energy_min.copy()
         else:
             data_shape = geom.data_shape
-            energy_min = np.full(data_shape, energy[0])
-            energy_max = np.full(data_shape, energy[-1])
+            energy_min = np.full(data_shape, energy.value[0])
+            energy_max = np.full(data_shape, energy.value[-1])
 
         map_min = Map.from_geom(geom, data=energy_min, unit=energy.unit)
         map_max = Map.from_geom(geom, data=energy_max, unit=energy.unit)
