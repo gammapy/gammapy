@@ -188,7 +188,7 @@ class SpatialModel(Model):
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
 
-        result = Map.from_geom(geom=wcs_geom, unit='1/sr')
+        result = Map.from_geom(geom=wcs_geom)#, unit='1/sr')
 
         pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
         if oversampling_factor is None and self.evaluation_bin_size_min is not None:
@@ -216,9 +216,12 @@ class SpatialModel(Model):
             integrated = upsampled.downsample(oversampling_factor, preserve_counts=True, weights=mask)
 
             # Finally stack result
+            result.unit = integrated.unit
             result.stack(integrated)
         else:
-            result.quantity += self.evaluate_geom(wcs_geom)
+            values = self.evaluate_geom(wcs_geom)
+            result.unit = values.unit
+            result += values
 
         result *= result.geom.solid_angle()
 

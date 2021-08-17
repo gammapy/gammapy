@@ -594,6 +594,7 @@ class MyCustomGaussianModel(SpatialModel):
         sigmas = u.Quantity([sigma_1TeV, sigma_10TeV])
         energy_nodes = [1, 10] * u.TeV
         sigma = np.interp(energy, energy_nodes, sigmas)
+        sigma = sigma.to("rad")
 
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
