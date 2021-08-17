@@ -184,28 +184,31 @@ class SpatialModel(Model):
         """
         wcs_geom = geom
         mask = None
+
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
 
         result = Map.from_geom(geom=wcs_geom, unit='1/sr')
 
-        if oversampling_factor is None and self.evaluation_bin_size_min:
+        pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
+        if oversampling_factor is None and self.evaluation_bin_size_min is not None:
             res_scale = self.evaluation_bin_size_min.to_value("deg")
-            oversampling_factor = int(np.ceil(np.max(wcs_geom.pixel_scales.deg) / res_scale))
+            oversampling_factor = int(np.ceil( pix_scale/ res_scale))
         else:
             oversampling_factor=1
 
         if oversampling_factor > 1:
             if self.evaluation_radius is not None:
                 # Is it still needed?
-                width = np.maximum(2 * self.evaluation_radius, 2 * np.max(wcs_geom.pixel_scales))
+                width = 2*np.maximum(self.evaluation_radius.to_value("deg"),pix_scale)
                 wcs_geom = wcs_geom.cutout(self.position, width)
 
             upsampled_geom = wcs_geom.upsample(oversampling_factor)
 
             # assume the upsampled solid angles are approximately factor**2 smaller
-            values = self.evaluate_geom(upsampled_geom)/oversampling_factor**2
-            upsampled = Map.from_geom(upsampled_geom, data=values.value, unit=values.unit)
+            values = self.evaluate_geom(upsampled_geom) / oversampling_factor ** 2
+            upsampled = Map.from_geom(upsampled_geom, unit=values.unit)
+            upsampled += values
 
             if geom.is_region:
                 mask = geom.contains(upsampled_geom.get_coord()).astype('int')
@@ -215,7 +218,7 @@ class SpatialModel(Model):
             # Finally stack result
             result.stack(integrated)
         else:
-            result.quantity = self.evaluate_geom(wcs_geom)
+            result.quantity += self.evaluate_geom(wcs_geom)
 
         result *= result.geom.solid_angle()
 
@@ -431,7 +434,7 @@ class PointSpatialModel(SpatialModel):
         values = self.integrate_geom(geom).data
         return values / geom.solid_angle()
 
-    def integrate_geom(self, geom):
+    def integrate_geom(self, geom, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom`
 
         Parameters
