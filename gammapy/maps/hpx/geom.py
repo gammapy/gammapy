@@ -476,6 +476,16 @@ class HpxGeom(Geom):
 
         return SkyCoord(lon, lat, frame=self.frame, unit="deg")
 
+    @property
+    def pixel_scales(self):
+        self.angle_ = """Pixel scale.
+
+        Returns
+        -------
+        angle: `~astropy.coordinates.Angle`
+        """
+        return get_pix_size_from_nside(self.nside) * u.deg
+
     def interp_weights(self, coords, idxs=None):
         """Get interpolation weights for given coords
 
