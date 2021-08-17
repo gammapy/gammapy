@@ -150,7 +150,7 @@ def test_sky_disk():
     assert_allclose(val.value, desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius, r_0 * (1 + model.edge_width.value))
+    assert_allclose(radius.to_value("deg"), 2.222)
 
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
@@ -170,7 +170,7 @@ def test_sky_disk():
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius, r_0 * (1 + model.edge_width.value))
+    assert_allclose(radius.to_value("deg"), 11.11)
     # test rotation
     r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
