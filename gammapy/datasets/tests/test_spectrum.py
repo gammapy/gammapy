@@ -131,13 +131,16 @@ def test_npred_models():
 
 
 def test_npred_spatial_model(spectrum_dataset):
-    model = SkyModel.create("pl", "point", name="test")
+    model = SkyModel.create("pl", "gauss", name="test")
 
     spectrum_dataset.models = [model]
 
     npred = spectrum_dataset.npred()
+    model.spatial_model.sigma.value = 1.0
+    npred_large_sigma = spectrum_dataset.npred()
 
     assert_allclose(npred.data.sum(), 3000)
+    assert_allclose(npred_large_sigma.data.sum(), 3000)
     assert spectrum_dataset.evaluators["test"].psf is None
 
 
