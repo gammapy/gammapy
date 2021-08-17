@@ -317,8 +317,11 @@ class SkyModel(Model):
 
         return value
 
-    def integrate_geom(self, geom, gti=None):
+    def integrate_geom(self, geom, gti=None, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom`.
+
+        See `~gammapy.modeling.models.SpatialModel.integrate_geom` and
+        `~gammapy.modeling.models.SpectralModel.integral`.
 
         Parameters
         ----------
@@ -326,6 +329,9 @@ class SkyModel(Model):
             Map geometry
         gti : `GTI`
             GIT table
+        oversampling_factor : int or None
+            The oversampling factor to use for spatial integration.
+            Default is None: the factor is estimated from the model minimal bin size
 
         Returns
         -------
@@ -338,7 +344,7 @@ class SkyModel(Model):
         )
 
         if self.spatial_model:
-            value = value * self.spatial_model.integrate_geom(geom, oversampling_factor=None).quantity
+            value = value * self.spatial_model.integrate_geom(geom, oversampling_factor=oversampling_factor).quantity
 
         if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
