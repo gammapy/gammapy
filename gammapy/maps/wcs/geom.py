@@ -14,7 +14,7 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from gammapy.utils.array import round_up_to_odd
+from gammapy.utils.array import round_up_to_odd, round_up_to_even
 from ..geom import (
     Geom,
     get_shape,
@@ -1077,6 +1077,28 @@ class WcsGeom(Geom):
 
         width_npix = (width / binsz).to_value("")
         npix = round_up_to_odd(width_npix)
+        return WcsGeom.create(
+            skydir=self.center_skydir,
+            binsz=binsz,
+            npix=npix,
+            proj=self.projection,
+            frame=self.frame,
+            axes=self.axes,
+        )
+
+    def to_even_npix(self):
+        """Create a new geom object with an even number of pixel and a maximum size.
+
+        Returns
+        -------
+        geom : `WcsGeom`
+            Geom with odd number of pixels
+        """
+        width = self.width.max()
+        binsz = self.pixel_scales.max()
+
+        width_npix = (width / binsz).to_value("")
+        npix = round_up_to_even(width_npix)
         return WcsGeom.create(
             skydir=self.center_skydir,
             binsz=binsz,

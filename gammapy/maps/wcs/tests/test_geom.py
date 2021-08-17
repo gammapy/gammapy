@@ -303,6 +303,7 @@ def test_cutout_info():
     assert cutout_info["cutout-slices"][0].start == 0
     assert cutout_info["cutout-slices"][1].start == 0
 
+
 def test_cutout_min_size():
     geom = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.5)
     position = SkyCoord(0, 0, unit="deg")
@@ -310,7 +311,8 @@ def test_cutout_min_size():
 
     assert cutout_geom.data_shape == (1, 4)
 
-def test_wcsgeom_get_coord():
+
+def test_wcs_geom_get_coord():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(4, 3), binsz=1, frame="galactic", proj="CAR"
     )
@@ -321,7 +323,7 @@ def test_wcsgeom_get_coord():
     assert coord.lat[0, 0].unit == "deg"
 
 
-def test_wcsgeom_instance_cache():
+def test_wcs_geom_instance_cache():
     geom_1 = WcsGeom.create(npix=(3, 3))
     geom_2 = WcsGeom.create(npix=(3, 3))
 
@@ -342,14 +344,14 @@ def test_wcsgeom_instance_cache():
     assert id(coord_2) == id(coord_2_cached)
 
 
-def test_wcsgeom_squash():
+def test_wcs_geom_squash():
     axis = MapAxis.from_nodes([1, 2, 3], name="test-axis")
     geom = WcsGeom.create(npix=(3, 3), axes=[axis])
     geom_squashed = geom.squash(axis_name="test-axis")
     assert geom_squashed.data_shape == (1, 3, 3)
 
 
-def test_wcsgeom_drop():
+def test_wcs_geom_drop():
     ax1 = MapAxis.from_nodes([1, 2, 3], name="ax1")
     ax2 = MapAxis.from_nodes([1, 2], name="ax2")
     ax3 = MapAxis.from_nodes([1, 2, 3, 4], name="ax3")
@@ -358,7 +360,7 @@ def test_wcsgeom_drop():
     assert geom_drop.data_shape == (4, 2, 3, 3)
 
 
-def test_wcsgeom_resample_overflows():
+def test_wcs_geom_resample_overflows():
     ax1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="ax1")
     ax2 = MapAxis.from_nodes([1, 2, 3], name="ax2")
     geom = WcsGeom.create(npix=(3, 3), axes=[ax1, ax2])
@@ -370,7 +372,7 @@ def test_wcsgeom_resample_overflows():
     assert_allclose(geom_resample.axes[0].edges, [1, 2, 5])
 
 
-def test_wcsgeom_get_pix_coords():
+def test_wcs_geom_get_pix_coords():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(4, 3), binsz=1, frame="galactic", proj="CAR", axes=axes1
     )
@@ -618,3 +620,13 @@ def test_non_equal_binsz():
 
     assert_allclose(coords["lon"].to_value("deg"), 0)
     assert_allclose(coords["lat"].to_value("deg"), [[-60], [0], [60]])
+
+
+def test_wcs_geom_to_even_npix():
+    geom = WcsGeom.create(
+        skydir=(0, 0), binsz=1, width=(3, 3)
+    )
+
+    geom_even = geom.to_even_npix()
+
+    assert geom_even.data_shape == (4, 4)
