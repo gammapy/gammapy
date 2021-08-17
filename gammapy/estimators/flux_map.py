@@ -815,7 +815,7 @@ class FluxMaps:
         hdulist = self.to_hdulist(sed_type)
 
         models = Models(self.reference_model)
-        models.write(filename_model, overwrite=overwrite)
+        models.write(filename_model, overwrite=overwrite, write_covariance=False)
         hdulist[0].header["MODEL"] = filename_model.as_posix()
 
         hdulist.writeto(filename, overwrite=overwrite)
