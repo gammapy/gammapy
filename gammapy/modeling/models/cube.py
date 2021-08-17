@@ -338,7 +338,7 @@ class SkyModel(Model):
         )
 
         if self.spatial_model:
-            value = value * self.spatial_model.integrate_geom(geom).quantity
+            value = value * self.spatial_model.integrate_geom(geom, oversampling_factor=None).quantity
 
         if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)

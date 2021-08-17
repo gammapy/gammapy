@@ -191,12 +191,14 @@ class SpatialModel(Model):
         result = Map.from_geom(geom=wcs_geom)#, unit='1/sr')
 
         pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
-        if oversampling_factor is None and self.evaluation_bin_size_min is not None:
-            res_scale = self.evaluation_bin_size_min.to_value("deg")
-            oversampling_factor = int(np.ceil( pix_scale/ res_scale))
-        else:
-            oversampling_factor=1
+        if oversampling_factor is None:
+            if self.evaluation_bin_size_min is not None:
+                res_scale = self.evaluation_bin_size_min.to_value("deg")
+                oversampling_factor = int(np.ceil( pix_scale/ res_scale))
+            else:
+                oversampling_factor=1
 
+        print(oversampling_factor)
         if oversampling_factor > 1:
             if self.evaluation_radius is not None:
                 # Is it still needed?
@@ -950,7 +952,7 @@ class ConstantFluxSpatialModel(SpatialModel):
         return 1 / geom.solid_angle()
 
     @staticmethod
-    def integrate_geom(geom):
+    def integrate_geom(geom, oversampling_factor=None):
         """Evaluate model."""
         return Map.from_geom(geom=geom, data=1)
 
