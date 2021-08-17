@@ -337,34 +337,53 @@ class MapDataset(Dataset):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
 
-    def _energy_range(self, mask = None):
-        """Compute the energy range with or without the mask fit."""
-        energy = self._geom.axes["energy"].edges
-        energy_min, energy_max = energy[:-1], energy[1:]
+    def _energy_range(self, mask=None):
+        """Compute the energy range maps with or without the fit mask."""
+        geom = self._geom
+        energy = geom.axes["energy"].edges
+        idx = geom.axes.index_data("energy")
+        geom = geom.drop("energy")
 
         if mask is not None:
-            if mask.data.any():
-                mask = mask.data.any(axis=(1, 2))
-            else:
-                return None, None
-        else:
-            mask = None
+            mask = mask.data
+            if mask.any():
+                energy_shape = [1] * mask.ndim
+                energy_shape[idx] = -1
+                energy_min, energy_max = energy.value[:-1], energy.value[1:]
+                energy_min = energy_min.reshape(energy_shape)
+                energy_max = energy_max.reshape(energy_shape)
 
-        return u.Quantity([energy_min[mask].min(), energy_max[mask].max()])
+                energy_min = energy_min * mask
+                energy_min[~mask] = np.nan
+                energy_min = np.nanmin(energy_min, idx)
+
+                energy_max = (energy_max * mask).max(idx)
+                energy_max[energy_max == 0] = np.nan
+            else:
+                energy_min = np.full(geom.data_shape, np.nan)
+                energy_max = energy_min.copy()
+        else:
+            data_shape = geom.data_shape
+            energy_min = np.full(data_shape, energy[0])
+            energy_max = np.full(data_shape, energy[-1])
+
+        map_min = Map.from_geom(geom, data=energy_min, unit=energy.unit)
+        map_max = Map.from_geom(geom, data=energy_max, unit=energy.unit)
+        return map_min, map_max
 
     @property
     def energy_range(self):
-        """Energy range defined by the full mask (mask_safe and mask_fit)."""
+        """Energy range maps defined by the full mask (mask_safe and mask_fit)."""
         return self._energy_range(mask=self.mask)
 
     @property
     def energy_range_safe(self):
-        """Energy range defined by the mask_safe only."""
+        """Energy range maps defined by the mask_safe only."""
         return self._energy_range(self.mask_safe)
 
     @property
-    def energy_range_safe(self):
-        """Energy range defined by the mask_fit only."""
+    def energy_range_fit(self):
+        """Energy range maps defined by the mask_fit only."""
         return self._energy_range(self.mask_fit)
 
     def npred(self):
@@ -647,7 +666,7 @@ class MapDataset(Dataset):
         ----------
         other: `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             Map dataset to be stacked with this one. If other is an on-off
-            dataset alpha * counts_off is used as a background model.        
+            dataset alpha * counts_off is used as a background model.
         nan_to_num: bool
             Non-finite values are replaced by zero if True (default).
 
@@ -1734,7 +1753,7 @@ class MapDatasetOnOff(MapDataset):
 
     See Also
     --------
-    MapDatasetOn, SpectrumDataset, FluxPointsDataset
+    MapDataset, SpectrumDataset, FluxPointsDataset
 
     """
 
