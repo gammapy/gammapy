@@ -197,11 +197,11 @@ def test_event_det_coords(dataset, models):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
-    assert len(events.table) == 374
-    assert_allclose(events.table["DETX"][0], -2.44563584, rtol=1e-5)
+    assert len(events.table) == 102
+    assert_allclose(events.table["DETX"][0], -2.269308, rtol=1e-5)
     assert events.table["DETX"].unit == "deg"
 
-    assert_allclose(events.table["DETY"][0], 0.01414569, rtol=1e-5)
+    assert_allclose(events.table["DETY"][0], -1.391967, rtol=1e-5)
     assert events.table["DETY"].unit == "deg"
 
 
@@ -225,15 +225,15 @@ def test_mde_run(dataset, models):
 
     events_bkg = sampler.run(dataset=dataset_bkg, observation=obs)
 
-    assert len(events.table) == 374
-    assert_allclose(events.table["ENERGY"][0], 4.09979515940, rtol=1e-5)
-    assert_allclose(events.table["RA"][0], 263.611383742, rtol=1e-5)
-    assert_allclose(events.table["DEC"][0], -28.89318805, rtol=1e-5)
+    assert len(events.table) == 102
+    assert_allclose(events.table["ENERGY"][0], 5.792375, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 263.777097, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -30.302968, rtol=1e-5)
 
-    assert len(events_bkg.table) == 10
-    assert_allclose(events_bkg.table["ENERGY"][0], 2.84808850102, rtol=1e-5)
-    assert_allclose(events_bkg.table["RA"][0], 266.6138405848, rtol=1e-5)
-    assert_allclose(events_bkg.table["DEC"][0], -29.0489180785, rtol=1e-5)
+    assert len(events_bkg.table) == 20
+    assert_allclose(events_bkg.table["ENERGY"][0], 1.40316, rtol=1e-5)
+    assert_allclose(events_bkg.table["RA"][0], 263.687109, rtol=1e-5)
+    assert_allclose(events_bkg.table["DEC"][0], -28.97436, rtol=1e-5)
     assert_allclose(events_bkg.table["MC_ID"][0], 0, rtol=1e-5)
 
     meta = events.table.meta
@@ -324,10 +324,10 @@ def test_mde_run_switchoff(dataset, models):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
-    assert len(events.table) == 348
-    assert_allclose(events.table["ENERGY"][0], 3.5360908528324453, rtol=1e-5)
-    assert_allclose(events.table["RA"][0], 266.2965928042457, rtol=1e-5)
-    assert_allclose(events.table["DEC"][0], -29.056521954411902, rtol=1e-5)
+    assert len(events.table) == 88
+    assert_allclose(events.table["ENERGY"][0], 2.751205, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.559566, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.742429, rtol=1e-5)
 
     meta = events.table.meta
 
