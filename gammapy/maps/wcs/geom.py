@@ -22,6 +22,7 @@ from ..geom import (
 )
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
+from ..coord import MapCoord, skycoord_to_lonlat
 from ..utils import INVALID_INDEX, _check_binsz, _check_width
 
 __all__ = ["WcsGeom"]

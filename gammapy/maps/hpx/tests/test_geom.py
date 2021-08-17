@@ -702,6 +702,16 @@ def test_hpxgeom_solid_angle():
     assert_allclose(solid_angle.value, 0.016362461737446838)
 
 
+def test_hpxgeom_pixel_scales():
+    geom = HpxGeom.create(
+        nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
+    )
+
+    pixel_scales = geom.pixel_scales
+
+    assert_allclose(pixel_scales, [4] * u.deg)
+
+
 def test_hpx_geom_cutout():
     geom = HpxGeom.create(
         nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]

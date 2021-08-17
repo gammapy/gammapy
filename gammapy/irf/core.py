@@ -817,7 +817,7 @@ class IRFMap:
         """
         irf_map = self._irf_map.slice_by_idx(slices=slices)
 
-        if "energy_true" in slices:
+        if "energy_true" in slices and self.exposure_map:
             exposure_map = self.exposure_map.slice_by_idx(slices=slices)
         else:
             exposure_map = self.exposure_map
