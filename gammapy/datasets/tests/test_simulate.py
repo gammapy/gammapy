@@ -61,13 +61,14 @@ def dataset():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=1, width="5 deg", frame="galactic", axes=[energy_axis]
+        skydir=(0, 0), binsz=0.05, width="5 deg", frame="galactic", axes=[energy_axis]
     )
 
     geom_true = geom.copy()
     geom_true.axes[0].name = "energy_true"
 
     dataset = get_map_dataset(geom=geom, geom_etrue=geom_true, edisp="edispmap", name="test")
+    dataset.background /= 400
 
     dataset.gti = GTI.create(
         start=0 * u.s, stop=1000 * u.s, reference_time="2000-01-01"
@@ -82,17 +83,17 @@ def test_mde_sample_sources(dataset, models):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
 
-    assert len(events.table["ENERGY_TRUE"]) == 348
-    assert_allclose(events.table["ENERGY_TRUE"][0], 3.536090852832, rtol=1e-5)
+    assert len(events.table["ENERGY_TRUE"]) == 88
+    assert_allclose(events.table["ENERGY_TRUE"][0], 2.751205, rtol=1e-5)
     assert events.table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.296592804, rtol=1e-5)
+    assert_allclose(events.table["RA_TRUE"][0], 266.559566, rtol=1e-5)
     assert events.table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -29.056521954, rtol=1e-5)
+    assert_allclose(events.table["DEC_TRUE"][0], -28.742429, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["TIME"][0], 32.73797244764, rtol=1e-5)
+    assert_allclose(events.table["TIME"][0], 461.424967, rtol=1e-5)
     assert events.table["TIME"].unit == "s"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
@@ -132,10 +133,10 @@ def test_mde_sample_background(dataset, models):
     assert_allclose(events.table["ENERGY"][0], 1.894698, rtol=1e-5)
     assert events.table["ENERGY"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.454448, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.571824, rtol=1e-5)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -30.870316, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -27.979152, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
     assert events.table["DEC_TRUE"][0] == events.table["DEC"][0]
@@ -150,14 +151,14 @@ def test_mde_sample_psf(dataset, models):
     events = sampler.sample_sources(dataset=dataset)
     events = sampler.sample_psf(dataset.psf, events)
 
-    assert len(events.table) == 348
-    assert_allclose(events.table["ENERGY_TRUE"][0], 3.536090852832, rtol=1e-5)
+    assert len(events.table) == 88
+    assert_allclose(events.table["ENERGY_TRUE"][0], 2.751205, rtol=1e-5)
     assert events.table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.2757792220, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.556053, rtol=1e-5)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -29.030939, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.746459, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
 
@@ -168,14 +169,14 @@ def test_mde_sample_edisp(dataset, models):
     events = sampler.sample_sources(dataset=dataset)
     events = sampler.sample_edisp(dataset.edisp, events)
 
-    assert len(events.table) == 348
-    assert_allclose(events.table["ENERGY"][0], 3.53609085283, rtol=1e-5)
+    assert len(events.table) == 88
+    assert_allclose(events.table["ENERGY"][0], 2.751205, rtol=1e-5)
     assert events.table["ENERGY"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.296592804, rtol=1e-5)
+    assert_allclose(events.table["RA_TRUE"][0], 266.559566, rtol=1e-5)
     assert events.table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -29.05652195, rtol=1e-5)
+    assert_allclose(events.table["DEC_TRUE"][0], -28.742429, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
