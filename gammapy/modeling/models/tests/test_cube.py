@@ -585,8 +585,8 @@ class MyCustomGaussianModel(SpatialModel):
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
 
-    sigma_1TeV = Parameter("sigma_1TeV", "1 deg", min=0)
-    sigma_10TeV = Parameter("sigma_10TeV", "0.5 deg", min=0)
+    sigma_1TeV = Parameter("sigma_1TeV", "0.5 deg", min=0)
+    sigma_10TeV = Parameter("sigma_10TeV", "0.1 deg", min=0)
 
     @staticmethod
     def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
@@ -607,13 +607,16 @@ class MyCustomGaussianModel(SpatialModel):
         return 5 * self.sigma_1TeV.quantity
 
 
-def test_energy_dependent_model(geom_true):
+def test_energy_dependent_model():
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy_true")
+    geom_true = WcsGeom.create(skydir=(0, 0), binsz="0.1 deg", npix=(50, 50), frame="galactic", axes=[axis])
+
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     spatial_model = MyCustomGaussianModel(frame="galactic")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = sky_model.integrate_geom(geom_true)
 
-    assert_allclose(model.data.sum(), 1.678314e-14, rtol=1e-3)
+    assert_allclose(model.data.sum(), 9.9e-11, rtol=1e-3)
 
 
 @requires_dependency("matplotlib")
