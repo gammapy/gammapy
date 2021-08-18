@@ -2747,7 +2747,7 @@ class MapEvaluator:
 
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
-
+            print(self.contributes)
             if self.contributes:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=self.cutout_width, odd_npix=True
@@ -2755,7 +2755,8 @@ class MapEvaluator:
         else:
             self.exposure = exposure
 
-        self.update_spatial_oversampling_factor(geom)
+        if self.contributes:
+            self.update_spatial_oversampling_factor(self.geom)
 
         self._compute_npred.cache_clear()
         self._compute_flux_spatial.cache_clear()
