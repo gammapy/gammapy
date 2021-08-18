@@ -2747,7 +2747,7 @@ class MapEvaluator:
 
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
-            print(self.contributes)
+
             if self.contributes:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=self.cutout_width, odd_npix=True
@@ -2772,7 +2772,7 @@ class MapEvaluator:
             binz = self.model.spatial_model.evaluation_bin_size_min
         else:
             binz = 0 * u.deg
-#        res_scale = np.sqrt(binz ** 2 + self._psf_r68_min ** 2).to_value("deg")
+
         res_scale = binz.to_value("deg")
 
         if res_scale != 0:
