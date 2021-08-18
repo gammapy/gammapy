@@ -2624,7 +2624,6 @@ class MapEvaluator:
         self._computation_cache = None
         self._neval = 0  # for debugging
         self._renorm = 1
-        self._psf_r68_min = 0 * u.deg
         self._spatial_oversampling_factor = 1
         self._upsampled_geom = self.exposure.geom if self.exposure else None
 
@@ -2740,12 +2739,7 @@ class MapEvaluator:
                 self.psf = psf.get_psf_kernel(
                     position=self.model.position, geom=geom, containment=PSF_CONTAINMENT
                 )
-            self._psf_r68_min = psf.containment_radius(
-                fraction=0.68,
-                energy_true=geom.axes["energy_true"].center,
-                position=self.model.position,
-            ).min()
-
+     
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
 
