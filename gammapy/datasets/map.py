@@ -2626,7 +2626,8 @@ class MapEvaluator:
         self._renorm = 1
         self._psf_r68_min = 0 * u.deg
         self._spatial_oversampling_factor = 1
-        self._upsampled_geom = None
+        self._upsampled_geom = self.exposure.geom if self.exposure else None
+
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -2856,7 +2857,6 @@ class MapEvaluator:
     def _compute_flux_spatial_geom(self, geom):
         """Compute spatial flux oversampling geom if necessary"""
         factor = self._spatial_oversampling_factor
-
         # for now we force the oversampling factor to be 1
         value = self.model.spatial_model.integrate_geom(geom, oversampling_factor=1)
 
