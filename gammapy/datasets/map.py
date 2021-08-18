@@ -2781,9 +2781,9 @@ class MapEvaluator:
             self._spatial_oversampling_factor = factor
 
         if  self._spatial_oversampling_factor > 1:
-            self._upsampled_geom = self.geom.upsample(self._spatial_oversampling_factor)
+            self._upsampled_geom = geom.upsample(self._spatial_oversampling_factor)
         else:
-            self._upsampled_geom = self.geom
+            self._upsampled_geom = geom
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
