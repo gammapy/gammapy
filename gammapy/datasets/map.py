@@ -2626,6 +2626,7 @@ class MapEvaluator:
         self._renorm = 1
         self._psf_r68_min = 0 * u.deg
         self._spatial_oversampling_factor = 1
+        self._upsampled_geom = None
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -2770,12 +2771,19 @@ class MapEvaluator:
             binz = self.model.spatial_model.evaluation_bin_size_min
         else:
             binz = 0 * u.deg
-        res_scale = np.sqrt(binz ** 2 + self._psf_r68_min ** 2).to_value("deg")
+#        res_scale = np.sqrt(binz ** 2 + self._psf_r68_min ** 2).to_value("deg")
+        res_scale = binz.to_value("deg")
+
         if res_scale != 0:
             if geom.is_region or geom.is_hpx:
                 geom = geom.to_wcs_geom()
             factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
             self._spatial_oversampling_factor = factor
+
+        if  self._spatial_oversampling_factor > 1:
+            self._upsampled_geom = self.geom.upsample(self._spatial_oversampling_factor)
+        else:
+            self._upsampled_geom = self.geom
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -2840,26 +2848,23 @@ class MapEvaluator:
             weights = wcs_geom.region_weights(regions=[self.geom.region])
             value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
         else:
-            value = self._compute_flux_spatial_geom(self.geom)
+            value = self._compute_flux_spatial_geom(self._upsampled_geom)
 
         return value
 
     def _compute_flux_spatial_geom(self, geom):
         """Compute spatial flux oversampling geom if necessary"""
         factor = self._spatial_oversampling_factor
-        if factor > 1:
-            geom = geom.upsample(factor)
 
         # for now we force the oversampling factor to be 1
         value = self.model.spatial_model.integrate_geom(geom, oversampling_factor=1)
-        if self.psf and self.model.apply_irf["psf"]:
-            psf_kernel_map = self.psf._psf_kernel_map.copy()
-            self.psf._psf_kernel_map = self.psf._psf_kernel_map.upsample(factor)
-            value = self.apply_psf(value)
-            self.psf._psf_kernel_map = psf_kernel_map
 
         if factor > 1:
             value = value.downsample(factor)
+
+        if self.psf and self.model.apply_irf["psf"]:
+            value = self.apply_psf(value)
+
         return value
 
     def compute_flux_spectral(self):
