@@ -337,28 +337,25 @@ class MapDataset(Dataset):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
 
-    def _energy_range(self, mask=None):
+    def _energy_range(self, mask_map=None):
         """Compute the energy range maps with or without the fit mask."""
         geom = self._geom
         energy = geom.axes["energy"].edges
-        idx = geom.axes.index_data("energy")
+        e_i = geom.axes.index_data("energy")
         geom = geom.drop("energy")
 
-        if mask is not None:
-            mask = mask.data
+        if mask_map is not None:
+            mask = mask_map.data
             if mask.any():
-                energy_shape = [1] * mask.ndim
-                energy_shape[idx] = -1
-                energy_min, energy_max = energy.value[:-1], energy.value[1:]
-                energy_min = energy_min.reshape(energy_shape)
-                energy_max = energy_max.reshape(energy_shape)
+                idx = mask.argmax(e_i)
+                energy_min = energy.value[idx]
+                mask_nan = ~mask.any(e_i)
+                energy_min[mask_nan] = np.nan
 
-                energy_min = energy_min * mask
-                energy_min[~mask] = np.nan
-                energy_min = np.nanmin(energy_min, idx)
-
-                energy_max = (energy_max * mask).max(idx)
-                energy_max[energy_max == 0] = np.nan
+                mask = np.flip(mask, e_i)
+                idx = mask.argmax(e_i)
+                energy_max = energy.value[::-1][idx]
+                energy_max[mask_nan] = np.nan
             else:
                 energy_min = np.full(geom.data_shape, np.nan)
                 energy_max = energy_min.copy()
@@ -374,7 +371,7 @@ class MapDataset(Dataset):
     @property
     def energy_range(self):
         """Energy range maps defined by the full mask (mask_safe and mask_fit)."""
-        return self._energy_range(mask=self.mask)
+        return self._energy_range(self.mask)
 
     @property
     def energy_range_safe(self):
