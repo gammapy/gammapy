@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.datasets import Datasets, SpectrumDatasetOnOff, MapDataset
+from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, Models
 from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -152,8 +152,8 @@ def test_flux_estimator_norm_range():
         reoptimize=True
     )
 
-    dataset = MapDataset(models=[model])
+    scale_model = estimator.get_scale_model(Models([model]))
 
-    estimator.run([dataset])
-
-    assert False
+    assert_allclose(scale_model.norm.min, 1e-3)
+    assert_allclose(scale_model.norm.max, 1e2)
+    assert scale_model.norm.interp == "log"
