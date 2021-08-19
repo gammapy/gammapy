@@ -1,12 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel, Models
-from gammapy.modeling import Fit
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    Models,
+    TemplateSpatialModel,
+    PowerLawNormSpectralModel,
+)
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -156,4 +161,26 @@ def test_flux_estimator_norm_range():
 
     assert_allclose(scale_model.norm.min, 1e-3)
     assert_allclose(scale_model.norm.max, 1e2)
+    assert scale_model.norm.interp == "log"
+
+def test_flux_estimator_norm_range_template():
+    energy = MapAxis.from_energy_bounds(0.1,10,3., unit='TeV', name="energy_true")
+    template = WcsNDMap.create(npix=10, axes=[energy], unit="cm-2 s-1 sr-1 TeV-1")
+    spatial = TemplateSpatialModel(template, normalize=False)
+    spectral = PowerLawNormSpectralModel()
+    model = SkyModel(spectral_model=spectral, spatial_model=spatial, name="test")
+
+    model.spectral_model.norm.max = 10
+    model.spectral_model.norm.min = 0
+
+    estimator = FluxEstimator(
+        source="test",
+        selection_optional=[],
+        reoptimize=True
+    )
+
+    scale_model = estimator.get_scale_model(Models([model]))
+
+    assert_allclose(scale_model.norm.min, 0)
+    assert_allclose(scale_model.norm.max, 10)
     assert scale_model.norm.interp == "log"
