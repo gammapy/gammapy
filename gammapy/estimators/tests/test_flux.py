@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+from gammapy.datasets import Datasets, SpectrumDatasetOnOff, MapDataset
 from gammapy.estimators.flux import FluxEstimator
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.modeling import Fit
@@ -138,3 +138,22 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     assert_allclose(result["norm_err"], 0.090744, atol=1e-3)
     assert_allclose(result["e_min"], 0.693145 * u.TeV, atol=1e-3)
     assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)
+
+
+def test_flux_estimator_norm_range():
+    model = SkyModel.create("pl", "gauss", name="test")
+
+    model.spectral_model.amplitude.min = 1e-15
+    model.spectral_model.amplitude.max = 1e-10
+
+    estimator = FluxEstimator(
+        source="test",
+        selection_optional=[],
+        reoptimize=True
+    )
+
+    dataset = MapDataset(models=[model])
+
+    estimator.run([dataset])
+
+    assert False
