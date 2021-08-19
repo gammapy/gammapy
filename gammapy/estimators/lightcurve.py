@@ -100,6 +100,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         gti = gti.union(overlap_ok=False, merge_equal=False)
 
         rows = []
+        valid_intervals = []
         for t_min, t_max in progress_bar(
                 gti.time_intervals,
                 desc="Time intervals"
@@ -112,6 +113,7 @@ class LightCurveEstimator(FluxPointsEstimator):
                 log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
                 continue
 
+            valid_intervals.append([t_min, t_max])
             fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
 
             for name in ["counts", "npred", "npred_null"]:
@@ -123,6 +125,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
 
+        gti = GTI.from_time_intervals(valid_intervals)
         axis = TimeMapAxis.from_gti(gti=gti)
         return FluxPoints.from_stack(
             maps=rows, axis=axis,
