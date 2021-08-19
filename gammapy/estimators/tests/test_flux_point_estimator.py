@@ -402,3 +402,42 @@ def test_mask_shape():
     table = fp.to_table()
 
     assert_allclose(table["counts"], 0)
+
+@requires_dependency("iminuit")
+def test_run_pwl_parameter_range(fpe_pwl):
+    pl = PowerLawSpectralModel(amplitude="1e-16 cm-2s-1TeV-1")
+
+    datasets, fpe = create_fpe(pl)
+
+    fp = fpe.run(datasets)
+    table_no_bounds = fp.to_table()
+
+    pl.amplitude.min=0
+    pl.amplitude.max=1e-8
+
+    fp = fpe.run(datasets)
+    table_with_bounds = fp.to_table()
+
+    actual = table_with_bounds["norm"].data
+    assert_allclose(actual, [3.215947e-02, 3.939055e-02, 5.551115e-09], rtol=1e-3)
+
+    actual = table_with_bounds["norm_err"].data
+    assert_allclose(actual, [251.490704, 280.37361 , 404.162784], rtol=1e-2)
+
+    actual = table_with_bounds["norm_ul"].data
+    assert_allclose(actual, [640.067576,  722.571371, 1414.22209], rtol=1e-2)
+
+    actual = table_with_bounds["sqrt_ts"].data
+    assert_allclose(actual, [0.,0., 0.], rtol=1e-2)
+
+    actual = table_no_bounds["norm"].data
+    assert_allclose(actual, [-511.76675 , -155.75408 , -853.547117], rtol=1e-3)
+
+    actual = table_no_bounds["norm_err"].data
+    assert_allclose(actual, [504.601499, 416.69248 , 851.223077], rtol=1e-2)
+
+    actual = table_no_bounds["norm_ul"].data
+    assert_allclose(actual, [ 514.957128,  707.888477, 1167.105962], rtol=1e-2)
+
+    actual = table_no_bounds["sqrt_ts"].data
+    assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
