@@ -86,6 +86,19 @@ def geom():
 
 
 @pytest.fixture
+def geom1():
+    e_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=20)
+    t_axis = MapAxis.from_bounds(0, 10, 2, name="time", unit="s")
+    return WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(3, 2),
+        frame="icrs",
+        axes=[e_axis, t_axis],
+    )
+
+
+@pytest.fixture
 def geom_etrue():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
     return WcsGeom.create(
@@ -170,7 +183,7 @@ def sky_model():
 
 
 def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
-    """Returns a MapDatasets"""
+    """Returns a MapDataset"""
     # define background model
     background = Map.from_geom(geom)
     background.data += 0.2
@@ -323,6 +336,50 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
 
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
     assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e09, rtol=1e-5)
+
+
+@requires_data()
+def test_energy_range(sky_model, geom1, geom_etrue):
+    sky_coord1 = SkyCoord(266.5, -29.3, unit="deg")
+    region1 = CircleSkyRegion(sky_coord1, 0.5 * u.deg)
+    mask1 = geom1.region_mask([region1]) & geom1.energy_mask(1 * u.TeV, 7 * u.TeV)
+    sky_coord2 = SkyCoord(266.5, -28.7, unit="deg")
+    region2 = CircleSkyRegion(sky_coord2, 0.5 * u.deg)
+    mask2 = geom1.region_mask([region2]) & geom1.energy_mask(2 * u.TeV, 8 * u.TeV)
+    mask3 = geom1.energy_mask(3 * u.TeV, 6 * u.TeV)
+
+    mask_safe = Map.from_geom(geom1, data=(mask1 | mask2 | mask3).data)
+    dataset = get_map_dataset(geom1, geom_etrue, edisp=None, mask_safe=mask_safe)
+    energy = geom1.axes["energy"].edges.value
+
+    e_min, e_max = dataset.energy_range_safe
+    assert_allclose(e_min.get_by_coord((265, -28, 0)), energy[15])
+    assert_allclose(e_max.get_by_coord((265, -28, 5)), energy[17])
+    assert_allclose(e_min.get_by_coord((sky_coord1.ra, sky_coord1.dec, 6)), energy[10])
+    assert_allclose(e_max.get_by_coord((sky_coord1.ra, sky_coord1.dec, 1)), energy[18])
+    assert_allclose(e_min.get_by_coord((sky_coord2.ra, sky_coord2.dec, 2)), energy[14])
+    assert_allclose(e_max.get_by_coord((sky_coord2.ra, sky_coord2.dec, 7)), energy[19])
+    assert_allclose(e_min.get_by_coord((266.5, -29, 8)), energy[10])
+    assert_allclose(e_max.get_by_coord((266.5, -29, 3)), energy[19])
+
+    e_min, e_max = dataset.energy_range_fit
+    assert_allclose(e_min.get_by_coord((265, -28, 0)), np.nan)
+    assert_allclose(e_max.get_by_coord((265, -28, 5)), np.nan)
+    assert_allclose(e_min.get_by_coord((266, -29, 4)), energy[0])
+    assert_allclose(e_max.get_by_coord((266, -29, 9)), energy[20])
+
+    e_min, e_max = dataset.energy_range
+    assert_allclose(e_min.get_by_coord((266, -29, 4)), energy[15])
+    assert_allclose(e_max.get_by_coord((266, -29, 9)), energy[17])
+
+    mask_zeros = Map.from_geom(geom1, data=np.zeros_like(mask_safe))
+    e_min, e_max = dataset._energy_range(mask_zeros)
+    assert_allclose(e_min.get_by_coord((266.5, -29, 8)), np.nan)
+    assert_allclose(e_max.get_by_coord((266.5, -29, 3)), np.nan)
+
+    e_min, e_max = dataset._energy_range()
+    assert_allclose(e_min.get_by_coord((265, -28, 0)), energy[0])
+    assert_allclose(e_max.get_by_coord((265, -28, 5)), energy[20])
 
 
 @requires_data()

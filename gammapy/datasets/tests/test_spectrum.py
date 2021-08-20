@@ -75,9 +75,11 @@ def test_str(spectrum_dataset):
 
 
 def test_energy_range(spectrum_dataset):
-    energy_range = spectrum_dataset.energy_range
-    assert energy_range.unit == u.TeV
-    assert_allclose(energy_range.to_value("TeV"), [0.1, 10.0])
+    e_min, e_max = spectrum_dataset.energy_range
+    assert e_min.unit == u.TeV
+    assert e_max.unit == u.TeV
+    assert_allclose(e_min, 0.1)
+    assert_allclose(e_max, 10.0)
 
 
 def test_info_dict(spectrum_dataset):
@@ -181,7 +183,7 @@ def test_spectrum_dataset_create():
     assert empty_spectrum_dataset.edisp.edisp_map.geom.axes["energy"].nbin == 2
     assert empty_spectrum_dataset.gti.time_sum.value == 0
     assert len(empty_spectrum_dataset.gti.table) == 0
-    assert empty_spectrum_dataset.energy_range[0] is None
+    assert np.isnan(empty_spectrum_dataset.energy_range[0])
     assert_allclose(empty_spectrum_dataset.mask_safe, 0)
 
 
@@ -438,7 +440,7 @@ class TestSpectrumOnOff:
         assert empty_dataset.acceptance_off.data.shape[0] == 2
         assert empty_dataset.gti.time_sum.value == 0
         assert len(empty_dataset.gti.table) == 0
-        assert empty_dataset.energy_range[0] is None
+        assert np.isnan(empty_dataset.energy_range[0])
 
     def test_create_stack(self):
         geom = RegionGeom(region=None, axes=[self.e_reco])
@@ -447,7 +449,10 @@ class TestSpectrumOnOff:
         stacked.mask_safe.data += True
 
         stacked.stack(self.dataset)
-        assert_allclose(stacked.energy_range.value, self.dataset.energy_range.value)
+        e_min_stacked, e_max_stacked = stacked.energy_range
+        e_min_dataset, e_max_dataset = self.dataset.energy_range
+        assert_allclose(e_min_stacked, e_min_dataset)
+        assert_allclose(e_max_stacked, e_max_dataset)
 
     def test_alpha(self):
         assert self.dataset.alpha.data.shape == (4, 1, 1)
@@ -764,7 +769,7 @@ class TestSpectralFit:
         actual = obs.energy_range[0]
 
         assert actual.unit == "keV"
-        assert_allclose(actual.value, 8.912509e08)
+        assert_allclose(actual, 8.912509e08)
 
     def test_no_edisp(self):
         dataset = self.datasets[0].copy()
@@ -910,10 +915,10 @@ class TestSpectrumDatasetOnOffStack:
         energy_min, energy_max = self.stacked_dataset.energy_range
 
         assert energy_min.unit == "keV"
-        assert_allclose(energy_min.value, 8.912509e08, rtol=1e-3)
+        assert_allclose(energy_min, 8.912509e08, rtol=1e-3)
 
         assert energy_max.unit == "keV"
-        assert_allclose(energy_max.value, 4.466836e10, rtol=1e-3)
+        assert_allclose(energy_max, 4.466836e10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Verifying npred is preserved during the stacking"""
@@ -1135,8 +1140,8 @@ class TestFit:
         assert np.sum(dataset.mask_safe) == self.nbins
         energy_min, energy_max = dataset.energy_range
 
-        assert_allclose(energy_max.value, 10)
-        assert_allclose(energy_min.value, 0.1)
+        assert_allclose(energy_max, 10)
+        assert_allclose(energy_min, 0.1)
 
     def test_stat_profile(self):
         geom = self.src.geom
