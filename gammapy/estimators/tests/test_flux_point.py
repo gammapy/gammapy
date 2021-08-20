@@ -7,6 +7,7 @@ from astropy.table import Table
 from gammapy.catalog.fermi import SourceCatalog3FGL
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import SpectralModel
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -240,3 +241,15 @@ def test_compute_flux_points_dnde_fermi():
         actual = table[column].quantity
         desired = getattr(flux_points, column).quantity.squeeze()
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=0.05)
+
+@requires_data()
+@requires_dependency("matplotlib")
+def test_plot_fp_no_ul():
+    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
+    table = Table.read(path)
+    table.remove_column('dnde_ul')
+    fp = FluxPoints.from_table(table, sed_type='dnde')
+
+    with mpl_plot_check():
+        fp.plot()
+
