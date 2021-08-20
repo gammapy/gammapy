@@ -272,9 +272,9 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert_allclose(table["norm_ul"], [[1.029989], [1.025061]], rtol=1e-2)
     assert_allclose(table["sqrt_ts"], [[19.384781], [19.161769]], rtol=1e-2)
     assert_allclose(table["ts"], [[375.769735], [367.173374]], rtol=1e-2)
-    assert_allclose(table[0]["norm_scan"], [[0.2, 1.0, 5.0]])
+    assert_allclose(table[0]["norm_scan"], [[0.2, 2.6, 5.0]])
     assert_allclose(
-        table[0]["stat_scan"], [[224.058304, 19.074405, 2063.75636]], rtol=1e-5,
+        table[0]["stat_scan"], [[224.058304, 545.093991, 2063.75636]], rtol=1e-5,
     )
 
     # TODO: fix reference model I/O
@@ -355,11 +355,11 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         rtol=1e-2,
     )
     assert_allclose(
-        table[0]["norm_scan"], [[0.2, 1.0, 5.0], [0.2, 1.0, 5.0]]
+        table[0]["norm_scan"], [[0.2, 2.6, 5.0], [0.2, 2.6, 5.0]]
     )
     assert_allclose(
         table[0]["stat_scan"],
-        [[153.880281, 10.701492, 1649.609684], [70.178023, 8.372913, 414.146676]],
+        [[153.880281, 431.655792, 1649.609684], [70.178023, 113.438199, 414.146676]],
         rtol=1e-5,
     )
 

@@ -222,10 +222,10 @@ def test_run_pwl(fpe_pwl):
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
 
     actual = table["norm_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [0.2, 1, 5])
+    assert_allclose(actual, [0.2, 2.6, 5])
 
     actual = table["stat_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-2)
+    assert_allclose(actual, [220.368653, 394.796395, 1881.626454], rtol=1e-2)
 
     actual = table["npred"].data
     assert_allclose(actual, [[1492.96638], [749.4587], [43.104823]])
@@ -309,10 +309,10 @@ def test_run_map_pwl(fpe_map_pwl):
     assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
 
     actual = table["norm_scan"][0]
-    assert_allclose(actual, [0.2, 1, 5])
+    assert_allclose(actual, [0.2, 2.6, 5])
 
     actual = table["stat_scan"][0] - table["stat"][0]
-    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
+    assert_allclose(actual, [1.628398e02, 432.425885, 2.008018e03], rtol=1e-2)
 
 
 @requires_dependency("iminuit")

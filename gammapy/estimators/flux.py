@@ -105,9 +105,7 @@ class FluxEstimator(ParameterEstimator):
 
         scale_model.norm.min = scaled_parameter.min/scaled_parameter.value
         scale_model.norm.max = scaled_parameter.max/scaled_parameter.value
-
-        # is log the best case?
-        scale_model.norm.interp = "log"
+        scale_model.norm.interp = scaled_parameter.interp
         scale_model.norm.scan_values = self.norm_values
         scale_model.norm.scan_min = self.norm_min
         scale_model.norm.scan_max = self.norm_max
