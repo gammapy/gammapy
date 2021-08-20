@@ -26,6 +26,9 @@ class LightCurveEstimator(FluxPointsEstimator):
     To be included in the estimation, the dataset must have their GTI fully
     overlapping a time interval.
 
+    Time intervals without any dataset GTI fully overlapping will be dropped. They will not
+    be stored in the final lightcurve `FluxPoints` object.
+
     Parameters
     ----------
     time_intervals : list of `astropy.time.Time`
@@ -110,7 +113,7 @@ class LightCurveEstimator(FluxPointsEstimator):
             )
 
             if len(datasets_to_fit) == 0:
-                log.debug(f"No Dataset for the time interval {t_min} to {t_max}")
+                log.info(f"No Dataset for the time interval {t_min} to {t_max}. Skipping interval.")
                 continue
 
             valid_intervals.append([t_min, t_max])
