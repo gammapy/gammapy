@@ -471,6 +471,24 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(table["norm_err"][0], [0.040874], rtol=1e-3)
     assert_allclose(table["ts"][0], [742.939324], rtol=1e-4)
 
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets_emptybin():
+    # Test all dataset in a single LC bin, here two hours
+    datasets = get_spectrum_datasets()
+    time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"]),
+                      Time(["2010-02-01T00:00:00", "2010-02-01T02:00:00"])]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 30] * u.TeV,
+        norm_n_values=3,
+        time_intervals=time_intervals,
+        selection_optional=["scan"],
+    )
+    lightcurve = estimator.run(datasets)
+    table = lightcurve.to_table(format="lightcurve")
+
+    assert_allclose(table["time_min"], [55197.0])
+    assert_allclose(table["time_max"], [55197.083333])
 
 @requires_data()
 @requires_dependency("iminuit")
