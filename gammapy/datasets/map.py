@@ -669,10 +669,14 @@ class MapDataset(Dataset):
 
         """
         if self.counts and other.counts:
-            self.counts.stack(other.counts, weights=other.mask_safe, nan_to_num=nan_to_num)
+            self.counts.stack(
+                other.counts, weights=other.mask_safe, nan_to_num=nan_to_num
+            )
 
         if self.exposure and other.exposure:
-            self.exposure.stack(other.exposure, weights=other.mask_safe_image, nan_to_num=nan_to_num)
+            self.exposure.stack(
+                other.exposure, weights=other.mask_safe_image, nan_to_num=nan_to_num
+            )
             # TODO: check whether this can be improved e.g. handling this in GTI
 
             if "livetime" in other.exposure.meta and np.any(other.mask_safe_image):
@@ -686,7 +690,11 @@ class MapDataset(Dataset):
         if self.stat_type == "cash":
             if self.background and other.background:
                 background = self.npred_background() * self.mask_safe
-                background.stack(other.npred_background(), weights=other.mask_safe, nan_to_num=nan_to_num)
+                background.stack(
+                    other.npred_background(),
+                    weights=other.mask_safe,
+                    nan_to_num=nan_to_num,
+                )
                 self.background = background
 
         if self.psf and other.psf:
@@ -2075,11 +2083,23 @@ class MapDatasetOnOff(MapDataset):
         total_alpha = Map.from_geom(geom)
 
         if self.counts_off:
-            total_off.stack(self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num)
-            total_alpha.stack(self.alpha * self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num)
+            total_off.stack(
+                self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num
+            )
+            total_alpha.stack(
+                self.alpha * self.counts_off,
+                weights=self.mask_safe,
+                nan_to_num=nan_to_num,
+            )
         if other.counts_off:
-            total_off.stack(other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num)
-            total_alpha.stack(other.alpha * other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num)
+            total_off.stack(
+                other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num
+            )
+            total_alpha.stack(
+                other.alpha * other.counts_off,
+                weights=other.mask_safe,
+                nan_to_num=nan_to_num,
+            )
 
         with np.errstate(divide="ignore", invalid="ignore"):
             acceptance_off = total_off / total_alpha
@@ -2714,9 +2734,7 @@ class MapEvaluator:
                     geom = geom.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position,
-                    geom=geom,
-                    containment=PSF_CONTAINMENT
+                    position=self.model.position, geom=geom, containment=PSF_CONTAINMENT
                 )
 
         if self.evaluation_mode == "local":
@@ -2724,9 +2742,7 @@ class MapEvaluator:
 
             if self.contributes:
                 self.exposure = exposure.cutout(
-                    position=self.model.position,
-                    width=self.cutout_width,
-                    odd_npix=True
+                    position=self.model.position, width=self.cutout_width, odd_npix=True
                 )
         else:
             self.exposure = exposure
@@ -2766,6 +2782,12 @@ class MapEvaluator:
 
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
+    def compute_flux_spatial(self):
+        """Compute spatial flux using caching"""
+        if self.parameters_spatial_changed() or not self.use_cache:
+            self._compute_flux_spatial.cache_clear()
+        return self._compute_flux_spatial()
+
     def _compute_flux_spatial(self):
         """Compute spatial flux
 
@@ -2787,22 +2809,35 @@ class MapEvaluator:
             else:
                 axes = [self.geom.axes["energy_true"].squash()]
                 values = values.to_cube(axes=axes)
+#            values = self._compute_flux_spatial_geom(wcs_geom)
 
             weights = wcs_geom.region_weights(regions=[self.geom.region])
             value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
-
         else:
-            value = self.model.spatial_model.integrate_geom(self.geom)
-            if self.psf and self.model.apply_irf["psf"]:
-                value = self.apply_psf(value)
+            value = self._compute_flux_spatial_geom(self.geom)
 
         return value
 
-    def compute_flux_spatial(self):
-        """Compute spatial flux using caching"""
-        if self.parameters_spatial_changed() or not self.use_cache:
-            self._compute_flux_spatial.cache_clear()
-        return self._compute_flux_spatial()
+    def _compute_flux_spatial_geom(self, geom):
+        """Compute spatial flux oversampling geom if necessary"""
+        factor = self.spatial_oversampling_factor(geom)
+        if factor > 1:
+            geom = geom.upsample(factor)
+
+        value = self.model.spatial_model.integrate_geom(geom)
+        if self.psf and self.model.apply_irf["psf"]:
+            value = self.apply_psf(value)
+
+        if factor > 1:
+            value.downsample(factor)
+        return value
+
+    def spatial_oversampling_factor(self, geom):
+        factor = 1
+        binz = self.model.spatial_model.evaluation_bin_size_min
+        if binz is not None:
+            factor = int(np.ceil(np.max(geom.pixel_scales.deg) / binz))
+        return factor
 
     def compute_flux_spectral(self):
         """Compute spectral flux"""

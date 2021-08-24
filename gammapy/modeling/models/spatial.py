@@ -61,6 +61,10 @@ class SpatialModel(Model):
 
         return self.evaluate(lon, lat, **kwargs)
 
+    @property
+    def evaluation_bin_size_min(self):
+        return None
+
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
     def is_energy_dependent(self):
