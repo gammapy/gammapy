@@ -162,7 +162,10 @@ class RegionGeom(Geom):
         if self.region is None:
             return SkyCoord(np.nan * u.deg, np.nan * u.deg)
 
-        return self._rectangle_bbox.center
+        if not isinstance(self.region, CompoundSkyRegion) and hasattr(self.region, "center"):
+            return self.region.center
+        else:
+            return self._rectangle_bbox.center
 
     @property
     def npix(self):
