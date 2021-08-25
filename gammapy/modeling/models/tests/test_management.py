@@ -128,7 +128,7 @@ def test_contributes_region_mask():
     geom = RegionGeom.create("galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.02 deg")
 
     mask = Map.from_geom(geom, unit='', dtype='bool')
-    mask += True
+    mask.data[...,0] = True
 
     spatial_model1 = GaussianSpatialModel(
         lon_0="0.2 deg", lat_0="0 deg", sigma="0.1 deg", frame="galactic"
