@@ -5,6 +5,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import lazyproperty
 from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
 from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
 from gammapy.utils.regions import (
@@ -96,7 +97,7 @@ class RegionGeom(Geom):
         """
         return Angle(proj_plane_pixel_scales(self.wcs), unit="deg")
 
-    @property
+    @lazyproperty
     def _rectangle_bbox(self):
         if self.region is None:
             raise ValueError("Region definition required.")
@@ -156,16 +157,13 @@ class RegionGeom(Geom):
         """Pixel values corresponding to the center of the region"""
         return tuple((np.array(self.data_shape) - 1.0) / 2)[::-1]
 
-    @property
+    @lazyproperty
     def center_skydir(self):
         """Sky coordinate of the center of the region"""
         if self.region is None:
             return SkyCoord(np.nan * u.deg, np.nan * u.deg)
 
-        if not isinstance(self.region, CompoundSkyRegion) and hasattr(self.region, "center"):
-            return self.region.center
-        else:
-            return self._rectangle_bbox.center
+        return self._rectangle_bbox.center
 
     @property
     def npix(self):
