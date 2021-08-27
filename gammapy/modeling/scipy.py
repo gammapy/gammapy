@@ -71,9 +71,9 @@ def _confidence_scipy_brentq(
     lower_bound = parameter.factor
 
     if upper:
-        upper_bound = parameter.scan_max / parameter.scale
+        upper_bound = parameter.conf_max / parameter.scale
     else:
-        upper_bound = parameter.scan_min / parameter.scale
+        upper_bound = parameter.conf_min / parameter.scale
 
     message, success = "Confidence terminated successfully.", True
     kwargs.setdefault("nbin", 1)
