@@ -214,44 +214,40 @@ class ExcessMapEstimator(Estimator):
             dataset, kernel, mask, self.correlate_off
         )
 
-        n_on = Map.from_geom(geom, data=counts_stat.n_on)
-        bkg = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
-        excess = Map.from_geom(geom, data=counts_stat.n_sig)
+        maps = {}
+        maps["npred"] = Map.from_geom(geom, data=counts_stat.n_on)
+        maps["npred_null"] = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
+        maps["npred_excess"] = Map.from_geom(geom, data=counts_stat.n_sig)
 
-        result = {"counts": n_on, "background": bkg, "excess": excess}
+        maps["ts"] = Map.from_geom(geom, data=counts_stat.ts)
+        maps["sqrt_ts"] = Map.from_geom(geom, data=counts_stat.sqrt_ts)
 
-        tsmap = Map.from_geom(geom, data=counts_stat.ts)
-        sqrt_ts = Map.from_geom(geom, data=counts_stat.sqrt_ts)
-        result.update({"ts": tsmap, "sqrt_ts": sqrt_ts})
-
-        err = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
-        result.update({"err": err})
+        maps["npred_err"] = Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
 
         if dataset.exposure:
             reco_exposure = estimate_exposure_reco_energy(dataset, self.spectral_model)
             with np.errstate(invalid="ignore", divide="ignore"):
                 reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(kernel.array)
-                flux = excess / reco_exposure
+                flux = maps["npred_excess"] / reco_exposure
                 flux.quantity = flux.quantity.to("1 / (cm2 s)").astype(dataset.exposure.data.dtype)
         else:
             flux = Map.from_geom(
                 geom=dataset.counts.geom, data=np.nan * np.ones(dataset.data_shape)
             )
-        result.update({"flux": flux})
+            
+        maps["flux"] = flux
 
         if "errn-errp" in self.selection_optional:
-            errn = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
-            errp = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
-            result.update({"errn": errn, "errp": errp})
+            maps["npred_errn"] = Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
+            maps["npred_errp"] = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
 
         if "ul" in self.selection_optional:
-            ul = Map.from_geom(
+            maps["npred_ul"] = Map.from_geom(
                 geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
             )
-            result.update({"ul": ul})
 
         # return nan values outside mask
-        for key in result:
-            result[key].data[~mask] = np.nan
+        for name in maps:
+            maps[name].data[~mask] = np.nan
 
-        return result
+        return maps
