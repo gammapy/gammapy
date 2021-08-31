@@ -47,8 +47,8 @@ class FluxPointsDataset(Dataset):
         model = SkyModel(spectral_model=PowerLawSpectralModel())
 
         dataset = FluxPointsDataset(model, flux_points)
-        fit = Fit([dataset])
-        result = fit.run()
+        fit = Fit()
+        result = fit.run([dataset])
         print(result["optimize_result"])
         print(result["optimize_result"].parameters.to_table())
 
