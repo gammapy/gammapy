@@ -125,10 +125,10 @@ def test_contributes():
 
 def test_contributes_region_mask():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
-    geom = RegionGeom.create("galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.02 deg")
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.05 deg")
 
     mask = Map.from_geom(geom, unit='', dtype='bool')
-    mask.data[...,0] = True
+    mask.data[...] = True
 
     spatial_model1 = GaussianSpatialModel(
         lon_0="0.2 deg", lat_0="0 deg", sigma="0.1 deg", frame="galactic"
@@ -145,11 +145,11 @@ def test_contributes_region_mask():
     model2 = SkyModel(
         spatial_model=spatial_model2,
         spectral_model=PowerLawSpectralModel(),
-        name="source-1",
+        name="source-2",
     )
     assert model1.contributes(mask, margin=0 * u.deg)
     assert not model2.contributes(mask, margin=0 * u.deg)
-    assert model2.contributes(mask, margin=0.2 * u.deg)
+    assert model2.contributes(mask, margin=0.3 * u.deg)
 
 def test_select(models):
     conditions = [

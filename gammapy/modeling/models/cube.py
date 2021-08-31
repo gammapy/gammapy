@@ -252,7 +252,7 @@ class SkyModel(Model):
 
         if mask.geom.is_region and mask.geom.region is not None:
             geom = mask.geom.to_wcs_geom()
-            mask = ~geom.region_mask([mask.geom.region])
+            mask = geom.region_mask([mask.geom.region])
 
         try:
             mask_cutout = mask.cutout(
