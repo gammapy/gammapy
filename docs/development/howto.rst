@@ -224,6 +224,12 @@ repository. It is recommended that developers have `$GAMMAPY_DATA` environment v
 where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  Github repository,
 so they can push and pull eventual modification of its content.
 
+Making a pull request which skips GitHub Actions
+-------------------------------------------------
+
+For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions. For this, add
+``[ci skip]`` in the commit message. For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__ 
+
 Fix non-Unix line endings
 -------------------------
 
@@ -237,7 +243,7 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c mac
     $ find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c ascii
     $ git status
-    $ cd astropy_helpers && git checkout -- . && cd ..
+    $ cd astropy_helpers && git checkout -- . && cd .
 
 What checks and conversions should I do for inputs?
 ---------------------------------------------------
