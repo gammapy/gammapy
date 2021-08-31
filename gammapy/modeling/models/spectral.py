@@ -1379,7 +1379,7 @@ class TemplateSpectralModel(SpectralModel):
     values : array
         Array with the values of the model at energies ``energy``.
     interp_kwargs : dict
-        Interpolation keyword arguments pass to `scipy.interpolate.interp1d`.
+        Interpolation keyword arguments passed to `scipy.interpolate.RegularGridInterpolator`.
         By default all values outside the interpolation range are set to zero.
         If you want to apply linear extrapolation you can pass `interp_kwargs={'fill_value':
         'extrapolate', 'kind': 'linear'}`. If you want to choose the interpolation
