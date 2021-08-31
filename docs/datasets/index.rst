@@ -178,6 +178,16 @@ even fit convergence might be an issue for a large number of datasets.
 To strike a balance, what might be a practical solution for analysis of many runs is to
 stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
 
+Using `gammapy.datasets`
+====================
+
+Gammapy tutorial notebooks that show how to use this package:
+
+.. nbgallery::
+
+   ../tutorials/api/datasets.ipynb
+   ../tutorials/api/model_management.ipynb
+   ../tutorials/analysis/1D/sed_fitting.ipynb
 
 
 Reference/API
