@@ -657,6 +657,9 @@ class RegionGeom(Geom):
             regions = []
 
             for reg in Regions.parse(data=region_table, format="fits"):
+                #TODO: remove workaround once regions issue with fits serialization is sorted out
+                # see https://github.com/astropy/regions/issues/400
+                reg.meta['include'] = True
                 regions.append(reg.to_sky(wcs))
             region = regions_to_compound_region(regions)
         else:
