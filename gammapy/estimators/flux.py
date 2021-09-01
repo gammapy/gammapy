@@ -94,9 +94,18 @@ class FluxEstimator(ParameterEstimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
+
         scale_model.norm.value = 1.0
         scale_model.norm.frozen = False
-        scale_model.norm.interp = "log"
+
+        if hasattr(ref_model, "amplitude"):
+            scaled_parameter = ref_model.amplitude
+        else:
+            scaled_parameter = ref_model.norm
+
+        scale_model.norm.min = scaled_parameter.min/scaled_parameter.value
+        scale_model.norm.max = scaled_parameter.max/scaled_parameter.value
+        scale_model.norm.interp = scaled_parameter.interp
         scale_model.norm.scan_values = self.norm_values
         scale_model.norm.scan_min = self.norm_min
         scale_model.norm.scan_max = self.norm_max
