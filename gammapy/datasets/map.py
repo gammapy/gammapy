@@ -2751,7 +2751,8 @@ class MapEvaluator:
             self.exposure = exposure
 
         if self.contributes:
-            self.update_spatial_oversampling_factor(self.geom)
+            if not self.geom.is_region or self.geom.region is not None:
+                self.update_spatial_oversampling_factor(self.geom)
 
         self._compute_npred.cache_clear()
         self._compute_flux_spatial.cache_clear()
@@ -2770,16 +2771,13 @@ class MapEvaluator:
 
         res_scale = binz.to_value("deg")
 
+        if geom.is_region or geom.is_hpx:
+            geom = geom.to_wcs_geom()
         if res_scale != 0:
-            if geom.is_region or geom.is_hpx:
-                geom = geom.to_wcs_geom()
             factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
             self._spatial_oversampling_factor = factor
 
-        if  self._spatial_oversampling_factor > 1:
-            self._upsampled_geom = geom.upsample(self._spatial_oversampling_factor)
-        else:
-            self._upsampled_geom = geom
+        self._upsampled_geom = geom.upsample(self._spatial_oversampling_factor)
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -2832,10 +2830,8 @@ class MapEvaluator:
 
             wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
 
-            if self.model.apply_irf["psf"]:
-                values = self.apply_psf(values)
-#            if self.psf and self.model.apply_irf["psf"]:
-#                values = self._compute_flux_spatial_geom(wcs_geom)
+            if self.psf and self.model.apply_irf["psf"]:
+                values = self._compute_flux_spatial_geom(wcs_geom)
             else:
                 values = self.model.spatial_model.integrate_geom(wcs_geom, oversampling_factor=1)
                 axes = [self.geom.axes["energy_true"].squash()]
@@ -2854,8 +2850,7 @@ class MapEvaluator:
         # for now we force the oversampling factor to be 1
         value = self.model.spatial_model.integrate_geom(geom, oversampling_factor=1)
 
-        if factor > 1:
-            value = value.downsample(factor)
+        value = value.downsample(factor)
 
         if self.psf and self.model.apply_irf["psf"]:
             value = self.apply_psf(value)
