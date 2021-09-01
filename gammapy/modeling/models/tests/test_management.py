@@ -14,7 +14,7 @@ from gammapy.modeling.models import (
     SkyModel,
     FoVBackgroundModel,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 
 
 @pytest.fixture(scope="session")
@@ -105,7 +105,7 @@ def test_select_mask(models_gauss):
     assert contribute_margin.names == ["source-1", "source-2", "source-3"]
 
 
-def test_contributes(models):
+def test_contributes():
     center_sky = SkyCoord(3, 4, unit="deg", frame="galactic")
     circle_sky_12 = CircleSkyRegion(center=center_sky, radius=1 * u.deg)
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
@@ -123,6 +123,33 @@ def test_contributes(models):
     )
     assert model4.contributes(mask, margin=0 * u.deg)
 
+def test_contributes_region_mask():
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.05 deg")
+
+    mask = Map.from_geom(geom, unit='', dtype='bool')
+    mask.data[...] = True
+
+    spatial_model1 = GaussianSpatialModel(
+        lon_0="0.2 deg", lat_0="0 deg", sigma="0.1 deg", frame="galactic"
+    )
+    spatial_model2 = PointSpatialModel(
+        lon_0="0.3 deg", lat_0="0.3 deg", frame="galactic"
+    )
+
+    model1 = SkyModel(
+        spatial_model=spatial_model1,
+        spectral_model=PowerLawSpectralModel(),
+        name="source-1",
+    )
+    model2 = SkyModel(
+        spatial_model=spatial_model2,
+        spectral_model=PowerLawSpectralModel(),
+        name="source-2",
+    )
+    assert model1.contributes(mask, margin=0 * u.deg)
+    assert not model2.contributes(mask, margin=0 * u.deg)
+    assert model2.contributes(mask, margin=0.3 * u.deg)
 
 def test_select(models):
     conditions = [

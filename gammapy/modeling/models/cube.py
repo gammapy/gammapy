@@ -257,7 +257,7 @@ class SkyModel(Model):
         try:
             mask_cutout = mask.cutout(
                 position=self.position,
-                width=(2 * self.evaluation_radius + CUTOUT_MARGIN) + margin,
+                width=(2 * self.evaluation_radius + CUTOUT_MARGIN + margin),
             )
             contributes = np.any(mask_cutout.data)
         except (NoOverlapError, ValueError):

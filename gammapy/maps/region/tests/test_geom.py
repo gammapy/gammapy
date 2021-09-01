@@ -352,3 +352,12 @@ def test_region_nd_map_plot(region):
     ax = plt.subplot(projection=geom.wcs)
     with mpl_plot_check():
         geom.plot_region(ax=ax)
+
+def test_region_geom_to_from_hdu(region):
+    axis1 = MapAxis.from_edges([1, 10] * u.TeV, name="energy", interp="log")
+    geom = RegionGeom.create(region, axes=[axis1])
+    hdulist = geom.to_hdulist(format="ogip")
+    new_geom = RegionGeom.from_hdulist(hdulist, format="ogip")
+
+    assert new_geom == geom
+    assert new_geom.region.meta['include'] == True
