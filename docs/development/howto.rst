@@ -224,8 +224,16 @@ repository. It is recommended that developers have `$GAMMAPY_DATA` environment v
 where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  Github repository,
 so they can push and pull eventual modification of its content.
 
+Making a pull request which skips GitHub Actions
+-------------------------------------------------
+
+For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions. 
+Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
+For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__ 
+
 Fix non-Unix line endings
 -------------------------
+
 
 In the past we had non-Unix (i.e. Mac or Windows) line endings in some files.
 This can be painful, e.g. git diff and autopep8 behave strangely.
