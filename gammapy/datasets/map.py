@@ -2761,15 +2761,9 @@ class MapEvaluator:
 
     def update_spatial_oversampling_factor(self, geom):
         """Update spatial oversampling_factor for model evaluation"""
-        if (
-            self.model.spatial_model is not None
-            and self.model.spatial_model.evaluation_bin_size_min is not None
-        ):
-            binz = self.model.spatial_model.evaluation_bin_size_min
-        else:
-            binz = 0 * u.deg
+        res_scale = self.model.evaluation_bin_size_min
 
-        res_scale = binz.to_value("deg")
+        res_scale = res_scale.to_value("deg") if res_scale is not None else 0
 
         if geom.is_region or geom.is_hpx:
             geom = geom.to_wcs_geom()

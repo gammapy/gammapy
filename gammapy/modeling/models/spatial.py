@@ -497,7 +497,7 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`) chosen as sigma/3."""
         return self.parameters["sigma"].quantity / 3.
 
 
@@ -600,7 +600,10 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as r_0/(3+8*eta)/(e+1).
+        """
         return self.r_0.quantity / (3 + 8 * self.eta.value) / (self.e.value + 1)
 
 
@@ -679,7 +682,10 @@ class DiskSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as r_0*(1-edge_width)/10.
+        """
         return self.r_0.quantity * (1 - self.edge_width.quantity) /10.
 
     @property
@@ -771,7 +777,10 @@ class ShellSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as the shell width.
+        """
         return self.width.quantity
 
     @property
@@ -839,7 +848,10 @@ class Shell2SpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as r_0*eta.
+        """
         return self.eta.value * self.r_0
 
     @property

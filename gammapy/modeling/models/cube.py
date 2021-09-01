@@ -191,6 +191,17 @@ class SkyModel(Model):
         return getattr(self.spatial_model, "position_lonlat", None)
 
     @property
+    def evaluation_bin_size_min(self):
+        """Minimal spatial bin size for spatial model evaluation."""
+        if (
+            self.spatial_model is not None
+            and self.spatial_model.evaluation_bin_size_min is not None
+        ):
+            return self.spatial_model.evaluation_bin_size_min
+        else:
+            return None
+
+    @property
     def evaluation_radius(self):
         """`~astropy.coordinates.Angle`"""
         return self.spatial_model.evaluation_radius
