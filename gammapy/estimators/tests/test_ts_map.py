@@ -153,7 +153,7 @@ def test_compute_ts_map_psf(fermi_dataset):
     assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=2e-3)
     assert_allclose(result["flux_errp"].data[0, 29, 29], 7.948953e-11, rtol=2e-3)
     assert_allclose(result["flux_errn"].data[0, 29, 29], 7.508168e-11, rtol=2e-3)
-    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.63222157e-10, rtol=2e-3)
+    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.513062157e-09, rtol=2e-3)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -209,7 +209,7 @@ def test_compute_ts_map_downsampled(input_dataset):
     assert_allclose(result["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.065988e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 4.005628e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[0, 99, 99], 8.220152e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[0, 99, 99], 1.14818952e-09, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")

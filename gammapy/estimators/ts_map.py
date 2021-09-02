@@ -669,7 +669,7 @@ class BrentqFluxEstimator(Estimator):
         result : dict
             Result dict including 'norm_ul'
         """
-        flux_ul = self._confidence(
+        flux_ul = result["norm"] + self._confidence(
             dataset=dataset, n_sigma=self.n_sigma_ul, result=result, positive=True
         )
 
