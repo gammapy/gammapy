@@ -85,7 +85,7 @@ class ExcessMapEstimator(Estimator):
         Default is 1.
     n_sigma_ul : float
         Confidence level for the upper limits expressed in number of sigma.
-        Default is 3.
+        Default is 2.
     selection_optional : list of str
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
@@ -114,7 +114,7 @@ class ExcessMapEstimator(Estimator):
         self,
         correlation_radius="0.1 deg",
         n_sigma=1,
-        n_sigma_ul=3,
+        n_sigma_ul=2,
         selection_optional=None,
         energy_edges=None,
         apply_mask_fit=False,
