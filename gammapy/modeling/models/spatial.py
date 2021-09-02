@@ -61,6 +61,10 @@ class SpatialModel(Model):
 
         return self.evaluate(lon, lat, **kwargs)
 
+    @property
+    def evaluation_bin_size_min(self):
+        return None
+
     # TODO: make this a hard-coded class attribute?
     @lazyproperty
     def is_energy_dependent(self):
@@ -154,28 +158,78 @@ class SpatialModel(Model):
         else:
             return self(coords.lon, coords.lat)
 
-    def integrate_geom(self, geom):
+    def integrate_geom(self, geom, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom` or `~gammapy.maps.RegionGeom`.
-        
+
+        Integration is performed by simple rectangle approximation, the pixel center model value
+        is multiplied by the pixel solid angle.
+        An oversampling factor can be used for precision. By default, this parameter is set to None
+        and an oversampling factor is automatically estimated based on the model estimation maximal
+        bin width.
+
+        For a RegionGeom, the model is integrated on a tangent WCS projection in the region.
+
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom` or `~gammapy.maps.RegionGeom`
+            The geom on which the integration is performed
+        oversampling_factor : int or None
+            The oversampling factor to use for integration.
+            Default is None: the factor is estimated from the model minimimal bin size
 
         Returns
         ---------
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
                 the integral value in each spatial bin.
         """
+        wcs_geom = geom
+        mask = None
+
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
-            mask = geom.contains(wcs_geom.get_coord())
-            values = self.evaluate_geom(wcs_geom)
-            data = ((values * wcs_geom.solid_angle())[mask]).sum()
-        else:
-            values = self.evaluate_geom(geom)
-            data = values * geom.solid_angle()
 
-        return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
+        result = Map.from_geom(geom=wcs_geom)#, unit='1/sr')
+
+        pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
+        if oversampling_factor is None:
+            if self.evaluation_bin_size_min is not None:
+                res_scale = self.evaluation_bin_size_min.to_value("deg")
+                oversampling_factor = int(np.ceil( pix_scale/ res_scale))
+            else:
+                oversampling_factor=1
+
+        if oversampling_factor > 1:
+            if self.evaluation_radius is not None:
+                # Is it still needed?
+                width = 2*np.maximum(self.evaluation_radius.to_value("deg"),pix_scale)
+                wcs_geom = wcs_geom.cutout(self.position, width)
+
+            upsampled_geom = wcs_geom.upsample(oversampling_factor)
+
+            # assume the upsampled solid angles are approximately factor**2 smaller
+            values = self.evaluate_geom(upsampled_geom) / oversampling_factor ** 2
+            upsampled = Map.from_geom(upsampled_geom, unit=values.unit)
+            upsampled += values
+
+            if geom.is_region:
+                mask = geom.contains(upsampled_geom.get_coord()).astype('int')
+
+            integrated = upsampled.downsample(oversampling_factor, preserve_counts=True, weights=mask)
+
+            # Finally stack result
+            result.unit = integrated.unit
+            result.stack(integrated)
+        else:
+            values = self.evaluate_geom(wcs_geom)
+            result.unit = values.unit
+            result += values
+
+        result *= result.geom.solid_angle()
+
+        if geom.is_region:
+            mask = result.geom.region_mask([geom.region])
+            result = Map.from_geom(geom, data=np.sum(result.data[mask]), unit=result.unit)
+        return result
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
@@ -356,6 +410,11 @@ class PointSpatialModel(SpatialModel):
     is_energy_dependent = False
 
     @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        return 0 * u.deg
+
+    @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
 
@@ -379,7 +438,7 @@ class PointSpatialModel(SpatialModel):
         values = self.integrate_geom(geom).data
         return values / geom.solid_angle()
 
-    def integrate_geom(self, geom):
+    def integrate_geom(self, geom, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom`
 
         Parameters
@@ -435,6 +494,12 @@ class GaussianSpatialModel(SpatialModel):
     sigma = Parameter("sigma", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
     phi = Parameter("phi", "0 deg", frozen=True)
+
+    @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`) chosen as sigma/3."""
+        return self.parameters["sigma"].quantity / 3.
+
 
     @property
     def evaluation_radius(self):
@@ -534,6 +599,15 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         return (norm * np.exp(-(z ** (1 / eta)))).to("sr-1")
 
     @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as r_0/(3+8*eta)/(e+1).
+        """
+        return self.r_0.quantity / (3 + 8 * self.eta.value) / (self.e.value + 1)
+
+
+    @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
         The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
@@ -607,12 +681,20 @@ class DiskSpatialModel(SpatialModel):
     edge_width = Parameter("edge_width", value=0.01, min=0, max=1, frozen=True)
 
     @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as r_0*(1-edge_width)/10.
+        """
+        return self.r_0.quantity * (1 - self.edge_width.quantity) /10.
+
+    @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
     
         Set to the length of the semi-major axis plus the edge width.
         """
-        return self.r_0.quantity * (1 + self.edge_width.quantity)
+        return 1.1*self.r_0.quantity * (1 + self.edge_width.quantity)
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
@@ -694,6 +776,14 @@ class ShellSpatialModel(SpatialModel):
     width = Parameter("width", "0.2 deg")
 
     @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as the shell width.
+        """
+        return self.width.quantity
+
+    @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
 
@@ -755,6 +845,14 @@ class Shell2SpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     r_0 = Parameter("r_0", "1 deg")
     eta = Parameter("eta", 0.2, min=0.02, max=1)
+
+    @property
+    def evaluation_bin_size_min(self):
+        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+
+        The bin min size is defined as r_0*eta.
+        """
+        return self.eta.value * self.r_0
 
     @property
     def evaluation_radius(self):
@@ -865,7 +963,7 @@ class ConstantFluxSpatialModel(SpatialModel):
         return 1 / geom.solid_angle()
 
     @staticmethod
-    def integrate_geom(geom):
+    def integrate_geom(geom, oversampling_factor=None):
         """Evaluate model."""
         return Map.from_geom(geom=geom, data=1)
 

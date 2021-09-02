@@ -109,7 +109,7 @@ def test_sky_gaussian():
 
 
 @pytest.mark.parametrize("eta", np.arange(0.1, 1.01, 0.3))
-@pytest.mark.parametrize("r_0", np.arange(0.1, 1.01, 0.3))
+@pytest.mark.parametrize("r_0", np.arange(0.01, 1.01, 0.3))
 @pytest.mark.parametrize("e", np.arange(0.0, 0.801, 0.4))
 def test_generalized_gaussian(eta, r_0, e):
     # check normalization is robust for a large set of values
@@ -117,8 +117,9 @@ def test_generalized_gaussian(eta, r_0, e):
         eta=eta, r_0=r_0 * u.deg, e=e, frame="galactic"
     )
 
+    width = np.maximum(2 * model.evaluation_radius.to_value("deg"), 0.5)
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=2 * model.evaluation_radius, frame="galactic",
+        skydir=(0, 0), binsz=0.02, width=width, frame="galactic",
     )
 
     integral = model.integrate_geom(geom)
@@ -149,7 +150,7 @@ def test_sky_disk():
     assert_allclose(val.value, desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius, r_0 * (1 + model.edge_width.value))
+    assert_allclose(radius.to_value("deg"), 2.222)
 
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
@@ -169,7 +170,7 @@ def test_sky_disk():
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius, r_0 * (1 + model.edge_width.value))
+    assert_allclose(radius.to_value("deg"), 11.11)
     # test rotation
     r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
@@ -375,7 +376,7 @@ def test_spatial_model_plot():
         model.plot_error(ax=ax)
 
 
-def test_integrate_geom():
+def test_integrate_region_geom():
     center = SkyCoord("0d", "0d", frame="icrs")
     model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
 
@@ -384,19 +385,28 @@ def test_integrate_geom():
     radius_small = 0.1 * u.deg
     circle_small = CircleSkyRegion(center, radius_small)
 
-    geom_large, geom_small = (
-        RegionGeom(region=circle_large, binsz_wcs="0.01deg"),
-        RegionGeom(region=circle_small, binsz_wcs="0.01deg"),
-    )
+    geom_large, geom_small = RegionGeom(region=circle_large), RegionGeom(region=circle_small, binsz_wcs="0.01d")
 
     integral_large, integral_small = (
         model.integrate_geom(geom_large).data,
         model.integrate_geom(geom_small).data,
     )
 
-    assert_allclose(integral_large[0], 1, rtol=0.01)
-    assert_allclose(integral_small[0], 0.3953, rtol=0.01)
+    assert_allclose(integral_large[0], 1, rtol=0.001)
+    assert_allclose(integral_small[0], 0.3953, rtol=0.001)
 
+def test_integrate_wcs_geom():
+    center = SkyCoord("0d", "0d", frame="icrs")
+    model_0_01d = GaussianSpatialModel(lon="0.234d", lat="-0.172d", sigma=0.01 * u.deg, frame="icrs")
+    model_0_005d = GaussianSpatialModel(lon="0.234d", lat="-0.172d", sigma=0.005 * u.deg, frame="icrs")
+
+    geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
+
+    integrated_0_01d = model_0_01d.integrate_geom(geom)
+    integrated_0_005d = model_0_005d.integrate_geom(geom)
+
+    assert_allclose(integrated_0_01d.data.sum(), 1, atol=2e-4)
+    assert_allclose(integrated_0_005d.data.sum(), 1, atol=2e-4)
 
 def test_integrate_geom_energy_axis():
     center = SkyCoord("0d", "0d", frame="icrs")
@@ -406,8 +416,8 @@ def test_integrate_geom_energy_axis():
     square = RectangleSkyRegion(center, radius, radius)
 
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
-    geom = RegionGeom(region=square, axes=[axis], binsz_wcs="0.01deg")
+    geom = RegionGeom(region=square, axes=[axis])
 
     integral = model.integrate_geom(geom).data
 
-    assert_allclose(integral, 1, rtol=0.01)
+    assert_allclose(integral, 1, rtol=0.0001)
