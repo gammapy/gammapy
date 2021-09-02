@@ -254,7 +254,7 @@ class SkyModel(Model):
         models : `DatasetModels`
             Selected models contributing inside the region where mask==True
         """
-        from gammapy.datasets.map import CUTOUT_MARGIN
+        from gammapy.datasets.evaluator import CUTOUT_MARGIN
 
         margin = u.Quantity(margin)
 
