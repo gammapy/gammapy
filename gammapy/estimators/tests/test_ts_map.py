@@ -227,13 +227,14 @@ def test_ts_map_with_model(fake_dataset):
     estimator = TSMapEstimator(
         model,
         kernel_width="0.3 deg",
-        selection_optional=[],
+        selection_optional=["all"],
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
 
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 18.369942, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], 3.513e-10, atol=1e-12)
+    assert_allclose(maps["flux_err"].data[0, 0, 0], 2.494462e-11, rtol=1e-4)
 
     fake_dataset.models = [model]
     maps = estimator.run(fake_dataset)

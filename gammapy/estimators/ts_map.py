@@ -523,11 +523,12 @@ class SimpleMapDataset:
     def stat_2nd_derivative(self, norm):
         """Stat 2nd derivative"""
         with np.errstate(invalid="ignore", divide="ignore"):
+            mask = self.background > 0
             return (
                 self.model ** 2
                 * self.counts
                 / (self.background + norm * self.model) ** 2
-            ).sum()
+            )[mask].sum()
 
     @classmethod
     def from_arrays(cls, counts, background, exposure, norm, position, kernel):
