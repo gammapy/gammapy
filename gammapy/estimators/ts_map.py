@@ -261,31 +261,22 @@ class TSMapEstimator(Estimator):
         flux = flux.convolve(kernel)
         return flux.sum_over_axes()
 
-    def estimate_mask_default(self, dataset, kernel=None):
+    def estimate_mask_default(self, dataset):
         """Compute default mask where to estimate TS values.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Input dataset.
-        kernel : `WcsNDMap`
-            Source model kernel.
 
         Returns
         -------
         mask : `WcsNDMap`
             Mask map.
         """
-        if kernel is None:
-            kernel = self.estimate_kernel(dataset=dataset)
-
         geom = dataset.counts.geom.to_image()
 
-        # mask boundary
-        mask = np.zeros(geom.data_shape, dtype=bool)
-        slice_x = slice(kernel.data.shape[2] // 2, -kernel.data.shape[2] // 2 + 1)
-        slice_y = slice(kernel.data.shape[1] // 2, -kernel.data.shape[1] // 2 + 1)
-        mask[slice_y, slice_x] = 1
+        mask = np.ones(geom.data_shape, dtype=bool)
 
         if dataset.mask is not None:
             mask &= dataset.mask.reduce_over_axes(func=np.logical_or, keepdims=False)
@@ -347,9 +338,11 @@ class TSMapEstimator(Estimator):
 
         kernel = self.estimate_kernel(dataset)
 
-        mask = self.estimate_mask_default(dataset, kernel=kernel)
+        mask = self.estimate_mask_default(dataset=dataset)
 
-        flux = self.estimate_flux_default(dataset, kernel=kernel, exposure=exposure)
+        flux = self.estimate_flux_default(
+            dataset=dataset, kernel=kernel, exposure=exposure
+        )
 
         energy_axis = counts.geom.axes["energy"]
 
@@ -530,11 +523,12 @@ class SimpleMapDataset:
     def stat_2nd_derivative(self, norm):
         """Stat 2nd derivative"""
         with np.errstate(invalid="ignore", divide="ignore"):
+            mask = self.background > 0
             return (
                 self.model ** 2
                 * self.counts
                 / (self.background + norm * self.model) ** 2
-            ).sum()
+            )[mask].sum()
 
     @classmethod
     def from_arrays(cls, counts, background, exposure, norm, position, kernel):

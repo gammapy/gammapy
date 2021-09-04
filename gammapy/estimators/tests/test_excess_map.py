@@ -118,7 +118,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["err"].data[0, 10, 10], 12.727922, atol=1e-3)
     assert_allclose(result["errp"].data[0, 10, 10], 13.063328, atol=1e-3)
     assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
-    assert_allclose(result["ul"].data[0, 10, 10], 122.240837, atol=1e-3)
+    assert_allclose(result["ul"].data[0, 10, 10], 107.806275, atol=1e-3)
 
     simple_dataset.exposure += 1e10 * u.cm ** 2 * u.s
     axis = simple_dataset.exposure.geom.axes[0]
