@@ -1,22 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import inspect
-from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import lazyproperty
-from astropy.coordinates.angle_utilities import angular_separation
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
-    TemplateNPredModel,
     DatasetModels,
     FoVBackgroundModel,
-    PointSpatialModel,
 )
 from gammapy.stats import (
     CashCountsStatistic,
@@ -54,7 +48,11 @@ USE_NPRED_CACHE = True
 
 
 def create_map_dataset_geoms(
-    geom, energy_axis_true=None, migra_axis=None, rad_axis=None, binsz_irf=None,
+    geom,
+    energy_axis_true=None,
+    migra_axis=None,
+    rad_axis=None,
+    binsz_irf=None,
 ):
     """Create map geometries for a `MapDataset`
 
@@ -418,7 +416,7 @@ class MapDataset(Dataset):
         return background
 
     def npred_signal(self, model_name=None):
-        """"Model predicted signal counts.
+        """ "Model predicted signal counts.
 
         If a model is passed, predicted counts from that component is returned.
         Else, the total signal counts are returned.
@@ -443,7 +441,11 @@ class MapDataset(Dataset):
         for evaluator in self.evaluators.values():
             if evaluator.needs_update:
                 evaluator.update(
-                    self.exposure, self.psf, self.edisp, self._geom, self.mask_image,
+                    self.exposure,
+                    self.psf,
+                    self.edisp,
+                    self._geom,
+                    self.mask_image,
                 )
 
             if evaluator.contributes:
@@ -965,7 +967,7 @@ class MapDataset(Dataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred()
-        data = np.nan_to_num(npred.data, copy=True, nan=0., posinf=0., neginf=0.)
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = random_state.poisson(data)
         self.counts = npred
 
@@ -2012,7 +2014,7 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def to_map_dataset(self, name=None):
-        """ Convert a MapDatasetOnOff to  MapDataset
+        """Convert a MapDatasetOnOff to  MapDataset
         The background model template is taken as alpha*counts_off
 
         Parameters
@@ -2134,7 +2136,7 @@ class MapDatasetOnOff(MapDataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
-        data = np.nan_to_num(npred.data, copy=True, nan=0., posinf=0., neginf=0.)
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = random_state.poisson(data)
 
         npred_bkg = random_state.poisson(npred_background.data)
@@ -2142,7 +2144,9 @@ class MapDatasetOnOff(MapDataset):
         self.counts = npred + npred_bkg
 
         npred_off = npred_background / self.alpha
-        data_off = np.nan_to_num(npred_off.data, copy=True, nan=0., posinf=0., neginf=0.)
+        data_off = np.nan_to_num(
+            npred_off.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0
+        )
         npred_off.data = random_state.poisson(data_off)
         self.counts_off = npred_off
 
@@ -2305,7 +2309,9 @@ class MapDatasetOnOff(MapDataset):
         info["alpha"] = alpha
 
         info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"], info["counts_off"], acceptance / acceptance_off,
+            info["counts"],
+            info["counts_off"],
+            acceptance / acceptance_off,
         ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
@@ -2541,5 +2547,3 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off=acceptance_off,
             counts_off=counts_off,
         )
-
-

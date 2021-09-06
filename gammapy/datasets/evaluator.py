@@ -54,15 +54,15 @@ class MapEvaluator:
     """
 
     def __init__(
-            self,
-            model=None,
-            exposure=None,
-            psf=None,
-            edisp=None,
-            gti=None,
-            mask=None,
-            evaluation_mode="local",
-            use_cache=True,
+        self,
+        model=None,
+        exposure=None,
+        psf=None,
+        edisp=None,
+        gti=None,
+        mask=None,
+        evaluation_mode="local",
+        use_cache=True,
     ):
 
         self.model = model
@@ -83,9 +83,9 @@ class MapEvaluator:
 
         # TODO: this is preliminary solution until we have further unified the model handling
         if (
-                isinstance(self.model, TemplateNPredModel)
-                or self.model.spatial_model is None
-                or self.model.evaluation_radius is None
+            isinstance(self.model, TemplateNPredModel)
+            or self.model.spatial_model is None
+            or self.model.evaluation_radius is None
         ):
             self.evaluation_mode = "global"
 
@@ -301,7 +301,9 @@ class MapEvaluator:
             if self.psf and self.model.apply_irf["psf"]:
                 values = self._compute_flux_spatial_geom(wcs_geom)
             else:
-                values = self.model.spatial_model.integrate_geom(wcs_geom, oversampling_factor=1)
+                values = self.model.spatial_model.integrate_geom(
+                    wcs_geom, oversampling_factor=1
+                )
                 axes = [self.geom.axes["energy_true"].squash()]
                 values = values.to_cube(axes=axes)
 
@@ -328,14 +330,17 @@ class MapEvaluator:
     def compute_flux_spectral(self):
         """Compute spectral flux"""
         energy = self.geom.axes["energy_true"].edges
-        value = self.model.spectral_model.integral(energy[:-1], energy[1:], )
+        value = self.model.spectral_model.integral(
+            energy[:-1],
+            energy[1:],
+        )
         if self.geom.is_hpx:
             return value.reshape((-1, 1))
         else:
             return value.reshape((-1, 1, 1))
 
     def compute_temporal_norm(self):
-        """Compute temporal norm """
+        """Compute temporal norm"""
         integral = self.model.temporal_model.integral(
             self.gti.time_start, self.gti.time_stop
         )
@@ -386,7 +391,7 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
-        """"""
+        """ """
         if not isinstance(self.model, TemplateNPredModel):
             return self.model.apply_irf.get("psf_after_edisp")
 
@@ -511,4 +516,3 @@ class MapEvaluator:
         if not self.model.apply_irf["edisp"]:
             methods.remove(self.apply_edisp)
         return methods
-
