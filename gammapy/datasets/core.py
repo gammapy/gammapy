@@ -411,7 +411,7 @@ class Datasets(collections.abc.MutableSequence):
                 filename_models, overwrite=overwrite, write_covariance=write_covariance,
             )
 
-    def stack_reduce(self, name=None, nan_to_num=True):
+    def stack_reduce(self, name=None, empty=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
         This works only if all Dataset are of the same type and if a proper
@@ -421,6 +421,8 @@ class Datasets(collections.abc.MutableSequence):
         ----------
         name : str
             Name of the stacked dataset.
+        empty : `~gammapy.datasets.Dataset`
+            An empty dataset to stack onto
         nan_to_num: bool
             Non-finite values are replaced by zero if True (default).
 
@@ -433,10 +435,15 @@ class Datasets(collections.abc.MutableSequence):
             raise ValueError(
                 "Stacking impossible: all Datasets contained are not of a unique type."
             )
+        if self[0].tag == "FluxPointsDataset":
+            raise ValueError("Stacking not defined for FluxPointsDataset")
 
-        stacked = self[0].to_masked(name=name, nan_to_num=nan_to_num)
+        if empty is not None:
+            stacked = empty.copy(name=name)
+        else:
+            stacked = self[0].from_geoms(**self[0].geoms, name=name)
 
-        for dataset in self[1:]:
+        for dataset in self:
             stacked.stack(dataset, nan_to_num=nan_to_num)
 
         return stacked
@@ -456,12 +463,13 @@ class Datasets(collections.abc.MutableSequence):
         """
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
+        if self[0].tag == "FluxPointsDataset":
+            raise ValueError("Info table not supported for FluxPointsDataset")
 
-        stacked = self[0].to_masked(name="stacked")
+        stacked = self[0].__class__.from_geoms(**self[0].geoms, name="stacked")
+        rows = []
 
-        rows = [stacked.info_dict()]
-
-        for dataset in self[1:]:
+        for dataset in self:
             if cumulative:
                 stacked.stack(dataset)
                 row = stacked.info_dict()
