@@ -118,9 +118,7 @@ def test_generalized_gaussian(eta, r_0, e):
     )
 
     width = np.maximum(2 * model.evaluation_radius.to_value("deg"), 0.5)
-    geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=width, frame="galactic",
-    )
+    geom = WcsGeom.create(skydir=(0, 0), binsz=0.02, width=width, frame="galactic",)
 
     integral = model.integrate_geom(geom)
     assert integral.unit.is_equivalent("")
@@ -200,9 +198,7 @@ def test_sky_disk():
 
 def test_sky_disk_edge():
     r_0 = 2 * u.deg
-    model = DiskSpatialModel(
-        lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg",
-    )
+    model = DiskSpatialModel(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg",)
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(0 * u.deg, r_0)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
@@ -269,8 +265,10 @@ def test_sky_diffuse_map(caplog):
     lat = -39.8 * u.deg
     val = model(lon, lat)
 
-    assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "Missing spatial template unit, assuming sr^-1"
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Missing spatial template unit, assuming sr^-1" in [
+        _.message for _ in caplog.records
+    ]
 
     assert val.unit == "sr-1"
     desired = [3269.178107, 0]
@@ -385,7 +383,10 @@ def test_integrate_region_geom():
     radius_small = 0.1 * u.deg
     circle_small = CircleSkyRegion(center, radius_small)
 
-    geom_large, geom_small = RegionGeom(region=circle_large), RegionGeom(region=circle_small, binsz_wcs="0.01d")
+    geom_large, geom_small = (
+        RegionGeom(region=circle_large),
+        RegionGeom(region=circle_small, binsz_wcs="0.01d"),
+    )
 
     integral_large, integral_small = (
         model.integrate_geom(geom_large).data,
@@ -395,10 +396,15 @@ def test_integrate_region_geom():
     assert_allclose(integral_large[0], 1, rtol=0.001)
     assert_allclose(integral_small[0], 0.3953, rtol=0.001)
 
+
 def test_integrate_wcs_geom():
     center = SkyCoord("0d", "0d", frame="icrs")
-    model_0_01d = GaussianSpatialModel(lon="0.234d", lat="-0.172d", sigma=0.01 * u.deg, frame="icrs")
-    model_0_005d = GaussianSpatialModel(lon="0.234d", lat="-0.172d", sigma=0.005 * u.deg, frame="icrs")
+    model_0_01d = GaussianSpatialModel(
+        lon="0.234d", lat="-0.172d", sigma=0.01 * u.deg, frame="icrs"
+    )
+    model_0_005d = GaussianSpatialModel(
+        lon="0.234d", lat="-0.172d", sigma=0.005 * u.deg, frame="icrs"
+    )
 
     geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
 
@@ -407,6 +413,7 @@ def test_integrate_wcs_geom():
 
     assert_allclose(integrated_0_01d.data.sum(), 1, atol=2e-4)
     assert_allclose(integrated_0_005d.data.sum(), 1, atol=2e-4)
+
 
 def test_integrate_geom_energy_axis():
     center = SkyCoord("0d", "0d", frame="icrs")
