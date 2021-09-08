@@ -875,11 +875,12 @@ def test_npred_sig(sky_model, geom, geom_etrue):
     bkg = FoVBackgroundModel(dataset_name=dataset.name)
     dataset.models = [bkg, sky_model, model1]
 
-    assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
-    assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
     assert_allclose(
         dataset.npred_signal(model_name=model1.name).data.sum(), 150.7487, rtol=1e-3
     )
+    assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
+    assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
+ 
     with pytest.raises(
         KeyError, match="m2",
     ):
