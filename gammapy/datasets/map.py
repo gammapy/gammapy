@@ -435,10 +435,11 @@ class MapDataset(Dataset):
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
 
+        evaluators = self.evaluators
         if model_name is not None:
-            return self.evaluators[model_name].compute_npred()
+            evaluators = {model_name: self.evaluators[model_name]} 
 
-        for evaluator in self.evaluators.values():
+        for evaluator in evaluators.values():
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
