@@ -75,6 +75,7 @@ class ParameterEstimator(Estimator):
         -------
         result : dict
             Dict with the various parameter estimation values.
+            (parameter value, total statistic, success flag, parameter error value)
         """
         value, total_stat, success, error = np.nan, 0, False, np.nan
 
@@ -104,10 +105,11 @@ class ParameterEstimator(Estimator):
         Returns
         -------
         result : dict
-            Dict with the various parameter estimation values.
+            Dict with the TS of the best fit value compared to the null hypothesis.
+            (TS, npred, npred_null)
         """
         if not np.any(datasets.contributes_to_stat):
-            return {"ts": np.nan}
+            return {"ts": np.nan, "npred": np.nan, "npred_null": np.nan}
 
         stat = datasets.stat_sum()
         npred = self.estimate_npred(datasets=datasets)
@@ -142,7 +144,8 @@ class ParameterEstimator(Estimator):
         Returns
         -------
         result : dict
-            Dict with the various parameter estimation values.
+            Dict with the parameter asymmetric errors
+            (error_p, error_n)
         """
         if not np.any(datasets.contributes_to_stat):
             return {
@@ -177,7 +180,8 @@ class ParameterEstimator(Estimator):
         Returns
         -------
         result : dict
-            Dict with the various parameter estimation values.
+            Dict with the parameter fit scan values.
+            (parameter values, statistic values)
 
         """
         scan_values = parameter.scan_values
@@ -214,7 +218,8 @@ class ParameterEstimator(Estimator):
         Returns
         -------
         result : dict
-            Dict with the various parameter estimation values.
+            Dict with the parameter ULs.
+            (upper limit)
 
         """
         if not np.any(datasets.contributes_to_stat):

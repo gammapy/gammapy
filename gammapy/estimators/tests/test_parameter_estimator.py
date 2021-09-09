@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data
 
 pytest.importorskip("iminuit")
@@ -71,3 +71,33 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     assert_allclose(result["amplitude"], 0.018251, rtol=1e-3)
     assert_allclose(result["amplitude_scan"].shape, 10)
     assert_allclose(result["amplitude_scan"][0], 0.017282, atol=1e-3)
+
+@requires_data()
+def test_parameter_estimator_no_data(crab_datasets_1d, pwl_model):
+    datasets = crab_datasets_1d
+
+    model = SkyModel(spectral_model=pwl_model, name="Crab")
+    model.spectral_model.amplitude.scan_n_values = 10
+
+    for dataset in datasets:
+        dataset.mask_safe.data[...] = False
+        dataset.models = model
+
+    estimator = ParameterEstimator(selection_optional="all")
+
+    result = estimator.run(datasets, parameter="amplitude")
+
+    assert np.isnan(result["amplitude"])
+    assert np.isnan(result["amplitude_err"])
+    assert np.isnan(result["amplitude_errp"])
+    assert np.isnan(result["amplitude_errn"])
+    assert np.isnan(result["amplitude_ul"])
+    assert np.isnan(result["ts"])
+    assert np.isnan(result["npred"])
+    assert np.isnan(result["npred_null"])
+    assert_allclose(result["counts"], 0)
+
+    # Add test for scan
+    assert_allclose(result["amplitude_scan"].shape, 10)
+    assert np.all(np.isnan(result["stat_scan"]))
+
