@@ -108,11 +108,20 @@ class ParameterEstimator(Estimator):
             Dict with the TS of the best fit value compared to the null hypothesis.
             (TS, npred, npred_null)
         """
-        if not np.any(datasets.contributes_to_stat):
-            return {"ts": np.nan, "npred": np.nan, "npred_null": np.nan}
 
-        stat = datasets.stat_sum()
+#        if not np.any(datasets.contributes_to_stat):
+#            npred_null = self.estimate_npred(datasets=datasets)
+#            return {"ts": np.nan,
+#                    "npred": self.estimate_npred(datasets=datasets),
+#                    "npred_null": self.estimate_npred(datasets=datasets)}
+
         npred = self.estimate_npred(datasets=datasets)
+
+        if not np.any(datasets.contributes_to_stat):
+            stat = np.nan
+            npred["npred"][...] = np.nan
+        else:
+            stat = datasets.stat_sum()
 
         with datasets.parameters.restore_status():
             # compute ts value

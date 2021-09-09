@@ -94,7 +94,7 @@ def test_parameter_estimator_no_data(crab_datasets_1d, pwl_model):
     assert np.isnan(result["amplitude_ul"])
     assert np.isnan(result["ts"])
     assert np.isnan(result["npred"])
-    assert np.isnan(result["npred_null"])
+    assert_allclose(result["npred_null"], 0)
     assert_allclose(result["counts"], 0)
 
     # Add test for scan
