@@ -219,7 +219,7 @@ def test_plot_models(caplog):
     models = Models([m1, m2])
 
     models.plot_regions()
-    assert caplog.records[-1].levelname == "WARNING"
-    assert (
-        caplog.records[-1].message == "Skipping model m2 - no spatial component present"
-    )
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Skipping model m2 - no spatial component present" in [
+        _.message for _ in caplog.records
+    ]

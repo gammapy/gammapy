@@ -31,11 +31,9 @@ def test_parameter_init():
 def test_parameter_outside_limit(caplog):
     par = Parameter("spam", 50, min=0, max=40)
     par.check_limits()
-    assert caplog.records[-1].levelname == "WARNING"
-    assert (
-        caplog.records[-1].message
-        == "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
-    )
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    message1 = "Value 50.0 is outside bounds [0.0, 40.0] for parameter 'spam'"
+    assert message1 in [_.message for _ in caplog.records]
 
 
 def test_parameter_scale():
@@ -173,8 +171,12 @@ def test_parameters_set_parameter_factors(pars):
 
 
 def test_parameters_s():
-    pars = Parameters([Parameter("", 20, scale_method="scale10"),
-                       Parameter("", 20, scale_method=None)])
+    pars = Parameters(
+        [
+            Parameter("", 20, scale_method="scale10"),
+            Parameter("", 20, scale_method=None),
+        ]
+    )
     pars_dict = pars.to_dict()
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
@@ -189,8 +191,7 @@ def test_parameters_s():
     assert pars[1].scale_method is None
     pars.autoscale()
     assert_allclose(pars[1].factor, 20)
-    assert_allclose(pars[1].scale, 1)    
-
+    assert_allclose(pars[1].scale, 1)
 
 
 def test_parameter_scan_values():
