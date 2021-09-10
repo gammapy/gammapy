@@ -379,8 +379,8 @@ with the expected logging level:
         ----------
         caplog : caplog fixture that give you access to the log level, the logger, etc.,
         """
-        assert caplog.records[-1].levelname == "WARNING"
-        assert "warning message" in caplog.records[-1].message
+        assert "WARNING" in [_.levelname for _ in caplog.records]
+        assert "warning message" in [_.message for _ in caplog.records]
 
 Random numbers
 --------------
