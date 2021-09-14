@@ -33,7 +33,7 @@ class ImageProfileEstimator(Estimator):
     center region::
 
         import matplotlib.pyplot as plt
-        from gammapy.maps import ImageProfileEstimator
+        from gammapy.estimators import ImageProfileEstimator
         from gammapy.maps import Map
         from astropy import units as u
 
