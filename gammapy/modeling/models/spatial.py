@@ -1010,7 +1010,7 @@ class TemplateSpatialModel(SpatialModel):
         self, map, meta=None, normalize=True, interp_kwargs=None, filename=None,
     ):
         if (map.data < 0).any():
-            log.warning("Diffuse map has negative values. Check and fix this!")
+            log.warning("Map has negative values. Check and fix this!")
 
         if filename is not None:
             filename = str(make_path(filename))
