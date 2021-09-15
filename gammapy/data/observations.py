@@ -6,17 +6,57 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
+from astropy.io import fits
+from gammapy.utils.scripts import make_path
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
-from .event_list import EventListChecker
+from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
+from .hdu_index_table import HDUIndexTable
+from gammapy import irf
+import matplotlib.pyplot as plt
 
-__all__ = ["Observation", "Observations"]
+__all__ = ["Observation", "Observations", "read_irf_with_hdu_class"]
 
 log = logging.getLogger(__name__)
 
+irf_dictionary = HDUIndexTable.HDU_CLASS_IMPLEMENTATION
+
+def read_irf_with_hdu_class(irf_file, hdu_class):
+    """Search for an IRF component with the specified HDUCLAS4 keyword within
+    the irf_file. Return an instance of the corresponding IRF class implemented 
+    in Gammapy.
+    
+    Parameters
+    ----------
+    irf_file : str, path
+        path to the file containing the IRF components, does not matter if also
+        EVENTS and GTI HDUs are included in the file, these are avoided
+    hdu_class : str
+        one of the allowed HDUCLAS4 header keyword in VALID_HDU_CLASS
+    
+    Returns
+    -------
+    one of the IRF component implementated in `~gammapy.irf`;
+    if the specified HDUCLAS4 is not available, `None` is returned
+    """
+    if hdu_class not in HDUIndexTable.VALID_HDU_CLASS:
+        raise KeyError(f"{hdu_class} is not a valid HDU CLASS.")
+    
+    for hdu in fits.open(irf_file):
+        try: 
+            read_hdu_class = hdu.header["HDUCLAS4"]
+            if (read_hdu_class.lower() == hdu_class.lower()):
+                # we have found a hdu with this specific HDUCLAS4 hedaer keyword
+                extname = hdu.header["EXTNAME"]
+                component = getattr(irf, irf_dictionary[hdu_class])
+                return component.read(irf_file, extname)
+        except KeyError:
+            # no 'HDUCLAS4' header keyword in this HDU (probably EVENTS or GTI)
+            continue
+    
 
 class Observation:
     """In-memory observation.
@@ -341,6 +381,56 @@ class Observation:
         obs = copy.deepcopy(self)
         obs.obs_filter = new_obs_filter
         return obs
+
+    @classmethod
+    def from_file(cls, event_file, irf_file):
+        """Create an Observation from a Event List and IRF file.
+        Ease the creation of a single Observation without creating an entire `DataStore`
+        that is without the need of HDU and OBS index files
+        """
+        log.info(f"reading the Event List and GTI from {event_file}")
+        event_file = make_path(event_file)
+        if not event_file.exists():
+            raise OSError(f"File not found: {event_file}")
+        log.debug(f"Reading {event_file}")
+        events = EventList.read(event_file)
+        gti = GTI.read(event_file) 
+        log.info(f"reading the IRF components in {irf_file}")
+        irf_file = make_path(irf_file)
+        if not irf_file.exists():
+            raise OSError(f"File not found: {irf_file}")
+        aeff = read_irf_with_hdu_class(irf_file, "aeff_2d")
+        edisp = read_irf_with_hdu_class(irf_file, "edisp_2d")
+        aeff.peek()
+        plt.show()
+        # non-mandatory IRF components
+        psf = None
+        bkg = None
+        # there are different options for the PSF, the first not None is returned
+        # we assume a single PSF class is saved in the file
+        for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
+            if hdu_class.startswith("psf"): 
+                psf_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
+                if psf_tmp is not None: 
+                    psf = psf_tmp
+        # there are different options for the BKG, the first not None is returned
+        for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
+            if hdu_class.startswith("bkg"): 
+                bkg_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
+                if bkg_tmp is not None: 
+                    bkg = bkg_tmp
+        
+        return cls(
+            gti=gti,
+            aeff=aeff,
+            bkg=bkg,
+            edisp=edisp,
+            psf=psf,
+            events=events,
+        )
+        
+        
+
 
 
 class Observations(collections.abc.MutableSequence):
