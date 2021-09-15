@@ -7,6 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from astropy.io import fits
+from astropy.table import Table
 from gammapy.utils.scripts import make_path
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
@@ -16,9 +17,8 @@ from .gti import GTI
 from .pointing import FixedPointingInfo
 from .hdu_index_table import HDUIndexTable
 from gammapy import irf
-import matplotlib.pyplot as plt
 
-__all__ = ["Observation", "Observations", "read_irf_with_hdu_class"]
+__all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
 
@@ -401,26 +401,31 @@ class Observation:
             raise OSError(f"File not found: {irf_file}")
         aeff = read_irf_with_hdu_class(irf_file, "aeff_2d")
         edisp = read_irf_with_hdu_class(irf_file, "edisp_2d")
-        aeff.peek()
-        plt.show()
         # non-mandatory IRF components
         psf = None
         bkg = None
-        # there are different options for the PSF, the first not None is returned
-        # we assume a single PSF class is saved in the file
+        # there are different options for the PSF, the first allowed HDU CLASS 
+        # that gives not None with read_irf_with_hdu_class will be returned
+        # - we assume only one PSF type per file is stored
         for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
             if hdu_class.startswith("psf"): 
                 psf_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
                 if psf_tmp is not None: 
                     psf = psf_tmp
-        # there are different options for the BKG, the first not None is returned
+        # there are different options for the BKG, the first allowed HDU CLASS 
+        # that gives not None with read_irf_with_hdu_class will be returned
+        # - we assume only one PSF type per file is stored
         for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
             if hdu_class.startswith("bkg"): 
                 bkg_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
                 if bkg_tmp is not None: 
                     bkg = bkg_tmp
         
+        # the obs_info seems to be a dictionary of the header of the EVENTS
+        obs_info = Table.read(event_file, hdu="EVENTS").meta
         return cls(
+            obs_id = obs_info.get("OBS_ID"),
+            obs_info=obs_info,
             gti=gti,
             aeff=aeff,
             bkg=bkg,
