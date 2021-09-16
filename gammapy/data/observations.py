@@ -398,7 +398,6 @@ class Observation:
         -------
         `~gammapy.data.Observation` with the event and irf read from the file
         """
-        log.info(f"reading the Event List and GTI from {event_file}")
         event_file = make_path(event_file)
         irf_file = make_path(irf_file) if irf_file is not None else event_file
         events = EventList.read(event_file)
