@@ -383,7 +383,7 @@ class Observation:
         return obs
 
     @classmethod
-    def from_file(cls, event_file, irf_file=None):
+    def read(cls, event_file, irf_file=None):
         """Create an Observation from a Event List and an (optional) IRF file.
 
         Parameters
