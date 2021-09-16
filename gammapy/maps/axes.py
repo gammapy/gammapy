@@ -1195,7 +1195,7 @@ class MapAxis:
 
             # background models are stored in reconstructed energy
             hduclass = table.meta.get("HDUCLAS2")
-            if hduclass == "BKG" and column_prefix == "ENERG":
+            if hduclass in {"BKG", "RAD_MAX"} and column_prefix == "ENERG":
                 name = "energy"
 
             edges_lo = table[f"{column_prefix}_LO"].quantity[0]
@@ -1880,6 +1880,7 @@ class MapAxes(Sequence):
                     )
                 except KeyError:
                     continue
+
                 axes.append(axis)
         elif format == "gadf-sed":
             for axis_format in ["gadf-sed-norm", "gadf-sed-energy", "gadf-sed-counts"]:

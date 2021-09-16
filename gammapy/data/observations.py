@@ -35,6 +35,9 @@ class Observation:
         Point spread function
     bkg : `~gammapy.irf.Background3D`
         Background rate model
+    rad_max: `~gammapy.irf.RAD_MAX_2d` or `~astropy.units.Quantity`
+        Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
+        or a single angle (global RAD_MAX)
     gti : `~gammapy.data.GTI`
         Table with GTI start and stop time
     events : `~gammapy.data.EventList`
@@ -47,6 +50,7 @@ class Observation:
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
     bkg = LazyFitsData(cache=False)
+    rad_max = LazyFitsData(cache=False)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=False)
 
@@ -59,6 +63,7 @@ class Observation:
         edisp=None,
         psf=None,
         bkg=None,
+        rad_max=None,
         events=None,
         obs_filter=None,
     ):
@@ -68,6 +73,7 @@ class Observation:
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
+        self.rad_max = rad_max
         self._gti = gti
         self._events = events
         self.obs_filter = obs_filter or ObservationFilter()
