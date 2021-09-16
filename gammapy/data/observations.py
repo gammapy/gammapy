@@ -383,22 +383,26 @@ class Observation:
         return obs
 
     @classmethod
-    def from_file(cls, event_file, irf_file):
-        """Create an Observation from a Event List and IRF file.
-        Ease the creation of a single Observation without creating an entire `DataStore`
-        that is without the need of HDU and OBS index files
+    def from_file(cls, event_file, irf_file=None):
+        """Create an Observation from a Event List and an (optional) IRF file.
+
+        Parameters
+        ----------
+        event_file : str, Path
+            path to the .fits file containing the event list and the GTI
+        irf_file : str, Path
+            (optional) path to the .fits file containing the IRF components,  
+            if not provided the IRF will be read from the event file
+
+        Returns
+        -------
+        `~gammapy.data.Observation` with the event and irf read from the file
         """
         log.info(f"reading the Event List and GTI from {event_file}")
         event_file = make_path(event_file)
-        if not event_file.exists():
-            raise OSError(f"File not found: {event_file}")
-        log.debug(f"Reading {event_file}")
+        irf_file = make_path(irf_file) if irf_file is not None else event_file
         events = EventList.read(event_file)
         gti = GTI.read(event_file) 
-        log.info(f"reading the IRF components in {irf_file}")
-        irf_file = make_path(irf_file)
-        if not irf_file.exists():
-            raise OSError(f"File not found: {irf_file}")
         aeff = read_irf_with_hdu_class(irf_file, "aeff_2d")
         edisp = read_irf_with_hdu_class(irf_file, "edisp_2d")
         # non-mandatory IRF components
@@ -412,6 +416,7 @@ class Observation:
                 psf_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
                 if psf_tmp is not None: 
                     psf = psf_tmp
+                    break
         # there are different options for the BKG, the first allowed HDU CLASS 
         # that gives not None with read_irf_with_hdu_class will be returned
         # - we assume only one PSF type per file is stored
@@ -420,7 +425,7 @@ class Observation:
                 bkg_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
                 if bkg_tmp is not None: 
                     bkg = bkg_tmp
-        
+                    break
         # the obs_info seems to be a dictionary of the header of the EVENTS
         obs_info = Table.read(event_file, hdu="EVENTS").meta
         return cls(
