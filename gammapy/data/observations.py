@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 irf_dictionary = HDUIndexTable.HDU_CLASS_IMPLEMENTATION
 
-def read_irf_with_hdu_class(irf_file, hdu_class):
+def load_irf_from_hdu_class(irf_file, hdu_class):
     """Search for an IRF component with the specified HDUCLAS4 keyword within
     the irf_file. Return an instance of the corresponding IRF class implemented 
     in Gammapy.
@@ -402,8 +402,8 @@ class Observation:
         irf_file = make_path(irf_file) if irf_file is not None else event_file
         events = EventList.read(event_file)
         gti = GTI.read(event_file) 
-        aeff = read_irf_with_hdu_class(irf_file, "aeff_2d")
-        edisp = read_irf_with_hdu_class(irf_file, "edisp_2d")
+        aeff = load_irf_from_hdu_class(irf_file, "aeff_2d")
+        edisp = load_irf_from_hdu_class(irf_file, "edisp_2d")
         # non-mandatory IRF components
         psf = None
         bkg = None
@@ -412,7 +412,7 @@ class Observation:
         # - we assume only one PSF type per file is stored
         for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
             if hdu_class.startswith("psf"): 
-                psf_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
+                psf_tmp = load_irf_from_hdu_class(irf_file, hdu_class)
                 if psf_tmp is not None: 
                     psf = psf_tmp
                     break
@@ -421,7 +421,7 @@ class Observation:
         # - we assume only one PSF type per file is stored
         for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
             if hdu_class.startswith("bkg"): 
-                bkg_tmp = read_irf_with_hdu_class(irf_file, hdu_class)
+                bkg_tmp = load_irf_from_hdu_class(irf_file, hdu_class)
                 if bkg_tmp is not None: 
                     bkg = bkg_tmp
                     break
