@@ -33,19 +33,6 @@ class HDUIndexTable(Table):
     ]
     """Valid values for `HDU_CLASS`."""
 
-    HDU_CLASS_IMPLEMENTATION = {
-        "events" : "EventList",
-        "gti" : "GTI",
-        "aeff_2d" : "EffectiveAreaTable2D",
-        "edisp_2d" : "EnergyDispersion2D",
-        "psf_table" : "PSF3D",
-        "psf_3gauss" : "EnergyDependentMultiGaussPSF",
-        "psf_king" : "PSFKing",
-        "bkg_2d" : "Background2D",
-        "bkg_3d" : "Background3D"
-    }
-    """Names of Gammapy classes implementing each specific HDUCLASS."""
-
     @classmethod
     def read(cls, filename, **kwargs):
         """Read :ref:`gadf:hdu-index`.
