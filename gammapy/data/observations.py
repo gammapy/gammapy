@@ -49,7 +49,7 @@ def load_irf_from_hdu_class(irf_file, hdu_class):
             if (read_hdu_class.lower() == hdu_class.lower()):
                 # we have found a hdu with this specific HDUCLAS4 hedaer keyword
                 extname = hdu.header["EXTNAME"]
-                component = IRF_REGISTRY.getattr(hdu_class)
+                component = IRF_REGISTRY.get_cls(hdu_class)
                 return component.read(irf_file, extname)
         except KeyError:
             # no 'HDUCLAS4' header keyword in this HDU (probably EVENTS or GTI)
