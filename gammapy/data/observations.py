@@ -16,13 +16,11 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
 from .hdu_index_table import HDUIndexTable
-from gammapy import irf
+from gammapy.irf import IRF_REGISTRY
 
 __all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
-
-irf_dictionary = HDUIndexTable.HDU_CLASS_IMPLEMENTATION
 
 def load_irf_from_hdu_class(irf_file, hdu_class):
     """Search for an IRF component with the specified HDUCLAS4 keyword within
@@ -51,7 +49,7 @@ def load_irf_from_hdu_class(irf_file, hdu_class):
             if (read_hdu_class.lower() == hdu_class.lower()):
                 # we have found a hdu with this specific HDUCLAS4 hedaer keyword
                 extname = hdu.header["EXTNAME"]
-                component = getattr(irf, irf_dictionary[hdu_class])
+                component = IRF_REGISTRY.getattr(hdu_class)
                 return component.read(irf_file, extname)
         except KeyError:
             # no 'HDUCLAS4' header keyword in this HDU (probably EVENTS or GTI)
