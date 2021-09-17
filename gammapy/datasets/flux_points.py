@@ -256,7 +256,9 @@ class FluxPointsDataset(Dataset):
         return len(self.models.parameters.free_parameters)
 
     @property
-    def weigth(self, datasets):
+    def weight(self, datasets):
+        # weight such as the total datasets stat_sum is sum(chi2)/sum(dof) - 1
+        # otherwise optimal solution fitting sys_err is infinity...
         return self.stat_array * np.sum([d.dof for d in datasets]) / (self.stat_array - self.dof)
 
     def residuals(self, method="diff"):

@@ -69,7 +69,7 @@ class Dataset(abc.ABC):
 
         return np.sum(stat, dtype=np.float64)
 
-    def weigth(self, datasets):
+    def weight(self, datasets):
         """Compute dataset weight within a list of datasets"""
         return 1.
 
