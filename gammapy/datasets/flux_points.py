@@ -216,7 +216,7 @@ class FluxPointsDataset(Dataset):
             "Number of parameters", len(self.models.parameters)
         )
         str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", self.dof
+            "Number of free parameters", len(self.models.parameters.free_parameters)
         )
 
         if self.models is not None:
@@ -253,13 +253,17 @@ class FluxPointsDataset(Dataset):
 
     @property
     def dof(self):
-        return len(self.models.parameters.free_parameters)
+        return float(
+                len(self.data.dnde.quantity[:, 0, 0][self.mask.data]) - 
+                len(self.models.parameters.free_parameters)
+                )
 
     def weight(self, datasets):
         # weight such as the total datasets stat_sum is |sum(chi2)/sum(dof) - 1|
         # otherwise optimal solution fitting sys_err is infinity...
         sum_dof = np.sum([d.dof for d in datasets])
-        return self.stat_array() * sum_dof / np.abs(self.stat_array() - self.dof)
+        tst = self.stat_sum() * sum_dof / np.abs(self.stat_sum() - self.dof)
+        return tst
 
     def residuals(self, method="diff"):
         """Compute the flux point residuals ().
