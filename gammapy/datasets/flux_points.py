@@ -4,15 +4,42 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from astropy.visualization import quantity_support
-from gammapy.modeling.models import DatasetModels
+from gammapy.modeling.models import DatasetModels, Model
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 from .utils import get_axes
+from gammapy.modeling import Parameter
 
 log = logging.getLogger(__name__)
 
 __all__ = ["FluxPointsDataset"]
 
+class SystematicErrorModel(Model):
+    """Systematic error parametrized as a relative error to data value.
+
+    Parameters
+    ----------
+    norm : float
+        Multiplicative norm factor for the data value.
+    """
+
+    tag = ["SystematicErrorModel"]
+    norm = Parameter("norm", 0, unit="", interp="log", frozen=True)
+
+    def __init__(self, norm=norm.quantity, dataset_name=None):
+        if dataset_name is None:
+            raise ValueError("Dataset name a is required argument")
+        self._covariance = None
+        super().__init__(norm=norm)
+
+    @property
+    def name(self):
+        """Model name"""
+        return self.datasets_names[0] + "-sys_err"
+
+    def __call__(self, data):
+        return self.norm.value * data
+        
 
 class FluxPointsDataset(Dataset):
     """
@@ -100,7 +127,7 @@ class FluxPointsDataset(Dataset):
         else:
             models = DatasetModels(models)
             self._models = models.select(datasets_names=self.name)
-
+        
     def write(self, filename, overwrite=True, **kwargs):
         """Write flux point dataset to file.
 
@@ -189,7 +216,7 @@ class FluxPointsDataset(Dataset):
             "Number of parameters", len(self.models.parameters)
         )
         str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.models.parameters.free_parameters)
+            "Number of free parameters", self.dof
         )
 
         if self.models is not None:
@@ -216,7 +243,21 @@ class FluxPointsDataset(Dataset):
             sigma = self.data.dnde_err
         except AttributeError:
             sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
-        return ((data - model) / sigma.quantity[:, 0, 0]).to_value("") ** 2
+        sigma = sigma[:, 0, 0]
+        try:
+            systematic_model =  self.models[f"{self.name}-sys_err"]
+            sigma = np.sqrt((sigma**2 +systematic_model(data)**2))
+        except (ValueError, TypeError):
+            pass
+        return ((data - model) / sigma.quantity).to_value("") ** 2
+
+    @property
+    def dof(self):
+        return len(self.models.parameters.free_parameters)
+
+    @property
+    def weigth(self, datasets):
+        return self.stat_array * np.sum([d.dof for d in datasets]) / (self.stat_array - self.dof)
 
     def residuals(self, method="diff"):
         """Compute the flux point residuals ().

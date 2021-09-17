@@ -69,6 +69,10 @@ class Dataset(abc.ABC):
 
         return np.sum(stat, dtype=np.float64)
 
+    def weigth(self, datasets):
+        """Compute dataset weight within a list of datasets"""
+        return 1.
+
     @abc.abstractmethod
     def stat_array(self):
         """Statistic array, one value per data point."""
@@ -221,7 +225,7 @@ class Datasets(collections.abc.MutableSequence):
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
-            stat_sum += dataset.stat_sum()
+            stat_sum += dataset.stat_sum()/dataset.weight(self)
         return stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
