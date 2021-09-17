@@ -243,24 +243,23 @@ class FluxPointsDataset(Dataset):
             sigma = self.data.dnde_err
         except AttributeError:
             sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
-        sigma = sigma[:, 0, 0]
+        sigma = sigma.quantity[:, 0, 0]
         try:
             systematic_model =  self.models[f"{self.name}-sys_err"]
             sigma = np.sqrt((sigma**2 +systematic_model(data)**2))
         except (ValueError, TypeError):
             pass
-        return ((data - model) / sigma.quantity).to_value("") ** 2
+        return ((data - model) / sigma).to_value("") ** 2
 
     @property
     def dof(self):
         return len(self.models.parameters.free_parameters)
 
-    @property
     def weight(self, datasets):
         # weight such as the total datasets stat_sum is |sum(chi2)/sum(dof) - 1|
         # otherwise optimal solution fitting sys_err is infinity...
         sum_dof = np.sum([d.dof for d in datasets])
-        return self.stat_array * sum_dof / np.abs(self.stat_array - self.dof)
+        return self.stat_array() * sum_dof / np.abs(self.stat_array() - self.dof)
 
     def residuals(self, method="diff"):
         """Compute the flux point residuals ().
