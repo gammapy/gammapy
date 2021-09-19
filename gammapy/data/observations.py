@@ -9,51 +9,48 @@ from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.utils.scripts import make_path
-from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
+from gammapy.utils.fits import LazyFitsData, HDULocation, earth_location_from_dict
 from gammapy.utils.testing import Checker
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
 from .hdu_index_table import HDUIndexTable
-from gammapy.irf import IRF_REGISTRY
 
 __all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
 
-def load_irf_from_hdu_class(irf_file, hdu_class):
-    """Search for an IRF component with the specified HDUCLAS4 keyword within
-    the irf_file. Return an instance of the corresponding IRF class implemented 
-    in Gammapy.
-    
-    Parameters
-    ----------
-    irf_file : str, path
-        path to the file containing the IRF components, does not matter if also
-        EVENTS and GTI HDUs are included in the file, these are avoided
-    hdu_class : str
-        one of the allowed HDUCLAS4 header keyword in VALID_HDU_CLASS
-    
-    Returns
-    -------
-    one of the IRF component implementated in `~gammapy.irf`;
-    if the specified HDUCLAS4 is not available, `None` is returned
+def load_irf_dict_from_file(filename):
     """
-    if hdu_class not in HDUIndexTable.VALID_HDU_CLASS:
-        raise KeyError(f"{hdu_class} is not a valid HDU CLASS.")
+    """
+    filename = make_path(filename)
+
+    hdulist = fits.open(make_path(filename))
     
-    for hdu in fits.open(irf_file):
-        try: 
-            read_hdu_class = hdu.header["HDUCLAS4"]
-            if (read_hdu_class.lower() == hdu_class.lower()):
-                # we have found a hdu with this specific HDUCLAS4 hedaer keyword
-                extname = hdu.header["EXTNAME"]
-                component = IRF_REGISTRY.get_cls(hdu_class)
-                return component.read(irf_file, extname)
-        except KeyError:
-            # no 'HDUCLAS4' header keyword in this HDU (probably EVENTS or GTI)
+    irf_dict = {}
+
+    for hdu in hdulist:
+        hdu_class = hdu.header.get("HDUCLAS1", "").lower()
+        
+        if hdu_class == "response":
+            hdu_class = hdu.header.get("HDUCLAS4", "").lower()
+        
+            loc = HDULocation(
+                hdu_class=hdu_class,
+                hdu_name=hdu.name,
+                file_dir=filename.parent,
+                file_name=filename.name
+            )
+            
+            for name in HDUIndexTable.VALID_HDU_TYPE:
+                if name in hdu_class:
+                    data = loc.load()
+                    # TODO: maybe introduce IRF.type attribute...
+                    irf_dict[name] = data
+        else : # not an IRF component
             continue
+    return irf_dict
     
 
 class Observation:
@@ -396,35 +393,31 @@ class Observation:
         -------
         `~gammapy.data.Observation` with the event and irf read from the file
         """
-        event_file = make_path(event_file)
-        irf_file = make_path(irf_file) if irf_file is not None else event_file
         events = EventList.read(event_file)
+        
         gti = GTI.read(event_file) 
-        aeff = load_irf_from_hdu_class(irf_file, "aeff_2d")
-        edisp = load_irf_from_hdu_class(irf_file, "edisp_2d")
-        # non-mandatory IRF components
+
+        irf_file = irf_file if irf_file is not None else event_file
+        irf_dict = load_irf_dict_from_file(irf_file)
+        
+        aeff = None
+        edisp = None
         psf = None
         bkg = None
-        # there are different options for the PSF, the first allowed HDU CLASS 
-        # that gives not None with read_irf_with_hdu_class will be returned
-        # - we assume only one PSF type per file is stored
-        for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
-            if hdu_class.startswith("psf"): 
-                psf_tmp = load_irf_from_hdu_class(irf_file, hdu_class)
-                if psf_tmp is not None: 
-                    psf = psf_tmp
-                    break
-        # there are different options for the BKG, the first allowed HDU CLASS 
-        # that gives not None with read_irf_with_hdu_class will be returned
-        # - we assume only one PSF type per file is stored
-        for hdu_class in HDUIndexTable.VALID_HDU_CLASS:
-            if hdu_class.startswith("bkg"): 
-                bkg_tmp = load_irf_from_hdu_class(irf_file, hdu_class)
-                if bkg_tmp is not None: 
-                    bkg = bkg_tmp
-                    break
-        # the obs_info seems to be a dictionary of the header of the EVENTS
-        obs_info = Table.read(event_file, hdu="EVENTS").meta
+
+        if "aeff" in irf_dict.keys():
+            aeff = irf_dict["aeff"]
+        
+        if "edsip" in irf_dict.keys():
+            edisp = irf_dict["edisp"]
+        
+        if "psf" in irf_dict.keys():
+            psf = irf_dict["psf"]
+        
+        if "bkg" in irf_dict.keys():
+            bkg = irf_dict["bkg"]
+            
+        obs_info = events.table.meta
         return cls(
             obs_id = obs_info.get("OBS_ID"),
             obs_info=obs_info,
