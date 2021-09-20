@@ -1,5 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-__all__ = ["load_cta_irfs"]
+from astropy.io import fits
+from gammapy.utils.scripts import make_path
+from gammapy.utils.fits import HDULocation
+from gammapy.data.hdu_index_table import HDUIndexTable
+
+__all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
 
 
 IRF_DL3_AXES_SPECIFICATION = {
@@ -124,3 +129,48 @@ def load_cta_irfs(filename):
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     return dict(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf)
+
+
+def load_irf_dict_from_file(filename):
+    """Open a fits file and generate a dictionary containing the Gammapy objects
+    corresponding ot the IRF components stored
+    
+    Parameters
+    ----------
+    filename : str, Path
+        path to the file containing the IRF components, if EVENTS and GTI HDUs 
+        are included in the file, they are ignored
+
+    Returns
+    -------
+    irf_dict : dict
+        dictionary with instances of the Gammapy obejcts corresponding 
+        to the IRF components        
+    """
+    filename = make_path(filename)
+
+    hdulist = fits.open(make_path(filename))
+    
+    irf_dict = {}
+
+    for hdu in hdulist:
+        hdu_class = hdu.header.get("HDUCLAS1", "").lower()
+        
+        if hdu_class == "response":
+            hdu_class = hdu.header.get("HDUCLAS4", "").lower()
+        
+            loc = HDULocation(
+                hdu_class=hdu_class,
+                hdu_name=hdu.name,
+                file_dir=filename.parent,
+                file_name=filename.name
+            )
+            
+            for name in HDUIndexTable.VALID_HDU_TYPE:
+                if name in hdu_class:
+                    data = loc.load()
+                    # TODO: maybe introduce IRF.type attribute...
+                    irf_dict[name] = data
+        else : # not an IRF component
+            continue
+    return irf_dict
