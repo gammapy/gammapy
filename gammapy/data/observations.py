@@ -22,7 +22,19 @@ __all__ = ["Observation", "Observations"]
 log = logging.getLogger(__name__)
 
 def load_irf_dict_from_file(filename):
-    """
+    """Open a fits file and generate a dictionary
+    
+    Parameters
+    ----------
+    filename : str, Path
+        path to the file containing the IRF components, if EVENTS and GTI HDUs 
+        are included in the file, they are ignored
+
+    Returns
+    -------
+    irf_dict : dict
+        dictionary with instances of the Gammapy obejcts corresponding 
+        to the IRF components        
     """
     filename = make_path(filename)
 
@@ -391,7 +403,8 @@ class Observation:
 
         Returns
         -------
-        `~gammapy.data.Observation` with the event and irf read from the file
+        observation : `~gammapy.data.Observation` 
+            observation with the events and the irf read from the file
         """
         events = EventList.read(event_file)
         
