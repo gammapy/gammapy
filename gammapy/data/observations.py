@@ -432,7 +432,7 @@ class Observation:
             
         obs_info = events.table.meta
         return cls(
-            obs_id = obs_info.get("OBS_ID"),
+            obs_id=obs_info.get("OBS_ID"),
             obs_info=obs_info,
             gti=gti,
             aeff=aeff,
