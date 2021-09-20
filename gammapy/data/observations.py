@@ -421,7 +421,7 @@ class Observation:
         if "aeff" in irf_dict.keys():
             aeff = irf_dict["aeff"]
         
-        if "edsip" in irf_dict.keys():
+        if "edisp" in irf_dict.keys():
             edisp = irf_dict["edisp"]
         
         if "psf" in irf_dict.keys():
