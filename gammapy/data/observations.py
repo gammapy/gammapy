@@ -8,7 +8,6 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
-from gammapy.irf import load_irf_dict_from_file
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
@@ -360,6 +359,8 @@ class Observation:
         observation : `~gammapy.data.Observation` 
             observation with the events and the irf read from the file
         """
+        from gammapy.irf.io import load_irf_dict_from_file
+
         events = EventList.read(event_file)
         
         gti = GTI.read(event_file) 
