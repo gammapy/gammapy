@@ -6,63 +6,17 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from astropy.io import fits
-from astropy.table import Table
-from gammapy.utils.scripts import make_path
-from gammapy.utils.fits import LazyFitsData, HDULocation, earth_location_from_dict
+from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
+from gammapy.irf.io import load_irf_dict_from_file
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
-from .hdu_index_table import HDUIndexTable
 
 __all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
-
-def load_irf_dict_from_file(filename):
-    """Open a fits file and generate a dictionary
-    
-    Parameters
-    ----------
-    filename : str, Path
-        path to the file containing the IRF components, if EVENTS and GTI HDUs 
-        are included in the file, they are ignored
-
-    Returns
-    -------
-    irf_dict : dict
-        dictionary with instances of the Gammapy obejcts corresponding 
-        to the IRF components        
-    """
-    filename = make_path(filename)
-
-    hdulist = fits.open(make_path(filename))
-    
-    irf_dict = {}
-
-    for hdu in hdulist:
-        hdu_class = hdu.header.get("HDUCLAS1", "").lower()
-        
-        if hdu_class == "response":
-            hdu_class = hdu.header.get("HDUCLAS4", "").lower()
-        
-            loc = HDULocation(
-                hdu_class=hdu_class,
-                hdu_name=hdu.name,
-                file_dir=filename.parent,
-                file_name=filename.name
-            )
-            
-            for name in HDUIndexTable.VALID_HDU_TYPE:
-                if name in hdu_class:
-                    data = loc.load()
-                    # TODO: maybe introduce IRF.type attribute...
-                    irf_dict[name] = data
-        else : # not an IRF component
-            continue
-    return irf_dict
     
 
 class Observation:
@@ -412,36 +366,9 @@ class Observation:
 
         irf_file = irf_file if irf_file is not None else event_file
         irf_dict = load_irf_dict_from_file(irf_file)
-        
-        aeff = None
-        edisp = None
-        psf = None
-        bkg = None
-
-        if "aeff" in irf_dict.keys():
-            aeff = irf_dict["aeff"]
-        
-        if "edisp" in irf_dict.keys():
-            edisp = irf_dict["edisp"]
-        
-        if "psf" in irf_dict.keys():
-            psf = irf_dict["psf"]
-        
-        if "bkg" in irf_dict.keys():
-            bkg = irf_dict["bkg"]
             
         obs_info = events.table.meta
-        return cls(
-            obs_id=obs_info.get("OBS_ID"),
-            obs_info=obs_info,
-            gti=gti,
-            aeff=aeff,
-            bkg=bkg,
-            edisp=edisp,
-            psf=psf,
-            events=events,
-        )
-        
+        return cls(events=events, gti=gti, obs_info=obs_info, obs_id=obs_info.get("OBS_ID"), **irf_dict)
         
 
 
