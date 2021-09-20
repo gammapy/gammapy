@@ -283,6 +283,30 @@ class Parameter:
         self.value = val.value
         self.unit = val.unit
 
+    # TODO: possibly allow to set this independently
+    @property
+    def conf_min(self):
+        """Confidence min value (`float`)
+
+        Returns parameter minimum if defined else the scan_min
+        """
+        if not np.isnan(self.min):
+            return self.min
+        else:
+            return self.scan_min
+
+    # TODO: possibly allow to set this independently
+    @property
+    def conf_max(self):
+        """Confidence max value (`float`)
+
+        Returns parameter maximum if defined else the scan_max
+        """
+        if not np.isnan(self.max):
+            return self.max
+        else:
+            return self.scan_max
+
     @property
     def scan_min(self):
         """Stat scan min"""

@@ -89,7 +89,7 @@ def test_scipy_confidence(pars):
     assert_allclose(ds.fcn(), 0, atol=1e-5)
 
     par = pars["x"]
-    par.min, par.max = 0, 10
+    par.scan_min, par.scan_max = 0, 10
 
     result = confidence_scipy(function=ds.fcn, parameters=pars, parameter=par, sigma=1)
 
