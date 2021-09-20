@@ -103,19 +103,19 @@ class CountsStatistic(abc.ABC):
 
         ul = np.zeros_like(self.n_on, dtype="float")
 
-        min_range = np.maximum(0, self.n_sig)
-        max_range = min_range + 2 * n_sigma * (self.error + 1)
+        min_range = self.n_sig
+        max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
         it = np.nditer(ul, flags=["multi_index"])
 
         while not it.finished:
-            TS_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
+            ts_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
 
             roots, res = find_roots(
                 self._stat_fcn,
                 min_range[it.multi_index],
                 max_range[it.multi_index],
                 nbin=1,
-                args=(TS_ref + n_sigma ** 2, it.multi_index),
+                args=(ts_ref + n_sigma ** 2, it.multi_index),
             )
             ul[it.multi_index] = roots[0]
             it.iternext()
