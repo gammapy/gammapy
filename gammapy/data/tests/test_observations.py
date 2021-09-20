@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from gammapy.data.observations import load_irf_dict_from_file
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -226,6 +227,15 @@ def test_observation():
     assert_allclose(obs.target_radec.ra, np.nan)
     assert_allclose(obs.pointing_zen, np.nan)
     assert_allclose(obs.muoneff, 1)
+
+
+@requires_data()
+def test_observation_read():
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
+    assert obs.obs_id == 20136
+    assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]
 
 
 @requires_data()
