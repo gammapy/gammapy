@@ -1117,13 +1117,16 @@ class TemplateSpatialModel(SpatialModel):
         data["filename"] = self.filename
         data["normalize"] = self.normalize
         data["unit"] = str(self.map.unit)
+        return data
+    
+    def write(self, overwrite=False):
         if self.filename is None:
             raise IOError("Missing filename")
-        elif os.path.isfile(self.filename) :
-            log.warning("Template file already exits, it will not be overwritten")
+        elif os.path.isfile(self.filename) and not overwrite:
+            log.warning("Template file already exits, and overwrite is False")
         else:
             self.map.write(self.filename)
-        return data
+
 
     def to_region(self, **kwargs):
         """Model outline from template map boundary (`~regions.RectangleSkyRegion`)."""

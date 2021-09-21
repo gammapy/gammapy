@@ -385,7 +385,7 @@ class DatasetModels(collections.abc.Sequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False, full_output=False, write_covariance=True):
+    def write(self, path, overwrite=False, overwrite_templates=False, full_output=False, write_covariance=True):
         """Write to YAML file.
 
         Parameters
@@ -393,7 +393,9 @@ class DatasetModels(collections.abc.Sequence):
         path : `pathlib.Path` or str
             path to write files
         overwrite : bool
-            overwrite files
+            overwrite YAML files
+        overwrite_templates : bool
+            overwrite templates FITS files
         write_covariance : bool
             save covariance or not
         """
@@ -425,7 +427,7 @@ class DatasetModels(collections.abc.Sequence):
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
 
-    def to_dict(self, full_output=False):
+    def to_dict(self, full_output=False, overwrite_templates=False):
         """Convert to dict."""
         # update linked parameters labels
         params_list = []
@@ -443,6 +445,9 @@ class DatasetModels(collections.abc.Sequence):
         for model in self._models:
             model_data = model.to_dict(full_output)
             models_data.append(model_data)
+            if "template" in model.tag:
+                model.write(self, overwrite=overwrite_templates)
+
         if self._covar_file is not None:
             return {
                 "components": models_data,
