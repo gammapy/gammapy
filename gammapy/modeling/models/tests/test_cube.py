@@ -63,7 +63,7 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    spatial_model = TemplateSpatialModel(m, normalize=False)
+    spatial_model = TemplateSpatialModel(m, normalize=False, filename="diffuse_test.fits")
     return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
@@ -373,6 +373,20 @@ class Test_Template_with_cube:
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value.mean(), 42)
+
+
+    @staticmethod
+    def test_write(tmpdir, diffuse_model):
+        filename = tmpdir / diffuse_model.spatial_model.filename
+
+        diffuse_model.spatial_model.filename = None
+        with pytest.raises(IOError):
+            diffuse_model.to_dict()
+            
+        diffuse_model.spatial_model.filename = filename
+        diffuse_model.to_dict()
+        TemplateSpatialModel.read(filename)
+        
 
     @staticmethod
     @requires_data()
