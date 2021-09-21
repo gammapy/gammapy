@@ -104,6 +104,20 @@ n_sigma_ul        Number of sigma used for upper limit estimation
 ts_threshold_ul   TS threshold to define the use of an upper limit
 ================= =================================================
 
+A note on negative flux and upper limit values:
+
+.. note::
+
+    Gammapy allows for negative flux values and upper limits by default.
+    While those values are physically not valid solutions, they are still
+    valid statistically. Negative flux values either hint at overestimated
+    background levels or underestimated systematic errors in general. Or in
+    case of many measurements, such as pixels in a flux map, they are even
+    statistically expected. In future versions of Gammapy it will be possible
+    to account for systematic errors in the likelihood as well. For now the
+    correct interpretation of the results is left to the user.
+
+
 Getting started
 ===============
 
