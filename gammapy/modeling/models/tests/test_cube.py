@@ -381,12 +381,14 @@ class Test_Template_with_cube:
 
         diffuse_model.spatial_model.filename = None
         with pytest.raises(IOError):
-            diffuse_model.to_dict()
+            diffuse_model.spatial_model.write()
+
+        with pytest.raises(IOError):
+            Models(diffuse_model).to_dict()
             
         diffuse_model.spatial_model.filename = filename
-        diffuse_model.to_dict()
+        diffuse_model.spatial_model.write(overwrite=False)
         TemplateSpatialModel.read(filename)
-        
 
     @staticmethod
     @requires_data()

@@ -385,7 +385,7 @@ class DatasetModels(collections.abc.Sequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False, overwrite_templates=False, full_output=False, write_covariance=True):
+    def write(self, path, overwrite=False, full_output=False, overwrite_templates=False, write_covariance=True):
         """Write to YAML file.
 
         Parameters
@@ -418,11 +418,11 @@ class DatasetModels(collections.abc.Sequence):
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
 
-        path.write_text(self.to_yaml(full_output))
+        path.write_text(self.to_yaml(full_output, overwrite_templates))
 
-    def to_yaml(self, full_output=False):
+    def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
-        data = self.to_dict(full_output)
+        data = self.to_dict(full_output, overwrite_templates)
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
@@ -445,8 +445,8 @@ class DatasetModels(collections.abc.Sequence):
         for model in self._models:
             model_data = model.to_dict(full_output)
             models_data.append(model_data)
-            if "template" in model.tag:
-                model.write(self, overwrite=overwrite_templates)
+            if model.spatial_model is not None and "template" in model.spatial_model.tag:
+                model.spatial_model.write(overwrite=overwrite_templates)
 
         if self._covar_file is not None:
             return {
