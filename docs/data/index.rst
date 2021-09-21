@@ -61,26 +61,10 @@ The index tables
 A typical way to organize the files relevant to the observation are the index tables.
 There are two relevant tables:
 
-- Observation index table: this table has information on specifics of each observation or run, meta data about each observation run,
-such as the pointing direction, the duration, the run ID...
-- HDU index table: this table links each of the observations listed in the observation
-index table to the relevant data and instrument response files.
+* Observation index table: this table has information on specifics of each observation or run, meta data about each observation run, such as the pointing direction, the duration, the run ID...
+* HDU index table: this table links each of the observations listed in the observation index table to the relevant data and instrument response files.
 
-A `~gammapy.data.DataStore` can be created by giving each of these two tables separately, as well as the directory that they can be found in:
-
-.. testcode::
-
-    from gammapy.data import DataStore
-    directory = "$GAMMAPY_DATA/hess-dl3-dr1"
-    hdu_table_path = directory + "/hdu-index.fits.gz"
-    obs_table_path = directory + "/obs-index.fits.gz"
-
-    # separate tables
-    data_store = DataStore(hdu_table=hdu_table_path, obs_table=obs_table_path)
-
-    # directly from directory
-    data_store = DataStore.from_dir(directory)
-
+A `~gammapy.data.DataStore` can then be created by giving each of these two tables separately, or instead by the directory that they can be found in as shown above.
 
 More details on these tables and their content can be found in https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/index.html.
 
