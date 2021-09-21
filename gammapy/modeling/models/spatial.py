@@ -1014,12 +1014,6 @@ class TemplateSpatialModel(SpatialModel):
 
         if filename is not None:
             filename = str(make_path(filename))
-            if not os.path.isfile(filename):
-                raise IOError("File not found")
-        else:
-            log.warning(
-                "filename is not set, model serialisation will not be possible if map is not written to disk beforehand"
-            )
 
         self.normalize = normalize
 
@@ -1051,6 +1045,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def map(self):
+        """Template map  (`~gammapy.maps.Map`)"""
         return self._map
 
     @property
@@ -1122,6 +1117,12 @@ class TemplateSpatialModel(SpatialModel):
         data["filename"] = self.filename
         data["normalize"] = self.normalize
         data["unit"] = str(self.map.unit)
+        if self.filename is None:
+            raise IOError("Missing filename")
+        elif os.path.isfile(self.filename) :
+            log.warning("Template file already exits, it will not be overwritten")
+        else:
+            self.map.write(self.filename)
         return data
 
     def to_region(self, **kwargs):
