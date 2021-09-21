@@ -7,7 +7,7 @@ import yaml
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from astropy.coordinates import  SkyCoord
+from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
@@ -55,10 +55,10 @@ class Model:
 
     def __getattribute__(self, name):
         value = object.__getattribute__(self, name)
-        
+
         if isinstance(value, Parameter):
             return value.__get__(self, None)
-    
+
         return value
 
     @property
@@ -385,7 +385,14 @@ class DatasetModels(collections.abc.Sequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False, full_output=False, overwrite_templates=False, write_covariance=True):
+    def write(
+        self,
+        path,
+        overwrite=False,
+        full_output=False,
+        overwrite_templates=False,
+        write_covariance=True,
+    ):
         """Write to YAML file.
 
         Parameters
@@ -445,7 +452,10 @@ class DatasetModels(collections.abc.Sequence):
         for model in self._models:
             model_data = model.to_dict(full_output)
             models_data.append(model_data)
-            if model.spatial_model is not None and "template" in model.spatial_model.tag:
+            if (
+                model.spatial_model is not None
+                and "template" in model.spatial_model.tag
+            ):
                 model.spatial_model.write(overwrite=overwrite_templates)
 
         if self._covar_file is not None:
@@ -949,7 +959,7 @@ class DatasetModels(collections.abc.Sequence):
 
         kwargs.setdefault("marker", "*")
         kwargs.setdefault("color", "tab:blue")
-        path_effects = kwargs.get('path_effects', None)
+        path_effects = kwargs.get("path_effects", None)
 
         xp, yp = self.positions.to_pixel(ax.wcs)
         p = ax.scatter(xp, yp, **kwargs)

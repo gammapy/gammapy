@@ -63,7 +63,9 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    spatial_model = TemplateSpatialModel(m, normalize=False, filename="diffuse_test.fits")
+    spatial_model = TemplateSpatialModel(
+        m, normalize=False, filename="diffuse_test.fits"
+    )
     return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
@@ -374,7 +376,6 @@ class Test_Template_with_cube:
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value.mean(), 42)
 
-
     @staticmethod
     def test_write(tmpdir, diffuse_model):
         filename = tmpdir / diffuse_model.spatial_model.filename
@@ -385,7 +386,7 @@ class Test_Template_with_cube:
 
         with pytest.raises(IOError):
             Models(diffuse_model).to_dict()
-            
+
         diffuse_model.spatial_model.filename = filename
         diffuse_model.spatial_model.write(overwrite=False)
         TemplateSpatialModel.read(filename)
@@ -626,7 +627,9 @@ class MyCustomGaussianModel(SpatialModel):
 
 def test_energy_dependent_model():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy_true")
-    geom_true = WcsGeom.create(skydir=(0, 0), binsz="0.1 deg", npix=(50, 50), frame="galactic", axes=[axis])
+    geom_true = WcsGeom.create(
+        skydir=(0, 0), binsz="0.1 deg", npix=(50, 50), frame="galactic", axes=[axis]
+    )
 
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     spatial_model = MyCustomGaussianModel(frame="galactic")
