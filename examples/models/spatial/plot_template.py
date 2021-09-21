@@ -24,7 +24,7 @@ filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_
 
 m = Map.read(filename)
 m.unit = "sr^-1"
-model = TemplateSpatialModel(m)
+model = TemplateSpatialModel(m, filename=filename)
 
 model.plot(add_cbar=True)
 
