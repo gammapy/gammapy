@@ -266,6 +266,30 @@ class GaussianTemporalModel(TemporalModel):
         integral = norm * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
         return integral / self.time_sum(t_min, t_max)
 
+    def sample_time(self, n_events, random_state=0):
+        """Sample arrival times of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        pars = self.parameters
+        sigma = pars["sigma"].quantity
+        
+        rng = Generator(PCG64(random_state))
+        time_delta = rng.normal(scale=sigma.value, size=n_events) * u.s
+ 
+        return self.t_ref + time_delta
+
 
 class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.

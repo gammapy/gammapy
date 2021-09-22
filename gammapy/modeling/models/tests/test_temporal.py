@@ -174,7 +174,6 @@ def test_exponential_temporal_model_sample_time():
 
     assert_allclose(times.value, [55555.00000787, 55555.0000118], rtol=1e-8)
 
-
 def test_gaussian_temporal_model_evaluate():
     t = Time(46301, format="mjd")
     t_ref = 46300 * u.d
@@ -193,6 +192,14 @@ def test_gaussian_temporal_model_integral():
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.682679, rtol=1e-5)
+
+
+def test_gaussian_temporal_model_sample_time():
+    t_ref = Time(55555, format="mjd")
+    temporal_model = GaussianTemporalModel(t_ref=t_ref.mjd * u.d, sigma="2.0 day")
+    times = temporal_model.sample_time(2)
+
+    assert_allclose(times.value, [55555.00000291, 55554.99999694], rtol=1e-8)
 
 
 @requires_data()
