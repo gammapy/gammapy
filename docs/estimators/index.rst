@@ -113,9 +113,10 @@ A note on negative flux and upper limit values:
     valid statistically. Negative flux values either hint at overestimated
     background levels or underestimated systematic errors in general. Or in
     case of many measurements, such as pixels in a flux map, they are even
-    statistically expected. In future versions of Gammapy it will be possible
-    to account for systematic errors in the likelihood as well. For now the
-    correct interpretation of the results is left to the user.
+    statistically expected. For flux points and light curves the amplitude
+    limits (if defined) are taken into account. In future versions of Gammapy
+    it will be possible to account for systematic errors in the likelihood as
+    well. For now the correct interpretation of the results is left to the user.
 
 
 Getting started
