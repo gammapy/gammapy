@@ -453,7 +453,8 @@ class DatasetModels(collections.abc.Sequence):
             model_data = model.to_dict(full_output)
             models_data.append(model_data)
             if (
-                model.spatial_model is not None
+                hasattr(model, "spatial_model")
+                and model.spatial_model is not None
                 and "template" in model.spatial_model.tag
             ):
                 model.spatial_model.write(overwrite=overwrite_templates)
