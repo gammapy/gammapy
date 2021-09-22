@@ -58,13 +58,14 @@ to load IACT data. E.g. an alternative way to load the events for observation ID
 
 The index tables
 ================
-A typical way to organize the files relevant to the observation are the index tables.
-There are two relevant tables:
+A typical way to organize the files relevant to the data we are interested in are the index tables.
+There are two tables:
 
-* Observation index table: this table has information on specifics of each observation or run, meta data about each observation run, such as the pointing direction, the duration, the run ID...
-* HDU index table: this table links each of the observations listed in the observation index table to the relevant data and instrument response files.
+* **Observation index table:** this table collects the information on each observation or run, with meta data about each of them, such as the pointing direction, the duration, the run ID...
 
-A `~gammapy.data.DataStore` can then be created by giving each of these two tables separately, or instead by the directory that they can be found in as shown above.
+* **HDU index table:** this table links each of the observations listed in the observation index table to the corresponding data and instrument response files.
+
+A `~gammapy.data.DataStore` can then be created by providing each of these two tables separately, or instead by the directory that they can be found in as shown above.
 
 More details on these tables and their content can be found in https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/index.html.
 
