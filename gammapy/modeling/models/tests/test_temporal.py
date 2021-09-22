@@ -167,6 +167,14 @@ def test_exponential_temporal_model_integral():
     assert_allclose(np.sum(val), 0.102557, rtol=1e-5)
 
 
+def test_exponential_temporal_model_sample_time():
+    t_ref = Time(55555, format="mjd")
+    temporal_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d)
+    times = temporal_model.sample_time(2)
+
+    assert_allclose(times.value, [55555.00000787, 55555.0000118], rtol=1e-8)
+
+
 def test_gaussian_temporal_model_evaluate():
     t = Time(46301, format="mjd")
     t_ref = 46300 * u.d
