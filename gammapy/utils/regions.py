@@ -10,14 +10,15 @@ without a WCS (see "sky and pixel regions" in PIG 10), or some HEALPix integrati
 """
 
 import operator
+
 import numpy as np
-from scipy.optimize import Bounds, minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.utils.scripts import make_path
 from regions import (
     CircleAnnulusSkyRegion,
+    CirclePixelRegion,
     CircleSkyRegion,
     CompoundSkyRegion,
     EllipseSkyRegion,
@@ -26,6 +27,10 @@ from regions import (
     PolygonSkyRegion,
     PolygonPixelRegion,
 )
+from regions._utils import pixel_scale_angle_at_skycoord
+from regions.core import BoundingBox
+from regions.core.attributes import RegionAttr
+from scipy.optimize import Bounds, minimize
 
 from regions.core.pixcoord import PixCoord
 from regions.core.metadata import RegionMeta, RegionVisual
@@ -601,3 +606,54 @@ def extract_bright_star_regions(
         )
 
     return Regions(regions)
+
+
+# This code is only needed because regions forbids array valued attributes
+
+
+class ArrayQuantityLength(RegionAttr):
+    """
+    Descriptor class for `~regions.SkyRegion`, which takes a scalar
+    `~astropy.units.Quantity` object.
+    """
+
+    def _validate(self, value):
+        if not (isinstance(value, u.Quantity)):
+            raise ValueError(f"The {self.name} must be an astropy " "Quantity object")
+
+
+class ArrayLength(RegionAttr):
+    """
+    Descriptor class for `~regions.PixelRegion`, which takes a scalar
+    python/numpy number.
+    """
+
+    def _validate(self, value):
+        pass
+
+
+class CircleSkyRegionArray(CircleSkyRegion):
+    """Circle sky region with array support for radius"""
+
+    radius = ArrayQuantityLength("radius")
+
+    def to_pixel(self, wcs):
+        center, pixscale, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
+        radius = (self.radius / pixscale).to(u.pix).value
+        return CirclePixelRegionArray(center, radius, self.meta, self.visual)
+
+
+class CirclePixelRegionArray(CirclePixelRegion):
+    """Pixel sky region with array support for radius"""
+
+    radius = ArrayLength("radius")
+
+    @property
+    def bounding_box(self):
+        """Bounding box (`~regions.BoundingBox`)."""
+        radius = max(self.radius)
+        xmin = self.center.x - radius
+        xmax = self.center.x + radius
+        ymin = self.center.y - radius
+        ymax = self.center.y + radius
+        return BoundingBox.from_float(xmin, xmax, ymin, ymax)
