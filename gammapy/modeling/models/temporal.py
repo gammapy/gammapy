@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
 import numpy as np
+from numpy.random import Generator, PCG64
 import scipy.interpolate
 from astropy import units as u
 from astropy.table import Table
@@ -189,6 +190,30 @@ class ExpDecayTemporalModel(TemporalModel):
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
         value = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
         return -t0 * value / self.time_sum(t_min, t_max)
+        
+    def sample_time(self, n_events, random_state=0):
+        """Sample arrival times of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        pars = self.parameters
+        t0 = pars["t0"].quantity
+
+        rng = Generator(PCG64(random_state))
+        time_delta = rng.exponential(scale=t0.value, size=n_events) * t0.unit
+
+        return self.t_ref + time_delta
 
 
 class GaussianTemporalModel(TemporalModel):
@@ -240,6 +265,30 @@ class GaussianTemporalModel(TemporalModel):
 
         integral = norm * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
         return integral / self.time_sum(t_min, t_max)
+
+    def sample_time(self, n_events, random_state=0):
+        """Sample arrival times of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        pars = self.parameters
+        sigma = pars["sigma"].quantity
+
+        rng = Generator(PCG64(random_state))
+        time_delta = rng.normal(scale=sigma.value, size=n_events) * sigma.unit
+
+        return self.t_ref + time_delta
 
 
 class LightCurveTemplateTemporalModel(TemporalModel):
