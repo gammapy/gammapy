@@ -44,6 +44,13 @@ You can for instance apply a cone search as shown `here
 You can also select observations based on other informations available using the
 `~gammapy.data.ObservationTable.select_observations` method.
 
+Make a on-axis equivalent livetime map
++++++++++++++++++++
+
+To compute an effective on-axis exposure in hours, see `here
+<tutorials/data/hess.html#On-axis-equivalent-livetime>`__.
+
+
 Check IRFs
 ++++++++++
 
