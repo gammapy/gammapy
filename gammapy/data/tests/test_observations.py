@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from gammapy.data import DataStore, Observation
@@ -231,8 +232,27 @@ def test_observation():
 @requires_data()
 def test_observation_read():
     obs = Observation.read(
+        event_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
+        irf_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
+
+    energy = Quantity(1, "TeV")
+    offset = Quantity(0.5, "deg")
+    val = obs.aeff.evaluate(energy_true=energy, offset=offset)
+
+    assert obs.obs_id == 20136
+    assert len(obs.events.energy) == 11243
+    assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]
+    assert_allclose(val.value, 273372.44851054, rtol=1e-5)
+    assert val.unit == "m2"
+
+
+@requires_data()
+def test_observation_read_single_file():
+    obs = Observation.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     )
+
     assert obs.obs_id == 20136
     assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]
 
