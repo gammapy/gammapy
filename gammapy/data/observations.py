@@ -372,8 +372,6 @@ class Observation:
         return cls(events=events, gti=gti, obs_info=obs_info, obs_id=obs_info.get("OBS_ID"), **irf_dict)
         
 
-
-
 class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.
 
