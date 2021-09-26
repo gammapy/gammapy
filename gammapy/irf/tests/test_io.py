@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 from astropy.units import Quantity
 import astropy.units as u
 from astropy.io import fits
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_cta_irfs, load_irf_dict_from_file
 from gammapy.utils.testing import requires_data
 from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.maps import MapAxis
@@ -33,6 +33,32 @@ def test_cta_irf():
 
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 9.400071e-05, rtol=1e-5)
+    assert val.unit == "1 / (MeV s sr)"
+
+@requires_data()
+def test_load_irf_dict_from_file():
+    """Test that the IRF components in a dictionary loaded from a DL3 file can 
+    be loaded in a dictionary and correctly used"""
+    irf = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
+
+    energy = Quantity(1, "TeV")
+    offset = Quantity(0.5, "deg")
+
+    val = irf["aeff"].evaluate(energy_true=energy, offset=offset)
+    assert_allclose(val.value, 273372.44851054, rtol=1e-5)
+    assert val.unit == "m2"
+
+    val = irf["edisp"].evaluate(offset=offset, energy_true=energy, migra=1)
+    assert_allclose(val.value, 1.84269482, rtol=1e-5)
+    assert val.unit == ""
+
+    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    assert_allclose(val, 6.75981573 * u.Unit("deg-2"), rtol=1e-5)
+
+    val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0.1 deg")
+    assert_allclose(val.value, 0.00031552, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
 
 
