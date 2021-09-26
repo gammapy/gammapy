@@ -38,6 +38,9 @@ def sky_model():
     spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
+    spectral_model.index.error = 0.1
+    spectral_model.amplitude.error = "1e-12 cm-2 s-1 TeV-1"
+
     temporal_model = ConstantTemporalModel()
     return SkyModel(
         spatial_model=spatial_model,
@@ -298,7 +301,11 @@ class TestSkyModel:
 
     @staticmethod
     def test_str(sky_model):
-        assert "SkyModel" in str(sky_model)
+        string_model = str(sky_model)
+        model_lines = string_model.splitlines()
+        assert "SkyModel" in string_model
+        assert "2.000   +/-    0.10" in model_lines[8]
+
 
     @staticmethod
     def test_parameters(sky_model):

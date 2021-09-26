@@ -19,15 +19,20 @@ def _get_parameters_str(parameters):
 
     for par in parameters:
         if par.name == "amplitude":
-            line = "\t{:12} {:11}: {:10.2e} {} {:<12s}\n"
+            value_format, error_format = "{:10.2e}", "{:7.1e}"
         else:
-            line = "\t{:12} {:11}: {:7.3f} {} {:<12s}\n"
+            value_format, error_format = "{:10.3f}", "{:7.2f}"
 
-        frozen = "(frozen)" if par.frozen else ""
-        try:
-            error = "+/- {:7.2f}".format(parameters.get_error(par))
-        except AttributeError:
-            error = ""
+        line = "\t{:12} {:11}: " + value_format + "\t {} {:<12s}\n"
+
+        if par.frozen:
+            frozen, error = "(frozen)", "\t\t"
+        else:
+            frozen = ""
+            try:
+                error = "+/- " + error_format.format(par.error)
+            except AttributeError:
+                error = ""
 
         str_ += line.format(par.name, frozen, par.value, error, par.unit)
     return str_.expandtabs(tabsize=2)
