@@ -143,8 +143,8 @@ def load_irf_dict_from_file(filename):
 
     Returns
     -------
-    irf_dict : dict
-        dictionary with instances of the Gammapy obejcts corresponding 
+    irf_dict : dict of `~gammapy.irf.IRF`
+        dictionary with instances of the Gammapy objects corresponding 
         to the IRF components        
     """
     filename = make_path(filename)
