@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
 from gammapy.utils.fits import HDULocation
 from gammapy.data.hdu_index_table import HDUIndexTable
 
 __all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
+
+log = logging.getLogger(__name__)
 
 
 IRF_DL3_AXES_SPECIFICATION = {
@@ -168,6 +171,10 @@ def load_irf_dict_from_file(filename):
             
             for name in HDUIndexTable.VALID_HDU_TYPE:
                 if name in hdu_class:
+                    if name in irf_dict.keys():
+                        log.warning(f"more than one HDU of {name} type found")
+                        log.warning(f"loaded the {irf_dict[name].meta['EXTNAME']} HDU in the dictionary")
+                        continue
                     data = loc.load()
                     # TODO: maybe introduce IRF.type attribute...
                     irf_dict[name] = data
