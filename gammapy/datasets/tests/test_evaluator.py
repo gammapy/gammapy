@@ -107,10 +107,16 @@ def test_large_oversampling():
     evaluator = MapEvaluator(model=model[0], exposure=exposure, psf=psf)
     flux_1 = evaluator.compute_flux_spatial()
 
-    spatial_model.sigma.value = 0.01
+    spatial_model.sigma.value = 0.001
     flux_2 = evaluator.compute_flux_spatial()
+
+    spatial_model.sigma.value = 0.01
+    flux_3 = evaluator.compute_flux_spatial()
+
+    spatial_model.sigma.value = 0.03
+    flux_4 = evaluator.compute_flux_spatial()
 
     assert_allclose(flux_1.data.sum(), 2, rtol=1e-4)
     assert_allclose(flux_2.data.sum(), 2, rtol=1e-4)
-
-
+    assert_allclose(flux_3.data.sum(), 2, rtol=1e-4)
+    assert_allclose(flux_4.data.sum(), 2, rtol=1e-4)

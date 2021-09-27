@@ -316,9 +316,7 @@ class MapEvaluator:
 
     def _compute_flux_spatial_geom(self, geom):
         """Compute spatial flux oversampling geom if necessary"""
-        factor = self._spatial_oversampling_factor
-
-        value = self.model.spatial_model.integrate_geom(geom, factor)
+        value = self.model.spatial_model.integrate_geom(geom)
 
         if self.psf and self.model.apply_irf["psf"]:
             value = self.apply_psf(value)
