@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -23,6 +22,7 @@ from gammapy.modeling.models import (
 )
 
 from gammapy.utils.gauss import Gauss2DPDF
+
 
 def test_compute_flux_spatial():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
@@ -57,6 +57,7 @@ def test_compute_flux_spatial():
     reference = g.containment_fraction(0.1)
     assert_allclose(flux.value, reference, rtol=0.003)
 
+
 def test_compute_flux_spatial_no_psf():
     # check that spatial integration is not performed in the absence of a psf
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
@@ -84,6 +85,7 @@ def test_compute_flux_spatial_no_psf():
 
     assert_allclose(flux, 1.0)
 
+
 def test_large_oversampling():
     nbin = 2
     energy_axis_true = MapAxis.from_energy_bounds(
@@ -93,7 +95,7 @@ def test_large_oversampling():
 
     spectral_model = ConstantSpectralModel()
     spatial_model = GaussianSpatialModel(
-        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=1e-4*u.deg, frame="icrs"
+        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=1e-4 * u.deg, frame="icrs"
     )
 
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
@@ -116,7 +118,7 @@ def test_large_oversampling():
     spatial_model.sigma.value = 0.03
     flux_4 = evaluator.compute_flux_spatial()
 
-    assert_allclose(flux_1.data.sum(), 2, rtol=1e-4)
-    assert_allclose(flux_2.data.sum(), 2, rtol=1e-4)
-    assert_allclose(flux_3.data.sum(), 2, rtol=1e-4)
-    assert_allclose(flux_4.data.sum(), 2, rtol=1e-4)
+    assert_allclose(flux_1.data.sum(), nbin, rtol=1e-4)
+    assert_allclose(flux_2.data.sum(), nbin, rtol=1e-4)
+    assert_allclose(flux_3.data.sum(), nbin, rtol=1e-4)
+    assert_allclose(flux_4.data.sum(), nbin, rtol=1e-4)
