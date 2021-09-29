@@ -316,6 +316,8 @@ class MapEvaluator:
 
     def _compute_flux_spatial_geom(self, geom):
         """Compute spatial flux oversampling geom if necessary"""
+        if not self.model.spatial_model.is_energy_dependent:
+            geom = geom.to_image()
         value = self.model.spatial_model.integrate_geom(geom)
 
         if self.psf and self.model.apply_irf["psf"]:
