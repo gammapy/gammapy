@@ -445,6 +445,10 @@ class PointSpatialModel(SpatialModel):
 
         return dx * dy
 
+    def is_energy_dependent(self):
+        return False
+
+
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
         values = self.integrate_geom(geom).data
@@ -968,6 +972,11 @@ class ConstantFluxSpatialModel(SpatialModel):
         data = super().to_dict(full_output)
         data.pop("frame")
         return data
+
+    @staticmethod
+    def evaluate(lon, lat):
+        """Evaluate model."""
+        return 1/u.sr
 
     @staticmethod
     def evaluate_geom(geom):
