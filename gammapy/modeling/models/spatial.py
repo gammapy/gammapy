@@ -25,6 +25,7 @@ import os
 
 log = logging.getLogger(__name__)
 
+MAX_OVERSAMPLING = 50
 
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
@@ -195,7 +196,11 @@ class SpatialModel(Model):
         if oversampling_factor is None:
             if self.evaluation_bin_size_min is not None:
                 res_scale = self.evaluation_bin_size_min.to_value("deg")
-                oversampling_factor = int(np.ceil(pix_scale / res_scale))
+                if res_scale>0:
+                    oversampling_factor = np.maximum(int(np.ceil(pix_scale/res_scale)),
+                                                     MAX_OVERSAMPLING)
+                else:
+                    oversampling_factor = MAX_OVERSAMPLING
             else:
                 oversampling_factor = 1
 
