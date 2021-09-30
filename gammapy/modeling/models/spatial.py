@@ -21,6 +21,7 @@ from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import Model
+import os
 
 log = logging.getLogger(__name__)
 
@@ -188,20 +189,22 @@ class SpatialModel(Model):
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
 
-        result = Map.from_geom(geom=wcs_geom)#, unit='1/sr')
+        result = Map.from_geom(geom=wcs_geom)  # , unit='1/sr')
 
         pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
         if oversampling_factor is None:
             if self.evaluation_bin_size_min is not None:
                 res_scale = self.evaluation_bin_size_min.to_value("deg")
-                oversampling_factor = int(np.ceil( pix_scale/ res_scale))
+                oversampling_factor = int(np.ceil(pix_scale / res_scale))
             else:
-                oversampling_factor=1
+                oversampling_factor = 1
 
         if oversampling_factor > 1:
             if self.evaluation_radius is not None:
                 # Is it still needed?
-                width = 2*np.maximum(self.evaluation_radius.to_value("deg"),pix_scale)
+                width = 2 * np.maximum(
+                    self.evaluation_radius.to_value("deg"), pix_scale
+                )
                 wcs_geom = wcs_geom.cutout(self.position, width)
 
             upsampled_geom = wcs_geom.upsample(oversampling_factor)
@@ -212,9 +215,11 @@ class SpatialModel(Model):
             upsampled += values
 
             if geom.is_region:
-                mask = geom.contains(upsampled_geom.get_coord()).astype('int')
+                mask = geom.contains(upsampled_geom.get_coord()).astype("int")
 
-            integrated = upsampled.downsample(oversampling_factor, preserve_counts=True, weights=mask)
+            integrated = upsampled.downsample(
+                oversampling_factor, preserve_counts=True, weights=mask
+            )
 
             # Finally stack result
             result.unit = integrated.unit
@@ -228,7 +233,9 @@ class SpatialModel(Model):
 
         if geom.is_region:
             mask = result.geom.region_mask([geom.region])
-            result = Map.from_geom(geom, data=np.sum(result.data[mask]), unit=result.unit)
+            result = Map.from_geom(
+                geom, data=np.sum(result.data[mask]), unit=result.unit
+            )
         return result
 
     def to_dict(self, full_output=False):
@@ -498,8 +505,7 @@ class GaussianSpatialModel(SpatialModel):
     @property
     def evaluation_bin_size_min(self):
         """ Minimal evaluation bin size (`~astropy.coordinates.Angle`) chosen as sigma/3."""
-        return self.parameters["sigma"].quantity / 3.
-
+        return self.parameters["sigma"].quantity / 3.0
 
     @property
     def evaluation_radius(self):
@@ -606,7 +612,6 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity / (3 + 8 * self.eta.value) / (self.e.value + 1)
 
-
     @property
     def evaluation_radius(self):
         r"""Evaluation radius (`~astropy.coordinates.Angle`).
@@ -686,7 +691,7 @@ class DiskSpatialModel(SpatialModel):
 
         The bin min size is defined as r_0*(1-edge_width)/10.
         """
-        return self.r_0.quantity * (1 - self.edge_width.quantity) /10.
+        return self.r_0.quantity * (1 - self.edge_width.quantity) / 10.0
 
     @property
     def evaluation_radius(self):
@@ -694,7 +699,7 @@ class DiskSpatialModel(SpatialModel):
     
         Set to the length of the semi-major axis plus the edge width.
         """
-        return 1.1*self.r_0.quantity * (1 + self.edge_width.quantity)
+        return 1.1 * self.r_0.quantity * (1 + self.edge_width.quantity)
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
@@ -733,7 +738,9 @@ class DiskSpatialModel(SpatialModel):
 
         norm = DiskSpatialModel._evaluate_norm_factor(r_0, e)
 
-        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(sep - sigma_eff, sigma_eff * edge_width)
+        in_ellipse = DiskSpatialModel._evaluate_smooth_edge(
+            sep - sigma_eff, sigma_eff * edge_width
+        )
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
     def to_region(self, **kwargs):
@@ -1003,7 +1010,7 @@ class TemplateSpatialModel(SpatialModel):
         self, map, meta=None, normalize=True, interp_kwargs=None, filename=None,
     ):
         if (map.data < 0).any():
-            log.warning("Diffuse map has negative values. Check and fix this!")
+            log.warning("Map has negative values. Check and fix this!")
 
         if filename is not None:
             filename = str(make_path(filename))
@@ -1026,7 +1033,7 @@ class TemplateSpatialModel(SpatialModel):
             map = map.copy(unit="sr-1")
             log.warning("Missing spatial template unit, assuming sr^-1")
 
-        self.map = map
+        self._map = map.copy()
 
         self.meta = dict() if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
@@ -1035,6 +1042,11 @@ class TemplateSpatialModel(SpatialModel):
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         super().__init__()
+
+    @property
+    def map(self):
+        """Template map  (`~gammapy.maps.Map`)"""
+        return self._map
 
     @property
     def is_energy_dependent(self):
@@ -1106,6 +1118,14 @@ class TemplateSpatialModel(SpatialModel):
         data["normalize"] = self.normalize
         data["unit"] = str(self.map.unit)
         return data
+
+    def write(self, overwrite=False):
+        if self.filename is None:
+            raise IOError("Missing filename")
+        elif os.path.isfile(self.filename) and not overwrite:
+            log.warning("Template file already exits, and overwrite is False")
+        else:
+            self.map.write(self.filename)
 
     def to_region(self, **kwargs):
         """Model outline from template map boundary (`~regions.RectangleSkyRegion`)."""
