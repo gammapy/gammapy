@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import logging
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 import astropy.units as u
 from astropy.io import fits
 from gammapy.irf import load_cta_irfs, load_irf_dict_from_file
 from gammapy.utils.testing import requires_data
+from gammapy.utils.scripts import make_path
 from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
 from gammapy.maps import MapAxis
 
@@ -61,6 +63,23 @@ def test_load_irf_dict_from_file():
     assert_allclose(val.value, 0.00031552, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
 
+@requires_data()
+def test_irf_dict_from_file_duplicate_irfs(caplog, tmp_path):
+    """catch the warning message about two type of IRF with the same hdu class 
+    encountered in the same file"""
+    original_file = make_path("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
+    dummy_file = tmp_path / "020136_duplicated_psf.fits" 
+    
+    # create a dummy file with the PSF HDU repeated twice
+    f = fits.open(original_file)
+    f.append(f[5].copy())
+    f[7].name = "PSF2"
+    f.writeto(dummy_file)
+    
+    load_irf_dict_from_file(dummy_file)
+    
+    assert "more than one HDU" in caplog.text
+    assert "loaded the PSF HDU in the dictionary" in caplog.text
 
 class TestIRFWrite:
     def setup(self):
