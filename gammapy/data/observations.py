@@ -35,7 +35,7 @@ class Observation:
         Point spread function
     bkg : `~gammapy.irf.Background3D`
         Background rate model
-    rad_max: `~gammapy.irf.RAD_MAX_2d` or `~astropy.units.Quantity`
+    rad_max: `~gammapy.irf.RadMax2D` or `~astropy.units.Quantity`
         Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
         or a single angle (global RAD_MAX)
     gti : `~gammapy.data.GTI`
