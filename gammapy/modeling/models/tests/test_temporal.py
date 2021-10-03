@@ -128,23 +128,6 @@ def test_lightcurve_temporal_model_integral():
     assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
 
-#def test_constant_temporal_model_sample():
-#    temporal_model = ConstantTemporalModel()
-#
-#    t_ref = "2010-01-01T00:00:00"
-#    t_min = "2010-01-01T00:00:00"
-#    t_max = "2010-01-01T08:00:00"
-#
-#    sampler = temporal_model.sample_time(
-#        n_events=2, t_min=t_min, t_max=t_max, random_state=0
-#    )
-#
-#    sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
-#
-#    assert len(sampler) == 2
-#    assert_allclose(sampler.value, [15805.82891311, 20597.45375153], rtol=1e-5)
-
-
 def test_constant_temporal_model_evaluate():
     temporal_model = ConstantTemporalModel()
     t = Time(46300, format="mjd")
@@ -183,15 +166,6 @@ def test_exponential_temporal_model_integral():
     assert_allclose(np.sum(val), 0.102557, rtol=1e-5)
 
 
-#def test_exponential_temporal_model_sample_time():
-#    t_ref = Time(55555, format="mjd")
-#    temporal_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d)
-#    times = temporal_model.sample_time(2)
-#
-#    assert times.unit == u.d
-#    assert_allclose(times.value, [55555.679932, 55556.019597], rtol=1e-8)
-#
-
 def test_gaussian_temporal_model_evaluate():
     t = Time(46301, format="mjd")
     t_ref = 46300 * u.d
@@ -211,15 +185,6 @@ def test_gaussian_temporal_model_integral():
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.682679, rtol=1e-5)
 
-
-#def test_gaussian_temporal_model_sample_time():
-#    t_ref = Time(55555, format="mjd")
-#    temporal_model = GaussianTemporalModel(t_ref=t_ref.mjd * u.d, sigma="2.0 day")
-#    times = temporal_model.sample_time(2)
-#
-#    assert times.unit == u.d
-#    assert_allclose(times.value, [55555.25146, 55554.73579], rtol=1e-8)
-#
 
 @requires_data()
 def test_to_dict(light_curve):
