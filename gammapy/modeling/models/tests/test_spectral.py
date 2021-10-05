@@ -966,7 +966,7 @@ def test_integral_exp_cut_off_power_law_large_number_of_bins():
 
     
     
-def test_template_ND(tmpir):   
+def test_template_ND(tmpdir):   
     energy_axis = MapAxis.from_bounds(1., 100, 10, interp='log', name='energy_true', unit='GeV')
     norm = MapAxis.from_bounds(0, 10, 10, interp='lin', name='norm', unit='')
     tilt = MapAxis.from_bounds(-1., 1, 5, interp='lin', name='tilt', unit='')
@@ -980,8 +980,12 @@ def test_template_ND(tmpir):
     assert  template.parameters["tilt"].value == 0
     assert_allclose(template([1 ,100, 1000]*u.GeV), [1., 2., 2.])
     
+    template.parameters["norm"].value = 1 
     template.filename = "template_ND.fits"
     template.write()
     dict_ = template.to_dict()
-    template_new = dict_.from_dict(dict_)
+    template_new = TemplateNDSpectralModel.from_dict(dict_)
     assert_allclose(template_new.map.data, region_map.data)
+    assert  len(template_new.parameters) == 2
+    assert  template_new.parameters["norm"].value == 1
+    assert  template_new.parameters["tilt"].value == 0

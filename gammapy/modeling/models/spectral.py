@@ -1622,18 +1622,16 @@ class TemplateNDSpectralModel(SpectralModel):
     @classmethod
     def from_dict(cls, data):
         filename = data["filename"]
-        normalize = data.get("normalize", True)
         m = RegionNDMap.read(filename)
-        model = cls(m, normalize=normalize, filename=filename)
-        for p in model.parameters:
-            p.value = data["parameters"][p.name]["value"]
+        model = cls(m, filename=filename)
+        for idx, p in enumerate(model.parameters):
+            p.value = data["parameters"][idx]["value"]
         return model
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
         data["filename"] = self.filename
-        data["normalize"] = self.normalize
         data["unit"] = str(self.map.unit)
         return data
 
