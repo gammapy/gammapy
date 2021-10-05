@@ -974,18 +974,32 @@ def test_template_ND(tmpdir):
     region_map.data[:,:,:5,0,0] = 1
     region_map.data[:,:,5:,0,0] = 2
     
+
+
+def test_template_ND(tmpdir):
+    energy_axis = MapAxis.from_bounds(
+        1.0, 100, 10, interp="log", name="energy_true", unit="GeV"
+    )
+    norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
+    tilt = MapAxis.from_bounds(-1.0, 1, 5, interp="lin", name="tilt", unit="")
+    region_map = RegionNDMap.create(
+        region="icrs;point(83.63, 22.01, 0.5)", axes=[energy_axis, norm, tilt]
+    )
+    region_map.data[:, :, :5, 0, 0] = 1
+    region_map.data[:, :, 5:, 0, 0] = 2
+
     template = TemplateNDSpectralModel(region_map)
-    assert  len(template.parameters) == 2
-    assert  template.parameters["norm"].value == 5
-    assert  template.parameters["tilt"].value == 0
-    assert_allclose(template([1 ,100, 1000]*u.GeV), [1., 2., 2.])
-    
-    template.parameters["norm"].value = 1 
+    assert len(template.parameters) == 2
+    assert template.parameters["norm"].value == 5
+    assert template.parameters["tilt"].value == 0
+    assert_allclose(template([1, 100, 1000] * u.GeV), [1.0, 2.0, 2.0])
+
+    template.parameters["norm"].value = 1
     template.filename = "template_ND.fits"
     template.write()
     dict_ = template.to_dict()
     template_new = TemplateNDSpectralModel.from_dict(dict_)
     assert_allclose(template_new.map.data, region_map.data)
-    assert  len(template_new.parameters) == 2
-    assert  template_new.parameters["norm"].value == 1
-    assert  template_new.parameters["tilt"].value == 0
+    assert len(template_new.parameters) == 2
+    assert template_new.parameters["norm"].value == 1
+    assert template_new.parameters["tilt"].value == 0

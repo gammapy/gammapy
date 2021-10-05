@@ -1563,24 +1563,29 @@ class TemplateNDSpectralModel(SpectralModel):
             filename = str(make_path(filename))
         self.filename = filename
 
-        points_scale = ["lin","lin","log",]
+        points_scale = [
+            "lin",
+            "lin",
+            "log",
+        ]
         parameters = []
         for axe in map.geom.axes:
-            if  axe.name not in ["energy_true", "energy"]:
-                center = (axe.bounds[1]+axe.bounds[0]) / 2
-                parameter = Parameter(name = axe.name,
-                                      value = center,
-                                      unit = axe.unit,
-                                      scale_method = "scale10",
-                                      min=axe.bounds[0],
-                                      max=axe.bounds[-1],
-                                      interp="lin",
-                                      )
+            if axe.name not in ["energy_true", "energy"]:
+                center = (axe.bounds[1] + axe.bounds[0]) / 2
+                parameter = Parameter(
+                    name=axe.name,
+                    value=center,
+                    unit=axe.unit,
+                    scale_method="scale10",
+                    min=axe.bounds[0],
+                    max=axe.bounds[-1],
+                    interp="lin",
+                )
                 points_scale.append("lin")
                 parameters.append(parameter)
         self.default_parameters = Parameters(parameters)
-        
-        interp_kwargs = interp_kwargs or {}        
+
+        interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("points_scale", points_scale)
         self._interp_kwargs = interp_kwargs
@@ -1594,15 +1599,11 @@ class TemplateNDSpectralModel(SpectralModel):
     def evaluate(self, energy, **kwargs):
         lon = self.map.geom.center_skydir.data.lon.deg
         lat = self.map.geom.center_skydir.data.lat.deg
-        coord = {
-                    "lon": lon,
-                    "lat": lat,
-                    "energy_true": energy
-                    }
+        coord = {"lon": lon, "lat": lat, "energy_true": energy}
         coord.update(kwargs)
 
         pixels = list(self.map.geom.coord_to_pix(coord))
-        #TODO : pixels in lon/lat are nan at center coord, why ?
+        # TODO : pixels in lon/lat are nan at center coord, why ?
         pixels[0][np.isnan(pixels[0])] = 0
         pixels[1][np.isnan(pixels[1])] = 0
 
