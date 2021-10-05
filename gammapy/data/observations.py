@@ -8,7 +8,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
-from .event_list import EventListChecker
+from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
@@ -16,7 +16,7 @@ from .pointing import FixedPointingInfo
 __all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
-
+    
 
 class Observation:
     """In-memory observation.
@@ -342,6 +342,35 @@ class Observation:
         obs.obs_filter = new_obs_filter
         return obs
 
+    @classmethod
+    def read(cls, event_file, irf_file=None):
+        """Create an Observation from a Event List and an (optional) IRF file.
+
+        Parameters
+        ----------
+        event_file : str, Path
+            path to the .fits file containing the event list and the GTI
+        irf_file : str, Path
+            (optional) path to the .fits file containing the IRF components,  
+            if not provided the IRF will be read from the event file
+
+        Returns
+        -------
+        observation : `~gammapy.data.Observation` 
+            observation with the events and the irf read from the file
+        """
+        from gammapy.irf.io import load_irf_dict_from_file
+
+        events = EventList.read(event_file)
+        
+        gti = GTI.read(event_file) 
+
+        irf_file = irf_file if irf_file is not None else event_file
+        irf_dict = load_irf_dict_from_file(irf_file)
+            
+        obs_info = events.table.meta
+        return cls(events=events, gti=gti, obs_info=obs_info, obs_id=obs_info.get("OBS_ID"), **irf_dict)
+        
 
 class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.
