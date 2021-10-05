@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
     BrokenPowerLawSpectralModel,
@@ -26,6 +26,7 @@ from gammapy.modeling.models import (
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpectralModel,
+    TemplateNDSpectralModel,
 )
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -962,3 +963,25 @@ def test_integral_exp_cut_off_power_law_large_number_of_bins():
     flux = exppowerlaw.integral(energy_min, energy_max)
 
     assert_allclose(flux.value, expected_flux.value, rtol=0.01)
+
+    
+    
+def test_template_ND(tmpir):   
+    energy_axis = MapAxis.from_bounds(1., 100, 10, interp='log', name='energy_true', unit='GeV')
+    norm = MapAxis.from_bounds(0, 10, 10, interp='lin', name='norm', unit='')
+    tilt = MapAxis.from_bounds(-1., 1, 5, interp='lin', name='tilt', unit='')
+    region_map = RegionNDMap.create(region="icrs;point(83.63, 22.01, 0.5)", axes=[energy_axis, norm, tilt])
+    region_map.data[:,:,:5,0,0] = 1
+    region_map.data[:,:,5:,0,0] = 2
+    
+    template = TemplateNDSpectralModel(region_map)
+    assert  len(template.parameters) == 2
+    assert  template.parameters["norm"].value == 5
+    assert  template.parameters["tilt"].value == 0
+    assert_allclose(template([1 ,100, 1000]*u.GeV), [1., 2., 2.])
+    
+    template.filename = "template_ND.fits"
+    template.write()
+    dict_ = template.to_dict()
+    template_new = dict_.from_dict(dict_)
+    assert_allclose(template_new.map.data, region_map.data)
