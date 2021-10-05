@@ -995,7 +995,7 @@ def test_template_ND(tmpdir):
     assert_allclose(template([1, 100, 1000] * u.GeV), [1.0, 2.0, 2.0])
 
     template.parameters["norm"].value = 1
-    template.filename = "template_ND.fits"
+    template.filename = str(tmpdir / "template_ND.fits")
     template.write()
     dict_ = template.to_dict()
     template_new = TemplateNDSpectralModel.from_dict(dict_)

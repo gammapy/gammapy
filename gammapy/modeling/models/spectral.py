@@ -1547,8 +1547,6 @@ class TemplateNDSpectralModel(SpectralModel):
         Map template. 
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
-    normalize : bool
-        Normalize the input map so that it integrates to unity.
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
