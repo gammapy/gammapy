@@ -14,7 +14,6 @@ from regions import (
     EllipseSkyRegion,
     PointSkyRegion,
     RectangleSkyRegion,
-    PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
@@ -190,7 +189,7 @@ class SpatialModel(Model):
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
 
-        result = Map.from_geom(geom=wcs_geom)  # , unit='1/sr')
+        result = Map.from_geom(geom=wcs_geom)
 
         pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
         if oversampling_factor is None:
