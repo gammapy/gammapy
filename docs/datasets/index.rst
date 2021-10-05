@@ -59,7 +59,7 @@ analyse the following datasets:
      - `cash`
    * - `~gammapy.datasets.SpectrumDatasetOnOff`
      - `counts`
-     - `edisp`
+     - `edisp`, `exposure`
      - `RegionGeom`
      - `acceptance`, `acceptance_off`, `counts_off`
      -  `wstat`
