@@ -14,7 +14,6 @@ from regions import (
     EllipseSkyRegion,
     PointSkyRegion,
     RectangleSkyRegion,
-    PolygonSkyRegion,
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
@@ -25,6 +24,7 @@ import os
 
 log = logging.getLogger(__name__)
 
+MAX_OVERSAMPLING = 200
 
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
@@ -189,13 +189,17 @@ class SpatialModel(Model):
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
 
-        result = Map.from_geom(geom=wcs_geom)  # , unit='1/sr')
+        result = Map.from_geom(geom=wcs_geom)
 
         pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
         if oversampling_factor is None:
             if self.evaluation_bin_size_min is not None:
                 res_scale = self.evaluation_bin_size_min.to_value("deg")
-                oversampling_factor = int(np.ceil(pix_scale / res_scale))
+                if res_scale>0:
+                    oversampling_factor = np.minimum(int(np.ceil(pix_scale/res_scale)),
+                                                     MAX_OVERSAMPLING)
+                else:
+                    oversampling_factor = MAX_OVERSAMPLING
             else:
                 oversampling_factor = 1
 
@@ -439,6 +443,10 @@ class PointSpatialModel(SpatialModel):
         dy = np.where(dy < 1, 1 - dy, 0)
 
         return dx * dy
+
+    def is_energy_dependent(self):
+        return False
+
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
@@ -963,6 +971,11 @@ class ConstantFluxSpatialModel(SpatialModel):
         data = super().to_dict(full_output)
         data.pop("frame")
         return data
+
+    @staticmethod
+    def evaluate(lon, lat):
+        """Evaluate model."""
+        return 1/u.sr
 
     @staticmethod
     def evaluate_geom(geom):

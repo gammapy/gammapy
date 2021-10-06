@@ -100,7 +100,9 @@ class MapEvaluator:
         self._neval = 0  # for debugging
         self._renorm = 1
         self._spatial_oversampling_factor = 1
-        self._upsampled_geom = self.exposure.geom if self.exposure else None
+        if self.exposure is not None:
+            if not self.geom.is_region or self.geom.region is not None:
+                self.update_spatial_oversampling_factor(self.geom)
 
     # workaround for the lru_cache pickle issue
     # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
@@ -245,8 +247,6 @@ class MapEvaluator:
             factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
             self._spatial_oversampling_factor = factor
 
-        self._upsampled_geom = geom.upsample(self._spatial_oversampling_factor)
-
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
 
@@ -310,17 +310,15 @@ class MapEvaluator:
             weights = wcs_geom.region_weights(regions=[self.geom.region])
             value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
         else:
-            value = self._compute_flux_spatial_geom(self._upsampled_geom)
+            value = self._compute_flux_spatial_geom(self.geom)
 
         return value
 
     def _compute_flux_spatial_geom(self, geom):
         """Compute spatial flux oversampling geom if necessary"""
-        factor = self._spatial_oversampling_factor
-        # for now we force the oversampling factor to be 1
-        value = self.model.spatial_model.integrate_geom(geom, oversampling_factor=1)
-
-        value = value.downsample(factor)
+        if not self.model.spatial_model.is_energy_dependent:
+            geom = geom.to_image()
+        value = self.model.spatial_model.integrate_geom(geom)
 
         if self.psf and self.model.apply_irf["psf"]:
             value = self.apply_psf(value)

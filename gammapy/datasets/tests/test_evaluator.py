@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -11,6 +10,8 @@ from gammapy.maps import (
     MapAxis,
     RegionGeom,
     RegionNDMap,
+    Map,
+    WcsGeom,
 )
 from gammapy.modeling.models import (
     GaussianSpatialModel,
@@ -21,6 +22,7 @@ from gammapy.modeling.models import (
 )
 
 from gammapy.utils.gauss import Gauss2DPDF
+
 
 def test_compute_flux_spatial():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
@@ -55,6 +57,7 @@ def test_compute_flux_spatial():
     reference = g.containment_fraction(0.1)
     assert_allclose(flux.value, reference, rtol=0.003)
 
+
 def test_compute_flux_spatial_no_psf():
     # check that spatial integration is not performed in the absence of a psf
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
@@ -81,3 +84,41 @@ def test_compute_flux_spatial_no_psf():
     flux = evaluator.compute_flux_spatial()
 
     assert_allclose(flux, 1.0)
+
+
+def test_large_oversampling():
+    nbin = 2
+    energy_axis_true = MapAxis.from_energy_bounds(
+        ".1 TeV", "10 TeV", nbin=nbin, name="energy_true"
+    )
+    geom = WcsGeom.create(width=1, binsz=0.02, axes=[energy_axis_true])
+
+    spectral_model = ConstantSpectralModel()
+    spatial_model = GaussianSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=1e-4 * u.deg, frame="icrs"
+    )
+
+    models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    model = Models(models)
+
+    exposure = Map.from_geom(geom, unit="m2 s")
+    exposure.data += 1.0
+
+    psf = PSFKernel.from_gauss(geom, sigma="0.1 deg")
+
+    evaluator = MapEvaluator(model=model[0], exposure=exposure, psf=psf)
+    flux_1 = evaluator.compute_flux_spatial()
+
+    spatial_model.sigma.value = 0.001
+    flux_2 = evaluator.compute_flux_spatial()
+
+    spatial_model.sigma.value = 0.01
+    flux_3 = evaluator.compute_flux_spatial()
+
+    spatial_model.sigma.value = 0.03
+    flux_4 = evaluator.compute_flux_spatial()
+
+    assert_allclose(flux_1.data.sum(), nbin, rtol=1e-4)
+    assert_allclose(flux_2.data.sum(), nbin, rtol=1e-4)
+    assert_allclose(flux_3.data.sum(), nbin, rtol=1e-4)
+    assert_allclose(flux_4.data.sum(), nbin, rtol=1e-4)
