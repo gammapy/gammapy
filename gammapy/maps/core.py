@@ -113,10 +113,6 @@ class Map(abc.ABC):
     def quantity(self, val):
         val = u.Quantity(val, copy=False)
         
-        if not val.unit.is_equivalent(self.unit):
-            raise u.UnitConversionError(
-                f"Unit must be equivalent to {self.unit}"
-            )
         self.data = val.value
         self.unit = val.unit
 
