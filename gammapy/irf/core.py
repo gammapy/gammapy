@@ -35,12 +35,17 @@ class IRF(metaclass=abc.ABCMeta):
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.,)
 
-    def __init__(self, axes, data=0, unit="", meta=None, interp_kwargs=None):
+    def __init__(self, axes, data=0, unit=None, meta=None, interp_kwargs=None):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
-        self.data = data
-        self.unit = unit
+
+        if isinstance(data, u.Quantity):
+            self.quantity = data
+        else:
+            self.data = data
+            self.unit = unit
+
         self.meta = meta or {}
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs.copy()
@@ -81,11 +86,11 @@ class IRF(metaclass=abc.ABCMeta):
         """
         required_shape = self.axes.shape
 
+        if isinstance(value, u.Quantity):
+            self.quantity = value
+
         if np.isscalar(value):
             value = value * np.ones(required_shape)
-
-        if isinstance(value, u.Quantity):
-            raise TypeError("Map data must be a Numpy array. Set unit separately")
 
         if np.shape(value) != required_shape:
             raise ValueError(
@@ -136,7 +141,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     @unit.setter
     def unit(self, val):
-        self._unit = u.Unit(val)
+        self._unit = u.Unit(val or "")
 
     @lazyproperty
     def _interpolate(self):
