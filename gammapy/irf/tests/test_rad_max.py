@@ -7,12 +7,12 @@ def test_rad_max_roundtrip(tmp_path):
     from gammapy.irf import RadMax2D
 
     n_energy = 10
-    energy_edges = np.geomspace(100 * u.GeV, 100 * u.TeV, n_energy + 1)
-    energy_axis = MapAxis.from_edges(energy_edges, name='energy')
+    energy_axis = MapAxis.from_energy_bounds(
+        50 * u.GeV, 100 * u.TeV, n_energy, name='energy'
+    )
 
     n_offset = 5
-    offset_edges = np.linspace(0, 2, n_offset + 1) * u.deg
-    offset_axis = MapAxis.from_edges(offset_edges, name="offset")
+    offset_axis = MapAxis.from_bounds(0, 2, n_offset, unit=u.deg, name="offset")
 
     shape = (n_energy, n_offset)
     rad_max = np.linspace(0.1, 0.5, n_energy * n_offset).reshape(shape)
