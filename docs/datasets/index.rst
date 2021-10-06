@@ -29,14 +29,47 @@ Types of supported datasets
 Gammapy has built-in support to create and
 analyse the following datasets:
 
+.. list-table::
+   :widths: 10 20 50 20 20 10
+   :header-rows: 1
 
-| **Dataset Type**       | **data_type** | **reduced irfs**             | **geometry**              | **additional quantity**                      | **statistic** |
-|------------------------|---------------|------------------------------|---------------------------|----------------------------------------------|---------------|
-| `~gammapy.datasets.MapDataset`           | `counts`      | `background`, `psf`, `edisp` | `WcsGeom` or `RegionGeom` |                                              | `cash`        |
-| `~gammapy.datasets.MapDatasetOnOff`      | `counts`      | `psf`, `edisp`               | `WcsGeom`                 | `acceptance`, `acceptance_off`, `counts_off` | `wstat`       |
-| `~gammapy.datasets.SpectrumDataset`      | `counts`      | `background`, `edisp`        | `RegionGeom`              |                                              | `cash`        |
-| `~gammapy.datasets.SpectrumDatasetOnOff` | `counts`      | `edisp`                      | `RegionGeom`              | `acceptance`, `acceptance_off`, `counts_off` | `wstat`       |
-| `~gammapy.datasets.FluxPointsDataset`     | `flux`        | None                         | None                      |                                              | `chi2`        |
+   * - **Dataset Type**
+     - **data_type**
+     - **reduced irfs**
+     - **geometry**
+     -  **additional quantity**
+     -  **statistic**
+   * - `~gammapy.datasets.MapDataset`
+     - `counts`
+     - `background`, `psf`, `edisp`, `exposure`,
+     -  `WcsGeom` or `RegionGeom`
+     -
+     -   `cash`
+   * - `~gammapy.datasets.MapDatasetOnOff`
+     - `counts`
+     - `psf`, `edisp`, `exposure`
+     -  `WcsGeom`
+     - `acceptance`, `acceptance_off`, `counts_off`
+     - `wstat`
+   * - `~gammapy.datasets.SpectrumDataset`
+     - `counts`
+     - `background`, `edisp`, `exposure`
+     - `RegionGeom`
+     -
+     - `cash`
+   * - `~gammapy.datasets.SpectrumDatasetOnOff`
+     - `counts`
+     - `edisp`, `exposure`
+     - `RegionGeom`
+     - `acceptance`, `acceptance_off`, `counts_off`
+     -  `wstat`
+   * - `~gammapy.datasets.FluxPointsDataset`
+     -  `flux`
+     - None
+     - None
+     -
+     - `chi2`
+
 
 In general, `OnOff` datasets should be used when the
 background is estimated from real off counts
