@@ -295,32 +295,45 @@ class Observation:
         """
         import matplotlib.pyplot as plt
 
-        fig, ((ax_aeff, ax_bkg), (ax_psf, ax_edisp)) = plt.subplots(
-            nrows=2,
-            ncols=2,
+
+        n_irfs = len(self.available_irfs)
+
+        fig, axes = plt.subplots(
+            nrows=n_irfs//2,
+            ncols=2 + n_irfs%2,
             figsize=figsize,
             gridspec_kw={"wspace": 0.25, "hspace": 0.25},
         )
 
-        self.aeff.plot(ax=ax_aeff)
+        axes_dict = dict(zip(self.available_irfs, axes.flatten()))
 
-        try:
+        if 'aeff' in self.available_irfs:
+            self.aeff.plot(ax=axes_dict['aeff'])
+            axes_dict['aeff'].set_title("Effective area")
+
+        if 'bkg' in self.available_irfs:
             bkg = self.bkg
 
             if not bkg.is_offset_dependent:
                 bkg = bkg.to_2d()
 
-            bkg.plot(ax=ax_bkg)
-        except AttributeError:
+            bkg.plot(ax=axes_dict['bkg'])
+            axes_dict['bkg'].set_title("Background rate")
+        else:
             logging.warning(f"No background model found for obs {self.obs_id}.")
 
-        self.psf.plot_containment_radius_vs_energy(ax=ax_psf)
-        self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
+        if 'psf' in self.available_irfs:
+            self.psf.plot_containment_radius_vs_energy(ax=axes_dict['psf'])
+            axes_dict['psf'].set_title("Point spread function")
+        else:
+            logging.warning(f"No PSF found for obs {self.obs_id}.")
 
-        ax_aeff.set_title("Effective area")
-        ax_bkg.set_title("Background rate")
-        ax_psf.set_title("Point spread function")
-        ax_edisp.set_title("Energy dispersion")
+        if 'edisp' in self.available_irfs:
+            self.edisp.plot_bias(ax=axes_dict['edisp'], add_cbar=True)
+            axes_dict['edisp'].set_title("Energy dispersion")
+        else:
+            logging.warning(f"No energy dispersion found for obs {self.obs_id}.")
+
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
