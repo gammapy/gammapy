@@ -437,7 +437,7 @@ class MapDataset(Dataset):
 
         evaluators = self.evaluators
         if model_name is not None:
-            evaluators = {model_name: self.evaluators[model_name]} 
+            evaluators = {model_name: self.evaluators[model_name]}
 
         for evaluator in evaluators.values():
             if evaluator.needs_update:
@@ -1496,7 +1496,7 @@ class MapDataset(Dataset):
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
-                    factor=factor, axis_name=axis_name
+                    factor=factor, axis_name=axis_name, weights=self.mask_safe_edisp
                 )
             else:
                 kwargs["edisp"] = self.edisp.copy()
