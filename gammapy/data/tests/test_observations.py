@@ -52,6 +52,11 @@ def test_observation_peek(data_store):
     with mpl_plot_check():
         obs.peek()
 
+    obs.psf = None
+    with mpl_plot_check():
+        obs.peek()
+
+
 
 @requires_data()
 @pytest.mark.parametrize(
