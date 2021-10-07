@@ -25,20 +25,24 @@ class Map(abc.ABC):
     ----------
     geom : `~gammapy.maps.Geom`
         Geometry
-    data : `~numpy.ndarray`
+    data : `~numpy.ndarray` or `~astropy.units.Quantity`
         Data array
     meta : `dict`
         Dictionary to store meta data
     unit : str or `~astropy.units.Unit`
-        Data unit
+        Data unit, ignored if data is a Quantity.
     """
 
     tag = "map"
 
     def __init__(self, geom, data, meta=None, unit=""):
         self._geom = geom
-        self.data = data
-        self.unit = unit
+        
+        if isinstance(data, u.Quantity):
+            self.quantity = data
+        else:
+            self.data = data
+            self.unit = unit
 
         if meta is None:
             self.meta = {}
@@ -75,6 +79,13 @@ class Map(abc.ABC):
 
     @data.setter
     def data(self, value):
+        """Set data
+
+        Parameters
+        ----------
+        value : array-like
+            Data array
+        """
         if np.isscalar(value):
             value = value * np.ones(self.geom.data_shape, dtype=type(value))
 
@@ -111,6 +122,13 @@ class Map(abc.ABC):
 
     @quantity.setter
     def quantity(self, val):
+        """Set data and unit
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+           Quantity
+        """
         val = u.Quantity(val, copy=False)
         
         self.data = val.value

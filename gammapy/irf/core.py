@@ -25,10 +25,10 @@ class IRF:
     -----------
     axes : list of `MapAxis` or `MapAxes`
         Axes
-    data : `~numpy.ndarray`
+    data : `~numpy.ndarray` or `~astropy.units.Quantity`
         Data
     unit : str or `~astropy.units.Unit`
-        Unit
+        Unit, ignored if data is a Quantity.
     meta : dict
         Meta data
     """
@@ -39,8 +39,11 @@ class IRF:
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
-        self.data = data
-        self.unit = unit
+        if isinstance(data, u.Quantity):
+            self.quantity = data
+        else:       
+            self.data = data
+            self.unit = unit
         self.meta = meta or {}
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs.copy()
@@ -159,6 +162,13 @@ class IRF:
 
     @quantity.setter
     def quantity(self, val):
+        """Set data and unit
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+           Quantity
+        """
         val = u.Quantity(val, copy=False, unit=self.unit)
         
         self.data = val.value
