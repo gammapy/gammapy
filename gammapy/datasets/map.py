@@ -1496,7 +1496,7 @@ class MapDataset(Dataset):
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
-                    factor=factor, axis_name=axis_name
+                    factor=factor, axis_name=axis_name, weights=self.mask_safe_edisp
                 )
             else:
                 kwargs["edisp"] = self.edisp.copy()

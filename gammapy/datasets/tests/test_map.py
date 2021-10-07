@@ -512,6 +512,30 @@ def test_downsample():
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
 
+def test_downsample_energy(geom, geom_etrue):
+    # This checks that downsample and resample_energy_axis give identical results
+    counts = Map.from_geom(geom, dtype='int')
+    counts += 1
+    mask = Map.from_geom(geom, dtype='bool')
+    mask.data[1:] = True
+    counts += 1
+    exposure = Map.from_geom(geom_etrue, unit="m2s")
+    edisp = EDispKernelMap.from_gauss(
+            geom.axes[0],
+            geom_etrue.axes[0], 0.1, 0.)
+    dataset = MapDataset(
+        counts=counts,
+        exposure=exposure,
+        mask_safe=mask,
+        edisp=edisp,
+    )
+    dataset_downsampled = dataset.downsample(2, axis_name="energy")
+    dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
+
+    assert dataset_downsampled.edisp.edisp_map.data.shape == (3,1,1,2)
+    assert_allclose(dataset_downsampled.edisp.edisp_map.data[:,:,0,0],
+                    dataset_resampled.edisp.edisp_map.data[:,:,0,0])
+
 
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
