@@ -70,6 +70,11 @@ IRF_DL3_HDU_SPECIFICATION = {
         "extname": "EFFECTIVE AREA",
         "column_name": "EFFAREA",
         "hduclas2": "EFF_AREA",
+    },
+    "rad_max_2d": {
+        "extname": "RAD_MAX",
+        "column_name": "RAD_MAX",
+        "hduclas2": "RAD_MAX",
     }
 }
 
