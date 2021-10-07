@@ -201,7 +201,10 @@ def test_map_quantity(map_type, unit):
 
     m.quantity = Quantity(np.ones_like(m.data), "m2")
     assert m.unit == "m2"
-
+    
+    m1 = m.__class__(geom=m.geom, data=m.quantity)
+    assert m1.unit == "m2"
+    assert_allclose(m1.data, m.data)
 
 @pytest.mark.parametrize(("map_type", "unit"), unit_args)
 def test_map_unit_read_write(map_type, unit):
