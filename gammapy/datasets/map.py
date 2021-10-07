@@ -437,7 +437,7 @@ class MapDataset(Dataset):
 
         evaluators = self.evaluators
         if model_name is not None:
-            evaluators = {model_name: self.evaluators[model_name]} 
+            evaluators = {model_name: self.evaluators[model_name]}
 
         for evaluator in evaluators.values():
             if evaluator.needs_update:

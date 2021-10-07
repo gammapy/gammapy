@@ -40,6 +40,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
+
 @pytest.fixture
 def geom_hpx():
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
@@ -512,17 +513,16 @@ def test_downsample():
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
 
+
 def test_downsample_energy(geom, geom_etrue):
     # This checks that downsample and resample_energy_axis give identical results
-    counts = Map.from_geom(geom, dtype='int')
+    counts = Map.from_geom(geom, dtype="int")
     counts += 1
-    mask = Map.from_geom(geom, dtype='bool')
+    mask = Map.from_geom(geom, dtype="bool")
     mask.data[1:] = True
     counts += 1
     exposure = Map.from_geom(geom_etrue, unit="m2s")
-    edisp = EDispKernelMap.from_gauss(
-            geom.axes[0],
-            geom_etrue.axes[0], 0.1, 0.)
+    edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
     dataset = MapDataset(
         counts=counts,
         exposure=exposure,
@@ -532,9 +532,11 @@ def test_downsample_energy(geom, geom_etrue):
     dataset_downsampled = dataset.downsample(2, axis_name="energy")
     dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
 
-    assert dataset_downsampled.edisp.edisp_map.data.shape == (3,1,1,2)
-    assert_allclose(dataset_downsampled.edisp.edisp_map.data[:,:,0,0],
-                    dataset_resampled.edisp.edisp_map.data[:,:,0,0])
+    assert dataset_downsampled.edisp.edisp_map.data.shape == (3, 1, 1, 2)
+    assert_allclose(
+        dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
+        dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
+    )
 
 
 @requires_data()
@@ -904,9 +906,10 @@ def test_npred_sig(sky_model, geom, geom_etrue):
     )
     assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
     assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
- 
+
     with pytest.raises(
-        KeyError, match="m2",
+        KeyError,
+        match="m2",
     ):
         dataset.npred_signal(model_name="m2")
 
@@ -922,7 +925,11 @@ def test_stack_npred():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.05, width=(2, 2), frame="icrs", axes=[axis],
+        skydir=(0, 0),
+        binsz=0.05,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
     )
 
     dataset_1 = MapDataset.create(
@@ -1455,7 +1462,11 @@ def test_slice_by_idx():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.5, width=(2, 2), frame="icrs", axes=[axis],
+        skydir=(0, 0),
+        binsz=0.5,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
     )
     dataset = MapDataset.create(geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5)
 
