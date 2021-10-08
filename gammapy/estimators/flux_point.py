@@ -657,6 +657,7 @@ class FluxPointsEstimator(FluxEstimator):
             row = self.estimate_flux_point(
                 datasets, energy_min=energy_min, energy_max=energy_max,
             )
+            print(row)
             rows.append(row)
 
         meta = {
@@ -692,6 +693,45 @@ class FluxPointsEstimator(FluxEstimator):
         datasets_sliced = datasets.slice_by_energy(
             energy_min=energy_min, energy_max=energy_max
         )
+        if len(datasets_sliced)>0:
+            datasets_sliced.models = datasets.models.copy()
+            return super().run(datasets=datasets_sliced)
+        else:
+            log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")
+            model = datasets.models[self.source].spectral_model
+            return self.nan_result(datasets, model, energy_min, energy_max)
 
-        datasets_sliced.models = datasets.models.copy()
-        return super().run(datasets=datasets_sliced)
+
+    def nan_result(self, datasets, model, energy_min, energy_max):
+         """NaN result"""
+         energy_axis = MapAxis.from_energy_edges([energy_min, energy_max])
+
+         with np.errstate(invalid="ignore", divide="ignore"):
+             result = model.reference_fluxes(energy_axis=energy_axis)
+             # convert to scalar values
+             result = {key: value.item() for key, value in result.items()}
+
+         result.update({
+             "norm": np.nan,
+             "stat": np.nan,
+             "success": False,
+             "norm_err": np.nan,
+             "ts": np.nan,
+             "counts": np.zeros(len(datasets)),
+             "npred": np.nan * np.zeros(len(datasets)),
+             "npred_null": np.nan * np.zeros(len(datasets)),
+             "datasets": datasets.names
+         })
+
+         if "errn-errp" in self.selection_optional:
+             result.update({"norm_errp": np.nan, "norm_errn": np.nan})
+
+         if "ul" in self.selection_optional:
+             result.update({"norm_ul": np.nan})
+
+         if "scan" in self.selection_optional:
+             norm = super()._set_norm_parameter()
+             norm_scan = norm.scan_values
+             result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
+
+         return result
