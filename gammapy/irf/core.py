@@ -41,7 +41,7 @@ class IRF(metaclass=abc.ABCMeta):
         self._axes = axes
 
         if isinstance(data, u.Quantity):
-            self.quantity = data
+            self.quantity = u.Quantity(data, unit=unit, copy=False)
         else:
             self.data = data
             self.unit = unit
