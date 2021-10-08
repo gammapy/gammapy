@@ -482,6 +482,7 @@ def test_run_pwl_parameter_range(fpe_pwl):
     assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
 
 
+@requires_dependency("iminuit")
 def test_flux_points_estimator_small_edges():
     pl = PowerLawSpectralModel(amplitude="1e-11 cm-2s-1TeV-1")
 
