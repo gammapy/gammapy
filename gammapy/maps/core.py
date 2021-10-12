@@ -1246,6 +1246,7 @@ class Map(abc.ABC):
             map_out = map_out.reduce(
                 axis_name, func=func, keepdims=keepdims, weights=weights
             )
+            map_out.data = map_out.data.astype(self.data.dtype)
 
         return map_out
 
@@ -1281,6 +1282,7 @@ class Map(abc.ABC):
         if weights is not None:
             data = data * weights
 
+        # Add the conservation of the dtype?
         data = func.reduce(data, axis=idx, keepdims=keepdims, where=~np.isnan(data))
         return self._init_copy(geom=geom, data=data)
 
