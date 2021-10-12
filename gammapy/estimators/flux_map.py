@@ -67,7 +67,8 @@ VALID_QUANTITIES = [
     "stat_null",
     "niter",
     "is_ul",
-    "counts"
+    "counts",
+    "success"
 ]
 
 
@@ -80,7 +81,8 @@ OPTIONAL_QUANTITIES_COMMON = [
     "stat_null",
     "niter",
     "is_ul",
-    "counts"
+    "counts",
+    "success"
 ]
 
 
@@ -115,6 +117,7 @@ class FluxMaps:
         * stat_scan : optional, the test statistic scan values.
         * ts : optional, the delta TS associated with the flux value.
         * sqrt_ts : optional, the square root of the TS, when relevant.
+        * success : optional, a boolean tagging the validity of the estimation
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         the reference model to use for conversions. Default in None.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
@@ -202,8 +205,13 @@ class FluxMaps:
 
     @property
     def has_stat_profiles(self):
-        """Whether the fluc estimate has stat profiles"""
+        """Whether the flux estimate has stat profiles"""
         return "stat_scan" in self._data
+
+    @property
+    def has_success(self):
+        """Whether the flux estimate has the fit status"""
+        return "success" in self._data
 
     @property
     def n_sigma(self):
@@ -294,10 +302,16 @@ class FluxMaps:
         return self._data["niter"]
 
     @property
+    def success(self):
+        """Fit success flag"""
+        self._check_quantity("success")
+        return self._data["success"]
+
+    @property
     def is_ul(self):
         """Whether data is an upper limit"""
         if "is_ul" in self._data:
-            return self._data["is_ul"]
+            return self._filter_convergence_failure(self._data["is_ul"])
 
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
@@ -309,7 +323,7 @@ class FluxMaps:
         else:
             is_ul.data = np.isnan(self.norm)
 
-        return is_ul
+        return self._filter_convergence_failure(is_ul)
 
     @property
     def counts(self):
@@ -334,19 +348,19 @@ class FluxMaps:
         """Predicted excess counts"""
         self._check_quantity("npred")
         self._check_quantity("npred_null")
-        return self._data["npred"] - self._data["npred_null"]
+        return self._filter_convergence_failure(self._data["npred"] - self._data["npred_null"])
 
     @property
     def stat_scan(self):
-        """Fit statistic value"""
+        """Fit statistic scan value"""
         self._check_quantity("stat_scan")
-        return self._data["stat_scan"]
+        return self._filter_convergence_failure(self._data["stat_scan"])
 
     @property
     def stat(self):
         """Fit statistic value"""
         self._check_quantity("stat")
-        return self._data["stat"]
+        return self._filter_convergence_failure(self._data["stat"])
 
     @property
     def stat_null(self):
@@ -358,12 +372,12 @@ class FluxMaps:
     def ts(self):
         """ts map (`Map`)"""
         self._check_quantity("ts")
-        return self._data["ts"]
+        return self._filter_convergence_failure(self._data["ts"])
 
     @property
     def ts_scan(self):
         """ts scan (`Map`)"""
-        return self.stat_scan - np.expand_dims(self.stat.data, 2)
+        return self._filter_convergence_failure(self.stat_scan - np.expand_dims(self.stat.data, 2))
 
     # TODO: always derive sqrt(TS) from TS?
     @property
@@ -395,31 +409,31 @@ class FluxMaps:
     @property
     def norm(self):
         """Norm values"""
-        return self._data["norm"]
+        return self._filter_convergence_failure(self._data["norm"])
 
     @property
     def norm_err(self):
         """Norm error"""
         self._check_quantity("norm_err")
-        return self._data["norm_err"]
+        return self._filter_convergence_failure(self._data["norm_err"])
 
     @property
     def norm_errn(self):
         """Negative norm error"""
         self._check_quantity("norm_errn")
-        return self._data["norm_errn"]
+        return self._filter_convergence_failure(self._data["norm_errn"])
 
     @property
     def norm_errp(self):
         """Positive norm error"""
         self._check_quantity("norm_errp")
-        return self._data["norm_errp"]
+        return self._filter_convergence_failure(self._data["norm_errp"])
 
     @property
     def norm_ul(self):
         """Norm upper limit"""
         self._check_quantity("norm_ul")
-        return self._data["norm_ul"]
+        return self._filter_convergence_failure(self._data["norm_ul"])
 
     @property
     def dnde_ref(self):
@@ -552,6 +566,19 @@ class FluxMaps:
         """Return energy flux (eflux) SED upper limits."""
         return self.norm_ul * self.eflux_ref
 
+    def _filter_convergence_failure(self, some_map):
+        """Put NaN where pixels did not converge."""
+        # if not self.has_success:
+        if (not self.has_success) or (not self.success.data.shape == some_map.data.shape):
+            return some_map
+
+        some_map.data[~self.success.data] = np.nan
+        return some_map
+        #Or do we return a copy?
+        # new_map = some_map.copy()
+        # new_map.data[~self.success.data] = np.nan
+        # return new_map
+
     def get_flux_points(self, position=None):
         """Extract flux point at a given position.
 
@@ -625,10 +652,11 @@ class FluxMaps:
             Stacked flux maps along axis.
         """
         reference = maps[0]
-
         data = {}
         for quantity in reference.available_quantities:
             data[quantity] = Map.from_stack([_[quantity] for _ in maps], axis=axis)
+            if quantity is "success":
+                data[quantity].data = data[quantity].data.astype(bool)
 
         if meta is None:
             meta = reference.meta.copy()
@@ -838,7 +866,7 @@ class FluxMaps:
             return cls.from_hdulist(hdulist)
 
     def slice_by_idx(self, slices):
-        """Slice flux mpas by idx
+        """Slice flux maps by idx
 
         Parameters
         ----------
@@ -857,6 +885,8 @@ class FluxMaps:
 
         for key, item in self._data.items():
             data[key] = item.slice_by_idx(slices)
+            if key is "success":
+                data[key].data = data[key].data.astype(bool)
 
         return self.__class__(
             data=data,
