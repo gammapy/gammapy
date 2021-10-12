@@ -1237,7 +1237,7 @@ class MapDataset(Dataset):
             mask_exposure = self.exposure.data > 0
 
             if self.mask_safe is not None:
-                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
+                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data.astype(bool)
                 mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
 
             if not mask_exposure.any():
@@ -2260,10 +2260,12 @@ class MapDatasetOnOff(MapDataset):
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
             kwargs["mask_safe"] = mask_safe
+            # kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if "MASK_FIT" in hdulist:
             mask_fit = Map.from_hdulist(hdulist, hdu="mask_fit", format=format)
             kwargs["mask_fit"] = mask_fit
+            # kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))
