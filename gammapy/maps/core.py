@@ -311,19 +311,16 @@ class Map(abc.ABC):
         """
         if map_type == "wcs":
             from .wcs import WcsNDMap
-
             return WcsNDMap
         elif map_type == "wcs-sparse":
             raise NotImplementedError()
         elif map_type == "hpx":
             from .hpx import HpxNDMap
-
             return HpxNDMap
         elif map_type == "hpx-sparse":
             raise NotImplementedError()
         elif map_type == "region":
             from .region import RegionNDMap
-
             return RegionNDMap
         else:
             raise ValueError(f"Unrecognized map type: {map_type!r}")
