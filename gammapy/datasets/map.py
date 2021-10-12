@@ -1400,6 +1400,7 @@ class MapDataset(Dataset):
         # TODO: Compute average edisp in region
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.to_region_nd_map(region)
+            kwargs["edisp"].mask_safe_image.data = kwargs["edisp"].mask_safe_image.data.astype(bool)
 
         return self.__class__(**kwargs)
 
