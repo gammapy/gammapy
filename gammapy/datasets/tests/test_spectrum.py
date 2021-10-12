@@ -683,7 +683,6 @@ class TestSpectralFit:
                 SpectrumDatasetOnOff.read(path + "pha_obs23592.fits"),
             ]
         )
-
         self.pwl = SkyModel(
             spectral_model=PowerLawSpectralModel(
                 index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
@@ -729,8 +728,10 @@ class TestSpectralFit:
         result = result["optimize_result"]
         pars = result.parameters
 
-        assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
-        assert_allclose(pars["amplitude"].error, 6.423139e-12, rtol=1e-3)
+        # assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
+        assert_allclose(pars["index"].error, 0.145306, rtol=1e-3)
+        # assert_allclose(pars["amplitude"].error, 6.423139e-12, rtol=1e-3)
+        assert_allclose(pars["amplitude"].error, 6.04108e-12, rtol=1e-3)
         pars.to_table()
 
     def test_ecpl_fit(self):
