@@ -110,7 +110,7 @@ class WcsNDMap(WcsMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            if "mask" in hdu.name.lower():
+            if any(x in hdu.name.lower() for x in ["mask", "is_ul", "success"]):
                 data = hdu.data.astype(bool)
             else:
                 data = hdu.data
@@ -531,7 +531,7 @@ class WcsNDMap(WcsMap):
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
-        return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
+        return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy(), dtype=self.data.dtype)
 
     def mask_contains_region(self, region):
         """Check if input region is contained in a boolean mask map.
