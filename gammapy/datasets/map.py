@@ -1372,9 +1372,11 @@ class MapDataset(Dataset):
 
         if self.mask_safe:
             kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
+            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit:
             kwargs["mask_fit"] = self.mask_fit.to_region_nd_map(region, func=np.any)
+            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         if self.counts:
             kwargs["counts"] = self.counts.to_region_nd_map(
@@ -1442,9 +1444,11 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.cutout(**cutout_kwargs)
+            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.cutout(**cutout_kwargs)
+            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -1508,11 +1512,13 @@ class MapDataset(Dataset):
             kwargs["mask_safe"] = self.mask_safe.downsample(
                 factor=factor, preserve_counts=False, axis_name=axis_name
             )
+            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.downsample(
                 factor=factor, preserve_counts=False, axis_name=axis_name
             )
+            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -1556,9 +1562,11 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.pad(pad_width=pad_width, mode=mode)
+            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.pad(pad_width=pad_width, mode=mode)
+            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -1602,9 +1610,11 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.slice_by_idx(slices=slices)
+            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.slice_by_idx(slices=slices)
+            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
