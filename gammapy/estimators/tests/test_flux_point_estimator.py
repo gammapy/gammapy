@@ -22,7 +22,7 @@ from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
-# TODO: use pregenerate data instead
+# TODO: use pre-generated data instead
 def simulate_spectrum_dataset(model, random_state=0):
     energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
     energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
@@ -201,10 +201,12 @@ def test_run_pwl(fpe_pwl):
     assert_allclose(actual, desired, rtol=1e-3)
 
     actual = table["norm"].data
-    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+    # assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+    assert_allclose(actual, [1.081463, 0.910947, 0.920842], rtol=1e-3)
 
     actual = table["norm_err"].data
-    assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-2)
+    # assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-2)
+    assert_allclose(actual, [0.055143, 0.325601, 0.177541], rtol=1e-2)
 
     actual = table["norm_errn"].data
     assert_allclose(actual, [0.065803, 0.060403, 0.171376], rtol=1e-2)
@@ -228,7 +230,8 @@ def test_run_pwl(fpe_pwl):
     assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-2)
 
     actual = table["npred"].data
-    assert_allclose(actual, [[1492.96638], [749.4587], [43.104823]])
+    # assert_allclose(actual, [[1492.96638], [749.4587], [43.104823]])
+    assert_allclose(actual, [[1492.964989], [749.463409], [43.058089]])
 
     actual = table["npred_null"].data
     assert_allclose(actual, [[942.5], [398.166667], [14.5]])
@@ -258,10 +261,12 @@ def test_run_ecpl(fpe_ecpl):
     assert_allclose(actual, desired, rtol=1e-3)
 
     actual = table["norm"].data
-    assert_allclose(actual, [1.001683, 1.061821, 1.237512e03], rtol=1e-3)
+    # assert_allclose(actual, [1.001683, 1.061821, 1.237512e03], rtol=1e-3)
+    assert_allclose(actual, [1.001690e+00, 1.062273e+00, 1.225395e+03], rtol=1e-3)
 
     actual = table["norm_err"].data
-    assert_allclose(actual, [1.386091e-01, 2.394241e-01, 3.259756e03], rtol=1e-2)
+    # assert_allclose(actual, [1.386091e-01, 2.394241e-01, 3.259756e03], rtol=1e-2)
+    assert_allclose(actual, [1.374525e-01, 2.369658e-01, 3.146520e+03], rtol=1e-2)
 
     actual = table["norm_errn"].data
     assert_allclose(actual, [1.374962e-01, 2.361246e-01, 2.888978e03], rtol=1e-2)
@@ -365,7 +370,7 @@ def test_no_likelihood_contribution():
 
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
-    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV, source="source")
+    fpe = FluxPointsEstimator(energy_edges=[1., 3., 10.] * u.TeV, source="source")
     table = fpe.run([dataset, dataset_2]).to_table()
 
     assert np.isnan(table["norm"]).all()
@@ -374,7 +379,7 @@ def test_no_likelihood_contribution():
 
 
 def test_mask_shape():
-    axis = MapAxis.from_edges([1, 3, 10], unit="TeV", interp="log", name="energy")
+    axis = MapAxis.from_edges([1., 3., 10.], unit="TeV", interp="log", name="energy")
     geom_1 = WcsGeom.create(binsz=1, width=3, axes=[axis])
     geom_2 = WcsGeom.create(binsz=1, width=5, axes=[axis])
 
@@ -419,25 +424,28 @@ def test_run_pwl_parameter_range(fpe_pwl):
     table_with_bounds = fp.to_table()
 
     actual = table_with_bounds["norm"].data
-    assert_allclose(actual, [3.215947e-02, 3.939055e-02, 5.551115e-09], rtol=1e-3)
+    # assert_allclose(actual, [3.215947e-02, 3.939055e-02, 5.551115e-09], rtol=1e-3)
+    assert_allclose(actual, [0.035067, 0.041094, 0.], rtol=1e-3)
 
     actual = table_with_bounds["norm_err"].data
-    assert_allclose(actual, [251.490704, 280.37361 , 404.162784], rtol=1e-2)
+    assert_allclose(actual, [251.490704, 280.37361, 404.162784], rtol=1e-2)
 
     actual = table_with_bounds["norm_ul"].data
-    assert_allclose(actual, [640.067576,  722.571371, 1414.22209], rtol=1e-2)
+    assert_allclose(actual, [640.067576, 722.571371, 1414.22209], rtol=1e-2)
 
     actual = table_with_bounds["sqrt_ts"].data
-    assert_allclose(actual, [0.,0., 0.], rtol=1e-2)
+    assert_allclose(actual, [0., 0., 0.], rtol=1e-2)
 
     actual = table_no_bounds["norm"].data
-    assert_allclose(actual, [-511.76675 , -155.75408 , -853.547117], rtol=1e-3)
+    # assert_allclose(actual, [-511.76675, -155.75408, -853.547117], rtol=1e-3)
+    assert_allclose(actual, [-511.617852, -156.745686, -853.548992], rtol=1e-3)
 
     actual = table_no_bounds["norm_err"].data
-    assert_allclose(actual, [504.601499, 416.69248 , 851.223077], rtol=1e-2)
+    # assert_allclose(actual, [504.601499, 416.69248, 851.223077], rtol=1e-2)
+    assert_allclose(actual, [702.28212,  237.252342, 1214.113483], rtol=1e-2)
 
     actual = table_no_bounds["norm_ul"].data
-    assert_allclose(actual, [ 514.957128,  707.888477, 1167.105962], rtol=1e-2)
+    assert_allclose(actual, [514.957128,  707.888477, 1167.105962], rtol=1e-2)
 
     actual = table_no_bounds["sqrt_ts"].data
     assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
