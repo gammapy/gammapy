@@ -71,7 +71,9 @@ TEST_MODELS = [
     dict(
         name="norm-powerlaw",
         model=PowerLawNormSpectralModel(
-            tilt=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
+            tilt=2 * u.Unit(""),
+            norm=4.0 * u.Unit(""),
+            reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, ""),
         integral_1_10TeV=u.Quantity(3.6, "TeV"),
@@ -276,7 +278,8 @@ TEST_MODELS = [
     dict(
         name="pbpl",
         model=PiecewiseNormSpectralModel(
-            energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
+            energy=[1, 3, 7, 10] * u.TeV,
+            norms=[1, 5, 3, 0.5] * u.Unit(""),
         ),
         val_at_2TeV=u.Quantity(2.76058404, ""),
         integral_1_10TeV=u.Quantity(24.758255, "TeV"),
@@ -929,3 +932,20 @@ def test_energy_flux_error_exp_cutoff_power_law():
 
     assert_allclose(enrg_flux.value / 1e-12, 2.788, rtol=0.001)
     assert_allclose(enrg_flux_error.value / 1e-12, 1.419, rtol=0.001)
+
+
+def test_integral_exp_cut_off_power_law_large_number_of_bins():
+    energy = np.geomspace(1, 10, 100) * u.TeV
+    energy_min = energy[:-1]
+    energy_max = energy[1:]
+
+    exppowerlaw = ExpCutoffPowerLawSpectralModel(
+        amplitude="1e-11 TeV-1 cm-2 s-1", index=2
+    )
+    exppowerlaw.parameters["lambda_"].value = 1e-3
+    powerlaw = PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1", index=2)
+    expected_flux = powerlaw.integral(energy_min, energy_max)
+
+    flux = exppowerlaw.integral(energy_min, energy_max)
+
+    assert_allclose(flux.value, expected_flux.value, rtol=0.01)
