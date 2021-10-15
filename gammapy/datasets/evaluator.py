@@ -55,7 +55,7 @@ class MapEvaluator:
 
     def __init__(
         self,
-        model=None,
+        model,
         exposure=None,
         psf=None,
         edisp=None,
@@ -90,8 +90,8 @@ class MapEvaluator:
             self.evaluation_mode = "global"
 
         # define cached computations
-        self._compute_npred = lru_cache()(self._compute_npred)
-        self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
+        #self._compute_npred = lru_cache()(self._compute_npred)
+        #self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_previous = None
         self._cached_parameter_values_spatial = None
@@ -124,6 +124,22 @@ class MapEvaluator:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
+
+    def reset_cached_properties(self, names=None):
+        """Reset cached properties.
+
+        Parameters
+        ----------
+        names : list of str or None
+            Names of the cached properties to reset. If None, reset all.
+            Default is None.
+            """
+        if names is None:
+            names = self.__class__.__dict__.keys()
+
+        for name, value in self.__class__.__dict__.items():
+            if isinstance(value, lazyproperty):
+                self.__dict__.pop(name, None)
 
     @property
     def geom(self):
@@ -283,6 +299,7 @@ class MapEvaluator:
             self._compute_flux_spatial.cache_clear()
         return self._compute_flux_spatial()
 
+    @lazyproperty
     def _compute_flux_spatial(self):
         """Compute spatial flux
 
@@ -373,6 +390,7 @@ class MapEvaluator:
         """
         return npred.apply_edisp(self.edisp)
 
+    @lazyproperty
     def _compute_npred(self):
         """Compute npred"""
         if isinstance(self.model, TemplateNPredModel):
