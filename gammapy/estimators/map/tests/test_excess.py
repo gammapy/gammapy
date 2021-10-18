@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
 from gammapy.utils.testing import requires_data
 from gammapy.estimators.utils import estimate_exposure_reco_energy
 
+
 def image_to_cube(input_map, energy_min, energy_max):
     energy_min = u.Quantity(energy_min)
     energy_max = u.Quantity(energy_max)
@@ -251,7 +252,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)
     assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
 
-    spectral_model=PowerLawSpectralModel(index=15)
+    spectral_model = PowerLawSpectralModel(index=15)
     estimator_mod = ExcessMapEstimator(
         0.11 * u.deg,
         apply_mask_fit=False,
@@ -263,7 +264,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert result_mod["flux"].unit == "cm-2s-1"
     assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
 
-    reco_exposure=estimate_exposure_reco_energy(simple_dataset_on_off, spectral_model=spectral_model)
+    reco_exposure = estimate_exposure_reco_energy(simple_dataset_on_off, spectral_model=spectral_model)
     assert_allclose(reco_exposure.data.sum(), 7.977796e+12, rtol=0.001)
 
 

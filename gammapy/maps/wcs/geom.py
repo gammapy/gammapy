@@ -23,7 +23,6 @@ from ..geom import (
 )
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
-from ..coord import MapCoord, skycoord_to_lonlat
 from ..utils import INVALID_INDEX, _check_binsz, _check_width
 
 __all__ = ["WcsGeom"]
@@ -116,7 +115,6 @@ class WcsGeom(Geom):
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
         self.get_pix = lru_cache()(self.get_pix)
-
 
     def __setstate__(self, state):
         for key, value in state.items():
@@ -880,7 +878,7 @@ class WcsGeom(Geom):
 
         binsz = self.pixel_scales
         width_npix = np.clip((width / binsz).to_value(""), 1, None)
-        width = width_npix*binsz
+        width = width_npix * binsz
 
         if odd_npix:
             width = round_up_to_odd(width_npix)

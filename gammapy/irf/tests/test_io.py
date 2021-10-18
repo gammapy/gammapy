@@ -37,6 +37,7 @@ def test_cta_irf():
     assert_allclose(val.value, 9.400071e-05, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
 
+
 @requires_data()
 def test_cta_irf_alpha_config_south():
     """Test that CTA IRFs can be loaded and evaluated."""
@@ -113,6 +114,7 @@ def test_load_irf_dict_from_file():
     assert_allclose(val.value, 0.00031552, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
 
+
 @requires_data()
 def test_irf_dict_from_file_duplicate_irfs(caplog, tmp_path):
     """catch the warning message about two type of IRF with the same hdu class
@@ -130,6 +132,7 @@ def test_irf_dict_from_file_duplicate_irfs(caplog, tmp_path):
 
     assert "more than one HDU" in caplog.text
     assert "loaded the PSF HDU in the dictionary" in caplog.text
+
 
 class TestIRFWrite:
     def setup(self):
@@ -167,9 +170,8 @@ class TestIRFWrite:
             data=self.aeff_data.value,
             unit=self.aeff_data.unit
         )
-        self.edisp = EnergyDispersion2D(axes=[
-            self.energy_axis_true, self.migra_axis, self.offset_axis,
-            ],
+        self.edisp = EnergyDispersion2D(
+            axes=[self.energy_axis_true, self.migra_axis, self.offset_axis, ],
             data=self.edisp_data,
         )
         axes = [self.energy_axis_true.copy(name="energy"), self.fov_lon_axis, self.fov_lat_axis]

@@ -301,12 +301,11 @@ class Observation:
         """
         import matplotlib.pyplot as plt
 
-
         n_irfs = len(self.available_irfs)
 
         fig, axes = plt.subplots(
-            nrows=n_irfs//2,
-            ncols=2 + n_irfs%2,
+            nrows=n_irfs // 2,
+            ncols=2 + n_irfs % 2,
             figsize=figsize,
             gridspec_kw={"wspace": 0.25, "hspace": 0.25},
         )
@@ -339,7 +338,6 @@ class Observation:
             axes_dict['edisp'].set_title("Energy dispersion")
         else:
             logging.warning(f"No energy dispersion found for obs {self.obs_id}.")
-
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.

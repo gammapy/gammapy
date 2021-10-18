@@ -3,6 +3,7 @@
 #
 # Gammapy documentation build configuration file.
 
+import os
 import datetime
 from pkg_resources import get_distribution
 

@@ -308,7 +308,6 @@ class TestSkyModel:
         assert "SkyModel" in string_model
         assert "2.000   +/-    0.10" in model_lines[8]
 
-
     @staticmethod
     def test_parameters(sky_model):
         # Check that model parameters are references to the spatial and spectral parts

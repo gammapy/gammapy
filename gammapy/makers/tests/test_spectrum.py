@@ -23,12 +23,14 @@ def observations_hess_dl3():
     obs_ids = [23523, 23526]
     return datastore.get_observations(obs_ids)
 
+
 @pytest.fixture
 def observations_magic_dl3():
     """MAGIC DL3 observation list."""
     datastore = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic/")
     obs_ids = [5029748]
     return datastore.get_observations(obs_ids, required_irf=["aeff", "edisp"])
+
 
 @pytest.fixture
 def observations_cta_dc1():
@@ -133,15 +135,15 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
         dataset = maker.run(bigger_region_dataset, obs)
         datasets_big_region.append(dataset)
 
-    ratio_regions = datasets[0].counts.geom.solid_angle()/datasets_big_region[1].counts.geom.solid_angle()
-    ratio_bg_1 = datasets[0].npred_background().data.sum()/ datasets_big_region[0].npred_background().data.sum()
-    ratio_bg_2 = datasets[1].npred_background().data.sum()/ datasets_big_region[1].npred_background().data.sum()
+    ratio_regions = datasets[0].counts.geom.solid_angle() / datasets_big_region[1].counts.geom.solid_angle()
+    ratio_bg_1 = datasets[0].npred_background().data.sum() / datasets_big_region[0].npred_background().data.sum()
+    ratio_bg_2 = datasets[1].npred_background().data.sum() / datasets_big_region[1].npred_background().data.sum()
     assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2)
     assert_allclose(ratio_bg_2, ratio_regions, rtol=1e-2)
 
-    #Edisp -> it isn't exactly 8, is that right? it also isn't without averaging
-    assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
-    assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin*2, rtol=1e-1)
+    # Edisp -> it isn't exactly 8, is that right? it also isn't without averaging
+    assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin * 2, rtol=1e-1)
+    assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin * 2, rtol=1e-1)
 
 
 @requires_data()
@@ -209,10 +211,11 @@ def test_make_meta_table(observations_hess_dl3):
     assert_allclose(map_spectrumdataset_meta_table["DEC_PNT"], 21.51444435119629)
     assert_allclose(map_spectrumdataset_meta_table["OBS_ID"], 23523)
 
+
 @requires_data()
 def test_region_center_spectrum_dataset_maker_magic_dl3(spectrum_dataset_magic_crab, observations_magic_dl3, caplog):
     maker = SpectrumDatasetMaker(use_region_center=True, selection=["exposure"])
-    maker_average = SpectrumDatasetMaker(use_region_center=False, selection=[ "exposure"])
+    maker_average = SpectrumDatasetMaker(use_region_center=False, selection=["exposure"])
     maker_correction = SpectrumDatasetMaker(containment_correction=True, selection=["exposure"])
 
     dataset = maker.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])

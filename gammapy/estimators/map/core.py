@@ -514,7 +514,7 @@ class FluxMaps:
         """Reference differential flux * energy ** 2"""
         energy = self.energy_axis.center
         result = (
-                self.reference_spectral_model(energy) * energy ** 2
+            self.reference_spectral_model(energy) * energy ** 2
         )
         return result[self._expand_slice]
 

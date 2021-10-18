@@ -103,9 +103,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
         reference_model = SkyModel(
-                spectral_model=self.spectral_model(),
-                name=self.name
-            )
+            spectral_model=self.spectral_model(),
+            name=self.name
+        )
         return FluxPoints.from_table(
             self.flux_points_table,
             reference_model=reference_model,

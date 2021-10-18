@@ -37,6 +37,7 @@ def test_config_default_types():
     assert config.excess_map.energy_edges.max is None
     assert config.excess_map.energy_edges.nbins is None
 
+
 def test_config_not_default_types():
     config = AnalysisConfig()
     config.observations.obs_cone = {
@@ -105,6 +106,7 @@ def test_safe_mask_config_validation():
     with pytest.raises(ValidationError):
         config.datasets.safe_mask.methods = ["bad"]
 
+
 def test_time_range_iso():
     cfg = """
     observations:
@@ -117,7 +119,8 @@ def test_time_range_iso():
     """
     config = AnalysisConfig.from_yaml(cfg)
 
-    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954] )
+    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954])
+
 
 def test_time_range_jyear():
     cfg = """
@@ -131,4 +134,4 @@ def test_time_range_jyear():
     """
     config = AnalysisConfig.from_yaml(cfg)
 
-    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954] )
+    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954])

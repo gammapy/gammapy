@@ -19,7 +19,8 @@ from .utils import (
     coords_to_vec,
     get_pix_size_from_nside,
     get_nside_from_pix_size,
-    nside_to_order
+    nside_to_order,
+    match_hpx_pix
 )
 from .io import HpxConv
 from ..utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys

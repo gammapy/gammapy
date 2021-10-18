@@ -54,6 +54,7 @@ def extract_bundle(bundle, destination):
         tar.extractall(path=destination, members=members(tar))
     Path(bundle).unlink()
 
+
 def show_info_notebooks(outfolder, release):
     print("")
     print(

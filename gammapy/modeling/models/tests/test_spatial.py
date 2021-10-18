@@ -412,7 +412,7 @@ def test_integrate_wcs_geom():
 
     geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
 
-    #TODO: solve issue with small radii
+    # TODO: solve issue with small radii
     integrated_0_0d = model_0_0d.integrate_geom(geom)
     integrated_0_01d = model_0_01d.integrate_geom(geom)
     integrated_0_005d = model_0_005d.integrate_geom(geom)

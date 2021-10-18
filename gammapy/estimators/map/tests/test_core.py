@@ -344,7 +344,7 @@ def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
 
     assert new_fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert f"No reference model set for FluxMaps." in [
+    assert "No reference model set for FluxMaps." in [
         _.message for _ in caplog.records
     ]
 
@@ -371,7 +371,7 @@ def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
     assert fluxmap.reference_model.spectral_model.index.value == 2
 
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert f"No reference model set for FluxMaps." in [
+    assert "No reference model set for FluxMaps." in [
         _.message for _ in caplog.records
     ]
 

@@ -251,7 +251,7 @@ def test_update_from_dict():
     assert par.unit == "GeV"
     assert par.min == 0
     assert par.max is np.nan
-    assert par.frozen == True
+    assert par.frozen is True
     data = {
         "model": "gc",
         "type": "spectral",
@@ -263,4 +263,4 @@ def test_update_from_dict():
         "unit": "GeV",
     }
     par.update_from_dict(data)
-    assert par.frozen == True
+    assert par.frozen is True

@@ -11,4 +11,4 @@ geom = WcsGeom.create(npix=50, binsz=0.01, axes=[axis])
 # .to_image() computes the exposure weighted mean PSF
 kernel = psf.get_psf_kernel(geom=geom).to_image()
 
-kernel.psf_kernel_map.plot();
+kernel.psf_kernel_map.plot()

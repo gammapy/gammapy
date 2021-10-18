@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 
 MAX_OVERSAMPLING = 200
 
+
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
     phi_0 = position_angle(lon_0, lat_0, lon, lat)
@@ -195,8 +196,8 @@ class SpatialModel(Model):
         if oversampling_factor is None:
             if self.evaluation_bin_size_min is not None:
                 res_scale = self.evaluation_bin_size_min.to_value("deg")
-                if res_scale>0:
-                    oversampling_factor = np.minimum(int(np.ceil(pix_scale/res_scale)),
+                if res_scale > 0:
+                    oversampling_factor = np.minimum(int(np.ceil(pix_scale / res_scale)),
                                                      MAX_OVERSAMPLING)
                 else:
                     oversampling_factor = MAX_OVERSAMPLING
@@ -446,7 +447,6 @@ class PointSpatialModel(SpatialModel):
 
     def is_energy_dependent(self):
         return False
-
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
@@ -975,7 +975,7 @@ class ConstantFluxSpatialModel(SpatialModel):
     @staticmethod
     def evaluate(lon, lat):
         """Evaluate model."""
-        return 1/u.sr
+        return 1 / u.sr
 
     @staticmethod
     def evaluate_geom(geom):

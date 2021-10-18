@@ -315,7 +315,7 @@ class EventList:
             energy_min=energy.min(), energy_max=energy.max(), nbin=50
         )
 
-    def plot_energy(self, ax=None,  **kwargs):
+    def plot_energy(self, ax=None, **kwargs):
         """Plot counts as a function of energy.
 
         Parameters

@@ -183,6 +183,6 @@ def load_irf_dict_from_file(filename):
                     data = loc.load()
                     # TODO: maybe introduce IRF.type attribute...
                     irf_dict[name] = data
-        else : # not an IRF component
+        else:  # not an IRF component
             continue
     return irf_dict

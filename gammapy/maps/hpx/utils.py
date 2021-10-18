@@ -443,7 +443,7 @@ class HpxToWcsMapping:
         hpx_slice = tuple(hpx_slice + [lmap])
 
         if normalize:
-            hpx_data[hpx_slice] = 1/mult_val * wcs_data[wcs_slice]
+            hpx_data[hpx_slice] = 1 / mult_val * wcs_data[wcs_slice]
         else:
             hpx_data[hpx_slice] = wcs_data[wcs_slice]
 

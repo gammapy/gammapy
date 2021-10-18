@@ -21,6 +21,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_center=True):
     """Compute exposure map.
 
@@ -230,9 +231,9 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     # Compute PSF values
     data = psf.evaluate(
-            energy_true=coords["energy_true"],
-            offset=offset,
-            rad=coords["rad"],
+        energy_true=coords["energy_true"],
+        offset=offset,
+        rad=coords["rad"],
     )
 
     # Create Map and fill relevant entries

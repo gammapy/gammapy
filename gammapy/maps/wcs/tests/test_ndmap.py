@@ -562,6 +562,7 @@ def test_convolve_nd():
     assert mc_full.data.shape == (3, 320, 320)
     assert_allclose(values_full, values_same, rtol=1e-5)
 
+
 def test_convolve_pixel_scale_error():
     m = WcsNDMap.create(binsz=0.05 * u.deg, width=5 * u.deg)
     kgeom = WcsGeom.create(binsz=0.04 * u.deg, width=0.5 * u.deg)

@@ -117,7 +117,7 @@ class PSF(IRF):
         return info
 
     def plot_containment_radius_vs_energy(
-            self, ax=None, fraction=[0.68, 0.95], offset=[0, 1] * u.deg,  **kwargs
+            self, ax=None, fraction=[0.68, 0.95], offset=[0, 1] * u.deg, **kwargs
     ):
         """Plot containment fraction as a function of energy.
 
@@ -161,7 +161,7 @@ class PSF(IRF):
         ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
-    def plot_containment_radius(self, ax=None, fraction=0.68,  add_cbar=True, **kwargs):
+    def plot_containment_radius(self, ax=None, fraction=0.68, add_cbar=True, **kwargs):
         """Plot containment image with energy and theta axes.
 
         Parameters

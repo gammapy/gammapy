@@ -161,7 +161,7 @@ class Analysis:
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
 
-        log.info(f"Reading model.")
+        log.info("Reading model.")
         if isinstance(models, str):
             self.models = Models.from_yaml(models)
         elif isinstance(models, Models):
@@ -239,7 +239,7 @@ class Analysis:
             raise ValueError("Cannot compute excess map for 1D dataset")
 
         # Here we could possibly stack the datasets if needed.
-        if len(self.datasets)>1:
+        if len(self.datasets) > 1:
             raise ValueError("Datasets must be stacked to compute the excess map")
 
         energy_edges = self._make_energy_axis(excess_settings.energy_edges)
@@ -261,7 +261,7 @@ class Analysis:
 
         if lc_settings.time_intervals.start is None or lc_settings.time_intervals.stop is None:
             log.info("Time intervals not defined. Extract light curve on datasets GTIs.")
-            time_intervals=None
+            time_intervals = None
         else:
             time_intervals = [(t1, t2) for t1, t2 in
                               zip(lc_settings.time_intervals.start, lc_settings.time_intervals.stop)]
@@ -407,7 +407,7 @@ class Analysis:
                 f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
             )
         else:
-            log.warning(f"No background maker set. Check configuration.")
+            log.warning("No background maker set. Check configuration.")
         return bkg_maker
 
     def _map_making(self):
@@ -496,7 +496,7 @@ class Analysis:
     def _make_energy_axis(axis, name="energy"):
         if axis.min is None or axis.max is None:
             return None
-        elif axis.nbins is None or axis.nbins<1:
+        elif axis.nbins is None or axis.nbins < 1:
             return None
         else:
             return MapAxis.from_bounds(

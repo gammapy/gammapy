@@ -194,7 +194,7 @@ def test_psfmap_stacking():
 
     psfmap_stack = psfmap1.copy()
     psfmap_stack.stack(psfmap2)
-    mask =  psfmap_stack.psf_map.data>0
+    mask = psfmap_stack.psf_map.data > 0
     assert_allclose(psfmap_stack.psf_map.data[mask], psfmap1.psf_map.data[mask])
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
