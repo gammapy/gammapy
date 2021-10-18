@@ -105,8 +105,8 @@ class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
-    map data is only loaded in memeory as the corresponding data attribute
-    on the MapDataset is accessed. If it was accesed once it is cached for
+    map data is only loaded in memory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accessed once it is cached for
     the next time.
 
     Parameters
@@ -130,7 +130,7 @@ class MapDataset(Dataset):
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
 
 
@@ -479,7 +479,7 @@ class MapDataset(Dataset):
             geometry for the psf map
         geom_edisp : `Geom`
             geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this wil create an EDispMap instead.
+            If geom_edisp has a migra axis, this will create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -547,7 +547,7 @@ class MapDataset(Dataset):
         name : str
             Name of the returned dataset.
         meta_table : `~astropy.table.Table`
-            Table listing informations on observations used to create the dataset.
+            Table listing information on observations used to create the dataset.
             One line per observation for stacked datasets.
 
         Returns
@@ -1756,7 +1756,7 @@ class MapDatasetOnOff(MapDataset):
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
@@ -1922,7 +1922,7 @@ class MapDatasetOnOff(MapDataset):
         name=None,
         **kwargs,
     ):
-        """Create a MapDatasetOnOff object  swith zero filled maps according to the specified geometries
+        """Create a MapDatasetOnOff object  switch zero filled maps according to the specified geometries
 
         Parameters
         ----------
@@ -1934,7 +1934,7 @@ class MapDatasetOnOff(MapDataset):
             geometry for the psf map
         geom_edisp : `gammapy.maps.WcsGeom`
             geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this wil create an EDispMap instead.
+            If geom_edisp has a migra axis, this will create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str

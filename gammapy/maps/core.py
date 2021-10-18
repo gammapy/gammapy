@@ -1517,12 +1517,12 @@ class Map(abc.ABC):
         )
 
     def _arithmetics(self, operator, other, copy):
-        """Perform arithmetics on maps after checking geometry consistency."""
+        """Perform arithmetic on maps after checking geometry consistency."""
         if isinstance(other, Map):
             if self.geom == other.geom:
                 q = other.quantity
             else:
-                raise ValueError("Map Arithmetics: Inconsistent geometries.")
+                raise ValueError("Map Arithmetic: Inconsistent geometries.")
         else:
             q = u.Quantity(other, copy=False)
 
@@ -1531,7 +1531,7 @@ class Map(abc.ABC):
         return out
 
     def _boolean_arithmetics(self, operator, other, copy):
-        """Perform arithmetics on maps after checking geometry consistency."""
+        """Perform arithmetic on maps after checking geometry consistency."""
         if operator == np.logical_not:
             out = self.copy()
             out.data = operator(out.data)
@@ -1541,7 +1541,7 @@ class Map(abc.ABC):
             if self.geom == other.geom:
                 other = other.data
             else:
-                raise ValueError("Map Arithmetics: Inconsistent geometries.")
+                raise ValueError("Map Arithmetic: Inconsistent geometries.")
 
         out = self.copy() if copy else self
         out.data = operator(out.data, other)

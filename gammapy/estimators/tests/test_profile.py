@@ -18,7 +18,7 @@ def checkerboard_image():
     nxpix, nypix = 10, 6
 
     # set up data as a checkerboard of 0.5 and 1.5, so that the mean and sum
-    # are not compeletely trivial to compute
+    # are not completely trivial to compute
     data = 1.5 * np.ones((nypix, nxpix))
     data[slice(0, nypix + 1, 2), slice(0, nxpix + 1, 2)] = 0.5
     data[slice(1, nypix + 1, 2), slice(1, nxpix + 1, 2)] = 0.5

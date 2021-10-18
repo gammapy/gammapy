@@ -38,7 +38,7 @@ Documentation specific to region-based maps is provided in :doc:`regionmap`.
 Getting started
 ===============
 
-All map objects have an abstract inteface provided through the methods of the
+All map objects have an abstract interface provided through the methods of the
 `~Map`. These methods can be used for accessing and manipulating the contents of
 a map without reference to the underlying data representation (e.g. whether a
 map uses WCS or HEALPix pixelization). For applications which do depend on the
@@ -99,7 +99,7 @@ coordinates can be expressed in one of three coordinate systems:
 * ``pix`` : Coordinates in pixel space.  Pixel coordinates are continuous defined
   on the interval [0,N-1] where N is the number of pixels along a given map
   dimension with pixel centers at integer values.  For methods that reference a
-  discrete pixel, pixel coordinates wil be rounded to the nearest pixel index
+  discrete pixel, pixel coordinates will be rounded to the nearest pixel index
   and passed to the corresponding ``idx`` method.
 * ``coord`` : The true map coordinates including angles on the sky (longitude
   and latitude).  This coordinate system supports three coordinate

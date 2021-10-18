@@ -182,7 +182,7 @@ shorter than having to remember and type this equivalent code::
     <CircleSkyRegion(center=<SkyCoord (Galactic): (l, b) in deg
         (42., 43.)>, radius=3.0 deg)>
 
-There is precendence for this pattern in Gammapy, we usually pass ``Quantity``
+There is precedence for this pattern in Gammapy, we usually pass ``Quantity``
 and ``Angle`` arguments through via e.g. ``angle = Angle(angle)`` in Gammapy
 functions, and often call them with strings ``angle="3 deg"``.
 
@@ -288,7 +288,7 @@ Rotated regions
 ---------------
 
 Rotated regions are used for background estimation in 1D spectral analysis in
-gamma-ray astronomy (see [Berge2007]_). The rotation is done arount the pointing
+gamma-ray astronomy (see [Berge2007]_). The rotation is done around the pointing
 position of the IACT telescope array. This method is also called "reflected
 regions", but really that's a bad name, reflecting would only give one region on
 the other side; what is done is rotating the regions.

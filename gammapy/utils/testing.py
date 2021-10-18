@@ -120,7 +120,7 @@ def run_cli(cli, args, exit_code=0):
 
     if result.exit_code != exit_code:
         sys.stderr.write("Exit code mismatch!\n")
-        sys.stderr.write("Ouput:\n")
+        sys.stderr.write("Output:\n")
         sys.stderr.write(result.output)
 
     return result

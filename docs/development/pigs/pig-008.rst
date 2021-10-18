@@ -396,7 +396,7 @@ and state of the model:
 A selection of methods for the residual computation would ne available, such
 as ``data - model``, ``(data - model) / model`` and ``(data - model) / sqrt(model)``.
 
-For counts based datasets an ``.excess()`` method can be implmented.
+For counts based datasets an ``.excess()`` method can be implemented.
 
 
 All dataset objects should implement a ``__str__`` method, so that the following
@@ -478,7 +478,7 @@ dataset. Here is an example:
         background-model: "obs-123/background.fits"
         model: "model.yaml" # optionally
 
-Addtionally we propose to introduce a single FITS file serializiaton for writing /
+Additionally we propose to introduce a single FITS file serializiaton for writing /
 reading datasets to and from disk:
 
 .. code::

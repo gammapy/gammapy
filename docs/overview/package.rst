@@ -34,7 +34,7 @@ At this level the data is stored as lists of gamma-like events and the correspon
 instrument response functions (IRFs). The instrument response includes effective
 area, point spread function (PSF), energy dispersion and residual hadronic background.
 In addition there is associated meta data including information on the observation such
-as pointing] direction, observation time and obervation conditions. The main FITS format
+as pointing] direction, observation time and observation conditions. The main FITS format
 supported by Gammapy is documented on the `Gamma astro data formats page <gadf>`_.
 
 The access to the data and instrument response is implemented in
@@ -54,7 +54,7 @@ estimation methods, such as ring background or reflected regions and
 exclude parts of the data with high associated IRF systematics by defining
 a "safe" data range. The counts data and the reduced IRFs are bundled into
 datasets. Those datasets can be optionally grouped and stacked and are
-typically writen to disk to allow users to read them back at any time later
+typically written to disk to allow users to read them back at any time later
 for modeling and fitting.
 
 The data reduction and background estimation methods are implemented in

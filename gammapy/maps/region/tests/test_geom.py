@@ -331,7 +331,7 @@ def test_get_wcs_coord_and_weights(region):
 
     assert region_coord.shape == weights.shape
 
-    # test on rectangular region (assymetric)
+    # test on rectangular region (asymmetric)
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     region = RectangleSkyRegion(center=center, width=1 * u.deg, height=2 * u.deg, angle=15*u.deg)
     geom = RegionGeom(region)

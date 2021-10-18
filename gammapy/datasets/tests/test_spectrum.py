@@ -762,7 +762,7 @@ class TestSpectralFit:
         assert_allclose(actual, desired)
 
     def test_fit_range(self):
-        # Fit range not restriced fit range should be the thresholds
+        # Fit range not restricted fit range should be the thresholds
         obs = self.datasets[0]
         actual = obs.energy_range[0]
 

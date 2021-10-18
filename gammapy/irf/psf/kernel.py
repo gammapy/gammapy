@@ -168,7 +168,7 @@ class PSFKernel:
             It must have the same size as the PSFKernel energy axis.
             Default is uniform exposure over energy.
         keepdims : bool
-            If true, the resulting PSFKernel wil keep an energy axis with one bin.
+            If true, the resulting PSFKernel will keep an energy axis with one bin.
             Default is True.
 
         Returns

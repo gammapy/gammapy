@@ -146,7 +146,7 @@ class Covariance:
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.visualisation.plot_heatmap`
+            Keyword arguments passed to `~gammapy.visualization.plot_heatmap`
 
         Returns
         -------

@@ -96,7 +96,7 @@ def fixed_pointing_info():
 
 @pytest.fixture(scope="session")
 def fixed_pointing_info_aligned(fixed_pointing_info):
-    # Create Fixed Pointing Info aligined between sky and horizon coordinates
+    # Create Fixed Pointing Info aligned between sky and horizon coordinates
     # (removes rotation in FoV and results in predictable solid angles)
     origin = SkyCoord(
         0,
@@ -150,7 +150,7 @@ def bkg_3d_custom(symmetry="constant"):
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data])
     else:
-        raise ValueError(f"Unkown value for symmetry: {symmetry}")
+        raise ValueError(f"Unknown value for symmetry: {symmetry}")
 
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
     fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
@@ -275,7 +275,7 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
     for d in m.data:
         # TODO:
         #  Dimensions of skymap data are [energy, lat, lon] (and is
-        #  representated as [lon, lat, energy] in the api, but the bkg irf
+        #  represented as [lon, lat, energy] in the api, but the bkg irf
         #  dimensions are currently [energy, lon, lat] - Will be changed in
         #  the future (perhaps when IRFs use the skymaps class)
         assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon

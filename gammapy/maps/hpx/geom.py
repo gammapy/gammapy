@@ -812,7 +812,7 @@ class HpxGeom(Geom):
             the spatial pixels in the map.
         binsz : float or `~numpy.ndarray`
             Approximate pixel size in degrees.  An NSIDE will be
-            chosen that correponds to a pixel size closest to this
+            chosen that corresponds to a pixel size closest to this
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPIX "NESTED" indexing scheme, False for "RING" scheme

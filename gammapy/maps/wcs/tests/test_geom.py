@@ -231,7 +231,7 @@ def test_wcsgeom_solid_angle_symmetry():
 
 
 def test_wcsgeom_solid_angle_ait():
-    # Pixels that don't correspond to locations on ths sky
+    # Pixels that don't correspond to locations on the sky
     # should have solid angles set to NaN
     ait_geom = WcsGeom.create(
         skydir=(0, 0), width=(360, 180), binsz=20, frame="galactic", proj="AIT"

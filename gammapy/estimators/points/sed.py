@@ -58,7 +58,7 @@ class FluxPointsEstimator(FluxEstimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool

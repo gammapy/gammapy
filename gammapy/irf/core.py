@@ -462,7 +462,7 @@ class IRF(metaclass=abc.ABCMeta):
         axis_name : str
             Which axis to downsample. By default spatial axes are padded.
         **kwargs : dict
-            Keyword argument forwared to `~numpy.pad`
+            Keyword argument forwarded to `~numpy.pad`
 
         Returns
         -------

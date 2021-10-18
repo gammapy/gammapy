@@ -985,7 +985,7 @@ def test_stack_npred():
 
 
 def to_cube(image):
-    # introduce a fake enery axis for now
+    # introduce a fake energy axis for now
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
     geom = image.geom.to_cube([axis])
     return WcsNDMap.from_geom(geom=geom, data=image.data)

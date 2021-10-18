@@ -169,7 +169,7 @@ We split the implementation in two big steps:
 
 **Scenarios**:
 
-1. Scenario: Run a 1D/3D analysis wth the ``Observations`` class
+1. Scenario: Run a 1D/3D analysis with the ``Observations`` class
     | **Given** a basic version of the ``Observations`` class
     | **When** passed on to the analysis classes
     | **Then** should behave the same as the current ``ObservationList`` class

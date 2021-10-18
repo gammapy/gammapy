@@ -64,8 +64,8 @@ class BackgroundIRF(IRF):
             )
 
         # TODO: The present HESS and CTA background fits files
-        #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
-        #  For now, we suport both.
+        #  have a reverse order (lon, lat, E) than recommended in GADF(E, lat, lon)
+        #  For now, we support both.
 
         if axes.shape == axes.shape[::-1]:
             log.error("Ambiguous axes order in Background fits files!")
