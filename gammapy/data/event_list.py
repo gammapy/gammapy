@@ -492,7 +492,7 @@ class EventList:
             center = self._plot_center
 
         energy_axis = self._default_plot_energy_axis
-        
+
         offset = center.separation(self.radec)
         offset_axis = MapAxis.from_bounds(0 * u.deg, offset.max(), nbin=30, name="offset")
 

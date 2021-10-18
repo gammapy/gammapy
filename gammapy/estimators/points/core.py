@@ -343,7 +343,7 @@ class FluxPoints(FluxMaps):
                 table["stat_scan"] = self.stat_scan.data[idx]
 
             table["is_ul"] = self.is_ul.data[idx]
-                
+
         elif format == "lightcurve":
             time_axis = self.geom.axes["time"]
 

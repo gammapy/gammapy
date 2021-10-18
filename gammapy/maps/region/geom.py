@@ -82,7 +82,7 @@ class RegionGeom(Geom):
             if key in ["get_wcs_coord_and_weights"]:
                 state[key] = lru_cache()(value)
         self.__dict__ = state
-        
+
 
     @property
     def frame(self):
@@ -502,10 +502,10 @@ class RegionGeom(Geom):
     @classmethod
     def create(cls, region, **kwargs):
         """Create region geometry.
-        
+
         The input region can be passed in the form of a ds9 string and will be parsed
         internally by `~regions.Regions.parse`. See:
-        
+
         * https://astropy-regions.readthedocs.io/en/stable/region_io.html
         * http://ds9.si.edu/doc/ref/region.html
 

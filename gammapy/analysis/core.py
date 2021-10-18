@@ -201,7 +201,7 @@ class Analysis:
                 geom = dataset.counts.geom
                 dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
-        log.info("Fitting datasets.") 
+        log.info("Fitting datasets.")
         result = self.fit.run(datasets=self.datasets)
         self.fit_result = result
         log.info(self.fit_result)

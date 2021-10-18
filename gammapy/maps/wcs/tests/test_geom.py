@@ -188,7 +188,7 @@ def test_from_aligned_vs_cutout_tan():
     )
 
     assert aligned_geom == geom_cutout
-    
+
 
 def test_wcsgeom_solid_angle():
     # Test using a CAR projection map with an extra axis

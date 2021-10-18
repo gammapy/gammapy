@@ -89,7 +89,7 @@ def test_cta_irf_alpha_config_north():
 
 @requires_data()
 def test_load_irf_dict_from_file():
-    """Test that the IRF components in a dictionary loaded from a DL3 file can 
+    """Test that the IRF components in a dictionary loaded from a DL3 file can
     be loaded in a dictionary and correctly used"""
     irf = load_irf_dict_from_file(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
@@ -115,19 +115,19 @@ def test_load_irf_dict_from_file():
 
 @requires_data()
 def test_irf_dict_from_file_duplicate_irfs(caplog, tmp_path):
-    """catch the warning message about two type of IRF with the same hdu class 
+    """catch the warning message about two type of IRF with the same hdu class
     encountered in the same file"""
     original_file = make_path("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
-    dummy_file = tmp_path / "020136_duplicated_psf.fits" 
-    
+    dummy_file = tmp_path / "020136_duplicated_psf.fits"
+
     # create a dummy file with the PSF HDU repeated twice
     f = fits.open(original_file)
     f.append(f[5].copy())
     f[7].name = "PSF2"
     f.writeto(dummy_file)
-    
+
     load_irf_dict_from_file(dummy_file)
-    
+
     assert "more than one HDU" in caplog.text
     assert "loaded the PSF HDU in the dictionary" in caplog.text
 

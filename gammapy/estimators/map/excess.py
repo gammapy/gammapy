@@ -102,8 +102,8 @@ class ExcessMapEstimator(Estimator):
     correlate_off : bool
         Correlate OFF events in the case of a `MapDatasetOnOff`. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
-        Spectral model used for the computation of the flux map. 
-        If None, a Power Law of index 2 is assumed (default). 
+        Spectral model used for the computation of the flux map.
+        If None, a Power Law of index 2 is assumed (default).
     """
 
     tag = "ExcessMapEstimator"

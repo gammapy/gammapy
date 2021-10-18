@@ -145,7 +145,7 @@ class SpatialModel(Model):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom` 
+        geom : `~gammapy.maps.WcsGeom`
 
         Returns
         ---------
@@ -543,13 +543,13 @@ class GaussianSpatialModel(SpatialModel):
 
     def to_region(self, x_sigma=1.5, **kwargs):
         """Model outline at a given number of :math:`\sigma`.
-        
+
         Parameters
         ----------
         x_sigma : float
-            Number of :math:`\sigma`
+            Number of :math:`\sigma
             Default is :math:`1.5\sigma` which corresponds to about 68%
-            containment for a 2D symmetric Gaussian. 
+            containment for a 2D symmetric Gaussian.
 
         Returns
         -------
@@ -633,7 +633,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     def to_region(self, x_r_0=1, **kwargs):
         """Model outline at a given number of r_0.
-        
+
         Parameters
         ----------
         x_r_0 : float
@@ -704,7 +704,7 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
-    
+
         Set to the length of the semi-major axis plus the edge width.
         """
         return 1.1 * self.r_0.quantity * (1 + self.edge_width.quantity)

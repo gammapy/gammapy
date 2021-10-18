@@ -196,7 +196,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        ax : `~matplotlib.axis` 
+        ax : `~matplotlib.axis`
             Axis instance to be used for the plot.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.axvspan`
@@ -274,7 +274,7 @@ class RegionNDMap(Map):
         axis_name : str
             Which axis to downsample. Default is "energy".
         weights : `RegionNDMap`
-            Contains the weights to apply to the axis to reduce. Default 
+            Contains the weights to apply to the axis to reduce. Default
             is just weighs of one.
 
         Returns

@@ -484,7 +484,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         Parameters
         ----------
         interval : {'1-year', '2-month'}
-            Time interval of the lightcurve. Default is '1-year'. 
+            Time interval of the lightcurve. Default is '1-year'.
             Note that '2-month' is not available for all catalogue version.
         """
 

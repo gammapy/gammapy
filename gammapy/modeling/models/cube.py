@@ -239,7 +239,7 @@ class SkyModel(Model):
 
     def contributes(self, mask, margin="0 deg"):
         """Check if a skymodel contributes within a mask map.
-    
+
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
@@ -511,11 +511,11 @@ class SkyModel(Model):
 
     def freeze(self, model_type=None):
         """Freeze parameters depending on model type
-        
+
         Parameters
         ----------
         model_type : {None, "spatial", "spectral", "temporal"}
-           freeze all parameters or only or only spatial/spectral/temporal. 
+           freeze all parameters or only or only spatial/spectral/temporal.
            Default is None so all parameters are frozen.
         """
         if model_type is None:
@@ -526,7 +526,7 @@ class SkyModel(Model):
 
     def unfreeze(self, model_type=None):
         """Restore parameters frozen status to default depending on model type
-        
+
         Parameters
         ----------
         model_type : {None, "spatial", "spectral", "temporal"}

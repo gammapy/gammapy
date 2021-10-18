@@ -423,7 +423,7 @@ class Parameter:
         * ``factor1`` sets ``factor, scale = 1, value``
 
         In both cases the sign of value is stored in ``factor``,
-        i.e. the ``scale`` is always positive. 
+        i.e. the ``scale`` is always positive.
         If ``scale_method`` is None the scaling is ignored.
 
         """
@@ -650,7 +650,7 @@ class Parameters(collections.abc.Sequence):
            type of models
         frozen : bool
             Select frozen parameters if True, exclude them if False.
- 
+
         Returns
         -------
         parameters : `Parameters`
