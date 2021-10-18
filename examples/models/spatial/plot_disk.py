@@ -116,4 +116,3 @@ model = SkyModel(spectral_model=pwl, spatial_model=gauss, name="pwl-disk-model")
 models = Models([model])
 
 print(models.to_yaml())
-

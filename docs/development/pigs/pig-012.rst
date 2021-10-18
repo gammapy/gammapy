@@ -367,4 +367,3 @@ comments that were addressed in `GH 2219`_. The PIG was accepted on August 19,
 .. _LightCurveEstimator: https://docs.gammapy.org/0.12/api/gammapy.time.LightCurveEstimator.html
 .. _benchmarks: https://github.com/gammapy/gammapy-benchmarks
 .. _ctapipe tools: https://cta-observatory.github.io/ctapipe/ctapipe_api/tools/index.html
-

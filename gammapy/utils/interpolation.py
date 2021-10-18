@@ -237,4 +237,3 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
     return ScaledRegularGridInterpolator(
         points=(x,), values=sign * y, values_scale=interp_scale
     )
-

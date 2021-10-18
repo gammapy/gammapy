@@ -36,4 +36,3 @@ class PSF3D(PSF):
     """
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
-

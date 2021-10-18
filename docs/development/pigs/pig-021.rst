@@ -341,5 +341,3 @@ any additional comments. Therefore the PIG was accepted on July 31, 2020.
 .. _GH 2944: https://github.com/gammapy/gammapy/pull/2944
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-web: https://github.com/gammapy/gammapy-webpage
-
-

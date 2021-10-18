@@ -297,4 +297,3 @@ class MapCoord:
             f"\tndim     : {self.ndim}\n"
             f"\tframe : {self.frame}\n"
         )
-

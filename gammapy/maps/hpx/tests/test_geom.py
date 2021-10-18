@@ -837,4 +837,3 @@ def test_hpx_geom_separation():
     separation = geom.separation(position)
     assert separation.unit == "deg"
     assert_allclose(separation.value[0], 9.978725)
-

@@ -411,4 +411,3 @@ class PSFKing(ParametricPSF):
             term3 = (1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** (-gamma)
 
         return term1 * term2 * term3
-

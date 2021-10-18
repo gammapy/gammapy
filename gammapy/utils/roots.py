@@ -134,4 +134,3 @@ def find_roots(
         except (RuntimeError, ValueError):
             continue
     return roots * unit, results
-

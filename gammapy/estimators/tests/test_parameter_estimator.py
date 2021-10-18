@@ -100,4 +100,3 @@ def test_parameter_estimator_no_data(crab_datasets_1d, pwl_model):
     # Add test for scan
     assert_allclose(result["amplitude_scan"].shape, 10)
     assert np.all(np.isnan(result["stat_scan"]))
-
