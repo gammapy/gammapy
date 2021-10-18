@@ -7,7 +7,7 @@ __all__ = ["plot_heatmap", "annotate_heatmap"]
 
 
 def plot_heatmap(
-    data, row_labels, col_labels, ax=None, cbar_kw={}, cbarlabel="", **kwargs
+    data, row_labels, col_labels, ax=None, cbar_kw=None, cbarlabel="", **kwargs
 ):
     """
     Create a heatmap from a numpy array and two lists of labels.
@@ -32,8 +32,11 @@ def plot_heatmap(
     """
     import matplotlib.pyplot as plt
 
-    if not ax:
+    if ax is None:
         ax = plt.gca()
+
+    if cbar_kw is None:
+        cbar_kw = {}
 
     # Plot the heatmap
     im = ax.imshow(data, **kwargs)
