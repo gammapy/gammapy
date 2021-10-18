@@ -422,7 +422,7 @@ class RegionGeom(Geom):
         """
         return self._init_copy(axes=None)
 
-    def upsample(self, factor, axis_name):
+    def upsample(self, factor, axis_name=None):
         """Upsample a non-spatial dimension of the region by a given factor.
 
         Returns

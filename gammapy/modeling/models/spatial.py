@@ -211,7 +211,7 @@ class SpatialModel(Model):
                 )
                 wcs_geom = wcs_geom.cutout(self.position, width)
 
-            upsampled_geom = wcs_geom.upsample(oversampling_factor)
+            upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
 
             # assume the upsampled solid angles are approximately factor**2 smaller
             values = self.evaluate_geom(upsampled_geom) / oversampling_factor ** 2
