@@ -116,13 +116,12 @@ class WcsGeom(Geom):
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
         self.get_pix = lru_cache()(self.get_pix)
-        self.bin_volume = lru_cache()(self.bin_volume)
         self.to_image = lru_cache()(self.to_image)
 
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["get_coord", "bin_volume", "to_image", "get_pix"]:
+            if key in ["get_coord", "to_image", "get_pix"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -822,6 +821,7 @@ class WcsGeom(Geom):
         #  find out why and fix properly
         return np.abs(u.Quantity(area_low_right + area_up_left, "sr", copy=False))
 
+    @lazyproperty
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
         value = self.to_image().solid_angle

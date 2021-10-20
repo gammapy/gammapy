@@ -303,6 +303,7 @@ class RegionGeom(Geom):
         solid_angle = area * proj_plane_pixel_area(self.wcs) * u.deg ** 2
         return solid_angle.to("sr")
 
+    @lazyproperty
     def bin_volume(self):
         """If the RegionGeom has a non-spatial axis, it
         returns the volume of the region. If not, it

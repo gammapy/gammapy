@@ -278,14 +278,14 @@ class WcsNDMap(WcsMap):
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
         if preserve_counts:
-            data = self.data / self.geom.bin_volume().value
+            data = self.data / self.geom.bin_volume.value
         else:
             data = self.data
 
         data = ndi.map_coordinates(data.T, tuple(pix), order=order, mode="nearest")
 
         if preserve_counts:
-            data *= geom.bin_volume().value
+            data *= geom.bin_volume.value
 
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
