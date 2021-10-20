@@ -1343,6 +1343,7 @@ class HpxGeom(Geom):
         idx = self.coord_to_idx(coords)
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
+    @lazyproperty
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 

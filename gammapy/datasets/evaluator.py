@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.utils import lazyproperty

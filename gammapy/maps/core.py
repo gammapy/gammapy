@@ -857,7 +857,7 @@ class Map(abc.ABC):
         if preserve_counts:
             if geom.ndim > 2:
                 assert self.geom.axes[0] == geom.axes[0]  # Energy axis has to match
-            map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
+            map_copy.data /= map_copy.geom.solid_angle.to_value("deg2")
 
         if map_copy.is_mask:
             # TODO: check this NaN handling is needed
@@ -867,7 +867,7 @@ class Map(abc.ABC):
             data = map_copy.interp_by_coord(coords, **kwargs)
 
         if preserve_counts:
-            data *= geom.solid_angle().to_value("deg2")
+            data *= geom.solid_angle.to_value("deg2")
 
         return Map.from_geom(geom, data=data, unit=self.unit)
 

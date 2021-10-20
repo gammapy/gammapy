@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import overlap_slices
 from astropy.convolution import Tophat2DKernel
+from astropy.utils import lazyproperty
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     celestial_frame_to_wcs,
@@ -115,14 +116,13 @@ class WcsGeom(Geom):
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
         self.get_pix = lru_cache()(self.get_pix)
-        self.solid_angle = lru_cache()(self.solid_angle)
         self.bin_volume = lru_cache()(self.bin_volume)
         self.to_image = lru_cache()(self.to_image)
 
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["get_coord", "solid_angle", "bin_volume", "to_image", "get_pix"]:
+            if key in ["get_coord", "bin_volume", "to_image", "get_pix"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -783,6 +783,7 @@ class WcsGeom(Geom):
             axes=copy.deepcopy(self.axes),
         )
 
+    @lazyproperty
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
@@ -823,7 +824,7 @@ class WcsGeom(Geom):
 
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
-        value = self.to_image().solid_angle()
+        value = self.to_image().solid_angle
 
         if not self.is_image:
             value = value * self.axes.bin_volume()

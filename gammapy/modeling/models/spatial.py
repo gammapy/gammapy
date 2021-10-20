@@ -233,7 +233,7 @@ class SpatialModel(Model):
             result.unit = values.unit
             result += values
 
-        result *= result.geom.solid_angle()
+        result *= result.geom.solid_angle
 
         if geom.is_region:
             mask = result.geom.region_mask([geom.region])
@@ -451,7 +451,7 @@ class PointSpatialModel(SpatialModel):
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
         values = self.integrate_geom(geom).data
-        return values / geom.solid_angle()
+        return values / geom.solid_angle
 
     def integrate_geom(self, geom, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom`
@@ -980,7 +980,7 @@ class ConstantFluxSpatialModel(SpatialModel):
     @staticmethod
     def evaluate_geom(geom):
         """Evaluate model."""
-        return 1 / geom.solid_angle()
+        return 1 / geom.solid_angle
 
     @staticmethod
     def integrate_geom(geom, oversampling_factor=None):
@@ -1039,7 +1039,7 @@ class TemplateSpatialModel(SpatialModel):
                 data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
 
             data = map.data / data_sum
-            data /= map.geom.solid_angle().to_value("sr")
+            data /= map.geom.solid_angle.to_value("sr")
             map = map.copy(data=data, unit="sr-1")
 
         if map.unit.is_equivalent(""):
