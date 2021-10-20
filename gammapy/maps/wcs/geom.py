@@ -116,12 +116,12 @@ class WcsGeom(Geom):
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
         self.get_pix = lru_cache()(self.get_pix)
-        self.to_image = lru_cache()(self.to_image)
 
+        self._image_geom = None
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["get_coord", "to_image", "get_pix"]:
+            if key in ["get_coord", "get_pix"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -689,11 +689,11 @@ class WcsGeom(Geom):
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def to_image(self):
-        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
-        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-        return self.__class__(
-            self._wcs, npix, cdelt=cdelt
-        )
+        if self._image_geom is None:
+            npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+            cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+            self._image_geom = self.__class__(self._wcs, npix, cdelt=cdelt)
+        return self._image_geom
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
@@ -782,7 +782,6 @@ class WcsGeom(Geom):
             axes=copy.deepcopy(self.axes),
         )
 
-    @lazyproperty
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
@@ -790,8 +789,12 @@ class WcsGeom(Geom):
 
         To return solid angles for the spatial dimensions only use::
 
-            WcsGeom.to_image().solid_angle()
+             WcsGeom.to_image().solid_angle()
         """
+        return self._solid_angle
+
+    @lazyproperty
+    def _solid_angle(self):
         coord = self.get_coord(mode="edges").skycoord
 
         # define pixel corners
@@ -824,7 +827,7 @@ class WcsGeom(Geom):
     @lazyproperty
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
-        value = self.to_image().solid_angle
+        value = self.to_image().solid_angle()
 
         if not self.is_image:
             value = value * self.axes.bin_volume()

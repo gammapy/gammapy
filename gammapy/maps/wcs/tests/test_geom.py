@@ -203,7 +203,7 @@ def test_wcsgeom_solid_angle():
         axes=[MapAxis.from_edges([0, 2, 3])],
     )
 
-    solid_angle = geom.solid_angle
+    solid_angle = geom.solid_angle()
 
     # Check array size
     assert solid_angle.shape == (2, npix, npix)
@@ -221,7 +221,7 @@ def test_wcsgeom_solid_angle_symmetry():
         skydir=(0, 0), frame="galactic", npix=(3, 3), binsz=20.0 * u.deg
     )
 
-    sa = geom.solid_angle
+    sa = geom.solid_angle()
 
     assert_allclose(sa[1, :], sa[1, 0])  # Constant along lon
     assert_allclose(sa[0, 1], sa[2, 1])  # Symmetric along lat
@@ -236,7 +236,7 @@ def test_wcsgeom_solid_angle_ait():
     ait_geom = WcsGeom.create(
         skydir=(0, 0), width=(360, 180), binsz=20, frame="galactic", proj="AIT"
     )
-    solid_angle = ait_geom.solid_angle.to_value("deg2")
+    solid_angle = ait_geom.solid_angle().to_value("deg2")
 
     assert_allclose(solid_angle[4, 1], 397.04838)
     assert_allclose(solid_angle[4, 16], 397.751841)

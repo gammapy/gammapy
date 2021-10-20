@@ -286,7 +286,6 @@ class RegionGeom(Geom):
     def crop(self):
         raise NotImplementedError("Cropping of `RegionGeom` not supported")
 
-    @lazyproperty
     def solid_angle(self):
         """Get solid angle of the region.
 
@@ -314,7 +313,7 @@ class RegionGeom(Geom):
         volume : `~astropy.units.Quantity`
             Volume of the region.
         """
-        bin_volume = self.solid_angle * np.ones(self.data_shape)
+        bin_volume = self.solid_angle() * np.ones(self.data_shape)
 
         for idx, ax in enumerate(self.axes):
             shape = self.ndim * [1]

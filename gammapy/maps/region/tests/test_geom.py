@@ -193,7 +193,7 @@ def test_contains(region):
 
 def test_solid_angle(region):
     geom = RegionGeom.create(region)
-    omega = geom.solid_angle
+    omega = geom.solid_angle()
 
     assert omega.unit == "sr"
     reference = 2 * np.pi * (1 - np.cos(region.radius))
@@ -325,9 +325,9 @@ def test_get_wcs_coord_and_weights(region):
     region_coord, weights = geom.get_wcs_coord_and_weights()
 
     wcs_geom = geom.to_wcs_geom()
-    solid_angles = wcs_geom.solid_angle.T[wcs_geom.coord_to_idx(region_coord)]
+    solid_angles = wcs_geom.solid_angle().T[wcs_geom.coord_to_idx(region_coord)]
     area = (weights*solid_angles).sum()
-    assert_allclose(area.value, geom.solid_angle.value, rtol=1e-3)
+    assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
 
     assert region_coord.shape == weights.shape
 
@@ -338,9 +338,9 @@ def test_get_wcs_coord_and_weights(region):
 
     wcs_geom = geom.to_wcs_geom()
     region_coord, weights = geom.get_wcs_coord_and_weights()
-    solid_angles = wcs_geom.solid_angle.T[wcs_geom.coord_to_idx(region_coord)]
+    solid_angles = wcs_geom.solid_angle().T[wcs_geom.coord_to_idx(region_coord)]
     area = (weights * solid_angles).sum()
-    assert_allclose(area.value, geom.solid_angle.value, rtol=1e-3)
+    assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
     assert region_coord.shape == weights.shape
 
 

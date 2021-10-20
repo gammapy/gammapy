@@ -696,7 +696,7 @@ def test_hpxgeom_solid_angle():
         nside=8, frame="galactic", axes=[MapAxis.from_edges([0, 2, 3])]
     )
 
-    solid_angle = geom.solid_angle
+    solid_angle = geom.solid_angle()
 
     assert solid_angle.shape == (1,)
     assert_allclose(solid_angle.value, 0.016362461737446838)
@@ -817,7 +817,7 @@ def test_hpx_geom_region_mask():
     assert_allclose(mask.data.sum(), 534)
     assert mask.geom.nside == 256
 
-    solid_angle = (mask.data * geom.solid_angle).sum()
+    solid_angle = (mask.data * geom.solid_angle()).sum()
     assert_allclose(solid_angle, 2 * np.pi * (1 - np.cos(3 * u.deg)) * u.sr, rtol=0.01)
 
 def test_hpx_geom_separation():
