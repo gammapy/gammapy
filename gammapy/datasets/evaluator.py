@@ -90,8 +90,6 @@ class MapEvaluator:
             self.evaluation_mode = "global"
 
         # define cached computations
-        #self._compute_npred = lru_cache()(self._compute_npred)
-        #self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_previous = None
         self._cached_parameter_values_spatial = None
@@ -104,42 +102,10 @@ class MapEvaluator:
             if not self.geom.is_region or self.geom.region is not None:
                 self.update_spatial_oversampling_factor(self.geom)
 
-    # workaround for the lru_cache pickle issue
-    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key, value in state.items():
-            func = getattr(value, "__wrapped__", None)
-            if func is not None:
-                state[key] = func
-
-        return state
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in [
-                "_compute_npred",
-                "_compute_flux_spatial",
-            ]:
-                state[key] = lru_cache()(value)
-
-        self.__dict__ = state
-
-    def reset_cached_properties(self, names=None):
-        """Reset cached properties.
-
-        Parameters
-        ----------
-        names : list of str or None
-            Names of the cached properties to reset. If None, reset all.
-            Default is None.
-            """
-        if names is None:
-            names = self.__class__.__dict__.keys()
-
-        for name, value in self.__class__.__dict__.items():
-            if isinstance(value, lazyproperty):
-                self.__dict__.pop(name, None)
+    def reset_cache_properties(self):
+        """Reset cached properties."""
+        del self._compute_npred
+        del self._compute_flux_spatial
 
     @property
     def geom(self):
@@ -246,8 +212,7 @@ class MapEvaluator:
             if not self.geom.is_region or self.geom.region is not None:
                 self.update_spatial_oversampling_factor(self.geom)
 
-        self._compute_npred.cache_clear()
-        self._compute_flux_spatial.cache_clear()
+        self.reset_cache_properties()
         self._computation_cache = None
         self._cached_parameter_previous = None
 
@@ -296,8 +261,8 @@ class MapEvaluator:
     def compute_flux_spatial(self):
         """Compute spatial flux using caching"""
         if self.parameters_spatial_changed() or not self.use_cache:
-            self._compute_flux_spatial.cache_clear()
-        return self._compute_flux_spatial()
+            del self._compute_flux_spatial
+        return self._compute_flux_spatial
 
     @lazyproperty
     def _compute_flux_spatial(self):
@@ -420,9 +385,9 @@ class MapEvaluator:
             Predicted counts on the map (in reco energy bins)
         """
         if self.parameters_changed or not self.use_cache:
-            self._compute_npred.cache_clear()
+            del self._compute_npred
 
-        return self._compute_npred()
+        return self._compute_npred
 
     @property
     def parameters_changed(self):
