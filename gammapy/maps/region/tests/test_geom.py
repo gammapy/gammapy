@@ -203,7 +203,7 @@ def test_solid_angle(region):
 def test_bin_volume(region):
     axis = MapAxis.from_edges([1, 3] * u.TeV, name="energy", interp="log")
     geom = RegionGeom.create(region, axes=[axis])
-    volume = geom.bin_volume
+    volume = geom.bin_volume()
 
     assert volume.unit == "sr TeV"
     reference = 2 * 2 * np.pi * (1 - np.cos(region.radius))

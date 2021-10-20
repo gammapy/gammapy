@@ -117,7 +117,6 @@ class WcsGeom(Geom):
         self.get_coord = lru_cache()(self.get_coord)
         self.get_pix = lru_cache()(self.get_pix)
 
-        self._image_geom = None
 
     def __setstate__(self, state):
         for key, value in state.items():
@@ -689,11 +688,13 @@ class WcsGeom(Geom):
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def to_image(self):
-        if self._image_geom is None:
-            npix = (np.max(self._npix[0]), np.max(self._npix[1]))
-            cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-            self._image_geom = self.__class__(self._wcs, npix, cdelt=cdelt)
         return self._image_geom
+        
+    @lazyproperty
+    def _image_geom(self):
+        npix = (np.max(self._npix[0]), np.max(self._npix[1]))
+        cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
+        return self.__class__(self._wcs, npix, cdelt=cdelt)
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
@@ -824,9 +825,13 @@ class WcsGeom(Geom):
         #  find out why and fix properly
         return np.abs(u.Quantity(area_low_right + area_up_left, "sr", copy=False))
 
-    @lazyproperty
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
+        return self._bin_volume
+
+    @lazyproperty
+    def _bin_volume(self):
+        """Cached property of bin volume"""
         value = self.to_image().solid_angle()
 
         if not self.is_image:
