@@ -39,6 +39,7 @@ class Map(abc.ABC):
         self._geom = geom
         
         if isinstance(data, u.Quantity):
+            self.unit = unit
             self.quantity = data
         else:
             self.data = data

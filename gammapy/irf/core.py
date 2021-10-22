@@ -40,6 +40,7 @@ class IRF:
         axes.assert_names(self.required_axes)
         self._axes = axes
         if isinstance(data, u.Quantity):
+            self.unit = unit
             self.quantity = data
         else:       
             self.data = data
