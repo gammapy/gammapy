@@ -149,4 +149,8 @@ pydocstyle:
 dataset-index:
 	python dev/datasets/make_dataset_index.py dataset-index
 
+# Note: codespell will pick its options from setup.cfg
+codespell:
+	codespell
+
 # TODO: add test and code quality checks for `examples`

@@ -44,6 +44,7 @@ dependencies:
   - sherpa
   # dev dependencies
   - black
+  - codespell
   - flake8
   - isort
   - nbsphinx
