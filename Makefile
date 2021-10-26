@@ -55,7 +55,7 @@ help:
 	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
 	@echo ' * Gammapy docs: https://docs.gammapy.org/'
 	@echo ''
-	@echo ' Most common commmands to hack on Gammapy:'
+	@echo ' Most common commands to hack on Gammapy:'
 	@echo ''
 	@echo '     make help          Print help message with all commands'
 	@echo '     pip install -e .   Install Gammapy in editable mode'
