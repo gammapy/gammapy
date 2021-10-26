@@ -4,8 +4,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import quantity_support
+from astropy.nddata import block_reduce
 from scipy.ndimage.measurements import label as ndi_label
-from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
 from ..core import Map

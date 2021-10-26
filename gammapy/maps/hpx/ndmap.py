@@ -443,18 +443,19 @@ class HpxNDMap(HpxMap):
         import healpy as hp
 
         nside = self.geom.nside
-        lmax = 3*nside-1 # maximum l of the power spectrum
-        nest = self.geom.nest
-        allsky = self.geom.is_allsky
+        lmax = int(3 * nside - 1) # maximum l of the power spectrum
         ipix = self.geom._ipix
 
-        if not allsky: #stack into an all sky map
-            full_sky_geom = HpxGeom.create(nside = self.geom.nside,
-                                        nest = self.geom.nest,
-                                        frame = self.geom.frame,
-                                        axes = self.geom.axes
-                                        )
+        if not self.geom.is_allsky:
+            # stack into an all sky map
+            full_sky_geom = HpxGeom.create(
+                nside=self.geom.nside,
+                nest=self.geom.nest,
+                frame=self.geom.frame,
+                axes=self.geom.axes
+            )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
+
             for img, idx in self.iter_by_image():
                 full_sky_map.data[idx][ipix] = img
         else:
@@ -474,7 +475,7 @@ class HpxNDMap(HpxMap):
         for img, idx in full_sky_map.iter_by_image():
             img = img.astype(float)
 
-            if nest:
+            if self.geom.nest:
                 # reorder to ring to do the smoothing
                 img = hp.pixelfunc.reorder(img, n2r=True)
 
@@ -482,20 +483,21 @@ class HpxNDMap(HpxMap):
                 data = hp.sphtfunc.smoothing(img, sigma=width, pol=False, verbose=False, lmax=lmax)
             elif kernel == "disk":
                 # create the step function in angular space
-                theta = np.linspace(0,width)
+                theta = np.linspace(0, width)
                 beam = np.ones(len(theta))
-                beam[theta>width]=0
+                beam[theta > width]=0
                 # convert to the spherical harmonics space
                 window_beam = hp.sphtfunc.beam2bl(beam, theta, lmax)
                 # normalize the window beam
-                window_beam = window_beam/window_beam.max()
+                window_beam = window_beam / window_beam.max()
                 data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
             else:
                 raise ValueError(f"Invalid kernel: {kernel!r}")
 
-            if nest:
+            if self.geom.nest:
                 # reorder back to nest after the smoothing
                 data = hp.pixelfunc.reorder(data, r2n=True)
+
             smoothed_data[idx] = data[ipix]
 
         return self._init_copy(data=smoothed_data)
@@ -625,17 +627,19 @@ class HpxNDMap(HpxMap):
         import healpy as hp
 
         nside = self.geom.nside
-        lmax = 3*nside-1 # maximum l of the power spectrum
+        lmax = int(3 * nside - 1) # maximum l of the power spectrum
         nest = self.geom.nest
         allsky = self.geom.is_allsky
         ipix = self.geom._ipix
 
-        if not allsky: #stack into an all sky map
-            full_sky_geom = HpxGeom.create(nside = self.geom.nside,
-                                        nest = self.geom.nest,
-                                        frame = self.geom.frame,
-                                        axes = self.geom.axes
-                                        )
+        if not allsky:
+            # stack into an all sky map
+            full_sky_geom = HpxGeom.create(
+                nside=self.geom.nside,
+                nest=self.geom.nest,
+                frame=self.geom.frame,
+                axes=self.geom.axes
+            )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
             for img, idx in self.iter_by_image():
                 full_sky_map.data[idx][ipix] = img
@@ -651,7 +655,7 @@ class HpxNDMap(HpxMap):
 
         pixels =[0,0]
         pixels[dim] = np.linspace(0,center, int(center+1)) # assuming radially symmetric kernel
-        pixels[abs(1-dim)] =  center_pix[abs(1-dim)]*np.ones(int(center+1))
+        pixels[abs(1-dim)] = center_pix[abs(1-dim)]*np.ones(int(center+1))
         coords = psf_kernel.geom.pix_to_coord(pixels)
         coordinates = SkyCoord(coords[0], coords[1], frame=psf_kernel.geom.frame )
         angles = coordinates.separation(psf_kernel.geom.center_skydir).rad
@@ -674,7 +678,6 @@ class HpxNDMap(HpxMap):
 
             convolved_data[idx] = data[ipix]
         return self._init_copy(data=convolved_data)
-
 
     def get_by_idx(self, idx):
         # inherited docstring
