@@ -4,12 +4,11 @@ Instrument response functions (IRFs).
 """
 from gammapy.utils.registry import Registry
 from .background import *
-from .edisp_kernel import *
-from .edisp_map import *
+from .edisp import *
 from .effective_area import *
-from .energy_dispersion import *
 from .io import *
 from .psf import *
+from .rad_max import *
 
 
 # TODO: add EDispMap?
@@ -24,5 +23,6 @@ IRF_REGISTRY = Registry(
         Background2D,
         PSFMap,
         EDispKernelMap,
+        RadMax2D,
     ]
 )

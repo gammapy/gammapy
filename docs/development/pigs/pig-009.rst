@@ -3,7 +3,7 @@
 .. _pig-009:
 
 **********************
-PIG 9 - Event Sampling
+PIG 9 - Event sampling
 **********************
 
 * Author: Fabio Pintore, Andrea Giuliani, Axel Donath
@@ -248,5 +248,5 @@ August 30, 2019.
 .. _here: https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584
 .. _spec: https://docs.gammapy.org/0.11/api/gammapy.spectrum.SpectrumSimulation.html
 .. _three-D: https://docs.gammapy.org/0.11/notebooks/simulate_3d.html
-.. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
+.. _astrisim: https://github.com/cento14/Astrisim
 .. _rej_sampl: https://en.wikipedia.org/wiki/Rejection_sampling

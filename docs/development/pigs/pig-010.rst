@@ -163,11 +163,11 @@ achieved via a ``make_region`` helper function::
     ...         return DS9Parser(region).shapes[0].to_region()
     ...     else:
     ...         return region
-    ... 
+    ...
     >>> make_region("image;circle(42,43,3)")
-    <CirclePixelRegion(PixCoord(x=41.0, y=42.0), radius=3.0)>
+    <CirclePixelRegion(center=PixCoord(x=41.0, y=42.0), radius=3.0)>
     >>> make_region("galactic;circle(42,43,3)")
-    <CircleSkyRegion(<SkyCoord (Galactic): (l, b) in deg
+    <CircleSkyRegion(center=<SkyCoord (Galactic): (l, b) in deg
         (42., 43.)>, radius=3.0 deg)>
 
 This is convenient, a simple ``region="galactic;circle(42,43,3)"`` is much
@@ -179,7 +179,7 @@ shorter than having to remember and type this equivalent code::
     >>> radius = Angle(3, "deg")
     >>> region = CircleSkyRegion(center, radius)
     >>> region
-    <CircleSkyRegion(<SkyCoord (Galactic): (l, b) in deg
+    <CircleSkyRegion(center=<SkyCoord (Galactic): (l, b) in deg
         (42., 43.)>, radius=3.0 deg)>
 
 There is precendence for this pattern in Gammapy, we usually pass ``Quantity``

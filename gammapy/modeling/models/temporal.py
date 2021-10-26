@@ -83,6 +83,64 @@ class TemporalModel(Model):
         ax.plot(times.mjd, val)
         return ax
 
+    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+        """Sample arrival times of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        t_min : `~astropy.time.Time`
+            Start time of the sampling.
+        t_max : `~astropy.time.Time`
+            Stop time of the sampling.
+        t_delta : `~astropy.units.Quantity`
+            Time step used for sampling of the temporal model.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+        t_delta = u.Quantity(t_delta)
+        random_state = get_random_state(random_state)
+
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+
+        time_unit = u.Unit(self.table.meta["TIMEUNIT"]) if hasattr(self, 'table') else ontime.unit
+
+        t_stop = ontime.to_value(time_unit)
+
+        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
+        #  is still incomplete, refactor once we change to recent numpy and astropy versions
+        t_step = t_delta.to_value(time_unit)
+        if hasattr(self, 'table'):
+            t = np.arange(0, t_stop, t_step)
+
+            pdf = self.evaluate(t)
+
+            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+            time_pix = sampler.sample(n_events)[0]
+            time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
+
+        else:
+            t_step = (t_step * u.s).to("d")
+            
+            t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+
+            pdf = self(t)
+
+            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+            time_pix = sampler.sample(n_events)[0]
+            time = (np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit).to(time_unit)
+
+        return t_min + time
+
 
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
@@ -110,38 +168,6 @@ class ConstantTemporalModel(TemporalModel):
             Integrated flux norm on the given time intervals
         """
         return (t_max - t_min) / self.time_sum(t_min, t_max)
-
-    @staticmethod
-    def sample_time(n_events, t_min, t_max, random_state=0):
-        """Sample arrival times of events.
-
-        Parameters
-        ----------
-        n_events : int
-            Number of events to sample.
-        t_min : `~astropy.time.Time`
-            Start time of the sampling.
-        t_max : `~astropy.time.Time`
-            Stop time of the sampling.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        time : `~astropy.units.Quantity`
-            Array with times of the sampled events.
-        """
-        random_state = get_random_state(random_state)
-
-        t_min = Time(t_min)
-        t_max = Time(t_max)
-
-        t_stop = (t_max - t_min).sec
-
-        time_delta = random_state.uniform(high=t_stop, size=n_events) * u.s
-
-        return t_min + time_delta
 
 
 class ExpDecayTemporalModel(TemporalModel):
@@ -282,12 +308,15 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     Compute ``norm`` at a given time:
 
-    >>> light_curve.evaluate(46300) # doctest: +SKIP
-    0.49059393580053845
+    >>> light_curve.evaluate(60000)
+    array(0.01551196)
 
     Compute mean ``norm`` in a given time interval:
 
-    >>> light_curve.mean_norm_in_time_interval(46300, 46301) # doctest: +SKIP
+    >>> from astropy.time import Time
+    >>> times = Time([60000, 61000], format='mjd')
+    >>> light_curve.integral(times[0], times[1])
+    <Quantity 0.01721725>
     """
 
     tag = ["LightCurveTemplateTemporalModel", "template"]
@@ -383,51 +412,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         n1 = self._interpolator.antiderivative()(t_max.mjd)
         n2 = self._interpolator.antiderivative()(t_min.mjd)
         return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
-
-    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
-        """Sample arrival times of events.
-
-        Parameters
-        ----------
-        n_events : int
-            Number of events to sample.
-        t_min : `~astropy.time.Time`
-            Start time of the sampling.
-        t_max : `~astropy.time.Time`
-            Stop time of the sampling.
-        t_delta : `~astropy.units.Quantity`
-            Time step used for sampling of the temporal model.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        time : `~astropy.units.Quantity`
-            Array with times of the sampled events.
-        """
-        time_unit = getattr(u, self.table.meta["TIMEUNIT"])
-
-        t_min = Time(t_min)
-        t_max = Time(t_max)
-        t_delta = u.Quantity(t_delta)
-        random_state = get_random_state(random_state)
-
-        ontime = u.Quantity((t_max - t_min).sec, "s")
-        t_stop = ontime.to_value(time_unit)
-
-        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
-        #  is still incomplete, refactor once we change to recent numpy and astropy versions
-        t_step = t_delta.to_value(time_unit)
-        t = np.arange(0, t_stop, t_step)
-
-        pdf = self.evaluate(t)
-
-        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-        time_pix = sampler.sample(n_events)[0]
-        time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
-
-        return t_min + time
 
     @classmethod
     def from_dict(cls, data):

@@ -2,8 +2,8 @@
 import itertools
 import logging
 import numpy as np
-from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data
+from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
 from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
@@ -67,99 +67,118 @@ class Fit:
 
     Parameters
     ----------
-    datasets : `Datasets`
-        Datasets
+    backend : {"minuit", "scipy" "sherpa"}
+        Global backend used for fitting, default : minuit
+    optimize_opts : dict
+        Keyword arguments passed to the optimizer. For the `"minuit"` backend
+        see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+        for a detailed description of the available options. If there is an entry
+        'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
+
+        For the `"sherpa"` backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
+        Those methods are described and compared in detail on
+        http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
+        options of the optimization methods are described on the following
+        pages in detail:
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
+            * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
+
+        For the `"scipy"` backend the available options are decsribed in detail here:
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+
+    covariance_opts : dict
+        Covariance options passed to the given backend.
+    confidence_opts : dict
+        Extra arguments passed to the backend. E.g. `iminuit.Minuit.minos` supports
+        a ``maxcall`` option. For the scipy backend ``confidence_opts`` are forwarded
+        to `~scipy.optimize.brentq`. If the confidence estimation fails, the bracketing
+        interval can be adapted by modifying the the upper bound of the interval (``b``) value.
+    store_trace : bool
+        Whether to store the trace of the fit
     """
 
-    def __init__(self, datasets, store_trace=False):
+    def __init__(
+        self,
+        backend="minuit",
+        optimize_opts=None,
+        covariance_opts=None,
+        confidence_opts=None,
+        store_trace=False,
+    ):
+        self.store_trace = store_trace
+        self.backend = backend
+
+        if optimize_opts is None:
+            optimize_opts = {"backend": backend}
+
+        if covariance_opts is None:
+            covariance_opts = {"backend": backend}
+
+        if confidence_opts is None:
+            confidence_opts = {"backend": backend}
+
+        self.optimize_opts = optimize_opts
+        self.covariance_opts = covariance_opts
+        self.confidence_opts = confidence_opts
+        self._minuit = None
+
+    @property
+    def minuit(self):
+        """Iminuit object"""
+        return self._minuit
+
+    @staticmethod
+    def _parse_datasets(datasets):
         from gammapy.datasets import Datasets
 
-        self.store_trace = store_trace
-        self.datasets = Datasets(datasets)
+        datasets = Datasets(datasets)
+        return datasets, datasets.parameters
 
-    @lazyproperty
-    def _parameters(self):
-        return self.datasets.parameters
-
-    @lazyproperty
-    def _models(self):
-        return self.datasets.models
-
-    def run(self, backend="minuit", optimize_opts=None, covariance_opts=None):
-        """
-        Run all fitting steps.
-
-        Parameters
-        ----------
-        backend : str
-            Backend used for fitting, default : minuit
-        optimize_opts : dict
-            Options passed to `Fit.optimize`.
-        covariance_opts : dict
-            Options passed to `Fit.covariance`.
+    def run(self, datasets):
+        """Run all fitting steps.
 
         Returns
         -------
         fit_result : `FitResult`
             Results
         """
+        optimize_result = self.optimize(datasets=datasets)
 
-        if optimize_opts is None:
-            optimize_opts = {}
-        optimize_result = self.optimize(backend, **optimize_opts)
-
-        if covariance_opts is None:
-            covariance_opts = {}
-
-        if backend not in registry.register["covariance"]:
+        if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
-            return optimize_result
+            return {"optimize_result": optimize_result, "covariance_result": None}
 
-        covariance_result = self.covariance(backend, **covariance_opts)
+        covariance_result = self.covariance(datasets=datasets)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
-        optimize_result._success = optimize_result.success and covariance_result.success
 
-        return optimize_result
+        return {
+            "optimize_result": optimize_result,
+            "covariance_result": covariance_result,
+        }
 
-    def optimize(self, backend="minuit", **kwargs):
+    def optimize(self, datasets):
         """Run the optimization.
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
-        **kwargs : dict
-            Keyword arguments passed to the optimizer. For the `"minuit"` backend
-            see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
-            for a detailed description of the available options. If there is an entry
-            'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
-
-            For the `"sherpa"` backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
-            Those methods are described and compared in detail on
-            http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
-            options of the optimization methods are described on the following
-            pages in detail:
-
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
-
-            For the `"scipy"` backend the available options are desribed in detail here:
-            https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
 
         Returns
         -------
-        fit_result : `FitResult`
-            Results
+        optimize_result : `OptimizeResult`
+            Optimization result
         """
-        parameters = self._parameters
-        parameters.check_limits()
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets.parameters.check_limits()
 
-        # TODO: expose options if / when to scale? On the Fit class?
-        if np.all(self._models.covariance.data == 0):
-            parameters.autoscale()
+        parameters.autoscale()
+
+        kwargs = self.optimize_opts.copy()
+        backend = kwargs.pop("backend", self.backend)
 
         compute = registry.get("optimize", backend)
         # TODO: change this calling interface!
@@ -167,24 +186,22 @@ class Fit:
         # and return something simpler, not a tuple of three things
         factors, info, optimizer = compute(
             parameters=parameters,
-            function=self.datasets.stat_sum,
+            function=datasets.stat_sum,
             store_trace=self.store_trace,
             **kwargs,
         )
 
-        # TODO: Change to a stateless interface for minuit also, or if we must support
-        # stateful backends, put a proper, backend-agnostic solution for this.
-        # As preliminary solution would like to provide a possibility that the user
-        # can access the Minuit object, because it features a lot useful functionality
         if backend == "minuit":
-            self.minuit = optimizer
+            self._minuit = optimizer
 
         trace = table_from_row_data(info.pop("trace"))
 
         if self.store_trace:
-            pars = self._models.parameters
-            idx = [pars.index(par) for par in pars.unique_parameters.free_parameters]
-            unique_names = np.array(self._models.parameters_unique_names)[idx]
+            idx = [
+                parameters.index(par)
+                for par in parameters.unique_parameters.free_parameters
+            ]
+            unique_names = np.array(datasets.models.parameters_unique_names)[idx]
             trace.rename_columns(trace.colnames[1:], list(unique_names))
 
         # Copy final results into the parameters object
@@ -192,49 +209,47 @@ class Fit:
         parameters.check_limits()
         return OptimizeResult(
             parameters=parameters,
-            total_stat=self.datasets.stat_sum(),
+            total_stat=datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),
             trace=trace,
             **info,
         )
 
-    def covariance(self, backend="minuit", **kwargs):
+    def covariance(self, datasets):
         """Estimate the covariance matrix.
 
         Assumes that the model parameters are already optimised.
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
 
         Returns
         -------
         result : `CovarianceResult`
             Results
         """
-        compute = registry.get("covariance", backend)
-        parameters = self._parameters
+        datasets, parameters = self._parse_datasets(datasets=datasets)
 
-        # TODO: wrap MINUIT in a stateless backend
+        kwargs = self.covariance_opts.copy()
+        backend = kwargs.pop("backend", self.backend)
+        compute = registry.get("covariance", backend)
+
         with parameters.restore_status():
-            if backend == "minuit":
+            if self.backend == "minuit":
                 method = "hesse"
-                if hasattr(self, "minuit"):
-                    factor_matrix, info = compute(self.minuit)
-                else:
-                    raise RuntimeError("To use minuit, you must first optimize.")
             else:
                 method = ""
-                factor_matrix, info = compute(
-                    parameters, self.datasets.stat_sum, **kwargs
-                )
 
-            covariance = Covariance.from_factor_matrix(
-                parameters=self._models.parameters, matrix=factor_matrix
+            factor_matrix, info = compute(
+                parameters=parameters, function=datasets.stat_sum, **kwargs
             )
-            self._models.covariance = covariance
+
+            datasets.models.covariance = Covariance.from_factor_matrix(
+                parameters=parameters, matrix=factor_matrix
+            )
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
@@ -245,9 +260,7 @@ class Fit:
             message=info["message"],
         )
 
-    def confidence(
-        self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
-    ):
+    def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -259,83 +272,57 @@ class Fit:
 
         Parameters
         ----------
-        backend : str
-            Which backend to use (see ``gammapy.modeling.registry``)
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         sigma : float
             Number of standard deviations for the confidence level
         reoptimize : bool
             Re-optimize other parameters, when computing the confidence region.
-        **kwargs : dict
-            Keyword argument passed ot the confidence estimation method.
 
         Returns
         -------
         result : dict
             Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+
+        kwargs = self.confidence_opts.copy()
+        backend = kwargs.pop("backend", self.backend)
+
         compute = registry.get("confidence", backend)
-        parameters = self._parameters
         parameter = parameters[parameter]
 
-        # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_status():
-            if backend == "minuit":
-                if hasattr(self, "minuit"):
-                    # This is ugly. We will access parameters and make a copy
-                    # from the backend, to avoid modifying the state
-                    result = compute(
-                        self.minuit, parameters, parameter, sigma, **kwargs
-                    )
-                else:
-                    raise RuntimeError("To use minuit, you must first optimize.")
-            else:
-                result = compute(
-                    parameters,
-                    parameter,
-                    self.datasets.stat_sum,
-                    sigma,
-                    reoptimize,
-                    **kwargs,
-                )
+            result = compute(
+                parameters=parameters,
+                parameter=parameter,
+                function=datasets.stat_sum,
+                sigma=sigma,
+                reoptimize=reoptimize,
+                **kwargs,
+            )
 
         result["errp"] *= parameter.scale
         result["errn"] *= parameter.scale
         return result
 
-    def stat_profile(
-        self,
-        parameter,
-        values=None,
-        bounds=2,
-        nvalues=11,
-        reoptimize=False,
-        optimize_opts=None,
-    ):
+    def stat_profile(self, datasets, parameter, reoptimize=False):
         """Compute fit statistic profile.
 
         The method used is to vary one parameter, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
 
-        See also: `Fit.minos_profile`.
-
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
-            Parameter of interest
-        values : `~astropy.units.Quantity` (optional)
-            Parameter values to evaluate the fit statistic for.
-        bounds : int or tuple of float
-            When an `int` is passed the bounds are computed from `bounds * sigma`
-            from the best fit value of the parameter, where `sigma` corresponds to
-            the one sigma error on the parameter. If a tuple of floats is given
-            those are taken as the min and max values and ``nvalues`` are linearly
-            spaced between those.
-        nvalues : int
-            Number of parameter grid points to use.
+            Parameter of interest. The specification for the scan, such as bounds
+            and number of values is taken from the parameter object.
         reoptimize : bool
-            Re-optimize other parameters, when computing the fit statistic profile.
+            Re-optimize other parameters, when computing the confidence region.
 
         Returns
         -------
@@ -343,35 +330,22 @@ class Fit:
             Dictionary with keys "values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
-        parameters = self._parameters
+        datasets, parameters = self._parse_datasets(datasets=datasets)
         parameter = parameters[parameter]
-
-        optimize_opts = optimize_opts or {}
-
-        if values is None:
-            if isinstance(bounds, tuple):
-                parmin, parmax = bounds
-            else:
-                if np.isnan(parameter.error):
-                    raise ValueError("Parameter error is not properly set.")
-                parerr = parameter.error
-                parval = parameter.value
-                parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
-
-            values = np.linspace(parmin, parmax, nvalues)
+        values = parameter.scan_values
 
         stats = []
         fit_results = []
         with parameters.restore_status():
-            for value in values:
+            for value in progress_bar(values, desc="Scan values"):
                 parameter.value = value
                 if reoptimize:
                     parameter.frozen = True
-                    result = self.optimize(**optimize_opts)
+                    result = self.optimize(datasets=datasets)
                     stat = result.total_stat
                     fit_results.append(result)
                 else:
-                    stat = self.datasets.stat_sum()
+                    stat = datasets.stat_sum()
                 stats.append(stat)
 
         return {
@@ -380,7 +354,7 @@ class Fit:
             "fit_results": fit_results,
         }
 
-    def stat_surface(self, x, y, x_values, y_values, reoptimize=False, **optimize_opts):
+    def stat_surface(self, datasets, x, y, reoptimize=False):
         """Compute fit statistic surface.
 
         The method used is to vary two parameters, keeping all others fixed.
@@ -388,18 +362,16 @@ class Fit:
 
         Caveat: This method can be very computationally intensive and slow
 
-        See also: `Fit.minos_contour`
+        See also: `Fit.stat_contour`
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
-        x_values, y_values : list or `numpy.ndarray`
-            Parameter values to evaluate the fit statistic for.
         reoptimize : bool
-            Re-optimize other parameters, when computing the fit statistic profile.
-        **optimize_opts : dict
-            Keyword arguments passed to the optimizer. See `Fit.optimize` for further details.
+            Re-optimize other parameters, when computing the confidence region.
 
         Returns
         -------
@@ -407,44 +379,43 @@ class Fit:
             Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
-        parameters = self._parameters
-        x = parameters[x]
-        y = parameters[y]
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+
+        x, y = parameters[x], parameters[y]
 
         stats = []
         fit_results = []
+
         with parameters.restore_status():
-            for x_value, y_value in itertools.product(x_values, y_values):
-                # TODO: Remove log.info() and provide a nice progress bar
-                log.info(f"Processing: x={x_value}, y={y_value}")
-                x.value = x_value
-                y.value = y_value
+            for x_value, y_value in progress_bar(
+                itertools.product(x.scan_values, y.scan_values), desc="Trial values"
+            ):
+                x.value, y.value = x_value, y_value
+
                 if reoptimize:
-                    x.frozen = True
-                    y.frozen = True
-                    result = self.optimize(**optimize_opts)
+                    x.frozen, y.frozen = True, True
+                    result = self.optimize(datasets=datasets)
                     stat = result.total_stat
                     fit_results.append(result)
                 else:
-                    stat = self.datasets.stat_sum()
+                    stat = datasets.stat_sum()
 
                 stats.append(stat)
 
-        shape = (np.asarray(x_values).shape[0], np.asarray(y_values).shape[0])
-        stats = np.array(stats)
-        stats = stats.reshape(shape)
+        shape = (len(x.scan_values), len(y.scan_values))
+        stats = np.array(stats).reshape(shape)
+
         if reoptimize:
-            fit_results = np.array(fit_results)
-            fit_results = fit_results.reshape(shape)
+            fit_results = np.array(fit_results).reshape(shape)
 
         return {
-            f"{x.name}_scan": x_values,
-            f"{y.name}_scan": y_values,
+            f"{x.name}_scan": x.scan_values,
+            f"{y.name}_scan": y.scan_values,
             "stat_scan": stats,
             "fit_results": fit_results,
         }
 
-    def minos_contour(self, x, y, numpoints=10, sigma=1.0):
+    def stat_contour(self, datasets, x, y, numpoints=10, sigma=1):
         """Compute MINOS contour.
 
         Calls ``iminuit.Minuit.mncontour``.
@@ -459,6 +430,8 @@ class Fit:
 
         Parameters
         ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
         numpoints : int
@@ -472,7 +445,8 @@ class Fit:
             Dictionary containing the parameter values defining the contour, with the
             boolean flag "success" and the info objects from ``mncontour``.
         """
-        parameters = self._parameters
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+
         x = parameters[x]
         y = parameters[y]
 

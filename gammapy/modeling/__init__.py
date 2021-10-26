@@ -3,4 +3,3 @@
 from .covariance import *
 from .fit import *
 from .parameter import *
-from .sampling import *

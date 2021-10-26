@@ -9,7 +9,7 @@ from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
 import yaml
-from pydantic import BaseModel, FilePath
+from pydantic import BaseModel
 from pydantic.utils import deep_update
 from gammapy.makers import MapDatasetMaker
 from gammapy.utils.scripts import make_path, read_yaml
@@ -64,6 +64,11 @@ class FrameEnum(str, Enum):
     icrs = "icrs"
     galactic = "galactic"
 
+class RequiredIRFEnum(str, Enum):
+    aeff = "aeff"
+    bkg = "bkg"
+    edisp = "edisp"
+    psf = "psf"
 
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
@@ -106,9 +111,9 @@ class SkyCoordConfig(GammapyBaseConfig):
 
 
 class EnergyAxisConfig(GammapyBaseConfig):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
-    nbins: int = 30
+    min: EnergyType = None
+    max: EnergyType = None
+    nbins: int = None
 
 
 class SpatialCircleConfig(GammapyBaseConfig):
@@ -119,8 +124,8 @@ class SpatialCircleConfig(GammapyBaseConfig):
 
 
 class EnergyRangeConfig(GammapyBaseConfig):
-    min: EnergyType = "0.1 TeV"
-    max: EnergyType = "10 TeV"
+    min: EnergyType = None
+    max: EnergyType = None
 
 
 class TimeRangeConfig(GammapyBaseConfig):
@@ -134,13 +139,26 @@ class FluxPointsConfig(GammapyBaseConfig):
     parameters: dict = {"selection_optional": "all"}
 
 
+class LightCurveConfig(GammapyBaseConfig):
+    time_intervals: TimeRangeConfig = TimeRangeConfig()
+    energy_edges: EnergyAxisConfig = EnergyAxisConfig()
+    source: str = "source"
+    parameters: dict = {"selection_optional": "all"}
+
+
 class FitConfig(GammapyBaseConfig):
     fit_range: EnergyRangeConfig = EnergyRangeConfig()
 
 
+class ExcessMapConfig(GammapyBaseConfig):
+    correlation_radius: AngleType = "0.1 deg"
+    parameters: dict = {}
+    energy_edges: EnergyAxisConfig = EnergyAxisConfig()
+
+
 class BackgroundConfig(GammapyBaseConfig):
     method: BackgroundMethodEnum = None
-    exclusion: FilePath = None
+    exclusion: Path = None
     parameters: dict = {}
 
 
@@ -150,15 +168,15 @@ class SafeMaskConfig(GammapyBaseConfig):
 
 
 class EnergyAxesConfig(GammapyBaseConfig):
-    energy: EnergyAxisConfig = EnergyAxisConfig()
-    energy_true: EnergyAxisConfig = EnergyAxisConfig()
+    energy: EnergyAxisConfig = EnergyAxisConfig(min="1 TeV", max="10 TeV", nbins=5)
+    energy_true: EnergyAxisConfig = EnergyAxisConfig(min="0.5 TeV", max="20 TeV", nbins=16)
 
 
 class SelectionConfig(GammapyBaseConfig):
     offset_max: AngleType = "2.5 deg"
 
 
-class FovConfig(GammapyBaseConfig):
+class WidthConfig(GammapyBaseConfig):
     width: AngleType = "5 deg"
     height: AngleType = "5 deg"
 
@@ -166,7 +184,7 @@ class FovConfig(GammapyBaseConfig):
 class WcsConfig(GammapyBaseConfig):
     skydir: SkyCoordConfig = SkyCoordConfig()
     binsize: AngleType = "0.02 deg"
-    fov: FovConfig = FovConfig()
+    width: WidthConfig = WidthConfig()
     binsize_irf: AngleType = "0.2 deg"
 
 
@@ -190,10 +208,10 @@ class DatasetsConfig(GammapyBaseConfig):
 class ObservationsConfig(GammapyBaseConfig):
     datastore: Path = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids: List[int] = []
-    obs_file: FilePath = None
+    obs_file: Path = None
     obs_cone: SpatialCircleConfig = SpatialCircleConfig()
     obs_time: TimeRangeConfig = TimeRangeConfig()
-
+    required_irf: List[RequiredIRFEnum] = ["aeff", "edisp", "psf", "bkg"]
 
 class LogConfig(GammapyBaseConfig):
     level: str = "info"
@@ -216,7 +234,9 @@ class AnalysisConfig(GammapyBaseConfig):
     datasets: DatasetsConfig = DatasetsConfig()
     fit: FitConfig = FitConfig()
     flux_points: FluxPointsConfig = FluxPointsConfig()
-
+    excess_map: ExcessMapConfig = ExcessMapConfig()
+    light_curve: LightCurveConfig = LightCurveConfig()
+    
     def __str__(self):
         """Display settings in pretty YAML format."""
         info = self.__class__.__name__ + "\n\n\t"

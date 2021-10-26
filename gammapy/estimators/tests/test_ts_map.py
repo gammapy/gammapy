@@ -84,7 +84,6 @@ def fermi_dataset():
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz"
     )
     exposure = exposure.cutout(exposure.geom.center_skydir, size)
-    exposure.unit = "cm2 s"
 
     psfmap = PSFMap.read(
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf-cube.fits.gz", format="gtpsf"
@@ -111,14 +110,21 @@ def test_compute_ts_map(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     ts_estimator = TSMapEstimator(
-        model=model, threshold=1, kernel_width="1 deg", selection_optional=[]
+        model=model, threshold=1, selection_optional=[]
     )
+
+    kernel = ts_estimator.estimate_kernel(dataset=input_dataset)
+    assert_allclose(kernel.geom.width, 1.22 * u.deg)
+
     result = ts_estimator.run(input_dataset)
 
     assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
-    assert_allclose(result["niter"].data[0, 99, 99], 8)
+    assert_allclose(result["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["npred"].data[0, 99, 99], 4744.020361, rtol=1e-2)
+    assert_allclose(result["npred_null"].data[0, 99, 99], 3721, rtol=1e-2)
+    assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -132,16 +138,23 @@ def test_compute_ts_map(input_dataset):
 
 @requires_data()
 def test_compute_ts_map_psf(fermi_dataset):
-    estimator = TSMapEstimator(kernel_width="1 deg", selection_optional="all")
+    spatial_model = PointSpatialModel()
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    estimator = TSMapEstimator(
+        model=model, kernel_width="1 deg", selection_optional="all"
+    )
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result["ts"].data[0, 29, 29], 835.140605, rtol=1e-2)
+    assert_allclose(result["ts"].data[0, 29, 29], 833.38, rtol=2e-3)
     assert_allclose(result["niter"].data[0, 29, 29], 7)
-    assert_allclose(result["flux"].data[0, 29, 29], 1.351949e-09, rtol=1e-2)
-    assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=1e-2)
-    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.9376134e-11, rtol=1e-2)
-    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.5180404579e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.63222157e-10, rtol=1e-2)
+    assert_allclose(result["flux"].data[0, 29, 29], 1.34984e-09, rtol=2e-3)
+    assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=2e-3)
+    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.948953e-11, rtol=2e-3)
+    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.508168e-11, rtol=2e-3)
+    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.513062157e-09, rtol=2e-3)
+
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
     assert result["flux_ul"].unit == u.Unit("cm-2s-1")
@@ -149,13 +162,20 @@ def test_compute_ts_map_psf(fermi_dataset):
 
 @requires_data()
 def test_compute_ts_map_energy(fermi_dataset):
+    spatial_model = PointSpatialModel()
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
     estimator = TSMapEstimator(
+        model=model,
         kernel_width="0.6 deg",
         energy_edges=[10, 100, 1000] * u.GeV,
         sum_over_energy_groups=False,
     )
 
     result = estimator.run(fermi_dataset)
+
+    assert_allclose(result.ts.data[1, 43, 30], 0.199291, atol=0.01)
 
     assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
     assert_allclose(
@@ -178,7 +198,10 @@ def test_compute_ts_map_downsampled(input_dataset):
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     ts_estimator = TSMapEstimator(
-        model=model, downsampling_factor=2, kernel_width="1 deg", selection_optional=["ul"]
+        model=model,
+        downsampling_factor=2,
+        kernel_width="1 deg",
+        selection_optional=["ul"]
     )
     result = ts_estimator.run(input_dataset)
 
@@ -186,7 +209,7 @@ def test_compute_ts_map_downsampled(input_dataset):
     assert_allclose(result["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.065988e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 4.005628e-11, rtol=1e-2)
-    assert_allclose(result["flux_ul"].data[0, 99, 99], 8.220152e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[0, 99, 99], 1.14818952e-09, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -194,15 +217,6 @@ def test_compute_ts_map_downsampled(input_dataset):
 
     # Check mask is correctly taken into account
     assert np.isnan(result["ts"].data[0, 30, 40])
-
-
-@requires_data()
-def test_large_kernel(input_dataset):
-    """Minimal test of compute_ts_image"""
-    ts_estimator = TSMapEstimator(kernel_width="4 deg")
-
-    with pytest.raises(ValueError):
-        ts_estimator.run(input_dataset)
 
 
 def test_ts_map_with_model(fake_dataset):
@@ -213,13 +227,14 @@ def test_ts_map_with_model(fake_dataset):
     estimator = TSMapEstimator(
         model,
         kernel_width="0.3 deg",
-        selection_optional=[],
+        selection_optional=["all"],
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
 
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 18.369942, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], 3.513e-10, atol=1e-12)
+    assert_allclose(maps["flux_err"].data[0, 0, 0], 2.494462e-11, rtol=1e-4)
 
     fake_dataset.models = [model]
     maps = estimator.run(fake_dataset)
@@ -236,5 +251,5 @@ def test_ts_map_with_model(fake_dataset):
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
-    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323, atol=0.1)
-    assert_allclose(maps["flux"].data[:, 25, 25], 1.015417e-12, atol=1e-12)
+    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323203, atol=0.1)
+    assert_allclose(maps["flux"].data[:, 25, 25], 1.015509e-12, atol=1e-12)

@@ -20,14 +20,14 @@ handbook`_ and the `Astropy Hands-On Tutorial`_.
 
 .. _tutorials_notebooks:
 
-Starting
---------
+Introduction
+------------
 
 The following three tutorials show different ways of how to use Gammapy to perform a complete data analysis,
 from data selection to data reduction and finally modeling and fitting.
 
-The first tutorial is an overview on how to perform a standard analysis workflow using the high-level interface
-in a configuration-driven approach, whilst the second deals with the same use-case using the low-level API
+The first tutorial is an overview on how to perform a standard analysis workflow using the high level interface
+in a configuration-driven approach, whilst the second deals with the same use-case using the low level API
 and showing what is happening *under-the-hood*. The third tutorial shows a glimpse of how to handle different
 basic data structures like event lists, source catalogs, sky maps, spectral models and flux points tables.
 
@@ -87,7 +87,6 @@ time-dependent analysis with light-curves.
    analysis/3D/cta_data_analysis.ipynb
    analysis/3D/analysis_3d.ipynb
    analysis/3D/simulate_3d.ipynb
-   analysis/3D/mcmc_sampling.ipynb
    analysis/3D/analysis_mwl.ipynb
    analysis/3D/event_sampling.ipynb
 
@@ -101,12 +100,6 @@ Time
    analysis/time/light_curve_flare.ipynb
    analysis/time/pulsar_analysis.ipynb
 
-Built-in models
----------------
-
-Gammapy provides a large choice of spatial, spectral and temporal models.
-You may check out the whole list of built-in models in the :ref:`model-gallery`.
-
 
 Package / API
 -------------
@@ -116,6 +109,7 @@ expose how to perform more specific use cases.
 
 .. nbgallery::
 
+   api/makers.ipynb
    api/catalog.ipynb
    api/models.ipynb
    api/model_management.ipynb

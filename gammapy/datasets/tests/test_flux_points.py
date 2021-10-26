@@ -8,11 +8,7 @@ from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-
-
-@pytest.fixture()
-def fit(dataset):
-    return Fit([dataset])
+from gammapy.utils.scripts import make_path
 
 
 @pytest.fixture()
@@ -26,8 +22,9 @@ def test_meta_table(dataset):
 @pytest.fixture()
 def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-    data = FluxPoints.read(path)
-    data.table["e_ref"] = data.energy_ref.to("TeV")
+    table = Table.read(make_path(path))
+    table["e_ref"] = table["e_ref"].quantity.to("TeV")
+    data = FluxPoints.from_table(table, format="gadf-sed")
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
@@ -46,8 +43,10 @@ def dataset():
 @requires_data()
 def test_flux_point_dataset_serialization(tmp_path):
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-    data = FluxPoints.read(path)
-    data.table["e_ref"] = data.energy_ref.to("TeV")
+    table = Table.read(make_path(path))
+    table["e_ref"] = table["e_ref"].quantity.to("TeV")
+    data = FluxPoints.from_table(table, format="gadf-sed")
+
     spectral_model = PowerLawSpectralModel(
         index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
     )
@@ -65,7 +64,7 @@ def test_flux_point_dataset_serialization(tmp_path):
     )
 
     new_dataset = datasets[0]
-    assert_allclose(new_dataset.data.table["dnde"], dataset.data.table["dnde"], 1e-4)
+    assert_allclose(new_dataset.data.dnde, dataset.data.dnde, 1e-4)
     if dataset.mask_fit is None:
         assert np.all(new_dataset.mask_fit == dataset.mask_safe)
     assert np.all(new_dataset.mask_safe == dataset.mask_safe)
@@ -80,13 +79,15 @@ def test_flux_point_dataset_str(dataset):
 @requires_data()
 class TestFluxPointFit:
     @requires_dependency("iminuit")
-    def test_fit_pwl_minuit(self, fit):
-        result = fit.run(backend="minuit")
-        self.assert_result(result)
+    def test_fit_pwl_minuit(self, dataset):
+        fit = Fit()
+        result = fit.run(dataset)
+        self.assert_result(result["optimize_result"])
 
     @requires_dependency("sherpa")
-    def test_fit_pwl_sherpa(self, fit):
-        result = fit.optimize(backend="sherpa", method="simplex")
+    def test_fit_pwl_sherpa(self, dataset):
+        fit = Fit(backend="sherpa", optimize_opts={"method": "simplex"})
+        result = fit.optimize(datasets=[dataset])
         self.assert_result(result)
 
     @staticmethod
@@ -105,28 +106,40 @@ class TestFluxPointFit:
 
     @staticmethod
     @requires_dependency("iminuit")
-    def test_stat_profile(fit):
+    def test_stat_profile(dataset):
+        fit = Fit()
+        result = fit.run(datasets=dataset)
+        result = result["optimize_result"]
 
-        result = fit.run(backend="minuit")
+        model = dataset.models[0].spectral_model
 
-        profile = fit.stat_profile("amplitude", nvalues=3, bounds=1)
+        model.amplitude.scan_n_values = 3
+        model.amplitude.scan_n_sigma = 1
+        model.amplitude.interp = "lin"
+        
+        profile = fit.stat_profile(
+            datasets=dataset,
+            parameter="amplitude",
+        )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
 
         value = result.parameters["amplitude"].value
         err = result.parameters["amplitude"].error
-        values = np.array([value - err, value, value + err])
 
-        profile = fit.stat_profile("amplitude", values=values)
+        model.amplitude.scan_values = np.array([value - err, value, value + err])
+        profile = fit.stat_profile(
+            datasets=dataset,
+            parameter="amplitude",
+        )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
 
     @staticmethod
     @requires_dependency("matplotlib")
-    def test_fp_dataset_plot_fit(fit):
-        fp_dataset = fit.datasets[0]
+    def test_fp_dataset_plot_fit(dataset):
 
         with mpl_plot_check():
-            fp_dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))
+            dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))

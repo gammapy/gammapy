@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
-from gammapy.maps import Map, WcsNDMap
+from gammapy.maps import Map, MapCoord
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
@@ -18,6 +19,7 @@ __all__ = [
     "make_theta_squared_table",
 ]
 
+log = logging.getLogger(__name__)
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_center=True):
     """Compute exposure map.
@@ -38,37 +40,34 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
     use_region_center: bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------
     map : `~gammapy.maps.WcsNDMap`
         Exposure map
     """
-    energy_true = geom.axes["energy_true"].center
-
     if not use_region_center:
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        offset = region_coord.skycoord.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis]
+        coords, weights = geom.get_wcs_coord_and_weights()
     else:
-        offset = geom.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis, np.newaxis]
+        coords, weights = geom.get_coord(sparse=True), None
 
+    offset = coords.skycoord.separation(pointing)
     exposure = aeff.evaluate(
-        offset=offset, energy_true=energy_true_dim
+        offset=offset, energy_true=coords["energy_true"]
     )
 
-    exposure = (exposure * livetime).to("m2 s")
-    meta = {"livetime": livetime}
+    data = (exposure * livetime).to("m2 s")
+    meta = {
+        "livetime": livetime,
+        "is_pointlike": aeff.is_pointlike
+    }
 
     if not use_region_center:
-        data = np.average(exposure.value, axis=1, weights=weights)
-    else:
-        data = exposure.value
+        data = np.average(data, axis=1, weights=weights)
 
     return Map.from_geom(
-        geom=geom, data=data, unit=exposure.unit, meta=meta
+        geom=geom, data=data.value, unit=data.unit, meta=meta
     )
 
 
@@ -187,13 +186,10 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
         coords["fov_lat"] = fov_lat
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
-
-    values = (bkg_de * d_omega * ontime).to_value("")
+    data = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
-        data = np.sum(weights * values, axis=2)
-    else:
-        data = values
+        data = np.sum(weights * data, axis=2)
 
     bkg_map = Map.from_geom(geom, data=data)
 
@@ -221,27 +217,22 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
-    use_region_center: bool
-        If geom is a RegionGeom, whether to just
-        consider the values at the region center
-        or the insted the average over the whole region
 
     Returns
     -------
     psfmap : `~gammapy.irf.PSFMap`
         the resulting PSF map
     """
-    energy_true = geom.axes["energy_true"].center
-    rad = geom.axes["rad"].center
+    coords = geom.get_coord(sparse=True)
 
     # Compute separations with pointing position
-    offset = geom.separation(pointing)
+    offset = coords.skycoord.separation(pointing)
 
     # Compute PSF values
     data = psf.evaluate(
-            energy_true=energy_true[:, np.newaxis, np.newaxis, np.newaxis],
+            energy_true=coords["energy_true"],
             offset=offset,
-            rad=rad[:, np.newaxis, np.newaxis],
+            rad=coords["rad"],
     )
 
     # Create Map and fill relevant entries
@@ -278,34 +269,26 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     edispmap : `~gammapy.irf.EDispMap`
         the resulting EDisp map
     """
-    energy_true = geom.axes["energy_true"].center
-    migra = geom.axes["migra"].center
-
     # Compute separations with pointing position
     if not use_region_center:
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        offset = region_coord.skycoord.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis, np.newaxis]
-        migra_dim = migra[:, np.newaxis]
+        coords, weights = geom.get_wcs_coord_and_weights()
     else:
-        offset = geom.separation(pointing)
-        energy_true_dim = energy_true[:, np.newaxis, np.newaxis, np.newaxis]
-        migra_dim = migra[:, np.newaxis, np.newaxis]
+        coords, weights = geom.get_coord(sparse=True), None
+
+    offset = coords.skycoord.separation(pointing)
 
     # Compute EDisp values
-    edisp_values = edisp.evaluate(
+    data = edisp.evaluate(
         offset=offset,
-        energy_true=energy_true_dim,
-        migra=migra_dim,
-    ).to_value("")
+        energy_true=coords["energy_true"],
+        migra=coords["migra"],
+    )
 
     if not use_region_center:
-        data = np.average(edisp_values, axis=2, weights=weights)
-    else:
-        data = edisp_values
+        data = np.average(data, axis=2, weights=weights)
 
     # Create Map and fill relevant entries
-    edisp_map = Map.from_geom(geom, data=data, unit="")
+    edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")
     edisp_map.normalize(axis_name="migra")
     return EDispMap(edisp_map, exposure_map)
 
@@ -396,12 +379,13 @@ def make_theta_squared_table(
     alpha_tot = np.zeros(len(table))
     livetime_tot = 0
 
+    create_off = position_off is None
     for observation in observations:
         separation = position.separation(observation.events.radec)
         counts, _ = np.histogram(separation ** 2, theta_squared_axis.edges)
         table["counts"] += counts
 
-        if not position_off:
+        if create_off:
             # Estimate the position of the mirror position
             pos_angle = observation.pointing_radec.position_angle(position)
             sep_angle = observation.pointing_radec.separation(position)

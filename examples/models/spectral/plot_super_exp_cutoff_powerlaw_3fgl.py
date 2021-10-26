@@ -1,7 +1,7 @@
 r"""
 .. _super-exp-cutoff-powerlaw-3fgl-spectral-model:
 
-Super Exponential Cutoff Power Law Model used for 3FGL
+Super exponential cutoff power law model used for 3FGL
 ======================================================
 
 This model parametrises super exponential cutoff power-law model spectrum used for 3FGL.
@@ -28,7 +28,7 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw3FGLSpectralModel,
 )
 
-energy_range = [0.1, 100] * u.TeV
+energy_bounds = [0.1, 100] * u.TeV
 model = SuperExpCutoffPowerLaw3FGLSpectralModel(
     index_1=1,
     index_2=2,
@@ -36,7 +36,7 @@ model = SuperExpCutoffPowerLaw3FGLSpectralModel(
     reference="1 TeV",
     ecut="10 TeV",
 )
-model.plot(energy_range)
+model.plot(energy_bounds)
 plt.grid(which="both")
 plt.ylim(1e-24, 1e-10)
 

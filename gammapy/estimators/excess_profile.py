@@ -31,10 +31,12 @@ class ExcessProfileEstimator(Estimator):
     selection_optional : list of str
         Additional quantities to be estimated. Possible options are:
 
+            * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
-        By default all quantities are estimated.
+        Default is None so the optionnal steps are not executed.
+
 
     Examples
     --------
@@ -255,9 +257,9 @@ class ExcessProfileEstimator(Estimator):
         """
         if self.energy_edges is not None:
             axis = MapAxis.from_energy_edges(self.energy_edges)
-            dataset = dataset.resample_energy_axis(energy_axis=axis)
+            dataset = dataset.resample_energy_axis(energy_axis=axis, name=dataset.name)
         else:
-            dataset = dataset.to_image()
+            dataset = dataset.to_image(name=dataset.name)
 
         spectrum_datasets = self.get_spectrum_datasets(dataset)
 

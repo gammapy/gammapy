@@ -23,7 +23,7 @@ possibly to change its spectral distribution. By default, only the `norm` parame
 `~gammapy.modeling.models.PowerLaWNormSpectralModel` is left free. If needed the spectral parameters
 can be unfrozen.
 
-.. code-block:: python
+.. testcode::
 
 	from gammapy.makers import MapDatasetMaker, FoVBackgroundMaker, SafeMaskMaker
 	from gammapy.datasets import MapDataset
@@ -61,6 +61,7 @@ can be unfrozen.
 The following notebooks shows examples using
 `~gammapy.makers.FoVBackgroundMaker` to perform 3D data extraction and fitting:
 
-* `analysis_2.html <../tutorials/analysis_2.html>`__
-* `analysis_3d.html <../tutorials/analysis_3d.html>`__
+.. nbgallery::
 
+   ../tutorials/starting/analysis_2.ipynb
+   ../tutorials/analysis/3D/analysis_3d.ipynb

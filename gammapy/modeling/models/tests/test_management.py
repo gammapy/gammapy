@@ -6,7 +6,7 @@ from regions import CircleSkyRegion
 from numpy.testing import assert_allclose
 from gammapy.modeling import Covariance
 from gammapy.modeling.models import (
-    BackgroundModel,
+    TemplateNPredModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
@@ -14,7 +14,7 @@ from gammapy.modeling.models import (
     SkyModel,
     FoVBackgroundModel,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 
 
 @pytest.fixture(scope="session")
@@ -23,8 +23,8 @@ def backgrounds():
     geom = WcsGeom.create(skydir=(0, 0), npix=(5, 4), frame="galactic", axes=[axis])
     m = Map.from_geom(geom)
     m.quantity = np.ones(geom.data_shape) * 1e-7
-    background1 = BackgroundModel(m, name="bkg1", datasets_names="dataset-1")
-    background2 = BackgroundModel(m, name="bkg2", datasets_names=["dataset-2"])
+    background1 = TemplateNPredModel(m, name="bkg1", datasets_names="dataset-1")
+    background2 = TemplateNPredModel(m, name="bkg2", datasets_names=["dataset-2"])
     backgrounds = [background1, background2]
     return backgrounds
 
@@ -99,11 +99,13 @@ def test_select_mask(models_gauss):
     inside = models_gauss.select_mask(mask, use_evaluation_region=False)
     assert inside.names == ["source-1"]
 
-    contribute_margin = models_gauss.select_mask(mask, margin=0.6 * u.deg, use_evaluation_region=True)
+    contribute_margin = models_gauss.select_mask(
+        mask, margin=0.6 * u.deg, use_evaluation_region=True
+    )
     assert contribute_margin.names == ["source-1", "source-2", "source-3"]
 
 
-def test_contributes(models):
+def test_contributes():
     center_sky = SkyCoord(3, 4, unit="deg", frame="galactic")
     circle_sky_12 = CircleSkyRegion(center=center_sky, radius=1 * u.deg)
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
@@ -119,8 +121,35 @@ def test_contributes(models):
         spectral_model=PowerLawSpectralModel(),
         name="source-4",
     )
-    assert model4.contributes(mask, margin=0*u.deg)
+    assert model4.contributes(mask, margin=0 * u.deg)
 
+def test_contributes_region_mask():
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.05 deg")
+
+    mask = Map.from_geom(geom, unit='', dtype='bool')
+    mask.data[...] = True
+
+    spatial_model1 = GaussianSpatialModel(
+        lon_0="0.2 deg", lat_0="0 deg", sigma="0.1 deg", frame="galactic"
+    )
+    spatial_model2 = PointSpatialModel(
+        lon_0="0.3 deg", lat_0="0.3 deg", frame="galactic"
+    )
+
+    model1 = SkyModel(
+        spatial_model=spatial_model1,
+        spectral_model=PowerLawSpectralModel(),
+        name="source-1",
+    )
+    model2 = SkyModel(
+        spatial_model=spatial_model2,
+        spectral_model=PowerLawSpectralModel(),
+        name="source-2",
+    )
+    assert model1.contributes(mask, margin=0 * u.deg)
+    assert not model2.contributes(mask, margin=0 * u.deg)
+    assert model2.contributes(mask, margin=0.3 * u.deg)
 
 def test_select(models):
     conditions = [
@@ -128,8 +157,8 @@ def test_select(models):
         {"datasets_names": "dataset-2"},
         {"datasets_names": ["dataset-1", "dataset-2"]},
         {"datasets_names": None},
-        {"tag": "BackgroundModel"},
-        {"tag": ["SkyModel", "BackgroundModel"]},
+        {"tag": "TemplateNPredModel"},
+        {"tag": ["SkyModel", "TemplateNPredModel"]},
         {"tag": "point", "model_type": "spatial"},
         {"tag": ["point", "gauss"], "model_type": "spatial"},
         {"tag": "pl", "model_type": "spectral"},
@@ -158,7 +187,6 @@ def test_select(models):
     ]
     for cdt, xp in zip(conditions, expected):
         selected = models.select(**cdt)
-        print(selected.names)
         assert selected.names == xp
 
     mask = models.selection_mask(**conditions[4]) | models.selection_mask(
@@ -228,7 +256,7 @@ def test_bounds(models):
         min=0,
         max=None,
     )
-    bkg_mask = models.selection_mask(tag="BackgroundModel")
+    bkg_mask = models.selection_mask(tag="TemplateNPredModel")
     assert np.all([m.spectral_model.amplitude.min == 0 for m in models[pl_mask]])
     assert np.all([m._spectral_model.norm.min == 0 for m in models[bkg_mask]])
 

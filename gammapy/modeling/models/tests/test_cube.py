@@ -13,7 +13,7 @@ from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
-    BackgroundModel,
+    TemplateNPredModel,
     CompoundSpectralModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
@@ -38,6 +38,9 @@ def sky_model():
     spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
+    spectral_model.index.error = 0.1
+    spectral_model.amplitude.error = "1e-12 cm-2 s-1 TeV-1"
+
     temporal_model = ConstantTemporalModel()
     return SkyModel(
         spatial_model=spatial_model,
@@ -63,7 +66,9 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    spatial_model = TemplateSpatialModel(m, normalize=False)
+    spatial_model = TemplateSpatialModel(
+        m, normalize=False, filename="diffuse_test.fits"
+    )
     return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
@@ -192,13 +197,13 @@ def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
 
 
 def test_background_model(background):
-    bkg1 = BackgroundModel(background)
+    bkg1 = TemplateNPredModel(background)
     bkg1.spectral_model.norm.value = 2.0
     npred1 = bkg1.evaluate()
     assert_allclose(npred1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
     assert_allclose(npred1.data.sum(), background.data.sum() * 2.0, rtol=1e-3)
 
-    bkg2 = BackgroundModel(background)
+    bkg2 = TemplateNPredModel(background)
     bkg2.spectral_model.norm.value = 2.0
     bkg2.spectral_model.tilt.value = 0.2
     bkg2.spectral_model.reference.quantity = "1000 GeV"
@@ -210,7 +215,7 @@ def test_background_model(background):
 
 def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
-    bkg = BackgroundModel(background, filename=filename)
+    bkg = TemplateNPredModel(background, filename=filename)
     bkg.spectral_model.norm.value = 2.0
     bkg.map.write(filename, overwrite=True)
     bkg_dict = bkg.to_dict()
@@ -298,7 +303,11 @@ class TestSkyModel:
 
     @staticmethod
     def test_str(sky_model):
-        assert "SkyModel" in str(sky_model)
+        string_model = str(sky_model)
+        model_lines = string_model.splitlines()
+        assert "SkyModel" in string_model
+        assert "2.000   +/-    0.10" in model_lines[8]
+
 
     @staticmethod
     def test_parameters(sky_model):
@@ -373,6 +382,21 @@ class Test_Template_with_cube:
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value.mean(), 42)
+
+    @staticmethod
+    def test_write(tmpdir, diffuse_model):
+        filename = tmpdir / diffuse_model.spatial_model.filename
+
+        diffuse_model.spatial_model.filename = None
+        with pytest.raises(IOError):
+            diffuse_model.spatial_model.write()
+
+        with pytest.raises(IOError):
+            Models(diffuse_model).to_dict()
+
+        diffuse_model.spatial_model.filename = filename
+        diffuse_model.spatial_model.write(overwrite=False)
+        TemplateSpatialModel.read(filename)
 
     @staticmethod
     @requires_data()
@@ -585,8 +609,8 @@ class MyCustomGaussianModel(SpatialModel):
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
 
-    sigma_1TeV = Parameter("sigma_1TeV", "1 deg", min=0)
-    sigma_10TeV = Parameter("sigma_10TeV", "0.5 deg", min=0)
+    sigma_1TeV = Parameter("sigma_1TeV", "0.5 deg", min=0)
+    sigma_10TeV = Parameter("sigma_10TeV", "0.1 deg", min=0)
 
     @staticmethod
     def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
@@ -594,6 +618,7 @@ class MyCustomGaussianModel(SpatialModel):
         sigmas = u.Quantity([sigma_1TeV, sigma_10TeV])
         energy_nodes = [1, 10] * u.TeV
         sigma = np.interp(energy, energy_nodes, sigmas)
+        sigma = sigma.to("rad")
 
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
@@ -607,13 +632,18 @@ class MyCustomGaussianModel(SpatialModel):
         return 5 * self.sigma_1TeV.quantity
 
 
-def test_energy_dependent_model(geom_true):
+def test_energy_dependent_model():
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy_true")
+    geom_true = WcsGeom.create(
+        skydir=(0, 0), binsz="0.1 deg", npix=(50, 50), frame="galactic", axes=[axis]
+    )
+
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     spatial_model = MyCustomGaussianModel(frame="galactic")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = sky_model.integrate_geom(geom_true)
 
-    assert_allclose(model.data.sum(), 1.678314e-14, rtol=1e-3)
+    assert_allclose(model.data.sum(), 9.9e-11, rtol=1e-3)
 
 
 @requires_dependency("matplotlib")
@@ -631,17 +661,17 @@ def test_sky_model_create():
 
 
 def test_integrate_geom():
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1*u.deg, frame='icrs')
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
 
-    center = SkyCoord("0d", "0d", frame='icrs')
+    center = SkyCoord("0d", "0d", frame="icrs")
     radius = 0.3 * u.deg
     square = CircleSkyRegion(center, radius)
 
-    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name='energy_true')
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
     geom = RegionGeom(region=square, axes=[axis], binsz_wcs="0.01deg")
 
     integral = sky_model.integrate_geom(geom).data
 
-    assert_allclose(integral/1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)
+    assert_allclose(integral / 1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)

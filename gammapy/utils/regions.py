@@ -5,10 +5,6 @@ Throughout Gammapy, we use `regions` to represent and work with regions.
 
 https://astropy-regions.readthedocs.io
 
-The functions ``make_region`` and ``make_pixel_region`` should be used
-throughout Gammapy in all functions that take ``region`` objects as input.
-They do conversion to a standard form, and some validation.
-
 We might add in other conveniences and features here, e.g. sky coord contains
 without a WCS (see "sky and pixel regions" in PIG 10), or some HEALPix integration.
 
@@ -25,101 +21,16 @@ from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
     CompoundSkyRegion,
-    DS9Parser,
-    PixelRegion,
+    Regions,
     RectangleSkyRegion,
-    Region,
-    SkyRegion,
 )
 
 __all__ = [
-    "make_region",
-    "make_pixel_region",
     "make_orthogonal_rectangle_sky_regions",
     "make_concentric_annulus_sky_regions",
-    "compound_region_to_list",
-    "list_to_compound_region",
+    "compound_region_to_regions",
+    "regions_to_compound_region",
 ]
-
-
-def make_region(region):
-    """Make region object (`regions.Region`).
-
-    See also:
-
-    * `gammapy.utils.regions.make_pixel_region`
-    * https://astropy-regions.readthedocs.io/en/latest/ds9.html
-    * http://ds9.si.edu/doc/ref/region.html
-
-    Parameters
-    ----------
-    region : `regions.Region` or str
-        Region object or DS9 string representation
-
-    Examples
-    --------
-    If a region object in DS9 string format is given, the corresponding
-    region object is created. Note that in the DS9 format "image"
-    or "physical" coordinates start at 1, whereas `regions.PixCoord`
-    starts at 0 (as does Python, Numpy, Astropy, Gammapy, ...).
-
-    >>> from gammapy.utils.regions import make_region
-    >>> make_region("image;circle(10,20,3)")
-    <CirclePixelRegion(PixCoord(x=9.0, y=19.0), radius=3.0)>
-    >>> make_region("galactic;circle(10,20,3)")
-    <CircleSkyRegion(<SkyCoord (Galactic): (l, b) in deg
-        (10., 20.)>, radius=3.0 deg)>
-
-    If a region object is passed in, it is returned unchanged:
-
-    >>> region = make_region("image;circle(10,20,3)")
-    >>> region2 = make_region(region)
-    >>> region is region2
-    True
-    """
-    if isinstance(region, str):
-        # This is basic and works for simple regions
-        # It could be extended to cover more things,
-        # like e.g. compound regions, exclusion regions, ....
-        return DS9Parser(region).shapes[0].to_region()
-    elif isinstance(region, Region):
-        return region
-    else:
-        raise TypeError(f"Invalid type: {region!r}")
-
-
-def make_pixel_region(region, wcs=None):
-    """Make pixel region object (`regions.PixelRegion`).
-
-    See also: `gammapy.utils.regions.make_region`
-
-    Parameters
-    ----------
-    region : `regions.Region` or str
-        Region object or DS9 string representation
-    wcs : `astropy.wcs.WCS`
-        WCS
-
-    Examples
-    --------
-    >>> from gammapy.maps import WcsGeom
-    >>> from gammapy.utils.regions import make_pixel_region
-    >>> wcs = WcsGeom.create().wcs
-    >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
-    >>> region
-    <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
-    """
-    if isinstance(region, str):
-        region = make_region(region)
-
-    if isinstance(region, SkyRegion):
-        if wcs is None:
-            raise ValueError("Need wcs to convert to pixel region")
-        return region.to_pixel(wcs)
-    elif isinstance(region, PixelRegion):
-        return region
-    else:
-        raise TypeError(f"Invalid type: {region!r}")
 
 
 def compound_region_center(compound_region):
@@ -139,7 +50,7 @@ def compound_region_center(compound_region):
     center : `SkyCoord`
         Geometric median of the positions of the individual regions
     """
-    regions = compound_region_to_list(compound_region)
+    regions = compound_region_to_regions(compound_region)
     positions = SkyCoord([region.center for region in regions])
 
     def f(x, coords):
@@ -148,53 +59,55 @@ def compound_region_center(compound_region):
         center = SkyCoord(lon * u.deg, lat * u.deg)
         return np.sum(center.separation(coords).deg)
 
-    eps = 1e-5
+    ra, dec = positions.icrs.ra.wrap_at("180d").deg, positions.icrs.dec.deg
+
     result = minimize(
         f,
-        x0=[0, 0],
+        x0=[np.mean(ra), np.mean(dec)],
         args=(positions,),
-        bounds=[(-180 + eps, 180 - eps), (-90 + eps, 90 - eps)],
+        bounds=[(np.min(ra), np.max(ra)), (np.min(dec), np.max(dec))],
         method="L-BFGS-B",
     )
+
     return SkyCoord(result.x[0], result.x[1], frame="icrs", unit="deg")
 
 
-def compound_region_to_list(region):
+def compound_region_to_regions(region):
     """Create list of regions from compound regions.
 
     Parameters
     ----------
-    regions : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
+    region : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
         Compound sky region
 
     Returns
     -------
-    regions : list of `~regions.SkyRegion`
+    regions : `~regions.Regions`
         List of regions.
     """
-    regions = []
+    regions = Regions([])
 
     if isinstance(region, CompoundSkyRegion):
         if region.operator is operator.or_:
-            regions_1 = compound_region_to_list(region.region1)
+            regions_1 = compound_region_to_regions(region.region1)
             regions.extend(regions_1)
 
-            regions_2 = compound_region_to_list(region.region2)
+            regions_2 = compound_region_to_regions(region.region2)
             regions.extend(regions_2)
         else:
             raise ValueError("Only union operator supported")
     else:
-        return [region]
+        return Regions([region])
 
     return regions
 
 
-def list_to_compound_region(regions):
+def regions_to_compound_region(regions):
     """Create compound region from list of regions, by creating the union.
 
     Parameters
     ----------
-    regions : list of `~regions.SkyRegion`
+    regions : `~regions.Regions`
         List of regions.
 
     Returns

@@ -1,7 +1,7 @@
 r"""
 .. _disk-spatial-model:
 
-Disk Spatial Model
+Disk spatial model
 ==================
 
 This is a spatial model parametrising a disk.
@@ -47,7 +47,13 @@ from gammapy.modeling.models import (
 
 phi = Angle("30 deg")
 model = DiskSpatialModel(
-    lon_0="2 deg", lat_0="2 deg", r_0="1 deg", e=0.8, phi="30 deg", frame="galactic",
+    lon_0="2 deg",
+    lat_0="2 deg",
+    r_0="1 deg",
+    e=0.8,
+    phi=phi,
+    edge_width=0.1,
+    frame="galactic",
 )
 
 ax = model.plot(add_cbar=True)
@@ -70,30 +76,33 @@ ax.text(2.15, 2.3, r"$\phi$", transform=transform)
 
 import matplotlib.pyplot as plt
 from astropy import units as u
+from astropy.visualization import quantity_support
 from gammapy.modeling.models import DiskSpatialModel
 import numpy as np
 
 lons = np.linspace(0, 0.3, 500) * u.deg
 
-r_0, edge = 0.2 * u.deg, 0.1 * u.deg
+r_0, edge_width = 0.2 * u.deg, 0.5
 
-disk = DiskSpatialModel(lon_0="0 deg", lat_0="0 deg", r_0=r_0, edge=edge)
+disk = DiskSpatialModel(lon_0="0 deg", lat_0="0 deg", r_0=r_0, edge_width=edge_width)
 profile = disk(lons, 0 * u.deg)
 
 plt.plot(lons, profile / profile.max(), alpha=0.5)
 plt.xlabel("Radius (deg)")
 plt.ylabel("Profile (A.U.)")
 
-edge_min, edge_max = (r_0 - edge / 2.).value, (r_0 + edge / 2.).value
-plt.vlines([edge_min, edge_max], 0, 1, linestyles=["--"], color="k")
-plt.annotate("", xy=(edge_min, 0.5), xytext=(edge_min + edge.value, 0.5),
-             arrowprops=dict(arrowstyle="<->", lw=2))
-plt.text(0.2, 0.53, "Edge width", ha="center", size=12)
-plt.hlines([0.95], edge_min - 0.02, edge_min + 0.02, linestyles=["-"], color="k")
-plt.text(edge_min + 0.02, 0.95, "95%", size=12, va="center")
-plt.hlines([0.05], edge_max - 0.02, edge_max + 0.02, linestyles=["-"], color="k")
-plt.text(edge_max - 0.02, 0.05, "5%", size=12, va="center", ha="right")
-plt.show()
+edge_min, edge_max = r_0 * (1 - edge_width / 2.), r_0 * (1 + edge_width / 2.)
+with quantity_support():
+    plt.vlines([edge_min, edge_max], 0, 1, linestyles=["--"], color="k")
+    plt.annotate("", xy=(edge_min, 0.5), xytext=(edge_min + r_0 * edge_width, 0.5),
+                 arrowprops=dict(arrowstyle="<->", lw=2))
+    plt.text(0.2, 0.53, "Edge width", ha="center", size=12)
+    margin = 0.02 * u.deg
+    plt.hlines([0.95], edge_min - margin, edge_min + margin, linestyles=["-"], color="k")
+    plt.text(edge_min + margin, 0.95, "95%", size=12, va="center")
+    plt.hlines([0.05], edge_max - margin, edge_max + margin, linestyles=["-"], color="k")
+    plt.text(edge_max - margin, 0.05, "5%", size=12, va="center", ha="right")
+    plt.show()
 
 # %%
 # YAML representation
@@ -107,3 +116,4 @@ model = SkyModel(spectral_model=pwl, spatial_model=gauss, name="pwl-disk-model")
 models = Models([model])
 
 print(models.to_yaml())
+

@@ -1,7 +1,7 @@
 r"""
 .. _compound-spectral-model:
 
-Compound Spectral Model
+Compound spectral model
 =======================
 
 This model is formed by the arithmetic combination of any two other spectral models.
@@ -23,7 +23,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-energy_range = [0.1, 100] * u.TeV
+energy_bounds = [0.1, 100] * u.TeV
 pwl = PowerLawSpectralModel(
     index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"
 )
@@ -31,7 +31,7 @@ lp = LogParabolaSpectralModel(
     amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2.0, beta=1.0
 )
 model = CompoundSpectralModel(pwl, lp, operator.add)
-model.plot(energy_range)
+model.plot(energy_bounds)
 plt.grid(which="both")
 
 # %%

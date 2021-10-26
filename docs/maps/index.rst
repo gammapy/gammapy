@@ -35,7 +35,7 @@ Documentation specific to WCS- and HEALPix-based maps is provided in :doc:`hpxma
 Documentation specific to region-based maps is provided in :doc:`regionmap`.
 
 
-Getting Started
+Getting started
 ===============
 
 All map objects have an abstract inteface provided through the methods of the
@@ -67,7 +67,7 @@ multiplied by the bin volumes to finally return integrated maps, so the output
 predicted counts maps are integral with node_type "edges".
 
 
-Accessor Methods
+Accessor methods
 ----------------
 
 All map objects have a set of accessor methods provided through the abstract
@@ -152,14 +152,15 @@ broadcast a given operation across a grid of coordinate values.
 The ``set`` and ``fill`` methods can both be used to set pixel values. The
 following demonstrates how one can set pixel values:
 
-.. code-block:: python
+.. testcode::
 
     from gammapy.maps import Map
+    import numpy as np
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
     m.set_by_coord(([-0.05, -0.05], [0.05, 0.05]), [0.5, 1.5])
-    m.fill_by_coord( ([-0.05, -0.05], [0.05, 0.05]), weights=[0.5, 1.5])
+    m.fill_by_coord( ([-0.05, -0.05], [0.05, 0.05]), weights=np.array([0.5, 1.5]))
 
 Interface with `~MapCoord` and `~astropy.coordinates.SkyCoord`
 --------------------------------------------------------------
@@ -297,14 +298,16 @@ geometry axis.
 Using `gammapy.maps`
 ====================
 
-:ref:`tutorials` that show examples using ``gammapy.maps``:
+Gammapy tutorial notebooks that show examples using ``gammapy.maps``:
 
-* `maps.html <../tutorials/maps.html>`__
-* `analysis_3d.html <../tutorials/analysis_3d.html>`__
-* `simulate_3d.html <../tutorials/simulate_3d.html>`__
-* `fermi_lat.html <../tutorials/fermi_lat.html>`__
+.. nbgallery::
 
-More detailed documentation on the WCS and HPX classes in `gammapy.maps` can be
+   ../tutorials/api/maps.ipynb
+   ../tutorials/analysis/3D/analysis_3d.ipynb
+   ../tutorials/analysis/3D/simulate_3d.ipynb
+   ../tutorials/data/fermi_lat.ipynb
+
+More detailed documentation on the WCS and HPX classes in ``gammapy.maps`` can be
 found in the following sub-pages:
 
 .. toctree::

@@ -232,6 +232,28 @@ class GTI:
         table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
         self.table = vstack([self.table, table])
 
+    @classmethod
+    def from_stack(cls, gtis, **kwargs):
+        """Stack (concatenate) list of event lists.
+
+        Calls `~astropy.table.vstack`.
+
+        Parameters
+        ----------
+        gtis : list of `GTI`
+            List of good time intervals to stack
+        **kwargs : dict
+            Keywords passed on to `~astropy.table.vstack`
+
+        Returns
+        -------
+        gti : `GTI`
+            Stacked good time intervals.
+        """
+        tables = [_.table for _ in gtis]
+        stacked_table = vstack(tables, **kwargs)
+        return cls(stacked_table)
+
     def union(self, overlap_ok=True, merge_equal=True):
         """Union of overlapping time intervals.
 

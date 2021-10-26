@@ -205,9 +205,8 @@ class TestFermi4FGLObject:
     def test_flux_points(self):
         flux_points = self.source.flux_points
 
-        assert len(flux_points.table) == 7
-        assert "flux_ul" in flux_points.table.colnames
-        assert flux_points.sed_type == "flux"
+        assert flux_points.norm.geom.axes["energy"].nbin == 7
+        assert flux_points.norm_ul
 
         desired = [
             2.2378458e-06,
@@ -218,7 +217,15 @@ class TestFermi4FGLObject:
             2.3897000e-09,
             7.1766204e-11,
         ]
-        assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-5)
+        assert_allclose(flux_points.flux.data.flat, desired, rtol=1e-5)
+
+    def test_flux_points_meta(self):
+        source = self.cat["4FGL J0000.3-7355"]
+        fp = source.flux_points
+
+        assert_allclose(fp.sqrt_ts_threshold_ul, 1)
+        assert_allclose(fp.n_sigma, 1)
+        assert_allclose(fp.n_sigma_ul, 2)
 
     def test_flux_points_ul(self):
         source = self.cat["4FGL J0000.3-7355"]
@@ -233,26 +240,32 @@ class TestFermi4FGLObject:
             np.nan,
             7.99699456e-12,
         ]
-        assert_allclose(flux_points.table["flux_ul"].data, desired, rtol=1e-5)
+        assert_allclose(flux_points.flux_ul.data.flat, desired, rtol=1e-5)
 
     def test_lightcurve_dr1(self):
         lc = self.source.lightcurve(interval="1-year")
-        table = lc.table
+        table = lc.to_table(format="lightcurve", sed_type="flux")
 
         assert len(table) == 8
         assert table.colnames == [
             "time_min",
             "time_max",
+            "e_ref",
+            "e_min",
+            "e_max",
             "flux",
             "flux_errp",
             "flux_errn",
+            "flux_ul",
+            "ts",
+            "sqrt_ts",
         ]
+        axis = lc.geom.axes["time"]
+        expected = Time(54682.6552835, format="mjd", scale="utc")
+        assert_time_allclose(axis.time_min[0].utc, expected)
 
-        expected = Time(54682.655277777776, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_min[0], expected)
-
-        expected = Time(55047.603239293836, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_max[0], expected)
+        expected = Time(55045.30090278, format="mjd", scale="utc")
+        assert_time_allclose(axis.time_max[0].utc, expected)
 
         assert table["flux"].unit == "cm-2 s-1"
         assert_allclose(table["flux"][0], 2.2122326e-06, rtol=1e-3)
@@ -263,7 +276,9 @@ class TestFermi4FGLObject:
         assert table["flux_errn"].unit == "cm-2 s-1"
         assert_allclose(table["flux_errn"][0], 2.3099371e-08, rtol=1e-3)
 
-        table = self.source.lightcurve(interval="2-month").table
+        table = self.source.lightcurve(interval="2-month").to_table(
+            format="lightcurve", sed_type="flux"
+        )
         assert len(table) == 48  # (12 month/year / 2month) * 8 years
 
         assert table["flux"].unit == "cm-2 s-1"
@@ -278,7 +293,9 @@ class TestFermi4FGLObject:
     def test_lightcurve_dr2(self):
         dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz")
         source_dr2 = dr2[self.source_name]
-        table = source_dr2.lightcurve(interval="1-year").table
+        table = source_dr2.lightcurve(interval="1-year").to_table(
+            format="lightcurve", sed_type="flux"
+        )
 
         assert table["flux"].unit == "cm-2 s-1"
         assert_allclose(table["flux"][0], 2.196788e-6, rtol=1e-3)
@@ -376,38 +393,42 @@ class TestFermi3FGLObject:
     def test_flux_points(self):
         flux_points = self.source.flux_points
 
-        assert len(flux_points.table) == 5
-        assert "flux_ul" in flux_points.table.colnames
-        assert flux_points.sed_type == "flux"
+        assert flux_points.energy_axis.nbin == 5
+        assert flux_points.norm_ul
 
         desired = [1.645888e-06, 5.445407e-07, 1.255338e-07, 2.545524e-08, 2.263189e-09]
-        assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-5)
+        assert_allclose(flux_points.flux.data.flat, desired, rtol=1e-5)
 
     def test_flux_points_ul(self):
         source = self.cat["3FGL J0000.2-3738"]
         flux_points = source.flux_points
 
         desired = [4.096391e-09, 6.680059e-10, np.nan, np.nan, np.nan]
-        assert_allclose(flux_points.table["flux_ul"].data, desired, rtol=1e-5)
+        assert_allclose(flux_points.flux_ul.data.flat, desired, rtol=1e-5)
 
     def test_lightcurve(self):
         lc = self.source.lightcurve()
-        table = lc.table
+        table = lc.to_table(format="lightcurve", sed_type="flux")
 
         assert len(table) == 48
         assert table.colnames == [
             "time_min",
             "time_max",
+            "e_ref",
+            "e_min",
+            "e_max",
             "flux",
             "flux_errp",
             "flux_errn",
+            "flux_ul",
         ]
 
         expected = Time(54680.02313657408, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_min[0], expected)
+        axis = lc.geom.axes["time"]
+        assert_time_allclose(axis.time_min[0].utc, expected)
 
-        expected = Time(54710.43824797454, format="mjd", scale="utc")
-        assert_time_allclose(lc.time_max[0], expected)
+        expected = Time(54710.46295139, format="mjd", scale="utc")
+        assert_time_allclose(axis.time_max[0].utc, expected)
 
         assert table["flux"].unit == "cm-2 s-1"
         assert_allclose(table["flux"][0], 2.384e-06, rtol=1e-3)
@@ -461,11 +482,11 @@ class TestFermi2FHLObject:
         # test flux point on  PKS 2155-304
         src = self.cat["PKS 2155-304"]
         flux_points = src.flux_points
-        actual = flux_points.table["flux"]
+        actual = flux_points.flux.quantity[:, 0, 0]
         desired = [2.866363e-10, 6.118736e-11, 3.257970e-16] * u.Unit("cm-2 s-1")
         assert_quantity_allclose(actual, desired)
 
-        actual = flux_points.table["flux_ul"]
+        actual = flux_points.flux_ul.quantity[:, 0, 0]
         desired = [np.nan, np.nan, 1.294092e-11] * u.Unit("cm-2 s-1")
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
@@ -569,11 +590,11 @@ class TestFermi3FHLObject:
     def test_flux_points(self):
         flux_points = self.source.flux_points
 
-        assert len(flux_points.table) == 5
-        assert "flux_ul" in flux_points.table.colnames
+        assert flux_points.energy_axis.nbin == 5
+        assert flux_points.norm_ul
 
         desired = [5.169889e-09, 2.245024e-09, 9.243175e-10, 2.758956e-10, 6.684021e-11]
-        assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-3)
+        assert_allclose(flux_points.flux.data[:, 0, 0], desired, rtol=1e-3)
 
     def test_crab_alias(self):
         for name in ["Crab Nebula", "3FHL J0534.5+2201", "3FGL J0534.5+2201i"]:
@@ -624,3 +645,9 @@ class TestSourceCatalog3FHL:
     def test_extended_sources(self):
         table = self.cat.extended_sources_table
         assert len(table) == 55
+
+    def test_to_models(self):
+        mask = self.cat.table["GLAT"].quantity > 80 * u.deg
+        subcat = self.cat[mask]
+        models = subcat.to_models()
+        assert len(models) == 17

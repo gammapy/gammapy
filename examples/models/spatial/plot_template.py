@@ -1,7 +1,7 @@
 r"""
 .. _template-spatial-model:
 
-Template Spatial Model
+Template spatial model
 ======================
 
 This is a spatial model based on a 2D sky map provided as a template.
@@ -24,7 +24,7 @@ filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_
 
 m = Map.read(filename)
 m.unit = "sr^-1"
-model = TemplateSpatialModel(m)
+model = TemplateSpatialModel(m, filename=filename)
 
 model.plot(add_cbar=True)
 
@@ -34,7 +34,7 @@ model.plot(add_cbar=True)
 # Here is an example YAML file using the model:
 
 pwl = PowerLawSpectralModel()
-template = TemplateSpatialModel(m)
+template = TemplateSpatialModel(m, filename=filename)
 
 model = SkyModel(spectral_model=pwl, spatial_model=template, name="pwl-template-model")
 models = Models([model])

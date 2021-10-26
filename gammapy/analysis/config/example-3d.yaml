@@ -10,7 +10,7 @@ datasets:
         wcs:
             skydir: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg}
             binsize: 0.04 deg
-            fov: {width: 5 deg, height: 5 deg}
+            width: {width: 5 deg, height: 5 deg}
             binsize_irf: 0.2 deg
         selection:
             offset_max: 2.5 deg
@@ -30,3 +30,8 @@ fit:
 
 flux_points:
     energy: {min: 1 TeV, max: 10 TeV, nbins: 2}
+
+excess_map:
+    correlation_radius: 0.1 deg
+    energy_edges: {min: 1 TeV, max: 10 TeV, nbins: 1}
+    parameters: {}

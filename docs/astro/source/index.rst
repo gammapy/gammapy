@@ -12,7 +12,7 @@ Introduction
 The `gammapy.astro.source` module contains classes of source models, which can
 be used for population synthesis of galactic gamma-ray sources.
 
-Getting Started
+Getting started
 ===============
 
 TODO: add basic example.

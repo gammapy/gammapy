@@ -10,7 +10,7 @@ from astropy.table import Table
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import Model, SkyModel
 from gammapy.utils.scripts import make_path
-from .core import SourceCatalog, SourceCatalogObject
+from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = ["SourceCatalogGammaCat", "SourceCatalogObjectGammaCat"]
 
@@ -27,6 +27,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     def __str__(self):
         return self.info()
+
+    @property
+    def flux_points(self):
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        return FluxPoints.from_table(
+            table=self.flux_points_table,
+            reference_model=self.sky_model(),
+            format="gadf-sed"
+        )
 
     def info(self, info="all"):
         """Info string.
@@ -156,11 +165,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += f"Number of spectral points: {d.sed_n_points}\n"
         ss += f"Number of upper limits: {d.sed_n_ul}\n\n"
 
-        flux_points = self.flux_points
-        if flux_points is None:
+        table = self.flux_points_table
+        if table is None:
             ss += "\nNo spectral points available for this source."
         else:
-            lines = flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
+            lines = format_flux_points_table(table).pformat(max_width=-1, max_lines=-1)
             ss += "\n".join(lines)
 
         return ss + "\n"
@@ -187,7 +196,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         elif spec_type == "pl2":
             e_max = data["spec_pl2_e_max"]
             DEFAULT_E_MAX = u.Quantity(1e5, "TeV")
-            if np.isnan(e_max.value):
+
+            if np.isnan(e_max.value) or e_max.value == 0:
                 e_max = DEFAULT_E_MAX
 
             tag = "PowerLaw2SpectralModel"
@@ -287,7 +297,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         m["reference_id"] = d["reference_id"]
 
     @property
-    def flux_points(self):
+    def flux_points_table(self):
         """Differential flux points (`~gammapy.estimators.FluxPoints`)."""
         d = self.data
         table = Table()
@@ -312,15 +322,11 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         # Only keep rows that actually contain information
         table = table[valid]
 
-        # Only keep columns that actually contain information
-        def _del_nan_col(table, colname):
-            if np.isfinite(table[colname]).sum() == 0:
-                del table[colname]
-
         for colname in table.colnames:
-            _del_nan_col(table, colname)
+            if not np.isfinite(table[colname]).any():
+                table.remove_column(colname)
 
-        return FluxPoints(table)
+        return table
 
 
 class SourceCatalogGammaCat(SourceCatalog):
@@ -351,11 +357,11 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     >>> energy_range = [1, 10] * u.TeV
     >>> source.spectral_model().plot(energy_range)
-    <AxesSubplot:xlabel='Energy [TeV]', ylabel='Flux [1 / (cm2 s TeV)]'>
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
     >>> source.spectral_model().plot_error(energy_range)
-    <AxesSubplot:xlabel='Energy [TeV]', ylabel='Flux [1 / (cm2 s TeV)]'>
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
     >>> source.flux_points.plot()
-    <AxesSubplot:xlabel='Energy (TeV)', ylabel='dnde (1 / (cm2 s TeV))'>
+    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde (1 / (cm2 s TeV))'>
     """
 
     tag = "gamma-cat"

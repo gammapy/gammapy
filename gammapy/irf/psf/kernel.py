@@ -112,7 +112,7 @@ class PSFKernel:
         model.position = geom.center_skydir
 
         geom = geom.upsample(factor=factor)
-        map = model.integrate_geom(geom)
+        map = model.integrate_geom(geom, oversampling_factor=1)
         return cls(psf_kernel_map=map.downsample(factor=factor))
 
     @classmethod
@@ -183,7 +183,9 @@ class PSFKernel:
 
         if exposure is None:
             exposure = np.ones(map.geom.axes[0].center.shape)
+
         exposure = u.Quantity(exposure)
+
         if exposure.shape != map.geom.axes[0].center.shape:
             raise ValueError("Incorrect exposure_array shape")
 

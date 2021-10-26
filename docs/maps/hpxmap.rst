@@ -1,6 +1,6 @@
 .. _hpxmap:
 
-HEALPix-based Maps
+HEALPix-based maps
 ==================
 
 This page provides examples and documentation specific to the HEALPix map
@@ -8,7 +8,14 @@ classes. All HEALPix classes inherit from `~gammapy.maps.Map` which provides gen
 interface methods that can be be used to access or update the contents of a map
 without reference to its pixelization scheme.
 
-HEALPix Geometry
+.. warning::
+
+    Gammapy uses `NEST` as default pixel order scheme, while `~healpy`
+    functions have `RING` as the default (see https://healpy.readthedocs.io/en/1.11.0/index.html).
+    If you are interfacing Gammapy HEALPix maps with `~healpy` functions, you need to specify the pixelization scheme
+    either while creating the Gammapy object or when using the `~healpy` functions.
+
+HEALPix geometry
 ----------------
 
 The `~gammapy.maps.HpxGeom` class encapsulates the geometry of a HEALPix map:

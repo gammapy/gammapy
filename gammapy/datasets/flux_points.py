@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+from astropy.visualization import quantity_support
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
@@ -26,7 +27,7 @@ class FluxPointsDataset(Dataset):
     mask_fit : `numpy.ndarray`
         Mask to apply for fitting
     mask_safe : `numpy.ndarray`
-        Mask defining the safe data range.
+        Mask defining the safe data range. By default upper limit values are excluded.
     meta_table : `~astropy.table.Table`
         Table listing informations on observations used to create the dataset.
         One line per observation for stacked datasets.
@@ -46,10 +47,10 @@ class FluxPointsDataset(Dataset):
         model = SkyModel(spectral_model=PowerLawSpectralModel())
 
         dataset = FluxPointsDataset(model, flux_points)
-        fit = Fit([dataset])
-        result = fit.run()
-        print(result)
-        print(result.parameters.to_table())
+        fit = Fit()
+        result = fit.run([dataset])
+        print(result["optimize_result"])
+        print(result["optimize_result"].parameters.to_table())
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
@@ -74,17 +75,19 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
-        if data.sed_type != "dnde":
-            raise ValueError("Currently only flux points of type 'dnde' are supported.")
-
         if mask_safe is None:
-            mask_safe = np.isfinite(data.table["dnde"])
+            mask_safe = (~data.is_ul).data[:, 0, 0]
 
         self.mask_safe = mask_safe
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def gti(self):
+        """Good time interval info (`GTI`)"""
+        return self.data.gti
 
     @property
     def models(self):
@@ -110,7 +113,8 @@ class FluxPointsDataset(Dataset):
         **kwargs : dict
              Keyword arguments passed to `~astropy.table.Table.write`.
         """
-        table = self.data.table.copy()
+        table = self.data.to_table()
+
         if self.mask_fit is None:
             mask_fit = self.mask_safe
         else:
@@ -143,7 +147,7 @@ class FluxPointsDataset(Dataset):
         table.remove_columns(["mask_fit", "mask_safe"])
         return cls(
             name=data["name"],
-            data=FluxPoints(table),
+            data=FluxPoints.from_table(table, format="gadf-sed"),
             mask_fit=mask_fit,
             mask_safe=mask_safe,
         )
@@ -158,7 +162,7 @@ class FluxPointsDataset(Dataset):
         # data section
         n_bins = 0
         if self.data is not None:
-            n_bins = len(self.data.table)
+            n_bins = self.data.energy_axis.nbin
         str_ += "\t{:32}: {} \n".format("Number of total flux points", n_bins)
 
         n_fit_bins = 0
@@ -207,9 +211,12 @@ class FluxPointsDataset(Dataset):
     def stat_array(self):
         """Fit statistic array."""
         model = self.flux_pred()
-        data = self.data.table["dnde"].quantity
-        sigma = self.data.table["dnde_err"].quantity
-        return ((data - model) / sigma).to_value("") ** 2
+        data = self.data.dnde.quantity[:, 0, 0]
+        try:
+            sigma = self.data.dnde_err
+        except AttributeError:
+            sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
+        return ((data - model) / sigma.quantity[:, 0, 0]).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute the flux point residuals ().
@@ -227,13 +234,12 @@ class FluxPointsDataset(Dataset):
             Residuals array.
         """
         fp = self.data
-        data = fp.table[fp.sed_type]
 
         model = self.flux_pred()
 
-        residuals = self._compute_residuals(data, model, method)
+        residuals = self._compute_residuals(fp.dnde.quantity[:, 0, 0], model, method)
         # Remove residuals for upper_limits
-        residuals[fp.is_ul] = np.nan
+        residuals[fp.is_ul.data[:, 0, 0]] = np.nan
         return residuals
 
     def plot_fit(
@@ -263,39 +269,28 @@ class FluxPointsDataset(Dataset):
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
             Flux points, best fit model and residuals plots.
         """
+        import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
 
+        fig = plt.figure(figsize=(9, 7))
+
         gs = GridSpec(7, 1)
-        ax_spectrum, ax_residuals = get_axes(
-            ax_spectrum,
-            ax_residuals,
-            8,
-            7,
-            [gs[:5, :]],
-            [gs[5:, :]],
-            kwargs2={"sharex": ax_spectrum},
-        )
+        if ax_spectrum is None:
+            ax_spectrum = fig.add_subplot(gs[:5, :])
+
+        if ax_residuals is None:
+            ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
+
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
         kwargs_residuals.setdefault("method", "diff/model")
 
-        self.plot_spectrum(ax_spectrum, **kwargs_spectrum)
-        ax_spectrum.label_outer()
-
-        self.plot_residuals(ax_residuals, **kwargs_residuals)
-        method = kwargs_residuals["method"]
-        label = self._residuals_labels[method]
-        unit = (
-            self.data._plot_get_flux_err(self.data.sed_type)[0].unit
-            if method == "diff"
-            else ""
-        )
-        ax_residuals.set_ylabel("Residuals\n" + label + (f"\n[{unit}]" if unit else ""))
-
+        self.plot_spectrum(ax=ax_spectrum, **kwargs_spectrum)
+        self.plot_residuals(ax=ax_residuals, **kwargs_residuals)
         return ax_spectrum, ax_residuals
 
     @property
-    def _energy_range(self):
+    def _energy_bounds(self):
         try:
             return u.Quantity([self.data.energy_min.min(), self.data.energy_max.max()])
         except KeyError:
@@ -329,21 +324,15 @@ class FluxPointsDataset(Dataset):
         fp = self.data
         residuals = self.residuals(method)
 
-        xerr = fp._plot_get_energy_err()
-        if xerr is not None:
-            xerr = (
-                xerr[0].to_value(self._energy_unit),
-                xerr[1].to_value(self._energy_unit),
-            )
+        xerr = self.data.energy_axis.as_plot_xerr
 
-        yerr = fp._plot_get_flux_err(fp.sed_type)
-        if method == "diff":
-            unit = yerr[0].unit
-            yerr = yerr[0].to_value(unit), yerr[1].to_value(unit)
-        elif method == "diff/model":
+        yerr = fp._plot_get_flux_err(sed_type="dnde")
+
+        if method == "diff/model":
             model = self.flux_pred()
-            unit = ""
-            yerr = (yerr[0] / model).to_value(unit), (yerr[1] / model).to_value(unit)
+            yerr = (yerr[0].quantity[:, 0, 0] / model), (yerr[1].quantity[:, 0, 0] / model)
+        elif method == "diff":
+            yerr = yerr[0].quantity[:, 0, 0], yerr[1].quantity[:, 0, 0]
         else:
             raise ValueError('Invalid method, choose between "diff" and "diff/model"')
 
@@ -351,23 +340,25 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
 
-        ax.errorbar(
-            fp.energy_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
-        )
+        with quantity_support():
+            ax.errorbar(
+                fp.energy_ref, residuals, xerr=xerr, yerr=yerr, **kwargs
+            )
+
         ax.axhline(0, color=kwargs["color"], lw=0.5)
 
         # format axes
         ax.set_xlabel(f"Energy [{self._energy_unit}]")
         ax.set_xscale("log")
-        ax.set_xlim(self._energy_range.to_value(self._energy_unit))
         label = self._residuals_labels[method]
-        ax.set_ylabel(f"Residuals ({label}){f' [{unit}]' if unit else ''}")
-        ymin = 1.05 * np.nanmin(residuals.value - yerr[0])
-        ymax = 1.05 * np.nanmax(residuals.value + yerr[1])
-        ax.set_ylim(ymin, ymax)
+        ax.set_ylabel(f"Residuals\n {label}")
+        ymin = np.nanmin(residuals - yerr[0])
+        ymax = np.nanmax(residuals + yerr[1])
+        ymax = max(abs(ymin), ymax)
+        ax.set_ylim(-1.05 * ymax, 1.05 * ymax)
         return ax
 
-    def plot_spectrum(self, ax=None, kwargs_fp=None, kwargs_model=None, **kwargs):
+    def plot_spectrum(self, ax=None, kwargs_fp=None, kwargs_model=None):
         """Plot spectrum including flux points and model.
 
         Parameters
@@ -379,45 +370,34 @@ class FluxPointsDataset(Dataset):
         kwargs_model : dict
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
             `gammapy.modeling.models.SpectralModel.plot_error`.
-        **kwargs: dict
-            Keyword arguments passed to all plot methods.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
         """
-        kwargs_fp = kwargs_fp or {}
-        kwargs_model = kwargs_model or {}
-
-        kwargs.setdefault("energy_power", 2)
-        kwargs.setdefault("energy_unit", "TeV")
-        kwargs.setdefault("flux_unit", "erg-1 cm-2 s-1")
+        kwargs_fp = (kwargs_fp or {}).copy()
+        kwargs_model = (kwargs_model or {}).copy()
 
         # plot flux points
-        plot_kwargs = kwargs.copy()
-        plot_kwargs.update(kwargs_fp)
-        plot_kwargs.setdefault("label", "Flux points")
-        ax = self.data.plot(ax, **plot_kwargs)
+        kwargs_fp.setdefault("label", "Flux points")
+        kwargs_fp.setdefault("sed_type", "e2dnde")
+        ax = self.data.plot(ax, **kwargs_fp)
 
-        plot_kwargs = kwargs.copy()
-        plot_kwargs.update(kwargs_model)
-        plot_kwargs.setdefault("energy_range", self._energy_range)
-        plot_kwargs.setdefault("label", "Best fit model")
-        plot_kwargs.setdefault("zorder", 10)
+        kwargs_model.setdefault("energy_bounds", self._energy_bounds)
+        kwargs_model.setdefault("label", "Best fit model")
+        kwargs_model.setdefault("sed_type", "e2dnde")
+        kwargs_model.setdefault("zorder", 10)
 
         for model in self.models:
             if model.datasets_names is None or self.name in model.datasets_names:
-                model.spectral_model.plot(ax=ax, **plot_kwargs)
+                model.spectral_model.plot(ax=ax, **kwargs_model)
 
-        plot_kwargs.setdefault("color", plot_kwargs.pop("c", ax.lines[-1].get_color()))
-        del plot_kwargs["label"]
+        kwargs_model["color"] = ax.lines[-1].get_color()
+        kwargs_model.pop("label")
 
         for model in self.models:
             if model.datasets_names is None or self.name in model.datasets_names:
-                if not np.all(model == 0):
-                    model.spectral_model.plot_error(ax=ax, **plot_kwargs)
+                model.spectral_model.plot_error(ax=ax, **kwargs_model)
 
-        # format axes
-        ax.set_xlim(self._energy_range.to_value(self._energy_unit))
         return ax

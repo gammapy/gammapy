@@ -10,7 +10,14 @@ __all__ = [
     "shape_2N",
     "shape_divisible_by",
     "symmetric_crop_pad_width",
+    "round_up_to_odd",
+    "round_up_to_even"
 ]
+
+
+def is_power2(n):
+    """Check if an integer is a power of 2."""
+    return (n > 0) & ((n & (n - 1)) == 0)
 
 
 def array_stats_str(x, label=""):
@@ -100,6 +107,22 @@ def round_up_to_odd(f):
         Odd integer
     """
     return (np.ceil(f) // 2 * 2 + 1).astype(int)
+
+
+def round_up_to_even(f):
+    """Round float to even integer
+
+    Parameters
+    ----------
+    f : float
+        Float value
+
+    Returns
+    -------
+    int : int
+        Odd integer
+    """
+    return (np.ceil(f + 1) // 2 * 2).astype(int)
 
 
 def symmetric_crop_pad_width(shape, new_shape):

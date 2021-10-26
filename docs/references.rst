@@ -25,7 +25,7 @@ Glossary
       by `Map` objects (see :ref:`maps`) and contained in a `MapDataset` object.
 
     Aeff
-      Is short for effective area, the IRF representing the detector collection
+      Short for effective area: it is the IRF representing the detector collection
       area. See :ref:`irf-aeff`.
 
     Cash
@@ -39,13 +39,18 @@ Glossary
       compared to the measured counts using the likelihood.
 
     EDisp
-      EDisp is short for energy dispersion, the IRF that represents the probability
+      Short for energy dispersion: it is the IRF that represents the probability
       of measuring a given reconstructed energy as a function of the true photon
       energy. See :ref:`irf-edisp`
 
+    FoV
+      Short for "field of view": it indicates the angular aperture (sometimes also the
+      solid angle) on the sky that is visible by the instrument with a single pointing.
+
     GTI
-      Short for Good Time Interval: an continuous time interval of data acquisition.
-      In CTA, they also represent time intervals where the IRFs are supposed to be constant.
+      Short for Good Time Interval: it indicates a continuous time interval of data
+      acquisition. In CTA, it also represents a time interval in which the IRFs are
+      supposed to be constant.
 
     IRF
       Short for Instrument Response Function. They are used to model the probability
@@ -53,9 +58,11 @@ Glossary
       and :ref:`irf`.
 
     Joint Analysis
-      In a joint analysis individual observations are reduced to datasets and are modeled
-      all together to extract physical informations through model fitting. This is opposed
-      to stacked analysis.
+      A joint fit across multiple datasets implies that each dataset is handled
+      independently during the data reduction stage,
+      and the statistics combined during the likelihood fit.
+      The likelihood is computed for each dataset and summed to get
+      the total fit statistic. See :ref:`joint`
 
     MET
       Short for Mission Elapsed Time; see also :ref:`MET_definition` in :ref:`time_handling`.
@@ -71,13 +78,18 @@ Glossary
     Ring Background
       Background estimation method typically used for image analysis.
 
+    RoI
+      Short for "region of interest": it indicates the spatial region in which the
+      data are analyzed. In practice, at each energy it corresponds with the sky region
+      in which the dataset mask is True.
+
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
       are then stacked to produce a single reduced dataset. The latter is then used
       to obtain physical information through model fitting. Some approximations must
       be made to perform dataset stacking (e.g. loss of individual background normalization,
       averaging of instrument responses, loss of information outside region of interest etc),
-      but this can reduce very significantly the computing and memory cost.
+      but this can reduce very significantly the computing and memory cost. For details, see :ref:`stack`
 
     True Energy
       The true energy (often written `e_true`) is the energy of the incident photon
@@ -91,8 +103,8 @@ Glossary
 
 .. _publications:
 
-Publications
-------------
+References
+----------
 
 This is the bibliography containing the literature references for the implemented methods
 referenced from the Gammapy docs.
@@ -103,7 +115,7 @@ referenced from the Gammapy docs.
 .. [Berge2007] `Berge et al. (2007) <https://ui.adsabs.harvard.edu/abs/2007A%26A...466.1219B>`_,
    "Background modelling in very-high-energy gamma-ray astronomy"
 
-.. [Cash1979] `Cash (1979) <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L>`_,
+.. [Cash1979] `Cash (1979) <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_,
    "Parameter estimation in astronomy through application of the likelihood ratio"
 
 .. [Cousins2007] `Cousins et al. (2007) <https://ui.adsabs.harvard.edu/abs/2007physics...2156C>`_,
@@ -137,6 +149,9 @@ referenced from the Gammapy docs.
 .. [Abdalla2018] `H.E.S.S. Collaboration (2018) <https://www.aanda.org/articles/aa/abs/2018/04/aa32098-17/aa32098-17.html>`_,
     "The H.E.S.S. Galactic plane survey"
 
+.. [Mohrmann2019] `Mohrmann et al. (2019) <https://www.aanda.org/articles/aa/abs/2019/12/aa36452-19/aa36452-19.html>`_,
+    "Validation of open-source science tools and background model construction in γ-ray astronomy"
+
 
 Software references:
 
@@ -167,12 +182,12 @@ Here are some other software packages for gamma-ray astronomy:
   to deal with the data and IRFs and compute the likelihood for a given model.
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `ctapipe`_ --- CTA Python pipeline experimental version
-* `FermiPy`_ --- Fermi-LAT science tools high-level Python interface by Matthew Wood
+* `FermiPy`_ --- Fermi-LAT science tools high level Python interface by Matthew Wood
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `pointlike`_ -- Fermi-LAT science tools alternative by Toby Burnett
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `Gamera`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
-* `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry Light C<->Urve pipeline by Jean-Philippe Lenain
+* `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry light-curve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
 * `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins

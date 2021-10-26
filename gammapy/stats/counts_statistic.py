@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import numpy as np
-from scipy.optimize import brentq, newton
 from scipy.stats import chi2
 from .fit_statistics import cash, get_wstat_mu_bkg, wstat
+from gammapy.utils.roots import find_roots
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
@@ -18,13 +18,17 @@ class CountsStatistic(abc.ABC):
 
     @property
     def sqrt_ts(self):
-        """Return statistical significance of measured excess."""
+        """Return statistical significance of measured excess.
+           The sign of the excess is applied to distinguish positive and negative fluctuations.
+        """
         return np.sign(self.n_sig) * np.sqrt(self.ts)
 
     @property
     def p_value(self):
-        """Return p_value of measured excess."""
-        return chi2.sf(self.ts, 1)
+        """Return p_value of measured excess.
+           Here the value accounts only for the positive excess significance (i.e. one-sided).
+        """
+        return 0.5 * chi2.sf(self.ts, 1)
 
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
@@ -36,21 +40,23 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
+
         errn = np.zeros_like(self.n_on, dtype="float")
         min_range = self.n_sig - 2 * n_sigma * (self.error + 1)
 
         it = np.nditer(errn, flags=["multi_index"])
         while not it.finished:
-            try:
-                res = brentq(
-                    self._stat_fcn,
-                    min_range[it.multi_index],
-                    self.n_sig[it.multi_index],
-                    args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
-                )
-                errn[it.multi_index] = res - self.n_sig[it.multi_index]
-            except ValueError:
+            roots, res = find_roots(
+                self._stat_fcn,
+                min_range[it.multi_index],
+                self.n_sig[it.multi_index],
+                nbin=1,
+                args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
+            )
+            if np.isnan(roots[0]):
                 errn[it.multi_index] = -self.n_on[it.multi_index]
+            else:
+                errn[it.multi_index] = roots[0] - self.n_sig[it.multi_index]
             it.iternext()
 
         return errn
@@ -65,17 +71,20 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
+
         errp = np.zeros_like(self.n_on, dtype="float")
         max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
 
         it = np.nditer(errp, flags=["multi_index"])
         while not it.finished:
-            errp[it.multi_index] = brentq(
+            roots, res = find_roots(
                 self._stat_fcn,
                 self.n_sig[it.multi_index],
                 max_range[it.multi_index],
+                nbin=1,
                 args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
             )
+            errp[it.multi_index] = roots[0]
             it.iternext()
 
         return errp - self.n_sig
@@ -91,23 +100,25 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the upper limit expressed in number of sigma. Default is 3.
         """
+
         ul = np.zeros_like(self.n_on, dtype="float")
 
-        min_range = np.maximum(0, self.n_sig)
-        max_range = min_range + 2 * n_sigma * (self.error + 1)
+        min_range = self.n_sig
+        max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
         it = np.nditer(ul, flags=["multi_index"])
 
         while not it.finished:
-            TS_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
+            ts_ref = self._stat_fcn(min_range[it.multi_index], 0.0, it.multi_index)
 
-            ul[it.multi_index] = brentq(
+            roots, res = find_roots(
                 self._stat_fcn,
                 min_range[it.multi_index],
                 max_range[it.multi_index],
-                args=(TS_ref + n_sigma ** 2, it.multi_index),
+                nbin=1,
+                args=(ts_ref + n_sigma ** 2, it.multi_index),
             )
+            ul[it.multi_index] = roots[0]
             it.iternext()
-
         return ul
 
     def n_sig_matching_significance(self, significance):
@@ -125,19 +136,25 @@ class CountsStatistic(abc.ABC):
         n_sig : `numpy.ndarray`
             Excess
         """
+
         n_sig = np.zeros_like(self.n_bkg, dtype="float")
         it = np.nditer(n_sig, flags=["multi_index"])
 
         while not it.finished:
-            try:
-                n_sig[it.multi_index] = newton(
-                    self._n_sig_matching_significance_fcn,
-                    np.sqrt(self.n_bkg[it.multi_index]) * significance,
-                    args=(significance, it.multi_index),
-                )
-            except:
-                n_sig[it.multi_index] = np.nan
-
+            lower_bound = np.sqrt(self.n_bkg[it.multi_index]) * significance
+            # find upper bounds for secant method as in scipy
+            eps = 1e-4
+            upper_bound = lower_bound * (1 + eps)
+            upper_bound += eps if upper_bound >= 0 else -eps
+            roots, res = find_roots(
+                self._n_sig_matching_significance_fcn,
+                lower_bound=lower_bound,
+                upper_bound=upper_bound,
+                args=(significance, it.multi_index),
+                nbin=1,
+                method="secant",
+            )
+            n_sig[it.multi_index] = roots[0]  # return NaN if fail
             it.iternext()
         return n_sig
 

@@ -35,6 +35,9 @@ class SafeMaskMaker(Maker):
     position : `~astropy.coordinates.SkyCoord`
         Position at which the `aeff_percent` or `bias_percent` are computed. By default,
         it uses the position of the center of the map.
+    fixed_offset : `~astropy.coordinates.Angle`
+        offset, calculated from the pointing position, at which 
+        the `aeff_percent` or `bias_percent` are computed.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
@@ -54,6 +57,7 @@ class SafeMaskMaker(Maker):
         aeff_percent=10,
         bias_percent=10,
         position=None,
+        fixed_offset=None,
         offset_max="3 deg",
     ):
         methods = set(methods)
@@ -66,7 +70,12 @@ class SafeMaskMaker(Maker):
         self.aeff_percent = aeff_percent
         self.bias_percent = bias_percent
         self.position = position
+        self.fixed_offset = fixed_offset
         self.offset_max = Angle(offset_max)
+        if self.position and self.fixed_offset:
+            raise ValueError(
+                "`position` and `fixed_offset` attributes are mutually exclusive"
+            )
 
     def make_mask_offset_max(self, dataset, observation):
         """Make maximum offset mask.
@@ -83,6 +92,9 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Maximum offset mask.
         """
+        if observation is None:
+            raise ValueError("Method 'offset-max' requires an observation object.")
+
         separation = dataset._geom.separation(observation.pointing_radec)
         return separation < self.offset_max
 
@@ -102,6 +114,9 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+        if observation is None:
+            raise ValueError("Method 'offset-max' requires an observation object.")
+
         try:
             energy_max = observation.aeff.meta["HI_THRES"] * u.TeV
             energy_min = observation.aeff.meta["LO_THRES"] * u.TeV
@@ -109,17 +124,17 @@ class SafeMaskMaker(Maker):
             log.warning(f"No default thresholds defined for obs {observation.obs_id}")
             energy_min, energy_max = None, None
 
-        return dataset.counts.geom.energy_mask(
-            energy_min=energy_min, energy_max=energy_max
-        )
+        return dataset._geom.energy_mask(energy_min=energy_min, energy_max=energy_max)
 
-    def make_mask_energy_aeff_max(self, dataset):
+    def make_mask_energy_aeff_max(self, dataset, observation=None):
         """Make safe energy mask from effective area maximum value.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
+        observation: `~gammapy.data.Observation`
+            Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
         -------
@@ -128,25 +143,47 @@ class SafeMaskMaker(Maker):
         """
         geom = dataset._geom
 
-        if self.position is None:
-            position = PointSkyRegion(dataset.counts.geom.center_skydir)
+        if self.fixed_offset:
+            if observation:
+                position = observation.pointing_radec.directional_offset_by(
+                    position_angle=0.0 * u.deg, separation=self.fixed_offset
+                )
+            else:
+                raise ValueError(
+                    f"observation argument is mandatory with {self.fixed_offset}"
+                )
+
+        elif self.position is None and self.fixed_offset is None:
+            position = PointSkyRegion(dataset._geom.center_skydir)
         else:
             position = PointSkyRegion(self.position)
 
-        aeff = dataset.exposure.get_spectrum(position) / dataset.exposure.meta["livetime"]
+        aeff = (
+            dataset.exposure.get_spectrum(position) / dataset.exposure.meta["livetime"]
+        )
         model = TemplateSpectralModel.from_region_map(aeff)
 
+        energy_true = model.energy
+        energy_min = energy_true[np.where(model.values > 0)[0][0]]
+        energy_max = energy_true[-1]
+
         aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
-        energy_min = model.inverse(aeff_thres)
+        inversion = model.inverse(
+            aeff_thres, energy_min=energy_min, energy_max=energy_max
+        )
+        if not np.isnan(inversion[0]):
+            energy_min = inversion[0]
         return geom.energy_mask(energy_min=energy_min)
 
-    def make_mask_energy_edisp_bias(self, dataset):
+    def make_mask_energy_edisp_bias(self, dataset, observation=None):
         """Make safe energy mask from energy dispersion bias.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
+        observation: `~gammapy.data.Observation`
+            Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
         -------
@@ -154,15 +191,33 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         edisp, geom = dataset.edisp, dataset._geom
+        position = None
+
+        if self.fixed_offset:
+            if observation:
+                position = observation.pointing_radec.directional_offset_by(
+                    position_angle=0 * u.deg, separation=self.fixed_offset
+                )
+            else:
+                raise ValueError(
+                    f"{observation} argument is mandatory with {self.fixed_offset}"
+                )
 
         if isinstance(edisp, EDispKernelMap):
-            edisp = edisp.get_edisp_kernel(self.position)
+            if position:
+                edisp = edisp.get_edisp_kernel(position)
+            else:
+                edisp = edisp.get_edisp_kernel(self.position)
         else:
-            e_reco = dataset.counts.geom.axes["energy"].edges
-            edisp = edisp.get_edisp_kernel(self.position, e_reco)
+            if position:
+                e_reco = dataset._geom.axes["energy"].edges
+                edisp = edisp.get_edisp_kernel(position, e_reco)
+            else:
+                e_reco = dataset._geom.axes["energy"].edges
+                edisp = edisp.get_edisp_kernel(self.position, e_reco)
 
         energy_min = edisp.get_bias_energy(self.bias_percent / 100)
-        return geom.energy_mask(energy_min=energy_min)
+        return geom.energy_mask(energy_min=energy_min[0])
 
     @staticmethod
     def make_mask_energy_bkg_peak(dataset):
@@ -182,12 +237,34 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-        geom = dataset.counts.geom
+        geom = dataset._geom
         background_spectrum = dataset.npred_background().get_spectrum()
         idx = np.argmax(background_spectrum.data, axis=0)
         energy_axis = geom.axes["energy"]
         energy_min = energy_axis.pix_to_coord(idx)
         return geom.energy_mask(energy_min=energy_min)
+
+    @staticmethod
+    def make_mask_bkg_invalid(dataset):
+        """Mask non-finite values and zeros values in background maps.
+ 
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+            Dataset to compute mask for.
+
+        Returns
+        -------
+        mask_safe : `~numpy.ndarray`
+            Safe data range mask.
+        """
+        bkg = dataset.background.data
+        mask = np.isfinite(bkg)
+
+        if not dataset.stat_type == "wstat":
+            mask &= (bkg > 0.0)
+
+        return mask
 
     def run(self, dataset, observation=None):
         """Make safe data range mask.
@@ -205,6 +282,10 @@ class SafeMaskMaker(Maker):
             Dataset with defined safe range mask.
         """
         mask_safe = np.ones(dataset._geom.data_shape, dtype=bool)
+
+        if dataset.background is not None:
+            # apply it first so only clipped values are removed for "bkg-peak"
+            mask_safe &= self.make_mask_bkg_invalid(dataset)
 
         if "offset-max" in self.methods:
             mask_safe &= self.make_mask_offset_max(dataset, observation)

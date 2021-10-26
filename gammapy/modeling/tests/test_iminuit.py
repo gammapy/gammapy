@@ -127,7 +127,9 @@ def test_iminuit_confidence():
     par = pars["x"]
     par.min, par.max = 0, 10
 
-    result = confidence_iminuit(minuit=minuit, parameters=pars, parameter=par, sigma=1)
+    result = confidence_iminuit(
+        function=ds.fcn, parameters=pars, parameter=par, sigma=1, reoptimize=True
+    )
 
     assert result["success"]
 

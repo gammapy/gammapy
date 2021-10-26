@@ -29,7 +29,6 @@ ESTIMATOR_REGISTRY = Registry(
 __all__ = [
     "ESTIMATOR_REGISTRY",
     "FluxPoints",
-    "LightCurve",
     "ImageProfile",
     "Estimator",
 ]

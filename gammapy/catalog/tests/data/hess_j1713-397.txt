@@ -13,52 +13,52 @@ Gamma-Cat id         : 96
 
 RA                   :  258.355 deg = 17h13m25s
 DEC                  :  -39.771 deg = -39d46m16s
-GLON                 :  347.311 +/- nan deg
-GLAT                 :   -0.457 +/- nan deg
-Position Error (68%) : nan deg
-Position Error (95%) : nan deg
+GLON                 :  347.311 +/- 0.000 deg
+GLAT                 :   -0.457 +/- 0.000 deg
+Position Error (68%) : 0.000 deg
+Position Error (95%) : 0.000 deg
 ROI number           : -1
 Spatial model        : Shell
-Spatial components   : 
-TS                   : nan
-sqrt(TS)             : nan
-Size                 : 0.500 +/- nan (UL: nan) deg
-R70                  : nan deg
+Spatial components   : --
+TS                   : --
+sqrt(TS)             : --
+Size                 : 0.500 +/- 0.000 (UL: 0.000) deg
+R70                  : 0.000 deg
 RSpec                : 0.600 deg
-Total model excess   : nan
-Excess in RSpec      : nan
-Model Excess in RSpec : nan
-Background in RSpec  : nan
+Total model excess   : --
+Excess in RSpec      : --
+Model Excess in RSpec : --
+Background in RSpec  : --
 Livetime             : 164.0 hours
-Energy threshold     : nan TeV
+Energy threshold     : 0.00 TeV
 Source flux (>1 TeV) : (16.879 +/- 0.824) x 10^-12 cm^-2 s^-1 = (74.69 +/- 3.64) % Crab
 
 Fluxes in RSpec (> 1 TeV):
-Map measurement                : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
-Source model                   : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
-Other component model          : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
-Large scale component model    : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
-Total model                    : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
-Containment in RSpec                :   nan %
-Contamination in RSpec              :   nan %
-Flux correction (RSpec -> Total)    :   nan %
-Flux correction (Total -> RSpec)    :   nan %
+Map measurement                : 0.000 x 10^-12 cm^-2 s^-1 =  0.00 % Crab
+Source model                   : 0.000 x 10^-12 cm^-2 s^-1 =  0.00 % Crab
+Other component model          : 0.000 x 10^-12 cm^-2 s^-1 =  0.00 % Crab
+Large scale component model    : 0.000 x 10^-12 cm^-2 s^-1 =  0.00 % Crab
+Total model                    : 0.000 x 10^-12 cm^-2 s^-1 =  0.00 % Crab
+Containment in RSpec                : -- %
+Contamination in RSpec              : -- %
+Flux correction (RSpec -> Total)    : -- %
+Flux correction (Total -> RSpec)    : -- %
 
 *** Info from spectral analysis ***
 
 Livetime             : 164.0 hours
 Energy range:        : 0.20 to 40.00 TeV
-Background           : nan
-Excess               : nan
+Background           : --
+Excess               : --
 Spectral model       : ECPL
-TS ECPL over PL      : nan
+TS ECPL over PL      : --
 Best-fit model flux(> 1 TeV) : (16.879 +/- 0.824) x 10^-12 cm^-2 s^-1  = (74.69 +/- 3.64) % Crab
 Best-fit model energy flux(1 to 10 TeV) : (59.996 +/- 3.173) x 10^-12 erg cm^-2 s^-1
-Pivot energy         : nan TeV
-Flux at pivot energy : (nan +/- nan) x 10^-12 cm^-2 s^-1 TeV^-1  = (nan +/- nan) % Crab
-PL   Flux(> 1 TeV)   : (nan +/- nan) x 10^-12 cm^-2 s^-1  = (nan +/- nan) % Crab
-PL   Flux(@ 1 TeV)   : (nan +/- nan) x 10^-12 cm^-2 s^-1 TeV^-1  = (nan +/- nan) % Crab
-PL   Index           : nan +/- nan
+Pivot energy         : 0.00 TeV
+Flux at pivot energy : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1 TeV^-1  = (0.00 +/- 0.00) % Crab
+PL   Flux(> 1 TeV)   : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1  = (0.00 +/- 0.00) % Crab
+PL   Flux(@ 1 TeV)   : (0.000 +/- 0.000) x 10^-12 cm^-2 s^-1 TeV^-1  = (0.00 +/- 0.00) % Crab
+PL   Index           : -- +/- --
 ECPL   Flux(@ 1 TeV) : (21.284 +/- 0.936) x 10^-12 cm^-2 s^-1 TeV^-1  = (94.18 +/- 2.67) % Crab
 ECPL   Flux(> 1 TeV) : (16.879 +/- 0.824) x 10^-12 cm^-2 s^-1  = (74.69 +/- 3.64) % Crab
 ECPL Index           : 2.06 +/- 0.02

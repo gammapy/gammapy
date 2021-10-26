@@ -64,7 +64,7 @@ Sphinx during the build documentation process. You may include snippets of Pytho
 within blocks labelled with ``.. code-block:: python`` Sphinx directive. However this code could not be
 tested and it will not be possible to know if it fails in following versions of Gammapy. That's why we
 recommend to use the ``.. testcode::`` directive to enclose code that will be tested against the results
-present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::` directive is provided,
+present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::`` directive is provided,
 only execution tests will be performed.
 
 For example, we could check that the code below does not fail, since it does not provide any output.
@@ -120,12 +120,13 @@ the code as well as the output value produced.
 
         Examples
         --------
-        >>> from gammapy.maps import WcsGeom
-        >>> from gammapy.utils.regions import make_pixel_region
-        >>> wcs = WcsGeom.create().wcs
-        >>> region = make_pixel_region("galactic;circle(10,20,3)", wcs)
-        >>> region
-        <CirclePixelRegion(PixCoord(x=570.9301128316974, y=159.935542455567), radius=6.061376992149382)>
+        >>> from regions import Regions
+        >>> regions = Regions.parse("galactic;circle(10,20,3)", format="ds9")
+        >>> print(regions[0])
+        Region: CircleSkyRegion
+        center: <SkyCoord (Galactic): (l, b) in deg
+            (10., 20.)>
+        radius: 3.0 deg
 
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
 following command.
@@ -223,8 +224,16 @@ repository. It is recommended that developers have `$GAMMAPY_DATA` environment v
 where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  Github repository,
 so they can push and pull eventual modification of its content.
 
+Making a pull request which skips GitHub Actions
+-------------------------------------------------
+
+For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions. 
+Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
+For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__ 
+
 Fix non-Unix line endings
 -------------------------
+
 
 In the past we had non-Unix (i.e. Mac or Windows) line endings in some files.
 This can be painful, e.g. git diff and autopep8 behave strangely.
@@ -370,8 +379,8 @@ with the expected logging level:
         ----------
         caplog : caplog fixture that give you access to the log level, the logger, etc.,
         """
-        assert caplog.records[-1].levelname == "WARNING"
-        assert "warning message" in caplog.records[-1].message
+        assert "WARNING" in [_.levelname for _ in caplog.records]
+        assert "warning message" in [_.message for _ in caplog.records]
 
 Random numbers
 --------------
@@ -603,10 +612,14 @@ This is a compromise between the alternatives:
   Can be annoying for the caller to not get any result.
 * ``bounds_error=False, fill_value=nan`` -- Medium "safe". Always return a result, but put NaN values to make it easy
   for analysers to spot that there's an issue in their results (if pixels with NaN are used, that will usually lead
-  to NaN values in high-level analysis results.
-* ``bounds_error=False, fill_value=0`` or ``bounds_error=False, fill_value=None`` -- Least "safe".
-  Extrapolate with zero or edge values (this is what ``None`` means).
-  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high-level analysis results
+  to NaN values in high level analysis results.
+* ``bounds_error=False, fill_value=0`` -- Less "safe".
+  Extrapolate with zero.
+  Can be very convenient for the caller to avoid dealing with NaN,
+  but if the data values can also be zero you will lose track of invalid pixels.
+* ``bounds_error=False, fill_value=None`` -- "Unsafe".
+  If fill_value is None, values outside the domain are extrapolated.
+  Can lead to errors where e.g. stacked high level analysis results
   aren't quite correct because IRFs or background models or ... were used outside their valid range.
 
 Methods that use interpolation should provide an option to the caller to pass interpolation options on to
@@ -632,7 +645,7 @@ Sometimes putting this in ``gammapy/__init__.py`` can help:
 Following the advice `here <http://stackoverflow.com/questions/22373927/get-traceback-of-warnings/22376126#22376126>`__,
 putting this in ``docs/conf.py`` can also help sometimes:
 
-.. testcode::
+.. code::
 
     import traceback
     import warnings
@@ -1048,7 +1061,7 @@ gallery, and then replace the ``"metadata": {},`` bit above the code cell with t
     "metadata": {
      "nbsphinx-thumbnail": {
       "tooltip": "Learn how to do perform a Fit in gammapy."
-     },
+     }},
 
 Note that you may write whatever you like after "tooltip".
 

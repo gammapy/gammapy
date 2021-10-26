@@ -1,0 +1,168 @@
+.. include:: ../../references.txt
+
+.. _pig-020:
+
+*************************
+PIG 20 - Global Model API
+*************************
+
+* Author: Axel Donath, Régis Terrier and Quentin Remy
+* Created: Jun 10, 2020
+* Withdrawn: Apr 26th, 2021
+* Status: withdrawn
+* Discussion: `GH 2942`_
+
+Abstract
+========
+Gammapy already supports joint-likelihood analyses, where indiviudal, statistically
+independent datasets are represented by a `Dataset` object. In a typical analysis
+scenario there are components in the model, that are only fitted to one of the datasets,
+while other model components are shared between all datasets. This PIG proposes the
+introduction of a global model API for Gammapy, which handles all model components
+involved in an analysis in a single global models object to resolve the spreaded
+model definition in the current implementation. We consider the global model API
+as a key solution for future support for distributed computing in Gammapy.
+
+
+Proposal
+========
+
+Global Model Handling
+---------------------
+Currently different model components are handled in Gammapy by having a different
+selection of models in the ``Dataset.models`` attributes and pointing to the same
+instance of a model, if the component is shared between multiple datasets. This
+works as long as all objects reside in the same memory space.
+
+If datasets are distributed to different processes in future, it is technically
+complex and probably in-efficient to share model states between all sub-processes.
+It is conceptionally simpler if processes communicate with a single server process
+that contains the single global model object.
+
+The fundamental important difference to the current design is, that the model objects
+defined in ``Dataset.models`` can represent copies of the global model object components.
+To avoid
+
+Using the ``.set_models()`` API we propose to hide the ``dataset.models`` attribute.
+
+
+.. code::
+
+    from gammapy.modeling.models import Models
+    from gammapy.datasets import Datasets
+
+    models = Models.read("my-models.yaml")
+    datasets = Datasets.read("my-datasets.yaml")
+
+    # the .set_models call distributes the model components to the datasets
+    datasets.set_models(models)
+
+    # this initialises the model evaluators
+	dataset.set_models(models)
+
+    # and to update parameters during fitting, a manual parameter modification by the user
+    # requires an update as well, maybe we can "detect" parameter changes automatically by
+    # caching the last parameters state?
+    datasets.set_models_parameters(models.parameters)
+
+It also requires adapting our fitting API as well to handle the model separately:
+
+.. code::
+
+    from gammapy.modeling import Fit
+
+    fit = Fit(datasets)
+
+    result = fit.optimize(models)
+
+    # or for estimators
+
+    fpe = FluxPointsEstimator(
+        source="my_source"
+    )
+
+    fpe.run(datasets, models)
+
+
+The public model attribute allows to create a global model on data reduction like so:
+
+.. code::
+
+    models = Models()
+
+    for obs in observations:
+        dataset, bkg_model = bkg_maker.run(dataset)
+        dataset.write(f"dataset-{obs.obs_id}.fits.gz")
+        models.extend(model)
+
+    models.write("my-model.yaml")
+
+
+
+Interaction Between Models and Dataset Objects
+----------------------------------------------
+
+The ``MapDataset`` object features methods such as ``.to_spectrum_dataset()``, ``.to_image()``
+and ``.stack()`` and ``.copy()``. It is convenient for the user if those methods modify the
+models contained in the dataset as well. In particular this is useful for the background model.
+We propose a uniform scheme on how the dataset methods interact with the model.
+
+We propose that in general datasets can modify their own models i.e. copies contained
+in 	``DatasetModels``, but never interact "bottom to top" with the global ``Models``
+object. So the global model object needs to be re-defined or updated explicitly.
+
+The proposed behaviour is as follows:
+- ``Dataset.copy()``, copy the dataset and model, if a new name is specified for the dataset, the ``Model.dataset_names`` are adapted.
+
+- ``Dataset.stack()``, stack the model components by concatenating the model lists. The background model is stacked in place.
+
+- ``.to_image()`` sums up the background model component and ``TemplateSpatialModel`` if it defines an energy axis.
+
+- ``.to_spectrum_dataset``, creates a fixed ``BackgroundModel`` by summing up the data in the same region. Further suggestions? Check which model contributes npred to the region?
+
+In this case we drop the model from the dataset.
+
+
+Background Model Handling
+-------------------------
+
+We also propose to extend the ``BackgroundModel`` to include a spectral model
+component like so:
+
+.. code::
+
+    from gammapy.modeling.models import BackgroundIRFModel, PowerLawNormSpectralModel
+
+    norm = PowerLawNormSpectralModel(norm=1, tilt=0.1)
+
+    bkg_model = BackgroundIRFModel(
+        spectral_model=norm,
+        dataset_name="my-dataset"
+    )
+
+    bkg_model.evaluate(map=map)
+
+After introduction of the global model we propose to remove ``MapDataset.background_model``
+and use ``MapDataset.models["dataset-name-bkg"]`` instead. Introduce a naming convention?
+
+The background data can be stored either in the ``BackgroundModel`` class
+or the ``MapDataset`` object as an IRF. This has implications on the
+serialisation and memory management once we introduce distributed
+computing. In one case the data is stored in the server process
+in the other case it is stored on the sub-process.
+
+To support spectral background models we propose to support ``RegionGeom`` in
+the ``BackgroundModel`` class.
+
+
+Decision
+========
+The authors decided to withdraw the PIG. Most of the proposed changes have been
+discussed and implemented independently in small contributions and discussion
+with the Gammapy developer team.
+
+
+.. _GH 2942: https://github.com/gammapy/gammapy/pull/2942
+.. _gammapy: https://github.com/gammapy/gammapy
+.. _gammapy-web: https://github.com/gammapy/gammapy-webpage
+

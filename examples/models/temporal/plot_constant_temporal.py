@@ -1,7 +1,7 @@
 r"""
 .. _constant-temporal-model:
 
-Constant Temporal Model
+Constant temporal model
 =======================
 
 This model parametrises a constant time model.

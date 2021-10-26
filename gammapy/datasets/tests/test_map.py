@@ -17,11 +17,17 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
-    PSFKernel,
 )
 
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap, RegionGeom, RegionNDMap
+from gammapy.maps import (
+    Map,
+    MapAxis,
+    WcsGeom,
+    WcsNDMap,
+    RegionGeom,
+    HpxGeom,
+)
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -30,11 +36,37 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    ConstantSpectralModel,
     DiskSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-from gammapy.utils.gauss import Gauss2DPDF
+
+
+@pytest.fixture
+def geom_hpx():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    geom = HpxGeom.create(nside=32, axes=[axis], frame="galactic")
+
+    return {"geom": geom, "energy_axis_true": energy_axis_true}
+
+
+@pytest.fixture
+def geom_hpx_partial():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+
+    geom = HpxGeom.create(
+        nside=32, axes=[axis], frame="galactic", region="DISK(110.,75.,10.)"
+    )
+
+    return {"geom": geom, "energy_axis_true": energy_axis_true}
 
 
 @pytest.fixture
@@ -46,6 +78,19 @@ def geom():
         width=(2, 2),
         frame="icrs",
         axes=[axis],
+    )
+
+
+@pytest.fixture
+def geom1():
+    e_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=20)
+    t_axis = MapAxis.from_bounds(0, 10, 2, name="time", unit="s")
+    return WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(3, 2),
+        frame="icrs",
+        axes=[e_axis, t_axis],
     )
 
 
@@ -96,14 +141,14 @@ def get_psf():
         frame="galactic",
         binsz=2,
         width=(2, 2),
-        axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]]
+        axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]],
     )
 
     return make_psf_map(
         psf=psf,
         pointing=SkyCoord(0, 0.5, unit="deg", frame="galactic"),
         geom=geom,
-        exposure_map=Map.from_geom(geom.squash("rad"), unit="cm2 s")
+        exposure_map=Map.from_geom(geom.squash("rad"), unit="cm2 s"),
     )
 
 
@@ -134,7 +179,7 @@ def sky_model():
 
 
 def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
-    """Returns a MapDatasets"""
+    """Returns a MapDataset"""
     # define background model
     background = Map.from_geom(geom)
     background.data += 0.2
@@ -191,6 +236,11 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     assert "background" in str(dataset)
 
     dataset.mask_safe = None
+    assert "MapDataset" in str(dataset)
+
+
+def test_map_dataset_str_empty():
+    dataset = MapDataset()
     assert "MapDataset" in str(dataset)
 
 
@@ -262,18 +312,70 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert spectrum_dataset.exposure.unit == "m2s"
 
     energy_axis = geom.axes["energy"]
-    assert spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis).axes["energy"].nbin == 2
-    assert spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis).axes["energy_true"].nbin == 3
-
-    assert_allclose(
-        spectrum_dataset.edisp.exposure_map.data[1], 3.070917e+09, rtol=1e-5
+    assert (
+        spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis)
+        .axes["energy"]
+        .nbin
+        == 2
     )
+    assert (
+        spectrum_dataset.edisp.get_edisp_kernel(energy_axis=energy_axis)
+        .axes["energy_true"]
+        .nbin
+        == 3
+    )
+
+    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.070917e09, rtol=1e-5)
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
 
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
-    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e+09, rtol=1e-5)
+    assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e09, rtol=1e-5)
+
+
+@requires_data()
+def test_energy_range(sky_model, geom1, geom_etrue):
+    sky_coord1 = SkyCoord(266.5, -29.3, unit="deg")
+    region1 = CircleSkyRegion(sky_coord1, 0.5 * u.deg)
+    mask1 = geom1.region_mask([region1]) & geom1.energy_mask(1 * u.TeV, 7 * u.TeV)
+    sky_coord2 = SkyCoord(266.5, -28.7, unit="deg")
+    region2 = CircleSkyRegion(sky_coord2, 0.5 * u.deg)
+    mask2 = geom1.region_mask([region2]) & geom1.energy_mask(2 * u.TeV, 8 * u.TeV)
+    mask3 = geom1.energy_mask(3 * u.TeV, 6 * u.TeV)
+
+    mask_safe = Map.from_geom(geom1, data=(mask1 | mask2 | mask3).data)
+    dataset = get_map_dataset(geom1, geom_etrue, edisp=None, mask_safe=mask_safe)
+    energy = geom1.axes["energy"].edges.value
+
+    e_min, e_max = dataset.energy_range_safe
+    assert_allclose(e_min.get_by_coord((265, -28, 0)), energy[15])
+    assert_allclose(e_max.get_by_coord((265, -28, 5)), energy[17])
+    assert_allclose(e_min.get_by_coord((sky_coord1.ra, sky_coord1.dec, 6)), energy[10])
+    assert_allclose(e_max.get_by_coord((sky_coord1.ra, sky_coord1.dec, 1)), energy[18])
+    assert_allclose(e_min.get_by_coord((sky_coord2.ra, sky_coord2.dec, 2)), energy[14])
+    assert_allclose(e_max.get_by_coord((sky_coord2.ra, sky_coord2.dec, 7)), energy[19])
+    assert_allclose(e_min.get_by_coord((266.5, -29, 8)), energy[10])
+    assert_allclose(e_max.get_by_coord((266.5, -29, 3)), energy[19])
+
+    e_min, e_max = dataset.energy_range_fit
+    assert_allclose(e_min.get_by_coord((265, -28, 0)), np.nan)
+    assert_allclose(e_max.get_by_coord((265, -28, 5)), np.nan)
+    assert_allclose(e_min.get_by_coord((266, -29, 4)), energy[0])
+    assert_allclose(e_max.get_by_coord((266, -29, 9)), energy[20])
+
+    e_min, e_max = dataset.energy_range
+    assert_allclose(e_min.get_by_coord((266, -29, 4)), energy[15])
+    assert_allclose(e_max.get_by_coord((266, -29, 9)), energy[17])
+
+    mask_zeros = Map.from_geom(geom1, data=np.zeros_like(mask_safe))
+    e_min, e_max = dataset._energy_range(mask_zeros)
+    assert_allclose(e_min.get_by_coord((266.5, -29, 8)), np.nan)
+    assert_allclose(e_max.get_by_coord((266.5, -29, 3)), np.nan)
+
+    e_min, e_max = dataset._energy_range()
+    assert_allclose(e_min.get_by_coord((265, -28, 0)), energy[0])
+    assert_allclose(e_max.get_by_coord((265, -28, 5)), energy[20])
 
 
 @requires_data()
@@ -412,6 +514,31 @@ def test_downsample():
         dataset.downsample(2, axis_name="energy")
 
 
+def test_downsample_energy(geom, geom_etrue):
+    # This checks that downsample and resample_energy_axis give identical results
+    counts = Map.from_geom(geom, dtype="int")
+    counts += 1
+    mask = Map.from_geom(geom, dtype="bool")
+    mask.data[1:] = True
+    counts += 1
+    exposure = Map.from_geom(geom_etrue, unit="m2s")
+    edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
+    dataset = MapDataset(
+        counts=counts,
+        exposure=exposure,
+        mask_safe=mask,
+        edisp=edisp,
+    )
+    dataset_downsampled = dataset.downsample(2, axis_name="energy")
+    dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
+
+    assert dataset_downsampled.edisp.edisp_map.data.shape == (3, 1, 1, 2)
+    assert_allclose(
+        dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
+        dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
+    )
+
+
 @requires_data()
 def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(geom, geom_etrue)
@@ -515,9 +642,9 @@ def test_map_fit(sky_model, geom, geom_etrue):
     models["test-1-bkg"].spectral_model.norm.value = 0.49
     models["test-2-bkg"].spectral_model.norm.value = 0.99
 
-    fit = Fit(datasets)
-    result = fit.run()
-
+    fit = Fit()
+    result = fit.run(datasets=datasets)
+    result = result["optimize_result"]
     assert result.success
     assert "minuit" in repr(result)
 
@@ -547,7 +674,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
     dataset_2.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
 
-    stat = fit.datasets.stat_sum()
+    stat = datasets.stat_sum()
     assert_allclose(stat, 14823.772744, rtol=1e-5)
 
     region = sky_model.spatial_model.to_region()
@@ -562,7 +689,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     # test model evaluation outside image
     dataset_1.models[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
-    assert not dataset_1._evaluators["test-model"].contributes
+    assert not dataset_1.evaluators["test-model"].contributes
 
 
 @requires_dependency("iminuit")
@@ -586,9 +713,9 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     sky_model.parameters["sigma"].value = 0.21
     dataset.models[f"{dataset.name}-bkg"].parameters["norm"].frozen = True
 
-    fit = Fit([dataset])
-    result = fit.run()
-
+    fit = Fit()
+    result = fit.run(datasets=[dataset])
+    result = result["optimize_result"]
     assert result.success
 
     npred = dataset.npred().data.sum()
@@ -769,14 +896,22 @@ def test_npred_sig(sky_model, geom, geom_etrue):
     gauss = GaussianSpatialModel(
         lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
     )
-    model1 = SkyModel(pwl, gauss)
+    model1 = SkyModel(pwl, gauss, name="m1")
 
     bkg = FoVBackgroundModel(dataset_name=dataset.name)
     dataset.models = [bkg, sky_model, model1]
 
+    assert_allclose(
+        dataset.npred_signal(model_name=model1.name).data.sum(), 150.7487, rtol=1e-3
+    )
     assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
     assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
-    assert_allclose(dataset.npred_signal(model=model1).data.sum(), 150.7487, rtol=1e-3)
+
+    with pytest.raises(
+        KeyError,
+        match="m2",
+    ):
+        dataset.npred_signal(model_name="m2")
 
 
 def test_stack_npred():
@@ -790,7 +925,11 @@ def test_stack_npred():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.05, width=(2, 2), frame="icrs", axes=[axis],
+        skydir=(0, 0),
+        binsz=0.05,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
     )
 
     dataset_1 = MapDataset.create(
@@ -896,6 +1035,16 @@ def get_map_dataset_onoff(images, **kwargs):
     mask_data = np.ones(images["counts"].data.shape, dtype=bool)
     mask_safe = Map.from_geom(mask_geom, data=mask_data)
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    energy_axis = mask_geom.axes["energy"]
+    energy_axis_true = energy_axis.copy(name="energy_true")
+
+    psf = PSFMap.from_gauss(
+        energy_axis_true=energy_axis_true, sigma=0.2 * u.deg, geom=mask_geom.to_image()
+    )
+
+    edisp = EDispKernelMap.from_diagonal_response(
+        energy_axis=energy_axis, energy_axis_true=energy_axis_true, geom=mask_geom
+    )
 
     return MapDatasetOnOff(
         counts=images["counts"],
@@ -904,6 +1053,8 @@ def get_map_dataset_onoff(images, **kwargs):
         acceptance_off=images["acceptance_off"],
         exposure=images["exposure"],
         mask_safe=mask_safe,
+        psf=psf,
+        edisp=edisp,
         gti=gti,
         **kwargs,
     )
@@ -924,6 +1075,14 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
         "COUNTS_BANDS",
         "EXPOSURE",
         "EXPOSURE_BANDS",
+        "EDISP",
+        "EDISP_BANDS",
+        "EDISP_EXPOSURE",
+        "EDISP_EXPOSURE_BANDS",
+        "PSF",
+        "PSF_BANDS",
+        "PSF_EXPOSURE",
+        "PSF_EXPOSURE_BANDS",
         "MASK_SAFE",
         "MASK_SAFE_BANDS",
         "GTI",
@@ -957,6 +1116,11 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
     assert_allclose(
         dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
     )
+
+    assert dataset.psf.psf_map == dataset_new.psf.psf_map
+    assert dataset.psf.exposure_map == dataset_new.psf.exposure_map
+    assert dataset.edisp.edisp_map == dataset_new.edisp.edisp_map
+    assert dataset.edisp.exposure_map == dataset_new.edisp.exposure_map
 
 
 def test_create_onoff(geom):
@@ -994,7 +1158,6 @@ def test_map_dataset_onoff_str(images):
 def test_stack_onoff(images):
     dataset = get_map_dataset_onoff(images)
     stacked = dataset.copy()
-
     stacked.stack(dataset)
 
     assert_allclose(stacked.counts.data.sum(), 2 * dataset.counts.data.sum())
@@ -1158,10 +1321,9 @@ def test_map_dataset_on_off_fake(geom):
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     energy_true_axis = geom.axes["energy"].copy(name="energy_true")
 
-    empty_dataset = MapDataset.create(geom, energy_true_axis, rad_axis=rad_axis)
-    empty_dataset = MapDatasetOnOff.from_map_dataset(
-        empty_dataset, acceptance=1, acceptance_off=10.0
-    )
+    empty_dataset = MapDatasetOnOff.create(geom, energy_true_axis, rad_axis=rad_axis)
+    empty_dataset.acceptance.data = 1.0
+    empty_dataset.acceptance_off.data = 10.0
 
     empty_dataset.acceptance_off.data[0, 50, 50] = 0
     background_map = Map.from_geom(geom, data=1)
@@ -1300,7 +1462,11 @@ def test_slice_by_idx():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.5, width=(2, 2), frame="icrs", axes=[axis],
+        skydir=(0, 0),
+        binsz=0.5,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
     )
     dataset = MapDataset.create(geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5)
 
@@ -1405,38 +1571,6 @@ def test_downsample_onoff():
     assert_allclose(downsampled.alpha.data, 0.5)
 
 
-def test_compute_flux_spatial():
-    center = SkyCoord("0 deg", "0 deg", frame="galactic")
-    region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
-
-    nbin = 2
-    energy_axis_true = MapAxis.from_energy_bounds(
-        ".1 TeV", "10 TeV", nbin=nbin, name="energy_true"
-    )
-
-    spectral_model = ConstantSpectralModel()
-    spatial_model = PointSpatialModel(
-        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
-    )
-
-    models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
-    model = Models(models)
-
-    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
-    exposure_region.data += 1.0
-    exposure_region.unit = "m2 s"
-
-    geom = RegionGeom(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
-    psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
-
-    evaluator = MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
-    flux = evaluator.compute_flux_spatial()
-
-    g = Gauss2DPDF(0.1)
-    reference = g.containment_fraction(0.1)
-    assert_allclose(flux.value, reference, rtol=0.003)
-
-
 @requires_data()
 def test_source_outside_geom(sky_model, geom, geom_etrue):
     dataset = get_map_dataset(geom, geom_etrue)
@@ -1495,9 +1629,7 @@ def test_dataset_mixed_geom(tmpdir):
         "1 TeV", "10 TeV", nbin=7, name="energy_true"
     )
 
-    rad_axis = MapAxis.from_bounds(
-        0, 1, nbin=10, name="rad", unit="deg"
-    )
+    rad_axis = MapAxis.from_bounds(0, 1, nbin=10, name="rad", unit="deg")
 
     geom = WcsGeom.create(npix=5, axes=[energy_axis])
     geom_exposure = WcsGeom.create(npix=5, axes=[energy_axis_true])
@@ -1511,10 +1643,7 @@ def test_dataset_mixed_geom(tmpdir):
     )
 
     dataset = MapDataset.from_geoms(
-        geom=geom,
-        geom_exposure=geom_exposure,
-        geom_psf=geom_psf,
-        geom_edisp=geom_edisp
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
     )
 
     filename = tmpdir / "test.fits"
@@ -1539,7 +1668,9 @@ def test_map_dataset_region_geom_npred():
     model_1 = SkyModel(pwl, point, name="model-1")
 
     pwl = PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1")
-    gauss = GaussianSpatialModel(lon_0="0.3 deg", lat_0="0.3 deg", sigma="0.5 deg", frame="galactic")
+    gauss = GaussianSpatialModel(
+        lon_0="0.3 deg", lat_0="0.3 deg", sigma="0.5 deg", frame="galactic"
+    )
     model_2 = SkyModel(pwl, gauss, name="model-2")
 
     dataset.models = [model_1, model_2]
@@ -1547,9 +1678,86 @@ def test_map_dataset_region_geom_npred():
     region = RegionGeom.create("galactic;circle(0, 0, 0.4)").region
     npred_ref = dataset.npred().to_region_nd_map(region)
 
-    dataset_spec = dataset.to_spectrum(region)
+    dataset_spec = dataset.to_region_map_dataset(region)
     dataset_spec.models = [model_1, model_2]
 
     npred = dataset_spec.npred()
 
     assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
+
+
+@requires_dependency("healpy")
+def test_map_dataset_create_hpx_geom(geom_hpx):
+
+    dataset = MapDataset.create(**geom_hpx, binsz_irf=10 * u.deg)
+
+    assert isinstance(dataset.counts.geom, HpxGeom)
+    assert dataset.counts.data.shape == (3, 12288)
+
+    assert isinstance(dataset.background.geom, HpxGeom)
+    assert dataset.background.data.shape == (3, 12288)
+
+    assert isinstance(dataset.exposure.geom, HpxGeom)
+    assert dataset.exposure.data.shape == (4, 12288)
+
+    assert isinstance(dataset.edisp.edisp_map.geom, HpxGeom)
+    assert dataset.edisp.edisp_map.data.shape == (4, 3, 768)
+
+    assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
+    assert dataset.psf.psf_map.data.shape == (4, 66, 768)
+
+
+@requires_dependency("healpy")
+def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
+
+    dataset = MapDataset.create(**geom_hpx_partial, binsz_irf=2 * u.deg)
+
+    assert isinstance(dataset.counts.geom, HpxGeom)
+    assert dataset.counts.data.shape == (3, 90)
+
+    assert isinstance(dataset.background.geom, HpxGeom)
+    assert dataset.background.data.shape == (3, 90)
+
+    assert isinstance(dataset.exposure.geom, HpxGeom)
+    assert dataset.exposure.data.shape == (4, 90)
+
+    assert isinstance(dataset.edisp.edisp_map.geom, HpxGeom)
+    assert dataset.edisp.edisp_map.data.shape == (4, 3, 24)
+
+    assert isinstance(dataset.psf.psf_map.geom, HpxGeom)
+    assert dataset.psf.psf_map.data.shape == (4, 66, 24)
+
+
+@requires_dependency("healpy")
+def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
+
+    dataset_all = MapDataset.create(**geom_hpx, binsz_irf=5 * u.deg)
+
+    gti = GTI.create(start=0 * u.s, stop=30 * u.min)
+    dataset_cutout = MapDataset.create(**geom_hpx_partial, binsz_irf=5 * u.deg, gti=gti)
+    dataset_cutout.counts.data += 1
+    dataset_cutout.background.data += 1
+    dataset_cutout.exposure.data += 1
+    dataset_cutout.mask_safe.data[...] = True
+
+    dataset_all.stack(dataset_cutout)
+
+    assert_allclose(dataset_all.counts.data.sum(), 3 * 90)
+    assert_allclose(dataset_all.background.data.sum(), 3 * 90)
+    assert_allclose(dataset_all.exposure.data.sum(), 4 * 90)
+
+
+@requires_data()
+@requires_dependency("healpy")
+def test_map_dataset_hpx_geom_npred(geom_hpx_partial):
+    hpx_geom = geom_hpx_partial["geom"]
+    hpx_true = hpx_geom.to_image().to_cube([geom_hpx_partial["energy_axis_true"]])
+    dataset = get_map_dataset(hpx_geom, hpx_true, edisp="edispkernelmap")
+
+    pwl = PowerLawSpectralModel()
+    point = PointSpatialModel(lon_0="110 deg", lat_0="75 deg", frame="galactic")
+    sky_model = SkyModel(pwl, point)
+
+    dataset.models = [sky_model]
+
+    assert_allclose(dataset.npred().data.sum(), 54, rtol=1e-3)

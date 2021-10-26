@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of adaptive smoothing algorithms."""
 import numpy as np
-from astropy import units as u
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from gammapy.datasets import Datasets, MapDatasetOnOff
-from gammapy.maps import Map, WcsNDMap
+from gammapy.datasets import MapDatasetOnOff
+from gammapy.maps import Map, WcsNDMap, MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
+from gammapy.utils.pbar import progress_bar
 from .core import Estimator
 from .utils import estimate_exposure_reco_energy
 
@@ -153,16 +153,17 @@ class ASmoothMapEstimator(Estimator):
                 * 'scales'
                 * 'sqrt_ts'.
         """
-        if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"]
-            energy_edges = u.Quantity([energy_axis.edges[0], energy_axis.edges[-1]])
-        else:
-            energy_edges = self.energy_edges
+        energy_axis = self._get_energy_axis(dataset)
 
         results = []
 
-        for energy_min, energy_max in zip(energy_edges[:-1], energy_edges[1:]):
-            dataset_sliced = dataset.slice_by_energy(energy_min, energy_max, name=dataset.name)
+        for energy_min, energy_max in progress_bar(
+            energy_axis.iter_by_edges,
+            desc="Energy bins"
+        ):
+            dataset_sliced = dataset.slice_by_energy(
+                energy_min=energy_min, energy_max=energy_max, name=dataset.name
+            )
             dataset_sliced.models = dataset.models
             result = self.estimate_maps(dataset_sliced)
             results.append(result)
@@ -170,7 +171,7 @@ class ASmoothMapEstimator(Estimator):
         result_all = {}
 
         for name in results[0].keys():
-            map_all = Map.from_images(images=[_[name] for _ in results])
+            map_all = Map.from_stack(maps=[_[name] for _ in results], axis_name="energy")
             result_all[name] = map_all
 
         return result_all

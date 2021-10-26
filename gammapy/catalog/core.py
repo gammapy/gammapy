@@ -2,9 +2,13 @@
 """Source catalog and object base classes."""
 import abc
 import numbers
+import numpy as np
+from copy import deepcopy
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from gammapy.modeling.models import Models
+from gammapy.maps import TimeMapAxis
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
@@ -16,10 +20,22 @@ class Bunch(dict):
         self.__dict__.update(kw)
 
 
+def format_flux_points_table(table):
+    for column in table.colnames:
+        if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
+            table[column].format = ".3e"
+        elif column.startswith(
+                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
+        ):
+            table[column].format = ".3f"
+
+    return table
+
+
 class SourceCatalogObject:
     """Source catalog object.
 
-    This class can be used directly, but it's mostly used as a
+    This class can be used directly, but it is mostly used as a
     base class for the other source catalog classes.
 
     The catalog data on this source is stored in the `source.data`
@@ -60,7 +76,7 @@ class SourceCatalogObject:
 class SourceCatalog(abc.ABC):
     """Generic source catalog.
 
-    This class can be used directly, but it's mostly used as a
+    This class can be used directly, but it is mostly used as a
     base class for the other source catalog classes.
 
     This is a thin wrapper around `~astropy.table.Table`,
@@ -107,7 +123,7 @@ class SourceCatalog(abc.ABC):
             name = row[self._source_name_key]
             names[name.strip()] = idx
             for alias_column in self._source_name_alias:
-                for alias in row[alias_column].split(","):
+                for alias in str(row[alias_column]).split(","):
                     if not alias == "":
                         names[alias.strip()] = idx
         return names
@@ -131,7 +147,7 @@ class SourceCatalog(abc.ABC):
 
         possible_names = [row[self._source_name_key]]
         for alias_column in self._source_name_alias:
-            possible_names += row[alias_column].split(",")
+            possible_names += str(row[alias_column]).split(",")
 
         if name not in possible_names:
             self.__dict__.pop("_name_to_index_cache")
@@ -168,6 +184,10 @@ class SourceCatalog(abc.ABC):
             index = self.row_index(key)
         elif isinstance(key, numbers.Integral):
             index = key
+        elif isinstance(key, np.ndarray) and key.dtype == bool:
+            new = deepcopy(self)
+            new.table = self.table[key]
+            return new
         else:
             raise TypeError(f"Invalid key: {key!r}, {type(key)}\n")
 
@@ -188,6 +208,15 @@ class SourceCatalog(abc.ABC):
         """
         data = table_row_to_dict(self.table[index])
         data[SourceCatalogObject._row_index_key] = index
+
+        hist_table = getattr(self, "hist_table", None)
+        hist2_table = getattr(self, "hist2_table", None)
+
+        if hist_table:
+            data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-fgl")
+
+        if hist2_table:
+            data["time_axis_2"] = TimeMapAxis.from_table(hist2_table, format="fermi-fgl")
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()
@@ -214,6 +243,10 @@ class SourceCatalog(abc.ABC):
     def positions(self):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return _skycoord_from_table(self.table)
+
+    def to_models(self, **kwargs):
+        """ Create Models object from catalogue"""
+        return Models([_.sky_model(**kwargs) for _ in self])
 
 
 def _skycoord_from_table(table):

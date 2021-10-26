@@ -1,8 +1,8 @@
 r"""
 .. _naima-spectral-model:
 
-Naima Spectral Model
-=======================
+Naima spectral model
+====================
 
 This class provides an interface with the models defined in the naima models module.
 
@@ -45,9 +45,8 @@ radiative_model = naima.radiative.InverseCompton(
 model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
 
 opts = {
-    "energy_range": [10 * u.GeV, 80 * u.TeV],
-    "energy_power": 2,
-    "flux_unit": "erg-1 cm-2 s-1",
+    "energy_bounds": [10 * u.GeV, 80 * u.TeV],
+    "sed_type": "e2dnde",
 }
 
 # Plot the total inverse Compton emission

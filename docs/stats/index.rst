@@ -104,17 +104,17 @@ significance" using the following recipe:
 
 .. code::
 
-	from scipy.stats import chi2, norm
+    from scipy.stats import chi2, norm
 
-	def sigma_to_ts(sigma, df=1):
-		"""Convert sigma to delta ts"""
-		p_value = 2 * norm.sf(sigma)
-		return chi2.isf(p_value, df=df)
+    def sigma_to_ts(sigma, df=1):
+        """Convert sigma to delta ts"""
+        p_value = 2 * norm.sf(sigma)
+        return chi2.isf(p_value, df=df)
 
-	def ts_to_sigma(ts, df=1):
-		"""Convert delta ts to sigma"""
-		p_value = chi2.sf(ts, df=df)
-		return norm.isf(0.5 * p_value)
+    def ts_to_sigma(ts, df=1):
+        """Convert delta ts to sigma"""
+        p_value = chi2.sf(ts, df=df)
+        return norm.isf(0.5 * p_value)
 
 In particular, with only one degree of freedom (e.g. flux amplitude), one
 can estimate the statistical significance in terms of number of :math:`\sigma`
@@ -126,12 +126,12 @@ the following convention is used:
 
 .. math::
 
-	\sqrt{\Delta TS} = \left \{
-	\begin{array}{ll}
-	  -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
-	  \sqrt{\Delta TS} & : \text{else}
-	\end{array}
-	\right.
+    \sqrt{\Delta TS} = \left \{
+    \begin{array}{ll}
+      -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
+      \sqrt{\Delta TS} & : \text{else}
+    \end{array}
+    \right.
 
 Counts statistics classes
 =========================
@@ -156,24 +156,24 @@ as well as the confidence interval on the true signal counts number value.
 
     from gammapy.stats import CashCountsStatistic
     stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(stat.n_sig)
-    print(stat.error)
-    print(stat.ts)
-    print(stat.sqrt_ts)
-    print(stat.p_value)
+    print(f"Excess  : {stat.n_sig:.2f}")
+    print(f"Error   : {stat.error:.2f}")
+    print(f"TS      : {stat.ts:.2f}")
+    print(f"sqrt(TS): {stat.sqrt_ts:.2f}")
+    print(f"p-value : {stat.p_value:.4f}")
 
 .. testoutput::
 
-    7.5
-    3.605551275463989
-    7.365232895800901
-    2.7138962573762653
-    0.006649698694909719
-
+    Excess  : 7.50
+    Error   : 3.61
+    TS      : 7.37
+    sqrt(TS): 2.71
+    p-value : 0.0033
 
 The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{on}}`.
-The significance is the square root of the :math:`TS`, multiplied by the sign of the excess,
-which is equivalent to the Li & Ma significance for known background.
+The `sqrt_ts` is the square root of the :math:`TS`, multiplied by the sign of the excess,
+which is equivalent to the Li & Ma significance for known background. The p-value is now computed taking into
+account only positive fluctuations.
 
 To see how the :math:`TS`, relates to the statistic function, we plot below the profile of the Cash
 statistic as a function of the expected signal events number.
@@ -193,21 +193,21 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confi
     excess = count_statistic.n_sig
     errn = count_statistic.compute_errn(1.)
     errp = count_statistic.compute_errp(1.)
-    print(f"68% confidence range: {excess+errn} < mu < {excess+errp}")
+    print(f"68% confidence range: {excess + errn:.3f} < mu < {excess + errp:.3f}")
 
 .. testoutput::
 
-    68% confidence range: 4.219788441647667 < mu < 11.446309124623102
+    68% confidence range: 4.220 < mu < 11.446
 
 .. testcode::
 
     errn_2sigma = count_statistic.compute_errn(2.)
     errp_2sigma = count_statistic.compute_errp(2.)
-    print(f"95% confidence range: {excess+errn_2sigma} < mu < {excess+errp_2sigma}")
+    print(f"95% confidence range: {excess + errn_2sigma:.3f} < mu < {excess + errp_2sigma:.3f}")
 
 .. testoutput::
 
-    95% confidence range: 1.5559091942635206 < mu < 16.10168631791818
+    95% confidence range: 1.556 < mu < 16.102
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values
@@ -239,13 +239,13 @@ Here's how you compute the statistical significance of your detection:
 
     from gammapy.stats import WStatCountsStatistic
     stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
-    print(stat.n_sig)
-    print(stat.sqrt_ts)
+    print(f"Excess  : {stat.n_sig:.2f}")
+    print(f"sqrt(TS): {stat.sqrt_ts:.2f}")
 
 .. testoutput::
 
-    7.5
-    2.09283236849328
+    Excess  : 7.50
+    sqrt(TS): 2.09
 
 .. plot:: stats/plot_wstat_significance.py
 
@@ -256,13 +256,13 @@ the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for k
 
     from gammapy.stats import CashCountsStatistic
     stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(stat.n_sig)
-    print(stat.sqrt_ts)
+    print(f"Excess  : {stat.n_sig:.2f}")
+    print(f"sqrt(TS): {stat.sqrt_ts:.2f}")
 
 .. testoutput::
 
-    7.5
-    2.7138962573762653
+    Excess  : 7.50
+    sqrt(TS): 2.71
 
 .. plot:: stats/plot_cash_significance.py
 
@@ -277,17 +277,17 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
 
     from gammapy.stats import CashCountsStatistic
     stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(stat.compute_errn(1.))
-    print(stat.compute_errp(1.))
-    print(stat.compute_errn(2.))
-    print(stat.compute_errp(2.))
+    print(f"{stat.compute_errn(1.):.2f}")
+    print(f"{stat.compute_errp(1.):.2f}")
+    print(f"{stat.compute_errn(2.):.2f}")
+    print(f"{stat.compute_errp(2.):.2f}")
 
 .. testoutput::
 
-    -3.280211558352333
-    3.9463091246231023
-    -5.944090805736479
-    8.60168631791818
+    -3.28
+    3.95
+    -5.94
+    8.60
 
 The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values

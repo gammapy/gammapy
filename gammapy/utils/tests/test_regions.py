@@ -7,75 +7,42 @@ in https://astropy-regions.readthedocs.io that we rely on in Gammapy.
 That package is still work in progress and not fully developed and
 stable, so need to establish a bit what works and what doesn't.
 """
-import pytest
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-import regions
 from astropy.coordinates import SkyCoord
-from gammapy.maps import WcsGeom
+from regions import Regions
 from gammapy.utils.regions import (
     SphericalCircleSkyRegion,
-    make_pixel_region,
-    make_region,
-    compound_region_center
+    compound_region_center,
+    regions_to_compound_region
 )
 
 
-def test_make_region():
-    reg = make_region("image;circle(10,20,3)")
-    assert isinstance(reg, regions.CirclePixelRegion)
-    assert reg.center.x == 9
-    assert reg.center.y == 19
-    assert reg.radius == 3
-
-    reg = make_region("galactic;circle(10,20,3)")
-    assert reg.center.l.deg == 10
-    assert reg.center.b.deg == 20
-    assert reg.radius.to_value("deg") == 3
-
-    # Existing regions should pass through
-    reg2 = make_region(reg)
-    assert reg is reg2
-
-    with pytest.raises(TypeError):
-        make_pixel_region([reg])
-
-
-def test_make_pixel_region():
-    wcs = WcsGeom.create().wcs
-
-    reg = make_pixel_region("image;circle(10,20,3)")
-    assert isinstance(reg, regions.CirclePixelRegion)
-    assert reg.center.x == 9
-    assert reg.center.y == 19
-    assert reg.radius == 3
-
-    reg = make_pixel_region("galactic;circle(10,20,3)", wcs)
-    assert isinstance(reg, regions.CirclePixelRegion)
-    assert_allclose(reg.center.x, 570.9301128316974)
-    assert_allclose(reg.center.y, 159.935542455567)
-    assert_allclose(reg.radius, 6.061376992149382)
-
-    with pytest.raises(ValueError):
-        make_pixel_region("galactic;circle(10,20,3)")
-
-    with pytest.raises(TypeError):
-        make_pixel_region(99)
-
-
 def test_compound_region_center():
-    region_1 = make_region("galactic;circle(1,1,0.1)")
-    region_2 = make_region("galactic;circle(-1,1,0.1)")
-    region_3 = make_region("galactic;circle(1,-1,0.1)")
-    region_4 = make_region("galactic;circle(-1,-1,0.1)")
+    regions_ds9 = (
+        "galactic;"
+        "circle(1,1,0.1);"
+        "circle(-1,1,0.1);"
+        "circle(1,-1,0.1);"
+        "circle(-1,-1,0.1);"
+    )
 
-    for region in [region_2, region_3, region_4]:
-        region_1 = region_1.union(region)
+    regions = Regions.parse(regions_ds9, format="ds9")
 
-    center = compound_region_center(region_1)
+    region = regions_to_compound_region(regions)
+
+    center = compound_region_center(region)
 
     assert_allclose(center.galactic.l.wrap_at("180d"), 0 * u.deg, atol=1e-6)
     assert_allclose(center.galactic.b, 0 * u.deg, atol=1e-6)
+
+
+def test_compound_region_center_single():
+    region = Regions.parse("galactic;circle(1,1,0.1)", format="ds9")[0]
+    center = compound_region_center(region)
+
+    assert_allclose(center.galactic.l.wrap_at("180d"), 1 * u.deg, atol=1e-6)
+    assert_allclose(center.galactic.b, 1 * u.deg, atol=1e-6)
 
 
 class TestSphericalCircleSkyRegion:

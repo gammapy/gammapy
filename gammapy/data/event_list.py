@@ -6,7 +6,8 @@ from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
-from astropy.units import Quantity, Unit
+from astropy import units as u
+from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
@@ -34,7 +35,7 @@ class EventList:
     E.g. when simulating data, or processing it in certain ways.
     So generally any analysis code should assume ``TIME`` is not sorted.
 
-    Other optional (columns) that are sometimes useful for high-level analysis:
+    Other optional (columns) that are sometimes useful for high level analysis:
 
     - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
     - ``DETX``, ``DETY`` - Field of view coordinates (deg)
@@ -145,18 +146,18 @@ class EventList:
         With 32-bit floats times will be incorrect by a few seconds
         when e.g. adding them to the reference time.
         """
-        met = Quantity(self.table["TIME"].astype("float64"), "second")
+        met = u.Quantity(self.table["TIME"].astype("float64"), "second")
         return self.time_ref + met
 
     @property
     def observation_time_start(self):
         """Observation start time (`~astropy.time.Time`)."""
-        return self.time_ref + Quantity(self.table.meta["TSTART"], "second")
+        return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
 
     @property
     def observation_time_stop(self):
         """Observation stop time (`~astropy.time.Time`)."""
-        return self.time_ref + Quantity(self.table.meta["TSTOP"], "second")
+        return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
 
     @property
     def radec(self):
@@ -229,11 +230,11 @@ class EventList:
 
         Examples
         --------
-        >>> from astropy.units import Quantity
+        >>> from astropy import units as u
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
-        >>> energy_range = Quantity([1, 20], 'TeV')
-        >>> event_list = event_list.select_energy() # doctest: +SKIP
+        >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
+        >>> energy_range =[1, 20] * u.TeV
+        >>> event_list = event_list.select_energy(energy_range=energy_range)
         """
         energy = self.energy
         mask = energy_range[0] <= energy
@@ -297,46 +298,65 @@ class EventList:
 
         Examples
         --------
+        >>> from astropy import units as u
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('events.fits') # doctest: +SKIP
-        >>> phase_region = (0.3, 0.5)
-        >>> event_list = event_list.select_parameter(parameter='PHASE', band=phase_region) # doctest: +SKIP
+        >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
+        >>> zd = (0, 30) * u.deg
+        >>> event_list = event_list.select_parameter(parameter='ZENITH_ANGLE', band=zd)
         """
         mask = band[0] <= self.table[parameter].quantity
         mask &= self.table[parameter].quantity < band[1]
         return self.select_row_subset(mask)
 
-    def _default_plot_energy_edges(self):
+    @property
+    def _default_plot_energy_axis(self):
         energy = self.energy
-        return MapAxis.from_energy_bounds(energy.min(), energy.max(), 50).edges
+        return MapAxis.from_energy_bounds(
+            energy_min=energy.min(), energy_max=energy.max(), nbin=50
+        )
 
-    def plot_energy(self, ax=None, energy_edges=None, **kwargs):
-        """Plot counts as a function of energy."""
+    def plot_energy(self, ax=None,  **kwargs):
+        """Plot counts as a function of energy.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.hist`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+        """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
+        energy_axis = self._default_plot_energy_axis
+
         kwargs.setdefault("log", True)
         kwargs.setdefault("histtype", "step")
+        kwargs.setdefault("bins", energy_axis.edges)
 
-        if energy_edges is None:
-            energy_edges = self._default_plot_energy_edges()
+        with quantity_support():
+            ax.hist(self.energy, **kwargs)
 
-        unit = energy_edges.unit
-
-        ax.hist(self.energy.to_value(unit), bins=energy_edges.value, **kwargs)
-        ax.loglog()
-        ax.set_xlabel(f"Energy ({unit})")
+        energy_axis.format_plot_xaxis(ax=ax)
         ax.set_ylabel("Counts")
+        ax.set_yscale("log")
         return ax
 
-    def plot_time(self, ax=None):
+    def plot_time(self, ax=None, **kwargs):
         """Plots an event rate time curve.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` or None
             Axes
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
         Returns
         -------
@@ -359,7 +379,9 @@ class EventList:
         x = x_edges[:-1] + xerr
         yerr = np.sqrt(y)
 
-        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, fmt="none")
+        kwargs.setdefault("fmt", "none")
+
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, **kwargs)
 
         return ax
 
@@ -388,7 +410,7 @@ class EventList:
             Center position for the offset^2 distribution.
             Default is the observation pointing position.
         **kwargs :
-            Extra keyword arguments are passed to `matplotlib.pyplot.hist`.
+            Extra keyword arguments are passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
@@ -400,13 +422,16 @@ class EventList:
         Load an example event list:
 
         >>> from gammapy.data import EventList
+        >>> from astropy import units as u
+        >>> import matplotlib.pyplot as plt
         >>> events = EventList.read('$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
 
         Plot the offset^2 distribution wrt. the observation pointing position
         (this is a commonly used plot to check the background spatial distribution):
 
+        >>> plt.cla()
         >>> events.plot_offset2_distribution()
-        <AxesSubplot:xlabel='Offset^2 (deg^2)', ylabel='Counts'>
+        <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
 
         Plot the offset^2 distribution wrt. the Crab pulsar position
         (this is commonly used to check both the gamma-ray signal and the background spatial distribution):
@@ -414,9 +439,10 @@ class EventList:
         >>> import numpy as np
         >>> from astropy.coordinates import SkyCoord
         >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
-        >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30)
+        >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30) * u.deg ** 2
+        >>> plt.cla()
         >>> events.plot_offset2_distribution(center=center, bins=bins)
-        <AxesSubplot:xlabel='Offset^2 (deg^2)', ylabel='Counts'>
+        <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
 
         Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
         in this case 30 bins ranging from 0 to (0.3 deg)^2.
@@ -428,19 +454,35 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        offset2 = center.separation(self.radec).deg ** 2
+        offset2 = center.separation(self.radec) ** 2
 
         kwargs.setdefault("histtype", "step")
         kwargs.setdefault("bins", 30)
 
-        ax.hist(offset2, **kwargs)
-        ax.set_xlabel("Offset^2 (deg^2)")
-        ax.set_ylabel("Counts")
+        with quantity_support():
+            ax.hist(offset2, **kwargs)
 
+        ax.set_xlabel(f"Offset^2 ({ax.xaxis.units})")
+        ax.set_ylabel("Counts")
         return ax
 
-    def plot_energy_offset(self, ax=None, center=None):
-        """Plot counts histogram with energy and offset axes."""
+    def plot_energy_offset(self, ax=None, center=None, **kwargs):
+        """Plot counts histogram with energy and offset axes
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis
+        center : `~astropy.coordinates.SkyCoord`
+            Sky coord from which offset is computed
+        **kwargs : dict
+            Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis
+        """
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
 
@@ -449,19 +491,23 @@ class EventList:
         if center is None:
             center = self._plot_center
 
-        energy_bounds = self._default_plot_energy_edges().to_value(self.energy.unit)
+        energy_axis = self._default_plot_energy_axis
+        
         offset = center.separation(self.radec)
-        offset_max = offset.max()
-        offset_bounds = np.linspace(0, offset_max.deg, 30)
+        offset_axis = MapAxis.from_bounds(0 * u.deg, offset.max(), nbin=30, name="offset")
 
         counts = np.histogram2d(
-            x=self.energy.value, y=offset.deg, bins=(energy_bounds, offset_bounds),
+            x=self.energy, y=offset, bins=(energy_axis.edges, offset_axis.edges),
         )[0]
 
-        ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
-        ax.set_xscale("log")
-        ax.set_xlabel(f"Energy ({self.energy.unit})")
-        ax.set_ylabel(f"Offset ({offset.unit})")
+        kwargs.setdefault("norm", LogNorm())
+
+        with quantity_support():
+            ax.pcolormesh(energy_axis.edges, offset_axis.edges, counts.T, **kwargs)
+
+        energy_axis.format_plot_xaxis(ax=ax)
+        offset_axis.format_plot_yaxis(ax=ax)
+        return ax
 
     def check(self, checks="all"):
         """Run checks.
@@ -491,7 +537,7 @@ class EventList:
         for axis in geom.axes:
             try:
                 col = cols[axis.name.upper()]
-                coord[axis.name] = Quantity(col).to(axis.unit)
+                coord[axis.name] = u.Quantity(col).to(axis.unit)
             except KeyError:
                 raise KeyError(f"Column not found in event list: {axis.name!r}")
 
@@ -523,7 +569,7 @@ class EventList:
         The wall time, including dead-time.
         """
         time_delta = (self.observation_time_stop - self.observation_time_start).sec
-        return Quantity(time_delta, "s")
+        return u.Quantity(time_delta, "s")
 
     @property
     def observation_live_time_duration(self):
@@ -536,7 +582,7 @@ class EventList:
 
         where ``f_dead`` is the dead-time fraction.
         """
-        return Quantity(self.table.meta["LIVETIME"], "second")
+        return u.Quantity(self.table.meta["LIVETIME"], "second")
 
     @property
     def observation_dead_time_fraction(self):
@@ -723,7 +769,7 @@ class EventListChecker(Checker):
         "coordinates_altaz": "check_coordinates_altaz",
     }
 
-    accuracy = {"angle": Angle("1 arcsec"), "time": Quantity(1, "microsecond")}
+    accuracy = {"angle": Angle("1 arcsec"), "time": u.Quantity(1, "microsecond")}
 
     # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
     meta_required = [
@@ -794,7 +840,7 @@ class EventListChecker(Checker):
             if name not in t.colnames:
                 yield self._record(level="error", msg=f"Missing table column: {name!r}")
             else:
-                if Unit(unit) != (t[name].unit or ""):
+                if u.Unit(unit) != (t[name].unit or ""):
                     yield self._record(
                         level="error", msg=f"Invalid unit for column: {name!r}"
                     )

@@ -1,20 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
-    BackgroundModel,
     DatasetModels,
     FoVBackgroundModel,
-    PointSpatialModel
 )
 from gammapy.stats import (
     CashCountsStatistic,
@@ -30,12 +26,13 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
 from .utils import get_axes
+from .evaluator import MapEvaluator
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
 
 log = logging.getLogger(__name__)
 
-CUTOUT_MARGIN = 0.1 * u.deg
+
 RAD_MAX = 0.66
 RAD_AXIS_DEFAULT = MapAxis.from_bounds(
     0, RAD_MAX, nbin=66, node_type="edges", name="rad", unit="deg"
@@ -51,7 +48,11 @@ USE_NPRED_CACHE = True
 
 
 def create_map_dataset_geoms(
-    geom, energy_axis_true=None, migra_axis=None, rad_axis=None, binsz_irf=None,
+    geom,
+    energy_axis_true=None,
+    migra_axis=None,
+    rad_axis=None,
+    binsz_irf=None,
 ):
     """Create map geometries for a `MapDataset`
 
@@ -334,22 +335,51 @@ class MapDataset(Dataset):
         """Shape of the counts or background data (tuple)"""
         return self._geom.data_shape
 
-    @property
-    # TODO: make this a method to support different methods?
-    def energy_range(self):
-        """Energy range defined by the safe mask"""
-        energy = self._geom.axes["energy"].edges
-        energy_min, energy_max = energy[:-1], energy[1:]
+    def _energy_range(self, mask_map=None):
+        """Compute the energy range maps with or without the fit mask."""
+        geom = self._geom
+        energy = geom.axes["energy"].edges
+        e_i = geom.axes.index_data("energy")
+        geom = geom.drop("energy")
 
-        if self.mask_safe is not None:
-            if self.mask_safe.data.any():
-                mask = self.mask_safe.data.any(axis=(1, 2))
+        if mask_map is not None:
+            mask = mask_map.data
+            if mask.any():
+                idx = mask.argmax(e_i)
+                energy_min = energy.value[idx]
+                mask_nan = ~mask.any(e_i)
+                energy_min[mask_nan] = np.nan
+
+                mask = np.flip(mask, e_i)
+                idx = mask.argmax(e_i)
+                energy_max = energy.value[::-1][idx]
+                energy_max[mask_nan] = np.nan
             else:
-                return None, None
+                energy_min = np.full(geom.data_shape, np.nan)
+                energy_max = energy_min.copy()
         else:
-            mask = None
+            data_shape = geom.data_shape
+            energy_min = np.full(data_shape, energy.value[0])
+            energy_max = np.full(data_shape, energy.value[-1])
 
-        return u.Quantity([energy_min[mask].min(), energy_max[mask].max()])
+        map_min = Map.from_geom(geom, data=energy_min, unit=energy.unit)
+        map_max = Map.from_geom(geom, data=energy_max, unit=energy.unit)
+        return map_min, map_max
+
+    @property
+    def energy_range(self):
+        """Energy range maps defined by the full mask (mask_safe and mask_fit)."""
+        return self._energy_range(self.mask)
+
+    @property
+    def energy_range_safe(self):
+        """Energy range maps defined by the mask_safe only."""
+        return self._energy_range(self.mask_safe)
+
+    @property
+    def energy_range_fit(self):
+        """Energy range maps defined by the mask_fit only."""
+        return self._energy_range(self.mask_fit)
 
     def npred(self):
         """Predicted source and background counts
@@ -385,16 +415,16 @@ class MapDataset(Dataset):
 
         return background
 
-    def npred_signal(self, model=None):
-        """"Model predicted signal counts.
+    def npred_signal(self, model_name=None):
+        """ "Model predicted signal counts.
 
         If a model is passed, predicted counts from that component is returned.
         Else, the total signal counts are returned.
 
         Parameters
         -------------
-        model: `~gammapy.modeling.models.SkyModel`, optional
-            Sky model to compute the npred for.
+        model_name: str
+        Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
 
@@ -405,10 +435,11 @@ class MapDataset(Dataset):
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
 
-        for evaluator in self.evaluators.values():
-            if model is evaluator.model:
-                return evaluator.compute_npred()
+        evaluators = self.evaluators
+        if model_name is not None:
+            evaluators = {model_name: self.evaluators[model_name]}
 
+        for evaluator in evaluators.values():
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
@@ -580,7 +611,7 @@ class MapDataset(Dataset):
 
         return self.mask_safe.interp_to_geom(geom)
 
-    def to_masked(self, name=None):
+    def to_masked(self, name=None, nan_to_num=True):
         """Return masked dataset
 
         Parameters
@@ -594,10 +625,10 @@ class MapDataset(Dataset):
             Masked dataset
         """
         dataset = self.__class__.from_geoms(**self.geoms, name=name)
-        dataset.stack(self)
+        dataset.stack(self, nan_to_num=nan_to_num)
         return dataset
 
-    def stack(self, other):
+    def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place.
 
         Safe mask is applied to compute the stacked counts data. Counts outside
@@ -636,23 +667,37 @@ class MapDataset(Dataset):
         other: `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
+
         """
         if self.counts and other.counts:
-            self.counts.stack(other.counts, weights=other.mask_safe)
+            self.counts.stack(
+                other.counts, weights=other.mask_safe, nan_to_num=nan_to_num
+            )
 
         if self.exposure and other.exposure:
-            self.exposure.stack(other.exposure, weights=other.mask_safe_image)
+            self.exposure.stack(
+                other.exposure, weights=other.mask_safe_image, nan_to_num=nan_to_num
+            )
             # TODO: check whether this can be improved e.g. handling this in GTI
-            if "livetime" in other.exposure.meta:
+
+            if "livetime" in other.exposure.meta and np.any(other.mask_safe_image):
                 if "livetime" in self.exposure.meta:
                     self.exposure.meta["livetime"] += other.exposure.meta["livetime"]
                 else:
-                    self.exposure.meta["livetime"] = other.exposure.meta["livetime"]
+                    self.exposure.meta["livetime"] = other.exposure.meta[
+                        "livetime"
+                    ].copy()
 
         if self.stat_type == "cash":
             if self.background and other.background:
                 background = self.npred_background() * self.mask_safe
-                background.stack(other.npred_background(), other.mask_safe)
+                background.stack(
+                    other.npred_background(),
+                    weights=other.mask_safe,
+                    nan_to_num=nan_to_num,
+                )
                 self.background = background
 
         if self.psf and other.psf:
@@ -830,9 +875,9 @@ class MapDataset(Dataset):
                 )
             elif self.stat_type == "cash":
                 stat = CashCountsStatistic(counts_spec.data, npred_spec.data)
-            yerr = stat.error.flatten()
+            yerr = stat.error
         elif method == "diff/sqrt(model)":
-            yerr = np.ones_like(residuals.data.flatten())
+            yerr = np.ones_like(residuals.data)
         else:
             raise ValueError(
                 'Invalid method, choose between "diff" and "diff/sqrt(model)"'
@@ -901,13 +946,9 @@ class MapDataset(Dataset):
 
         return ax_spatial, ax_spectral
 
-    @lazyproperty
-    def _counts_data(self):
-        return self.counts.data.astype(float)
-
     def stat_sum(self):
         """Total likelihood given the current model parameters."""
-        counts, npred = self._counts_data, self.npred().data
+        counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
             return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
@@ -927,7 +968,8 @@ class MapDataset(Dataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred()
-        npred.data = random_state.poisson(npred.data)
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = random_state.poisson(data)
         self.counts = npred
 
     def to_hdulist(self):
@@ -1000,13 +1042,17 @@ class MapDataset(Dataset):
             kwargs["exposure"] = exposure
 
         if "BACKGROUND" in hdulist:
-            kwargs["background"] = Map.from_hdulist(hdulist, hdu="background", format=format)
+            kwargs["background"] = Map.from_hdulist(
+                hdulist, hdu="background", format=format
+            )
 
         if "EDISP" in hdulist:
             edisp_map = Map.from_hdulist(hdulist, hdu="edisp", format=format)
 
             try:
-                exposure_map = Map.from_hdulist(hdulist, hdu="edisp_exposure", format=format)
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="edisp_exposure", format=format
+                )
             except KeyError:
                 exposure_map = None
 
@@ -1018,7 +1064,9 @@ class MapDataset(Dataset):
         if "PSF" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf", format=format)
             try:
-                exposure_map = Map.from_hdulist(hdulist, hdu="psf_exposure", format=format)
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="psf_exposure", format=format
+                )
             except KeyError:
                 exposure_map = None
             kwargs["psf"] = PSFMap(psf_map, exposure_map)
@@ -1067,7 +1115,7 @@ class MapDataset(Dataset):
                 file_name=path.name,
                 hdu_name=hdu_name.upper(),
                 cache=cache,
-                format=format
+                format=format,
             )
 
         kwargs["edisp"] = HDULocation(
@@ -1076,7 +1124,7 @@ class MapDataset(Dataset):
             file_name=path.name,
             hdu_name="EDISP",
             cache=cache,
-            format=format
+            format=format,
         )
 
         kwargs["psf"] = HDULocation(
@@ -1085,7 +1133,7 @@ class MapDataset(Dataset):
             file_name=path.name,
             hdu_name="PSF",
             cache=cache,
-            format=format
+            format=format,
         )
 
         return cls(**kwargs)
@@ -1115,7 +1163,9 @@ class MapDataset(Dataset):
         name = make_name(name)
 
         if lazy:
-            return cls._read_lazy(name=name, filename=filename, cache=cache, format=format)
+            return cls._read_lazy(
+                name=name, filename=filename, cache=cache, format=format
+            )
         else:
             with fits.open(str(make_path(filename)), memmap=False) as hdulist:
                 return cls.from_hdulist(hdulist, name=name, format=format)
@@ -1189,8 +1239,9 @@ class MapDataset(Dataset):
             if self.mask_safe is not None:
                 mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
                 mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
-                if not mask_exposure.any():
-                    mask_exposure = slice(None)
+
+            if not mask_exposure.any():
+                mask_exposure = slice(None)
 
             exposure_min = np.min(self.exposure.quantity[mask_exposure])
             exposure_max = np.max(self.exposure.quantity[mask_exposure])
@@ -1259,13 +1310,12 @@ class MapDataset(Dataset):
         """
         from .spectrum import SpectrumDataset
 
-        dataset = self.to_spectrum(region=on_region, name=name)
+        dataset = self.to_region_map_dataset(region=on_region, name=name)
 
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containment correction is only supported for"
-                    " `CircleSkyRegion`."
+                    "Containment correction is only supported for" " `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
@@ -1275,13 +1325,21 @@ class MapDataset(Dataset):
                 containment = self.psf.containment(
                     position=on_region.center,
                     energy_true=energy_true,
-                    rad=on_region.radius
+                    rad=on_region.radius,
                 )
                 dataset.exposure.quantity *= containment.reshape(geom.data_shape)
 
         kwargs = {}
 
-        for name in ["counts", "edisp", "mask_safe", "mask_fit", "exposure", "gti", "meta_table"]:
+        for name in [
+            "counts",
+            "edisp",
+            "mask_safe",
+            "mask_fit",
+            "exposure",
+            "gti",
+            "meta_table",
+        ]:
             kwargs[name] = getattr(dataset, name)
 
         if self.stat_type == "cash":
@@ -1289,11 +1347,13 @@ class MapDataset(Dataset):
 
         return SpectrumDataset(**kwargs)
 
-    def to_spectrum(self, region, name=None):
-        """Return a ~gammapy.datasets.SpectrumDataset from on_region.
+    def to_region_map_dataset(self, region, name=None):
+        """Integrate the map dataset in a given region.
 
-        The model is not exported to the ~gammapy.datasets.SpectrumDataset.
-        It must be set after the dataset extraction.
+        Counts and background of the dataset are integrated in the given region,
+        taking the safe mask into accounts. The exposure is averaged in the
+        region again taking the safe mask into account. The PSF and energy
+        dispersion kernel are taken at the center of the region.
 
         Parameters
         ----------
@@ -1436,7 +1496,7 @@ class MapDataset(Dataset):
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
-                    factor=factor, axis_name=axis_name
+                    factor=factor, axis_name=axis_name, weights=self.mask_safe_edisp
                 )
             else:
                 kwargs["edisp"] = self.edisp.copy()
@@ -1548,7 +1608,7 @@ class MapDataset(Dataset):
 
         return self.__class__(**kwargs)
 
-    def slice_by_energy(self, energy_min, energy_max, name=None):
+    def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
         """Select and slice datasets in energy range
 
         Parameters
@@ -1565,7 +1625,16 @@ class MapDataset(Dataset):
 
         """
         name = make_name(name)
+
         energy_axis = self._geom.axes["energy"]
+
+        if energy_min is None:
+            energy_min = energy_axis.bounds[0]
+
+        if energy_max is None:
+            energy_max = energy_axis.bounds[1]
+
+        energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
 
         group = energy_axis.group_table(edges=[energy_min, energy_max])
 
@@ -1693,7 +1762,7 @@ class MapDatasetOnOff(MapDataset):
 
     See Also
     --------
-    MapDatasetOn, SpectrumDataset, FluxPointsDataset
+    MapDataset, SpectrumDataset, FluxPointsDataset
 
     """
 
@@ -1722,21 +1791,8 @@ class MapDatasetOnOff(MapDataset):
         self.counts = counts
         self.counts_off = counts_off
         self.exposure = exposure
-
-        if np.isscalar(acceptance):
-            acceptance = Map.from_geom(
-                self._geom, data=np.ones(self.data_shape) * acceptance
-            )
-
         self.acceptance = acceptance
-
-        if np.isscalar(acceptance_off):
-            acceptance_off = Map.from_geom(
-                self._geom, data=np.ones(self.data_shape) * acceptance_off
-            )
-
         self.acceptance_off = acceptance_off
-
         self.gti = gti
         self.mask_fit = mask_fit
         self.psf = psf
@@ -1895,7 +1951,7 @@ class MapDatasetOnOff(MapDataset):
             geom_edisp=geom_edisp,
             name=name,
             reference_time=reference_time,
-            **kwargs
+            **kwargs,
         )
 
         off_maps = {}
@@ -1903,7 +1959,7 @@ class MapDatasetOnOff(MapDataset):
         for key in ["counts_off", "acceptance", "acceptance_off"]:
             off_maps[key] = Map.from_geom(geom, unit="")
 
-        return cls.from_map_dataset(dataset, **off_maps)
+        return cls.from_map_dataset(dataset, name=name, **off_maps)
 
     @classmethod
     def from_map_dataset(
@@ -1936,6 +1992,12 @@ class MapDatasetOnOff(MapDataset):
             alpha = acceptance / acceptance_off
             counts_off = dataset.npred_background() / alpha
 
+        if np.isscalar(acceptance):
+            acceptance = Map.from_geom(dataset._geom, data=acceptance)
+
+        if np.isscalar(acceptance_off):
+            acceptance_off = Map.from_geom(dataset._geom, data=acceptance_off)
+
         return cls(
             models=dataset.models,
             counts=dataset.counts,
@@ -1948,12 +2010,12 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             gti=dataset.gti,
-            name=dataset.name,
+            name=name,
             meta_table=dataset.meta_table,
         )
 
     def to_map_dataset(self, name=None):
-        """ Convert a MapDatasetOnOff to  MapDataset
+        """Convert a MapDatasetOnOff to  MapDataset
         The background model template is taken as alpha*counts_off
 
         Parameters
@@ -1966,7 +2028,6 @@ class MapDatasetOnOff(MapDataset):
         dataset: `MapDataset`
             Map dataset with cash statistics
         """
-
         name = make_name(name)
 
         return MapDataset(
@@ -1985,16 +2046,18 @@ class MapDatasetOnOff(MapDataset):
     @property
     def _is_stackable(self):
         """Check if the Dataset contains enough information to be stacked"""
-        if (
+        incomplete = (
             self.acceptance_off is None
             or self.acceptance is None
             or self.counts_off is None
-        ):
+        )
+        unmasked = np.any(self.mask_safe.data)
+        if incomplete and unmasked:
             return False
         else:
             return True
 
-    def stack(self, other):
+    def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place.
 
         The ``acceptance`` of the stacked dataset is normalized to 1,
@@ -2009,6 +2072,8 @@ class MapDatasetOnOff(MapDataset):
         ----------
         other : `MapDatasetOnOff`
             Other dataset
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
         """
         if not isinstance(other, MapDatasetOnOff):
             raise TypeError("Incompatible types for MapDatasetOnOff stacking")
@@ -2020,11 +2085,24 @@ class MapDatasetOnOff(MapDataset):
         total_off = Map.from_geom(geom)
         total_alpha = Map.from_geom(geom)
 
-        total_off.stack(self.counts_off, weights=self.mask_safe)
-        total_off.stack(other.counts_off, weights=other.mask_safe)
-
-        total_alpha.stack(self.alpha * self.counts_off, weights=self.mask_safe)
-        total_alpha.stack(other.alpha * other.counts_off, weights=other.mask_safe)
+        if self.counts_off:
+            total_off.stack(
+                self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num
+            )
+            total_alpha.stack(
+                self.alpha * self.counts_off,
+                weights=self.mask_safe,
+                nan_to_num=nan_to_num,
+            )
+        if other.counts_off:
+            total_off.stack(
+                other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num
+            )
+            total_alpha.stack(
+                other.alpha * other.counts_off,
+                weights=other.mask_safe,
+                nan_to_num=nan_to_num,
+            )
 
         with np.errstate(divide="ignore", invalid="ignore"):
             acceptance_off = total_off / total_alpha
@@ -2038,11 +2116,9 @@ class MapDatasetOnOff(MapDataset):
         self.acceptance.data[...] = 1
         self.acceptance_off = acceptance_off
 
-        if self.counts_off is not None:
-            self.counts_off *= self.mask_safe
-            self.counts_off.stack(other.counts_off, weights=other.mask_safe)
+        self.counts_off = total_off
 
-        super().stack(other)
+        super().stack(other, nan_to_num=nan_to_num)
 
     def stat_sum(self):
         """Total likelihood given the current model parameters."""
@@ -2061,14 +2137,18 @@ class MapDatasetOnOff(MapDataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
-        npred.data = random_state.poisson(npred.data)
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = random_state.poisson(data)
 
         npred_bkg = random_state.poisson(npred_background.data)
 
         self.counts = npred + npred_bkg
 
         npred_off = npred_background / self.alpha
-        npred_off.data = random_state.poisson(npred_off.data)
+        data_off = np.nan_to_num(
+            npred_off.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0
+        )
+        npred_off.data = random_state.poisson(data_off)
         self.counts_off = npred_off
 
     def to_hdulist(self):
@@ -2113,7 +2193,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `MapDatasetOnOff`
             Map dataset.
         """
         kwargs = {}
@@ -2123,18 +2203,49 @@ class MapDatasetOnOff(MapDataset):
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts", format=format)
 
         if "COUNTS_OFF" in hdulist:
-            kwargs["counts_off"] = Map.from_hdulist(hdulist, hdu="counts_off", format=format)
+            kwargs["counts_off"] = Map.from_hdulist(
+                hdulist, hdu="counts_off", format=format
+            )
 
         if "ACCEPTANCE" in hdulist:
-            kwargs["acceptance"] = Map.from_hdulist(hdulist, hdu="acceptance", format=format)
+            kwargs["acceptance"] = Map.from_hdulist(
+                hdulist, hdu="acceptance", format=format
+            )
 
         if "ACCEPTANCE_OFF" in hdulist:
-            kwargs["acceptance_off"] = Map.from_hdulist(hdulist, hdu="acceptance_off", format=format)
+            kwargs["acceptance_off"] = Map.from_hdulist(
+                hdulist, hdu="acceptance_off", format=format
+            )
 
         if "EXPOSURE" in hdulist:
-            kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure", format=format)
+            kwargs["exposure"] = Map.from_hdulist(
+                hdulist, hdu="exposure", format=format
+            )
 
-        # TODO: this misses the PSFMap and EDispMap
+        if "EDISP" in hdulist:
+            edisp_map = Map.from_hdulist(hdulist, hdu="edisp", format=format)
+
+            try:
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="edisp_exposure", format=format
+                )
+            except KeyError:
+                exposure_map = None
+
+            if edisp_map.geom.axes[0].name == "energy":
+                kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
+            else:
+                kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
+
+        if "PSF" in hdulist:
+            psf_map = Map.from_hdulist(hdulist, hdu="psf", format=format)
+            try:
+                exposure_map = Map.from_hdulist(
+                    hdulist, hdu="psf_exposure", format=format
+                )
+            except KeyError:
+                exposure_map = None
+            kwargs["psf"] = PSFMap(psf_map, exposure_map)
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
@@ -2199,7 +2310,9 @@ class MapDatasetOnOff(MapDataset):
         info["alpha"] = alpha
 
         info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"], info["counts_off"], acceptance / acceptance_off,
+            info["counts"],
+            info["counts_off"],
+            acceptance / acceptance_off,
         ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
@@ -2435,397 +2548,3 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off=acceptance_off,
             counts_off=counts_off,
         )
-
-
-class MapEvaluator:
-    """Sky model evaluation on maps.
-
-    This evaluates a sky model on a 3D map and convolves with the IRFs,
-    and returns a map of the predicted counts.
-    Note that background counts are not added.
-
-    For now, we only make it work for 3D WCS maps with an energy axis.
-    No HPX, no other axes, those can be added later here or via new
-    separate model evaluator classes.
-
-    Parameters
-    ----------
-    model : `~gammapy.modeling.models.SkyModel`
-        Sky model
-    exposure : `~gammapy.maps.Map`
-        Exposure map
-    psf : `~gammapy.irf.PSFKernel`
-        PSF kernel
-    edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
-    mask : `~gammapy.maps.Map`
-        Mask to apply to the likelihood for fitting.
-    gti : `~gammapy.data.GTI`
-        GTI of the observation or union of GTI if it is a stacked observation
-    evaluation_mode : {"local", "global"}
-        Model evaluation mode.
-        The "local" mode evaluates the model components on smaller grids to save computation time.
-        This mode is recommended for local optimization algorithms.
-        The "global" evaluation mode evaluates the model components on the full map.
-        This mode is recommended for global optimization algorithms.
-    use_cache : bool
-        Use npred caching.
-    """
-
-    def __init__(
-        self,
-        model=None,
-        exposure=None,
-        psf=None,
-        edisp=None,
-        gti=None,
-        mask=None,
-        evaluation_mode="local",
-        use_cache=True,
-    ):
-
-        self.model = model
-        self.exposure = exposure
-        self.psf = psf
-        self.edisp = edisp
-        self.mask = mask
-        self.gti = gti
-        self.use_cache = use_cache
-        self._init_position = None
-        self.contributes = True
-        self.psf_containment = None
-
-        if evaluation_mode not in {"local", "global"}:
-            raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
-
-        self.evaluation_mode = evaluation_mode
-
-        # TODO: this is preliminary solution until we have further unified the model handling
-        if isinstance(self.model, BackgroundModel) or self.model.spatial_model is None or self.model.evaluation_radius is None:
-            self.evaluation_mode = "global"
-
-        # define cached computations
-        self._compute_npred = lru_cache()(self._compute_npred)
-        self._compute_npred_psf_after_edisp = lru_cache()(
-            self._compute_npred_psf_after_edisp
-        )
-        self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
-        self._cached_parameter_values = None
-        self._cached_parameter_values_spatial = None
-
-    # workaround for the lru_cache pickle issue
-    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key, value in state.items():
-            func = getattr(value, "__wrapped__", None)
-            if func is not None:
-                state[key] = func
-
-        return state
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in ["_compute_npred", "_compute_flux_spatial", "_compute_npred_psf_after_edisp"]:
-                state[key] = lru_cache()(value)
-
-        self.__dict__ = state
-
-    @property
-    def geom(self):
-        """True energy map geometry (`~gammapy.maps.Geom`)"""
-        return self.exposure.geom
-
-    @property
-    def needs_update(self):
-        """Check whether the model component has drifted away from its support."""
-        # TODO: simplify and clean up
-        if isinstance(self.model, BackgroundModel):
-            return False
-        elif self.exposure is None:
-            return True
-        elif self.geom.is_region:
-            return False
-        elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
-            return False
-        else:
-            position = self.model.position
-            separation = self._init_position.separation(position)
-            update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
-
-        return update
-
-    @property
-    def psf_width(self):
-        """Width of the PSF"""
-        if self.psf is not None:
-            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
-        else:
-            psf_width = 0 * u.deg
-        return psf_width
-
-    def use_psf_containment(self, geom):
-        """Use psf containment for point sources and circular regions"""
-        if not geom.is_region:
-            return False
-
-        is_point_model = isinstance(self.model.spatial_model, PointSpatialModel)
-        is_circle_region = isinstance(geom.region, CircleSkyRegion)
-        return is_point_model & is_circle_region
-
-    @property
-    def cutout_width(self):
-        """Cutout width for the model component"""
-        return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
-
-    def update(self, exposure, psf, edisp, geom, mask):
-        """Update MapEvaluator, based on the current position of the model component.
-
-        Parameters
-        ----------
-        exposure : `~gammapy.maps.Map`
-            Exposure map.
-        psf : `gammapy.irf.PSFMap`
-            PSF map.
-        edisp : `gammapy.irf.EDispMap`
-            Edisp map.
-        geom : `WcsGeom`
-            Counts geom
-        mask : `~gammapy.maps.Map`
-            Mask to apply to the likelihood for fitting.
-        """
-        # TODO: simplify and clean up
-        log.debug("Updating model evaluator")
-
-        # lookup edisp
-        if edisp:
-            energy_axis = geom.axes["energy"]
-            self.edisp = edisp.get_edisp_kernel(
-                self.model.position, energy_axis=energy_axis
-            )
-
-        # lookup psf
-        if psf and self.model.spatial_model:
-            if self.apply_psf_after_edisp:
-                geom = geom.as_energy_true
-            else:
-                geom = exposure.geom
-
-            if self.use_psf_containment(geom=geom):
-                energy_true = geom.axes["energy_true"].center.reshape((-1, 1, 1))
-                self.psf_containment = psf.containment(
-                    energy_true=energy_true, rad=geom.region.radius
-                )
-            else:
-                if geom.is_region:
-                    # here we just need to choose a large value, the size will be the rad max
-                    geom = geom.to_wcs_geom(width_min="15 deg")
-
-                self.psf = psf.get_psf_kernel(position=self.model.position, geom=geom)
-
-        if self.evaluation_mode == "local":
-            self._init_position = self.model.position
-            self.contributes = self.model.contributes(
-                mask=mask, margin=self.psf_width
-            )
-
-            if self.contributes:
-                self.exposure = exposure.cutout(
-                    position=self.model.position, width=self.cutout_width
-                )
-        else:
-            self.exposure = exposure
-
-        self._compute_npred.cache_clear()
-        self._compute_flux_spatial.cache_clear()
-        self._compute_npred_psf_after_edisp.cache_clear()
-
-    def compute_dnde(self):
-        """Compute model differential flux at map pixel centers.
-
-        Returns
-        -------
-        model_map : `~gammapy.maps.Map`
-            Sky cube with data filled with evaluated model values.
-            Units: ``cm-2 s-1 TeV-1 deg-2``
-        """
-        return self.model.evaluate_geom(self.geom, self.gti)
-
-    def compute_flux(self):
-        """Compute flux"""
-        return self.model.integrate_geom(self.geom, self.gti)
-
-    def compute_flux_psf_convolved(self):
-        """Compute psf convolved and temporal model corrected flux."""
-        value = self.compute_flux_spectral()
-
-        if self.model.spatial_model:
-            if self.psf_containment is not None:
-                value = value * self.psf_containment
-            else:
-                value = value * self.compute_flux_spatial()
-
-        if self.model.temporal_model:
-            value *= self.compute_temporal_norm()
-
-        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
-
-    def _compute_flux_spatial(self):
-        """Compute spatial flux
-
-        Returns
-        ----------
-        value: `~astropy.units.Quantity`
-            Psf-corrected, integrated flux over a given region.
-        """
-        if self.geom.is_region:
-            if self.geom.region is None:
-                return 1
-
-            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
-            values = self.model.spatial_model.integrate_geom(wcs_geom)
-
-            if self.psf and self.model.apply_irf["psf"]:
-                values = self.apply_psf(values)
-
-            weights = wcs_geom.region_weights(regions=[self.geom.region])
-            value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
-
-        else:
-            value = self.model.spatial_model.integrate_geom(self.geom)
-            if self.psf and self.model.apply_irf["psf"]:
-                value = self.apply_psf(value)
-
-        return value
-
-    def compute_flux_spatial(self):
-        """Compute spatial flux using caching"""
-        if self.parameters_spatial_changed or not self.use_cache:
-            self._compute_flux_spatial.cache_clear()
-        return self._compute_flux_spatial()
-
-    def compute_flux_spectral(self):
-        """Compute spectral flux"""
-        energy = self.geom.axes["energy_true"].edges
-        value = self.model.spectral_model.integral(energy[:-1], energy[1:],)
-        return value.reshape((-1, 1, 1))
-
-    def compute_temporal_norm(self):
-        """Compute temporal norm """
-        integral = self.model.temporal_model.integral(
-            self.gti.time_start, self.gti.time_stop
-        )
-        return np.sum(integral)
-
-    def apply_exposure(self, flux):
-        """Compute npred cube
-
-        For now just divide flux cube by exposure
-        """
-        npred = (flux.quantity * self.exposure.quantity).to_value("")
-        return Map.from_geom(self.geom, data=npred, unit="")
-
-    def apply_psf(self, npred):
-        """Convolve npred cube with PSF"""
-        tmp = npred.convolve(self.psf)
-        tmp.data[tmp.data < 0.0] = 0
-        return tmp
-
-    def apply_edisp(self, npred):
-        """Convolve map data with energy dispersion.
-
-        Parameters
-        ----------
-        npred : `~gammapy.maps.Map`
-            Predicted counts in true energy bins
-
-        Returns
-        -------
-        npred_reco : `~gammapy.maps.Map`
-            Predicted counts in reco energy bins
-        """
-        return npred.apply_edisp(self.edisp)
-
-    def _compute_npred(self):
-        """Compute npred"""
-        if isinstance(self.model, BackgroundModel):
-            npred = self.model.evaluate()
-        else:
-            npred = self.compute_flux_psf_convolved()
-
-            if self.model.apply_irf["exposure"]:
-                npred = self.apply_exposure(npred)
-
-            if self.model.apply_irf["edisp"]:
-                npred = self.apply_edisp(npred)
-
-        return npred
-
-    @property
-    def apply_psf_after_edisp(self):
-        """"""
-        if not isinstance(self.model, BackgroundModel):
-            return self.model.apply_irf.get("psf_after_edisp")
-
-    # TODO: remove again if possible...
-    def _compute_npred_psf_after_edisp(self):
-        if isinstance(self.model, BackgroundModel):
-            return self.model.evaluate()
-
-        npred = self.compute_flux()
-
-        if self.model.apply_irf["exposure"]:
-            npred = self.apply_exposure(npred)
-
-        if self.model.apply_irf["edisp"]:
-            npred = self.apply_edisp(npred)
-
-        if self.model.apply_irf["psf"]:
-            npred = self.apply_psf(npred)
-
-        return npred
-
-    def compute_npred(self):
-        """Evaluate model predicted counts.
-
-        Returns
-        -------
-        npred : `~gammapy.maps.Map`
-            Predicted counts on the map (in reco energy bins)
-        """
-        if self.apply_psf_after_edisp:
-            if self.parameters_changed or not self.use_cache:
-                self._compute_npred_psf_after_edisp.cache_clear()
-
-            return self._compute_npred_psf_after_edisp()
-
-        if self.parameters_changed or not self.use_cache:
-            self._compute_npred.cache_clear()
-
-        return self._compute_npred()
-
-    @property
-    def parameters_changed(self):
-        """Parameters changed"""
-        values = self.model.parameters.value
-
-        # TODO: possibly allow for a tolerance here?
-        changed = ~np.all(self._cached_parameter_values == values)
-
-        if changed:
-            self._cached_parameter_values = values
-
-        return changed
-
-    @property
-    def parameters_spatial_changed(self):
-        """Parameters changed"""
-        values = self.model.spatial_model.parameters.value
-
-        # TODO: possibly allow for a tolerance here?
-        changed = ~np.all(self._cached_parameter_values_spatial == values)
-
-        if changed:
-            self._cached_parameter_values_spatial = values
-
-        return changed

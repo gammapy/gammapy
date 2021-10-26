@@ -1,8 +1,8 @@
 r"""
 .. _LightCurve-temporal-model:
 
-LightCurve Temporal Model
-=========================
+Light curve temporal model
+==========================
 
 This model parametrises a lightCurve time model.
 

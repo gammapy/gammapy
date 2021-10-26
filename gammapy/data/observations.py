@@ -6,10 +6,9 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.irf import Background3D
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
-from .event_list import EventListChecker
+from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
@@ -17,7 +16,7 @@ from .pointing import FixedPointingInfo
 __all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
-
+    
 
 class Observation:
     """In-memory observation.
@@ -36,6 +35,9 @@ class Observation:
         Point spread function
     bkg : `~gammapy.irf.Background3D`
         Background rate model
+    rad_max: `~gammapy.irf.RadMax2D` or `~astropy.units.Quantity`
+        Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
+        or a single angle (global RAD_MAX)
     gti : `~gammapy.data.GTI`
         Table with GTI start and stop time
     events : `~gammapy.data.EventList`
@@ -48,6 +50,7 @@ class Observation:
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
     bkg = LazyFitsData(cache=False)
+    rad_max = LazyFitsData(cache=False)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=False)
 
@@ -60,6 +63,7 @@ class Observation:
         edisp=None,
         psf=None,
         bkg=None,
+        rad_max=None,
         events=None,
         obs_filter=None,
     ):
@@ -69,9 +73,24 @@ class Observation:
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
+        self.rad_max = rad_max
         self._gti = gti
         self._events = events
         self.obs_filter = obs_filter or ObservationFilter()
+
+    @property
+    def available_irfs(self):
+        """Which irfs are available"""
+        available_irf = []
+
+        for irf in ["aeff", "edisp", "psf", "bkg"]:
+            available = self.__dict__.get(irf, False)
+            available_hdu = self.__dict__.get(f"_{irf}_hdu", False)
+
+            if available or available_hdu:
+                available_irf.append(irf)
+
+        return available_irf
 
     @property
     def events(self):
@@ -277,37 +296,50 @@ class Observation:
 
         Parameters
         ----------
-        figszie : tuple
+        figsize : tuple
             Figure size
         """
         import matplotlib.pyplot as plt
 
-        fig, ((ax_aeff, ax_bkg), (ax_psf, ax_edisp)) = plt.subplots(
-            nrows=2,
-            ncols=2,
+
+        n_irfs = len(self.available_irfs)
+
+        fig, axes = plt.subplots(
+            nrows=n_irfs//2,
+            ncols=2 + n_irfs%2,
             figsize=figsize,
             gridspec_kw={"wspace": 0.25, "hspace": 0.25},
         )
 
-        self.aeff.plot(ax=ax_aeff)
+        axes_dict = dict(zip(self.available_irfs, axes.flatten()))
 
-        try:
-            if isinstance(self.bkg, Background3D):
-                bkg = self.bkg.to_2d()
-            else:
-                bkg = self.bkg
+        if 'aeff' in self.available_irfs:
+            self.aeff.plot(ax=axes_dict['aeff'])
+            axes_dict['aeff'].set_title("Effective area")
 
-            bkg.plot(ax=ax_bkg)
-        except AttributeError:
+        if 'bkg' in self.available_irfs:
+            bkg = self.bkg
+
+            if not bkg.is_offset_dependent:
+                bkg = bkg.to_2d()
+
+            bkg.plot(ax=axes_dict['bkg'])
+            axes_dict['bkg'].set_title("Background rate")
+        else:
             logging.warning(f"No background model found for obs {self.obs_id}.")
 
-        self.psf.plot_containment_radius_vs_energy(ax=ax_psf)
-        self.edisp.plot_bias(ax=ax_edisp, add_cbar=True)
+        if 'psf' in self.available_irfs:
+            self.psf.plot_containment_radius_vs_energy(ax=axes_dict['psf'])
+            axes_dict['psf'].set_title("Point spread function")
+        else:
+            logging.warning(f"No PSF found for obs {self.obs_id}.")
 
-        ax_aeff.set_title("Effective area")
-        ax_bkg.set_title("Background rate")
-        ax_psf.set_title("Point spread function")
-        ax_edisp.set_title("Energy dispersion")
+        if 'edisp' in self.available_irfs:
+            self.edisp.plot_bias(ax=axes_dict['edisp'], add_cbar=True)
+            axes_dict['edisp'].set_title("Energy dispersion")
+        else:
+            logging.warning(f"No energy dispersion found for obs {self.obs_id}.")
+
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
@@ -329,6 +361,35 @@ class Observation:
         obs.obs_filter = new_obs_filter
         return obs
 
+    @classmethod
+    def read(cls, event_file, irf_file=None):
+        """Create an Observation from a Event List and an (optional) IRF file.
+
+        Parameters
+        ----------
+        event_file : str, Path
+            path to the .fits file containing the event list and the GTI
+        irf_file : str, Path
+            (optional) path to the .fits file containing the IRF components,  
+            if not provided the IRF will be read from the event file
+
+        Returns
+        -------
+        observation : `~gammapy.data.Observation` 
+            observation with the events and the irf read from the file
+        """
+        from gammapy.irf.io import load_irf_dict_from_file
+
+        events = EventList.read(event_file)
+        
+        gti = GTI.read(event_file) 
+
+        irf_file = irf_file if irf_file is not None else event_file
+        irf_dict = load_irf_dict_from_file(irf_file)
+            
+        obs_info = events.table.meta
+        return cls(events=events, gti=gti, obs_info=obs_info, obs_id=obs_info.get("OBS_ID"), **irf_dict)
+        
 
 class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.

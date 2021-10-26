@@ -63,7 +63,9 @@ def find_peaks(image, threshold, min_distance=1):
         raise TypeError("find_peaks only supports WcsNDMap")
 
     if not image.geom.is_flat:
-        raise ValueError("find_peaks only supports flat Maps, with no spatial axes of length 1.")
+        raise ValueError(
+            "find_peaks only supports flat Maps, with no spatial axes of length 1."
+        )
 
     if isinstance(min_distance, (str, u.Quantity)):
         min_distance = np.mean(u.Quantity(min_distance) / image.geom.pixel_scales)

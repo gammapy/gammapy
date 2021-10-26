@@ -18,7 +18,7 @@ from gammapy.makers import (
     SpectrumDatasetMaker,
 )
 from gammapy.maps import MapAxis, WcsGeom, WcsNDMap, RegionGeom
-from gammapy.utils.regions import compound_region_to_list
+from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
@@ -79,28 +79,24 @@ def test_find_reflected_regions(
         exclusion_mask=exclusion_mask,
         min_distance_input="0 deg",
     )
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg1
     assert_quantity_allclose(regions[3].center.icrs.ra, reg3_ra, rtol=1e-2)
 
     # Test without exclusion
     finder.exclusion_mask = None
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg2
 
     # Test with too small exclusion
     small_mask = exclusion_mask.cutout(pointing, Angle("0.1 deg"))
     finder.exclusion_mask = small_mask
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg3
 
     # Test with maximum number of regions
     finder.max_region_number = 5
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == 5
 
     # Test with an other type of region
@@ -114,8 +110,7 @@ def test_find_reflected_regions(
     )
     finder.region = on_ellipse_annulus
     finder.reference_map = None
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == 5
 
 
@@ -123,10 +118,10 @@ center = SkyCoord(0.5, 0.0, unit="deg")
 other_region_finder_param = [
     (RectangleSkyRegion(center, 0.5 * u.deg, 0.5 * u.deg, angle=0 * u.deg), 3),
     (RectangleSkyRegion(center, 0.5 * u.deg, 1 * u.deg, angle=0 * u.deg), 1),
-    (RectangleSkyRegion(center, 0.5 * u.deg, 1 * u.deg, angle=90 * u.deg), 0),
+    (RectangleSkyRegion(center, 0.5 * u.deg, 1 * u.deg, angle=90 * u.deg), 1),
     (EllipseSkyRegion(center, 0.1 * u.deg, 1 * u.deg, angle=0 * u.deg), 2),
     (EllipseSkyRegion(center, 0.1 * u.deg, 1 * u.deg, angle=60 * u.deg), 3),
-    (EllipseSkyRegion(center, 0.1 * u.deg, 1 * u.deg, angle=90 * u.deg), 0),
+    (EllipseSkyRegion(center, 0.1 * u.deg, 1 * u.deg, angle=90 * u.deg), 2),
 ]
 
 
@@ -137,8 +132,7 @@ def test_non_circular_regions(region, nreg):
     finder = ReflectedRegionsFinder(
         center=pointing, region=region, min_distance_input="0 deg"
     )
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == nreg
 
 
@@ -151,13 +145,8 @@ def test_bad_on_region(exclusion_mask, on_region):
         exclusion_mask=exclusion_mask,
         min_distance_input="0 deg",
     )
-    finder.run()
-    regions = finder.reflected_regions
+    regions = finder.run()
     assert len(regions) == 0
-
-    # try plotting
-    with mpl_plot_check():
-        finder.plot()
 
 
 @requires_data()
@@ -180,14 +169,14 @@ def test_reflected_bkg_maker(on_region, reflected_bkg_maker, observations):
     assert_allclose(datasets[0].counts_off.data.sum(), 76)
     assert_allclose(datasets[1].counts_off.data.sum(), 60)
 
-    regions_0 = compound_region_to_list(datasets[0].counts_off.geom.region)
-    regions_1 = compound_region_to_list(datasets[1].counts_off.geom.region)
+    regions_0 = compound_region_to_regions(datasets[0].counts_off.geom.region)
+    regions_1 = compound_region_to_regions(datasets[1].counts_off.geom.region)
     assert_allclose(len(regions_0), 11)
     assert_allclose(len(regions_1), 11)
 
 
 @requires_data()
-def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
+def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations, caplog):
     pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
     radius = Angle(0.11, "deg")
     region = CircleSkyRegion(pos, radius)
@@ -207,4 +196,39 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations):
         datasets.append(dataset_on_off)
 
     assert datasets[0].counts_off is None
+    assert_allclose(datasets[0].acceptance_off, 0)
+    assert_allclose(datasets[0].mask_safe.data, False)
+
+    assert "WARNING" in [record.levelname for record in caplog.records]
+
+    message1 = f"ReflectedRegionsBackgroundMaker failed. " \
+              f"No OFF region found outside exclusion mask for {datasets[0].name}."
+    message2 = f"ReflectedRegionsBackgroundMaker failed. " \
+              f"Setting {datasets[0].name} mask to False."
+
+    assert message1 in [record.message for record in caplog.records]
+    assert message2 in [record.message for record in caplog.records]
+
+
+@requires_data()
+def test_reflected_bkg_maker_no_off_background(reflected_bkg_maker, observations):
+    pos = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
+    radius = Angle(0.11, "deg")
+    region = CircleSkyRegion(pos, radius)
+
+    maker = SpectrumDatasetMaker(selection=["counts", "background"])
+
+    datasets = []
+
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
+    geom = RegionGeom.create(region=region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+
+    for obs in observations:
+        dataset = maker.run(dataset_empty, obs)
+        dataset_on_off = reflected_bkg_maker.run(dataset, obs)
+        datasets.append(dataset_on_off)
+
+    assert_allclose(datasets[0].counts_off.data, 0)
     assert_allclose(datasets[0].acceptance_off, 0)

@@ -1,7 +1,7 @@
 r"""
 .. _smooth-broken-powerlaw-spectral-model:
 
-Smooth Broken Power Law Spectral Model
+Smooth broken power law spectral model
 ======================================
 
 This model parametrises a smooth broken power law spectrum.
@@ -21,7 +21,7 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import Models, SkyModel, SmoothBrokenPowerLawSpectralModel
 
-energy_range = [0.1, 100] * u.TeV
+energy_bounds = [0.1, 100] * u.TeV
 model = SmoothBrokenPowerLawSpectralModel(
     index1=1.5,
     index2=2.5,
@@ -30,7 +30,7 @@ model = SmoothBrokenPowerLawSpectralModel(
     reference="1 TeV",
     beta=1,
 )
-model.plot(energy_range)
+model.plot(energy_bounds)
 plt.grid(which="both")
 
 # %%

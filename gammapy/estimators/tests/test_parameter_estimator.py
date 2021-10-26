@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.parameter import ParameterEstimator
@@ -18,7 +19,7 @@ def crab_datasets_1d():
 
 
 @pytest.fixture
-def PLmodel():
+def pwl_model():
     return PowerLawSpectralModel(amplitude="3e-11 cm-2s-1TeV-1", index=2.7)
 
 
@@ -31,12 +32,16 @@ def crab_datasets_fermi():
 
 
 @requires_data()
-def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
+def test_parameter_estimator_1d(crab_datasets_1d, pwl_model):
     datasets = crab_datasets_1d
-    for dataset in datasets:
-        dataset.models = SkyModel(spectral_model=PLmodel, name="Crab")
 
-    estimator = ParameterEstimator(scan_n_values=10, selection_optional="all")
+    model = SkyModel(spectral_model=pwl_model, name="Crab")
+    model.spectral_model.amplitude.scan_n_values = 10
+
+    for dataset in datasets:
+        dataset.models = model
+
+    estimator = ParameterEstimator(selection_optional="all")
 
     result = estimator.run(datasets, parameter="amplitude")
 
@@ -54,7 +59,9 @@ def test_parameter_estimator_1d(crab_datasets_1d, PLmodel):
 def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     datasets = crab_datasets_fermi
     parameter = datasets[0].models.parameters["amplitude"]
-    estimator = ParameterEstimator(reoptimize=False, scan_n_values=10, selection_optional=["scan"])
+    parameter.scan_n_values = 10
+
+    estimator = ParameterEstimator(reoptimize=False, selection_optional=["scan"])
     alpha_value = datasets[0].models.parameters["alpha"].value
 
     result = estimator.run(datasets, parameter)
@@ -64,3 +71,33 @@ def test_parameter_estimator_3d_no_reoptimization(crab_datasets_fermi):
     assert_allclose(result["amplitude"], 0.018251, rtol=1e-3)
     assert_allclose(result["amplitude_scan"].shape, 10)
     assert_allclose(result["amplitude_scan"][0], 0.017282, atol=1e-3)
+
+@requires_data()
+def test_parameter_estimator_no_data(crab_datasets_1d, pwl_model):
+    datasets = crab_datasets_1d
+
+    model = SkyModel(spectral_model=pwl_model, name="Crab")
+    model.spectral_model.amplitude.scan_n_values = 10
+
+    for dataset in datasets:
+        dataset.mask_safe.data[...] = False
+        dataset.models = model
+
+    estimator = ParameterEstimator(selection_optional="all")
+
+    result = estimator.run(datasets, parameter="amplitude")
+
+    assert np.isnan(result["amplitude"])
+    assert np.isnan(result["amplitude_err"])
+    assert np.isnan(result["amplitude_errp"])
+    assert np.isnan(result["amplitude_errn"])
+    assert np.isnan(result["amplitude_ul"])
+    assert np.isnan(result["ts"])
+    assert np.isnan(result["npred"])
+    assert_allclose(result["npred_null"], 0)
+    assert_allclose(result["counts"], 0)
+
+    # Add test for scan
+    assert_allclose(result["amplitude_scan"].shape, 10)
+    assert np.all(np.isnan(result["stat_scan"]))
+

@@ -3,13 +3,16 @@ import logging
 import collections.abc
 import copy
 from os.path import split
+import yaml
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-import yaml
+from astropy.coordinates import SkyCoord
+from regions import PointSkyRegion
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import RegionGeom
+from gammapy.maps import RegionGeom, Map
+
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +52,14 @@ class Model:
 
             setattr(self, par.name, par)
         self._covariance = Covariance(self.parameters)
+
+    def __getattribute__(self, name):
+        value = object.__getattribute__(self, name)
+
+        if isinstance(value, Parameter):
+            return value.__get__(self, None)
+
+        return value
 
     @property
     def type(self):
@@ -374,7 +385,14 @@ class DatasetModels(collections.abc.Sequence):
                 shared_register = _set_link(shared_register, model)
         return models
 
-    def write(self, path, overwrite=False, full_output=False, write_covariance=True):
+    def write(
+        self,
+        path,
+        overwrite=False,
+        full_output=False,
+        overwrite_templates=False,
+        write_covariance=True,
+    ):
         """Write to YAML file.
 
         Parameters
@@ -382,7 +400,9 @@ class DatasetModels(collections.abc.Sequence):
         path : `pathlib.Path` or str
             path to write files
         overwrite : bool
-            overwrite files
+            overwrite YAML files
+        overwrite_templates : bool
+            overwrite templates FITS files
         write_covariance : bool
             save covariance or not
         """
@@ -405,16 +425,16 @@ class DatasetModels(collections.abc.Sequence):
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
 
-        path.write_text(self.to_yaml(full_output))
+        path.write_text(self.to_yaml(full_output, overwrite_templates))
 
-    def to_yaml(self, full_output=False):
+    def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
-        data = self.to_dict(full_output)
+        data = self.to_dict(full_output, overwrite_templates)
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
 
-    def to_dict(self, full_output=False):
+    def to_dict(self, full_output=False, overwrite_templates=False):
         """Convert to dict."""
         # update linked parameters labels
         params_list = []
@@ -432,6 +452,13 @@ class DatasetModels(collections.abc.Sequence):
         for model in self._models:
             model_data = model.to_dict(full_output)
             models_data.append(model_data)
+            if (
+                hasattr(model, "spatial_model")
+                and model.spatial_model is not None
+                and "template" in model.spatial_model.tag
+            ):
+                model.spatial_model.write(overwrite=overwrite_templates)
+
         if self._covar_file is not None:
             return {
                 "components": models_data,
@@ -790,6 +817,158 @@ class DatasetModels(collections.abc.Sequence):
         """
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
         return self.__class__(models)
+
+    def to_template_sky_model(self, geom, spectral_model=None, name=None):
+        """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`
+    
+        Parameters
+        ----------
+        spectral_model : `~gammapy.modeling.models.SpectralModel`
+            One of the NormSpectralMdel 
+        name : str
+            Name of the new model
+                           
+        """
+        from . import SkyModel, TemplateSpatialModel, PowerLawNormSpectralModel
+
+        unit = u.Unit("1 / (cm2 s sr TeV)")
+        map_ = Map.from_geom(geom, unit=unit)
+        for m in self:
+            map_ += m.evaluate_geom(geom).to(unit)
+        spatial_model = TemplateSpatialModel(map_, normalize=False)
+        if spectral_model is None:
+            spectral_model = PowerLawNormSpectralModel()
+        return SkyModel(
+            spectral_model=spectral_model, spatial_model=spatial_model, name=name
+        )
+
+    @property
+    def positions(self):
+        """Positions of the models (`SkyCoord`)"""
+        positions = []
+
+        for model in self.select(tag="sky-model"):
+            if model.position:
+                positions.append(model.position)
+            else:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+
+        return SkyCoord(positions)
+
+    def to_regions(self):
+        """Returns a list of the regions for the spatial models
+
+        Returns
+        -------
+        regions: list of `~regions.SkyRegion`
+            Regions
+        """
+        regions = []
+
+        for model in self.select(tag="sky-model"):
+            try:
+                region = model.spatial_model.to_region()
+                regions.append(region)
+            except AttributeError:
+                log.warning(
+                    f"Skipping model {model.name} - no spatial component present"
+                )
+        return regions
+
+    @property
+    def wcs_geom(self):
+        """Minimum WCS geom in which all the models are contained """
+        regions = self.to_regions()
+        try:
+            return RegionGeom.from_regions(regions).to_wcs_geom()
+        except IndexError:
+            log.error("No spatial component in any model. Geom not defined")
+
+    def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
+        """ Plot extent of the spatial models on a given wcs axis
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.WCSAxes`
+            Axes to plot on. If no axes are given, an all-sky wcs
+            is chosen using a CAR projection
+        kwargs_point : dict
+            Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
+            of point sources
+        path_effect : `~matplotlib.patheffects.PathEffect`
+            Path effect applied to artists and lines.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.artists.Artist`
+
+
+        Returns
+        -------
+        ax : `~astropy.visualization.WcsAxes`
+            WCS axes
+        """
+        from astropy.visualization.wcsaxes import WCSAxes
+
+        kwargs_point = kwargs_point or {}
+
+        if ax is None or not isinstance(ax, WCSAxes):
+            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+
+        kwargs.setdefault("color", "tab:blue")
+        kwargs.setdefault("fc", "None")
+        kwargs_point.setdefault("marker", "*")
+        kwargs_point.setdefault("markersize", 10)
+        kwargs_point.setdefault("markeredgecolor", "None")
+        kwargs_point.setdefault("color", kwargs["color"])
+
+        for region in self.to_regions():
+            if isinstance(region, PointSkyRegion):
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs_point)
+            else:
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
+
+            if path_effect:
+                artist.set_path_effects([path_effect])
+
+            ax.add_artist(artist)
+
+        return ax
+
+    def plot_positions(self, ax=None, **kwargs):
+        """"Plot the centers of the spatial models on a given wcs axis
+
+        Parameters
+        ----------
+        ax : `~astropy.visualization.WCSAxes`
+            Axes to plot on. If no axes are given, an all-sky wcs
+            is chosen using a CAR projection
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.scatter`
+
+
+        Returns
+        -------
+        ax : `~astropy.vizualisation.WcsAxes`
+            Wcs axes
+        """
+        from astropy.visualization.wcsaxes import WCSAxes
+        import matplotlib.pyplot as plt
+
+        if ax is None or not isinstance(ax, WCSAxes):
+            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+
+        kwargs.setdefault("marker", "*")
+        kwargs.setdefault("color", "tab:blue")
+        path_effects = kwargs.get("path_effects", None)
+
+        xp, yp = self.positions.to_pixel(ax.wcs)
+        p = ax.scatter(xp, yp, **kwargs)
+
+        if path_effects:
+            plt.setp(p, path_effects=path_effects)
+
+        return ax
 
 
 class Models(DatasetModels, collections.abc.MutableSequence):
