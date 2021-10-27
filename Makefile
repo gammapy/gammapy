@@ -55,7 +55,7 @@ help:
 	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
 	@echo ' * Gammapy docs: https://docs.gammapy.org/'
 	@echo ''
-	@echo ' Most common commmands to hack on Gammapy:'
+	@echo ' Most common commands to hack on Gammapy:'
 	@echo ''
 	@echo '     make help          Print help message with all commands'
 	@echo '     pip install -e .   Install Gammapy in editable mode'
@@ -148,5 +148,9 @@ pydocstyle:
 
 dataset-index:
 	python dev/datasets/make_dataset_index.py dataset-index
+
+# Note: codespell will pick its options from setup.cfg
+codespell:
+	codespell
 
 # TODO: add test and code quality checks for `examples`

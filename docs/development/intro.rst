@@ -70,7 +70,7 @@ Make small pull requests
 
 **Contributions to Gammapy happen via pull requests on Github. We like them small.**
 
-So as we'll explain in mor detail below, the contribution cycle to Gammapy is roughly:
+So as we'll explain in more detail below, the contribution cycle to Gammapy is roughly:
 
 1. Get the latest development version (``master`` branch) of Gammapy
 2. Make fixes, changes and additions locally
