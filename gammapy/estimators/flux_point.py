@@ -325,6 +325,8 @@ class FluxPoints(FluxMaps):
             if self.n_sigma_ul:
                 table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(self.n_sigma_ul), 7)
 
+            table.meta["sqrt_ts_threshold"] = self.meta["sqrt_ts_threshold"]
+
             if sed_type == "likelihood":
                 table["ref_dnde"] = self.dnde_ref[idx]
                 table["ref_flux"] = self.flux_ref[idx]
