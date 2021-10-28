@@ -40,8 +40,8 @@ class IRF:
         axes.assert_names(self.required_axes)
         self._axes = axes
         if isinstance(data, u.Quantity):
-            self.unit = unit
-            self.quantity = data
+            self.data = data.value
+            self.unit = data.unit
         else:       
             self.data = data
             self.unit = unit
@@ -171,9 +171,7 @@ class IRF:
            Quantity
         """
         val = u.Quantity(val, copy=False, unit=self.unit)
-        
         self.data = val.value
-        self.unit = val.unit
 
     @property
     def axes(self):
