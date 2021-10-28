@@ -325,7 +325,7 @@ class FluxPoints(FluxMaps):
             if self.n_sigma_ul:
                 table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(self.n_sigma_ul), 7)
 
-            table.meta["sqrt_ts_threshold"] = self.meta["sqrt_ts_threshold"]
+            table.meta["sqrt_ts_threshold_ul"] = self.sqrt_ts_threshold_ul
 
             if sed_type == "likelihood":
                 table["ref_dnde"] = self.dnde_ref[idx]
@@ -343,9 +343,7 @@ class FluxPoints(FluxMaps):
                 table["stat"] = self.stat.data[idx]
                 table["stat_scan"] = self.stat_scan.data[idx]
 
-            # TODO: check whether this is reasonable behaviour
-            if "is_ul" not in self._data:
-                table.remove_column("is_ul")
+            table["is_ul"] = self.is_ul
                 
         elif format == "lightcurve":
             time_axis = self.geom.axes["time"]
