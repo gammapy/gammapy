@@ -273,5 +273,10 @@ def test_sqrt_ts_thrshold_io(tmpdir):
 def test_is_ul(tmpdir):
     path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
     table = Table.read(path)
+
     fp = FluxPoints.from_table(table, sed_type='dnde')
-    assert_allclose(fp.to_table()["is_ul"], fp.is_ul) 
+    assert_allclose(fp.to_table()["is_ul"], fp.is_ul.data.squeeze()) 
+    
+    table.remove_column('dnde_ul')
+    fp = FluxPoints.from_table(table, sed_type='dnde')
+    assert_allclose(fp.to_table()["is_ul"], fp.is_ul.data.squeeze()) 
