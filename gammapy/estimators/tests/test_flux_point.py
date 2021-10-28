@@ -253,3 +253,25 @@ def test_plot_fp_no_ul():
     with mpl_plot_check():
         fp.plot()
 
+
+@requires_data()
+def test_sqrt_ts_thrshold_io(tmpdir):
+    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
+    table = Table.read(path)
+    fp = FluxPoints.from_table(table, sed_type='dnde')
+    assert_allclose(fp.to_table().meta["sqrt_ts_threshold_ul"], 2)
+    fp.meta["sqrt_ts_threshold_ul"] = 1
+    assert_allclose(fp.to_table().meta["sqrt_ts_threshold_ul"], 1)
+
+
+    filename = tmpdir / "diff_flux_points.fits"
+    fp.write(filename)
+    fp_read = FluxPoints.read(filename)
+    assert_allclose(fp_read.meta["sqrt_ts_threshold_ul"], 1)
+
+@requires_data()
+def test_is_ul(tmpdir):
+    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
+    table = Table.read(path)
+    fp = FluxPoints.from_table(table, sed_type='dnde')
+    assert_allclose(fp.to_table()["is_ul"], fp.is_ul) 
