@@ -170,8 +170,9 @@ class IRF:
         value : `~astropy.units.Quantity`
            Quantity
         """
-        val = u.Quantity(val, copy=False, unit=self.unit)
+        val = u.Quantity(val, copy=False)
         self.data = val.value
+        self.unit = val.unit
 
     @property
     def axes(self):
