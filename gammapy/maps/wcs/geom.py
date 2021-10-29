@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import overlap_slices
 from astropy.convolution import Tophat2DKernel
+from astropy.utils import lazyproperty
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     celestial_frame_to_wcs,
@@ -115,14 +116,11 @@ class WcsGeom(Geom):
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
         self.get_pix = lru_cache()(self.get_pix)
-        self.solid_angle = lru_cache()(self.solid_angle)
-        self.bin_volume = lru_cache()(self.bin_volume)
-        self.to_image = lru_cache()(self.to_image)
 
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["get_coord", "solid_angle", "bin_volume", "to_image", "get_pix"]:
+            if key in ["get_coord", "get_pix"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -690,11 +688,13 @@ class WcsGeom(Geom):
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def to_image(self):
+        return self._image_geom
+        
+    @lazyproperty
+    def _image_geom(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-        return self.__class__(
-            self._wcs, npix, cdelt=cdelt
-        )
+        return self.__class__(self._wcs, npix, cdelt=cdelt)
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
@@ -790,8 +790,12 @@ class WcsGeom(Geom):
 
         To return solid angles for the spatial dimensions only use::
 
-            WcsGeom.to_image().solid_angle()
+             WcsGeom.to_image().solid_angle()
         """
+        return self._solid_angle
+
+    @lazyproperty
+    def _solid_angle(self):
         coord = self.get_coord(mode="edges").skycoord
 
         # define pixel corners
@@ -823,6 +827,11 @@ class WcsGeom(Geom):
 
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
+        return self._bin_volume
+
+    @lazyproperty
+    def _bin_volume(self):
+        """Cached property of bin volume"""
         value = self.to_image().solid_angle()
 
         if not self.is_image:
