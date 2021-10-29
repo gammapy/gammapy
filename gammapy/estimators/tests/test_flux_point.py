@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
-from gammapy.catalog.fermi import SourceCatalog3FGL
+from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import SpectralModel
 from gammapy.utils.scripts import make_path
@@ -144,7 +144,6 @@ def test_compute_flux_points_dnde_exp(method):
 
 @requires_data()
 def test_fermi_to_dnde():
-    from gammapy.catalog import SourceCatalog4FGL
 
     catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
     src = catalog_4fgl["FGES J1553.8-5325"]
@@ -255,28 +254,26 @@ def test_plot_fp_no_ul():
 
 
 @requires_data()
-def test_sqrt_ts_thrshold_io(tmpdir):
-    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
-    table = Table.read(path)
-    fp = FluxPoints.from_table(table, sed_type='dnde')
-    assert_allclose(fp.to_table().meta["sqrt_ts_threshold_ul"], 2)
-    fp.meta["sqrt_ts_threshold_ul"] = 1
-    assert_allclose(fp.to_table().meta["sqrt_ts_threshold_ul"], 1)
+def test_is_ul(tmp_path):
+    catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
+    src = catalog_4fgl["FGES J1553.8-5325"]
+    fp = src.flux_points
 
+    is_ul = fp._data["is_ul"].data.squeeze()
 
-    filename = tmpdir / "diff_flux_points.fits"
-    fp.write(filename)
-    fp_read = FluxPoints.read(filename)
-    assert_allclose(fp_read.meta["sqrt_ts_threshold_ul"], 1)
+    fp.meta["sqrt_ts_threshold_ul"] = None
+    assert_allclose(fp.is_ul.data.squeeze(), is_ul) 
+    table = fp.to_table()
+    assert_allclose(table["is_ul"].data.data, is_ul) 
 
-@requires_data()
-def test_is_ul(tmpdir):
-    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
-    table = Table.read(path)
+    fp.meta["sqrt_ts_threshold_ul"] = 100
+    assert_allclose(fp.is_ul.data.squeeze(), np.ones(is_ul.shape, dtype=bool)) 
+    table = fp.to_table()
+    assert_allclose(table["is_ul"].data.data, np.ones(is_ul.shape, dtype=bool)) 
 
-    fp = FluxPoints.from_table(table, sed_type='dnde')
-    assert_allclose(fp.to_table()["is_ul"], fp.is_ul.data.squeeze()) 
-    
-    table.remove_column('dnde_ul')
-    fp = FluxPoints.from_table(table, sed_type='dnde')
-    assert_allclose(fp.to_table()["is_ul"], fp.is_ul.data.squeeze()) 
+    table.write(tmp_path / "test_modif_ul_threshold.fits")
+    table_read = Table.read(tmp_path / "test_modif_ul_threshold.fits")
+    assert_allclose(table_read["is_ul"].data.data, np.ones(is_ul.shape, dtype=bool)) 
+    fp_read = FluxPoints.from_table(table_read)
+    assert_allclose(fp_read.is_ul.data.squeeze(), np.ones(is_ul.shape, dtype=bool)) 
+    assert_allclose(fp_read.to_table()["is_ul"], fp_read.is_ul.data.squeeze()) 

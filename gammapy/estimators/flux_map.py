@@ -218,7 +218,7 @@ class FluxMaps:
     @property
     def sqrt_ts_threshold_ul(self):
         """sqrt(TS) threshold for upper limits"""
-        return self.meta.get("sqrt_ts_threshold_ul", 2)
+        return self.meta.get("sqrt_ts_threshold_ul", None)
 
     @property
     def sed_type_init(self):
@@ -296,14 +296,13 @@ class FluxMaps:
     @property
     def is_ul(self):
         """Whether data is an upper limit"""
-        if "is_ul" in self._data:
-            return self._data["is_ul"]
-
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
 
-        if any([_ in self._data for _ in ["ts", "sqrt_ts"]]) and "norm_ul" in self._data:
+        if self.sqrt_ts_threshold_ul and any([_ in self._data for _ in ["ts", "sqrt_ts"]]) and "norm_ul" in self._data:
             is_ul.data = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
+        elif "is_ul" in self._data:
+            is_ul = self._data["is_ul"]
         elif "norm_ul" in self._data:
             is_ul.data = np.isfinite(self.norm_ul)
         else:
