@@ -263,7 +263,7 @@ def get_sigmas_and_norms(**kwargs):
     sigmas = u.Quantity([kwargs[f"sigma_{idx}"] for idx in [1, 2, 3]])
 
     scale = kwargs["scale"]
-    ones = np.ones_like(scale)
+    ones = np.ones_like(scale).value
     amplitudes = u.Quantity([ones, kwargs["ampl_2"], kwargs["ampl_3"]])
     norms = 2 * scale * amplitudes * sigmas ** 2
     return sigmas, norms
