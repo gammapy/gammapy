@@ -88,6 +88,17 @@ def test_psf_cta_1dc():
     assert_allclose(radius, 0.052841 * u.deg, atol=1e-4)
 
 
+@requires_data()
+def test_get_sigmas_and_norms():
+    filename = "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+
+    psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+
+    value = psf_irf.evaluate(
+        energy_true=1 * u.TeV, rad=0.03 * u.deg, offset=3.5 * u.deg
+    )
+    assert_allclose(value, 78.25826069 * u.Unit("deg-2"))
+
 @pytest.fixture(scope="session")
 def psf_king():
     return PSFKing.read("$GAMMAPY_DATA/tests/hess_psf_king_023523.fits.gz")
