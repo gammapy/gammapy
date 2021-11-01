@@ -95,9 +95,9 @@ def test_get_sigmas_and_norms():
     psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     value = psf_irf.evaluate(
-        energy_true=0.05 * u.TeV, rad=0.03 * u.deg, offset=4.5 * u.deg
+        energy_true=1 * u.TeV, rad=0.03 * u.deg, offset=3.5 * u.deg
     )
-    assert_allclose(value, 0 * u.Unit("deg-2"))
+    assert_allclose(value, 78.25826069 * u.Unit("deg-2"))
 
 @pytest.fixture(scope="session")
 def psf_king():
