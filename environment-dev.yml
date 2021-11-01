@@ -37,7 +37,7 @@ dependencies:
   - ipython
   - jupyter
   - jupyterlab
-  - matplotlib
+  - matplotlib>=3.4
   - naima
   - pandas
   - reproject

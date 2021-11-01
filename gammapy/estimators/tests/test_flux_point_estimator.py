@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
-from gammapy.estimators import FluxPointsEstimator
+from gammapy.estimators import FluxPointsEstimator, FluxPoints
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
@@ -173,7 +173,7 @@ def test_str(fpe_pwl):
 
 
 @requires_dependency("iminuit")
-def test_run_pwl(fpe_pwl):
+def test_run_pwl(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
 
     fp = fpe.run(datasets)
@@ -236,9 +236,14 @@ def test_run_pwl(fpe_pwl):
     actual = table.meta["UL_CONF"]
     assert_allclose(actual, 0.9544997)
 
+    # test GADF I/O
+    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp_new = FluxPoints.read(tmpdir / "test.fits")
+    assert fp_new.meta["sed_type_init"] == "likelihood"
+
 
 @requires_dependency("iminuit")
-def test_run_ecpl(fpe_ecpl):
+def test_run_ecpl(fpe_ecpl, tmpdir):
     datasets, fpe = fpe_ecpl
 
     fp = fpe.run(datasets)
@@ -275,10 +280,15 @@ def test_run_ecpl(fpe_ecpl):
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [7.678454, 4.735691, 0.399243], rtol=1e-2)
 
+    # test GADF I/O
+    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp_new = FluxPoints.read(tmpdir / "test.fits")
+    assert fp_new.meta["sed_type_init"] == "likelihood"
+
 
 @requires_dependency("iminuit")
 @requires_data()
-def test_run_map_pwl(fpe_map_pwl):
+def test_run_map_pwl(fpe_map_pwl, tmpdir):
     datasets, fpe = fpe_map_pwl
     fp = fpe.run(datasets)
 
@@ -314,6 +324,11 @@ def test_run_map_pwl(fpe_map_pwl):
     actual = table["stat_scan"][0] - table["stat"][0]
     assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
 
+    # test GADF I/O
+    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp_new = FluxPoints.read(tmpdir / "test.fits")
+    assert fp_new.meta["sed_type_init"] == "likelihood"
+
 
 @requires_dependency("iminuit")
 @requires_data()
@@ -343,7 +358,7 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
 
 @requires_dependency("iminuit")
 @requires_data()
-def test_flux_points_estimator_no_norm_scan(fpe_pwl):
+def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = None
 
@@ -354,6 +369,12 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl):
 
     assert fp.sed_type_init == "likelihood"
     assert "stat_scan" not in fp._data
+
+    # test GADF I/O
+    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp_new = FluxPoints.read(tmpdir / "test.fits")
+    assert fp_new.meta["sed_type_init"] == "likelihood"
+
 
 
 def test_no_likelihood_contribution():
