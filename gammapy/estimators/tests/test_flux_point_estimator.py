@@ -376,7 +376,6 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
 
-
 def test_no_likelihood_contribution():
     dataset = simulate_spectrum_dataset(
         SkyModel(spectral_model=PowerLawSpectralModel(), name="source")
@@ -435,22 +434,22 @@ def test_run_pwl_parameter_range(fpe_pwl):
     table_no_bounds = fp.to_table()
 
     pl.amplitude.min = 0
-    pl.amplitude.max = 1e-8
+    pl.amplitude.max = 1e-12
 
     fp = fpe.run(datasets)
     table_with_bounds = fp.to_table()
 
     actual = table_with_bounds["norm"].data
-    assert_allclose(actual, [3.215947e-02, 3.939055e-02, 5.551115e-09], rtol=1e-3)
+    assert_allclose(actual, [0., 0., 0.], atol=1e-2)
 
-    actual = table_with_bounds["norm_err"].data
-    assert_allclose(actual, [251.490704, 280.37361, 404.162784], rtol=1e-2)
+    actual = table_with_bounds["norm_errp"].data
+    assert_allclose(actual, [212.593368, 298.383045, 449.951747], rtol=1e-2)
 
     actual = table_with_bounds["norm_ul"].data
     assert_allclose(actual, [640.067576,  722.571371, 1414.22209], rtol=1e-2)
 
     actual = table_with_bounds["sqrt_ts"].data
-    assert_allclose(actual, [0.,0., 0.], rtol=1e-2)
+    assert_allclose(actual, [0., 0., 0.], atol=1e-2)
 
     actual = table_no_bounds["norm"].data
     assert_allclose(actual, [-511.76675, -155.75408, -853.547117], rtol=1e-3)
