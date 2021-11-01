@@ -136,8 +136,13 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
         minuit.minos(var, cl=cl, ncall=None)
         info = minuit.merrors[var]
     except (AttributeError, RuntimeError) as error:
-        message, success = str(error), False
-        info = {"is_valid": False, "lower": np.nan, "upper": np.nan, "nfcn": 0}
+        return {
+            "success": False,
+            "message": str(error),
+            "errp": np.nan,
+            "errn": np.nan,
+            "nfev": 0
+        }
 
     return {
         "success": info.is_valid,
