@@ -55,12 +55,15 @@ def test_cta_irf_alpha_config_south():
     assert_allclose(val.value, 0.0499099, rtol=1e-5)
     assert val.unit == ""
 
+    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    assert_allclose(val, 3.31135957 * u.Unit("deg-2"), rtol=1e-5)
+
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 8.98793486e-05, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
 
 @requires_data()
-def test_cta_irf_alpha_config_south():
+def test_cta_irf_alpha_config_north():
     """Test that CTA IRFs can be loaded and evaluated."""
     irf = load_cta_irfs(
         "$GAMMAPY_DATA/cta-caldb/Prod5-North-20deg-AverageAz-4LSTs09MSTs.180000s-v0.1.fits.gz"
@@ -76,6 +79,9 @@ def test_cta_irf_alpha_config_south():
     val = irf["edisp"].evaluate(offset=offset, energy_true=energy, migra=1)
     assert_allclose(val.value, 0.04070749, rtol=1e-5)
     assert val.unit == ""
+
+    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    assert_allclose(val, 6.20107085 * u.Unit("deg-2"), rtol=1e-5)
 
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 5.43334659e-05, rtol=1e-5)
