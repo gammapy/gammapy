@@ -18,7 +18,7 @@ from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
 log = logging.getLogger(__name__)
 
 
-class IRF:
+class IRF(metaclass=abc.ABCMeta):
     """IRF base class for DL3 instrument response functions
 
     Parameters
