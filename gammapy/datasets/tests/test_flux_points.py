@@ -113,6 +113,8 @@ class TestFluxPointFit:
 
         model = dataset.models[0].spectral_model
 
+        assert_allclose(model.amplitude.error, 2.39e-14, rtol=1e-2)
+
         model.amplitude.scan_n_values = 3
         model.amplitude.scan_n_sigma = 1
         model.amplitude.interp = "lin"
@@ -124,7 +126,6 @@ class TestFluxPointFit:
 
         ts_diff = profile["stat_scan"] - result.total_stat
         assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
-        assert_allclose(model.amplitude.error, 1e-12)
 
         value = result.parameters["amplitude"].value
         err = result.parameters["amplitude"].error
@@ -137,7 +138,6 @@ class TestFluxPointFit:
 
         ts_diff = profile["stat_scan"] - result.total_stat
         assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
-        assert_allclose(model.amplitude.error, 1e-12)
 
     @staticmethod
     @requires_dependency("matplotlib")
