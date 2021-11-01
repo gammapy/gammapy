@@ -305,6 +305,22 @@ def test_mde_run(dataset, models):
 
 
 @requires_data()
+def test_irf_alpha_config(dataset, models):
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
+    livetime = 1.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+    )
+
+    dataset.models = models
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+
+
+@requires_data()
 def test_mde_run_switchoff(dataset, models):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
