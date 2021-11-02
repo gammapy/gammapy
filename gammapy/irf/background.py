@@ -150,7 +150,7 @@ class Background3D(BackgroundIRF):
         ncols : int
             Number of columns to plot
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
         import matplotlib.pyplot as plt
 
@@ -167,12 +167,23 @@ class Background3D(BackgroundIRF):
             gridspec_kw={"hspace": 0.2, "wspace": 0.3},
         )
 
+        x1 = self.axes[1]
+        x2 = self.axes[2]
+
+        x = x1.edges.value
+        y = x2.edges.value
+        X, Y = np.meshgrid(x, y)
+
         for i, ee in enumerate(energy):
-            ax = axes.flat[i]
+            if len(energy) == 1:
+                ax = axes
+            else:
+                ax = axes.flat[i]
             bkg = self.evaluate(energy=ee)
-            im = ax.imshow(bkg.squeeze(), **kwargs)
-            ax.set_xlabel(self.axes.names[1])
-            ax.set_ylabel(self.axes.names[2])
+            Z = bkg.squeeze().value
+            im = ax.pcolormesh(X, Y, Z, **kwargs)
+            ax.set_xlabel(x1.name + " [" + str(x1.unit) + "]")
+            ax.set_ylabel(x2.name + " [" + str(x2.unit) + "]")
             ax.set_title(str(ee))
             if add_cbar:
                 ax.figure.colorbar(im, ax=ax, label=bkg.unit)
@@ -217,13 +228,14 @@ class Background2D(BackgroundIRF):
         offset = self.axes["fov_lon"].edges[idx_lon:]
         offset_axis = MapAxis.from_edges(offset, name="offset")
 
-        fov_lat = self.axes['offset'].copy(name='fov_lat')
-        fov_lon = self.axes['offset'].copy(name='fov_lat')
+        fov_lat = self.axes["offset"].copy(name="fov_lat")
+        fov_lon = self.axes["offset"].copy(name="fov_lat")
 
         return Background3D(
-            axes=[self.axes["energy"], fov_lon, fov_lat], data=data.value, unit=data.unit
+            axes=[self.axes["energy"], fov_lon, fov_lat],
+            data=data.value,
+            unit=data.unit,
         )
-
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model.
