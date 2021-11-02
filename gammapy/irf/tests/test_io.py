@@ -38,6 +38,56 @@ def test_cta_irf():
     assert val.unit == "1 / (MeV s sr)"
 
 @requires_data()
+def test_cta_irf_alpha_config_south():
+    """Test that CTA IRFs can be loaded and evaluated."""
+    irf = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
+
+    energy = Quantity(1, "TeV")
+    offset = Quantity(3, "deg")
+
+    val = irf["aeff"].evaluate(energy_true=energy, offset=offset)
+    assert_allclose(val.value, 493538.4460737773, rtol=1e-5)
+    assert val.unit == "m2"
+
+    val = irf["edisp"].evaluate(offset=offset, energy_true=energy, migra=1)
+    assert_allclose(val.value, 0.0499099, rtol=1e-5)
+    assert val.unit == ""
+
+    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    assert_allclose(val, 3.31135957 * u.Unit("deg-2"), rtol=1e-5)
+
+    val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
+    assert_allclose(val.value, 8.98793486e-05, rtol=1e-5)
+    assert val.unit == "1 / (MeV s sr)"
+
+@requires_data()
+def test_cta_irf_alpha_config_north():
+    """Test that CTA IRFs can be loaded and evaluated."""
+    irf = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-North-20deg-AverageAz-4LSTs09MSTs.180000s-v0.1.fits.gz"
+    )
+
+    energy = Quantity(1, "TeV")
+    offset = Quantity(3, "deg")
+
+    val = irf["aeff"].evaluate(energy_true=energy, offset=offset)
+    assert_allclose(val.value, 277301.26585409, rtol=1e-5)
+    assert val.unit == "m2"
+
+    val = irf["edisp"].evaluate(offset=offset, energy_true=energy, migra=1)
+    assert_allclose(val.value, 0.04070749, rtol=1e-5)
+    assert val.unit == ""
+
+    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    assert_allclose(val, 6.20107085 * u.Unit("deg-2"), rtol=1e-5)
+
+    val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
+    assert_allclose(val.value, 5.43334659e-05, rtol=1e-5)
+    assert val.unit == "1 / (MeV s sr)"
+
+@requires_data()
 def test_load_irf_dict_from_file():
     """Test that the IRF components in a dictionary loaded from a DL3 file can 
     be loaded in a dictionary and correctly used"""
