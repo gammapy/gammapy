@@ -232,7 +232,7 @@ class ExcessMapEstimator(Estimator):
             with np.errstate(invalid="ignore", divide="ignore"):
                 reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(kernel.array)
                 flux = excess / reco_exposure
-            flux.quantity = flux.quantity.to("1 / (cm2 s)")
+                flux.quantity = flux.quantity.to("1 / (cm2 s)").astype(dataset.exposure.data.dtype)
         else:
             flux = Map.from_geom(
                 geom=dataset.counts.geom, data=np.nan * np.ones(dataset.data_shape)
