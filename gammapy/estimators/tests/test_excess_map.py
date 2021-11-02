@@ -225,7 +225,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert_allclose(result_image["background"].data[0, 9, 9], 152)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
-    assert_allclose(result_image["flux"].data[0, 9, 9], 1.52e-8, rtol=1e-3)
+    assert_allclose(result_image["flux"].data[0, 9, 9], 1.190928e-08, rtol=1e-3)
 
     simple_dataset_on_off.psf = None
 
@@ -254,7 +254,7 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
 
     assert result_mod["flux"].unit == "cm-2s-1"
     assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)
-    assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06 , rtol=1e-3)
+    assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
 
     spectral_model=PowerLawSpectralModel(index=15)
     estimator_mod = ExcessMapEstimator(
@@ -266,10 +266,11 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     result_mod = estimator_mod.run(simple_dataset_on_off)
 
     assert result_mod["flux"].unit == "cm-2s-1"
-    assert_allclose(result_mod["flux"].data.sum(),5.920642e-06, rtol=1e-3)
+    assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
 
     reco_exposure=estimate_exposure_reco_energy(simple_dataset_on_off, spectral_model=spectral_model)
     assert_allclose(reco_exposure.data.sum(), 7.977796e+12, rtol=0.001)
+
 
 def test_incorrect_selection():
     with pytest.raises(ValueError):
