@@ -316,6 +316,17 @@ def test_background_2d_integrate(bkg_2d):
     assert_allclose(rate.value, [[0, 198]])
 
 
+def test_to_3d(bkg_2d):
+    bkg_3d = bkg_2d.to_3d()
+    assert bkg_3d.data.shape == (2, 6, 6)
+    assert_allclose(bkg_3d.data[1, 1, 1], 1.51, rtol=0.1)
+
+    # assert you get back same after goint to 2d
+    # need high rtol due to interpolation effects?
+    b2 = bkg_3d.to_2d()
+    assert_allclose(bkg_2d.data, b2.data, rtol=0.2)
+
+
 @requires_dependency("matplotlib")
 def test_plot(bkg_2d):
     with mpl_plot_check():

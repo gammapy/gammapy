@@ -219,23 +219,45 @@ class Background2D(BackgroundIRF):
 
     def to_3d(self):
         """"Convert to Background3D"""
-        idx_lon = self.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
-        idx_lat = self.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
-        data = self.quantity[:, idx_lon:, idx_lat].copy()
+        edges = np.concatenate(
+            (
+                np.negative(self.axes["offset"].edges)[::-1][:-1],
+                self.axes["offset"].edges,
+            )
+        )
+        fov_lat = MapAxis.from_edges(edges=edges, name="fov_lat")
+        fov_lon = MapAxis.from_edges(edges=edges, name="fov_lon")
 
-        data = np.sqrt(self.quantity)
-
-        offset = self.axes["fov_lon"].edges[idx_lon:]
-        offset_axis = MapAxis.from_edges(offset, name="offset")
-
-        fov_lat = self.axes["offset"].copy(name="fov_lat")
-        fov_lon = self.axes["offset"].copy(name="fov_lat")
+        shape = (self.axes["energy"].nbin, fov_lon.nbin, fov_lat.nbin)
+        data = np.zeros(shape)
+        for i, x1 in enumerate(fov_lat.center):
+            x2 = fov_lon.center
+            r = np.sqrt(x1 * x1 + x2 * x2)
+            val = self.evaluate(offset=r)
+            data[:, :, i] = val
 
         return Background3D(
-            axes=[self.axes["energy"], fov_lon, fov_lat],
-            data=data.value,
-            unit=data.unit,
+            axes=[self.axes["energy"], fov_lon, fov_lat], data=data, unit=self.unit,
         )
+
+    def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
+        """ Plot the background rate in Field of view co-ordinates at a given energy.
+
+            Parameters
+            -----------
+            energy : `~astropy.units.Quantity`
+                list of Energy
+            ax: `~matplotlib.axes.Axes`, optional
+                Axis
+            add_cbar : bool
+                Add color bar?
+            ncols : int
+                Number of columns to plot
+            **kwargs : dict
+                Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+        """
+        bkg_3d = self.to_3d()
+        bkg_3d.plot_at_energy(energy, ax, add_cbar, ncols, **kwargs)
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model.
