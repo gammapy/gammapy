@@ -1521,20 +1521,15 @@ class Map(abc.ABC):
 
     def _arithmetics(self, operator, other, copy):
         """Perform arithmetics on maps after checking geometry consistency."""
-        if isinstance(other, Map):
-            q = other.quantity
-            geom = self.geom.broadcast(other.geom)
-        else:
-            q = u.Quantity(other, copy=False)
-            geom = self.geom
+        data = operator(self.quantity, u.Quantity(other, copy=False))
 
-        data = operator(self.quantity, q)
+        geom = self.geom.broadcast(getattr(other, "geom", None))
 
         if copy:
             return Map.from_geom(geom=geom, data=data)
-        else:
-            self.quantity = data
-            return self
+
+        self.quantity = data
+        return self
 
     def _boolean_arithmetics(self, operator, other, copy):
         """Perform arithmetics on maps after checking geometry consistency."""
@@ -1543,15 +1538,15 @@ class Map(abc.ABC):
             out.data = operator(out.data)
             return out
 
-        if isinstance(other, Map):
-            if self.geom == other.geom:
-                other = other.data
-            else:
-                raise ValueError("Map Arithmetics: Inconsistent geometries.")
+        data = operator(self.data, np.array(other))
 
-        out = self.copy() if copy else self
-        out.data = operator(out.data, other)
-        return out
+        geom = self.geom.broadcast(getattr(other, "geom", None))
+
+        if copy:
+            return Map.from_geom(geom=geom, data=data)
+
+        self.data = data
+        return self
 
     def __add__(self, other):
         return self._arithmetics(np.add, other, copy=True)

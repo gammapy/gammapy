@@ -381,6 +381,9 @@ class Geom(abc.ABC):
         broadcasted : `Geom`
             Broadcasted map geometry
         """
+        if other is None:
+            return self
+
         if not self.to_image() == other.to_image():
             raise ValueError(f"Geometries cannot be broadcasted {self} and {other}")
 
