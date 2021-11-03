@@ -308,6 +308,36 @@ class MapAxis:
         ax.set_ylim(self.bounds)
         return ax
 
+    def broadcast(self, other):
+        """Broadcast two axis objects
+
+        Two map axis objects are broadcastable if they are either exactly equal or one
+        corresponds to the squashed version of the other.
+
+        Parameters
+        ----------
+        other : `MapAxis`
+            Axis to broadcast with.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Broadcasted axis.
+        """
+        if other is None:
+            return self
+
+        if self == other:
+            return self
+
+        if self == other.squash():
+            return other
+
+        if other == self.squash():
+            return self
+
+        raise ValueError(f"Map axes cannot be broadcasted:\n {self} \n {other} ")
+
     @property
     def iter_by_edges(self):
         """Iterate by intervals defined by the edges"""
