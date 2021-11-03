@@ -236,17 +236,20 @@ def test_run_pwl(fpe_pwl, tmpdir):
     actual = table.meta["UL_CONF"]
     assert_allclose(actual, 0.9544997)
 
+    npred_err = fp.npred_excess.data.squeeze()
+    assert_allclose(npred_err, [550.46638 , 351.292033,  28.604823])
+
     npred_err = fp.npred_err.data.squeeze()
-    assert_allclose(npred_err, [0, 0, 0])
+    assert_allclose(npred_err, [33.783979, 23.535834,  5.575055])
 
     npred_errp = fp.npred_errp.data.squeeze()
-    assert_allclose(npred_errp, [0, 0, 0])
+    assert_allclose(npred_errp, [34.032192, 23.791832,  5.844476])
 
     npred_errn = fp.npred_errn.data.squeeze()
-    assert_allclose(npred_errn, [0, 0, 0])
+    assert_allclose(npred_errn, [33.539282, 23.277257,  5.315383])
 
     npred_ul = fp.npred_ul.data.squeeze()
-    assert_allclose(npred_ul, [0, 0, 0])
+    assert_allclose(npred_ul, [619.059717, 399.317749,  40.849236])
 
     # test GADF I/O
     fp.write(tmpdir / "test.fits", format="gadf-sed")

@@ -363,30 +363,39 @@ class FluxMaps:
         self._check_quantity("npred_null")
         return self.npred - self.npred_null
 
+    def _expand_dims(self, data):
+        # instead make map support broadcasting
+        axes = self.counts.geom.axes
+        # here we need to rely on broadcasting
+        if "dataset" in axes.names:
+            idx = axes.index_data("dataset")
+            data = np.expand_dims(data, axis=idx)
+        return data
+
     @property
     def npred_ref(self):
         """Predicted excess reference counts"""
-        return self.npred_excess / self.norm
+        return self.npred_excess / self._expand_dims(self.norm.data)
 
     @property
     def npred_err(self):
         """Predicted excess counts error"""
-        return self.npred_ref * self.norm_err
+        return self.npred_ref * self._expand_dims(self.norm_err.data)
 
     @property
     def npred_errp(self):
         """Predicted excess counts positive error"""
-        return self.npred_ref * self.norm_errp
+        return self.npred_ref * self._expand_dims(self.norm_errp.data)
 
     @property
     def npred_errn(self):
         """Predicted excess counts negative error"""
-        return self.npred_ref * self.norm_errn
+        return self.npred_ref * self._expand_dims(self.norm_errn.data)
 
     @property
     def npred_ul(self):
         """Predicted excess counts upper limits"""
-        return self.npred_ref * self.norm_ul
+        return self.npred_ref * self._expand_dims(self.norm_ul.data)
 
     @property
     def stat_scan(self):
