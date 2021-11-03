@@ -43,13 +43,7 @@ class RegionNDMap(Map):
         if data is None:
             data = np.zeros(geom.data_shape, dtype=dtype)
 
-        if meta is None:
-            meta = {}
-
-        self._geom = geom
-        self.data = data
-        self.meta = meta
-        self.unit = u.Unit(unit)
+        super().__init__(geom, data, meta, unit)
 
     def plot(self, ax=None, axis_name=None, **kwargs):
         """Plot the data contained in region map along the non-spatial axis.
