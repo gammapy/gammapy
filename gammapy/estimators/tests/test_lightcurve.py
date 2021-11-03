@@ -305,6 +305,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     )
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
+
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(
@@ -364,6 +365,22 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         rtol=1e-5,
     )
 
+    # those quantities are currently not part of the table so we test separately
+    npred = lightcurve.npred.data.squeeze()
+    assert_allclose(npred, [[[669.36, np.nan], [121.66, np.nan]], [[np.nan, 664.41], [np.nan, 115.09]]], rtol=1e-3)
+
+    npred_err = lightcurve.npred_err.data.squeeze()
+    assert_allclose(npred_err, [[[22.34, np.nan], [9.42, np.nan]], [[np.nan, 22.38], [np.nan, 9.29]]], rtol=1e-3)
+
+    npred_errp = lightcurve.npred_errp.data.squeeze()
+    assert_allclose(npred_errp, [[[22.59, np.nan], [9.69, np.nan]], [[np.nan, 22.63], [np.nan, 9.55]]], rtol=1e-3)
+
+    npred_errn = lightcurve.npred_errn.data.squeeze()
+    assert_allclose(npred_errn, [[[22.08, np.nan], [9.17, np.nan]], [[np.nan, 22.12], [np.nan, 9.03]]], rtol=1e-3)
+
+    npred_ul = lightcurve.npred_ul.data.squeeze()
+    assert_allclose(npred_ul, [[[348.90, np.nan], [95.15, np.nan]], [[np.nan, 355.62], [np.nan, 88.22]]], rtol=1e-3)
+
     fp = FluxPoints.from_table(
         table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
     )
@@ -374,7 +391,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
+def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -472,6 +489,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(table["norm_err"][0], [0.040874], rtol=1e-3)
     assert_allclose(table["ts"][0], [742.939324], rtol=1e-4)
 
+
 @requires_data()
 @requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_emptybin():
@@ -490,6 +508,7 @@ def test_lightcurve_estimator_spectrum_datasets_emptybin():
 
     assert_allclose(table["time_min"], [55197.0])
     assert_allclose(table["time_max"], [55197.083333])
+
 
 @requires_data()
 @requires_dependency("iminuit")
