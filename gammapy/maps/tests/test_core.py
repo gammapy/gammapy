@@ -400,6 +400,38 @@ def test_arithmetics_after_serialization(tmp_path, interp):
     assert_allclose(m_wcs.data, 2.0)
 
 
+def test_broadcast_geom():
+    axis = MapAxis.from_edges([1, 2, 3, 4, 5, 6], name="axis")
+    axis2 = MapAxis.from_edges([1, 2, 3], name="axis-2")
+    axis3 = MapAxis.from_edges([1, 6], name="axis")
+
+    geom1 = WcsGeom.create(npix=(4, 3))
+    geom2 = WcsGeom.create(npix=(4, 3), axes=[axis])
+    geom3 = WcsGeom.create(npix=(4, 3), axes=[axis, axis2])
+    geom4 = WcsGeom.create(npix=(4, 3), axes=[axis3, axis2])
+
+    geom = geom2.broadcast(geom1)
+    assert geom.data_shape == (5, 3, 4)
+    assert geom.axes_names == ["lon", "lat", "axis"]
+
+    geom = geom1.broadcast(geom3)
+    assert geom.data_shape == (2, 5, 3, 4)
+    assert geom.axes_names == ["lon", "lat", "axis", "axis-2"]
+
+    geom = geom1.broadcast(geom3)
+    assert geom.data_shape == (2, 5, 3, 4)
+    assert geom.axes_names == ["lon", "lat", "axis", "axis-2"]
+
+    geom = geom4.broadcast(geom3)
+    assert geom.data_shape == (2, 5, 3, 4)
+    assert geom.axes_names == ["lon", "lat", "axis", "axis-2"]
+
+    geom5 = WcsGeom.create(npix=(4, 3), axes=[axis2, axis3])
+
+    with pytest.raises(ValueError):
+        geom4.broadcast(geom5)
+
+
 def test_set_scalar():
     m = Map.create(width=1)
     m.data = 1
