@@ -361,7 +361,32 @@ class FluxMaps:
         """Predicted excess counts"""
         self._check_quantity("npred")
         self._check_quantity("npred_null")
-        return self._filter_convergence_failure(self._data["npred"] - self._data["npred_null"])
+        return self.npred - self.npred_null
+
+    @property
+    def npred_ref(self):
+        """Predicted excess reference counts"""
+        return self.npred_excess / self.norm
+
+    @property
+    def npred_err(self):
+        """Predicted excess counts error"""
+        return self.npred_ref * self.norm_err
+
+    @property
+    def npred_errp(self):
+        """Predicted excess counts positive error"""
+        return self.npred_ref * self.norm_errp
+
+    @property
+    def npred_errn(self):
+        """Predicted excess counts negative error"""
+        return self.npred_ref * self.norm_errn
+
+    @property
+    def npred_ul(self):
+        """Predicted excess counts upper limits"""
+        return self.npred_ref * self.norm_ul
 
     @property
     def stat_scan(self):
