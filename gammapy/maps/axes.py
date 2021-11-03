@@ -1363,7 +1363,7 @@ class MapAxes(Sequence):
             else:
                 axes.append(ax_other)
 
-        return axes
+        return self.__class__(axes=axes)
 
     @property
     def reverse(self):
