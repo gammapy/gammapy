@@ -70,6 +70,12 @@ class Geom(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def axes(self):
+        """List of non-spatial axes."""
+        pass
+
+    @property
+    @abc.abstractmethod
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
         pass
@@ -359,6 +365,35 @@ class Geom(abc.ABC):
     def has_energy_axis(self):
         """Whether geom has an energy axis"""
         return ("energy" in self.axes.names) ^ ("energy_true" in self.axes.names)
+
+    def broadcast(self, other):
+        """Broadcast geometries
+
+        Broadcasting follows the general numpy rules: https://numpy.org/doc/stable/user/basics.broadcasting.html
+
+        Parameters
+        ----------
+        other  : `Geom`
+            Other map geometry
+
+        Returns
+        -------
+        broadcasted : `Geom`
+            Broadcasted map geometry
+        """
+        if not self.to_image() == other.to_image():
+            raise ValueError(f"Geometries cannot be broadcasted {self} and {other}")
+
+        if self.axes and other.axes:
+            axes = self.axes.broadcast(other.axes)
+        elif self.axes:
+            axes = self.axes
+        elif other.axes:
+            axes = other.axes
+        else:
+            axes = None
+
+        return self._init_copy(axes=axes)
 
     @abc.abstractmethod
     def to_image(self):
