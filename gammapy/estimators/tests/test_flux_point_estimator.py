@@ -236,6 +236,18 @@ def test_run_pwl(fpe_pwl, tmpdir):
     actual = table.meta["UL_CONF"]
     assert_allclose(actual, 0.9544997)
 
+    npred_err = fp.npred_err.data.squeeze()
+    assert_allclose(npred_err, [0, 0, 0])
+
+    npred_errp = fp.npred_errp.data.squeeze()
+    assert_allclose(npred_errp, [0, 0, 0])
+
+    npred_errn = fp.npred_errn.data.squeeze()
+    assert_allclose(npred_errn, [0, 0, 0])
+
+    npred_ul = fp.npred_ul.data.squeeze()
+    assert_allclose(npred_ul, [0, 0, 0])
+
     # test GADF I/O
     fp.write(tmpdir / "test.fits", format="gadf-sed")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
