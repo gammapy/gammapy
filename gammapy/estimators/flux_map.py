@@ -365,7 +365,7 @@ class FluxMaps:
 
     def _expand_dims(self, data):
         # instead make map support broadcasting
-        axes = self.counts.geom.axes
+        axes = self.npred.geom.axes
         # here we need to rely on broadcasting
         if "dataset" in axes.names:
             idx = axes.index_data("dataset")

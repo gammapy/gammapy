@@ -125,6 +125,7 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(result["npred"].data[0, 99, 99], 4744.020361, rtol=1e-2)
     assert_allclose(result["npred_null"].data[0, 99, 99], 3721, rtol=1e-2)
     assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
+    assert_allclose(result["npred_err"].data[0, 99, 99], 38.470995, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
