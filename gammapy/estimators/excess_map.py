@@ -183,8 +183,8 @@ class ExcessMapEstimator(Estimator):
         else:
             resampled_dataset.background = dataset.npred().resample_axis(axis=axis)
             resampled_dataset.models = None
-        result = self.estimate_excess_map(resampled_dataset)
 
+        result = self.estimate_excess_map(resampled_dataset)
         return result
 
     def estimate_excess_map(self, dataset):
@@ -224,7 +224,7 @@ class ExcessMapEstimator(Estimator):
         maps["sqrt_ts"] = Map.from_geom(geom, data=counts_stat.sqrt_ts)
 
         if dataset.exposure:
-            reco_exposure = estimate_exposure_reco_energy(dataset, self.spectral_model, normalize=True)
+            reco_exposure = estimate_exposure_reco_energy(dataset, self.spectral_model, normalize=False)
             with np.errstate(invalid="ignore", divide="ignore"):
                 reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(kernel.array)
         else:
