@@ -2,6 +2,7 @@
 from collections.abc import Sequence
 import copy
 import inspect
+from itertools import zip_longest
 import numpy as np
 import scipy
 import astropy.units as u
@@ -1339,6 +1340,30 @@ class MapAxes(Sequence):
         """Whether axes is unidimensional"""
         value = (np.array(self.shape) > 1).sum()
         return value == 1
+
+    def broadcast(self, other):
+        """Broadcast axes
+
+        Parameters
+        ----------
+        other : `MapAxes`
+            Other map axes.
+
+        Returns
+        -------
+        broadcasted : `MapAxes`
+            Broadcasted map axes.
+        """
+        axes = []
+
+        for ax, ax_other in zip_longest(self, other):
+            if ax is not None:
+                result = ax.broadcast(ax_other)
+                axes.append(result)
+            else:
+                axes.append(ax_other)
+
+        return axes
 
     @property
     def reverse(self):
