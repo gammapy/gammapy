@@ -1237,7 +1237,7 @@ class MapDataset(Dataset):
             mask_exposure = self.exposure.data > 0
 
             if self.mask_safe is not None:
-                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data.astype(bool)
+                mask_spatial = self.mask_safe.reduce_over_axes(func=np.logical_or).data
                 mask_exposure = mask_exposure & mask_spatial[np.newaxis, :, :]
 
             if not mask_exposure.any():
@@ -1372,11 +1372,9 @@ class MapDataset(Dataset):
 
         if self.mask_safe:
             kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
-            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit:
             kwargs["mask_fit"] = self.mask_fit.to_region_nd_map(region, func=np.any)
-            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         if self.counts:
             kwargs["counts"] = self.counts.to_region_nd_map(
@@ -1400,7 +1398,6 @@ class MapDataset(Dataset):
         # TODO: Compute average edisp in region
         if self.edisp is not None:
             kwargs["edisp"] = self.edisp.to_region_nd_map(region)
-            kwargs["edisp"].mask_safe_image.data = kwargs["edisp"].mask_safe_image.data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -1445,11 +1442,9 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.cutout(**cutout_kwargs)
-            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.cutout(**cutout_kwargs)
-            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -1513,13 +1508,11 @@ class MapDataset(Dataset):
             kwargs["mask_safe"] = self.mask_safe.downsample(
                 factor=factor, preserve_counts=False, axis_name=axis_name
             )
-            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.downsample(
                 factor=factor, preserve_counts=False, axis_name=axis_name
             )
-            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -1563,11 +1556,9 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.pad(pad_width=pad_width, mode=mode)
-            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.pad(pad_width=pad_width, mode=mode)
-            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -1611,11 +1602,9 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             kwargs["mask_safe"] = self.mask_safe.slice_by_idx(slices=slices)
-            kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if self.mask_fit is not None:
             kwargs["mask_fit"] = self.mask_fit.slice_by_idx(slices=slices)
-            kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         return self.__class__(**kwargs)
 
@@ -2261,12 +2250,10 @@ class MapDatasetOnOff(MapDataset):
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
             kwargs["mask_safe"] = mask_safe
-            # kwargs["mask_safe"].data = kwargs["mask_safe"].data.astype(bool)
 
         if "MASK_FIT" in hdulist:
             mask_fit = Map.from_hdulist(hdulist, hdu="mask_fit", format=format)
             kwargs["mask_fit"] = mask_fit
-            # kwargs["mask_fit"].data = kwargs["mask_fit"].data.astype(bool)
 
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))
