@@ -266,8 +266,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     )
     assert_allclose(table["stat"], [[16.824042], [17.391981]], rtol=1e-5)
     assert_allclose(table["norm"], [[0.911963], [0.9069318]], rtol=1e-2)
-    # assert_allclose(table["norm_err"], [[0.057769], [0.057835]], rtol=1e-2)
-    assert_allclose(table["norm_err"], [[0.051854], [0.05183]], rtol=1e-2)
+    assert_allclose(table["norm_err"], [[0.057769], [0.057835]], rtol=1e-2)
     assert_allclose(table["counts"], [[[791, np.nan]], [[np.nan, 784]]])
     assert_allclose(table["norm_errp"], [[0.058398], [0.058416]], rtol=1e-2)
     assert_allclose(table["norm_errn"], [[0.057144], [0.057259]], rtol=1e-2)
@@ -330,14 +329,9 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         [[0.894723, 0.967419], [0.914283, 0.882351]],
         rtol=1e-2,
     )
-    # assert_allclose(
-    #     table["norm_err"],
-    #     [[0.065905, 0.121288], [0.06601, 0.119457]],
-    #     rtol=1e-2,
-    # )
     assert_allclose(
         table["norm_err"],
-        [[0.053286, 0.120677], [0.075585, 0.113452]],
+        [[0.065905, 0.121288], [0.06601, 0.119457]],
         rtol=1e-2,
     )
     assert_allclose(table["counts"], [[[669.0, np.nan], [122.0, np.nan]], [[np.nan, 667.0], [np.nan, 117.0]]])
@@ -475,10 +469,8 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(table["ref_flux"][0], [9.683772e-13], rtol=1e-5)
     assert_allclose(table["ref_eflux"][0], [3.453878e-12], rtol=1e-5)
     assert_allclose(table["stat"][0], [34.219808], rtol=1e-5)
-    # assert_allclose(table["norm"][0], [0.909646], rtol=1e-5)
-    assert_allclose(table["norm"][0], [0.909402], rtol=1e-5)
-    # assert_allclose(table["norm_err"][0], [0.040874], rtol=1e-3)
-    assert_allclose(table["norm_err"][0], [0.043368], rtol=1e-3)
+    assert_allclose(table["norm"][0], [0.909646], rtol=1e-5)
+    assert_allclose(table["norm_err"][0], [0.040874], rtol=1e-3)
     assert_allclose(table["ts"][0], [742.939324], rtol=1e-4)
 
 @requires_data()
