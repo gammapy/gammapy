@@ -47,10 +47,7 @@ class RegionNDMap(Map):
             meta = {}
 
         self._geom = geom
-        if isinstance(data, np.ndarray):
-            self.data = data.astype(dtype)
-        else:
-            self.data = data
+        self.data = data
         self.meta = meta
         self.unit = u.Unit(unit)
 
