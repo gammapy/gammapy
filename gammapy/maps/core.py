@@ -1211,8 +1211,11 @@ class Map(abc.ABC):
         map_out : `~Map`
             Map with non-spatial axes summed over
         """
+        mfunc = np.add
+        if self.data.dtype is np.dtype(bool):
+            mfunc = np.any
         return self.reduce_over_axes(
-            func=np.add, axes_names=axes_names, keepdims=keepdims, weights=weights
+            func=mfunc, axes_names=axes_names, keepdims=keepdims, weights=weights
         )
 
     def reduce_over_axes(
@@ -1282,7 +1285,6 @@ class Map(abc.ABC):
         if weights is not None:
             data = data * weights
 
-        # Add the conservation of the dtype?
         data = func.reduce(data, axis=idx, keepdims=keepdims, where=~np.isnan(data))
         return self._init_copy(geom=geom, data=data)
 
