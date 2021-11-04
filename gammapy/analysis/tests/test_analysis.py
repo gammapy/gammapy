@@ -201,7 +201,7 @@ def test_analysis_1d():
 
     flux = analysis.light_curve.flux.data[:, :, 0, 0]
     assert_allclose(flux, [[1.688954e-11], [2.347870e-11], [1.604152e-11]], rtol=1e-4)
- 
+
 
 @requires_data()
 def test_geom_analysis_1d():
