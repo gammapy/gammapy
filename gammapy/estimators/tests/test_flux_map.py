@@ -248,6 +248,14 @@ def test_flux_map_properties(wcs_flux_map, reference_model):
     assert_allclose(fluxmap.e2dnde_err.data[:, 0, 1], [np.nan, 1e-13])
 
 
+def test_flux_map_failed_properties(wcs_flux_map, reference_model):
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
+    fluxmap.set_remove_failed(False)
+
+    assert_allclose(fluxmap.success.data[:, 0, 1], [False, True])
+    assert_allclose(fluxmap.flux.data[:, 0, 1], [9.e-12, 9e-13])
+
+
 def test_flux_map_str(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
 
@@ -370,7 +378,6 @@ def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
 @requires_dependency("matplotlib")
 def test_get_flux_point(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
-
     coord = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     fp = fluxmap.get_flux_points(coord)
     table = fp.to_table()
