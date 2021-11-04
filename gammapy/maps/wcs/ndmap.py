@@ -518,6 +518,8 @@ class WcsNDMap(WcsMap):
             data = self.interp_by_coord(coords=coords, method=method)
             if weights is not None:
                 data *= weights.interp_by_coord(coords=coords, method=method)
+            # Casting needed as interp_by_coord transforms boolean
+            data = data.astype(self.data.dtype)
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
 
@@ -531,7 +533,7 @@ class WcsNDMap(WcsMap):
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
-        return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy(), dtype=self.data.dtype)
+        return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
     def mask_contains_region(self, region):
         """Check if input region is contained in a boolean mask map.
