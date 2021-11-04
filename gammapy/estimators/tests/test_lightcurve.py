@@ -402,8 +402,7 @@ def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["stat"], [[6.603043], [0.421051]], rtol=1e-3)
-    # assert_allclose(table["norm"], [[0.885124], [0.967054]], rtol=1e-3)
-    assert_allclose(table["norm"], [[0.884909], [0.966032]], rtol=1e-3)
+    assert_allclose(table["norm"], [[0.885124], [0.967054]], rtol=1e-3)
 
 
 @requires_data()
