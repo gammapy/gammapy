@@ -225,31 +225,31 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [0.2, 1., 5.])
 
     actual = table["stat_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-2)
+    assert_allclose(actual, [220.369, 4.301, 1881.626], rtol=1e-2)
 
     actual = table["npred"].data
-    assert_allclose(actual, [[1492.96638], [749.4587], [43.104823]])
+    assert_allclose(actual, [[1492.966], [749.459], [43.105]], rtol=1e-3)
 
     actual = table["npred_null"].data
-    assert_allclose(actual, [[942.5], [398.166667], [14.5]])
+    assert_allclose(actual, [[942.5], [398.167], [14.5]], rtol=1e-3)
 
     actual = table.meta["UL_CONF"]
     assert_allclose(actual, 0.9544997)
 
     npred_err = fp.npred_excess.data.squeeze()
-    assert_allclose(npred_err, [550.46638 , 351.292033,  28.604823])
+    assert_allclose(npred_err, [550.466, 351.292,  28.604], rtol=1e-3)
 
     npred_err = fp.npred_err.data.squeeze()
-    assert_allclose(npred_err, [33.783979, 23.535834,  5.575055])
+    assert_allclose(npred_err, [33.784, 23.536,  5.575], rtol=1e-3)
 
     npred_errp = fp.npred_errp.data.squeeze()
-    assert_allclose(npred_errp, [34.032192, 23.791832,  5.844476])
+    assert_allclose(npred_errp, [34.032, 23.792,  5.844], rtol=1e-3)
 
     npred_errn = fp.npred_errn.data.squeeze()
-    assert_allclose(npred_errn, [33.539282, 23.277257,  5.315383])
+    assert_allclose(npred_errn, [33.539, 23.277,  5.315], rtol=1e-3)
 
     npred_ul = fp.npred_ul.data.squeeze()
-    assert_allclose(npred_ul, [619.059717, 399.317749,  40.849236])
+    assert_allclose(npred_ul, [619.060, 399.318,  40.849], rtol=1e-3)
 
     # test GADF I/O
     fp.write(tmpdir / "test.fits", format="gadf-sed")
