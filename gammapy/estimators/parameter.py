@@ -158,12 +158,6 @@ class ParameterEstimator(Estimator):
                 * parameter.name_errp : positive error on parameter value
                 * parameter.name_errn : negative error on parameter value
         """
-        if not np.any(datasets.contributes_to_stat):
-            return {
-                f"{parameter.name}_errp": np.nan,
-                f"{parameter.name}_errn": np.nan,
-            }
-
         self.fit.optimize(datasets=datasets)
 
         res = self.fit.confidence(
@@ -198,12 +192,6 @@ class ParameterEstimator(Estimator):
         """
         scan_values = parameter.scan_values
 
-        if not np.any(datasets.contributes_to_stat):
-            return {
-                f"{parameter.name}_scan": scan_values,
-                "stat_scan": scan_values * np.nan
-            }
-
         self.fit.optimize(datasets=datasets)
 
         profile = self.fit.stat_profile(
@@ -234,9 +222,6 @@ class ParameterEstimator(Estimator):
             
                 * parameter.name_ul : upper limit on parameter value
         """
-        if not np.any(datasets.contributes_to_stat):
-            return {f"{parameter.name}_ul": np.nan}
-
         self.fit.optimize(datasets=datasets)
 
         res = self.fit.confidence(
@@ -293,6 +278,31 @@ class ParameterEstimator(Estimator):
 
         return {"npred": np.array(npred), "datasets": datasets.names}
 
+    def make_empty_result(self, datasets, parameter):
+        """Produce a dictionnary with empty default result values."""
+        result = {
+                f"{parameter.name}": np.nan,
+                "stat": np.nan,
+                "success": False,
+                f"{parameter.name}_err": np.nan,
+                "ts": np.nan,
+                "counts": np.zeros(len(datasets)),
+                "npred": np.nan * np.zeros(len(datasets)),
+                "npred_null": np.nan * np.zeros(len(datasets)),
+                "datasets": datasets.names,
+            }
+        if "errn-errp" in self.selection_optional:
+            result.update({f"{parameter.name}_errp": np.nan, f"{parameter.name}_errn": np.nan})
+
+        if "ul" in self.selection_optional:
+            result.update({f"{parameter.name}_ul": np.nan})
+
+        if "scan" in self.selection_optional:
+            scan_values = parameter.scan_values
+            result.update({f"{parameter.name}_scan": scan_values, "stat_scan": scan_values * np.nan})
+        return result
+
+
     def run(self, datasets, parameter):
         """Run the parameter estimator.
 
@@ -311,13 +321,19 @@ class ParameterEstimator(Estimator):
         datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
 
+        result = self.make_empty_result(datasets, parameter)
+        result.update(self.estimate_counts(datasets))
+
+        if not np.any(datasets.contributes_to_stat):
+            return result
+
         with datasets.parameters.restore_status():
 
             if not self.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False
 
-            result = self.estimate_best_fit(datasets, parameter)
+            result.update(self.estimate_best_fit(datasets, parameter))
             result.update(self.estimate_ts(datasets, parameter))
 
             if "errn-errp" in self.selection_optional:
@@ -329,5 +345,4 @@ class ParameterEstimator(Estimator):
             if "scan" in self.selection_optional:
                 result.update(self.estimate_scan(datasets, parameter))
 
-        result.update(self.estimate_counts(datasets))
         return result
