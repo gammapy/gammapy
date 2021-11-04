@@ -52,9 +52,7 @@ def test_cta_sensitivity_estimator(spectrum_dataset):
     assert_allclose(row["e2dnde"], 2.74559e-08, rtol=1e-3)
     assert_allclose(row["excess"], 270000, rtol=1e-3)
     assert_allclose(row["background"], 3.6e06, rtol=1e-3)
-    # BKH: why this has changed? Do not understand... need help
-    # assert row["criterion"] == "bkg"
-    assert row["criterion"] == "significance"
+    assert row["criterion"] == "bkg"
 
     row = table[1]
     assert_allclose(row["energy"], 2.37137, rtol=1e-3)
