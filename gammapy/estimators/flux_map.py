@@ -579,7 +579,6 @@ class FluxMaps:
         if not self.remove_failed:
             return some_map
 
-        # if not self.has_success:
         if (not self.has_success) or (not self.success.data.shape == some_map.data.shape):
             return some_map
 
