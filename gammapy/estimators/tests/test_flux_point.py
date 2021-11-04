@@ -261,19 +261,23 @@ def test_is_ul(tmp_path):
 
     is_ul = fp._data["is_ul"].data.squeeze()
 
-    fp.meta["sqrt_ts_threshold_ul"] = None
     assert_allclose(fp.is_ul.data.squeeze(), is_ul) 
     table = fp.to_table()
     assert_allclose(table["is_ul"].data.data, is_ul) 
 
-    fp.meta["sqrt_ts_threshold_ul"] = 100
+    fp.sqrt_ts_threshold_ul = 100
     assert_allclose(fp.is_ul.data.squeeze(), np.ones(is_ul.shape, dtype=bool)) 
     table = fp.to_table()
     assert_allclose(table["is_ul"].data.data, np.ones(is_ul.shape, dtype=bool)) 
-
+    
     table.write(tmp_path / "test_modif_ul_threshold.fits")
     table_read = Table.read(tmp_path / "test_modif_ul_threshold.fits")
     assert_allclose(table_read["is_ul"].data.data, np.ones(is_ul.shape, dtype=bool)) 
     fp_read = FluxPoints.from_table(table_read)
     assert_allclose(fp_read.is_ul.data.squeeze(), np.ones(is_ul.shape, dtype=bool)) 
-    assert_allclose(fp_read.to_table()["is_ul"], fp_read.is_ul.data.squeeze()) 
+    assert_allclose(fp_read.to_table()["is_ul"], fp_read.is_ul.data.squeeze())
+
+    fp.is_ul = is_ul
+    assert_allclose(fp.is_ul.data.squeeze(), is_ul) 
+    table = fp.to_table()
+    assert_allclose(table["is_ul"].data.data, is_ul) 

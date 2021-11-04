@@ -218,7 +218,19 @@ class FluxMaps:
     @property
     def sqrt_ts_threshold_ul(self):
         """sqrt(TS) threshold for upper limits"""
-        return self.meta.get("sqrt_ts_threshold_ul", None)
+        return self.meta.get("sqrt_ts_threshold_ul", 2)
+
+    @sqrt_ts_threshold_ul.setter
+    def sqrt_ts_threshold_ul(self, value):
+        """sqrt(TS) threshold for upper limits
+        
+        Parameters
+        ----------
+        value : int
+            Threshold value in sqrt(TS) for upper limits
+        """
+        self.meta["sqrt_ts_threshold_ul"] = value
+        self.is_ul = self._apply_sqrt_ts_threshold_ul
 
     @property
     def sed_type_init(self):
@@ -299,16 +311,32 @@ class FluxMaps:
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
 
-        if self.sqrt_ts_threshold_ul and any([_ in self._data for _ in ["ts", "sqrt_ts"]]) and "norm_ul" in self._data:
-            is_ul.data = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
-        elif "is_ul" in self._data:
+        if "is_ul" in self._data:
             is_ul = self._data["is_ul"]
+        elif self.sqrt_ts_threshold_ul is not None:
+            is_ul.data = self._apply_sqrt_ts_threshold_ul
         elif "norm_ul" in self._data:
             is_ul.data = np.isfinite(self.norm_ul)
         else:
             is_ul.data = np.isnan(self.norm)
-
         return is_ul
+
+    @property
+    def _apply_sqrt_ts_threshold_ul(self):
+        if any([_ in self._data for _ in ["ts", "sqrt_ts"]]) and "norm_ul" in self._data:
+            return self.sqrt_ts.data < self.sqrt_ts_threshold_ul
+
+    @is_ul.setter
+    def is_ul(self, data):
+        """Whether data is an upper limit
+        
+        Parameters
+        ----------
+        data : "~numpy.array"
+            boolean array
+        """
+        self._data["is_ul"] = self.norm.copy(data=data)
+
 
     @property
     def counts(self):
