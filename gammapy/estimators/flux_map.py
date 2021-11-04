@@ -665,8 +665,8 @@ class FluxMaps:
         data = {}
         for quantity in reference.available_quantities:
             data[quantity] = Map.from_stack([_[quantity] for _ in maps], axis=axis)
-            if quantity is "success":
-                data[quantity].data = data[quantity].data.astype(bool)
+            # if quantity is "success":
+                # data[quantity].data = data[quantity].data.astype(bool)
 
         if meta is None:
             meta = reference.meta.copy()
