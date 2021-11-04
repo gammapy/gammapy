@@ -121,12 +121,16 @@ class FluxMaps:
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         the reference model to use for conversions. Default in None.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
-    gti : `~gammapy.data.GTI`
+    meta : dict, optional
+        List of metadata. Default is None.
+    gti : `~gammapy.data.GTI`, optional
         the maps GTI information. Default is None.
+    remove_failed : boolean, optional
+        Set fitted values to NaN when the fit has not succeeded. Default is True.
     """
     _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
-    def __init__(self, data, reference_model, meta=None, gti=None):
+    def __init__(self, data, reference_model, meta=None, gti=None, remove_failed=True):
         self._data = data
 
         if isinstance(reference_model, SpectralModel):
@@ -139,6 +143,10 @@ class FluxMaps:
 
         self.meta = meta
         self.gti = gti
+        self.remove_failed = remove_failed
+
+    def set_remove_failed(self, remove_failed):
+        self.remove_failed = remove_failed
 
     @property
     def available_quantities(self):
@@ -568,16 +576,16 @@ class FluxMaps:
 
     def _filter_convergence_failure(self, some_map):
         """Put NaN where pixels did not converge."""
+        if not self.remove_failed:
+            return some_map
+
         # if not self.has_success:
         if (not self.has_success) or (not self.success.data.shape == some_map.data.shape):
             return some_map
 
-        some_map.data[~self.success.data] = np.nan
-        return some_map
-        #Or do we return a copy?
-        # new_map = some_map.copy()
-        # new_map.data[~self.success.data] = np.nan
-        # return new_map
+        new_map = some_map.copy()
+        new_map.data[~self.success.data] = np.nan
+        return new_map
 
     def get_flux_points(self, position=None):
         """Extract flux point at a given position.
@@ -601,7 +609,10 @@ class FluxMaps:
 
         for name in self._data:
             m = getattr(self, name)
-            data[name] = m.to_region_nd_map(region=position, method="nearest")
+            if m.data.dtype is np.dtype(bool):
+                data[name] = m.to_region_nd_map(region=position, method="nearest", func=np.any)
+            else:
+                data[name] = m.to_region_nd_map(region=position, method="nearest")
 
         return FluxPoints(
             data,
