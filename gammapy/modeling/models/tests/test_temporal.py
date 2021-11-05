@@ -8,8 +8,11 @@ from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
     ConstantTemporalModel,
+    LinearTemporalModel,
     ExpDecayTemporalModel,
     GaussianTemporalModel,
+    PowerLawTemporalModel,
+    SinusTemporalModel,
     LightCurveTemplateTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
@@ -145,6 +148,25 @@ def test_constant_temporal_model_integral():
     assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
 
+def test_linear_temporal_model_evaluate():
+    t = Time(46301, format="mjd")
+    t_ref = 46300 * u.d
+    temporal_model = LinearTemporalModel(alpha=1., beta=0.1/u.day, t_ref=t_ref)
+    val = temporal_model(t)
+    assert_allclose(val, 1.1, rtol=1e-5)
+
+
+def test_linear_temporal_model_integral():
+    t_ref = Time(55555, format="mjd")
+    temporal_model = LinearTemporalModel(alpha=1., beta=0.1/u.day, t_ref=t_ref.mjd * u.d)
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 1.345, rtol=1e-5)
+
+
 def test_exponential_temporal_model_evaluate():
     t = Time(46301, format="mjd")
     t_ref = 46300 * u.d
@@ -184,6 +206,56 @@ def test_gaussian_temporal_model_integral():
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.682679, rtol=1e-5)
+
+
+def test_powerlaw_temporal_model_evaluate():
+    t = Time(46302, format="mjd")
+    t_ref = 46300 * u.d
+    alpha = -2.
+    temporal_model = PowerLawTemporalModel(t_ref=t_ref, alpha=alpha)
+    val = temporal_model(t)
+    assert_allclose(val, 0.25, rtol=1e-5)
+
+
+def test_powerlaw_temporal_model_integral():
+    t_ref = Time(55555, format="mjd")
+    temporal_model = PowerLawTemporalModel(alpha=-2., t_ref=t_ref.mjd * u.d)
+    start = 1 * u.day
+    stop = 4 * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 1
+    assert_allclose(np.sum(val), 0.25, rtol=1e-5)
+
+    temporal_model.parameters["alpha"].value = -1
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    print(np.sum(val))
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 0.411847, rtol=1e-5)
+
+
+def test_sinus_temporal_model_evaluate():
+    t = Time(46302, format="mjd")
+    t_ref = 46300 * u.d
+    omega = np.pi/4. * u.rad/u.day
+    temporal_model = SinusTemporalModel(amp=0.5, omega=omega, t_ref=t_ref)
+    val = temporal_model(t)
+    assert_allclose(val, 1.5, rtol=1e-5)
+
+
+def test_sinus_temporal_model_integral():
+    t_ref = Time(55555, format="mjd")
+    omega = np.pi/4. * u.rad/u.day
+    temporal_model = SinusTemporalModel(amp=0.5, omega=omega, t_ref=t_ref.mjd * u.d)
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 1.08261, rtol=1e-5)
 
 
 @requires_data()
