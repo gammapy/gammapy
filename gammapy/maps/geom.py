@@ -486,7 +486,7 @@ class Geom(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor, axis_name):
+    def upsample(self, factor, axis_name=None):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
