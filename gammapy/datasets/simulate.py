@@ -290,9 +290,6 @@ class MapDatasetEventSampler:
         meta["TIMEREF"] = "LOCAL"
         meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
         meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]
-        meta["TIME-OBS"] = dataset.gti.time_start.isot[0][11:23]
-        meta["TIME-END"] = dataset.gti.time_stop.isot[0][11:23]
-        meta["TIMEDEL"] = 1e-9
         meta["CONV_DEP"] = 0
         meta["CONV_RA"] = 0
         meta["CONV_DEC"] = 0
@@ -303,7 +300,6 @@ class MapDatasetEventSampler:
         meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
-        meta["ALTITUDE"] = observation.aeff.meta["CBD50001"][7:-4]
         meta["ALT_PNT"] = observation.aeff.meta["CBD50001"][7:-4]
         meta["AZ_PNT"] = observation.aeff.meta["CBD60001"][8:-4]
 
@@ -315,12 +311,10 @@ class MapDatasetEventSampler:
         meta["INSTRUME"] = observation.aeff.meta["INSTRUME"]
         meta["N_TELS"] = ""
         meta["TELLIST"] = ""
-        meta["GEOLON"] = ""
-        meta["GEOLAT"] = ""
-        # TO BE ADDED
-        #        meta["CREATED"] = ""
-        #        meta["OBS_MODE"] = ""
-        #        meta["EV_CLASS"] = ""
+
+        meta["CREATED"] = ""
+        meta["OBS_MODE"] = ""
+        meta["EV_CLASS"] = ""
 
         return meta
 
