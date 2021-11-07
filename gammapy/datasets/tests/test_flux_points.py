@@ -82,18 +82,18 @@ class TestFluxPointFit:
     def test_fit_pwl_minuit(self, dataset):
         fit = Fit()
         result = fit.run(dataset)
-        self.assert_result(result["optimize_result"])
+        self.assert_result(result["optimize_result"], dataset)
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, dataset):
         fit = Fit(backend="sherpa", optimize_opts={"method": "simplex"})
         result = fit.optimize(datasets=[dataset])
-        self.assert_result(result)
+        self.assert_result(result, dataset)
 
     @staticmethod
-    def assert_result(result):
+    def assert_result(result, dataset):
         assert result.success
-        assert_allclose(result.total_stat, 25.2059, rtol=1e-3)
+        assert_allclose(result.total_stat, 25.2059/dataset.dof-1, rtol=1e-3)
 
         index = result.parameters["index"]
         assert_allclose(index.value, 2.216, rtol=1e-3)
