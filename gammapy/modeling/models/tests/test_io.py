@@ -225,6 +225,9 @@ def make_all_models():
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
     yield Model.create("ConstantTemporalModel", "temporal")
+    yield Model.create("LinearTemporalModel", "temporal")
+    yield Model.create("PowerLawTemporalModel", "temporal")
+    yield Model.create("SinusTemporalModel", "temporal")
     yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
     yield Model.create(
         "SkyModel",
