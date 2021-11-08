@@ -125,12 +125,12 @@ class FluxMaps:
         List of metadata. Default is None.
     gti : `~gammapy.data.GTI`, optional
         the maps GTI information. Default is None.
-    remove_failed : boolean, optional
+    filter_success_nan : boolean, optional
         Set fitted values to NaN when the fit has not succeeded. Default is True.
     """
     _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
-    def __init__(self, data, reference_model, meta=None, gti=None, remove_failed=True):
+    def __init__(self, data, reference_model, meta=None, gti=None, filter_success_nan=True):
         self._data = data
 
         if isinstance(reference_model, SpectralModel):
@@ -143,10 +143,11 @@ class FluxMaps:
 
         self.meta = meta
         self.gti = gti
-        self.remove_failed = remove_failed
+        self.filter_success_nan = filter_success_nan
 
-    def set_remove_failed(self, remove_failed):
-        self.remove_failed = remove_failed
+    @filter_sucess_nan.setter
+    def set_filter_success_nan(self, value):
+        self.filter_success_nan = value
 
     @property
     def available_quantities(self):
@@ -576,7 +577,7 @@ class FluxMaps:
 
     def _filter_convergence_failure(self, some_map):
         """Put NaN where pixels did not converge."""
-        if not self.remove_failed:
+        if not self.filter_success_nan:
             return some_map
 
         if (not self.has_success) or (not self.success.data.shape == some_map.data.shape):
