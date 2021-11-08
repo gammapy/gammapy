@@ -189,15 +189,45 @@ class ObservationTable(Table):
 
         return self[mask]
 
-    def select_observations(self, selection=None):
-        """Select subset of observations.
+    def select_sky_circle(self, center, radius, inverted=False):
+        """Make an observation table, applying a cone selection.
+
+        Apply a selection based on the separation between the cone center
+        and the observation pointing stored in the table.
+
+        If the inverted flag is activated, the selection is applied to
+        keep all elements outside the selected range.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinate.SkyCoord`
+            Cone center coordinate.
+        radius : `~astropy.coordinate.Angle`
+            Cone opening angle. The maximal separation allowed between the center and the observation
+            pointing direction.
+        inverted : bool, optional
+            Invert selection: keep all entries outside the cone.
+
+        Returns
+        -------
+        obs_table : `~gammapy.data.ObservationTable`
+            Observation table after selection.
+        """
+        region = SphericalCircleSkyRegion(center=center, radius=radius)
+        mask = region.contains(self.pointing_radec)
+        if inverted:
+            mask = np.invert(mask)
+        return self[mask]
+
+    def select_observations(self, selections=None):
+        """Select subset of observations from a list of selection criteria.
 
         Returns a new observation table representing the subset.
 
         There are 3 main kinds of selection criteria, according to the
         value of the **type** keyword in the **selection** dictionary:
 
-        - sky regions
+        - circular region
 
         - time intervals (min, max)
 
@@ -209,8 +239,7 @@ class ObservationTable(Table):
         keywords in the **selection** dictionary under the **type** key.
 
         - ``sky_circle`` is a circular region centered in the coordinate
-           marked by the **lon** and **lat** keywords, and radius **radius**;
-           uses `~gammapy.catalog.select_sky_circle`
+           marked by the **lon** and **lat** keywords, and radius **radius**
 
         - ``time_box`` is a 1D selection criterion acting on the observation
           start time (**TSTART**); the interval is set via the
@@ -233,8 +262,8 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selection : dict
-            Dictionary with a few keywords for applying selection cuts.
+        selection : list of dict
+            List of selection cuts dictionaries.
 
         Returns
         -------
@@ -266,39 +295,34 @@ class ObservationTable(Table):
         >>> selection = dict(type='par_box', variable='N_TELS', value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
-        if "inverted" not in selection:
-            selection["inverted"] = False
-        if "partial_overlap" not in selection:
-            selection["partial_overlap"] = False
+        if isinstance(selections, dict):
+            selections = [selections]
 
-        if selection["type"] == "sky_circle":
-            lon = Angle(selection["lon"], "deg")
-            lat = Angle(selection["lat"], "deg")
-            radius = Angle(selection["radius"])
-            if "border" in selection:
-                border = Angle(selection["border"])
-            else:
-                border = Angle(0, "deg")
-            region = SphericalCircleSkyRegion(
-                center=SkyCoord(lon, lat, frame=selection["frame"]),
-                radius=radius + border,
-            )
-            mask = region.contains(self.pointing_radec)
-            if selection["inverted"]:
-                mask = np.invert(mask)
-            return self[mask]
-        elif selection["type"] == "time_box":
-            return self.select_time_range(
-                selection["time_range"],
-                selection["partial_overlap"],
-                selection["inverted"],
-            )
-        elif selection["type"] == "par_box":
-            return self.select_range(
-                selection["variable"], selection["value_range"], selection["inverted"]
-            )
+        obs_table = self
+        for selection in selections:
+            obs_table = obs_table._apply_simple_selection(selection)
+
+        return obs_table
+
+    def _apply_simple_selection(self, selection):
+        """Select subset of observations from a single selection criterion."""
+        selection = selection.copy()
+        type = selection.pop("type")
+        if type == "sky_circle":
+            lon = Angle(selection.pop("lon"), "deg")
+            lat = Angle(selection.pop("lat"), "deg")
+            radius = Angle(selection.pop("radius"), "deg")
+            radius += Angle(selection.pop("border", 0), "deg")
+            center = SkyCoord(lon, lat, frame=selection.pop("frame"))
+            return self.select_sky_circle(center, radius, **selection)
+        elif type == "time_box":
+            time_range = selection.pop("time_range")
+            return self.select_time_range(time_range, **selection)
+        elif type == "par_box":
+            variable = selection.pop("variable")
+            return self.select_range(variable, **selection)
         else:
-            raise ValueError(f"Invalid selection type: {selection['type']}")
+            raise ValueError(f"Invalid selection type: {type}")
 
 
 class ObservationTableChecker(Checker):
