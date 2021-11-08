@@ -281,11 +281,3 @@ def test_simplified_output():
 def test_registries_print():
     assert "Registry" in str(MODEL_REGISTRY)
 
-
-# def test_serialisation():
-# It fails....
-#     pl_model = PowerLawTemporalModel(alpha=-2.)
-#     pl_dict = pl_model.to_dict()
-#
-#     read_model = TemporalModel.from_dict(pl_dict)
-#     assert read_model.alpha == pl_model.alpha
