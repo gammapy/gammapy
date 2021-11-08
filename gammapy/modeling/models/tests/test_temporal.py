@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     GaussianTemporalModel,
     PowerLawTemporalModel,
-    SinusTemporalModel,
+    SineTemporalModel,
     LightCurveTemplateTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
@@ -237,19 +237,19 @@ def test_powerlaw_temporal_model_integral():
     assert_allclose(np.sum(val), 0.411847, rtol=1e-5)
 
 
-def test_sinus_temporal_model_evaluate():
+def test_sine_temporal_model_evaluate():
     t = Time(46302, format="mjd")
     t_ref = 46300 * u.d
     omega = np.pi/4. * u.rad/u.day
-    temporal_model = SinusTemporalModel(amp=0.5, omega=omega, t_ref=t_ref)
+    temporal_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=t_ref)
     val = temporal_model(t)
     assert_allclose(val, 1.5, rtol=1e-5)
 
 
-def test_sinus_temporal_model_integral():
+def test_sine_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
     omega = np.pi/4. * u.rad/u.day
-    temporal_model = SinusTemporalModel(amp=0.5, omega=omega, t_ref=t_ref.mjd * u.d)
+    temporal_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=t_ref.mjd * u.d)
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop, reference_time=t_ref)
