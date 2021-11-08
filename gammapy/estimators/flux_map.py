@@ -143,11 +143,15 @@ class FluxMaps:
 
         self.meta = meta
         self.gti = gti
-        self.filter_success_nan = filter_success_nan
+        self._filter_success_nan = filter_success_nan
 
-    @filter_sucess_nan.setter
-    def set_filter_success_nan(self, value):
-        self.filter_success_nan = value
+    @property
+    def filter_success_nan(self):
+        return self._filter_success_nan
+
+    @filter_success_nan.setter
+    def filter_success_nan(self, value):
+        self._filter_success_nan = value
 
     @property
     def available_quantities(self):
@@ -577,7 +581,7 @@ class FluxMaps:
 
     def _filter_convergence_failure(self, some_map):
         """Put NaN where pixels did not converge."""
-        if not self.filter_success_nan:
+        if not self._filter_success_nan:
             return some_map
 
         if (not self.has_success) or (not self.success.data.shape == some_map.data.shape):
