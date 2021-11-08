@@ -4,7 +4,7 @@ r"""
 PowerLaw temporal model
 =======================
 
-This model parametrises a constant time model.
+This model parametrises a power-law time model.
 
 .. math:: F(t) = ((t - t_{ref})/t_0)^alpha
 
