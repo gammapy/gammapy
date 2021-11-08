@@ -475,7 +475,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
 
 class PowerLawTemporalModel(TemporalModel):
-    r"""Temporal model with an exponential decay.
+    r"""Temporal model with a Power Law decay.
 
     .. math::
             F(t) = ((t - t_ref)/t0)^alpha
@@ -529,8 +529,8 @@ class PowerLawTemporalModel(TemporalModel):
             return t0 * value / self.time_sum(t_min, t_max)
 
 
-class SinusTemporalModel(TemporalModel):
-    r"""Temporal model with an exponential decay.
+class SineTemporalModel(TemporalModel):
+    r"""Temporal model with a sinusoidal modulation.
 
     .. math::
             F(t) = 1 + amp * sin(omega*(t-t_ref))
