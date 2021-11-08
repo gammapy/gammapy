@@ -152,7 +152,7 @@ class Fit:
 
         covariance_result = self.covariance(datasets=datasets)
 
-        optimize_result.covariance_results = covariance_result
+        optimize_result._covariance_result = covariance_result
 
         return optimize_result
 
@@ -518,11 +518,11 @@ class CovarianceResult(FitResult):
 class OptimizeResult(FitResult):
     """Optimize result object."""
 
-    def __init__(self, nfev, total_stat, trace, covariance_results=None, **kwargs):
+    def __init__(self, nfev, total_stat, trace, covariance_result=None, **kwargs):
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
-        self.covariance_results = covariance_results
+        self._covariance_result = covariance_result
         super().__init__(**kwargs)
 
     @property
@@ -541,19 +541,14 @@ class OptimizeResult(FitResult):
         return self._total_stat
 
     @property
-    def covariance_results(self):
+    def covariance_result(self):
         """Covariance results."""
-        return self._covariance_results
-
-    @covariance_results.setter
-    def covariance_results(self, covariance_results):
-        """Set Covariance results."""
-        self._covariance_results = covariance_results
+        return self._covariance_result
 
     def __repr__(self):
         str_ = super().__repr__()
         str_ += f"\tnfev       : {self.nfev}\n"
         str_ += f"\ttotal stat : {self.total_stat:.2f}\n"
-        if self.covariance_results is not None:
-            str_ += self.covariance_results.__repr__()
+        if self.covariance_result is not None:
+            str_ += self.covariance_result.__repr__()
         return str_
