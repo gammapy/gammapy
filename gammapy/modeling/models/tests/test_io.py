@@ -229,7 +229,7 @@ def make_all_models():
     yield Model.create("ConstantTemporalModel", "temporal")
     yield Model.create("LinearTemporalModel", "temporal")
     yield Model.create("PowerLawTemporalModel", "temporal")
-    yield Model.create("SinusTemporalModel", "temporal")
+    yield Model.create("SineTemporalModel", "temporal")
     yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
     yield Model.create(
         "SkyModel",
