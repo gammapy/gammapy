@@ -250,7 +250,7 @@ def test_flux_map_properties(wcs_flux_map, reference_model):
 
 def test_flux_map_failed_properties(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
-    fluxmap.set_remove_failed(False)
+    fluxmap.filter_success_nan(False)
 
     assert_allclose(fluxmap.success.data[:, 0, 1], [False, True])
     assert_allclose(fluxmap.flux.data[:, 0, 1], [9.e-12, 9e-13])
