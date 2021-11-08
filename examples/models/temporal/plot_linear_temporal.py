@@ -4,7 +4,7 @@ r"""
 Linear temporal model
 =======================
 
-This model parametrises a constant time model.
+This model parametrises a linear time model.
 
 .. math:: F(t) = alpha + beta * (t - t_{ref})
 
