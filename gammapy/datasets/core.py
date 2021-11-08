@@ -411,6 +411,39 @@ class Datasets(collections.abc.MutableSequence):
                 filename_models, overwrite=overwrite, write_covariance=write_covariance,
             )
 
+    def _if_info_pos(self):
+        if not self.is_all_same_type:
+            log.info(
+                "Not possible: all Datasets contained are not of same type."
+            )
+            return False
+        if self[0].tag == "FluxPointsDataset":
+            log.info("Not not defined for FluxPointsDataset")
+            return False
+
+    def is_stackable(self, empty=None):
+        """
+        Ckeck if the datasets can be stacked onto the empty one
+
+        Parameters
+        ----------
+        empty = `~gammapy.datasets.Dataset`
+            An empty dataset to stack onto
+        """
+
+        info = self._if_info_pos()
+        if info is False:
+            return False
+
+        if empty is None:
+            empty = self[0].__class__.from_geoms(**self[0].geoms)
+        for dataset in self:
+            for g1,g2 in zip(empty.geoms, dataset.geoms):
+                if g1.is_aligned(g2.geom) is False:
+                    return False
+        return True
+
+
     def stack_reduce(self, name=None, empty=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
@@ -431,12 +464,6 @@ class Datasets(collections.abc.MutableSequence):
         dataset : `~gammapy.datasets.Dataset`
             the stacked dataset
         """
-        if not self.is_all_same_type:
-            raise ValueError(
-                "Stacking impossible: all Datasets contained are not of a unique type."
-            )
-        if self[0].tag == "FluxPointsDataset":
-            raise ValueError("Stacking not defined for FluxPointsDataset")
 
         if empty is not None:
             stacked = empty.copy(name=name)
