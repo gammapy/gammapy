@@ -644,7 +644,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     fit = Fit()
     result = fit.run(datasets=datasets)
-    result = result["optimize_result"]
+
     assert result.success
     assert "minuit" in repr(result)
 
@@ -715,7 +715,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
 
     fit = Fit()
     result = fit.run(datasets=[dataset])
-    result = result["optimize_result"]
+
     assert result.success
 
     npred = dataset.npred().data.sum()
