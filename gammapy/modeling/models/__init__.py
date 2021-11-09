@@ -57,7 +57,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
         ExpDecayTemporalModel,
         GaussianTemporalModel,
         PowerLawTemporalModel,
-        SinusTemporalModel,
+        SineTemporalModel,
     ]
 )
 """Registry of temporal models classes."""
