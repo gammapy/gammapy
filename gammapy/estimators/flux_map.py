@@ -390,7 +390,7 @@ class FluxMaps:
     @property
     def ts_scan(self):
         """ts scan (`Map`)"""
-        return self._filter_convergence_failure(self.stat_scan - np.expand_dims(self.stat.data, 2))
+        return self.stat_scan - np.expand_dims(self.stat.data, 2)
 
     # TODO: always derive sqrt(TS) from TS?
     @property
@@ -584,11 +584,17 @@ class FluxMaps:
         if not self._filter_success_nan:
             return some_map
 
-        if (not self.has_success) or (not self.success.data.shape == some_map.data.shape):
+        if not self.has_success:
             return some_map
 
-        new_map = some_map.copy()
-        new_map.data[~self.success.data] = np.nan
+        if self.success.data.shape == some_map.data.shape:
+            new_map = some_map.copy()
+            new_map.data[~self.success.data] = np.nan
+        else:
+            mask_nan = np.ones(self.success.data.shape)
+            mask_nan[~self.success.data] = np.nan
+            new_map = some_map * np.expand_dims(mask_nan, 2)
+            new_map.data = new_map.data.astype(some_map.data.dtype)
         return new_map
 
     def get_flux_points(self, position=None):
@@ -669,7 +675,7 @@ class FluxMaps:
         reference = maps[0]
         data = {}
         for quantity in reference.available_quantities:
-            data[quantity] = Map.from_stack([_[quantity] for _ in maps], axis=axis)
+            data[quantity] = Map.from_stack([_._data[quantity] for _ in maps], axis=axis)
 
         if meta is None:
             meta = reference.meta.copy()
