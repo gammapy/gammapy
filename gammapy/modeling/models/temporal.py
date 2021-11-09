@@ -542,7 +542,7 @@ class SineTemporalModel(TemporalModel):
         Pulsation of the signal.
     """
 
-    tag = ["SinusTemporalModel", "sinus"]
+    tag = ["SineTemporalModel", "sinus"]
 
     amp = Parameter("amp", 1., frozen=False)
     omega = Parameter("omega", "1. rad/day", frozen=False)
