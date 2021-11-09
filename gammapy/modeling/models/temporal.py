@@ -171,10 +171,9 @@ class ConstantTemporalModel(TemporalModel):
 
 
 class LinearTemporalModel(TemporalModel):
-    r"""Temporal model with a linear variation.
+    """Temporal model with a linear variation.
 
-    .. math::
-            F(t) = alpha + beta * (t - t_ref)
+    For more information see :ref:`linear-temporal-model`.
 
     Parameters
     ----------
@@ -475,10 +474,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
 
 class PowerLawTemporalModel(TemporalModel):
-    r"""Temporal model with a Power Law decay.
+    """Temporal model with a Power Law decay.
 
-    .. math::
-            F(t) = ((t - t_ref)/t0)^alpha
+    For more information see :ref:`powerlaw-temporal-model`.
 
     Parameters
     ----------
@@ -530,10 +528,9 @@ class PowerLawTemporalModel(TemporalModel):
 
 
 class SineTemporalModel(TemporalModel):
-    r"""Temporal model with a sinusoidal modulation.
+    """Temporal model with a sinusoidal modulation.
 
-    .. math::
-            F(t) = 1 + amp * sin(omega*(t-t_ref))
+    For more information see :ref:`sine-temporal-model`.
 
     Parameters
     ----------
