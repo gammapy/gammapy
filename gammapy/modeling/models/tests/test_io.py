@@ -11,12 +11,10 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
     EBLAbsorptionNormSpectralModel,
     Model,
-    TemporalModel,
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
-    PowerLawTemporalModel,
-)
+    )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
