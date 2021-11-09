@@ -170,18 +170,69 @@ class ConstantTemporalModel(TemporalModel):
         return (t_max - t_min) / self.time_sum(t_min, t_max)
 
 
+class LinearTemporalModel(TemporalModel):
+    """Temporal model with a linear variation.
+
+    For more information see :ref:`linear-temporal-model`.
+
+    Parameters
+    ----------
+    alpha : float
+        Constant term of the baseline flux
+    beta : `~astropy.units.Quantity`
+        Time variation coefficient of the flux
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd. Frozen per default, at 2000-01-01.
+    """
+
+    tag = ["LinearTemporalModel", "linear"]
+
+    alpha = Parameter("alpha", 1., frozen=False)
+    beta = Parameter("beta", 0., unit="d-1", frozen=False)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+
+    @staticmethod
+    def evaluate(time, alpha, beta, t_ref):
+        """Evaluate at given times"""
+        return alpha + beta*(time - t_ref)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        pars = self.parameters
+        alpha = pars["alpha"]
+        beta = pars["beta"].quantity
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        value = alpha*(t_max-t_min) + \
+                beta/2.*((t_max-t_ref)*(t_max-t_ref)-(t_min-t_ref)*(t_min-t_ref))
+        return value / self.time_sum(t_min, t_max)
+
+
 class ExpDecayTemporalModel(TemporalModel):
     r"""Temporal model with an exponential decay.
 
     .. math::
-            F(t) = exp(t - t_ref)/t0
+            F(t) = exp(-(t - t_ref)/t0)
 
     Parameters
     ----------
     t0 : `~astropy.units.Quantity`
         Decay time scale
     t_ref: `~astropy.units.Quantity`
-        The reference time in mjd
+        The reference time in mjd. Frozen per default, at 2000-01-01 .
     """
 
     tag = ["ExpDecayTemporalModel", "exp-decay"]
@@ -418,5 +469,110 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return cls.read(data["filename"])
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serilisation"""
+        """Create dict for YAML serialisation"""
         return {"type": self.tag[0], "filename": self.filename}
+
+
+class PowerLawTemporalModel(TemporalModel):
+    """Temporal model with a Power Law decay.
+
+    For more information see :ref:`powerlaw-temporal-model`.
+
+    Parameters
+    ----------
+    alpha : float
+        Decay time power
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd. Frozen by default, at 2000-01-01.
+    t0: `~astropy.units.Quantity`
+        The scaling time in mjd. Fixed by default, at 1 day.
+    """
+
+    tag = ["PowerLawTemporalModel", "powerlaw"]
+
+    alpha = Parameter("alpha", 1., frozen=False)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+    t0 = Parameter("t0", "1 d", frozen=True)
+
+    @staticmethod
+    def evaluate(time, alpha, t_ref, t0=1*u.day):
+        """Evaluate at given times"""
+        return np.power((time - t_ref)/t0, alpha)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        pars = self.parameters
+        alpha = pars["alpha"].quantity
+        t0 = pars["t0"].quantity
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        if alpha != -1:
+            value = self.evaluate(t_max, alpha+1., t_ref, t0) - self.evaluate(t_min, alpha+1., t_ref, t0)
+            return t0 / (alpha+1.) * value / self.time_sum(t_min, t_max)
+        else:
+            value = np.log((t_max-t_ref)/(t_min-t_ref))
+            return t0 * value / self.time_sum(t_min, t_max)
+
+
+class SineTemporalModel(TemporalModel):
+    """Temporal model with a sinusoidal modulation.
+
+    For more information see :ref:`sine-temporal-model`.
+
+    Parameters
+    ----------
+    amp : float
+        Amplitude of the sinusoidal function
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd.
+    omega: `~astropy.units.Quantity`
+        Pulsation of the signal.
+    """
+
+    tag = ["SineTemporalModel", "sinus"]
+
+    amp = Parameter("amp", 1., frozen=False)
+    omega = Parameter("omega", "1. rad/day", frozen=False)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
+
+    @staticmethod
+    def evaluate(time, amp, omega, t_ref):
+        """Evaluate at given times"""
+        return 1. + amp * np.sin(omega*(time-t_ref))
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        pars = self.parameters
+        omega = pars["omega"].quantity.to_value('rad/day')
+        amp = pars["amp"].value
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        value = (t_max-t_min) - \
+                amp/omega*(np.sin(omega*(t_max-t_ref).to_value('day'))-np.sin(omega*(t_min-t_ref).to_value('day')))
+        return value / self.time_sum(t_min, t_max)

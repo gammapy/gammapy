@@ -1,12 +1,12 @@
 r"""
-.. _constant-temporal-model:
+.. _linear-temporal-model:
 
-Constant temporal model
+Linear temporal model
 =======================
 
-This model parametrises a constant time model.
+This model parametrises a linear time model.
 
-.. math:: F(t) = k
+.. math:: F(t) = alpha + beta * (t - t_{ref})
 
 """
 
@@ -24,22 +24,22 @@ import matplotlib.pyplot as plt
 # -------------------
 # Here is an example YAML file using the model:
 from gammapy.modeling.models import (
-    ConstantTemporalModel,
+    LinearTemporalModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
 )
 
-time_range = [Time.now(), Time.now() + 1 * u.d]
-constant_model = ConstantTemporalModel(const=1)
-constant_model.plot(time_range)
+time_range = [Time.now(), Time.now() + 2 * u.d]
+linear_model = LinearTemporalModel(alpha=1, beta=0.5/u.d, t_ref=(time_range[0].mjd-0.1)*u.d)
+linear_model.plot(time_range)
 plt.grid(which="both")
 
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),
-    temporal_model=constant_model,
-    name="constant-model",
+    temporal_model=linear_model,
+    name="linear-model",
 )
 models = Models([model])
 
