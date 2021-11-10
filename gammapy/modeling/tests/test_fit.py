@@ -259,7 +259,7 @@ def test_stat_contour():
     fit.optimize([dataset])
     result = fit.stat_contour(datasets=[dataset], x="y", y="z")
 
-    assert result["success"] is True
+    assert result["success"]
 
     x = result["y"]
     assert_allclose(len(x), 10)
