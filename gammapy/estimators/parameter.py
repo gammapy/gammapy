@@ -81,7 +81,7 @@ class ParameterEstimator(Estimator):
                 * "success": boolean flag for fit success
                 * parameter.name_err: covariance-based error estimate on parameter value
         """
-        value, total_stat, success, error = np.nan, 0, False, np.nan
+        value, total_stat, success, error = np.nan, 0., False, np.nan
 
         if np.any(datasets.contributes_to_stat):
             result = self.fit.run(datasets=datasets)

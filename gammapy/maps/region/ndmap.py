@@ -534,7 +534,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Format not supported {format}")
 
         geom = RegionGeom.create(region=None, axes=axes)
-        return cls(geom=geom, data=data, unit=unit, meta=table.meta)
+        return cls(geom=geom, data=data, unit=unit, meta=table.meta, dtype=data.dtype)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
@@ -578,7 +578,7 @@ class RegionNDMap(Map):
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
+        return cls(geom=geom, data=data, meta=table.meta, unit=unit, dtype=data.dtype)
 
     def _pad_spatial(self, *args, **kwargs):
         raise NotImplementedError("Spatial padding is not supported by RegionNDMap")
