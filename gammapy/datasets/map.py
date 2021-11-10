@@ -25,7 +25,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
-from .utils import get_axes
+from .utils import get_axes, get_figure
 from .evaluator import MapEvaluator
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
@@ -590,6 +590,13 @@ class MapDataset(Dataset):
         if self.mask_safe is None:
             return None
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
+
+    @property
+    def mask_fit_image(self):
+        """Reduced mask fit"""
+        if self.mask_fit is None:
+            return None
+        return self.mask_fit.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_image(self):
@@ -1746,6 +1753,131 @@ class MapDataset(Dataset):
         """
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
+
+    def plot_counts(self, ax=None, kwargs_counts=None, **kwargs):
+        """Plot counts and background.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on.
+        kwargs_counts: dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts.
+        **kwargs: dict
+            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object.
+        """
+        kwargs_counts = kwargs_counts or {}
+
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(kwargs_counts)
+        plot_kwargs.setdefault("label", "Counts")
+        plot_kwargs.setdefault("add_cbar", True)
+        plot_kwargs.setdefault("cmap", "coolwarm")
+
+        ax = self.counts.sum_over_axes().plot(ax=ax, **plot_kwargs)
+
+        return ax
+
+    def plot_masks(self, ax=None, kwargs_fit=None, kwargs_safe=None):
+        """Plot mask safe and mask fit
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on.
+        kwargs_fit: dict
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
+        kwargs_safe: dict
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for maks safe
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object.
+        """
+        from matplotlib import colors as colors
+        kwargs_fit = kwargs_fit or {}
+        kwargs_safe = kwargs_safe or {}
+
+        c_white = colors.colorConverter.to_rgba('white', alpha=0)
+        c_black = colors.colorConverter.to_rgba('black', alpha=1)
+        cmap_rb = colors.LinearSegmentedColormap.from_list('rb_cmap', [c_black, c_white], 512)
+
+        kwargs_fit.setdefault("label", "Mask fit")
+        kwargs_fit.setdefault("cmap", cmap_rb)
+        kwargs_safe.setdefault("label", "Mask safe")
+        kwargs_safe.setdefault("cmap", cmap_rb)
+
+        if self.mask_fit:
+            self.mask_fit_image.plot(ax=ax, **kwargs_fit)
+
+        if self.mask_safe:
+            self.mask_safe_image.plot(ax=ax, **kwargs_safe)
+
+        return ax
+
+    def plot_excess(self, ax=None, kwargs_excess=None, **kwargs):
+        """Plot excess and predicted signal.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axes to plot on.
+        kwargs_excess: dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for
+            the excess.
+        **kwargs: dict
+            Keyword arguments passed to both plot methods.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object.
+        """
+        kwargs_excess = kwargs_excess or {}
+
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(kwargs_excess)
+        plot_kwargs.setdefault("label", "Excess counts")
+        plot_kwargs.setdefault("add_cbar", True)
+        plot_kwargs.setdefault("cmap", "coolwarm")
+        ax = self.excess.sum_over_axes().plot(ax, **plot_kwargs)
+
+        return ax
+
+    def peek(self, fig=None):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on.
+
+        Returns
+        -------
+        ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
+            Counts, excess and exposure.
+        """
+        fig = get_figure(fig, 16, 4)
+        ax1, ax2, ax3 = fig.subplots(1, 3)
+
+        ax1.set_title("Counts")
+        self.plot_counts(ax1)
+        self.plot_masks(ax=ax1)
+
+        ax2.set_title("Excess counts")
+        self.plot_excess(ax=ax2)
+        self.plot_masks(ax=ax2)
+
+        ax3.set_title("Exposure")
+        self.exposure.sum_over_axes().plot(ax3, add_cbar=True)
+
+        return ax1, ax2, ax3
 
 
 class MapDatasetOnOff(MapDataset):
