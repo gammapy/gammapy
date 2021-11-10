@@ -230,10 +230,10 @@ def test_mde_run(dataset, models):
     assert_allclose(events.table["RA"][0], 263.777097, rtol=1e-5)
     assert_allclose(events.table["DEC"][0], -30.302968, rtol=1e-5)
 
-    assert len(events_bkg.table) == 20
-    assert_allclose(events_bkg.table["ENERGY"][0], 1.40316, rtol=1e-5)
-    assert_allclose(events_bkg.table["RA"][0], 263.687109, rtol=1e-5)
-    assert_allclose(events_bkg.table["DEC"][0], -28.97436, rtol=1e-5)
+    assert len(events_bkg.table) == 16
+    assert_allclose(events_bkg.table["ENERGY"][0], 4.014328, rtol=1e-5)
+    assert_allclose(events_bkg.table["RA"][0], 267.488623, rtol=1e-5)
+    assert_allclose(events_bkg.table["DEC"][0], -30.924333, rtol=1e-5)
     assert_allclose(events_bkg.table["MC_ID"][0], 0, rtol=1e-5)
 
     meta = events.table.meta

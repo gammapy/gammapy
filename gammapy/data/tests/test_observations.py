@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from gammapy.data import DataStore, Observation
@@ -41,15 +42,28 @@ def test_observation(data_store):
 
 @requires_dependency("matplotlib")
 @requires_data()
-def test_observation_peek(data_store):
-    obs = data_store.obs(23523)
+def test_observation_peek(data_store, caplog):
+    obs = Observation.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz")
 
     with mpl_plot_check():
         obs.peek()
 
     obs.bkg = None
+
     with mpl_plot_check():
         obs.peek()
+
+    assert "WARNING" in [record.levelname for record in caplog.records]
+    message = "No background model found for obs 23523."
+    assert message in [record.message for record in caplog.records]
+
+    obs.psf = None
+    with mpl_plot_check():
+        obs.peek()
+
+    assert "WARNING" in [record.levelname for record in caplog.records]
+    message = "No PSF found for obs 23523."
+    assert message in [record.message for record in caplog.records]
 
 
 @requires_data()
@@ -226,6 +240,43 @@ def test_observation():
     assert_allclose(obs.target_radec.ra, np.nan)
     assert_allclose(obs.pointing_zen, np.nan)
     assert_allclose(obs.muoneff, 1)
+
+
+@requires_data()
+def test_observation_read():
+    """read event list and irf components from different DL3 files"""
+    obs = Observation.read(
+        event_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
+        irf_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020137.fits.gz"
+    )
+
+    energy = Quantity(1, "TeV")
+    offset = Quantity(0.5, "deg")
+    val = obs.aeff.evaluate(energy_true=energy, offset=offset)
+
+    assert obs.obs_id == 20136
+    assert len(obs.events.energy) == 11243
+    assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]
+    assert_allclose(val.value, 278000.54120855, rtol=1e-5)
+    assert val.unit == "m2"
+
+
+@requires_data()
+def test_observation_read_single_file():
+    """read event list and irf components from the same DL3 files"""
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
+
+    energy = Quantity(1, "TeV")
+    offset = Quantity(0.5, "deg")
+    val = obs.aeff.evaluate(energy_true=energy, offset=offset)
+    
+    assert obs.obs_id == 20136
+    assert len(obs.events.energy) == 11243
+    assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]
+    assert_allclose(val.value, 273372.44851054, rtol=1e-5)
+    assert val.unit == "m2"
 
 
 @requires_data()

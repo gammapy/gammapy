@@ -62,7 +62,8 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
         Number of grid points per decade used for the integration.
         Default : 100
     """
-    num = np.max(ndecade * np.log10(energy_max / energy_min))
+    # Here we impose to duplicate the number
+    num = np.maximum(np.max(ndecade * np.log10(energy_max / energy_min)), 2)
     energy = np.geomspace(energy_min, energy_max, num=int(num), axis=-1)
     integral = trapz_loglog(func(energy), energy, axis=-1)
     return integral.sum(axis=0)
@@ -116,7 +117,7 @@ class SpectralModel(Model):
 
     def _propagate_error(self, epsilon, fct, **kwargs):
         """Evaluate error for a given function with uncertainty propagation.
-        
+
         Parameters
         ----------
         fct : `~astropy.units.Quantity`
@@ -126,7 +127,7 @@ class SpectralModel(Model):
             fraction of the parameter error.
         **kwargs : dict
             Keyword argument
-        
+
         Returns
         -------
         f_cov : `~astropy.units.Quantity`
@@ -300,13 +301,19 @@ class SpectralModel(Model):
             flux.quantity, flux_err.quantity = self.evaluate_error(energy.center)
 
         elif sed_type == "e2dnde":
-            flux.quantity, flux_err.quantity = energy.center ** 2 * self.evaluate_error(energy.center)
+            flux.quantity, flux_err.quantity = energy.center ** 2 * self.evaluate_error(
+                energy.center
+            )
 
         elif sed_type == "flux":
-            flux.quantity, flux_err.quantity = self.integral_error(energy.edges_min, energy.edges_max)
+            flux.quantity, flux_err.quantity = self.integral_error(
+                energy.edges_min, energy.edges_max
+            )
 
         elif sed_type == "eflux":
-            flux.quantity, flux_err.quantity = self.energy_flux_error(energy.edges_min, energy.edges_max)
+            flux.quantity, flux_err.quantity = self.energy_flux_error(
+                energy.edges_min, energy.edges_max
+            )
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
 
@@ -365,10 +372,14 @@ class SpectralModel(Model):
 
         energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points,
+            energy_min,
+            energy_max,
+            n_points,
         )
 
-        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
+        kwargs.setdefault(
+            "yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power
+        )
 
         flux, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
 
@@ -435,13 +446,17 @@ class SpectralModel(Model):
 
         energy_min, energy_max = energy_bounds
         energy = MapAxis.from_energy_bounds(
-            energy_min, energy_max, n_points,
+            energy_min,
+            energy_max,
+            n_points,
         )
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
-        kwargs.setdefault("yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
+        kwargs.setdefault(
+            "yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power
+        )
 
         flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
         y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
@@ -635,7 +650,9 @@ class PowerLawSpectralModel(SpectralModel):
 
     tag = ["PowerLawSpectralModel", "pl"]
     index = Parameter("index", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
@@ -848,7 +865,9 @@ class PowerLaw2SpectralModel(SpectralModel):
     """
     tag = ["PowerLaw2SpectralModel", "pl-2"]
 
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1", scale_method="scale10", interp="log"
+    )
     index = Parameter("index", 2)
     emin = Parameter("emin", "0.1 TeV", frozen=True)
     emax = Parameter("emax", "100 TeV", frozen=True)
@@ -930,7 +949,9 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     tag = ["BrokenPowerLawSpectralModel", "bpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     ebreak = Parameter("ebreak", "1 TeV")
 
     @staticmethod
@@ -972,7 +993,9 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     tag = ["SmoothBrokenPowerLawSpectralModel", "sbpl"]
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     ebreak = Parameter("ebreak", "1 TeV")
     reference = Parameter("reference", "1 TeV", frozen=True)
     beta = Parameter("beta", 1, frozen=True)
@@ -987,7 +1010,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
 
 class PiecewiseNormSpectralModel(SpectralModel):
-    """ Piecewise spectral correction
+    """Piecewise spectral correction
        with a free normalization at each fixed energy nodes.
 
        For more information see :ref:`piecewise-norm-spectral`.
@@ -1094,7 +1117,9 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     tag = ["ExpCutoffPowerLawSpectralModel", "ecpl"]
 
     index = Parameter("index", 1.5)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
@@ -1183,7 +1208,9 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     tag = ["ExpCutoffPowerLaw3FGLSpectralModel", "ecpl-3fgl"]
     index = Parameter("index", 1.5)
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
 
@@ -1221,7 +1248,9 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     """
 
     tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
     index_1 = Parameter("index_1", 1.5)
@@ -1256,7 +1285,9 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
     index_1 = Parameter("index_1", 1.5)
@@ -1296,7 +1327,9 @@ class LogParabolaSpectralModel(SpectralModel):
 
     """
     tag = ["LogParabolaSpectralModel", "lp"]
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log")
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 2)
     beta = Parameter("beta", 1)
@@ -1391,7 +1424,11 @@ class TemplateSpectralModel(SpectralModel):
     tag = ["TemplateSpectralModel", "template"]
 
     def __init__(
-        self, energy, values, interp_kwargs=None, meta=None,
+        self,
+        energy,
+        values,
+        interp_kwargs=None,
+        meta=None,
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
@@ -1763,7 +1800,8 @@ class NaimaSpectralModel(SpectralModel):
         super().__init__()
 
     def _evaluate_ssc(
-        self, energy,
+        self,
+        energy,
     ):
         """
         Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,

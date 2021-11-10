@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.utils import lazyproperty
@@ -55,7 +54,7 @@ class MapEvaluator:
 
     def __init__(
         self,
-        model=None,
+        model,
         exposure=None,
         psf=None,
         edisp=None,
@@ -90,8 +89,6 @@ class MapEvaluator:
             self.evaluation_mode = "global"
 
         # define cached computations
-        self._compute_npred = lru_cache()(self._compute_npred)
-        self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
         self._cached_parameter_values = None
         self._cached_parameter_values_previous = None
         self._cached_parameter_values_spatial = None
@@ -100,28 +97,14 @@ class MapEvaluator:
         self._neval = 0  # for debugging
         self._renorm = 1
         self._spatial_oversampling_factor = 1
-        self._upsampled_geom = self.exposure.geom if self.exposure else None
+        if self.exposure is not None:
+            if not self.geom.is_region or self.geom.region is not None:
+                self.update_spatial_oversampling_factor(self.geom)
 
-    # workaround for the lru_cache pickle issue
-    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key, value in state.items():
-            func = getattr(value, "__wrapped__", None)
-            if func is not None:
-                state[key] = func
-
-        return state
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in [
-                "_compute_npred",
-                "_compute_flux_spatial",
-            ]:
-                state[key] = lru_cache()(value)
-
-        self.__dict__ = state
+    def reset_cache_properties(self):
+        """Reset cached properties."""
+        del self._compute_npred
+        del self._compute_flux_spatial
 
     @property
     def geom(self):
@@ -228,8 +211,7 @@ class MapEvaluator:
             if not self.geom.is_region or self.geom.region is not None:
                 self.update_spatial_oversampling_factor(self.geom)
 
-        self._compute_npred.cache_clear()
-        self._compute_flux_spatial.cache_clear()
+        self.reset_cache_properties()
         self._computation_cache = None
         self._cached_parameter_previous = None
 
@@ -244,8 +226,6 @@ class MapEvaluator:
         if res_scale != 0:
             factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
             self._spatial_oversampling_factor = factor
-
-        self._upsampled_geom = geom.upsample(self._spatial_oversampling_factor)
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -280,9 +260,10 @@ class MapEvaluator:
     def compute_flux_spatial(self):
         """Compute spatial flux using caching"""
         if self.parameters_spatial_changed() or not self.use_cache:
-            self._compute_flux_spatial.cache_clear()
-        return self._compute_flux_spatial()
+            del self._compute_flux_spatial
+        return self._compute_flux_spatial
 
+    @lazyproperty
     def _compute_flux_spatial(self):
         """Compute spatial flux
 
@@ -310,17 +291,15 @@ class MapEvaluator:
             weights = wcs_geom.region_weights(regions=[self.geom.region])
             value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
         else:
-            value = self._compute_flux_spatial_geom(self._upsampled_geom)
+            value = self._compute_flux_spatial_geom(self.geom)
 
         return value
 
     def _compute_flux_spatial_geom(self, geom):
         """Compute spatial flux oversampling geom if necessary"""
-        factor = self._spatial_oversampling_factor
-        # for now we force the oversampling factor to be 1
-        value = self.model.spatial_model.integrate_geom(geom, oversampling_factor=1)
-
-        value = value.downsample(factor)
+        if not self.model.spatial_model.is_energy_dependent:
+            geom = geom.to_image()
+        value = self.model.spatial_model.integrate_geom(geom)
 
         if self.psf and self.model.apply_irf["psf"]:
             value = self.apply_psf(value)
@@ -375,6 +354,7 @@ class MapEvaluator:
         """
         return npred.apply_edisp(self.edisp)
 
+    @lazyproperty
     def _compute_npred(self):
         """Compute npred"""
         if isinstance(self.model, TemplateNPredModel):
@@ -404,9 +384,9 @@ class MapEvaluator:
             Predicted counts on the map (in reco energy bins)
         """
         if self.parameters_changed or not self.use_cache:
-            self._compute_npred.cache_clear()
+            del self._compute_npred
 
-        return self._compute_npred()
+        return self._compute_npred
 
     @property
     def parameters_changed(self):

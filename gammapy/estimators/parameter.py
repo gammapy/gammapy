@@ -86,8 +86,8 @@ class ParameterEstimator(Estimator):
         if np.any(datasets.contributes_to_stat):
             result = self.fit.run(datasets=datasets)
             value, error = parameter.value, parameter.error
-            total_stat = result["optimize_result"].total_stat
-            success = result["optimize_result"].success
+            total_stat = result.total_stat
+            success = result.success
 
         return {
             f"{parameter.name}": value,

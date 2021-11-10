@@ -225,7 +225,7 @@ class DataStore:
         kwargs = {"obs_id": int(obs_id)}
         kwargs["obs_info"] = table_row_to_dict(row)
 
-        hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+        hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
         for hdu in hdu_list:
             kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 

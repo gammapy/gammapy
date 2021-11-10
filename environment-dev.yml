@@ -37,13 +37,14 @@ dependencies:
   - ipython
   - jupyter
   - jupyterlab
-  - matplotlib
+  - matplotlib>=3.4
   - naima
   - pandas
   - reproject
   - sherpa
   # dev dependencies
   - black
+  - codespell
   - flake8
   - isort
   - nbsphinx

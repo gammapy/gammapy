@@ -8,6 +8,7 @@ from .edisp import *
 from .effective_area import *
 from .io import *
 from .psf import *
+from .rad_max import *
 
 
 # TODO: add EDispMap?
@@ -22,5 +23,6 @@ IRF_REGISTRY = Registry(
         Background2D,
         PSFMap,
         EDispKernelMap,
+        RadMax2D,
     ]
 )

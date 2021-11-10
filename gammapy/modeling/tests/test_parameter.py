@@ -157,10 +157,13 @@ def test_parameters_getitem(pars):
 
 def test_parameters_to_table(pars):
     pars["ham"].error = 1e-10
+    pars["spam"]._link_label_io = "test"
+
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 8
-
+    assert len(table.columns) == 9
+    assert table["link"][0] == "test"
+    assert table["link"][1] == ""
 
 def test_parameters_set_parameter_factors(pars):
     pars.set_parameter_factors([77, 78])

@@ -15,6 +15,7 @@ __all__ = ["PSFMap"]
 
 class IRFLikePSF(PSF):
     required_axes = ["energy_true", "rad", "lat_idx", "lon_idx"]
+    tag = "irf_like_psf"
 
 
 class PSFMap(IRFMap):

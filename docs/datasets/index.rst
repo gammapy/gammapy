@@ -22,31 +22,70 @@ components.
 
 To model and fit data in Gammapy, you have to create a
 `~gammapy.datasets.Datasets` container object with one or multiple
-`~gammapy.datasets.Dataset` objects. Gammapy has built-in support to create and
-analyse the following datasets: `~gammapy.datasets.MapDataset`,
-`~gammapy.datasets.MapDatasetOnOff`, `~gammapy.datasets.SpectrumDataset`,
-`~gammapy.datasets.SpectrumDatasetOnOff` and
-`~gammapy.datasets.FluxPointsDataset`.
+`~gammapy.datasets.Dataset` objects.
+
+Types of supported datasets
+===========================
+Gammapy has built-in support to create and
+analyse the following datasets:
+
+.. list-table::
+   :widths: 10 20 50 20 20 10
+   :header-rows: 1
+
+   * - **Dataset Type**
+     - **data_type**
+     - **reduced irfs**
+     - **geometry**
+     -  **additional quantity**
+     -  **statistic**
+   * - `~gammapy.datasets.MapDataset`
+     - `counts`
+     - `background`, `psf`, `edisp`, `exposure`,
+     -  `WcsGeom` or `RegionGeom`
+     -
+     -   `cash`
+   * - `~gammapy.datasets.MapDatasetOnOff`
+     - `counts`
+     - `psf`, `edisp`, `exposure`
+     -  `WcsGeom`
+     - `acceptance`, `acceptance_off`, `counts_off`
+     - `wstat`
+   * - `~gammapy.datasets.SpectrumDataset`
+     - `counts`
+     - `background`, `edisp`, `exposure`
+     - `RegionGeom`
+     -
+     - `cash`
+   * - `~gammapy.datasets.SpectrumDatasetOnOff`
+     - `counts`
+     - `edisp`, `exposure`
+     - `RegionGeom`
+     - `acceptance`, `acceptance_off`, `counts_off`
+     -  `wstat`
+   * - `~gammapy.datasets.FluxPointsDataset`
+     -  `flux`
+     - None
+     - None
+     -
+     - `chi2`
+
+
+In general, `OnOff` datasets should be used when the
+background is estimated from real off counts
+(eg: `RingBackground` or `ReflectedBackground`),
+rather than from a background model.
+The `FluxPointDataset` is used to fit pre-computed flux points
+when no convolution with IRFs are needed.
+
 
 The map datasets represent 3D cubes (`~gammapy.maps.WcsNDMap` objects) with two
 spatial and one energy axis. For 2D images the same map objects and map datasets
-are used, an energy axis is present but only has one energy bin. The
-`~gammapy.datasets.MapDataset` contains a counzts map, background is modeled with a
-`~gammapy.modeling.models.BackgroundModel`, and the fit statistic used is
-``cash``. The `~gammapy.datasets.MapDatasetOnOff` contains on and off count maps,
-background is implicitly modeled via the off counts map, and the ``wstat`` fit
-statistic.
+are used, an energy axis is present but only has one energy bin.
 
 The spectrum datasets represent 1D spectra (`~gammapy.maps.RegionNDMap`
 objects) with an energy axis. There are no spatial axes or information, the 1D
-spectra are obtained for a given on region. The
-`~gammapy.datasets.SpectrumDataset` contains a counts spectrum, background is
-modeled with a `~gammapy.maps.RegionNDMap`, and the fit statistic used is
-``cash``. The `~gammapy.datasets.SpectrumDatasetOnOff` contains on on and off
-count spectra, background is implicitly modeled via the off counts spectrum, and
-the ``wstat`` fit statistic. The `~gammapy.datasets.FluxPointsDataset` contains
-`~gammapy.estimatorsFluxPoints` and a spectral model, the fit statistic used is
-``chi2``.
+spectra are obtained for a given on region.
 
 Note that in Gammapy, 2D image analyses are done with 3D cubes with a single
 energy bin, e.g. for modeling and fitting,
@@ -178,6 +217,16 @@ even fit convergence might be an issue for a large number of datasets.
 To strike a balance, what might be a practical solution for analysis of many runs is to
 stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
 
+Using `gammapy.datasets`
+====================
+
+Gammapy tutorial notebooks that show how to use this package:
+
+.. nbgallery::
+
+   ../tutorials/api/datasets.ipynb
+   ../tutorials/api/model_management.ipynb
+   ../tutorials/analysis/1D/sed_fitting.ipynb
 
 
 Reference/API
