@@ -4,7 +4,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
-from gammapy.estimators import ExcessProfileEstimator
+from gammapy.estimators import FluxProfileEstimator
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
@@ -15,7 +15,7 @@ from gammapy.utils.regions import (
 def get_simple_dataset_on_off():
     axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=40, binsz=0.01, axes=[axis])
-    dataset = MapDatasetOnOff.create(geom)
+    dataset = MapDatasetOnOff.create(geom, name="test-on-off")
     dataset.mask_safe += True
     dataset.counts += 5
     dataset.counts_off += 1
@@ -47,8 +47,8 @@ def test_profile_content():
     wcs = mapdataset_onoff.counts.geom.wcs
     boxes = make_horizontal_boxes(wcs)
 
-    prof_maker = ExcessProfileEstimator(
-        boxes, energy_edges=[0.1, 1, 10] * u.TeV, selection_optional="all"
+    prof_maker = FluxProfileEstimator(
+        regions=boxes, energy_edges=[0.1, 1, 10] * u.TeV, selection_optional="all"
     )
     imp_prof = prof_maker.run(mapdataset_onoff)
 
@@ -69,7 +69,7 @@ def test_radial_profile():
         center=geom.center_skydir, radius_max=0.2 * u.deg,
     )
 
-    prof_maker = ExcessProfileEstimator(
+    prof_maker = FluxProfileEstimator(
         regions, energy_edges=[0.1, 1, 10] * u.TeV, selection_optional="all"
     )
     imp_prof = prof_maker.run(dataset)
@@ -92,7 +92,7 @@ def test_radial_profile_one_interval():
         center=geom.center_skydir, radius_max=0.2 * u.deg,
     )
 
-    prof_maker = ExcessProfileEstimator(regions, selection_optional="all")
+    prof_maker = FluxProfileEstimator(regions, selection_optional="all")
     imp_prof = prof_maker.run(dataset)
 
     assert_allclose(imp_prof[7]["counts"], [1960], atol=1e-5)

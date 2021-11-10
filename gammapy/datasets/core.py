@@ -303,7 +303,9 @@ class Datasets(collections.abc.MutableSequence):
         datasets = Datasets()
 
         for dataset in self:
-            spectrum_dataset = dataset.to_spectrum_dataset(on_region=region)
+            spectrum_dataset = dataset.to_spectrum_dataset(
+                on_region=region, name=dataset.name
+            )
             datasets.append(spectrum_dataset)
 
         return datasets

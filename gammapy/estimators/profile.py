@@ -14,7 +14,7 @@ from .flux_point import FluxPoints, FluxPointsEstimator
 from .core import Estimator
 
 
-__all__ = ["ImageProfile", "ImageProfileEstimator"]
+__all__ = ["ImageProfile", "ImageProfileEstimator", "FluxProfileEstimator"]
 
 
 class FluxProfileEstimator(FluxPointsEstimator):
@@ -85,6 +85,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
             Profile flux points.
         """
         datasets = Datasets(datasets=datasets)
+
         maps = []
 
         for region in self.regions:
