@@ -48,18 +48,34 @@ def test_profile_content():
     boxes = make_horizontal_boxes(wcs)
 
     prof_maker = FluxProfileEstimator(
-        regions=boxes, energy_edges=[0.1, 1, 10] * u.TeV, selection_optional="all"
+        regions=boxes,
+        energy_edges=[0.1, 1, 10] * u.TeV,
+        selection_optional="all",
+        n_sigma=1,
+        n_sigma_ul=3
     )
-    imp_prof = prof_maker.run(mapdataset_onoff)
+    result = prof_maker.run(mapdataset_onoff)
 
+    imp_prof = result.to_table(sed_type="flux", format="profile")
     assert_allclose(imp_prof[7]["x_min"], 0.1462, atol=1e-4)
     assert_allclose(imp_prof[7]["x_ref"], 0.1575, atol=1e-4)
-    assert_allclose(imp_prof[7]["counts"], [100.0, 100.0], atol=1e-2)
-    assert_allclose(imp_prof[7]["excess"], [80.0, 80.0], atol=1e-2)
+    assert_allclose(imp_prof[7]["counts"], [[100.0], [100.0]], atol=1e-2)
     assert_allclose(imp_prof[7]["sqrt_ts"], [7.6302447, 7.6302447], atol=1e-5)
-    assert_allclose(imp_prof[7]["errn"], [-10.747017, -10.747017], atol=1e-5)
-    assert_allclose(imp_prof[0]["ul"], [115.171871, 115.171871], atol=1e-5)
     assert_allclose(imp_prof[0]["flux"], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
+
+    # TODO: npred quantities are not supported by the table serialisation format
+    #  so we rely on the FluxPoints object
+    npred_null = result.npred_null.data[7].squeeze()
+    assert_allclose(npred_null, [80.0, 80.0], atol=1e-2)
+
+    npred_excess = result.npred_excess.data[7].squeeze()
+    assert_allclose(npred_excess, [80.0, 80.0], atol=1e-2)
+
+    errn = result.npred_excess_errn.data[7].squeeze()
+    assert_allclose(errn, [-10.747017, -10.747017], atol=1e-5)
+
+    ul = result.npred_excess_ul.data[7].squeeze()
+    assert_allclose(ul, [115.171871, 115.171871], atol=1e-5)
 
 
 def test_radial_profile():
@@ -72,17 +88,21 @@ def test_radial_profile():
     prof_maker = FluxProfileEstimator(
         regions, energy_edges=[0.1, 1, 10] * u.TeV, selection_optional="all"
     )
-    imp_prof = prof_maker.run(dataset)
+    result = prof_maker.run(dataset)
+
+    imp_prof = result.to_table(sed_type="flux", format="profile")
 
     assert_allclose(imp_prof[7]["x_min"], 0.14, atol=1e-4)
     assert_allclose(imp_prof[7]["x_ref"], 0.15, atol=1e-4)
-    assert_allclose(imp_prof[7]["counts"], [980.0, 980.0], atol=1e-2)
-    assert_allclose(imp_prof[7]["excess"], [784.0, 784.0], atol=1e-2)
+    assert_allclose(imp_prof[7]["counts"], [[980.0], [980.0]], atol=1e-2)
     assert_allclose(imp_prof[7]["sqrt_ts"], [23.886444, 23.886444], atol=1e-5)
+    assert_allclose(imp_prof[0]["flux"], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
+
+    # TODO: npred quantities are not supported by the table serialisation format
+    #  so we rely on the FluxPoints object
+    assert_allclose(imp_prof[7]["excess"], [784.0, 784.0], atol=1e-2)
     assert_allclose(imp_prof[7]["errn"], [-34.075141, -34.075141], atol=1e-5)
     assert_allclose(imp_prof[0]["ul"], [75.834983, 75.834983], atol=1e-5)
-    assert_allclose(imp_prof[0]["flux"], [7.99999987e-06, 8.00000010e-06], atol=1e-3)
-    assert_allclose(imp_prof[0]["solid_angle"], [6.853891e-07, 6.853891e-07], atol=1e-5)
 
 
 def test_radial_profile_one_interval():
