@@ -1,12 +1,12 @@
 r"""
-.. _constant-temporal-model:
+.. _powerlaw-temporal-model:
 
-Constant temporal model
+PowerLaw temporal model
 =======================
 
-This model parametrises a constant time model.
+This model parametrises a power-law time model.
 
-.. math:: F(t) = k
+.. math:: F(t) = ((t - t_{ref})/t_0)^alpha
 
 """
 
@@ -24,22 +24,22 @@ import matplotlib.pyplot as plt
 # -------------------
 # Here is an example YAML file using the model:
 from gammapy.modeling.models import (
-    ConstantTemporalModel,
+    PowerLawTemporalModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
 )
 
-time_range = [Time.now(), Time.now() + 1 * u.d]
-constant_model = ConstantTemporalModel(const=1)
-constant_model.plot(time_range)
+time_range = [Time.now(), Time.now() + 2 * u.d]
+pl_model = PowerLawTemporalModel(alpha=-2., t_ref=(time_range[0].mjd-0.1)*u.d)
+pl_model.plot(time_range)
 plt.grid(which="both")
-
+plt.yscale('log')
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),
-    temporal_model=constant_model,
-    name="constant-model",
+    temporal_model=pl_model,
+    name="powerlaw-model",
 )
 models = Models([model])
 

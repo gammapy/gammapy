@@ -22,7 +22,7 @@ from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
-# TODO: use pregenerate data instead
+# TODO: use pre-generated data instead
 def simulate_spectrum_dataset(model, random_state=0):
     energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
     energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
@@ -385,7 +385,7 @@ def test_no_likelihood_contribution():
 
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
-    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV, source="source")
+    fpe = FluxPointsEstimator(energy_edges=[1., 3., 10.] * u.TeV, source="source")
     table = fpe.run([dataset, dataset_2]).to_table()
 
     assert np.isnan(table["norm"]).all()
@@ -394,7 +394,7 @@ def test_no_likelihood_contribution():
 
 
 def test_mask_shape():
-    axis = MapAxis.from_edges([1, 3, 10], unit="TeV", interp="log", name="energy")
+    axis = MapAxis.from_edges([1., 3., 10.], unit="TeV", interp="log", name="energy")
     geom_1 = WcsGeom.create(binsz=1, width=3, axes=[axis])
     geom_2 = WcsGeom.create(binsz=1, width=5, axes=[axis])
 
@@ -445,8 +445,11 @@ def test_run_pwl_parameter_range(fpe_pwl):
     actual = table_with_bounds["norm_errp"].data
     assert_allclose(actual, [212.593368, 298.383045, 449.951747], rtol=1e-2)
 
+    actual = table_with_bounds["norm_err"].data
+    assert_allclose(actual, [251.490704, 280.37361, 404.162784], rtol=1e-2)
+
     actual = table_with_bounds["norm_ul"].data
-    assert_allclose(actual, [640.067576,  722.571371, 1414.22209], rtol=1e-2)
+    assert_allclose(actual, [640.067576, 722.571371, 1414.22209], rtol=1e-2)
 
     actual = table_with_bounds["sqrt_ts"].data
     assert_allclose(actual, [0., 0., 0.], atol=1e-2)
@@ -458,7 +461,7 @@ def test_run_pwl_parameter_range(fpe_pwl):
     assert_allclose(actual, [504.601499, 416.69248, 851.223077], rtol=1e-2)
 
     actual = table_no_bounds["norm_ul"].data
-    assert_allclose(actual, [ 514.957128,  707.888477, 1167.105962], rtol=1e-2)
+    assert_allclose(actual, [514.957128,  707.888477, 1167.105962], rtol=1e-2)
 
     actual = table_no_bounds["sqrt_ts"].data
     assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)

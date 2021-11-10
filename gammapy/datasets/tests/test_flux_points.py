@@ -82,7 +82,7 @@ class TestFluxPointFit:
     def test_fit_pwl_minuit(self, dataset):
         fit = Fit()
         result = fit.run(dataset)
-        self.assert_result(result["optimize_result"])
+        self.assert_result(result)
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, dataset):
@@ -109,7 +109,6 @@ class TestFluxPointFit:
     def test_stat_profile(dataset):
         fit = Fit()
         result = fit.run(datasets=dataset)
-        result = result["optimize_result"]
 
         model = dataset.models[0].spectral_model
 

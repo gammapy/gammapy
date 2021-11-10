@@ -764,9 +764,11 @@ class HpxGeom(Geom):
             axes=copy.deepcopy(self.axes),
         )
 
-    def downsample(self, factor):
+    def downsample(self, factor, axis_name=None):
         if not is_power2(factor):
             raise ValueError("Downsample factor must be a power of 2.")
+        if axis_name is not None:
+            raise ValueError("Currently the only valid axis name is None.")
 
         if self.is_allsky:
             return self.__class__(

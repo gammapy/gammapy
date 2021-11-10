@@ -589,6 +589,8 @@ class Parameters(collections.abc.Sequence):
         rows = []
         for p in self._parameters:
             d = p.to_dict()
+            if "link" not in d:
+                d["link"] = ""
             for key in ["scale_method", "interp"]:
                 if key in d:
                     del d[key]

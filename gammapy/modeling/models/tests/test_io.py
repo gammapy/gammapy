@@ -14,7 +14,7 @@ from gammapy.modeling.models import (
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
-)
+    )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
@@ -225,6 +225,9 @@ def make_all_models():
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
     yield Model.create("ConstantTemporalModel", "temporal")
+    yield Model.create("LinearTemporalModel", "temporal")
+    yield Model.create("PowerLawTemporalModel", "temporal")
+    yield Model.create("SineTemporalModel", "temporal")
     yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
     yield Model.create(
         "SkyModel",
@@ -275,3 +278,4 @@ def test_simplified_output():
 
 def test_registries_print():
     assert "Registry" in str(MODEL_REGISTRY)
+

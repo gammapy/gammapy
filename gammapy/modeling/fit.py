@@ -148,16 +148,13 @@ class Fit:
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
-            return {"optimize_result": optimize_result, "covariance_result": None}
+            return optimize_result
 
         covariance_result = self.covariance(datasets=datasets)
-        # TODO: not sure how best to report the results
-        # back or how to form the FitResult object.
 
-        return {
-            "optimize_result": optimize_result,
-            "covariance_result": covariance_result,
-        }
+        optimize_result._covariance_result = covariance_result
+
+        return optimize_result
 
     def optimize(self, datasets):
         """Run the optimization.
@@ -253,9 +250,9 @@ class Fit:
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
+            parameters=parameters,
             backend=backend,
             method=method,
-            parameters=parameters,
             success=info["success"],
             message=info["message"],
         )
@@ -526,10 +523,11 @@ class CovarianceResult(FitResult):
 class OptimizeResult(FitResult):
     """Optimize result object."""
 
-    def __init__(self, nfev, total_stat, trace, **kwargs):
+    def __init__(self, nfev, total_stat, trace, covariance_result=None, **kwargs):
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
+        self._covariance_result = covariance_result
         super().__init__(**kwargs)
 
     @property
@@ -547,8 +545,15 @@ class OptimizeResult(FitResult):
         """Value of the fit statistic at minimum."""
         return self._total_stat
 
+    @property
+    def covariance_result(self):
+        """Covariance results."""
+        return self._covariance_result
+
     def __repr__(self):
         str_ = super().__repr__()
         str_ += f"\tnfev       : {self.nfev}\n"
         str_ += f"\ttotal stat : {self.total_stat:.2f}\n"
+        if self.covariance_result is not None:
+            str_ += self.covariance_result.__repr__()
         return str_

@@ -152,7 +152,7 @@ This how to compute flux maps with the `ExcessMapEstimator`:
         shape : (320, 240, 2)
         ndim  : 3
         unit  : 1 / (cm2 s)
-        dtype : float64
+        dtype : >f4
     <BLANKLINE>
 
 Flux points
