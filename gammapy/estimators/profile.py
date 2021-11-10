@@ -68,7 +68,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
             distances.append(distance)
 
         return MapAxis.from_nodes(
-            u.Quantity(distances, "deg"), name="projected distance"
+            u.Quantity(distances, "deg"), name="projected-distance"
         )
 
     def run(self, datasets):
