@@ -236,20 +236,20 @@ def test_run_pwl(fpe_pwl, tmpdir):
     actual = table.meta["UL_CONF"]
     assert_allclose(actual, 0.9544997)
 
-    npred_err = fp.npred_excess.data.squeeze()
-    assert_allclose(npred_err, [550.466, 351.292,  28.604], rtol=1e-3)
+    npred_excess_err = fp.npred_excess.data.squeeze()
+    assert_allclose(npred_excess_err, [550.466, 351.292,  28.604], rtol=1e-3)
 
-    npred_err = fp.npred_err.data.squeeze()
-    assert_allclose(npred_err, [33.784, 23.536,  5.575], rtol=1e-3)
+    npred_excess_err = fp.npred_excess_err.data.squeeze()
+    assert_allclose(npred_excess_err, [33.784, 23.536,  5.575], rtol=1e-3)
 
-    npred_errp = fp.npred_errp.data.squeeze()
-    assert_allclose(npred_errp, [34.032, 23.792,  5.844], rtol=1e-3)
+    npred_excess_errp = fp.npred_excess_errp.data.squeeze()
+    assert_allclose(npred_excess_errp, [34.032, 23.792,  5.844], rtol=1e-3)
 
-    npred_errn = fp.npred_errn.data.squeeze()
-    assert_allclose(npred_errn, [33.539, 23.277,  5.315], rtol=1e-3)
+    npred_excess_errn = fp.npred_excess_errn.data.squeeze()
+    assert_allclose(npred_excess_errn, [33.539, 23.277,  5.315], rtol=1e-3)
 
-    npred_ul = fp.npred_ul.data.squeeze()
-    assert_allclose(npred_ul, [619.060, 399.318,  40.849], rtol=1e-3)
+    npred_excess_ul = fp.npred_excess_ul.data.squeeze()
+    assert_allclose(npred_excess_ul, [619.060, 399.318,  40.849], rtol=1e-3)
 
     # test GADF I/O
     fp.write(tmpdir / "test.fits", format="gadf-sed")

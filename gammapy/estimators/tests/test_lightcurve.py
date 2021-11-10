@@ -369,17 +369,17 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     npred = lightcurve.npred.data.squeeze()
     assert_allclose(npred, [[[669.36, np.nan], [121.66, np.nan]], [[np.nan, 664.41], [np.nan, 115.09]]], rtol=1e-3)
 
-    npred_err = lightcurve.npred_err.data.squeeze()
-    assert_allclose(npred_err, [[[22.34, np.nan], [9.42, np.nan]], [[np.nan, 22.38], [np.nan, 9.29]]], rtol=1e-3)
+    npred_excess_err = lightcurve.npred_excess_err.data.squeeze()
+    assert_allclose(npred_excess_err, [[[22.34, np.nan], [9.42, np.nan]], [[np.nan, 22.38], [np.nan, 9.29]]], rtol=1e-3)
 
-    npred_errp = lightcurve.npred_errp.data.squeeze()
-    assert_allclose(npred_errp, [[[22.59, np.nan], [9.69, np.nan]], [[np.nan, 22.63], [np.nan, 9.55]]], rtol=1e-3)
+    npred_excess_errp = lightcurve.npred_excess_errp.data.squeeze()
+    assert_allclose(npred_excess_errp, [[[22.59, np.nan], [9.69, np.nan]], [[np.nan, 22.63], [np.nan, 9.55]]], rtol=1e-3)
 
-    npred_errn = lightcurve.npred_errn.data.squeeze()
-    assert_allclose(npred_errn, [[[22.08, np.nan], [9.17, np.nan]], [[np.nan, 22.12], [np.nan, 9.03]]], rtol=1e-3)
+    npred_excess_errn = lightcurve.npred_excess_errn.data.squeeze()
+    assert_allclose(npred_excess_errn, [[[22.08, np.nan], [9.17, np.nan]], [[np.nan, 22.12], [np.nan, 9.03]]], rtol=1e-3)
 
-    npred_ul = lightcurve.npred_ul.data.squeeze()
-    assert_allclose(npred_ul, [[[348.90, np.nan], [95.15, np.nan]], [[np.nan, 355.62], [np.nan, 88.22]]], rtol=1e-3)
+    npred_excess_ul = lightcurve.npred_excess_ul.data.squeeze()
+    assert_allclose(npred_excess_ul, [[[348.90, np.nan], [95.15, np.nan]], [[np.nan, 355.62], [np.nan, 88.22]]], rtol=1e-3)
 
     fp = FluxPoints.from_table(
         table=table, format="lightcurve", reference_model=PowerLawSpectralModel()

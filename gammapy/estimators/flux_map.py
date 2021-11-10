@@ -373,29 +373,29 @@ class FluxMaps:
         return data
 
     @property
-    def npred_ref(self):
+    def npred_excess_ref(self):
         """Predicted excess reference counts"""
         return self.npred_excess / self._expand_dims(self.norm.data)
 
     @property
-    def npred_err(self):
+    def npred_excess_err(self):
         """Predicted excess counts error"""
-        return self.npred_ref * self._expand_dims(self.norm_err.data)
+        return self.npred_excess_ref * self._expand_dims(self.norm_err.data)
 
     @property
-    def npred_errp(self):
+    def npred_excess_errp(self):
         """Predicted excess counts positive error"""
-        return self.npred_ref * self._expand_dims(self.norm_errp.data)
+        return self.npred_excess_ref * self._expand_dims(self.norm_errp.data)
 
     @property
-    def npred_errn(self):
+    def npred_excess_errn(self):
         """Predicted excess counts negative error"""
-        return self.npred_ref * self._expand_dims(self.norm_errn.data)
+        return self.npred_excess_ref * self._expand_dims(self.norm_errn.data)
 
     @property
-    def npred_ul(self):
+    def npred_excess_ul(self):
         """Predicted excess counts upper limits"""
-        return self.npred_ref * self._expand_dims(self.norm_ul.data)
+        return self.npred_excess_ref * self._expand_dims(self.norm_ul.data)
 
     @property
     def stat_scan(self):

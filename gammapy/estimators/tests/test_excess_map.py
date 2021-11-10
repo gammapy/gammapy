@@ -117,10 +117,10 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["npred_null"].data[0, 10, 10], 81)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
 
-    assert_allclose(result["npred_err"].data[0, 10, 10], 12.727922, atol=1e-3)
-    assert_allclose(result["npred_errp"].data[0, 10, 10], 13.063328, atol=1e-3)
-    assert_allclose(result["npred_errn"].data[0, 10, 10], 12.396716, atol=1e-3)
-    assert_allclose(result["npred_ul"].data[0, 10, 10], 107.806275, atol=1e-3)
+    assert_allclose(result["npred_excess_err"].data[0, 10, 10], 12.727922, atol=1e-3)
+    assert_allclose(result["npred_excess_errp"].data[0, 10, 10], 13.063328, atol=1e-3)
+    assert_allclose(result["npred_excess_errn"].data[0, 10, 10], 12.396716, atol=1e-3)
+    assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 107.806275, atol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
