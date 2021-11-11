@@ -508,7 +508,7 @@ class RegionNDMap(Map):
             if colname == "stat_scan":
                 names = ["norm", "energy"]
             # TODO: this is not officially supported by GADF...
-            elif colname in ["counts", "npred", "npred_null"]:
+            elif colname in ["counts", "npred", "npred_excess"]:
                 names = ["dataset", "energy"]
             else:
                 names = ["energy"]
@@ -522,7 +522,7 @@ class RegionNDMap(Map):
             if colname == "stat_scan":
                 names = ["norm", "energy", "time"]
             # TODO: this is not officially supported by GADF...
-            elif colname in ["counts", "npred", "npred_null"]:
+            elif colname in ["counts", "npred", "npred_excess"]:
                 names = ["dataset", "energy", "time"]
             else:
                 names = ["energy", "time"]
