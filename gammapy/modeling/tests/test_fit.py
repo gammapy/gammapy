@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 from gammapy.datasets import Dataset
 from gammapy.modeling import Fit, Parameter
-from gammapy.modeling.models import Model, ModelBase, Models
+from gammapy.modeling.models import ModelBase, Models
 from gammapy.utils.testing import requires_dependency
 
 pytest.importorskip("iminuit")

@@ -371,11 +371,7 @@ class SpectralModel(ModelBase):
             sed_type = "norm"
 
         energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points,)
 
         kwargs.setdefault(
             "yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power
@@ -445,11 +441,7 @@ class SpectralModel(ModelBase):
             sed_type = "norm"
 
         energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points,)
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
@@ -612,21 +604,24 @@ class CompoundSpectralModel(SpectralModel):
     def to_dict(self, full_output=False):
         dict1 = self.model1.to_dict(full_output)
         dict2 = self.model2.to_dict(full_output)
-        return {self._type: {
-            "type": self.tag[0],
-            "model1": dict1["spectral"], #for cleaner output
-            "model2": dict2["spectral"],
-            "operator": self.operator.__name__,
-        }}
+        return {
+            self._type: {
+                "type": self.tag[0],
+                "model1": dict1["spectral"],  # for cleaner output
+                "model2": dict2["spectral"],
+                "operator": self.operator.__name__,
+            }
+        }
 
     @classmethod
     def from_dict(cls, data):
         from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+
         data = data["spectral"]
         model1_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model1"]["type"])
-        model1 = model1_cls.from_dict({"spectral":data["model1"]})
+        model1 = model1_cls.from_dict({"spectral": data["model1"]})
         model2_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model2"]["type"])
-        model2 = model2_cls.from_dict({"spectral":data["model2"]})
+        model2 = model2_cls.from_dict({"spectral": data["model2"]})
         op = getattr(operator, data["operator"])
         return cls(model1, model2, op)
 
@@ -1427,11 +1422,7 @@ class TemplateSpectralModel(SpectralModel):
     tag = ["TemplateSpectralModel", "template"]
 
     def __init__(
-        self,
-        energy,
-        values,
-        interp_kwargs=None,
-        meta=None,
+        self, energy, values, interp_kwargs=None, meta=None,
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
@@ -1501,17 +1492,19 @@ class TemplateSpectralModel(SpectralModel):
         return self._evaluate((energy,), clip=True)
 
     def to_dict(self, full_output=False):
-        return {self._type: {
-            "type": self.tag[0],
-            "energy": {
-                "data": self.energy.data.tolist(),
-                "unit": str(self.energy.unit),
-            },
-            "values": {
-                "data": self.values.data.tolist(),
-                "unit": str(self.values.unit),
-            },
-        }}
+        return {
+            self._type: {
+                "type": self.tag[0],
+                "energy": {
+                    "data": self.energy.data.tolist(),
+                    "unit": str(self.energy.unit),
+                },
+                "values": {
+                    "data": self.values.data.tolist(),
+                    "unit": str(self.values.unit),
+                },
+            }
+        }
 
     @classmethod
     def from_dict(cls, data):
@@ -1805,8 +1798,7 @@ class NaimaSpectralModel(SpectralModel):
         super().__init__()
 
     def _evaluate_ssc(
-        self,
-        energy,
+        self, energy,
     ):
         """
         Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,

@@ -32,6 +32,7 @@ def _set_link(shared_register, model):
 
 __all__ = ["Model", "Models", "DatasetModels"]
 
+
 class ModelBase:
     """Model base class."""
 
@@ -156,9 +157,11 @@ class ModelBase:
         par_data = []
         key0 = next(iter(data))
         if key0 in ["spatial", "temporal", "spectral"]:
-            data=data[key0]
+            data = data[key0]
         if data["type"] not in cls.tag:
-            raise ValueError(f"Invalid model type {data['type']} for Class {cls.__name__}")
+            raise ValueError(
+                f"Invalid model type {data['type']} for Class {cls.__name__}"
+            )
 
         input_names = [_["name"] for _ in data["parameters"]]
 

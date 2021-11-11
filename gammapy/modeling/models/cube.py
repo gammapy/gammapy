@@ -355,7 +355,12 @@ class SkyModel(ModelBase):
         )
 
         if self.spatial_model:
-            value = value * self.spatial_model.integrate_geom(geom, oversampling_factor=oversampling_factor).quantity
+            value = (
+                value
+                * self.spatial_model.integrate_geom(
+                    geom, oversampling_factor=oversampling_factor
+                ).quantity
+            )
 
         if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
@@ -416,13 +421,13 @@ class SkyModel(ModelBase):
         )
 
         model_class = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
-        spectral_model = model_class.from_dict({"spectral":data["spectral"]})
+        spectral_model = model_class.from_dict({"spectral": data["spectral"]})
 
         spatial_data = data.get("spatial")
 
         if spatial_data is not None:
             model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
-            spatial_model = model_class.from_dict({"spatial":spatial_data})
+            spatial_model = model_class.from_dict({"spatial": spatial_data})
         else:
             spatial_model = None
 
@@ -430,7 +435,7 @@ class SkyModel(ModelBase):
 
         if temporal_data is not None:
             model_class = TEMPORAL_MODEL_REGISTRY.get_cls(temporal_data["type"])
-            temporal_model = model_class.from_dict({"temporal":temporal_data})
+            temporal_model = model_class.from_dict({"temporal": temporal_data})
         else:
             temporal_model = None
 
@@ -635,7 +640,9 @@ class FoVBackgroundModel(ModelBase):
         data = {}
         data["type"] = self.tag[0]
         data["datasets_names"] = self.datasets_names
-        data["norm_spectral_model"] = self.spectral_model.to_dict(full_output=full_output)["spectral"]
+        data["norm_spectral_model"] = self.spectral_model.to_dict(
+            full_output=full_output
+        )["spectral"]
         return data
 
     @classmethod
@@ -774,7 +781,9 @@ class TemplateNPredModel(ModelBase):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["norm_spectral_model"] = self.spectral_model.to_dict(full_output)["spectral"]
+        data["norm_spectral_model"] = self.spectral_model.to_dict(full_output)[
+            "spectral"
+        ]
 
         if self.filename is not None:
             data["filename"] = self.filename
