@@ -2,10 +2,10 @@
 """Simulate observations"""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord, SkyOffsetFrame
+from astropy.coordinates import SkyCoord, SkyOffsetFrame, EarthLocation, AltAz
 from astropy.table import Table
 import gammapy
-from gammapy.data import EventList
+from gammapy.data import EventList, observatory_locations
 from gammapy.maps import MapCoord
 from gammapy.modeling.models import ConstantTemporalModel
 from gammapy.utils.random import get_random_state
@@ -300,8 +300,26 @@ class MapDatasetEventSampler:
         meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
-        meta["ALT_PNT"] = observation.aeff.meta["CBD50001"][7:-4]
-        meta["AZ_PNT"] = observation.aeff.meta["CBD60001"][8:-4]
+        telescope = observation.aeff.meta["TELESCOP"]
+        instrument = observation.aeff.meta["INSTRUME"]
+        if telescope == "CTA":
+            if instrument == "Southern Array":
+                loc = observatory_locations["cta_south"]
+            elif instrument == "Northern Array":
+                loc = observatory_locations["cta_north"]
+            else:
+                loc = observatory_locations["cta_south"]
+
+        else:
+            print("here")
+            loc = observatory_locations[telescope.lower()]
+
+        # this is not really correct but maybe OK for now
+        altaz_frame = AltAz(obstime=dataset.gti.time_start, location=loc)
+        coord_altaz = observation.pointing_radec.transform_to(altaz_frame)
+        
+        meta["ALT_PNT"] = str(coord_altaz.alt.deg[0])
+        meta["AZ_PNT"] = str(coord_altaz.az.deg[0])
 
         # TO DO: these keywords should be taken from the IRF of the dataset
         meta["ORIGIN"] = "Gammapy"
