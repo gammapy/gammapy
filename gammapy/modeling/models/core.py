@@ -32,8 +32,7 @@ def _set_link(shared_register, model):
 
 __all__ = ["Model", "Models", "DatasetModels"]
 
-
-class Model:
+class ModelBase:
     """Model base class."""
 
     _type = None
@@ -144,14 +143,22 @@ class Model:
 
                 if init["unit"] == "":
                     del par["unit"]
-
-        return {"type": tag, "parameters": params}
+        data = {"type": tag, "parameters": params}
+        if self._type is None:
+            return data
+        else:
+            return {self._type: data}
 
     @classmethod
     def from_dict(cls, data):
         kwargs = {}
 
         par_data = []
+        key0 = next(iter(data))
+        if key0 in ["spatial", "temporal", "spectral"]:
+            data=data[key0]
+        if data["type"] not in cls.tag:
+            raise ValueError(f"Invalid model type {data['type']} for Class {cls.__name__}")
 
         input_names = [_["name"] for _ in data["parameters"]]
 
@@ -173,35 +180,6 @@ class Model:
             kwargs["frame"] = data["frame"]
 
         return cls.from_parameters(parameters, **kwargs)
-
-    @staticmethod
-    def create(tag, model_type=None, *args, **kwargs):
-        """Create a model instance.
-
-        Examples
-        --------
-        >>> from gammapy.modeling.models import Model
-        >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
-        >>> type(spectral_model)
-        <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
-        """
-        from . import (
-            MODEL_REGISTRY,
-            SPATIAL_MODEL_REGISTRY,
-            SPECTRAL_MODEL_REGISTRY,
-            TEMPORAL_MODEL_REGISTRY,
-        )
-
-        if model_type is None:
-            cls = MODEL_REGISTRY.get_cls(tag)
-        else:
-            registry = {
-                "spatial": SPATIAL_MODEL_REGISTRY,
-                "spectral": SPECTRAL_MODEL_REGISTRY,
-                "temporal": TEMPORAL_MODEL_REGISTRY,
-            }
-            cls = registry[model_type].get_cls(tag)
-        return cls(*args, **kwargs)
 
     def __str__(self):
         string = f"{self.__class__.__name__}\n"
@@ -261,6 +239,61 @@ class Model:
         return model
 
 
+class Model:
+    """Model class that contains only methods to create a model listed in the registries."""
+
+    @staticmethod
+    def create(tag, model_type=None, *args, **kwargs):
+        """Create a model instance.
+
+        Examples
+        --------
+        >>> from gammapy.modeling.models import Model
+        >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
+        >>> type(spectral_model)
+        <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
+        """
+        from . import (
+            MODEL_REGISTRY,
+            SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
+            TEMPORAL_MODEL_REGISTRY,
+        )
+
+        if model_type is None:
+            cls = MODEL_REGISTRY.get_cls(tag)
+        else:
+            registry = {
+                "spatial": SPATIAL_MODEL_REGISTRY,
+                "spectral": SPECTRAL_MODEL_REGISTRY,
+                "temporal": TEMPORAL_MODEL_REGISTRY,
+            }
+            cls = registry[model_type].get_cls(tag)
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    def from_dict(data):
+        """Create a model instance from a dict"""
+
+        from . import (
+            MODEL_REGISTRY,
+            SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
+            TEMPORAL_MODEL_REGISTRY,
+        )
+
+        if "spatial" in data:
+            cls = SPATIAL_MODEL_REGISTRY.get_cls(data["spatial"]["type"])
+        elif "spectral" in data:
+            cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
+        elif "temporal" in data:
+            cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
+        else:
+            cls = MODEL_REGISTRY.get_cls(data["type"])
+
+        return cls.from_dict(data)
+
+
 class DatasetModels(collections.abc.Sequence):
     """Immutable models container
 
@@ -276,7 +309,7 @@ class DatasetModels(collections.abc.Sequence):
 
         if isinstance(models, (Models, DatasetModels)):
             models = models._models
-        elif isinstance(models, Model):
+        elif isinstance(models, ModelBase):
             models = [models]
         elif not isinstance(models, list):
             raise TypeError(f"Invalid type: {models!r}")
@@ -535,7 +568,7 @@ class DatasetModels(collections.abc.Sequence):
     def __add__(self, other):
         if isinstance(other, (Models, list)):
             return Models([*self, *other])
-        elif isinstance(other, Model):
+        elif isinstance(other, ModelBase):
             if other.name in self.names:
                 raise (ValueError("Model names must be unique"))
             return Models([*self, other])
@@ -553,7 +586,7 @@ class DatasetModels(collections.abc.Sequence):
             return key
         elif isinstance(key, str):
             return self.names.index(key)
-        elif isinstance(key, Model):
+        elif isinstance(key, ModelBase):
             return self._models.index(key)
         else:
             raise TypeError(f"Invalid type: {type(key)!r}")
