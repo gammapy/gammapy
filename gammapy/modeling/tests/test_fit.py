@@ -5,13 +5,13 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 from gammapy.datasets import Dataset
 from gammapy.modeling import Fit, Parameter
-from gammapy.modeling.models import Model, Models
+from gammapy.modeling.models import Model, ModelBase, Models
 from gammapy.utils.testing import requires_dependency
 
 pytest.importorskip("iminuit")
 
 
-class MyModel(Model):
+class MyModel(ModelBase):
     x = Parameter("x", 2)
     y = Parameter("y", 3e2)
     z = Parameter("z", 4e-2)

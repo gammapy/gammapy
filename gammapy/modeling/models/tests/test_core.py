@@ -2,18 +2,18 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import Model, Models, Parameter, Parameters, SkyModel
+from gammapy.modeling.models import ModelBase, Model, Models, Parameter, Parameters, SkyModel
 from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
 
 
-class MyModel(Model):
+class MyModel(ModelBase):
     """Simple model example"""
 
     x = Parameter("x", 1, "cm")
     y = Parameter("y", 2)
 
 
-class CoModel(Model):
+class CoModel(ModelBase):
     """Compound model example"""
 
     norm = Parameter("norm", 42, "cm")
@@ -28,7 +28,7 @@ class CoModel(Model):
         return Parameters([self.norm]) + self.m1.parameters + self.m2.parameters
 
 
-class WrapperModel(Model):
+class WrapperModel(ModelBase):
     """Wrapper compound model.
 
     Dynamically generated parameters in `__init__`,
