@@ -10,11 +10,11 @@ from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-from .core import Model
+from .core import ModelBase
 
 
 # TODO: make this a small ABC to define a uniform interface.
-class TemporalModel(Model):
+class TemporalModel(ModelBase):
     """Temporal model base class.
     evaluates on  astropy.time.Time objects"""
 
@@ -466,11 +466,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @classmethod
     def from_dict(cls, data):
-        return cls.read(data["filename"])
+        return cls.read(data["temporal"]["filename"])
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serialisation"""
-        return {"type": self.tag[0], "filename": self.filename}
+        return {self._type: {"type": self.tag[0], "filename": self.filename}}
 
 
 class PowerLawTemporalModel(TemporalModel):

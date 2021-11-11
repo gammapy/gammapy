@@ -19,7 +19,7 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
-from .core import Model
+from .core import ModelBase
 import os
 
 log = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     return minor_axis, sigma_eff
 
 
-class SpatialModel(Model):
+class SpatialModel(ModelBase):
     """Spatial model base class."""
 
     _type = "spatial"
@@ -245,8 +245,8 @@ class SpatialModel(Model):
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
-        data["frame"] = self.frame
-        data["parameters"] = data.pop("parameters")
+        data["spatial"]["frame"] = self.frame
+        data["spatial"]["parameters"] = data["spatial"].pop("parameters")
         return data
 
     def _get_plot_map(self, geom):
@@ -931,8 +931,8 @@ class ConstantSpatialModel(SpatialModel):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
-        data.pop("frame")
-        data["parameters"] = data.pop("parameters")
+        data["spatial"].pop("frame")
+        data["spatial"]["parameters"] = data.pop("parameters")
         return data
 
     @staticmethod
@@ -969,7 +969,7 @@ class ConstantFluxSpatialModel(SpatialModel):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
-        data.pop("frame")
+        data["spatial"].pop("frame")
         return data
 
     @staticmethod
@@ -1119,6 +1119,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
+        data = data["spatial"]
         filename = data["filename"]
         normalize = data.get("normalize", True)
         m = Map.read(filename)
@@ -1127,9 +1128,9 @@ class TemplateSpatialModel(SpatialModel):
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
-        data["filename"] = self.filename
-        data["normalize"] = self.normalize
-        data["unit"] = str(self.map.unit)
+        data["spatial"]["filename"] = self.filename
+        data["spatial"]["normalize"] = self.normalize
+        data["spatial"]["unit"] = str(self.map.unit)
         return data
 
     def write(self, overwrite=False):
