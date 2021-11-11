@@ -4,7 +4,7 @@ import inspect
 from copy import deepcopy
 import numpy as np
 from astropy import units as u
-from gammapy.modeling.models import Model
+from gammapy.modeling.models import ModelBase
 from gammapy.maps import MapAxis
 
 
