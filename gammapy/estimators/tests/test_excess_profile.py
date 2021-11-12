@@ -86,7 +86,7 @@ def test_radial_profile():
         regions,
         energy_edges=[0.1, 1, 10] * u.TeV,
         selection_optional="all",
-        n_sigma_ul=3
+        n_sigma_ul=3,
     )
     result = prof_maker.run(dataset)
 
@@ -117,15 +117,24 @@ def test_radial_profile_one_interval():
         center=geom.center_skydir, radius_max=0.2 * u.deg,
     )
 
-    prof_maker = FluxProfileEstimator(regions, selection_optional="all")
-    result = prof_maker.run(dataset)
+    prof_maker = FluxProfileEstimator(
+        regions,
+        selection_optional="all",
+        energy_edges=[0.1, 10] * u.TeV,
+        n_sigma_ul=3
+    )
+    result = prof_maker.run(dataset.to_image())
 
     imp_prof = result.to_table(sed_type="flux", format="profile")
 
     assert_allclose(imp_prof[7]["counts"], [[1960]], atol=1e-5)
-    assert_allclose(imp_prof[7]["npred_excess"], [1568.0], atol=1e-5)
-    assert_allclose(imp_prof[7]["sqrt_ts"], [33.780533], atol=1e-5)
-    assert_allclose(imp_prof[7]["errn"], [-48.278367], atol=1e-5)
-    assert_allclose(imp_prof[0]["ul"], [134.285969], atol=1e-5)
+    assert_allclose(imp_prof[7]["npred_excess"], [[1568.0]], rtol=1e-3)
+    assert_allclose(imp_prof[7]["sqrt_ts"], [33.780533], rtol=1e-3)
     assert_allclose(imp_prof[0]["flux"], [16e-06], atol=1e-3)
-    assert_allclose(imp_prof[0]["solid_angle"], [6.853891e-07], atol=1e-5)
+
+    errn = result.npred_excess_errn.data[7].squeeze()
+    assert_allclose(errn, [48.278367], rtol=2e-3)
+
+    ul = result.npred_excess_ul.data[0].squeeze()
+    assert_allclose(ul, [130.394824], rtol=1e-3)
+
