@@ -200,3 +200,21 @@ Interpolate maps onto a different geometry
 
 To interpolate maps onto a different geometry, use `Map.interp_to_geom`,
 see `here <tutorials/api/maps.html#Filling-maps-from-interpolation>`__.
+
+
+Suppress warnings
++++++++++++++++++
+In general it is not recommended to suppress warnings from code because they
+might point to potential issues or help debugging a non-working script. However
+in some cases the cause of the warning is known and the warnings clutter the
+logging output. In this case it can be useful to locally suppress a specific
+warning like so:
+
+.. code::
+
+    from astropy.io.fits.verify import VerifyWarning
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', VerifyWarning)
+        # do stuff here
