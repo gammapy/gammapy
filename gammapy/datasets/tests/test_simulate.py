@@ -287,8 +287,8 @@ def test_mde_run(dataset, models):
     assert meta["MID00001"] == 1
     assert meta["MID00002"] == 2
     assert meta["NMCIDS"] == 2
-    assert meta["ALT_PNT"] == "-13.534507646452631"
-    assert meta["AZ_PNT"] == "228.82981620065763"
+    assert_allclose(float(meta["ALT_PNT"]), float("-13.5345076464"), rtol=1e-7)
+    assert_allclose(float(meta["AZ_PNT"]), float("228.82981620065763"), rtol=1e-7)
     assert meta["ORIGIN"] == "Gammapy"
     assert meta["CALDB"] == "1dc"
     assert meta["IRF"] == "South_z20_50"
