@@ -29,6 +29,25 @@ def _set_link(shared_register, model):
                 shared_register[link_label] = param
     return shared_register
 
+def _get_model_class_from_dict(data):
+    """get a model class from a dict"""
+    from . import (
+        MODEL_REGISTRY,
+        SPATIAL_MODEL_REGISTRY,
+        SPECTRAL_MODEL_REGISTRY,
+        TEMPORAL_MODEL_REGISTRY,
+    )
+
+    if "spatial" in data:
+        cls = SPATIAL_MODEL_REGISTRY.get_cls(data["spatial"]["type"])
+    elif "spectral" in data:
+        cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
+    elif "temporal" in data:
+        cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
+    else:
+        cls = MODEL_REGISTRY.get_cls(data["type"])
+    return cls
+
 
 __all__ = ["Model", "Models", "DatasetModels"]
 
@@ -256,45 +275,21 @@ class Model:
         >>> type(spectral_model)
         <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
-        from . import (
-            MODEL_REGISTRY,
-            SPATIAL_MODEL_REGISTRY,
-            SPECTRAL_MODEL_REGISTRY,
-            TEMPORAL_MODEL_REGISTRY,
-        )
+        
+        data = {"type":tag}
+        if model_type is not None:
+            data = {model_type:data}
 
-        if model_type is None:
-            cls = MODEL_REGISTRY.get_cls(tag)
-        else:
-            registry = {
-                "spatial": SPATIAL_MODEL_REGISTRY,
-                "spectral": SPECTRAL_MODEL_REGISTRY,
-                "temporal": TEMPORAL_MODEL_REGISTRY,
-            }
-            cls = registry[model_type].get_cls(tag)
+        cls = _get_model_class_from_dict(data)
         return cls(*args, **kwargs)
 
     @staticmethod
     def from_dict(data):
         """Create a model instance from a dict"""
 
-        from . import (
-            MODEL_REGISTRY,
-            SPATIAL_MODEL_REGISTRY,
-            SPECTRAL_MODEL_REGISTRY,
-            TEMPORAL_MODEL_REGISTRY,
-        )
-
-        if "spatial" in data:
-            cls = SPATIAL_MODEL_REGISTRY.get_cls(data["spatial"]["type"])
-        elif "spectral" in data:
-            cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
-        elif "temporal" in data:
-            cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
-        else:
-            cls = MODEL_REGISTRY.get_cls(data["type"])
-
+        cls = _get_model_class_from_dict(data)
         return cls.from_dict(data)
+
 
 
 class DatasetModels(collections.abc.Sequence):
