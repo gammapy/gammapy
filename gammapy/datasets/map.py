@@ -424,7 +424,7 @@ class MapDataset(Dataset):
         Parameters
         -------------
         model_name: str
-        Name of  SkyModel for which to compute the npred for.
+            Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
 

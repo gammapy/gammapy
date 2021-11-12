@@ -61,7 +61,6 @@ VALID_QUANTITIES = [
     "sqrt_ts",
     "npred",
     "npred_excess",
-    "npred_null",
     "stat",
     "stat_scan",
     "stat_null",
@@ -76,7 +75,7 @@ OPTIONAL_QUANTITIES_COMMON = [
     "ts",
     "sqrt_ts",
     "npred",
-    "npred_null",
+    "npred_excess",
     "stat",
     "stat_null",
     "niter",
@@ -351,17 +350,10 @@ class FluxMaps:
         return self._data["npred"]
 
     @property
-    def npred_null(self):
-        """Predicted counts null hypothesis"""
-        self._check_quantity("npred_null")
-        return self._data["npred_null"]
-
-    @property
     def npred_excess(self):
         """Predicted excess counts"""
-        self._check_quantity("npred")
-        self._check_quantity("npred_null")
-        return self.npred - self.npred_null
+        self._check_quantity("npred_excess")
+        return self._data["npred_excess"]
 
     def _expand_dims(self, data):
         # instead make map support broadcasting
