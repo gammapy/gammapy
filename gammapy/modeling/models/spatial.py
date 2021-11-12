@@ -933,7 +933,7 @@ class ConstantSpatialModel(SpatialModel):
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
         data["spatial"].pop("frame")
-        data["spatial"]["parameters"] = data.pop("parameters")
+        data["spatial"]["parameters"] = []
         return data
 
     @staticmethod
