@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.special
-from astropy.coordinates import Angle
-from astropy.units import Quantity
+from astropy.coordinates import Angle, SkyCoord
+from astropy import units as u
 from astropy.visualization import quantity_support
-from gammapy.maps import MapAxis, MapAxes
-from .kernel import EDispKernel
+from gammapy.maps import MapAxis, MapAxes, RegionGeom
 from ..core import IRF
 
 __all__ = ["EnergyDispersion2D"]
@@ -123,6 +122,7 @@ class EnergyDispersion2D(IRF):
         edisp : `~gammapy.irf.EDispKernel`
             Energy dispersion matrix
         """
+        from gammapy.makers.utils import make_edisp_kernel_map
         offset = Angle(offset)
 
         # TODO: expect directly MapAxis here?
@@ -138,22 +138,15 @@ class EnergyDispersion2D(IRF):
                 energy_true, name="energy_true",
             )
 
-        axes = MapAxes([energy_axis_true, energy_axis])
-        coords = axes.get_coord(mode="edges", axis_name="energy")
+        pointing = SkyCoord("0d", "0d")
 
-        # migration value of energy bounds
-        migra = coords["energy"] / coords["energy_true"]
-
-        values = self.integral(
-            axis_name="migra",
-            offset=offset,
-            energy_true=coords["energy_true"],
-            migra=migra,
+        center = pointing.directional_offset_by(position_angle=0 * u.deg, separation=offset)
+        geom = RegionGeom.create(
+            region=center, axes=[energy_axis, energy_axis_true]
         )
 
-        data = np.diff(values)
-
-        return EDispKernel(axes=axes, data=data.to_value(""),)
+        edisp = make_edisp_kernel_map(geom=geom, edisp=self, pointing=pointing)
+        return edisp.get_edisp_kernel()
 
     def normalize(self):
         """Normalise energy dispersion"""
@@ -190,9 +183,9 @@ class EnergyDispersion2D(IRF):
             offset = np.atleast_1d(Angle(offset))
 
         if energy_true is None:
-            energy_true = Quantity([0.1, 1, 10], "TeV")
+            energy_true = u.Quantity([0.1, 1, 10], "TeV")
         else:
-            energy_true = np.atleast_1d(Quantity(energy_true))
+            energy_true = np.atleast_1d(u.Quantity(energy_true))
 
         migra = self.axes["migra"]
 
