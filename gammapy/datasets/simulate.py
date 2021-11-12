@@ -323,8 +323,6 @@ class MapDatasetEventSampler:
 
         # TO DO: these keywords should be taken from the IRF of the dataset
         meta["ORIGIN"] = "Gammapy"
-        meta["CALDB"] = observation.aeff.meta["CBD20001"][8:-1]
-        meta["IRF"] = observation.aeff.meta["CBD10001"][5:-2]
         meta["TELESCOP"] = observation.aeff.meta["TELESCOP"]
         meta["INSTRUME"] = observation.aeff.meta["INSTRUME"]
         meta["N_TELS"] = ""
