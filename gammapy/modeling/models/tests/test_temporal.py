@@ -107,11 +107,15 @@ def test_time_sampling(tmp_path):
     assert_allclose(sampler_costant.value, [4330.10377559, 3334.04566256], rtol=1e-5)
 
     temporal_model = ExpDecayTemporalModel(t_ref=Time(t_ref).mjd * u.d)
-    sampler_expo = temporal_model.sample_time(n_events=2, t_min=t_min, t_max=t_max, random_state=0)
+    sampler_expo = temporal_model.sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0
+    )
     sampler_expo = u.Quantity((sampler_expo.mjd - Time(t_ref).mjd), "d")
 
     assert sampler_expo.unit == u.d
-    assert_allclose(sampler_expo.to("s").value, [11824.1055276 ,  7273.04658336], rtol=1e-8)
+    assert_allclose(
+        sampler_expo.to("s").value, [11824.1055276, 7273.04658336], rtol=1e-8
+    )
 
 
 def test_lightcurve_temporal_model_integral():
@@ -151,14 +155,16 @@ def test_constant_temporal_model_integral():
 def test_linear_temporal_model_evaluate():
     t = Time(46301, format="mjd")
     t_ref = 46300 * u.d
-    temporal_model = LinearTemporalModel(alpha=1., beta=0.1/u.day, t_ref=t_ref)
+    temporal_model = LinearTemporalModel(alpha=1.0, beta=0.1 / u.day, t_ref=t_ref)
     val = temporal_model(t)
     assert_allclose(val, 1.1, rtol=1e-5)
 
 
 def test_linear_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
-    temporal_model = LinearTemporalModel(alpha=1., beta=0.1/u.day, t_ref=t_ref.mjd * u.d)
+    temporal_model = LinearTemporalModel(
+        alpha=1.0, beta=0.1 / u.day, t_ref=t_ref.mjd * u.d
+    )
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop, reference_time=t_ref)
@@ -211,7 +217,7 @@ def test_gaussian_temporal_model_integral():
 def test_powerlaw_temporal_model_evaluate():
     t = Time(46302, format="mjd")
     t_ref = 46300 * u.d
-    alpha = -2.
+    alpha = -2.0
     temporal_model = PowerLawTemporalModel(t_ref=t_ref, alpha=alpha)
     val = temporal_model(t)
     assert_allclose(val, 0.25, rtol=1e-5)
@@ -219,7 +225,7 @@ def test_powerlaw_temporal_model_evaluate():
 
 def test_powerlaw_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
-    temporal_model = PowerLawTemporalModel(alpha=-2., t_ref=t_ref.mjd * u.d)
+    temporal_model = PowerLawTemporalModel(alpha=-2.0, t_ref=t_ref.mjd * u.d)
     start = 1 * u.day
     stop = 4 * u.day
     gti = GTI.create(start, stop, reference_time=t_ref)
@@ -240,7 +246,7 @@ def test_powerlaw_temporal_model_integral():
 def test_sine_temporal_model_evaluate():
     t = Time(46302, format="mjd")
     t_ref = 46300 * u.d
-    omega = np.pi/4. * u.rad/u.day
+    omega = np.pi / 4.0 * u.rad / u.day
     temporal_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=t_ref)
     val = temporal_model(t)
     assert_allclose(val, 1.5, rtol=1e-5)
@@ -248,7 +254,7 @@ def test_sine_temporal_model_evaluate():
 
 def test_sine_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
-    omega = np.pi/4. * u.rad/u.day
+    omega = np.pi / 4.0 * u.rad / u.day
     temporal_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=t_ref.mjd * u.d)
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
@@ -288,3 +294,4 @@ def test_plot_constant_model():
     constant_model = ConstantTemporalModel(const=1)
     with mpl_plot_check():
         constant_model.plot(time_range)
+
