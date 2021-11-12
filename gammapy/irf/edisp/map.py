@@ -107,36 +107,9 @@ class EDispMap(IRFMap):
         edisp : `~gammapy.irf.EnergyDispersion`
             the energy dispersion (i.e. rmf object)
         """
-        if position is None:
-            position = self.edisp_map.geom.center_skydir
-
-        if position.size != 1:
-            raise ValueError(
-                "EnergyDispersion can be extracted at one single position only."
-            )
-
-        position = self._get_nearest_valid_position(position)
-        energy_axis_true = self.edisp_map.geom.axes["energy_true"]
-
-        axes = MapAxes([energy_axis_true, energy_axis])
-
-        coords = axes.get_coord(mode="edges", axis_name="energy")
-
-        # migration value of energy bounds
-        migra = coords["energy"] / coords["energy_true"]
-
-        coords = {
-            "skycoord": position,
-            "energy_true": coords["energy_true"],
-            "migra": migra,
-        }
-
-        values = self.edisp_map.integral(axis_name="migra", coords=coords)
-        data = np.diff(np.clip(values, 0, np.inf))
-
-        return EDispKernel(
-            axes=axes, data=data.to_value("")
-        )
+        edisp_map = self.to_region_nd_map(region=position)
+        edisp_kernel_map = edisp_map.to_edisp_kernel_map(energy_axis=energy_axis)
+        return edisp_kernel_map.get_edisp_kernel()
 
     def to_edisp_kernel_map(self, energy_axis):
         """Convert to map with edisp kernels

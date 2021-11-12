@@ -217,7 +217,7 @@ class ExcessMapEstimator(Estimator):
 
         maps = {}
         maps["npred"] = Map.from_geom(geom, data=counts_stat.n_on)
-        maps["npred_null"] = Map.from_geom(geom, data=counts_stat.n_on - counts_stat.n_sig)
+        maps["npred_excess"] = Map.from_geom(geom, data=counts_stat.n_sig)
         maps["counts"] = maps["npred"]
 
         maps["ts"] = Map.from_geom(geom, data=counts_stat.ts)
@@ -231,7 +231,7 @@ class ExcessMapEstimator(Estimator):
             reco_exposure = 1
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            maps["norm"] = (maps["npred"] - maps["npred_null"]) / reco_exposure
+            maps["norm"] = maps["npred_excess"] / reco_exposure
             maps["norm_err"] = Map.from_geom(geom, data=counts_stat.error * self.n_sigma) / reco_exposure
 
             if "errn-errp" in self.selection_optional:

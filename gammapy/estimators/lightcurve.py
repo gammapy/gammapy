@@ -119,7 +119,7 @@ class LightCurveEstimator(FluxPointsEstimator):
             valid_intervals.append([t_min, t_max])
             fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
 
-            for name in ["counts", "npred", "npred_null"]:
+            for name in ["counts", "npred", "npred_excess"]:
                 fp._data[name] = self.expand_map(
                     fp._data[name], dataset_names=datasets.names
                 )

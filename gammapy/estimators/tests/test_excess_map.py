@@ -114,7 +114,6 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
     assert_allclose(result["npred"].data[0, 10, 10], 162)
     assert_allclose(result["npred_excess"].data[0, 10, 10], 81)
-    assert_allclose(result["npred_null"].data[0, 10, 10], 81)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
 
     assert_allclose(result["npred_excess_err"].data[0, 10, 10], 12.727922, atol=1e-3)
@@ -143,7 +142,6 @@ def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
     result = estimator.run(simple_dataset)
 
     assert_allclose(result["npred_excess"].data.sum(), 19733.602, rtol=1e-3)
-    assert_allclose(result["npred_null"].data.sum(), 31818.398, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, rtol=1e-3)
 
 
@@ -163,7 +161,6 @@ def test_significance_map_estimator_map_dataset_on_off_no_correlation(
     assert result_image["npred"].data.shape == (1, 20, 20)
     assert_allclose(result_image["npred"].data[0, 10, 10], 194)
     assert_allclose(result_image["npred_excess"].data[0, 10, 10], 97)
-    assert_allclose(result_image["npred_null"].data[0, 10, 10], 97)
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 0.780125, atol=1e-3)
     assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
@@ -185,7 +182,6 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert result["npred"].data.shape == (2, 20, 20)
     assert_allclose(result["npred"].data[:, 10, 10], 194)
     assert_allclose(result["npred_excess"].data[:, 10, 10], 97)
-    assert_allclose(result["npred_null"].data[:, 10, 10], 97)
     assert_allclose(result["sqrt_ts"].data[:, 10, 10], 5.741116, atol=1e-5)
 
     # Test with exposure
@@ -198,7 +194,6 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert result_image["npred"].data.shape == (1, 20, 20)
     assert_allclose(result_image["npred"].data[0, 10, 10], 194)
     assert_allclose(result_image["npred_excess"].data[0, 10, 10], 97)
-    assert_allclose(result_image["npred_null"].data[0, 10, 10], 97)
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 5.741116, atol=1e-3)
     assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
@@ -221,11 +216,9 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], np.nan, atol=1e-3)
     assert_allclose(result_image["npred"].data[0, 10, 10], np.nan)
     assert_allclose(result_image["npred_excess"].data[0, 10, 10], np.nan)
-    assert_allclose(result_image["npred_null"].data[0, 10, 10], np.nan)
     assert_allclose(result_image["sqrt_ts"].data[0, 9, 9], 7.186745, atol=1e-3)
     assert_allclose(result_image["npred"].data[0, 9, 9], 304)
     assert_allclose(result_image["npred_excess"].data[0, 9, 9], 152)
-    assert_allclose(result_image["npred_null"].data[0, 9, 9], 152)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
     assert_allclose(result_image["flux"].data[0, 9, 9], 1.190928e-08, rtol=1e-3)
@@ -253,7 +246,6 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
 
     assert_allclose(result_mod["npred"].data[0, 10, 10], 388)
     assert_allclose(result_mod["npred_excess"].data[0, 10, 10], 190.68057)
-    assert_allclose(result_mod["npred_null"].data[0, 10, 10], 197.31943)
 
     assert result_mod["flux"].unit == "cm-2s-1"
     assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)

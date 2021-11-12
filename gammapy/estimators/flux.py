@@ -6,6 +6,7 @@ from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import Models, ScaleSpectralModel
 from gammapy.modeling import Fit, Parameter
+from gammapy.maps import Map
 
 log = logging.getLogger(__name__)
 
@@ -121,6 +122,31 @@ class FluxEstimator(ParameterEstimator):
         scale_model.norm = self._set_norm_parameter(scale_model.norm, scaled_parameter)
         return scale_model
 
+    def estimate_npred_excess(self, datasets):
+        """Estimate npred excess for the source.
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with the sum of the
+            masked npred excess.
+        """
+        npred_excess = []
+
+        for dataset in datasets:
+            name = datasets.models[self.source].name
+            npred_signal = dataset.npred_signal(model_name=name)
+            npred = Map.from_geom(dataset.mask.geom)
+            npred.stack(npred_signal)
+            npred_excess.append(npred.data[dataset.mask].sum())
+
+        return {"npred_excess": np.array(npred_excess), "datasets": datasets.names}
+
     def run(self, datasets):
         """Estimate flux for a given energy range.
 
@@ -150,4 +176,5 @@ class FluxEstimator(ParameterEstimator):
         models[self.source].spectral_model = model
         datasets.models = models
         result.update(super().run(datasets, model.norm))
+        result.update(self.estimate_npred_excess(datasets=datasets))
         return result

@@ -111,9 +111,8 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the TS of the best fit value compared to the null hypothesis. Entries are:
 
-                * TS : fit statistic difference with null hypothesis
+                * "ts" : fit statistic difference with null hypothesis
                 * "npred" : predicted number of counts per dataset
-                * "npred_null" : predicted number of counts per dataset in the null hypothesis
         """
         npred = self.estimate_npred(datasets=datasets)
 
@@ -132,12 +131,10 @@ class ParameterEstimator(Estimator):
                 _ = self.fit.optimize(datasets=datasets)
 
             ts = datasets.stat_sum() - stat
-            npred_null = self.estimate_npred(datasets=datasets)
 
         return {
             "ts": ts,
             "npred": npred["npred"],
-            "npred_null": npred_null["npred"]
         }
 
     def estimate_errn_errp(self, datasets, parameter):
