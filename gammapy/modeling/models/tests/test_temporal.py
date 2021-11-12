@@ -7,7 +7,6 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
-    TemporalModel,
     ConstantTemporalModel,
     LinearTemporalModel,
     ExpDecayTemporalModel,
@@ -296,20 +295,3 @@ def test_plot_constant_model():
     with mpl_plot_check():
         constant_model.plot(time_range)
 
-
-def test_io():
-    classes = [
-        ConstantTemporalModel,
-        LinearTemporalModel,
-        ExpDecayTemporalModel,
-        GaussianTemporalModel,
-        PowerLawTemporalModel,
-        SineTemporalModel,
-    ]
-    for c in classes:
-        sky_model = SkyModel(spectral_model=PowerLawSpectralModel(), temporal_model=c())
-        model_dict = sky_model.to_dict()
-        read_model = SkyModel.from_dict(model_dict)
-        for p in sky_model.temporal_model.parameters:
-            assert_allclose(read_model.temporal_model.parameters[p.name].value, p.value)
-            assert read_model.temporal_model.parameters[p.name].unit == p.unit
