@@ -281,27 +281,35 @@ def test_mde_run(dataset, models):
     assert meta["TIMEREF"] == "LOCAL"
     assert meta["DATE-OBS"] == "2000-01-01"
     assert meta["DATE-END"] == "2000-01-01"
-    assert meta["TIME-OBS"] == "00:01:04.184"
-    assert meta["TIME-END"] == "00:17:44.184"
-    assert_allclose(meta["TIMEDEL"], 1e-09)
     assert meta["CONV_DEP"] == 0
     assert meta["CONV_RA"] == 0
     assert meta["CONV_DEC"] == 0
     assert meta["MID00001"] == 1
     assert meta["MID00002"] == 2
     assert meta["NMCIDS"] == 2
-    assert meta["ALTITUDE"] == "20.000"
-    assert meta["ALT_PNT"] == "20.000"
-    assert meta["AZ_PNT"] == "0.000"
+    assert_allclose(float(meta["ALT_PNT"]), float("-13.5345076464"), rtol=1e-7)
+    assert_allclose(float(meta["AZ_PNT"]), float("228.82981620065763"), rtol=1e-7)
     assert meta["ORIGIN"] == "Gammapy"
-    assert meta["CALDB"] == "1dc"
-    assert meta["IRF"] == "South_z20_50"
     assert meta["TELESCOP"] == "CTA"
     assert meta["INSTRUME"] == "1DC"
     assert meta["N_TELS"] == ""
     assert meta["TELLIST"] == ""
-    assert meta["GEOLON"] == ""
-    assert meta["GEOLAT"] == ""
+
+
+@requires_data()
+def test_irf_alpha_config(dataset, models):
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
+    livetime = 1.0 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+    )
+
+    dataset.models = models
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
 
 
 @requires_data()

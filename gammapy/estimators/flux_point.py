@@ -391,6 +391,26 @@ class FluxPoints(FluxMaps):
                 data = getattr(self, quantity, None)
                 if data:
                     table[quantity] = data.quantity.squeeze()
+        elif format == "profile":
+            x_axis = self.geom.axes["projected-distance"]
+
+            tables = []
+            for idx, (x_min, x_max) in enumerate(x_axis.iter_by_edges):
+                table_flat = Table()
+                table_flat["x_min"] = [x_min]
+                table_flat["x_max"] = [x_max]
+                table_flat["x_ref"] = [(x_max + x_min) / 2]
+
+                fp = self.slice_by_idx(slices={"projected-distance": idx})
+                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
+
+                for column in table.columns:
+                    table_flat[column] = table[column][np.newaxis]
+
+                tables.append(table_flat)
+
+            table = vstack(tables)
+
         else:
             raise ValueError(f"Not a supported format {format}")
 
@@ -638,7 +658,7 @@ class FluxPointsEstimator(FluxEstimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.datasets.Dataset`
+        datasets : `~gammapy.datasets.Datasets`
             Datasets
 
         Returns
@@ -646,9 +666,7 @@ class FluxPointsEstimator(FluxEstimator):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        # TODO: remove copy here...
-        datasets = Datasets(datasets).copy()
-
+        datasets = Datasets(datasets=datasets)
         rows = []
 
         for energy_min, energy_max in progress_bar(
@@ -695,6 +713,7 @@ class FluxPointsEstimator(FluxEstimator):
         datasets_sliced = datasets.slice_by_energy(
             energy_min=energy_min, energy_max=energy_max
         )
+
         if len(datasets_sliced) > 0:
             datasets_sliced.models = datasets.models.copy()
             return super().run(datasets=datasets_sliced)
@@ -738,3 +757,4 @@ class FluxPointsEstimator(FluxEstimator):
             result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
 
         return result
+      

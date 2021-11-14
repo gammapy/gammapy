@@ -86,7 +86,6 @@ def test_asmooth_dataset(input_dataset):
         assert_allclose(actual, desired[name], rtol=1e-2)
 
 
-@pytest.mark.xfail
 def test_asmooth_map_dataset_on_off():
     kernel = Tophat2DKernel
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
@@ -116,6 +115,6 @@ def test_asmooth_map_dataset_on_off():
     )
 
     smoothed = asmooth.run(dataset)
-    assert_allclose(smoothed["counts"].data[25, 25], 2)
-    assert_allclose(smoothed["background"].data[25, 25], 1.25)
-    assert_allclose(smoothed["significance"].data[25, 25], 3.079799117645, rtol=1e-2)
+    assert_allclose(smoothed["counts"].data[0, 25, 25], 2)
+    assert_allclose(smoothed["background"].data[0, 25, 25], 1)
+    assert_allclose(smoothed["sqrt_ts"].data[0, 25, 25], 4.39, rtol=1e-2)

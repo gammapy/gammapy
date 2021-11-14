@@ -1329,9 +1329,9 @@ class MapDataset(Dataset):
                 )
                 dataset.exposure.quantity *= containment.reshape(geom.data_shape)
 
-        kwargs = {}
+        kwargs = {"name": name}
 
-        for name in [
+        for key in [
             "counts",
             "edisp",
             "mask_safe",
@@ -1340,12 +1340,12 @@ class MapDataset(Dataset):
             "gti",
             "meta_table",
         ]:
-            kwargs[name] = getattr(dataset, name)
+            kwargs[key] = getattr(dataset, key)
 
         if self.stat_type == "cash":
             kwargs["background"] = dataset.background
 
-        return SpectrumDataset(**kwargs)
+        return  SpectrumDataset(**kwargs)
 
     def to_region_map_dataset(self, region, name=None):
         """Integrate the map dataset in a given region.
@@ -2350,9 +2350,12 @@ class MapDatasetOnOff(MapDataset):
         """
         from .spectrum import SpectrumDatasetOnOff
 
-        dataset = super().to_spectrum_dataset(on_region, containment_correction, name)
+        dataset = super().to_spectrum_dataset(
+            on_region=on_region, containment_correction=containment_correction, name=name
+        )
 
-        kwargs = {}
+        kwargs = {"name": name}
+
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.get_spectrum(
                 on_region, np.sum, weights=self.mask_safe

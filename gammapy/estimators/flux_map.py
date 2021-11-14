@@ -700,13 +700,19 @@ class FluxMaps:
         """
         reference = maps[0]
         data = {}
+
         for quantity in reference.available_quantities:
             data[quantity] = Map.from_stack([_._data[quantity] for _ in maps], axis=axis)
 
         if meta is None:
             meta = reference.meta.copy()
 
-        gti = GTI.from_stack([_.gti for _ in maps])
+        gtis = [_.gti for _ in maps if _.gti]
+
+        if gtis:
+            gti = GTI.from_stack(gtis)
+        else:
+            gti = None
 
         return cls(
             data=data,
