@@ -236,18 +236,18 @@ class Background2D(BackgroundIRF):
     def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
         """ Plot the background rate in Field of view co-ordinates at a given energy.
 
-            Parameters
-            -----------
-            energy : `~astropy.units.Quantity`
-                list of Energy
-            ax: `~matplotlib.axes.Axes`, optional
-                Axis
-            add_cbar : bool
-                Add color bar?
-            ncols : int
-                Number of columns to plot
-            **kwargs : dict
-                Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+        Parameters
+        -----------
+        energy : `~astropy.units.Quantity`
+            list of Energy
+        ax: `~matplotlib.axes.Axes`, optional
+            Axis
+        add_cbar : bool
+            Add color bar?
+        ncols : int
+            Number of columns to plot
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
         bkg_3d = self.to_3d()
         bkg_3d.plot_at_energy(energy, ax, add_cbar, ncols, **kwargs)
