@@ -721,7 +721,7 @@ class FluxPointsEstimator(FluxEstimator):
                 "ts": np.nan,
                 "counts": np.zeros(len(datasets)),
                 "npred": np.nan * np.zeros(len(datasets)),
-                "npred_null": np.zeros(len(datasets)),
+                "npred_excess": np.nan * np.zeros(len(datasets)),
                 "datasets": datasets.names,
             }
         )
