@@ -15,9 +15,7 @@ log = logging.getLogger(__name__)
 class BackgroundIRF(IRF):
     """Background IRF base class"""
 
-    default_interp_kwargs = dict(
-        bounds_error=False, fill_value=0.0, values_scale="log"
-    )
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0.0, values_scale="log")
     """Default Interpolation kwargs to extrapolate."""
 
     @classmethod
@@ -167,12 +165,9 @@ class Background3D(BackgroundIRF):
             gridspec_kw={"hspace": 0.2, "wspace": 0.3},
         )
 
-        x1 = self.axes[1]
-        x2 = self.axes[2]
-
-        x = x1.edges.value
-        y = x2.edges.value
-        X, Y = np.meshgrid(x, y)
+        x = self.axes["fov_lat"].edges
+        y = self.axes["fov_lon"].edges
+        X, Y = X, Y = np.meshgrid(x, y)
 
         for i, ee in enumerate(energy):
             if len(energy) == 1:
@@ -180,13 +175,15 @@ class Background3D(BackgroundIRF):
             else:
                 ax = axes.flat[i]
             bkg = self.evaluate(energy=ee)
-            Z = bkg.squeeze().value
-            im = ax.pcolormesh(X, Y, Z, **kwargs)
-            ax.set_xlabel(x1.name + " [" + str(x1.unit) + "]")
-            ax.set_ylabel(x2.name + " [" + str(x2.unit) + "]")
+            with quantity_support():
+                caxes = ax.pcolormesh(X, Y, bkg.squeeze(), **kwargs)
+
+            self.axes["fov_lat"].format_plot_xaxis(ax)
+            self.axes["fov_lon"].format_plot_yaxis(ax)
             ax.set_title(str(ee))
             if add_cbar:
-                ax.figure.colorbar(im, ax=ax, label=bkg.unit)
+                label = f"Background [{bkg.unit}]"
+                ax.figure.colorbar(caxes, ax=ax, label=label)
 
             row, col = np.unravel_index(i, shape=(rows, cols))
             if col > 0:
@@ -214,11 +211,12 @@ class Background2D(BackgroundIRF):
 
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
-    default_interp_kwargs = dict(bounds_error=False, fill_value=0.)
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0.0)
     """Default Interpolation kwargs."""
 
     def to_3d(self):
         """"Convert to Background3D"""
+
         edges = np.concatenate(
             (
                 np.negative(self.axes["offset"].edges)[::-1][:-1],
@@ -228,17 +226,12 @@ class Background2D(BackgroundIRF):
         fov_lat = MapAxis.from_edges(edges=edges, name="fov_lat")
         fov_lon = MapAxis.from_edges(edges=edges, name="fov_lon")
 
-        shape = (self.axes["energy"].nbin, fov_lon.nbin, fov_lat.nbin)
-        data = np.zeros(shape)
-        for i, x1 in enumerate(fov_lat.center):
-            x2 = fov_lon.center
-            r = np.sqrt(x1 * x1 + x2 * x2)
-            val = self.evaluate(offset=r)
-            data[:, :, i] = val
+        axes = MapAxes([self.axes["energy"], fov_lon, fov_lat])
+        coords = axes.get_coord()
+        offset = np.sqrt(coords["fov_lat"] ** 2 + coords["fov_lon"] ** 2)
+        data = self.evaluate(offset=offset, energy=coords["energy"])
 
-        return Background3D(
-            axes=[self.axes["energy"], fov_lon, fov_lat], data=data, unit=self.unit,
-        )
+        return Background3D(axes=axes, data=data,)
 
     def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
         """ Plot the background rate in Field of view co-ordinates at a given energy.
@@ -388,9 +381,7 @@ class Background2D(BackgroundIRF):
         offset_axis = self.axes["offset"]
         energy_axis = self.axes["energy"]
 
-        bkg = self.integral(
-            offset=offset_axis.bounds[1], axis_name="offset"
-        )
+        bkg = self.integral(offset=offset_axis.bounds[1], axis_name="offset")
 
         with quantity_support():
             ax.plot(energy_axis.center, bkg, label="integrated spectrum", **kwargs)
