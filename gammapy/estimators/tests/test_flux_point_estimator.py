@@ -42,7 +42,9 @@ def simulate_spectrum_dataset(model, random_state=0):
     geom = RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis])
     acceptance = RegionNDMap.from_geom(geom=geom, data=1)
     edisp = EDispKernelMap.from_diagonal_response(
-        energy_axis=energy_axis, energy_axis_true=energy_axis_true, geom=geom,
+        energy_axis=energy_axis,
+        energy_axis_true=energy_axis_true,
+        geom=geom,
     )
 
     geom_true = RegionGeom.create(
@@ -69,7 +71,8 @@ def simulate_spectrum_dataset(model, random_state=0):
 
     dataset.models = model
     dataset.fake(
-        random_state=random_state, npred_background=bkg_npred,
+        random_state=random_state,
+        npred_background=bkg_npred,
     )
     return dataset
 
@@ -84,7 +87,7 @@ def create_fpe(model):
         norm_n_values=11,
         source="source",
         selection_optional="all",
-        fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1))
+        fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
     )
     datasets = [dataset]
     return datasets, fpe
@@ -152,7 +155,7 @@ def fpe_map_pwl_reoptimize():
         energy_edges=energy_edges,
         norm_values=[0.8, 1, 1.2],
         reoptimize=True,
-        source="source"
+        source="source",
     )
     return datasets, fpe
 
@@ -222,7 +225,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
 
     actual = table["norm_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [0.2, 1., 5.])
+    assert_allclose(actual, [0.2, 1.0, 5.0])
 
     actual = table["stat_scan"][0][[0, 5, -1]]
     assert_allclose(actual, [220.369, 4.301, 1881.626], rtol=1e-2)
@@ -474,3 +477,19 @@ def test_run_pwl_parameter_range(fpe_pwl):
 
     actual = table_no_bounds["sqrt_ts"].data
     assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
+
+
+@requires_dependency("iminuit")
+def test_flux_points_estimator_small_edges():
+    pl = PowerLawSpectralModel(amplitude="1e-11 cm-2s-1TeV-1")
+
+    datasets, fpe = create_fpe(pl)
+
+    fpe.energy_edges = datasets[0].counts.geom.axes["energy"].upsample(2).edges[1:4]
+    fpe.selection_optional = []
+
+    fp = fpe.run(datasets)
+
+    assert_allclose(fp.ts.data[0, 0, 0], 2156.96959291)
+    assert np.isnan(fp.ts.data[1, 0, 0])
+    assert np.isnan(fp.npred.data[1, 0, 0])

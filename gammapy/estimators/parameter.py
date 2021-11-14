@@ -290,6 +290,7 @@ class ParameterEstimator(Estimator):
 
         return {"npred": np.array(npred), "datasets": datasets.names}
 
+
     def run(self, datasets, parameter):
         """Run the parameter estimator.
 
