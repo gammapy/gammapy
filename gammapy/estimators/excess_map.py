@@ -151,24 +151,12 @@ class ExcessMapEstimator(Estimator):
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-            input dataset
+            Map dataset
 
         Returns
         -------
-        images : dict
-            Dictionary containing result correlated maps. Keys are:
-
-                * counts : correlated counts map
-                * background : correlated background map
-                * excess : correlated excess map
-                * ts : TS map
-                * sqrt_ts : sqrt(delta TS), or Li-Ma significance map
-                * err : symmetric error map (from covariance)
-                * flux : flux map. An exposure map must be present in the dataset to compute flux map
-                * errn : negative error map
-                * errp : positive error map
-                * ul : upper limit map
-
+        maps : `FluxMaps`
+            Flux maps
         """
         if not isinstance(dataset, MapDataset):
             raise ValueError("Unsupported dataset type. Excess map is not applicable to 1D datasets.")

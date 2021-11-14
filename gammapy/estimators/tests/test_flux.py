@@ -115,7 +115,7 @@ def test_flux_estimator_1d(hess_datasets):
     assert_allclose(result["e_min"], 1 * u.TeV, atol=1e-3)
     assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)
     assert_allclose(result["npred"], [93.209263, 93.667283], atol=1e-3)
-    assert_allclose(result["npred_excess"], [70.827835, 72.79262], atol=1e-3)
+    assert_allclose(result["npred_excess"], [86.27813, 88.6715], atol=1e-3)
 
 
 @requires_data()
