@@ -8,8 +8,8 @@ PIG 22 - Unified flux estimators API
 
 * Author: Régis Terrier and Axel Donath
 * Created: Nov 11, 2020
-* Accepted: -
-* Status: -
+* Withdrawn: Nov 14th, 2021
+* Status: withdrawn
 * Discussion: `GH 3075`_
 
 Abstract
@@ -359,11 +359,5 @@ Alternative
 
 Decision
 ========
-
-A preliminary list of reasonable decisions:
-
-- Clarify
-
-- Go for a flat ``Table`` object to describe the variety of possible ``FluxPoints``
-
-- Postpone introduction of ``Datasets`` grouping as it requires a general clarification of ``meta_table`` usage.
+The authors have decided to withdraw the PIG. Most of the proposed changes have been
+implemented independently with review and discussions on individuals PRs.
