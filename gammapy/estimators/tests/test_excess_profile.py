@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import FluxProfileEstimator
@@ -142,3 +144,15 @@ def test_radial_profile_one_interval():
     ul = result.npred_excess_ul.data[0].squeeze()
     assert_allclose(ul, [130.394824], rtol=1e-3)
 
+
+def test_regions_init():
+    with pytest.raises(ValueError):
+        FluxProfileEstimator(regions=[])
+
+    region = CircleSkyRegion(
+        center=SkyCoord("0d", "0d"),
+        radius=0.1 * u.deg
+    )
+
+    with pytest.raises(ValueError):
+        FluxProfileEstimator(regions=[region])

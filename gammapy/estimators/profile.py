@@ -35,6 +35,9 @@ class FluxProfileEstimator(FluxPointsEstimator):
     tag = "FluxProfileEstimator"
 
     def __init__(self, regions, spectrum=None, **kwargs):
+        if len(regions) <= 1:
+            raise ValueError("Please provide at least two regions for flux profile estimation.")
+
         self.regions = regions
 
         if spectrum is None:
@@ -47,7 +50,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
     def projected_distance_axis(self):
         """Get projected distance from the first region.
 
-        For normal region this is defined as the distance form the
+        For normal region this is defined as the distance from the
         center of the region. For annulus shaped regions it is the
         mean between the inner and outer radius.
 
