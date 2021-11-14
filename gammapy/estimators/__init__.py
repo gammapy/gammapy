@@ -4,7 +4,6 @@ from gammapy.utils.registry import Registry
 from .asmooth_map import *
 from .core import *
 from .excess_map import *
-from .excess_profile import *
 from .flux_map import *
 from .flux_point import *
 from .lightcurve import *
@@ -21,7 +20,6 @@ ESTIMATOR_REGISTRY = Registry(
         LightCurveEstimator,
         SensitivityEstimator,
         ImageProfileEstimator,
-        ExcessProfileEstimator,
     ]
 )
 """Registry of estimator classes in Gammapy."""
