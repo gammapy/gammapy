@@ -89,17 +89,20 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
 
 
 def covariance_iminuit(parameters, function, **kwargs):
-    minuit, minuit_func = setup_iminuit(
-        parameters=parameters,
-        function=function,
-        store_trace=False,
-        **kwargs
-    )
+    minuit = kwargs["minuit"]
+
+    if minuit is None:
+        minuit, _ = setup_iminuit(
+            parameters=parameters,
+            function=function,
+            store_trace=False,
+            **kwargs
+        )
+        minuit.hesse()
 
     message, success = "Hesse terminated successfully.", True
 
     try:
-        minuit.hesse()
         covariance_factors = np.array(minuit.covariance)
     except (TypeError, RuntimeError):
         N = len(minuit.values)

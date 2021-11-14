@@ -231,6 +231,7 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
         kwargs = self.covariance_opts.copy()
+        kwargs["minuit"] = self.minuit
         backend = kwargs.pop("backend", self.backend)
         compute = registry.get("covariance", backend)
 
