@@ -657,7 +657,7 @@ class FluxPointsEstimator(FluxEstimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.datasets.Dataset`
+        datasets : `~gammapy.datasets.Datasets`
             Datasets
 
         Returns
@@ -665,9 +665,7 @@ class FluxPointsEstimator(FluxEstimator):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        # TODO: remove copy here...
-        datasets = Datasets(datasets).copy()
-
+        datasets = Datasets(datasets=datasets)
         rows = []
 
         for energy_min, energy_max in progress_bar(
@@ -712,6 +710,5 @@ class FluxPointsEstimator(FluxEstimator):
         datasets_sliced = datasets.slice_by_energy(
             energy_min=energy_min, energy_max=energy_max
         )
-
         datasets_sliced.models = datasets.models.copy()
         return super().run(datasets=datasets_sliced)
