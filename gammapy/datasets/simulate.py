@@ -311,7 +311,6 @@ class MapDatasetEventSampler:
                 loc = observatory_locations["cta_south"]
 
         else:
-            print("here")
             loc = observatory_locations[telescope.lower()]
 
         # this is not really correct but maybe OK for now
