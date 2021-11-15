@@ -5,9 +5,7 @@ from .core import *
 from .map import *
 from .points import *
 from .flux_map import *
-from .flux_point import *
 from .profile import *
-from .sensitivity import *
 
 ESTIMATOR_REGISTRY = Registry(
     [

@@ -7,7 +7,7 @@ from gammapy.datasets import Datasets
 from gammapy.maps import TimeMapAxis, LabelMapAxis, Map
 from gammapy.utils.pbar import progress_bar
 from gammapy.modeling import Fit
-from ..flux_point import FluxPoints, FluxPointsEstimator
+from .core import FluxPoints, FluxPointsEstimator
 
 __all__ = ["LightCurveEstimator"]
 

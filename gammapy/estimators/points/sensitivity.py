@@ -4,7 +4,7 @@ from astropy.table import Column, Table
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
-from .core import Estimator
+from ..core import Estimator
 
 __all__ = ["SensitivityEstimator"]
 

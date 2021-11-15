@@ -10,7 +10,7 @@ from regions import CircleAnnulusSkyRegion
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from .flux_point import FluxPoints, FluxPointsEstimator
+from .points import FluxPoints, FluxPointsEstimator
 from .core import Estimator
 
 
