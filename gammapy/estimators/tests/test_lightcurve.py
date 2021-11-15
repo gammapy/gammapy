@@ -33,6 +33,7 @@ def lc():
             Column([0.1e-11, 0.3e-11], "flux_err", unit="cm-2 s-1"),
             Column([np.nan, 3.6e-11], "flux_ul", unit="cm-2 s-1"),
             Column([False, True], "is_ul"),
+            Column([True, True], "success"),
         ],
     )
 
@@ -304,6 +305,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     )
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
+
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(
@@ -363,6 +365,22 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         rtol=1e-5,
     )
 
+    # those quantities are currently not part of the table so we test separately
+    npred = lightcurve.npred.data.squeeze()
+    assert_allclose(npred, [[[669.36, np.nan], [121.66, np.nan]], [[np.nan, 664.41], [np.nan, 115.09]]], rtol=1e-3)
+
+    npred_excess_err = lightcurve.npred_excess_err.data.squeeze()
+    assert_allclose(npred_excess_err, [[[26.80, np.nan], [11.31, np.nan]], [[np.nan, 26.85], [np.nan, 11.14]]], rtol=1e-3)
+
+    npred_excess_errp = lightcurve.npred_excess_errp.data.squeeze()
+    assert_allclose(npred_excess_errp, [[[27.11, np.nan], [11.63, np.nan]], [[np.nan, 27.15], [np.nan, 11.46]]], rtol=1e-3)
+
+    npred_excess_errn = lightcurve.npred_excess_errn.data.squeeze()
+    assert_allclose(npred_excess_errn, [[[26.50, np.nan], [11.00, np.nan]], [[np.nan, 26.54], [np.nan, 10.84]]], rtol=1e-3)
+
+    npred_excess_ul = lightcurve.npred_excess_ul.data.squeeze()
+    assert_allclose(npred_excess_ul, [[[418.68, np.nan], [114.19, np.nan]], [[np.nan, 426.74], [np.nan, 105.86]]], rtol=1e-3)
+
     fp = FluxPoints.from_table(
         table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
     )
@@ -373,7 +391,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_lightcurve_estimator_spectrum_datasets_withmaskfit():
+def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [
@@ -471,6 +489,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(table["norm_err"][0], [0.040874], rtol=1e-3)
     assert_allclose(table["ts"][0], [742.939324], rtol=1e-4)
 
+
 @requires_data()
 @requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_emptybin():
@@ -489,6 +508,7 @@ def test_lightcurve_estimator_spectrum_datasets_emptybin():
 
     assert_allclose(table["time_min"], [55197.0])
     assert_allclose(table["time_max"], [55197.083333])
+
 
 @requires_data()
 @requires_dependency("iminuit")

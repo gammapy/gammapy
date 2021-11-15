@@ -220,17 +220,17 @@ def test_select_parameter_box():
     # test box selection in obs_id
     variable = "OBS_ID"
     value_range = [2, 5]
-    selection = dict(type="par_box", variable=variable, value_range=value_range)
-    selected_obs_table = obs_table.select_observations(selection)
+    selection_id = dict(type="par_box", variable=variable, value_range=value_range)
+    selected_obs_table = obs_table.select_observations(selection_id)
     assert len(selected_obs_table) == 3
     assert (value_range[0] <= selected_obs_table[variable]).all()
     assert (selected_obs_table[variable] < value_range[1]).all()
 
     # test box selection in obs_id inverted
-    selection = dict(
+    selection_id_inverted = dict(
         type="par_box", variable=variable, value_range=value_range, inverted=True
     )
-    selected_obs_table = obs_table.select_observations(selection)
+    selected_obs_table = obs_table.select_observations(selection_id_inverted)
     assert len(selected_obs_table) == 7
     assert (
         (value_range[0] > selected_obs_table[variable])
@@ -240,11 +240,15 @@ def test_select_parameter_box():
     # test box selection in alt
     variable = "ALT"
     value_range = Angle([60.0, 70.0], "deg")
-    selection = dict(type="par_box", variable=variable, value_range=value_range)
-    selected_obs_table = obs_table.select_observations(selection)
+    selection_alt = dict(type="par_box", variable=variable, value_range=value_range)
+    selected_obs_table = obs_table.select_observations(selection_alt)
     assert (value_range[0] < Angle(selected_obs_table[variable])).all()
     assert (Angle(selected_obs_table[variable]) < value_range[1]).all()
 
+    # test multiple selections
+    selections = [selection_alt, selection_id]
+    selected_obs_table = obs_table.select_observations(selections)
+    assert len(selected_obs_table) == 2
 
 def test_select_time_box():
     # create random observation table with very close (in time)

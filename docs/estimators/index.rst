@@ -53,8 +53,7 @@ stat_null         Fit statistics value of the null hypothesis
 ts                Difference in fit statistics (`stat - stat_null` )
 sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
 npred             Predicted counts of the best fit hypothesis, equivalent to correlated counts for backward folding
-npred_null        Predicted counts of the null hypothesis, equivalent to correlated null counts for backward folding
-npred_excess      Predicted counts of the excess over `npred_null`, equivalent to (`npred - npred_null`), equivalent to correlated counts for backward folding
+npred_excess      Predicted excess counts of the best fit hypothesis equivalent to correlated excess for backward folding
 ================= =================================================
 
 
@@ -152,7 +151,7 @@ This how to compute flux maps with the `ExcessMapEstimator`:
         shape : (320, 240, 2)
         ndim  : 3
         unit  : 1 / (cm2 s)
-        dtype : >f4
+        dtype : float64
     <BLANKLINE>
 
 Flux points

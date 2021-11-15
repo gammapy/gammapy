@@ -301,7 +301,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
         on_region, containment_correction=True
     )
     mask = np.ones_like(dataset_ref.counts, dtype="bool")
-    mask[1, 40:60, 40:60] = 0
+    mask[1, 40:60, 40:60] = False
     dataset_ref.mask_safe = Map.from_geom(dataset_ref.counts.geom, data=mask)
     spectrum_dataset_mask = dataset_ref.to_spectrum_dataset(on_region)
 
@@ -644,7 +644,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     fit = Fit()
     result = fit.run(datasets=datasets)
-    result = result["optimize_result"]
+
     assert result.success
     assert "minuit" in repr(result)
 
@@ -657,10 +657,10 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars["lon_0"].error, 0.002244, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars["index"].error, 0.024277, rtol=1e-2)
+    assert_allclose(pars["index"].error, 0.024023, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars["amplitude"].error, 4.216154e-13, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 4.171413e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
@@ -715,7 +715,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
 
     fit = Fit()
     result = fit.run(datasets=[dataset])
-    result = result["optimize_result"]
+
     assert result.success
 
     npred = dataset.npred().data.sum()

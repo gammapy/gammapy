@@ -52,9 +52,12 @@ SPECTRAL_MODEL_REGISTRY = Registry(
 TEMPORAL_MODEL_REGISTRY = Registry(
     [
         ConstantTemporalModel,
+        LinearTemporalModel,
         LightCurveTemplateTemporalModel,
         ExpDecayTemporalModel,
         GaussianTemporalModel,
+        PowerLawTemporalModel,
+        SineTemporalModel,
     ]
 )
 """Registry of temporal models classes."""

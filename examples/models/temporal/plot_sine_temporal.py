@@ -1,12 +1,12 @@
 r"""
-.. _constant-temporal-model:
+.. _sine-temporal-model:
 
-Constant temporal model
+Sinusoidal temporal model
 =======================
 
-This model parametrises a constant time model.
+This model parametrises a time model of sinusoidal modulation.
 
-.. math:: F(t) = k
+.. math:: F(t) = 1 + amp * sin(omega*(t-t_{ref}))
 
 """
 
@@ -19,27 +19,29 @@ This model parametrises a constant time model.
 from astropy import units as u
 from astropy.time import Time
 import matplotlib.pyplot as plt
+import numpy as np
 # %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:
 from gammapy.modeling.models import (
-    ConstantTemporalModel,
+    SineTemporalModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
 )
 
-time_range = [Time.now(), Time.now() + 1 * u.d]
-constant_model = ConstantTemporalModel(const=1)
-constant_model.plot(time_range)
+time_range = [Time.now(), Time.now() + 16 * u.d]
+omega = np.pi/4. * u.rad/u.day
+sine_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=(time_range[0].mjd-0.1)*u.d)
+sine_model.plot(time_range)
 plt.grid(which="both")
 
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),
-    temporal_model=constant_model,
-    name="constant-model",
+    temporal_model=sine_model,
+    name="sine-model",
 )
 models = Models([model])
 

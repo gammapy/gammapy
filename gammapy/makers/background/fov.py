@@ -181,7 +181,7 @@ class FoVBackgroundMaker(Maker):
             models.select(tag="sky-model").freeze()
 
             fit_result = self.fit.run(datasets=[dataset])
-            if not fit_result["optimize_result"].success:
+            if not fit_result.success:
                 log.warning(
                     f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "
                     f"Setting mask to False."

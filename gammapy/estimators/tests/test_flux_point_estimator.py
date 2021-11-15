@@ -22,7 +22,7 @@ from gammapy.modeling import Fit
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
-# TODO: use pregenerate data instead
+# TODO: use pre-generated data instead
 def simulate_spectrum_dataset(model, random_state=0):
     energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
     energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
@@ -42,7 +42,9 @@ def simulate_spectrum_dataset(model, random_state=0):
     geom = RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis])
     acceptance = RegionNDMap.from_geom(geom=geom, data=1)
     edisp = EDispKernelMap.from_diagonal_response(
-        energy_axis=energy_axis, energy_axis_true=energy_axis_true, geom=geom,
+        energy_axis=energy_axis,
+        energy_axis_true=energy_axis_true,
+        geom=geom,
     )
 
     geom_true = RegionGeom.create(
@@ -69,7 +71,8 @@ def simulate_spectrum_dataset(model, random_state=0):
 
     dataset.models = model
     dataset.fake(
-        random_state=random_state, npred_background=bkg_npred,
+        random_state=random_state,
+        npred_background=bkg_npred,
     )
     return dataset
 
@@ -84,7 +87,7 @@ def create_fpe(model):
         norm_n_values=11,
         source="source",
         selection_optional="all",
-        fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1))
+        fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
     )
     datasets = [dataset]
     return datasets, fpe
@@ -152,7 +155,7 @@ def fpe_map_pwl_reoptimize():
         energy_edges=energy_edges,
         norm_values=[0.8, 1, 1.2],
         reoptimize=True,
-        source="source"
+        source="source",
     )
     return datasets, fpe
 
@@ -222,19 +225,31 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
 
     actual = table["norm_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [0.2, 1., 5.])
+    assert_allclose(actual, [0.2, 1.0, 5.0])
 
     actual = table["stat_scan"][0][[0, 5, -1]]
-    assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-2)
+    assert_allclose(actual, [220.369, 4.301, 1881.626], rtol=1e-2)
 
     actual = table["npred"].data
-    assert_allclose(actual, [[1492.96638], [749.4587], [43.104823]])
+    assert_allclose(actual, [[1492.966], [749.459], [43.105]], rtol=1e-3)
 
-    actual = table["npred_null"].data
-    assert_allclose(actual, [[942.5], [398.166667], [14.5]])
+    actual = table["npred_excess"].data
+    assert_allclose(actual, [[660.5625], [421.5402], [34.3258]], rtol=1e-3)
 
     actual = table.meta["UL_CONF"]
     assert_allclose(actual, 0.9544997)
+
+    npred_excess_err = fp.npred_excess_err.data.squeeze()
+    assert_allclose(npred_excess_err, [40.541334, 28.244024,  6.690005], rtol=1e-3)
+
+    npred_excess_errp = fp.npred_excess_errp.data.squeeze()
+    assert_allclose(npred_excess_errp, [40.838806, 28.549508,  7.013377], rtol=1e-3)
+
+    npred_excess_errn = fp.npred_excess_errn.data.squeeze()
+    assert_allclose(npred_excess_errn, [40.247313, 27.932033,  6.378465], rtol=1e-3)
+
+    npred_excess_ul = fp.npred_excess_ul.data.squeeze()
+    assert_allclose(npred_excess_ul, [742.87486 , 479.169719,  49.019125], rtol=1e-3)
 
     # test GADF I/O
     fp.write(tmpdir / "test.fits", format="gadf-sed")
@@ -376,7 +391,6 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
 
-
 def test_no_likelihood_contribution():
     dataset = simulate_spectrum_dataset(
         SkyModel(spectral_model=PowerLawSpectralModel(), name="source")
@@ -386,7 +400,7 @@ def test_no_likelihood_contribution():
 
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
 
-    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV, source="source")
+    fpe = FluxPointsEstimator(energy_edges=[1., 3., 10.] * u.TeV, source="source")
     table = fpe.run([dataset, dataset_2]).to_table()
 
     assert np.isnan(table["norm"]).all()
@@ -395,7 +409,7 @@ def test_no_likelihood_contribution():
 
 
 def test_mask_shape():
-    axis = MapAxis.from_edges([1, 3, 10], unit="TeV", interp="log", name="energy")
+    axis = MapAxis.from_edges([1., 3., 10.], unit="TeV", interp="log", name="energy")
     geom_1 = WcsGeom.create(binsz=1, width=3, axes=[axis])
     geom_2 = WcsGeom.create(binsz=1, width=5, axes=[axis])
 
@@ -424,6 +438,7 @@ def test_mask_shape():
 
     assert_allclose(table["counts"], 0)
 
+
 @requires_dependency("iminuit")
 def test_run_pwl_parameter_range(fpe_pwl):
     pl = PowerLawSpectralModel(amplitude="1e-16 cm-2s-1TeV-1")
@@ -433,32 +448,48 @@ def test_run_pwl_parameter_range(fpe_pwl):
     fp = fpe.run(datasets)
     table_no_bounds = fp.to_table()
 
-    pl.amplitude.min=0
-    pl.amplitude.max=1e-8
+    pl.amplitude.min = 0
+    pl.amplitude.max = 1e-12
 
     fp = fpe.run(datasets)
     table_with_bounds = fp.to_table()
 
     actual = table_with_bounds["norm"].data
-    assert_allclose(actual, [3.215947e-02, 3.939055e-02, 5.551115e-09], rtol=1e-3)
+    assert_allclose(actual, [0., 0., 0.], atol=1e-2)
 
-    actual = table_with_bounds["norm_err"].data
-    assert_allclose(actual, [251.490704, 280.37361 , 404.162784], rtol=1e-2)
+    actual = table_with_bounds["norm_errp"].data
+    assert_allclose(actual, [212.593368, 298.383045, 449.951747], rtol=1e-2)
 
     actual = table_with_bounds["norm_ul"].data
-    assert_allclose(actual, [640.067576,  722.571371, 1414.22209], rtol=1e-2)
+    assert_allclose(actual, [640.067576, 722.571371, 1414.22209], rtol=1e-2)
 
     actual = table_with_bounds["sqrt_ts"].data
-    assert_allclose(actual, [0.,0., 0.], rtol=1e-2)
+    assert_allclose(actual, [0., 0., 0.], atol=1e-2)
 
     actual = table_no_bounds["norm"].data
-    assert_allclose(actual, [-511.76675 , -155.75408 , -853.547117], rtol=1e-3)
+    assert_allclose(actual, [-511.76675, -155.75408, -853.547117], rtol=1e-3)
 
     actual = table_no_bounds["norm_err"].data
-    assert_allclose(actual, [504.601499, 416.69248 , 851.223077], rtol=1e-2)
+    assert_allclose(actual, [504.601499, 416.69248, 851.223077], rtol=1e-2)
 
     actual = table_no_bounds["norm_ul"].data
-    assert_allclose(actual, [ 514.957128,  707.888477, 1167.105962], rtol=1e-2)
+    assert_allclose(actual, [514.957128,  707.888477, 1167.105962], rtol=1e-2)
 
     actual = table_no_bounds["sqrt_ts"].data
     assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
+
+
+@requires_dependency("iminuit")
+def test_flux_points_estimator_small_edges():
+    pl = PowerLawSpectralModel(amplitude="1e-11 cm-2s-1TeV-1")
+
+    datasets, fpe = create_fpe(pl)
+
+    fpe.energy_edges = datasets[0].counts.geom.axes["energy"].upsample(2).edges[1:4]
+    fpe.selection_optional = []
+
+    fp = fpe.run(datasets)
+
+    assert_allclose(fp.ts.data[0, 0, 0], 2156.96959291)
+    assert np.isnan(fp.ts.data[1, 0, 0])
+    assert np.isnan(fp.npred.data[1, 0, 0])

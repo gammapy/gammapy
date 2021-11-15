@@ -93,7 +93,7 @@ def test_compute_lima_on_off_image():
     results = estimator.run(dataset)
 
     # Reproduce safe significance threshold from HESS software
-    results["sqrt_ts"].data[results["counts"].data < 5] = 0
+    results["sqrt_ts"].data[results["npred"].data < 5] = 0
 
     # crop the image at the boundaries, because the reference image
     # is cut out from a large map, there is no way to reproduce the
@@ -108,18 +108,21 @@ def test_compute_lima_on_off_image():
 
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
+    simple_dataset.exposure = None
     estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional=["all"])
     result = estimator.run(simple_dataset)
 
-    assert_allclose(result["counts"].data[0, 10, 10], 162)
-    assert_allclose(result["excess"].data[0, 10, 10], 81)
-    assert_allclose(result["background"].data[0, 10, 10], 81)
+    assert_allclose(result["npred"].data[0, 10, 10], 162)
+    assert_allclose(result["npred_excess"].data[0, 10, 10], 81)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
-    assert_allclose(result["err"].data[0, 10, 10], 12.727922, atol=1e-3)
-    assert_allclose(result["errp"].data[0, 10, 10], 13.063328, atol=1e-3)
-    assert_allclose(result["errn"].data[0, 10, 10], -12.396716, atol=1e-3)
-    assert_allclose(result["ul"].data[0, 10, 10], 107.806275, atol=1e-3)
 
+    assert_allclose(result["npred_excess_err"].data[0, 10, 10], 12.727922, atol=1e-3)
+    assert_allclose(result["npred_excess_errp"].data[0, 10, 10], 13.063328, atol=1e-3)
+    assert_allclose(result["npred_excess_errn"].data[0, 10, 10], 12.396716, atol=1e-3)
+    assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 107.806275, atol=1e-3)
+
+
+def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
     simple_dataset.exposure += 1e10 * u.cm ** 2 * u.s
     axis = simple_dataset.exposure.geom.axes[0]
     simple_dataset.psf = PSFMap.from_gauss(axis, sigma="0.05 deg")
@@ -138,8 +141,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional="all")
     result = estimator.run(simple_dataset)
 
-    assert_allclose(result["excess"].data.sum(), 19733.602, rtol=1e-3)
-    assert_allclose(result["background"].data.sum(), 31818.398, rtol=1e-3)
+    assert_allclose(result["npred_excess"].data.sum(), 19733.602, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, rtol=1e-3)
 
 
@@ -156,10 +158,9 @@ def test_significance_map_estimator_map_dataset_on_off_no_correlation(
     )
 
     result_image = estimator_image.run(simple_dataset_on_off)
-    assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["counts"].data[0, 10, 10], 194)
-    assert_allclose(result_image["excess"].data[0, 10, 10], 97)
-    assert_allclose(result_image["background"].data[0, 10, 10], 97)
+    assert result_image["npred"].data.shape == (1, 20, 20)
+    assert_allclose(result_image["npred"].data[0, 10, 10], 194)
+    assert_allclose(result_image["npred_excess"].data[0, 10, 10], 97)
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 0.780125, atol=1e-3)
     assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
@@ -178,12 +179,10 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     )
     result = estimator.run(simple_dataset_on_off)
 
-    assert result["counts"].data.shape == (2, 20, 20)
-    assert_allclose(result["counts"].data[:, 10, 10], 194)
-    assert_allclose(result["excess"].data[:, 10, 10], 97)
-    assert_allclose(result["background"].data[:, 10, 10], 97)
+    assert result["npred"].data.shape == (2, 20, 20)
+    assert_allclose(result["npred"].data[:, 10, 10], 194)
+    assert_allclose(result["npred_excess"].data[:, 10, 10], 97)
     assert_allclose(result["sqrt_ts"].data[:, 10, 10], 5.741116, atol=1e-5)
-    assert_allclose(result["flux"].data[:, 10, 10], np.nan)
 
     # Test with exposure
     simple_dataset_on_off.exposure = exposure
@@ -192,10 +191,9 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     )
 
     result_image = estimator_image.run(simple_dataset_on_off)
-    assert result_image["counts"].data.shape == (1, 20, 20)
-    assert_allclose(result_image["counts"].data[0, 10, 10], 194)
-    assert_allclose(result_image["excess"].data[0, 10, 10], 97)
-    assert_allclose(result_image["background"].data[0, 10, 10], 97)
+    assert result_image["npred"].data.shape == (1, 20, 20)
+    assert_allclose(result_image["npred"].data[0, 10, 10], 194)
+    assert_allclose(result_image["npred_excess"].data[0, 10, 10], 97)
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 5.741116, atol=1e-3)
     assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
@@ -213,16 +211,14 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     )
 
     result_image = estimator_image.run(simple_dataset_on_off)
-    assert result_image["counts"].data.shape == (1, 20, 20)
+    assert result_image["npred"].data.shape == (1, 20, 20)
 
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], np.nan, atol=1e-3)
-    assert_allclose(result_image["counts"].data[0, 10, 10], np.nan)
-    assert_allclose(result_image["excess"].data[0, 10, 10], np.nan)
-    assert_allclose(result_image["background"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["npred"].data[0, 10, 10], np.nan)
+    assert_allclose(result_image["npred_excess"].data[0, 10, 10], np.nan)
     assert_allclose(result_image["sqrt_ts"].data[0, 9, 9], 7.186745, atol=1e-3)
-    assert_allclose(result_image["counts"].data[0, 9, 9], 304)
-    assert_allclose(result_image["excess"].data[0, 9, 9], 152)
-    assert_allclose(result_image["background"].data[0, 9, 9], 152)
+    assert_allclose(result_image["npred"].data[0, 9, 9], 304)
+    assert_allclose(result_image["npred_excess"].data[0, 9, 9], 152)
 
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
     assert_allclose(result_image["flux"].data[0, 9, 9], 1.190928e-08, rtol=1e-3)
@@ -244,13 +240,12 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
         0.11 * u.deg, apply_mask_fit=False, correlate_off=True
     )
     result_mod = estimator_mod.run(simple_dataset_on_off)
-    assert result_mod["counts"].data.shape == (1, 20, 20)
+    assert result_mod["npred"].data.shape == (1, 20, 20)
 
     assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 8.899278, atol=1e-3)
 
-    assert_allclose(result_mod["counts"].data[0, 10, 10], 388)
-    assert_allclose(result_mod["excess"].data[0, 10, 10], 190.68057)
-    assert_allclose(result_mod["background"].data[0, 10, 10], 197.31943)
+    assert_allclose(result_mod["npred"].data[0, 10, 10], 388)
+    assert_allclose(result_mod["npred_excess"].data[0, 10, 10], 190.68057)
 
     assert result_mod["flux"].unit == "cm-2s-1"
     assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)

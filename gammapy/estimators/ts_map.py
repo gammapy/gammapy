@@ -172,7 +172,7 @@ class TSMapEstimator(Estimator):
             "niter",
             "norm_err",
             "npred",
-            "npred_null",
+            "npred_excess",
             "stat",
             "stat_null",
         ]
@@ -742,7 +742,7 @@ class BrentqFluxEstimator(Estimator):
 
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
-        result["npred_null"] = dataset.npred(norm=0).sum()
+        result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
 
         if "ul" in self.selection_optional:
             result.update(self.estimate_ul(dataset, result))

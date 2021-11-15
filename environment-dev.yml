@@ -33,7 +33,6 @@ dependencies:
   - tqdm
   # extra dependencies
   - healpy
-  - iminuit<2.0
   - ipython
   - jupyter
   - jupyterlab
@@ -42,6 +41,7 @@ dependencies:
   - pandas
   - reproject
   - sherpa
+  - iminuit>=2.8.0
   # dev dependencies
   - black
   - codespell
@@ -65,3 +65,4 @@ dependencies:
   - h5py==2.10.0
   - pip:
       - pytest-sphinx
+

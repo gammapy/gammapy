@@ -68,7 +68,6 @@ def test_optimize_backend_and_covariance(backend):
 
     fit = Fit(optimize_opts=kwargs)
     result = fit.run([dataset])
-    result = result["optimize_result"]
 
     pars = result.parameters
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
@@ -90,7 +89,6 @@ def test_run(backend):
     dataset = MyDataset()
     fit = Fit(backend=backend)
     result = fit.run([dataset])
-    result = result["optimize_result"]
     pars = result.parameters
 
     assert result.success is True
@@ -261,7 +259,7 @@ def test_stat_contour():
     fit.optimize([dataset])
     result = fit.stat_contour(datasets=[dataset], x="y", y="z")
 
-    assert result["success"] is True
+    assert result["success"]
 
     x = result["y"]
     assert_allclose(len(x), 10)

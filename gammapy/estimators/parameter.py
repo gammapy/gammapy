@@ -81,13 +81,13 @@ class ParameterEstimator(Estimator):
                 * "success": boolean flag for fit success
                 * parameter.name_err: covariance-based error estimate on parameter value
         """
-        value, total_stat, success, error = np.nan, 0, False, np.nan
+        value, total_stat, success, error = np.nan, 0., False, np.nan
 
         if np.any(datasets.contributes_to_stat):
             result = self.fit.run(datasets=datasets)
             value, error = parameter.value, parameter.error
-            total_stat = result["optimize_result"].total_stat
-            success = result["optimize_result"].success
+            total_stat = result.total_stat
+            success = result.success
 
         return {
             f"{parameter.name}": value,
@@ -111,9 +111,8 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the TS of the best fit value compared to the null hypothesis. Entries are:
 
-                * TS : fit statistic difference with null hypothesis
+                * "ts" : fit statistic difference with null hypothesis
                 * "npred" : predicted number of counts per dataset
-                * "npred_null" : predicted number of counts per dataset in the null hypothesis
         """
         npred = self.estimate_npred(datasets=datasets)
 
@@ -132,12 +131,10 @@ class ParameterEstimator(Estimator):
                 _ = self.fit.optimize(datasets=datasets)
 
             ts = datasets.stat_sum() - stat
-            npred_null = self.estimate_npred(datasets=datasets)
 
         return {
             "ts": ts,
             "npred": npred["npred"],
-            "npred_null": npred_null["npred"]
         }
 
     def estimate_errn_errp(self, datasets, parameter):
@@ -292,6 +289,7 @@ class ParameterEstimator(Estimator):
             npred.append(dataset.npred().data[mask].sum())
 
         return {"npred": np.array(npred), "datasets": datasets.names}
+
 
     def run(self, datasets, parameter):
         """Run the parameter estimator.

@@ -94,16 +94,12 @@ def test_iminuit_limits():
     assert_allclose(pars["y"].value, 301000, rtol=1e-3)
 
     # Check that minuit sees the limit factors correctly
-    states = minuit.get_param_states()
-    assert not states[0]["has_limits"]
+    params = minuit.init_params
 
-    y = states[1]
-    assert y["has_limits"]
-    assert_allclose(y["lower_limit"], 3.01)
-
-    # The next assert can be added when we no longer test on iminuit 1.2
-    # See https://github.com/gammapy/gammapy/pull/1771
-    # assert states[1]["upper_limit"] is None
+    assert not params["x"].has_limits
+    assert params["par_001_y"].has_limits
+    assert_allclose(params["par_001_y"].lower_limit, 3.01)
+    assert params["par_001_y"].upper_limit is None
 
 
 def test_opts():

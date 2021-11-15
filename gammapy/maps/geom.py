@@ -486,7 +486,7 @@ class Geom(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor, axis_name):
+    def upsample(self, factor, axis_name=None):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
@@ -621,4 +621,4 @@ class Geom(abc.ABC):
 
         mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
         data = np.broadcast_to(mask, shape=self.data_shape)
-        return Map.from_geom(geom=self, data=data)
+        return Map.from_geom(geom=self, data=data, dtype=data.dtype)

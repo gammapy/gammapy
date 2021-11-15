@@ -10,11 +10,18 @@ from gammapy.modeling.models import (
     MODEL_REGISTRY,
     TemplateNPredModel,
     EBLAbsorptionNormSpectralModel,
+    SkyModel,
     Model,
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
-)
+    ConstantTemporalModel,
+    LinearTemporalModel,
+    ExpDecayTemporalModel,
+    GaussianTemporalModel,
+    PowerLawTemporalModel,
+    SineTemporalModel,
+    )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
@@ -225,6 +232,9 @@ def make_all_models():
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
     yield Model.create("ConstantTemporalModel", "temporal")
+    yield Model.create("LinearTemporalModel", "temporal")
+    yield Model.create("PowerLawTemporalModel", "temporal")
+    yield Model.create("SineTemporalModel", "temporal")
     yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
     yield Model.create(
         "SkyModel",
@@ -275,3 +285,22 @@ def test_simplified_output():
 
 def test_registries_print():
     assert "Registry" in str(MODEL_REGISTRY)
+
+
+def test_io_temporal():
+    classes = [
+        ConstantTemporalModel,
+        LinearTemporalModel,
+        ExpDecayTemporalModel,
+        GaussianTemporalModel,
+        PowerLawTemporalModel,
+        SineTemporalModel,
+    ]
+    for c in classes:
+        sky_model = SkyModel(spectral_model=PowerLawSpectralModel(), temporal_model=c())
+        model_dict = sky_model.to_dict()
+        read_model = SkyModel.from_dict(model_dict)
+        for p in sky_model.temporal_model.parameters:
+            assert_allclose(read_model.temporal_model.parameters[p.name].value, p.value)
+            assert read_model.temporal_model.parameters[p.name].unit == p.unit
+
