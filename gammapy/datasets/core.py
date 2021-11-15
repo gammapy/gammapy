@@ -10,7 +10,7 @@ from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
-from gammapy.maps import WcsGeom
+from gammapy.maps import RegionGeom
 
 log = logging.getLogger(__name__)
 
@@ -442,6 +442,8 @@ class Datasets(collections.abc.MutableSequence):
             return False
         for dataset in self:
             for g1, g2 in zip(empty.geoms.values(), dataset.geoms.values()):
+                if isinstance(g1, RegionGeom):
+                    return True
                 if g1.is_aligned(g2) is False:
                     return False
         return True

@@ -866,6 +866,19 @@ def test_stack(sky_model):
 
     assert_allclose(stacked.meta_table["OBS_ID"][0], [0, 1])
 
+    ## now test datasets.stack_reduce()
+    datasets = Datasets([dataset1, dataset2])
+    stacked1 = datasets.stack_reduce()
+    assert_allclose(stacked.counts.data, stacked1.counts.data)
+
+    geoms = {
+        name: WcsGeom.from_aligned(geom, skydir=geom.center_skydir, width=5.0 * u.deg)
+        for name, geom in dataset1.geoms.items()
+    }
+    empty = MapDataset.from_geoms(**geoms)
+    stacked2 = datasets.stack_reduce(empty=empty)
+    assert_allclose(stacked2.counts.data.sum(), 9000, 1e-5)
+
 
 @requires_data()
 def test_npred_sig(sky_model, geom, geom_etrue):
@@ -1573,6 +1586,7 @@ def test_compute_flux_spatial():
     reference = g.containment_fraction(0.1)
     assert_allclose(flux.value, reference, rtol=0.003)
 
+
 def test_compute_flux_spatial_no_psf():
     # check that spatial integration is not performed in the absence of a psf
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
@@ -1599,6 +1613,7 @@ def test_compute_flux_spatial_no_psf():
     flux = evaluator.compute_flux_spatial()
 
     assert_allclose(flux, 1.0)
+
 
 @requires_data()
 def test_source_outside_geom(sky_model, geom, geom_etrue):
