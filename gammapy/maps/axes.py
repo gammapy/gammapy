@@ -2,6 +2,7 @@
 from collections.abc import Sequence
 import copy
 import inspect
+from itertools import zip_longest
 import numpy as np
 import scipy
 import astropy.units as u
@@ -307,6 +308,36 @@ class MapAxis:
         ax.set_ylabel(ylabel)
         ax.set_ylim(self.bounds)
         return ax
+
+    def broadcast(self, other):
+        """Broadcast two axis objects
+
+        Two map axis objects are broadcastable if they are either exactly equal or one
+        corresponds to the squashed version of the other.
+
+        Parameters
+        ----------
+        other : `MapAxis`
+            Axis to broadcast with.
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Broadcasted axis.
+        """
+        if other is None:
+            return self
+
+        if self == other:
+            return self
+
+        if self == other.squash():
+            return other
+
+        if other == self.squash():
+            return self
+
+        raise ValueError(f"Map axes cannot be broadcasted:\n {self} \n {other} ")
 
     @property
     def iter_by_edges(self):
@@ -1309,6 +1340,30 @@ class MapAxes(Sequence):
         """Whether axes is unidimensional"""
         value = (np.array(self.shape) > 1).sum()
         return value == 1
+
+    def broadcast(self, other):
+        """Broadcast axes
+
+        Parameters
+        ----------
+        other : `MapAxes`
+            Other map axes.
+
+        Returns
+        -------
+        broadcasted : `MapAxes`
+            Broadcasted map axes.
+        """
+        axes = []
+
+        for ax, ax_other in zip_longest(self, other):
+            if ax is not None:
+                result = ax.broadcast(ax_other)
+                axes.append(result)
+            else:
+                axes.append(ax_other)
+
+        return self.__class__(axes=axes)
 
     @property
     def reverse(self):

@@ -651,3 +651,59 @@ def test_mixed_axes():
 
     assert table["LABEL"].dtype == np.dtype("<U7")
     assert len(table) == 24
+
+
+def test_broadcast_axis():
+    axis1 = MapAxis.from_edges([1, 2, 3], name="axis")
+    axis2 = MapAxis.from_edges([1, 3], name="axis")
+
+    axis = axis1.broadcast(axis2)
+    assert axis == axis1
+
+    axis = axis2.broadcast(axis1)
+    assert axis == axis1
+
+    axis1 = MapAxis.from_edges([1, 2, 3], name="axis")
+    axis2 = MapAxis.from_edges([1, 2, 3], name="axis")
+
+    axis = axis1.broadcast(axis2)
+    assert axis == axis1
+
+    axis1 = MapAxis.from_edges([1, 2, 3], name="axis")
+    axis2 = MapAxis.from_edges([1, 4], name="axis")
+
+    with pytest.raises(ValueError):
+        axis1.broadcast(axis2)
+
+    axis1 = MapAxis.from_edges([1, 2, 3], name="axis")
+    axis2 = MapAxis.from_edges([1, 2, 3], name="axis-2")
+
+    with pytest.raises(ValueError):
+        axis1.broadcast(axis2)
+
+
+def test_broadcast_axes():
+    axis1 = MapAxis.from_edges([1, 2, 3], name="axis")
+    axis2 = MapAxis.from_edges([1, 3], name="axis-2")
+
+    axes1 = MapAxes([axis1, axis2])
+    axes2 = MapAxes([axis1])
+
+    axes = axes1.broadcast(axes2)
+
+    assert axes.names == axes1.names
+    assert axes.shape == axes1.shape
+
+    axes1 = MapAxes([axis1, axis2])
+    axes2 = MapAxes([axis1, axis2.squash()])
+
+    axes = axes1.broadcast(axes2)
+
+    assert axes.names == axes1.names
+    assert axes.shape == axes1.shape
+
+    axes1 = MapAxes([axis1, axis2])
+    axes2 = MapAxes([axis2, axis1])
+
+    with pytest.raises(ValueError):
+        axes1.broadcast(axes2)

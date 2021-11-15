@@ -677,7 +677,7 @@ class WcsNDMap(WcsMap):
                 geom = geom.to_cube(kmap.geom.axes)
 
         if mode == "full":
-            pad_width = [0.5*(width-1) for width in kernel.shape[-2:]]
+            pad_width = [0.5 * (width - 1) for width in kernel.shape[-2:]]
             geom = geom.pad(pad_width, axis_name=None)
         elif mode == "valid":
             raise NotImplementedError("WcsNDMap.convolve: mode='valid' is not supported.")
