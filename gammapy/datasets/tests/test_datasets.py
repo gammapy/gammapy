@@ -40,6 +40,15 @@ def test_names(datasets):
     assert datasets.names == ["test-1", "test-2"]
 
 
+def test_stack_reduce(datasets):
+    with pytest.raises(ValueError, match="Stacking failed"):
+        datasets.stack_reduce(datasets[0])
+
+
+def test_is_stackable(datasets):
+    assert datasets.is_stackable(datasets[0]) is False
+
+
 def test_Datasets_mutation():
     dat = MyDataset(name="test-1")
     dats = Datasets([MyDataset(name="test-2"), MyDataset(name="test-3")])

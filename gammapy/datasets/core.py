@@ -10,6 +10,7 @@ from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
+from gammapy.maps import WcsGeom
 
 log = logging.getLogger(__name__)
 
@@ -413,17 +414,17 @@ class Datasets(collections.abc.MutableSequence):
 
     def _if_info_pos(self):
         if not self.is_all_same_type:
-            log.info(
-                "Not possible: all Datasets contained are not of same type."
-            )
+            log.info("Not possible: all Datasets contained are not of same type.")
             return False
         if self[0].tag == "FluxPointsDataset":
-            log.info("Not not defined for FluxPointsDataset")
+            log.info("Not defined for FluxPointsDataset")
             return False
+        return True
 
     def is_stackable(self, empty=None):
         """
-        Ckeck if the datasets can be stacked onto the empty one
+        Check if the datasets can be stacked onto the empty one
+        If no empty dataset is passed, the first dataset in self is taken
 
         Parameters
         ----------
@@ -434,17 +435,18 @@ class Datasets(collections.abc.MutableSequence):
         info = self._if_info_pos()
         if info is False:
             return False
-
         if empty is None:
             empty = self[0].__class__.from_geoms(**self[0].geoms)
+        if hasattr(empty.__class__, "stack") is False:
+            log.info("No inbuilt stacking exists for this dataset")
+            return False
         for dataset in self:
-            for g1,g2 in zip(empty.geoms, dataset.geoms):
-                if g1.is_aligned(g2.geom) is False:
+            for g1, g2 in zip(empty.geoms.values(), dataset.geoms.values()):
+                if g1.is_aligned(g2) is False:
                     return False
         return True
 
-
-    def stack_reduce(self, name=None, empty=None, nan_to_num=True):
+    def stack_reduce(self, empty=None, name=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
         This works only if all Dataset are of the same type and if a proper
@@ -455,7 +457,7 @@ class Datasets(collections.abc.MutableSequence):
         name : str
             Name of the stacked dataset.
         empty : `~gammapy.datasets.Dataset`
-            An empty dataset to stack onto
+             An empty dataset to stack onto
         nan_to_num: bool
             Non-finite values are replaced by zero if True (default).
 
@@ -465,15 +467,13 @@ class Datasets(collections.abc.MutableSequence):
             the stacked dataset
         """
 
-        if empty is not None:
-            stacked = empty.copy(name=name)
-        else:
-            stacked = self[0].from_geoms(**self[0].geoms, name=name)
-
+        if self.is_stackable(empty) is False:
+            raise ValueError("Stacking failed")
+        empty = self[0].__class__.from_geoms(**self[0].geoms, name=name)
         for dataset in self:
-            stacked.stack(dataset, nan_to_num=nan_to_num)
+            empty.stack(dataset, nan_to_num=nan_to_num)
 
-        return stacked
+        return empty
 
     def info_table(self, cumulative=False):
         """Get info table for datasets.
@@ -488,10 +488,8 @@ class Datasets(collections.abc.MutableSequence):
         info_table : `~astropy.table.Table`
             Info table.
         """
-        if not self.is_all_same_type:
-            raise ValueError("Info table not supported for mixed dataset type.")
-        if self[0].tag == "FluxPointsDataset":
-            raise ValueError("Info table not supported for FluxPointsDataset")
+        if self._if_info_pos() is False:
+            raise ValueError("Info table failed")
 
         stacked = self[0].__class__.from_geoms(**self[0].geoms, name="stacked")
         rows = []
