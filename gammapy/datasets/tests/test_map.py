@@ -657,10 +657,10 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars["lon_0"].error, 0.002244, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars["index"].error, 0.024023, rtol=1e-2)
+    assert_allclose(pars["index"].error, 0.0242, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars["amplitude"].error, 4.171413e-13, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 4.216e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
