@@ -9,7 +9,7 @@ from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.estimators import FluxPoints, LightCurveEstimator
-from gammapy.estimators.tests.test_flux_point_estimator import (
+from gammapy.estimators.points.tests.test_sed import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
 )

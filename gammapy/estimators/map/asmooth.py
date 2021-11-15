@@ -9,8 +9,8 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
 from gammapy.utils.pbar import progress_bar
-from .core import Estimator
-from .utils import estimate_exposure_reco_energy
+from ..core import Estimator
+from ..utils import estimate_exposure_reco_energy
 
 __all__ = ["ASmoothMapEstimator"]
 
