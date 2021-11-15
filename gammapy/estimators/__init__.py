@@ -8,7 +8,6 @@ from .flux_point import *
 from .lightcurve import *
 from .profile import *
 from .sensitivity import *
-from .ts_map import *
 
 ESTIMATOR_REGISTRY = Registry(
     [
