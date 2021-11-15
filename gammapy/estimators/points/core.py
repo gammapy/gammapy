@@ -15,7 +15,7 @@ from gammapy.maps.axes import flat_if_equal
 from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from ..flux_map import (
+from ..map.core import (
     FluxMaps,
     DEFAULT_UNIT,
 )

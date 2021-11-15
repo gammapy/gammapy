@@ -4,7 +4,6 @@ from gammapy.utils.registry import Registry
 from .core import *
 from .map import *
 from .points import *
-from .flux_map import *
 from .profile import *
 
 ESTIMATOR_REGISTRY = Registry(
