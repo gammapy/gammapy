@@ -195,6 +195,7 @@ class TestFluxPoints:
     def test_write_fits(self, tmp_path, flux_points):
         flux_points.write(tmp_path / "tmp.fits", sed_type=flux_points.sed_type_init)
         actual = FluxPoints.read(tmp_path / "tmp.fits")
+        actual._data.pop("is_ul")
         assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmp_path, flux_points):
@@ -202,6 +203,7 @@ class TestFluxPoints:
             tmp_path / "flux_points.ecsv", sed_type=flux_points.sed_type_init
         )
         actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
+        actual._data.pop("is_ul")
         assert str(flux_points) == str(actual)
 
     def test_quantity_access(self, flux_points_likelihood):
