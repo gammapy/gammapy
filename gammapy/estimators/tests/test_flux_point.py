@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
-from gammapy.catalog.fermi import SourceCatalog3FGL
+from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
 from gammapy.estimators import FluxPoints
 from gammapy.modeling.models import SpectralModel
 from gammapy.utils.scripts import make_path
@@ -88,7 +88,9 @@ def test_dnde_from_flux():
 
     # Get values
     model = XSqrTestModel()
-    table["e_ref"] = FluxPoints._energy_ref_lafferty(model, table["e_min"], table["e_max"])
+    table["e_ref"] = FluxPoints._energy_ref_lafferty(
+        model, table["e_min"], table["e_max"]
+    )
     dnde = FluxPoints.from_table(table, reference_model=model)
 
     # Set up test case comparison
@@ -144,16 +146,13 @@ def test_compute_flux_points_dnde_exp(method):
 
 @requires_data()
 def test_fermi_to_dnde():
-    from gammapy.catalog import SourceCatalog4FGL
 
     catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
     src = catalog_4fgl["FGES J1553.8-5325"]
     fp = src.flux_points
 
     assert_allclose(
-        fp.dnde.quantity[1, 0, 0],
-        4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"),
-        rtol=1e-5,
+        fp.dnde.quantity[1, 0, 0], 4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"), rtol=1e-5,
     )
 
 
@@ -199,7 +198,9 @@ class TestFluxPoints:
         assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmp_path, flux_points):
-        flux_points.write(tmp_path / "flux_points.ecsv", sed_type=flux_points.sed_type_init)
+        flux_points.write(
+            tmp_path / "flux_points.ecsv", sed_type=flux_points.sed_type_init
+        )
         actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
         assert str(flux_points) == str(actual)
 
@@ -242,14 +243,44 @@ def test_compute_flux_points_dnde_fermi():
         desired = getattr(flux_points, column).quantity.squeeze()
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=0.05)
 
+
 @requires_data()
 @requires_dependency("matplotlib")
 def test_plot_fp_no_ul():
     path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
     table = Table.read(path)
-    table.remove_column('dnde_ul')
-    fp = FluxPoints.from_table(table, sed_type='dnde')
+    table.remove_column("dnde_ul")
+    fp = FluxPoints.from_table(table, sed_type="dnde")
 
     with mpl_plot_check():
         fp.plot()
 
+
+@requires_data()
+def test_is_ul(tmp_path):
+    catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
+    src = catalog_4fgl["FGES J1553.8-5325"]
+    fp = src.flux_points
+
+    is_ul = fp._data["is_ul"].data.squeeze()
+
+    assert_allclose(fp.is_ul.data.squeeze(), is_ul)
+    table = fp.to_table()
+    assert_allclose(table["is_ul"].data.data, is_ul)
+
+    fp.sqrt_ts_threshold_ul = 100
+    assert_allclose(fp.is_ul.data.squeeze(), np.ones(is_ul.shape, dtype=bool))
+    table = fp.to_table()
+    assert_allclose(table["is_ul"].data.data, np.ones(is_ul.shape, dtype=bool))
+
+    table.write(tmp_path / "test_modif_ul_threshold.fits")
+    table_read = Table.read(tmp_path / "test_modif_ul_threshold.fits")
+    assert_allclose(table_read["is_ul"].data.data, np.ones(is_ul.shape, dtype=bool))
+    fp_read = FluxPoints.from_table(table_read)
+    assert_allclose(fp_read.is_ul.data.squeeze(), np.ones(is_ul.shape, dtype=bool))
+    assert_allclose(fp_read.to_table()["is_ul"], fp_read.is_ul.data.squeeze())
+
+    fp.is_ul = is_ul
+    assert_allclose(fp.is_ul.data.squeeze(), is_ul)
+    table = fp.to_table()
+    assert_allclose(table["is_ul"].data.data, is_ul)

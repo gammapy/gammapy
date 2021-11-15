@@ -347,10 +347,8 @@ class FluxPoints(FluxMaps):
                 table["stat"] = self.stat.data[idx]
                 table["stat_scan"] = self.stat_scan.data[idx]
 
-            # TODO: check whether this is reasonable behaviour
-            if "is_ul" not in self._data:
-                table.remove_column("is_ul")
-
+            table["is_ul"] = self.is_ul.data[idx]
+                
         elif format == "lightcurve":
             time_axis = self.geom.axes["time"]
 
