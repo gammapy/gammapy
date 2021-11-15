@@ -98,7 +98,6 @@ class FluxPointsEstimator(FluxEstimator):
                 energy_min=energy_min,
                 energy_max=energy_max,
             )
-            print(row)
             rows.append(row)
 
         meta = {
