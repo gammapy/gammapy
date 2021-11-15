@@ -5,7 +5,8 @@ from regions import CircleAnnulusSkyRegion
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from .core import FluxPoints, FluxPointsEstimator
+from .core import FluxPoints
+from .sed import FluxPointsEstimator
 
 
 __all__ = ["FluxProfileEstimator"]
