@@ -21,7 +21,7 @@ model, the sharp edges is smoothed using `~scipy.special.erf`.
 
 In case an eccentricity (`e`) and rotation angle (:math:`\phi`) are passed,
 then the model is an elongated disk (i.e. an ellipse), with a major semiaxis of length :math:`r_0`
-and position angle :math:`\phi` (increaing counter-clockwise from the North direction).
+and position angle :math:`\phi` (increasing counter-clockwise from the North direction).
 
 The model is defined on the celestial sphere, with a normalization defined by:
 
