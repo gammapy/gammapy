@@ -485,7 +485,7 @@ def test_flux_points_estimator_small_edges():
 
     datasets, fpe = create_fpe(pl)
 
-    fpe.energy_edges = datasets[0].counts.geom.axes["energy"].upsample(2).edges[1:4]
+    fpe.energy_edges = datasets[0].counts.geom.axes["energy"].upsample(3).edges[1:4]
     fpe.selection_optional = []
 
     fp = fpe.run(datasets)
