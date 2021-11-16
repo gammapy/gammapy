@@ -216,6 +216,16 @@ class FluxMaps:
                 return sed_type
 
     @property
+    def has_ul(self):
+        """Whether the flux estimate has either sqrt(ts) or ts defined"""
+        return  "norm_ul" in self._data
+
+    @property
+    def has_any_ts(self):
+        """Whether the flux estimate has either sqrt(ts) or ts defined"""
+        return  any([_ in self._data for _ in ["ts", "sqrt_ts"]])
+
+    @property
     def has_stat_profiles(self):
         """Whether the flux estimate has stat profiles"""
         return "stat_scan" in self._data
@@ -250,11 +260,11 @@ class FluxMaps:
             Threshold value in sqrt(TS) for upper limits
         """
         self.meta["sqrt_ts_threshold_ul"] = value
-        if (
-            any([_ in self._data for _ in ["ts", "sqrt_ts"]])
-            and "norm_ul" in self._data
-        ):
-            self.is_ul = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
+
+        if self.has_any_ts:
+            self.is_ul = self.sqrt_ts < self.sqrt_ts_threshold_ul
+        else:
+            raise ValueError("Either ts or sqrt_ts is required to set the threshold")
 
     @property
     def sed_type_init(self):
@@ -339,32 +349,32 @@ class FluxMaps:
     def is_ul(self):
         """Whether data is an upper limit"""
         # TODO: make this a well defined behaviour
-        is_ul = self.norm.copy()
+        is_ul = self.norm.copy(data=False)
 
         if "is_ul" in self._data:
             is_ul = self._data["is_ul"]
-        elif (
-            any([_ in self._data for _ in ["ts", "sqrt_ts"]])
-            and "norm_ul" in self._data
-        ):
+        elif self.has_any_ts and self.has_ul:
             is_ul.data = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
-        elif "norm_ul" in self._data:
+        elif self.has_ul:
             is_ul.data = np.isfinite(self.norm_ul)
         else:
             is_ul.data = np.isnan(self.norm)
+
         return self._filter_convergence_failure(is_ul)
 
     @is_ul.setter
-    def is_ul(self, data):
+    def is_ul(self, value):
         """Whether data is an upper limit
         
         Parameters
         ----------
-        data : "~numpy.array"
-            boolean array
+        value : `~Map`
+            Boolean map.
         """
-        self._data["is_ul"] = self.norm.copy(data=data)
+        if not isinstance(value, Map):
+            value = self.norm.copy(data=value)
 
+        self._data["is_ul"] = value
 
     @property
     def counts(self):
