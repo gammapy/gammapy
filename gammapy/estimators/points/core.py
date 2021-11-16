@@ -474,11 +474,11 @@ class FluxPoints(FluxMaps):
 
         is_ul = self.is_ul.data
         if self.has_ul and y_errn and is_ul.any():
-                flux_ul = getattr(self, sed_type + "_ul").quantity
-                y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
-                y_errp.data[is_ul] = 0
-                flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
-                kwargs.setdefault("uplims", is_ul)
+            flux_ul = getattr(self, sed_type + "_ul").quantity
+            y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
+            y_errp.data[is_ul] = 0
+            flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
+            kwargs.setdefault("uplims", is_ul)
 
         # set flux points plotting defaults
         if y_errp:
