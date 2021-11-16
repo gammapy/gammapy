@@ -472,12 +472,14 @@ class FluxPoints(FluxMaps):
         # get errors and ul
         y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
 
-        is_ul = self.is_ul.data
-        if np.isnan(is_ul.data).all() and y_errn and is_ul.any():
-            flux_ul = getattr(self, sed_type + "_ul").quantity
-            y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
-            y_errp.data[is_ul] = 0
-            flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
+        if 'norm_ul' in self.available_quantities:
+            is_ul = self.is_ul.data
+            if not np.isnan(is_ul).all() and y_errn and is_ul.any():
+                flux_ul = getattr(self, sed_type + "_ul").quantity
+                y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
+                y_errp.data[is_ul] = 0
+                flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
+                kwargs.setdefault("uplims", is_ul)
 
         # set flux points plotting defaults
         if y_errp:
@@ -487,7 +489,6 @@ class FluxPoints(FluxMaps):
             y_errn = scale_plot_flux(y_errn, energy_power=energy_power).quantity
 
         kwargs.setdefault("yerr", (y_errn, y_errp))
-        kwargs.setdefault("uplims", is_ul)
 
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
