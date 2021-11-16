@@ -186,7 +186,7 @@ def test_parameters_s():
     assert_allclose(pars[0].scale, 10)
 
     assert pars_dict[0]["scale_method"] == "scale10"
-    assert "scale_method" not in pars_dict[1]
+    assert pars_dict[1]["scale_method"] is None
     pars = Parameters.from_dict(pars_dict)
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)

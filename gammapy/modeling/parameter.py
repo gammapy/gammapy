@@ -402,10 +402,9 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
-            "interp": self.interp
+            "interp": self.interp,
+            "scale_method": self.scale_method
         }
-        if self.scale_method is not None:
-            output["scale_method"] = self.scale_method
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
