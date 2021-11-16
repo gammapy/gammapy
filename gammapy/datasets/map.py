@@ -180,6 +180,8 @@ class MapDataset(Dataset):
         self.exposure = exposure
         self.background = background
         self._background_cached = None
+        self._background_parameters_cached = None
+
         self.mask_fit = mask_fit
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
@@ -410,17 +412,26 @@ class MapDataset(Dataset):
         """
         background = self.background
         if self.background_model and background:
-            values = self.background_model.evaluate_geom(geom=self.background.geom)
-            if self._background_cached is None:
-                self._background_cached = background * values
-            else:
-                self._background_cached.data = background.data * values.value
-                self._background_cached.unit = background.unit
+            if self._background_parameters_changed:
+                values = self.background_model.evaluate_geom(geom=self.background.geom)
+                if self._background_cached is None:
+                    self._background_cached = background * values
+                else:
+                    self._background_cached.data = background.data * values.value
+                    self._background_cached.unit = background.unit
             return self._background_cached
         else:
             return background
 
         return background
+
+    def _background_parameters_changed(self):
+        values = self.background_model.parameters.value
+        # TODO: possibly allow for a tolerance here?
+        changed = ~np.all(self._background_parameters_cached == values)
+        if changed:
+            self._background_parameters_cached = values
+        return changed
 
     def npred_signal(self, model_name=None):
         """ "Model predicted signal counts.
