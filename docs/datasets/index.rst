@@ -174,7 +174,7 @@ Here, :math:`k` denotes a bin in reconstructed energy,
      -
 
 For the model evaluation, an important factor that needs to be accounted for is
-that the energy threshold changes between obseravtions.
+that the energy threshold changes between observations.
 With the above implementation using a `~gammapy.irf.EDispersionMap`,
 the `npred` is conserved,
 ie, the predicted number of counts on the stacked
@@ -202,7 +202,7 @@ Joint Analysis
 An alternative to stacking datasets is a joint fit across all the datasets.
 For a definition, see :ref:`glossary`.
 
-The totat fit statistic of datasets is the sum of the
+The total fit statistic of datasets is the sum of the
 fit statistic of each dataset. Note that this is **not** equal to the
 stacked fit statistic.
 
