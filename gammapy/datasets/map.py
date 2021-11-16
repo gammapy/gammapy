@@ -414,7 +414,7 @@ class MapDataset(Dataset):
             if self._background_cached is None:
                 self._background_cached = background * values
             else:
-                self._background_cached.data = background.data * values.data
+                self._background_cached.data = background.data * values.value
                 self._background_cached.unit = background.unit
             return self._background_cached
         else:
