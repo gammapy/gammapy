@@ -203,7 +203,7 @@ class Analysis:
 
         log.info("Fitting datasets.") 
         result = self.fit.run(datasets=self.datasets)
-        self.fit_result = result["optimize_result"]
+        self.fit_result = result
         log.info(self.fit_result)
 
     def get_flux_points(self):

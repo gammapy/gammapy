@@ -9,8 +9,8 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.nddata import block_reduce
 from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord, PointPixelRegion
-from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -110,7 +110,7 @@ class WcsNDMap(WcsMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            if "mask" in hdu.name.lower():
+            if any(x in hdu.name.lower() for x in ["mask", "is_ul", "success"]):
                 data = hdu.data.astype(bool)
             else:
                 data = hdu.data
@@ -518,6 +518,8 @@ class WcsNDMap(WcsMap):
             data = self.interp_by_coord(coords=coords, method=method)
             if weights is not None:
                 data *= weights.interp_by_coord(coords=coords, method=method)
+            # Casting needed as interp_by_coord transforms boolean
+            data = data.astype(self.data.dtype)
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
 

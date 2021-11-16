@@ -259,6 +259,7 @@ class TestFermi4FGLObject:
             "flux_ul",
             "ts",
             "sqrt_ts",
+            "is_ul"
         ]
         axis = lc.geom.axes["time"]
         expected = Time(54682.6552835, format="mjd", scale="utc")
@@ -421,6 +422,7 @@ class TestFermi3FGLObject:
             "flux_errp",
             "flux_errn",
             "flux_ul",
+            "is_ul"
         ]
 
         expected = Time(54680.02313657408, format="mjd", scale="utc")

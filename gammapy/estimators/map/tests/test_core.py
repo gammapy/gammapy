@@ -7,68 +7,104 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from gammapy.data import GTI
 from gammapy.maps import MapAxis, WcsNDMap, RegionGeom, Maps
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel, LogParabolaSpectralModel
+from gammapy.modeling.models import (
+    SkyModel,
+    PowerLawSpectralModel,
+    PointSpatialModel,
+    LogParabolaSpectralModel,
+)
 from gammapy.estimators import FluxMaps
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 
 @pytest.fixture(scope="session")
 def reference_model():
-    return SkyModel(spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2))
+    return SkyModel(
+        spatial_model=PointSpatialModel(), spectral_model=PowerLawSpectralModel(index=2)
+    )
 
 
 @pytest.fixture(scope="session")
 def logpar_reference_model():
-    logpar = LogParabolaSpectralModel(amplitude="2e-12 cm-2s-1TeV-1", alpha=1.5, beta=0.5)
+    logpar = LogParabolaSpectralModel(
+        amplitude="2e-12 cm-2s-1TeV-1", alpha=1.5, beta=0.5
+    )
     return SkyModel(spatial_model=PointSpatialModel(), spectral_model=logpar)
 
 
 @pytest.fixture(scope="session")
 def wcs_flux_map():
-    energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit='TeV')
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
 
     map_dict = {}
 
-    map_dict["norm"]= WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["norm"].data += 1.0
 
-    map_dict["norm_err"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm_err"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["norm_err"].data += 0.1
 
-    map_dict["norm_errp"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm_errp"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["norm_errp"].data += 0.2
 
-    map_dict["norm_errn"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm_errn"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["norm_errn"].data += 0.2
 
-    map_dict["norm_ul"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm_ul"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["norm_ul"].data += 2.0
 
     # Add another map
-    map_dict["sqrt_ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["sqrt_ts"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["sqrt_ts"].data += 1.0
 
     # Add another map
-    map_dict["ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["ts"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["ts"].data[1] += 3.0
+
+    # Add another map
+    map_dict["success"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit="", dtype=np.dtype(bool)
+    )
+    map_dict["success"].data = True
+    map_dict["success"].data[0, 0, 1] = False
 
     return map_dict
 
 
 @pytest.fixture(scope="session")
 def partial_wcs_flux_map():
-    energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit='TeV')
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
 
     map_dict = {}
 
-    map_dict["norm"]= WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["norm"].data += 1.0
 
-    map_dict["norm_err"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["norm_err"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["norm_err"].data += 0.1
 
     # Add another map
-    map_dict["sqrt_ts"] = WcsNDMap.create(npix=10, frame='galactic', axes=[energy_axis], unit='')
+    map_dict["sqrt_ts"] = WcsNDMap.create(
+        npix=10, frame="galactic", axes=[energy_axis], unit=""
+    )
     map_dict["sqrt_ts"].data += 1.0
 
     return map_dict
@@ -77,13 +113,10 @@ def partial_wcs_flux_map():
 @pytest.fixture(scope="session")
 def region_map_flux_estimate():
     axis = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
-    geom = RegionGeom.create(
-        "galactic;circle(0, 0, 0.1)", axes=[axis]
-    )
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.1)", axes=[axis])
 
     maps = Maps.from_geom(
-        geom=geom,
-        names=["norm", "norm_err", "norm_errn", "norm_errp", "norm_ul"]
+        geom=geom, names=["norm", "norm_err", "norm_errn", "norm_errp", "norm_ul"]
     )
 
     maps["norm"].data = np.array([1.0, 1.0])
@@ -168,12 +201,8 @@ def test_map_properties(map_flux_estimate):
 
     assert fe.eflux.unit == u.Unit("TeV cm-2s-1")
     assert_allclose(fe.eflux.quantity.value[:, 2, 2], [2.302585e-10, 2.302585e-10])
-    assert_allclose(
-        fe.eflux_err.quantity.value[:, 2, 2], [2.302585e-11, 2.302585e-11]
-    )
-    assert_allclose(
-        fe.eflux_errn.quantity.value[:, 2, 2], [4.60517e-11, 4.60517e-11]
-    )
+    assert_allclose(fe.eflux_err.quantity.value[:, 2, 2], [2.302585e-11, 2.302585e-11])
+    assert_allclose(fe.eflux_errn.quantity.value[:, 2, 2], [4.60517e-11, 4.60517e-11])
     assert_allclose(
         fe.eflux_errp.quantity.value[:, 2, 2], [3.4538775e-11, 3.4538775e-11]
     )
@@ -183,24 +212,24 @@ def test_map_properties(map_flux_estimate):
 def test_flux_map_properties(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
 
-    assert_allclose(fluxmap.dnde.data[:,0,0],[1e-11, 1e-13])
-    assert_allclose(fluxmap.dnde_err.data[:,0,0],[1e-12, 1e-14])
-    assert_allclose(fluxmap.dnde_err.data[:,0,0],[1e-12, 1e-14])
-    assert_allclose(fluxmap.dnde_errn.data[:,0,0],[2e-12, 2e-14])
-    assert_allclose(fluxmap.dnde_errp.data[:,0,0],[2e-12, 2e-14])
-    assert_allclose(fluxmap.dnde_ul.data[:,0,0],[2e-11, 2e-13])
+    assert_allclose(fluxmap.dnde.data[:, 0, 0], [1e-11, 1e-13])
+    assert_allclose(fluxmap.dnde_err.data[:, 0, 0], [1e-12, 1e-14])
+    assert_allclose(fluxmap.dnde_err.data[:, 0, 0], [1e-12, 1e-14])
+    assert_allclose(fluxmap.dnde_errn.data[:, 0, 0], [2e-12, 2e-14])
+    assert_allclose(fluxmap.dnde_errp.data[:, 0, 0], [2e-12, 2e-14])
+    assert_allclose(fluxmap.dnde_ul.data[:, 0, 0], [2e-11, 2e-13])
 
-    assert_allclose(fluxmap.flux.data[:,0,0],[9e-12, 9e-13])
-    assert_allclose(fluxmap.flux_err.data[:,0,0],[9e-13, 9e-14])
-    assert_allclose(fluxmap.flux_errn.data[:,0,0],[18e-13, 18e-14])
-    assert_allclose(fluxmap.flux_errp.data[:,0,0],[18e-13, 18e-14])
-    assert_allclose(fluxmap.flux_ul.data[:,0,0],[18e-12, 18e-13])
+    assert_allclose(fluxmap.flux.data[:, 0, 0], [9e-12, 9e-13])
+    assert_allclose(fluxmap.flux_err.data[:, 0, 0], [9e-13, 9e-14])
+    assert_allclose(fluxmap.flux_errn.data[:, 0, 0], [18e-13, 18e-14])
+    assert_allclose(fluxmap.flux_errp.data[:, 0, 0], [18e-13, 18e-14])
+    assert_allclose(fluxmap.flux_ul.data[:, 0, 0], [18e-12, 18e-13])
 
-    assert_allclose(fluxmap.eflux.data[:,0,0],[2.302585e-12, 2.302585e-12])
-    assert_allclose(fluxmap.eflux_err.data[:,0,0],[2.302585e-13, 2.302585e-13])
-    assert_allclose(fluxmap.eflux_errp.data[:,0,0],[4.60517e-13, 4.60517e-13])
-    assert_allclose(fluxmap.eflux_errn.data[:,0,0],[4.60517e-13, 4.60517e-13])
-    assert_allclose(fluxmap.eflux_ul.data[:,0,0],[4.60517e-12, 4.60517e-12])
+    assert_allclose(fluxmap.eflux.data[:, 0, 0], [2.302585e-12, 2.302585e-12])
+    assert_allclose(fluxmap.eflux_err.data[:, 0, 0], [2.302585e-13, 2.302585e-13])
+    assert_allclose(fluxmap.eflux_errp.data[:, 0, 0], [4.60517e-13, 4.60517e-13])
+    assert_allclose(fluxmap.eflux_errn.data[:, 0, 0], [4.60517e-13, 4.60517e-13])
+    assert_allclose(fluxmap.eflux_ul.data[:, 0, 0], [4.60517e-12, 4.60517e-12])
 
     assert_allclose(fluxmap.e2dnde.data[:, 0, 0], [1e-12, 1e-12])
     assert_allclose(fluxmap.e2dnde_err.data[:, 0, 0], [1e-13, 1e-13])
@@ -209,7 +238,23 @@ def test_flux_map_properties(wcs_flux_map, reference_model):
     assert_allclose(fluxmap.e2dnde_ul.data[:, 0, 0], [2e-12, 2e-12])
 
     assert_allclose(fluxmap.sqrt_ts.data, 1)
-    assert_allclose(fluxmap.ts.data[:,0,0], [0, 3])
+    assert_allclose(fluxmap.ts.data[:, 0, 0], [0, 3])
+
+    assert_allclose(fluxmap.success.data[:, 0, 1], [False, True])
+    assert_allclose(fluxmap.flux.data[:, 0, 1], [np.nan, 9e-13])
+    assert_allclose(fluxmap.flux_err.data[:, 0, 1], [np.nan, 9e-14])
+
+    assert_allclose(fluxmap.eflux.data[:, 0, 1], [np.nan, 2.30258509e-12])
+    assert_allclose(fluxmap.e2dnde_err.data[:, 0, 1], [np.nan, 1e-13])
+
+
+def test_flux_map_failed_properties(wcs_flux_map, reference_model):
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
+    fluxmap.filter_success_nan = False
+
+    assert_allclose(fluxmap.success.data[:, 0, 1], [False, True])
+    assert_allclose(fluxmap.flux.data[:, 0, 1], [9.e-12, 9e-13])
+    assert fluxmap.filter_success_nan is False
 
 
 def test_flux_map_str(wcs_flux_map, reference_model):
@@ -230,33 +275,39 @@ def test_flux_map_str(wcs_flux_map, reference_model):
 def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed_type):
     fluxmap = FluxMaps(wcs_flux_map, logpar_reference_model)
 
-    fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
+    fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type, overwrite=True)
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
-    assert_allclose(new_fluxmap.norm.data[:,0,0], [1, 1])
-    assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
-    assert_allclose(new_fluxmap.norm_errn.data[:,0,0], [0.2, 0.2])
-    assert_allclose(new_fluxmap.norm_ul.data[:,0,0], [2, 2])
+    assert_allclose(new_fluxmap.norm.data[:, 0, 0], [1, 1])
+    assert_allclose(new_fluxmap.norm_err.data[:, 0, 0], [0.1, 0.1])
+    assert_allclose(new_fluxmap.norm_errn.data[:, 0, 0], [0.2, 0.2])
+    assert_allclose(new_fluxmap.norm_ul.data[:, 0, 0], [2, 2])
 
     # check model
-    assert new_fluxmap.reference_model.spectral_model.tag[0] == "LogParabolaSpectralModel"
+    assert (
+        new_fluxmap.reference_model.spectral_model.tag[0] == "LogParabolaSpectralModel"
+    )
     assert new_fluxmap.reference_model.spectral_model.alpha.value == 1.5
     assert new_fluxmap.reference_model.spectral_model.beta.value == 0.5
     assert new_fluxmap.reference_model.spectral_model.amplitude.value == 2e-12
 
     # check existence and content of additional map
     assert_allclose(new_fluxmap.sqrt_ts.data, 1.0)
+    assert_allclose(new_fluxmap.success.data[:, 0, 1], [False, True])
+    assert_allclose(new_fluxmap.is_ul.data, True)
 
 
 @pytest.mark.parametrize("sed_type", ["likelihood", "dnde", "flux", "eflux", "e2dnde"])
-def test_partial_flux_map_read_write(tmp_path, partial_wcs_flux_map, reference_model, sed_type):
+def test_partial_flux_map_read_write(
+    tmp_path, partial_wcs_flux_map, reference_model, sed_type
+):
     fluxmap = FluxMaps(partial_wcs_flux_map, reference_model)
 
-    fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type)
+    fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type, overwrite=True)
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
-    assert_allclose(new_fluxmap.norm.data[:,0,0], [1, 1])
-    assert_allclose(new_fluxmap.norm_err.data[:,0,0], [0.1, 0.1])
+    assert_allclose(new_fluxmap.norm.data[:, 0, 0], [1, 1])
+    assert_allclose(new_fluxmap.norm_err.data[:, 0, 0], [0.1, 0.1])
 
     # check model
     assert new_fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
@@ -277,7 +328,7 @@ def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model
 
     fluxmap = FluxMaps(partial_wcs_flux_map, reference_model, gti=gti)
 
-    fluxmap.write(tmp_path / "tmp.fits", sed_type='dnde')
+    fluxmap.write(tmp_path / "tmp.fits", sed_type="dnde")
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert len(new_fluxmap.gti.table) == 2
@@ -292,11 +343,15 @@ def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert new_fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
-    assert caplog.records[-1].levelname == "WARNING"
-    assert f"No reference model set for FluxMaps." in caplog.records[-1].message
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert f"No reference model set for FluxMaps." in [
+        _.message for _ in caplog.records
+    ]
 
 
-def test_flux_map_read_write_missing_reference_model(tmp_path, wcs_flux_map, reference_model):
+def test_flux_map_read_write_missing_reference_model(
+    tmp_path, wcs_flux_map, reference_model
+):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
     fluxmap.write(tmp_path / "tmp.fits")
 
@@ -315,22 +370,23 @@ def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
     assert fluxmap.reference_model.spatial_model.tag[0] == "PointSpatialModel"
     assert fluxmap.reference_model.spectral_model.index.value == 2
 
-    assert caplog.records[-1].levelname == "WARNING"
-    assert f"No reference model set for FluxMaps." in caplog.records[-1].message
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert f"No reference model set for FluxMaps." in [
+        _.message for _ in caplog.records
+    ]
 
 
 @requires_dependency("matplotlib")
 def test_get_flux_point(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
-
-    coord = SkyCoord(0., 0., unit="deg", frame="galactic")
+    coord = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     fp = fluxmap.get_flux_points(coord)
     table = fp.to_table()
 
     assert_allclose(table["e_min"], [0.1, 1.0])
-    assert_allclose(table["norm"], [1, 1] )
-    assert_allclose(table["norm_err"], [0.1, 0.1] )
-    assert_allclose(table["norm_errn"], [0.2, 0.2] )
+    assert_allclose(table["norm"], [1, 1])
+    assert_allclose(table["norm_err"], [0.1, 0.1])
+    assert_allclose(table["norm_errn"], [0.2, 0.2])
     assert_allclose(table["norm_errp"], [0.2, 0.2])
     assert_allclose(table["norm_ul"], [2, 2])
     assert_allclose(table["sqrt_ts"], [1, 1])
@@ -349,15 +405,14 @@ def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     other_data.pop("norm_errp")
     fluxmap = FluxMaps(other_data, reference_model)
 
-    coord = SkyCoord(0., 0., unit="deg", frame="galactic")
+    coord = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     table = fluxmap.get_flux_points(coord).to_table()
-
     assert_allclose(table["e_min"], [0.1, 1.0])
     assert_allclose(table["norm"], [1, 1])
     assert_allclose(table["norm_err"], [0.1, 0.1])
     assert_allclose(table["norm_ul"], [2, 2])
     assert "norm_errn" not in table.columns
-
+    assert table["success"].data.dtype == np.dtype(np.bool)
 
 def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
     ref_map = FluxMaps(wcs_flux_map, reference_model)
@@ -369,8 +424,7 @@ def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
 
     flux_map = FluxMaps.from_maps(map_dict, "eflux", reference_model)
 
-    assert_allclose(flux_map.norm.data, 1)
+    assert_allclose(flux_map.norm.data[:, 0, 0], 1.0)
     assert flux_map.norm.unit == ""
-    assert_allclose(flux_map.norm_err.data, 0.1)
+    assert_allclose(flux_map.norm_err.data[:, 0, 0], 0.1)
     assert flux_map.norm_err.unit == ""
-

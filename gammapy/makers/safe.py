@@ -302,5 +302,5 @@ class SafeMaskMaker(Maker):
         if "bkg-peak" in self.methods:
             mask_safe &= self.make_mask_energy_bkg_peak(dataset)
 
-        dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
+        dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe, dtype=bool)
         return dataset

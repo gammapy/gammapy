@@ -49,11 +49,11 @@ def test_cash_errors(n_on, mu_bkg, result):
 
 
 values = [
-    (1, 2, [5.869898]),
+    (1, 2, [5.517193]),
     (5, 1, [13.98959]),
     (10, 5, [17.696064]),
     (100, 23, [110.07206]),
-    (1, 20, [4.711538]),
+    (1, 20, [-12.482807]),
     (5 * ref_array, 1 * ref_array, [13.98959]),
 ]
 
@@ -72,6 +72,7 @@ values = [
     pytest.param(1, -2, np.nan, marks=pytest.mark.xfail),
     ([1, 2], 5, [8.327276, 10.550546]),
 ]
+
 
 @pytest.mark.parametrize(("mu_bkg", "significance", "result"), values)
 def test_cash_excess_matching_significance(mu_bkg, significance, result):
@@ -151,11 +152,11 @@ def test_wstat_errors(n_on, n_off, alpha, result):
 
 
 values = [
-    (1, 2, 1, [6.272627]),
+    (1, 2, 1, [6.075534]),
     (5, 1, 1, [14.222831]),
     (10, 5, 0.3, [21.309229]),
     (10, 23, 0.1, [20.45803]),
-    (1, 20, 1.0, [4.884418]),
+    (1, 20, 1.0, [-7.078228]),
     (5 * ref_array, 1 * ref_array, 1 * ref_array, [14.222831]),
 ]
 

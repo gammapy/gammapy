@@ -8,8 +8,11 @@ from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
     ConstantTemporalModel,
+    LinearTemporalModel,
     ExpDecayTemporalModel,
     GaussianTemporalModel,
+    PowerLawTemporalModel,
+    SineTemporalModel,
     LightCurveTemplateTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
@@ -75,8 +78,8 @@ def test_time_sampling(tmp_path):
     sampler = temporal_model.sample_time(
         n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
     )
-
     sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
+
     assert len(sampler) == 2
     assert_allclose(sampler.value, [12661.65802564, 7826.92991], rtol=1e-5)
 
@@ -93,6 +96,26 @@ def test_time_sampling(tmp_path):
 
     assert len(sampler_uniform) == 2
     assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
+
+    temporal_model = ConstantTemporalModel()
+    sampler_costant = temporal_model.sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0
+    )
+    sampler_costant = u.Quantity((sampler_costant - Time(t_ref)).sec, "s")
+
+    assert len(sampler_costant) == 2
+    assert_allclose(sampler_costant.value, [4330.10377559, 3334.04566256], rtol=1e-5)
+
+    temporal_model = ExpDecayTemporalModel(t_ref=Time(t_ref).mjd * u.d)
+    sampler_expo = temporal_model.sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0
+    )
+    sampler_expo = u.Quantity((sampler_expo.mjd - Time(t_ref).mjd), "d")
+
+    assert sampler_expo.unit == u.d
+    assert_allclose(
+        sampler_expo.to("s").value, [11824.1055276, 7273.04658336], rtol=1e-8
+    )
 
 
 def test_lightcurve_temporal_model_integral():
@@ -112,23 +135,6 @@ def test_lightcurve_temporal_model_integral():
     assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
 
-def test_constant_temporal_model_sample():
-    temporal_model = ConstantTemporalModel()
-
-    t_ref = "2010-01-01T00:00:00"
-    t_min = "2010-01-01T00:00:00"
-    t_max = "2010-01-01T08:00:00"
-
-    sampler = temporal_model.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0
-    )
-
-    sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
-
-    assert len(sampler) == 2
-    assert_allclose(sampler.value, [15805.82891311, 20597.45375153], rtol=1e-5)
-
-
 def test_constant_temporal_model_evaluate():
     temporal_model = ConstantTemporalModel()
     t = Time(46300, format="mjd")
@@ -144,6 +150,27 @@ def test_constant_temporal_model_integral():
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.0, rtol=1e-5)
+
+
+def test_linear_temporal_model_evaluate():
+    t = Time(46301, format="mjd")
+    t_ref = 46300 * u.d
+    temporal_model = LinearTemporalModel(alpha=1.0, beta=0.1 / u.day, t_ref=t_ref)
+    val = temporal_model(t)
+    assert_allclose(val, 1.1, rtol=1e-5)
+
+
+def test_linear_temporal_model_integral():
+    t_ref = Time(55555, format="mjd")
+    temporal_model = LinearTemporalModel(
+        alpha=1.0, beta=0.1 / u.day, t_ref=t_ref.mjd * u.d
+    )
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 1.345, rtol=1e-5)
 
 
 def test_exponential_temporal_model_evaluate():
@@ -187,6 +214,56 @@ def test_gaussian_temporal_model_integral():
     assert_allclose(np.sum(val), 0.682679, rtol=1e-5)
 
 
+def test_powerlaw_temporal_model_evaluate():
+    t = Time(46302, format="mjd")
+    t_ref = 46300 * u.d
+    alpha = -2.0
+    temporal_model = PowerLawTemporalModel(t_ref=t_ref, alpha=alpha)
+    val = temporal_model(t)
+    assert_allclose(val, 0.25, rtol=1e-5)
+
+
+def test_powerlaw_temporal_model_integral():
+    t_ref = Time(55555, format="mjd")
+    temporal_model = PowerLawTemporalModel(alpha=-2.0, t_ref=t_ref.mjd * u.d)
+    start = 1 * u.day
+    stop = 4 * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 1
+    assert_allclose(np.sum(val), 0.25, rtol=1e-5)
+
+    temporal_model.parameters["alpha"].value = -1
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    print(np.sum(val))
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 0.411847, rtol=1e-5)
+
+
+def test_sine_temporal_model_evaluate():
+    t = Time(46302, format="mjd")
+    t_ref = 46300 * u.d
+    omega = np.pi / 4.0 * u.rad / u.day
+    temporal_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=t_ref)
+    val = temporal_model(t)
+    assert_allclose(val, 1.5, rtol=1e-5)
+
+
+def test_sine_temporal_model_integral():
+    t_ref = Time(55555, format="mjd")
+    omega = np.pi / 4.0 * u.rad / u.day
+    temporal_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=t_ref.mjd * u.d)
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 1.08261, rtol=1e-5)
+
+
 @requires_data()
 def test_to_dict(light_curve):
 
@@ -217,3 +294,4 @@ def test_plot_constant_model():
     constant_model = ConstantTemporalModel(const=1)
     with mpl_plot_check():
         constant_model.plot(time_range)
+

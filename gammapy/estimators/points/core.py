@@ -2,27 +2,22 @@
 import logging
 import numpy as np
 from scipy import stats
-from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
-from gammapy.datasets import Datasets
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
-from gammapy.modeling import Fit
 from gammapy.maps import RegionNDMap, Maps, TimeMapAxis, MapAxis
 from gammapy.maps.axes import flat_if_equal
 from gammapy.utils.scripts import make_path
-from gammapy.utils.pbar import progress_bar
-from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
-from .flux_map import (
+from gammapy.utils.table import table_standardise_units_copy
+from ..map.core import (
     FluxMaps,
     DEFAULT_UNIT,
 )
-from. flux import FluxEstimator
 
 
-__all__ = ["FluxPoints", "FluxPointsEstimator"]
+__all__ = ["FluxPoints"]
 
 log = logging.getLogger(__name__)
 
@@ -114,7 +109,9 @@ class FluxPoints(FluxMaps):
     """
 
     @classmethod
-    def read(cls, filename, sed_type=None, format="gadf-sed", reference_model=None, **kwargs):
+    def read(
+        cls, filename, sed_type=None, format="gadf-sed", reference_model=None, **kwargs
+    ):
         """Read flux points.
 
         Parameters
@@ -147,7 +144,7 @@ class FluxPoints(FluxMaps):
             table=table,
             sed_type=sed_type,
             reference_model=reference_model,
-            format=format
+            format=format,
         )
 
     def write(self, filename, sed_type="likelihood", format="gadf-sed", **kwargs):
@@ -188,7 +185,9 @@ class FluxPoints(FluxMaps):
         return table
 
     @classmethod
-    def from_table(cls, table, sed_type=None, format="gadf-sed", reference_model=None, gti=None):
+    def from_table(
+        cls, table, sed_type=None, format="gadf-sed", reference_model=None, gti=None
+    ):
         """Create flux points from table
 
         Parameters
@@ -227,7 +226,7 @@ class FluxPoints(FluxMaps):
             if reference_model is None:
                 reference_model = TemplateSpectralModel(
                     energy=flat_if_equal(table["e_ref"].quantity),
-                    values=flat_if_equal(table["ref_dnde"].quantity)
+                    values=flat_if_equal(table["ref_dnde"].quantity),
                 )
 
         maps = Maps()
@@ -245,7 +244,7 @@ class FluxPoints(FluxMaps):
             reference_model=reference_model,
             meta=meta,
             sed_type=sed_type,
-            gti=gti
+            gti=gti,
         )
 
     @staticmethod
@@ -323,7 +322,9 @@ class FluxPoints(FluxMaps):
             table.meta["SED_TYPE"] = sed_type
 
             if self.n_sigma_ul:
-                table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(self.n_sigma_ul), 7)
+                table.meta["UL_CONF"] = np.round(
+                    1 - 2 * stats.norm.sf(self.n_sigma_ul), 7
+                )
 
             if sed_type == "likelihood":
                 table["ref_dnde"] = self.dnde_ref[idx]
@@ -341,9 +342,7 @@ class FluxPoints(FluxMaps):
                 table["stat"] = self.stat.data[idx]
                 table["stat_scan"] = self.stat_scan.data[idx]
 
-            # TODO: check whether this is reasonable behaviour
-            if "is_ul" not in self._data:
-                table.remove_column("is_ul")
+            table["is_ul"] = self.is_ul.data[idx]
                 
         elif format == "lightcurve":
             time_axis = self.geom.axes["time"]
@@ -385,6 +384,26 @@ class FluxPoints(FluxMaps):
                 data = getattr(self, quantity, None)
                 if data:
                     table[quantity] = data.quantity.squeeze()
+        elif format == "profile":
+            x_axis = self.geom.axes["projected-distance"]
+
+            tables = []
+            for idx, (x_min, x_max) in enumerate(x_axis.iter_by_edges):
+                table_flat = Table()
+                table_flat["x_min"] = [x_min]
+                table_flat["x_max"] = [x_max]
+                table_flat["x_ref"] = [(x_max + x_min) / 2]
+
+                fp = self.slice_by_idx(slices={"projected-distance": idx})
+                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
+
+                for column in table.columns:
+                    table_flat[column] = table[column][np.newaxis]
+
+                tables.append(table_flat)
+
+            table = vstack(tables)
+
         else:
             raise ValueError(f"Not a supported format {format}")
 
@@ -419,9 +438,7 @@ class FluxPoints(FluxMaps):
 
         return y_errn, y_errp
 
-    def plot(
-        self, ax=None, sed_type="dnde", energy_power=0, **kwargs
-    ):
+    def plot(self, ax=None, sed_type="dnde", energy_power=0, **kwargs):
         """Plot flux points.
 
         Parameters
@@ -512,7 +529,9 @@ class FluxPoints(FluxMaps):
             raise ValueError("Plotting only supported for region based flux points")
 
         if not self.geom.axes.is_unidimensional:
-            raise ValueError("Profile plotting is only supported for unidimensional maps")
+            raise ValueError(
+                "Profile plotting is only supported for unidimensional maps"
+            )
 
         axis = self.geom.axes.primary_axis
 
@@ -532,7 +551,7 @@ class FluxPoints(FluxMaps):
             norm_max * flux_ref.value.max(),
             nbin=500,
             interp=axis.interp,
-            unit=flux_ref.unit
+            unit=flux_ref.unit,
         )
 
         norm = flux.center / flux_ref.reshape((-1, 1))
@@ -554,9 +573,7 @@ class FluxPoints(FluxMaps):
         z[-z < kwargs["vmin"]] = np.nan
 
         with quantity_support():
-            caxes = ax.pcolormesh(
-                axis.as_plot_edges, flux.edges, -z.T, **kwargs
-            )
+            caxes = ax.pcolormesh(axis.as_plot_edges, flux.edges, -z.T, **kwargs)
 
         axis.format_plot_xaxis(ax=ax)
 
@@ -568,130 +585,3 @@ class FluxPoints(FluxMaps):
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
-
-
-class FluxPointsEstimator(FluxEstimator):
-    """Flux points estimator.
-
-    Estimates flux points for a given list of datasets, energies and spectral model.
-
-    To estimate the flux point the amplitude of the reference spectral model is
-    fitted within the energy range defined by the energy group. This is done for
-    each group independently. The amplitude is re-normalized using the "norm" parameter,
-    which specifies the deviation of the flux from the reference model in this
-    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
-    for details.
-
-    The method is also described in the Fermi-LAT catalog paper
-    https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
-    or the HESS Galactic Plane Survey paper
-    https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
-
-    Parameters
-    ----------
-    energy_edges : `~astropy.units.Quantity`
-        Energy edges of the flux point bins.
-    source : str or int
-        For which source in the model to compute the flux points.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
-    n_sigma : int
-        Number of sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
-        Number of sigma to use for upper limit computation. Default is 2.
-    selection_optional : list of str
-        Which additional quantities to estimate. Available options are:
-
-            * "all": all the optional steps are executed
-            * "errn-errp": estimate asymmetric errors on flux.
-            * "ul": estimate upper limits.
-            * "scan": estimate fit statistic profiles.
-
-        Default is None so the optionnal steps are not executed.
-    fit : `Fit`
-        Fit instance specifying the backend and fit options.
-    reoptimize : bool
-        Re-optimize other free model parameters. Default is True.
-    """
-    tag = "FluxPointsEstimator"
-
-    def __init__(
-        self,
-        energy_edges=[1, 10] * u.TeV,
-        **kwargs
-    ):
-        self.energy_edges = energy_edges
-
-        fit = Fit(confidence_opts={"backend": "scipy"})
-        kwargs.setdefault("fit", fit)
-        super().__init__(**kwargs)
-
-    def run(self, datasets):
-        """Run the flux point estimator for all energy groups.
-
-        Parameters
-        ----------
-        datasets : list of `~gammapy.datasets.Dataset`
-            Datasets
-
-        Returns
-        -------
-        flux_points : `FluxPoints`
-            Estimated flux points.
-        """
-        # TODO: remove copy here...
-        datasets = Datasets(datasets).copy()
-
-        rows = []
-
-        for energy_min, energy_max in progress_bar(
-            zip(self.energy_edges[:-1], self.energy_edges[1:]),
-            desc="Energy bins"
-        ):
-            row = self.estimate_flux_point(
-                datasets, energy_min=energy_min, energy_max=energy_max,
-            )
-            rows.append(row)
-
-        meta = {
-            "n_sigma": self.n_sigma,
-            "n_sigma_ul": self.n_sigma_ul,
-            "sed_type_init": "likelihood"
-        }
-
-        table = table_from_row_data(rows=rows, meta=meta)
-        model = datasets.models[self.source]
-        return FluxPoints.from_table(
-            table=table,
-            reference_model=model.copy(),
-            gti=datasets.gti,
-            format="gadf-sed"
-        )
-
-    def estimate_flux_point(self, datasets, energy_min, energy_max):
-        """Estimate flux point for a single energy group.
-
-        Parameters
-        ----------
-        datasets : `Datasets`
-            Datasets
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for.
-
-        Returns
-        -------
-        result : dict
-            Dict with results for the flux point.
-        """
-        datasets_sliced = datasets.slice_by_energy(
-            energy_min=energy_min, energy_max=energy_max
-        )
-
-        datasets_sliced.models = datasets.models.copy()
-        return super().run(datasets=datasets_sliced)

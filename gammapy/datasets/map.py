@@ -1,22 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import inspect
-from functools import lru_cache
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import lazyproperty
-from astropy.coordinates.angle_utilities import angular_separation
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
-    TemplateNPredModel,
     DatasetModels,
     FoVBackgroundModel,
-    PointSpatialModel,
 )
 from gammapy.stats import (
     CashCountsStatistic,
@@ -32,12 +26,13 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
 from .utils import get_axes
+from .evaluator import MapEvaluator
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
 
 log = logging.getLogger(__name__)
 
-CUTOUT_MARGIN = 0.1 * u.deg
+
 RAD_MAX = 0.66
 RAD_AXIS_DEFAULT = MapAxis.from_bounds(
     0, RAD_MAX, nbin=66, node_type="edges", name="rad", unit="deg"
@@ -50,11 +45,14 @@ BINSZ_IRF_DEFAULT = 0.2
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
-PSF_CONTAINMENT = 0.999
 
 
 def create_map_dataset_geoms(
-    geom, energy_axis_true=None, migra_axis=None, rad_axis=None, binsz_irf=None,
+    geom,
+    energy_axis_true=None,
+    migra_axis=None,
+    rad_axis=None,
+    binsz_irf=None,
 ):
     """Create map geometries for a `MapDataset`
 
@@ -418,7 +416,7 @@ class MapDataset(Dataset):
         return background
 
     def npred_signal(self, model_name=None):
-        """"Model predicted signal counts.
+        """ "Model predicted signal counts.
 
         If a model is passed, predicted counts from that component is returned.
         Else, the total signal counts are returned.
@@ -426,7 +424,7 @@ class MapDataset(Dataset):
         Parameters
         -------------
         model_name: str
-        Name of  SkyModel for which to compute the npred for.
+            Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
 
@@ -437,13 +435,18 @@ class MapDataset(Dataset):
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
 
+        evaluators = self.evaluators
         if model_name is not None:
-            return self.evaluators[model_name].compute_npred()
+            evaluators = {model_name: self.evaluators[model_name]}
 
-        for evaluator in self.evaluators.values():
+        for evaluator in evaluators.values():
             if evaluator.needs_update:
                 evaluator.update(
-                    self.exposure, self.psf, self.edisp, self._geom, self.mask_image,
+                    self.exposure,
+                    self.psf,
+                    self.edisp,
+                    self._geom,
+                    self.mask_image,
                 )
 
             if evaluator.contributes:
@@ -965,7 +968,7 @@ class MapDataset(Dataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred()
-        data = np.nan_to_num(npred.data, copy=True, nan=0., posinf=0., neginf=0.)
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = random_state.poisson(data)
         self.counts = npred
 
@@ -1195,17 +1198,17 @@ class MapDataset(Dataset):
         else:
             mask = slice(None)
 
-        counts = np.nan
+        counts = 0
         if self.counts:
             counts = self.counts.data[mask].sum()
 
-        info["counts"] = counts
+        info["counts"] = int(counts)
 
         background = np.nan
         if self.background:
             background = self.background.data[mask].sum()
 
-        info["background"] = background
+        info["background"] = float(background)
 
         info["excess"] = counts - background
         info["sqrt_ts"] = CashCountsStatistic(counts, background).sqrt_ts
@@ -1214,21 +1217,23 @@ class MapDataset(Dataset):
         if self.models or not np.isnan(background):
             npred = self.npred().data[mask].sum()
 
-        info["npred"] = npred
+        info["npred"] = float(npred)
 
         npred_background = np.nan
         if self.background:
             npred_background = self.npred_background().data[mask].sum()
 
-        info["npred_background"] = npred_background
+        info["npred_background"] = float(npred_background)
 
         npred_signal = np.nan
         if self.models:
             npred_signal = self.npred_signal().data[mask].sum()
 
-        info["npred_signal"] = npred_signal
+        info["npred_signal"] = float(npred_signal)
 
-        exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
+        exposure_min = np.nan * u.Unit("cm s")
+        exposure_max = np.nan * u.Unit("cm s")
+        livetime = np.nan * u.s
 
         if self.exposure is not None:
             mask_exposure = self.exposure.data > 0
@@ -1244,8 +1249,8 @@ class MapDataset(Dataset):
             exposure_max = np.max(self.exposure.quantity[mask_exposure])
             livetime = self.exposure.meta.get("livetime", np.nan * u.s).copy()
 
-        info["exposure_min"] = exposure_min
-        info["exposure_max"] = exposure_max
+        info["exposure_min"] = exposure_min.item()
+        info["exposure_max"] = exposure_max.item()
         info["livetime"] = livetime
 
         ontime = u.Quantity(np.nan, "s")
@@ -1262,20 +1267,20 @@ class MapDataset(Dataset):
         n_bins = 0
         if self.counts is not None:
             n_bins = self.counts.data.size
-        info["n_bins"] = n_bins
+        info["n_bins"] = int(n_bins)
 
         n_fit_bins = 0
         if self.mask is not None:
             n_fit_bins = np.sum(self.mask.data)
 
-        info["n_fit_bins"] = n_fit_bins
+        info["n_fit_bins"] = int(n_fit_bins)
         info["stat_type"] = self.stat_type
 
         stat_sum = np.nan
         if self.counts is not None and self.models is not None:
             stat_sum = self.stat_sum()
 
-        info["stat_sum"] = stat_sum
+        info["stat_sum"] = float(stat_sum)
 
         return info
 
@@ -1326,9 +1331,9 @@ class MapDataset(Dataset):
                 )
                 dataset.exposure.quantity *= containment.reshape(geom.data_shape)
 
-        kwargs = {}
+        kwargs = {"name": name}
 
-        for name in [
+        for key in [
             "counts",
             "edisp",
             "mask_safe",
@@ -1337,12 +1342,12 @@ class MapDataset(Dataset):
             "gti",
             "meta_table",
         ]:
-            kwargs[name] = getattr(dataset, name)
+            kwargs[key] = getattr(dataset, key)
 
         if self.stat_type == "cash":
             kwargs["background"] = dataset.background
 
-        return SpectrumDataset(**kwargs)
+        return  SpectrumDataset(**kwargs)
 
     def to_region_map_dataset(self, region, name=None):
         """Integrate the map dataset in a given region.
@@ -1493,7 +1498,7 @@ class MapDataset(Dataset):
         if self.edisp is not None:
             if axis_name is not None:
                 kwargs["edisp"] = self.edisp.downsample(
-                    factor=factor, axis_name=axis_name
+                    factor=factor, axis_name=axis_name, weights=self.mask_safe_edisp
                 )
             else:
                 kwargs["edisp"] = self.edisp.copy()
@@ -2012,7 +2017,7 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def to_map_dataset(self, name=None):
-        """ Convert a MapDatasetOnOff to  MapDataset
+        """Convert a MapDatasetOnOff to  MapDataset
         The background model template is taken as alpha*counts_off
 
         Parameters
@@ -2134,7 +2139,7 @@ class MapDatasetOnOff(MapDataset):
         """
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
-        data = np.nan_to_num(npred.data, copy=True, nan=0., posinf=0., neginf=0.)
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = random_state.poisson(data)
 
         npred_bkg = random_state.poisson(npred_background.data)
@@ -2142,7 +2147,9 @@ class MapDatasetOnOff(MapDataset):
         self.counts = npred + npred_bkg
 
         npred_off = npred_background / self.alpha
-        data_off = np.nan_to_num(npred_off.data, copy=True, nan=0., posinf=0., neginf=0.)
+        data_off = np.nan_to_num(
+            npred_off.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0
+        )
         npred_off.data = random_state.poisson(data_off)
         self.counts_off = npred_off
 
@@ -2279,33 +2286,35 @@ class MapDatasetOnOff(MapDataset):
         else:
             mask = slice(None)
 
-        counts_off = np.nan
+        counts_off = 0
         if self.counts_off is not None:
             counts_off = self.counts_off.data[mask].sum()
 
-        info["counts_off"] = counts_off
+        info["counts_off"] = int(counts_off)
 
         acceptance = 1
         if self.acceptance:
             # TODO: handle energy dependent a_on / a_off
             acceptance = self.acceptance.data[mask].sum()
 
-        info["acceptance"] = acceptance
+        info["acceptance"] = float(acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off:
             acceptance_off = acceptance * counts_off / info["background"]
 
-        info["acceptance_off"] = acceptance_off
+        info["acceptance_off"] = float(acceptance_off)
 
         alpha = np.nan
         if self.acceptance_off and self.acceptance:
             alpha = np.mean(self.alpha.data[mask])
 
-        info["alpha"] = alpha
+        info["alpha"] = float(alpha)
 
         info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"], info["counts_off"], acceptance / acceptance_off,
+            info["counts"],
+            info["counts_off"],
+            acceptance / acceptance_off,
         ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
@@ -2343,9 +2352,12 @@ class MapDatasetOnOff(MapDataset):
         """
         from .spectrum import SpectrumDatasetOnOff
 
-        dataset = super().to_spectrum_dataset(on_region, containment_correction, name)
+        dataset = super().to_spectrum_dataset(
+            on_region=on_region, containment_correction=containment_correction, name=name
+        )
 
-        kwargs = {}
+        kwargs = {"name": name}
+
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.get_spectrum(
                 on_region, np.sum, weights=self.mask_safe
@@ -2541,499 +2553,3 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off=acceptance_off,
             counts_off=counts_off,
         )
-
-
-class MapEvaluator:
-    """Sky model evaluation on maps.
-
-    This evaluates a sky model on a 3D map and convolves with the IRFs,
-    and returns a map of the predicted counts.
-    Note that background counts are not added.
-
-    For now, we only make it work for 3D WCS maps with an energy axis.
-    No HPX, no other axes, those can be added later here or via new
-    separate model evaluator classes.
-
-    Parameters
-    ----------
-    model : `~gammapy.modeling.models.SkyModel`
-        Sky model
-    exposure : `~gammapy.maps.Map`
-        Exposure map
-    psf : `~gammapy.irf.PSFKernel`
-        PSF kernel
-    edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
-    mask : `~gammapy.maps.Map`
-        Mask to apply to the likelihood for fitting.
-    gti : `~gammapy.data.GTI`
-        GTI of the observation or union of GTI if it is a stacked observation
-    evaluation_mode : {"local", "global"}
-        Model evaluation mode.
-        The "local" mode evaluates the model components on smaller grids to save computation time.
-        This mode is recommended for local optimization algorithms.
-        The "global" evaluation mode evaluates the model components on the full map.
-        This mode is recommended for global optimization algorithms.
-    use_cache : bool
-        Use npred caching.
-    """
-
-    def __init__(
-        self,
-        model=None,
-        exposure=None,
-        psf=None,
-        edisp=None,
-        gti=None,
-        mask=None,
-        evaluation_mode="local",
-        use_cache=True,
-    ):
-
-        self.model = model
-        self.exposure = exposure
-        self.psf = psf
-        self.edisp = edisp
-        self.mask = mask
-        self.gti = gti
-        self.use_cache = use_cache
-        self._init_position = None
-        self.contributes = True
-        self.psf_containment = None
-
-        if evaluation_mode not in {"local", "global"}:
-            raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
-
-        self.evaluation_mode = evaluation_mode
-
-        # TODO: this is preliminary solution until we have further unified the model handling
-        if (
-            isinstance(self.model, TemplateNPredModel)
-            or self.model.spatial_model is None
-            or self.model.evaluation_radius is None
-        ):
-            self.evaluation_mode = "global"
-
-        # define cached computations
-        self._compute_npred = lru_cache()(self._compute_npred)
-        self._compute_flux_spatial = lru_cache()(self._compute_flux_spatial)
-        self._cached_parameter_values = None
-        self._cached_parameter_values_previous = None
-        self._cached_parameter_values_spatial = None
-        self._cached_position = (0, 0)
-        self._computation_cache = None
-        self._neval = 0  # for debugging
-        self._renorm = 1
-        self._spatial_oversampling_factor = 1
-        self._upsampled_geom = self.exposure.geom if self.exposure else None
-
-
-    # workaround for the lru_cache pickle issue
-    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key, value in state.items():
-            func = getattr(value, "__wrapped__", None)
-            if func is not None:
-                state[key] = func
-
-        return state
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in [
-                "_compute_npred",
-                "_compute_flux_spatial",
-            ]:
-                state[key] = lru_cache()(value)
-
-        self.__dict__ = state
-
-    @property
-    def geom(self):
-        """True energy map geometry (`~gammapy.maps.Geom`)"""
-        return self.exposure.geom
-
-    @property
-    def needs_update(self):
-        """Check whether the model component has drifted away from its support."""
-        # TODO: simplify and clean up
-        if isinstance(self.model, TemplateNPredModel):
-            return False
-        elif self.exposure is None:
-            return True
-        elif self.geom.is_region:
-            return False
-        elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
-            return False
-        elif not self.parameters_spatial_changed(reset=False):
-            return False
-        else:
-            return self.irf_position_changed
-
-    @property
-    def psf_width(self):
-        """Width of the PSF"""
-        if self.psf is not None:
-            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
-        else:
-            psf_width = 0 * u.deg
-        return psf_width
-
-    def use_psf_containment(self, geom):
-        """Use psf containment for point sources and circular regions"""
-        if not geom.is_region:
-            return False
-
-        is_point_model = isinstance(self.model.spatial_model, PointSpatialModel)
-        is_circle_region = isinstance(geom.region, CircleSkyRegion)
-        return is_point_model & is_circle_region
-
-    @property
-    def cutout_width(self):
-        """Cutout width for the model component"""
-        return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
-
-    def update(self, exposure, psf, edisp, geom, mask):
-        """Update MapEvaluator, based on the current position of the model component.
-
-        Parameters
-        ----------
-        exposure : `~gammapy.maps.Map`
-            Exposure map.
-        psf : `gammapy.irf.PSFMap`
-            PSF map.
-        edisp : `gammapy.irf.EDispMap`
-            Edisp map.
-        geom : `WcsGeom`
-            Counts geom
-        mask : `~gammapy.maps.Map`
-            Mask to apply to the likelihood for fitting.
-        """
-        # TODO: simplify and clean up
-        log.debug("Updating model evaluator")
-
-        # lookup edisp
-        if edisp:
-            energy_axis = geom.axes["energy"]
-            self.edisp = edisp.get_edisp_kernel(
-                self.model.position, energy_axis=energy_axis
-            )
-
-        # lookup psf
-        if psf and self.model.spatial_model:
-            if self.apply_psf_after_edisp:
-                geom = geom.as_energy_true
-            else:
-                geom = exposure.geom
-
-            if self.use_psf_containment(geom=geom):
-                energy_true = geom.axes["energy_true"].center.reshape((-1, 1, 1))
-                self.psf_containment = psf.containment(
-                    energy_true=energy_true, rad=geom.region.radius
-                )
-            else:
-                if geom.is_region or geom.is_hpx:
-                    geom = geom.to_wcs_geom()
-
-                self.psf = psf.get_psf_kernel(
-                    position=self.model.position, geom=geom, containment=PSF_CONTAINMENT
-                )
-     
-        if self.evaluation_mode == "local":
-            self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
-
-            if self.contributes:
-                self.exposure = exposure.cutout(
-                    position=self.model.position, width=self.cutout_width, odd_npix=True
-                )
-        else:
-            self.exposure = exposure
-
-        if self.contributes:
-            if not self.geom.is_region or self.geom.region is not None:
-                self.update_spatial_oversampling_factor(self.geom)
-
-        self._compute_npred.cache_clear()
-        self._compute_flux_spatial.cache_clear()
-        self._computation_cache = None
-        self._cached_parameter_previous = None
-
-    def update_spatial_oversampling_factor(self, geom):
-        """Update spatial oversampling_factor for model evaluation"""
-        res_scale = self.model.evaluation_bin_size_min
-
-        res_scale = res_scale.to_value("deg") if res_scale is not None else 0
-
-        if geom.is_region or geom.is_hpx:
-            geom = geom.to_wcs_geom()
-        if res_scale != 0:
-            factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
-            self._spatial_oversampling_factor = factor
-
-        self._upsampled_geom = geom.upsample(self._spatial_oversampling_factor)
-
-    def compute_dnde(self):
-        """Compute model differential flux at map pixel centers.
-
-        Returns
-        -------
-        model_map : `~gammapy.maps.Map`
-            Sky cube with data filled with evaluated model values.
-            Units: ``cm-2 s-1 TeV-1 deg-2``
-        """
-        return self.model.evaluate_geom(self.geom, self.gti)
-
-    def compute_flux(self, *arg):
-        """Compute flux"""
-        return self.model.integrate_geom(self.geom, self.gti)
-
-    def compute_flux_psf_convolved(self, *arg):
-        """Compute psf convolved and temporal model corrected flux."""
-        value = self.compute_flux_spectral()
-
-        if self.model.spatial_model:
-            if self.psf_containment is not None:
-                value = value * self.psf_containment
-            else:
-                value = value * self.compute_flux_spatial()
-
-        if self.model.temporal_model:
-            value *= self.compute_temporal_norm()
-
-        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
-
-    def compute_flux_spatial(self):
-        """Compute spatial flux using caching"""
-        if self.parameters_spatial_changed() or not self.use_cache:
-            self._compute_flux_spatial.cache_clear()
-        return self._compute_flux_spatial()
-
-    def _compute_flux_spatial(self):
-        """Compute spatial flux
-
-        Returns
-        ----------
-        value: `~astropy.units.Quantity`
-            Psf-corrected, integrated flux over a given region.
-        """
-        if self.geom.is_region:
-            # We don't estimate spatial contributions if no psf are defined
-            if self.geom.region is None or self.psf is None:
-                return 1
-
-            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
-
-            if self.psf and self.model.apply_irf["psf"]:
-                values = self._compute_flux_spatial_geom(wcs_geom)
-            else:
-                values = self.model.spatial_model.integrate_geom(wcs_geom, oversampling_factor=1)
-                axes = [self.geom.axes["energy_true"].squash()]
-                values = values.to_cube(axes=axes)
-
-            weights = wcs_geom.region_weights(regions=[self.geom.region])
-            value = (values.quantity * weights).sum(axis=(1, 2), keepdims=True)
-        else:
-            value = self._compute_flux_spatial_geom(self._upsampled_geom)
-
-        return value
-
-    def _compute_flux_spatial_geom(self, geom):
-        """Compute spatial flux oversampling geom if necessary"""
-        factor = self._spatial_oversampling_factor
-        # for now we force the oversampling factor to be 1
-        value = self.model.spatial_model.integrate_geom(geom, oversampling_factor=1)
-
-        value = value.downsample(factor)
-
-        if self.psf and self.model.apply_irf["psf"]:
-            value = self.apply_psf(value)
-
-        return value
-
-    def compute_flux_spectral(self):
-        """Compute spectral flux"""
-        energy = self.geom.axes["energy_true"].edges
-        value = self.model.spectral_model.integral(energy[:-1], energy[1:],)
-        if self.geom.is_hpx:
-            return value.reshape((-1, 1))
-        else:
-            return value.reshape((-1, 1, 1))
-
-    def compute_temporal_norm(self):
-        """Compute temporal norm """
-        integral = self.model.temporal_model.integral(
-            self.gti.time_start, self.gti.time_stop
-        )
-        return np.sum(integral)
-
-    def apply_exposure(self, flux):
-        """Compute npred cube
-
-        For now just divide flux cube by exposure
-        """
-        npred = (flux.quantity * self.exposure.quantity).to_value("")
-        return Map.from_geom(self.geom, data=npred, unit="")
-
-    def apply_psf(self, npred):
-        """Convolve npred cube with PSF"""
-        tmp = npred.convolve(self.psf)
-        tmp.data[tmp.data < 0.0] = 0
-        return tmp
-
-    def apply_edisp(self, npred):
-        """Convolve map data with energy dispersion.
-
-        Parameters
-        ----------
-        npred : `~gammapy.maps.Map`
-            Predicted counts in true energy bins
-
-        Returns
-        -------
-        npred_reco : `~gammapy.maps.Map`
-            Predicted counts in reco energy bins
-        """
-        return npred.apply_edisp(self.edisp)
-
-    def _compute_npred(self):
-        """Compute npred"""
-        if isinstance(self.model, TemplateNPredModel):
-            npred = self.model.evaluate()
-        else:
-            if not self.parameter_norm_only_changed:
-                for method in self.methods_sequence:
-                    values = method(self._computation_cache)
-                    self._computation_cache = values
-                npred = self._computation_cache
-            else:
-                npred = self._computation_cache * self.renorm()
-        return npred
-
-    @property
-    def apply_psf_after_edisp(self):
-        """"""
-        if not isinstance(self.model, TemplateNPredModel):
-            return self.model.apply_irf.get("psf_after_edisp")
-
-    def compute_npred(self):
-        """Evaluate model predicted counts.
-
-        Returns
-        -------
-        npred : `~gammapy.maps.Map`
-            Predicted counts on the map (in reco energy bins)
-        """
-        if self.parameters_changed or not self.use_cache:
-            self._compute_npred.cache_clear()
-
-        return self._compute_npred()
-
-    @property
-    def parameters_changed(self):
-        """Parameters changed"""
-        values = self.model.parameters.value
-
-        # TODO: possibly allow for a tolerance here?
-        changed = ~np.all(self._cached_parameter_values == values)
-
-        if changed:
-            self._cached_parameter_values = values
-
-        return changed
-
-    @property
-    def parameter_norm_only_changed(self):
-        """Only norm parameter changed"""
-        norm_only_changed = False
-        idx = self._norm_idx
-        values = self.model.parameters.value
-        if idx and self._computation_cache is not None:
-            changed = self._cached_parameter_values_previous == values
-            norm_only_changed = sum(changed) == 1 and changed[idx]
-
-        if not norm_only_changed:
-            self._cached_parameter_values_previous = values
-        return norm_only_changed
-
-    def parameters_spatial_changed(self, reset=True):
-        """Parameters changed
-
-        Parameters
-        ----------
-        reset : bool
-            Reset cached values
-
-        Returns
-        -------
-        changed : bool
-            Whether spatial parameters changed.
-        """
-        values = self.model.spatial_model.parameters.value
-
-        # TODO: possibly allow for a tolerance here?
-        changed = ~np.all(self._cached_parameter_values_spatial == values)
-
-        if changed and reset:
-            self._cached_parameter_values_spatial = values
-
-        return changed
-
-    @property
-    def irf_position_changed(self):
-        """Position for IRF changed"""
-
-        # Here we do not use SkyCoord.separation to improve performance
-        # (it avoids equivalence comparisons for frame and units)
-        lon_cached, lat_cached = self._cached_position
-        lon, lat = self.model.position_lonlat
-
-        separation = angular_separation(lon, lat, lon_cached, lat_cached)
-        changed = separation > (self.model.evaluation_radius + CUTOUT_MARGIN).to_value(
-            u.rad
-        )
-
-        if changed:
-            self._cached_position = lon, lat
-
-        return changed
-
-    @lazyproperty
-    def _norm_idx(self):
-        """norm index"""
-        names = self.model.parameters.names
-        ind = [idx for idx, name in enumerate(names) if name in ["norm", "amplitude"]]
-        if len(ind) == 1:
-            return ind[0]
-        else:
-            return None
-
-    def renorm(self):
-        value = self.model.parameters.value[self._norm_idx]
-        value_cached = self._cached_parameter_values_previous[self._norm_idx]
-        return value / value_cached
-
-    @lazyproperty
-    def methods_sequence(self):
-        """order to apply irf"""
-
-        if self.apply_psf_after_edisp:
-            methods = [
-                self.compute_flux,
-                self.apply_exposure,
-                self.apply_edisp,
-                self.apply_psf,
-            ]
-            if not self.psf or not self.model.apply_irf["psf"]:
-                methods.remove(self.apply_psf)
-        else:
-            methods = [
-                self.compute_flux_psf_convolved,
-                self.apply_exposure,
-                self.apply_edisp,
-            ]
-        if not self.model.apply_irf["exposure"]:
-            methods.remove(self.apply_exposure)
-        if not self.model.apply_irf["edisp"]:
-            methods.remove(self.apply_edisp)
-        return methods

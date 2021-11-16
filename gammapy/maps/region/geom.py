@@ -76,6 +76,14 @@ class RegionGeom(Geom):
         # define cached methods
         self.get_wcs_coord_and_weights = lru_cache()(self.get_wcs_coord_and_weights)
 
+
+    def __setstate__(self, state):
+        for key, value in state.items():
+            if key in ["get_wcs_coord_and_weights"]:
+                state[key] = lru_cache()(value)
+        self.__dict__ = state
+        
+
     @property
     def frame(self):
         """Coordinate system, either Galactic ("galactic") or Equatorial
@@ -414,7 +422,7 @@ class RegionGeom(Geom):
         """
         return self._init_copy(axes=None)
 
-    def upsample(self, factor, axis_name):
+    def upsample(self, factor, axis_name=None):
         """Upsample a non-spatial dimension of the region by a given factor.
 
         Returns

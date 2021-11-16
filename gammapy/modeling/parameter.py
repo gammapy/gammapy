@@ -19,15 +19,20 @@ def _get_parameters_str(parameters):
 
     for par in parameters:
         if par.name == "amplitude":
-            line = "\t{:12} {:11}: {:10.2e} {} {:<12s}\n"
+            value_format, error_format = "{:10.2e}", "{:7.1e}"
         else:
-            line = "\t{:12} {:11}: {:7.3f} {} {:<12s}\n"
+            value_format, error_format = "{:10.3f}", "{:7.2f}"
 
-        frozen = "(frozen)" if par.frozen else ""
-        try:
-            error = "+/- {:7.2f}".format(parameters.get_error(par))
-        except AttributeError:
-            error = ""
+        line = "\t{:12} {:11}: " + value_format + "\t {} {:<12s}\n"
+
+        if par.frozen:
+            frozen, error = "(frozen)", "\t\t"
+        else:
+            frozen = ""
+            try:
+                error = "+/- " + error_format.format(par.error)
+            except AttributeError:
+                error = ""
 
         str_ += line.format(par.name, frozen, par.value, error, par.unit)
     return str_.expandtabs(tabsize=2)
@@ -282,6 +287,30 @@ class Parameter:
 
         self.value = val.value
         self.unit = val.unit
+
+    # TODO: possibly allow to set this independently
+    @property
+    def conf_min(self):
+        """Confidence min value (`float`)
+
+        Returns parameter minimum if defined else the scan_min
+        """
+        if not np.isnan(self.min):
+            return self.min
+        else:
+            return self.scan_min
+
+    # TODO: possibly allow to set this independently
+    @property
+    def conf_max(self):
+        """Confidence max value (`float`)
+
+        Returns parameter maximum if defined else the scan_max
+        """
+        if not np.isnan(self.max):
+            return self.max
+        else:
+            return self.scan_max
 
     @property
     def scan_min(self):
@@ -560,6 +589,8 @@ class Parameters(collections.abc.Sequence):
         rows = []
         for p in self._parameters:
             d = p.to_dict()
+            if "link" not in d:
+                d["link"] = ""
             for key in ["scale_method", "interp"]:
                 if key in d:
                     del d[key]

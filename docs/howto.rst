@@ -44,6 +44,15 @@ You can for instance apply a cone search as shown `here
 You can also select observations based on other informations available using the
 `~gammapy.data.ObservationTable.select_observations` method.
 
+Make a on-axis equivalent livetime map
+++++++++++++++++++++++++++++++++++++++
+
+IACT detection efficiency varies in the FoV. To have an estimate
+of the effective exposure with respect to the on-axis one,
+it can be useful to build an `on-axis equivalent lifetime map
+<tutorials/data/hess.html#On-axis-equivalent-livetime>`__.
+
+
 Check IRFs
 ++++++++++
 
@@ -191,3 +200,21 @@ Interpolate maps onto a different geometry
 
 To interpolate maps onto a different geometry, use `Map.interp_to_geom`,
 see `here <tutorials/api/maps.html#Filling-maps-from-interpolation>`__.
+
+
+Suppress warnings
++++++++++++++++++
+In general it is not recommended to suppress warnings from code because they
+might point to potential issues or help debugging a non-working script. However
+in some cases the cause of the warning is known and the warnings clutter the
+logging output. In this case it can be useful to locally suppress a specific
+warning like so:
+
+.. code::
+
+    from astropy.io.fits.verify import VerifyWarning
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', VerifyWarning)
+        # do stuff here

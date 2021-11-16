@@ -82,7 +82,7 @@ class TestFluxPointFit:
     def test_fit_pwl_minuit(self, dataset):
         fit = Fit()
         result = fit.run(dataset)
-        self.assert_result(result["optimize_result"])
+        self.assert_result(result)
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, dataset):
@@ -109,9 +109,10 @@ class TestFluxPointFit:
     def test_stat_profile(dataset):
         fit = Fit()
         result = fit.run(datasets=dataset)
-        result = result["optimize_result"]
 
         model = dataset.models[0].spectral_model
+
+        assert_allclose(model.amplitude.error, 1.9e-14, rtol=1e-2)
 
         model.amplitude.scan_n_values = 3
         model.amplitude.scan_n_sigma = 1
@@ -123,7 +124,8 @@ class TestFluxPointFit:
         )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
+        assert_allclose(model.amplitude.scan_values, [1.97e-13, 2.16e-13, 2.35e-13], rtol=1e-2)
+        assert_allclose(ts_diff, [110.244116, 0., 110.292074], rtol=1e-2, atol=1e-7)
 
         value = result.parameters["amplitude"].value
         err = result.parameters["amplitude"].error
@@ -135,7 +137,8 @@ class TestFluxPointFit:
         )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
+        assert_allclose(model.amplitude.scan_values, [1.97e-13, 2.16e-13, 2.35e-13], rtol=1e-2)
+        assert_allclose(ts_diff, [110.244116, 0., 110.292074], rtol=1e-2, atol=1e-7)
 
     @staticmethod
     @requires_dependency("matplotlib")

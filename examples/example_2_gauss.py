@@ -67,8 +67,8 @@ npred = dataset.npred()
 
 dataset.fake()
 
-fit = Fit([dataset])
-results = fit.run()
+fit = Fit()
+results = fit.run([dataset])
 
 print(results)
 print(models)

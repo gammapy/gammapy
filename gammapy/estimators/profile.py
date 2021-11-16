@@ -8,6 +8,7 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from .core import Estimator
 
+
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
 
 
@@ -33,7 +34,7 @@ class ImageProfileEstimator(Estimator):
     center region::
 
         import matplotlib.pyplot as plt
-        from gammapy.maps import ImageProfileEstimator
+        from gammapy.estimators import ImageProfileEstimator
         from gammapy.maps import Map
         from astropy import units as u
 
@@ -54,17 +55,16 @@ class ImageProfileEstimator(Estimator):
     tag = "ImageProfileEstimator"
 
     def __init__(self, x_edges=None, method="sum", axis="lon", center=None):
-        self._x_edges = x_edges
-
         if method not in ["sum", "mean"]:
             raise ValueError("Not a valid method, choose either 'sum' or 'mean'")
 
         if axis not in ["lon", "lat", "radial"]:
             raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
 
-        if method == "radial" and center is None:
+        if axis == "radial" and center is None:
             raise ValueError("Please provide center coordinate for radial profiles")
 
+        self._x_edges = x_edges
         self.parameters = {"method": method, "axis": axis, "center": center}
 
     def _get_x_edges(self, image):
@@ -295,7 +295,7 @@ class ImageProfile:
         y = self.table["profile"].data
         x = self.x_ref.value
         ax.plot(x, y, **kwargs)
-        ax.set_xlabel("lon")
+        ax.set_xlabel(self.table.meta.get("PROFILE_TYPE", "axis"))
         ax.set_ylabel("profile")
         ax.set_xlim(x.max(), x.min())
         return ax

@@ -38,6 +38,9 @@ def sky_model():
     spectral_model = PowerLawSpectralModel(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
+    spectral_model.index.error = 0.1
+    spectral_model.amplitude.error = "1e-12 cm-2 s-1 TeV-1"
+
     temporal_model = ConstantTemporalModel()
     return SkyModel(
         spatial_model=spatial_model,
@@ -63,7 +66,9 @@ def diffuse_model():
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
     m.data += 42
-    spatial_model = TemplateSpatialModel(m, normalize=False)
+    spatial_model = TemplateSpatialModel(
+        m, normalize=False, filename="diffuse_test.fits"
+    )
     return SkyModel(PowerLawNormSpectralModel(), spatial_model)
 
 
@@ -298,7 +303,11 @@ class TestSkyModel:
 
     @staticmethod
     def test_str(sky_model):
-        assert "SkyModel" in str(sky_model)
+        string_model = str(sky_model)
+        model_lines = string_model.splitlines()
+        assert "SkyModel" in string_model
+        assert "2.000   +/-    0.10" in model_lines[8]
+
 
     @staticmethod
     def test_parameters(sky_model):
@@ -373,6 +382,21 @@ class Test_Template_with_cube:
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value.mean(), 42)
+
+    @staticmethod
+    def test_write(tmpdir, diffuse_model):
+        filename = tmpdir / diffuse_model.spatial_model.filename
+
+        diffuse_model.spatial_model.filename = None
+        with pytest.raises(IOError):
+            diffuse_model.spatial_model.write()
+
+        with pytest.raises(IOError):
+            Models(diffuse_model).to_dict()
+
+        diffuse_model.spatial_model.filename = filename
+        diffuse_model.spatial_model.write(overwrite=False)
+        TemplateSpatialModel.read(filename)
 
     @staticmethod
     @requires_data()
@@ -610,7 +634,9 @@ class MyCustomGaussianModel(SpatialModel):
 
 def test_energy_dependent_model():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy_true")
-    geom_true = WcsGeom.create(skydir=(0, 0), binsz="0.1 deg", npix=(50, 50), frame="galactic", axes=[axis])
+    geom_true = WcsGeom.create(
+        skydir=(0, 0), binsz="0.1 deg", npix=(50, 50), frame="galactic", axes=[axis]
+    )
 
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     spatial_model = MyCustomGaussianModel(frame="galactic")

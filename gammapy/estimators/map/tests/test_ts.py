@@ -123,8 +123,8 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
     assert_allclose(result["flux_err"].data[0, 99, 99], 3.84e-11, rtol=1e-2)
     assert_allclose(result["npred"].data[0, 99, 99], 4744.020361, rtol=1e-2)
-    assert_allclose(result["npred_null"].data[0, 99, 99], 3721, rtol=1e-2)
     assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
+    assert_allclose(result["npred_excess_err"].data[0, 99, 99], 38.470995, rtol=1e-2)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -227,13 +227,14 @@ def test_ts_map_with_model(fake_dataset):
     estimator = TSMapEstimator(
         model,
         kernel_width="0.3 deg",
-        selection_optional=[],
+        selection_optional=["all"],
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
 
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 18.369942, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], 3.513e-10, atol=1e-12)
+    assert_allclose(maps["flux_err"].data[0, 0, 0], 2.494462e-11, rtol=1e-4)
 
     fake_dataset.models = [model]
     maps = estimator.run(fake_dataset)

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import json
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -9,7 +10,7 @@ from regions import CircleSkyRegion
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.datasets.map import MapEvaluator, RAD_AXIS_DEFAULT
+from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -17,7 +18,6 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     PSFMap,
-    PSFKernel,
 )
 
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
@@ -27,9 +27,9 @@ from gammapy.maps import (
     WcsGeom,
     WcsNDMap,
     RegionGeom,
-    RegionNDMap,
     HpxGeom,
 )
+from gammapy.maps.io import JsonQuantityEncoder
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -38,11 +38,9 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    ConstantSpectralModel,
     DiskSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-from gammapy.utils.gauss import Gauss2DPDF
 
 
 @pytest.fixture
@@ -305,7 +303,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
         on_region, containment_correction=True
     )
     mask = np.ones_like(dataset_ref.counts, dtype="bool")
-    mask[1, 40:60, 40:60] = 0
+    mask[1, 40:60, 40:60] = False
     dataset_ref.mask_safe = Map.from_geom(dataset_ref.counts.geom, data=mask)
     spectrum_dataset_mask = dataset_ref.to_spectrum_dataset(on_region)
 
@@ -413,6 +411,10 @@ def test_info_dict(sky_model, geom, geom_etrue):
 
     assert info_dict["name"] == "test"
 
+    # try to dump as json
+    result = json.dumps(info_dict, cls=JsonQuantityEncoder)
+    assert "counts" in result
+
 
 def get_fermi_3fhl_gc_dataset():
     counts = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts-cube.fits.gz")
@@ -516,6 +518,31 @@ def test_downsample():
 
     with pytest.raises(ValueError):
         dataset.downsample(2, axis_name="energy")
+
+
+def test_downsample_energy(geom, geom_etrue):
+    # This checks that downsample and resample_energy_axis give identical results
+    counts = Map.from_geom(geom, dtype="int")
+    counts += 1
+    mask = Map.from_geom(geom, dtype="bool")
+    mask.data[1:] = True
+    counts += 1
+    exposure = Map.from_geom(geom_etrue, unit="m2s")
+    edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
+    dataset = MapDataset(
+        counts=counts,
+        exposure=exposure,
+        mask_safe=mask,
+        edisp=edisp,
+    )
+    dataset_downsampled = dataset.downsample(2, axis_name="energy")
+    dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
+
+    assert dataset_downsampled.edisp.edisp_map.data.shape == (3, 1, 1, 2)
+    assert_allclose(
+        dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
+        dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
+    )
 
 
 @requires_data()
@@ -623,7 +650,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     fit = Fit()
     result = fit.run(datasets=datasets)
-    result = result["optimize_result"]
+
     assert result.success
     assert "minuit" in repr(result)
 
@@ -636,10 +663,10 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars["lon_0"].error, 0.002244, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars["index"].error, 0.024277, rtol=1e-2)
+    assert_allclose(pars["index"].error, 0.0242, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars["amplitude"].error, 4.216154e-13, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 4.216e-13, rtol=1e-2)
 
     # background norm 1
     assert_allclose(pars[8].value, 0.5, rtol=1e-2)
@@ -694,7 +721,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
 
     fit = Fit()
     result = fit.run(datasets=[dataset])
-    result = result["optimize_result"]
+
     assert result.success
 
     npred = dataset.npred().data.sum()
@@ -893,13 +920,15 @@ def test_npred_sig(sky_model, geom, geom_etrue):
     bkg = FoVBackgroundModel(dataset_name=dataset.name)
     dataset.models = [bkg, sky_model, model1]
 
-    assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
-    assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
     assert_allclose(
         dataset.npred_signal(model_name=model1.name).data.sum(), 150.7487, rtol=1e-3
     )
+    assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
+    assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
+
     with pytest.raises(
-        KeyError, match="m2",
+        KeyError,
+        match="m2",
     ):
         dataset.npred_signal(model_name="m2")
 
@@ -915,7 +944,11 @@ def test_stack_npred():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.05, width=(2, 2), frame="icrs", axes=[axis],
+        skydir=(0, 0),
+        binsz=0.05,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
     )
 
     dataset_1 = MapDataset.create(
@@ -1448,7 +1481,11 @@ def test_slice_by_idx():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0), binsz=0.5, width=(2, 2), frame="icrs", axes=[axis],
+        skydir=(0, 0),
+        binsz=0.5,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
     )
     dataset = MapDataset.create(geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5)
 

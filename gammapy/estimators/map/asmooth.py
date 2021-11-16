@@ -4,13 +4,13 @@ import numpy as np
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDatasetOnOff
-from gammapy.maps import Map, WcsNDMap, MapAxis
+from gammapy.maps import Map, WcsNDMap, Maps
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube
 from gammapy.utils.pbar import progress_bar
-from .core import Estimator
-from .utils import estimate_exposure_reco_energy
+from ..core import Estimator
+from ..utils import estimate_exposure_reco_energy
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -168,13 +168,14 @@ class ASmoothMapEstimator(Estimator):
             result = self.estimate_maps(dataset_sliced)
             results.append(result)
 
-        result_all = {}
+        maps = Maps()
 
         for name in results[0].keys():
-            map_all = Map.from_stack(maps=[_[name] for _ in results], axis_name="energy")
-            result_all[name] = map_all
+            maps[name] = Map.from_stack(
+                maps=[_[name] for _ in results], axis_name="energy"
+            )
 
-        return result_all
+        return maps
 
     def estimate_maps(self, dataset):
         """Run adaptive smoothing on input Maps.

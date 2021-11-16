@@ -118,6 +118,7 @@ def test_get_observations_obs_time(tmp_path):
     with pytest.raises(KeyError):
         analysis.get_observations()
 
+
 @requires_data()
 def test_get_observations_missing_irf():
     config = AnalysisConfig()
@@ -127,6 +128,7 @@ def test_get_observations_missing_irf():
     analysis.config.observations.required_irf = ["aeff", "edisp"]
     analysis.get_observations()
     assert len(analysis.observations) == 1
+
 
 @requires_data()
 def test_set_models():
@@ -319,7 +321,7 @@ def test_analysis_ring_background():
         analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
     )
     assert isinstance(analysis.excess_map["sqrt_ts"], WcsNDMap)
-    assert_allclose(analysis.excess_map["excess"].data[0,62,62],134.12389)
+    assert_allclose(analysis.excess_map.npred_excess.data[0, 62, 62], 134.12389)
 
 
 @requires_data()
@@ -340,8 +342,10 @@ def test_analysis_no_bkg_1d(caplog):
     analysis.get_observations()
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
-    assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "No background maker set. Check configuration."
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "No background maker set. Check configuration." in [
+        _.message for _ in caplog.records
+    ]
 
 
 @requires_data()
@@ -352,8 +356,10 @@ def test_analysis_no_bkg_3d(caplog):
     analysis.get_observations()
     analysis.get_datasets()
     assert isinstance(analysis.datasets[0], MapDataset) is True
-    assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "No background maker set. Check configuration."
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "No background maker set. Check configuration." in [
+        _.message for _ in caplog.records
+    ]
 
 
 @requires_dependency("iminuit")

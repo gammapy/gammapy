@@ -109,12 +109,12 @@ def test_hdu_index_table_hd_hap(capfd):
 
     with pytest.raises(ValueError) as excinfo:
         hdu_index.hdu_location(obs_id=23523, hdu_type="invalid")
-    msg = "Invalid hdu_type: invalid. Valid values are: ['events', 'gti', 'aeff', 'edisp', 'psf', 'bkg']"
+    msg = "Invalid hdu_type: invalid. Valid values are: ['events', 'gti', 'aeff', 'edisp', 'psf', 'bkg', 'rad_max']"
     assert str(excinfo.value) == msg
 
     with pytest.raises(ValueError) as excinfo:
         hdu_index.hdu_location(obs_id=23523, hdu_class="invalid")
-    msg = "Invalid hdu_class: invalid. Valid values are: ['events', 'gti', 'aeff_2d', 'edisp_2d', 'psf_table', 'psf_3gauss', 'psf_king', 'bkg_2d', 'bkg_3d']"
+    msg = "Invalid hdu_class: invalid. Valid values are: ['events', 'gti', 'aeff_2d', 'edisp_2d', 'psf_table', 'psf_3gauss', 'psf_king', 'bkg_2d', 'bkg_3d', 'rad_max_2d']"
     assert str(excinfo.value) == msg
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_class="psf_king")

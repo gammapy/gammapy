@@ -69,14 +69,11 @@ def _confidence_scipy_brentq(
     )
 
     lower_bound = parameter.factor
-    upper_bound = parameter.factor_max if upper else parameter.factor_min
-    if np.isnan(upper_bound):
-        # TODO: remove hard coded limits here...
-        upper_bound = parameter.factor
-        if upper:
-            upper_bound += 1e2 * parameter.error / parameter.scale
-        else:
-            upper_bound -= 1e2 * parameter.error / parameter.scale
+
+    if upper:
+        upper_bound = parameter.conf_max / parameter.scale
+    else:
+        upper_bound = parameter.conf_min / parameter.scale
 
     message, success = "Confidence terminated successfully.", True
     kwargs.setdefault("nbin", 1)
@@ -85,11 +82,13 @@ def _confidence_scipy_brentq(
         ts_diff.fcn, lower_bound=lower_bound, upper_bound=upper_bound, **kwargs
     )
     result = (roots[0], res[0])
+
     if np.isnan(roots[0]):
         message = (
             "Confidence estimation failed. Try to set the parameter.min/max by hand."
         )
         success = False
+
     suffix = "errp" if upper else "errn"
 
     return {

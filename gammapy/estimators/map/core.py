@@ -61,13 +61,13 @@ VALID_QUANTITIES = [
     "sqrt_ts",
     "npred",
     "npred_excess",
-    "npred_null",
     "stat",
     "stat_scan",
     "stat_null",
     "niter",
     "is_ul",
-    "counts"
+    "counts",
+    "success"
 ]
 
 
@@ -75,12 +75,13 @@ OPTIONAL_QUANTITIES_COMMON = [
     "ts",
     "sqrt_ts",
     "npred",
-    "npred_null",
+    "npred_excess",
     "stat",
     "stat_null",
     "niter",
     "is_ul",
-    "counts"
+    "counts",
+    "success"
 ]
 
 
@@ -115,15 +116,20 @@ class FluxMaps:
         * stat_scan : optional, the test statistic scan values.
         * ts : optional, the delta TS associated with the flux value.
         * sqrt_ts : optional, the square root of the TS, when relevant.
+        * success : optional, a boolean tagging the validity of the estimation
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         the reference model to use for conversions. Default in None.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
-    gti : `~gammapy.data.GTI`
+    meta : dict, optional
+        List of metadata. Default is None.
+    gti : `~gammapy.data.GTI`, optional
         the maps GTI information. Default is None.
+    filter_success_nan : boolean, optional
+        Set fitted values to NaN when the fit has not succeeded. Default is True.
     """
     _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
-    def __init__(self, data, reference_model, meta=None, gti=None):
+    def __init__(self, data, reference_model, meta=None, gti=None, filter_success_nan=True):
         self._data = data
 
         if isinstance(reference_model, SpectralModel):
@@ -136,6 +142,15 @@ class FluxMaps:
 
         self.meta = meta
         self.gti = gti
+        self._filter_success_nan = filter_success_nan
+
+    @property
+    def filter_success_nan(self):
+        return self._filter_success_nan
+
+    @filter_success_nan.setter
+    def filter_success_nan(self, value):
+        self._filter_success_nan = value
 
     @property
     def available_quantities(self):
@@ -202,8 +217,13 @@ class FluxMaps:
 
     @property
     def has_stat_profiles(self):
-        """Whether the fluc estimate has stat profiles"""
+        """Whether the flux estimate has stat profiles"""
         return "stat_scan" in self._data
+
+    @property
+    def has_success(self):
+        """Whether the flux estimate has the fit status"""
+        return "success" in self._data
 
     @property
     def n_sigma(self):
@@ -219,6 +239,22 @@ class FluxMaps:
     def sqrt_ts_threshold_ul(self):
         """sqrt(TS) threshold for upper limits"""
         return self.meta.get("sqrt_ts_threshold_ul", 2)
+
+    @sqrt_ts_threshold_ul.setter
+    def sqrt_ts_threshold_ul(self, value):
+        """sqrt(TS) threshold for upper limits
+        
+        Parameters
+        ----------
+        value : int
+            Threshold value in sqrt(TS) for upper limits
+        """
+        self.meta["sqrt_ts_threshold_ul"] = value
+        if (
+            any([_ in self._data for _ in ["ts", "sqrt_ts"]])
+            and "norm_ul" in self._data
+        ):
+            self.is_ul = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
 
     @property
     def sed_type_init(self):
@@ -294,22 +330,41 @@ class FluxMaps:
         return self._data["niter"]
 
     @property
+    def success(self):
+        """Fit success flag"""
+        self._check_quantity("success")
+        return self._data["success"]
+
+    @property
     def is_ul(self):
         """Whether data is an upper limit"""
-        if "is_ul" in self._data:
-            return self._data["is_ul"]
-
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy()
 
-        if any([_ in self._data for _ in ["ts", "sqrt_ts"]]) and "norm_ul" in self._data:
+        if "is_ul" in self._data:
+            is_ul = self._data["is_ul"]
+        elif (
+            any([_ in self._data for _ in ["ts", "sqrt_ts"]])
+            and "norm_ul" in self._data
+        ):
             is_ul.data = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
         elif "norm_ul" in self._data:
             is_ul.data = np.isfinite(self.norm_ul)
         else:
             is_ul.data = np.isnan(self.norm)
+        return self._filter_convergence_failure(is_ul)
 
-        return is_ul
+    @is_ul.setter
+    def is_ul(self, data):
+        """Whether data is an upper limit
+        
+        Parameters
+        ----------
+        data : "~numpy.array"
+            boolean array
+        """
+        self._data["is_ul"] = self.norm.copy(data=data)
+
 
     @property
     def counts(self):
@@ -324,29 +379,56 @@ class FluxMaps:
         return self._data["npred"]
 
     @property
-    def npred_null(self):
-        """Predicted counts null hypothesis"""
-        self._check_quantity("npred_null")
-        return self._data["npred_null"]
-
-    @property
     def npred_excess(self):
         """Predicted excess counts"""
-        self._check_quantity("npred")
-        self._check_quantity("npred_null")
-        return self._data["npred"] - self._data["npred_null"]
+        self._check_quantity("npred_excess")
+        return self._data["npred_excess"]
+
+    def _expand_dims(self, data):
+        # instead make map support broadcasting
+        axes = self.npred.geom.axes
+        # here we need to rely on broadcasting
+        if "dataset" in axes.names:
+            idx = axes.index_data("dataset")
+            data = np.expand_dims(data, axis=idx)
+        return data
+
+    @property
+    def npred_excess_ref(self):
+        """Predicted excess reference counts"""
+        return self.npred_excess / self._expand_dims(self.norm.data)
+
+    @property
+    def npred_excess_err(self):
+        """Predicted excess counts error"""
+        return self.npred_excess_ref * self._expand_dims(self.norm_err.data)
+
+    @property
+    def npred_excess_errp(self):
+        """Predicted excess counts positive error"""
+        return self.npred_excess_ref * self._expand_dims(self.norm_errp.data)
+
+    @property
+    def npred_excess_errn(self):
+        """Predicted excess counts negative error"""
+        return self.npred_excess_ref * self._expand_dims(self.norm_errn.data)
+
+    @property
+    def npred_excess_ul(self):
+        """Predicted excess counts upper limits"""
+        return self.npred_excess_ref * self._expand_dims(self.norm_ul.data)
 
     @property
     def stat_scan(self):
-        """Fit statistic value"""
+        """Fit statistic scan value"""
         self._check_quantity("stat_scan")
-        return self._data["stat_scan"]
+        return self._filter_convergence_failure(self._data["stat_scan"])
 
     @property
     def stat(self):
         """Fit statistic value"""
         self._check_quantity("stat")
-        return self._data["stat"]
+        return self._filter_convergence_failure(self._data["stat"])
 
     @property
     def stat_null(self):
@@ -358,7 +440,7 @@ class FluxMaps:
     def ts(self):
         """ts map (`Map`)"""
         self._check_quantity("ts")
-        return self._data["ts"]
+        return self._filter_convergence_failure(self._data["ts"])
 
     @property
     def ts_scan(self):
@@ -395,31 +477,31 @@ class FluxMaps:
     @property
     def norm(self):
         """Norm values"""
-        return self._data["norm"]
+        return self._filter_convergence_failure(self._data["norm"])
 
     @property
     def norm_err(self):
         """Norm error"""
         self._check_quantity("norm_err")
-        return self._data["norm_err"]
+        return self._filter_convergence_failure(self._data["norm_err"])
 
     @property
     def norm_errn(self):
         """Negative norm error"""
         self._check_quantity("norm_errn")
-        return self._data["norm_errn"]
+        return self._filter_convergence_failure(self._data["norm_errn"])
 
     @property
     def norm_errp(self):
         """Positive norm error"""
         self._check_quantity("norm_errp")
-        return self._data["norm_errp"]
+        return self._filter_convergence_failure(self._data["norm_errp"])
 
     @property
     def norm_ul(self):
         """Norm upper limit"""
         self._check_quantity("norm_ul")
-        return self._data["norm_ul"]
+        return self._filter_convergence_failure(self._data["norm_ul"])
 
     @property
     def dnde_ref(self):
@@ -552,6 +634,24 @@ class FluxMaps:
         """Return energy flux (eflux) SED upper limits."""
         return self.norm_ul * self.eflux_ref
 
+    def _filter_convergence_failure(self, some_map):
+        """Put NaN where pixels did not converge."""
+        if not self._filter_success_nan:
+            return some_map
+
+        if not self.has_success:
+            return some_map
+
+        if self.success.data.shape == some_map.data.shape:
+            new_map = some_map.copy()
+            new_map.data[~self.success.data] = np.nan
+        else:
+            mask_nan = np.ones(self.success.data.shape)
+            mask_nan[~self.success.data] = np.nan
+            new_map = some_map * np.expand_dims(mask_nan, 2)
+            new_map.data = new_map.data.astype(some_map.data.dtype)
+        return new_map
+
     def get_flux_points(self, position=None):
         """Extract flux point at a given position.
 
@@ -574,7 +674,10 @@ class FluxMaps:
 
         for name in self._data:
             m = getattr(self, name)
-            data[name] = m.to_region_nd_map(region=position, method="nearest")
+            if m.data.dtype is np.dtype(bool):
+                data[name] = m.to_region_nd_map(region=position, method="nearest", func=np.any)
+            else:
+                data[name] = m.to_region_nd_map(region=position, method="nearest")
 
         return FluxPoints(
             data,
@@ -625,15 +728,20 @@ class FluxMaps:
             Stacked flux maps along axis.
         """
         reference = maps[0]
-
         data = {}
+
         for quantity in reference.available_quantities:
-            data[quantity] = Map.from_stack([_[quantity] for _ in maps], axis=axis)
+            data[quantity] = Map.from_stack([_._data[quantity] for _ in maps], axis=axis)
 
         if meta is None:
             meta = reference.meta.copy()
 
-        gti = GTI.from_stack([_.gti for _ in maps])
+        gtis = [_.gti for _ in maps if _.gti]
+
+        if gtis:
+            gti = GTI.from_stack(gtis)
+        else:
+            gti = None
 
         return cls(
             data=data,
@@ -838,7 +946,7 @@ class FluxMaps:
             return cls.from_hdulist(hdulist)
 
     def slice_by_idx(self, slices):
-        """Slice flux mpas by idx
+        """Slice flux maps by idx
 
         Parameters
         ----------
@@ -857,6 +965,8 @@ class FluxMaps:
 
         for key, item in self._data.items():
             data[key] = item.slice_by_idx(slices)
+            if key is "success":
+                data[key].data = data[key].data.astype(bool)
 
         return self.__class__(
             data=data,

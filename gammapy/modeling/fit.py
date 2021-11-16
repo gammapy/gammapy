@@ -5,7 +5,7 @@ import numpy as np
 from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
-from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
+from .iminuit import confidence_iminuit, covariance_iminuit, contour_iminuit, optimize_iminuit
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
@@ -148,16 +148,13 @@ class Fit:
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
-            return {"optimize_result": optimize_result, "covariance_result": None}
+            return optimize_result
 
         covariance_result = self.covariance(datasets=datasets)
-        # TODO: not sure how best to report the results
-        # back or how to form the FitResult object.
 
-        return {
-            "optimize_result": optimize_result,
-            "covariance_result": covariance_result,
-        }
+        optimize_result._covariance_result = covariance_result
+
+        return optimize_result
 
     def optimize(self, datasets):
         """Run the optimization.
@@ -234,6 +231,7 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
         kwargs = self.covariance_opts.copy()
+        kwargs["minuit"] = self.minuit
         backend = kwargs.pop("backend", self.backend)
         compute = registry.get("covariance", backend)
 
@@ -253,9 +251,9 @@ class Fit:
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
+            parameters=parameters,
             backend=backend,
             method=method,
-            parameters=parameters,
             success=info["success"],
             message=info["message"],
         )
@@ -416,7 +414,7 @@ class Fit:
         }
 
     def stat_contour(self, datasets, x, y, numpoints=10, sigma=1):
-        """Compute MINOS contour.
+        """Compute stat contour.
 
         Calls ``iminuit.Minuit.mncontour``.
 
@@ -451,7 +449,14 @@ class Fit:
         y = parameters[y]
 
         with parameters.restore_status():
-            result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
+            result = contour_iminuit(
+                parameters=parameters,
+                function=datasets.stat_sum,
+                x=x,
+                y=y,
+                numpoints=numpoints,
+                sigma=sigma
+            )
 
         x_name = x.name
         y_name = y.name
@@ -462,8 +467,6 @@ class Fit:
             x_name: x,
             y_name: y,
             "success": result["success"],
-            f"{x_name}_info": result["x_info"],
-            f"{y_name}_info": result["y_info"],
         }
 
 
@@ -521,10 +524,11 @@ class CovarianceResult(FitResult):
 class OptimizeResult(FitResult):
     """Optimize result object."""
 
-    def __init__(self, nfev, total_stat, trace, **kwargs):
+    def __init__(self, nfev, total_stat, trace, covariance_result=None, **kwargs):
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
+        self._covariance_result = covariance_result
         super().__init__(**kwargs)
 
     @property
@@ -542,8 +546,15 @@ class OptimizeResult(FitResult):
         """Value of the fit statistic at minimum."""
         return self._total_stat
 
+    @property
+    def covariance_result(self):
+        """Covariance results."""
+        return self._covariance_result
+
     def __repr__(self):
         str_ = super().__repr__()
         str_ += f"\tnfev       : {self.nfev}\n"
         str_ += f"\ttotal stat : {self.total_stat:.2f}\n"
+        if self.covariance_result is not None:
+            str_ += self.covariance_result.__repr__()
         return str_

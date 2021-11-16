@@ -74,8 +74,9 @@ def test_safe_mask_maker(observations, caplog):
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert_allclose(mask_bkg_peak.data.sum(), 1815)
-    assert caplog.records[-1].levelname == "WARNING"
-    assert caplog.records[-1].message == "No default thresholds defined for obs 110380"
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    message1 = "No default thresholds defined for obs 110380"
+    assert message1 in [_.message for _ in caplog.records]
 
     safe_mask_maker_noroot = SafeMaskMaker(
         offset_max="3 deg", aeff_percent=-10, bias_percent=-10
@@ -110,7 +111,6 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
     mask_nonan = safe_mask_maker_nonan.make_mask_bkg_invalid(dataset)
 
     assert mask_nonan[0, 0, 0] == False
-
 
     assert_allclose(bkg[mask_nonan].max(), 20.656366)
 

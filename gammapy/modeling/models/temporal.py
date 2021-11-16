@@ -83,6 +83,64 @@ class TemporalModel(Model):
         ax.plot(times.mjd, val)
         return ax
 
+    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+        """Sample arrival times of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        t_min : `~astropy.time.Time`
+            Start time of the sampling.
+        t_max : `~astropy.time.Time`
+            Stop time of the sampling.
+        t_delta : `~astropy.units.Quantity`
+            Time step used for sampling of the temporal model.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+        t_delta = u.Quantity(t_delta)
+        random_state = get_random_state(random_state)
+
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+
+        time_unit = u.Unit(self.table.meta["TIMEUNIT"]) if hasattr(self, 'table') else ontime.unit
+
+        t_stop = ontime.to_value(time_unit)
+
+        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
+        #  is still incomplete, refactor once we change to recent numpy and astropy versions
+        t_step = t_delta.to_value(time_unit)
+        if hasattr(self, 'table'):
+            t = np.arange(0, t_stop, t_step)
+
+            pdf = self.evaluate(t)
+
+            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+            time_pix = sampler.sample(n_events)[0]
+            time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
+
+        else:
+            t_step = (t_step * u.s).to("d")
+            
+            t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+
+            pdf = self(t)
+
+            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+            time_pix = sampler.sample(n_events)[0]
+            time = (np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit).to(time_unit)
+
+        return t_min + time
+
 
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
@@ -111,51 +169,70 @@ class ConstantTemporalModel(TemporalModel):
         """
         return (t_max - t_min) / self.time_sum(t_min, t_max)
 
+
+class LinearTemporalModel(TemporalModel):
+    """Temporal model with a linear variation.
+
+    For more information see :ref:`linear-temporal-model`.
+
+    Parameters
+    ----------
+    alpha : float
+        Constant term of the baseline flux
+    beta : `~astropy.units.Quantity`
+        Time variation coefficient of the flux
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd. Frozen per default, at 2000-01-01.
+    """
+
+    tag = ["LinearTemporalModel", "linear"]
+
+    alpha = Parameter("alpha", 1., frozen=False)
+    beta = Parameter("beta", 0., unit="d-1", frozen=False)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+
     @staticmethod
-    def sample_time(n_events, t_min, t_max, random_state=0):
-        """Sample arrival times of events.
+    def evaluate(time, alpha, beta, t_ref):
+        """Evaluate at given times"""
+        return alpha + beta*(time - t_ref)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
 
         Parameters
         ----------
-        n_events : int
-            Number of events to sample.
-        t_min : `~astropy.time.Time`
-            Start time of the sampling.
-        t_max : `~astropy.time.Time`
-            Stop time of the sampling.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
 
         Returns
         -------
-        time : `~astropy.units.Quantity`
-            Array with times of the sampled events.
+        norm : float
+            Integrated flux norm on the given time intervals
         """
-        random_state = get_random_state(random_state)
-
-        t_min = Time(t_min)
-        t_max = Time(t_max)
-
-        t_stop = (t_max - t_min).sec
-
-        time_delta = random_state.uniform(high=t_stop, size=n_events) * u.s
-
-        return t_min + time_delta
+        pars = self.parameters
+        alpha = pars["alpha"]
+        beta = pars["beta"].quantity
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        value = alpha*(t_max-t_min) + \
+                beta/2.*((t_max-t_ref)*(t_max-t_ref)-(t_min-t_ref)*(t_min-t_ref))
+        return value / self.time_sum(t_min, t_max)
 
 
 class ExpDecayTemporalModel(TemporalModel):
     r"""Temporal model with an exponential decay.
 
     .. math::
-            F(t) = exp(t - t_ref)/t0
+            F(t) = exp(-(t - t_ref)/t0)
 
     Parameters
     ----------
     t0 : `~astropy.units.Quantity`
         Decay time scale
     t_ref: `~astropy.units.Quantity`
-        The reference time in mjd
+        The reference time in mjd. Frozen per default, at 2000-01-01 .
     """
 
     tag = ["ExpDecayTemporalModel", "exp-decay"]
@@ -387,55 +464,115 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         n2 = self._interpolator.antiderivative()(t_min.mjd)
         return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
 
-    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
-        """Sample arrival times of events.
-
-        Parameters
-        ----------
-        n_events : int
-            Number of events to sample.
-        t_min : `~astropy.time.Time`
-            Start time of the sampling.
-        t_max : `~astropy.time.Time`
-            Stop time of the sampling.
-        t_delta : `~astropy.units.Quantity`
-            Time step used for sampling of the temporal model.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        time : `~astropy.units.Quantity`
-            Array with times of the sampled events.
-        """
-        time_unit = getattr(u, self.table.meta["TIMEUNIT"])
-
-        t_min = Time(t_min)
-        t_max = Time(t_max)
-        t_delta = u.Quantity(t_delta)
-        random_state = get_random_state(random_state)
-
-        ontime = u.Quantity((t_max - t_min).sec, "s")
-        t_stop = ontime.to_value(time_unit)
-
-        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
-        #  is still incomplete, refactor once we change to recent numpy and astropy versions
-        t_step = t_delta.to_value(time_unit)
-        t = np.arange(0, t_stop, t_step)
-
-        pdf = self.evaluate(t)
-
-        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-        time_pix = sampler.sample(n_events)[0]
-        time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
-
-        return t_min + time
-
     @classmethod
     def from_dict(cls, data):
         return cls.read(data["filename"])
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serilisation"""
+        """Create dict for YAML serialisation"""
         return {"type": self.tag[0], "filename": self.filename}
+
+
+class PowerLawTemporalModel(TemporalModel):
+    """Temporal model with a Power Law decay.
+
+    For more information see :ref:`powerlaw-temporal-model`.
+
+    Parameters
+    ----------
+    alpha : float
+        Decay time power
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd. Frozen by default, at 2000-01-01.
+    t0: `~astropy.units.Quantity`
+        The scaling time in mjd. Fixed by default, at 1 day.
+    """
+
+    tag = ["PowerLawTemporalModel", "powerlaw"]
+
+    alpha = Parameter("alpha", 1., frozen=False)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+    t0 = Parameter("t0", "1 d", frozen=True)
+
+    @staticmethod
+    def evaluate(time, alpha, t_ref, t0=1*u.day):
+        """Evaluate at given times"""
+        return np.power((time - t_ref)/t0, alpha)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        pars = self.parameters
+        alpha = pars["alpha"].quantity
+        t0 = pars["t0"].quantity
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        if alpha != -1:
+            value = self.evaluate(t_max, alpha+1., t_ref, t0) - self.evaluate(t_min, alpha+1., t_ref, t0)
+            return t0 / (alpha+1.) * value / self.time_sum(t_min, t_max)
+        else:
+            value = np.log((t_max-t_ref)/(t_min-t_ref))
+            return t0 * value / self.time_sum(t_min, t_max)
+
+
+class SineTemporalModel(TemporalModel):
+    """Temporal model with a sinusoidal modulation.
+
+    For more information see :ref:`sine-temporal-model`.
+
+    Parameters
+    ----------
+    amp : float
+        Amplitude of the sinusoidal function
+    t_ref: `~astropy.units.Quantity`
+        The reference time in mjd.
+    omega: `~astropy.units.Quantity`
+        Pulsation of the signal.
+    """
+
+    tag = ["SineTemporalModel", "sinus"]
+
+    amp = Parameter("amp", 1., frozen=False)
+    omega = Parameter("omega", "1. rad/day", frozen=False)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
+
+    @staticmethod
+    def evaluate(time, amp, omega, t_ref):
+        """Evaluate at given times"""
+        return 1. + amp * np.sin(omega*(time-t_ref))
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        pars = self.parameters
+        omega = pars["omega"].quantity.to_value('rad/day')
+        amp = pars["amp"].value
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        value = (t_max-t_min) - \
+                amp/omega*(np.sin(omega*(t_max-t_ref).to_value('day'))-np.sin(omega*(t_min-t_ref).to_value('day')))
+        return value / self.time_sum(t_min, t_max)

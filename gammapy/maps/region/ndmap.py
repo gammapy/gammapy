@@ -4,8 +4,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import quantity_support
+from astropy.nddata import block_reduce
 from scipy.ndimage.measurements import label as ndi_label
-from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
 from ..core import Map
@@ -508,7 +508,7 @@ class RegionNDMap(Map):
             if colname == "stat_scan":
                 names = ["norm", "energy"]
             # TODO: this is not officially supported by GADF...
-            elif colname in ["counts", "npred", "npred_null"]:
+            elif colname in ["counts", "npred", "npred_excess"]:
                 names = ["dataset", "energy"]
             else:
                 names = ["energy"]
@@ -522,7 +522,7 @@ class RegionNDMap(Map):
             if colname == "stat_scan":
                 names = ["norm", "energy", "time"]
             # TODO: this is not officially supported by GADF...
-            elif colname in ["counts", "npred", "npred_null"]:
+            elif colname in ["counts", "npred", "npred_excess"]:
                 names = ["dataset", "energy", "time"]
             else:
                 names = ["energy", "time"]
@@ -534,7 +534,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Format not supported {format}")
 
         geom = RegionGeom.create(region=None, axes=axes)
-        return cls(geom=geom, data=data, unit=unit, meta=table.meta)
+        return cls(geom=geom, data=data, unit=unit, meta=table.meta, dtype=data.dtype)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
@@ -578,7 +578,7 @@ class RegionNDMap(Map):
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
+        return cls(geom=geom, data=data, meta=table.meta, unit=unit, dtype=data.dtype)
 
     def _pad_spatial(self, *args, **kwargs):
         raise NotImplementedError("Spatial padding is not supported by RegionNDMap")

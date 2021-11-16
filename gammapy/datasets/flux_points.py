@@ -49,8 +49,8 @@ class FluxPointsDataset(Dataset):
         dataset = FluxPointsDataset(model, flux_points)
         fit = Fit()
         result = fit.run([dataset])
-        print(result["optimize_result"])
-        print(result["optimize_result"].parameters.to_table())
+        print(result)
+        print(result.parameters.to_table())
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command

@@ -62,6 +62,9 @@ class TestImageProfileEstimator:
         desired = [4.0, 8.0, 20.0, 12.0, 12.0] * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
+        with pytest.raises(ValueError):
+            ImageProfileEstimator(axis="radial")
+
     @staticmethod
     def test_lat_profile_mean(checkerboard_image):
         p = ImageProfileEstimator(axis="lat", method="mean")

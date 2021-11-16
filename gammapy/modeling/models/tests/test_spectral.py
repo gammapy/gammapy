@@ -71,7 +71,9 @@ TEST_MODELS = [
     dict(
         name="norm-powerlaw",
         model=PowerLawNormSpectralModel(
-            tilt=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
+            tilt=2 * u.Unit(""),
+            norm=4.0 * u.Unit(""),
+            reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, ""),
         integral_1_10TeV=u.Quantity(3.6, "TeV"),
@@ -276,7 +278,8 @@ TEST_MODELS = [
     dict(
         name="pbpl",
         model=PiecewiseNormSpectralModel(
-            energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
+            energy=[1, 3, 7, 10] * u.TeV,
+            norms=[1, 5, 3, 0.5] * u.Unit(""),
         ),
         val_at_2TeV=u.Quantity(2.76058404, ""),
         integral_1_10TeV=u.Quantity(24.758255, "TeV"),
@@ -323,10 +326,10 @@ TEST_MODELS.append(
 def test_models(spectrum):
     model = spectrum["model"]
     for p in model.parameters:
-        assert p._type == 'spectral'
+        assert p._type == "spectral"
     energy = 2 * u.TeV
     value = model(energy)
-    energies =  [2, 3] * u.TeV
+    energies = [2, 3] * u.TeV
     values = model(energies)
     assert_quantity_allclose(value, spectrum["val_at_2TeV"], rtol=1e-7)
     if "val_at_3TeV" in spectrum:
@@ -362,7 +365,6 @@ def test_models(spectrum):
         inverse = model.inverse_all(values)
         for ke, ener in enumerate(energies):
             assert_quantity_allclose(inverse[ke], energies[ke], rtol=0.01)
-
 
     if "integral_infinity" in spectrum:
         energy_min = 0 * u.TeV
@@ -407,33 +409,33 @@ def test_model_plot():
 @requires_dependency("matplotlib")
 def test_model_plot_sed_type():
     pwl = PowerLawSpectralModel(
-                                amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
-                                )
+        amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
+    )
     pwl.amplitude.error = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
-                                
+
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
-        assert(ax1.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]")
-        assert(ax2.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]")
+        assert ax1.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]"
+        assert ax2.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
-        assert(ax1.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
-        assert(ax2.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]")
+        assert ax1.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]"
+        assert ax2.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="flux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="flux")
-        assert(ax1.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]")
-        assert(ax2.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]")
+        assert ax1.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]"
+        assert ax2.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
-        assert(ax1.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]")
-        assert(ax2.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]")
+        assert ax1.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
+        assert ax2.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
 
 
 def test_to_from_dict():
@@ -478,11 +480,10 @@ def test_to_from_dict_partial_input(caplog):
     actual = [par.frozen for par in new_model.parameters]
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
-    assert caplog.records[-1].levelname == "WARNING"
-    assert (
-        caplog.records[-1].message
-        == "Parameter reference not defined. Using default value: 1.0 TeV"
-    )
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Parameter reference not defined. Using default value: 1.0 TeV" in [
+        _.message for _ in caplog.records
+    ]
 
 
 def test_to_from_dict_compound():
@@ -644,7 +645,7 @@ class TestNaimaModel:
         )
         model = NaimaSpectralModel(radiative_model)
         for p in model.parameters:
-            assert p._type == 'spectral'
+            assert p._type == "spectral"
 
         val_at_2TeV = 9.725347355450884e-14 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 3.530537143620737e-13 * u.Unit("cm-2 s-1")
@@ -685,7 +686,7 @@ class TestNaimaModel:
 
         model = NaimaSpectralModel(radiative_model)
         for p in model.parameters:
-            assert p._type == 'spectral'
+            assert p._type == "spectral"
 
         val_at_2TeV = 4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 1.595813e-11 * u.Unit("cm-2 s-1")
@@ -716,7 +717,7 @@ class TestNaimaModel:
 
         model = NaimaSpectralModel(radiative_model)
         for p in model.parameters:
-            assert p._type == 'spectral'
+            assert p._type == "spectral"
 
         val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
         integral_1_10TeV = 4.449186e-13 * u.Unit("cm-2 s-1")
@@ -931,3 +932,20 @@ def test_energy_flux_error_exp_cutoff_power_law():
 
     assert_allclose(enrg_flux.value / 1e-12, 2.788, rtol=0.001)
     assert_allclose(enrg_flux_error.value / 1e-12, 1.419, rtol=0.001)
+
+
+def test_integral_exp_cut_off_power_law_large_number_of_bins():
+    energy = np.geomspace(1, 10, 100) * u.TeV
+    energy_min = energy[:-1]
+    energy_max = energy[1:]
+
+    exppowerlaw = ExpCutoffPowerLawSpectralModel(
+        amplitude="1e-11 TeV-1 cm-2 s-1", index=2
+    )
+    exppowerlaw.parameters["lambda_"].value = 1e-3
+    powerlaw = PowerLawSpectralModel(amplitude="1e-11 TeV-1 cm-2 s-1", index=2)
+    expected_flux = powerlaw.integral(energy_min, energy_max)
+
+    flux = exppowerlaw.integral(energy_min, energy_max)
+
+    assert_allclose(flux.value, expected_flux.value, rtol=0.01)

@@ -419,9 +419,8 @@ class MapAxis:
         """
         energy_edges = u.Quantity(energy_edges, unit)
 
-        if unit is None:
-            unit = energy_edges.unit
-            energy_edges = energy_edges.to(unit)
+        if not energy_edges.unit.is_equivalent("TeV"):
+            raise ValueError(f"Please provide a valid energy unit, got {energy_edges.unit} instead.")
 
         if name is None:
             name = "energy"
@@ -471,6 +470,9 @@ class MapAxis:
         if unit is None:
             unit = energy_max.unit
             energy_min = energy_min.to(unit)
+
+        if not energy_max.unit.is_equivalent("TeV"):
+            raise ValueError(f"Please provide a valid energy unit, got {energy_max.unit} instead.")
 
         if per_decade:
             nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
@@ -1195,7 +1197,7 @@ class MapAxis:
 
             # background models are stored in reconstructed energy
             hduclass = table.meta.get("HDUCLAS2")
-            if hduclass == "BKG" and column_prefix == "ENERG":
+            if hduclass in {"BKG", "RAD_MAX"} and column_prefix == "ENERG":
                 name = "energy"
 
             edges_lo = table[f"{column_prefix}_LO"].quantity[0]
@@ -1880,6 +1882,7 @@ class MapAxes(Sequence):
                     )
                 except KeyError:
                     continue
+
                 axes.append(axis)
         elif format == "gadf-sed":
             for axis_format in ["gadf-sed-norm", "gadf-sed-energy", "gadf-sed-counts"]:

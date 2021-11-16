@@ -288,6 +288,29 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets=datasets)
 
+    def to_spectrum_datasets(self, region):
+        """Extract spectrum datasets for the given region.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`
+            Region definition.
+
+        Returns
+        --------
+        datasets : `Datasets`
+            List of `~gammapy.datasets.SpectrumDataset`
+        """
+        datasets = Datasets()
+
+        for dataset in self:
+            spectrum_dataset = dataset.to_spectrum_dataset(
+                on_region=region, name=dataset.name
+            )
+            datasets.append(spectrum_dataset)
+
+        return datasets
+
     @property
     # TODO: make this a method to support different methods?
     def energy_ranges(self):

@@ -33,17 +33,18 @@ dependencies:
   - tqdm
   # extra dependencies
   - healpy
-  - iminuit<2.0
   - ipython
   - jupyter
   - jupyterlab
-  - matplotlib
+  - matplotlib>=3.4
   - naima
   - pandas
   - reproject
   - sherpa
+  - iminuit>=2.8.0
   # dev dependencies
   - black
+  - codespell
   - flake8
   - isort
   - nbsphinx
@@ -64,3 +65,4 @@ dependencies:
   - h5py==2.10.0
   - pip:
       - pytest-sphinx
+

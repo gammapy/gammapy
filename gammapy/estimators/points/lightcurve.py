@@ -7,7 +7,8 @@ from gammapy.datasets import Datasets
 from gammapy.maps import TimeMapAxis, LabelMapAxis, Map
 from gammapy.utils.pbar import progress_bar
 from gammapy.modeling import Fit
-from .flux_point import FluxPoints, FluxPointsEstimator
+from .core import FluxPoints
+from .sed import FluxPointsEstimator
 
 __all__ = ["LightCurveEstimator"]
 
@@ -119,7 +120,7 @@ class LightCurveEstimator(FluxPointsEstimator):
             valid_intervals.append([t_min, t_max])
             fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
 
-            for name in ["counts", "npred", "npred_null"]:
+            for name in ["counts", "npred", "npred_excess"]:
                 fp._data[name] = self.expand_map(
                     fp._data[name], dataset_names=datasets.names
                 )
