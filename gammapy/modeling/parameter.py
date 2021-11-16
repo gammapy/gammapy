@@ -105,7 +105,7 @@ class Parameter:
         scan_n_values=11,
         scan_n_sigma=2,
         scan_values=None,
-        scale_method=None,
+        scale_method="scale10",
         interp="lin",
     ):
         if not isinstance(name, str):
