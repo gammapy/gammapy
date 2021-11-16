@@ -2286,30 +2286,30 @@ class MapDatasetOnOff(MapDataset):
         else:
             mask = slice(None)
 
-        counts_off = np.nan
+        counts_off = 0
         if self.counts_off is not None:
             counts_off = self.counts_off.data[mask].sum()
 
-        info["counts_off"] = counts_off
+        info["counts_off"] = int(counts_off)
 
         acceptance = 1
         if self.acceptance:
             # TODO: handle energy dependent a_on / a_off
             acceptance = self.acceptance.data[mask].sum()
 
-        info["acceptance"] = acceptance
+        info["acceptance"] = float(acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off:
             acceptance_off = acceptance * counts_off / info["background"]
 
-        info["acceptance_off"] = acceptance_off
+        info["acceptance_off"] = float(acceptance_off)
 
         alpha = np.nan
         if self.acceptance_off and self.acceptance:
             alpha = np.mean(self.alpha.data[mask])
 
-        info["alpha"] = alpha
+        info["alpha"] = float(alpha)
 
         info["sqrt_ts"] = WStatCountsStatistic(
             info["counts"],
