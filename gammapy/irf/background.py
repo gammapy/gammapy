@@ -134,7 +134,9 @@ class Background3D(BackgroundIRF):
     def peek(self, figsize=(10, 8)):
         return self.to_2d().peek(figsize)
 
-    def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
+    def plot_at_energy(
+        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+    ):
         """ Plot the background rate in Field of view co-ordinates at a given energy.
 
         Parameters
@@ -156,7 +158,8 @@ class Background3D(BackgroundIRF):
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
         width = 12
-        figsize = (width, width * rows / cols)
+        if figsize is None:
+            figsize = (width, width * rows / cols)
 
         fig, axes = plt.subplots(
             ncols=cols,
@@ -167,7 +170,7 @@ class Background3D(BackgroundIRF):
 
         x = self.axes["fov_lat"].edges
         y = self.axes["fov_lon"].edges
-        X, Y = X, Y = np.meshgrid(x, y)
+        X, Y = np.meshgrid(x, y)
 
         for i, ee in enumerate(energy):
             if len(energy) == 1:
