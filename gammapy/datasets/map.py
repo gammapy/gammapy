@@ -1231,7 +1231,9 @@ class MapDataset(Dataset):
 
         info["npred_signal"] = float(npred_signal)
 
-        exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
+        exposure_min = np.nan * u.Unit("cm s")
+        exposure_max = np.nan * u.Unit("cm s")
+        livetime = np.nan * u.s
 
         if self.exposure is not None:
             mask_exposure = self.exposure.data > 0
