@@ -47,7 +47,8 @@ class HDUIndexTable(Table):
         table = super().read(filename, **kwargs)
         table.meta["BASE_DIR"] = filename.parent.as_posix()
 
-        return table
+        # TODO: simply return the table when empty string column is not masked by default
+        return table.filled(fill_value='')
 
     @property
     def base_dir(self):
