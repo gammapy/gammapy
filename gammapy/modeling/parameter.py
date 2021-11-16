@@ -105,7 +105,7 @@ class Parameter:
         scan_n_values=11,
         scan_n_sigma=2,
         scan_values=None,
-        scale_method=None,
+        scale_method="scale10",
         interp="lin",
     ):
         if not isinstance(name, str):
@@ -402,10 +402,9 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
-            "interp": self.interp
+            "interp": self.interp,
+            "scale_method": self.scale_method
         }
-        if self.scale_method is not None:
-            output["scale_method"] = self.scale_method
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io

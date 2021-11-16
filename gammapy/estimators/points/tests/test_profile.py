@@ -76,7 +76,7 @@ def test_profile_content():
     assert_allclose(errn, [10.75, 10.75], atol=1e-2)
 
     ul = result.npred_excess_ul.data[7].squeeze()
-    assert_allclose(ul, [111.31, 111.31], atol=1e-2)
+    assert_allclose(ul, [111.32, 111.32], atol=1e-2)
 
 
 @requires_dependency("iminuit")
