@@ -1198,17 +1198,17 @@ class MapDataset(Dataset):
         else:
             mask = slice(None)
 
-        counts = np.nan
+        counts = 0
         if self.counts:
             counts = self.counts.data[mask].sum()
 
-        info["counts"] = counts
+        info["counts"] = int(counts)
 
         background = np.nan
         if self.background:
             background = self.background.data[mask].sum()
 
-        info["background"] = background
+        info["background"] = float(background)
 
         info["excess"] = counts - background
         info["sqrt_ts"] = CashCountsStatistic(counts, background).sqrt_ts
@@ -1217,21 +1217,23 @@ class MapDataset(Dataset):
         if self.models or not np.isnan(background):
             npred = self.npred().data[mask].sum()
 
-        info["npred"] = npred
+        info["npred"] = float(npred)
 
         npred_background = np.nan
         if self.background:
             npred_background = self.npred_background().data[mask].sum()
 
-        info["npred_background"] = npred_background
+        info["npred_background"] = float(npred_background)
 
         npred_signal = np.nan
         if self.models:
             npred_signal = self.npred_signal().data[mask].sum()
 
-        info["npred_signal"] = npred_signal
+        info["npred_signal"] = float(npred_signal)
 
-        exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
+        exposure_min = np.nan * u.Unit("cm s")
+        exposure_max = np.nan * u.Unit("cm s")
+        livetime = np.nan * u.s
 
         if self.exposure is not None:
             mask_exposure = self.exposure.data > 0
@@ -1247,8 +1249,8 @@ class MapDataset(Dataset):
             exposure_max = np.max(self.exposure.quantity[mask_exposure])
             livetime = self.exposure.meta.get("livetime", np.nan * u.s).copy()
 
-        info["exposure_min"] = exposure_min
-        info["exposure_max"] = exposure_max
+        info["exposure_min"] = exposure_min.item()
+        info["exposure_max"] = exposure_max.item()
         info["livetime"] = livetime
 
         ontime = u.Quantity(np.nan, "s")
@@ -1265,20 +1267,20 @@ class MapDataset(Dataset):
         n_bins = 0
         if self.counts is not None:
             n_bins = self.counts.data.size
-        info["n_bins"] = n_bins
+        info["n_bins"] = int(n_bins)
 
         n_fit_bins = 0
         if self.mask is not None:
             n_fit_bins = np.sum(self.mask.data)
 
-        info["n_fit_bins"] = n_fit_bins
+        info["n_fit_bins"] = int(n_fit_bins)
         info["stat_type"] = self.stat_type
 
         stat_sum = np.nan
         if self.counts is not None and self.models is not None:
             stat_sum = self.stat_sum()
 
-        info["stat_sum"] = stat_sum
+        info["stat_sum"] = float(stat_sum)
 
         return info
 
@@ -2284,30 +2286,30 @@ class MapDatasetOnOff(MapDataset):
         else:
             mask = slice(None)
 
-        counts_off = np.nan
+        counts_off = 0
         if self.counts_off is not None:
             counts_off = self.counts_off.data[mask].sum()
 
-        info["counts_off"] = counts_off
+        info["counts_off"] = int(counts_off)
 
         acceptance = 1
         if self.acceptance:
             # TODO: handle energy dependent a_on / a_off
             acceptance = self.acceptance.data[mask].sum()
 
-        info["acceptance"] = acceptance
+        info["acceptance"] = float(acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off:
             acceptance_off = acceptance * counts_off / info["background"]
 
-        info["acceptance_off"] = acceptance_off
+        info["acceptance_off"] = float(acceptance_off)
 
         alpha = np.nan
         if self.acceptance_off and self.acceptance:
             alpha = np.mean(self.alpha.data[mask])
 
-        info["alpha"] = alpha
+        info["alpha"] = float(alpha)
 
         info["sqrt_ts"] = WStatCountsStatistic(
             info["counts"],

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import json
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -9,7 +10,7 @@ from regions import CircleSkyRegion
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.datasets.map import MapEvaluator, RAD_AXIS_DEFAULT
+from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -28,6 +29,7 @@ from gammapy.maps import (
     RegionGeom,
     HpxGeom,
 )
+from gammapy.maps.io import JsonQuantityEncoder
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -408,6 +410,10 @@ def test_info_dict(sky_model, geom, geom_etrue):
     assert_allclose(info_dict["ontime"].value, 3600)
 
     assert info_dict["name"] == "test"
+
+    # try to dump as json
+    result = json.dumps(info_dict, cls=JsonQuantityEncoder)
+    assert "counts" in result
 
 
 def get_fermi_3fhl_gc_dataset():
