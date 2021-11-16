@@ -19,7 +19,7 @@ independent datasets are represented by a `Dataset` object. In a typical analysi
 scenario there are components in the model, that are only fitted to one of the datasets,
 while other model components are shared between all datasets. This PIG proposes the
 introduction of a global model API for Gammapy, which handles all model components
-involved in an analysis in a single global models object to resolve the spreaded
+involved in an analysis in a single global models object to resolve the spread
 model definition in the current implementation. We consider the global model API
 as a key solution for future support for distributed computing in Gammapy.
 

@@ -555,7 +555,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             Which spectral model
             
         linked : bool
-             Each sub-component of a source is given as a diffrent `SkyModel`
+             Each sub-component of a source is given as a different `SkyModel`
              If True the spectral parameters except the mormalisation are linked.
              Default is False
 
@@ -880,14 +880,14 @@ class SourceCatalogHGPS(SourceCatalog):
         components_status : {'independent', 'linked', 'merged'}
             Relation between the sources components:
                 'independent' : each sub-component of a source is given as 
-                                a diffrent `SkyModel` (Default)
+                                a different `SkyModel` (Default)
                 'linked' : each sub-component of a source is given as 
-                           a diffrent `SkyModel` but the spectral parameters
+                           a different `SkyModel` but the spectral parameters
                            except the mormalisation are linked.
                 'merged' : the sub-components are merged into a single `SkyModel`
                            given as a `~gammapy.modeling.models.TemplateSpatialModel`
                            with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
-                           In that case the relave weigths between the components
+                           In that case the relavtie weights between the components
                            cannot be adjusted.
 
         Returns

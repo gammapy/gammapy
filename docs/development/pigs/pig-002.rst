@@ -42,7 +42,7 @@ Similarly, classes should have 3-10 methods. 2 methods classes (e.g. only
 methodes, the class should  be split into several classes/functions.
 
 It is important to keep the number of functions and classes needed by the user
-to a reasonnable level. Modularity is therefore very important, since it allows
+to a reasonable level. Modularity is therefore very important, since it allows
 to easily implement high level interfaces that orchestrates the common analysis
 patterns.
 
@@ -158,7 +158,7 @@ Existing code
 
 Currently, maps and cubes rely on the ``SkyImage`` and ``SkyCube`` classes.
 There are various scripts and classes existing currently in gammapy to produce
-maps and cubes (mostly developped by @adonath and @ljouvin).Image  processing
+maps and cubes (mostly developed by @adonath and @ljouvin).Image  processing
 can be performed with ``SingleObsImageMaker`` and ``StackedObsImageMaker``,
 while cube processing can be performed with ``SingleObsCubeMaker`` and
 ``StackedObsCubeMaker``. For images, one can also use the

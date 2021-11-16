@@ -113,7 +113,7 @@ def plot_contour_line(ax, x, y, **kwargs):
     """Plot smooth curve from contour points"""
     from scipy.interpolate import CubicSpline
 
-    # close countour
+    # close contour
     xf = np.append(x, x[0])
     yf = np.append(y, y[0])
 

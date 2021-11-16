@@ -78,7 +78,7 @@ class Parameter:
     scan_max : float
         Minimum value for the parameter scan. Overwrites scan_n_sigma.
     scan_n_values: int
-        Number of values to be used fo the parameter scan.
+        Number of values to be used for the parameter scan.
     scan_n_sigma : int
         Number of sigmas to scan.
     scan_values: `numpy.array`

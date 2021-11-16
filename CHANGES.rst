@@ -100,7 +100,7 @@ accordingly to an ``EBLAbsorptionNormSpectralModel``. A new
 ``GeneralizedGaussianSpatialModel`` and ``BrokenPowerlawSpectralModel``
 have been introduced.
 
-Gammapy v0.18 comesnow with support for custom energy dependent spatial models.
+Gammapy v0.18 comes now with support for custom energy dependent spatial models.
 An example for this can be found in the `models tutorial <tutorials/models.html>`__.
 The ``SkyDiffuseCube`` has been removed, the same functionality can now be
 achieved with the ``TemplateSpatialModel``. Following the proposal in
@@ -257,7 +257,7 @@ Summary
 **What's new**
 
 Gammapy v0.17 comes with new important features, an improved sub-package
-stucture and a more uniform API. Again this release contains several API
+structure and a more uniform API. Again this release contains several API
 breaking changes and removal of non-essential parts of Gammapy. These
 changes are required to finally arrive at a more consistent and stable
 API for Gammapy v1.0.
@@ -855,7 +855,7 @@ handled correctly.
 
 The recommended conda environment for Gammapy v0.13 was updated. It now relies
 on Python 3.7, Ipython 7.5, Scipy 1.3, Matplotlib 3.1, Astropy 3.1, and Healpy 1.12.
-These updates should be backwards compatible. Sripts and notebooks should
+These updates should be backwards compatible. Scripts and notebooks should
 run and give the same results.
 
 **Contributors:**
@@ -1830,7 +1830,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
-- [#1006] Add possibilty to skip runs based on alpha in SpectrumExtraction (Johannes King)
+- [#1006] Add possibility to skip runs based on alpha in SpectrumExtraction (Johannes King)
 - [#1002] Containment correction in SpectrumObservation via AREASCAL (Johannes King)
 - [#1001] Add SpectrumAnalysisIACT (Johannes King)
 - [#997] Add compute_chisq method to lightcurve class (Nachiketa Chakraborty)

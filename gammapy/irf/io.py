@@ -141,7 +141,7 @@ def load_cta_irfs(filename):
 
 def load_irf_dict_from_file(filename):
     """Open a fits file and generate a dictionary containing the Gammapy objects
-    corresponding ot the IRF components stored
+    corresponding to the IRF components stored
     
     Parameters
     ----------

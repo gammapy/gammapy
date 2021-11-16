@@ -129,7 +129,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     use_region_center: bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the sum over the whole region
+        or the instead the sum over the whole region
 
     Returns
     -------
@@ -262,7 +262,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------
@@ -315,7 +315,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_c
     use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------

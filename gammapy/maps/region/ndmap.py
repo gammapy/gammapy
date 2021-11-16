@@ -181,7 +181,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.

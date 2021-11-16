@@ -670,7 +670,7 @@ class EventList:
         Parameters
         ----------
         allsky : bool
-            Wheter to look at the events allsky
+            Whether to look at the events allsky
         """
         import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec

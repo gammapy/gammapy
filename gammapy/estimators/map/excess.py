@@ -93,7 +93,7 @@ class ExcessMapEstimator(Estimator):
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
     apply_mask_fit : bool

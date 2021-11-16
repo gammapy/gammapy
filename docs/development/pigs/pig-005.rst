@@ -24,7 +24,7 @@ will be addressed in separate PIGs**.
 The content of this document was decided based upon user feedback from the first
 CTA data challenge (DC1), experience from analysing existing datasets as well as
 definition of use cases (see below). The content will be **updated in the
-comming month** and be adjusted to upcoming **requirements defined by CTA**.
+coming month** and be adjusted to upcoming **requirements defined by CTA**.
 Current requirements defined by CTA are described observer access use cases
 (private link to slides_) and in the document written summarizing the SUSS
 workshop Dec. 2018 (private link to indico_).
@@ -144,14 +144,14 @@ Modeling
 
 Unify quantity support for model evaluation. Implement coordinate frame handling
 for spatial models. Implement full support of the XML I/O as well as improve the
-existing YAML IO. Add missing models. Implement (hierachical) model parameter
+existing YAML IO. Add missing models. Implement (hierarchical) model parameter
 name handling and improve parameter user interface. Add support for baysian
 priors on model parameters. Add support for handling tied parameters.
 
 Fitting
 -------
 
-Design and implement configuration and result handling. Finish implemention of
+Design and implement configuration and result handling. Finish implementation of
 the unified fitting front end in ``gammapy.utils.fitting``. Fully support of the
 ``sherpa`` fitting backend. Add further fitting backends, such as
 ``scipy.optimize`` or ``emcee``. Implement fitting helper and diagnosis methods
@@ -200,7 +200,7 @@ those project PIGs should define a list of proposed pull requests, with
 preliminary milestones (version number as listed above) assigned. For each
 development project we will create a GitHub project and list the proposed pull
 requests as issues under the project. Responsibilities, updated milestones and
-discussion on implementation details are discussed in thoses issues. The general
+discussion on implementation details are discussed in those issues. The general
 progress of the development work can be tracked using the GitHub project board.
 
 Decision

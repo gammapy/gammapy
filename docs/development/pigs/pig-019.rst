@@ -110,15 +110,15 @@ introducing general higher level estimators and a common configuration
 system.
 
 
-Introduce gammapy.visualisation
+Introduce gammapy.visualization
 -------------------------------
 To group plotting and data visualisation related functionality in a single
-namespace we propose to introduce ``gammapy.visualisation``. The model of
+namespace we propose to introduce ``gammapy.visualization``. The model of
 a separate sub-package for plotting was adopted by many other large
 astronomical python packages, such as `astropy`_, `sunpy`_, `ctapipe`_
 and `sherpa`_. So far the plotting functionality in Gammapy is limited
 and mostly attached to data objects such as datasets, maps and irfs.
-Introducing ``gammapy.visualisation`` would be a possibility to
+Introducing ``gammapy.visualization`` would be a possibility to
 maintain plotting related code independently and move existing functionality
 such as ``MapPanelPlotter`` or ``colormap_hess`` etc. to a common namespace.
 

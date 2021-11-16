@@ -113,7 +113,7 @@ class PlotMixin:
         kwargs_fit: dict
             Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
         kwargs_safe: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for maks safe
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe.
 
         Returns
         -------

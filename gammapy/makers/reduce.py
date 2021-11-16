@@ -22,7 +22,7 @@ class DatasetsMaker(Maker):
         Stack into reference dataset or not
     n_jobs : int
         Number of processes to run in parallel
-        Defalut is None
+        Default is None
     cutout_mode : str
         Cutout mode. Default is "partial"
     cutout_width : str or `~astropy.coordinates.Angle`,
@@ -107,7 +107,7 @@ class DatasetsMaker(Maker):
             self._datasets.append(dataset)
 
     def error_callback(self, dataset):
-        # parralel run could cause a memory error with non-explicit message.
+        # parallel run could cause a memory error with non-explicit message.
         self._error = True
 
     def run(self, dataset, observations, datasets=None):

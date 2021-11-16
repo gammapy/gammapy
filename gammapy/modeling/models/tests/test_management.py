@@ -199,7 +199,7 @@ def test_select(models):
 def test_restore_status(models):
     model = models[1].spectral_model
     covariance_data = np.array([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])
-    # the covariance is resest for frozen parameters
+    # the covariance is reset for frozen parameters
     # because of from_factor_matrix (used by the optimizer)
     # so if amplitude if frozen we get
     covariance_frozen = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])

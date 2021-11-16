@@ -85,7 +85,7 @@ class Fit:
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
 
-        For the `"scipy"` backend the available options are decsribed in detail here:
+        For the `"scipy"` backend the available options are described in detail here:
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
 
     covariance_opts : dict

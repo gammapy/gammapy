@@ -85,10 +85,10 @@ class TSMapEstimator(Estimator):
         Available options are:
 
             * "all": all the optional steps are executed
-            * "errn-errp": estimate assymmetric error on flux.
+            * "errn-errp": estimate asymmetric error on flux.
             * "ul": estimate upper limits on flux.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the maps bins.
     sum_over_energy_groups : bool

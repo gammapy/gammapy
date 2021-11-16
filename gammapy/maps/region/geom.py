@@ -305,7 +305,7 @@ class RegionGeom(Geom):
     def bin_volume(self):
         """If the RegionGeom has a non-spatial axis, it
         returns the volume of the region. If not, it
-        just retuns the solid angle size.
+        just returns the solid angle size.
 
         Returns
         -------
@@ -700,7 +700,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
@@ -709,7 +709,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on.
         """
         import matplotlib.pyplot as plt

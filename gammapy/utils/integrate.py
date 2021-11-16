@@ -32,7 +32,7 @@ def trapz_loglog(y, x, axis=-1):
     energy_min, energy_max = x[:-1], x[1:]
     vals_energy_min, vals_energy_max = y[:-1], y[1:]
 
-    # log scale has the build-in zero clipping
+    # log scale has the built-in zero clipping
     log = LogScale()
 
     with np.errstate(invalid="ignore", divide="ignore"):

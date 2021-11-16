@@ -290,7 +290,7 @@ def test_map_arithmetics(map_type):
     assert m3.unit == u.Unit("m2")
     assert_allclose(m3.data, 1.0001)
 
-    # substraction
+    # subtraction
     m3 -= 1 * u.cm ** 2
     assert m3.unit == u.Unit("m2")
     assert_allclose(m3.data, 1.0)

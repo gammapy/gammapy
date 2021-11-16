@@ -1118,7 +1118,7 @@ class MapAxis:
 
     @classmethod
     def from_table(cls, table, format="ogip", idx=0, column_prefix=""):
-        """Instanciate MapAxis from table HDU
+        """Instantiate MapAxis from table HDU
 
         Parameters
         ----------
@@ -1246,7 +1246,7 @@ class MapAxis:
 
     @classmethod
     def from_table_hdu(cls, hdu, format="ogip", idx=0):
-        """Instanciate MapAxis from table HDU
+        """Instantiate MapAxis from table HDU
 
         Parameters
         ----------
@@ -1757,7 +1757,7 @@ class MapAxes(Sequence):
                     colnames = [name, name + "_MIN", name + "_MAX"]
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-                    # do not store edges for lable axis
+                    # do not store edges for label axis
                     if ax.node_type == "label" and colname != name:
                         continue
 

@@ -291,7 +291,7 @@ class SkyModel(Model):
         energy : `~astropy.units.Quantity`
             Energy coordinate
         time: `~astropy.time.Time`
-            Time co-ordinate
+            Time coordinate
 
         Returns
         -------
@@ -531,7 +531,7 @@ class SkyModel(Model):
         ----------
         model_type : {None, "spatial", "spectral", "temporal"}
            restore frozen status to default for all parameters or only spatial/spectral/temporal
-           Default is None so all parameters are restore to defaut frozen status.
+           Default is None so all parameters are restore to default frozen status.
 
         """
         if model_type is None:

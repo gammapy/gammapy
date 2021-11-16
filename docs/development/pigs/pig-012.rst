@@ -74,13 +74,13 @@ analysis.
 We see then two main options on how to use the high level interface API:
 
 - Within an IPython session or notebook, mostly dealing with a manager object to perform specific tasks in an **interactive** analysis process
-- In a Python script or notebook, declaring the orchestration of the tasks with a manager object for an **automatized** process
+- In a Python script or notebook, declaring the orchestration of the tasks with a manager object for an **automated** process
 
 This high level interface API is similar to what it is done in `Fermipy`_ or HAP
 in HESS, including also the options to save and recover session states, as well
 as serialization of intermediate data products and logging. It is flexible
 enough to allow the user to work with the API at any stage of the analysis
-process, and not only from the start to the very end or in automatized process.
+process, and not only from the start to the very end or in automated process.
 
 **Use cases**
 

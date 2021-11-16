@@ -986,7 +986,7 @@ class WcsGeom(Geom):
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
         oversampling_factor : int
-            Over-sampling factor to compute the region weigths
+            Over-sampling factor to compute the region weights
 
         Returns
         -------
