@@ -159,7 +159,7 @@ class RegionNDMap(Map):
             weights = self.data[:, 0, 0]
             ax.hist(
                 axis.as_plot_center,
-                bins=axis.as_plot_center,
+                bins=axis.as_plot_edges,
                 weights=weights,
                 **kwargs
             )
