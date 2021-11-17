@@ -175,6 +175,13 @@ keywords:
 identifiers:
  - type: "doi"
    value: 10.5281/zenodo.4701500
+   description: Zenodo DOI v0.18.2
+ - type: "doi"
+   value: 10.5281/zenodo.4701492
+   description: Zenodo DOI v0.17
+ - type: "doi"
+   value: 10.5281/zenodo.4701489
+   description: Zenodo DOI v0.16
  - type: "bibcode"
    value: "2017ascl.soft11014D"
  - type: "ascl-id"
