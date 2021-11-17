@@ -1,0 +1,34 @@
+If you use Gammapy for work/research presented in a publication (whether
+directly, or as a dependency to another package), we recommend and encourage
+the following acknowledgment:
+
+  This research made use of Gammapy, a community-developed core Python package for gamma-ray astronomy
+  (Deil et al., 2017).
+
+where (Deil et al., 2017) is a citation to this paper:
+
+  https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D
+
+We encourage you to also include citations to the paper in the main text
+wherever appropriate.
+
+Recommended BibTeX entry for the above citation:
+
+@INPROCEEDINGS{2017ICRC...35..766D,
+       author = {{Deil}, C. and {Zanin}, R. and {Lefaucheur}, J. and {Boisson}, C. and {Khelifi}, B. and {Terrier}, R. and {Wood}, M. and {Mohrmann}, L. and {Chakraborty}, N. and {Watson}, J. and {Lopez-Coto}, R. and {Klepser}, S. and {Cerruti}, M. and {Lenain}, J.~P. and {Acero}, F. and {Djannati-Ata{\"\i}}, A. and {Pita}, S. and {Bosnjak}, Z. and {Trichard}, C. and {Vuillaume}, T. and {Donath}, A. and {Consortium}, CTA and {King}, J. and {Jouvin}, L. and {Owen}, E. and {Sipocz}, B. and {Lennarz}, D. and {Voruganti}, A. and {Spir-Jacob}, M. and {Ruiz}, J. Enrique and {Arribas}, M. Paz},
+        title = "{Gammapy - A prototype for the CTA science tools}",
+     keywords = {Astrophysics - Instrumentation and Methods for Astrophysics},
+    booktitle = {35th International Cosmic Ray Conference (ICRC2017)},
+         year = 2017,
+       series = {International Cosmic Ray Conference},
+       volume = {301},
+        month = jan,
+          eid = {766},
+        pages = {766},
+archivePrefix = {arXiv},
+       eprint = {1709.01751},
+ primaryClass = {astro-ph.IM},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
