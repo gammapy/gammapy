@@ -173,7 +173,7 @@ def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
     idx_y = parameters.free_parameters.index(par_y)
     y = _make_parname(idx_y, par_y)
 
-    cl = chi2(2).cdf(sigma)
+    cl = chi2(2).cdf(sigma**2)
     contour = minuit.mncontour(x=x, y=y, size=numpoints, cl=cl)
     # TODO: add try and except to get the success
     return {
