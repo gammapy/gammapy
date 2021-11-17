@@ -864,13 +864,16 @@ class MapDataset(Dataset):
 
         if method == "diff":
             if self.stat_type == "wstat":
-                counts_off = (self.counts_off * mask).get_spectrum(region).data
-                norm = (self.background * mask).get_spectrum(region).data
-                mu_sig = (self.npred_signal() * mask).get_spectrum(region).data
+                counts_off = (self.counts_off * mask).get_spectrum(region)
+
+                with np.errstate(invalid="ignore"):
+                    alpha = (self.background * mask).get_spectrum(region) / counts_off
+
+                mu_sig = (self.npred_signal() * mask).get_spectrum(region)
                 stat = WStatCountsStatistic(
-                    n_on=counts_spec.data,
+                    n_on=counts_spec,
                     n_off=counts_off,
-                    alpha=norm / counts_off,
+                    alpha=alpha,
                     mu_sig=mu_sig,
                 )
             elif self.stat_type == "cash":
