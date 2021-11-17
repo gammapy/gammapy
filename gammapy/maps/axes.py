@@ -493,7 +493,6 @@ class MapAxis:
             node_type=node_type,
         )
 
-
     @classmethod
     def from_nodes(cls, nodes, **kwargs):
         """Generate an axis object from a sequence of nodes (bin centers).
@@ -2224,7 +2223,7 @@ class TimeMapAxis:
         for time_min, time_max in zip(self.time_min, self.time_max):
             yield (time_min, time_max)
 
-    def coord_to_idx(self, coord,**kwargs):
+    def coord_to_idx(self, coord, **kwargs):
         """Transform from axis time coordinate to bin index.
 
         Indices of time values falling outside time bins will be
@@ -2792,7 +2791,7 @@ class LabelMapAxis:
         str_ += fmt.format("name", self.name)
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("node type", self.node_type)
-        str_ += fmt.format(f"labels", "{0}".format(list(self._labels)))
+        str_ += fmt.format("labels", "{0}".format(list(self._labels)))
         return str_.expandtabs(tabsize=2)
 
     def __eq__(self, other):

@@ -76,13 +76,11 @@ class RegionGeom(Geom):
         # define cached methods
         self.get_wcs_coord_and_weights = lru_cache()(self.get_wcs_coord_and_weights)
 
-
     def __setstate__(self, state):
         for key, value in state.items():
             if key in ["get_wcs_coord_and_weights"]:
                 state[key] = lru_cache()(value)
         self.__dict__ = state
-        
 
     @property
     def frame(self):
@@ -502,10 +500,10 @@ class RegionGeom(Geom):
     @classmethod
     def create(cls, region, **kwargs):
         """Create region geometry.
-        
+
         The input region can be passed in the form of a ds9 string and will be parsed
         internally by `~regions.Regions.parse`. See:
-        
+
         * https://astropy-regions.readthedocs.io/en/stable/region_io.html
         * http://ds9.si.edu/doc/ref/region.html
 
@@ -665,7 +663,7 @@ class RegionGeom(Geom):
             regions = []
 
             for reg in Regions.parse(data=region_table, format="fits"):
-                #TODO: remove workaround once regions issue with fits serialization is sorted out
+                # TODO: remove workaround once regions issue with fits serialization is sorted out
                 # see https://github.com/astropy/regions/issues/400
                 reg.meta['include'] = True
                 regions.append(reg.to_sky(wcs))

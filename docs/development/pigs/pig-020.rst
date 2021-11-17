@@ -165,4 +165,3 @@ with the Gammapy developer team.
 .. _GH 2942: https://github.com/gammapy/gammapy/pull/2942
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-web: https://github.com/gammapy/gammapy-webpage
-

@@ -250,22 +250,22 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
     @property
     def is_pointlike(self):
-        return self.data[f"spec0_radius"] == 0.0
+        return self.data["spec0_radius"] == 0.0
 
     def spectral_model(self):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`)."""
 
         pars = {
             "reference": "7 TeV",
-            "amplitude": self.data[f"spec0_dnde"],
-            "index": -self.data[f"spec0_index"],
+            "amplitude": self.data["spec0_dnde"],
+            "index": -self.data["spec0_index"],
         }
 
         errs = {
             "index": 0.5
-            * (self.data[f"spec0_index_errp"] + self.data[f"spec0_index_errn"]),
+            * (self.data["spec0_index_errp"] + self.data["spec0_index_errn"]),
             "amplitude": 0.5
-            * (self.data[f"spec0_dnde_errp"] + self.data[f"spec0_dnde_errp"]),
+            * (self.data["spec0_dnde_errp"] + self.data["spec0_dnde_errp"]),
         }
 
         model = Model.create("PowerLawSpectralModel", "spectral", **pars)
@@ -283,7 +283,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
             tag = "PointSpatialModel"
         else:
             tag = "DiskSpatialModel"
-            pars["r_0"] = self.data[f"spec0_radius"]
+            pars["r_0"] = self.data["spec0_radius"]
 
         errs = {
             "lat_0": self.data.pos_err,

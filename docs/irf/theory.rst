@@ -59,5 +59,3 @@ and selection schemes. In the DL3 format, the IRF are distributed for each obser
 
 Further details on individuals responses and how they are implemented in gammapy are given in :ref:`irf-aeff`,
 :ref:`irf-edisp` and :ref:`irf-psf`.
-
-

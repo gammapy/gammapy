@@ -51,7 +51,7 @@ def test_defined_wcs(region):
 
 
 def test_to_binsz_wcs(region):
-    binsz = 0.05*u.deg
+    binsz = 0.05 * u.deg
     geom = RegionGeom.create(region, binsz_wcs=0.01)
     new_geom = geom.to_binsz_wcs(binsz)
     assert geom.binsz_wcs[0].deg == 0.01
@@ -326,7 +326,7 @@ def test_get_wcs_coord_and_weights(region):
 
     wcs_geom = geom.to_wcs_geom()
     solid_angles = wcs_geom.solid_angle().T[wcs_geom.coord_to_idx(region_coord)]
-    area = (weights*solid_angles).sum()
+    area = (weights * solid_angles).sum()
     assert_allclose(area.value, geom.solid_angle().value, rtol=1e-3)
 
     assert region_coord.shape == weights.shape
@@ -353,6 +353,7 @@ def test_region_nd_map_plot(region):
     with mpl_plot_check():
         geom.plot_region(ax=ax)
 
+
 def test_region_geom_to_from_hdu(region):
     axis1 = MapAxis.from_edges([1, 10] * u.TeV, name="energy", interp="log")
     geom = RegionGeom.create(region, axes=[axis1])
@@ -360,4 +361,4 @@ def test_region_geom_to_from_hdu(region):
     new_geom = RegionGeom.from_hdulist(hdulist, format="ogip")
 
     assert new_geom == geom
-    assert new_geom.region.meta['include'] == True
+    assert new_geom.region.meta['include'] is True

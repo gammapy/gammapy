@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 
 MAX_OVERSAMPLING = 200
 
+
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
     phi_0 = position_angle(lon_0, lat_0, lon, lat)
@@ -145,7 +146,7 @@ class SpatialModel(Model):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom` 
+        geom : `~gammapy.maps.WcsGeom`
 
         Returns
         ---------
@@ -195,8 +196,8 @@ class SpatialModel(Model):
         if oversampling_factor is None:
             if self.evaluation_bin_size_min is not None:
                 res_scale = self.evaluation_bin_size_min.to_value("deg")
-                if res_scale>0:
-                    oversampling_factor = np.minimum(int(np.ceil(pix_scale/res_scale)),
+                if res_scale > 0:
+                    oversampling_factor = np.minimum(int(np.ceil(pix_scale / res_scale)),
                                                      MAX_OVERSAMPLING)
                 else:
                     oversampling_factor = MAX_OVERSAMPLING
@@ -447,7 +448,6 @@ class PointSpatialModel(SpatialModel):
     def is_energy_dependent(self):
         return False
 
-
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
         values = self.integrate_geom(geom).data
@@ -543,13 +543,13 @@ class GaussianSpatialModel(SpatialModel):
 
     def to_region(self, x_sigma=1.5, **kwargs):
         """Model outline at a given number of :math:`\sigma`.
-        
+
         Parameters
         ----------
         x_sigma : float
-            Number of :math:`\sigma`
+            Number of :math:`\sigma
             Default is :math:`1.5\sigma` which corresponds to about 68%
-            containment for a 2D symmetric Gaussian. 
+            containment for a 2D symmetric Gaussian.
 
         Returns
         -------
@@ -633,7 +633,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     def to_region(self, x_r_0=1, **kwargs):
         """Model outline at a given number of r_0.
-        
+
         Parameters
         ----------
         x_r_0 : float
@@ -704,7 +704,7 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
-    
+
         Set to the length of the semi-major axis plus the edge width.
         """
         return 1.1 * self.r_0.quantity * (1 + self.edge_width.quantity)
@@ -975,7 +975,7 @@ class ConstantFluxSpatialModel(SpatialModel):
     @staticmethod
     def evaluate(lon, lat):
         """Evaluate model."""
-        return 1/u.sr
+        return 1 / u.sr
 
     @staticmethod
     def evaluate_geom(geom):

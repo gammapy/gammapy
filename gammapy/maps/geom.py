@@ -82,7 +82,7 @@ class Geom(abc.ABC):
         ----------
         dtype : data-type
             The desired data-type for the array. Default is "float32"
-            
+
         Returns
         -------
         memory : `~astropy.units.Quantity`

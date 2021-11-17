@@ -215,5 +215,3 @@ Reference/API
 
 
 .. _`likelihood SED type page`: https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
-
-

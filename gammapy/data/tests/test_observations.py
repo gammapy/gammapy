@@ -271,7 +271,7 @@ def test_observation_read_single_file():
     energy = Quantity(1, "TeV")
     offset = Quantity(0.5, "deg")
     val = obs.aeff.evaluate(energy_true=energy, offset=offset)
-    
+
     assert obs.obs_id == 20136
     assert len(obs.events.energy) == 11243
     assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]

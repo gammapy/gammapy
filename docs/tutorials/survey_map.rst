@@ -14,4 +14,3 @@ To execute it run:
 .. code-block:: bash
 
     $ python survey_example.py
-

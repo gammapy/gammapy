@@ -103,9 +103,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
         reference_model = SkyModel(
-                spectral_model=self.spectral_model(),
-                name=self.name
-            )
+            spectral_model=self.spectral_model(),
+            name=self.name
+        )
         return FluxPoints.from_table(
             self.flux_points_table,
             reference_model=reference_model,
@@ -532,7 +532,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
-            
+
         Returns
         -------
         sky_model : `~gammapy.modeling.models.Models`
@@ -553,7 +553,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
-            
+
         linked : bool
              Each sub-component of a source is given as a different `SkyModel`
              If True the spectral parameters except the mormalisation are linked.
@@ -876,12 +876,12 @@ class SourceCatalogHGPS(SourceCatalog):
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
-            
+
         components_status : {'independent', 'linked', 'merged'}
             Relation between the sources components:
-                'independent' : each sub-component of a source is given as 
+                'independent' : each sub-component of a source is given as
                                 a different `SkyModel` (Default)
-                'linked' : each sub-component of a source is given as 
+                'linked' : each sub-component of a source is given as
                            a different `SkyModel` but the spectral parameters
                            except the mormalisation are linked.
                 'merged' : the sub-components are merged into a single `SkyModel`

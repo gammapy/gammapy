@@ -314,6 +314,7 @@ def test_plot():
     with mpl_plot_check():
         m.plot()
 
+
 @requires_dependency("matplotlib")
 def test_plot_grid():
     axis = MapAxis([0, 1, 2], node_type="edges")
@@ -480,6 +481,7 @@ def test_hpx_map_to_region_nd_map():
     spec_interp = m.to_region_nd_map(region=circle.center, func=np.mean)
     assert_allclose(spec_interp.data, 1)
 
+
 @pytest.mark.parametrize("kernel", ["gauss", "disk"])
 def test_smooth(kernel):
     axes = [
@@ -487,10 +489,10 @@ def test_smooth(kernel):
         MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
     ]
     geom_nest = HpxGeom.create(
-        nside=256,nest = False, frame="galactic", axes=axes
+        nside=256, nest=False, frame="galactic", axes=axes
     )
     geom_ring = HpxGeom.create(
-        nside=256,nest = True, frame="galactic", axes=axes
+        nside=256, nest=True, frame="galactic", axes=axes
     )
     m_nest = HpxNDMap(geom_nest, data=np.ones(geom_nest.data_shape), unit="m2")
     m_ring = HpxNDMap(geom_ring, data=np.ones(geom_ring.data_shape), unit="m2")
@@ -522,19 +524,19 @@ def test_smooth(kernel):
 
 @pytest.mark.parametrize("nest", [True, False])
 def test_convolve_wcs(nest):
-    energy = MapAxis.from_bounds(1,100, unit='TeV', nbin=2, name='energy')
+    energy = MapAxis.from_bounds(1, 100, unit='TeV', nbin=2, name='energy')
     nside = 256
     hpx_geom = HpxGeom.create(
         nside=nside,
         axes=[energy],
         region='DISK(0,0,2.5)',
         nest=nest
-        )
+    )
     hpx_map = Map.from_geom(hpx_geom)
     hpx_map.set_by_coord((0, 0, [2, 90]), 1)
     wcs_geom = WcsGeom.create(width=5, binsz=0.04, axes=[energy])
 
-    kernel = PSFKernel.from_gauss(wcs_geom, 0.4*u.deg)
+    kernel = PSFKernel.from_gauss(wcs_geom, 0.4 * u.deg)
     convolved_map = hpx_map.convolve_wcs(kernel)
     assert_allclose(convolved_map.data.sum(), 2, rtol=0.001)
 
@@ -550,7 +552,7 @@ def test_convolve_full(region):
         region=region,
         nest=False,
         frame='icrs'
-        )
+    )
 
     all_sky_map = Map.from_geom(all_sky_geom)
     all_sky_map.set_by_coord((0, 0, [2, 90]), 1)
@@ -575,7 +577,7 @@ def test_hpxmap_read_healpy(tmp_path):
     import healpy as hp
     path = tmp_path / "tmp.fits"
     npix = 12 * 1024 * 1024
-    m = [np.arange(npix), np.arange(npix)-1, np.arange(npix)-2]
+    m = [np.arange(npix), np.arange(npix) - 1, np.arange(npix) - 2]
     hp.write_map(
         filename=path,
         m=m, nest=False,
@@ -591,13 +593,13 @@ def test_hpxmap_read_healpy(tmp_path):
         format = HpxConv.identify_hpx_format(header)
         assert format == "healpy"
 
-    #first column "TEMPERATURE"
+    # first column "TEMPERATURE"
     m1 = Map.read(path, colname="TEMPERATURE")
     assert m1.data.shape[0] == npix
     diff = np.sum(m[0] - m1.data)
     assert_allclose(diff, 0.0)
 
-    #specifying the colname by default for healpy it is "Q_POLARISATION"
+    # specifying the colname by default for healpy it is "Q_POLARISATION"
     m2 = Map.read(path, colname="Q_POLARISATION")
     assert m2.data.shape[0] == npix
     diff = np.sum(m[1] - m2.data)

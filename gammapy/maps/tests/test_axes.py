@@ -7,7 +7,7 @@ from astropy.table import Table
 import astropy.units as u
 from gammapy.maps import RegionNDMap, MapAxis, TimeMapAxis, MapAxes, LabelMapAxis
 from gammapy.data import GTI
-from gammapy.utils.testing import assert_allclose, requires_data, assert_time_allclose
+from gammapy.utils.testing import requires_data, assert_time_allclose
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_to_dict
 
@@ -54,7 +54,7 @@ def time_intervals():
 def time_interval():
     t0 = Time("2020-03-19")
     t_min = 1 * u.d
-    t_max = 11 *u.d
+    t_max = 11 * u.d
     return {"t_min": t_min, "t_max": t_max, "t_ref": t0}
 
 
@@ -417,7 +417,7 @@ def test_single_interval_time_axis(time_interval):
 def test_slice_squash_time_axis(time_intervals):
     axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
     axis_squash = axis.squash()
-    axis_slice = axis.slice(slice(1,5))
+    axis_slice = axis.slice(slice(1, 5))
 
     assert axis_squash.nbin == 1
     assert_allclose(axis_squash.time_min[0].mjd, 58927)
@@ -481,7 +481,7 @@ def test_coord_to_idx_time_axis(time_intervals):
 
     times = axis.time_mid
     times[::2] += 1 * u.h
-    times = times.insert(0, tref-[1, 2] * u.yr)
+    times = times.insert(0, tref - [1, 2] * u.yr)
 
     idx = axis.coord_to_idx(time)
     indices = axis.coord_to_idx(times)
@@ -539,7 +539,7 @@ def test_from_gti_time_axis():
 
 def test_map_with_time_axis(time_intervals):
     time_axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
-    energy_axis = MapAxis.from_energy_bounds(0.1,10, 2, unit="TeV")
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
     region_map = RegionNDMap.create(region="fk5; circle(0,0,0.1)", axes=[energy_axis, time_axis])
 
     assert region_map.geom.data_shape == (20, 2, 1, 1)
@@ -582,6 +582,7 @@ def test_axes_basics():
     assert not axes.is_flat
 
     assert axes.primary_axis.name == "time"
+
 
 def test_label_map_axis_basics():
     axis = LabelMapAxis(labels=["label-1", "label-2"], name="label-axis")

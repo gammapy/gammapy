@@ -228,7 +228,7 @@ class ParameterEstimator(Estimator):
         -------
         result : dict
             Dict with the parameter ULs. Entries are:
-            
+
                 * parameter.name_ul : upper limit on parameter value
         """
         if not np.any(datasets.contributes_to_stat):

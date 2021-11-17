@@ -118,7 +118,7 @@ def test_hdu_index_table_hd_hap(capfd):
     assert str(excinfo.value) == msg
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_class="psf_king")
-    assert location == None
+    assert location is None
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_class="bkg_2d")
-    assert location == None
+    assert location is None

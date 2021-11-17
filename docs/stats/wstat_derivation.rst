@@ -185,4 +185,3 @@ For the unphysical case, we set :math:`\mu_{\mathrm{bkg}}=0` and arrive at
 .. math::
     W = 2\big(\mu_{\mathrm{sig}} + n_{\mathrm{on}}(\log{(n_{\mathrm{on}})} -
     \log{(\mu_{\mathrm{sig}})} - 1)\big)
-

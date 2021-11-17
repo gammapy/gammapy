@@ -120,7 +120,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
     def _info_spectral_fit(self):
         """Print spectral info."""
         d = self.data
-        ss = f"\n*** Spectral info ***\n\n"
+        ss = "\n*** Spectral info ***\n\n"
         ss += f"Significance: {d.significance:.3f}\n"
         ss += f"Livetime: {d.livetime:.3f}\n"
 

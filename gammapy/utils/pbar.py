@@ -13,7 +13,7 @@ except ImportError:
             self._iterable = iterable
             if not self.disable:
                 log.info(
-                    f"Tqdm is currently not installed. Visit https://tqdm.github.io/"
+                    "Tqdm is currently not installed. Visit https://tqdm.github.io/"
                 )
 
         def update(self, x):
@@ -26,6 +26,7 @@ except ImportError:
             return self._iterable.__next__()
 
 SHOW_PROGRESS_BAR = False
+
 
 def progress_bar(iterable, desc=None):
     # Necessary because iterable may be a zip

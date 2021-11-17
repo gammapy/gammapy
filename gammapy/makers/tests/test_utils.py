@@ -160,8 +160,8 @@ def bkg_3d_custom(symmetry="constant"):
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
         unit=u.Unit("s-1 MeV-1 sr-1"),
-        interp_kwargs = dict(bounds_error=False, fill_value=None, values_scale="log")
-        #allow extrapolation for symmetry tests
+        interp_kwargs=dict(bounds_error=False, fill_value=None, values_scale="log")
+        # allow extrapolation for symmetry tests
     )
 
 
@@ -317,7 +317,6 @@ class TestTheta2Table:
             events["DEC"] = sign * ([0.0, 0.05, 0.9, 10.0, 10.0] * u.deg)
             events["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
             events["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
-
 
             obs_info = dict(
                 RA_PNT=0 * u.deg,

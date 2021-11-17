@@ -2,7 +2,7 @@
 """Utils to find roots of a scalar function within a given range"""
 
 import numpy as np
-import astropy.units as u 
+import astropy.units as u
 from gammapy.utils.interpolation import interpolation_scale
 from scipy.optimize import root_scalar, RootResults
 
@@ -25,7 +25,7 @@ def find_roots(
     options=None,
 ):
     """ Find roots of a scalar function within a given range.
-    
+
     Parameters
     ----------
     f : callable
@@ -46,7 +46,7 @@ def find_roots(
         Solver available in `~scipy.optimize.root_scalar`.  Should be one of :
             - 'brentq' (default),
             - 'brenth',
-            - 'bisect', 
+            - 'bisect',
             - 'ridder',
             - 'toms748',
             - 'newton',
@@ -77,7 +77,7 @@ def find_roots(
     -------
     roots : `~astropy.units.Quantity`
         The function roots.
-        
+
     results : `~numpy.array`
         An array of `~scipy.optimize.RootResults` which is an
         object containing information about the convergence.
@@ -134,4 +134,3 @@ def find_roots(
         except (RuntimeError, ValueError):
             continue
     return roots * unit, results
-

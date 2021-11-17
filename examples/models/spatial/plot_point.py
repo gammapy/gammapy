@@ -37,7 +37,7 @@ geom = WcsGeom.create(
 )
 model.plot(geom=geom, add_cbar=True)
 
-#%%
+# %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:

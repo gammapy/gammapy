@@ -462,11 +462,11 @@ def test_map_plot_mask():
     skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
 
     m_wcs = Map.create(
-                   map_type='wcs',
-                   binsz=0.02,
-                   skydir=skydir,
-                   width=2.0,
-                   )
+        map_type='wcs',
+        binsz=0.02,
+        skydir=skydir,
+        width=2.0,
+    )
 
     exclusion_region = CircleSkyRegion(center=SkyCoord(0.0, 0.0, unit="deg", frame="galactic"),
                                        radius=0.6 * u.deg)

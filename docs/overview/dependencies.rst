@@ -53,4 +53,3 @@ SED modeling).
 * naima_ for SED modeling
 * emcee_ for fitting by MCMC sampling
 * corner_ for MCMC corner plots
-

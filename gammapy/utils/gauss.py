@@ -4,6 +4,7 @@ import numpy as np
 from astropy import units as u
 from gammapy.utils.roots import find_roots
 
+
 class Gauss2DPDF:
     """2D symmetric Gaussian PDF.
 

@@ -196,7 +196,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        ax : `~matplotlib.axis` 
+        ax : `~matplotlib.axis`
             Axis instance to be used for the plot.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.axvspan`
@@ -274,7 +274,7 @@ class RegionNDMap(Map):
         axis_name : str
             Which axis to downsample. Default is "energy".
         weights : `RegionNDMap`
-            Contains the weights to apply to the axis to reduce. Default 
+            Contains the weights to apply to the axis to reduce. Default
             is just weighs of one.
 
         Returns
@@ -353,7 +353,7 @@ class RegionNDMap(Map):
             yield tuple(idx), self.quantity[tuple(idx)]
 
     def fill_by_idx(self, idx, weights=None):
-        #TODO: too complex, simplify!
+        # TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
 
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
@@ -501,7 +501,7 @@ class RegionNDMap(Map):
         """
         if format == "gadf-sed":
             if colname is None:
-                raise ValueError(f"Column name required")
+                raise ValueError("Column name required")
 
             axes = MapAxes.from_table(table=table, format=format)
 

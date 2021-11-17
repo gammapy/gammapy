@@ -16,7 +16,7 @@ from .pointing import FixedPointingInfo
 __all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
-    
+
 
 class Observation:
     """In-memory observation.
@@ -301,12 +301,11 @@ class Observation:
         """
         import matplotlib.pyplot as plt
 
-
         n_irfs = len(self.available_irfs)
 
         fig, axes = plt.subplots(
-            nrows=n_irfs//2,
-            ncols=2 + n_irfs%2,
+            nrows=n_irfs // 2,
+            ncols=2 + n_irfs % 2,
             figsize=figsize,
             gridspec_kw={"wspace": 0.25, "hspace": 0.25},
         )
@@ -340,7 +339,6 @@ class Observation:
         else:
             logging.warning(f"No energy dispersion found for obs {self.obs_id}.")
 
-
     def select_time(self, time_interval):
         """Select a time interval of the observation.
 
@@ -370,26 +368,26 @@ class Observation:
         event_file : str, Path
             path to the .fits file containing the event list and the GTI
         irf_file : str, Path
-            (optional) path to the .fits file containing the IRF components,  
+            (optional) path to the .fits file containing the IRF components,
             if not provided the IRF will be read from the event file
 
         Returns
         -------
-        observation : `~gammapy.data.Observation` 
+        observation : `~gammapy.data.Observation`
             observation with the events and the irf read from the file
         """
         from gammapy.irf.io import load_irf_dict_from_file
 
         events = EventList.read(event_file)
-        
-        gti = GTI.read(event_file) 
+
+        gti = GTI.read(event_file)
 
         irf_file = irf_file if irf_file is not None else event_file
         irf_dict = load_irf_dict_from_file(irf_file)
-            
+
         obs_info = events.table.meta
         return cls(events=events, gti=gti, obs_info=obs_info, obs_id=obs_info.get("OBS_ID"), **irf_dict)
-        
+
 
 class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.

@@ -473,7 +473,7 @@ def test_run_pwl_parameter_range(fpe_pwl):
     assert_allclose(actual, [504.601499, 416.69248, 851.223077], rtol=1e-2)
 
     actual = table_no_bounds["norm_ul"].data
-    assert_allclose(actual, [514.957128,  707.888477, 1167.105962], rtol=1e-2)
+    assert_allclose(actual, [514.957128, 707.888477, 1167.105962], rtol=1e-2)
 
     actual = table_no_bounds["sqrt_ts"].data
     assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
