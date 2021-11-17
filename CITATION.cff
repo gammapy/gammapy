@@ -173,6 +173,24 @@ authors:
   family-names: Lebigot
 - given-names: Stefan
   family-names: Klepser
+- given-names: Anne
+  family-names: Lemière
+- given-names: Dimitri
+  family-names: Papadopoulos
+- given-names: Gabriel
+  family-names: Emery
+- given-names: Laura
+  family-names: Vega Garcia
+- given-names: Marion
+  family-names: Spir-Jacob
+- given-names: Roberta
+  family-names: Zanin
+- given-names: Matthias
+  family-names: Wegenmat
+- given-names: Silvia
+  family-names: Manconi
+- given-names: Sebastian
+  family-names: Panny
 version: 0.18.2
 date-released: 2020-11-19
 repository-code: https://github.com/gammapy/gammapy
