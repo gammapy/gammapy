@@ -118,7 +118,7 @@ class PSFMap(IRFMap):
         coords = MapCoord.create(kwargs)
 
         geom = self.psf_map.geom.to_image()
-        lon_pix, lat_pix = geom.coord_to_pix((coords.lon, coords.lat))
+        lon_pix, lat_pix = geom.coord_to_pix(coords.skycoord)
 
         coords_irf = {
             "lon_idx": lon_pix,
