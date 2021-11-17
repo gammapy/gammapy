@@ -480,6 +480,7 @@ def test_psf_map_plot_psf_vs_rad():
         psf.plot_psf_vs_rad()
 
 
+@requires_data()
 def test_psf_containment_coords():
     # regression test to check the cooordinate conversion for PSFMap.containment
     psf = PSFMap.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", hdu="PSF")
@@ -491,4 +492,3 @@ def test_psf_containment_coords():
     )
 
     assert_allclose(radius, 0.10575 * u.deg, rtol=1e-5)
-
