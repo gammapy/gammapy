@@ -1863,26 +1863,52 @@ class MapDataset(Dataset):
         ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
             Counts, excess and exposure.
         """
-        fig = get_figure(fig, 16, 4)
-        ax1, ax2, ax3 = fig.subplots(1, 3)
+        geom = self._geom.to_image()
+        fig = get_figure(fig, 16, 8)
+        [ax1, ax2, ax3],[ax4, ax5, ax6]  = fig.subplots(2, 3, projection=geom.wcs)
 
         if self.mask_fit is not None:
             mask_fit = self.mask_fit.reduce_over_axes(func=np.logical_or)
+        else:
+            mask_fit = Map.from_geom(geom, data=True, dtype='bool')
+
         if self.mask_safe is not None:
             mask_safe = self.mask_safe.reduce_over_axes(func=np.logical_or)
+        else:
+            mask_safe = Map.from_geom(geom, data=True, dtype='bool')
 
 
         ax1.set_title("Counts")
-        self.plot_counts(ax1)
-        mask_fit.plot_mask(ax=ax, label="Mask safe", alpha=0.2)
-        self.plot_masks(ax=ax1)
+        self.counts.sum_over_axes().plot(ax=ax1, add_cbar=True)
+        mask_fit.plot_mask(ax=ax1, label="Mask safe", alpha=0.2)
+        mask_safe.plot_mask(ax=ax1, label="Mask safe", hatches=["///"], colors="w")
 
         ax2.set_title("Excess counts")
-        self.plot_excess(ax=ax2)
-        self.plot_masks(ax=ax2)
+        self.excess.sum_over_axes().plot(ax=ax2, add_cbar=True)
+        mask_fit.plot_mask(ax=ax2, label="Mask safe", alpha=0.2)
+        mask_safe.plot_mask(ax=ax2, label="Mask safe", hatches=["///"], colors="w")
 
         ax3.set_title("Exposure")
-        self.exposure.sum_over_axes().plot(ax3, add_cbar=True)
+        self.exposure.sum_over_axes().plot(ax=ax3, add_cbar=True)
+        mask_safe.plot_mask(ax=ax3, label="Mask safe", hatches=["///"], colors="w")
+
+        ax4.set_title("Background")
+        self.background.sum_over_axes().plot(ax=ax4, add_cbar=True)
+        mask_fit.plot_mask(ax=ax4, label="Mask safe", alpha=0.2)
+        mask_safe.plot_mask(ax=ax4, label="Mask safe", hatches=["///"], colors="w")
+
+        ax5.set_title("Npred Signal")
+        self.npred_signal().sum_over_axes().plot(ax=ax5, add_cbar=True)
+        mask_fit.plot_mask(ax=ax5, label="Mask safe", alpha=0.2)
+        mask_safe.plot_mask(ax=ax5, label="Mask safe", hatches=["///"], colors="w")
+
+        ax6.set_title("")
+        self.counts.to_region_nd_map().plot(ax=ax6)
+        self.background.to_region_nd_map().plot(ax=ax6)
+
+#        mask_fit.plot_mask(ax=ax5, label="Mask safe", alpha=0.2)
+#        mask_safe.plot_mask(ax=ax5, label="Mask safe", hatches=["///"], colors="w")
+
 
         return ax1, ax2, ax3
 
