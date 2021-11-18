@@ -118,14 +118,14 @@ class FluxMaps:
         * sqrt_ts : optional, the square root of the TS, when relevant.
         * success : optional, a boolean tagging the validity of the estimation
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
-        the reference model to use for conversions. Default in None.
+        the reference model to use for conversions.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
     meta : dict, optional
-        List of metadata. Default is None.
+        Dict of metadata.
     gti : `~gammapy.data.GTI`, optional
-        the maps GTI information. Default is None.
+        Maps GTI information.
     filter_success_nan : boolean, optional
-        Set fitted values to NaN when the fit has not succeeded. Default is True.
+        Set fitted norm and error to NaN when the fit has not succeeded.
     """
     _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
@@ -360,7 +360,7 @@ class FluxMaps:
         else:
             is_ul.data = np.isnan(self.norm)
 
-        return self._filter_convergence_failure(is_ul)
+        return is_ul
 
     @is_ul.setter
     def is_ul(self, value):
@@ -432,13 +432,13 @@ class FluxMaps:
     def stat_scan(self):
         """Fit statistic scan value"""
         self._check_quantity("stat_scan")
-        return self._filter_convergence_failure(self._data["stat_scan"])
+        return self._data["stat_scan"]
 
     @property
     def stat(self):
         """Fit statistic value"""
         self._check_quantity("stat")
-        return self._filter_convergence_failure(self._data["stat"])
+        return self._data["stat"]
 
     @property
     def stat_null(self):
@@ -450,7 +450,7 @@ class FluxMaps:
     def ts(self):
         """ts map (`Map`)"""
         self._check_quantity("ts")
-        return self._filter_convergence_failure(self._data["ts"])
+        return self._data["ts"]
 
     @property
     def ts_scan(self):
@@ -499,19 +499,19 @@ class FluxMaps:
     def norm_errn(self):
         """Negative norm error"""
         self._check_quantity("norm_errn")
-        return self._filter_convergence_failure(self._data["norm_errn"])
+        return self._data["norm_errn"]
 
     @property
     def norm_errp(self):
         """Positive norm error"""
         self._check_quantity("norm_errp")
-        return self._filter_convergence_failure(self._data["norm_errp"])
+        return self._data["norm_errp"]
 
     @property
     def norm_ul(self):
         """Norm upper limit"""
         self._check_quantity("norm_ul")
-        return self._filter_convergence_failure(self._data["norm_ul"])
+        return self._data["norm_ul"]
 
     @property
     def dnde_ref(self):
