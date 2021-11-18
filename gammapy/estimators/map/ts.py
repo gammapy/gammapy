@@ -175,6 +175,7 @@ class TSMapEstimator(Estimator):
             "npred_excess",
             "stat",
             "stat_null",
+            "success"
         ]
 
         if "errn-errp" in self.selection_optional:
@@ -460,7 +461,7 @@ class TSMapEstimator(Estimator):
         for name in self.selection_all:
             m = Map.from_stack(maps=[_[name] for _ in results], axis_name="energy")
 
-            order = 0 if name == "niter" else 1
+            order = 0 if name in ["niter", "success"] else 1
             m = m.upsample(
                 factor=self.downsampling_factor,
                 preserve_counts=False,
@@ -469,12 +470,14 @@ class TSMapEstimator(Estimator):
 
             maps[name] = m.crop(crop_width=pad_width)
 
+        maps["success"].data = maps["success"].data.astype(bool)
+
         meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
         return FluxMaps(
             data=maps,
             reference_model=self.model,
             gti=dataset.gti,
-            meta=meta
+            meta=meta,
         )
 
 
@@ -522,13 +525,10 @@ class SimpleMapDataset:
 
     def stat_2nd_derivative(self, norm):
         """Stat 2nd derivative"""
-        with np.errstate(invalid="ignore", divide="ignore"):
-            mask = self.background > 0
-            return (
-                self.model ** 2
-                * self.counts
-                / (self.background + norm * self.model) ** 2
-            )[mask].sum()
+        term_top = self.model ** 2 * self.counts
+        term_bottom = (self.background + norm * self.model) ** 2
+        mask = (term_bottom == 0)
+        return (term_top / term_bottom)[~mask].sum()
 
     @classmethod
     def from_arrays(cls, counts, background, exposure, norm, position, kernel):
@@ -585,7 +585,7 @@ class BrentqFluxEstimator(Estimator):
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
         if not dataset.counts.sum() > 0:
-            norm, niter = norm_min_total, 0
+            norm, niter, success = norm_min_total, 0, True
 
         else:
             with warnings.catch_warnings():
@@ -602,8 +602,9 @@ class BrentqFluxEstimator(Estimator):
                     )
                     norm = max(result_fit[0], norm_min_total)
                     niter = result_fit[1].iterations
+                    success = result_fit[1].converged
                 except (RuntimeError, ValueError):
-                    norm, niter = norm_min_total, self.max_niter
+                    norm, niter, success = norm_min_total, self.max_niter, False
 
         with np.errstate(invalid="ignore", divide="ignore"):
             norm_err = np.sqrt(1 / dataset.stat_2nd_derivative(norm)) * self.n_sigma
@@ -618,6 +619,7 @@ class BrentqFluxEstimator(Estimator):
             "ts": stat_null - stat,
             "stat": stat,
             "stat_null": stat_null,
+            "success": success
         }
 
     def _confidence(self, dataset, n_sigma, result, positive):
@@ -718,6 +720,7 @@ class BrentqFluxEstimator(Estimator):
             "ts": stat_null - stat,
             "stat": stat,
             "stat_null": stat_null,
+            "success": True
         }
 
     def run(self, dataset):
