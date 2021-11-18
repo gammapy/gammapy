@@ -362,7 +362,8 @@ class WcsNDMap(WcsMap):
         mask = np.isfinite(data)
 
         if mask.any():
-            norm = simple_norm(data[mask], stretch)
+            min_cut, max_cut = kwargs.pop("vmin", None), kwargs.pop("vmin", None)
+            norm = simple_norm(data[mask], stretch, min_cut=min_cut, max_cut=max_cut)
             kwargs.setdefault("norm", norm)
 
         im = ax.imshow(data, **kwargs)
