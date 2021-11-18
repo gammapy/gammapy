@@ -1866,8 +1866,15 @@ class MapDataset(Dataset):
         fig = get_figure(fig, 16, 4)
         ax1, ax2, ax3 = fig.subplots(1, 3)
 
+        if self.mask_fit is not None:
+            mask_fit = self.mask_fit.reduce_over_axes(func=np.logical_or)
+        if self.mask_safe is not None:
+            mask_safe = self.mask_safe.reduce_over_axes(func=np.logical_or)
+
+
         ax1.set_title("Counts")
         self.plot_counts(ax1)
+        mask_fit.plot_mask(ax=ax, label="Mask safe", alpha=0.2)
         self.plot_masks(ax=ax1)
 
         ax2.set_title("Excess counts")
