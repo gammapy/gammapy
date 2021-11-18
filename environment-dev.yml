@@ -22,6 +22,7 @@ dependencies:
   - pydantic
   - pyyaml
   - regions
+  - matplotlib>=3.4,3.5
   - scipy
   # test dependencies
   - codecov
@@ -36,7 +37,6 @@ dependencies:
   - ipython
   - jupyter
   - jupyterlab
-  - matplotlib==3.4.3
   - naima
   - pandas
   - reproject
