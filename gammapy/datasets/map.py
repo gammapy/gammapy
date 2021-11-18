@@ -2572,4 +2572,5 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
+            name=name
         )
