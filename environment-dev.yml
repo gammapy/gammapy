@@ -22,7 +22,7 @@ dependencies:
   - pydantic
   - pyyaml
   - regions
-  - matplotlib>=3.4,3.5
+  - matplotlib>=3.4,<3.5
   - scipy
   # test dependencies
   - codecov
