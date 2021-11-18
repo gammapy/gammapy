@@ -54,6 +54,8 @@ authors:
   family-names: Vorokh
 - given-names: Fabio
   family-names: Acero
+  affiliation: "DAp/AIM, CEA-Saclay/CNRS"
+  orcid: https://orcid.org/0000-0002-6606-2816  
 - given-names: David
   family-names: Fidalgo
 - given-names: Thomas
