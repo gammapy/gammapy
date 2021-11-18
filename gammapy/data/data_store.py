@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy import units as u
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
@@ -452,7 +453,9 @@ class DataStoreMaker:
 
     @staticmethod
     def read_events_info(path):
+        """Read mandatory events header info"""
         log.debug(f"Reading {path}")
+
         with fits.open(path, memmap=False) as hdu_list:
             header = hdu_list["EVENTS"].header
 
@@ -460,20 +463,28 @@ class DataStoreMaker:
 
         info = {}
         # Note: for some reason `header["OBS_ID"]` is sometimes `str`, maybe trailing whitespace
+        # mandatory header info:
         info["OBS_ID"] = int(header["OBS_ID"])
-        info["RA_PNT"] = header["RA_PNT"]
-        info["DEC_PNT"] = header["DEC_PNT"]
-        pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
-        info["GLON_PNT"] = pos.l.deg
-        info["GLAT_PNT"] = pos.b.deg
-        info["ZEN_PNT"] = 90 - float(header["ALT_PNT"])
-        info["ALT_PNT"] = header["ALT_PNT"]
-        info["AZ_PNT"] = header["AZ_PNT"]
-        info["ONTIME"] = header["ONTIME"]
-        info["LIVETIME"] = header["LIVETIME"]
+        info["TSTART"] = header["TSTART"] * u.s
+        info["TSTOP"] = header["TSTOP"] * u.s
+        info["ONTIME"] = header["ONTIME"] * u.s
+        info["LIVETIME"] = header["LIVETIME"] * u.s
         info["DEADC"] = header["DEADC"]
-        info["TSTART"] = header["TSTART"]
-        info["TSTOP"] = header["TSTOP"]
+        info["TELESCOP"] = header.get("TELESCOP", na_str)
+
+        obs_mode = header.get("OBS_MODE", "POINTING")
+        if obs_mode == "DRIFT":
+            info["ALT_PNT"] = header["ALT_PNT"] * u.deg
+            info["AZ_PNT"] = header["AZ_PNT"] * u.deg
+            info["ZEN_PNT"] = 90 * u.deg - info["ALT_PNT"]
+        else:
+            info["RA_PNT"] = header["RA_PNT"] * u.deg
+            info["DEC_PNT"] = header["DEC_PNT"] * u.deg
+
+        # optional header info
+        pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
+        info["GLON_PNT"] = pos.l
+        info["GLAT_PNT"] = pos.b
         info["DATE-OBS"] = header.get("DATE_OBS", na_str)
         info["TIME-OBS"] = header.get("TIME_OBS", na_str)
         info["DATE-END"] = header.get("DATE_END", na_str)
@@ -482,18 +493,12 @@ class DataStoreMaker:
         info["OBJECT"] = header.get("OBJECT", na_str)
 
         # This is the info needed to link from EVENTS to IRFs
-        info["TELESCOP"] = header.get("TELESCOP", na_str)
         info["CALDB"] = header.get("CALDB", na_str)
         info["IRF"] = header.get("IRF", na_str)
 
         # Not part of the spec, but good to know from which file the info comes
         info["EVENTS_FILENAME"] = str(path)
         info["EVENT_COUNT"] = header["NAXIS2"]
-
-        # gti = Table.read(filename, hdu='GTI')
-        # info['GTI_START'] = gti['START'][0]
-        # info['GTI_STOP'] = gti['STOP'][0]
-
         return info
 
     def make_obs_table(self):
@@ -504,18 +509,6 @@ class DataStoreMaker:
 
         names = list(rows[0].keys())
         table = ObservationTable(rows=rows, names=names)
-
-        table["RA_PNT"].unit = "deg"
-        table["DEC_PNT"].unit = "deg"
-        table["GLON_PNT"].unit = "deg"
-        table["GLAT_PNT"].unit = "deg"
-        table["ZEN_PNT"].unit = "deg"
-        table["ALT_PNT"].unit = "deg"
-        table["AZ_PNT"].unit = "deg"
-        table["ONTIME"].unit = "s"
-        table["LIVETIME"].unit = "s"
-        table["TSTART"].unit = "s"
-        table["TSTOP"].unit = "s"
 
         # TODO: Values copied from one of the EVENTS headers
         # TODO: check consistency for all EVENTS files and handle inconsistent case
