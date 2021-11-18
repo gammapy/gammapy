@@ -47,7 +47,7 @@ Gammapy these are also the recommended format and time scale.
 .. warning::
 
    Actually what's written here is not true. In CTA it hasn't been decided if
-   times will be in ``utc`` or ``tt`` (terrestial time) format.
+   times will be in ``utc`` or ``tt`` (terrestrial time) format.
 
    Here's a reminder that this needs to be settled / updated:
    https://github.com/gammapy/gammapy/issues/284

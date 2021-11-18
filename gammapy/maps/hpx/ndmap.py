@@ -443,7 +443,7 @@ class HpxNDMap(HpxMap):
         import healpy as hp
 
         nside = self.geom.nside
-        lmax = int(3 * nside - 1) # maximum l of the power spectrum
+        lmax = int(3 * nside - 1)  # maximum l of the power spectrum
         ipix = self.geom._ipix
 
         if not self.geom.is_allsky:
@@ -485,7 +485,7 @@ class HpxNDMap(HpxMap):
                 # create the step function in angular space
                 theta = np.linspace(0, width)
                 beam = np.ones(len(theta))
-                beam[theta > width]=0
+                beam[theta > width] = 0
                 # convert to the spherical harmonics space
                 window_beam = hp.sphtfunc.beam2bl(beam, theta, lmax)
                 # normalize the window beam
@@ -627,7 +627,7 @@ class HpxNDMap(HpxMap):
         import healpy as hp
 
         nside = self.geom.nside
-        lmax = int(3 * nside - 1) # maximum l of the power spectrum
+        lmax = int(3 * nside - 1)  # maximum l of the power spectrum
         nest = self.geom.nest
         allsky = self.geom.is_allsky
         ipix = self.geom._ipix
@@ -655,9 +655,9 @@ class HpxNDMap(HpxMap):
 
         pixels =[0,0]
         pixels[dim] = np.linspace(0,center, int(center+1)) # assuming radially symmetric kernel
-        pixels[abs(1-dim)] = center_pix[abs(1-dim)]*np.ones(int(center+1))
+        pixels[abs(1-dim)] = center_pix[abs(1-dim)] * np.ones(int(center+1))
         coords = psf_kernel.geom.pix_to_coord(pixels)
-        coordinates = SkyCoord(coords[0], coords[1], frame=psf_kernel.geom.frame )
+        coordinates = SkyCoord(coords[0], coords[1], frame=psf_kernel.geom.frame)
         angles = coordinates.separation(psf_kernel.geom.center_skydir).rad
         values = psf_kernel.get_by_pix(pixels)
 
@@ -670,7 +670,7 @@ class HpxNDMap(HpxMap):
                 img = hp.pixelfunc.reorder(img, n2r=True)
             radial_profile = np.reshape(values[:,idx], (values.shape[0],))
             window_beam = hp.sphtfunc.beam2bl(np.flip(radial_profile), np.flip(angles), lmax)
-            window_beam = window_beam/window_beam.max()
+            window_beam = window_beam / window_beam.max()
             data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
             if nest:
                 # reorder back to nest after the convolution
@@ -889,13 +889,8 @@ class HpxNDMap(HpxMap):
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        im : `~matplotlib.image.AxesImage` or `~matplotlib.collections.PatchCollection`
-            Image object.
-
         """
         if method == "raster":
             m = self.to_wcs(
@@ -991,17 +986,16 @@ class HpxNDMap(HpxMap):
         ax.autoscale_view()
         ax.coords.grid(color="w", linestyle=":", linewidth=0.5)
 
-        return fig, ax, p
-
+        return ax
 
     def plot_mask(self,
-            method="raster",
-            ax=None,
-            proj="AIT",
-            oversample=2,
-            width_pix=1000,
-            **kwargs,
-        ):
+        method="raster",
+        ax=None,
+        proj="AIT",
+        oversample=2,
+        width_pix=1000,
+        **kwargs,
+    ):
         """Plot the mask as a shaded area
 
         Parameters

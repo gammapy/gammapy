@@ -22,4 +22,4 @@ def test_cli_version():
 
 def test_check_logging():
     result = run_cli(cli, ["check", "logging"])
-    assert f"output" in result.output
+    assert "output" in result.output

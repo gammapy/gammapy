@@ -117,12 +117,12 @@ class SensitivityEstimator(Estimator):
         return criterion
 
     def run(self, dataset):
-        """Run the sensitivty estimation
+        """Run the sensitivity estimation
 
         Parameters
         ----------
         dataset : `SpectrumDatasetOnOff`
-            Dataset to compute sensitivty for.
+            Dataset to compute sensitivity for.
 
         Returns
         -------

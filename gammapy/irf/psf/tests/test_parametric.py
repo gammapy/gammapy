@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose   
+from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.io import fits
 from astropy.coordinates import Angle

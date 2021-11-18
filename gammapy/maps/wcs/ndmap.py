@@ -331,12 +331,8 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        cbar : `~matplotlib.colorbar.Colorbar` or None
-            Colorbar object.
         """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
@@ -362,12 +358,13 @@ class WcsNDMap(WcsMap):
         mask = np.isfinite(data)
 
         if mask.any():
-            norm = simple_norm(data[mask], stretch)
+            min_cut, max_cut = kwargs.pop("vmin", None), kwargs.pop("vmin", None)
+            norm = simple_norm(data[mask], stretch, min_cut=min_cut, max_cut=max_cut)
             kwargs.setdefault("norm", norm)
 
         im = ax.imshow(data, **kwargs)
 
-        cbar = fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
+        fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
@@ -376,7 +373,7 @@ class WcsNDMap(WcsMap):
 
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
-        return fig, ax, cbar
+        return ax
 
     def plot_mask(self, ax=None, **kwargs):
         """Plot the mask as a shaded area
@@ -677,7 +674,7 @@ class WcsNDMap(WcsMap):
                 geom = geom.to_cube(kmap.geom.axes)
 
         if mode == "full":
-            pad_width = [0.5*(width-1) for width in kernel.shape[-2:]]
+            pad_width = [0.5 * (width-1) for width in kernel.shape[-2:]]
             geom = geom.pad(pad_width, axis_name=None)
         elif mode == "valid":
             raise NotImplementedError("WcsNDMap.convolve: mode='valid' is not supported.")
@@ -701,7 +698,7 @@ class WcsNDMap(WcsMap):
             for img, idx in self.iter_by_image():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
                 data[idx] = convolve(
-                    img.astype(np.float32), kernel[ikern],  method=method, mode=mode
+                    img.astype(np.float32), kernel[ikern], method=method, mode=mode
                 )
         return self._init_copy(data=data, geom=geom)
 

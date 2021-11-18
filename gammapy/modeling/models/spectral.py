@@ -208,7 +208,7 @@ class SpectralModel(ModelBase):
         Returns
         -------
         flux, flux_err : tuple of `~astropy.units.Quantity`
-            Integral flux and flux error betwen energy_min and energy_max.
+            Integral flux and flux error between energy_min and energy_max.
         """
         return self._propagate_error(
             epsilon=epsilon,
@@ -258,7 +258,7 @@ class SpectralModel(ModelBase):
         Returns
         -------
         energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
-            Energy flux and energy flux error betwen energy_min and energy_max.
+            Energy flux and energy flux error between energy_min and energy_max.
         """
         return self._propagate_error(
             epsilon=epsilon,
@@ -355,7 +355,7 @@ class SpectralModel(ModelBase):
         n_points : int, optional
             Number of evaluation nodes
         **kwargs : dict
-            Keyword arguments forwared to `~matplotlib.pyplot.plot`
+            Keyword arguments forwarded to `~matplotlib.pyplot.plot`
 
         Returns
         -------
@@ -406,7 +406,7 @@ class SpectralModel(ModelBase):
             when the error band extends to negative values (see also
             https://github.com/matplotlib/matplotlib/issues/8623).
 
-            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
+            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitly in your
             plotting code and the error band extends to negative values, it is not
             shown correctly. To circumvent this issue also use
             ``plt.loglog(nonposx='clip', nonpositive='clip')``
@@ -1742,7 +1742,7 @@ class NaimaSpectralModel(SpectralModel):
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
     nested_models : dict
-        Additionnal parameters for nested models not supplied by the radiative model,
+        Additional parameters for nested models not supplied by the radiative model,
         for now this is used  only for synchrotron self-compton model
     """
 

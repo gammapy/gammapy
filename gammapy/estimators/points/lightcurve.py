@@ -18,8 +18,8 @@ log = logging.getLogger(__name__)
 class LightCurveEstimator(FluxPointsEstimator):
     """Estimate light curve.
 
-    The estimator will fit the source model component to datasets in each of the
-    provided time intervals.
+    The estimator will fit the norm of the source model component to datasets in
+    each of the provided time intervals.
 
     If no time intervals are provided, the estimator will use the time intervals
     defined by the datasets GTIs.
@@ -60,7 +60,7 @@ class LightCurveEstimator(FluxPointsEstimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool

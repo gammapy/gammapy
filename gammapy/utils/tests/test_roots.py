@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from gammapy.utils.roots import find_roots
 import pytest
 
+
 class TestFindRoots:
     lower_bound = -3 * np.pi * u.rad
     upper_bound = 0 * u.rad

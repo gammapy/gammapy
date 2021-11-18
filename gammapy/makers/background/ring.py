@@ -117,7 +117,7 @@ class AdaptiveRingBackgroundMaker(Maker):
     def _reduce_cubes(self, cubes, dataset):
         """Compute off and off acceptance map.
 
-        Calulated by reducing the cubes. The data is
+        Calculated by reducing the cubes. The data is
         iterated along the third axis (i.e. increasing ring sizes), the value
         with the first approximate alpha < threshold is taken.
         """

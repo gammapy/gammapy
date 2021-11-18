@@ -58,17 +58,21 @@ class FluxPointsEstimator(FluxEstimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
+    sum_over_energy_groups : bool
+        Whether to sum over the energy groups or fit the norm on the full energy
+        grid.
     """
 
     tag = "FluxPointsEstimator"
 
-    def __init__(self, energy_edges=[1, 10] * u.TeV, **kwargs):
+    def __init__(self, energy_edges=[1, 10] * u.TeV, sum_over_energy_groups=False, **kwargs):
         self.energy_edges = energy_edges
+        self.sum_over_energy_groups = sum_over_energy_groups
 
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
@@ -133,6 +137,8 @@ class FluxPointsEstimator(FluxEstimator):
         datasets_sliced = datasets.slice_by_energy(
             energy_min=energy_min, energy_max=energy_max
         )
+        if self.sum_over_energy_groups:
+            datasets_sliced = Datasets([_.to_image(name=_.name) for _ in datasets_sliced])
 
         if len(datasets_sliced) > 0:
             datasets_sliced.models = datasets.models.copy()

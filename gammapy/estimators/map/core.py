@@ -118,14 +118,14 @@ class FluxMaps:
         * sqrt_ts : optional, the square root of the TS, when relevant.
         * success : optional, a boolean tagging the validity of the estimation
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
-        the reference model to use for conversions. Default in None.
+        the reference model to use for conversions.
         If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
     meta : dict, optional
-        List of metadata. Default is None.
+        Dict of metadata.
     gti : `~gammapy.data.GTI`, optional
-        the maps GTI information. Default is None.
+        Maps GTI information.
     filter_success_nan : boolean, optional
-        Set fitted values to NaN when the fit has not succeeded. Default is True.
+        Set fitted norm and error to NaN when the fit has not succeeded.
     """
     _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
@@ -216,6 +216,16 @@ class FluxMaps:
                 return sed_type
 
     @property
+    def has_ul(self):
+        """Whether the flux estimate has either sqrt(ts) or ts defined"""
+        return  "norm_ul" in self._data
+
+    @property
+    def has_any_ts(self):
+        """Whether the flux estimate has either sqrt(ts) or ts defined"""
+        return  any([_ in self._data for _ in ["ts", "sqrt_ts"]])
+
+    @property
     def has_stat_profiles(self):
         """Whether the flux estimate has stat profiles"""
         return "stat_scan" in self._data
@@ -250,11 +260,11 @@ class FluxMaps:
             Threshold value in sqrt(TS) for upper limits
         """
         self.meta["sqrt_ts_threshold_ul"] = value
-        if (
-            any([_ in self._data for _ in ["ts", "sqrt_ts"]])
-            and "norm_ul" in self._data
-        ):
-            self.is_ul = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
+
+        if self.has_any_ts:
+            self.is_ul = self.sqrt_ts < self.sqrt_ts_threshold_ul
+        else:
+            raise ValueError("Either ts or sqrt_ts is required to set the threshold")
 
     @property
     def sed_type_init(self):
@@ -339,32 +349,32 @@ class FluxMaps:
     def is_ul(self):
         """Whether data is an upper limit"""
         # TODO: make this a well defined behaviour
-        is_ul = self.norm.copy()
+        is_ul = self.norm.copy(data=False)
 
         if "is_ul" in self._data:
             is_ul = self._data["is_ul"]
-        elif (
-            any([_ in self._data for _ in ["ts", "sqrt_ts"]])
-            and "norm_ul" in self._data
-        ):
+        elif self.has_any_ts and self.has_ul:
             is_ul.data = self.sqrt_ts.data < self.sqrt_ts_threshold_ul
-        elif "norm_ul" in self._data:
+        elif self.has_ul:
             is_ul.data = np.isfinite(self.norm_ul)
         else:
             is_ul.data = np.isnan(self.norm)
-        return self._filter_convergence_failure(is_ul)
+
+        return is_ul
 
     @is_ul.setter
-    def is_ul(self, data):
+    def is_ul(self, value):
         """Whether data is an upper limit
         
         Parameters
         ----------
-        data : "~numpy.array"
-            boolean array
+        value : `~Map`
+            Boolean map.
         """
-        self._data["is_ul"] = self.norm.copy(data=data)
+        if not isinstance(value, Map):
+            value = self.norm.copy(data=value)
 
+        self._data["is_ul"] = value
 
     @property
     def counts(self):
@@ -422,13 +432,13 @@ class FluxMaps:
     def stat_scan(self):
         """Fit statistic scan value"""
         self._check_quantity("stat_scan")
-        return self._filter_convergence_failure(self._data["stat_scan"])
+        return self._data["stat_scan"]
 
     @property
     def stat(self):
         """Fit statistic value"""
         self._check_quantity("stat")
-        return self._filter_convergence_failure(self._data["stat"])
+        return self._data["stat"]
 
     @property
     def stat_null(self):
@@ -440,7 +450,7 @@ class FluxMaps:
     def ts(self):
         """ts map (`Map`)"""
         self._check_quantity("ts")
-        return self._filter_convergence_failure(self._data["ts"])
+        return self._data["ts"]
 
     @property
     def ts_scan(self):
@@ -489,19 +499,19 @@ class FluxMaps:
     def norm_errn(self):
         """Negative norm error"""
         self._check_quantity("norm_errn")
-        return self._filter_convergence_failure(self._data["norm_errn"])
+        return self._data["norm_errn"]
 
     @property
     def norm_errp(self):
         """Positive norm error"""
         self._check_quantity("norm_errp")
-        return self._filter_convergence_failure(self._data["norm_errp"])
+        return self._data["norm_errp"]
 
     @property
     def norm_ul(self):
         """Norm upper limit"""
         self._check_quantity("norm_ul")
-        return self._filter_convergence_failure(self._data["norm_ul"])
+        return self._data["norm_ul"]
 
     @property
     def dnde_ref(self):
@@ -514,7 +524,7 @@ class FluxMaps:
         """Reference differential flux * energy ** 2"""
         energy = self.energy_axis.center
         result = (
-                self.reference_spectral_model(energy) * energy ** 2
+            self.reference_spectral_model(energy) * energy ** 2
         )
         return result[self._expand_slice]
 

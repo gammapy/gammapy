@@ -19,7 +19,8 @@ from .utils import (
     coords_to_vec,
     get_pix_size_from_nside,
     get_nside_from_pix_size,
-    nside_to_order
+    nside_to_order,
+    match_hpx_pix
 )
 from .io import HpxConv
 from ..utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
@@ -812,7 +813,7 @@ class HpxGeom(Geom):
             the spatial pixels in the map.
         binsz : float or `~numpy.ndarray`
             Approximate pixel size in degrees.  An NSIDE will be
-            chosen that correponds to a pixel size closest to this
+            chosen that corresponds to a pixel size closest to this
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPIX "NESTED" indexing scheme, False for "RING" scheme

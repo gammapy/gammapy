@@ -31,7 +31,7 @@ class ParameterEstimator(Estimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
@@ -62,7 +62,7 @@ class ParameterEstimator(Estimator):
         self.reoptimize = reoptimize
 
     def estimate_best_fit(self, datasets, parameter):
-        """Estimate parameter assymetric errors
+        """Estimate parameter asymmetric errors
 
         Parameters
         ----------
@@ -138,7 +138,7 @@ class ParameterEstimator(Estimator):
         }
 
     def estimate_errn_errp(self, datasets, parameter):
-        """Estimate parameter assymetric errors
+        """Estimate parameter asymmetric errors
 
         Parameters
         ----------
@@ -228,7 +228,7 @@ class ParameterEstimator(Estimator):
         -------
         result : dict
             Dict with the parameter ULs. Entries are:
-            
+
                 * parameter.name_ul : upper limit on parameter value
         """
         if not np.any(datasets.contributes_to_stat):

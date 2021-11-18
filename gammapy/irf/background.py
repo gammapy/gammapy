@@ -15,9 +15,7 @@ log = logging.getLogger(__name__)
 class BackgroundIRF(IRF):
     """Background IRF base class"""
 
-    default_interp_kwargs = dict(
-        bounds_error=False, fill_value=0.0, values_scale="log"
-    )
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0.0, values_scale="log")
     """Default Interpolation kwargs to extrapolate."""
 
     @classmethod
@@ -64,8 +62,8 @@ class BackgroundIRF(IRF):
             )
 
         # TODO: The present HESS and CTA background fits files
-        #  have a reverse order (lon, lat, E) than recommened in GADF(E, lat, lon)
-        #  For now, we suport both.
+        #  have a reverse order (lon, lat, E) than recommended in GADF(E, lat, lon)
+        #  For now, we support both.
 
         if axes.shape == axes.shape[::-1]:
             log.error("Ambiguous axes order in Background fits files!")
@@ -136,6 +134,66 @@ class Background3D(BackgroundIRF):
     def peek(self, figsize=(10, 8)):
         return self.to_2d().peek(figsize)
 
+    def plot_at_energy(
+        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+    ):
+        """ Plot the background rate in Field of view co-ordinates at a given energy.
+
+        Parameters
+        -----------
+        energy : `~astropy.units.Quantity`
+            list of Energy
+        ax: `~matplotlib.axes.Axes`, optional
+            Axis
+        add_cbar : bool
+            Add color bar?
+        ncols : int
+            Number of columns to plot
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+        """
+        import matplotlib.pyplot as plt
+
+        n = len(energy)
+        cols = min(ncols, n)
+        rows = 1 + (n - 1) // cols
+        width = 12
+        if figsize is None:
+            figsize = (width, width * rows / cols)
+
+        fig, axes = plt.subplots(
+            ncols=cols,
+            nrows=rows,
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.2, "wspace": 0.3},
+        )
+
+        x = self.axes["fov_lat"].edges
+        y = self.axes["fov_lon"].edges
+        X, Y = np.meshgrid(x, y)
+
+        for i, ee in enumerate(energy):
+            if len(energy) == 1:
+                ax = axes
+            else:
+                ax = axes.flat[i]
+            bkg = self.evaluate(energy=ee)
+            with quantity_support():
+                caxes = ax.pcolormesh(X, Y, bkg.squeeze(), **kwargs)
+
+            self.axes["fov_lat"].format_plot_xaxis(ax)
+            self.axes["fov_lon"].format_plot_yaxis(ax)
+            ax.set_title(str(ee))
+            if add_cbar:
+                label = f"Background [{bkg.unit}]"
+                ax.figure.colorbar(caxes, ax=ax, label=label)
+
+            row, col = np.unravel_index(i, shape=(rows, cols))
+            if col > 0:
+                ax.set_ylabel("")
+            if row < rows - 1:
+                ax.set_xlabel("")
+
 
 class Background2D(BackgroundIRF):
     """Background 2D.
@@ -156,8 +214,46 @@ class Background2D(BackgroundIRF):
 
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
-    default_interp_kwargs = dict(bounds_error=False, fill_value=0.)
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0.0)
     """Default Interpolation kwargs."""
+
+    def to_3d(self):
+        """"Convert to Background3D"""
+
+        edges = np.concatenate(
+            (
+                np.negative(self.axes["offset"].edges)[::-1][:-1],
+                self.axes["offset"].edges,
+            )
+        )
+        fov_lat = MapAxis.from_edges(edges=edges, name="fov_lat")
+        fov_lon = MapAxis.from_edges(edges=edges, name="fov_lon")
+
+        axes = MapAxes([self.axes["energy"], fov_lon, fov_lat])
+        coords = axes.get_coord()
+        offset = np.sqrt(coords["fov_lat"] ** 2 + coords["fov_lon"] ** 2)
+        data = self.evaluate(offset=offset, energy=coords["energy"])
+
+        return Background3D(axes=axes, data=data,)
+
+    def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
+        """ Plot the background rate in Field of view co-ordinates at a given energy.
+
+        Parameters
+        -----------
+        energy : `~astropy.units.Quantity`
+            list of Energy
+        ax: `~matplotlib.axes.Axes`, optional
+            Axis
+        add_cbar : bool
+            Add color bar?
+        ncols : int
+            Number of columns to plot
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+        """
+        bkg_3d = self.to_3d()
+        bkg_3d.plot_at_energy(energy, ax, add_cbar, ncols, **kwargs)
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model.
@@ -288,9 +384,7 @@ class Background2D(BackgroundIRF):
         offset_axis = self.axes["offset"]
         energy_axis = self.axes["energy"]
 
-        bkg = self.integral(
-            offset=offset_axis.bounds[1], axis_name="offset"
-        )
+        bkg = self.integral(offset=offset_axis.bounds[1], axis_name="offset")
 
         with quantity_support():
             ax.plot(energy_axis.center, bkg, label="integrated spectrum", **kwargs)

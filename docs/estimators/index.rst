@@ -69,7 +69,7 @@ norm_scan         Norm scan
 stat_scan         Fit statistics scan
 ================= =================================================
 
-To compute the error, assymetric errors as well as upper limits one can
+To compute the error, asymmetric errors as well as upper limits one can
 specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
 arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
 
@@ -215,5 +215,3 @@ Reference/API
 
 
 .. _`likelihood SED type page`: https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
-
-

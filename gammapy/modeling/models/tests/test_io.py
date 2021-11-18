@@ -100,7 +100,7 @@ def test_dict_to_skymodels():
 
 @requires_data()
 def test_sky_models_io(tmp_path):
-    # TODO: maybe change to a test case where we create a model programatically?
+    # TODO: maybe change to a test case where we create a model programmatically?
     filename = get_pkg_data_filename("data/examples.yaml")
     models = Models.read(filename)
     models.covariance = np.eye(len(models.parameters))

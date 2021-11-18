@@ -493,7 +493,6 @@ class MapAxis:
             node_type=node_type,
         )
 
-
     @classmethod
     def from_nodes(cls, nodes, **kwargs):
         """Generate an axis object from a sequence of nodes (bin centers).
@@ -1118,7 +1117,7 @@ class MapAxis:
 
     @classmethod
     def from_table(cls, table, format="ogip", idx=0, column_prefix=""):
-        """Instanciate MapAxis from table HDU
+        """Instantiate MapAxis from table HDU
 
         Parameters
         ----------
@@ -1246,7 +1245,7 @@ class MapAxis:
 
     @classmethod
     def from_table_hdu(cls, hdu, format="ogip", idx=0):
-        """Instanciate MapAxis from table HDU
+        """Instantiate MapAxis from table HDU
 
         Parameters
         ----------
@@ -1757,7 +1756,7 @@ class MapAxes(Sequence):
                     colnames = [name, name + "_MIN", name + "_MAX"]
 
                 for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
-                    # do not store edges for lable axis
+                    # do not store edges for label axis
                     if ax.node_type == "label" and colname != name:
                         continue
 
@@ -2224,7 +2223,7 @@ class TimeMapAxis:
         for time_min, time_max in zip(self.time_min, self.time_max):
             yield (time_min, time_max)
 
-    def coord_to_idx(self, coord,**kwargs):
+    def coord_to_idx(self, coord, **kwargs):
         """Transform from axis time coordinate to bin index.
 
         Indices of time values falling outside time bins will be
@@ -2792,7 +2791,7 @@ class LabelMapAxis:
         str_ += fmt.format("name", self.name)
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("node type", self.node_type)
-        str_ += fmt.format(f"labels", "{0}".format(list(self._labels)))
+        str_ += fmt.format("labels", "{0}".format(list(self._labels)))
         return str_.expandtabs(tabsize=2)
 
     def __eq__(self, other):

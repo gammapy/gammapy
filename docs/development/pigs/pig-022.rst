@@ -54,7 +54,7 @@ actual fluxes. Associated quantities are denoted ``norm_err``, ``norm_ul`` etc.
 What we have
 ============
 
-So far, the only API in gammapy handling these differents flux types is the ``FluxPoints``
+So far, the only API in gammapy handling these different flux types is the ``FluxPoints``
 object. It contains a ``Table`` representing one given format above and utility functions
 allow to convert the table into another format with e.g.:
 
@@ -161,7 +161,7 @@ Introduce a FluxMap API
 Handling a simple dictionary of ``Maps`` is not very convenient. It is complex to
 perform flux transform, it is more complex to provide standard plotting functions
 for instance. More importantly, there is no way to serialize the maps with their
-associated quantities and other informations. It could be useful to export the
+associated quantities and other information. It could be useful to export the
 ``GTI`` table of the ``Dataset`` that was used to extract the map or its ``meta``
 table. Some information on the way the flux was obtained could be kept as well
 (e.g. spatial model assumed or correlation radius used).
@@ -300,10 +300,10 @@ The ``ExcessMapEstimator`` and ``ExcessProfileEstimator`` are following the seco
 their name suggest), but they still provide flux estimates through the excess/npred ratio. We note
 that flux points and light curve can also be estimated through this approach to provide rapid estimates.
 
-So we propose to introduce the following simplifed estiomator API:
+So we propose to introduce the following simplified estimator API:
 
-- `FluxPointsEstimator`, which handles multiple sources, time intervals and energy bins, using "foward folding"
-- `FluxMapEstimator`, which handles multiple energy bins, using "foward folding"
+- `FluxPointsEstimator`, which handles multiple sources, time intervals and energy bins, using "forward folding"
+- `FluxMapEstimator`, which handles multiple energy bins, using "forward folding"
 - `ExcessPointsEstimator`, which handles multiple regions, time intervals and energy bins, using "backward folding"
 - `ExcessMapEstimator`, which handles multiple energy bins, using "backward folding"
 

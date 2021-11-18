@@ -174,8 +174,10 @@ def test_compute_ts_map_energy(fermi_dataset):
     )
 
     result = estimator.run(fermi_dataset)
+    result.filter_success_nan = False
 
     assert_allclose(result.ts.data[1, 43, 30], 0.199291, atol=0.01)
+    assert not result["success"].data[1, 43, 30]
 
     assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
     assert_allclose(

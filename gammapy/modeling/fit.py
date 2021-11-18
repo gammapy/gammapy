@@ -85,7 +85,7 @@ class Fit:
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
 
-        For the `"scipy"` backend the available options are decsribed in detail here:
+        For the `"scipy"` backend the available options are described in detail here:
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
 
     covariance_opts : dict
@@ -190,6 +190,7 @@ class Fit:
 
         if backend == "minuit":
             self._minuit = optimizer
+            kwargs["method"] = "minos"
 
         trace = table_from_row_data(info.pop("trace"))
 
@@ -554,7 +555,9 @@ class OptimizeResult(FitResult):
     def __repr__(self):
         str_ = super().__repr__()
         str_ += f"\tnfev       : {self.nfev}\n"
-        str_ += f"\ttotal stat : {self.total_stat:.2f}\n"
+        str_ += f"\ttotal stat : {self.total_stat:.2f}\n\n"
+
         if self.covariance_result is not None:
-            str_ += self.covariance_result.__repr__()
+            str_ += str(self.covariance_result)
+
         return str_

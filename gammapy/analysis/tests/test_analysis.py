@@ -151,7 +151,7 @@ def test_analysis_1d():
         datastore: $GAMMAPY_DATA/hess-dl3-dr1
         obs_ids: [23523, 23526]
         obs_time: {
-            start: [J2004.92654346, J2004.92658453, J2004.92663655], 
+            start: [J2004.92654346, J2004.92658453, J2004.92663655],
             stop: [J2004.92658453, J2004.92663655, J2004.92670773]
         }
     datasets:
@@ -171,8 +171,8 @@ def test_analysis_1d():
     light_curve:
         energy_edges: {min: 1 TeV, max: 50 TeV, nbins: 1}
         time_intervals: {
-            start: [J2004.92654346, J2004.92658453, J2004.92663655], 
-            stop: [J2004.92658453, J2004.92663655, J2004.92670773]        
+            start: [J2004.92654346, J2004.92658453, J2004.92663655],
+            stop: [J2004.92658453, J2004.92663655, J2004.92670773]
         }
     """
     config = get_example_config("1d")

@@ -72,7 +72,6 @@ def test_datastore_from_events():
     assert len(data_store.obs_table) == 1
     assert len(data_store.hdu_table) == 6
 
-
     @requires_data()
     def test_datastore_get_observations(data_store, caplog):
         """Test loading data and IRF files via the DataStore"""

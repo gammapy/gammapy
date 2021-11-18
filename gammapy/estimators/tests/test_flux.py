@@ -163,6 +163,7 @@ def test_flux_estimator_norm_range():
     assert_allclose(scale_model.norm.max, 1e2)
     assert scale_model.norm.interp == "log"
 
+
 def test_flux_estimator_norm_range_template():
     energy = MapAxis.from_energy_bounds(0.1,10,3., unit='TeV', name="energy_true")
     template = WcsNDMap.create(npix=10, axes=[energy], unit="cm-2 s-1 sr-1 TeV-1")

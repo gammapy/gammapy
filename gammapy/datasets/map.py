@@ -105,8 +105,8 @@ class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
-    map data is only loaded in memeory as the corresponding data attribute
-    on the MapDataset is accessed. If it was accesed once it is cached for
+    map data is only loaded in memory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accessed once it is cached for
     the next time.
 
     Parameters
@@ -130,7 +130,7 @@ class MapDataset(Dataset):
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
 
 
@@ -179,6 +179,9 @@ class MapDataset(Dataset):
         self.counts = counts
         self.exposure = exposure
         self.background = background
+        self._background_cached = None
+        self._background_parameters_cached = None
+
         self.mask_fit = mask_fit
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
@@ -408,12 +411,27 @@ class MapDataset(Dataset):
             Predicted counts from the background.
         """
         background = self.background
-
         if self.background_model and background:
-            values = self.background_model.evaluate_geom(geom=self.background.geom)
-            background = background * values
+            if self._background_parameters_changed:
+                values = self.background_model.evaluate_geom(geom=self.background.geom)
+                if self._background_cached is None:
+                    self._background_cached = background * values
+                else:
+                    self._background_cached.data = background.data * values.value
+                    self._background_cached.unit = background.unit
+            return self._background_cached
+        else:
+            return background
 
         return background
+
+    def _background_parameters_changed(self):
+        values = self.background_model.parameters.value
+        # TODO: possibly allow for a tolerance here?
+        changed = ~np.all(self._background_parameters_cached == values)
+        if changed:
+            self._background_parameters_cached = values
+        return changed
 
     def npred_signal(self, model_name=None):
         """ "Model predicted signal counts.
@@ -479,7 +497,7 @@ class MapDataset(Dataset):
             geometry for the psf map
         geom_edisp : `Geom`
             geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this wil create an EDispMap instead.
+            If geom_edisp has a migra axis, this will create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -547,7 +565,7 @@ class MapDataset(Dataset):
         name : str
             Name of the returned dataset.
         meta_table : `~astropy.table.Table`
-            Table listing informations on observations used to create the dataset.
+            Table listing information on observations used to create the dataset.
             One line per observation for stacked datasets.
 
         Returns
@@ -822,8 +840,7 @@ class MapDataset(Dataset):
         kwargs.setdefault("cmap", "coolwarm")
         kwargs.setdefault("vmin", -5)
         kwargs.setdefault("vmax", 5)
-        _, ax, _ = residuals.plot(ax, **kwargs)
-
+        ax = residuals.plot(ax, **kwargs)
         return ax
 
     def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
@@ -864,13 +881,16 @@ class MapDataset(Dataset):
 
         if method == "diff":
             if self.stat_type == "wstat":
-                counts_off = (self.counts_off * mask).get_spectrum(region).data
-                norm = (self.background * mask).get_spectrum(region).data
-                mu_sig = (self.npred_signal() * mask).get_spectrum(region).data
+                counts_off = (self.counts_off * mask).get_spectrum(region)
+
+                with np.errstate(invalid="ignore"):
+                    alpha = (self.background * mask).get_spectrum(region) / counts_off
+
+                mu_sig = (self.npred_signal() * mask).get_spectrum(region)
                 stat = WStatCountsStatistic(
-                    n_on=counts_spec.data,
+                    n_on=counts_spec,
                     n_off=counts_off,
-                    alpha=norm / counts_off,
+                    alpha=alpha,
                     mu_sig=mu_sig,
                 )
             elif self.stat_type == "cash":
@@ -1756,7 +1776,7 @@ class MapDatasetOnOff(MapDataset):
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
@@ -1922,7 +1942,7 @@ class MapDatasetOnOff(MapDataset):
         name=None,
         **kwargs,
     ):
-        """Create a MapDatasetOnOff object  swith zero filled maps according to the specified geometries
+        """Create a MapDatasetOnOff object  switch zero filled maps according to the specified geometries
 
         Parameters
         ----------
@@ -1934,7 +1954,7 @@ class MapDatasetOnOff(MapDataset):
             geometry for the psf map
         geom_edisp : `gammapy.maps.WcsGeom`
             geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this wil create an EDispMap instead.
+            If geom_edisp has a migra axis, this will create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -2552,4 +2572,5 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
+            name=name
         )

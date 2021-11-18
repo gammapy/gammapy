@@ -141,39 +141,39 @@ def load_cta_irfs(filename):
 
 def load_irf_dict_from_file(filename):
     """Open a fits file and generate a dictionary containing the Gammapy objects
-    corresponding ot the IRF components stored
-    
+    corresponding to the IRF components stored
+
     Parameters
     ----------
     filename : str, Path
-        path to the file containing the IRF components, if EVENTS and GTI HDUs 
+        path to the file containing the IRF components, if EVENTS and GTI HDUs
         are included in the file, they are ignored
 
     Returns
     -------
     irf_dict : dict of `~gammapy.irf.IRF`
-        dictionary with instances of the Gammapy objects corresponding 
-        to the IRF components        
+        dictionary with instances of the Gammapy objects corresponding
+        to the IRF components
     """
     filename = make_path(filename)
 
     hdulist = fits.open(make_path(filename))
-    
+
     irf_dict = {}
 
     for hdu in hdulist:
         hdu_class = hdu.header.get("HDUCLAS1", "").lower()
-        
+
         if hdu_class == "response":
             hdu_class = hdu.header.get("HDUCLAS4", "").lower()
-        
+
             loc = HDULocation(
                 hdu_class=hdu_class,
                 hdu_name=hdu.name,
                 file_dir=filename.parent,
                 file_name=filename.name
             )
-            
+
             for name in HDUIndexTable.VALID_HDU_TYPE:
                 if name in hdu_class:
                     if name in irf_dict.keys():
@@ -183,6 +183,6 @@ def load_irf_dict_from_file(filename):
                     data = loc.load()
                     # TODO: maybe introduce IRF.type attribute...
                     irf_dict[name] = data
-        else : # not an IRF component
+        else:  # not an IRF component
             continue
     return irf_dict

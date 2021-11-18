@@ -22,11 +22,11 @@ class DatasetsMaker(Maker):
         Stack into reference dataset or not
     n_jobs : int
         Number of processes to run in parallel
-        Defalut is None
+        Default is None
     cutout_mode : str
         Cutout mode. Default is "partial"
     cutout_width : str or `~astropy.coordinates.Angle`,
-        Cutout width. Default is None, If Default is determined 
+        Cutout width. Default is None, If Default is determined
     """
 
     tag = "DatasetsMaker"
@@ -107,7 +107,7 @@ class DatasetsMaker(Maker):
             self._datasets.append(dataset)
 
     def error_callback(self, dataset):
-        # parralel run could cause a memory error with non-explicit message.
+        # parallel run could cause a memory error with non-explicit message.
         self._error = True
 
     def run(self, dataset, observations, datasets=None):
@@ -116,10 +116,10 @@ class DatasetsMaker(Maker):
         Parameters
         ----------
          dataset : `~gammapy.datasets.MapDataset`
-            Reference dataset (used only for stacking if datasets are provided) 
+            Reference dataset (used only for stacking if datasets are provided)
          observations : `Observations`
             Observations
-         datasets : `~gammapy.datasets.Datasets`   
+         datasets : `~gammapy.datasets.Datasets`
              Base datasets, if provided its length must be the same than the observations.
 
         Returns

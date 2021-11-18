@@ -41,7 +41,7 @@ The `~gammapy.data.DataStore` provides access to a summary table of all observat
 It can be used to select observations with various criterion.
 You can for instance apply a cone search as shown `here
 <tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
-You can also select observations based on other informations available using the
+You can also select observations based on other information available using the
 `~gammapy.data.ObservationTable.select_observations` method.
 
 Make a on-axis equivalent livetime map

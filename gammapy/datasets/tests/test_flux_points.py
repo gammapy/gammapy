@@ -117,7 +117,7 @@ class TestFluxPointFit:
         model.amplitude.scan_n_values = 3
         model.amplitude.scan_n_sigma = 1
         model.amplitude.interp = "lin"
-        
+
         profile = fit.stat_profile(
             datasets=dataset,
             parameter="amplitude",

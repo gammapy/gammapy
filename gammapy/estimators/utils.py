@@ -47,7 +47,7 @@ def find_peaks(image, threshold, min_distance=1):
     threshold : float or array-like
         The data value or pixel-wise data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
-        shape as tha map ``data``.
+        shape as the map ``data``.
     min_distance : int or `~astropy.units.Quantity`
         Minimum distance between peaks. An integer value is interpreted
         as pixels.

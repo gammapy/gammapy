@@ -24,7 +24,7 @@ geom = WcsGeom.create(npix=(100, 100), binsz=0.1)
 model = ConstantSpatialModel(value="42 sr-1")
 model.plot(geom=geom, add_cbar=True)
 
-#%%
+# %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:

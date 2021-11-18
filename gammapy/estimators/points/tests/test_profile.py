@@ -76,7 +76,7 @@ def test_profile_content():
     assert_allclose(errn, [10.75, 10.75], atol=1e-2)
 
     ul = result.npred_excess_ul.data[7].squeeze()
-    assert_allclose(ul, [111.31, 111.31], atol=1e-2)
+    assert_allclose(ul, [111.32, 111.32], atol=1e-2)
 
 
 @requires_dependency("iminuit")
@@ -127,9 +127,10 @@ def test_radial_profile_one_interval():
         regions,
         selection_optional="all",
         energy_edges=[0.1, 10] * u.TeV,
-        n_sigma_ul=3
+        n_sigma_ul=3,
+        sum_over_energy_groups=True
     )
-    result = prof_maker.run(dataset.to_image())
+    result = prof_maker.run(dataset)
 
     imp_prof = result.to_table(sed_type="flux", format="profile")
 
@@ -137,6 +138,9 @@ def test_radial_profile_one_interval():
     assert_allclose(imp_prof[7]["npred_excess"], [[1568.0]], rtol=1e-3)
     assert_allclose(imp_prof[7]["sqrt_ts"], [33.780533], rtol=1e-3)
     assert_allclose(imp_prof[0]["flux"], [16e-06], atol=1e-3)
+
+    axis = result.counts.geom.axes["dataset"]
+    assert axis.center == ["test-on-off"]
 
     errn = result.npred_excess_errn.data[7].squeeze()
     assert_allclose(errn, [48.278367], rtol=2e-3)

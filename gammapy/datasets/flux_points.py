@@ -29,7 +29,7 @@ class FluxPointsDataset(Dataset):
     mask_safe : `numpy.ndarray`
         Mask defining the safe data range. By default upper limit values are excluded.
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
 
     Examples

@@ -19,75 +19,71 @@ def aeff():
     return EffectiveAreaTable2D.read(filename, hdu="AEFF")
 
 
-class TestEffectiveAreaTable2D:
-    # TODO: split this out into separate tests, especially the plotting
-    # Add I/O test
-    @staticmethod
-    @requires_data()
-    def test(aeff):
-        assert aeff.axes["energy_true"].nbin == 96
-        assert aeff.axes["offset"].nbin == 6
-        assert aeff.data.shape == (96, 6)
+@requires_data()
+def test_basic(aeff):
+    assert aeff.axes["energy_true"].nbin == 96
+    assert aeff.axes["offset"].nbin == 6
+    assert aeff.data.shape == (96, 6)
 
-        assert aeff.axes["energy_true"].unit == "TeV"
-        assert aeff.axes["offset"].unit == "deg"
-        assert aeff.unit == "m2"
+    assert aeff.axes["energy_true"].unit == "TeV"
+    assert aeff.axes["offset"].unit == "deg"
+    assert aeff.unit == "m2"
 
-        assert_quantity_allclose(aeff.meta["HI_THRES"], 100, rtol=1e-3)
-        assert_quantity_allclose(aeff.meta["LO_THRES"], 0.870964, rtol=1e-3)
+    assert_quantity_allclose(aeff.meta["HI_THRES"], 100, rtol=1e-3)
+    assert_quantity_allclose(aeff.meta["LO_THRES"], 0.870964, rtol=1e-3)
 
-        test_val = aeff.evaluate(energy_true="14 TeV", offset="0.2 deg")
-        assert_allclose(test_val.value, 683177.5, rtol=1e-3)
+    test_val = aeff.evaluate(energy_true="14 TeV", offset="0.2 deg")
+    assert_allclose(test_val.value, 683177.5, rtol=1e-3)
 
-    @staticmethod
-    def test_from_parametrization():
-        # Log center of this is 100 GeV
-        area_ref = 1.65469579e07 * u.cm ** 2
 
-        axis = MapAxis.from_energy_edges([80, 125] * u.GeV, name="energy_true")
-        area = EffectiveAreaTable2D.from_parametrization(axis, "HESS")
+def test_from_parametrization():
+    # Log center of this is 100 GeV
+    area_ref = 1.65469579e07 * u.cm ** 2
 
-        assert_allclose(area.quantity, area_ref)
-        assert area.unit == area_ref.unit
+    axis = MapAxis.from_energy_edges([80, 125] * u.GeV, name="energy_true")
+    area = EffectiveAreaTable2D.from_parametrization(axis, "HESS")
 
-        # Log center of this is 0.1, 2 TeV
-        area_ref = [1.65469579e07, 1.46451957e09] * u.cm * u.cm
+    assert_allclose(area.quantity, area_ref)
+    assert area.unit == area_ref.unit
 
-        axis = MapAxis.from_energy_edges([0.08, 0.125, 32] * u.TeV, name="energy_true")
-        area = EffectiveAreaTable2D.from_parametrization(axis, "HESS")
-        assert_allclose(area.quantity[:, 0], area_ref)
-        assert area.unit == area_ref.unit
-        assert area.meta["TELESCOP"] == "HESS"
+    # Log center of this is 0.1, 2 TeV
+    area_ref = [1.65469579e07, 1.46451957e09] * u.cm * u.cm
 
-    @staticmethod
-    @requires_dependency("matplotlib")
-    @requires_data()
-    def test_plot(aeff):
-        with mpl_plot_check():
-            aeff.plot()
+    axis = MapAxis.from_energy_edges([0.08, 0.125, 32] * u.TeV, name="energy_true")
+    area = EffectiveAreaTable2D.from_parametrization(axis, "HESS")
+    assert_allclose(area.quantity[:, 0], area_ref)
+    assert area.unit == area_ref.unit
+    assert area.meta["TELESCOP"] == "HESS"
 
-        with mpl_plot_check():
-            aeff.plot_energy_dependence()
 
-        with mpl_plot_check():
-            aeff.plot_offset_dependence()
+@requires_dependency("matplotlib")
+@requires_data()
+def test_plot(aeff):
+    with mpl_plot_check():
+        aeff.plot()
 
-    @staticmethod
-    def test_write():
-        energy_axis_true = MapAxis.from_energy_bounds(
-            "1 TeV", "10 TeV", nbin=10, name="energy_true"
-        )
+    with mpl_plot_check():
+        aeff.plot_energy_dependence()
 
-        offset_axis = MapAxis.from_bounds(0, 1, nbin=4, name="offset", unit="deg")
+    with mpl_plot_check():
+        aeff.plot_offset_dependence()
 
-        aeff = EffectiveAreaTable2D(
-            axes=[energy_axis_true, offset_axis], data=1, unit="cm2"
-        )
-        hdu = aeff.to_table_hdu()
-        assert_equal(
-            hdu.data["ENERG_LO"][0], aeff.axes["energy_true"].edges[:-1].value
-        )
-        assert hdu.header["TUNIT1"] == aeff.axes["energy_true"].unit
+
+def test_to_table():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=10, name="energy_true"
+    )
+
+    offset_axis = MapAxis.from_bounds(0, 1, nbin=4, name="offset", unit="deg")
+
+    aeff = EffectiveAreaTable2D(
+        axes=[energy_axis_true, offset_axis], data=1, unit="cm2"
+    )
+    hdu = aeff.to_table_hdu()
+    assert_equal(
+        hdu.data["ENERG_LO"][0], aeff.axes["energy_true"].edges[:-1].value
+    )
+    assert hdu.header["TUNIT1"] == aeff.axes["energy_true"].unit
 
 
 def test_wrong_axis_order():

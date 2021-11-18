@@ -379,7 +379,7 @@ def add_observed_parameters(table, obs_pos=None):
     Output table columns: distance, glon, glat, flux, angular_extension
 
     Position of observer in cartesian coordinates.
-    Center of galaxy as origin, x-axis goes trough sun.
+    Center of galaxy as origin, x-axis goes through sun.
 
     Parameters
     ----------

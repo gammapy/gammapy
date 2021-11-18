@@ -21,6 +21,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_center=True):
     """Compute exposure map.
 
@@ -129,7 +130,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     use_region_center: bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the sum over the whole region
+        or the instead the sum over the whole region
 
     Returns
     -------
@@ -230,9 +231,9 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     # Compute PSF values
     data = psf.evaluate(
-            energy_true=coords["energy_true"],
-            offset=offset,
-            rad=coords["rad"],
+        energy_true=coords["energy_true"],
+        offset=offset,
+        rad=coords["rad"],
     )
 
     # Create Map and fill relevant entries
@@ -262,7 +263,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------
@@ -315,7 +316,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_c
     use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------

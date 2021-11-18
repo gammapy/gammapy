@@ -326,8 +326,8 @@ class EDispKernel(IRF):
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
             # add 1 to borders for correct behaviour of np.split
-            groups = np.asarray(np.split(pos, borders + 1))
-            n_grp_temp = groups.shape[0] if groups.size > 0 else 1
+            groups = np.split(pos, borders + 1)
+            n_grp_temp = len(groups) if len(groups) > 0 else 1
             n_chan_temp = np.asarray([val.size for val in groups])
             try:
                 f_chan_temp = np.asarray([val[0] for val in groups])

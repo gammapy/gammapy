@@ -10,4 +10,3 @@ def identify_wcs_format(hdu):
         return "fgst-ccube"
     else:
         return "gadf"
-

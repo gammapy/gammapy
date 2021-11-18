@@ -895,7 +895,7 @@ def test_stack(sky_model):
 
 
 @requires_data()
-def test_npred_sig(sky_model, geom, geom_etrue):
+def test_npred(sky_model, geom, geom_etrue):
     dataset = get_map_dataset(geom, geom_etrue)
 
     pwl = PowerLawSpectralModel()
@@ -910,14 +910,24 @@ def test_npred_sig(sky_model, geom, geom_etrue):
     assert_allclose(
         dataset.npred_signal(model_name=model1.name).data.sum(), 150.7487, rtol=1e-3
     )
+    assert dataset._background_cached is None
+    assert_allclose(dataset.npred_background().data.sum(), 4000., rtol=1e-3)
+    assert_allclose(dataset._background_cached.data.sum(), 4000., rtol=1e-3)
+
     assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
     assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
+
+    bkg.spectral_model.norm.value = 1.1
+    assert_allclose(dataset.npred_background().data.sum(), 4400., rtol=1e-3)
+    assert_allclose(dataset._background_cached.data.sum(), 4400., rtol=1e-3)
+
 
     with pytest.raises(
         KeyError,
         match="m2",
     ):
         dataset.npred_signal(model_name="m2")
+
 
 
 def test_stack_npred():
@@ -985,7 +995,7 @@ def test_stack_npred():
 
 
 def to_cube(image):
-    # introduce a fake enery axis for now
+    # introduce a fake energy axis for now
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
     geom = image.geom.to_cube([axis])
     return WcsNDMap.from_geom(geom=geom, data=image.data)

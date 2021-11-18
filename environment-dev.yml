@@ -22,6 +22,7 @@ dependencies:
   - pydantic
   - pyyaml
   - regions
+  - matplotlib>=3.4,<3.5
   - scipy
   # test dependencies
   - codecov
@@ -36,7 +37,6 @@ dependencies:
   - ipython
   - jupyter
   - jupyterlab
-  - matplotlib>=3.4
   - naima
   - pandas
   - reproject
@@ -63,6 +63,7 @@ dependencies:
   - nbformat==5.0.8
   - docutils==0.16
   - h5py==2.10.0
+  - ruamel.yaml
   - pip:
       - pytest-sphinx
 

@@ -93,7 +93,7 @@ class ExcessMapEstimator(Estimator):
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
     apply_mask_fit : bool
@@ -102,8 +102,8 @@ class ExcessMapEstimator(Estimator):
     correlate_off : bool
         Correlate OFF events in the case of a `MapDatasetOnOff`. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
-        Spectral model used for the computation of the flux map. 
-        If None, a Power Law of index 2 is assumed (default). 
+        Spectral model used for the computation of the flux map.
+        If None, a Power Law of index 2 is assumed (default).
     """
 
     tag = "ExcessMapEstimator"

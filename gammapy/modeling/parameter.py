@@ -78,7 +78,7 @@ class Parameter:
     scan_max : float
         Minimum value for the parameter scan. Overwrites scan_n_sigma.
     scan_n_values: int
-        Number of values to be used fo the parameter scan.
+        Number of values to be used for the parameter scan.
     scan_n_sigma : int
         Number of sigmas to scan.
     scan_values: `numpy.array`
@@ -105,7 +105,7 @@ class Parameter:
         scan_n_values=11,
         scan_n_sigma=2,
         scan_values=None,
-        scale_method=None,
+        scale_method="scale10",
         interp="lin",
     ):
         if not isinstance(name, str):
@@ -402,10 +402,9 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
-            "interp": self.interp
+            "interp": self.interp,
+            "scale_method": self.scale_method
         }
-        if self.scale_method is not None:
-            output["scale_method"] = self.scale_method
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
@@ -423,7 +422,7 @@ class Parameter:
         * ``factor1`` sets ``factor, scale = 1, value``
 
         In both cases the sign of value is stored in ``factor``,
-        i.e. the ``scale`` is always positive. 
+        i.e. the ``scale`` is always positive.
         If ``scale_method`` is None the scaling is ignored.
 
         """
@@ -650,7 +649,7 @@ class Parameters(collections.abc.Sequence):
            type of models
         frozen : bool
             Select frozen parameters if True, exclude them if False.
- 
+
         Returns
         -------
         parameters : `Parameters`
