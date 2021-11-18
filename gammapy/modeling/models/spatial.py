@@ -286,8 +286,7 @@ class SpatialModel(Model):
             raise TypeError(
                 "Use .plot_interactive() or .plot_grid() for Map dimension > 2"
             )
-        _, ax, _ = m.plot(ax=ax, **kwargs)
-        return ax
+        return m.plot(ax=ax, **kwargs)
 
     def plot_interative(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.

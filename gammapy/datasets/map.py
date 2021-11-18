@@ -840,8 +840,7 @@ class MapDataset(Dataset):
         kwargs.setdefault("cmap", "coolwarm")
         kwargs.setdefault("vmin", -5)
         kwargs.setdefault("vmax", 5)
-        _, ax, _ = residuals.plot(ax, **kwargs)
-
+        ax = residuals.plot(ax, **kwargs)
         return ax
 
     def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):

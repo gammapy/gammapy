@@ -913,7 +913,7 @@ class DatasetModels(collections.abc.Sequence):
         kwargs_point = kwargs_point or {}
 
         if ax is None or not isinstance(ax, WCSAxes):
-            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+            ax = Map.from_geom(self.wcs_geom).plot()
 
         kwargs.setdefault("color", "tab:blue")
         kwargs.setdefault("fc", "None")
@@ -956,7 +956,7 @@ class DatasetModels(collections.abc.Sequence):
         import matplotlib.pyplot as plt
 
         if ax is None or not isinstance(ax, WCSAxes):
-            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+            ax = Map.from_geom(self.wcs_geom).plot()
 
         kwargs.setdefault("marker", "*")
         kwargs.setdefault("color", "tab:blue")

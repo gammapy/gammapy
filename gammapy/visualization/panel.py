@@ -88,7 +88,7 @@ class MapPanelPlotter:
         spec = self.grid_spec[panel]
         ax = self.figure.add_subplot(spec, projection=map.geom.wcs)
         try:
-            ax = map.plot(ax=ax, **kwargs)[1]
+            ax = map.plot(ax=ax, **kwargs)
         except AttributeError:
             ax = map.plot_rgb(ax=ax, **kwargs)
         ax = self._set_ax_fov(ax, panel_fov)

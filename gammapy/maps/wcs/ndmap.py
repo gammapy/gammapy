@@ -331,12 +331,8 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        cbar : `~matplotlib.colorbar.Colorbar` or None
-            Colorbar object.
         """
         import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
@@ -368,7 +364,7 @@ class WcsNDMap(WcsMap):
 
         im = ax.imshow(data, **kwargs)
 
-        cbar = fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
+        fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
@@ -377,7 +373,7 @@ class WcsNDMap(WcsMap):
 
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
-        return fig, ax, cbar
+        return ax
 
     def plot_mask(self, ax=None, **kwargs):
         """Plot the mask as a shaded area
