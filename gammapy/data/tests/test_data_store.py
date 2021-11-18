@@ -158,7 +158,7 @@ class TestDataStoreMaker:
         table = self.data_store.obs_table
         assert table.__class__.__name__ == "ObservationTable"
         assert len(table) == 4
-        assert len(table.colnames) == 24
+        assert len(table.colnames) == 21
 
         # TODO: implement https://github.com/gammapy/gammapy/issues/1218 and add tests here
         # assert table.time_start[0].iso == "spam"
