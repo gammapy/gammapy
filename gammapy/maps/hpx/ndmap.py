@@ -889,13 +889,8 @@ class HpxNDMap(HpxMap):
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        im : `~matplotlib.image.AxesImage` or `~matplotlib.collections.PatchCollection`
-            Image object.
-
         """
         if method == "raster":
             m = self.to_wcs(
@@ -991,7 +986,7 @@ class HpxNDMap(HpxMap):
         ax.autoscale_view()
         ax.coords.grid(color="w", linestyle=":", linewidth=0.5)
 
-        return fig, ax, p
+        return ax
 
     def plot_mask(self,
         method="raster",
