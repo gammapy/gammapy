@@ -529,12 +529,7 @@ def test_downsample_energy(geom, geom_etrue):
     counts += 1
     exposure = Map.from_geom(geom_etrue, unit="m2s")
     edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
-    dataset = MapDataset(
-        counts=counts,
-        exposure=exposure,
-        mask_safe=mask,
-        edisp=edisp,
-    )
+    dataset = MapDataset(counts=counts, exposure=exposure, mask_safe=mask, edisp=edisp,)
     dataset_downsampled = dataset.downsample(2, axis_name="energy")
     dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
 
@@ -895,15 +890,7 @@ def test_stack(sky_model):
 
     ## now test datasets.stack_reduce()
     datasets = Datasets([dataset1, dataset2])
-    stacked1 = datasets.stack_reduce()
-    assert_allclose(stacked.counts.data, stacked1.counts.data)
-
-    geoms = {
-        name: WcsGeom.from_aligned(geom, skydir=geom.center_skydir, width=5.0 * u.deg)
-        for name, geom in dataset1.geoms.items()
-    }
-    empty = MapDataset.from_geoms(**geoms)
-    stacked2 = datasets.stack_reduce(empty=empty)
+    stacked2 = datasets.stack_reduce(skydir=geom.center_skydir, width=5.0 * u.deg)
     assert_allclose(stacked2.counts.data.sum(), 9000, 1e-5)
 
 
@@ -927,8 +914,7 @@ def test_npred_sig(sky_model, geom, geom_etrue):
     assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
 
     with pytest.raises(
-        KeyError,
-        match="m2",
+        KeyError, match="m2",
     ):
         dataset.npred_signal(model_name="m2")
 
@@ -944,11 +930,7 @@ def test_stack_npred():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0),
-        binsz=0.05,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
+        skydir=(0, 0), binsz=0.05, width=(2, 2), frame="icrs", axes=[axis],
     )
 
     dataset_1 = MapDataset.create(
@@ -1481,11 +1463,7 @@ def test_slice_by_idx():
     )
 
     geom = WcsGeom.create(
-        skydir=(0, 0),
-        binsz=0.5,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
+        skydir=(0, 0), binsz=0.5, width=(2, 2), frame="icrs", axes=[axis],
     )
     dataset = MapDataset.create(geom=geom, energy_axis_true=axis_etrue, binsz_irf=0.5)
 

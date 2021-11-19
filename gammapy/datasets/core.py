@@ -10,7 +10,7 @@ from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 from gammapy.utils.table import table_from_row_data
-from gammapy.maps import RegionGeom
+from gammapy.maps import RegionGeom, WcsGeom
 
 log = logging.getLogger(__name__)
 
@@ -437,11 +437,9 @@ class Datasets(collections.abc.MutableSequence):
 
     def _if_info_pos(self):
         if not self.is_all_same_type:
-            log.info("Not possible: all Datasets contained are not of same type.")
-            return False
+            raise ValueError("All Datasets contained are not of same type.")
         if self[0].tag == "FluxPointsDataset":
-            log.info("Not defined for FluxPointsDataset")
-            return False
+            raise ValueError("Method not defined for FluxPointsDataset")
         return True
 
     def is_stackable(self, empty=None):
@@ -456,22 +454,20 @@ class Datasets(collections.abc.MutableSequence):
         """
 
         info = self._if_info_pos()
-        if info is False:
-            return False
-        if empty is None:
-            empty = self[0].__class__.from_geoms(**self[0].geoms)
-        if hasattr(empty.__class__, "stack") is False:
-            log.info("No inbuilt stacking exists for this dataset")
-            return False
+        if info is True:
+            if empty is None:
+                empty = self[0].__class__.from_geoms(**self[0].geoms)
+            if hasattr(empty.__class__, "stack") is False:
+                raise ValueError("No inbuilt stacking exists for dataset")
         for dataset in self:
             for g1, g2 in zip(empty.geoms.values(), dataset.geoms.values()):
                 if isinstance(g1, RegionGeom):
                     return True
                 if g1.is_aligned(g2) is False:
-                    return False
+                    raise ValueError("Geom not aligned for ", dataset.name)
         return True
 
-    def stack_reduce(self, empty=None, name=None, nan_to_num=True):
+    def stack_reduce(self, skydir=None, width=None, name=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
         This works only if all Dataset are of the same type and if a proper
@@ -481,22 +477,34 @@ class Datasets(collections.abc.MutableSequence):
         ----------
         name : str
             Name of the stacked dataset.
-        empty : `~gammapy.datasets.Dataset`
-             An empty dataset to stack onto
+        skydir : `~astropy.coordinates.SkyCoord`
+            Center of the final stacked map.
+            Must be defined for a MapDataset, not required for SpectralDatasets
+        width : float or tuple or list or string
+            Width of the map in degrees.  A tuple will be interpreted
+            as parameters for longitude and latitude axes.
+            Must be defined for a MapDataset, not required for SpectralDatasets
         nan_to_num: bool
             Non-finite values are replaced by zero if True (default).
 
         Returns
         -------
-        dataset : `~gammapy.datasets.Dataset`
+        empty : `~gammapy.datasets.Dataset`
             the stacked dataset
         """
 
-        if self.is_stackable(empty) is False:
-            raise ValueError("Stacking failed")
-        empty = self[0].__class__.from_geoms(**self[0].geoms, name=name)
-        for dataset in self:
-            empty.stack(dataset, nan_to_num=nan_to_num)
+        if self[0].tag == "MapDataset" or self[0].tag == "MapDatasetOnOff":
+            geoms = {
+                name: WcsGeom.from_aligned(geom, skydir=skydir, width=width)
+                for name, geom in self[0].geoms.items()
+            }
+        elif self[0].tag == "SpectrumDataset" or self[0].tag == "SpectrumDatasetOnOff":
+            geoms = self[0].geoms
+        empty = self[0].__class__.from_geoms(**geoms, name=name)
+
+        if self.is_stackable(empty) is True:
+            for dataset in self:
+                empty.stack(dataset, nan_to_num=nan_to_num)
 
         return empty
 

@@ -41,12 +41,15 @@ def test_names(datasets):
 
 
 def test_stack_reduce(datasets):
-    with pytest.raises(ValueError, match="Stacking failed"):
+    with pytest.raises(
+        AttributeError, match="type object 'MyDataset' has no attribute 'from_geoms'"
+    ):
         datasets.stack_reduce(datasets[0])
 
 
 def test_is_stackable(datasets):
-    assert datasets.is_stackable(datasets[0]) is False
+    with pytest.raises(ValueError, match="No inbuilt stacking exists for dataset"):
+        datasets.is_stackable(datasets[0])
 
 
 def test_Datasets_mutation():
