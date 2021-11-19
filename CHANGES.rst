@@ -88,7 +88,6 @@ In alphabetical order by first name:
 - Sebastian Panny
 - Vikas Joshi
 
-
 Pull Requests
 +++++++++++++
 
