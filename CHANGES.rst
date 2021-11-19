@@ -61,7 +61,6 @@ contributed examples, a new web page and repository has been created: `gammapy.r
 [these instructions](https://gammapy.github.io/gammapy-recipes/_build/html/contributing.html)
 if you would like to contribute to the gammapy recipes with your own.
 
-
 After changes in the Travis CI platform, the Continuous Integration (CI) has been simplified
 and moved from Travis to GitHub actions.
 
