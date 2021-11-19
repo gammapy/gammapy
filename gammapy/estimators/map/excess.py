@@ -38,7 +38,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
 
         npred_sig_convolve = npred_sig.convolve(kernel.array)
         if correlate_off:
-            background = dataset.background * dataset.mask
+            background = dataset.background * mask
             background.data[dataset.acceptance_off == 0] = 0.
             background_conv = background.convolve(kernel.array)
 

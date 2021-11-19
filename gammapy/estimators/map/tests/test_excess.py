@@ -245,14 +245,14 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
     result_mod = estimator_mod.run(simple_dataset_on_off)
     assert result_mod["npred"].data.shape == (1, 20, 20)
 
-    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 8.899278, atol=1e-3)
+    assert_allclose(result_mod["sqrt_ts"].data[0, 10, 10], 6.240846, atol=1e-3)
 
     assert_allclose(result_mod["npred"].data[0, 10, 10], 388)
-    assert_allclose(result_mod["npred_excess"].data[0, 10, 10], 190.68057)
+    assert_allclose(result_mod["npred_excess"].data[0, 10, 10], 148.68057)
 
     assert result_mod["flux"].unit == "cm-2s-1"
-    assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)
-    assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
+    assert_allclose(result_mod["flux"].data[0, 10, 10], 1.486806e-08, rtol=1e-3)
+    assert_allclose(result_mod["flux"].data.sum(), 5.254442e-06, rtol=1e-3)
 
 
 def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
@@ -280,7 +280,7 @@ def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     result_mod = estimator_mod.run(simple_dataset_on_off)
 
     assert result_mod["flux"].unit == "cm-2s-1"
-    assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
+    assert_allclose(result_mod["flux"].data.sum(), 5.254442e-06, rtol=1e-3)
 
     reco_exposure = estimate_exposure_reco_energy(
         simple_dataset_on_off, spectral_model=spectral_model
