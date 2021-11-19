@@ -132,7 +132,7 @@ def test_piecewise_norm_spectral_model_io():
 
     model_dict = model.to_dict()
 
-    parnames = [_["name"] for _ in model_dict["parameters"]]
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     for k, parname in enumerate(parnames):
         assert parname == f"norm_{k}"
 
@@ -149,7 +149,7 @@ def test_absorption_io(tmp_path):
     assert len(dominguez.parameters) == 2
 
     model_dict = dominguez.to_dict()
-    parnames = [_["name"] for _ in model_dict["parameters"]]
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
         "alpha_norm",
         "redshift",
@@ -279,8 +279,8 @@ def test_simplified_output():
     simplified = model.to_dict()
     for k, _ in enumerate(model.parameters.names):
         for item in ["min", "max", "error"]:
-            assert item in full["parameters"][k]
-            assert item not in simplified["parameters"][k]
+            assert item in full["spectral"]["parameters"][k]
+            assert item not in simplified["spectral"]["parameters"][k]
 
 
 def test_registries_print():

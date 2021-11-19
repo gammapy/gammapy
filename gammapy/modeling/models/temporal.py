@@ -10,11 +10,11 @@ from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-from .core import Model
+from .core import ModelBase
 
 
 # TODO: make this a small ABC to define a uniform interface.
-class TemporalModel(Model):
+class TemporalModel(ModelBase):
     """Temporal model base class.
     evaluates on  astropy.time.Time objects"""
 
@@ -112,14 +112,18 @@ class TemporalModel(Model):
 
         ontime = u.Quantity((t_max - t_min).sec, "s")
 
-        time_unit = u.Unit(self.table.meta["TIMEUNIT"]) if hasattr(self, 'table') else ontime.unit
+        time_unit = (
+            u.Unit(self.table.meta["TIMEUNIT"])
+            if hasattr(self, "table")
+            else ontime.unit
+        )
 
         t_stop = ontime.to_value(time_unit)
 
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
         t_step = t_delta.to_value(time_unit)
-        if hasattr(self, 'table'):
+        if hasattr(self, "table"):
             t = np.arange(0, t_stop, t_step)
 
             pdf = self.evaluate(t)
@@ -130,14 +134,17 @@ class TemporalModel(Model):
 
         else:
             t_step = (t_step * u.s).to("d")
-            
+
             t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
 
             pdf = self(t)
 
             sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
             time_pix = sampler.sample(n_events)[0]
-            time = (np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit).to(time_unit)
+            time = (
+                np.interp(time_pix, np.arange(len(t)), t.value - min(t.value))
+                * t_step.unit
+            ).to(time_unit)
 
         return t_min + time
 
@@ -187,15 +194,15 @@ class LinearTemporalModel(TemporalModel):
 
     tag = ["LinearTemporalModel", "linear"]
 
-    alpha = Parameter("alpha", 1., frozen=False)
-    beta = Parameter("beta", 0., unit="d-1", frozen=False)
+    alpha = Parameter("alpha", 1.0, frozen=False)
+    beta = Parameter("beta", 0.0, unit="d-1", frozen=False)
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
     @staticmethod
     def evaluate(time, alpha, beta, t_ref):
         """Evaluate at given times"""
-        return alpha + beta*(time - t_ref)
+        return alpha + beta * (time - t_ref)
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -216,8 +223,9 @@ class LinearTemporalModel(TemporalModel):
         alpha = pars["alpha"]
         beta = pars["beta"].quantity
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
-        value = alpha*(t_max-t_min) + \
-                beta/2.*((t_max-t_ref)*(t_max-t_ref)-(t_min-t_ref)*(t_min-t_ref))
+        value = alpha * (t_max - t_min) + beta / 2.0 * (
+            (t_max - t_ref) * (t_max - t_ref) - (t_min - t_ref) * (t_min - t_ref)
+        )
         return value / self.time_sum(t_min, t_max)
 
 
@@ -466,11 +474,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @classmethod
     def from_dict(cls, data):
-        return cls.read(data["filename"])
+        return cls.read(data["temporal"]["filename"])
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serialisation"""
-        return {"type": self.tag[0], "filename": self.filename}
+        return {self._type: {"type": self.tag[0], "filename": self.filename}}
 
 
 class PowerLawTemporalModel(TemporalModel):
@@ -490,15 +498,15 @@ class PowerLawTemporalModel(TemporalModel):
 
     tag = ["PowerLawTemporalModel", "powerlaw"]
 
-    alpha = Parameter("alpha", 1., frozen=False)
+    alpha = Parameter("alpha", 1.0, frozen=False)
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
     t0 = Parameter("t0", "1 d", frozen=True)
 
     @staticmethod
-    def evaluate(time, alpha, t_ref, t0=1*u.day):
+    def evaluate(time, alpha, t_ref, t0=1 * u.day):
         """Evaluate at given times"""
-        return np.power((time - t_ref)/t0, alpha)
+        return np.power((time - t_ref) / t0, alpha)
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -520,10 +528,12 @@ class PowerLawTemporalModel(TemporalModel):
         t0 = pars["t0"].quantity
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
         if alpha != -1:
-            value = self.evaluate(t_max, alpha+1., t_ref, t0) - self.evaluate(t_min, alpha+1., t_ref, t0)
-            return t0 / (alpha+1.) * value / self.time_sum(t_min, t_max)
+            value = self.evaluate(t_max, alpha + 1.0, t_ref, t0) - self.evaluate(
+                t_min, alpha + 1.0, t_ref, t0
+            )
+            return t0 / (alpha + 1.0) * value / self.time_sum(t_min, t_max)
         else:
-            value = np.log((t_max-t_ref)/(t_min-t_ref))
+            value = np.log((t_max - t_ref) / (t_min - t_ref))
             return t0 * value / self.time_sum(t_min, t_max)
 
 
@@ -544,7 +554,7 @@ class SineTemporalModel(TemporalModel):
 
     tag = ["SineTemporalModel", "sinus"]
 
-    amp = Parameter("amp", 1., frozen=False)
+    amp = Parameter("amp", 1.0, frozen=False)
     omega = Parameter("omega", "1. rad/day", frozen=False)
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
@@ -552,7 +562,7 @@ class SineTemporalModel(TemporalModel):
     @staticmethod
     def evaluate(time, amp, omega, t_ref):
         """Evaluate at given times"""
-        return 1. + amp * np.sin(omega*(time-t_ref))
+        return 1.0 + amp * np.sin(omega * (time - t_ref))
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -570,9 +580,11 @@ class SineTemporalModel(TemporalModel):
             Integrated flux norm on the given time intervals
         """
         pars = self.parameters
-        omega = pars["omega"].quantity.to_value('rad/day')
+        omega = pars["omega"].quantity.to_value("rad/day")
         amp = pars["amp"].value
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
-        value = (t_max-t_min) - \
-                amp/omega*(np.sin(omega*(t_max-t_ref).to_value('day'))-np.sin(omega*(t_min-t_ref).to_value('day')))
+        value = (t_max - t_min) - amp / omega * (
+            np.sin(omega * (t_max - t_ref).to_value("day"))
+            - np.sin(omega * (t_min - t_ref).to_value("day"))
+        )
         return value / self.time_sum(t_min, t_max)

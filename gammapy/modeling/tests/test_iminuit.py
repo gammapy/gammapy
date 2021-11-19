@@ -3,12 +3,12 @@ import pytest
 from numpy.testing import assert_allclose
 from gammapy.modeling import Parameter
 from gammapy.modeling.iminuit import confidence_iminuit, optimize_iminuit
-from gammapy.modeling.models import Model, Models
+from gammapy.modeling.models import ModelBase, Models
 
 pytest.importorskip("iminuit")
 
 
-class MyModel(Model):
+class MyModel(ModelBase):
     x = Parameter("x", 2.1, error=0.2)
     y = Parameter("y", 3.1, scale=1e5, error=3e4)
     z = Parameter("z", 4.1, scale=1e-5, error=4e-6)

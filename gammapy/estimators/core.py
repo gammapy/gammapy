@@ -4,7 +4,7 @@ import inspect
 from copy import deepcopy
 import numpy as np
 from astropy import units as u
-from gammapy.modeling.models import Model
+from gammapy.modeling.models import ModelBase
 from gammapy.maps import MapAxis
 
 
@@ -74,7 +74,7 @@ class Estimator(abc.ABC):
         max_len = np.max([len(_) for _ in pars]) + 1
 
         for name, value in sorted(pars.items()):
-            if isinstance(value, Model):
+            if isinstance(value, ModelBase):
                 s += f"\t{name:{max_len}s}: {value.tag[0]}\n"
             elif inspect.isclass(value):
                 s += f"\t{name:{max_len}s}: {value.__name__}\n"

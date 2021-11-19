@@ -9,7 +9,7 @@ from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
-from .core import Model, Models
+from .core import Model, Models, ModelBase
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-class SkyModel(Model):
+class SkyModel(ModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
@@ -355,7 +355,12 @@ class SkyModel(Model):
         )
 
         if self.spatial_model:
-            value = value * self.spatial_model.integrate_geom(geom, oversampling_factor=oversampling_factor).quantity
+            value = (
+                value
+                * self.spatial_model.integrate_geom(
+                    geom, oversampling_factor=oversampling_factor
+                ).quantity
+            )
 
         if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
@@ -396,13 +401,13 @@ class SkyModel(Model):
         if self.datasets_names is not None:
             data["datasets_names"] = self.datasets_names
 
-        data["spectral"] = self.spectral_model.to_dict(full_output)
+        data.update(self.spectral_model.to_dict(full_output))
 
         if self.spatial_model is not None:
-            data["spatial"] = self.spatial_model.to_dict(full_output)
+            data.update(self.spatial_model.to_dict(full_output))
 
         if self.temporal_model is not None:
-            data["temporal"] = self.temporal_model.to_dict(full_output)
+            data.update(self.temporal_model.to_dict(full_output))
 
         return data
 
@@ -416,13 +421,13 @@ class SkyModel(Model):
         )
 
         model_class = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
-        spectral_model = model_class.from_dict(data["spectral"])
+        spectral_model = model_class.from_dict({"spectral": data["spectral"]})
 
         spatial_data = data.get("spatial")
 
         if spatial_data is not None:
             model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
-            spatial_model = model_class.from_dict(spatial_data)
+            spatial_model = model_class.from_dict({"spatial": spatial_data})
         else:
             spatial_model = None
 
@@ -430,7 +435,7 @@ class SkyModel(Model):
 
         if temporal_data is not None:
             model_class = TEMPORAL_MODEL_REGISTRY.get_cls(temporal_data["type"])
-            temporal_model = model_class.from_dict(temporal_data)
+            temporal_model = model_class.from_dict({"temporal": temporal_data})
         else:
             temporal_model = None
 
@@ -543,7 +548,7 @@ class SkyModel(Model):
                 model.unfreeze()
 
 
-class FoVBackgroundModel(Model):
+class FoVBackgroundModel(ModelBase):
     """Field of view background model
 
     The background model holds the correction parameters applied to
@@ -635,7 +640,9 @@ class FoVBackgroundModel(Model):
         data = {}
         data["type"] = self.tag[0]
         data["datasets_names"] = self.datasets_names
-        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)
+        data["spectral"] = self.spectral_model.to_dict(
+            full_output=full_output
+        )["spectral"]
         return data
 
     @classmethod
@@ -682,7 +689,7 @@ class FoVBackgroundModel(Model):
             self._spectral_model.unfreeze()
 
 
-class TemplateNPredModel(Model):
+class TemplateNPredModel(ModelBase):
     """Background model.
 
     Create a new map by a tilt and normalization on the available map
@@ -774,7 +781,9 @@ class TemplateNPredModel(Model):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["spectral"] = self.spectral_model.to_dict(full_output)
+        data["spectral"] = self.spectral_model.to_dict(full_output)[
+            "spectral"
+        ]
 
         if self.filename is not None:
             data["filename"] = self.filename

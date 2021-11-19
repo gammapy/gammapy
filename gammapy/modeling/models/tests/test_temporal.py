@@ -268,8 +268,8 @@ def test_sine_temporal_model_integral():
 def test_to_dict(light_curve):
 
     out = light_curve.to_dict()
-    assert out["type"] == "LightCurveTemplateTemporalModel"
-    assert "lightcrv_PKSB1222+216.fits" in out["filename"]
+    assert out["temporal"]["type"] == "LightCurveTemplateTemporalModel"
+    assert "lightcrv_PKSB1222+216.fits" in out["temporal"]["filename"]
 
 
 @requires_data()
