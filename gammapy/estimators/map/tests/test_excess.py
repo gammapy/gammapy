@@ -209,7 +209,7 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_mask_fit(
     simple_dataset_on_off,
 ):
     estimator_image = ExcessMapEstimator(
-        0.11 * u.deg, apply_mask_fit=True, correlate_off=True
+        0.11 * u.deg, correlate_off=True
     )
 
     result_image = estimator_image.run(simple_dataset_on_off)
@@ -239,9 +239,12 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
 
     simple_dataset_on_off.models = [model]
 
+    
     estimator_mod = ExcessMapEstimator(
-        0.11 * u.deg, apply_mask_fit=False, correlate_off=True
+        0.11 * u.deg, correlate_off=True
     )
+
+    simple_dataset_on_off.mask_fit = None
     result_mod = estimator_mod.run(simple_dataset_on_off)
     assert result_mod["npred"].data.shape == (1, 20, 20)
 
@@ -273,7 +276,6 @@ def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     spectral_model = PowerLawSpectralModel(index=15)
     estimator_mod = ExcessMapEstimator(
         0.11 * u.deg,
-        apply_mask_fit=False,
         correlate_off=True,
         spectral_model=spectral_model,
     )
