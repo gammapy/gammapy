@@ -640,7 +640,7 @@ class FoVBackgroundModel(ModelBase):
         data = {}
         data["type"] = self.tag[0]
         data["datasets_names"] = self.datasets_names
-        data["norm_spectral_model"] = self.spectral_model.to_dict(
+        data["spectral"] = self.spectral_model.to_dict(
             full_output=full_output
         )["spectral"]
         return data
@@ -656,7 +656,7 @@ class FoVBackgroundModel(ModelBase):
         """
         from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
-        spectral_data = data.get("norm_spectral_model")
+        spectral_data = data.get("spectral")
         if spectral_data is not None:
             model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
             spectral_model = model_class.from_dict(spectral_data)
@@ -781,7 +781,7 @@ class TemplateNPredModel(ModelBase):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["norm_spectral_model"] = self.spectral_model.to_dict(full_output)[
+        data["spectral"] = self.spectral_model.to_dict(full_output)[
             "spectral"
         ]
 
@@ -797,7 +797,7 @@ class TemplateNPredModel(ModelBase):
     def from_dict(cls, data):
         from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
-        spectral_data = data.get("norm_spectral_model")
+        spectral_data = data.get("spectral")
         if spectral_data is not None:
             model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
             spectral_model = model_class.from_dict(spectral_data)

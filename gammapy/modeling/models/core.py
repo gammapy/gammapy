@@ -38,14 +38,14 @@ def _get_model_class_from_dict(data):
         TEMPORAL_MODEL_REGISTRY,
     )
 
-    if "spatial" in data:
+    if "type" in data:
+        cls = MODEL_REGISTRY.get_cls(data["type"])
+    elif "spatial" in data:
         cls = SPATIAL_MODEL_REGISTRY.get_cls(data["spatial"]["type"])
     elif "spectral" in data:
         cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
     elif "temporal" in data:
         cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
-    else:
-        cls = MODEL_REGISTRY.get_cls(data["type"])
     return cls
 
 
