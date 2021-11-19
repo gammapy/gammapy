@@ -47,8 +47,11 @@ class HDUIndexTable(Table):
         table = super().read(filename, **kwargs)
         table.meta["BASE_DIR"] = filename.parent.as_posix()
 
-        # TODO: simply return the table when empty string column is not masked by default
-        return table.filled(fill_value='')
+        # TODO: this is a workaround for the joint-crab validation with astropy>4.0.
+        # TODO: Remove when handling of empty columns is clarified
+        table["FILE_DIR"].fill_value=''
+
+        return table.filled()
 
     @property
     def base_dir(self):
