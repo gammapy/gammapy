@@ -47,6 +47,11 @@ def simple_dataset_on_off():
     dataset.acceptance_off += 1
     dataset.exposure.data += 1e6
     dataset.psf = None
+
+    mask_fit = Map.from_geom(geom, data=1, dtype=bool)
+    mask_fit.data[:, :, 10] = False
+    mask_fit.data[:, 10, :] = False
+    dataset.mask_fit = mask_fit
     return dataset
 
 
@@ -169,6 +174,7 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_no_exposure(
 ):
     # First without exposure
     simple_dataset_on_off.exposure = None
+    simple_dataset_on_off.mask_fit = None
 
     estimator = ExcessMapEstimator(
         0.11 * u.deg, energy_edges=[0.1, 1, 10] * u.TeV, correlate_off=True
@@ -185,6 +191,8 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation(
     simple_dataset_on_off,
 ):
     simple_dataset_on_off.exposure = None
+    simple_dataset_on_off.mask_fit = None
+
     estimator_image = ExcessMapEstimator(
         0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV, correlate_off=True
     )
@@ -200,14 +208,6 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation(
 def test_excess_map_estimator_map_dataset_on_off_with_correlation_mask_fit(
     simple_dataset_on_off,
 ):
-    mask_fit = Map.from_geom(
-        simple_dataset_on_off._geom,
-        data=np.ones(simple_dataset_on_off.counts.data.shape, dtype=bool),
-    )
-    mask_fit.data[:, :, 10] = False
-    mask_fit.data[:, 10, :] = False
-    simple_dataset_on_off.mask_fit = mask_fit
-
     estimator_image = ExcessMapEstimator(
         0.11 * u.deg, apply_mask_fit=True, correlate_off=True
     )
@@ -227,14 +227,8 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_mask_fit(
 
 
 def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
-            simple_dataset_on_off,
-    ):
-
-    mask_fit = Map.from_geom(simple_dataset_on_off._geom, data=1, dtype=bool)
-    mask_fit.data[:, :, 10] = False
-    mask_fit.data[:, 10, :] = False
-    simple_dataset_on_off.mask_fit = mask_fit
-
+    simple_dataset_on_off,
+):
     model = SkyModel(
         PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
         GaussianSpatialModel(
@@ -262,13 +256,8 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
 
 
 def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
-            simple_dataset_on_off,
-    ):
-
-    mask_fit = Map.from_geom(simple_dataset_on_off._geom, data=1, dtype=bool)
-    mask_fit.data[:, :, 10] = False
-    mask_fit.data[:, 10, :] = False
-    simple_dataset_on_off.mask_fit = mask_fit
+    simple_dataset_on_off,
+):
 
     # TODO: this has never worked...
     model = SkyModel(
@@ -293,8 +282,10 @@ def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     assert result_mod["flux"].unit == "cm-2s-1"
     assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
 
-    reco_exposure = estimate_exposure_reco_energy(simple_dataset_on_off, spectral_model=spectral_model)
-    assert_allclose(reco_exposure.data.sum(), 7.977796e+12, rtol=0.001)
+    reco_exposure = estimate_exposure_reco_energy(
+        simple_dataset_on_off, spectral_model=spectral_model
+    )
+    assert_allclose(reco_exposure.data.sum(), 7.977796e12, rtol=0.001)
 
 
 def test_incorrect_selection():
