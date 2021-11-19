@@ -72,6 +72,9 @@ def test_compute_lima_image():
 
     assert_allclose(result_lima["sqrt_ts"].data[:, 100, 100], 30.814916, atol=1e-3)
     assert_allclose(result_lima["sqrt_ts"].data[:, 1, 1], 0.164, atol=1e-3)
+    assert_allclose(result_lima["npred_background"].data[:, 1, 1], 37, atol=1e-3)
+    assert_allclose(result_lima["npred"].data[:, 1, 1], 38, atol=1e-3)
+    assert_allclose(result_lima["npred_excess"].data[:, 1, 1], 1, atol=1e-3)
 
 
 @requires_data()
@@ -112,7 +115,16 @@ def test_compute_lima_on_off_image():
     # Set boundary to NaN in reference image
     # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
     # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
-    assert_allclose(actual, desired, atol=0.2)
+    assert_allclose(actual, desired, atol=0.2, rtol=1e-5)
+
+    actual = np.nan_to_num(results["npred_background"].crop((11, 11)).data)
+    background_corr = image_to_cube(Map.read(filename, hdu="BACKGROUNDCORRELATED"), "1 TeV", "100 TeV")
+    desired = background_corr.crop((11, 11)).data
+
+    # Set boundary to NaN in reference image
+    # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
+    # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
+    assert_allclose(actual, desired, atol=0.2, rtol=1e-5)
 
 
 def test_significance_map_estimator_map_dataset(simple_dataset):
@@ -122,6 +134,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
     assert_allclose(result["npred"].data[0, 10, 10], 162)
     assert_allclose(result["npred_excess"].data[0, 10, 10], 81)
+    assert_allclose(result["npred_background"].data[0, 10, 10], 81)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 7.910732, atol=1e-5)
 
     assert_allclose(result["npred_excess_err"].data[0, 10, 10], 12.727922, atol=1e-3)
