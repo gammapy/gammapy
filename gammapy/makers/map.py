@@ -306,7 +306,9 @@ class MapDatasetMaker(Maker):
 
         if "counts" in self.selection:
             counts = self.make_counts(dataset.counts.geom, observation)
-            kwargs["counts"] = counts
+        else:
+            counts = Map.from_geom(dataset.counts.geom, data=0)
+        kwargs["counts"] = counts
 
         if "exposure" in self.selection:
             exposure = self.make_exposure(dataset.exposure.geom, observation)

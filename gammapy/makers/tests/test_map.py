@@ -229,6 +229,15 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["DEC_PNT"], -29.6075)
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
 
+@requires_data()
+def test_make_map_no(observations):
+    dataset = MapDataset.create(geom((0.1, 1, 10)))
+    maker_obs = MapDatasetMaker(selection=["exposure"])
+    map_dataset = maker_obs.run(dataset, observation=observations[0])
+
+    assert map_dataset.counts is not None
+    assert_allclose(map_dataset.counts.data, 0)
+    assert map_dataset.counts.geom == dataset.counts.geom
 
 @requires_data()
 @requires_dependency("healpy")
