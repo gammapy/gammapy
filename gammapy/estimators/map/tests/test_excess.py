@@ -46,6 +46,7 @@ def simple_dataset_on_off():
     dataset.acceptance += 1
     dataset.acceptance_off += 1
     dataset.exposure.data += 1e6
+    dataset.psf = None
     return dataset
 
 
@@ -237,8 +238,6 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
     mask_fit.data[:, 10, :] = False
     simple_dataset_on_off.mask_fit = mask_fit
 
-    simple_dataset_on_off.psf = None
-
     # TODO: this has never worked...
     model = SkyModel(
         PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
@@ -276,8 +275,6 @@ def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     mask_fit.data[:, :, 10] = False
     mask_fit.data[:, 10, :] = False
     simple_dataset_on_off.mask_fit = mask_fit
-
-    simple_dataset_on_off.psf = None
 
     # TODO: this has never worked...
     model = SkyModel(
