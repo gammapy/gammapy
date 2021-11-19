@@ -484,7 +484,7 @@ class FluxMaps:
     # TODO: always derive sqrt(TS) from TS?
     @property
     def sqrt_ts(self):
-        """sqrt(TS) as defined by:
+        r"""sqrt(TS) as defined by:
 
         .. math::
 

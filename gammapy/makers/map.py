@@ -2,8 +2,7 @@
 import logging
 import astropy.units as u
 from astropy.table import Table
-from gammapy.datasets import MapDataset
-from gammapy.irf import EDispKernelMap, EnergyDependentMultiGaussPSF, PSFMap
+from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (

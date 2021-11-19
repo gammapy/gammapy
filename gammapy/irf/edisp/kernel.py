@@ -220,9 +220,9 @@ class EDispKernel(IRF):
                 for k in range(l.field("N_GRP")):
                     pdf_matrix[
                         i,
-                        l.field("F_CHAN")[k] : l.field("F_CHAN")[k]
+                        l.field("F_CHAN")[k]: l.field("F_CHAN")[k]
                         + l.field("N_CHAN")[k],
-                    ] = l.field("MATRIX")[m_start : m_start + l.field("N_CHAN")[k]]
+                    ] = l.field("MATRIX")[m_start: m_start + l.field("N_CHAN")[k]]
                     m_start += l.field("N_CHAN")[k]
 
         table = Table.read(ebounds_hdu)
@@ -537,7 +537,7 @@ class EDispKernel(IRF):
 
         if add_cbar:
             label = "Probability density (A.U.)"
-            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+            ax.figure.colorbar(caxes, ax=ax, label=label)
 
         energy_axis_true.format_plot_xaxis(ax=ax)
         energy_axis.format_plot_yaxis(ax=ax)

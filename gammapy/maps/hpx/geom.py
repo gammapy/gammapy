@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for dealing with HEALPix projections and mappings."""
 import copy
-import re
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy.utils import lazyproperty
 from gammapy.utils.array import is_power2
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat

@@ -128,9 +128,9 @@ def test_background_3d_evaluate(bkg_3d):
 
 
 @requires_dependency("matplotlib")
-def test_plot(bkg_3d):
+def test_plot_at_energy(bkg_3d):
     with mpl_plot_check():
-        bkg_3d.plot_at_energy("5 TeV")
+        bkg_3d.plot_at_energy(energy=[5] * u.TeV)
 
 
 def test_background_3d_missing_values(bkg_3d_interp):

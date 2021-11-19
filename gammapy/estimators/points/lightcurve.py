@@ -5,7 +5,6 @@ import astropy.units as u
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
-from gammapy.modeling import Fit
 from gammapy.utils.pbar import progress_bar
 from .core import FluxPoints
 from .sed import FluxPointsEstimator

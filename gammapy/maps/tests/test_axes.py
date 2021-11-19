@@ -310,10 +310,10 @@ def test_mapaxis_from_bounds(nodes, interp):
 
 def test_map_axis_from_energy_units():
     with pytest.raises(ValueError):
-        axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="deg")
+        _ = MapAxis.from_energy_bounds(0.1, 10, 2, unit="deg")
 
     with pytest.raises(ValueError):
-        axis = MapAxis.from_energy_edges([0.1, 1, 10] * u.deg)
+        _ = MapAxis.from_energy_edges([0.1, 1, 10] * u.deg)
 
 
 @pytest.mark.parametrize(("nodes", "interp", "node_type"), MAP_AXIS_NODE_TYPES)

@@ -7,7 +7,6 @@ from astropy.visualization import quantity_support
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
-from .utils import get_axes
 
 log = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ import abc
 import numpy as np
 from scipy.stats import chi2
 from gammapy.utils.roots import find_roots
-from .fit_statistics import cash, get_wstat_mu_bkg, wstat
+from .fit_statistics import cash, wstat
 
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 

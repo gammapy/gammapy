@@ -17,7 +17,7 @@ from gammapy.utils.regions import (
     compound_region_to_regions,
     regions_to_compound_region,
 )
-from ..axes import MapAxes, MapAxis
+from ..axes import MapAxes
 from ..core import Map, MapCoord
 from ..geom import Geom, pix_tuple_to_idx
 from ..utils import _check_width

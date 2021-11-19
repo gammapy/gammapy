@@ -312,6 +312,7 @@ def test_irf_alpha_config(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
+    assert events is not None
 
 
 @requires_data()

@@ -545,7 +545,7 @@ class GaussianSpatialModel(SpatialModel):
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
     def to_region(self, x_sigma=1.5, **kwargs):
-        """Model outline at a given number of :math:`\sigma`.
+        r"""Model outline at a given number of :math:`\sigma`.
 
         Parameters
         ----------

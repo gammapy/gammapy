@@ -8,7 +8,7 @@ from astropy.table import Table
 from astropy.visualization import quantity_support
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
-from ..axes import MapAxes, MapAxis
+from ..axes import MapAxes
 from ..core import Map
 from ..geom import pix_tuple_to_idx
 from ..region import RegionGeom

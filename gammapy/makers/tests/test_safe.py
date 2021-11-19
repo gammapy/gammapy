@@ -110,7 +110,7 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
 
     mask_nonan = safe_mask_maker_nonan.make_mask_bkg_invalid(dataset)
 
-    assert mask_nonan[0, 0, 0] == False
+    assert not mask_nonan[0, 0, 0]
 
     assert_allclose(bkg[mask_nonan].max(), 20.656366)
 

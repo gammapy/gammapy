@@ -5,7 +5,7 @@ import numpy as np
 from scipy.stats import chi2, norm
 from .likelihood import Likelihood
 
-__all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit", "mncontour"]
+__all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit", "contour_iminuit"]
 
 log = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
     idx = parameters.free_parameters.index(parameter)
     var = _make_parname(idx, parameter)
 
-    message, success = "Minos terminated successfully.", True
+    message = "Minos terminated successfully."
     cl = 2 * norm.cdf(sigma) - 1
 
     try:

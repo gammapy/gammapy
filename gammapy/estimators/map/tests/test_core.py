@@ -357,7 +357,7 @@ def test_flux_map_read_write_missing_reference_model(
     hdulist[0].header["MODEL"] = "non_existent"
 
     with pytest.raises(FileNotFoundError):
-        new_fluxmap = FluxMaps.from_hdulist(hdulist)
+        _ = FluxMaps.from_hdulist(hdulist)
 
 
 @pytest.mark.xfail

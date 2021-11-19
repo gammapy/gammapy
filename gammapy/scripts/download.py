@@ -45,7 +45,7 @@ def members(tf):
     root_folder = list_members[0].name
     for member in list_members:
         if member.path.startswith(root_folder):
-            member.path = member.path[len(root_folder) + 1 :]
+            member.path = member.path[len(root_folder) + 1:]
             yield member
 
 

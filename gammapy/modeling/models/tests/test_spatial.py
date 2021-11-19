@@ -10,7 +10,6 @@ from regions import (
     CircleSkyRegion,
     EllipseSkyRegion,
     PointSkyRegion,
-    PolygonSkyRegion,
     RectangleSkyRegion,
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom

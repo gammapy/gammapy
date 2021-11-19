@@ -4,7 +4,6 @@ import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxes, MapAxis
-from gammapy.utils.integrate import trapz_loglog
 from .core import IRF
 
 __all__ = ["Background3D", "Background2D"]

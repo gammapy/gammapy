@@ -4,8 +4,8 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Fit, Parameter
-from gammapy.modeling.models import Models, ScaleSpectralModel
+from gammapy.modeling import Parameter
+from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
 

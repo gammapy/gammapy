@@ -5,7 +5,7 @@ from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
-from gammapy.maps import Map, MapCoord
+from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov

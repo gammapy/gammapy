@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-import astropy.units as u
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import SensitivityEstimator
 from gammapy.irf import EDispKernelMap
