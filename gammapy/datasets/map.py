@@ -592,6 +592,13 @@ class MapDataset(Dataset):
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
 
     @property
+    def mask_fit_image(self):
+        """Reduced mask fit"""
+        if self.mask_fit is None:
+            return None
+        return self.mask_fit.reduce_over_axes(func=np.logical_or)
+
+    @property
     def mask_image(self):
         """Reduced mask"""
         if self.mask is None:
@@ -1747,6 +1754,52 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
+
+    def peek(self, figsize=(12,10)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on.
+
+        Returns
+        -------
+        ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
+            Counts, excess and exposure.
+        """
+        def plot_mask(ax, mask, **kwargs):
+            if mask is not None:
+                mask.plot_mask(ax=ax, **kwargs)
+
+        import matplotlib.pyplot as plt
+
+        fig, axes  = plt.subplots(ncols=2,
+                                  nrows=2,
+                                  subplot_kw={"projection": self._geom.wcs},
+                                  figsize=figsize,
+                                  gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+                                  )
+
+        axes = axes.flat
+        axes[0].set_title("Counts")
+        self.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
+        plot_mask(ax=axes[0], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[0], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[1].set_title("Excess counts")
+        self.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        plot_mask(ax=axes[1], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[1], mask=self.mask_safe_image,  hatches=["///"], colors="w")
+
+        axes[2].set_title("Exposure")
+        self.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
+        plot_mask(ax=axes[2], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[3].set_title("Background")
+        self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
+        plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.

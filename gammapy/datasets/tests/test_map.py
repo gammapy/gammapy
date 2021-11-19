@@ -1777,3 +1777,12 @@ def test_map_dataset_hpx_geom_npred(geom_hpx_partial):
     dataset.models = [sky_model]
 
     assert_allclose(dataset.npred().data.sum(), 54, rtol=1e-3)
+
+
+@requires_dependency("matplotlib")
+@requires_data()
+def test_peek(images):
+    dataset = get_map_dataset_onoff(images)
+
+    with mpl_plot_check():
+        dataset.peek()
