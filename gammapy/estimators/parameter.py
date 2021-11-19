@@ -48,7 +48,7 @@ class ParameterEstimator(Estimator):
         null_value=1e-150,
         selection_optional=None,
         fit=None,
-        reoptimize=True
+        reoptimize=True,
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -81,7 +81,7 @@ class ParameterEstimator(Estimator):
                 * "success": boolean flag for fit success
                 * parameter.name_err: covariance-based error estimate on parameter value
         """
-        value, total_stat, success, error = np.nan, 0., False, np.nan
+        value, total_stat, success, error = np.nan, 0.0, False, np.nan
 
         if np.any(datasets.contributes_to_stat):
             result = self.fit.run(datasets=datasets)
@@ -167,7 +167,7 @@ class ParameterEstimator(Estimator):
             datasets=datasets,
             parameter=parameter,
             sigma=self.n_sigma,
-            reoptimize=self.reoptimize
+            reoptimize=self.reoptimize,
         )
 
         return {
@@ -198,15 +198,13 @@ class ParameterEstimator(Estimator):
         if not np.any(datasets.contributes_to_stat):
             return {
                 f"{parameter.name}_scan": scan_values,
-                "stat_scan": scan_values * np.nan
+                "stat_scan": scan_values * np.nan,
             }
 
         self.fit.optimize(datasets=datasets)
 
         profile = self.fit.stat_profile(
-            datasets=datasets,
-            parameter=parameter,
-            reoptimize=self.reoptimize
+            datasets=datasets, parameter=parameter, reoptimize=self.reoptimize
         )
 
         return {
@@ -240,7 +238,7 @@ class ParameterEstimator(Estimator):
             datasets=datasets,
             parameter=parameter,
             sigma=self.n_sigma_ul,
-            reoptimize=self.reoptimize
+            reoptimize=self.reoptimize,
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
@@ -289,7 +287,6 @@ class ParameterEstimator(Estimator):
             npred.append(dataset.npred().data[mask].sum())
 
         return {"npred": np.array(npred), "datasets": datasets.names}
-
 
     def run(self, datasets, parameter):
         """Run the parameter estimator.

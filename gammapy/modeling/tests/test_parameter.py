@@ -165,6 +165,7 @@ def test_parameters_to_table(pars):
     assert table["link"][0] == "test"
     assert table["link"][1] == ""
 
+
 def test_parameters_set_parameter_factors(pars):
     pars.set_parameter_factors([77, 78])
     assert_allclose(pars["spam"].factor, 77)

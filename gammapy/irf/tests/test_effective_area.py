@@ -80,9 +80,7 @@ def test_to_table():
         axes=[energy_axis_true, offset_axis], data=1, unit="cm2"
     )
     hdu = aeff.to_table_hdu()
-    assert_equal(
-        hdu.data["ENERG_LO"][0], aeff.axes["energy_true"].edges[:-1].value
-    )
+    assert_equal(hdu.data["ENERG_LO"][0], aeff.axes["energy_true"].edges[:-1].value)
     assert hdu.header["TUNIT1"] == aeff.axes["energy_true"].unit
 
 

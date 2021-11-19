@@ -253,7 +253,7 @@ def test_flux_map_failed_properties(wcs_flux_map, reference_model):
     fluxmap.filter_success_nan = False
 
     assert_allclose(fluxmap.success.data[:, 0, 1], [False, True])
-    assert_allclose(fluxmap.flux.data[:, 0, 1], [9.e-12, 9e-13])
+    assert_allclose(fluxmap.flux.data[:, 0, 1], [9.0e-12, 9e-13])
     assert not fluxmap.filter_success_nan
 
 
@@ -344,9 +344,7 @@ def test_flux_map_read_write_no_reference_model(tmp_path, wcs_flux_map, caplog):
 
     assert new_fluxmap.reference_model.spectral_model.tag[0] == "PowerLawSpectralModel"
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "No reference model set for FluxMaps." in [
-        _.message for _ in caplog.records
-    ]
+    assert "No reference model set for FluxMaps." in [_.message for _ in caplog.records]
 
 
 def test_flux_map_read_write_missing_reference_model(
@@ -371,9 +369,7 @@ def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
     assert fluxmap.reference_model.spectral_model.index.value == 2
 
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "No reference model set for FluxMaps." in [
-        _.message for _ in caplog.records
-    ]
+    assert "No reference model set for FluxMaps." in [_.message for _ in caplog.records]
 
 
 @requires_dependency("matplotlib")
@@ -413,6 +409,7 @@ def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     assert_allclose(table["norm_ul"], [2, 2])
     assert "norm_errn" not in table.columns
     assert table["success"].data.dtype == np.dtype(np.bool)
+
 
 def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
     ref_map = FluxMaps(wcs_flux_map, reference_model)

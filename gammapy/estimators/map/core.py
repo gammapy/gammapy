@@ -7,7 +7,12 @@ from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import Map, Maps
-from gammapy.modeling.models import Models, SkyModel, PowerLawSpectralModel, SpectralModel
+from gammapy.modeling.models import (
+    Models,
+    SkyModel,
+    PowerLawSpectralModel,
+    SpectralModel,
+)
 from gammapy.utils.scripts import make_path
 
 __all__ = ["FluxMaps"]
@@ -20,7 +25,7 @@ DEFAULT_UNIT = {
     "e2dnde": u.Unit("erg cm-2 s-1"),
     "flux": u.Unit("cm-2 s-1"),
     "eflux": u.Unit("erg cm-2 s-1"),
-    "norm": u.Unit("")
+    "norm": u.Unit(""),
 }
 
 REQUIRED_MAPS = {
@@ -37,7 +42,15 @@ REQUIRED_COLUMNS = {
     "flux": ["e_min", "e_max", "flux"],
     "eflux": ["e_min", "e_max", "eflux"],
     # TODO: extend required columns
-    "likelihood": ["e_min", "e_max", "e_ref", "ref_dnde", "ref_flux", "ref_eflux", "norm"],
+    "likelihood": [
+        "e_min",
+        "e_max",
+        "e_ref",
+        "ref_dnde",
+        "ref_flux",
+        "ref_eflux",
+        "norm",
+    ],
 }
 
 
@@ -67,7 +80,7 @@ VALID_QUANTITIES = [
     "niter",
     "is_ul",
     "counts",
-    "success"
+    "success",
 ]
 
 
@@ -81,7 +94,7 @@ OPTIONAL_QUANTITIES_COMMON = [
     "niter",
     "is_ul",
     "counts",
-    "success"
+    "success",
 ]
 
 
@@ -127,9 +140,12 @@ class FluxMaps:
     filter_success_nan : boolean, optional
         Set fitted norm and error to NaN when the fit has not succeeded.
     """
+
     _expand_slice = (slice(None), np.newaxis, np.newaxis)
 
-    def __init__(self, data, reference_model, meta=None, gti=None, filter_success_nan=True):
+    def __init__(
+        self, data, reference_model, meta=None, gti=None, filter_success_nan=True
+    ):
         self._data = data
 
         if isinstance(reference_model, SpectralModel):
@@ -196,7 +212,8 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for sed type '{}':" " {}".format(sed_type, missing)
+                "Missing data / column for sed type '{}':"
+                " {}".format(sed_type, missing)
             )
 
     # TODO: add support for scan
@@ -218,12 +235,12 @@ class FluxMaps:
     @property
     def has_ul(self):
         """Whether the flux estimate has either sqrt(ts) or ts defined"""
-        return  "norm_ul" in self._data
+        return "norm_ul" in self._data
 
     @property
     def has_any_ts(self):
         """Whether the flux estimate has either sqrt(ts) or ts defined"""
-        return  any([_ in self._data for _ in ["ts", "sqrt_ts"]])
+        return any([_ in self._data for _ in ["ts", "sqrt_ts"]])
 
     @property
     def has_stat_profiles(self):
@@ -253,7 +270,7 @@ class FluxMaps:
     @sqrt_ts_threshold_ul.setter
     def sqrt_ts_threshold_ul(self, value):
         """sqrt(TS) threshold for upper limits
-        
+
         Parameters
         ----------
         value : int
@@ -283,7 +300,7 @@ class FluxMaps:
 
     @classproperty
     def reference_model_default(self):
-        """Reference model default (`SkyModel`) """
+        """Reference model default (`SkyModel`)"""
         return SkyModel(PowerLawSpectralModel(index=2))
 
     @property
@@ -365,7 +382,7 @@ class FluxMaps:
     @is_ul.setter
     def is_ul(self, value):
         """Whether data is an upper limit
-        
+
         Parameters
         ----------
         value : `~Map`
@@ -530,9 +547,7 @@ class FluxMaps:
     def e2dnde_ref(self):
         """Reference differential flux * energy ** 2"""
         energy = self.energy_axis.center
-        result = (
-            self.reference_spectral_model(energy) * energy ** 2
-        )
+        result = self.reference_spectral_model(energy) * energy ** 2
         return result[self._expand_slice]
 
     @property
@@ -692,7 +707,9 @@ class FluxMaps:
         for name in self._data:
             m = getattr(self, name)
             if m.data.dtype is np.dtype(bool):
-                data[name] = m.to_region_nd_map(region=position, method="nearest", func=np.any)
+                data[name] = m.to_region_nd_map(
+                    region=position, method="nearest", func=np.any
+                )
             else:
                 data[name] = m.to_region_nd_map(region=position, method="nearest")
 
@@ -700,7 +717,7 @@ class FluxMaps:
             data,
             reference_model=self.reference_model,
             meta=self.meta.copy(),
-            gti=self.gti
+            gti=self.gti,
         )
 
     def to_maps(self, sed_type="likelihood"):
@@ -748,7 +765,9 @@ class FluxMaps:
         data = {}
 
         for quantity in reference.available_quantities:
-            data[quantity] = Map.from_stack([_._data[quantity] for _ in maps], axis=axis)
+            data[quantity] = Map.from_stack(
+                [_._data[quantity] for _ in maps], axis=axis
+            )
 
         if meta is None:
             meta = reference.meta.copy()
@@ -761,10 +780,7 @@ class FluxMaps:
             gti = None
 
         return cls(
-            data=data,
-            reference_model=reference.reference_model,
-            meta=meta,
-            gti=gti
+            data=data, reference_model=reference.reference_model, meta=meta, gti=gti
         )
 
     @classmethod
@@ -814,7 +830,9 @@ class FluxMaps:
         energy_axis = map_ref.geom.axes["energy"]
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            fluxes = reference_model.spectral_model.reference_fluxes(energy_axis=energy_axis)
+            fluxes = reference_model.spectral_model.reference_fluxes(
+                energy_axis=energy_axis
+            )
 
         # TODO: handle reshaping in MapAxis
         factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[cls._expand_slice]
@@ -904,14 +922,11 @@ class FluxMaps:
             gti = None
 
         return cls.from_maps(
-            maps=maps,
-            sed_type=sed_type,
-            reference_model=reference_model,
-            gti=gti
+            maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
 
     def write(
-            self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
+        self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
     ):
         """Write flux map to file.
 
@@ -986,7 +1001,8 @@ class FluxMaps:
         return self.__class__(
             data=data,
             reference_model=self.reference_model,
-            meta=self.meta.copy(), gti=self.gti
+            meta=self.meta.copy(),
+            gti=self.gti,
         )
 
     # TODO: should we allow this?
@@ -1001,7 +1017,9 @@ class FluxMaps:
         str_ += "\t" + f"axes                   : {self.geom.axes_names}\n"
         str_ += "\t" + f"shape                  : {self.geom.data_shape[::-1]}\n"
         str_ += "\t" + f"quantities             : {list(self.available_quantities)}\n"
-        str_ += "\t" + f"ref. model             : {self.reference_spectral_model.tag[-1]}\n"
+        str_ += (
+            "\t" + f"ref. model             : {self.reference_spectral_model.tag[-1]}\n"
+        )
         str_ += "\t" + f"n_sigma                : {self.n_sigma}\n"
         str_ += "\t" + f"n_sigma_ul             : {self.n_sigma_ul}\n"
         str_ += "\t" + f"sqrt_ts_threshold_ul   : {self.sqrt_ts_threshold_ul}\n"

@@ -387,7 +387,7 @@ class Parameter:
 
     def update_from_dict(self, data):
         """Update parameters from a dict.
-           Protection against changing parameter model, type, name."""
+        Protection against changing parameter model, type, name."""
         keys = ["value", "unit", "min", "max", "frozen"]
         for k in keys:
             setattr(self, k, data[k])
@@ -403,7 +403,7 @@ class Parameter:
             "max": self.max,
             "frozen": self.frozen,
             "interp": self.interp,
-            "scale_method": self.scale_method
+            "scale_method": self.scale_method,
         }
 
         if self._link_label_io is not None:
@@ -637,7 +637,10 @@ class Parameters(collections.abc.Sequence):
             par.autoscale()
 
     def select(
-        self, name=None, type=None, frozen=None,
+        self,
+        name=None,
+        type=None,
+        frozen=None,
     ):
         """Create a mask of models, true if all conditions are verified
 
@@ -681,7 +684,7 @@ class Parameters(collections.abc.Sequence):
             par.frozen = True
 
     def unfreeze_all(self):
-        """ Unfreeze all parameters (even those frozen by default)"""
+        """Unfreeze all parameters (even those frozen by default)"""
         for par in self._parameters:
             par.frozen = False
 

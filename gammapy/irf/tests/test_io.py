@@ -30,7 +30,9 @@ def test_cta_irf():
     assert_allclose(val.value, 3183.6882, rtol=1e-5)
     assert val.unit == ""
 
-    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    val = irf["psf"].evaluate(
+        rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset
+    )
     assert_allclose(val, 3.56989 * u.Unit("deg-2"), rtol=1e-5)
 
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
@@ -56,12 +58,15 @@ def test_cta_irf_alpha_config_south():
     assert_allclose(val.value, 0.0499099, rtol=1e-5)
     assert val.unit == ""
 
-    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    val = irf["psf"].evaluate(
+        rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset
+    )
     assert_allclose(val, 3.31135957 * u.Unit("deg-2"), rtol=1e-5)
 
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 8.98793486e-05, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
+
 
 @requires_data()
 def test_cta_irf_alpha_config_north():
@@ -81,12 +86,15 @@ def test_cta_irf_alpha_config_north():
     assert_allclose(val.value, 0.04070749, rtol=1e-5)
     assert val.unit == ""
 
-    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    val = irf["psf"].evaluate(
+        rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset
+    )
     assert_allclose(val, 6.20107085 * u.Unit("deg-2"), rtol=1e-5)
 
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
     assert_allclose(val.value, 5.43334659e-05, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
+
 
 @requires_data()
 def test_load_irf_dict_from_file():
@@ -107,7 +115,9 @@ def test_load_irf_dict_from_file():
     assert_allclose(val.value, 1.84269482, rtol=1e-5)
     assert val.unit == ""
 
-    val = irf["psf"].evaluate(rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset)
+    val = irf["psf"].evaluate(
+        rad=Quantity(0.1, "deg"), energy_true=energy, offset=offset
+    )
     assert_allclose(val, 6.75981573 * u.Unit("deg-2"), rtol=1e-5)
 
     val = irf["bkg"].evaluate(energy=energy, fov_lon=offset, fov_lat="0.1 deg")
@@ -119,7 +129,9 @@ def test_load_irf_dict_from_file():
 def test_irf_dict_from_file_duplicate_irfs(caplog, tmp_path):
     """catch the warning message about two type of IRF with the same hdu class
     encountered in the same file"""
-    original_file = make_path("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
+    original_file = make_path(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
     dummy_file = tmp_path / "020136_duplicated_psf.fits"
 
     # create a dummy file with the PSF HDU repeated twice
@@ -168,14 +180,24 @@ class TestIRFWrite:
         self.aeff = EffectiveAreaTable2D(
             axes=[self.energy_axis_true, self.offset_axis],
             data=self.aeff_data.value,
-            unit=self.aeff_data.unit
+            unit=self.aeff_data.unit,
         )
         self.edisp = EnergyDispersion2D(
-            axes=[self.energy_axis_true, self.migra_axis, self.offset_axis, ],
+            axes=[
+                self.energy_axis_true,
+                self.migra_axis,
+                self.offset_axis,
+            ],
             data=self.edisp_data,
         )
-        axes = [self.energy_axis_true.copy(name="energy"), self.fov_lon_axis, self.fov_lat_axis]
-        self.bkg = Background3D(axes=axes, data=self.bkg_data.value, unit=self.bkg_data.unit)
+        axes = [
+            self.energy_axis_true.copy(name="energy"),
+            self.fov_lon_axis,
+            self.fov_lat_axis,
+        ]
+        self.bkg = Background3D(
+            axes=axes, data=self.bkg_data.value, unit=self.bkg_data.unit
+        )
 
     def test_array_to_container(self):
         assert_allclose(self.aeff.quantity, self.aeff_data)

@@ -316,7 +316,7 @@ class MapDatasetEventSampler:
         # this is not really correct but maybe OK for now
         altaz_frame = AltAz(obstime=dataset.gti.time_start, location=loc)
         coord_altaz = observation.pointing_radec.transform_to(altaz_frame)
-        
+
         meta["ALT_PNT"] = str(coord_altaz.alt.deg[0])
         meta["AZ_PNT"] = str(coord_altaz.az.deg[0])
 

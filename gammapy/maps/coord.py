@@ -283,7 +283,9 @@ class MapCoord:
         """Return broadcasted coords"""
         vals = np.broadcast_arrays(*self._data.values(), subok=True)
         data = dict(zip(self._data.keys(), vals))
-        return self.__class__(data=data, frame=self.frame, match_by_name=self._match_by_name)
+        return self.__class__(
+            data=data, frame=self.frame, match_by_name=self._match_by_name
+        )
 
     def copy(self):
         """Copy `MapCoord` object."""

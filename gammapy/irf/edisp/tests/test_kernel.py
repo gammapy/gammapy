@@ -23,7 +23,9 @@ class TestEDispKernel:
         )
 
     def test_from_diagonal_response(self):
-        energy_axis_true = MapAxis.from_energy_edges([0.5, 1, 2, 4, 6] * u.TeV, name="energy_true")
+        energy_axis_true = MapAxis.from_energy_edges(
+            [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+        )
         energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
 
         edisp = EDispKernel.from_diagonal_response(energy_axis_true, energy_axis)
@@ -50,7 +52,7 @@ class TestEDispKernel:
             energy_axis=energy_axis,
             energy_axis_true=energy_axis_true,
             sigma=0.2,
-            bias=0.1
+            bias=0.1,
         )
         im = edisp.to_image()
 

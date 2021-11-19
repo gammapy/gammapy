@@ -208,7 +208,9 @@ def make_concentric_annulus_sky_regions(center, radius_max, nbin=11):
 
     for r_in, r_out in zip(edges[:-1], edges[1:]):
         region = CircleAnnulusSkyRegion(
-            center=center, inner_radius=r_in, outer_radius=r_out,
+            center=center,
+            inner_radius=r_in,
+            outer_radius=r_out,
         )
         regions.append(region)
 

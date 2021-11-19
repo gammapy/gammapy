@@ -21,7 +21,7 @@ from gammapy.modeling.models import (
     GaussianTemporalModel,
     PowerLawTemporalModel,
     SineTemporalModel,
-    )
+)
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
@@ -117,10 +117,24 @@ def test_sky_models_io(tmp_path):
 
 def test_piecewise_norm_spectral_model_init():
     with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1, 5])
+        PiecewiseNormSpectralModel(
+            energy=[
+                1,
+            ]
+            * u.TeV,
+            norms=[1, 5],
+        )
 
     with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1,])
+        PiecewiseNormSpectralModel(
+            energy=[
+                1,
+            ]
+            * u.TeV,
+            norms=[
+                1,
+            ],
+        )
 
 
 def test_piecewise_norm_spectral_model_io():
@@ -303,4 +317,3 @@ def test_io_temporal():
         for p in sky_model.temporal_model.parameters:
             assert_allclose(read_model.temporal_model.parameters[p.name].value, p.value)
             assert read_model.temporal_model.parameters[p.name].unit == p.unit
-

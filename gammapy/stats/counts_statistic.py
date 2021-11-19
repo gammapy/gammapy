@@ -19,14 +19,14 @@ class CountsStatistic(abc.ABC):
     @property
     def sqrt_ts(self):
         """Return statistical significance of measured excess.
-           The sign of the excess is applied to distinguish positive and negative fluctuations.
+        The sign of the excess is applied to distinguish positive and negative fluctuations.
         """
         return np.sign(self.n_sig) * np.sqrt(self.ts)
 
     @property
     def p_value(self):
         """Return p_value of measured excess.
-           Here the value accounts only for the positive excess significance (i.e. one-sided).
+        Here the value accounts only for the positive excess significance (i.e. one-sided).
         """
         return 0.5 * chi2.sf(self.ts, 1)
 
@@ -241,7 +241,7 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def n_sig(self):
-        """Excess """
+        """Excess"""
         return self.n_on - self.n_bkg - self.mu_sig
 
     @property
@@ -275,6 +275,9 @@ class WStatCountsStatistic(CountsStatistic):
             n_sig + self.n_bkg[index], self.n_off[index], self.alpha[index], 0
         )
         stat1 = wstat(
-            n_sig + self.n_bkg[index], self.n_off[index], self.alpha[index], n_sig,
+            n_sig + self.n_bkg[index],
+            self.n_off[index],
+            self.alpha[index],
+            n_sig,
         )
         return np.sign(n_sig) * np.sqrt(np.clip(stat0 - stat1, 0, None)) - significance

@@ -79,8 +79,7 @@ def test_energy_ref_lafferty():
 
 @pytest.mark.xfail
 def test_dnde_from_flux():
-    """Tests y-value normalization adjustment method.
-    """
+    """Tests y-value normalization adjustment method."""
     table = Table()
     table["e_min"] = np.array([10, 20, 30, 40])
     table["e_max"] = np.array([20, 30, 40, 50])
@@ -152,7 +151,9 @@ def test_fermi_to_dnde():
     fp = src.flux_points
 
     assert_allclose(
-        fp.dnde.quantity[1, 0, 0], 4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"), rtol=1e-5,
+        fp.dnde.quantity[1, 0, 0],
+        4.567393e-10 * u.Unit("cm-2 s-1 MeV-1"),
+        rtol=1e-5,
     )
 
 

@@ -42,10 +42,8 @@ def test_binsz(region):
 
 def test_defined_wcs(region):
     wcs = WcsGeom.create(
-        skydir=(0,0),
-        frame="galactic",
-        width="1.5deg",
-        binsz="0.1deg").wcs
+        skydir=(0, 0), frame="galactic", width="1.5deg", binsz="0.1deg"
+    ).wcs
     geom = RegionGeom.create(region, wcs=wcs)
     assert geom.binsz_wcs[0].deg == 0.1
 
@@ -298,7 +296,7 @@ def test_to_wcs_geom(region):
     wcs_geom = geom.to_wcs_geom()
     assert_allclose(wcs_geom.center_coord[1].value, 0, rtol=0.001, atol=0)
     assert_allclose(wcs_geom.width[0], 360 * u.deg, rtol=1, atol=0)
-    assert wcs_geom.wcs.wcs.ctype[1] == 'GLAT-TAN'
+    assert wcs_geom.wcs.wcs.ctype[1] == "GLAT-TAN"
 
     # test with an extra axis
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
@@ -333,7 +331,9 @@ def test_get_wcs_coord_and_weights(region):
 
     # test on rectangular region (asymmetric)
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
-    region = RectangleSkyRegion(center=center, width=1 * u.deg, height=2 * u.deg, angle=15*u.deg)
+    region = RectangleSkyRegion(
+        center=center, width=1 * u.deg, height=2 * u.deg, angle=15 * u.deg
+    )
     geom = RegionGeom(region)
 
     wcs_geom = geom.to_wcs_geom()
@@ -347,6 +347,7 @@ def test_get_wcs_coord_and_weights(region):
 @requires_dependency("matplotlib")
 def test_region_nd_map_plot(region):
     import matplotlib.pyplot as plt
+
     geom = RegionGeom(region)
 
     ax = plt.subplot(projection=geom.wcs)
@@ -361,4 +362,4 @@ def test_region_geom_to_from_hdu(region):
     new_geom = RegionGeom.from_hdulist(hdulist, format="ogip")
 
     assert new_geom == geom
-    assert new_geom.region.meta['include']
+    assert new_geom.region.meta["include"]

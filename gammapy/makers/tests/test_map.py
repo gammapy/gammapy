@@ -229,6 +229,7 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["DEC_PNT"], -29.6075)
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
 
+
 @requires_data()
 def test_make_map_no_count(observations):
     dataset = MapDataset.create(geom((0.1, 1, 10)))
@@ -238,6 +239,7 @@ def test_make_map_no_count(observations):
     assert map_dataset.counts is not None
     assert_allclose(map_dataset.counts.data, 0)
     assert map_dataset.counts.geom == dataset.counts.geom
+
 
 @requires_data()
 @requires_dependency("healpy")
@@ -394,7 +396,7 @@ def test_interpolate_map_dataset():
 @requires_data()
 @pytest.mark.xfail
 def test_minimal_datastore():
-    """"Check that a standard analysis runs on a minimal datastore"""
+    """ "Check that a standard analysis runs on a minimal datastore"""
 
     energy_axis = MapAxis.from_energy_bounds(
         1, 10, nbin=3, per_decade=False, unit="TeV", name="energy"

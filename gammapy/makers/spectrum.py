@@ -32,7 +32,13 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     tag = "SpectrumDatasetMaker"
     available_selection = ["counts", "background", "exposure", "edisp"]
 
-    def __init__(self, selection=None, containment_correction=False, background_oversampling=None, use_region_center=True):
+    def __init__(
+        self,
+        selection=None,
+        containment_correction=False,
+        background_oversampling=None,
+        use_region_center=True,
+    ):
         self.containment_correction = containment_correction
         self.use_region_center = use_region_center
         super().__init__(
@@ -54,16 +60,22 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         exposure : `~gammapy.maps.RegionNDMap`
             Exposure map.
         """
-        exposure = super().make_exposure(geom, observation, use_region_center=self.use_region_center)
+        exposure = super().make_exposure(
+            geom, observation, use_region_center=self.use_region_center
+        )
 
         is_pointlike = exposure.meta.get("is_pointlike", False)
         if is_pointlike:
-            log.warning("MapMaker: use_region_center=False should not be used with point-like IRF. "
-                        "Results are likely inaccurate.")
+            log.warning(
+                "MapMaker: use_region_center=False should not be used with point-like IRF. "
+                "Results are likely inaccurate."
+            )
 
         if self.containment_correction:
             if is_pointlike:
-                raise ValueError("Cannot apply containment correction for point-like IRF.")
+                raise ValueError(
+                    "Cannot apply containment correction for point-like IRF."
+                )
 
             if not isinstance(geom.region, CircleSkyRegion):
                 raise TypeError(
@@ -71,7 +83,9 @@ class SpectrumDatasetMaker(MapDatasetMaker):
                 )
             offset = geom.separation(observation.pointing_radec)
             containment = observation.psf.containment(
-                rad=geom.region.radius, offset=offset, energy_true=geom.axes["energy_true"].center
+                rad=geom.region.radius,
+                offset=offset,
+                energy_true=geom.axes["energy_true"].center,
             )
             exposure.quantity *= containment.reshape(geom.data_shape)
 

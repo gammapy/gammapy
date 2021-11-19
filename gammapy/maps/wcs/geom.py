@@ -186,7 +186,7 @@ class WcsGeom(Geom):
             large_array_shape=geom.data_shape[-2:],
             small_array_shape=self.data_shape[-2:],
             position=position[::-1],
-            mode=mode
+            mode=mode,
         )
         return {
             "parent-slices": slices[0],
@@ -443,8 +443,8 @@ class WcsGeom(Geom):
         width = _check_width(width) * u.deg
         npix = tuple(np.round(width / geom.pixel_scales).astype(int))
         xref, yref = geom.to_image().coord_to_pix(skydir)
-        xref = int(np.floor(-xref + npix[0] / 2.)) + geom.wcs.wcs.crpix[0]
-        yref = int(np.floor(-yref + npix[1] / 2.)) + geom.wcs.wcs.crpix[1]
+        xref = int(np.floor(-xref + npix[0] / 2.0)) + geom.wcs.wcs.crpix[0]
+        yref = int(np.floor(-yref + npix[1] / 2.0)) + geom.wcs.wcs.crpix[1]
         return cls.create(
             skydir=tuple(geom.wcs.wcs.crval),
             npix=npix,
@@ -452,7 +452,7 @@ class WcsGeom(Geom):
             frame=geom.frame,
             binsz=tuple(geom.pixel_scales.deg),
             axes=geom.axes,
-            proj=geom.projection
+            proj=geom.projection,
         )
 
     @classmethod
@@ -546,7 +546,9 @@ class WcsGeom(Geom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_all(self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")):
+    def _get_pix_all(
+        self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")
+    ):
         """Get idx coordinate array without footprint of the projection applied"""
         pix_all = []
 
@@ -584,7 +586,9 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, mode="center", frame=None, sparse=False, axis_name=None):
+    def get_coord(
+        self, idx=None, mode="center", frame=None, sparse=False, axis_name=None
+    ):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -609,9 +613,7 @@ class WcsGeom(Geom):
         if frame is None:
             frame = self.frame
 
-        pix = self._get_pix_all(
-            idx=idx, mode=mode, sparse=sparse, axis_name=axis_name
-        )
+        pix = self._get_pix_all(idx=idx, mode=mode, sparse=sparse, axis_name=axis_name)
 
         data = self.pix_to_coord(pix)
 
@@ -687,7 +689,7 @@ class WcsGeom(Geom):
 
     def to_image(self):
         return self._image_geom
-        
+
     @lazyproperty
     def _image_geom(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
@@ -910,6 +912,7 @@ class WcsGeom(Geom):
 
         """
         from .ndmap import WcsNDMap
+
         data = np.ones(self.data_shape, dtype=bool)
         return WcsNDMap.from_geom(self, data=data).binary_erode(
             width=2 * u.Quantity(width), kernel="box"

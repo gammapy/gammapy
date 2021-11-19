@@ -145,9 +145,7 @@ def test_wcs_geom_from_aligned(npix, binsz, frame, proj, skydir, axes):
         npix=npix, binsz=binsz, skydir=(0, 0), proj=proj, frame=frame, axes=axes
     )
 
-    aligned_geom = WcsGeom.from_aligned(
-        geom=geom, skydir=(2, 3), width="90 deg"
-    )
+    aligned_geom = WcsGeom.from_aligned(geom=geom, skydir=(2, 3), width="90 deg")
 
     assert aligned_geom.is_aligned(geom)
 
@@ -155,16 +153,12 @@ def test_wcs_geom_from_aligned(npix, binsz, frame, proj, skydir, axes):
 def test_from_aligned_vs_cutout():
     skydir = SkyCoord(0.12, -0.34, unit="deg", frame="galactic")
 
-    geom = WcsGeom.create(
-        binsz=0.1, skydir=skydir, proj="AIT", frame="galactic"
-    )
+    geom = WcsGeom.create(binsz=0.1, skydir=skydir, proj="AIT", frame="galactic")
 
     position = SkyCoord("2.23d", "3.102d", frame="galactic")
 
     width = ("89 deg", "79 deg")
-    aligned_geom = WcsGeom.from_aligned(
-        geom=geom, skydir=position, width=width
-    )
+    aligned_geom = WcsGeom.from_aligned(geom=geom, skydir=position, width=width)
 
     geom_cutout = geom.cutout(position=position, width=width)
 
@@ -183,9 +177,7 @@ def test_from_aligned_vs_cutout_tan():
 
     geom_cutout = geom.cutout(position=position, width=width, mode="partial")
 
-    aligned_geom = WcsGeom.from_aligned(
-        geom=geom, skydir=position, width=width
-    )
+    aligned_geom = WcsGeom.from_aligned(geom=geom, skydir=position, width=width)
 
     assert aligned_geom == geom_cutout
 
@@ -623,9 +615,7 @@ def test_non_equal_binsz():
 
 
 def test_wcs_geom_to_even_npix():
-    geom = WcsGeom.create(
-        skydir=(0, 0), binsz=1, width=(3, 3)
-    )
+    geom = WcsGeom.create(skydir=(0, 0), binsz=1, width=(3, 3))
 
     geom_even = geom.to_even_npix()
 

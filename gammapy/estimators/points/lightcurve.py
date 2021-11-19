@@ -69,12 +69,7 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     tag = "LightCurveEstimator"
 
-    def __init__(
-        self,
-        time_intervals=None,
-        atol="1e-6 s",
-        **kwargs
-    ):
+    def __init__(self, time_intervals=None, atol="1e-6 s", **kwargs):
         self.time_intervals = time_intervals
         self.atol = u.Quantity(atol)
         super().__init__(**kwargs)
@@ -105,16 +100,15 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         rows = []
         valid_intervals = []
-        for t_min, t_max in progress_bar(
-                gti.time_intervals,
-                desc="Time intervals"
-        ):
+        for t_min, t_max in progress_bar(gti.time_intervals, desc="Time intervals"):
             datasets_to_fit = datasets.select_time(
                 time_min=t_min, time_max=t_max, atol=self.atol
             )
 
             if len(datasets_to_fit) == 0:
-                log.info(f"No Dataset for the time interval {t_min} to {t_max}. Skipping interval.")
+                log.info(
+                    f"No Dataset for the time interval {t_min} to {t_max}. Skipping interval."
+                )
                 continue
 
             valid_intervals.append([t_min, t_max])
@@ -132,7 +126,8 @@ class LightCurveEstimator(FluxPointsEstimator):
         gti = GTI.from_time_intervals(valid_intervals)
         axis = TimeMapAxis.from_gti(gti=gti)
         return FluxPoints.from_stack(
-            maps=rows, axis=axis,
+            maps=rows,
+            axis=axis,
         )
 
     @staticmethod

@@ -330,7 +330,9 @@ class FluxPointsDataset(Dataset):
 
         if method == "diff/model":
             model = self.flux_pred()
-            yerr = (yerr[0].quantity[:, 0, 0] / model), (yerr[1].quantity[:, 0, 0] / model)
+            yerr = (yerr[0].quantity[:, 0, 0] / model), (
+                yerr[1].quantity[:, 0, 0] / model
+            )
         elif method == "diff":
             yerr = yerr[0].quantity[:, 0, 0], yerr[1].quantity[:, 0, 0]
         else:
@@ -341,9 +343,7 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
 
         with quantity_support():
-            ax.errorbar(
-                fp.energy_ref, residuals, xerr=xerr, yerr=yerr, **kwargs
-            )
+            ax.errorbar(fp.energy_ref, residuals, xerr=xerr, yerr=yerr, **kwargs)
 
         ax.axhline(0, color=kwargs["color"], lw=0.5)
 

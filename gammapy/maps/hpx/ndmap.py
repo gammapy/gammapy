@@ -84,7 +84,7 @@ class HpxNDMap(HpxMap):
             binsz=geom_wcs.pixel_scales[0],
             frame=geom_wcs.frame,
             nest=nest,
-            axes=geom_wcs.axes
+            axes=geom_wcs.axes,
         )
 
         map_hpx = cls.from_geom(geom=geom_hpx, unit=wcs_tiles[0].unit)
@@ -104,7 +104,9 @@ class HpxNDMap(HpxMap):
 
         return map_hpx
 
-    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg", method="nearest", oversampling_factor=1):
+    def to_wcs_tiles(
+        self, nside_tiles=4, margin="0 deg", method="nearest", oversampling_factor=1
+    ):
         """Convert HpxNDMap to a list of WCS tiles
 
         Parameters
@@ -125,9 +127,7 @@ class HpxNDMap(HpxMap):
         """
         wcs_tiles = []
 
-        wcs_geoms = self.geom.to_wcs_tiles(
-            nside_tiles=nside_tiles, margin=margin
-        )
+        wcs_geoms = self.geom.to_wcs_tiles(nside_tiles=nside_tiles, margin=margin)
 
         for geom in wcs_geoms:
             if oversampling_factor > 1:
@@ -223,7 +223,7 @@ class HpxNDMap(HpxMap):
         oversample=2,
         width_pix=None,
         hpx2wcs=None,
-        fill_nan=True
+        fill_nan=True,
     ):
         from gammapy.maps import WcsNDMap
 
@@ -333,7 +333,9 @@ class HpxNDMap(HpxMap):
         if factor > 1:
             return self.upsample(factor=int(factor), preserve_counts=preserve_counts)
         elif factor < 1:
-            return self.downsample(factor=int(1 / factor), preserve_counts=preserve_counts)
+            return self.downsample(
+                factor=int(1 / factor), preserve_counts=preserve_counts
+            )
         else:
             return self.copy()
 
@@ -349,8 +351,7 @@ class HpxNDMap(HpxMap):
             raise ValueError(f"Invalid interpolation method: {method!r}")
 
     def interp_by_pix(self, pix, method=None):
-        """Interpolate map values at the given pixel coordinates.
-        """
+        """Interpolate map values at the given pixel coordinates."""
         raise NotImplementedError
 
     def cutout(self, position, width, *args, **kwargs):
@@ -376,9 +377,7 @@ class HpxNDMap(HpxMap):
             idx = self.geom.to_image().global_to_local((geom._ipix,))
 
         data = self.data[..., idx]
-        return self.__class__(
-            geom=geom, data=data, unit=self.unit, meta=self.meta
-        )
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
     def stack(self, other, weights=None, nan_to_num=True):
         """Stack cutout into map.
@@ -454,7 +453,7 @@ class HpxNDMap(HpxMap):
                 nside=self.geom.nside,
                 nest=self.geom.nest,
                 frame=self.geom.frame,
-                axes=self.geom.axes
+                axes=self.geom.axes,
             )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
 
@@ -482,7 +481,9 @@ class HpxNDMap(HpxMap):
                 img = hp.pixelfunc.reorder(img, n2r=True)
 
             if kernel == "gauss":
-                data = hp.sphtfunc.smoothing(img, sigma=width, pol=False, verbose=False, lmax=lmax)
+                data = hp.sphtfunc.smoothing(
+                    img, sigma=width, pol=False, verbose=False, lmax=lmax
+                )
             elif kernel == "disk":
                 # create the step function in angular space
                 theta = np.linspace(0, width)
@@ -492,7 +493,9 @@ class HpxNDMap(HpxMap):
                 window_beam = hp.sphtfunc.beam2bl(beam, theta, lmax)
                 # normalize the window beam
                 window_beam = window_beam / window_beam.max()
-                data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
+                data = hp.sphtfunc.smoothing(
+                    img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax
+                )
             else:
                 raise ValueError(f"Invalid kernel: {kernel!r}")
 
@@ -536,7 +539,9 @@ class HpxNDMap(HpxMap):
         elif convolution_method == "":
             return self.convolve_full(kernel)
         else:
-            raise ValueError(f"Not a valid method for HPX convolution: {convolution_method}")
+            raise ValueError(
+                f"Not a valid method for HPX convolution: {convolution_method}"
+            )
 
     def convolve_wcs(self, kernel, **kwargs):
         """Convolve map with a WCS kernel.
@@ -565,7 +570,9 @@ class HpxNDMap(HpxMap):
         """
         # TODO: maybe go through `.to_wcs_tiles()` to make this work for allsky maps
         if self.geom.is_allsky:
-            raise ValueError("Convolution via WCS projection is not supported for allsky maps.")
+            raise ValueError(
+                "Convolution via WCS projection is not supported for allsky maps."
+            )
 
         if self.geom.width > 10 * u.deg:
             log.warning(
@@ -585,7 +592,9 @@ class HpxNDMap(HpxMap):
             )
 
         geom_wcs = self.geom.to_wcs_geom(proj="TAN").to_image()
-        hpx2wcs = HpxToWcsMapping.create(hpx=self.geom, wcs=geom_wcs.to_binsz(binsz=wcs_size))
+        hpx2wcs = HpxToWcsMapping.create(
+            hpx=self.geom, wcs=geom_wcs.to_binsz(binsz=wcs_size)
+        )
 
         # Project to WCS and convolve
         wcs_map = self.to_wcs(hpx2wcs=hpx2wcs, fill_nan=False)
@@ -640,7 +649,7 @@ class HpxNDMap(HpxMap):
                 nside=self.geom.nside,
                 nest=self.geom.nest,
                 frame=self.geom.frame,
-                axes=self.geom.axes
+                axes=self.geom.axes,
             )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
             for img, idx in self.iter_by_image():
@@ -655,9 +664,11 @@ class HpxNDMap(HpxMap):
         center = max(center_pix)
         dim = np.argmax(center_pix)
 
-        pixels =[0,0]
-        pixels[dim] = np.linspace(0,center, int(center+1)) # assuming radially symmetric kernel
-        pixels[abs(1-dim)] = center_pix[abs(1-dim)] * np.ones(int(center+1))
+        pixels = [0, 0]
+        pixels[dim] = np.linspace(
+            0, center, int(center + 1)
+        )  # assuming radially symmetric kernel
+        pixels[abs(1 - dim)] = center_pix[abs(1 - dim)] * np.ones(int(center + 1))
         coords = psf_kernel.geom.pix_to_coord(pixels)
         coordinates = SkyCoord(coords[0], coords[1], frame=psf_kernel.geom.frame)
         angles = coordinates.separation(psf_kernel.geom.center_skydir).rad
@@ -670,10 +681,14 @@ class HpxNDMap(HpxMap):
             if nest:
                 # reorder to ring to do the convolution
                 img = hp.pixelfunc.reorder(img, n2r=True)
-            radial_profile = np.reshape(values[:,idx], (values.shape[0],))
-            window_beam = hp.sphtfunc.beam2bl(np.flip(radial_profile), np.flip(angles), lmax)
+            radial_profile = np.reshape(values[:, idx], (values.shape[0],))
+            window_beam = hp.sphtfunc.beam2bl(
+                np.flip(radial_profile), np.flip(angles), lmax
+            )
             window_beam = window_beam / window_beam.max()
-            data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
+            data = hp.sphtfunc.smoothing(
+                img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax
+            )
             if nest:
                 # reorder back to nest after the convolution
                 data = hp.pixelfunc.reorder(data, r2n=True)
@@ -990,7 +1005,8 @@ class HpxNDMap(HpxMap):
 
         return ax
 
-    def plot_mask(self,
+    def plot_mask(
+        self,
         method="raster",
         ax=None,
         proj="AIT",
@@ -1029,7 +1045,9 @@ class HpxNDMap(HpxMap):
             WCS axis object
         """
         if not self.is_mask:
-            raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
+            raise ValueError(
+                "`.plot_mask()` only supports maps containing boolean values."
+            )
 
         if method == "raster":
             m = self.to_wcs(

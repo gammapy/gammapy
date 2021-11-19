@@ -49,7 +49,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         "sed_type_init": "flux",
         "n_sigma": 1,
         "sqrt_ts_threshold_ul": 1,
-        "n_sigma_ul": 2
+        "n_sigma_ul": 2,
     }
 
     def __str__(self):
@@ -155,7 +155,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
     def _info_spectral_points(self):
         ss = "\n*** Spectral points ***\n\n"
-        lines = format_flux_points_table(self.flux_points_table).pformat(max_width=-1, max_lines=-1)
+        lines = format_flux_points_table(self.flux_points_table).pformat(
+            max_width=-1, max_lines=-1
+        )
         ss += "\n".join(lines)
         return ss
 
@@ -522,7 +524,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             maps=maps,
             sed_type="flux",
             reference_model=self.sky_model(),
-            meta=self.flux_points.meta.copy()
+            meta=self.flux_points.meta.copy(),
         )
 
 
@@ -818,7 +820,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
             maps=maps,
             sed_type="flux",
             reference_model=self.sky_model(),
-            meta=self.flux_points_meta.copy()
+            meta=self.flux_points_meta.copy(),
         )
 
 

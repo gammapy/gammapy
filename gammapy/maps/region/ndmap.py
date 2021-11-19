@@ -93,9 +93,13 @@ class RegionNDMap(Map):
         uplims_nd, uplims = kwargs.pop("uplims", None), None
         label_default = kwargs.pop("label", None)
 
-        labels = product(*[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name])
+        labels = product(
+            *[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name]
+        )
 
-        for label_axis, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
+        for label_axis, (idx, quantity) in zip(
+            labels, self.iter_by_axis(axis_name=axis.name)
+        ):
             if isinstance(yerr_nd, tuple):
                 yerr = yerr_nd[0][idx], yerr_nd[1][idx]
             elif isinstance(yerr_nd, np.ndarray):
@@ -113,7 +117,7 @@ class RegionNDMap(Map):
                     yerr=yerr,
                     uplims=uplims,
                     label=label,
-                    **kwargs
+                    **kwargs,
                 )
 
         axis.format_plot_xaxis(ax=ax)
@@ -158,10 +162,7 @@ class RegionNDMap(Map):
         with quantity_support():
             weights = self.data[:, 0, 0]
             ax.hist(
-                axis.as_plot_center,
-                bins=axis.as_plot_edges,
-                weights=weights,
-                **kwargs
+                axis.as_plot_center, bins=axis.as_plot_edges, weights=weights, **kwargs
             )
 
         if not self.unit.is_unity():
@@ -222,7 +223,7 @@ class RegionNDMap(Map):
         labels, nlabels = ndi_label(self.data)
 
         for idx in range(1, nlabels + 1):
-            mask = (labels == idx)
+            mask = labels == idx
             xmin = edges[:-1][mask].min().value
             xmax = edges[1:][mask].max().value
             ax.axvspan(xmin, xmax, **kwargs)
@@ -230,7 +231,17 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg", data=None):
+    def create(
+        cls,
+        region,
+        axes=None,
+        dtype="float32",
+        meta=None,
+        unit="",
+        wcs=None,
+        binsz_wcs="0.1deg",
+        data=None,
+    ):
         """Create an empty region map object.
 
         Parameters
@@ -391,9 +402,7 @@ class RegionNDMap(Map):
             axis = 2 + self.geom.axes.index("norm")
             kwargs["values_scale"] = StatProfileScale(axis=axis)
 
-        fn = ScaledRegularGridInterpolator(
-            grid_pix, data, **kwargs
-        )
+        fn = ScaledRegularGridInterpolator(grid_pix, data, **kwargs)
         return fn(tuple(pix), clip=False)
 
     def set_by_idx(self, idx, value):
@@ -421,7 +430,9 @@ class RegionNDMap(Map):
         """
         filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
+            return cls.from_hdulist(
+                hdulist, format=format, ogip_column=ogip_column, hdu=hdu
+            )
 
     def write(self, filename, overwrite=False, format="gadf", hdu="SKYMAP"):
         """Write map to file
@@ -436,9 +447,7 @@ class RegionNDMap(Map):
             Overwrite existing files?
         """
         filename = make_path(filename)
-        self.to_hdulist(format=format, hdu=hdu).writeto(
-            filename, overwrite=overwrite
-        )
+        self.to_hdulist(format=format, hdu=hdu).writeto(filename, overwrite=overwrite)
 
     def to_hdulist(self, format="gadf", hdu="SKYMAP", hdu_bands=None, hdu_region=None):
         """Convert to `~astropy.io.fits.HDUList`.
@@ -476,7 +485,9 @@ class RegionNDMap(Map):
             raise ValueError(f"Unsupported format '{format}'")
 
         if format in ["ogip", "ogip-sherpa", "gadf"]:
-            hdulist_geom = self.geom.to_hdulist(format=format, hdu_bands=hdu_bands, hdu_region=hdu_region)
+            hdulist_geom = self.geom.to_hdulist(
+                format=format, hdu_bands=hdu_bands, hdu_region=hdu_region
+            )
             hdulist.extend(hdulist_geom[1:])
 
         return hdulist
@@ -632,8 +643,10 @@ class RegionNDMap(Map):
 
         if format == "ogip":
             if len(self.geom.axes) > 1:
-                raise ValueError(f"Writing to format '{format}' only supports a "
-                                 f"single energy axis. Got {self.geom.axes.names}")
+                raise ValueError(
+                    f"Writing to format '{format}' only supports a "
+                    f"single energy axis. Got {self.geom.axes.names}"
+                )
 
             energy_axis = self.geom.axes[0]
             energy_axis.assert_name("energy")
@@ -665,8 +678,10 @@ class RegionNDMap(Map):
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
             if len(self.geom.axes) > 1:
-                raise ValueError(f"Writing to format '{format}' only supports a "
-                                 f"single energy axis. Got {self.geom.axes.names}")
+                raise ValueError(
+                    f"Writing to format '{format}' only supports a "
+                    f"single energy axis. Got {self.geom.axes.names}"
+                )
 
             energy_axis = self.geom.axes[0]
             table = energy_axis.to_table(format=format)
@@ -678,7 +693,7 @@ class RegionNDMap(Map):
                 "hduclass": "OGIP",
                 "hduclas1": "RESPONSE",
                 "hduclas2": "SPECRESP",
-                "hduvers": "1.1.0"
+                "hduvers": "1.1.0",
             }
 
             if format == "ogip-arf-sherpa":

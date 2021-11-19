@@ -37,7 +37,7 @@ class Map(abc.ABC):
 
     def __init__(self, geom, data, meta=None, unit=""):
         self._geom = geom
-        
+
         if isinstance(data, u.Quantity):
             self.unit = unit
             self.quantity = data
@@ -51,8 +51,7 @@ class Map(abc.ABC):
             self.meta = meta
 
     def _init_copy(self, **kwargs):
-        """Init map instance by copying missing init arguments from self.
-        """
+        """Init map instance by copying missing init arguments from self."""
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
         argnames.remove("dtype")
@@ -131,7 +130,7 @@ class Map(abc.ABC):
            Quantity
         """
         val = u.Quantity(val, copy=False)
-        
+
         self.data = val.value
         self.unit = val.unit
 
@@ -188,7 +187,9 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
+    def read(
+        filename, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None
+    ):
         """Read a map from a FITS file.
 
         Parameters
@@ -216,7 +217,9 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format, colname=colname)
+            return Map.from_hdulist(
+                hdulist, hdu, hdu_bands, map_type, format=format, colname=colname
+            )
 
     @staticmethod
     def from_geom(geom, meta=None, data=None, unit="", dtype="float32"):
@@ -256,7 +259,9 @@ class Map(abc.ABC):
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
+    def from_hdulist(
+        hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None
+    ):
         """Create from `astropy.io.fits.HDUList`.
 
         Parameters
@@ -331,16 +336,19 @@ class Map(abc.ABC):
         """
         if map_type == "wcs":
             from .wcs import WcsNDMap
+
             return WcsNDMap
         elif map_type == "wcs-sparse":
             raise NotImplementedError()
         elif map_type == "hpx":
             from .hpx import HpxNDMap
+
             return HpxNDMap
         elif map_type == "hpx-sparse":
             raise NotImplementedError()
         elif map_type == "region":
             from .region import RegionNDMap
+
             return RegionNDMap
         else:
             raise ValueError(f"Unrecognized map type: {map_type!r}")
@@ -459,7 +467,9 @@ class Map(abc.ABC):
                 kwargs["constant_values"] = cval
 
             data = np.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
-            return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
+            return self.__class__(
+                geom=geom, data=data, unit=self.unit, meta=self.meta.copy()
+            )
 
         return self._pad_spatial(pad_width, mode="constant", cval=cval)
 
@@ -554,6 +564,7 @@ class Map(abc.ABC):
             Map with resampled axis.
         """
         from .hpx import HpxGeom
+
         geom = self.geom.resample_axis(axis)
 
         axis_self = self.geom.axes[axis.name]
@@ -582,7 +593,8 @@ class Map(abc.ABC):
         return self._init_copy(data=data, geom=geom)
 
     def slice_by_idx(
-        self, slices,
+        self,
+        slices,
     ):
         """Slice sub map from map object.
 
@@ -1040,7 +1052,11 @@ class Map(abc.ABC):
                 continue
 
             if image.geom.is_hpx:
-                image_wcs = image.to_wcs(normalize=False, proj="AIT", oversample=2,)
+                image_wcs = image.to_wcs(
+                    normalize=False,
+                    proj="AIT",
+                    oversample=2,
+                )
             else:
                 image_wcs = image
 
@@ -1156,9 +1172,11 @@ class Map(abc.ABC):
         if "geom" in kwargs:
             geom = kwargs["geom"]
             if not geom.data_shape == self.geom.data_shape:
-                raise ValueError("Can't copy and change data size of the map. "
-                                 f" Current shape {self.geom.data_shape},"
-                                 f" requested shape {geom.data_shape}")
+                raise ValueError(
+                    "Can't copy and change data size of the map. "
+                    f" Current shape {self.geom.data_shape},"
+                    f" requested shape {geom.data_shape}"
+                )
 
         return self._init_copy(**kwargs)
 
@@ -1362,9 +1380,7 @@ class Map(abc.ABC):
         cumsum = self.cumsum(axis_name=axis_name)
         cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
         return u.Quantity(
-            cumsum.interp_by_coord(coords, **kwargs),
-            cumsum.unit,
-            copy=False
+            cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False
         )
 
     def normalize(self, axis_name=None):

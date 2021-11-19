@@ -10,7 +10,13 @@ from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
-from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord, PointPixelRegion
+from regions import (
+    PointSkyRegion,
+    RectangleSkyRegion,
+    SkyRegion,
+    PixCoord,
+    PointPixelRegion,
+)
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -187,7 +193,9 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def _pad_spatial(self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"):
+    def _pad_spatial(
+        self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"
+    ):
         if axis_name is None:
             if np.isscalar(pad_width):
                 pad_width = (pad_width, pad_width)
@@ -394,7 +402,9 @@ class WcsNDMap(WcsMap):
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
 
         if not self.is_mask:
-            raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
+            raise ValueError(
+                "`.plot_mask()` only supports maps containing boolean values."
+            )
 
         ax = self._plot_default_axes(ax=ax)
 
@@ -422,8 +432,7 @@ class WcsNDMap(WcsMap):
             fig = plt.gcf()
             if self.geom.projection in ["AIT"]:
                 ax = fig.add_subplot(
-                    1, 1, 1, projection=self.geom.wcs,
-                    frame_class=EllipticalFrame
+                    1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame
                 )
             else:
                 ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
@@ -472,7 +481,9 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
-    def to_region_nd_map(self, region=None, func=np.nansum, weights=None, method="nearest"):
+    def to_region_nd_map(
+        self, region=None, func=np.nansum, weights=None, method="nearest"
+    ):
         """Get region ND map in a given region.
 
         By default the whole map region is considered.
@@ -593,7 +604,9 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure.squeeze(), method="fft") > (structure.sum() - 1)
+            return self.convolve(structure.squeeze(), method="fft") > (
+                structure.sum() - 1
+            )
 
         data = ndi.binary_erosion(self.data, structure=structure)
         return self._init_copy(data=data)
@@ -674,10 +687,12 @@ class WcsNDMap(WcsMap):
                 geom = geom.to_cube(kmap.geom.axes)
 
         if mode == "full":
-            pad_width = [0.5 * (width-1) for width in kernel.shape[-2:]]
+            pad_width = [0.5 * (width - 1) for width in kernel.shape[-2:]]
             geom = geom.pad(pad_width, axis_name=None)
         elif mode == "valid":
-            raise NotImplementedError("WcsNDMap.convolve: mode='valid' is not supported.")
+            raise NotImplementedError(
+                "WcsNDMap.convolve: mode='valid' is not supported."
+            )
 
         data = np.empty(geom.data_shape, dtype=np.float32)
 

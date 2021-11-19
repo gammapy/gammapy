@@ -148,7 +148,9 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
     reco_exposure = eval.compute_npred()
 
     if normalize:
-        ref_flux = spectral_model.integral(energy_axis.edges[:-1], energy_axis.edges[1:])
+        ref_flux = spectral_model.integral(
+            energy_axis.edges[:-1], energy_axis.edges[1:]
+        )
         reco_exposure = reco_exposure / ref_flux[:, np.newaxis, np.newaxis]
 
     return reco_exposure

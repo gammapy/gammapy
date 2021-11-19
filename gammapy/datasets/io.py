@@ -60,6 +60,7 @@ class OGIPDatasetWriter(DatasetWriter):
     overwrite : bool
         Overwrite existing files?
     """
+
     tag = ["ogip", "ogip-sherpa"]
 
     def __init__(self, filename, format="ogip", overwrite=False):
@@ -90,7 +91,7 @@ class OGIPDatasetWriter(DatasetWriter):
         return {
             "respfile": name.format("_rmf"),
             "backfile": name.format("_bkg"),
-            "ancrfile": name.format("_arf")
+            "ancrfile": name.format("_arf"),
         }
 
     def get_ogip_meta(self, dataset, is_bkg=False):
@@ -156,11 +157,7 @@ class OGIPDatasetWriter(DatasetWriter):
             Filename to use.
         """
         kernel = dataset.edisp.get_edisp_kernel()
-        kernel.write(
-            filename=filename,
-            overwrite=self.overwrite,
-            format=self.format
-        )
+        kernel.write(filename=filename, overwrite=self.overwrite, format=self.format)
 
     def write_arf(self, dataset, filename):
         """Write effective area
@@ -266,6 +263,7 @@ class OGIPDatasetReader(DatasetReader):
     filename : str or `~pathlib.Path`
         OGIP PHA file to read
     """
+
     tag = "ogip"
 
     def __init__(self, filename):
@@ -307,9 +305,7 @@ class OGIPDatasetReader(DatasetReader):
             Dict with filenames of "arffile", "rmffile" (optional)
             and "bkgfile" (optional)
         """
-        filenames = {
-            "arffile": self.get_valid_path(pha_meta["ANCRFILE"])
-        }
+        filenames = {"arffile": self.get_valid_path(pha_meta["ANCRFILE"])}
 
         if "BACKFILE" in pha_meta:
             filenames["bkgfile"] = self.get_valid_path(pha_meta["BACKFILE"])

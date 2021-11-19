@@ -11,7 +11,7 @@ __all__ = [
     "shape_divisible_by",
     "symmetric_crop_pad_width",
     "round_up_to_odd",
-    "round_up_to_even"
+    "round_up_to_even",
 ]
 
 

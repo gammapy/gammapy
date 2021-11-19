@@ -56,7 +56,7 @@ def test_profile_content():
         energy_edges=[0.1, 1, 10] * u.TeV,
         selection_optional="all",
         n_sigma=1,
-        n_sigma_ul=3
+        n_sigma_ul=3,
     )
     result = prof_maker.run(mapdataset_onoff)
 
@@ -65,7 +65,7 @@ def test_profile_content():
     assert_allclose(imp_prof[7]["x_ref"], 0.1575, atol=1e-4)
     assert_allclose(imp_prof[7]["counts"], [[100.0], [100.0]], atol=1e-2)
     assert_allclose(imp_prof[7]["sqrt_ts"], [7.63, 7.63], atol=1e-2)
-    assert_allclose(imp_prof[0]["flux"], [8e-06, 8.e-06], atol=1e-3)
+    assert_allclose(imp_prof[0]["flux"], [8e-06, 8.0e-06], atol=1e-3)
 
     # TODO: npred quantities are not supported by the table serialisation format
     #  so we rely on the FluxPoints object
@@ -84,7 +84,8 @@ def test_radial_profile():
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
-        center=geom.center_skydir, radius_max=0.2 * u.deg,
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
     )
 
     prof_maker = FluxProfileEstimator(
@@ -101,7 +102,7 @@ def test_radial_profile():
     assert_allclose(imp_prof[7]["x_ref"], 0.15, atol=1e-4)
     assert_allclose(imp_prof[7]["counts"], [[980.0], [980.0]], atol=1e-2)
     assert_allclose(imp_prof[7]["sqrt_ts"], [23.886444, 23.886444], atol=1e-5)
-    assert_allclose(imp_prof[0]["flux"], [8e-06, 8.e-06], atol=1e-3)
+    assert_allclose(imp_prof[0]["flux"], [8e-06, 8.0e-06], atol=1e-3)
 
     # TODO: npred quantities are not supported by the table serialisation format
     #  so we rely on the FluxPoints object
@@ -120,7 +121,8 @@ def test_radial_profile_one_interval():
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
-        center=geom.center_skydir, radius_max=0.2 * u.deg,
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
     )
 
     prof_maker = FluxProfileEstimator(
@@ -128,7 +130,7 @@ def test_radial_profile_one_interval():
         selection_optional="all",
         energy_edges=[0.1, 10] * u.TeV,
         n_sigma_ul=3,
-        sum_over_energy_groups=True
+        sum_over_energy_groups=True,
     )
     result = prof_maker.run(dataset)
 
@@ -153,10 +155,7 @@ def test_regions_init():
     with pytest.raises(ValueError):
         FluxProfileEstimator(regions=[])
 
-    region = CircleSkyRegion(
-        center=SkyCoord("0d", "0d"),
-        radius=0.1 * u.deg
-    )
+    region = CircleSkyRegion(center=SkyCoord("0d", "0d"), radius=0.1 * u.deg)
 
     with pytest.raises(ValueError):
         FluxProfileEstimator(regions=[region])

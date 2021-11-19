@@ -398,7 +398,10 @@ class SpatialModel(ModelBase):
         if hasattr(self, "to_region"):
             return self.to_region()
         elif self.evaluation_radius is not None:
-            return CircleSkyRegion(center=self.position, radius=self.evaluation_radius,)
+            return CircleSkyRegion(
+                center=self.position,
+                radius=self.evaluation_radius,
+            )
         else:
             return None
 
@@ -423,7 +426,7 @@ class PointSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
         return 0 * u.deg
 
     @property
@@ -512,7 +515,7 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`) chosen as sigma/3."""
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`) chosen as sigma/3."""
         return self.parameters["sigma"].quantity / 3.0
 
     @property
@@ -568,7 +571,7 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_region(self):
-        """Evaluation region consistent with evaluation radius """
+        """Evaluation region consistent with evaluation radius"""
         return self.to_region(x_sigma=5)
 
 
@@ -614,7 +617,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as r_0/(3+8*eta)/(e+1).
         """
@@ -695,7 +698,7 @@ class DiskSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as r_0*(1-edge_width)/10.
         """
@@ -792,7 +795,7 @@ class ShellSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as the shell width.
         """
@@ -863,7 +866,7 @@ class Shell2SpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as r_0*eta.
         """
@@ -1020,7 +1023,12 @@ class TemplateSpatialModel(SpatialModel):
     tag = ["TemplateSpatialModel", "template"]
 
     def __init__(
-        self, map, meta=None, normalize=True, interp_kwargs=None, filename=None,
+        self,
+        map,
+        meta=None,
+        normalize=True,
+        interp_kwargs=None,
+        filename=None,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")

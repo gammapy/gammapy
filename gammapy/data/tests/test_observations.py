@@ -43,7 +43,9 @@ def test_observation(data_store):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_observation_peek(data_store, caplog):
-    obs = Observation.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz")
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
 
     with mpl_plot_check():
         obs.peek()
@@ -247,7 +249,7 @@ def test_observation_read():
     """read event list and irf components from different DL3 files"""
     obs = Observation.read(
         event_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
-        irf_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020137.fits.gz"
+        irf_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020137.fits.gz",
     )
 
     energy = Quantity(1, "TeV")

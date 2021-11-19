@@ -175,7 +175,7 @@ class TSMapEstimator(Estimator):
             "npred_excess",
             "stat",
             "stat_null",
-            "success"
+            "success",
         ]
 
         if "errn-errp" in self.selection_optional:
@@ -360,7 +360,7 @@ class TSMapEstimator(Estimator):
             "norm": norm,
             "mask": mask,
             "exposure": exposure_npred,
-            "kernel": kernel
+            "kernel": kernel,
         }
 
     def estimate_flux_map(self, dataset):
@@ -443,7 +443,7 @@ class TSMapEstimator(Estimator):
         results = []
 
         for energy_min, energy_max in progress_bar(
-                energy_axis.iter_by_edges, desc="Energy bins"
+            energy_axis.iter_by_edges, desc="Energy bins"
         ):
             sliced_dataset = dataset.slice_by_energy(
                 energy_min=energy_min, energy_max=energy_max, name=dataset.name
@@ -463,9 +463,7 @@ class TSMapEstimator(Estimator):
 
             order = 0 if name in ["niter", "success"] else 1
             m = m.upsample(
-                factor=self.downsampling_factor,
-                preserve_counts=False,
-                order=order
+                factor=self.downsampling_factor, preserve_counts=False, order=order
             )
 
             maps[name] = m.crop(crop_width=pad_width)
@@ -527,7 +525,7 @@ class SimpleMapDataset:
         """Stat 2nd derivative"""
         term_top = self.model ** 2 * self.counts
         term_bottom = (self.background + norm * self.model) ** 2
-        mask = (term_bottom == 0)
+        mask = term_bottom == 0
         return (term_top / term_bottom)[~mask].sum()
 
     @classmethod
@@ -619,7 +617,7 @@ class BrentqFluxEstimator(Estimator):
             "ts": stat_null - stat,
             "stat": stat,
             "stat_null": stat_null,
-            "success": success
+            "success": success,
         }
 
     def _confidence(self, dataset, n_sigma, result, positive):
@@ -720,7 +718,7 @@ class BrentqFluxEstimator(Estimator):
             "ts": stat_null - stat,
             "stat": stat,
             "stat_null": stat_null,
-            "success": True
+            "success": True,
         }
 
     def run(self, dataset):

@@ -2,7 +2,14 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import ModelBase, Model, Models, Parameter, Parameters, SkyModel
+from gammapy.modeling.models import (
+    ModelBase,
+    Model,
+    Models,
+    Parameter,
+    Parameters,
+    SkyModel,
+)
 from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
 
 
@@ -211,9 +218,15 @@ def test_plot_models(caplog):
     regions = models.to_regions()
     assert len(regions) == 3
 
-    p1 = Model.create("pl-2", model_type="spectral",)
+    p1 = Model.create(
+        "pl-2",
+        model_type="spectral",
+    )
     g1 = Model.create("gauss", model_type="spatial")
-    p2 = Model.create("pl-2", model_type="spectral",)
+    p2 = Model.create(
+        "pl-2",
+        model_type="spectral",
+    )
     m1 = SkyModel(spectral_model=p1, spatial_model=g1, name="m1")
     m2 = SkyModel(spectral_model=p2, name="m2")
     models = Models([m1, m2])

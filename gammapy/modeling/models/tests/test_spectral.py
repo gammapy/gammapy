@@ -72,7 +72,9 @@ TEST_MODELS = [
     dict(
         name="norm-powerlaw",
         model=PowerLawNormSpectralModel(
-            tilt=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
+            tilt=2 * u.Unit(""),
+            norm=4.0 * u.Unit(""),
+            reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, ""),
         integral_1_10TeV=u.Quantity(3.6, "TeV"),
@@ -277,7 +279,8 @@ TEST_MODELS = [
     dict(
         name="pbpl",
         model=PiecewiseNormSpectralModel(
-            energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
+            energy=[1, 3, 7, 10] * u.TeV,
+            norms=[1, 5, 3, 0.5] * u.Unit(""),
         ),
         val_at_2TeV=u.Quantity(2.76058404, ""),
         integral_1_10TeV=u.Quantity(24.758255, "TeV"),

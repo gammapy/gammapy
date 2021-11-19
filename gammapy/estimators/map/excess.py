@@ -39,7 +39,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
         npred_sig_convolve = npred_sig.convolve(kernel.array)
         if correlate_off:
             background = dataset.background * mask
-            background.data[dataset.acceptance_off == 0] = 0.
+            background.data[dataset.acceptance_off == 0] = 0.0
             background_conv = background.convolve(kernel.array)
 
             n_off = n_off.convolve(kernel.array)
@@ -154,7 +154,9 @@ class ExcessMapEstimator(Estimator):
             Flux maps
         """
         if not isinstance(dataset, MapDataset):
-            raise ValueError("Unsupported dataset type. Excess map is not applicable to 1D datasets.")
+            raise ValueError(
+                "Unsupported dataset type. Excess map is not applicable to 1D datasets."
+            )
 
         axis = self._get_energy_axis(dataset)
 
@@ -187,7 +189,7 @@ class ExcessMapEstimator(Estimator):
 
         geom = dataset.counts.geom
 
-        if  dataset.mask_fit:
+        if dataset.mask_fit:
             mask = dataset.mask
         elif dataset.mask_safe:
             mask = dataset.mask_safe
@@ -207,24 +209,40 @@ class ExcessMapEstimator(Estimator):
         maps["sqrt_ts"] = Map.from_geom(geom, data=counts_stat.sqrt_ts)
 
         if dataset.exposure:
-            reco_exposure = estimate_exposure_reco_energy(dataset, self.spectral_model, normalize=False)
+            reco_exposure = estimate_exposure_reco_energy(
+                dataset, self.spectral_model, normalize=False
+            )
             with np.errstate(invalid="ignore", divide="ignore"):
-                reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(kernel.array)
+                reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(
+                    kernel.array
+                )
         else:
             reco_exposure = 1
 
         with np.errstate(invalid="ignore", divide="ignore"):
             maps["norm"] = maps["npred_excess"] / reco_exposure
-            maps["norm_err"] = Map.from_geom(geom, data=counts_stat.error * self.n_sigma) / reco_exposure
+            maps["norm_err"] = (
+                Map.from_geom(geom, data=counts_stat.error * self.n_sigma)
+                / reco_exposure
+            )
 
             if "errn-errp" in self.selection_optional:
-                maps["norm_errn"] = Map.from_geom(geom, data=-counts_stat.compute_errn(self.n_sigma)) / reco_exposure
-                maps["norm_errp"] = Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma)) / reco_exposure
+                maps["norm_errn"] = (
+                    Map.from_geom(geom, data=-counts_stat.compute_errn(self.n_sigma))
+                    / reco_exposure
+                )
+                maps["norm_errp"] = (
+                    Map.from_geom(geom, data=counts_stat.compute_errp(self.n_sigma))
+                    / reco_exposure
+                )
 
             if "ul" in self.selection_optional:
-                maps["norm_ul"] = Map.from_geom(
-                    geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
-                ) / reco_exposure
+                maps["norm_ul"] = (
+                    Map.from_geom(
+                        geom, data=counts_stat.compute_upper_limit(self.n_sigma_ul)
+                    )
+                    / reco_exposure
+                )
 
         # return nan values outside mask
         for name in maps:
@@ -233,13 +251,12 @@ class ExcessMapEstimator(Estimator):
         meta = {
             "n_sigma": self.n_sigma,
             "n_sigma_ul": self.n_sigma_ul,
-            "sed_type_init": "likelihood"
+            "sed_type_init": "likelihood",
         }
 
         return FluxMaps.from_maps(
             maps=maps,
             meta=meta,
             reference_model=SkyModel(self.spectral_model),
-            sed_type="likelihood"
-
+            sed_type="likelihood",
         )

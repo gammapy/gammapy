@@ -233,7 +233,7 @@ class EffectiveAreaTable2D(IRF):
 
         g1, g2, g3 = pars[instrument]
 
-        offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
+        offset_axis = MapAxis.from_edges([0.0, 5.0] * u.deg, name="offset")
         axes = MapAxes([energy_axis_true, offset_axis])
         coords = axes.get_coord()
 

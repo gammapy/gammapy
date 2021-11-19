@@ -24,7 +24,7 @@ def find_roots(
     maxiter=None,
     options=None,
 ):
-    """ Find roots of a scalar function within a given range.
+    """Find roots of a scalar function within a given range.
 
     Parameters
     ----------

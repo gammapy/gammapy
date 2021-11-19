@@ -142,7 +142,8 @@ def test_psfmap_to_psf_kernel():
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
 
     psfkernel = psfmap.get_psf_kernel(
-        position=SkyCoord(1, 1, unit="deg"), geom=kern_geom,
+        position=SkyCoord(1, 1, unit="deg"),
+        geom=kern_geom,
     )
     assert_allclose(psfkernel.psf_kernel_map.geom.width, 1.14 * u.deg)
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
@@ -356,7 +357,10 @@ def test_make_mean_psf(data_store):
     psf = observations[0].psf
 
     geom = WcsGeom.create(
-        skydir=position, npix=(3, 3), axes=psf.axes[["rad", "energy_true"]], binsz=0.2,
+        skydir=position,
+        npix=(3, 3),
+        axes=psf.axes[["rad", "energy_true"]],
+        binsz=0.2,
     )
 
     psf_map_1 = make_psf_map_obs(geom, observations[0])

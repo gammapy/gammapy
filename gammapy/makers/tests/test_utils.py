@@ -7,7 +7,12 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, EventList, FixedPointingInfo, Observation
-from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D, Background2D
+from gammapy.irf import (
+    Background3D,
+    EffectiveAreaTable2D,
+    EnergyDispersion2D,
+    Background2D,
+)
 from gammapy.makers.utils import (
     _map_spectrum_weight,
     make_edisp_kernel_map,
@@ -131,9 +136,7 @@ def bkg_3d():
 def bkg_2d():
     offset_axis = MapAxis.from_bounds(0, 4, nbin=10, name="offset", unit="deg")
     energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=20)
-    bkg_2d = Background2D(
-        axes=[energy_axis, offset_axis], unit="s-1 TeV-1 sr-1"
-    )
+    bkg_2d = Background2D(axes=[energy_axis, offset_axis], unit="s-1 TeV-1 sr-1")
     coords = bkg_2d.axes.get_coord()
     value = np.exp(-0.5 * (coords["offset"] / (2 * u.deg)) ** 2)
     bkg_2d.data = (value * (coords["energy"] / (1 * u.TeV)) ** -2).to_value("")
@@ -291,11 +294,7 @@ def test_make_edisp_kernel_map():
     ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
 
     edisp = EnergyDispersion2D.from_gauss(
-        energy_axis_true=etrue,
-        migra_axis=migra,
-        bias=0,
-        sigma=0.01,
-        offset_axis=offset
+        energy_axis_true=etrue, migra_axis=migra, bias=0, sigma=0.01, offset_axis=offset
     )
 
     geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])
@@ -328,9 +327,9 @@ class TestTheta2Table:
             gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
             gti = GTI(gti_table)
 
-            self.observations.append(Observation(
-                events=EventList(events), obs_info=obs_info, gti=gti
-            ))
+            self.observations.append(
+                Observation(events=EventList(events), obs_info=obs_info, gti=gti)
+            )
 
     def test_make_theta_squared_table(self):
         # pointing position: (0,0.5) degree in ra/dec
@@ -339,7 +338,9 @@ class TestTheta2Table:
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
         axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
         theta2_table = make_theta_squared_table(
-            observations=[self.observations[0]], position=position, theta_squared_axis=axis
+            observations=[self.observations[0]],
+            position=position,
+            theta_squared_axis=axis,
         )
         theta2_lo = [0, 0.05, 0.1, 0.15]
         theta2_hi = [0.05, 0.1, 0.15, 0.2]

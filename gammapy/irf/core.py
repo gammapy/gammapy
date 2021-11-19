@@ -33,7 +33,10 @@ class IRF(metaclass=abc.ABCMeta):
         Meta data
     """
 
-    default_interp_kwargs = dict(bounds_error=False, fill_value=0.,)
+    default_interp_kwargs = dict(
+        bounds_error=False,
+        fill_value=0.0,
+    )
 
     def __init__(self, axes, data=0, unit="", meta=None, interp_kwargs=None):
         axes = MapAxes(axes)
@@ -42,7 +45,7 @@ class IRF(metaclass=abc.ABCMeta):
         if isinstance(data, u.Quantity):
             self.data = data.value
             self.unit = data.unit
-        else:       
+        else:
             self.data = data
             self.unit = unit
         self.meta = meta or {}
@@ -481,7 +484,9 @@ class IRF(metaclass=abc.ABCMeta):
 
         axes = self.axes.pad(axis_name=axis_name, pad_width=pad_width)
         data = np.pad(self.data, pad_width=pad_width_np, **kwargs)
-        return self.__class__(data=data, axes=axes, meta=self.meta.copy(), unit=self.unit)
+        return self.__class__(
+            data=data, axes=axes, meta=self.meta.copy(), unit=self.unit
+        )
 
 
 class IRFMap:

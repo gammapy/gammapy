@@ -8,7 +8,7 @@ def test_rad_max_roundtrip(tmp_path):
 
     n_energy = 10
     energy_axis = MapAxis.from_energy_bounds(
-        50 * u.GeV, 100 * u.TeV, n_energy, name='energy'
+        50 * u.GeV, 100 * u.TeV, n_energy, name="energy"
     )
 
     n_offset = 5
@@ -26,8 +26,8 @@ def test_rad_max_roundtrip(tmp_path):
         unit=u.deg,
     )
 
-    rad_max_2d.write(tmp_path / 'rad_max.fits')
-    rad_max_read = RadMax2D.read(tmp_path / 'rad_max.fits')
+    rad_max_2d.write(tmp_path / "rad_max.fits")
+    rad_max_read = RadMax2D.read(tmp_path / "rad_max.fits")
 
     assert np.all(rad_max_read.data.data == rad_max)
     assert np.all(rad_max_read.data.data == rad_max_read.data.data)

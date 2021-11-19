@@ -94,7 +94,9 @@ class MapDatasetMaker(Maker):
             Exposure map.
         """
         if isinstance(observation.aeff, Map):
-            return observation.aeff.interp_to_geom(geom=geom,)
+            return observation.aeff.interp_to_geom(
+                geom=geom,
+            )
         return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,

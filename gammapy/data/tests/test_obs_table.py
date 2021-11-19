@@ -250,6 +250,7 @@ def test_select_parameter_box():
     selected_obs_table = obs_table.select_observations(selections)
     assert len(selected_obs_table) == 2
 
+
 def test_select_time_box():
     # create random observation table with very close (in time)
     # observations (and times in absolute times)

@@ -260,11 +260,7 @@ class MapAxis:
     @property
     def as_plot_scale(self):
         """Plot axis scale"""
-        mpl_scale = {
-            "lin": "linear",
-            "sqrt": "linear",
-            "log": "log"
-        }
+        mpl_scale = {"lin": "linear", "sqrt": "linear", "log": "log"}
 
         return mpl_scale[self.interp]
 
@@ -420,7 +416,9 @@ class MapAxis:
         energy_edges = u.Quantity(energy_edges, unit)
 
         if not energy_edges.unit.is_equivalent("TeV"):
-            raise ValueError(f"Please provide a valid energy unit, got {energy_edges.unit} instead.")
+            raise ValueError(
+                f"Please provide a valid energy unit, got {energy_edges.unit} instead."
+            )
 
         if name is None:
             name = "energy"
@@ -472,7 +470,9 @@ class MapAxis:
             energy_min = energy_min.to(unit)
 
         if not energy_max.unit.is_equivalent("TeV"):
-            raise ValueError(f"Please provide a valid energy unit, got {energy_max.unit} instead.")
+            raise ValueError(
+                f"Please provide a valid energy unit, got {energy_max.unit} instead."
+            )
 
         if per_decade:
             nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
@@ -776,8 +776,7 @@ class MapAxis:
         return str_
 
     def _init_copy(self, **kwargs):
-        """Init map axis instance by copying missing init arguments from self.
-        """
+        """Init map axis instance by copying missing init arguments from self."""
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
 
@@ -1224,8 +1223,9 @@ class MapAxis:
                 e_ref = flat_if_equal(table["e_ref"].quantity)
                 axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
             else:
-                raise ValueError("Either 'e_ref', 'e_min' or 'e_max' column "
-                                 "names are required")
+                raise ValueError(
+                    "Either 'e_ref', 'e_min' or 'e_max' column " "names are required"
+                )
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
             nodes = flat_if_equal(table["norm_scan"][0])
@@ -1324,7 +1324,13 @@ class MapAxes(Sequence):
             shape = [1] * len(self)
             shape[idx] = -1
             if self._n_spatial_axes:
-                shape = shape[::-1] + [1, ] * self._n_spatial_axes
+                shape = (
+                    shape[::-1]
+                    + [
+                        1,
+                    ]
+                    * self._n_spatial_axes
+                )
             yield tuple(shape), axis
 
     def get_coord(self, mode="center", axis_name=None):
@@ -1474,7 +1480,8 @@ class MapAxes(Sequence):
         groups = groups[groups["bin_type"] == "normal   "]
 
         edges = edges_from_lo_hi(
-            groups[axis.name + "_min"].quantity, groups[axis.name + "_max"].quantity,
+            groups[axis.name + "_min"].quantity,
+            groups[axis.name + "_max"].quantity,
         )
 
         axis_resampled = MapAxis.from_edges(
@@ -1924,8 +1931,10 @@ class MapAxes(Sequence):
         required_names : list of str
             Required
         """
-        message = ("Incorrect axis order or names. Expected axis "
-                   f"order: {required_names}, got: {self.names}.")
+        message = (
+            "Incorrect axis order or names. Expected axis "
+            f"order: {required_names}, got: {self.names}."
+        )
 
         if not len(self) == len(required_names):
             raise ValueError(message)
@@ -1965,6 +1974,7 @@ class TimeMapAxis:
         Interpolation method used to transform between axis and pixel
         coordinates.  For now only 'lin' is supported.
     """
+
     node_type = "intervals"
     time_format = "iso"
 
@@ -1975,14 +1985,20 @@ class TimeMapAxis:
         edges_max = u.Quantity(edges_max, ndmin=1)
 
         if not edges_min.unit.is_equivalent("s"):
-            raise ValueError(f"Time edges min must have a valid time unit, got {edges_min.unit}")
+            raise ValueError(
+                f"Time edges min must have a valid time unit, got {edges_min.unit}"
+            )
 
         if not edges_max.unit.is_equivalent("s"):
-            raise ValueError(f"Time edges max must have a valid time unit, got {edges_max.unit}")
+            raise ValueError(
+                f"Time edges max must have a valid time unit, got {edges_max.unit}"
+            )
 
         if not edges_min.shape == edges_max.shape:
-            raise ValueError("Edges min and edges max must have the same shape,"
-                             f" got {edges_min.shape} and {edges_max.shape}.")
+            raise ValueError(
+                "Edges min and edges max must have the same shape,"
+                f" got {edges_min.shape} and {edges_max.shape}."
+            )
 
         if not np.all(edges_max > edges_min):
             raise ValueError("Edges max must all be larger than edge min")
@@ -1994,7 +2010,9 @@ class TimeMapAxis:
             raise ValueError("Time edges max values must be sorted")
 
         if interp != "lin":
-            raise NotImplementedError(f"Non-linear scaling scheme are not supported yet, got {interp}")
+            raise NotImplementedError(
+                f"Non-linear scaling scheme are not supported yet, got {interp}"
+            )
 
         self._edges_min = edges_min
         self._edges_max = edges_max
@@ -2025,7 +2043,7 @@ class TimeMapAxis:
             edges_max=edges[1:],
             reference_time=self.reference_time,
             name=self.name,
-            interp=self.interp
+            interp=self.interp,
         )
 
     @property
@@ -2202,8 +2220,8 @@ class TimeMapAxis:
         delta_max = self.time_max - other.time_max
 
         return (
-            np.allclose(delta_min.to_value("s"), 0., atol=1e-6)
-            and np.allclose(delta_max.to_value("s"), 0., atol=1e-6)
+            np.allclose(delta_min.to_value("s"), 0.0, atol=1e-6)
+            and np.allclose(delta_max.to_value("s"), 0.0, atol=1e-6)
             and self._interp == other._interp
             and self.name.upper() == other.name.upper()
         )
@@ -2244,8 +2262,8 @@ class TimeMapAxis:
             coord = self.reference_time + coord
 
         time = Time(coord[..., np.newaxis])
-        delta_plus = (time - self.time_min).value > 0.
-        delta_minus = (time - self.time_max).value <= 0.
+        delta_plus = (time - self.time_min).value > 0.0
+        delta_minus = (time - self.time_max).value <= 0.0
         mask = np.logical_and(delta_plus, delta_minus)
 
         idx = np.asanyarray(np.argmax(mask, axis=-1))
@@ -2274,7 +2292,7 @@ class TimeMapAxis:
         idx = np.atleast_1d(self.coord_to_idx(coord))
 
         valid_pix = idx != INVALID_INDEX.int
-        pix = np.atleast_1d(idx).astype('float')
+        pix = np.atleast_1d(idx).astype("float")
 
         # TODO: is there the equivalent of np.atleast1d for astropy.time.Time?
         if coord.shape == ():
@@ -2325,8 +2343,7 @@ class TimeMapAxis:
         raise NotImplementedError
 
     def _init_copy(self, **kwargs):
-        """Init map axis instance by copying missing init arguments from self.
-        """
+        """Init map axis instance by copying missing init arguments from self."""
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
 
@@ -2421,7 +2438,13 @@ class TimeMapAxis:
         edges_min = time_min - reference_time
         edges_max = time_max - reference_time
 
-        return cls(edges_min.to(unit), edges_max.to(unit), reference_time, interp=interp, name=name)
+        return cls(
+            edges_min.to(unit),
+            edges_max.to(unit),
+            reference_time,
+            interp=interp,
+            name=name,
+        )
 
     # TODO: how configurable should that be? column names?
     @classmethod
@@ -2471,7 +2494,7 @@ class TimeMapAxis:
             edges_min=edges_min,
             edges_max=edges_max,
             reference_time=reference_time,
-            name=name
+            name=name,
         )
 
     @classmethod
@@ -2495,10 +2518,10 @@ class TimeMapAxis:
         tmax = gti.time_stop - gti.time_ref
 
         return cls(
-            edges_min=tmin.to('s'),
-            edges_max=tmax.to('s'),
+            edges_min=tmin.to("s"),
+            edges_max=tmax.to("s"),
             reference_time=gti.time_ref,
-            name=name
+            name=name,
         )
 
     def to_header(self, format="gadf", idx=0):
@@ -2544,6 +2567,7 @@ class LabelMapAxis:
         Name of the axis.
 
     """
+
     node_type = "label"
 
     def __init__(self, labels, name=""):
@@ -2686,7 +2710,7 @@ class LabelMapAxis:
 
     @property
     def bin_width(self):
-        """Bin width is unity """
+        """Bin width is unity"""
         return np.ones(self.nbin)
 
     @property

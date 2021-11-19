@@ -188,9 +188,7 @@ class WcsMap(Map):
             hdu_bands = f"{hdu.upper()}_BANDS"
 
         if self.geom.axes:
-            hdu_bands_out = self.geom.to_bands_hdu(
-                hdu_bands=hdu_bands, format=format
-            )
+            hdu_bands_out = self.geom.to_bands_hdu(hdu_bands=hdu_bands, format=format)
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands = None

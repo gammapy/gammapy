@@ -170,25 +170,34 @@ def test_hpx_global_to_local():
     assert_allclose(hpx.global_to_local(0, ravel=True), np.array([0]))
     assert_allclose(hpx.global_to_local(633, ravel=True), np.array([633]))
     assert_allclose(hpx.global_to_local((0, 633), ravel=True), np.array([0, 633]))
-    assert_allclose(hpx.global_to_local(np.array([0, 633]), ravel=True), np.array([0, 633]))
+    assert_allclose(
+        hpx.global_to_local(np.array([0, 633]), ravel=True), np.array([0, 633])
+    )
 
     # 3D All-sky
     hpx = HpxGeom(16, False, "galactic", axes=[ax0])
     assert_allclose(
-        hpx.global_to_local((np.array([177, 177]), np.array([0, 1])), ravel=True), np.array([177, 177 + 3072])
+        hpx.global_to_local((np.array([177, 177]), np.array([0, 1])), ravel=True),
+        np.array([177, 177 + 3072]),
     )
 
     # 2D Partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
-    assert_allclose(hpx.global_to_local((0, 633, 706), ravel=True), np.array([-1, 0, 2]))
+    assert_allclose(
+        hpx.global_to_local((0, 633, 706), ravel=True), np.array([-1, 0, 2])
+    )
 
     # 3D Partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     assert_allclose(hpx.global_to_local(633, ravel=True), np.array([0]))
     assert_allclose(hpx.global_to_local(49859, ravel=True), np.array([19]))
-    assert_allclose(hpx.global_to_local((0, 633, 706, 49859, 49935), ravel=True), np.array([-1, 0, 2, 19, 21]))
     assert_allclose(
-        hpx.global_to_local(np.array([0, 633, 706, 49859, 49935]), ravel=True), np.array([-1, 0, 2, 19, 21])
+        hpx.global_to_local((0, 633, 706, 49859, 49935), ravel=True),
+        np.array([-1, 0, 2, 19, 21]),
+    )
+    assert_allclose(
+        hpx.global_to_local(np.array([0, 633, 706, 49859, 49935]), ravel=True),
+        np.array([-1, 0, 2, 19, 21]),
     )
     idx_global = (np.array([0, 633, 706, 707, 783]), np.array([0, 0, 0, 1, 1]))
     assert_allclose(hpx.global_to_local(idx_global, ravel=True), [-1, 0, 2, 19, 21])
@@ -198,7 +207,9 @@ def test_hpx_global_to_local():
 
     assert_allclose(hpx.global_to_local(191, ravel=True), [0])
     assert_allclose(hpx.global_to_local(12995, ravel=True), [6])
-    assert_allclose(hpx.global_to_local((0, 191, 233, 12995), ravel=True), [-1, 0, 2, 6])
+    assert_allclose(
+        hpx.global_to_local((0, 191, 233, 12995), ravel=True), [-1, 0, 2, 6]
+    )
 
     idx_global = (np.array([0, 191, 233, 707]), np.array([0, 0, 0, 1]))
     assert_allclose(
@@ -796,7 +807,9 @@ def test_hpx_geom_to_binsz():
     assert geom_new.frame == "galactic"
     assert geom_new.nest
 
-    geom = HpxGeom.create(nside=32, frame="galactic", nest=True, region="DISK(110.,75.,10.)")
+    geom = HpxGeom.create(
+        nside=32, frame="galactic", nest=True, region="DISK(110.,75.,10.)"
+    )
 
     geom_new = geom.to_binsz(1 * u.deg)
     assert geom_new.nside[0] == 64

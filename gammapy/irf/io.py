@@ -47,24 +47,22 @@ IRF_DL3_HDU_SPECIFICATION = {
     "psf_3gauss": {
         "extname": "PSF_2D_GAUSS",
         "hduclas2": "PSF",
-        "column_name":
-            {
-                "sigma_1": "SIGMA_1",
-                "sigma_2": "SIGMA_2",
-                "sigma_3": "SIGMA_3",
-                "scale": "SCALE",
-                "ampl_2": "AMPL_2",
-                "ampl_3": "AMPL_3",
-            }
+        "column_name": {
+            "sigma_1": "SIGMA_1",
+            "sigma_2": "SIGMA_2",
+            "sigma_3": "SIGMA_3",
+            "scale": "SCALE",
+            "ampl_2": "AMPL_2",
+            "ampl_3": "AMPL_3",
+        },
     },
     "psf_king": {
         "extname": "PSF_2D_KING",
         "hduclas2": "PSF",
-        "column_name":
-            {
-                "sigma": "SIGMA",
-                "gamma": "GAMMA",
-            }
+        "column_name": {
+            "sigma": "SIGMA",
+            "gamma": "GAMMA",
+        },
     },
     "aeff_2d": {
         "extname": "EFFECTIVE AREA",
@@ -75,14 +73,14 @@ IRF_DL3_HDU_SPECIFICATION = {
         "extname": "RAD_MAX",
         "column_name": "RAD_MAX",
         "hduclas2": "RAD_MAX",
-    }
+    },
 }
 
 
 IRF_MAP_HDU_SPECIFICATION = {
     "edisp_kernel_map": "edisp",
     "edisp_map": "edisp",
-    "psf_map": "psf"
+    "psf_map": "psf",
 }
 
 
@@ -171,14 +169,16 @@ def load_irf_dict_from_file(filename):
                 hdu_class=hdu_class,
                 hdu_name=hdu.name,
                 file_dir=filename.parent,
-                file_name=filename.name
+                file_name=filename.name,
             )
 
             for name in HDUIndexTable.VALID_HDU_TYPE:
                 if name in hdu_class:
                     if name in irf_dict.keys():
                         log.warning(f"more than one HDU of {name} type found")
-                        log.warning(f"loaded the {irf_dict[name].meta['EXTNAME']} HDU in the dictionary")
+                        log.warning(
+                            f"loaded the {irf_dict[name].meta['EXTNAME']} HDU in the dictionary"
+                        )
                         continue
                     data = loc.load()
                     # TODO: maybe introduce IRF.type attribute...

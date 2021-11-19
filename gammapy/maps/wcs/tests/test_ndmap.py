@@ -554,7 +554,11 @@ def test_convolve_nd():
     kernel_2d.normalize("peak")
     mc_full = m.convolve(kernel_2d.array, mode="full")
     mc_same = m.convolve(kernel_2d.array, mode="same")
-    coords = [[0.2, 0.1, 0.4, 0.44, -1.3], [-0.1, -0.13, 0.6, 0.57, 0.91], [0.5, 0.5, 3.6, 3.6, 0.5]]
+    coords = [
+        [0.2, 0.1, 0.4, 0.44, -1.3],
+        [-0.1, -0.13, 0.6, 0.57, 0.91],
+        [0.5, 0.5, 3.6, 3.6, 0.5],
+    ]
     values_full = mc_full.get_by_coord(coords)
     values_same = mc_same.get_by_coord(coords)
 

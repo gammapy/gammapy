@@ -119,7 +119,9 @@ def test_time_range_iso():
     """
     config = AnalysisConfig.from_yaml(cfg)
 
-    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954])
+    assert_allclose(
+        config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954]
+    )
 
 
 def test_time_range_jyear():
@@ -134,4 +136,6 @@ def test_time_range_jyear():
     """
     config = AnalysisConfig.from_yaml(cfg)
 
-    assert_allclose(config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954])
+    assert_allclose(
+        config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954]
+    )

@@ -34,7 +34,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         return FluxPoints.from_table(
             table=self.flux_points_table,
             reference_model=self.sky_model(),
-            format="gadf-sed"
+            format="gadf-sed",
         )
 
     def info(self, info="all"):

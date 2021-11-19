@@ -1374,7 +1374,7 @@ class MapDataset(Dataset):
         if self.stat_type == "cash":
             kwargs["background"] = dataset.background
 
-        return  SpectrumDataset(**kwargs)
+        return SpectrumDataset(**kwargs)
 
     def to_region_map_dataset(self, region, name=None):
         """Integrate the map dataset in a given region.
@@ -1754,8 +1754,7 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-
-    def peek(self, figsize=(12,10)):
+    def peek(self, figsize=(12, 10)):
         """Quick-look summary plots.
 
         Parameters
@@ -1768,18 +1767,20 @@ class MapDataset(Dataset):
         ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
             Counts, excess and exposure.
         """
+
         def plot_mask(ax, mask, **kwargs):
             if mask is not None:
                 mask.plot_mask(ax=ax, **kwargs)
 
         import matplotlib.pyplot as plt
 
-        fig, axes  = plt.subplots(ncols=2,
-                                  nrows=2,
-                                  subplot_kw={"projection": self._geom.wcs},
-                                  figsize=figsize,
-                                  gridspec_kw={"hspace": 0.1, "wspace": 0.1},
-                                  )
+        fig, axes = plt.subplots(
+            ncols=2,
+            nrows=2,
+            subplot_kw={"projection": self._geom.wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+        )
 
         axes = axes.flat
         axes[0].set_title("Counts")
@@ -1790,7 +1791,7 @@ class MapDataset(Dataset):
         axes[1].set_title("Excess counts")
         self.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
         plot_mask(ax=axes[1], mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=axes[1], mask=self.mask_safe_image,  hatches=["///"], colors="w")
+        plot_mask(ax=axes[1], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
         axes[2].set_title("Exposure")
         self.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
@@ -1800,6 +1801,7 @@ class MapDataset(Dataset):
         self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
         plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -2426,7 +2428,9 @@ class MapDatasetOnOff(MapDataset):
         from .spectrum import SpectrumDatasetOnOff
 
         dataset = super().to_spectrum_dataset(
-            on_region=on_region, containment_correction=containment_correction, name=name
+            on_region=on_region,
+            containment_correction=containment_correction,
+            name=name,
         )
 
         kwargs = {"name": name}
@@ -2625,5 +2629,5 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
-            name=name
+            name=name,
         )

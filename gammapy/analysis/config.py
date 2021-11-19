@@ -171,7 +171,9 @@ class SafeMaskConfig(GammapyBaseConfig):
 
 class EnergyAxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig(min="1 TeV", max="10 TeV", nbins=5)
-    energy_true: EnergyAxisConfig = EnergyAxisConfig(min="0.5 TeV", max="20 TeV", nbins=16)
+    energy_true: EnergyAxisConfig = EnergyAxisConfig(
+        min="0.5 TeV", max="20 TeV", nbins=16
+    )
 
 
 class SelectionConfig(GammapyBaseConfig):

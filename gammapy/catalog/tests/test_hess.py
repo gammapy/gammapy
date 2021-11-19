@@ -253,7 +253,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_flux_points_meta(cat):
-        source = cat['HESS J1843-033']
+        source = cat["HESS J1843-033"]
         fp = source.flux_points
 
         assert fp.sqrt_ts_threshold_ul == 1

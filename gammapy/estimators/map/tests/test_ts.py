@@ -109,9 +109,7 @@ def test_compute_ts_map(input_dataset):
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-    ts_estimator = TSMapEstimator(
-        model=model, threshold=1, selection_optional=[]
-    )
+    ts_estimator = TSMapEstimator(model=model, threshold=1, selection_optional=[])
 
     kernel = ts_estimator.estimate_kernel(dataset=input_dataset)
     assert_allclose(kernel.geom.width, 1.22 * u.deg)
@@ -203,7 +201,7 @@ def test_compute_ts_map_downsampled(input_dataset):
         model=model,
         downsampling_factor=2,
         kernel_width="1 deg",
-        selection_optional=["ul"]
+        selection_optional=["ul"],
     )
     result = ts_estimator.run(input_dataset)
 

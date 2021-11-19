@@ -5,7 +5,12 @@ import numpy as np
 from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
-from .iminuit import confidence_iminuit, covariance_iminuit, contour_iminuit, optimize_iminuit
+from .iminuit import (
+    confidence_iminuit,
+    covariance_iminuit,
+    contour_iminuit,
+    optimize_iminuit,
+)
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
@@ -456,7 +461,7 @@ class Fit:
                 x=x,
                 y=y,
                 numpoints=numpoints,
-                sigma=sigma
+                sigma=sigma,
             )
 
         x_name = x.name

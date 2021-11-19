@@ -38,7 +38,9 @@ def models(backgrounds):
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     model1 = SkyModel(
-        spatial_model=spatial_model, spectral_model=spectral_model, name="source-1",
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        name="source-1",
     )
 
     model2 = model1.copy(name="source-2")
@@ -126,9 +128,11 @@ def test_contributes():
 
 def test_contributes_region_mask():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
-    geom = RegionGeom.create("galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.05 deg")
+    geom = RegionGeom.create(
+        "galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.05 deg"
+    )
 
-    mask = Map.from_geom(geom, unit='', dtype='bool')
+    mask = Map.from_geom(geom, unit="", dtype="bool")
     mask.data[...] = True
 
     spatial_model1 = GaussianSpatialModel(

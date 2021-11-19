@@ -102,10 +102,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
-        reference_model = SkyModel(
-            spectral_model=self.spectral_model(),
-            name=self.name
-        )
+        reference_model = SkyModel(spectral_model=self.spectral_model(), name=self.name)
         return FluxPoints.from_table(
             self.flux_points_table,
             reference_model=reference_model,
@@ -397,7 +394,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = "\n*** Flux points info ***\n\n"
         ss += "Number of flux points: {}\n".format(d["N_Flux_Points"])
         ss += "Flux points table: \n\n"
-        lines = format_flux_points_table(self.flux_points_table).pformat(max_width=-1, max_lines=-1)
+        lines = format_flux_points_table(self.flux_points_table).pformat(
+            max_width=-1, max_lines=-1
+        )
         ss += "\n".join(lines)
         return ss + "\n"
 
@@ -870,7 +869,7 @@ class SourceCatalogHGPS(SourceCatalog):
         return SourceCatalogObjectHGPSComponent(data=data)
 
     def to_models(self, which="best", components_status="independent"):
-        """ Create Models object from catalogue
+        """Create Models object from catalogue
 
         Parameters
         ----------

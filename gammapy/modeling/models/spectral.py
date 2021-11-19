@@ -371,7 +371,11 @@ class SpectralModel(ModelBase):
             sed_type = "norm"
 
         energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points,)
+        energy = MapAxis.from_energy_bounds(
+            energy_min,
+            energy_max,
+            n_points,
+        )
 
         kwargs.setdefault(
             "yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power
@@ -441,7 +445,11 @@ class SpectralModel(ModelBase):
             sed_type = "norm"
 
         energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points,)
+        energy = MapAxis.from_energy_bounds(
+            energy_min,
+            energy_max,
+            n_points,
+        )
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
@@ -1422,7 +1430,11 @@ class TemplateSpectralModel(SpectralModel):
     tag = ["TemplateSpectralModel", "template"]
 
     def __init__(
-        self, energy, values, interp_kwargs=None, meta=None,
+        self,
+        energy,
+        values,
+        interp_kwargs=None,
+        meta=None,
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
@@ -1798,7 +1810,8 @@ class NaimaSpectralModel(SpectralModel):
         super().__init__()
 
     def _evaluate_ssc(
-        self, energy,
+        self,
+        energy,
     ):
         """
         Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,

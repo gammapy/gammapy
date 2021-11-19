@@ -120,12 +120,12 @@ def test_cash_sum_cython(test_data):
 
 def test_cash_bad_truncation():
     with pytest.raises(ValueError):
-        stats.cash(10, 10, 0.)
+        stats.cash(10, 10, 0.0)
 
 
 def test_cstat_bad_truncation():
     with pytest.raises(ValueError):
-        stats.cstat(10, 10, 0.)
+        stats.cstat(10, 10, 0.0)
 
 
 def test_wstat_corner_cases():

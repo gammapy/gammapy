@@ -52,7 +52,9 @@ def spectrum_dataset_gc():
 def spectrum_dataset_magic_crab():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
-    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.14)", axes=[e_reco], binsz_wcs="0.01deg")
+    geom = RegionGeom.create(
+        "icrs;circle(83.63, 22.01, 0.14)", axes=[e_reco], binsz_wcs="0.01deg"
+    )
     return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
@@ -60,7 +62,9 @@ def spectrum_dataset_magic_crab():
 def spectrum_dataset_crab():
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
     e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
-    geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco], binsz_wcs="0.01deg")
+    geom = RegionGeom.create(
+        "icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco], binsz_wcs="0.01deg"
+    )
     return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
 
@@ -85,7 +89,9 @@ def reflected_regions_bkg_maker():
 
 
 @requires_data()
-def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hess_dl3):
+def test_region_center_spectrum_dataset_maker_hess_dl3(
+    spectrum_dataset_crab, observations_hess_dl3
+):
     datasets = []
     maker = SpectrumDatasetMaker(use_region_center=True)
 
@@ -125,25 +131,40 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
     assert_allclose(datasets[1].npred_background().data.sum(), 5.7314076, rtol=1e-5)
 
     # Compare background with using bigger region
-    e_reco = datasets[0].background.geom.axes['energy']
-    e_true = datasets[0].exposure.geom.axes['energy_true']
+    e_reco = datasets[0].background.geom.axes["energy"]
+    e_true = datasets[0].exposure.geom.axes["energy_true"]
     geom_bigger = RegionGeom.create("icrs;circle(83.63, 22.01, 0.22)", axes=[e_reco])
 
     datasets_big_region = []
-    bigger_region_dataset = SpectrumDataset.create(geom=geom_bigger, energy_axis_true=e_true)
+    bigger_region_dataset = SpectrumDataset.create(
+        geom=geom_bigger, energy_axis_true=e_true
+    )
     for obs in observations_hess_dl3:
         dataset = maker.run(bigger_region_dataset, obs)
         datasets_big_region.append(dataset)
 
-    ratio_regions = datasets[0].counts.geom.solid_angle() / datasets_big_region[1].counts.geom.solid_angle()
-    ratio_bg_1 = datasets[0].npred_background().data.sum() / datasets_big_region[0].npred_background().data.sum()
-    ratio_bg_2 = datasets[1].npred_background().data.sum() / datasets_big_region[1].npred_background().data.sum()
+    ratio_regions = (
+        datasets[0].counts.geom.solid_angle()
+        / datasets_big_region[1].counts.geom.solid_angle()
+    )
+    ratio_bg_1 = (
+        datasets[0].npred_background().data.sum()
+        / datasets_big_region[0].npred_background().data.sum()
+    )
+    ratio_bg_2 = (
+        datasets[1].npred_background().data.sum()
+        / datasets_big_region[1].npred_background().data.sum()
+    )
     assert_allclose(ratio_bg_1, ratio_regions, rtol=1e-2)
     assert_allclose(ratio_bg_2, ratio_regions, rtol=1e-2)
 
     # Edisp -> it isn't exactly 8, is that right? it also isn't without averaging
-    assert_allclose(datasets[0].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin * 2, rtol=1e-1)
-    assert_allclose(datasets[1].edisp.edisp_map.data[:,:,0,0].sum(), e_reco.nbin * 2, rtol=1e-1)
+    assert_allclose(
+        datasets[0].edisp.edisp_map.data[:, :, 0, 0].sum(), e_reco.nbin * 2, rtol=1e-1
+    )
+    assert_allclose(
+        datasets[1].edisp.edisp_map.data[:, :, 0, 0].sum(), e_reco.nbin * 2, rtol=1e-1
+    )
 
 
 @requires_data()
@@ -213,13 +234,21 @@ def test_make_meta_table(observations_hess_dl3):
 
 
 @requires_data()
-def test_region_center_spectrum_dataset_maker_magic_dl3(spectrum_dataset_magic_crab, observations_magic_dl3, caplog):
+def test_region_center_spectrum_dataset_maker_magic_dl3(
+    spectrum_dataset_magic_crab, observations_magic_dl3, caplog
+):
     maker = SpectrumDatasetMaker(use_region_center=True, selection=["exposure"])
-    maker_average = SpectrumDatasetMaker(use_region_center=False, selection=["exposure"])
-    maker_correction = SpectrumDatasetMaker(containment_correction=True, selection=["exposure"])
+    maker_average = SpectrumDatasetMaker(
+        use_region_center=False, selection=["exposure"]
+    )
+    maker_correction = SpectrumDatasetMaker(
+        containment_correction=True, selection=["exposure"]
+    )
 
     dataset = maker.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
-    dataset_average = maker_average.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
+    dataset_average = maker_average.run(
+        spectrum_dataset_magic_crab, observations_magic_dl3[0]
+    )
     with pytest.raises(ValueError):
         maker_correction.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
 
@@ -229,8 +258,10 @@ def test_region_center_spectrum_dataset_maker_magic_dl3(spectrum_dataset_magic_c
 
     assert "WARNING" in [record.levelname for record in caplog.records]
 
-    message = "MapMaker: use_region_center=False should not be used with point-like IRF. "\
-              "Results are likely inaccurate."
+    message = (
+        "MapMaker: use_region_center=False should not be used with point-like IRF. "
+        "Results are likely inaccurate."
+    )
 
     assert message in [record.message for record in caplog.records]
 

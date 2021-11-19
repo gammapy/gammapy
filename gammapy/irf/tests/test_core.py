@@ -4,12 +4,11 @@ import astropy.units as u
 from gammapy.irf.core import IRF
 from gammapy.maps import MapAxis
 
+
 def test_irf_init_quantity():
-
     class TestIRF(IRF):
-        tag = 'myirf'
-        required_axes = ['energy', 'offset']
-
+        tag = "myirf"
+        required_axes = ["energy", "offset"]
 
     energy_axis = MapAxis.from_energy_bounds(10, 100, 10, unit="TeV", name="energy")
     offset_axis = MapAxis.from_bounds(0, 2.5, 5, unit="deg", name="offset")

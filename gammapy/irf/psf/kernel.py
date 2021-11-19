@@ -106,9 +106,7 @@ class PSFKernel:
         if max_radius is None:
             max_radius = model.evaluation_radius
 
-        geom = geom.to_odd_npix(
-            max_radius=max_radius
-        )
+        geom = geom.to_odd_npix(max_radius=max_radius)
         model.position = geom.center_skydir
 
         geom = geom.upsample(factor=factor)
@@ -116,9 +114,7 @@ class PSFKernel:
         return cls(psf_kernel_map=map.downsample(factor=factor))
 
     @classmethod
-    def from_gauss(
-        cls, geom, sigma, max_radius=None, factor=4
-    ):
+    def from_gauss(cls, geom, sigma, max_radius=None, factor=4):
         """Create Gaussian PSF.
 
         This is used for testing and examples.

@@ -21,5 +21,6 @@ class RadMax2D(IRF):
     meta : dict
         Meta data
     """
+
     tag = "rad_max_2d"
     required_axes = ["energy", "offset"]

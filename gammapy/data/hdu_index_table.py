@@ -30,7 +30,7 @@ class HDUIndexTable(Table):
         "psf_king",
         "bkg_2d",
         "bkg_3d",
-        "rad_max_2d"
+        "rad_max_2d",
     ]
     """Valid values for `HDU_CLASS`."""
 
@@ -49,7 +49,7 @@ class HDUIndexTable(Table):
 
         # TODO: this is a workaround for the joint-crab validation with astropy>4.0.
         # TODO: Remove when handling of empty columns is clarified
-        table["FILE_DIR"].fill_value=''
+        table["FILE_DIR"].fill_value = ""
 
         return table.filled()
 

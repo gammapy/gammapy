@@ -70,7 +70,9 @@ class FluxPointsEstimator(FluxEstimator):
 
     tag = "FluxPointsEstimator"
 
-    def __init__(self, energy_edges=[1, 10] * u.TeV, sum_over_energy_groups=False, **kwargs):
+    def __init__(
+        self, energy_edges=[1, 10] * u.TeV, sum_over_energy_groups=False, **kwargs
+    ):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
 
@@ -95,7 +97,7 @@ class FluxPointsEstimator(FluxEstimator):
         rows = []
 
         for energy_min, energy_max in progress_bar(
-                zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
+            zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
         ):
             row = self.estimate_flux_point(
                 datasets,
@@ -138,7 +140,9 @@ class FluxPointsEstimator(FluxEstimator):
             energy_min=energy_min, energy_max=energy_max
         )
         if self.sum_over_energy_groups:
-            datasets_sliced = Datasets([_.to_image(name=_.name) for _ in datasets_sliced])
+            datasets_sliced = Datasets(
+                [_.to_image(name=_.name) for _ in datasets_sliced]
+            )
 
         if len(datasets_sliced) > 0:
             datasets_sliced.models = datasets.models.copy()

@@ -29,9 +29,9 @@ try:  # pragma no cover
 except NameError:  # pragma no cover
     _unicode = str
 
-__author__ = 'Martin Blech'
-__version__ = '0.9.0'
-__license__ = 'MIT'
+__author__ = "Martin Blech"
+__version__ = "0.9.0"
+__license__ = "MIT"
 
 
 class ParsingInterrupted(Exception):
@@ -39,19 +39,21 @@ class ParsingInterrupted(Exception):
 
 
 class _DictSAXHandler(object):
-    def __init__(self,
-                 item_depth=0,
-                 item_callback=lambda *args: True,
-                 xml_attribs=True,
-                 attr_prefix='@',
-                 cdata_key='#text',
-                 force_cdata=False,
-                 cdata_separator='',
-                 postprocessor=None,
-                 dict_constructor=OrderedDict,
-                 strip_whitespace=True,
-                 namespace_separator=':',
-                 namespaces=None):
+    def __init__(
+        self,
+        item_depth=0,
+        item_callback=lambda *args: True,
+        xml_attribs=True,
+        attr_prefix="@",
+        cdata_key="#text",
+        force_cdata=False,
+        cdata_separator="",
+        postprocessor=None,
+        dict_constructor=OrderedDict,
+        strip_whitespace=True,
+        namespace_separator=":",
+        namespaces=None,
+    ):
         self.path = []
         self.stack = []
         self.data = None
@@ -75,7 +77,7 @@ class _DictSAXHandler(object):
         i = full_name.rfind(self.namespace_separator)
         if i == -1:
             return full_name
-        namespace, name = full_name[:i], full_name[i+1:]
+        namespace, name = full_name[:i], full_name[i + 1 :]
         short_namespace = self.namespaces.get(namespace, namespace)
         if not short_namespace:
             return name
@@ -95,8 +97,8 @@ class _DictSAXHandler(object):
             self.stack.append((self.item, self.data))
             if self.xml_attribs:
                 attrs = self.dict_constructor(
-                    (self.attr_prefix+key, value)
-                    for (key, value) in attrs.items())
+                    (self.attr_prefix + key, value) for (key, value) in attrs.items()
+                )
             else:
                 attrs = None
             self.item = attrs or None
@@ -153,8 +155,14 @@ class _DictSAXHandler(object):
         return item
 
 
-def parse(xml_input, encoding=None, expat=expat, process_namespaces=False,
-          namespace_separator=':', **kwargs):
+def parse(
+    xml_input,
+    encoding=None,
+    expat=expat,
+    process_namespaces=False,
+    namespace_separator=":",
+    **kwargs
+):
     """Parse the given XML input and convert it into a dictionary.
 
     `xml_input` can either be a `string` or a file-like object.
@@ -222,18 +230,14 @@ def parse(xml_input, encoding=None, expat=expat, process_namespaces=False,
         OrderedDict([(u'a', u'hello')])
 
     """
-    handler = _DictSAXHandler(namespace_separator=namespace_separator,
-                              **kwargs)
+    handler = _DictSAXHandler(namespace_separator=namespace_separator, **kwargs)
     if isinstance(xml_input, _unicode):
         if not encoding:
-            encoding = 'utf-8'
+            encoding = "utf-8"
         xml_input = xml_input.encode(encoding)
     if not process_namespaces:
         namespace_separator = None
-    parser = expat.ParserCreate(
-        encoding,
-        namespace_separator
-    )
+    parser = expat.ParserCreate(encoding, namespace_separator)
     try:
         parser.ordered_attributes = True
     except AttributeError:
@@ -250,14 +254,18 @@ def parse(xml_input, encoding=None, expat=expat, process_namespaces=False,
     return handler.item
 
 
-def _emit(key, value, content_handler,
-          attr_prefix='@',
-          cdata_key='#text',
-          depth=0,
-          preprocessor=None,
-          pretty=False,
-          newl='\n',
-          indent='\t'):
+def _emit(
+    key,
+    value,
+    content_handler,
+    attr_prefix="@",
+    cdata_key="#text",
+    depth=0,
+    preprocessor=None,
+    pretty=False,
+    newl="\n",
+    indent="\t",
+):
     if preprocessor is not None:
         result = preprocessor(key, value)
         if result is None:
@@ -266,7 +274,7 @@ def _emit(key, value, content_handler,
     if not isinstance(value, (list, tuple)):
         value = [value]
     if depth == 0 and len(value) > 1:
-        raise ValueError('document with multiple roots')
+        raise ValueError("document with multiple roots")
     for v in value:
         if v is None:
             v = OrderedDict()
@@ -282,7 +290,7 @@ def _emit(key, value, content_handler,
                 cdata = iv
                 continue
             if ik.startswith(attr_prefix):
-                attrs[ik[len(attr_prefix):]] = iv
+                attrs[ik[len(attr_prefix) :]] = iv
                 continue
             children.append((ik, iv))
         if pretty:
@@ -291,9 +299,18 @@ def _emit(key, value, content_handler,
         if pretty and children:
             content_handler.ignorableWhitespace(newl)
         for child_key, child_value in children:
-            _emit(child_key, child_value, content_handler,
-                  attr_prefix, cdata_key, depth+1, preprocessor,
-                  pretty, newl, indent)
+            _emit(
+                child_key,
+                child_value,
+                content_handler,
+                attr_prefix,
+                cdata_key,
+                depth + 1,
+                preprocessor,
+                pretty,
+                newl,
+                indent,
+            )
         if cdata is not None:
             content_handler.characters(cdata)
         if pretty and children:
@@ -303,8 +320,7 @@ def _emit(key, value, content_handler,
             content_handler.ignorableWhitespace(newl)
 
 
-def unparse(input_dict, output=None, encoding='utf-8', full_document=True,
-            **kwargs):
+def unparse(input_dict, output=None, encoding="utf-8", full_document=True, **kwargs):
     """Emit an XML document for the given `input_dict` (reverse of `parse`).
 
     The resulting XML document is returned as a string, but if `output` (a
@@ -338,7 +354,8 @@ def unparse(input_dict, output=None, encoding='utf-8', full_document=True,
             pass
         return value
 
-if __name__ == '__main__':  # pragma: no cover
+
+if __name__ == "__main__":  # pragma: no cover
     import sys
     import marshal
 
@@ -350,10 +367,12 @@ if __name__ == '__main__':  # pragma: no cover
         return True
 
     try:
-        root = parse(sys.stdin,
-                     item_depth=item_depth,
-                     item_callback=handle_item,
-                     dict_constructor=dict)
+        root = parse(
+            sys.stdin,
+            item_depth=item_depth,
+            item_callback=handle_item,
+            dict_constructor=dict,
+        )
         if item_depth == 0:
             handle_item([], root)
     except KeyboardInterrupt:

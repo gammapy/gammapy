@@ -36,7 +36,7 @@ def test_cta_sensitivity_estimator(spectrum_dataset):
     dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
         dataset=spectrum_dataset,
         acceptance=RegionNDMap.from_geom(geom=geom, data=1),
-        acceptance_off=RegionNDMap.from_geom(geom=geom, data=5)
+        acceptance_off=RegionNDMap.from_geom(geom=geom, data=5),
     )
 
     sens = SensitivityEstimator(gamma_min=25, bkg_syst_fraction=0.075)

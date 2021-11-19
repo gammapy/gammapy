@@ -158,8 +158,7 @@ class ASmoothMapEstimator(Estimator):
         results = []
 
         for energy_min, energy_max in progress_bar(
-            energy_axis.iter_by_edges,
-            desc="Energy bins"
+            energy_axis.iter_by_edges, desc="Energy bins"
         ):
             dataset_sliced = dataset.slice_by_energy(
                 energy_min=energy_min, energy_max=energy_max, name=dataset.name

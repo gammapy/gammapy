@@ -350,9 +350,10 @@ class SkyModel(ModelBase):
             Predicted flux map
         """
         energy = geom.axes["energy_true"].edges
-        value = self.spectral_model.integral(energy[:-1], energy[1:],).reshape(
-            (-1, 1, 1)
-        )
+        value = self.spectral_model.integral(
+            energy[:-1],
+            energy[1:],
+        ).reshape((-1, 1, 1))
 
         if self.spatial_model:
             value = (
@@ -640,9 +641,9 @@ class FoVBackgroundModel(ModelBase):
         data = {}
         data["type"] = self.tag[0]
         data["datasets_names"] = self.datasets_names
-        data["spectral"] = self.spectral_model.to_dict(
-            full_output=full_output
-        )["spectral"]
+        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)[
+            "spectral"
+        ]
         return data
 
     @classmethod
@@ -671,7 +672,10 @@ class FoVBackgroundModel(ModelBase):
         if len(datasets_names) > 1:
             raise ValueError("FoVBackgroundModel can only be assigned to one dataset")
 
-        return cls(spectral_model=spectral_model, dataset_name=datasets_names[0],)
+        return cls(
+            spectral_model=spectral_model,
+            dataset_name=datasets_names[0],
+        )
 
     def reset_to_default(self):
         """Reset parameter values to default"""
@@ -707,7 +711,12 @@ class TemplateNPredModel(ModelBase):
     map = LazyFitsData(cache=True)
 
     def __init__(
-        self, map, spectral_model=None, name=None, filename=None, datasets_names=None,
+        self,
+        map,
+        spectral_model=None,
+        name=None,
+        filename=None,
+        datasets_names=None,
     ):
         if isinstance(map, Map):
             axis = map.geom.axes["energy"]
@@ -781,9 +790,7 @@ class TemplateNPredModel(ModelBase):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
-        data["spectral"] = self.spectral_model.to_dict(full_output)[
-            "spectral"
-        ]
+        data["spectral"] = self.spectral_model.to_dict(full_output)["spectral"]
 
         if self.filename is not None:
             data["filename"] = self.filename

@@ -220,9 +220,7 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_mask_fit(
     mask_fit.data[:, 10, :] = False
     simple_dataset_on_off.mask_fit = mask_fit
 
-    estimator_image = ExcessMapEstimator(
-        0.11 * u.deg, correlate_off=True
-    )
+    estimator_image = ExcessMapEstimator(0.11 * u.deg, correlate_off=True)
 
     result_image = estimator_image.run(simple_dataset_on_off)
     assert result_image["npred"].data.shape == (1, 20, 20)
@@ -250,10 +248,8 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
     )
 
     simple_dataset_on_off.models = [model]
-    
-    estimator_mod = ExcessMapEstimator(
-        0.11 * u.deg, correlate_off=True
-    )
+
+    estimator_mod = ExcessMapEstimator(0.11 * u.deg, correlate_off=True)
 
     result_mod = estimator_mod.run(simple_dataset_on_off)
     assert result_mod["npred"].data.shape == (1, 20, 20)

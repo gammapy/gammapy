@@ -29,6 +29,7 @@ def _set_link(shared_register, model):
                 shared_register[link_label] = param
     return shared_register
 
+
 def _get_model_class_from_dict(data):
     """get a model class from a dict"""
     from . import (
@@ -211,7 +212,7 @@ class ModelBase:
 
     @property
     def frozen(self):
-        """Frozen status of a model, True if all parameters are frozen """
+        """Frozen status of a model, True if all parameters are frozen"""
         return np.all([p.frozen for p in self.parameters])
 
     def freeze(self):
@@ -275,10 +276,10 @@ class Model:
         >>> type(spectral_model)
         <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
-        
-        data = {"type":tag}
+
+        data = {"type": tag}
         if model_type is not None:
-            data = {model_type:data}
+            data = {model_type: data}
 
         cls = _get_model_class_from_dict(data)
         return cls(*args, **kwargs)
@@ -289,7 +290,6 @@ class Model:
 
         cls = _get_model_class_from_dict(data)
         return cls.from_dict(data)
-
 
 
 class DatasetModels(collections.abc.Sequence):
@@ -910,7 +910,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def wcs_geom(self):
-        """Minimum WCS geom in which all the models are contained """
+        """Minimum WCS geom in which all the models are contained"""
         regions = self.to_regions()
         try:
             return RegionGeom.from_regions(regions).to_wcs_geom()
@@ -918,7 +918,7 @@ class DatasetModels(collections.abc.Sequence):
             log.error("No spatial component in any model. Geom not defined")
 
     def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
-        """ Plot extent of the spatial models on a given wcs axis
+        """Plot extent of the spatial models on a given wcs axis
 
         Parameters
         ----------
@@ -967,7 +967,7 @@ class DatasetModels(collections.abc.Sequence):
         return ax
 
     def plot_positions(self, ax=None, **kwargs):
-        """"Plot the centers of the spatial models on a given wcs axis
+        """ "Plot the centers of the spatial models on a given wcs axis
 
         Parameters
         ----------

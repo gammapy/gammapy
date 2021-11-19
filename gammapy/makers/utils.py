@@ -22,7 +22,9 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_center=True):
+def make_map_exposure_true_energy(
+    pointing, livetime, aeff, geom, use_region_center=True
+):
     """Compute exposure map.
 
     This map has a true energy axis, the exposure is not combined
@@ -54,22 +56,15 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
         coords, weights = geom.get_coord(sparse=True), None
 
     offset = coords.skycoord.separation(pointing)
-    exposure = aeff.evaluate(
-        offset=offset, energy_true=coords["energy_true"]
-    )
+    exposure = aeff.evaluate(offset=offset, energy_true=coords["energy_true"])
 
     data = (exposure * livetime).to("m2 s")
-    meta = {
-        "livetime": livetime,
-        "is_pointlike": aeff.is_pointlike
-    }
+    meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:
         data = np.average(data, axis=1, weights=weights)
 
-    return Map.from_geom(
-        geom=geom, data=data.value, unit=data.unit, meta=meta
-    )
+    return Map.from_geom(geom=geom, data=data.value, unit=data.unit, meta=meta)
 
 
 def _map_spectrum_weight(map, spectrum=None):
@@ -108,7 +103,9 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_region_center=True):
+def make_map_background_irf(
+    pointing, ontime, bkg, geom, oversampling=None, use_region_center=True
+):
     """Compute background map from background IRFs.
 
     Parameters
@@ -150,9 +147,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     if oversampling is not None:
         geom = geom.upsample(factor=oversampling, axis_name="energy")
 
-    coords = {
-        "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
-    }
+    coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
 
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
@@ -294,7 +289,9 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     return EDispMap(edisp_map, exposure_map)
 
 
-def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):
+def make_edisp_kernel_map(
+    edisp, pointing, geom, exposure_map=None, use_region_center=True
+):
     """Make a edisp kernel map for a single observation
 
     Expected axes : (reco) energy and true energy in this specific order
@@ -329,7 +326,9 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_c
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
-    edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map, use_region_center)
+    edisp_map = make_edisp_map(
+        edisp, pointing, new_geom, exposure_map, use_region_center
+    )
 
     return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 

@@ -67,7 +67,9 @@ def dataset():
     geom_true = geom.copy()
     geom_true.axes[0].name = "energy_true"
 
-    dataset = get_map_dataset(geom=geom, geom_etrue=geom_true, edisp="edispmap", name="test")
+    dataset = get_map_dataset(
+        geom=geom, geom_etrue=geom_true, edisp="edispmap", name="test"
+    )
     dataset.background /= 400
 
     dataset.gti = GTI.create(

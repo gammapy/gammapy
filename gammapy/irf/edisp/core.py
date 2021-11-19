@@ -100,7 +100,10 @@ class EnergyDispersion2D(IRF):
         data = pdf * np.ones(axes.shape)
         data[data < pdf_threshold] = 0
 
-        return cls(axes=axes, data=data.value,)
+        return cls(
+            axes=axes,
+            data=data.value,
+        )
 
     def to_edisp_kernel(self, offset, energy_true=None, energy=None):
         """Detector response R(Delta E_reco, Delta E_true)
@@ -123,6 +126,7 @@ class EnergyDispersion2D(IRF):
             Energy dispersion matrix
         """
         from gammapy.makers.utils import make_edisp_kernel_map
+
         offset = Angle(offset)
 
         # TODO: expect directly MapAxis here?
@@ -135,15 +139,16 @@ class EnergyDispersion2D(IRF):
             energy_axis_true = self.axes["energy_true"]
         else:
             energy_axis_true = MapAxis.from_energy_edges(
-                energy_true, name="energy_true",
+                energy_true,
+                name="energy_true",
             )
 
         pointing = SkyCoord("0d", "0d")
 
-        center = pointing.directional_offset_by(position_angle=0 * u.deg, separation=offset)
-        geom = RegionGeom.create(
-            region=center, axes=[energy_axis, energy_axis_true]
+        center = pointing.directional_offset_by(
+            position_angle=0 * u.deg, separation=offset
         )
+        geom = RegionGeom.create(region=center, axes=[energy_axis, energy_axis_true])
 
         edisp = make_edisp_kernel_map(geom=geom, edisp=self, pointing=pointing)
         return edisp.get_edisp_kernel()
@@ -152,9 +157,7 @@ class EnergyDispersion2D(IRF):
         """Normalise energy dispersion"""
         super().normalize(axis_name="migra")
 
-    def plot_migration(
-        self, ax=None, offset=None, energy_true=None, **kwargs
-    ):
+    def plot_migration(self, ax=None, offset=None, energy_true=None, **kwargs):
         """Plot energy dispersion for given offset and true energy.
 
         Parameters
@@ -192,7 +195,9 @@ class EnergyDispersion2D(IRF):
         with quantity_support():
             for ener in energy_true:
                 for off in offset:
-                    disp = self.evaluate(offset=off, energy_true=ener, migra=migra.center)
+                    disp = self.evaluate(
+                        offset=off, energy_true=ener, migra=migra.center
+                    )
                     label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
                     ax.plot(migra.center, disp, label=label, **kwargs)
 

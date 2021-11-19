@@ -164,7 +164,7 @@ def test_map_time_axis_read_write(map_type):
     time_axis = TimeMapAxis(
         edges_min=[0, 2, 4] * u.d,
         edges_max=[1, 3, 5] * u.d,
-        reference_time="2000-01-01"
+        reference_time="2000-01-01",
     )
 
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
@@ -174,7 +174,7 @@ def test_map_time_axis_read_write(map_type):
         width=10.0,
         map_type=map_type,
         skydir=SkyCoord(0.0, 30.0, unit="deg"),
-        axes=[energy_axis, time_axis]
+        axes=[energy_axis, time_axis],
     )
 
     hdulist = m.to_hdulist(hdu="COUNTS")
@@ -201,10 +201,11 @@ def test_map_quantity(map_type, unit):
 
     m.quantity = Quantity(np.ones_like(m.data), "m2")
     assert m.unit == "m2"
-    
+
     m1 = m.__class__(geom=m.geom, data=m.quantity)
     assert m1.unit == "m2"
     assert_allclose(m1.data, m.data)
+
 
 @pytest.mark.parametrize(("map_type", "unit"), unit_args)
 def test_map_unit_read_write(map_type, unit):
@@ -446,11 +447,19 @@ def test_interp_to_geom():
     assert interp_hpx_map.geom == hpx_geom_target
 
     # Preserving the counts
-    geom_initial = WcsGeom.create(skydir=(20, 20), width=(5, 5), binsz=0.2 * u.deg,)
+    geom_initial = WcsGeom.create(
+        skydir=(20, 20),
+        width=(5, 5),
+        binsz=0.2 * u.deg,
+    )
 
     test_map = Map.from_geom(geom_initial, unit="")
     test_map.data = value * np.ones(test_map.data.shape)
-    geom_target = WcsGeom.create(skydir=(20, 20), width=(5, 5), binsz=0.1 * u.deg,)
+    geom_target = WcsGeom.create(
+        skydir=(20, 20),
+        width=(5, 5),
+        binsz=0.1 * u.deg,
+    )
     new_map = test_map.interp_to_geom(geom_target, preserve_counts=True)
     assert np.floor(np.sum(new_map.data)) == np.sum(test_map.data)
 
@@ -459,17 +468,18 @@ def test_interp_to_geom():
 def test_map_plot_mask():
     from regions import CircleSkyRegion
 
-    skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+    skydir = SkyCoord(0, 0, frame="galactic", unit="deg")
 
     m_wcs = Map.create(
-        map_type='wcs',
+        map_type="wcs",
         binsz=0.02,
         skydir=skydir,
         width=2.0,
     )
 
-    exclusion_region = CircleSkyRegion(center=SkyCoord(0.0, 0.0, unit="deg", frame="galactic"),
-                                       radius=0.6 * u.deg)
+    exclusion_region = CircleSkyRegion(
+        center=SkyCoord(0.0, 0.0, unit="deg", frame="galactic"), radius=0.6 * u.deg
+    )
 
     mask = ~m_wcs.geom.region_mask([exclusion_region])
 

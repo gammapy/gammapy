@@ -86,7 +86,9 @@ class DatasetsMaker(Maker):
                 "width": self.cutout_width,
                 "mode": self.cutout_mode,
             }
-            dataset_obs = dataset.cutout(**cutouts_kwargs,)
+            dataset_obs = dataset.cutout(
+                **cutouts_kwargs,
+            )
         else:
             dataset_obs = dataset.copy()
         if dataset.models is not None:
@@ -151,7 +153,10 @@ class DatasetsMaker(Maker):
                 for base, obs in zip(datasets, observations):
                     result = pool.apply_async(
                         self.make_dataset,
-                        (base, obs,),
+                        (
+                            base,
+                            obs,
+                        ),
                         callback=self.callback,
                         error_callback=self.error_callback,
                     )

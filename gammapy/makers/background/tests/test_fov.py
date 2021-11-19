@@ -130,8 +130,8 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     assert_allclose(model.tilt.value, 0.071069, rtol=1e-4)
 
     # TODO: reactivate with a more stable error estimate
-    #assert_allclose(model.norm.error, 0.355637, rtol=1e-2)
-    #assert_allclose(model.tilt.error, 0.342201, rtol=1e-2)
+    # assert_allclose(model.norm.error, 0.355637, rtol=1e-2)
+    # assert_allclose(model.tilt.error, 0.342201, rtol=1e-2)
 
     assert_allclose(fov_bkg_maker.default_spectral_model.tilt.value, 0.0)
     assert_allclose(fov_bkg_maker.default_spectral_model.norm.value, 1.0)
@@ -193,7 +193,10 @@ def test_fov_bkg_maker_fit_with_source_model(obs_dataset, exclusion_mask):
 @requires_data()
 @requires_dependency("iminuit")
 def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
-    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask,)
+    fov_bkg_maker = FoVBackgroundMaker(
+        method="fit",
+        exclusion_mask=exclusion_mask,
+    )
 
     test_dataset = obs_dataset.copy(name="test-fov")
 

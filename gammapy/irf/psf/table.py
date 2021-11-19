@@ -34,5 +34,6 @@ class PSF3D(PSF):
     meta : dict
         Meta dict
     """
+
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]

@@ -6,7 +6,11 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
+from astropy.wcs.utils import (
+    proj_plane_pixel_area,
+    wcs_to_celestial_frame,
+    proj_plane_pixel_scales,
+)
 from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
 from gammapy.utils.regions import (
     compound_region_to_regions,
@@ -43,6 +47,7 @@ class RegionGeom(Geom):
         value is adequate for the majority of use cases. If a wcs object
         is provided, the input of binsz_wcs is overridden.
     """
+
     is_regular = True
     is_allsky = False
     is_hpx = False
@@ -85,7 +90,7 @@ class RegionGeom(Geom):
     @property
     def frame(self):
         """Coordinate system, either Galactic ("galactic") or Equatorial
-            ("icrs")."""
+        ("icrs")."""
         if self.region is None:
             return "icrs"
         try:
@@ -336,7 +341,9 @@ class RegionGeom(Geom):
             A WCS geometry object.
         """
         if width_min is not None:
-            width = np.max([self.width.to_value("deg"), _check_width(width_min)], axis=0)
+            width = np.max(
+                [self.width.to_value("deg"), _check_width(width_min)], axis=0
+            )
         else:
             width = self.width
         wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
@@ -388,7 +395,7 @@ class RegionGeom(Geom):
             regions=[self.region], oversampling_factor=factor
         )
 
-        mask = (weights.data > 0)
+        mask = weights.data > 0
         weights = weights.data[mask]
 
         # Get coordinates
@@ -665,7 +672,7 @@ class RegionGeom(Geom):
             for reg in Regions.parse(data=region_table, format="fits"):
                 # TODO: remove workaround once regions issue with fits serialization is sorted out
                 # see https://github.com/astropy/regions/issues/400
-                reg.meta['include'] = True
+                reg.meta["include"] = True
                 regions.append(reg.to_sky(wcs))
             region = regions_to_compound_region(regions)
         else:

@@ -66,11 +66,14 @@ class FluxProfileEstimator(FluxPointsEstimator):
         print(fermi_prof)
 
     """
+
     tag = "FluxProfileEstimator"
 
     def __init__(self, regions, spectrum=None, **kwargs):
         if len(regions) <= 1:
-            raise ValueError("Please provide at least two regions for flux profile estimation.")
+            raise ValueError(
+                "Please provide at least two regions for flux profile estimation."
+            )
 
         self.regions = regions
 
@@ -132,5 +135,6 @@ class FluxProfileEstimator(FluxPointsEstimator):
             maps.append(fp)
 
         return FluxPoints.from_stack(
-            maps=maps, axis=self.projected_distance_axis,
+            maps=maps,
+            axis=self.projected_distance_axis,
         )

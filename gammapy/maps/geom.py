@@ -562,8 +562,7 @@ class Geom(abc.ABC):
             return valid
 
     def _init_copy(self, **kwargs):
-        """Init map geom instance by copying missing init arguments from self.
-        """
+        """Init map geom instance by copying missing init arguments from self."""
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
 

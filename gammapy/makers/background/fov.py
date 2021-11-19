@@ -52,7 +52,7 @@ class FoVBackgroundMaker(Maker):
         spectral_model="pl-norm",
         min_counts=0,
         min_npred_background=0,
-        fit=None
+        fit=None,
     ):
         self.method = method
         self.exclusion_mask = exclusion_mask

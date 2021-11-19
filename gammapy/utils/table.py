@@ -59,8 +59,7 @@ def table_standardise_units_copy(table):
 
 
 def table_standardise_units_inplace(table):
-    """Standardise units for all columns in a table in place.
-    """
+    """Standardise units for all columns in a table in place."""
     for column in table.columns.values():
         if column.unit:
             column.unit = standardise_unit(column.unit)

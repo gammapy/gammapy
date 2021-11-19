@@ -166,9 +166,7 @@ class PlotMixin:
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_excess)
         plot_kwargs.setdefault("label", "Excess counts")
-        ax = self.excess.plot(
-            ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs
-        )
+        ax = self.excess.plot(ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_npred_signal)
@@ -350,7 +348,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         return cls.from_map_dataset(**kwargs)
 
     def to_spectrum_dataset(self, name=None):
-        """ Convert a SpectrumDatasetOnOff to a SpectrumDataset
+        """Convert a SpectrumDatasetOnOff to a SpectrumDataset
         The background model template is taken as alpha*counts_off
 
         Parameters

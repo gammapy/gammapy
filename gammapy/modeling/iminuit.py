@@ -26,6 +26,7 @@ class MinuitLikelihood(Likelihood):
 
 def setup_iminuit(parameters, function, store_trace=False, **kwargs):
     from iminuit import Minuit
+
     minuit_func = MinuitLikelihood(function, parameters, store_trace=store_trace)
 
     pars, errors, limits = make_minuit_par_kwargs(parameters)
@@ -68,10 +69,7 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     migrad_opts = kwargs.pop("migrad_opts", {})
 
     minuit, minuit_func = setup_iminuit(
-        parameters=parameters,
-        function=function,
-        store_trace=store_trace,
-        **kwargs
+        parameters=parameters, function=function, store_trace=store_trace, **kwargs
     )
 
     minuit.migrad(**migrad_opts)
@@ -93,10 +91,7 @@ def covariance_iminuit(parameters, function, **kwargs):
 
     if minuit is None:
         minuit, _ = setup_iminuit(
-            parameters=parameters,
-            function=function,
-            store_trace=False,
-            **kwargs
+            parameters=parameters, function=function, store_trace=False, **kwargs
         )
         minuit.hesse()
 
@@ -118,10 +113,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
         log.warning("Reoptimize = False ignored for iminuit backend")
 
     minuit, minuit_func = setup_iminuit(
-        parameters=parameters,
-        function=function,
-        store_trace=False,
-        **kwargs
+        parameters=parameters, function=function, store_trace=False, **kwargs
     )
     migrad_opts = kwargs.get("migrad_opts", {})
     minuit.migrad(**migrad_opts)
@@ -131,8 +123,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
     idx = parameters.free_parameters.index(parameter)
     var = _make_parname(idx, parameter)
 
-    message, success = "Minos terminated successfully.", True\
-
+    message, success = "Minos terminated successfully.", True
     cl = 2 * norm.cdf(sigma) - 1
 
     try:
@@ -144,7 +135,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
             "message": str(error),
             "errp": np.nan,
             "errn": np.nan,
-            "nfev": 0
+            "nfev": 0,
         }
 
     return {
@@ -158,10 +149,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
 
 def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
     minuit, minuit_func = setup_iminuit(
-        parameters=parameters,
-        function=function,
-        store_trace=False,
-        **kwargs
+        parameters=parameters, function=function, store_trace=False, **kwargs
     )
     minuit.migrad()
 
@@ -173,7 +161,7 @@ def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
     idx_y = parameters.free_parameters.index(par_y)
     y = _make_parname(idx_y, par_y)
 
-    cl = chi2(2).cdf(sigma**2)
+    cl = chi2(2).cdf(sigma ** 2)
     contour = minuit.mncontour(x=x, y=y, size=numpoints, cl=cl)
     # TODO: add try and except to get the success
     return {

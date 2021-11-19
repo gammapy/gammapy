@@ -74,6 +74,7 @@ class EDispMap(IRFMap):
         # Write map to disk
         edisp_map.write("edisp_map.fits")
     """
+
     tag = "edisp_map"
     required_axes = ["migra", "energy_true"]
 
@@ -175,9 +176,7 @@ class EDispMap(IRFMap):
         if "energy_true" not in [ax.name for ax in geom.axes]:
             raise ValueError("EDispMap requires true energy axis")
 
-        exposure_map = Map.from_geom(
-            geom=geom.squash(axis_name="migra"), unit="m2 s"
-        )
+        exposure_map = Map.from_geom(geom=geom.squash(axis_name="migra"), unit="m2 s")
 
         edisp_map = Map.from_geom(geom, unit="")
         migra_axis = geom.axes["migra"]
@@ -267,6 +266,7 @@ class EDispKernelMap(IRFMap):
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
+
     tag = "edisp_kernel_map"
     required_axes = ["energy", "energy_true"]
 
@@ -434,7 +434,7 @@ class EDispKernelMap(IRFMap):
         return cls.from_edisp_kernel(kernel, geom=geom)
 
     def to_image(self, weights=None):
-        """"Return a 2D EdispKernelMap by summing over the reconstructed energy axis.
+        """ "Return a 2D EdispKernelMap by summing over the reconstructed energy axis.
 
         Parameters
         ----------

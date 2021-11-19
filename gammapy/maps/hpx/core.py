@@ -100,7 +100,9 @@ class HpxMap(Map):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None, colname=None):
+    def from_hdulist(
+        cls, hdu_list, hdu=None, hdu_bands=None, format=None, colname=None
+    ):
         """Make a HpxMap object from a FITS HDUList.
 
         Parameters
@@ -195,9 +197,7 @@ class HpxMap(Map):
             hdu_bands = f"{hdu.upper()}_BANDS"
 
         if self.geom.axes:
-            hdu_bands_out = self.geom.to_bands_hdu(
-                hdu_bands=hdu_bands, format=format
-            )
+            hdu_bands_out = self.geom.to_bands_hdu(hdu_bands=hdu_bands, format=format)
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands_out = None

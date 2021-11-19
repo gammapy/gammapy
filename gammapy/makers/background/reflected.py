@@ -115,11 +115,7 @@ class ReflectedRegionsFinder:
         width = 4 * self.region.center.separation(self.center) + Angle("0.3 deg")
 
         return WcsGeom.create(
-            skydir=self.center,
-            binsz=self.binsz,
-            width=width,
-            frame=frame,
-            proj="TAN"
+            skydir=self.center, binsz=self.binsz, width=width, frame=frame, proj="TAN"
         )
 
     @lazyproperty
@@ -295,9 +291,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         if len(regions) > 0:
             geom = RegionGeom.from_regions(
-                regions=regions,
-                axes=[energy_axis],
-                wcs=finder.geom_ref.wcs
+                regions=regions, axes=[energy_axis], wcs=finder.geom_ref.wcs
             )
 
             counts_off = RegionNDMap.from_geom(geom=geom)
@@ -337,7 +331,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
-            name=dataset.name
+            name=dataset.name,
         )
 
         if dataset_onoff.counts_off is None:

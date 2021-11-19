@@ -494,10 +494,14 @@ class EventList:
         energy_axis = self._default_plot_energy_axis
 
         offset = center.separation(self.radec)
-        offset_axis = MapAxis.from_bounds(0 * u.deg, offset.max(), nbin=30, name="offset")
+        offset_axis = MapAxis.from_bounds(
+            0 * u.deg, offset.max(), nbin=30, name="offset"
+        )
 
         counts = np.histogram2d(
-            x=self.energy, y=offset, bins=(energy_axis.edges, offset_axis.edges),
+            x=self.energy,
+            y=offset,
+            bins=(energy_axis.edges, offset_axis.edges),
         )[0]
 
         kwargs.setdefault("norm", LogNorm())

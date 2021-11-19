@@ -79,7 +79,7 @@ def test_mapaxis_equal(nodes, interp, node_type, unit, name, result):
         name="test",
         unit="s",
         interp="lin",
-        node_type="edges"
+        node_type="edges",
     )
 
     axis2 = MapAxis(nodes, name=name, unit=unit, interp=interp, node_type=node_type)
@@ -366,7 +366,9 @@ def test_map_axis_plot_helpers():
 
 
 def test_time_axis(time_intervals):
-    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
+    axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
 
     axis_copy = axis.copy()
 
@@ -395,7 +397,7 @@ def test_single_interval_time_axis(time_interval):
     axis = TimeMapAxis(
         edges_min=time_interval["t_min"],
         edges_max=time_interval["t_max"],
-        reference_time=time_interval["t_ref"]
+        reference_time=time_interval["t_ref"],
     )
 
     coord = Time(58933, format="mjd") + u.Quantity([1.5, 3.5, 10], unit="d")
@@ -415,7 +417,9 @@ def test_single_interval_time_axis(time_interval):
 
 
 def test_slice_squash_time_axis(time_intervals):
-    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
+    axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
     axis_squash = axis.squash()
     axis_slice = axis.slice(slice(1, 5))
 
@@ -433,7 +437,7 @@ def test_from_time_edges_time_axis():
     t_max = t_min + 1 * u.h
 
     axis = TimeMapAxis.from_time_edges(t_min, t_max)
-    axis_h = TimeMapAxis.from_time_edges(t_min, t_max, unit='h')
+    axis_h = TimeMapAxis.from_time_edges(t_min, t_max, unit="h")
 
     assert axis.nbin == 20
     assert axis.name == "time"
@@ -497,7 +501,9 @@ def test_coord_to_idx_time_axis(time_intervals):
 
 
 def test_slice_time_axis(time_intervals):
-    axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
+    axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
 
     new_axis = axis.slice([2, 6, 9])
     squashed = axis.squash()
@@ -509,7 +515,7 @@ def test_slice_time_axis(time_intervals):
 
 
 def test_from_table_time_axis():
-    t0 = Time("2006-02-12", scale='utc')
+    t0 = Time("2006-02-12", scale="utc")
     t_min = np.linspace(0, 10, 10) * u.d
     t_max = t_min + 12 * u.h
 
@@ -538,20 +544,24 @@ def test_from_gti_time_axis():
 
 
 def test_map_with_time_axis(time_intervals):
-    time_axis = TimeMapAxis(time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"])
+    time_axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
     energy_axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
-    region_map = RegionNDMap.create(region="fk5; circle(0,0,0.1)", axes=[energy_axis, time_axis])
+    region_map = RegionNDMap.create(
+        region="fk5; circle(0,0,0.1)", axes=[energy_axis, time_axis]
+    )
 
     assert region_map.geom.data_shape == (20, 2, 1, 1)
 
 
 def test_time_axis_plot_helpers():
-    time_ref = Time('1999-01-01T00:00:00.123456789')
+    time_ref = Time("1999-01-01T00:00:00.123456789")
 
     time_axis = TimeMapAxis(
         edges_min=[0, 1, 3] * u.d,
         edges_max=[0.8, 1.9, 5.4] * u.d,
-        reference_time=time_ref
+        reference_time=time_ref,
     )
 
     labels = time_axis.as_plot_labels
@@ -567,12 +577,12 @@ def test_time_axis_plot_helpers():
 def test_axes_basics():
     energy_axis = MapAxis.from_energy_edges([1, 3] * u.TeV)
 
-    time_ref = Time('1999-01-01T00:00:00.123456789')
+    time_ref = Time("1999-01-01T00:00:00.123456789")
 
     time_axis = TimeMapAxis(
         edges_min=[0, 1, 3] * u.d,
         edges_max=[0.8, 1.9, 5.4] * u.d,
-        reference_time=time_ref
+        reference_time=time_ref,
     )
 
     axes = MapAxes([energy_axis, time_axis])
@@ -635,7 +645,7 @@ def test_mixed_axes():
     time_axis = TimeMapAxis(
         edges_min=[1, 10] * u.day,
         edges_max=[2, 13] * u.day,
-        reference_time=Time("2020-03-19")
+        reference_time=Time("2020-03-19"),
     )
 
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=4)

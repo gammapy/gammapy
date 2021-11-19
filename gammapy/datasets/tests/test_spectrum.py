@@ -37,7 +37,9 @@ def spectrum_dataset():
     livetime = 100 * u.s
 
     pwl = PowerLawSpectralModel(
-        index=2.1, amplitude="1e5 cm-2 s-1 TeV-1", reference="0.1 TeV",
+        index=2.1,
+        amplitude="1e5 cm-2 s-1 TeV-1",
+        reference="0.1 TeV",
     )
 
     temp_mod = ConstantTemporalModel()
@@ -60,7 +62,11 @@ def spectrum_dataset():
     gti = GTI.create(start, stop, reference_time=t_ref)
 
     dataset = SpectrumDataset(
-        models=models, exposure=exposure, background=background, name=name, gti=gti,
+        models=models,
+        exposure=exposure,
+        background=background,
+        name=name,
+        gti=gti,
     )
     dataset.fake(random_state=23)
     return dataset
@@ -351,7 +357,7 @@ def test_peek(spectrum_dataset):
 
 
 class TestSpectrumOnOff:
-    """ Test ON OFF SpectrumDataset"""
+    """Test ON OFF SpectrumDataset"""
 
     def setup(self):
         etrue = np.logspace(-1, 1, 10) * u.TeV
@@ -369,7 +375,10 @@ class TestSpectrumOnOff:
         self.wcs = WcsGeom.create(npix=300, binsz=0.01, frame="icrs").wcs
 
         self.aeff = RegionNDMap.create(
-            region="icrs;circle(0.,1.,0.1)", wcs=self.wcs, axes=[self.e_true], unit="cm2"
+            region="icrs;circle(0.,1.,0.1)",
+            wcs=self.wcs,
+            axes=[self.e_true],
+            unit="cm2",
         )
         self.aeff.data += 1
 
@@ -389,7 +398,7 @@ class TestSpectrumOnOff:
         self.off_counts = RegionNDMap.create(
             region="icrs;box(0.,1.,0.1, 0.2,30);box(-1.,-1.,0.1, 0.2,150)",
             wcs=self.wcs,
-            axes=[axis]
+            axes=[axis],
         )
         self.off_counts.data += 10
 
@@ -939,7 +948,7 @@ class TestSpectrumDatasetOnOffStack:
         assert_allclose(npred_stacked, npred_summed, rtol=1e-6)
 
     def test_stack_backscal(self):
-        """Verify backscal stacking """
+        """Verify backscal stacking"""
         obs1, obs2 = make_observation_list()
         obs1.stack(obs2)
         assert_allclose(obs1.alpha.data[0], 1.25 / 4.0)
@@ -1078,7 +1087,9 @@ class TestFit:
     def test_cash(self):
         """Simple CASH fit to the on vector"""
         dataset = SpectrumDataset(
-            models=self.source_model, counts=self.src, exposure=self.exposure,
+            models=self.source_model,
+            counts=self.src,
+            exposure=self.exposure,
         )
 
         npred = dataset.npred().data

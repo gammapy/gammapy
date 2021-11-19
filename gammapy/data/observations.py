@@ -312,30 +312,30 @@ class Observation:
 
         axes_dict = dict(zip(self.available_irfs, axes.flatten()))
 
-        if 'aeff' in self.available_irfs:
-            self.aeff.plot(ax=axes_dict['aeff'])
-            axes_dict['aeff'].set_title("Effective area")
+        if "aeff" in self.available_irfs:
+            self.aeff.plot(ax=axes_dict["aeff"])
+            axes_dict["aeff"].set_title("Effective area")
 
-        if 'bkg' in self.available_irfs:
+        if "bkg" in self.available_irfs:
             bkg = self.bkg
 
             if not bkg.is_offset_dependent:
                 bkg = bkg.to_2d()
 
-            bkg.plot(ax=axes_dict['bkg'])
-            axes_dict['bkg'].set_title("Background rate")
+            bkg.plot(ax=axes_dict["bkg"])
+            axes_dict["bkg"].set_title("Background rate")
         else:
             logging.warning(f"No background model found for obs {self.obs_id}.")
 
-        if 'psf' in self.available_irfs:
-            self.psf.plot_containment_radius_vs_energy(ax=axes_dict['psf'])
-            axes_dict['psf'].set_title("Point spread function")
+        if "psf" in self.available_irfs:
+            self.psf.plot_containment_radius_vs_energy(ax=axes_dict["psf"])
+            axes_dict["psf"].set_title("Point spread function")
         else:
             logging.warning(f"No PSF found for obs {self.obs_id}.")
 
-        if 'edisp' in self.available_irfs:
-            self.edisp.plot_bias(ax=axes_dict['edisp'], add_cbar=True)
-            axes_dict['edisp'].set_title("Energy dispersion")
+        if "edisp" in self.available_irfs:
+            self.edisp.plot_bias(ax=axes_dict["edisp"], add_cbar=True)
+            axes_dict["edisp"].set_title("Energy dispersion")
         else:
             logging.warning(f"No energy dispersion found for obs {self.obs_id}.")
 
@@ -386,7 +386,13 @@ class Observation:
         irf_dict = load_irf_dict_from_file(irf_file)
 
         obs_info = events.table.meta
-        return cls(events=events, gti=gti, obs_info=obs_info, obs_id=obs_info.get("OBS_ID"), **irf_dict)
+        return cls(
+            events=events,
+            gti=gti,
+            obs_info=obs_info,
+            obs_id=obs_info.get("OBS_ID"),
+            **irf_dict,
+        )
 
 
 class Observations(collections.abc.MutableSequence):

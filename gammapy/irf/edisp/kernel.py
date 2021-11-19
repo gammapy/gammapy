@@ -50,6 +50,7 @@ class EDispKernel(IRF):
     >>> edisp.peek()
 
     """
+
     tag = "edisp_kernel"
     required_axes = ["energy_true", "energy"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
@@ -101,7 +102,8 @@ class EDispKernel(IRF):
         data = self.pdf_in_safe_range(lo_threshold, hi_threshold)
 
         return self.__class__(
-            axes=self.axes.squash("energy"), data=np.sum(data, axis=1, keepdims=True),
+            axes=self.axes.squash("energy"),
+            data=np.sum(data, axis=1, keepdims=True),
         )
 
     @classmethod
@@ -569,7 +571,9 @@ class EDispKernel(IRF):
             ax.plot(energy, bias, **kwargs)
 
         ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units}]")
-        ax.set_ylabel("($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$")
+        ax.set_ylabel(
+            "($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$"
+        )
         ax.set_xscale("log")
         return ax
 

@@ -137,7 +137,7 @@ class Background3D(BackgroundIRF):
     def plot_at_energy(
         self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
     ):
-        """ Plot the background rate in Field of view co-ordinates at a given energy.
+        """Plot the background rate in Field of view co-ordinates at a given energy.
 
         Parameters
         -----------
@@ -218,7 +218,7 @@ class Background2D(BackgroundIRF):
     """Default Interpolation kwargs."""
 
     def to_3d(self):
-        """"Convert to Background3D"""
+        """ "Convert to Background3D"""
 
         edges = np.concatenate(
             (
@@ -234,10 +234,13 @@ class Background2D(BackgroundIRF):
         offset = np.sqrt(coords["fov_lat"] ** 2 + coords["fov_lon"] ** 2)
         data = self.evaluate(offset=offset, energy=coords["energy"])
 
-        return Background3D(axes=axes, data=data,)
+        return Background3D(
+            axes=axes,
+            data=data,
+        )
 
     def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
-        """ Plot the background rate in Field of view co-ordinates at a given energy.
+        """Plot the background rate in Field of view co-ordinates at a given energy.
 
         Parameters
         -----------
@@ -256,8 +259,7 @@ class Background2D(BackgroundIRF):
         bkg_3d.plot_at_energy(energy, ax, add_cbar, ncols, **kwargs)
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
-        """Plot energy offset dependence of the background model.
-        """
+        """Plot energy offset dependence of the background model."""
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
 

@@ -408,7 +408,9 @@ def test_hpx_map_cutout():
 
 def test_partial_hpx_map_cutout():
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
-    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m = HpxNDMap.create(
+        nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)"
+    )
     m.data += np.arange(90)
 
     cutout = m.cutout(SkyCoord("0d", "0d"), width=10 * u.deg)
@@ -421,7 +423,9 @@ def test_partial_hpx_map_cutout():
 
 def test_hpx_map_stack():
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
-    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m = HpxNDMap.create(
+        nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)"
+    )
     m.data += np.arange(90)
 
     m_allsky = HpxNDMap.create(nside=32, frame="galactic", axes=[axis])
@@ -441,7 +445,9 @@ def test_hpx_map_stack():
 
 def test_hpx_map_weights_stack():
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
-    m = HpxNDMap.create(nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)")
+    m = HpxNDMap.create(
+        nside=32, frame="galactic", axes=[axis], region="DISK(110.,75.,10.)"
+    )
     m.data += np.arange(90) + 1
 
     weights = m.copy()
@@ -455,10 +461,14 @@ def test_hpx_map_weights_stack():
 
 def test_partial_hpx_map_stack():
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
-    m_1 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(110.,75.,20.)")
+    m_1 = HpxNDMap.create(
+        nside=128, frame="galactic", axes=[axis], region="DISK(110.,75.,20.)"
+    )
     m_1.data += 1
 
-    m_2 = HpxNDMap.create(nside=128, frame="galactic", axes=[axis], region="DISK(130.,75.,20.)")
+    m_2 = HpxNDMap.create(
+        nside=128, frame="galactic", axes=[axis], region="DISK(130.,75.,20.)"
+    )
     m_2.stack(m_1)
 
     assert_allclose(m_1.data.sum(), 5933)
@@ -488,12 +498,8 @@ def test_smooth(kernel):
         MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
         MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
     ]
-    geom_nest = HpxGeom.create(
-        nside=256, nest=False, frame="galactic", axes=axes
-    )
-    geom_ring = HpxGeom.create(
-        nside=256, nest=True, frame="galactic", axes=axes
-    )
+    geom_nest = HpxGeom.create(nside=256, nest=False, frame="galactic", axes=axes)
+    geom_ring = HpxGeom.create(nside=256, nest=True, frame="galactic", axes=axes)
     m_nest = HpxNDMap(geom_nest, data=np.ones(geom_nest.data_shape), unit="m2")
     m_ring = HpxNDMap(geom_ring, data=np.ones(geom_ring.data_shape), unit="m2")
 
@@ -512,7 +518,7 @@ def test_smooth(kernel):
     assert smoothed_ring.data.dtype == float
 
     # with pytest.raises(NotImplementedError):
-    cutout = m_nest.cutout(position=(0,0), width=15*u.deg)
+    cutout = m_nest.cutout(position=(0, 0), width=15 * u.deg)
     smoothed_cutout = cutout.smooth(0.1 * u.deg, kernel)
     actual_cutout = cutout.data.sum()
     desired_cutout = smoothed_cutout.data.sum()
@@ -524,13 +530,10 @@ def test_smooth(kernel):
 
 @pytest.mark.parametrize("nest", [True, False])
 def test_convolve_wcs(nest):
-    energy = MapAxis.from_bounds(1, 100, unit='TeV', nbin=2, name='energy')
+    energy = MapAxis.from_bounds(1, 100, unit="TeV", nbin=2, name="energy")
     nside = 256
     hpx_geom = HpxGeom.create(
-        nside=nside,
-        axes=[energy],
-        region='DISK(0,0,2.5)',
-        nest=nest
+        nside=nside, axes=[energy], region="DISK(0,0,2.5)", nest=nest
     )
     hpx_map = Map.from_geom(hpx_geom)
     hpx_map.set_by_coord((0, 0, [2, 90]), 1)
@@ -541,17 +544,13 @@ def test_convolve_wcs(nest):
     assert_allclose(convolved_map.data.sum(), 2, rtol=0.001)
 
 
-@pytest.mark.parametrize("region", [None, 'DISK(0,0,70)'])
+@pytest.mark.parametrize("region", [None, "DISK(0,0,70)"])
 def test_convolve_full(region):
-    energy = MapAxis.from_bounds(1, 100, unit='TeV', nbin=2, name='energy_true')
+    energy = MapAxis.from_bounds(1, 100, unit="TeV", nbin=2, name="energy_true")
     nside = 256
 
     all_sky_geom = HpxGeom(
-        nside=nside,
-        axes=[energy],
-        region=region,
-        nest=False,
-        frame='icrs'
+        nside=nside, axes=[energy], region=region, nest=False, frame="icrs"
     )
 
     all_sky_map = Map.from_geom(all_sky_geom)
@@ -564,25 +563,20 @@ def test_convolve_full(region):
     all_sky_map.set_by_coord((30, -45, [2, 90]), 1)
 
     wcs_geom = WcsGeom.create(width=5, binsz=0.05, axes=[energy])
-    psf = PSFMap.from_gauss(
-        energy_axis_true=energy, sigma=[0.5, 0.6] * u.deg
-    )
+    psf = PSFMap.from_gauss(energy_axis_true=energy, sigma=[0.5, 0.6] * u.deg)
 
-    kernel = psf.get_psf_kernel(geom=wcs_geom, max_radius=1*u.deg)
+    kernel = psf.get_psf_kernel(geom=wcs_geom, max_radius=1 * u.deg)
     convolved_map = all_sky_map.convolve_full(kernel)
     assert_allclose(convolved_map.data.sum(), 14, rtol=1e-5)
 
 
 def test_hpxmap_read_healpy(tmp_path):
     import healpy as hp
+
     path = tmp_path / "tmp.fits"
     npix = 12 * 1024 * 1024
     m = [np.arange(npix), np.arange(npix) - 1, np.arange(npix) - 2]
-    hp.write_map(
-        filename=path,
-        m=m, nest=False,
-        overwrite=True
-    )
+    hp.write_map(filename=path, m=m, nest=False, overwrite=True)
     with fits.open(path, memmap=False) as hdulist:
         hdu_out = find_bintable_hdu(hdulist)
         header = hdu_out.header
@@ -611,8 +605,7 @@ def test_map_plot_mask():
     geom = HpxGeom.create(nside=16)
 
     region = CircleSkyRegion(
-        center=SkyCoord("0d", "0d", frame="galactic"),
-        radius=20 * u.deg
+        center=SkyCoord("0d", "0d", frame="galactic"), radius=20 * u.deg
     )
 
     mask = geom.region_mask([region])

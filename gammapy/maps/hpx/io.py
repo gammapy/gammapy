@@ -96,8 +96,4 @@ HPX_FITS_CONVENTIONS["galprop2"] = HpxConv(
     bands_hdu="ENERGIES",
     quantity_type="differential",
 )
-HPX_FITS_CONVENTIONS["healpy"] = HpxConv(
-    "healpy",
-    hduname=None,
-    colstring=None
-)
+HPX_FITS_CONVENTIONS["healpy"] = HpxConv("healpy", hduname=None, colstring=None)
