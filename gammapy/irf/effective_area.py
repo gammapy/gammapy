@@ -94,7 +94,7 @@ class EffectiveAreaTable2D(IRF):
 
         for off in offset:
             area = self.evaluate(offset=off, energy_true=energy_axis.center)
-            label = f"offset = {off:.1f}"
+            label = kwargs.pop("label", f"offset = {off:.1f}")
             with quantity_support():
                 ax.plot(energy_axis.center, area, label=label, **kwargs)
 

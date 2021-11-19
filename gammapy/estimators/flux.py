@@ -105,8 +105,8 @@ class FluxEstimator(ParameterEstimator):
         models : `Models`
             Models
 
-        Return
-        ------
+        Returns
+        -------
         model : `ScaleSpectralModel`
             Scale spectral model
         """

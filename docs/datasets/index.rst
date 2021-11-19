@@ -218,7 +218,7 @@ To strike a balance, what might be a practical solution for analysis of many run
 stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
 
 Using `gammapy.datasets`
-====================
+========================
 
 Gammapy tutorial notebooks that show how to use this package:
 

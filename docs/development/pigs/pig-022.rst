@@ -44,6 +44,7 @@ gamma astro data format. They are;
 
 - ``eflux`` integral energy flux defined between ``e_min`` and ``e_max``
 
+
 To convert between these flux types, an assumption must be made on the spectral model.
 
 Besides these, a useful SED type is the so-called ``likelihood`` type introduced by fermipy
@@ -77,6 +78,7 @@ into a ``Table`` with one row per time interval and flux points stored as an arr
 
 - ``ExcessProfileEstimator`` computes an integral flux (``flux`` type) in a list of regions and a list of energies.
 It returns a ``Table`` with one region per row, and energy dependent fluxes stored as an array in each row.
+
 
 This diversity of output formats and flux types could be simplified with better design for flux quantities in gammapy.
 We propose below a generalized flux points API.

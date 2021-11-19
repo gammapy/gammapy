@@ -1153,8 +1153,8 @@ class HpxGeom(Geom):
         margin : Angle
             Width margin of the wcs tile
 
-        Return
-        ------
+        Returns
+        -------
         wcs_tiles : list
             List of WCS tile geoms.
         """

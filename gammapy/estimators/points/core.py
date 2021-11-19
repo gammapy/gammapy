@@ -273,7 +273,7 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            sed type to convert to. Default is `likelihood`
+            Sed type to convert to. Default is `likelihood`
         format : {"gadf-sed", "lightcurve", "binned-time-series"}
             Format specification. The following formats are supported:
             * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
@@ -282,7 +282,7 @@ class FluxPoints(FluxMaps):
               lightcurves. Basically a generalisation of the "gadf" format, but
               currently there is no detailed documentation available.
             * "binned-time-series": table format support by Astropy's
-             `~astropy.timeseries.BinnedTimeSeries`.
+              `~astropy.timeseries.BinnedTimeSeries`.
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
             formatted to .3f and .3e respectively.
@@ -290,15 +290,17 @@ class FluxPoints(FluxMaps):
         Examples
         --------
 
-        >>> from gammapy.estimators import FluxPoints
-        >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
-        >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
-        >>> print(table[:2])
-        e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
-         TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
-        ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
-        1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
-        2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
+        This is how to read and plot example flux points:
+
+            >>> from gammapy.estimators import FluxPoints
+            >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
+            >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
+            >>> print(table[:2])
+            e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
+             TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
+            ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
+            1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
+            2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
 
         Returns
         -------

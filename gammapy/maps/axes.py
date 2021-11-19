@@ -1729,8 +1729,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip",
-                  "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -1963,7 +1962,7 @@ class TimeMapAxis:
     ----------
     edges_min : `~astropy.units.Quantity`
         Array of edge time values. This the time delta w.r.t. to the reference time.
-    edges_max : ``~astropy.units.Quantity`
+    edges_max : `~astropy.units.Quantity`
         Array of edge time values. This the time delta w.r.t. to the reference time.
     reference_time : `~astropy.time.Time`
         Reference time to use.
@@ -2417,7 +2416,7 @@ class TimeMapAxis:
         ----------
         time_min : `~astropy.time.Time`
             Array of lower edge times.
-        time_max : ``~astropy.time.Time`
+        time_max : `~astropy.time.Time`
             Array of lower edge times.
         unit : `~astropy.units.Unit` or str
             The unit to convert the edges to. Default is 'd' (day).

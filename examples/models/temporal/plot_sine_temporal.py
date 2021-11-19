@@ -1,8 +1,8 @@
 r"""
 .. _sine-temporal-model:
 
-Sinusoidal temporal model
-=======================
+Sine temporal model
+===================
 
 This model parametrises a time model of sinusoidal modulation.
 

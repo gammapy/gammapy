@@ -688,7 +688,7 @@ class FluxMaps:
         """Extract flux point at a given position.
 
         Parameters
-        ---------
+        ----------
         position : `~astropy.coordinates.SkyCoord`
             Position where the flux points are extracted.
 

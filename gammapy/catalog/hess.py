@@ -607,7 +607,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points_table(self):
-        """Flux points table (`~astropy.table.Table)."""
+        """Flux points table (`~astropy.table.Table`)."""
         table = Table()
         table.meta["sed_type_init"] = "dnde"
         table.meta["n_sigma_ul"] = 2

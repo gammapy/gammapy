@@ -75,7 +75,7 @@ class DatasetsMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Reference dataset
-         observation : `Observation`
+        observation : `Observation`
             Observation
         """
 
@@ -116,12 +116,12 @@ class DatasetsMaker(Maker):
 
         Parameters
         ----------
-         dataset : `~gammapy.datasets.MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Reference dataset (used only for stacking if datasets are provided)
-         observations : `Observations`
+        observations : `Observations`
             Observations
-         datasets : `~gammapy.datasets.Datasets`
-             Base datasets, if provided its length must be the same than the observations.
+        datasets : `~gammapy.datasets.Datasets`
+            Base datasets, if provided its length must be the same than the observations.
 
         Returns
         -------

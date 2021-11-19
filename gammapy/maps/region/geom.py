@@ -728,7 +728,7 @@ class RegionGeom(Geom):
                 ax.remove()
                 wcs_geom = self.to_wcs_geom()
                 m = Map.from_geom(wcs_geom.to_image())
-                fig, ax, cbar = m.plot(add_cbar=False)
+                ax = m.plot(add_cbar=False)
 
         regions = compound_region_to_regions(self.region)
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
