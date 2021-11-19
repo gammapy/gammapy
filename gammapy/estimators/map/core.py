@@ -384,18 +384,25 @@ class FluxMaps:
 
     @property
     def npred(self):
-        """Predicted counts"""
+        """Predicted counts from best fit hypothesis"""
         self._check_quantity("npred")
         return self._data["npred"]
 
     @property
+    def npred_background(self):
+        """Predicted background counts from best fit hypothesis"""
+        self._check_quantity("npred")
+        self._check_quantity("npred_excess")
+        return self.npred - self.npred_excess
+
+    @property
     def npred_excess(self):
-        """Predicted excess counts"""
+        """Predicted excess count  rom best fit hypothesis"""
         self._check_quantity("npred_excess")
         return self._data["npred_excess"]
 
     def _expand_dims(self, data):
-        # instead make map support broadcasting
+        # TODO: instead make map support broadcasting
         axes = self.npred.geom.axes
         # here we need to rely on broadcasting
         if "dataset" in axes.names:
