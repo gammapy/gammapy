@@ -38,9 +38,9 @@ In general the flux can be estimated using two methods:
    not re-optimising other parameters, one can estimate the significance based on the
    analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
    are given by the excess over the null hypothesis. This method is also named
-   **backward folding**.
+   **backward folding**. This method is currently only exposed in the `ExcessMapEstimator`
 
-
+In case the data is fitted to a single data bin only, e.g. one energy bin
 Uniformly for both methods most estimators compute the same basic quantities:
 
 ================= =================================================
@@ -52,10 +52,10 @@ stat              Fit statistics value of the best fit hypothesis
 stat_null         Fit statistics value of the null hypothesis
 ts                Difference in fit statistics (`stat - stat_null` )
 sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
-npred             Predicted counts of the best fit hypothesis, equivalent to correlated counts for backward folding
-npred_excess      Predicted excess counts of the best fit hypothesis equivalent to correlated excess for backward folding
+npred             Predicted counts of the best fit hypothesis. Equivalent to correlated counts for backward folding
+npred_excess      Predicted excess counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
+npred_background  Predicted background counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
 ================= =================================================
-
 
 In addition the following optional quantities can be computed:
 
