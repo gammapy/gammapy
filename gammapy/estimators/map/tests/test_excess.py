@@ -45,6 +45,7 @@ def simple_dataset_on_off():
     dataset.counts_off += 1
     dataset.acceptance += 1
     dataset.acceptance_off += 1
+    dataset.exposure.data += 1e6
     return dataset
 
 
@@ -149,8 +150,6 @@ def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
 def test_excess_map_estimator_map_dataset_on_off_no_correlation(
     simple_dataset_on_off,
 ):
-    simple_dataset_on_off.exposure.data += 1e6
-
     # Test with exposure
     estimator_image = ExcessMapEstimator(
         0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV, correlate_off=False
@@ -184,10 +183,7 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_no_exposure(
 def test_excess_map_estimator_map_dataset_on_off_with_correlation(
     simple_dataset_on_off,
 ):
-
-    # Test with exposure
-    simple_dataset_on_off.exposure.data += 1e6
-
+    simple_dataset_on_off.exposure = None
     estimator_image = ExcessMapEstimator(
         0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV, correlate_off=True
     )
@@ -203,9 +199,6 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation(
 def test_excess_map_estimator_map_dataset_on_off_with_correlation_mask_fit(
     simple_dataset_on_off,
 ):
-    # Test with mask fit
-    simple_dataset_on_off.exposure.data += 1e6
-
     mask_fit = Map.from_geom(
         simple_dataset_on_off._geom,
         data=np.ones(simple_dataset_on_off.counts.data.shape, dtype=bool),
@@ -244,7 +237,6 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
     mask_fit.data[:, 10, :] = False
     simple_dataset_on_off.mask_fit = mask_fit
 
-    simple_dataset_on_off.exposure.data += 1e6
     simple_dataset_on_off.psf = None
 
     # TODO: this has never worked...
@@ -285,7 +277,6 @@ def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     mask_fit.data[:, 10, :] = False
     simple_dataset_on_off.mask_fit = mask_fit
 
-    simple_dataset_on_off.exposure.data += 1e6
     simple_dataset_on_off.psf = None
 
     # TODO: this has never worked...
