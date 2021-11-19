@@ -146,14 +146,12 @@ def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, rtol=1e-3)
 
 
-def test_significance_map_estimator_map_dataset_on_off_no_correlation(
+def test_excess_map_estimator_map_dataset_on_off_no_correlation(
     simple_dataset_on_off,
 ):
-    exposure = simple_dataset_on_off.exposure
-    exposure.data += 1e6
+    simple_dataset_on_off.exposure.data += 1e6
 
     # Test with exposure
-    simple_dataset_on_off.exposure = exposure
     estimator_image = ExcessMapEstimator(
         0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV, correlate_off=False
     )
@@ -166,12 +164,9 @@ def test_significance_map_estimator_map_dataset_on_off_no_correlation(
     assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
 
-def test_significance_map_estimator_map_dataset_on_off_with_correlation(
+def test_excess_map_estimator_map_dataset_on_off_with_correlation_no_exposure(
     simple_dataset_on_off,
 ):
-    exposure = simple_dataset_on_off.exposure
-    exposure.data += 1e6
-
     # First without exposure
     simple_dataset_on_off.exposure = None
 
@@ -185,8 +180,14 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert_allclose(result["npred_excess"].data[:, 10, 10], 97)
     assert_allclose(result["sqrt_ts"].data[:, 10, 10], 5.741116, atol=1e-5)
 
+
+def test_excess_map_estimator_map_dataset_on_off_with_correlation(
+    simple_dataset_on_off,
+):
+
     # Test with exposure
-    simple_dataset_on_off.exposure = exposure
+    simple_dataset_on_off.exposure.data += 1e6
+
     estimator_image = ExcessMapEstimator(
         0.11 * u.deg, energy_edges=[0.1, 1] * u.TeV, correlate_off=True
     )
@@ -198,7 +199,11 @@ def test_significance_map_estimator_map_dataset_on_off_with_correlation(
     assert_allclose(result_image["sqrt_ts"].data[0, 10, 10], 5.741116, atol=1e-3)
     assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
+
+def test_all(simple_dataset_on_off):
     # Test with mask fit
+    simple_dataset_on_off.exposure.data += 1e6
+
     mask_fit = Map.from_geom(
         simple_dataset_on_off._geom,
         data=np.ones(simple_dataset_on_off.counts.data.shape, dtype=bool),
