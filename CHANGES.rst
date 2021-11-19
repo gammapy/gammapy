@@ -23,6 +23,22 @@ Computation of `npred` on a ``MapDataset`` with a ``HpxGeom`` geometry is now po
 New catalog information has been added on `gammapy.catalog`, the data release 2 of the 4FGL
 and the third HAWC catalog.
 
+Several additions were made to the `gammapy.maps` subpackage.
+A new ``Maps`` container has been introduced. It is a `dict` like structure that stores ``Map``
+objects sharing the same geometry. It allows easy serialization and I/O to FITS for such objects.
+A ``MapAxes`` class, a container for ``MapAxis`` objects, has been introduced as well. It provides
+several convenience functionality to handle multiple non-spatial axes. This is especially useful
+after the addition of new axis type. So far, ``MapAxis`` only supports contiguous axes defined either
+through their edges or their centers. Non-contiguous axes types have been added. ``TimeMapAxis``
+provides an axis for non-adjacent time intervals. Similarly, ``LabelMapAxis`` provides an axis
+for non-numeric entries.
+#TODO: provide more detail on the underlying non-contiguous array structure?
+
+`gammapy.irf` has been significantly updated. A general ``IRF`` base class is now used. It relies
+on ``MapAxes`` and ``Quantity`` and provides most of the methods such as interpolation and I/O.
+A registry of IRFs is now added. All these new features, considerably simplify the addition of a
+type of IRF for a user.
+
 The `gammapy.estimators` package has been further cleaned-up. All ``Estimator`` objects share the
 same default options, in particular the full error and upper limit calculations are no longer
 calculated by default, but passing an option `selection_optional` parameter.
@@ -79,6 +95,8 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
+- [#3592] Avoid copy in background model evaluation (Quentin Rémy)
+- [#3584] Return Maps object in ASmoothMapEstimator (Axel Donath)
 - [#3568] Add test for event sampler using CTA IRF alpha configuration (Fabio Pintore)
 - [#3561] Add FluxPoints.is_ul setter and fix its serialisation (Quentin Rémy)
 - [#3559] Codespell infrastructure (Dimitri Papadopoulos)
@@ -110,6 +128,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3418] Refactor FluxPoints to rely on maps internally (Axel Donath)
 - [#3416] Mask invalid background values in SafeMaskMaker (Quentin Rémy)
 - [#3413] Introduce inheritance for Estimator classes (Axel Donath)
+- [#3409] Support iminuit v2.0 (Axel Donath)
 - [#3406] Add scan specification to the Parameter object (Axel Donath)
 - [#3404] Add is_pointlike property on irfs (Régis Terrier)
 - [#3403] Add sparse option to get_coord() methods (Axel Donath)
