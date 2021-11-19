@@ -25,7 +25,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
-from .utils import get_axes, get_figure
+from .utils import get_axes
 from .evaluator import MapEvaluator
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
@@ -1784,25 +1784,22 @@ class MapDataset(Dataset):
         axes = axes.flat
         axes[0].set_title("Counts")
         self.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
-        plot_mask(ax=axes[0], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
-        plot_mask(ax=axes[0], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
+        plot_mask(ax=axes[0], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[0], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
         axes[1].set_title("Excess counts")
         self.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
-        plot_mask(ax=axes[1], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
-        plot_mask(ax=axes[1], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
+        plot_mask(ax=axes[1], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[1], mask=self.mask_safe_image,  hatches=["///"], colors="w")
 
         axes[2].set_title("Exposure")
         self.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
-        plot_mask(ax=axes[2], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
-        plot_mask(ax=axes[2], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
+        plot_mask(ax=axes[2], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
         axes[3].set_title("Background")
         self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
-        plot_mask(ax=axes[3], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
-        plot_mask(ax=axes[3], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
-
-        plt.tight_layout()
+        plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
