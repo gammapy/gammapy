@@ -1137,7 +1137,7 @@ class Map(abc.ABC):
             img = self.get_image_by_idx(idx)
             stretch = ikwargs["stretch"]
             with mpl.rc_context(rc=rc_params):
-                fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
+                img.plot(stretch=stretch, **kwargs)
                 plt.show()
 
     def copy(self, **kwargs):

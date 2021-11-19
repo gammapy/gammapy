@@ -117,6 +117,7 @@ expose how to perform more specific use cases.
    api/maps.ipynb
    api/mask_maps.ipynb
    api/astro_dark_matter.ipynb
+   api/datasets.ipynb
 
 
 .. _tutorials_scripts:
