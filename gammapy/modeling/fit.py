@@ -190,7 +190,7 @@ class Fit:
 
         if backend == "minuit":
             self._minuit = optimizer
-            kwargs["method"] = "minos"
+            kwargs["method"] = "migrad"
 
         trace = table_from_row_data(info.pop("trace"))
 

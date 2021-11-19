@@ -91,7 +91,8 @@ def test_run(backend):
     result = fit.run([dataset])
     pars = result.parameters
 
-    assert result.success is True
+    assert result.success
+    assert result.method == "migrad"
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
@@ -121,7 +122,7 @@ def test_optimize(backend):
     result = fit.optimize([dataset])
     pars = dataset.models.parameters
 
-    assert result.success is True
+    assert result.success
     assert_allclose(result.total_stat, 0, atol=1)
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
@@ -143,7 +144,7 @@ def test_confidence(backend):
     fit.optimize([dataset])
     result = fit.confidence(datasets=[dataset], parameter="x")
 
-    assert result["success"] is True
+    assert result["success"]
     assert_allclose(result["errp"], 1)
     assert_allclose(result["errn"], 1)
 
@@ -159,7 +160,7 @@ def test_confidence_frozen(backend):
     fit.optimize([dataset])
     result = fit.confidence(datasets=[dataset], parameter="y")
 
-    assert result["success"] is True
+    assert result["success"]
     assert_allclose(result["errp"], 1)
     assert_allclose(result["errn"], 1)
 
