@@ -1,9 +1,9 @@
 0.19 (unreleased)
 -----------------
 
-- No changes yet
-- 17 contributors
-- 259 pull requests so far (not all listed below)
+- Released November , 2021
+- 19 contributors
+- 350 pull requests so far (not all listed below)
 
 **What's new?**
 
@@ -53,10 +53,12 @@ and moved from Travis to GitHub actions.
 
 In alphabetical order by first name:
 
+- Alexis Coutinho
 - Atreyee Sinha
 - Axel Donath
 - Bruno Khelifi
 - Cosimo Nigro
+- Dimitri Papadopoulos
 - Fabio Acero
 - Fabio Pintore
 - Jalel Hajlaoui
@@ -77,6 +79,20 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
+- [#3568] Add test for event sampler using CTA IRF alpha configuration (Fabio Pintore)
+- [#3561] Add FluxPoints.is_ul setter and fix its serialisation (Quentin Rémy)
+- [#3559] Codespell infrastructure (Dimitri Papadopoulos)
+- [#3544] Add FluxMaps.success quantity (Bruno Khelifi)
+- [#3529] Correct map evaluator to avoid memory overload (Régis Terrier)
+- [#3523] Add .sample_time to GaussianTemporalMode` and ExpDecayTemporalModel (Fabio Pintore)
+- [#3515] Add RadMax2d IRF (Maximilian Nöthe)
+- [#3491] Use FluxMaps as return type for ExcessMapEstimator (Axel Donath)
+- [#3488] Add a Datasets API notebook (Atreyee Sinha)
+- [#3480] Implement FluxProfileEstimator (Axel Donath)
+- [#3474] Return min/max energy maps from energy_range methods (Alexis Coutinho)
+- [#3471] Rename MapDataset.to_spectrum and improve docstring (Axel Donath)
+- [#3468] Prevents spatial model integration if no psf is present and add test (Régis Terrier)
+- [#3466] Restructure gammapy maps with subfolders (Axel Donath)
 - [#3458] Support binned time series format in FluxPoints.to_table() (Axel Donath)
 - [#3454] Add npred quantities to flux point computation (Axel Donath)
 - [#3453] Adapt Gammapy to regions v0.5 (Axel Donath)
