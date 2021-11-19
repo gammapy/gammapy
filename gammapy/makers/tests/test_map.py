@@ -230,7 +230,7 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
 
 @requires_data()
-def test_make_map_no(observations):
+def test_make_map_no_count(observations):
     dataset = MapDataset.create(geom((0.1, 1, 10)))
     maker_obs = MapDatasetMaker(selection=["exposure"])
     map_dataset = maker_obs.run(dataset, observation=observations[0])
