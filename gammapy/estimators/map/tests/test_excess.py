@@ -273,6 +273,32 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
     assert_allclose(result_mod["flux"].data[0, 10, 10], 1.906806e-08, rtol=1e-3)
     assert_allclose(result_mod["flux"].data.sum(), 5.920642e-06, rtol=1e-3)
 
+
+def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
+            simple_dataset_on_off,
+    ):
+    mask_fit = Map.from_geom(
+        simple_dataset_on_off._geom,
+        data=np.ones(simple_dataset_on_off.counts.data.shape, dtype=bool),
+    )
+    mask_fit.data[:, :, 10] = False
+    mask_fit.data[:, 10, :] = False
+    simple_dataset_on_off.mask_fit = mask_fit
+
+    simple_dataset_on_off.exposure.data += 1e6
+    simple_dataset_on_off.psf = None
+
+    # TODO: this has never worked...
+    model = SkyModel(
+        PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
+        GaussianSpatialModel(
+            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+        ),
+        name="sky_model",
+    )
+
+    simple_dataset_on_off.models = [model]
+
     spectral_model = PowerLawSpectralModel(index=15)
     estimator_mod = ExcessMapEstimator(
         0.11 * u.deg,
