@@ -200,7 +200,9 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation(
     assert_allclose(result_image["flux"].data[:, 10, 10], 9.7e-9, atol=1e-5)
 
 
-def test_all(simple_dataset_on_off):
+def test_excess_map_estimator_map_dataset_on_off_with_correlation_mask_fit(
+    simple_dataset_on_off,
+):
     # Test with mask fit
     simple_dataset_on_off.exposure.data += 1e6
 
@@ -229,6 +231,20 @@ def test_all(simple_dataset_on_off):
     assert result_image["flux"].unit == u.Unit("cm-2s-1")
     assert_allclose(result_image["flux"].data[0, 9, 9], 1.190928e-08, rtol=1e-3)
 
+
+def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
+            simple_dataset_on_off,
+    ):
+
+    mask_fit = Map.from_geom(
+        simple_dataset_on_off._geom,
+        data=np.ones(simple_dataset_on_off.counts.data.shape, dtype=bool),
+    )
+    mask_fit.data[:, :, 10] = False
+    mask_fit.data[:, 10, :] = False
+    simple_dataset_on_off.mask_fit = mask_fit
+
+    simple_dataset_on_off.exposure.data += 1e6
     simple_dataset_on_off.psf = None
 
     # TODO: this has never worked...
