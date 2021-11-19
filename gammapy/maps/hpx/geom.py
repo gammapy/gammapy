@@ -1374,7 +1374,7 @@ class HpxGeom(Geom):
         if not isinstance(other, self.__class__):
             return NotImplemented
 
-        if self.is_allsky and other.is_allsky is False:
+        if self.is_allsky and not other.is_allsky:
             return NotImplemented
 
         # check overall shape and axes compatibility

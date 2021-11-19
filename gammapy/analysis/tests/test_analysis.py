@@ -138,7 +138,7 @@ def test_set_models():
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
     analysis.set_models(models=models_str)
-    assert isinstance(analysis.models, Models) is True
+    assert isinstance(analysis.models, Models)
     with pytest.raises(TypeError):
         analysis.set_models(0)
 
@@ -341,7 +341,7 @@ def test_analysis_no_bkg_1d(caplog):
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
+    assert not isinstance(analysis.datasets[0], SpectrumDatasetOnOff)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "No background maker set. Check configuration." in [
         _.message for _ in caplog.records
@@ -355,7 +355,7 @@ def test_analysis_no_bkg_3d(caplog):
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    assert isinstance(analysis.datasets[0], MapDataset) is True
+    assert isinstance(analysis.datasets[0], MapDataset)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "No background maker set. Check configuration." in [
         _.message for _ in caplog.records

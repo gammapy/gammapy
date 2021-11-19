@@ -175,7 +175,7 @@ class ObservationTable(Table):
         tstart = self.time_start
         tstop = self.time_stop
 
-        if partial_overlap is False:
+        if not partial_overlap:
             mask1 = time_range[0] <= tstart
             mask2 = time_range[1] >= tstop
         else:

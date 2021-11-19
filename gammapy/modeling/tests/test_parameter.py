@@ -17,7 +17,7 @@ def test_parameter_init():
     assert par.unit == "deg"
     assert par.min is np.nan
     assert par.max is np.nan
-    assert par.frozen is False
+    assert not par.frozen
 
     par = Parameter("spam", "42 deg")
     assert par.factor == 42
@@ -251,7 +251,7 @@ def test_update_from_dict():
     assert par.unit == "GeV"
     assert par.min == 0
     assert par.max is np.nan
-    assert par.frozen is True
+    assert par.frozen
     data = {
         "model": "gc",
         "type": "spectral",
@@ -263,4 +263,4 @@ def test_update_from_dict():
         "unit": "GeV",
     }
     par.update_from_dict(data)
-    assert par.frozen is True
+    assert par.frozen

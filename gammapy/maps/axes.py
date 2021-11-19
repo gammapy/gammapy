@@ -165,7 +165,7 @@ class MapAxis:
         # TODO: implement an allclose method for MapAxis and call it here
         if self.edges.shape != other.edges.shape:
             return False
-        if self.unit.is_equivalent(other.unit) is False:
+        if not self.unit.is_equivalent(other.unit):
             return False
         return (
             np.allclose(

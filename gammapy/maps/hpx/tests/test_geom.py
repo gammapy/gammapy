@@ -632,7 +632,7 @@ def test_hpxgeom_from_header():
     hpx = HpxGeom.from_header(header)
 
     assert hpx.frame == "icrs"
-    assert hpx.nest is False
+    assert not hpx.nest
     assert_allclose(hpx.nside, np.array([64]))
 
 

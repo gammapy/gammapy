@@ -94,7 +94,7 @@ def test_region_center_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, ob
         datasets.append(dataset)
 
     assert isinstance(datasets[0], SpectrumDataset)
-    assert datasets[0].exposure.meta["is_pointlike"] is False
+    assert not datasets[0].exposure.meta["is_pointlike"]
 
     assert_allclose(datasets[0].counts.data.sum(), 100)
     assert_allclose(datasets[1].counts.data.sum(), 92)

@@ -196,7 +196,7 @@ class TestFermi4FGLObject:
         model = self.cat["4FGL J1443.0-6227e"].spatial_model()
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
-        assert model.normalize is True
+        assert model.normalize
 
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_sky_model(self, ref):
@@ -377,7 +377,7 @@ class TestFermi3FGLObject:
         model = self.cat[602].spatial_model()
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
-        assert model.normalize is True
+        assert model.normalize
 
         model = self.cat["3FGL J0000.2-3738"].spatial_model()
         pos_err = model.position_error
@@ -529,7 +529,7 @@ class TestFermi2FHLObject:
         model = self.cat[256].spatial_model()
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
-        assert model.normalize is True
+        assert model.normalize
         # TODO: have to check the extended template used for RX J1713,
         # for now I guess it's the same than for 3FGL
         # and added a copy with the name given by 2FHL in gammapy-extra

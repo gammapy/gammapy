@@ -226,9 +226,9 @@ def test_restore_status(models):
         model.amplitude.value = 0
         model.amplitude.frozen = True
         assert model.amplitude.value == 0
-        assert model.amplitude.frozen is True
+        assert model.amplitude.frozen
     assert_allclose(model.amplitude.value, 1e-11)
-    assert model.amplitude.frozen is False
+    assert not model.amplitude.frozen
 
     with models.parameters.restore_status(restore_values=False):
         model.amplitude.value = 0
