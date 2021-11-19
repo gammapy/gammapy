@@ -1754,103 +1754,8 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def plot_counts(self, ax=None, kwargs_counts=None, **kwargs):
-        """Plot counts and background.
 
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
-        kwargs_counts: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts.
-        **kwargs: dict
-            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Axes object.
-        """
-        kwargs_counts = kwargs_counts or {}
-
-        plot_kwargs = kwargs.copy()
-        plot_kwargs.update(kwargs_counts)
-        plot_kwargs.setdefault("label", "Counts")
-        plot_kwargs.setdefault("add_cbar", True)
-        plot_kwargs.setdefault("cmap", "coolwarm")
-
-        ax = self.counts.sum_over_axes().plot(ax=ax, **plot_kwargs)
-
-        return ax
-
-    def plot_masks(self, ax=None, kwargs_fit=None, kwargs_safe=None):
-        """Plot mask safe and mask fit
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
-        kwargs_fit: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
-        kwargs_safe: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for maks safe
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Axes object.
-        """
-        from matplotlib import colors as colors
-        kwargs_fit = kwargs_fit or {}
-        kwargs_safe = kwargs_safe or {}
-
-        c_white = colors.colorConverter.to_rgba('white', alpha=0)
-        c_black = colors.colorConverter.to_rgba('black', alpha=1)
-        cmap_rb = colors.LinearSegmentedColormap.from_list('rb_cmap', [c_black, c_white], 512)
-
-        kwargs_fit.setdefault("label", "Mask fit")
-        kwargs_fit.setdefault("cmap", cmap_rb)
-        kwargs_safe.setdefault("label", "Mask safe")
-        kwargs_safe.setdefault("cmap", cmap_rb)
-
-        if self.mask_fit:
-            self.mask_fit_image.plot(ax=ax, **kwargs_fit)
-
-        if self.mask_safe:
-            self.mask_safe_image.plot(ax=ax, **kwargs_safe)
-
-        return ax
-
-    def plot_excess(self, ax=None, kwargs_excess=None, **kwargs):
-        """Plot excess and predicted signal.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
-        kwargs_excess: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for
-            the excess.
-        **kwargs: dict
-            Keyword arguments passed to both plot methods.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Axes object.
-        """
-        kwargs_excess = kwargs_excess or {}
-
-        plot_kwargs = kwargs.copy()
-        plot_kwargs.update(kwargs_excess)
-        plot_kwargs.setdefault("label", "Excess counts")
-        plot_kwargs.setdefault("add_cbar", True)
-        plot_kwargs.setdefault("cmap", "coolwarm")
-        ax = self.excess.sum_over_axes().plot(ax, **plot_kwargs)
-
-        return ax
-
-    def peek(self, fig=None):
+    def peek(self, figsize=(12,10)):
         """Quick-look summary plots.
 
         Parameters
@@ -1863,55 +1768,41 @@ class MapDataset(Dataset):
         ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
             Counts, excess and exposure.
         """
-        geom = self._geom.to_image()
-        fig = get_figure(fig, 16, 8)
-        [ax1, ax2, ax3],[ax4, ax5, ax6]  = fig.subplots(2, 3, projection=geom.wcs)
+        def plot_mask(ax, mask, **kwargs):
+            if mask is not None:
+                mask.plot_mask(ax=ax, **kwargs)
 
-        if self.mask_fit is not None:
-            mask_fit = self.mask_fit.reduce_over_axes(func=np.logical_or)
-        else:
-            mask_fit = Map.from_geom(geom, data=True, dtype='bool')
+        import matplotlib.pyplot as plt
 
-        if self.mask_safe is not None:
-            mask_safe = self.mask_safe.reduce_over_axes(func=np.logical_or)
-        else:
-            mask_safe = Map.from_geom(geom, data=True, dtype='bool')
+        fig, axes  = plt.subplots(ncols=2,
+                                  nrows=2,
+                                  subplot_kw={"projection": self._geom.wcs},
+                                  figsize=figsize,
+                                  gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+                                  )
 
+        axes = axes.flat
+        axes[0].set_title("Counts")
+        self.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
+        plot_mask(ax=axes[0], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
+        plot_mask(ax=axes[0], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
 
-        ax1.set_title("Counts")
-        self.counts.sum_over_axes().plot(ax=ax1, add_cbar=True)
-        mask_fit.plot_mask(ax=ax1, label="Mask safe", alpha=0.2)
-        mask_safe.plot_mask(ax=ax1, label="Mask safe", hatches=["///"], colors="w")
+        axes[1].set_title("Excess counts")
+        self.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        plot_mask(ax=axes[1], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
+        plot_mask(ax=axes[1], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
 
-        ax2.set_title("Excess counts")
-        self.excess.sum_over_axes().plot(ax=ax2, add_cbar=True)
-        mask_fit.plot_mask(ax=ax2, label="Mask safe", alpha=0.2)
-        mask_safe.plot_mask(ax=ax2, label="Mask safe", hatches=["///"], colors="w")
+        axes[2].set_title("Exposure")
+        self.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
+        plot_mask(ax=axes[2], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
+        plot_mask(ax=axes[2], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
 
-        ax3.set_title("Exposure")
-        self.exposure.sum_over_axes().plot(ax=ax3, add_cbar=True)
-        mask_safe.plot_mask(ax=ax3, label="Mask safe", hatches=["///"], colors="w")
+        axes[3].set_title("Background")
+        self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
+        plot_mask(ax=axes[3], mask=self.mask_fit_image, label="Mask safe", alpha=0.2)
+        plot_mask(ax=axes[3], mask=self.mask_safe_image,  label="Mask safe", hatches=["///"], colors="w")
 
-        ax4.set_title("Background")
-        self.background.sum_over_axes().plot(ax=ax4, add_cbar=True)
-        mask_fit.plot_mask(ax=ax4, label="Mask safe", alpha=0.2)
-        mask_safe.plot_mask(ax=ax4, label="Mask safe", hatches=["///"], colors="w")
-
-        ax5.set_title("Npred Signal")
-        self.npred_signal().sum_over_axes().plot(ax=ax5, add_cbar=True)
-        mask_fit.plot_mask(ax=ax5, label="Mask safe", alpha=0.2)
-        mask_safe.plot_mask(ax=ax5, label="Mask safe", hatches=["///"], colors="w")
-
-        ax6.set_title("")
-        self.counts.to_region_nd_map().plot(ax=ax6)
-        self.background.to_region_nd_map().plot(ax=ax6)
-
-#        mask_fit.plot_mask(ax=ax5, label="Mask safe", alpha=0.2)
-#        mask_safe.plot_mask(ax=ax5, label="Mask safe", hatches=["///"], colors="w")
-
-
-        return ax1, ax2, ax3
-
+        plt.tight_layout()
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
