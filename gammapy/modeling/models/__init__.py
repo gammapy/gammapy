@@ -73,6 +73,8 @@ __all__ = [
     "SPECTRAL_MODEL_REGISTRY",
     "Models",
     "SkyModel",
+    "FoVBackgroundModel",
+    "TemplateNPredModel",
     "create_crab_spectral_model",
     "create_cosmic_ray_spectral_model",
     "SpatialModel",
