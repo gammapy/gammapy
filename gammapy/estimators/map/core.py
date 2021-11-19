@@ -975,8 +975,6 @@ class FluxMaps:
 
         for key, item in self._data.items():
             data[key] = item.slice_by_idx(slices)
-            if key is "success":
-                data[key].data = data[key].data.astype(bool)
 
         return self.__class__(
             data=data,
