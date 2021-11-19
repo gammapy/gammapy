@@ -2,13 +2,13 @@
 """Source catalog and object base classes."""
 import abc
 import numbers
-import numpy as np
 from copy import deepcopy
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
-from gammapy.utils.table import table_from_row_data, table_row_to_dict
-from gammapy.modeling.models import Models
 from gammapy.maps import TimeMapAxis
+from gammapy.modeling.models import Models
+from gammapy.utils.table import table_from_row_data, table_row_to_dict
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 

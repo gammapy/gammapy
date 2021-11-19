@@ -3,31 +3,29 @@
 import copy
 import re
 import numpy as np
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy import units as u
 from astropy.utils import lazyproperty
 from gammapy.utils.array import is_power2
-from .io import HPX_FITS_CONVENTIONS
+from ..axes import MapAxes
+from ..coord import MapCoord, skycoord_to_lonlat
+from ..geom import Geom, pix_tuple_to_idx
+from ..utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
+from .io import HPX_FITS_CONVENTIONS, HpxConv
 from .utils import (
+    coords_to_vec,
+    get_nside_from_pix_size,
+    get_pix_size_from_nside,
     get_subpixels,
     get_superpixels,
-    parse_hpxregion,
-    unravel_hpx_index,
-    ravel_hpx_index,
-    coords_to_vec,
-    get_pix_size_from_nside,
-    get_nside_from_pix_size,
-    nside_to_order,
     match_hpx_pix,
+    nside_to_order,
+    parse_hpxregion,
+    ravel_hpx_index,
+    unravel_hpx_index,
 )
-from .io import HpxConv
-from ..utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
-from ..geom import Geom, pix_tuple_to_idx
-from ..coord import MapCoord, skycoord_to_lonlat
-from ..axes import MapAxes
-
 
 # Not sure if we should expose this in the docs or not:
 # HPX_FITS_CONVENTIONS, HpxConv

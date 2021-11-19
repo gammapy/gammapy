@@ -8,7 +8,6 @@ from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
 
-
 __all__ = ["FluxProfileEstimator"]
 
 

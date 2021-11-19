@@ -1,12 +1,11 @@
-import logging
 import contextlib
+import logging
 from multiprocessing import Pool
 import numpy as np
-
 from astropy.coordinates import Angle
+from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from .core import Maker
 from .safe import SafeMaskMaker
-from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 
 log = logging.getLogger(__name__)
 

@@ -3,12 +3,12 @@ import logging
 import numpy as np
 from astropy import units as u
 from gammapy.datasets import Datasets
-from gammapy.modeling import Fit
 from gammapy.maps import MapAxis
+from gammapy.modeling import Fit
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.table import table_from_row_data
-from .core import FluxPoints
 from ..flux import FluxEstimator
+from .core import FluxPoints
 
 log = logging.getLogger(__name__)
 

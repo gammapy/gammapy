@@ -5,17 +5,13 @@ from scipy import stats
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
+from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
+from gammapy.maps.axes import flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
-from gammapy.maps import RegionNDMap, Maps, TimeMapAxis, MapAxis
-from gammapy.maps.axes import flat_if_equal
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
-from ..map.core import (
-    FluxMaps,
-    DEFAULT_UNIT,
-)
-
+from ..map.core import DEFAULT_UNIT, FluxMaps
 
 __all__ = ["FluxPoints"]
 

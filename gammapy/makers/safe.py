@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.coordinates import Angle
 from astropy import units as u
+from astropy.coordinates import Angle
 from regions import PointSkyRegion
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import Map

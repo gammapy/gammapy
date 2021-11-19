@@ -209,8 +209,8 @@ def mpl_plot_check():
     This is writing to an in-memory byte buffer, i.e. is faster
     than writing to disk.
     """
-    import matplotlib.pyplot as plt
     from io import BytesIO
+    import matplotlib.pyplot as plt
 
     class MPLPlotCheck:
         def __enter__(self):

@@ -9,7 +9,7 @@ from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
-from .core import Model, Models, ModelBase
+from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel

@@ -6,7 +6,6 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
-    Model,
     SPECTRAL_MODEL_REGISTRY,
     BrokenPowerLawSpectralModel,
     CompoundSpectralModel,
@@ -18,6 +17,7 @@ from gammapy.modeling.models import (
     GaussianSpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
+    Model,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
     PowerLaw2SpectralModel,

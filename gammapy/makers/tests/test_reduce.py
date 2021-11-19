@@ -2,20 +2,20 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
+from regions import CircleSkyRegion
 from gammapy.data import DataStore
+from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import (
     DatasetsMaker,
-    MapDatasetMaker,
-    SafeMaskMaker,
     FoVBackgroundMaker,
-    SpectrumDatasetMaker,
+    MapDatasetMaker,
     ReflectedRegionsBackgroundMaker,
+    SafeMaskMaker,
+    SpectrumDatasetMaker,
 )
-from gammapy.maps import MapAxis, WcsGeom, RegionGeom
-from gammapy.datasets import MapDataset, SpectrumDataset
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
-from regions import CircleSkyRegion
 
 
 @pytest.fixture(scope="session")

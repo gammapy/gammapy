@@ -4,7 +4,7 @@ import numpy as np
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDatasetOnOff
-from gammapy.maps import Map, WcsNDMap, Maps
+from gammapy.maps import Map, Maps, WcsNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import CashCountsStatistic
 from gammapy.utils.array import scale_cube

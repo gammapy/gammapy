@@ -1,18 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import collections.abc
 import copy
+import logging
 from os.path import split
-import yaml
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from regions import PointSkyRegion
+import yaml
+from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import RegionGeom, Map
-
 
 log = logging.getLogger(__name__)
 
@@ -860,7 +859,7 @@ class DatasetModels(collections.abc.Sequence):
             Name of the new model
 
         """
-        from . import SkyModel, TemplateSpatialModel, PowerLawNormSpectralModel
+        from . import PowerLawNormSpectralModel, SkyModel, TemplateSpatialModel
 
         unit = u.Unit("1 / (cm2 s sr TeV)")
         map_ = Map.from_geom(geom, unit=unit)
@@ -1015,7 +1014,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
         del self._models[self.index(key)]
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import SkyModel, FoVBackgroundModel
+        from gammapy.modeling.models import FoVBackgroundModel, SkyModel
 
         if isinstance(model, (SkyModel, FoVBackgroundModel)):
             self._models[self.index(key)] = model

@@ -2,18 +2,18 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from regions import CircleSkyRegion
 from astropy import units as u
 from astropy.time import Time
+from regions import CircleSkyRegion
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
 from gammapy.maps import (
+    LabelMapAxis,
     Map,
     MapAxis,
     RegionGeom,
     RegionNDMap,
     TimeMapAxis,
-    LabelMapAxis,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 

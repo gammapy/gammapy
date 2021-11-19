@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 from pydantic.error_wrappers import ValidationError
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
-from gammapy.maps import WcsNDMap, WcsGeom
+from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data, requires_dependency
 

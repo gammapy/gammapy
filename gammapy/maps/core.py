@@ -7,9 +7,9 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
-from .geom import pix_tuple_to_idx
 from .axes import MapAxis
 from .coord import MapCoord
+from .geom import pix_tuple_to_idx
 from .io import JsonQuantityDecoder
 
 __all__ = ["Map"]
@@ -172,8 +172,8 @@ class Map(abc.ABC):
             Empty map object.
         """
         from .hpx import HpxMap
-        from .wcs import WcsMap
         from .region import RegionNDMap
+        from .wcs import WcsMap
 
         map_type = kwargs.setdefault("map_type", "wcs")
         if "wcs" in map_type.lower():
@@ -243,8 +243,8 @@ class Map(abc.ABC):
 
         """
         from .hpx import HpxGeom
-        from .wcs import WcsGeom
         from .region import RegionGeom
+        from .wcs import WcsGeom
 
         if isinstance(geom, HpxGeom):
             map_type = "hpx"
@@ -1111,8 +1111,8 @@ class Map(abc.ABC):
         """
         import matplotlib as mpl
         import matplotlib.pyplot as plt
-        from ipywidgets.widgets.interaction import interact, fixed
-        from ipywidgets import SelectionSlider, RadioButtons
+        from ipywidgets import RadioButtons, SelectionSlider
+        from ipywidgets.widgets.interaction import fixed, interact
 
         if self.geom.is_image:
             raise TypeError("Use .plot() for 2D Maps")

@@ -8,8 +8,8 @@ from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
 from gammapy.estimators import (
-    FluxPointsEstimator,
     ExcessMapEstimator,
+    FluxPointsEstimator,
     LightCurveEstimator,
 )
 from gammapy.makers import (
@@ -20,11 +20,11 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
-from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
+from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]
 

@@ -2,11 +2,10 @@
 import json
 import numpy as np
 from astropy.io import fits
+from ..core import Map
+from ..io import JsonQuantityEncoder, find_bands_hdu, find_hdu
 from .geom import WcsGeom
 from .io import identify_wcs_format
-from ..core import Map
-from ..io import find_bands_hdu, find_hdu, JsonQuantityEncoder
-
 
 __all__ = ["WcsMap"]
 

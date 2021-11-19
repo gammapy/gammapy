@@ -8,13 +8,13 @@ from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
     ConstantTemporalModel,
-    LinearTemporalModel,
     ExpDecayTemporalModel,
     GaussianTemporalModel,
+    LightCurveTemplateTemporalModel,
+    LinearTemporalModel,
+    PowerLawSpectralModel,
     PowerLawTemporalModel,
     SineTemporalModel,
-    LightCurveTemplateTemporalModel,
-    PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.scripts import make_path

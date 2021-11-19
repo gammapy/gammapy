@@ -2,8 +2,8 @@
 """iminuit fitting functions."""
 import logging
 import numpy as np
+from scipy.stats import chi2, norm
 from .likelihood import Likelihood
-from scipy.stats import norm, chi2
 
 __all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit", "mncontour"]
 

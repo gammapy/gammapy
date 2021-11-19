@@ -6,8 +6,8 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from .utils import INVALID_INDEX
 from .io import find_bands_hdu, find_hdu
+from .utils import INVALID_INDEX
 
 __all__ = ["Geom"]
 

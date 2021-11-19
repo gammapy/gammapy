@@ -8,19 +8,19 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
-    TemplateNPredModel,
+    ConstantTemporalModel,
     EBLAbsorptionNormSpectralModel,
-    SkyModel,
+    ExpDecayTemporalModel,
+    GaussianTemporalModel,
+    LinearTemporalModel,
     Model,
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
-    ConstantTemporalModel,
-    LinearTemporalModel,
-    ExpDecayTemporalModel,
-    GaussianTemporalModel,
     PowerLawTemporalModel,
     SineTemporalModel,
+    SkyModel,
+    TemplateNPredModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data

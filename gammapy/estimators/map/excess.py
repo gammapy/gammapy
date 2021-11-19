@@ -8,9 +8,9 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
-from .core import FluxMaps
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
+from .core import FluxMaps
 
 __all__ = [
     "ExcessMapEstimator",

@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.io import fits
 from astropy.coordinates import Angle
+from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKing
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency

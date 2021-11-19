@@ -2,13 +2,13 @@
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
-from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.gauss import Gauss2DPDF
-from .kernel import PSFKernel
-from .core import PSF
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
+from .core import PSF
+from .kernel import PSFKernel
 
 __all__ = ["PSFMap"]
 

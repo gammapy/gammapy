@@ -1,11 +1,11 @@
 """Example plot showing stacking of two datasets."""
 
-import matplotlib.pyplot as plt
 from astropy import units as u
-from gammapy.datasets import MapDataset, Datasets
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
+from gammapy.datasets import Datasets, MapDataset
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 
 region = CircleSkyRegion(
     center=SkyCoord(0, 0, unit="deg", frame="galactic"), radius=0.3 * u.deg

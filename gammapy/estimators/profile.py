@@ -8,7 +8,6 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from .core import Estimator
 
-
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
 
 

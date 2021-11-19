@@ -1,6 +1,6 @@
 """Plot Fermi PSF."""
 from gammapy.irf import PSFMap
-from gammapy.maps import WcsGeom, MapAxis
+from gammapy.maps import MapAxis, WcsGeom
 
 filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz"
 psf = PSFMap.read(filename, format="gtpsf")

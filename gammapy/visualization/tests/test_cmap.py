@@ -6,8 +6,8 @@ from gammapy.visualization import colormap_hess, colormap_milagro
 
 def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
     """Helper function to check RGB values of color images"""
-    from matplotlib.colors import Normalize
     from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import Normalize
 
     norm = Normalize(vmin, vmax)
     sm = ScalarMappable(norm=norm, cmap=cmap)

@@ -2,9 +2,9 @@
 import logging
 import subprocess
 from pathlib import Path
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy import units as u
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker

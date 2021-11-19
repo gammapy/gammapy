@@ -1,19 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
-from astropy.io import fits
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from regions import PointSkyRegion
 from gammapy.utils.units import unit_from_fits_image_hdu
-import logging
-from .geom import HpxGeom
-from .core import HpxMap
-from .io import HpxConv, HPX_FITS_CONVENTIONS
-from .utils import HpxToWcsMapping, get_superpixels, get_pix_size_from_nside
-from ..utils import INVALID_INDEX
-from ..geom import pix_tuple_to_idx
 from ..coord import MapCoord
-
+from ..geom import pix_tuple_to_idx
+from ..utils import INVALID_INDEX
+from .core import HpxMap
+from .geom import HpxGeom
+from .io import HPX_FITS_CONVENTIONS, HpxConv
+from .utils import HpxToWcsMapping, get_pix_size_from_nside, get_superpixels
 
 __all__ = ["HpxNDMap"]
 
@@ -939,10 +938,10 @@ class HpxNDMap(HpxMap):
 
         # FIXME: Figure out how to force a square aspect-ratio like imshow
 
-        import matplotlib.pyplot as plt
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
         import healpy as hp
+        import matplotlib.pyplot as plt
+        from matplotlib.collections import PatchCollection
+        from matplotlib.patches import Polygon
 
         wcs = self.geom.to_wcs_geom(proj=proj, oversample=1)
         if ax is None:

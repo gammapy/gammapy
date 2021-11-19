@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.special
-from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 from astropy.visualization import quantity_support
-from gammapy.maps import MapAxis, MapAxes, RegionGeom
+from gammapy.maps import MapAxes, MapAxis, RegionGeom
 from ..core import IRF
 
 __all__ = ["EnergyDispersion2D"]
@@ -225,8 +225,8 @@ class EnergyDispersion2D(IRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        from matplotlib.colors import PowerNorm
         import matplotlib.pyplot as plt
+        from matplotlib.colors import PowerNorm
 
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("norm", PowerNorm(gamma=0.5))

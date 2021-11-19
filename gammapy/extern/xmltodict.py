@@ -356,8 +356,8 @@ def unparse(input_dict, output=None, encoding="utf-8", full_document=True, **kwa
 
 
 if __name__ == "__main__":  # pragma: no cover
-    import sys
     import marshal
+    import sys
 
     (item_depth,) = sys.argv[1:]
     item_depth = int(item_depth)

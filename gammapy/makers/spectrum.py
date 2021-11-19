@@ -3,7 +3,6 @@ import logging
 from regions import CircleSkyRegion
 from .map import MapDatasetMaker
 
-
 __all__ = ["SpectrumDatasetMaker"]
 
 log = logging.getLogger(__name__)

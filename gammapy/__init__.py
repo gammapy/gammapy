@@ -52,8 +52,8 @@ def song(karaoke=False):
     karaoke : bool
         Print lyrics to sing along.
     """
-    import webbrowser
     import sys
+    import webbrowser
 
     webbrowser.open("https://gammapy.org/gammapy_song.mp3")
 

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spatial models."""
 import logging
+import os
 import numpy as np
 import scipy.integrate
 import scipy.special
@@ -20,7 +21,6 @@ from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
-import os
 
 log = logging.getLogger(__name__)
 

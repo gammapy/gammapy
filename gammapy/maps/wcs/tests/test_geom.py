@@ -7,7 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from regions import CircleSkyRegion
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.maps.utils import _check_width, _check_binsz
+from gammapy.maps.utils import _check_binsz, _check_width
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [

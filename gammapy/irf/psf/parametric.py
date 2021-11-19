@@ -3,11 +3,10 @@ import abc
 import logging
 import numpy as np
 from astropy import units as u
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from .core import PSF
-
 
 __all__ = ["ParametricPSF", "EnergyDependentMultiGaussPSF", "PSFKing"]
 
@@ -185,8 +184,8 @@ class ParametricPSF(PSF):
         psf3d : `~gammapy.irf.PSF3D`
             PSF3D.
         """
-        from gammapy.irf import PSF3D
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
+        from gammapy.irf import PSF3D
 
         offset_axis = self.axes["offset"]
         energy_axis_true = self.axes["energy_true"]

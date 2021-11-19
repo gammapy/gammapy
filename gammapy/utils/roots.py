@@ -2,9 +2,9 @@
 """Utils to find roots of a scalar function within a given range"""
 
 import numpy as np
+from scipy.optimize import RootResults, root_scalar
 import astropy.units as u
 from gammapy.utils.interpolation import interpolation_scale
-from scipy.optimize import root_scalar, RootResults
 
 BAD_RES = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
 

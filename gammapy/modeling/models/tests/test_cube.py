@@ -3,17 +3,16 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import SkyCoord
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.time import Time
 from regions import CircleSkyRegion
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
-from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
-    TemplateNPredModel,
     CompoundSpectralModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
@@ -24,6 +23,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     SpatialModel,
+    TemplateNPredModel,
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )

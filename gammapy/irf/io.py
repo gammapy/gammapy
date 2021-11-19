@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from astropy.io import fits
-from gammapy.utils.scripts import make_path
-from gammapy.utils.fits import HDULocation
 from gammapy.data.hdu_index_table import HDUIndexTable
+from gammapy.utils.fits import HDULocation
+from gammapy.utils.scripts import make_path
 
 __all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
 
@@ -125,8 +125,8 @@ def load_cta_irfs(filename):
     <BLANKLINE>
     """
     from .background import Background3D
-    from .effective_area import EffectiveAreaTable2D
     from .edisp import EnergyDispersion2D
+    from .effective_area import EffectiveAreaTable2D
     from .psf import EnergyDependentMultiGaussPSF
 
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")

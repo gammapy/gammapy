@@ -2,14 +2,11 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.utils import lazyproperty
 from astropy.coordinates.angle_utilities import angular_separation
+from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.maps import Map
-from gammapy.modeling.models import (
-    TemplateNPredModel,
-    PointSpatialModel,
-)
+from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 
 PSF_CONTAINMENT = 0.999
 CUTOUT_MARGIN = 0.1 * u.deg

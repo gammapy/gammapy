@@ -2,13 +2,13 @@
 import itertools
 import logging
 import numpy as np
-from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
+from gammapy.utils.table import table_from_row_data
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
-    covariance_iminuit,
     contour_iminuit,
+    covariance_iminuit,
     optimize_iminuit,
 )
 from .scipy import confidence_scipy, optimize_scipy

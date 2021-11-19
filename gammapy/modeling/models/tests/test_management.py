@@ -1,20 +1,20 @@
 import pytest
 import numpy as np
-from astropy.coordinates import SkyCoord
-from astropy import units as u
-from regions import CircleSkyRegion
 from numpy.testing import assert_allclose
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Covariance
 from gammapy.modeling.models import (
-    TemplateNPredModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    FoVBackgroundModel,
+    TemplateNPredModel,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 
 
 @pytest.fixture(scope="session")

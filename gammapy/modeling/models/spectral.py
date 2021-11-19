@@ -16,9 +16,9 @@ from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
     interpolation_scale,
 )
+from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
-from gammapy.utils.roots import find_roots
 
 
 def scale_plot_flux(flux, energy_power=0):
@@ -362,8 +362,8 @@ class SpectralModel(ModelBase):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        from gammapy.estimators.map.core import DEFAULT_UNIT
         import matplotlib.pyplot as plt
+        from gammapy.estimators.map.core import DEFAULT_UNIT
 
         ax = plt.gca() if ax is None else ax
 
@@ -436,8 +436,8 @@ class SpectralModel(ModelBase):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        from gammapy.estimators.map.core import DEFAULT_UNIT
         import matplotlib.pyplot as plt
+        from gammapy.estimators.map.core import DEFAULT_UNIT
 
         ax = plt.gca() if ax is None else ax
 

@@ -10,7 +10,6 @@ from .io import *
 from .psf import *
 from .rad_max import *
 
-
 # TODO: add EDispMap?
 IRF_REGISTRY = Registry(
     [

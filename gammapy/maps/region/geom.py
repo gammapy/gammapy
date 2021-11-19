@@ -2,25 +2,25 @@ import copy
 from functools import lru_cache
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from astropy.wcs.utils import (
     proj_plane_pixel_area,
-    wcs_to_celestial_frame,
     proj_plane_pixel_scales,
+    wcs_to_celestial_frame,
 )
-from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
+from regions import CompoundSkyRegion, PixCoord, PointSkyRegion, Regions, SkyRegion
 from gammapy.utils.regions import (
+    compound_region_center,
     compound_region_to_regions,
     regions_to_compound_region,
-    compound_region_center,
 )
-from ..core import MapCoord, Map
-from ..utils import _check_width
-from ..geom import Geom, pix_tuple_to_idx
 from ..axes import MapAxes, MapAxis
+from ..core import Map, MapCoord
+from ..geom import Geom, pix_tuple_to_idx
+from ..utils import _check_width
 from ..wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -717,9 +717,9 @@ class RegionGeom(Geom):
         ax : `~astropy.visualization.WCSAxes`
             Axes to plot on.
         """
+        from astropy.visualization.wcsaxes import WCSAxes
         import matplotlib.pyplot as plt
         from matplotlib.collections import PatchCollection
-        from astropy.visualization.wcsaxes import WCSAxes
 
         if ax is None:
             ax = plt.gca()

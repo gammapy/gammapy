@@ -10,8 +10,8 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     FoVBackgroundModel,
     GaussianSpatialModel,
-    PowerLawSpectralModel,
     PowerLawNormSpectralModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency

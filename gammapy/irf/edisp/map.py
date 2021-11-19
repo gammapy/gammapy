@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from gammapy.maps import Map, MapAxis, MapAxes, MapCoord, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxes, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
-from .kernel import EDispKernel
 from ..core import IRFMap
+from .kernel import EDispKernel
 
 __all__ = ["EDispMap", "EDispKernelMap"]
 

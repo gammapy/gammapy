@@ -2,26 +2,26 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from regions import (
     CircleAnnulusSkyRegion,
+    CircleSkyRegion,
     EllipseSkyRegion,
     PointSkyRegion,
     PolygonSkyRegion,
-    CircleSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, WcsGeom, RegionGeom, MapAxis
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpatialModel,
     DiskSpatialModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PointSpatialModel,
-    ShellSpatialModel,
     Shell2SpatialModel,
+    ShellSpatialModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency

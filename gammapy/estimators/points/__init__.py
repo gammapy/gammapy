@@ -1,5 +1,5 @@
-from .lightcurve import *
-from .sensitivity import *
 from .core import *
+from .lightcurve import *
 from .profile import *
 from .sed import *
+from .sensitivity import *

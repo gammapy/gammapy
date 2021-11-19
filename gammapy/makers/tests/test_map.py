@@ -2,16 +2,16 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from regions import CircleSkyRegion
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
+from regions import CircleSkyRegion
 from gammapy.data import GTI, DataStore, EventList, Observation
 from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker, FoVBackgroundMaker
-from gammapy.maps import Map, MapAxis, WcsGeom, HpxGeom
+from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
+from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
 
 

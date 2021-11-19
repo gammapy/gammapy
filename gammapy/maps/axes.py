@@ -1,18 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections.abc import Sequence
 import copy
 import inspect
+from collections.abc import Sequence
 import numpy as np
 import scipy
 import astropy.units as u
-from astropy.time import Time
 from astropy.io import fits
 from astropy.table import Column, Table, hstack
+from astropy.time import Time
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
-from gammapy.utils.time import time_ref_to_dict, time_ref_from_dict
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
-
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 

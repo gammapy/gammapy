@@ -3,11 +3,11 @@ import copy
 from functools import lru_cache
 import numpy as np
 import astropy.units as u
+from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import overlap_slices
-from astropy.convolution import Tophat2DKernel
 from astropy.utils import lazyproperty
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
@@ -15,14 +15,10 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from gammapy.utils.array import round_up_to_odd, round_up_to_even
-from ..geom import (
-    Geom,
-    get_shape,
-    pix_tuple_to_idx,
-)
+from gammapy.utils.array import round_up_to_even, round_up_to_odd
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
+from ..geom import Geom, get_shape, pix_tuple_to_idx
 from ..utils import INVALID_INDEX, _check_binsz, _check_width
 
 __all__ = ["WcsGeom"]

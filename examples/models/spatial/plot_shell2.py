@@ -38,7 +38,6 @@ although that approximation is still very good even for 10 deg radius shells.
 # In this case the relative width, eta, acts as a shape parameter.
 
 import matplotlib.pyplot as plt
-
 from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,

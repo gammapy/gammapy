@@ -16,9 +16,9 @@ from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cytho
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
-from .core import FluxMaps
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
+from .core import FluxMaps
 
 __all__ = ["TSMapEstimator"]
 

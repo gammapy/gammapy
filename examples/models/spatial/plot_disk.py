@@ -74,11 +74,11 @@ ax.text(2.15, 2.3, r"$\phi$", transform=transform)
 # %%
 # This plot illustrates the definition of the edge parameter:
 
-import matplotlib.pyplot as plt
+import numpy as np
 from astropy import units as u
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
 from gammapy.modeling.models import DiskSpatialModel
-import numpy as np
 
 lons = np.linspace(0, 0.3, 500) * u.deg
 

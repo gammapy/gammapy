@@ -5,22 +5,14 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.datasets.evaluator import MapEvaluator
 from gammapy.irf import PSFKernel
-
-from gammapy.maps import (
-    MapAxis,
-    RegionGeom,
-    RegionNDMap,
-    Map,
-    WcsGeom,
-)
+from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
+    ConstantSpectralModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
     SkyModel,
-    ConstantSpectralModel,
 )
-
 from gammapy.utils.gauss import Gauss2DPDF
 
 

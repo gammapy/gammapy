@@ -2,15 +2,15 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
+from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.modeling.models import (
+    Models,
+    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
     TemplateSpatialModel,
-    PowerLawNormSpectralModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 

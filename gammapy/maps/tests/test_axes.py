@@ -2,15 +2,14 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.time import Time
-from astropy.table import Table
 import astropy.units as u
-from gammapy.maps import RegionNDMap, MapAxis, TimeMapAxis, MapAxes, LabelMapAxis
+from astropy.table import Table
+from astropy.time import Time
 from gammapy.data import GTI
-from gammapy.utils.testing import requires_data, assert_time_allclose
+from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import assert_time_allclose, requires_data
 from gammapy.utils.time import time_ref_to_dict
-
 
 MAP_AXIS_INTERP = [
     (np.array([0.25, 0.75, 1.0, 2.0]), "lin"),

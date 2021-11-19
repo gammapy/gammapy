@@ -21,8 +21,8 @@ from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
     CompoundSkyRegion,
-    Regions,
     RectangleSkyRegion,
+    Regions,
 )
 
 __all__ = [

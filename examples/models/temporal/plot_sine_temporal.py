@@ -16,18 +16,18 @@ This model parametrises a time model of sinusoidal modulation.
 # ------------
 # Here is an example plot of the model:
 
+import numpy as np
 from astropy import units as u
 from astropy.time import Time
 import matplotlib.pyplot as plt
-import numpy as np
 # %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:
 from gammapy.modeling.models import (
-    SineTemporalModel,
     Models,
     PowerLawSpectralModel,
+    SineTemporalModel,
     SkyModel,
 )
 

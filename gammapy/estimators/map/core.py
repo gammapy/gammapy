@@ -9,8 +9,8 @@ from gammapy.data import GTI
 from gammapy.maps import Map, Maps
 from gammapy.modeling.models import (
     Models,
-    SkyModel,
     PowerLawSpectralModel,
+    SkyModel,
     SpectralModel,
 )
 from gammapy.utils.scripts import make_path

@@ -6,8 +6,8 @@ import itertools
 import logging
 import numpy as np
 from astropy import units as u
-from gammapy.utils.table import table_from_row_data
 from gammapy.utils.interpolation import interpolation_scale
+from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
 

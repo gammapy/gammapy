@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from gammapy.maps import MapAxis
 from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
-from gammapy.modeling.models import Models, ScaleSpectralModel
+from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Fit, Parameter
-from gammapy.maps import Map
+from gammapy.modeling.models import Models, ScaleSpectralModel
 
 log = logging.getLogger(__name__)
 

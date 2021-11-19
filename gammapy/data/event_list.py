@@ -2,11 +2,11 @@
 import collections
 import logging
 import numpy as np
+from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
-from astropy import units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
@@ -676,8 +676,8 @@ class EventList:
         allsky : bool
             Whether to look at the events allsky
         """
-        import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec
+        import matplotlib.pyplot as plt
 
         if allsky:
             gs = gridspec.GridSpec(nrows=2, ncols=2)

@@ -24,9 +24,9 @@ import matplotlib.pyplot as plt
 # -------------------
 # Here is an example YAML file using the model:
 from gammapy.modeling.models import (
-    PowerLawTemporalModel,
     Models,
     PowerLawSpectralModel,
+    PowerLawTemporalModel,
     SkyModel,
 )
 

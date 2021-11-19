@@ -5,9 +5,9 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.utils.scripts import make_path
+from gammapy.irf import EDispKernel, EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.irf import EDispKernelMap, EDispKernel
+from gammapy.utils.scripts import make_path
 from .spectrum import SpectrumDatasetOnOff
 
 

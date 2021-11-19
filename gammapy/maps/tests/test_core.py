@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
-from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, WcsGeom, WcsNDMap, TimeMapAxis
+from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, TimeMapAxis, WcsGeom, WcsNDMap
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 pytest.importorskip("healpy")

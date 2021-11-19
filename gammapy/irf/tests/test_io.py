@@ -1,15 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import logging
+import numpy as np
 from numpy.testing import assert_allclose
-from astropy.units import Quantity
 import astropy.units as u
 from astropy.io import fits
-from gammapy.irf import load_cta_irfs, load_irf_dict_from_file
-from gammapy.utils.testing import requires_data
-from gammapy.utils.scripts import make_path
-from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
+from astropy.units import Quantity
+from gammapy.irf import (
+    Background3D,
+    EffectiveAreaTable2D,
+    EnergyDispersion2D,
+    load_cta_irfs,
+    load_irf_dict_from_file,
+)
 from gammapy.maps import MapAxis
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 
 @requires_data()

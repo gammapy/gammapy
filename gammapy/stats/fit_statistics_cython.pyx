@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # cython: language_level=3
 import numpy as np
+
 cimport numpy as np
 cimport cython
+
 
 cdef extern from "math.h":
     float log(float x)

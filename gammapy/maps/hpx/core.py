@@ -3,10 +3,10 @@ import abc
 import json
 import numpy as np
 from astropy.io import fits
+from ..core import Map
+from ..io import find_bands_hdu, find_bintable_hdu
 from .geom import HpxGeom
 from .io import HpxConv
-from ..io import find_bands_hdu, find_bintable_hdu
-from ..core import Map
 
 __all__ = ["HpxMap"]
 

@@ -7,7 +7,6 @@ from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Model
 from ..core import Maker
 
-
 __all__ = ["FoVBackgroundMaker"]
 
 log = logging.getLogger(__name__)

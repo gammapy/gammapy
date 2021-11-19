@@ -5,15 +5,15 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.estimators.utils import estimate_exposure_reco_energy
 from gammapy.irf import PSFMap
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.testing import requires_data
-from gammapy.estimators.utils import estimate_exposure_reco_energy
 
 
 def image_to_cube(input_map, energy_min, energy_max):

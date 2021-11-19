@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
 from gammapy.irf import load_cta_irfs
 from gammapy.utils.testing import (

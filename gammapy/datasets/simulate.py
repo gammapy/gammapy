@@ -2,7 +2,7 @@
 """Simulate observations"""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord, SkyOffsetFrame, EarthLocation, AltAz
+from astropy.coordinates import AltAz, EarthLocation, SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 import gammapy
 from gammapy.data import EventList, observatory_locations

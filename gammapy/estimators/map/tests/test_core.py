@@ -2,18 +2,18 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.io import fits
-from astropy.coordinates import SkyCoord
 import astropy.units as u
+from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from gammapy.data import GTI
-from gammapy.maps import MapAxis, WcsNDMap, RegionGeom, Maps
-from gammapy.modeling.models import (
-    SkyModel,
-    PowerLawSpectralModel,
-    PointSpatialModel,
-    LogParabolaSpectralModel,
-)
 from gammapy.estimators import FluxMaps
+from gammapy.maps import MapAxis, Maps, RegionGeom, WcsNDMap
+from gammapy.modeling.models import (
+    LogParabolaSpectralModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 

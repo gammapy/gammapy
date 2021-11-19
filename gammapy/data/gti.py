@@ -2,9 +2,9 @@
 import copy
 from operator import le, lt
 import numpy as np
+from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
-from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import (

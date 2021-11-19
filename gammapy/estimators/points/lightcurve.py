@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import astropy.units as u
 import numpy as np
+import astropy.units as u
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
-from gammapy.maps import TimeMapAxis, LabelMapAxis, Map
-from gammapy.utils.pbar import progress_bar
+from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
 from gammapy.modeling import Fit
+from gammapy.utils.pbar import progress_bar
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
 

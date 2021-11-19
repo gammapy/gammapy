@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from regions import PixCoord
 from gammapy.datasets import SpectrumDatasetOnOff
-from gammapy.maps import RegionGeom, RegionNDMap, WcsNDMap, WcsGeom
+from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]

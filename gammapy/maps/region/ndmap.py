@@ -1,16 +1,16 @@
 from itertools import product
 import numpy as np
+from scipy.ndimage.measurements import label as ndi_label
 from astropy import units as u
 from astropy.io import fits
+from astropy.nddata import block_reduce
 from astropy.table import Table
 from astropy.visualization import quantity_support
-from astropy.nddata import block_reduce
-from scipy.ndimage.measurements import label as ndi_label
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
+from ..axes import MapAxes, MapAxis
 from ..core import Map
 from ..geom import pix_tuple_to_idx
-from ..axes import MapAxes, MapAxis
 from ..region import RegionGeom
 from ..utils import INVALID_INDEX
 

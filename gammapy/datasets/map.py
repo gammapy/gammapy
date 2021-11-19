@@ -8,10 +8,7 @@ from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling.models import (
-    DatasetModels,
-    FoVBackgroundModel,
-)
+from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
@@ -25,8 +22,8 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
-from .utils import get_axes
 from .evaluator import MapEvaluator
+from .utils import get_axes
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
 

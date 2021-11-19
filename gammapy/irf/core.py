@@ -1,17 +1,17 @@
-from copy import deepcopy
 import abc
 import logging
+from copy import deepcopy
 import numpy as np
-from astropy.io import fits
 from astropy import units as u
-from astropy.utils import lazyproperty
+from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import lazyproperty
 from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
+from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
     interpolation_scale,
 )
-from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.scripts import make_path
 from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
 

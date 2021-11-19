@@ -8,10 +8,10 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, EventList, FixedPointingInfo, Observation
 from gammapy.irf import (
+    Background2D,
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
-    Background2D,
 )
 from gammapy.makers.utils import (
     _map_spectrum_weight,

@@ -2,11 +2,11 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from regions import CircleSkyRegion
-from gammapy.maps import MapAxis, MapCoord, HpxGeom
+from gammapy.maps import HpxGeom, MapAxis, MapCoord
 from gammapy.maps.hpx.utils import (
     HpxToWcsMapping,
     get_pix_size_from_nside,

@@ -11,21 +11,20 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
 from regions import (
+    PixCoord,
+    PointPixelRegion,
     PointSkyRegion,
     RectangleSkyRegion,
     SkyRegion,
-    PixCoord,
-    PointPixelRegion,
 )
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
-from .geom import WcsGeom
-from .core import WcsMap
-from ..utils import INVALID_INDEX
-from ..geom import pix_tuple_to_idx
 from ..coord import MapCoord
-
+from ..geom import pix_tuple_to_idx
+from ..utils import INVALID_INDEX
+from .core import WcsMap
+from .geom import WcsGeom
 
 __all__ = ["WcsNDMap"]
 
@@ -342,8 +341,8 @@ class WcsNDMap(WcsMap):
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
         """
-        import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
+        import matplotlib.pyplot as plt
 
         if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
@@ -425,8 +424,8 @@ class WcsNDMap(WcsMap):
         return ax
 
     def _plot_default_axes(self, ax):
-        import matplotlib.pyplot as plt
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
+        import matplotlib.pyplot as plt
 
         if ax is None:
             fig = plt.gcf()
