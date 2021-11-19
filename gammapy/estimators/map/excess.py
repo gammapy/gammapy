@@ -96,9 +96,6 @@ class ExcessMapEstimator(Estimator):
         Default is None so the optional steps are not executed.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
-    apply_mask_fit : bool
-        Apply a mask for the computation.
-        A `~gammapy.datasets.MapDataset.mask_fit` must be present on the input dataset
     correlate_off : bool
         Correlate OFF events in the case of a `MapDatasetOnOff`. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
@@ -116,14 +113,12 @@ class ExcessMapEstimator(Estimator):
         n_sigma_ul=2,
         selection_optional=None,
         energy_edges=None,
-        apply_mask_fit=False,
         correlate_off=True,
         spectral_model=None,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
-        self.apply_mask_fit = apply_mask_fit
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
         self.correlate_off = correlate_off
@@ -192,7 +187,7 @@ class ExcessMapEstimator(Estimator):
 
         geom = dataset.counts.geom
 
-        if self.apply_mask_fit:
+        if  dataset.mask_fit:
             mask = dataset.mask
         elif dataset.mask_safe:
             mask = dataset.mask_safe
