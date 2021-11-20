@@ -240,7 +240,7 @@ class FluxMaps:
     @property
     def has_any_ts(self):
         """Whether the flux estimate has either sqrt(ts) or ts defined"""
-        return any([_ in self._data for _ in ["ts", "sqrt_ts"]])
+        return any(_ in self._data for _ in ["ts", "sqrt_ts"])
 
     @property
     def has_stat_profiles(self):
