@@ -884,8 +884,8 @@ class Map(abc.ABC):
         map_copy = self.copy()
 
         if preserve_counts:
-            if geom.ndim > 2:
-                assert self.geom.axes[0] == geom.axes[0]  # Energy axis has to match
+            if geom.ndim > 2 and geom.axes[0] != self.geom.axes[0]:
+                raise ValueError("Energy axis has to match")
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
         if map_copy.is_mask:
