@@ -10,6 +10,7 @@ from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
+from gammapy.maps import TimeMapAxis, RegionNDMap
 from .core import ModelBase
 
 
@@ -56,7 +57,7 @@ class TemporalModel(ModelBase):
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
 
-    def plot(self, time_range, ax=None):
+    def plot(self, time_range, ax=None, **kwargs):
         """
         Plot Temporal Model.
 
@@ -65,22 +66,29 @@ class TemporalModel(ModelBase):
         time_range : `~astropy.time.Time`
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
-            axis
+            Axis to plot on
+        **kwargs : dict
+            Keywords forwared to `~matplotlib.pyplot.errorbar`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
             axis
         """
-        import matplotlib.pyplot as plt
+        time_min, time_max = time_range
+        time_axis = TimeMapAxis.from_time_bounds(
+            time_min=time_min, time_max=time_max, nbin=100
+        )
 
-        ax = plt.gca() if ax is None else ax
-        t_min, t_max = time_range
-        n_value = 100
-        delta = t_max - t_min
-        times = t_min + delta * np.linspace(0, 1, n_value)
-        val = self(times)
-        ax.plot(times.mjd, val)
+        m = RegionNDMap.create(
+            region=None, axes=[time_axis]
+        )
+        kwargs.setdefault("marker", "None")
+        kwargs.setdefault("ls", "-")
+        kwargs.setdefault("xerr", None)
+        m.quantity = self(time_axis.time_mid)
+        ax = m.plot(ax=ax, **kwargs)
+        ax.set_ylabel("Norm / A.U.")
         return ax
 
     def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
