@@ -1056,7 +1056,7 @@ class TemplateSpatialModel(SpatialModel):
 
         self._map = map.copy()
 
-        self.meta = dict() if meta is None else meta
+        self.meta = {} if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
