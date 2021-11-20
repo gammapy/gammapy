@@ -151,7 +151,7 @@ class InterpolationScale:
         return self._scale(values)
 
     def inverse(self, values):
-        values = self._inverse(self, values)
+        values = self._inverse(values)
         if hasattr(self, "_unit"):
             return u.Quantity(values, self._unit, copy=False)
         else:
@@ -167,7 +167,6 @@ class LogScale(InterpolationScale):
         values = np.clip(values, self.tiny, np.inf)
         return np.log(values)
 
-    @staticmethod
     def _inverse(self, values):
         output = np.exp(values)
         return np.where(abs(output) - self.tiny <= self.tiny, 0, output)
@@ -181,7 +180,6 @@ class SqrtScale(InterpolationScale):
         sign = np.sign(values)
         return sign * np.sqrt(sign * values)
 
-    @staticmethod
     def _inverse(self, values):
         return np.power(values, 2)
 
@@ -197,7 +195,6 @@ class StatProfileScale(InterpolationScale):
         sign = np.sign(values)
         return sign * np.sqrt(sign * values)
 
-    @staticmethod
     def _inverse(self, values):
         return np.power(values, 2)
 
@@ -209,7 +206,6 @@ class LinearScale(InterpolationScale):
     def _scale(values):
         return values
 
-    @staticmethod
     def _inverse(self, values):
         return values
 
