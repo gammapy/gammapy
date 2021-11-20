@@ -147,7 +147,7 @@ class Fit:
 
         Returns
         -------
-        fit_result : `FitResult`
+        fit_result : `FitStepResult`
             Results
         """
         optimize_result = self.optimize(datasets=datasets)
@@ -477,7 +477,7 @@ class Fit:
         }
 
 
-class FitResult:
+class FitStepResult:
     """Fit result base class"""
 
     def __init__(self, parameters, backend, method, success, message):
@@ -522,13 +522,13 @@ class FitResult:
         )
 
 
-class CovarianceResult(FitResult):
+class CovarianceResult(FitStepResult):
     """Covariance result object."""
 
     pass
 
 
-class OptimizeResult(FitResult):
+class OptimizeResult(FitStepResult):
     """Optimize result object."""
 
     def __init__(self, nfev, total_stat, trace, covariance_result=None, **kwargs):
