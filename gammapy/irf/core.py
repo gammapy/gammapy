@@ -627,7 +627,7 @@ class IRFMap:
             exposure_map = Map.from_geom(
                 geom=geom_exposure, data=table["Exposure"].data, unit="cm2 s"
             )
-            return cls(psf_map=psf_map, exposure_map=exposure_map)
+            return cls(irf_map=psf_map, exposure_map=exposure_map)
         else:
             raise ValueError(f"Format {format} not supported")
 
