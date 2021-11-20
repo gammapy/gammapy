@@ -22,7 +22,7 @@ def cli():
 def get_git_shortlog_authors():
     """Get list of authors from git shortlog"""
     authors = []
-    command = "git shortlog --summary --numbered"
+    command = ("git", "shortlog", "--summary", "--numbered")
     result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
     data = result.split("\n")
     for row in data:
