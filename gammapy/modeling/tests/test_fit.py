@@ -94,7 +94,7 @@ def test_run(backend):
     pars = dataset.models.parameters
 
     assert result.success
-    assert result.method == "migrad"
+    assert result.optimize_result.method == "migrad"
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
