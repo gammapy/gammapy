@@ -1879,7 +1879,7 @@ class MapAxes(Sequence):
 
                 axes.append(axis)
         elif format == "gadf-dl3":
-            for column_prefix in IRF_DL3_AXES_SPECIFICATION.keys():
+            for column_prefix in IRF_DL3_AXES_SPECIFICATION:
                 try:
                     axis = MapAxis.from_table(
                         table, format=format, column_prefix=column_prefix
