@@ -438,7 +438,8 @@ class WcsNDMap(WcsMap):
 
         return ax
 
-    def _plot_format(self, ax):
+    @staticmethod
+    def _plot_format(ax):
         try:
             ax.coords["glon"].set_axislabel("Galactic Longitude")
             ax.coords["glat"].set_axislabel("Galactic Latitude")

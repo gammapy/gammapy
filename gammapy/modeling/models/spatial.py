@@ -738,7 +738,8 @@ class DiskSpatialModel(SpatialModel):
         edge_width_95 = 2.326174307353347
         return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
 
-    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge_width):
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, e, phi, edge_width):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 

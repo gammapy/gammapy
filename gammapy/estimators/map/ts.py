@@ -262,7 +262,8 @@ class TSMapEstimator(Estimator):
         flux = flux.convolve(kernel)
         return flux.sum_over_axes()
 
-    def estimate_mask_default(self, dataset):
+    @staticmethod
+    def estimate_mask_default(dataset):
         """Compute default mask where to estimate TS values.
 
         Parameters

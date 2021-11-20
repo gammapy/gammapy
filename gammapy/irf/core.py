@@ -233,7 +233,8 @@ class IRF(metaclass=abc.ABCMeta):
             data[~np.isfinite(data)] = self.interp_kwargs["fill_value"]
         return data
 
-    def _mask_out_bounds(self, invalid):
+    @staticmethod
+    def _mask_out_bounds(invalid):
         return np.any(invalid, axis=0)
 
     def integrate_log_log(self, axis_name, **kwargs):
