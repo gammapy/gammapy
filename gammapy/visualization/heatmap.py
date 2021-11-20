@@ -74,7 +74,7 @@ def annotate_heatmap(
     im,
     data=None,
     valfmt="{x:.2f}",
-    textcolors=["black", "white"],
+    textcolors=("black", "white"),
     threshold=None,
     **textkw
 ):

@@ -402,7 +402,7 @@ class PSFMap(IRFMap):
         return self.__class__(psf_map=psf, exposure_map=exposure)
 
     def plot_containment_radius_vs_energy(
-        self, ax=None, fraction=[0.68, 0.95], **kwargs
+        self, ax=None, fraction=(0.68, 0.95), **kwargs
     ):
         """Plot containment fraction as a function of energy.
 
