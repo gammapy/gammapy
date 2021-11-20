@@ -2523,6 +2523,31 @@ class TimeMapAxis:
             name=name,
         )
 
+    @classmethod
+    def from_time_bounds(cls, time_min, time_max, nbin, unit="d", name="time"):
+        """Create linearily spaced time axis from bounds
+
+        Parameters
+        ----------
+        time_min : `~astropy.time.Time`
+            Lower bound
+        time_max : `~astropy.time.Time`
+            Upper bound
+        nbin : int
+            Number of bins
+        name : str
+            Name of the axis.
+        """
+        delta = time_max - time_min
+        time_edges = time_min + delta * np.linspace(0, 1, nbin)
+        return cls.from_time_edges(
+            time_min=time_edges[:-1],
+            time_max=time_edges[1:],
+            interp="lin",
+            unit=unit,
+            name=name
+        )
+
     def to_header(self, format="gadf", idx=0):
         """Create FITS header
 
