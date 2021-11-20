@@ -216,7 +216,7 @@ one row represents one energy.
 
 A dedicated API could be introduced to support these objects. In order to keep the logic used in
 ``FluxPoints``, a flat table ``Table`` could be used to store the various fluxes, where each row
- would represent the flux at a given energy, time, position etc.
+would represent the flux at a given energy, time, position etc.
 
 Astropy provides a mechanism to group table rows according to column entries. It is then possible
 to extract the relevant ``FluxPoints`` object, representing the simple flux points or the lightcurve.
