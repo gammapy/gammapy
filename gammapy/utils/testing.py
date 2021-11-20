@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 # Cache for `requires_dependency`
-_requires_dependency_cache = dict()
+_requires_dependency_cache = {}
 
 
 def requires_dependency(name):

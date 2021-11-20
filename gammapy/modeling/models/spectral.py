@@ -1438,7 +1438,7 @@ class TemplateSpectralModel(SpectralModel):
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
-        self.meta = dict() if meta is None else meta
+        self.meta = {} if meta is None else meta
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("points_scale", ("log",))
@@ -1721,7 +1721,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
 
         """
-        models = dict()
+        models = {}
         models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
         models["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
         models["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"

@@ -118,7 +118,7 @@ class SourceCatalog(abc.ABC):
     @lazyproperty
     def _name_to_index_cache(self):
         # Make a dict for quick lookup: source name -> row index
-        names = dict()
+        names = {}
         for idx, row in enumerate(self.table):
             name = row[self._source_name_key]
             names[name.strip()] = idx

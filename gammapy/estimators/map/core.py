@@ -837,7 +837,7 @@ class FluxMaps:
         # TODO: handle reshaping in MapAxis
         factor = fluxes[f"ref_{sed_type}"].to(map_ref.unit)[cls._expand_slice]
 
-        data = dict()
+        data = {}
         data["norm"] = map_ref / factor
 
         for key in OPTIONAL_QUANTITIES[sed_type]:
