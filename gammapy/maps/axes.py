@@ -2308,7 +2308,8 @@ class TimeMapAxis:
         pix[~valid_pix] = INVALID_INDEX.float
         return pix - 0.5
 
-    def pix_to_idx(self, pix, clip=False):
+    @staticmethod
+    def pix_to_idx(pix, clip=False):
         return pix
 
     @property

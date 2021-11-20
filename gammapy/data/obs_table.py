@@ -377,7 +377,8 @@ class ObservationTableChecker(Checker):
     def __init__(self, obs_table):
         self.obs_table = obs_table
 
-    def _record(self, level="info", msg=None):
+    @staticmethod
+    def _record(level="info", msg=None):
         return {"level": level, "hdu": "obs-index", "msg": msg}
 
     def check_meta(self):
