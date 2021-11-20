@@ -145,10 +145,15 @@ class Fit:
     def run(self, datasets):
         """Run all fitting steps.
 
+        Parameters
+        ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
+
         Returns
         -------
-        fit_result : `FitStepResult`
-            Results
+        fit_result : `FitResult`
+            Fit result
         """
         optimize_result = self.optimize(datasets=datasets)
 
@@ -158,9 +163,10 @@ class Fit:
 
         covariance_result = self.covariance(datasets=datasets)
 
-        optimize_result._covariance_result = covariance_result
-
-        return optimize_result
+        return FitResult(
+            optimize_result=optimize_result,
+            covariance_result=covariance_result,
+        )
 
     def optimize(self, datasets):
         """Run the optimization.
@@ -523,11 +529,10 @@ class CovarianceResult(FitStepResult):
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
 
-    def __init__(self, nfev, total_stat, trace, covariance_result=None, **kwargs):
+    def __init__(self, nfev, total_stat, trace, **kwargs):
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
-        self._covariance_result = covariance_result
         super().__init__(**kwargs)
 
     @property
@@ -545,17 +550,56 @@ class OptimizeResult(FitStepResult):
         """Value of the fit statistic at minimum."""
         return self._total_stat
 
-    @property
-    def covariance_result(self):
-        """Covariance results."""
-        return self._covariance_result
-
     def __repr__(self):
         str_ = super().__repr__()
         str_ += f"\tnfev       : {self.nfev}\n"
         str_ += f"\ttotal stat : {self.total_stat:.2f}\n\n"
+        return str_
 
-        if self.covariance_result is not None:
+
+class FitResult:
+    """Fit result class
+
+    Parameters
+    ----------
+    optimize_result : `OptimizeResult`
+        Result of the optimization step.
+    covariance_result : `CovarianceResult`
+        Result of the covariance step.
+    """
+    def __init__(self, optimize_result=None, covariance_result=None):
+        self._optimize_result = optimize_result
+        self._covariance_result = covariance_result
+
+    @property
+    def total_stat(self):
+        """Total stat from the optimization"""
+        # TODO: is the convenience access needed?
+        return self.optimize_result.total_stat
+
+    @property
+    def success(self):
+        """Total success flag"""
+        success = self.optimize_result.success and self.covariance_result.success
+        return success
+
+    @property
+    def optimize_result(self):
+        """Optimize result"""
+        return self._optimize_result
+
+    @property
+    def covariance_result(self):
+        """Optimize result"""
+        return self._optimize_result
+
+    def __repr__(self):
+        str_ = ""
+        if self.optimize_result:
+            str_ += str(self.optimize_result)
+
+        if self.covariance_result:
             str_ += str(self.covariance_result)
 
         return str_
+
