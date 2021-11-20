@@ -71,8 +71,8 @@ class PSF(IRF):
 
     def info(
         self,
-        fraction=[0.68, 0.95],
-        energy_true=[[1.0], [10.0]] * u.TeV,
+        fraction=(0.68, 0.95),
+        energy_true=([1.0], [10.0]) * u.TeV,
         offset=0 * u.deg,
     ):
         """
@@ -118,7 +118,7 @@ class PSF(IRF):
         return info
 
     def plot_containment_radius_vs_energy(
-        self, ax=None, fraction=[0.68, 0.95], offset=[0, 1] * u.deg, **kwargs
+        self, ax=None, fraction=(0.68, 0.95), offset=(0, 1) * u.deg, **kwargs
     ):
         """Plot containment fraction as a function of energy.
 
