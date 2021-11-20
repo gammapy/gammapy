@@ -37,11 +37,8 @@ for the definition of flux. There are four types of SED flux estimates described
 gamma astro data format. They are;
 
 - ``dnde`` differential flux which is defined at a given ``e_ref``
-
 - ``e2dnde`` differential energy flux which is defined at a given ``e_ref``
-
 - ``flux`` integral flux defined between ``e_min`` and ``e_max``
-
 - ``eflux`` integral energy flux defined between ``e_min`` and ``e_max``
 
 
@@ -70,12 +67,9 @@ The various estimators implemented so far return different objects.
 
 - Map estimators return a dictionary of ``Map`` objects which are defined as ``flux`` types. Beyond the
 fixed flux type, there is no easy API to allow the user to serialize all the ``Maps`` at once.
-
 - ``FluxPointsEstimator`` returns a ``FluxPoints`` object using the ``likelihood`` normalization scheme.
-
 - ``LightCurveEstimator`` relies on the ``FluxPointsEstimator`` in each time interval but converts the output
 into a ``Table`` with one row per time interval and flux points stored as an array in each row.
-
 - ``ExcessProfileEstimator`` computes an integral flux (``flux`` type) in a list of regions and a list of energies.
 It returns a ``Table`` with one region per row, and energy dependent fluxes stored as an array in each row.
 
@@ -363,3 +357,5 @@ Decision
 ========
 The authors have decided to withdraw the PIG. Most of the proposed changes have been
 implemented independently with review and discussions on individuals PRs.
+
+.. _GH 3075: https://github.com/gammapy/gammapy/pull/3075

@@ -85,6 +85,7 @@ class Fit:
         http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
         options of the optimization methods are described on the following
         pages in detail:
+
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html

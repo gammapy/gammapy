@@ -10,7 +10,6 @@ from .io import *
 from .psf import *
 from .rad_max import *
 
-# TODO: add EDispMap?
 IRF_REGISTRY = Registry(
     [
         EffectiveAreaTable2D,
@@ -23,5 +22,9 @@ IRF_REGISTRY = Registry(
         PSFMap,
         EDispKernelMap,
         RadMax2D,
+        EDispMap
     ]
 )
+
+__all__ = ["IRF_REGISTRY"]
+__all__.extend(cls.__name__ for cls in IRF_REGISTRY)
