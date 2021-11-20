@@ -2539,7 +2539,7 @@ class TimeMapAxis:
             Name of the axis.
         """
         delta = time_max - time_min
-        time_edges = time_min + delta * np.linspace(0, 1, nbin)
+        time_edges = time_min + delta * np.linspace(0, 1, nbin + 1)
         return cls.from_time_edges(
             time_min=time_edges[:-1],
             time_max=time_edges[1:],

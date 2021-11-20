@@ -513,6 +513,14 @@ def test_slice_time_axis(time_intervals):
     assert_allclose(squashed.time_max[0].mjd, 58937.041667)
 
 
+def test_time_map_axis_from_time_bounds():
+    t_min = Time("2006-02-12", scale="utc")
+    t_max = t_min + 12 * u.h
+
+    axis = TimeMapAxis.from_time_bounds(time_min=t_min, time_max=t_max, nbin=3)
+    assert_allclose(axis.center, [0.083333, 0.25, 0.416667] * u.d, rtol=1e-5)
+
+
 def test_from_table_time_axis():
     t0 = Time("2006-02-12", scale="utc")
     t_min = np.linspace(0, 10, 10) * u.d
