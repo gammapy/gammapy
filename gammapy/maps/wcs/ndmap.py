@@ -371,7 +371,8 @@ class WcsNDMap(WcsMap):
 
         im = ax.imshow(data, **kwargs)
 
-        fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
+        if add_cbar:
+            fig.colorbar(im, ax=ax, label=str(self.unit))
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
