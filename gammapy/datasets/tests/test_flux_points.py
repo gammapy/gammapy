@@ -82,26 +82,26 @@ class TestFluxPointFit:
     def test_fit_pwl_minuit(self, dataset):
         fit = Fit()
         result = fit.run(dataset)
-        self.assert_result(result)
+        self.assert_result(result, dataset.models)
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, dataset):
         fit = Fit(backend="sherpa", optimize_opts={"method": "simplex"})
         result = fit.optimize(datasets=[dataset])
-        self.assert_result(result)
+        self.assert_result(result, dataset.models)
 
     @staticmethod
-    def assert_result(result):
+    def assert_result(result, models):
         assert result.success
         assert_allclose(result.total_stat, 25.2059, rtol=1e-3)
 
-        index = result.parameters["index"]
+        index = models.parameters["index"]
         assert_allclose(index.value, 2.216, rtol=1e-3)
 
-        amplitude = result.parameters["amplitude"]
+        amplitude = models.parameters["amplitude"]
         assert_allclose(amplitude.value, 2.1616e-13, rtol=1e-3)
 
-        reference = result.parameters["reference"]
+        reference = models.parameters["reference"]
         assert_allclose(reference.value, 1, rtol=1e-8)
 
     @staticmethod
@@ -129,8 +129,8 @@ class TestFluxPointFit:
         )
         assert_allclose(ts_diff, [110.244116, 0.0, 110.292074], rtol=1e-2, atol=1e-7)
 
-        value = result.parameters["amplitude"].value
-        err = result.parameters["amplitude"].error
+        value = model.parameters["amplitude"].value
+        err = model.parameters["amplitude"].error
 
         model.amplitude.scan_values = np.array([value - err, value, value + err])
         profile = fit.stat_profile(

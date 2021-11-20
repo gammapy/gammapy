@@ -299,7 +299,7 @@ def test_analysis_1d_stacked_no_fit_range():
 
     assert len(analysis.datasets) == 1
     assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
-    pars = analysis.fit_result.parameters
+    pars = analysis.models.parameters
     assert_allclose(analysis.datasets[0].mask_fit.data, True)
 
     assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
@@ -375,8 +375,8 @@ def test_analysis_3d():
     analysis.get_flux_points()
 
     assert len(analysis.datasets) == 1
-    assert len(analysis.fit_result.parameters) == 8
-    res = analysis.fit_result.parameters
+    assert len(analysis.models.parameters) == 8
+    res = analysis.models.parameters
     assert res["amplitude"].unit == "cm-2 s-1 TeV-1"
 
     table = analysis.flux_points.data.to_table(sed_type="dnde")

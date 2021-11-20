@@ -69,7 +69,9 @@ def test_optimize_backend_and_covariance(backend):
     fit = Fit(optimize_opts=kwargs)
     result = fit.run([dataset])
 
-    pars = result.parameters
+    assert result is not None
+
+    pars = dataset.models.parameters
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
     assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
@@ -89,7 +91,7 @@ def test_run(backend):
     dataset = MyDataset()
     fit = Fit(backend=backend)
     result = fit.run([dataset])
-    pars = result.parameters
+    pars = dataset.models.parameters
 
     assert result.success
     assert result.method == "migrad"

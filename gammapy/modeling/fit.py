@@ -212,7 +212,6 @@ class Fit:
         parameters.set_parameter_factors(factors)
         parameters.check_limits()
         return OptimizeResult(
-            parameters=parameters,
             total_stat=datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),
@@ -258,7 +257,6 @@ class Fit:
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
-            parameters=parameters,
             backend=backend,
             method=method,
             success=info["success"],
@@ -480,17 +478,11 @@ class Fit:
 class FitStepResult:
     """Fit result base class"""
 
-    def __init__(self, parameters, backend, method, success, message):
-        self._parameters = parameters
+    def __init__(self, backend, method, success, message):
         self._success = success
         self._message = message
         self._backend = backend
         self._method = method
-
-    @property
-    def parameters(self):
-        """Optimizer backend used for the fit."""
-        return self._parameters
 
     @property
     def backend(self):
