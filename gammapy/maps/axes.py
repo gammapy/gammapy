@@ -837,7 +837,7 @@ class MapAxis:
             Map axis group table.
         """
         # TODO: try to simplify this code
-        if not self.node_type == "edges":
+        if self.node_type != "edges":
             raise ValueError("Only edge based map axis can be grouped")
 
         edges_pix = self.coord_to_pix(edges)
