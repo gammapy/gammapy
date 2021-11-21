@@ -500,7 +500,7 @@ class RegionNDMap(Map):
         ----------
         table : `~astropy.table.Table`
             Table with input data
-        format : {"gadf-sed", "lightcurve"}
+        format : {"gadf-sed", "lightcurve", "profile"}
             Format to use
         colname : str
             Column name to take the data from.
@@ -537,6 +537,20 @@ class RegionNDMap(Map):
                 names = ["dataset", "energy", "time"]
             else:
                 names = ["energy", "time"]
+
+            axes = axes[names]
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        elif format == "profile":
+            axes = MapAxes.from_table(table=table, format=format)
+
+            if colname == "stat_scan":
+                names = ["norm", "energy", "projected-distance"]
+            # TODO: this is not officially supported by GADF...
+            elif colname in ["counts", "npred", "npred_excess"]:
+                names = ["dataset", "energy", "projected-distance"]
+            else:
+                names = ["energy", "projected-distance"]
 
             axes = axes[names]
             data = table[colname].data

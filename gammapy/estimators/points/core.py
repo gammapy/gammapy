@@ -192,7 +192,7 @@ class FluxPoints(FluxMaps):
             Table
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             Sed type
-        format : {"gadf-sed", "lightcurve"}
+        format : {"gadf-sed", "lightcurve", "profile"}
             Table format.
         reference_model : `SpectralModel`
             Reference spectral model
