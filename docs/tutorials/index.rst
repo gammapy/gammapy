@@ -89,6 +89,7 @@ time-dependent analysis with light-curves.
    analysis/3D/simulate_3d.ipynb
    analysis/3D/analysis_mwl.ipynb
    analysis/3D/event_sampling.ipynb
+   analysis/3D/flux_profiles.ipynb
 
 Time
 ~~~~
