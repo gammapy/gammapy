@@ -11,10 +11,6 @@ This model parametrises a lightCurve time model.
 
 
 from astropy.time import Time
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
 from gammapy.modeling.models import (
     LightCurveTemplateTemporalModel,
     Models,
@@ -27,6 +23,10 @@ path = "$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits"
 light_curve_model = LightCurveTemplateTemporalModel.read(path)
 light_curve_model.plot(time_range)
 
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),

@@ -20,10 +20,6 @@ import numpy as np
 from astropy import units as u
 from astropy.time import Time
 import matplotlib.pyplot as plt
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
 from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
@@ -32,11 +28,15 @@ from gammapy.modeling.models import (
 )
 
 time_range = [Time.now(), Time.now() + 16 * u.d]
-omega = np.pi/4. * u.rad/u.day
-sine_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=(time_range[0].mjd-0.1)*u.d)
+omega = np.pi / 4. * u.rad / u.day
+sine_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=(time_range[0].mjd-0.1) * u.d)
 sine_model.plot(time_range)
 plt.grid(which="both")
 
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),

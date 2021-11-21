@@ -20,10 +20,6 @@ This model parametrises an ExpDecay time model.
 from astropy import units as u
 from astropy.time import Time
 import matplotlib.pyplot as plt
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
 from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     Models,
@@ -38,6 +34,10 @@ expdecay_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d, t0=t0)
 expdecay_model.plot(time_range)
 plt.grid(which="both")
 
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),

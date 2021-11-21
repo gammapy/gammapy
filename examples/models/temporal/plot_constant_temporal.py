@@ -19,10 +19,6 @@ This model parametrises a constant time model.
 from astropy import units as u
 from astropy.time import Time
 import matplotlib.pyplot as plt
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
 from gammapy.modeling.models import (
     ConstantTemporalModel,
     Models,
@@ -35,6 +31,10 @@ constant_model = ConstantTemporalModel(const=1)
 constant_model.plot(time_range)
 plt.grid(which="both")
 
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),

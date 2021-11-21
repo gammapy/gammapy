@@ -79,6 +79,7 @@ class TemporalModel(ModelBase):
         time_axis = TimeMapAxis.from_time_bounds(
             time_min=time_min, time_max=time_max, nbin=100
         )
+        time_axis.time_format = "mjd"
 
         m = RegionNDMap.create(
             region=None, axes=[time_axis]

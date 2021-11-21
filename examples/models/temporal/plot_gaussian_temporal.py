@@ -19,10 +19,6 @@ This model parametrises a gaussian time model.
 from astropy import units as u
 from astropy.time import Time
 import matplotlib.pyplot as plt
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
 from gammapy.modeling.models import (
     GaussianTemporalModel,
     Models,
@@ -37,6 +33,10 @@ gaussian_model = GaussianTemporalModel(t_ref=t_ref.mjd * u.d, sigma=sigma)
 gaussian_model.plot(time_range)
 plt.grid(which="both")
 
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),

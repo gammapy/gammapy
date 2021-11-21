@@ -19,10 +19,6 @@ This model parametrises a linear time model.
 from astropy import units as u
 from astropy.time import Time
 import matplotlib.pyplot as plt
-# %%
-# YAML representation
-# -------------------
-# Here is an example YAML file using the model:
 from gammapy.modeling.models import (
     LinearTemporalModel,
     Models,
@@ -31,10 +27,14 @@ from gammapy.modeling.models import (
 )
 
 time_range = [Time.now(), Time.now() + 2 * u.d]
-linear_model = LinearTemporalModel(alpha=1, beta=0.5/u.d, t_ref=(time_range[0].mjd-0.1)*u.d)
+linear_model = LinearTemporalModel(alpha=1, beta=0.5/u.d, t_ref=(time_range[0].mjd - 0.1) * u.d)
 linear_model.plot(time_range)
 plt.grid(which="both")
 
+# %%
+# YAML representation
+# -------------------
+# Here is an example YAML file using the model:
 
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),
