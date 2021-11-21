@@ -548,7 +548,7 @@ class OptimizeResult(FitStepResult):
 
     @property
     def trace(self):
-        """Optimizer backend used for the fit."""
+        """Parameter trace from the optimisation"""
         return self._trace
 
     @property
@@ -582,17 +582,47 @@ class FitResult:
         self._optimize_result = optimize_result
         self._covariance_result = covariance_result
 
+    # TODO: is the convenience access needed?
     @property
     def parameters(self):
-        """Best fit parameters from the optimization"""
-        # TODO: is the convenience access needed?
+        """Best fit parameters of the optimization step"""
         return self.optimize_result.models.parameters
 
+    # TODO: is the convenience access needed?
     @property
     def total_stat(self):
-        """Total stat from the optimization"""
-        # TODO: is the convenience access needed?
+        """Total stat of the optimization step"""
         return self.optimize_result.total_stat
+
+    # TODO: is the convenience access needed?
+    @property
+    def trace(self):
+        """Parameter trace of the optimisation step"""
+        return self.optimize_result.trace
+
+    # TODO: is the convenience access needed?
+    @property
+    def nfev(self):
+        """Number of function evaluations of the optimisation step"""
+        return self.optimize_result.nfev
+
+    # TODO: is the convenience access needed?
+    @property
+    def backend(self):
+        """Optimizer backend used for the fit."""
+        return self.optimize_result.backend
+
+    # TODO: is the convenience access needed?
+    @property
+    def method(self):
+        """Optimizer method used for the fit."""
+        return self.optimize_result.method
+
+    # TODO: is the convenience access needed?
+    @property
+    def message(self):
+        """Optimizer status message."""
+        return self.optimize_result.message
 
     @property
     def success(self):
