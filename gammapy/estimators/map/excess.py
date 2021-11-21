@@ -69,6 +69,7 @@ class ExcessMapEstimator(Estimator):
     excess taking into account the predicted counts of the model.
 
     ..note::
+
         By default the excess estimator correlates the off counts as well to avoid
         artifacts at the edges of the :term:`FoV` for stacked on-off datasets.
         However when the on-off dataset has been derived from a ring background
