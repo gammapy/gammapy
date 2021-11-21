@@ -140,7 +140,7 @@ Here, :math:`k` denotes a bin in reconstructed energy,
 
 .. list-table::
    :widths: 25 25 50
-   :header-rows: 1
+   f:header-rows: 1
 
    * - Dataset attribute
      - Behaviour
@@ -180,7 +180,8 @@ the `npred` is conserved,
 ie, the predicted number of counts on the stacked
 dataset is the sum expected by stacking the `npred` of the individual runs,
 
-The following plot shows the individual and stacked energy dispersion kernel and `npred`  for two `SpectrumDataset`
+The following plot illustrates the stacked energy dispersion kernel and summed predicted counts for
+individual as well as stacked spectral datasets:
 
 .. plot:: datasets/plot_stack.py
 
@@ -189,8 +190,8 @@ The following plot shows the individual and stacked energy dispersion kernel and
     - Stacking happens in-place, ie, ``dataset1.stack(dataset2)`` will overwrite ``dataset1``
     - To properly handle masks, it is necessary to stack onto an empty dataset.
     - Stacking only works for maps with equivalent geometry.
-      Two geometries are called equivalent if one is exactly the same as, or can be obtained
-      from a cutout of, the other.
+      Two geometries are called equivalent if one is exactly the same as or can be obtained
+      from a cutout of the other.
 
 
 
