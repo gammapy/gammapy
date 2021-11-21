@@ -1242,10 +1242,8 @@ class MapAxis:
                 labels = np.unique(table["datasets"])
                 axis = LabelMapAxis(labels=labels, name="dataset")
             else:
-                x_min = table["x_min"].quantity
-                x_max = table["x_max"].quantity
-                edges = edges_from_lo_hi(x_min, x_max)
-                axis = MapAxis.from_edges(edges, name="projected-distance")
+                x_ref = table["x_ref"].quantity
+                axis = MapAxis.from_nodes(x_ref, name="projected-distance")
         else:
             raise ValueError(f"Format '{format}' not supported")
 
