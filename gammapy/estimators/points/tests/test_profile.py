@@ -153,6 +153,7 @@ def test_radial_profile_one_interval():
     assert_allclose(ul, [130.394824], rtol=1e-3)
 
 
+@requires_dependency("iminuit")
 def test_serialisation(tmpdir):
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
@@ -177,8 +178,6 @@ def test_serialisation(tmpdir):
     assert_allclose(result.npred, profile.npred)
     assert_allclose(result.ts, profile.ts)
 
-    print(result.is_ul)
-    print(profile.is_ul)
     assert np.all(result.is_ul == profile.is_ul)
 
 
