@@ -89,6 +89,8 @@ authors:
   family-names: de Almeida Coutinho
 - given-names: Matthias
   family-names: Wegenmat
+- given-names: Dimitri
+  family-names: Papadopoulos
 - given-names: Maximilian
   family-names: Nöthe
 - given-names: Nachiketa
@@ -96,22 +98,20 @@ authors:
 - given-names: Michael
   family-names: Droettboom
   affiliation: Mozilla
-- given-names: Helen
-  family-names: Poon
 - given-names: Jason
   family-names: Watson
   affiliation: DESY
+- given-names: Helen
+  family-names: Poon
 - given-names: Arjun
   family-names: Voruganti
+- given-names: Vikas
+  family-names: Joshi
+- given-names: Thomas
+  family-names: Armstrong
 - given-names: Erik
   family-names: Tollerud
   affiliation: Space Telescope Science Institute
-- given-names: Vikas
-  family-names: Joshi
-- given-names: Dimitri
-  family-names: Papadopoulos
-- given-names: Thomas
-  family-names: Armstrong
 - given-names: Erik
   name-particle: M.
   family-names: Bray
