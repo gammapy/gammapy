@@ -68,7 +68,7 @@ class TemporalModel(ModelBase):
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
         **kwargs : dict
-            Keywords forwared to `~matplotlib.pyplot.errorbar`
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`
 
         Returns
         -------

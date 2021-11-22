@@ -136,7 +136,7 @@ class Background3D(BackgroundIRF):
     def plot_at_energy(
         self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
     ):
-        """Plot the background rate in Field of view co-ordinates at a given energy.
+        """Plot the background rate in Field of view coordinates at a given energy.
 
         Parameters
         -----------
@@ -239,7 +239,7 @@ class Background2D(BackgroundIRF):
         )
 
     def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
-        """Plot the background rate in Field of view co-ordinates at a given energy.
+        """Plot the background rate in Field of view coordinates at a given energy.
 
         Parameters
         -----------

@@ -12,7 +12,7 @@ and improved performance. It provides a nearly complete API for the coming 1.0 r
 API changes a relatively limited and concern mostly the `gammapy.estimators` subpackage.
 Its API has been unified and now heavily relies on the ``Map`` structure.
 
-A wiki page containing specific informations on the main API changes from v0.18.2 to v0.19 is available
+A wiki page containing specific information on the main API changes from v0.18.2 to v0.19 is available
 [here](https://github.com/gammapy/gammapy/wiki/Main-API-changes-from-v0.18.2-to-v0.19).
 
 Documentation has been significantly reorganized. In particular, the tutorials have been

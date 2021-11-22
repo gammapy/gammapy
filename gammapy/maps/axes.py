@@ -2535,7 +2535,7 @@ class TimeMapAxis:
 
     @classmethod
     def from_time_bounds(cls, time_min, time_max, nbin, unit="d", name="time"):
-        """Create linearily spaced time axis from bounds
+        """Create linearly spaced time axis from bounds
 
         Parameters
         ----------

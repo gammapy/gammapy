@@ -133,7 +133,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
 
     try:
         minuit.minos(var, cl=cl, ncall=None)
-        info = minuit.merrors[var]
+        info = minuit.mirrors[var]
     except (AttributeError, RuntimeError) as error:
         return {
             "success": False,
