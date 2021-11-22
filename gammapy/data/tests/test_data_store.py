@@ -95,9 +95,7 @@ def test_broken_links_datastore(data_store):
     hdu_table = data_store.hdu_table
     index = np.where(hdu_table["OBS_ID"] == 23526)[0][0]
     hdu_table.remove_row(index)
-    hdu_table._hdu_type_stripped = np.array(
-        [_.strip() for _ in hdu_table["HDU_TYPE"]]
-    )
+    hdu_table._hdu_type_stripped = np.array([_.strip() for _ in hdu_table["HDU_TYPE"]])
     observations = data_store.get_observations(
         [23523, 23526], required_irf=["aeff", "bkg"]
     )

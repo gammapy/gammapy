@@ -275,7 +275,9 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             try:
                 dataset_sliced = dataset.slice_by_energy(
-                    energy_min=energy_min, energy_max=energy_max, name=dataset.name,
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                    name=dataset.name,
                 )
             except ValueError:
                 log.info(
@@ -431,7 +433,9 @@ class Datasets(collections.abc.MutableSequence):
 
         if filename_models:
             self.models.write(
-                filename_models, overwrite=overwrite, write_covariance=write_covariance,
+                filename_models,
+                overwrite=overwrite,
+                write_covariance=write_covariance,
             )
 
     def stack_reduce(self, name=None, nan_to_num=True):

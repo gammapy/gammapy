@@ -30,7 +30,11 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-model = PointSpatialModel(lon_0="0.01 deg", lat_0="0.01 deg", frame="galactic",)
+model = PointSpatialModel(
+    lon_0="0.01 deg",
+    lat_0="0.01 deg",
+    frame="galactic",
+)
 
 geom = WcsGeom.create(
     skydir=SkyCoord("0d 0d", frame="galactic"), width=(1, 1), binsz=0.1

@@ -28,8 +28,10 @@ from gammapy.modeling.models import (
 )
 
 time_range = [Time.now(), Time.now() + 16 * u.d]
-omega = np.pi / 4. * u.rad / u.day
-sine_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=(time_range[0].mjd-0.1) * u.d)
+omega = np.pi / 4.0 * u.rad / u.day
+sine_model = SineTemporalModel(
+    amp=0.5, omega=omega, t_ref=(time_range[0].mjd - 0.1) * u.d
+)
 sine_model.plot(time_range)
 plt.grid(which="both")
 

@@ -22,7 +22,7 @@ IRF_REGISTRY = Registry(
         PSFMap,
         EDispKernelMap,
         RadMax2D,
-        EDispMap
+        EDispMap,
     ]
 )
 

@@ -91,16 +91,24 @@ plt.plot(lons, profile / profile.max(), alpha=0.5)
 plt.xlabel("Radius (deg)")
 plt.ylabel("Profile (A.U.)")
 
-edge_min, edge_max = r_0 * (1 - edge_width / 2.), r_0 * (1 + edge_width / 2.)
+edge_min, edge_max = r_0 * (1 - edge_width / 2.0), r_0 * (1 + edge_width / 2.0)
 with quantity_support():
     plt.vlines([edge_min, edge_max], 0, 1, linestyles=["--"], color="k")
-    plt.annotate("", xy=(edge_min, 0.5), xytext=(edge_min + r_0 * edge_width, 0.5),
-                 arrowprops=dict(arrowstyle="<->", lw=2))
+    plt.annotate(
+        "",
+        xy=(edge_min, 0.5),
+        xytext=(edge_min + r_0 * edge_width, 0.5),
+        arrowprops=dict(arrowstyle="<->", lw=2),
+    )
     plt.text(0.2, 0.53, "Edge width", ha="center", size=12)
     margin = 0.02 * u.deg
-    plt.hlines([0.95], edge_min - margin, edge_min + margin, linestyles=["-"], color="k")
+    plt.hlines(
+        [0.95], edge_min - margin, edge_min + margin, linestyles=["-"], color="k"
+    )
     plt.text(edge_min + margin, 0.95, "95%", size=12, va="center")
-    plt.hlines([0.05], edge_max - margin, edge_max + margin, linestyles=["-"], color="k")
+    plt.hlines(
+        [0.05], edge_max - margin, edge_max + margin, linestyles=["-"], color="k"
+    )
     plt.text(edge_max - margin, 0.05, "5%", size=12, va="center", ha="right")
     plt.show()
 

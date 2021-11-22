@@ -27,10 +27,10 @@ from gammapy.modeling.models import (
 )
 
 time_range = [Time.now(), Time.now() + 2 * u.d]
-pl_model = PowerLawTemporalModel(alpha=-2., t_ref=(time_range[0].mjd - 0.1) * u.d)
+pl_model = PowerLawTemporalModel(alpha=-2.0, t_ref=(time_range[0].mjd - 0.1) * u.d)
 pl_model.plot(time_range)
 plt.grid(which="both")
-plt.yscale('log')
+plt.yscale("log")
 
 # %%
 # YAML representation

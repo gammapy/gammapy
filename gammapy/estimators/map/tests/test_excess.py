@@ -113,7 +113,9 @@ def test_compute_lima_on_off_image():
     assert_allclose(actual, desired, atol=0.2, rtol=1e-5)
 
     actual = np.nan_to_num(results["npred_background"].crop((11, 11)).data)
-    background_corr = image_to_cube(Map.read(filename, hdu="BACKGROUNDCORRELATED"), "1 TeV", "100 TeV")
+    background_corr = image_to_cube(
+        Map.read(filename, hdu="BACKGROUNDCORRELATED"), "1 TeV", "100 TeV"
+    )
     desired = background_corr.crop((11, 11)).data
 
     # Set boundary to NaN in reference image

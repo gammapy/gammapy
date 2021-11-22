@@ -45,7 +45,11 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-tags = [r"Disk-like, $\eta \rightarrow 0$", r"Shell, $\eta=0.25$", r"Peaked, $\eta\rightarrow 1$"]
+tags = [
+    r"Disk-like, $\eta \rightarrow 0$",
+    r"Shell, $\eta=0.25$",
+    r"Peaked, $\eta\rightarrow 1$",
+]
 eta_range = [0.001, 0.25, 1]
 fig, axes = plt.subplots(1, 3, figsize=(9, 6))
 for ax, eta, tag in zip(axes, eta_range, tags):

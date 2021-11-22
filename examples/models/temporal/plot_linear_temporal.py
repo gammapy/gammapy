@@ -27,7 +27,9 @@ from gammapy.modeling.models import (
 )
 
 time_range = [Time.now(), Time.now() + 2 * u.d]
-linear_model = LinearTemporalModel(alpha=1, beta=0.5/u.d, t_ref=(time_range[0].mjd - 0.1) * u.d)
+linear_model = LinearTemporalModel(
+    alpha=1, beta=0.5 / u.d, t_ref=(time_range[0].mjd - 0.1) * u.d
+)
 linear_model.plot(time_range)
 plt.grid(which="both")
 

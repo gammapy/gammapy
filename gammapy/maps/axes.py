@@ -2555,7 +2555,7 @@ class TimeMapAxis:
             time_max=time_edges[1:],
             interp="lin",
             unit=unit,
-            name=name
+            name=name,
         )
 
     def to_header(self, format="gadf", idx=0):

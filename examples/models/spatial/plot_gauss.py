@@ -64,7 +64,12 @@ from gammapy.modeling.models import (
 
 phi = Angle("30 deg")
 model = GaussianSpatialModel(
-    lon_0="2 deg", lat_0="2 deg", sigma="1 deg", e=0.7, phi=phi, frame="galactic",
+    lon_0="2 deg",
+    lat_0="2 deg",
+    sigma="1 deg",
+    e=0.7,
+    phi=phi,
+    frame="galactic",
 )
 
 geom = WcsGeom.create(

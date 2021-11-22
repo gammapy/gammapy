@@ -23,6 +23,7 @@ The class implementation follows closely what has been done in
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
+
 # %%
 # Spectral correction
 # Corrections to templates can be applied by multiplication with a normalized spectral model,

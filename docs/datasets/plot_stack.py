@@ -12,10 +12,14 @@ from gammapy.data import Observation
 from gammapy.makers import SpectrumDatasetMaker
 
 
-energy_true = MapAxis.from_energy_bounds("0.1 TeV", "20 TeV", nbin=20, per_decade=True, name="energy_true")
+energy_true = MapAxis.from_energy_bounds(
+    "0.1 TeV", "20 TeV", nbin=20, per_decade=True, name="energy_true"
+)
 energy_reco = MapAxis.from_energy_bounds("0.2 TeV", "10 TeV", nbin=10, per_decade=True)
 
-aeff = EffectiveAreaTable2D.from_parametrization(energy_axis_true=energy_true, instrument="HESS")
+aeff = EffectiveAreaTable2D.from_parametrization(
+    energy_axis_true=energy_true, instrument="HESS"
+)
 offset_axis = MapAxis.from_bounds(0 * u.deg, 5 * u.deg, nbin=2, name="offset")
 
 edisp = EnergyDispersion2D.from_gauss(
@@ -23,7 +27,7 @@ edisp = EnergyDispersion2D.from_gauss(
     offset_axis=offset_axis,
     migra_axis=MIGRA_AXIS_DEFAULT,
     bias=0,
-    sigma=0.2
+    sigma=0.2,
 )
 
 observation = Observation.create(
@@ -31,7 +35,7 @@ observation = Observation.create(
     pointing=SkyCoord("0d", "0d", frame="icrs"),
     irfs={"aeff": aeff, "edisp": edisp},
     tstart=0 * u.h,
-    tstop=0.5 * u.h
+    tstop=0.5 * u.h,
 )
 
 geom = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_reco])

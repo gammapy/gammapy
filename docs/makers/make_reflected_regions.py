@@ -42,9 +42,7 @@ def plot_regions(ax, regions, on_region, exclusion_mask):
 
 ax = axes[0]
 ax.set_title("Min. distance first region")
-plot_regions(
-    ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask
-)
+plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask)
 
 
 # One can impose a minimal distance between two adjacent regions
@@ -58,9 +56,7 @@ regions = finder.run()
 
 ax = axes[1]
 ax.set_title("Min. distance all regions")
-plot_regions(
-    ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask
-)
+plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask)
 
 
 # One can impose a maximal number of regions to be extracted
@@ -75,7 +71,5 @@ regions = finder.run()
 
 ax = axes[2]
 ax.set_title("Max. number of regions")
-plot_regions(
-    ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask
-)
+plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask)
 plt.show()

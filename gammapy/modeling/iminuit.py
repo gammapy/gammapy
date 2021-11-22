@@ -5,7 +5,12 @@ import numpy as np
 from scipy.stats import chi2, norm
 from .likelihood import Likelihood
 
-__all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit", "contour_iminuit"]
+__all__ = [
+    "optimize_iminuit",
+    "covariance_iminuit",
+    "confidence_iminuit",
+    "contour_iminuit",
+]
 
 log = logging.getLogger(__name__)
 

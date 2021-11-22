@@ -24,7 +24,9 @@ from gammapy.modeling.models import Models, PowerLawSpectralModel, SkyModel
 
 energy_bounds = [0.1, 100] * u.TeV
 model = PowerLawSpectralModel(
-    index=2, amplitude="1e-12 TeV-1 cm-2 s-1", reference=1 * u.TeV,
+    index=2,
+    amplitude="1e-12 TeV-1 cm-2 s-1",
+    reference=1 * u.TeV,
 )
 model.plot(energy_bounds)
 plt.grid(which="both")

@@ -81,9 +81,7 @@ class TemporalModel(ModelBase):
         )
         time_axis.time_format = "mjd"
 
-        m = RegionNDMap.create(
-            region=None, axes=[time_axis]
-        )
+        m = RegionNDMap.create(region=None, axes=[time_axis])
         kwargs.setdefault("marker", "None")
         kwargs.setdefault("ls", "-")
         kwargs.setdefault("xerr", None)

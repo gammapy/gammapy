@@ -10,10 +10,7 @@ energy_axis_true = MapAxis.from_energy_bounds(
 
 
 edisp = EDispKernel.from_gauss(
-    energy_axis=energy_axis,
-    energy_axis_true=energy_axis_true,
-    sigma=0.1,
-    bias=0
+    energy_axis=energy_axis, energy_axis_true=energy_axis_true, sigma=0.1, bias=0
 )
 edisp.peek()
 plt.show()
