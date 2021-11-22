@@ -7,21 +7,22 @@
 
 **What's new?**
 
-``SpectrumDataset`` now inherits from ``MapDataset`` which removes a lot of code duplication.
-The APIs for the creation of both map and spectrum datasets are now similar and rely on ``Geom``.
-IRFs can now be natively integrated or averaged over the region using a simple `use_region_center`
-parameter in the ``SpectrumDatasetMaker``.
-Model evaluation is now possible on a ``RegionGeom`` thanks to the ``RegionGeom.wcs``.
-Spatial models can now be evaluated using ``SpectrumDataset``.
-These changes allow for a direct support of extended sources in 1D analysis.
+Gammapy v0.19 comes with many new features, further unified API, bug fixes
+and improved performance. It provides a nearly complete API for the coming 1.0 release.
+API changes a relatively limited and concern mostly the `gammapy.estimators` subpackage.
+Its API has been unified and now heavily relies on the ``Map`` structure.
 
-In addition, healpy support has been improved with the addition of a `convolve` method on the
-``HpxNDMap`` and improved I/O methods.
-#TODO : Say more about convolution ?
-Computation of `npred` on a ``MapDataset`` with a ``HpxGeom`` geometry is now possible.
+A wiki page containing specific informations on the main API changes from v0.18.2 to v0.19 is available
+[here](https://github.com/gammapy/gammapy/wiki/Main-API-changes-from-v0.18.2-to-v0.19).
 
-New catalog information has been added on `gammapy.catalog`, the data release 2 of the 4FGL
-and the third HAWC catalog.
+Documentation has been significantly reorganized. In particular, the tutorials have been
+restructured into subfolders based of the type of treatment described. Tutorials are now
+presented in a nice gallery view format. Some tutorials have been removed because their
+objectives are too specific for the general documentation. To present these specific, possibly
+contributed examples, a new web page and repository has been created: `gammapy.recipes`
+(https://github.com/gammapy/gammapy-recipes). Please, follow
+[these instructions](https://gammapy.github.io/gammapy-recipes/_build/html/contributing.html)
+if you would like to contribute to the gammapy recipes with your own.
 
 Several additions were made to the `gammapy.maps` subpackage.
 A new ``Maps`` container has been introduced. It is a `dict` like structure that stores ``Map``
@@ -32,34 +33,49 @@ after the addition of new axis type. So far, ``MapAxis`` only supports contiguou
 through their edges or their centers. Non-contiguous axes types have been added. ``TimeMapAxis``
 provides an axis for non-adjacent time intervals. Similarly, ``LabelMapAxis`` provides an axis
 for non-numeric entries.
-#TODO: provide more detail on the underlying non-contiguous array structure?
+
+The `gammapy.estimators` package has been largely restructured. All ``Estimator`` objects now share the
+same default options, in particular the full error and upper limit calculations are no longer
+calculated by default, but passing an option `selection_optional` parameter.
+The class ``FluxMaps`` has been introduced to provide a uniform scheme for the products of the ``Estimators``.
+It uses the ``Map`` API as a common container for estimator results. Region based maps, ``RegionNDMap``, are
+used to contain ``FluxPointsEstimator`` and ``LightCurveEstimator`` results and WCS based maps, ``WcsNDMap``, for
+``TSMapEstimator`` and ``ExcessMapEstimator``. This provides many advantages.
+Internally, this reduce a lot the code duplication and remove unnecessary structures. For instance, the
+``LightCurve`` class has been removed since all its functionalities are now supported by the ``FluxPoints``,
+since they can carry a ``TimeMapAxis``. The internal data model of high level products is therefore much more
+independent of the data formats defined outside gammapy. Some convenience methods have been introduced to support
+flux conversion from estimates based on a reference model and `norm` values into various fluxes as defined
+in gadf (namely `dnde`, `e2dnde`, `flux` or `eflux`). ``FluxMaps`` also allows simple serialization of the maps.
+Following this new scheme, a ``FluxProfileEstimator`` has been added.
+
+
+The subpackage `gammapy.datasets` has been re-organized. Its API does not change significantly but
+it has been simplified internally.
+``SpectrumDataset`` now inherits from ``MapDataset`` which removes a lot of code duplication.
+The APIs for the creation of both map and spectrum datasets are now similar and rely on ``Geom``.
+IRFs can now be natively integrated or averaged over the region using a simple `use_region_center`
+parameter in the ``SpectrumDatasetMaker``. Model evaluation is now possible on a ``RegionGeom``
+thanks to the ``RegionGeom.wcs``. Spatial models can now be evaluated using ``SpectrumDataset``.
+These changes allow for a direct support of extended sources in 1D analysis. In addition, healpy
+support has been improved with the addition of a `convolve` method on the
+``HpxNDMap`` (which relies on a local WCS projection) and improved I/O methods.
+Computation of `npred` on a ``MapDataset`` with a ``HpxGeom`` geometry is now possible.
+
 
 `gammapy.irf` has been significantly updated. A general ``IRF`` base class is now used. It relies
 on ``MapAxes`` and ``Quantity`` and provides most of the methods such as interpolation and I/O.
 A registry of IRFs is now added. All these new features, considerably simplify the addition of a
 type of IRF for a user.
 
-The `gammapy.estimators` package has been further cleaned-up. All ``Estimator`` objects share the
-same default options, in particular the full error and upper limit calculations are no longer
-calculated by default, but passing an option `selection_optional` parameter.
-A generic ``FluxEstimate`` class has been introduced that supports flux conversion
-from estimates based on a reference model and `norm` values into various fluxes as defined
-in gadf (namely `dnde`, `e2dnde`, `flux` or `eflux`).
-The class ``FluxMaps`` has been introduced to support easy handling of the collection of classes
-produced by the ``TSMapEstimators``. In particular, it allows for simple serialization of the maps.
 
 Model handling has been strongly simplified thanks to a number of helper methods allowing e.g.
 to freeze all spectral or spatial parameters of a given ``Models`` object, to select all
 components of a ``Models`` lying inside a given region.
 
-Documentation has been significantly reorganized. In particular, the tutorials have been
-restructured into subfolders based of the type of treatment described. Tutorials are now
-presented in a nice gallery view format. Some tutorials have been removed because their
-objectives are too specific for the general documentation. To present these specific, possibly
-contributed examples, a new web page and repository has been created: `gammapy.recipes`
-(https://github.com/gammapy/gammapy-recipes). Please, follow
-[these instructions](https://gammapy.github.io/gammapy-recipes/_build/html/contributing.html)
-if you would like to contribute to the gammapy recipes with your own.
+New catalog information has been added on `gammapy.catalog`, namely the data release 2 of the 4FGL
+and the third HAWC catalog.
+
 
 After changes in the Travis CI platform, the Continuous Integration (CI) has been simplified
 and moved from Travis to GitHub actions.
