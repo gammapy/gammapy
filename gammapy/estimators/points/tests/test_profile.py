@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
-from gammapy.estimators import FluxProfileEstimator, FluxPoints
+from gammapy.estimators import FluxPoints, FluxProfileEstimator
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.regions import (
@@ -170,7 +170,7 @@ def test_serialisation(tmpdir):
     profile = FluxPoints.read(
         tmpdir / "profile.fits",
         format="profile",
-        reference_model=PowerLawSpectralModel()
+        reference_model=PowerLawSpectralModel(),
     )
 
     assert_allclose(result.norm, profile.norm, rtol=1e-4)
