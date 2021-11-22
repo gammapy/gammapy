@@ -529,6 +529,7 @@ class CovarianceResult(FitStepResult):
 
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
+
     def __init__(self, parameters, nfev, total_stat, trace, **kwargs):
         self._parameters = parameters
         self._nfev = nfev
@@ -573,6 +574,7 @@ class FitResult:
     covariance_result : `CovarianceResult`
         Result of the covariance step.
     """
+
     def __init__(self, optimize_result=None, covariance_result=None):
         self._optimize_result = optimize_result
         self._covariance_result = covariance_result
@@ -644,4 +646,3 @@ class FitResult:
             str_ += str(self.covariance_result)
 
         return str_
-

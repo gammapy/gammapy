@@ -14,7 +14,7 @@ ESTIMATOR_REGISTRY = Registry(
         ASmoothMapEstimator,
         LightCurveEstimator,
         SensitivityEstimator,
-        ImageProfileEstimator,
+        FluxProfileEstimator,
     ]
 )
 """Registry of estimator classes in Gammapy."""
@@ -22,7 +22,7 @@ ESTIMATOR_REGISTRY = Registry(
 __all__ = [
     "ESTIMATOR_REGISTRY",
     "FluxPoints",
-    "ImageProfile",
+    "FluxMaps",
     "Estimator",
 ]
 __all__.extend(cls.__name__ for cls in ESTIMATOR_REGISTRY)

@@ -204,6 +204,7 @@ Gammapy tutorial notebooks that show examples using ``gammapy.estimators``:
    ../tutorials/analysis/2D/detect.ipynb
    ../tutorials/analysis/1D/spectral_analysis.ipynb
    ../tutorials/analysis/3D/analysis_3d.ipynb
+   ../tutorials/analysis/3D/flux_profiles.ipynb
 
 
 Reference/API
