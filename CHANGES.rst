@@ -1,9 +1,9 @@
 0.19 (unreleased)
 -----------------
 
-- Released November , 2021
+- Released November 22, 2021
 - 19 contributors
-- 350 pull requests so far (not all listed below)
+- 390 pull requests so far (not all listed below)
 
 **What's new?**
 
@@ -76,9 +76,9 @@ components of a ``Models`` lying inside a given region.
 New catalog information has been added on `gammapy.catalog`, namely the data release 2 of the 4FGL
 and the third HAWC catalog.
 
-
-After changes in the Travis CI platform, the Continuous Integration (CI) has been simplified
-and moved from Travis to GitHub actions.
+For Gammapy v0.19 we dropped the support for Python 3.6, please use Python 3.7 or later. We
+also updated to use regions v0.5 and iminuit 2.8.4. After changes in the Travis CI platform,
+the Continuous Integration (CI) has been simplified and moved from Travis to GitHub actions.
 
 **Contributors**
 
