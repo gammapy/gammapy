@@ -1237,6 +1237,13 @@ class MapAxis:
                 shape = table["counts"].shape
                 edges = np.arange(shape[-1] + 1) - 0.5
                 axis = MapAxis.from_edges(edges, name="dataset")
+        elif format == "profile":
+            if "datasets" in table.colnames:
+                labels = np.unique(table["datasets"])
+                axis = LabelMapAxis(labels=labels, name="dataset")
+            else:
+                x_ref = table["x_ref"].quantity
+                axis = MapAxis.from_nodes(x_ref, name="projected-distance")
         else:
             raise ValueError(f"Format '{format}' not supported")
 
@@ -1834,7 +1841,7 @@ class MapAxes(Sequence):
 
     @classmethod
     def from_table(cls, table, format="gadf"):
-        """Create MapAxes from BinTableHDU
+        """Create MapAxes from table
 
         Parameters
         ----------
@@ -1898,6 +1905,9 @@ class MapAxes(Sequence):
         elif format == "lightcurve":
             axes.extend(cls.from_table(table=table, format="gadf-sed"))
             axes.append(TimeMapAxis.from_table(table, format="lightcurve"))
+        elif format == "profile":
+            axes.extend(cls.from_table(table=table, format="gadf-sed"))
+            axes.append(MapAxis.from_table(table, format="profile"))
         else:
             raise ValueError(f"Unsupported format: '{format}'")
 

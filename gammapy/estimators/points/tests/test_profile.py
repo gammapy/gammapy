@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
-from gammapy.estimators import FluxProfileEstimator
+from gammapy.estimators import FluxProfileEstimator, FluxPoints
 from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
@@ -149,6 +151,34 @@ def test_radial_profile_one_interval():
 
     ul = result.npred_excess_ul.data[0].squeeze()
     assert_allclose(ul, [130.394824], rtol=1e-3)
+
+
+@requires_dependency("iminuit")
+def test_serialisation(tmpdir):
+    dataset = get_simple_dataset_on_off()
+    geom = dataset.counts.geom
+    regions = make_concentric_annulus_sky_regions(
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
+    )
+
+    est = FluxProfileEstimator(regions, energy_edges=[0.1, 10] * u.TeV)
+    result = est.run(dataset)
+
+    result.write(tmpdir / "profile.fits", format="profile")
+
+    profile = FluxPoints.read(
+        tmpdir / "profile.fits",
+        format="profile",
+        reference_model=PowerLawSpectralModel()
+    )
+
+    assert_allclose(result.norm, profile.norm, rtol=1e-4)
+    assert_allclose(result.norm_err, profile.norm_err, rtol=1e-4)
+    assert_allclose(result.npred, profile.npred)
+    assert_allclose(result.ts, profile.ts)
+
+    assert np.all(result.is_ul == profile.is_ul)
 
 
 def test_regions_init():

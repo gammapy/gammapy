@@ -137,3 +137,11 @@ class FluxProfileEstimator(FluxPointsEstimator):
             maps=maps,
             axis=self.projected_distance_axis,
         )
+
+    @property
+    def config_parameters(self):
+        """Config parameters"""
+        pars = self.__dict__.copy()
+        pars = {key.strip("_"): value for key, value in pars.items()}
+        pars.pop("regions")
+        return pars
