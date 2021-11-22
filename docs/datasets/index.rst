@@ -34,11 +34,11 @@ analyse the following datasets:
    :header-rows: 1
 
    * - **Dataset Type**
-     - **data_type**
-     - **reduced irfs**
-     - **geometry**
-     -  **additional quantity**
-     -  **statistic**
+     - **Data Type**
+     - **Reduced IRFs**
+     - **Geometry**
+     -  **Additional Quantities**
+     -  **Fit Statistic**
    * - `~gammapy.datasets.MapDataset`
      - `counts`
      - `background`, `psf`, `edisp`, `exposure`,
@@ -140,7 +140,7 @@ Here, :math:`k` denotes a bin in reconstructed energy,
 
 .. list-table::
    :widths: 25 25 50
-   f:header-rows: 1
+   :header-rows: 1
 
    * - Dataset attribute
      - Behaviour

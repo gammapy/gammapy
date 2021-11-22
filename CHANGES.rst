@@ -1,5 +1,5 @@
-0.19 (unreleased)
------------------
+0.19 (Nov 22nd, 2021)
+---------------------
 
 - Released November 22, 2021
 - 19 contributors
@@ -13,16 +13,15 @@ API changes a relatively limited and concern mostly the `gammapy.estimators` sub
 Its API has been unified and now heavily relies on the ``Map`` structure.
 
 A wiki page containing specific information on the main API changes from v0.18.2 to v0.19 is available
-[here](https://github.com/gammapy/gammapy/wiki/Main-API-changes-from-v0.18.2-to-v0.19).
+`here <https://github.com/gammapy/gammapy/wiki/Main-API-changes-from-v0.18.2-to-v0.19>`__.
 
 Documentation has been significantly reorganized. In particular, the tutorials have been
 restructured into subfolders based of the type of treatment described. Tutorials are now
-presented in a nice gallery view format. Some tutorials have been removed because their
+presented in a `nice gallery view <tutorials/index.html>`__ format. Some tutorials have been removed because their
 objectives are too specific for the general documentation. To present these specific, possibly
-contributed examples, a new web page and repository has been created: `gammapy.recipes`
-(https://github.com/gammapy/gammapy-recipes). Please, follow
-[these instructions](https://gammapy.github.io/gammapy-recipes/_build/html/contributing.html)
-if you would like to contribute to the gammapy recipes with your own.
+contributed examples, a new web page and repository has been created: `gammapy.recipes <https://github.com/gammapy/gammapy-recipes>`__.
+Please follow `these instructions <https://gammapy.github.io/gammapy-recipes/_build/html/contributing.html>`__
+if you would like to contribute to the Gammapy recipes with your own.
 
 Several additions were made to the `gammapy.maps` subpackage.
 A new ``Maps`` container has been introduced. It is a `dict` like structure that stores ``Map``
@@ -160,7 +159,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3369] Enable reading psf and edisp for MapDatasetOnOff (Atreyee Sinha)
 - [#3363] Read healpy maps with col name (Vikas Joshi)
 - [#3358] Complete test coverage in docstrings of python files (Jose Enrique Ruiz)
-- [#3357] Improve test coverage in RST files (Jose Enrique Ruiz)
+- [#3357] Improve test coverage in RST files (Jose Enrique Ruiz)
 - [#3353] Tweak in MapEvaluator.need_update for performance (Quentin Rémy)
 - [#3349] Cleanup MapEvaluator and add more caching (Quentin Rémy)
 - [#3347] Simplify and refactor installation instructions (Jose Enrique Ruiz)
@@ -237,6 +236,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3138] Migrate Travis CI to Github actions (Jose Enrique Ruiz)
 - [#3136] Evaluate spatial model in RegionGeom (Laura Olivera Nieto)
 - [#3131] Further remove code duplication between SpectrumDataset and MapDataset (Axel Donath)
+
 
 0.18.2 (Nov 19th, 2020)
 -----------------------

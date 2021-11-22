@@ -24,8 +24,8 @@ Gammapy in a virtual isolated environment. If you want to learn about using virt
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.18.2-environment.yml
-    conda env create -f gammapy-0.18.2-environment.yml
+    curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
+    conda env create -f gammapy-0.19-environment.yml
 
 .. note::
 
@@ -34,11 +34,11 @@ Gammapy in a virtual isolated environment. If you want to learn about using virt
     currently aren't available on Windows.
 
 
-This creates a conda environment called ``gammapy-0.18.2`` which you can activate via:
+This creates a conda environment called ``gammapy-0.19`` which you can activate via:
 
 .. code-block:: bash
 
-    conda activate gammapy-0.18.2
+    conda activate gammapy-0.19
 
 Note that you have to execute that activation command (but not the environment
 creation command) every time you open a new terminal window, because the default
@@ -68,7 +68,7 @@ to install the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
-    gammapy download notebooks --release 0.18.2
+    gammapy download notebooks --release 0.19
     gammapy download datasets
     export GAMMAPY_DATA=$PWD/gammapy-datasets
 
