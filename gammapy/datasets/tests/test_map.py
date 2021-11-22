@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import json
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -14,31 +14,23 @@ from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
-    EnergyDispersion2D,
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
+    EnergyDispersion2D,
     PSFMap,
 )
-
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import (
-    Map,
-    MapAxis,
-    WcsGeom,
-    WcsNDMap,
-    RegionGeom,
-    HpxGeom,
-)
+from gammapy.maps import HpxGeom, Map, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.maps.io import JsonQuantityEncoder
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    DiskSpatialModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    DiskSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 

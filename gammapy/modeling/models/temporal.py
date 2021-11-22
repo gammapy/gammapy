@@ -6,11 +6,11 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
+from gammapy.maps import RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-from gammapy.maps import TimeMapAxis, RegionNDMap
 from .core import ModelBase
 
 

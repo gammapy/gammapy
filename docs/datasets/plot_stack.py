@@ -1,16 +1,15 @@
 """Example plot showing stacking of two datasets."""
 
-import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+import matplotlib.pyplot as plt
+from gammapy.data import Observation
 from gammapy.datasets import SpectrumDataset
 from gammapy.datasets.map import MIGRA_AXIS_DEFAULT
 from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
+from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.data import Observation
-from gammapy.makers import SpectrumDatasetMaker
-
 
 energy_true = MapAxis.from_energy_bounds(
     "0.1 TeV", "20 TeV", nbin=20, per_decade=True, name="energy_true"
