@@ -164,7 +164,7 @@ def test_fit(spectrum_dataset):
     assert_allclose(npred, 907012.186399, rtol=1e-3)
     assert_allclose(result.total_stat, -18087404.624, rtol=1e-3)
 
-    pars = result.parameters
+    pars = spectrum_dataset.models.parameters
     assert_allclose(pars["index"].value, 2.1, rtol=1e-2)
     assert_allclose(pars["index"].error, 0.001276, rtol=1e-2)
 
@@ -732,7 +732,7 @@ class TestSpectralFit:
     def test_basic_errors(self):
         self.set_model(self.pwl)
         result = self.fit.run([self.datasets[0]])
-        pars = result.parameters
+        pars = self.pwl.parameters
 
         assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
         assert_allclose(pars["amplitude"].error, 6.423139e-12, rtol=1e-3)
@@ -786,7 +786,7 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
+        assert_allclose(self.pwl.spectral_model.index.value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
         dataset = self.datasets[0].copy()
@@ -795,7 +795,7 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        pars = result.parameters
+        pars = dataset.models.parameters
 
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
@@ -1104,7 +1104,7 @@ class TestFit:
         result = fit.run(datasets=[dataset])
 
         # These values are check with sherpa fits, do not change
-        pars = result.parameters
+        pars = self.source_model.parameters
         assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.9, rtol=1e-3)
 
@@ -1161,7 +1161,7 @@ class TestFit:
         )
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        true_idx = result.parameters["index"].value
+        true_idx = self.source_model.parameters["index"].value
 
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         self.source_model.spectral_model.index.scan_values = values

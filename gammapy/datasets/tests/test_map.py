@@ -650,7 +650,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(npred, 7525.790688, rtol=1e-3)
     assert_allclose(result.total_stat, 21625.845714, rtol=1e-3)
 
-    pars = result.parameters
+    pars = models.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
     assert_allclose(pars["lon_0"].error, 0.002244, rtol=1e-2)
 
@@ -720,7 +720,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     assert_allclose(npred, 16538.124036, rtol=1e-3)
     assert_allclose(result.total_stat, -34844.125047, rtol=1e-3)
 
-    pars = result.parameters
+    pars = sky_model.parameters
 
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
     assert_allclose(pars["lon_0"].error, 0.001689, rtol=1e-2)

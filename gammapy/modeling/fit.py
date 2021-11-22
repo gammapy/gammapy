@@ -145,10 +145,15 @@ class Fit:
     def run(self, datasets):
         """Run all fitting steps.
 
+        Parameters
+        ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
+
         Returns
         -------
         fit_result : `FitResult`
-            Results
+            Fit result
         """
         optimize_result = self.optimize(datasets=datasets)
 
@@ -158,9 +163,10 @@ class Fit:
 
         covariance_result = self.covariance(datasets=datasets)
 
-        optimize_result._covariance_result = covariance_result
-
-        return optimize_result
+        return FitResult(
+            optimize_result=optimize_result,
+            covariance_result=covariance_result,
+        )
 
     def optimize(self, datasets):
         """Run the optimization.
@@ -258,7 +264,6 @@ class Fit:
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
-            parameters=parameters,
             backend=backend,
             method=method,
             success=info["success"],
@@ -477,20 +482,14 @@ class Fit:
         }
 
 
-class FitResult:
+class FitStepResult:
     """Fit result base class"""
 
-    def __init__(self, parameters, backend, method, success, message):
-        self._parameters = parameters
+    def __init__(self, backend, method, success, message):
         self._success = success
         self._message = message
         self._backend = backend
         self._method = method
-
-    @property
-    def parameters(self):
-        """Optimizer backend used for the fit."""
-        return self._parameters
 
     @property
     def backend(self):
@@ -522,25 +521,29 @@ class FitResult:
         )
 
 
-class CovarianceResult(FitResult):
+class CovarianceResult(FitStepResult):
     """Covariance result object."""
 
     pass
 
 
-class OptimizeResult(FitResult):
+class OptimizeResult(FitStepResult):
     """Optimize result object."""
-
-    def __init__(self, nfev, total_stat, trace, covariance_result=None, **kwargs):
+    def __init__(self, parameters, nfev, total_stat, trace, **kwargs):
+        self._parameters = parameters
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
-        self._covariance_result = covariance_result
         super().__init__(**kwargs)
 
     @property
+    def parameters(self):
+        """Best fit parameters"""
+        return self._parameters
+
+    @property
     def trace(self):
-        """Optimizer backend used for the fit."""
+        """Parameter trace from the optimisation"""
         return self._trace
 
     @property
@@ -553,17 +556,92 @@ class OptimizeResult(FitResult):
         """Value of the fit statistic at minimum."""
         return self._total_stat
 
-    @property
-    def covariance_result(self):
-        """Covariance results."""
-        return self._covariance_result
-
     def __repr__(self):
         str_ = super().__repr__()
         str_ += f"\tnfev       : {self.nfev}\n"
         str_ += f"\ttotal stat : {self.total_stat:.2f}\n\n"
+        return str_
 
-        if self.covariance_result is not None:
+
+class FitResult:
+    """Fit result class
+
+    Parameters
+    ----------
+    optimize_result : `OptimizeResult`
+        Result of the optimization step.
+    covariance_result : `CovarianceResult`
+        Result of the covariance step.
+    """
+    def __init__(self, optimize_result=None, covariance_result=None):
+        self._optimize_result = optimize_result
+        self._covariance_result = covariance_result
+
+    # TODO: is the convenience access needed?
+    @property
+    def parameters(self):
+        """Best fit parameters of the optimization step"""
+        return self.optimize_result.parameters
+
+    # TODO: is the convenience access needed?
+    @property
+    def total_stat(self):
+        """Total stat of the optimization step"""
+        return self.optimize_result.total_stat
+
+    # TODO: is the convenience access needed?
+    @property
+    def trace(self):
+        """Parameter trace of the optimisation step"""
+        return self.optimize_result.trace
+
+    # TODO: is the convenience access needed?
+    @property
+    def nfev(self):
+        """Number of function evaluations of the optimisation step"""
+        return self.optimize_result.nfev
+
+    # TODO: is the convenience access needed?
+    @property
+    def backend(self):
+        """Optimizer backend used for the fit."""
+        return self.optimize_result.backend
+
+    # TODO: is the convenience access needed?
+    @property
+    def method(self):
+        """Optimizer method used for the fit."""
+        return self.optimize_result.method
+
+    # TODO: is the convenience access needed?
+    @property
+    def message(self):
+        """Optimizer status message."""
+        return self.optimize_result.message
+
+    @property
+    def success(self):
+        """Total success flag"""
+        success = self.optimize_result.success and self.covariance_result.success
+        return success
+
+    @property
+    def optimize_result(self):
+        """Optimize result"""
+        return self._optimize_result
+
+    @property
+    def covariance_result(self):
+        """Optimize result"""
+        return self._optimize_result
+
+    def __repr__(self):
+        str_ = ""
+        if self.optimize_result:
+            str_ += str(self.optimize_result)
+
+        if self.covariance_result:
             str_ += str(self.covariance_result)
 
         return str_
+
