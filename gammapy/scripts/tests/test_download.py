@@ -7,7 +7,7 @@ from gammapy.utils.testing import run_cli
 @pytest.fixture(scope="session")
 def config():
     return {
-        "release": "0.18",
+        "release": "dev",
         "notebook": "astro_dark_matter",
         "envfilename": "gammapy-0.18-environment.yml",
     }
