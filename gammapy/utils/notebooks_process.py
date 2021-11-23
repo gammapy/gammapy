@@ -64,7 +64,8 @@ def add_box(nb_path):
     nb_filename = nb_path.absolute().name
     py_filename = nb_filename.replace("ipynb", "py")
     release_number = __version__
-    BINDER_LINK = f"- Try online[![Binder]({BINDER_BADGE})]({BINDER_URL}/v{__version__}?urlpath=lab/tree{path_tail})"
+    path_nbs_binder =  pathtail.replace("/tutorials", "")
+    BINDER_LINK = f"- Try online[![Binder]({BINDER_BADGE})]({BINDER_URL}/v{__version__}?urlpath=lab/tree{path_nbs_binder})"
     if "dev" in __version__:
         BINDER_LINK = ""
         release_number = "dev"
