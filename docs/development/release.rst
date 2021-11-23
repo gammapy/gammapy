@@ -36,9 +36,7 @@ Pre release
 
 Steps to prepare for the release (e.g. a week before) to check that things are in order:
 
-#. Check the issue (example: https://github.com/gammapy/gammapy/issues/302 )
-   and milestone (example: https://github.com/gammapy/gammapy/milestones/0.14 )
-   for the release. Try to get developers to finish up their PRs, try to help
+#. Check the issues and milestones for the release. Try to get developers to finish up their PRs, try to help
    fix bugs, and postpone non-critical issues to the next release.
 #. Do these extra checks and clean up any warnings / errors that come up::
 
