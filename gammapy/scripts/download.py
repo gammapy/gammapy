@@ -39,19 +39,10 @@ def progress_download(source, destination):
                     progress_bar.update(len(chunk))
     progress_bar.close()
 
-
-def members(tf):
-    list_members = tf.getmembers()
-    root_folder = list_members[0].name
-    for member in list_members:
-        if member.path.startswith(root_folder):
-            member.path = member.path[len(root_folder) + 1 :]
-            yield member
-
-
 def extract_bundle(bundle, destination):
-    with tarfile.open(bundle) as tar:
-        tar.extractall(path=destination, members=members(tar))
+    my_tar = tarfile.open(bundle)
+    my_tar.extractall(destination)
+    my_tar.close()
     Path(bundle).unlink()
 
 
