@@ -39,11 +39,19 @@ def progress_download(source, destination):
                     progress_bar.update(len(chunk))
     progress_bar.close()
 
+
+def members(tf):
+    list_members = tf.getmembers()
+    root_folder = list_members[0].name
+    for member in list_members:
+        if member.path.startswith(root_folder):
+            member.path = member.path[len(root_folder) + 1 :]
+            yield member
+
+
 def extract_bundle(bundle, destination):
-    my_tar = tarfile.open(bundle)
-    my_tar.extractall(destination)
-    my_tar.close()
-    Path(bundle).unlink()
+    with tarfile.open(bundle) as tar:
+        tar.extractall(path=destination, members=members(tar))
 
 
 def show_info_notebooks(outfolder, release):
@@ -86,7 +94,10 @@ def cli_download_notebooks(release, out):
     url_tar_notebooks = f"{NBTAR_BASE_URL}/{release}/_downloads/notebooks-{release}.tar"
     tar_destination_file = localfolder / f"notebooks_{release}.tar"
     progress_download(url_tar_notebooks, tar_destination_file)
-    extract_bundle(tar_destination_file, localfolder)
+    my_tar = tarfile.open(tar_destination_file)
+    my_tar.extractall(localfolder)
+    my_tar.close()
+    Path(tar_destination_file).unlink()
     show_info_notebooks(localfolder, release)
 
 
@@ -105,4 +116,5 @@ def cli_download_datasets(out):
     progress_download(TAR_DATASETS, tar_destination_file)
     log.info(f"Extracting {tar_destination_file}")
     extract_bundle(tar_destination_file, localfolder)
+    Path(tar_destination_file).unlink()
     show_info_datasets(localfolder)
