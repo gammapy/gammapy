@@ -56,6 +56,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
         LightCurveTemplateTemporalModel,
         ExpDecayTemporalModel,
         GaussianTemporalModel,
+        GeneralizedGaussianTemporalModel,
         PowerLawTemporalModel,
         SineTemporalModel,
     ]

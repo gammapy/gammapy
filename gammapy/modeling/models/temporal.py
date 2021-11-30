@@ -334,6 +334,93 @@ class GaussianTemporalModel(TemporalModel):
         return integral / self.time_sum(t_min, t_max)
 
 
+class GeneralizedGaussianTemporalModel(TemporalModel):
+    r"""A generalized Gaussian temporal profile
+
+    ..math::
+            F(t) = A * exp( - (\frac{|t - t_{maxim}|}{\sigma_r}) ^ v)   for  t < t_max
+            
+            F(t) = A * exp( - (\frac{|t - t_{maxim}|}{\sigma_d}) ^ v)   for  t > t_max            
+
+    Parameters
+    ----------
+    A : `~astropy.units.Quantity`
+        Maximum intensity
+    t_maxim: `~astropy.units.Quantity`
+        The time of the pulse's maximum intensity.
+    sigma_r : `~astropy.units.Quantity`
+        Rise time constant.
+    sigma_d : `~astropy.units.Quantity`
+        Decay time constant.
+    v : `~astropy.units.Quantity`
+        Pulse sharpness -> lower values implies a more peaked pulse
+    
+    """
+
+    tag = ["GeneralizedGaussianTemporalModel", "gengauss"]
+
+    _t_max_default = Time("2000-01-01")
+    t_maxim = Parameter("t_maxim", _t_max_default.mjd, unit = "day", frozen=False)
+    sigma_r = Parameter("sigma_r", "1d", frozen=False)
+    sigma_d = Parameter("sigma_d", "1d", frozen=False)
+    v = Parameter("v", 2, unit = "", frozen=False)
+    A = Parameter("A", 1, unit = "", frozen=False)
+
+    @staticmethod
+    def evaluate(time, t_maxim, sigma_r, v, sigma_d, A):
+        val=np.ones(time.shape)
+        for t in range(len(time)):
+            if time[t] < t_maxim:
+                val[t] = (A * np.exp( - (np.abs((time[t] - t_maxim).value) ** v) / (sigma_r.value ** v)))
+            else:
+                val[t] = (A * np.exp( - (np.abs((time[t] - t_maxim).value) ** v) / (sigma_d.value ** v)))
+        return val
+    
+    def integral(self, t_min, t_max, **kwargs):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        
+        pars = self.parameters
+        sigma_r = pars["sigma_r"].quantity.to_value("day")
+        sigma_d = pars["sigma_d"].quantity.to_value("day")
+        v = pars["v"].quantity
+        A = pars["A"].quantity
+        t_maxim = Time(pars["t_maxim"].quantity, format = "mjd")
+                     
+        def gen_gauss(time):
+            return A * np.exp( - (np.abs(time - t_maxim.mjd) ** v) / (sigma ** v))
+
+        if t_min < t_maxim and t_max <= t_maxim:
+            sigma = sigma_r
+            integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd)[0]
+            return integral / self.time_sum(t_min, t_max).value
+        
+        elif t_min < t_maxim and t_max > t_maxim:
+            sigma = sigma_r
+            integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_maxim.mjd)[0]
+            
+            sigma = sigma_d
+            integral = integral + scipy.integrate.quad(gen_gauss, t_maxim.mjd, t_max.mjd)[0]  
+            return integral / self.time_sum(t_min, t_max).value
+        
+        elif t_min >= t_maxim and t_max > t_maxim:
+            sigma = sigma_d
+            integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd)[0]
+            return integral / self.time_sum(t_min, t_max).value
+
+
 class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
