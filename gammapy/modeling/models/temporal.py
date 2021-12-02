@@ -338,42 +338,36 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     r"""A generalized Gaussian temporal profile
 
     ..math::
-            F(t) = A * exp( - (\frac{|t - t_{maxim}|}{\sigma_r}) ^ v)   for  t < t_max
+            F(t) = exp( - (\frac{|t - t_{ref}|}{\sigma_rise}) ^ nu)   for  t < t_ref
             
-            F(t) = A * exp( - (\frac{|t - t_{maxim}|}{\sigma_d}) ^ v)   for  t > t_max            
+            F(t) = exp( - (\frac{|t - t_{ref}|}{\sigma_decay}) ^ nu)   for  t > t_ref            
 
     Parameters
     ----------
-    A : `~astropy.units.Quantity`
-        Maximum intensity
-    t_maxim: `~astropy.units.Quantity`
+    t_ref: `~astropy.units.Quantity`
         The time of the pulse's maximum intensity.
-    sigma_r : `~astropy.units.Quantity`
+    sigma_rise : `~astropy.units.Quantity`
         Rise time constant.
-    sigma_d : `~astropy.units.Quantity`
+    sigma_decay : `~astropy.units.Quantity`
         Decay time constant.
-    v : `~astropy.units.Quantity`
+    nu : `~astropy.units.Quantity`
         Pulse sharpness -> lower values implies a more peaked pulse
     
     """
 
     tag = ["GeneralizedGaussianTemporalModel", "gengauss"]
 
-    _t_max_default = Time("2000-01-01")
-    t_maxim = Parameter("t_maxim", _t_max_default.mjd, unit = "day", frozen=False)
-    sigma_r = Parameter("sigma_r", "1d", frozen=False)
-    sigma_d = Parameter("sigma_d", "1d", frozen=False)
-    v = Parameter("v", 2, unit = "", frozen=False)
-    A = Parameter("A", 1, unit = "", frozen=False)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit = "day", frozen=False)
+    sigma_rise = Parameter("sigma_rise", "1d", frozen=False)
+    sigma_decay = Parameter("sigma_decay", "1d", frozen=False)
+    nu = Parameter("nu", 2, unit = "", frozen=False)
 
     @staticmethod
-    def evaluate(time, t_maxim, sigma_r, v, sigma_d, A):
-        val=np.ones(time.shape)
-        for t in range(len(time)):
-            if time[t] < t_maxim:
-                val[t] = (A * np.exp( - (np.abs((time[t] - t_maxim).value) ** v) / (sigma_r.value ** v)))
-            else:
-                val[t] = (A * np.exp( - (np.abs((time[t] - t_maxim).value) ** v) / (sigma_d.value ** v)))
+    def evaluate(time, t_ref, sigma_rise, nu, sigma_decay):
+        val_rise = np.exp( - (np.abs((time - t_ref).value) ** nu) / (sigma_rise.value ** nu))
+        val_decay = np.exp( - (np.abs((time - t_ref).value) ** nu) / (sigma_decay.value ** nu))
+        val = np.where(time < t_ref, val_rise, val_decay)
         return val
     
     def integral(self, t_min, t_max, **kwargs):
@@ -393,32 +387,19 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         """
         
         pars = self.parameters
-        sigma_r = pars["sigma_r"].quantity.to_value("day")
-        sigma_d = pars["sigma_d"].quantity.to_value("day")
-        v = pars["v"].quantity
-        A = pars["A"].quantity
-        t_maxim = Time(pars["t_maxim"].quantity, format = "mjd")
+        sigma_rise = pars["sigma_rise"].quantity.to_value("day")
+        sigma_decay = pars["sigma_decay"].quantity.to_value("day")
+        nu = pars["nu"].quantity
+        t_ref = Time(pars["t_ref"].quantity, format = "mjd")
                      
         def gen_gauss(time):
-            return A * np.exp( - (np.abs(time - t_maxim.mjd) ** v) / (sigma ** v))
+            if time < t_ref.mjd:
+                return np.exp( - (np.abs(time - t_ref.mjd) ** nu) / (sigma_rise ** nu))
+            else:
+                return np.exp( - (np.abs(time - t_ref.mjd) ** nu) / (sigma_decay ** nu))
 
-        if t_min < t_maxim and t_max <= t_maxim:
-            sigma = sigma_r
-            integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd)[0]
-            return integral / self.time_sum(t_min, t_max).value
-        
-        elif t_min < t_maxim and t_max > t_maxim:
-            sigma = sigma_r
-            integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_maxim.mjd)[0]
-            
-            sigma = sigma_d
-            integral = integral + scipy.integrate.quad(gen_gauss, t_maxim.mjd, t_max.mjd)[0]  
-            return integral / self.time_sum(t_min, t_max).value
-        
-        elif t_min >= t_maxim and t_max > t_maxim:
-            sigma = sigma_d
-            integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd)[0]
-            return integral / self.time_sum(t_min, t_max).value
+        integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd)[0]
+        return integral / self.time_sum(t_min, t_max).value
 
 
 class LightCurveTemplateTemporalModel(TemporalModel):
