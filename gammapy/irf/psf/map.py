@@ -10,7 +10,7 @@ from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
 
-__all__ = ["PSFMap"]
+__all__ = ["PSFMap", "PSFKernelMap"]
 
 
 class IRFLikePSF(PSF):
@@ -490,3 +490,11 @@ class PSFMap(IRFMap):
 
     def __str__(self):
         return str(self.psf_map)
+
+
+class PSFKernelMap(IRFMap):
+    tag = "psf_kernel_map"
+    required_axes = ["psf_lon","psf_true", "energy_true"]
+
+    def __init__(self, psf_kernel_map, exposure_map=None):
+        super().__init__(irf_map=psf_kernel_map, exposure_map=exposure_map)
