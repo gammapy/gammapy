@@ -298,7 +298,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     @classmethod
     def from_dict(cls, data, **kwargs):
-        """Create flux point dataset from dict.
+        """Create spectrum dataset from dict.
 
         Parameters
         ----------
@@ -309,7 +309,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         -------
         dataset : `SpectrumDatasetOnOff`
             Spectrum dataset on off.
-
         """
 
         filename = make_path(data["filename"])
@@ -343,7 +342,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         -------
         dataset : `SpectrumDatasetOnOff`
             Spectrum dataset on off.
-
         """
         return cls.from_map_dataset(**kwargs)
 
