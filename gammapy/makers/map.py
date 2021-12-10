@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 import astropy.units as u
 from astropy.table import Table
+from gammapy.maps.region.ndmap import RegionNDMap
+from regions import CircleSkyRegion
 from gammapy.irf import EDispKernelMap, PSFMap
-from gammapy.maps import Map
+from gammapy.maps import MapAxis, Map, RegionGeom
 from .core import Maker
 from .utils import (
     make_edisp_kernel_map,
@@ -35,7 +38,7 @@ class MapDatasetMaker(Maker):
     """
 
     tag = "MapDatasetMaker"
-    available_selection = ["counts", "exposure", "background", "psf", "edisp"]
+    available_selection = ["counts", "exposure", "background", "psf", "edisp", "rad_max"]
 
     def __init__(
         self,
@@ -49,7 +52,7 @@ class MapDatasetMaker(Maker):
             selection = self.available_selection
 
         selection = set(selection)
-
+        
         if not selection.issubset(self.available_selection):
             difference = selection.difference(self.available_selection)
             raise ValueError(f"{difference} is not a valid method.")
@@ -74,6 +77,35 @@ class MapDatasetMaker(Maker):
         """
         counts = Map.from_geom(geom)
         counts.fill_events(observation.events)
+        return counts
+    
+    @staticmethod
+    def make_counts_rad_max(geom, observation):
+        """Extract the counts using for the ON region size the values in the `RAD_MAX_2D` table"""
+        if observation.rad_max is None:
+            raise TypeError("the IRF for this observation does not include a RAD_MAX_2D table")
+
+        # TODO: move this in a function similar to the make_map_<IRF_COMPONENT>
+        on_center = geom.center_skydir
+        offset = on_center.separation(observation.pointing_radec)
+        rad_max = observation.rad_max.evaluate(
+            offset=offset,
+            energy=geom.axes["energy"].center
+        )
+
+        counts_list = []
+        # create and fill a map per each energy bin, fetch the counts
+        for i, rad in enumerate(rad_max):
+            on_region = CircleSkyRegion(center=on_center, radius=rad)
+            energy_range = geom.axes["energy"].slice(i)
+            on_region_geom = RegionGeom(on_region, axes=[energy_range])
+            counts = Map.from_geom(on_region_geom)
+            counts.fill_events(observation.events)
+            counts_list.append(counts.data[0])
+
+        counts = RegionNDMap.from_geom(geom)
+        counts.data = np.asarray(counts_list)
+
         return counts
 
     @staticmethod
@@ -309,6 +341,10 @@ class MapDatasetMaker(Maker):
             counts = self.make_counts(dataset.counts.geom, observation)
         else:
             counts = Map.from_geom(dataset.counts.geom, data=0)
+        
+        if set(["counts", "rad_max"]).issubset(self.selection):
+            counts = self.make_counts_rad_max(dataset.counts.geom, observation)
+
         kwargs["counts"] = counts
 
         if "exposure" in self.selection:
