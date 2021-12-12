@@ -392,7 +392,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         eta = pars["eta"].quantity
         t_ref = Time(pars["t_ref"].quantity, format = "mjd")
                      
-        def gen_gauss(time,t_ref,t_rise,t_decay,eta):
+        def gen_gauss(time,t_ref, t_rise, t_decay, eta):
             if time < t_ref.mjd:
                 return np.exp( - 0.5 * (np.abs(time - t_ref.mjd) ** (1/eta)) / (t_rise ** (1/eta)))
             else:
