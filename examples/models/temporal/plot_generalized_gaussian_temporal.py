@@ -5,9 +5,9 @@ Generalized Gaussian temporal model
 =======================
 This model parametrises a generalized Gaussian time model.
 .. math::
-        F(t) = exp( - (\frac{|t - t_{ref}|}{\sigma_rise}) ^ nu)   for  t < t_ref
-        
-        F(t) = exp( - (\frac{|t - t_{ref}|}{\sigma_decay}) ^ nu)   for  t > t_ref
+        F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_rise}) ^ {1 / \eta})   for  t < t_ref
+            
+        F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_decay}) ^ {1 / \eta})   for  t > t_ref    
 """
 
 # %%
@@ -25,15 +25,15 @@ from gammapy.modeling.models import (GeneralizedGaussianTemporalModel,
     PowerLawSpectralModel,
     SkyModel)
 
-sigma_rise = Quantity(0.1, "h")
-sigma_decay = Quantity(1, "h")
-nu = Quantity(1.5, "")
+t_rise = Quantity(0.1, "d")
+t_decay = Quantity(1, "d")
+eta = Quantity(2/3, "")
 t_ref = Time("2020-10-01")
 time_range = [t_ref - 1 * u.d, t_ref + 1 * u.d]
 gen_gaussian_model = GeneralizedGaussianTemporalModel(t_ref = t_ref.mjd * u.d,\
-                                                  sigma_rise = sigma_rise,\
-                                                  sigma_decay = sigma_decay,\
-                                                  nu = nu)
+                                                  t_rise = t_rise,\
+                                                  t_decay = t_decay,\
+                                                  eta = eta)
 gen_gaussian_model.plot(time_range)
 plt.grid(which="both")
 

@@ -338,20 +338,20 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     r"""A generalized Gaussian temporal profile
 
     ..math::
-            F(t) = exp( - (\frac{|t - t_{ref}|}{\sigma_rise}) ^ nu)   for  t < t_ref
+            F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_rise}) ^ {1 / \eta})   for  t < t_ref
             
-            F(t) = exp( - (\frac{|t - t_{ref}|}{\sigma_decay}) ^ nu)   for  t > t_ref            
+            F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_decay}) ^ {1 / \eta})   for  t > t_ref            
 
     Parameters
     ----------
     t_ref: `~astropy.units.Quantity`
         The time of the pulse's maximum intensity.
-    sigma_rise : `~astropy.units.Quantity`
+    t_rise : `~astropy.units.Quantity`
         Rise time constant.
-    sigma_decay : `~astropy.units.Quantity`
+    t_decay : `~astropy.units.Quantity`
         Decay time constant.
-    nu : `~astropy.units.Quantity`
-        Pulse sharpness -> lower values implies a more peaked pulse
+    eta : `~astropy.units.Quantity`
+        Inverse pulse sharpness -> higher values implies a more peaked pulse
     
     """
 
@@ -359,14 +359,14 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
 
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit = "day", frozen=False)
-    sigma_rise = Parameter("sigma_rise", "1d", frozen=False)
-    sigma_decay = Parameter("sigma_decay", "1d", frozen=False)
-    nu = Parameter("nu", 2, unit = "", frozen=False)
+    t_rise = Parameter("t_rise", "1d", frozen=False)
+    t_decay = Parameter("t_decay", "1d", frozen=False)
+    eta = Parameter("eta", 1/2, unit = "", frozen=False)
 
     @staticmethod
-    def evaluate(time, t_ref, sigma_rise, nu, sigma_decay):
-        val_rise = np.exp( - (np.abs((time - t_ref).value) ** nu) / (sigma_rise.value ** nu))
-        val_decay = np.exp( - (np.abs((time - t_ref).value) ** nu) / (sigma_decay.value ** nu))
+    def evaluate(time, t_ref, t_rise, eta, t_decay):
+        val_rise = np.exp( - 0.5 * (np.abs((time - t_ref).value) ** (1/eta)) / (t_rise.to_value("d") ** (1/eta)))
+        val_decay = np.exp( - 0.5 * (np.abs((time - t_ref).value) ** (1/eta)) / (t_decay.to_value("d") ** (1/eta)))
         val = np.where(time < t_ref, val_rise, val_decay)
         return val
     
@@ -387,18 +387,18 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         """
         
         pars = self.parameters
-        sigma_rise = pars["sigma_rise"].quantity.to_value("day")
-        sigma_decay = pars["sigma_decay"].quantity.to_value("day")
-        nu = pars["nu"].quantity
+        t_rise = pars["t_rise"].quantity.to_value("day")
+        t_decay = pars["t_decay"].quantity.to_value("day")
+        eta = pars["eta"].quantity
         t_ref = Time(pars["t_ref"].quantity, format = "mjd")
                      
-        def gen_gauss(time):
+        def gen_gauss(time,t_ref,t_rise,t_decay,eta):
             if time < t_ref.mjd:
-                return np.exp( - (np.abs(time - t_ref.mjd) ** nu) / (sigma_rise ** nu))
+                return np.exp( - 0.5 * (np.abs(time - t_ref.mjd) ** (1/eta)) / (t_rise ** (1/eta)))
             else:
-                return np.exp( - (np.abs(time - t_ref.mjd) ** nu) / (sigma_decay ** nu))
+                return np.exp( - 0.5 * (np.abs(time - t_ref.mjd) ** (1/eta)) / (t_decay ** (1/eta)))
 
-        integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd)[0]
+        integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd, args=(t_ref,t_rise,t_decay,eta))[0]
         return integral / self.time_sum(t_min, t_max).value
 
 
