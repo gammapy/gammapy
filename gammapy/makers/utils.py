@@ -3,9 +3,10 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
+from regions import CircleSkyRegion
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
-from gammapy.maps import Map
+from gammapy.maps import Map, RegionGeom, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
@@ -422,3 +423,47 @@ def make_theta_squared_table(
     table.meta["ON_RA"] = position.icrs.ra
     table.meta["ON_DEC"] = position.icrs.dec
     return table
+
+
+def make_counts_rad_max(geom, observation):
+    """Extract the counts using for the ON region size the values in the
+    `RAD_MAX_2D` table.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.Geom`
+        Reference map geom.
+    observation : `~gammapy.data.Observation`
+        Observation container.
+
+    Returns
+    -------
+    counts : `~gammapy.maps.RegionNDMap`
+        Counts map.
+    """
+    if observation.rad_max is None:
+        raise ValueError("the IRF for this observation does not include a RAD_MAX_2D table")
+
+    # TODO: move this in a function similar to the make_map_<IRF_COMPONENT>
+    on_center = geom.center_skydir
+    offset = on_center.separation(observation.pointing_radec)
+    rad_max = observation.rad_max.evaluate(
+        offset=offset,
+        energy=geom.axes["energy"].center
+    )
+
+    counts_list = []
+    events = observation.events
+
+    # create and fill a map per each energy bin, fetch the counts
+    for i, rad in enumerate(rad_max):
+        on_region = CircleSkyRegion(center=on_center, radius=rad)
+        energy_range = geom.axes["energy"].slice(i)
+        on_region_geom = RegionGeom(on_region, axes=[energy_range])
+        counts = Map.from_geom(on_region_geom)
+        counts.fill_events(events)
+        counts_list.append(counts.data[0])
+
+    counts = RegionNDMap.from_geom(geom, data=np.asarray(counts_list))
+
+    return counts
