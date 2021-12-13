@@ -64,10 +64,9 @@ class MapDatasetMaker(Maker):
     def make_counts(geom, observation):
         """Make counts map.
 
-        **NOTE:** for 1D analyses, if the `~gammapy.maps.Geom` is built from a
+        **NOTE for 1D analysis:** if the `~gammapy.maps.Geom` is built from a 
         `~regions.CircleSkyRegion`, the latter will be directly used to extract
-        the counts.
-        If instead the `~gammapy.maps.Geom` is built from a
+        the counts. If instead the `~gammapy.maps.Geom` is built from a
         `~regions.PointSkyRegion`, the size of the ON region is taken from
         the `RAD_MAX_2D` table containing energy-dependent theta2 cuts.
 
