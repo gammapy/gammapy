@@ -29,7 +29,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     """
 
     tag = "SpectrumDatasetMaker"
-    available_selection = ["counts", "background", "exposure", "edisp", "rad_max"]
+    available_selection = ["counts", "background", "exposure", "edisp"]
 
     def __init__(
         self,
