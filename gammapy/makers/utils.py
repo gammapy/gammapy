@@ -425,6 +425,36 @@ def make_theta_squared_table(
     return table
 
 
+def get_rad_max_vs_energy(geom, observation):
+    """Obtain the values of `RAD_MAX` values corresponding to the observation
+    offset and to the energy values in the geometry energy axis.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.Geom`
+        Reference map geom.
+    observation : `~gammapy.data.Observation`
+        Observation container.
+
+    Returns
+    -------
+    array : `~astropy.units.Quantity`
+        Values of the `RAD_MAX` corresponding to each estimated energy bin.
+    """
+    if observation.rad_max is None:
+        raise ValueError("the IRF for this observation does not include a RAD_MAX_2D table")
+
+    on_center = geom.center_skydir
+    offset = on_center.separation(observation.pointing_radec)
+
+    rad_max = observation.rad_max.evaluate(
+        offset=offset,
+        energy=geom.axes["energy"].center
+    )
+
+    return rad_max
+
+
 def make_counts_rad_max(geom, observation):
     """Extract the counts using for the ON region size the values in the
     `RAD_MAX_2D` table.
@@ -439,25 +469,16 @@ def make_counts_rad_max(geom, observation):
     Returns
     -------
     counts : `~gammapy.maps.RegionNDMap`
-        Counts map.
+        Counts vs estimated energy extracted from the ON region.
     """
-    if observation.rad_max is None:
-        raise ValueError("the IRF for this observation does not include a RAD_MAX_2D table")
-
-    # TODO: move this in a function similar to the make_map_<IRF_COMPONENT>
-    on_center = geom.center_skydir
-    offset = on_center.separation(observation.pointing_radec)
-    rad_max = observation.rad_max.evaluate(
-        offset=offset,
-        energy=geom.axes["energy"].center
-    )
+    rad_max = get_rad_max_vs_energy(geom, observation)
 
     counts_list = []
     events = observation.events
 
     # create and fill a map per each energy bin, fetch the counts
     for i, rad in enumerate(rad_max):
-        on_region = CircleSkyRegion(center=on_center, radius=rad)
+        on_region = CircleSkyRegion(center=geom.center_skydir, radius=rad)
         energy_range = geom.axes["energy"].slice(i)
         on_region_geom = RegionGeom(on_region, axes=[energy_range])
         counts = Map.from_geom(on_region_geom)
