@@ -4,10 +4,11 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from regions import PixCoord
+from regions import PixCoord, PointSkyRegion, CircleSkyRegion
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker
+from ..utils import get_rad_max_vs_energy
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
 
@@ -271,40 +272,100 @@ class ReflectedRegionsBackgroundMaker(Maker):
     def make_counts_off(self, dataset, observation):
         """Make off counts.
 
+        **NOTE for 1D analysis:** as for
+        `~gammapy.makers.map.MapDatasetMaker.make_counts`,
+        if the geometry of the dataset is a `~regions.CircleSkyRegion` then only
+        a single instance of the `ReflectedRegionsFinder` will be called.
+        If, on the other hand, the geometry of the dataset is a 
+        `~regions.PointSkyRegion`, then we have to call the
+        `ReflectedRegionsFinder` several time, each time with a different size
+        of the on region that we will read from the `RAD_MAX_2D` table.
+
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
-        observation : `DatastoreObservation`
-            Data store observation.
-
+        observation : `~gammapy.observation.Observation`
+            Observation container.
 
         Returns
         -------
-        counts_off : `RegionNDMap`
-            Off counts.
+        counts_off : `~gammapy.maps.RegionNDMap`
+            Counts vs estimated energy extracted from the OFF regions.
         """
-        finder = self._get_finder(dataset, observation)
-        regions = finder.run()
+        if isinstance(dataset.counts.geom.region, CircleSkyRegion):
+            finder = self._get_finder(dataset, observation)
+            regions = finder.run()
 
-        energy_axis = dataset.counts.geom.axes["energy"]
+            energy_axis = dataset.counts.geom.axes["energy"]
 
-        if len(regions) > 0:
-            geom = RegionGeom.from_regions(
-                regions=regions, axes=[energy_axis], wcs=finder.geom_ref.wcs
+            if len(regions) > 0:
+                geom = RegionGeom.from_regions(
+                    regions=regions, axes=[energy_axis], wcs=finder.geom_ref.wcs
+                )
+
+                counts_off = RegionNDMap.from_geom(geom=geom)
+                counts_off.fill_events(observation.events)
+                acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(regions))
+            else:
+                # if no OFF regions are found, off is set to None and acceptance_off to zero
+                log.warning(
+                    f"ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for {dataset.name}."
+                )
+
+                counts_off = None
+                acceptance_off = RegionNDMap.from_geom(geom=dataset._geom, data=0)
+
+        if isinstance(dataset.counts.geom.region, PointSkyRegion):
+            rad_max = get_rad_max_vs_energy(dataset.counts.geom, observation)
+
+            counts_off_list = []
+            acceptance_off_list = []
+            events = observation.events
+
+            # we have to define an ON region and a finder for each energy bin
+            for i, rad in enumerate(rad_max):
+
+                on_region = CircleSkyRegion(center=dataset.counts.geom.center_skydir, radius=rad)
+                energy_range = dataset.counts.geom.axes["energy"].slice(i)
+
+                finder = ReflectedRegionsFinder(
+                    binsz=self.binsz,
+                    exclusion_mask=self.exclusion_mask,
+                    center=observation.pointing_radec,
+                    region=on_region,
+                    min_distance=self.min_distance,
+                    min_distance_input=self.min_distance_input,
+                    max_region_number=self.max_region_number,
+                    angle_increment=self.angle_increment,
+                )
+                regions = finder.run()
+
+                if len(regions) > 0:
+                    geom = RegionGeom.from_regions(
+                        regions=regions, axes=[energy_range], wcs=finder.geom_ref.wcs
+                    )
+                    counts_off = RegionNDMap.from_geom(geom=geom)
+                    counts_off.fill_events(events)
+                    counts_off_list.append(counts_off.data[0])
+                
+                else:
+                    log.warning(
+                        f"ReflectedRegionsBackgroundMaker failed in estimated energy bin {i}."
+                    )
+                    counts_off_list.append(0)
+                
+                acceptance_off_list.append(len(regions))
+                
+            # create the final arrays with the OFF counts and the acceptance
+            counts_off = RegionNDMap.from_geom(
+                geom=dataset.counts.geom, 
+                data=np.asarray(counts_off_list)
             )
-
-            counts_off = RegionNDMap.from_geom(geom=geom)
-            counts_off.fill_events(observation.events)
-            acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(regions))
-        else:
-            # if no OFF regions are found, off is set to None and acceptance_off to zero
-            log.warning(
-                f"ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for {dataset.name}."
+            acceptance_off = RegionNDMap.from_geom(
+                geom=dataset.counts.geom, 
+                data=np.asarray(acceptance_off_list)
             )
-
-            counts_off = None
-            acceptance_off = RegionNDMap.from_geom(geom=dataset._geom, data=0)
 
         return counts_off, acceptance_off
 
