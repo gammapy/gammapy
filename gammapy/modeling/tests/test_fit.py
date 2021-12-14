@@ -130,7 +130,11 @@ def test_run_linked(backend):
 
     assert len(dataset.models.parameters.unique_parameters) == 3 
     assert dataset.models.covariance.shape == (6,6) 
-
+    expected = [[1.00000000e+00, 1.69728073e-30, 4.76456033e-16],
+                [1.69728073e-30, 1.00000000e+00, 3.56230294e-15],
+                [4.76456033e-16, 3.56230294e-15, 1.00000000e+00]]
+    assert_allclose(dataset.models[0].covariance.data, expected)
+    assert_allclose(dataset.models[1].covariance.data, expected)
 
 @requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
