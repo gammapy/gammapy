@@ -364,7 +364,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     eta = Parameter("eta", 1/2, unit = "", frozen=False)
 
     @staticmethod
-    def evaluate(time, t_ref, t_rise, eta, t_decay):
+    def evaluate(time, t_ref, t_rise, t_decay, eta):
         val_rise = np.exp( - 0.5 * (np.abs((time - t_ref).value) ** (1/eta)) / (t_rise.to_value("d") ** (1/eta)))
         val_decay = np.exp( - 0.5 * (np.abs((time - t_ref).value) ** (1/eta)) / (t_decay.to_value("d") ** (1/eta)))
         val = np.where(time < t_ref, val_rise, val_decay)
