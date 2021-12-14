@@ -1,8 +1,12 @@
 r"""
 .. _generalized-gaussian-temporal-model:
+
 Generalized Gaussian temporal model
 =======================
+
 This model parametrises a generalized Gaussian time model.
+
+
 .. math::
         F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_rise}) ^ {1 / \eta})   for  t < t_ref
             
@@ -13,7 +17,6 @@ This model parametrises a generalized Gaussian time model.
 # Example plot
 # ------------
 # Here is an example plot of the model:
-
 
 from astropy import units as u
 from astropy.units import Quantity
