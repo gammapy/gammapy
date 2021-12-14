@@ -241,7 +241,7 @@ class Fit:
         result : `CovarianceResult`
             Results
         """
-        datasets, _ = self._parse_datasets(datasets=datasets)
+        datasets, unique_pars = self._parse_datasets(datasets=datasets)
         parameters = datasets.models.parameters
 
         kwargs = self.covariance_opts.copy()
@@ -249,14 +249,14 @@ class Fit:
         backend = kwargs.pop("backend", self.backend)
         compute = registry.get("covariance", backend)
 
-        with parameters.restore_status():
+        with unique_pars.restore_status():
             if self.backend == "minuit":
                 method = "hesse"
             else:
                 method = ""
 
             factor_matrix, info = compute(
-                parameters=parameters, function=datasets.stat_sum, **kwargs
+                parameters=unique_pars, function=datasets.stat_sum, **kwargs
             )
 
             datasets.models.covariance = Covariance.from_factor_matrix(
