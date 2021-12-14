@@ -14,7 +14,7 @@ from .utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_psf_map,
-    make_counts_rad_max
+    make_counts_rad_max,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -53,7 +53,7 @@ class MapDatasetMaker(Maker):
             selection = self.available_selection
 
         selection = set(selection)
-        
+
         if not selection.issubset(self.available_selection):
             difference = selection.difference(self.available_selection)
             raise ValueError(f"{difference} is not a valid method.")
@@ -64,7 +64,7 @@ class MapDatasetMaker(Maker):
     def make_counts(geom, observation):
         """Make counts map.
 
-        **NOTE for 1D analysis:** if the `~gammapy.maps.Geom` is built from a 
+        **NOTE for 1D analysis:** if the `~gammapy.maps.Geom` is built from a
         `~regions.CircleSkyRegion`, the latter will be directly used to extract
         the counts. If instead the `~gammapy.maps.Geom` is built from a
         `~regions.PointSkyRegion`, the size of the ON region is taken from
@@ -82,9 +82,9 @@ class MapDatasetMaker(Maker):
         counts : `~gammapy.maps.Map`
             Counts map.
         """
-        if isinstance(geom.region, PointSkyRegion):
+        if geom.is_region and isinstance(geom.region, PointSkyRegion):
             counts = make_counts_rad_max(geom, observation)
-        elif isinstance(geom.region, CircleSkyRegion):
+        else:
             counts = Map.from_geom(geom)
             counts.fill_events(observation.events)
         return counts
