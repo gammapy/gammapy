@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r"""
 .. _generalized-gaussian-temporal-model:
 Generalized Gaussian temporal model
