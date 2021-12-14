@@ -35,12 +35,12 @@ class MyDataset(Dataset):
 
     def stat_sum(self):
         # self._model.parameters = parameters
-        x, y, z = [p.value for p in self.models.parameters]
+        x, y, z = [p.value for p in self.models.parameters.unique_parameters]
         x_opt, y_opt, z_opt = 2, 3e2, 4e-2
         return (x - x_opt) ** 2 + (y - y_opt) ** 2 + (z - z_opt) ** 2
 
     def fcn(self):
-        x, y, z = [p.value for p in self.models.parameters]
+        x, y, z = [p.value for p in self.models.parameters.unique_parameters]
         x_opt, y_opt, z_opt = 2, 3e5, 4e-5
         x_err, y_err, z_err = 0.2, 3e4, 4e-6
         return (
@@ -86,6 +86,7 @@ def test_optimize_backend_and_covariance(backend):
     assert_allclose(correlation[1, 2], 0, atol=1e-7)
 
 
+
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
     dataset = MyDataset()
@@ -110,6 +111,25 @@ def test_run(backend):
     assert_allclose(correlation[0, 1], 0, atol=1e-7)
     assert_allclose(correlation[0, 2], 0, atol=1e-7)
     assert_allclose(correlation[1, 2], 0, atol=1e-7)
+
+@pytest.mark.parametrize("backend", ["minuit"])
+def test_run_linked(backend):
+    dataset = MyDataset()
+    model1 = MyModel(x=1.99, y=2.99e3, z=3.99e-2)
+    model1.name = "model1"
+    model2 = MyModel(x=0.99, y=0.99e3, z=3.99e-2)
+    model2.name = "model2"
+    model2.x = model1.x
+    model2.y = model1.y
+    model2.z = model1.z
+
+    dataset._models = Models([model1, model2])
+
+    fit = Fit(backend=backend)
+    fit.run([dataset])
+
+    assert len(dataset.models.parameters.unique_parameters) == 3 
+    assert dataset.models.covariance.shape == (6,6) 
 
 
 @requires_dependency("sherpa")
