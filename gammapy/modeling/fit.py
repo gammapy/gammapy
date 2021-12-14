@@ -241,7 +241,8 @@ class Fit:
         result : `CovarianceResult`
             Results
         """
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, _ = self._parse_datasets(datasets=datasets)
+        parameters = datasets.models.parameters
 
         kwargs = self.covariance_opts.copy()
         kwargs["minuit"] = self.minuit
