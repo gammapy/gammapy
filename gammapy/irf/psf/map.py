@@ -4,7 +4,7 @@ import astropy.units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.gauss import Gauss2DPDF, AsymmetricGauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
 from .core import PSF
@@ -494,7 +494,78 @@ class PSFMap(IRFMap):
 
 class PSFKernelMap(IRFMap):
     tag = "psf_kernel_map"
-    required_axes = ["psf_lon","psf_true", "energy_true"]
+    required_axes = ["psf_lon","psf_lat", "energy_true"]
 
     def __init__(self, psf_kernel_map, exposure_map=None):
         super().__init__(irf_map=psf_kernel_map, exposure_map=exposure_map)
+
+    @property
+    def psf_kernel_map(self):
+        return self._irf_map
+
+    @psf_kernel_map.setter
+    def psf_kernel_map(self, value):
+        self._irf_map = value
+
+    @classmethod
+    def from_gauss(cls, energy_axis_true, psf_lon_axis=None, psf_lat_axis=None, sigma=0.1 * u.deg, geom=None):
+        """Create all-sky PSF kernel map from Gaussian width.
+
+        This is used for testing and examples.
+
+        The width can be the same for all energies
+        or be an array with one or two values per energy node.
+        The first value corresponds to the lon direction.
+
+        Parameters
+        ----------
+        energy_axis_true : `~gammapy.maps.MapAxis`
+            True energy axis.
+        rad_axis : `~gammapy.maps.MapAxis`
+            Offset angle wrt source position axis.
+        sigma : `~astropy.coordinates.Angle`
+            Gaussian width.
+        geom : `Geom`
+            Image geometry. By default an allsky geometry is created.
+
+        Returns
+        -------
+        psf_kernel_map : `PSFKernelMap`
+            Point spread function map.
+        """
+        LONLAT_AXIS_DEFAULT = MapAxis.from_bounds(-1, 1, nbin=11, unit='deg')
+
+        if not all([psf_lon_axis, psf_lat_axis]):
+            psf_lon_axis = LONLAT_AXIS_DEFAULT.copy()
+            psf_lat_axis = LONLAT_AXIS_DEFAULT.copy()
+            psf_lon_axis.name = 'psf_lon'
+            psf_lat_axis.name = 'psf_lat'
+
+        if geom is None:
+            geom = WcsGeom.create(
+                npix=(2, 1),
+                proj="CAR",
+                binsz=180,
+            )
+
+        geom = geom.to_cube([psf_lon_axis,psf_lat_axis, energy_axis_true])
+
+        coords = geom.get_coord(sparse=True)
+
+        # for now let's ignore energy dependent sigma and assume
+        # that it is either a tuple or a number
+        sigma = u.Quantity(sigma)
+        if np.size(sigma) == 1:
+            sigma =[sigma, sigma]
+        gauss = AsymmetricGauss2DPDF(sigma[0], sigma[1])
+
+        data = gauss(coords['psf_lon'],coords['psf_lat']) * np.ones(geom.data_shape)
+
+        psf_kernel_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
+
+        geom_exposure = geom.squash(axis_name='psf_lon').squash(axis_name='psf_lat')
+        exposure_map = Map.from_geom(
+            geom=geom_exposure, unit="m2 s", data=1.0
+        )
+        return cls(psf_kernel_map=psf_kernel_map, exposure_map=exposure_map)
+

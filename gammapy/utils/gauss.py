@@ -369,7 +369,7 @@ class AsymmetricGauss2DPDF:
         x2 = x * x
         y2 = y * y
         amplitude = 1 / (2 * np.pi * self.sigma_x * self.sigma_y)
-        exponent_x = -0.5 * x2 / self.sigma_x
-        exponent_y = -0.5 * y2 / self.sigma_y
+        exponent_x = -0.5 * x2 / self.sigma_x**2
+        exponent_y = -0.5 * y2 / self.sigma_y**2
 
         return amplitude * np.exp(exponent_x) * np.exp(exponent_y)
