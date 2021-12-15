@@ -327,3 +327,49 @@ class MultiGauss2D:
             norms.append(self.norms[ii] * norm)
 
         return MultiGauss2D(sigmas, norms)
+
+class AsymmetricGauss2DPDF:
+    """2D asymmetric Gaussian PDF.
+
+    Reference: http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
+
+    Parameters
+    ----------
+    sigma_x : float
+        Gaussian width in the x direction.
+    sigma_y : float
+        Gaussian width in the y direction.
+    """
+
+    def __init__(self, sigma_x=1, sigma_y=1):
+        self.sigma_x = sigma_x
+        self.sigma_y = sigma_y
+
+
+    @property
+    def amplitude(self):
+        """PDF amplitude at the center (float)"""
+        return self.__call(0, 0)
+
+    def __call__(self, x, y=0):
+        """dp / (dx dy) at position (x, y)
+
+        Parameters
+        ----------
+        x : `~numpy.ndarray`
+            x coordinate
+        y : `~numpy.ndarray`, optional
+            y coordinate
+
+        Returns
+        -------
+        dpdxdy : `~numpy.ndarray`
+            dp / (dx dy)
+        """
+        x2 = x * x
+        y2 = y * y
+        amplitude = 1 / (2 * np.pi * self._sigma_x * self._sigma_y)
+        exponent_x = -0.5 * x2 / self._sigma_x
+        exponent_y = -0.5 * y2 / self._sigma_y
+
+        return amplitude * np.exp(exponent_x) * np.exp(exponent_y)
