@@ -569,3 +569,29 @@ class PSFKernelMap(IRFMap):
         )
         return cls(psf_kernel_map=psf_kernel_map, exposure_map=exposure_map)
 
+
+    @classmethod
+    def from_geom(cls, geom):
+        """Create PSF kernel map from geom.
+
+        By default a symmetric gaussian PSF kernel is created.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            PSF kernel map geometry. Must have
+            an energy_true axis and both
+            psf_lon and psf_lat axes.
+
+        Returns
+        -------
+        psf_kernel_map : `PSFKernelMap`
+            PSF kernel map.
+        """
+        geom.axes.assert_names(cls.required_axes)
+
+        psf_lon_axis = geom.axes["psf_lon"]
+        psf_lat_axis = geom.axes["psf_lat"]
+        energy_axis_true = geom.axes["energy_true"]
+
+        return cls.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=0.1 * u.deg, geom=geom.to_image())
