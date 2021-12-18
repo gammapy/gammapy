@@ -53,7 +53,7 @@ dependencies:
   - pydocstyle
   - pylint
   - setuptools_scm
-  - sphinx==2.4.4
+  - sphinx
   - sphinx-astropy
   - sphinx-click
   - sphinx-gallery
@@ -61,7 +61,6 @@ dependencies:
   - twine
   - yamllint
   - nbformat==5.0.8
-  - docutils==0.16
   - h5py==2.10.0
   - ruamel.yaml
   - pip:
