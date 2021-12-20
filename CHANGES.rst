@@ -1,5 +1,5 @@
 1.0rc (unreleased)
-----------------
+------------------
 
 - No changes yet
 
