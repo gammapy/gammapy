@@ -28,7 +28,7 @@ Access IACT DL3 data
 
 To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
 easy access to observations stored in the DL3 data library. You can create it directly
-as in `this example<tutorials/data/hess.html#Datastore>`__.
+as in `this example <tutorials/data/hess.html#Datastore>`__.
 It is also internally used by the high level interface `~gammapy.analysis.Analysis`. You
 can see how to properly set it `here
 <tutorials/starting/analysis_1.html#Setting-the-data-to-use>`__.
@@ -78,12 +78,12 @@ Extract 1D spectra
 The `~gammapy.analysis.Analysis` class can perform spectral extraction. The
 `~gammapy.analysis.AnalysisConfig` must be defined to produce '1d' datasets.
 Alternatively, you can follow the `spectrum extraction notebook
-<tutorials/analysis/1D/spectrum_analysis.html>`__.
+<tutorials/analysis/1D/spectral_analysis.html>`__.
 
 Extract a lightcurve
 ++++++++++++++++++++
 
-The `Light curve estimation <tutorials/light_curve.html>`__ tutorial shows how
+The `Light curve estimation <tutorials/analysis/time/light_curve.html>`__ tutorial shows how
 to extract a run-wise lightcurve.
 
 To perform an analysis in a time range smaller than that of an observation, it
@@ -93,7 +93,7 @@ an new observation containing events in the specified time range. With the new
 reduction which will produce datasets in the correct time range. The light curve
 extraction can then be performed as usual with the
 `~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the `Light curve -
-Flare <tutorials/time/light_curve_flare.html>`__ tutorial.
+Flare <tutorials/analysis/time/light_curve_flare.html>`__ tutorial.
 
 Choose units for plotting
 +++++++++++++++++++++++++
@@ -133,7 +133,7 @@ source as a function of observing time. In Gammapy, you can produce it with 1D
 (spectral) analysis. Once datasets are produced for a given ON region, you can
 access the total statistics with the ``info_table(cumulative=True)`` method of
 `~gammapy.modeling.Datasets`. See example `here
-<tutorials/analysis/1D/spectrum_analysis.html#Source-statistic>`__.
+<tutorials/analysis/1D/spectral_analysis.html#Source-statistic>`__.
 
 Detect sources in a map
 +++++++++++++++++++++++
