@@ -97,24 +97,6 @@ release = version
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
-# html_theme_options = {
-#    'logotext1': 'gamma',  # white,  semi-bold
-#    'logotext2': 'py',  # orange, light
-#    'logotext3': ':docs'  # white,  light
-# }
-
-html_theme_options = {
-    "canonical_url": setup_cfg["url_docs"],
-    "analytics_id": "",
-    "logo_only": False,
-    "display_version": True,
-    "prev_next_buttons_location": "bottom",
-    # Toc options
-    "collapse_navigation": False,
-    "sticky_navigation": True,
-    "navigation_depth": 3,
-}
-
 # Add any paths that contain custom themes here, relative to this directory.
 # To use a different custom theme, add the directory containing the theme.
 # html_theme_path = []
@@ -126,22 +108,18 @@ html_theme = "pydata_sphinx_theme"
 
 # Static files to copy after template files
 html_static_path = ["_static"]
+
+# The name of an image file (within the static path) to use as favicon of the
+# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# pixels large.
 html_logo = os.path.join(html_static_path[0], "logo.png")
 html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
-# Custom sidebar templates, maps document names to template names.
-# html_sidebars = {}
 
+# Custom sidebar templates, maps document names to template names.
 html_sidebars = {
    'search': 'search-field.html',
    'navigation': 'sidebar-nav-bs.html',
 }
-# The name of an image file (within the static path) to use as favicon of the
-# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
-# html_favicon = ''
-
-# TODO: set this image also in the title bar
-# (html_logo is not the right option)
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -154,11 +132,24 @@ html_title = "{} v{}".format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
 
-# Static files to copy after template files
-html_static_path = ["_static"]
+# html_theme_options = {
+#    'logotext1': 'gamma',  # white,  semi-bold
+#    'logotext2': 'py',  # orange, light
+#    'logotext3': ':docs'  # white,  light
+# }
 
-gammapy_sphinx_ext_activate()
+html_theme_options = {
+    "canonical_url": setup_cfg["url_docs"],
+    "analytics_id": "",
+    "logo_only": False,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    # toc options
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 3,
 
+}
 
 # Theme style
 # html_style = ''
@@ -172,8 +163,7 @@ def setup(app):
 # slightly modified to work on RTD theme from javascript file in easydev package
 # https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js
 
-
-html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
+gammapy_sphinx_ext_activate()
 
 # -- Options for LaTeX output --------------------------------------------------
 
