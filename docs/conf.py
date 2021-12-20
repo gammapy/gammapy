@@ -132,18 +132,7 @@ html_title = "{} v{}".format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
 
-# html_theme_options = {
-#    'logotext1': 'gamma',  # white,  semi-bold
-#    'logotext2': 'py',  # orange, light
-#    'logotext3': ':docs'  # white,  light
-# }
-
 html_theme_options = {
-    "canonical_url": setup_cfg["url_docs"],
-    "analytics_id": "",
-    "logo_only": False,
-    "display_version": True,
-    "prev_next_buttons_location": "bottom",
     # toc options
     "collapse_navigation": False,
     "sticky_navigation": True,
