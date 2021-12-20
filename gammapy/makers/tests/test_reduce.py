@@ -35,8 +35,10 @@ def observations_hess():
 
 @pytest.fixture(scope="session")
 def observations_magic():
-    files = make_path("$GAMMAPY_DATA/magic/rad_max/data").glob("*.fits")
-    observations = [Observation.read(_file) for _file in files]
+    observations = [
+        Observation.read("$GAMMAPY_DATA/magic/rad_max/data/magic_dl3_run_05029747.fits"),
+        Observation.read("$GAMMAPY_DATA/magic/rad_max/data/magic_dl3_run_05029748.fits"),
+    ]
     return observations
 
 
@@ -254,7 +256,7 @@ def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
 def test_dataset_maker_spectrum_rad_max(observations_magic):
     """test the energy-dependent spectrum extraction"""
 
-    observation = observations_magic[1]
+    observation = observations_magic[0]
 
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
