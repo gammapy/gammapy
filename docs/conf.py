@@ -148,7 +148,9 @@ html_theme_options = {
     "collapse_navigation": False,
     "sticky_navigation": True,
     "navigation_depth": 3,
-
+    # links in menu
+    "github_url": "https://github.com/gammapy/gammapy",
+    "twitter_url": "https://twitter.com/gammapyST",
 }
 
 # Theme style
