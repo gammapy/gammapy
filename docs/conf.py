@@ -7,7 +7,7 @@ import os
 import datetime
 from pkg_resources import get_distribution
 
-# Load all of the global Astropy configuration
+# Load all the global Astropy configuration
 from sphinx_astropy.conf import *
 
 # Load utils docs functions
@@ -23,11 +23,13 @@ conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
 
+# -- General configuration ----------------------------------------------------
+
+# Matplotlib directive sets whether to show a link to the source in HTML
 plot_html_show_source_link = False
 
+# If true, figures, tables and code-blocks are automatically numbered if they have a caption
 numfig = False
-
-# -- General configuration ----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = '1.1'
@@ -38,16 +40,10 @@ numfig = False
 intersphinx_mapping.pop("h5py", None)
 intersphinx_mapping["matplotlib"] = ("https://matplotlib.org/", None)
 intersphinx_mapping["astropy"] = ("http://docs.astropy.org/en/latest/", None)
-intersphinx_mapping["regions"] = (
-    "https://astropy-regions.readthedocs.io/en/latest/",
-    None,
-)
+intersphinx_mapping["regions"] = ("https://astropy-regions.readthedocs.io/en/latest/", None)
 intersphinx_mapping["reproject"] = ("https://reproject.readthedocs.io/en/latest/", None)
 intersphinx_mapping["naima"] = ("https://naima.readthedocs.io/en/latest/", None)
-intersphinx_mapping["gadf"] = (
-    "https://gamma-astro-data-formats.readthedocs.io/en/latest/",
-    None,
-)
+intersphinx_mapping["gadf"] = ("https://gamma-astro-data-formats.readthedocs.io/en/latest/", None)
 intersphinx_mapping["iminuit"] = ("https://iminuit.readthedocs.io/en/latest/", None)
 intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/", None)
 
@@ -93,7 +89,7 @@ release = version
 # A NOTE ON HTML THEMES
 # The global astropy configuration uses a custom theme, 'bootstrap-astropy',
 # which is installed along with astropy. A different theme can be used or
-# the options for this theme can be modified by overriding some of the
+# the options for this theme can be modified by overriding some
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
@@ -135,12 +131,12 @@ htmlhelp_basename = project + "doc"
 html_theme_options = {
     # toc options
     "collapse_navigation": False,
-    "sticky_navigation": True,
     "navigation_depth": 3,
     # links in menu
     "github_url": "https://github.com/gammapy/gammapy",
     "twitter_url": "https://twitter.com/gammapyST",
 }
+
 
 # Theme style
 # html_style = ''
@@ -149,10 +145,10 @@ def setup(app):
     app.add_js_file("copybutton.js")
     app.add_js_file("gammapy.js")
 
-
 # copybutton.js provides hide/show button for python prompts >>>
 # slightly modified to work on RTD theme from javascript file in easydev package
 # https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js
+
 
 gammapy_sphinx_ext_activate()
 
