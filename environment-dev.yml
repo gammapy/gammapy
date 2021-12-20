@@ -53,7 +53,7 @@ dependencies:
   - pydocstyle
   - pylint
   - setuptools_scm
-  - sphinx
+  - sphinx==2.4
   - sphinx-astropy
   - sphinx-click
   - sphinx-gallery
