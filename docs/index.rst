@@ -1,12 +1,19 @@
 .. include:: references.txt
 
-.. image:: _static/gammapy_banner.png
-    :width: 400px
-
 .. Should we add a known issues section at the end?
 
-Gammapy
--------
+gammapy documentation
+---------------------
+
+**Date**: |today| **Version**: |version|
+
+**Useful links**:
+:ref:`install` |
+`Source Repository <https://github.com/gammapy/gammapy/issues>`__ |
+`Issues & Ideas <https://github.com/gammapy/gammapy/issues>`__ |
+`Discussions <https://github.com/gammapy/gammapy/discussions>`__ |
+`Contact <https://gammapy.org/contact.html>`__
+
 
 Gammapy is a community-developed, open-source Python package for gamma-ray
 astronomy built on Numpy, Scipy and Astropy. It is the core library for the `CTA`_ science tools
