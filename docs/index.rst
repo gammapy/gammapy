@@ -27,7 +27,75 @@ where you may find more information about Gammapy, including the
 have any questions, want to report and issue or request a feature, or need help with anything
 related to Gammapy.
 
+.. panels::
+    :card: + intro-card text-center
+    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
 
+    ---
+    :img-top: _static/index_getting_started.svg
+
+    Getting started
+    ^^^^^^^^^^^^^^^
+
+    New to *Gammapy*? Check out the getting started documents. They contain information
+    on how to install and start using *Gammapy'* in your local desktop.
+
+    +++
+
+    .. link-button:: getting-started/index
+            :type: ref
+            :text: To the getting started docs
+            :classes: btn-block btn-secondary stretched-link
+
+    ---
+    :img-top: _static/index_user_guide.svg
+
+    Tutorials
+    ^^^^^^^^^
+
+    The tutorials provide in-depth information on the
+    key concepts of Gammapy with useful background information and explanation.
+
+    +++
+
+    .. link-button:: tutorials/index
+            :type: ref
+            :text: To the tutorials
+            :classes: btn-block btn-secondary stretched-link
+
+    ---
+    :img-top: _static/index_api.svg
+
+    API reference
+    ^^^^^^^^^^^^^
+
+    The reference guide contains a detailed description of
+    the Gammapy API. The reference describes how the methods work and which parameters can
+    be used. It assumes that you have an understanding of the key concepts.
+
+    +++
+
+    .. link-button:: api-ref
+            :type: ref
+            :text: To the reference guide
+            :classes: btn-block btn-secondary stretched-link
+
+    ---
+    :img-top: _static/index_contribute.svg
+
+    Developer guide
+    ^^^^^^^^^^^^^^^
+
+    Saw a typo in the documentation? Want to improve
+    existing functionalities? The contributing guidelines will guide
+    you through the process of improving Gammapy.
+
+    +++
+
+    .. link-button:: development/index
+            :type: ref
+            :text: To the developer guide
+            :classes: btn-block btn-secondary stretched-link
 
 
 .. toctree::

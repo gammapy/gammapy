@@ -57,6 +57,7 @@ dependencies:
   - sphinx-astropy
   - sphinx-click
   - sphinx-gallery
+  - sphinx-panels
   - pydata-sphinx-theme
   - twine
   - yamllint

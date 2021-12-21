@@ -66,6 +66,7 @@ extensions.extend(
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
+        "sphinx_panels"
     ]
 )
 nbsphinx_execute = "never"

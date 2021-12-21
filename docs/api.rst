@@ -1,5 +1,5 @@
 
-.. _api:
+.. _api-ref:
 
 =============
 API reference
