@@ -28,50 +28,17 @@ have any questions, want to report and issue or request a feature, or need help 
 related to Gammapy.
 
 
-.. _gammapy_intro:
+
+
 .. toctree::
-    :caption: User Guide
     :maxdepth: 1
+    :titlesonly:
+    :hidden:
 
     overview/index
     getting-started/index
     tutorials/index
-    modeling/gallery/index
-    howto
-    references
-    changelog
-    List of releases <https://gammapy.org/news.html#releases>
-
-
-.. _gammapy_package:
-
-.. toctree::
-    :caption: Gammapy Package
-    :maxdepth: 1
-
-    analysis/index
-    data/index
-    makers/index
-    datasets/index
-    modeling/index
-    estimators/index
-
-    irf/index
-    maps/index
-    catalog/index
-
-    astro/index
-    scripts/index
-    stats/index
-    visualization/index
-    utils/index
-
-
-.. _gammapy_dev:
-
-.. toctree::
-    :caption: Developer Documentation
-    :titlesonly:
-    :maxdepth: 1
-
+    api
     development/index
+    changelog
+
