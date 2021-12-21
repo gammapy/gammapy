@@ -1,10 +1,13 @@
 .. include:: references.txt
 
+.. image:: _static/gammapy_banner.png
+    :width: 400px
+
 .. Should we add a known issues section at the end?
 
-gammapy documentation
----------------------
-
+|
+Gammapy
+-------
 **Date**: |today| **Version**: |version|
 
 **Useful links**:
