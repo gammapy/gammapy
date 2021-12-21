@@ -144,11 +144,8 @@ html_theme_options = {
 
 # Theme style
 # html_style = ''
-def setup(app):
-    app.add_css_file("gammapy.css")
-    app.add_js_file("copybutton.js")
-    app.add_js_file("gammapy.js")
-
+html_css_files = ["gammapy.css"]
+html_js_files = ["copybutton.js", "gammapy.js"]
 # copybutton.js provides hide/show button for python prompts >>>
 # slightly modified to work on RTD theme from javascript file in easydev package
 # https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js

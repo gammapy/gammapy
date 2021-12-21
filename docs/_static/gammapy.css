@@ -109,3 +109,13 @@ table.docutils {
   margin-bottom: 0rem;
   color: #484848;
 }
+
+.btn-secondary {
+  background-color: var(--gammapy-secondary);
+  border-color: var(--gammapy-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: #666;
+  border-color: #666;
+}
