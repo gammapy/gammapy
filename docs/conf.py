@@ -52,6 +52,9 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 exclude_patterns.append("_templates")
 exclude_patterns.append("_static")
 exclude_patterns.append("**.ipynb_checkpoints")
+exclude_patterns.append("modeling/gallery/*/*.ipynb")
+exclude_patterns.append("modeling/gallery/*/*.md5")
+exclude_patterns.append("modeling/gallery/*/*.py")
 
 #
 # -- nbsphinx settings
