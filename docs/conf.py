@@ -135,12 +135,11 @@ htmlhelp_basename = project + "doc"
 html_theme_options = {
     # toc options
     "collapse_navigation": False,
-    "navigation_depth": 3,
+    "navigation_depth": 1,
     # links in menu
     "github_url": "https://github.com/gammapy/gammapy",
     "twitter_url": "https://twitter.com/gammapyST",
 }
-
 
 # Theme style
 # html_style = ''
