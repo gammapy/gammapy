@@ -2,7 +2,7 @@
 
 .. _overview_package:
 
-Package Structure
+Package structure
 =================
 
 This page gives an overview of the main concepts in Gammapy. :ref:`Fig. 1 <data_flow>`

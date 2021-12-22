@@ -2,8 +2,8 @@
 
 .. _overview:
 
-Overview
-========
+User guide
+==========
 
 
 .. toctree::
@@ -12,11 +12,6 @@ Overview
     analysis
     package
     dependencies
-
-#--
-
-.. toctree::
-    :maxdepth: 1
 
     ../howto
     ../modeling/gallery/index

@@ -8,6 +8,7 @@
 |
 Gammapy
 -------
+
 **Date**: |today| **Version**: |version|
 
 **Useful links**:
@@ -47,7 +48,7 @@ related to Gammapy.
 
     .. link-button:: getting-started/index
             :type: ref
-            :text: To the getting started docs
+            :text: To the quickstart docs
             :classes: btn-block btn-secondary stretched-link
 
     ---
@@ -95,7 +96,7 @@ related to Gammapy.
 
     +++
 
-    .. link-button:: development/index
+    .. link-button:: development/intro
             :type: ref
             :text: To the developer guide
             :classes: btn-block btn-secondary stretched-link
@@ -106,9 +107,10 @@ related to Gammapy.
     :titlesonly:
     :hidden:
 
-    overview/index
     getting-started/index
+    overview/index
     tutorials/index
+    modeling/gallery/index
     api
     development/index
     changelog
