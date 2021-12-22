@@ -58,6 +58,7 @@ dependencies:
   - sphinx-click
   - sphinx-gallery
   - sphinx-panels
+  - sphinx-copybutton
   - pydata-sphinx-theme
   - twine
   - yamllint

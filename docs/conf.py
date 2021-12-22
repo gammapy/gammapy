@@ -56,8 +56,6 @@ exclude_patterns.append("modeling/gallery/*/*.ipynb")
 exclude_patterns.append("modeling/gallery/*/*.md5")
 exclude_patterns.append("modeling/gallery/*/*.py")
 
-#
-# -- nbsphinx settings
 extensions.extend(
     [
         "nbsphinx",
@@ -66,11 +64,13 @@ extensions.extend(
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
-        "sphinx_panels"
+        "sphinx_panels",
+        "sphinx_copybutton"
     ]
 )
 nbsphinx_execute = "never"
-
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
 # --
 
 # This is added to the end of RST files - a good place to put substitutions to
