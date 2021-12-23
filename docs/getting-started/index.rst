@@ -105,3 +105,4 @@ Congratulations! You are all set to start using Gammapy!
     install
     usage
     troubleshooting
+    upgrade

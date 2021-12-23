@@ -266,6 +266,8 @@ e.g. during data reduction, or at the dataset or model component or at the funct
 This is planned for 2020, but really prototyping and pull requests on performance are welcome
 any time.
 
+.. _dev_random:
+
 Caplog fixture
 --------------
 
