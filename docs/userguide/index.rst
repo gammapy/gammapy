@@ -44,7 +44,7 @@ User guide
     ---
     :img-top: ../_static/index_contribute.svg
 
-    How-to
+    How To
     ^^^^^^
 
     A short “frequently asked question” entries for Gammapy.
@@ -53,7 +53,7 @@ User guide
 
     .. link-button:: howto
             :type: ref
-            :text: To the how-to
+            :text: To the How To
             :classes: btn-block btn-secondary stretched-link
 
     ---
