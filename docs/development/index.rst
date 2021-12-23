@@ -19,5 +19,6 @@ listed on the Gammapy webpage. Ideally you join directly the #dev channel in the
   intro
   release
   setup
-  howto
+  doc_howto
+  dev_howto
   pigs/index
