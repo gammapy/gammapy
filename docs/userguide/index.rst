@@ -17,9 +17,9 @@ User guide
     :hidden:
 
     ../tutorials/index
-    ../howto
+    howto
     ../modeling/gallery/index
-    ../references
+    references
 
 
 .. panels::
@@ -51,7 +51,7 @@ User guide
 
     +++
 
-    .. link-button:: howto
+    .. link-button:: ../userguide/howto
             :type: ref
             :text: To the How To
             :classes: btn-block btn-secondary stretched-link
@@ -81,7 +81,7 @@ User guide
 
     +++
 
-    .. link-button:: references
+    .. link-button:: ../userguide/references
             :type: ref
             :text: To the glossary
             :classes: btn-block btn-secondary stretched-link
