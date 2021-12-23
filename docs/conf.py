@@ -144,11 +144,7 @@ html_theme_options = {
 # Theme style
 # html_style = ''
 html_css_files = ["gammapy.css"]
-html_js_files = ["copybutton.js", "gammapy.js"]
-# copybutton.js provides hide/show button for python prompts >>>
-# slightly modified to work on RTD theme from javascript file in easydev package
-# https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js
-
+html_js_files = ["gammapy.js"]
 
 gammapy_sphinx_ext_activate()
 
