@@ -6,6 +6,7 @@
 .. Should we add a known issues section at the end?
 
 |
+
 Gammapy
 -------
 
@@ -108,7 +109,7 @@ related to Gammapy.
     :hidden:
 
     getting-started/index
-    overview/index
+    userguide/index
     tutorials/index
     modeling/gallery/index
     api

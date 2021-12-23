@@ -9,7 +9,7 @@ This page contains short "how to" or "frequently asked question" entries for
 Gammapy. Each entry is for a very specific task, with a short answer, and links
 to examples and documentation.
 
-If you're new to Gammapy, please read the :ref:`overview` and have a look at the
+If you're new to Gammapy, please read the :ref:`userguide` and have a look at the
 list of :ref:`tutorials`. The information below is in addition to those pages,
 it's not a complete list of how to do everything in Gammapy.
 

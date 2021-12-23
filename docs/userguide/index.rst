@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _overview:
+.. _userguide:
 
 User guide
 ==========
