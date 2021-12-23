@@ -55,17 +55,18 @@ related to Gammapy.
     ---
     :img-top: _static/index_user_guide.svg
 
-    Tutorials
-    ^^^^^^^^^
+    User guide
+    ^^^^^^^^^^
 
-    The tutorials provide in-depth information on the
-    key concepts of Gammapy with useful background information and explanation.
+    The user guide provide in-depth information on the
+    key concepts of Gammapy with useful background information and explanation,
+    as well as tutorials in the form of Jupyter notebooks.
 
     +++
 
-    .. link-button:: tutorials/index
+    .. link-button:: userguide/index
             :type: ref
-            :text: To the tutorials
+            :text: To the user guide
             :classes: btn-block btn-secondary stretched-link
 
     ---
@@ -110,8 +111,6 @@ related to Gammapy.
 
     getting-started/index
     userguide/index
-    tutorials/index
-    modeling/gallery/index
     api
     development/index
     changelog
