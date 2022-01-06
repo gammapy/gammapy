@@ -64,7 +64,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         )
 
         is_pointlike = exposure.meta.get("is_pointlike", False)
-        if is_pointlike:
+        if is_pointlike and self.use_region_center is False:
             log.warning(
                 "MapMaker: use_region_center=False should not be used with point-like IRF. "
                 "Results are likely inaccurate."
