@@ -245,25 +245,30 @@ def test_region_center_spectrum_dataset_maker_magic_dl3(
         containment_correction=True, selection=["exposure"]
     )
 
-    dataset = maker.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
-    dataset_average = maker_average.run(
-        spectrum_dataset_magic_crab, observations_magic_dl3[0]
-    )
+
+    # containment correction should fail
     with pytest.raises(ValueError):
         maker_correction.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
 
+    # use_center = True should run and raise no warning
+    dataset = maker.run(spectrum_dataset_magic_crab, observations_magic_dl3[0])
+
     assert isinstance(dataset, SpectrumDataset)
     assert dataset.exposure.meta["is_pointlike"]
-    assert dataset_average.exposure.meta["is_pointlike"]
+    assert "WARNING" not in [record.levelname for record in caplog.records]
+
+    # use_center = False should raise a warning
+    dataset_average = maker_average.run(
+        spectrum_dataset_magic_crab, observations_magic_dl3[0]
+    )
 
     assert "WARNING" in [record.levelname for record in caplog.records]
-
     message = (
         "MapMaker: use_region_center=False should not be used with point-like IRF. "
         "Results are likely inaccurate."
     )
-
     assert message in [record.message for record in caplog.records]
+    assert dataset_average.exposure.meta["is_pointlike"]
 
 
 @requires_data()
