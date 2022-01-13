@@ -426,57 +426,55 @@ def make_theta_squared_table(
     return table
 
 
-def get_rad_max_vs_energy(geom, observation):
-    """Obtain the values of `RAD_MAX` values corresponding to the observation
-    offset and to the bin centers of the energy axis in the `RegionGeom`.
+def get_rad_max_vs_energy(rad_max, pointing, geom):
+    """Obtain the values of `RAD_MAX` at a given offset and for an array of
+    estimated energy values (in the geom energy axis).
 
     Parameters
     ----------
-    geom : `~gammapy.maps.RegionGeom`
-        Reference map geom.
-    observation : `~gammapy.data.Observation`
-        Observation container.
+    rad_max : `~gammapy.irf.RadMax2D`
+        the RAD_MAX_2D table IRF
+    geom : `~gammapy.maps.Geom`
+        the map geom to be used
+    pointing : `~astropy.coordinates.SkyCoord`
+        pointing direction
 
     Returns
     -------
     array : `~astropy.units.Quantity`
         Values of the `RAD_MAX` corresponding to each estimated energy bin center.
     """
-    if observation.rad_max is None:
-        raise ValueError(
-            "the IRF for this observation does not include a RAD_MAX_2D table"
-        )
-
     on_center = geom.center_skydir
-    offset = on_center.separation(observation.pointing_radec)
+    offset = on_center.separation(pointing)
 
-    rad_max = observation.rad_max.evaluate(
+    rad_max_vals = rad_max.evaluate(
         offset=offset, energy=geom.axes["energy"].center
     )
 
-    return rad_max
+    return rad_max_vals
 
 
-def make_counts_rad_max(geom, observation):
+def make_counts_rad_max(geom, rad_max, events):
     """Extract the counts using for the ON region size the values in the
     `RAD_MAX_2D` table.
 
     Parameters
     ----------
     geom : `~gammapy.maps.RegionGeom`
-        Reference map geom.
-    observation : `~gammapy.data.Observation`
-        Observation container.
+        reference map geom
+    rad_max : `~gammapy.irf.RadMax2D`
+        the RAD_MAX_2D table IRF
+    events : `~gammapy.data.EventList`
+        event list to be used to compute the ON counts
 
     Returns
     -------
     counts : `~gammapy.maps.RegionNDMap`
         Counts vs estimated energy extracted from the ON region.
     """
-    rad_max = get_rad_max_vs_energy(geom, observation)
+    rad_max = get_rad_max_vs_energy(rad_max, events.pointing_radec, geom)
 
     counts_list = []
-    events = observation.events
 
     # create and fill a map per each energy bin, fetch the counts
     for i, rad in enumerate(rad_max):
@@ -494,7 +492,8 @@ def make_counts_rad_max(geom, observation):
 
 def make_counts_off_rad_max(
     geom,
-    observation,
+    rad_max,
+    events,
     binsz,
     exclusion_mask,
     min_distance,
@@ -510,9 +509,11 @@ def make_counts_off_rad_max(
     Parameters
     ----------
     geom : `~gammapy.maps.RegionGeom`
-        Reference map geom.
-    observation : `~gammapy.data.Observation`
-        Observation container.
+        reference map geom
+    rad_max : `~gammapy.irf.RadMax2D`
+        the RAD_MAX_2D table IRF
+    events : `~gammapy.data.EventList`
+        event list to be used to compute the OFF counts
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
@@ -524,22 +525,21 @@ def make_counts_off_rad_max(
     max_region_number : int, optional
         Maximum number of regions to use
     angle_increment : `~astropy.coordinates.Angle`, optional
-        Rotation angle applied when a region falls in an excluded region.
+        Rotation angle applied when a region falls in an excluded region
 
     Returns
     -------
     counts_off : `~gammapy.maps.RegionNDMap`
         OFF Counts vs estimated energy extracted from the ON region.
     acceptance_off : `~gammapy.maps.RegionNDMap`
-        ratio of the acceptances of th.
+        ratio of the acceptances of the OFF to ON regions.
     """
     from .background import ReflectedRegionsFinder
 
-    rad_max = get_rad_max_vs_energy(geom, observation)
+    rad_max = get_rad_max_vs_energy(rad_max, events.pointing_radec, geom)
 
     counts_off_list = []
     acceptance_off_list = []
-    events = observation.events
 
     # we have to define an ON region and a region finder for each energy bin
     for i, rad in enumerate(rad_max):
@@ -550,7 +550,7 @@ def make_counts_off_rad_max(
         finder = ReflectedRegionsFinder(
             binsz=binsz,
             exclusion_mask=exclusion_mask,
-            center=observation.pointing_radec,
+            center=events.pointing_radec,
             region=on_region,
             min_distance=min_distance,
             min_distance_input=min_distance_input,
