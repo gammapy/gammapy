@@ -83,7 +83,7 @@ class MapDatasetMaker(Maker):
             Counts map.
         """
         if geom.is_region and isinstance(geom.region, PointSkyRegion):
-            counts = make_counts_rad_max(geom, observation)
+            counts = make_counts_rad_max(geom, observation.rad_max, observation.events)
         else:
             counts = Map.from_geom(geom)
             counts.fill_events(observation.events)

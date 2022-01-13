@@ -298,7 +298,8 @@ class ReflectedRegionsBackgroundMaker(Maker):
         ):
             counts_off, acceptance_off = make_counts_off_rad_max(
                 geom=dataset.counts.geom,
-                observation=observation,
+                rad_max=observation.rad_max,
+                events=observation.events,
                 binsz=self.binsz,
                 exclusion_mask=self.exclusion_mask,
                 min_distance=self.min_distance,
