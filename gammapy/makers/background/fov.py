@@ -229,9 +229,11 @@ class FoVBackgroundMaker(Maker):
             Map dataset with scaled background model
 
         """
+        npred = dataset.npred()
         mask = dataset.mask
+        mask &= ~np.isnan(npred)
         count_tot = dataset.counts.data[mask].sum()
-        bkg_tot = dataset.npred_background().data[mask].sum()
+        npred_tot = npred.data[mask].sum()
 
         value = count_tot / bkg_tot
         err = np.sqrt(count_tot) / bkg_tot
