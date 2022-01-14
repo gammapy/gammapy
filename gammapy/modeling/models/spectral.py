@@ -1624,7 +1624,7 @@ class TemplateNDSpectralModel(SpectralModel):
         m = RegionNDMap.read(filename)
         model = cls(m, filename=filename)
         for idx, p in enumerate(model.parameters):
-            p.value = data["parameters"][idx]["value"]
+            p.value = data["spectral"]["parameters"][idx]["value"]
         return model
 
     def to_dict(self, full_output=False):
