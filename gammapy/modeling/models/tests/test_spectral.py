@@ -996,6 +996,7 @@ def test_template_ND(tmpdir):
     assert template_new.parameters["tilt"].value == 0
 
 
+@requires_data()
 def test_template_ND_EBL(tmpdir):
     
     #TODO: add RegionNDMap.read(format="xspec")
@@ -1003,11 +1004,17 @@ def test_template_ND_EBL(tmpdir):
     filename="$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
     filename = make_path(filename)
     table_param = Table.read(filename, hdu="PARAMETERS")
+    npar = len(table_param)
     par_axes = []
-    for k in range(len(table_param)):
+    idx_data = []
+    for k in range(npar):
         name=table_param["NAME"][k].lower().strip()
         param, idx = np.unique(table_param[0]["VALUE"], return_index=True)
         par_axes.append(MapAxis(param,node_type="center", interp="lin", name=name, unit=""))
+        idx_data.append(idx)
+    idx_data.append(Ellipsis)
+    idx_data = tuple(idx_data)
+
     # Get energy values
     table_energy = Table.read(filename, hdu="ENERGIES")
     energy_lo = u.Quantity(
@@ -1020,7 +1027,6 @@ def test_template_ND_EBL(tmpdir):
 
     # Get spectrum values
     table_spectra = Table.read(filename, hdu="SPECTRA")
-    data = table_spectra["INTPSPEC"].data[idx, :]
 
     energy_axis = MapAxis(
         energy,node_type="center", interp="log", name="energy_true"
@@ -1029,13 +1035,15 @@ def test_template_ND_EBL(tmpdir):
         region="galactic;point(0, 0)", axes=[energy_axis]+par_axes
     )
     #TODO: here we use a fake position, is it possible to allow region=None ?
+    data = table_spectra["INTPSPEC"].data[idx_data]
     region_map.data[:,:, 0, 0] = data
     
 
     template = TemplateNDSpectralModel(region_map)
     assert len(template.parameters) == 1
-    assert template.parameters["redshift"].value == 1.001
-
+    assert_allclose(template.parameters["redshift"].value, 1.001, rtol=1e-3)
+    expected = [9.950501e-01, 4.953951e-01, 1.588062e-06]
+    assert_allclose(template([1, 100, 1000] * u.GeV), expected, rtol=1e-3)
     template.parameters["redshift"].value = 0.1
     template.filename = str(tmpdir / "template_ND_ebl_franceschini.fits")
     template.write()
@@ -1043,4 +1051,4 @@ def test_template_ND_EBL(tmpdir):
     template_new = TemplateNDSpectralModel.from_dict(dict_)
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
-    assert template.parameters["redshift"].value == 0.1
+    assert_allclose(template.parameters["redshift"].value, 0.1)
