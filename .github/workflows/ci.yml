@@ -46,6 +46,8 @@ jobs:
         if: matrix.name!='Windows python 3.7 all'
         uses: conda-incubator/setup-miniconda@v2
         with:
+          mamba-version: "*"
+          use-mamba: true
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
       - name: install gammapy
@@ -77,6 +79,8 @@ jobs:
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:
+          mamba-version: "*"
+          use-mamba: true
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
           auto-update-conda: true
@@ -104,6 +108,8 @@ jobs:
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:
+          mamba-version: "*"
+          use-mamba: true
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
           auto-update-conda: true
