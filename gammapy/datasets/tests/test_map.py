@@ -689,6 +689,53 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.npred()
     assert not dataset_1.evaluators["test-model"].contributes
 
+@requires_dependency("iminuit")
+@requires_data()
+def test_map_fit_linked(sky_model, geom, geom_etrue):
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
+    datasets = Datasets([dataset_1, dataset_2])
+
+    models = Models(datasets.models)
+    models.insert(0, sky_model)
+    sky_model2 = sky_model.copy(name="test-model-2")
+    sky_model2.spectral_model.index = sky_model.spectral_model.index
+    sky_model2.spectral_model.reference = sky_model.spectral_model.reference
+
+    models.insert(0, sky_model2)
+
+    models["test-1-bkg"].spectral_model.norm.value = 0.5
+    models["test-model"].spatial_model.sigma.frozen = True
+
+    datasets.models = models
+    dataset_2.counts = dataset_2.npred()
+    dataset_1.counts = dataset_1.npred()
+
+    models["test-1-bkg"].spectral_model.norm.value = 0.49
+    models["test-2-bkg"].spectral_model.norm.value = 0.99
+
+    fit = Fit()
+    result = fit.run(datasets=datasets)
+
+    assert result.success
+    assert "minuit" in repr(result)
+
+    assert sky_model2.parameters["index"] is sky_model.parameters["index"]
+    assert sky_model2.parameters["reference"] is sky_model.parameters["reference"]
+
+    print(models.parameters.to_table())
+
+    assert len(datasets.models.parameters.unique_parameters) == 20 
+    assert datasets.models.covariance.shape == (22,22) 
+
+    models.to_dict()
+    pars = sky_model.parameters
+    pars2 = sky_model2.parameters
+    assert pars["index"]._link_label_io is not None 
+    assert pars2["reference"]._link_label_io is not None 
+    assert pars["index"]._link_label_io == pars2["index"]._link_label_io
+    assert pars["reference"]._link_label_io == pars2["reference"]._link_label_io
+
 
 @requires_dependency("iminuit")
 @requires_data()
