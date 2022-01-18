@@ -135,25 +135,39 @@ class FoVBackgroundMaker(Maker):
     def _verify_requirements(self, dataset):
         """"Verify that the requirements of min_counts
         and min_npred_background are satisfied"""
-
+    
+        npred = dataset.npred()
         mask = dataset.mask
+        mask &= ~np.isnan(npred)
         count_tot = dataset.counts.data[mask].sum()
+        npred_tot = npred.data[mask].sum()
         bkg_tot = dataset.npred_background().data[mask].sum()
+        not_bkg_tot = npred_tot - bkg_tot
 
-        if count_tot <= self.min_counts:
+        self._value_cached = (count_tot-not_bkg_tot) / bkg_tot
+        self._error_cached = np.sqrt(count_tot-not_bkg_tot) / bkg_tot
+
+        if not np.isfinite(self._value_cached):
             log.warning(
-                f"FoVBackgroundMaker failed. Only {int(count_tot)} counts outside exclusion mask for {dataset.name}. "
+                f"FoVBackgroundMaker failed. Non-finite value in counts or predicted counts"
+                f"Setting mask to False."
+            )
+            return False                    
+        elif count_tot-not_bkg_tot <= self.min_counts:
+            log.warning(
+                f"FoVBackgroundMaker failed. Only {int(count_tot)} residual counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
             )
             return False
         elif bkg_tot <= self.min_npred_background:
             log.warning(
-                f"FoVBackgroundMaker failed. Only {int(bkg_tot)} background counts outside exclusion mask for {dataset.name}. "
+                f"FoVBackgroundMaker failed. Only {int(npred_tot)} background counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
             )
             return False
         else:
             return True
+
 
     def run(self, dataset, observation=None):
         """Run FoV background maker.
@@ -169,6 +183,8 @@ class FoVBackgroundMaker(Maker):
         mask_fit = dataset.mask_fit
 
         dataset.mask_fit = self.make_exclusion_mask(dataset)
+        self._value_cached = None
+        self._error_cached = None
 
         if dataset.background_model is None:
             dataset = self.make_default_fov_background_model(dataset)
@@ -229,13 +245,6 @@ class FoVBackgroundMaker(Maker):
             Map dataset with scaled background model
 
         """
-        npred = dataset.npred()
-        mask = dataset.mask
-        mask &= ~np.isnan(npred)
-        count_tot = dataset.counts.data[mask].sum()
-        npred_tot = npred.data[mask].sum()
-        bkg_tot = dataset.npred_background().data[mask].sum()
-        not_bkg_tot = npred_tot - bkg_tot
 
         value = count_tot / bkg_tot
         err = np.sqrt(count_tot) / bkg_tot
