@@ -149,7 +149,7 @@ class FoVBackgroundMaker(Maker):
 
         if not np.isfinite(self._value_cached):
             log.warning(
-                f"FoVBackgroundMaker failed. Non-finite value in counts or predicted counts"
+                f"FoVBackgroundMaker failed. Non-finite normalisation value. "
                 f"Setting mask to False."
             )
             return False
