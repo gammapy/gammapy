@@ -135,7 +135,7 @@ class FoVBackgroundMaker(Maker):
     def _verify_requirements(self, dataset):
         """"Verify that the requirements of min_counts
         and min_npred_background are satisfied"""
-    
+
         npred = dataset.npred()
         mask = dataset.mask
         mask &= ~np.isnan(npred)
@@ -144,16 +144,16 @@ class FoVBackgroundMaker(Maker):
         bkg_tot = dataset.npred_background().data[mask].sum()
         not_bkg_tot = npred_tot - bkg_tot
 
-        self._value_cached = (count_tot-not_bkg_tot) / bkg_tot
-        self._error_cached = np.sqrt(count_tot-not_bkg_tot) / bkg_tot
+        self._value_cached = (count_tot - not_bkg_tot) / bkg_tot
+        self._error_cached = np.sqrt(count_tot - not_bkg_tot) / bkg_tot
 
         if not np.isfinite(self._value_cached):
             log.warning(
                 f"FoVBackgroundMaker failed. Non-finite value in counts or predicted counts"
                 f"Setting mask to False."
             )
-            return False                    
-        elif count_tot-not_bkg_tot <= self.min_counts:
+            return False
+        elif count_tot - not_bkg_tot <= self.min_counts:
             log.warning(
                 f"FoVBackgroundMaker failed. Only {int(count_tot)} residual counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
@@ -167,7 +167,6 @@ class FoVBackgroundMaker(Maker):
             return False
         else:
             return True
-
 
     def run(self, dataset, observation=None):
         """Run FoV background maker.
