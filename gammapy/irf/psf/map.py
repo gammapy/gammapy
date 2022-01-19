@@ -595,3 +595,64 @@ class PSFKernelMap(IRFMap):
         energy_axis_true = geom.axes["energy_true"]
 
         return cls.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=0.1 * u.deg, geom=geom.to_image())
+
+    def get_psf_kernel(
+        self, geom, position=None, max_radius=None, containment=0.999, factor=4
+    ):
+        """Returns a PSF kernel at the given position.
+
+        The PSF is returned in the form a WcsNDMap defined by the input Geom.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target geometry to use
+        position : `~astropy.coordinates.SkyCoord`
+            Target position. Should be a single coordinate. By default the
+            center position is used.
+        max_radius : `~astropy.coordinates.Angle`
+            maximum angular size of the kernel map
+        containment : float
+            Containment fraction to use as size of the kernel. The max. radius
+            across all energies is used. The radius can be overwritten using
+            the `max_radius` argument.
+        factor : int
+            oversampling factor to compute the PSF
+
+        Returns
+        -------
+        kernel : `~gammapy.irf.PSFKernel`
+            the resulting kernel
+        """
+        if position is None:
+            position = self.psf_kernel_map.geom.center_skydir
+
+        position = self._get_nearest_valid_position(position)
+
+        if max_radius is None:
+            energy_axis = self.psf_kernel_map.geom.axes["energy_true"]
+
+            radii = self.containment_radius(
+                fraction=containment, position=position, energy_true=energy_axis.center
+            )
+            max_radius = np.max(radii)
+
+        geom = geom.to_odd_npix(max_radius=max_radius)
+        geom_upsampled = geom.upsample(factor=factor)
+        coords = geom_upsampled.get_coord(sparse=True)
+        rad = coords.skycoord.separation(geom.center_skydir)
+
+        coords = {
+            "energy_true": coords["energy_true"],
+            "rad": rad,
+            "skycoord": position,
+        }
+
+        data = self.psf_map.interp_by_coord(
+            coords=coords,
+            method="linear",
+        )
+
+        kernel_map = Map.from_geom(geom=geom_upsampled, data=np.clip(data, 0, np.inf))
+        kernel_map = kernel_map.downsample(factor, preserve_counts=True)
+        return PSFKernel(kernel_map, normalize=True)
