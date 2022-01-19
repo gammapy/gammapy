@@ -393,7 +393,7 @@ class MapDataset(Dataset):
 
         if self.background:
             npred_total += self.npred_background()
-
+        npred_total.data[npred_total.data < 0.0] = 0
         return npred_total
 
     def npred_background(self):
