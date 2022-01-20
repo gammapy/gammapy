@@ -542,3 +542,31 @@ def test_psf_kernel_map_from_geom():
     assert psf_kernel_map.psf_kernel_map.geom.axes[2] == energy_axis_true
     assert psf_kernel_map.psf_kernel_map.unit == Unit("sr-1")
     assert psf_kernel_map.psf_kernel_map.data.shape == (2, 3, 3, 2, 4)
+
+
+def test_get_psf_kernel_map():
+    energy_axis_true = MapAxis.from_nodes(
+        [1, 10], name="energy_true", interp="log", unit="TeV"
+    )
+    psf_lonlat = np.linspace(-.66, .66, 61) * u.deg
+    psf_lon_axis = MapAxis.from_nodes(psf_lonlat, name="psf_lon", unit="deg")
+    psf_lat_axis = MapAxis.from_nodes(psf_lonlat, name="psf_lat", unit="deg")
+
+    psf_kernel_map = PSFKernelMap.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=(0.1 * u.deg, 0.2*u.deg))
+
+    energy_axis_true_1 = MapAxis.from_edges(np.logspace(-1, 1, 6), unit="TeV", name="energy_true")
+    geom = WcsGeom.create(skydir=(83,15),
+            width=1*u.deg,
+            binsz = 0.01*u.deg,
+            proj="CAR",
+            axes = [energy_axis_true_1]
+        )
+
+    kernel_1 = psf_kernel_map.get_psf_kernel(geom)
+
+    assert kernel_1.psf_kernel_map.geom == geom
+    assert_allclose(kernel_1.data.sum(), len(energy_axis_true_1.center), rtol=1e-5)
+
+    kernel_2 = psf_kernel_map.get_psf_kernel(geom, position=SkyCoord(ra=15, dec=20, unit='deg'))
+    assert kernel_2.psf_kernel_map.geom == geom
+    assert_allclose(kernel_2.data.sum(), len(energy_axis_true_1.center), rtol=1e-5)
