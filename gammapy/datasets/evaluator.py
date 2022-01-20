@@ -333,7 +333,6 @@ class MapEvaluator:
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""
         tmp = npred.convolve(self.psf)
-        tmp.data[tmp.data < 0.0] = 0
         return tmp
 
     def apply_edisp(self, npred):
