@@ -509,15 +509,36 @@ def test_psf_kernel_map_from_gauss_const_sigma():
     psf_kernel_map_sym = PSFKernelMap.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=0.1 * u.deg)
     psf_kernel_map_asym = PSFKernelMap.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=(0.1 * u.deg, 0.2*u.deg))
 
-    assert psf_kernel_map_sym.psf_map.geom.axes[0] == psf_lon_axis
-    assert psf_kernel_map_sym.psf_map.geom.axes[1] == psf_lat_axis
-    assert psf_kernel_map_sym.psf_map.geom.axes[1] == energy_axis_true
-    assert psf_kernel_map_sym.psf_map.unit == Unit("sr-1")
-    assert psf_kernel_map_sym.psf_map.data.shape == (2, 3, 1, 2)
+    assert psf_kernel_map_sym.psf_kernel_map.geom.axes[0] == psf_lon_axis
+    assert psf_kernel_map_sym.psf_kernel_map.geom.axes[1] == psf_lat_axis
+    assert psf_kernel_map_sym.psf_kernel_map.geom.axes[2] == energy_axis_true
+    assert psf_kernel_map_sym.psf_kernel_map.unit == Unit("sr-1")
+    assert psf_kernel_map_sym.psf_kernel_map.data.shape == (2, 3, 3, 1, 2)
 
-    assert psf_kernel_map_asym.psf_map.geom.axes[0] == psf_lon_axis
-    assert psf_kernel_map_asym.psf_map.geom.axes[1] == psf_lat_axis
-    assert psf_kernel_map_asym.psf_map.geom.axes[1] == energy_axis_true
-    assert psf_kernel_map_asym.psf_map.unit == Unit("sr-1")
-    assert psf_kernel_map_asym.psf_map.data.shape == (2, 3, 1, 2)
+    assert psf_kernel_map_asym.psf_kernel_map.geom.axes[0] == psf_lon_axis
+    assert psf_kernel_map_asym.psf_kernel_map.geom.axes[1] == psf_lat_axis
+    assert psf_kernel_map_asym.psf_kernel_map.geom.axes[2] == energy_axis_true
+    assert psf_kernel_map_asym.psf_kernel_map.unit == Unit("sr-1")
+    assert psf_kernel_map_asym.psf_kernel_map.data.shape == (2, 3, 3, 1, 2)
 
+def test_psf_kernel_map_from_geom():
+    energy_axis_true = MapAxis.from_nodes(
+        [1, 10], name="energy_true", interp="log", unit="TeV"
+    )
+    psf_lonlat = np.linspace(-.66, .66, 3) * u.deg
+    psf_lon_axis = MapAxis.from_nodes(psf_lonlat, name="psf_lon", unit="deg")
+    psf_lat_axis = MapAxis.from_nodes(psf_lonlat, name="psf_lat", unit="deg")
+
+    geom = WcsGeom.create(
+        npix=(4, 2),
+        proj="CAR",
+    )
+    geom = geom.to_cube([psf_lon_axis,psf_lat_axis, energy_axis_true])
+
+    psf_kernel_map = PSFKernelMap.from_geom(geom)
+
+    assert psf_kernel_map.psf_kernel_map.geom.axes[0] == psf_lon_axis
+    assert psf_kernel_map.psf_kernel_map.geom.axes[1] == psf_lat_axis
+    assert psf_kernel_map.psf_kernel_map.geom.axes[2] == energy_axis_true
+    assert psf_kernel_map.psf_kernel_map.unit == Unit("sr-1")
+    assert psf_kernel_map.psf_kernel_map.data.shape == (2, 3, 3, 2, 4)
