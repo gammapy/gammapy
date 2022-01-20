@@ -2,7 +2,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from gammapy.utils.gauss import Gauss2DPDF, MultiGauss2D
+from gammapy.utils.gauss import Gauss2DPDF, MultiGauss2D, AsymmetricGauss2DPDF
 
 
 class TestGauss2DPDF:
@@ -84,3 +84,23 @@ class TestMultiGauss2D:
         # Check that convolve did not change the original
         assert_allclose(m.sigmas, [3])
         assert_allclose(m.norms, [5])
+
+
+class TestAsymmetricGauss2DPDF:
+    """Note that we test __call__ and dpdtheta2 by
+    checking that their integrals as advertised are 1."""
+
+    def setup(self):
+        self.gs = [
+            AsymmetricGauss2DPDF(0.1 * u.deg, 0.1 * u.deg),
+            AsymmetricGauss2DPDF(0.1 * u.deg, 0.5 * u.deg),
+            AsymmetricGauss2DPDF(1 * u.deg, 5 * u.deg),
+        ]
+
+    def test_call(self):
+        # Check that value at origin matches the one given here:
+        # http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
+        for g in self.gs:
+            actual = g(0 * u.deg, 0 * u.deg)
+            desired = 1 / (2 * np.pi * g.sigma_x * g.sigma_y)
+            assert_allclose(actual, desired)
