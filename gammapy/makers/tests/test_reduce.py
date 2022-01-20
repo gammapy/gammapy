@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from gammapy.makers.tests.test_spectrum import observations_magic_dl3
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
-from regions import CircleSkyRegion
-from gammapy.data import DataStore
+from regions import CircleSkyRegion, PointSkyRegion
+from gammapy.data import DataStore, Observation
 from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import (
     DatasetsMaker,
@@ -16,6 +17,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
+from gammapy.utils.scripts import make_path
 
 
 @pytest.fixture(scope="session")
@@ -29,6 +31,19 @@ def observations_hess():
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids = [23523, 23526, 23559, 23592]
     return datastore.get_observations(obs_ids)
+
+
+@pytest.fixture(scope="session")
+def observations_magic():
+    observations = [
+        Observation.read(
+            "$GAMMAPY_DATA/magic/rad_max/data/magic_dl3_run_05029747.fits"
+        ),
+        Observation.read(
+            "$GAMMAPY_DATA/magic/rad_max/data/magic_dl3_run_05029748.fits"
+        ),
+    ]
+    return observations
 
 
 def get_mapdataset(name):
@@ -55,6 +70,25 @@ def get_spectrumdataset(name):
     )
 
     geom = RegionGeom.create(region=on_region, axes=[energy_axis])
+    return SpectrumDataset.create(
+        geom=geom, energy_axis_true=energy_axis_true, name=name
+    )
+
+
+def get_spectrumdataset_rad_max(name):
+    """get the spectrum dataset maker for the energy-dependent spectrum extraction"""
+    target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
+    on_center = PointSkyRegion(target_position)
+
+    energy_axis = MapAxis.from_energy_bounds(
+        0.005, 50, nbin=28, per_decade=False, unit="TeV", name="energy"
+    )
+    energy_axis_true = MapAxis.from_energy_bounds(
+        0.005, 50, nbin=20, per_decade=False, unit="TeV", name="energy_true"
+    )
+
+    geom = RegionGeom.create(region=on_center, axes=[energy_axis])
+
     return SpectrumDataset.create(
         geom=geom, energy_axis_true=energy_axis_true, name=name
     )
@@ -221,3 +255,29 @@ def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
     exposure = datasets[0].exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 3.94257338e08, rtol=3e-3)
+
+
+@requires_data()
+def test_dataset_maker_spectrum_rad_max(observations_magic):
+    """test the energy-dependent spectrum extraction"""
+
+    observation = observations_magic[0]
+
+    maker = SpectrumDatasetMaker(
+        containment_correction=False, selection=["counts", "exposure", "edisp"]
+    )
+    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+
+    bkg_maker = ReflectedRegionsBackgroundMaker()
+    dataset_on_off = bkg_maker.run(dataset, observation)
+
+    counts = dataset_on_off.counts
+    counts_off = dataset_on_off.counts_off
+    assert counts.unit == ""
+    assert counts_off.unit == ""
+    assert_allclose(counts.data.sum(), 1138, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 2128, rtol=1e-5)
+
+    exposure = dataset_on_off.exposure
+    assert exposure.unit == "m2 s"
+    assert_allclose(exposure.data.mean(), 68714990.52908568, rtol=1e-5)
