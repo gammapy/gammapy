@@ -597,7 +597,7 @@ class PSFKernelMap(IRFMap):
         return cls.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=0.1 * u.deg, geom=geom.to_image())
 
     def get_psf_kernel(
-        self, geom=None, position=None,
+        self, geom, position=None,
     ):
         """Returns the PSF kernel at the given position.
 
@@ -609,7 +609,7 @@ class PSFKernelMap(IRFMap):
             Target geometry to use
         position : `~astropy.coordinates.SkyCoord`
             Target position. Should be a single coordinate. By default the
-            center position of the input geom is used.
+            center position of the PSFKernelMap is used.
 
         Returns
         -------
@@ -638,8 +638,7 @@ class PSFKernelMap(IRFMap):
 
         kernel_map = Map.from_geom(kernel_geom, data = kernel_data.data[:,:,:,0,0])
 
-        if geom is not None:
-            kernel_map = kernel_map.interp_to_geom(geom)
+        kernel_map = kernel_map.interp_to_geom(geom)
         kernel_map.data = np.clip(kernel_map.data,0,np.inf)
 
         return PSFKernel(kernel_map, normalize=True)
