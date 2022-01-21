@@ -136,8 +136,7 @@ class FoVBackgroundMaker(Maker):
         """"Compute the sums of the counts, npred, and bacground maps within the mask"""
 
         npred = dataset.npred()
-        mask = dataset.mask
-        mask &= ~np.isnan(npred)
+        mask = dataset.mask & ~np.isnan(npred)
         count_tot = dataset.counts.data[mask].sum()
         npred_tot = npred.data[mask].sum()
         bkg_tot = dataset.npred_background().data[mask].sum()
