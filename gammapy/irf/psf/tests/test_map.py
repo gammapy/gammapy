@@ -562,11 +562,31 @@ def test_get_psf_kernel_map():
             axes = [energy_axis_true_1]
         )
 
-    kernel_1 = psf_kernel_map.get_psf_kernel(geom)
+    position = SkyCoord(ra=15, dec=20, unit='deg')
 
+    # Providing a target geometry
+    kernel_1 = psf_kernel_map.get_psf_kernel(geom)
     assert kernel_1.psf_kernel_map.geom == geom
     assert_allclose(kernel_1.data.sum(), len(energy_axis_true_1.center), rtol=1e-5)
 
-    kernel_2 = psf_kernel_map.get_psf_kernel(geom, position=SkyCoord(ra=15, dec=20, unit='deg'))
+    # Providing a target geometry and a position from which to get the kernel
+    kernel_2 = psf_kernel_map.get_psf_kernel(geom, position=position)
     assert kernel_2.psf_kernel_map.geom == geom
     assert_allclose(kernel_2.data.sum(), len(energy_axis_true_1.center), rtol=1e-5)
+
+    # Providing just the position
+    kernel_3 = psf_kernel_map.get_psf_kernel(position=position)
+    assert kernel_3.psf_kernel_map.geom.center_skydir == position
+    data_norm = psf_kernel_map.psf_kernel_map.to_region_nd_map(region=position).data[:,:,:,0,0]
+    data_norm = np.nan_to_num(data_norm / data_norm.sum(axis=(1,2), keepdims=True))
+    assert np.all(kernel_3.psf_kernel_map.data ==data_norm)
+    assert_allclose(kernel_3.data.sum(), len(energy_axis_true.center), rtol=1e-5)
+
+    # Providing nothing (kernel is taken from the center)
+    kernel_4 = psf_kernel_map.get_psf_kernel()
+    assert kernel_4.psf_kernel_map.geom.center_skydir == psf_kernel_map.psf_kernel_map.geom.center_skydir
+    center = psf_kernel_map.psf_kernel_map.geom.center_skydir
+    data_norm = psf_kernel_map.psf_kernel_map.to_region_nd_map(region=center).data[:,:,:,0,0]
+    data_norm = np.nan_to_num(data_norm / data_norm.sum(axis=(1,2), keepdims=True))
+    assert np.all(kernel_4.psf_kernel_map.data == data_norm)
+    assert_allclose(kernel_4.data.sum(), len(energy_axis_true.center), rtol=1e-5)
