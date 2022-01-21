@@ -597,7 +597,7 @@ class PSFKernelMap(IRFMap):
         return cls.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=0.1 * u.deg, geom=geom.to_image())
 
     def get_psf_kernel(
-        self, geom, position=None,
+        self, geom=None, position=None,
     ):
         """Returns the PSF kernel at the given position.
 
@@ -606,7 +606,8 @@ class PSFKernelMap(IRFMap):
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Target geometry to use
+            Target geometry to use. If None is provided, the kernel will
+            be returned with the same geometry as is contained in the PSFKernelMap
         position : `~astropy.coordinates.SkyCoord`
             Target position. Should be a single coordinate. By default the
             center position of the PSFKernelMap is used.
@@ -628,8 +629,12 @@ class PSFKernelMap(IRFMap):
                       kernel_data.geom.axes['psf_lon'].edges.max().to_value('deg'),
                       kernel_data.geom.axes['psf_lat'].edges.max().to_value('deg')]))
 
+        if geom is None:
+            geom_center = position
+        else:
+            geom_center = geom.center_skydir
 
-        kernel_geom = WcsGeom.create(skydir=geom.center_skydir,
+        kernel_geom = WcsGeom.create(skydir=geom_center,
                             binsz=(kernel_data.geom.axes['psf_lon'].bin_width,
                                   kernel_data.geom.axes['psf_lat'].bin_width),
                             width = width,
@@ -638,7 +643,8 @@ class PSFKernelMap(IRFMap):
 
         kernel_map = Map.from_geom(kernel_geom, data = kernel_data.data[:,:,:,0,0])
 
-        kernel_map = kernel_map.interp_to_geom(geom)
+        if geom is not None:
+            kernel_map = kernel_map.interp_to_geom(geom)
         kernel_map.data = np.clip(kernel_map.data,0,np.inf)
 
         return PSFKernel(kernel_map, normalize=True)
