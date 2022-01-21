@@ -142,36 +142,34 @@ class FoVBackgroundMaker(Maker):
         npred_tot = npred.data[mask].sum()
         bkg_tot = dataset.npred_background().data[mask].sum()
         return {
-            "counts_total": count_tot,
-            "npred_total": npred_tot,
-            "background_total": bkg_tot,
+            "counts": count_tot,
+            "npred": npred_tot,
+            "bkg": bkg_tot,
         }
 
     def _verify_requirements(self, dataset):
         """"Verify that the requirements of min_counts
         and min_npred_background are satisfied"""
 
-        count_tot, npred_tot, bkg_tot = self._make_masked_summed_counts(
-            dataset
-        ).values()
-        not_bkg_tot = npred_tot - bkg_tot
+        total = self._make_masked_summed_counts(dataset)
+        not_bkg_tot = total["npred"] - total["bkg"]
 
-        value = (count_tot - not_bkg_tot) / bkg_tot
+        value = (total["counts"] - not_bkg_tot) / total["bkg"]
         if not np.isfinite(value):
             log.warning(
                 f"FoVBackgroundMaker failed. Non-finite normalisation value. "
                 f"Setting mask to False."
             )
             return False
-        elif count_tot - not_bkg_tot <= self.min_counts:
+        elif total["counts"] - not_bkg_tot <= self.min_counts:
             log.warning(
-                f"FoVBackgroundMaker failed. Only {int(count_tot)} residual counts outside exclusion mask for {dataset.name}. "
+                f"FoVBackgroundMaker failed. Only {int(total['counts'])} residual counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
             )
             return False
-        elif bkg_tot <= self.min_npred_background:
+        elif total["bkg"] <= self.min_npred_background:
             log.warning(
-                f"FoVBackgroundMaker failed. Only {int(bkg_tot)} background counts outside exclusion mask for {dataset.name}. "
+                f"FoVBackgroundMaker failed. Only {int(total['bkg'])} background counts outside exclusion mask for {dataset.name}. "
                 f"Setting mask to False."
             )
             return False
@@ -252,13 +250,12 @@ class FoVBackgroundMaker(Maker):
             Map dataset with scaled background model
 
         """
-        count_tot, npred_tot, bkg_tot = self._make_masked_summed_counts(
-            dataset
-        ).values()
-        not_bkg_tot = npred_tot - bkg_tot
+        total = self._make_masked_summed_counts(dataset)
+        not_bkg_tot = total["npred"] - total["bkg"]
 
-        value = count_tot / bkg_tot
-        err = np.sqrt(count_tot) / bkg_tot
+        value = (total["counts"] - not_bkg_tot) / total["bkg"]
+        error = np.sqrt(total["counts"] - not_bkg_tot) / total["bkg"]
         dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = value
-        dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.error = err
+        dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.error = error
+
         return dataset
