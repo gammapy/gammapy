@@ -10,7 +10,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.modeling.models import Models, FoVBackgroundModel
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.makers import MapDatasetMaker
-from.observations import Observation
+from .observations import Observation
 
 class ObservationsEventsSampler():
     """Run event sampling for an emsemble of observations

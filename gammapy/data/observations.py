@@ -27,7 +27,6 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
-from .data_store import DataStore
 from astropy.table import Table
 import xml.etree.ElementTree as ET
 
@@ -46,6 +45,7 @@ def read_observations_table(filename, format="gps-csv"):
     format : {"gadf", "gps-csv", "ctools-xml"}
         Convention used in the input file
     """
+    from .data_store import DataStore
 
     if format not in ["gadf", "gps-csv", "ctools-xml"]:
         raise ValueError(f"Invalid format {format}")
@@ -373,6 +373,7 @@ class Observation:
             caldb : str
                 path to the caldb folder containing the irfs
        """
+        from gammapy.irf import load_irf_dict_from_file
         pointings = SkyCoord(table["lon"].quantity[0], table["lat"].quantity[0], frame="galactic")
         if caldb is None:
             caldb="$CALDB/data/"
