@@ -173,6 +173,7 @@ def test_flux_estimator_compound_model():
     pl.amplitude.min = 1e-15
     pl.amplitude.max = 1e-10
     pln = PowerLawNormSpectralModel()
+    pln.norm.value = 1
     spectral_model = pl*pln
     model = SkyModel(spectral_model=spectral_model, name="test")
 
