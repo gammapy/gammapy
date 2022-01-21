@@ -723,8 +723,6 @@ def test_map_fit_linked(sky_model, geom, geom_etrue):
     assert sky_model2.parameters["index"] is sky_model.parameters["index"]
     assert sky_model2.parameters["reference"] is sky_model.parameters["reference"]
 
-    print(models.parameters.to_table())
-
     assert len(datasets.models.parameters.unique_parameters) == 20 
     assert datasets.models.covariance.shape == (22,22) 
 
