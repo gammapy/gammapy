@@ -132,9 +132,8 @@ class FoVBackgroundMaker(Maker):
             mask = Map.from_geom(geom=geom, data=1, dtype=bool)
         return mask
 
-    def _verify_requirements(self, dataset):
-        """"Verify that the requirements of min_counts
-        and min_npred_background are satisfied"""
+    def _make_masked_summed_counts(self, dataset):
+        """"Compute the sums of the counts, npred, and bacground maps within the mask"""
 
         npred = dataset.npred()
         mask = dataset.mask
@@ -142,12 +141,23 @@ class FoVBackgroundMaker(Maker):
         count_tot = dataset.counts.data[mask].sum()
         npred_tot = npred.data[mask].sum()
         bkg_tot = dataset.npred_background().data[mask].sum()
+        return {
+            "counts_total": count_tot,
+            "npred_total": npred_tot,
+            "background_total": bkg_tot,
+        }
+
+    def _verify_requirements(self, dataset):
+        """"Verify that the requirements of min_counts
+        and min_npred_background are satisfied"""
+
+        count_tot, npred_tot, bkg_tot = self._make_masked_summed_counts(
+            dataset
+        ).values()
         not_bkg_tot = npred_tot - bkg_tot
 
-        self._value_cached = (count_tot - not_bkg_tot) / bkg_tot
-        self._error_cached = np.sqrt(count_tot - not_bkg_tot) / bkg_tot
-
-        if not np.isfinite(self._value_cached):
+        value = (count_tot - not_bkg_tot) / bkg_tot
+        if not np.isfinite(value):
             log.warning(
                 f"FoVBackgroundMaker failed. Non-finite normalisation value. "
                 f"Setting mask to False."
@@ -182,8 +192,6 @@ class FoVBackgroundMaker(Maker):
         mask_fit = dataset.mask_fit
 
         dataset.mask_fit = self.make_exclusion_mask(dataset)
-        self._value_cached = None
-        self._error_cached = None
 
         if dataset.background_model is None:
             dataset = self.make_default_fov_background_model(dataset)
@@ -244,6 +252,10 @@ class FoVBackgroundMaker(Maker):
             Map dataset with scaled background model
 
         """
+        count_tot, npred_tot, bkg_tot = self._make_masked_summed_counts(
+            dataset
+        ).values()
+        not_bkg_tot = npred_tot - bkg_tot
 
         value = count_tot / bkg_tot
         err = np.sqrt(count_tot) / bkg_tot

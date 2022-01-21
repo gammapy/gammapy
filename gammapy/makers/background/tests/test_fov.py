@@ -165,8 +165,8 @@ def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
 def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask):
 
     test_dataset = obs_dataset.copy(name="test-fov")
-    
-    #crab model
+
+    # crab model
     spatial_model = PointSpatialModel(
         lon_0="83.619deg", lat_0="22.024deg", frame="icrs"
     )
@@ -188,8 +188,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask):
     assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-
-    #apply scale method with pre-fitted source model and no exclusion_mask
+    # apply scale method with pre-fitted source model and no exclusion_mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=None)
     dataset = fov_bkg_maker.run(test_dataset)
@@ -198,17 +197,16 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask):
     assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-    #apply fit method with pre-fitted source model and no exlusion mask
+    # apply fit method with pre-fitted source model and no exlusion mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=None)
     dataset = fov_bkg_maker.run(test_dataset)
-    
+
     bkg_model_spec = test_dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-   
-    #apply scale method with pre-fitted source model and exclusion_mask
+    # apply scale method with pre-fitted source model and exclusion_mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
     dataset = fov_bkg_maker.run(test_dataset)
@@ -217,7 +215,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask):
     assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-    #apply fit method with pre-fitted source model and exlusion mask
+    # apply fit method with pre-fitted source model and exlusion mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
     dataset = fov_bkg_maker.run(test_dataset)
@@ -229,7 +227,6 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask):
     # Here we check that source parameters are correctly thawed after fit.
     assert not dataset.models.parameters["index"].frozen
     assert not dataset.models.parameters["lon_0"].frozen
-
 
 
 @requires_data()
