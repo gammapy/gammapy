@@ -35,77 +35,6 @@ __all__ = ["Observation", "Observations"]
 log = logging.getLogger(__name__)
 
 
-def read_observations_table(filename, format="gps-csv"):
-    """read observations table
-
-    Parameters
-    ----------
-    filename : str, Path
-        Obsertations pointing table file
-    format : {"gadf", "gps-csv", "ctools-xml"}
-        Convention used in the input file
-    """
-    from .data_store import DataStore
-
-    if format not in ["gadf", "gps-csv", "ctools-xml"]:
-        raise ValueError(f"Invalid format {format}")
-
-    if format=="gadf":
-        ds = DataStore.from_file(filename)
-        return ds.get_observations()
-    
-    if format=="gps-csv":
-        table = Table.read(filename, format="csv")
-        if "tref" not in table.keys():
-            #default for the CTA-GPS
-            meta = {"MJDREFI":51544,"MJDREFF":0.5,"TIMESYS":"TT", "TIMEUNIT":"s", "TIMEREF":"LOCAL"}
-            table["tref"] = time_ref_from_dict(meta, format='mjd', scale='tt')
-        if "deadc" not in table.keys():
-            #default for the CTA-GPS
-            table["deadc"] =  0.98
-    
-    elif format=="ctools-xml":
-        tree = ET.parse(filename)
-        root = tree.getroot()  # Load the xml root
-        table = Table()
-        keys = ["name" ,"id","lon", "lat", "rad", "tmin", "duration", "tref", "deadc","caldb","irf","emin","emax"]
-        dtypes = ["U30", int,  float, float, float, float, float, object,float,  "U20","U20",float, float]
-        nobs= len(root)
-        for key, dtype in zip(keys, dtypes):
-            table[key] = np.zeros(nobs, dtype=dtype)
-        for k, child in enumerate(root):
-            table["name"][k] = child.get("name")
-            table["id"][k] = int(child.get("id"))
-        
-            pos = SkyCoord(child[0].get("ra"), child[0].get("dec"), unit=u.deg, frame="icrs")
-            table["lon"][k] = pos.galactic.l.value
-            table["lat"][k] = pos.galactic.b.value
-            table["rad"][k] = float(child[4].get("rad"))
-        
-            table["tmin"][k] = float(child[2].get("tmin"))
-            table["duration"][k] = float(child[2].get("tmax")) - table["tmin"][k]
-            meta = {"MJDREFI":child[3].get("mjdrefi"),
-                    "MJDREFF":child[3].get("mjdreff"),
-                    "TIMESYS":child[3].get("timesys"),
-                    "TIMEUNIT":child[3].get("timeunit"),
-                    "TIMEREF":child[3].get("timeref")}
-            table["tref"][k] = time_ref_from_dict(meta, format='mjd', scale='tt')
-            table["deadc"][k] = child[5].get("deadc")
-        
-            table["caldb"][k] = child[6].get("database")
-            table["irf"][k] = child[6].get("response")
-        
-            table["emin"][k]= float(child[1].get("emin"))
-            table["emax"][k] = float(child[1].get("emax"))
-    
-    #add default unit
-    keys = ["lon", "lat","rad", "duration", "tmin", "tref"]
-    units = [u.deg,u.deg,u.deg,u.s,u.s,u.s]
-    for key, unit in zip(keys,units):
-        table[key].unit = unit
-    return table
-
-
 class Observation:
     """In-memory observation.
 
@@ -360,36 +289,6 @@ class Observation:
             pointing=pointing,
             location=location,
         )
-
-    @classmethod
-    def from_table(cls, table, caldb=None):
-        """
-            Create Observation from ctools pointing tables 
-    
-            Parameters
-            ----------
-            table : `~astropy.table.Table`
-                Obsertation pointing table
-            caldb : str
-                path to the caldb folder containing the irfs
-       """
-        from gammapy.irf import load_irf_dict_from_file
-        pointings = SkyCoord(table["lon"].quantity[0], table["lat"].quantity[0], frame="galactic")
-        if caldb is None:
-            caldb="$CALDB/data/"
-        irf_file = f'{caldb}/{table["caldb"][0]}/bcf/{table["irf"][0]}/irf_file.fits'
-        irfs = load_irf_dict_from_file(irf_file)
-        obs = cls.create(pointings,
-                                 obs_id=table["id"][0],
-                                 livetime=table["duration"].quantity[0],
-                                 tstart=table["tmin"].quantity[0],
-                                 tstop=table["tmin"].quantity[0]+table["duration"].quantity[0],
-                                 irfs=irfs,
-                                 deadtime_fraction=1-table["deadc"][0],
-                                 reference_time=table["tref"][0]
-                    )
-        obs.rad_max = table["rad"][0]
-        return obs
 
     @property
     def tstart(self):
