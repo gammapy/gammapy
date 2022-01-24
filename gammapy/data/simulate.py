@@ -4,13 +4,11 @@ import multiprocessing as mp
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
-from astropy.table import Table
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.scripts import make_path
 from gammapy.modeling.models import Models, FoVBackgroundModel
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.makers import MapDatasetMaker
-from .observations import Observation
 
 class ObservationsEventsSampler():
     """Run event sampling for an emsemble of observations
@@ -35,9 +33,8 @@ class ObservationsEventsSampler():
         Overwrite the output files or not
     """
     
-    def __init__(self, models=None, caldb=".", outdir="./data/", prefix=None, n_jobs=None, random_state='random-seed', overwrite=True):
+    def __init__(self, models=None, outdir="./data/", prefix=None, n_jobs=None, random_state='random-seed', overwrite=True):
         self.models = models
-        self.caldb = caldb
         outdir = make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         self.outdir = outdir
@@ -109,12 +106,9 @@ class ObservationsEventsSampler():
 
         Parameters
         ----------
-        observation : `gammapy.data.Observation` or `~astropy.table.Table`
+        observation : `gammapy.data.Observation`
             Observation object or table
         """
-
-        if not isinstance(observation, Observation):
-            observation = Observation.from_table(Table(observation), caldb=self.caldb)
 
         dataset = self.create_dataset(observation)
         
@@ -141,7 +135,7 @@ class ObservationsEventsSampler():
     
         Parameters
         ----------
-        observations : `~gammapy.data.Observations` or `~astropy.table.Table`
+        observations : `~gammapy.data.Observations`
             Observations object or table
 
         """

@@ -12,7 +12,6 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.time import Time
-import astropy.units as u
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
@@ -27,8 +26,6 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
-from astropy.table import Table
-import xml.etree.ElementTree as ET
 
 __all__ = ["Observation", "Observations"]
 
