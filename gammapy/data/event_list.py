@@ -7,12 +7,14 @@ from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
+from astropy.io import fits
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
+from gammapy.data import GTI
 
 __all__ = ["EventList"]
 
@@ -73,6 +75,29 @@ class EventList:
         kwargs.setdefault("hdu", "EVENTS")
         table = Table.read(filename, **kwargs)
         return cls(table=table)
+
+    def write(self, filename, gti=None, overwrite=False):
+        """Write the event list to a FITS file.
+
+        If a GTI object is provided, it is saved into
+        a second extension in the file.
+        """
+
+        filename = make_path(filename)
+
+        if gti is None: # save just the events
+            self.table.meta = {"extname": "events"}
+            self.table.write(filename, overwrite=overwrite)
+
+        else:
+            assert isinstance(gti, GTI)
+            primary_hdu = fits.PrimaryHDU()
+            hdu_evt = fits.BinTableHDU(self.table, name='events')
+            hdu_gti = fits.BinTableHDU(gti.table, name="gti")
+            hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
+            hdu_all.writeto("filename.fits", overwrite=True)
+
+
 
     @classmethod
     def from_stack(cls, event_lists, **kwargs):
