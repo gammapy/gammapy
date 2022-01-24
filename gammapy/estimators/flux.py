@@ -113,10 +113,10 @@ class FluxEstimator(ParameterEstimator):
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
 
-        if hasattr(ref_model, "amplitude"):
-            scaled_parameter = ref_model.amplitude
+        if "amplitude" in ref_model.parameters.names:
+            scaled_parameter = ref_model.parameters["amplitude"]
         else:
-            scaled_parameter = ref_model.norm
+            scaled_parameter = ref_model.parameters["norm"]
 
         scale_model.norm = self._set_norm_parameter(scale_model.norm, scaled_parameter)
         return scale_model
