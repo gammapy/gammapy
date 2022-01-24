@@ -7,6 +7,7 @@ from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import EventList, GTI
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+import pytest
 
 
 @requires_data()
@@ -45,6 +46,11 @@ class TestEventListBase:
         assert (self.events.table == read_again_ev.table).all()
         assert gti.table.meta == read_again_gti.table.meta
         assert (gti.table == read_again_gti.table).all()
+
+        # test that it won't work if gti is not a GTI
+        with pytest.raises(TypeError):
+            self.events.write("test.fits", overwrite=True, gti=gti.table)
+
 
 @requires_data()
 class TestEventListHESS:
