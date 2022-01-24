@@ -14,7 +14,7 @@ from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from gammapy.data import GTI
+from .gti import GTI
 
 __all__ = ["EventList"]
 
@@ -86,16 +86,17 @@ class EventList:
         filename = make_path(filename)
 
         if gti is None: # save just the events
-            self.table.meta = {"extname": "events"}
+            if "extname" not in map(str.lower, self.table.meta.keys()):
+                self.table.meta = {"EXTNAME": "EVENTS"}
             self.table.write(filename, overwrite=overwrite)
 
         else:
             assert isinstance(gti, GTI)
             primary_hdu = fits.PrimaryHDU()
-            hdu_evt = fits.BinTableHDU(self.table, name='events')
-            hdu_gti = fits.BinTableHDU(gti.table, name="gti")
+            hdu_evt = fits.BinTableHDU(self.table, name='EVENTS')
+            hdu_gti = fits.BinTableHDU(gti.table, name="GTI")
             hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
-            hdu_all.writeto("filename.fits", overwrite=True)
+            hdu_all.writeto(filename, overwrite=True)
 
 
 
