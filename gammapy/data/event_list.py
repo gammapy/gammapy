@@ -76,11 +76,24 @@ class EventList:
         table = Table.read(filename, **kwargs)
         return cls(table=table)
 
-    def write(self, filename, gti=None, overwrite=False):
+    def write(self, filename, gti=None, overwrite=False, format='gadf'):
         """Write the event list to a FITS file.
 
         If a GTI object is provided, it is saved into
         a second extension in the file.
+
+        Parameters
+        ----------
+        filename : `pathlib.Path`, str
+            Filename
+        gti : `~gammapy.data.GTI`
+            Good Time Intervals object to save to the same file.
+            Default is None.
+        overwrite : bool
+            Overwrite existing file?
+        format : str, optional
+            FITS format convention.  By default files will be written
+            to the gamma-astro-data-formats (GADF) format.
         """
 
         filename = make_path(filename)
