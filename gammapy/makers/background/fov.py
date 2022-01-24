@@ -20,8 +20,8 @@ class FoVBackgroundMaker(Maker):
 
     The normalization is performed outside the exclusion mask that is passed on init.
 
-    If a SkyModel is set on the input dataset and method is 'fit', it' parameters
-    are frozen during the fov normalization fit.
+    If a SkyModel is set on the input dataset its parameters
+    are frozen during the fov re-normalization.
 
     If the requirement (greater than) of either min_counts or min_npred_background is not satisfied,
     the background will not be normalised
