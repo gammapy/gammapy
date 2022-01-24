@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from gammapy.datasets import MapDataset
-from gammapy.irf import EDispKernelMap, EnergyDependentMultiGaussPSF, PSFMap
-from gammapy.maps import Map
+from gammapy.maps.region.ndmap import RegionNDMap
+from regions import PointSkyRegion, CircleSkyRegion
+from gammapy.irf import EDispKernelMap, PSFMap
+from gammapy.maps import Map, RegionGeom
 from .core import Maker
 from .utils import (
     make_edisp_kernel_map,
@@ -12,6 +14,7 @@ from .utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_psf_map,
+    make_counts_rad_max,
 )
 
 __all__ = ["MapDatasetMaker"]
@@ -61,6 +64,12 @@ class MapDatasetMaker(Maker):
     def make_counts(geom, observation):
         """Make counts map.
 
+        **NOTE for 1D analysis:** if the `~gammapy.maps.Geom` is built from a
+        `~regions.CircleSkyRegion`, the latter will be directly used to extract
+        the counts. If instead the `~gammapy.maps.Geom` is built from a
+        `~regions.PointSkyRegion`, the size of the ON region is taken from
+        the `RAD_MAX_2D` table containing energy-dependent theta2 cuts.
+
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
@@ -73,8 +82,11 @@ class MapDatasetMaker(Maker):
         counts : `~gammapy.maps.Map`
             Counts map.
         """
-        counts = Map.from_geom(geom)
-        counts.fill_events(observation.events)
+        if geom.is_region and isinstance(geom.region, PointSkyRegion):
+            counts = make_counts_rad_max(geom, observation.rad_max, observation.events)
+        else:
+            counts = Map.from_geom(geom)
+            counts.fill_events(observation.events)
         return counts
 
     @staticmethod
@@ -94,7 +106,9 @@ class MapDatasetMaker(Maker):
             Exposure map.
         """
         if isinstance(observation.aeff, Map):
-            return observation.aeff.interp_to_geom(geom=geom,)
+            return observation.aeff.interp_to_geom(
+                geom=geom,
+            )
         return make_map_exposure_true_energy(
             pointing=observation.pointing_radec,
             livetime=observation.observation_live_time_duration,
@@ -306,7 +320,9 @@ class MapDatasetMaker(Maker):
 
         if "counts" in self.selection:
             counts = self.make_counts(dataset.counts.geom, observation)
-            kwargs["counts"] = counts
+        else:
+            counts = Map.from_geom(dataset.counts.geom, data=0)
+        kwargs["counts"] = counts
 
         if "exposure" in self.selection:
             exposure = self.make_exposure(dataset.exposure.geom, observation)

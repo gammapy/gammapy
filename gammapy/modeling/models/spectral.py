@@ -16,9 +16,9 @@ from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
     interpolation_scale,
 )
-from gammapy.utils.scripts import make_path
-from .core import Model
 from gammapy.utils.roots import find_roots
+from gammapy.utils.scripts import make_path
+from .core import ModelBase
 
 
 def scale_plot_flux(flux, energy_power=0):
@@ -69,7 +69,7 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     return integral.sum(axis=0)
 
 
-class SpectralModel(Model):
+class SpectralModel(ModelBase):
     """Spectral model base class."""
 
     _type = "spectral"
@@ -208,7 +208,7 @@ class SpectralModel(Model):
         Returns
         -------
         flux, flux_err : tuple of `~astropy.units.Quantity`
-            Integral flux and flux error betwen energy_min and energy_max.
+            Integral flux and flux error between energy_min and energy_max.
         """
         return self._propagate_error(
             epsilon=epsilon,
@@ -258,7 +258,7 @@ class SpectralModel(Model):
         Returns
         -------
         energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
-            Energy flux and energy flux error betwen energy_min and energy_max.
+            Energy flux and energy flux error between energy_min and energy_max.
         """
         return self._propagate_error(
             epsilon=epsilon,
@@ -355,15 +355,15 @@ class SpectralModel(Model):
         n_points : int, optional
             Number of evaluation nodes
         **kwargs : dict
-            Keyword arguments forwared to `~matplotlib.pyplot.plot`
+            Keyword arguments forwarded to `~matplotlib.pyplot.plot`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        from gammapy.estimators.flux_map import DEFAULT_UNIT
         import matplotlib.pyplot as plt
+        from gammapy.estimators.map.core import DEFAULT_UNIT
 
         ax = plt.gca() if ax is None else ax
 
@@ -410,7 +410,7 @@ class SpectralModel(Model):
             when the error band extends to negative values (see also
             https://github.com/matplotlib/matplotlib/issues/8623).
 
-            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
+            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitly in your
             plotting code and the error band extends to negative values, it is not
             shown correctly. To circumvent this issue also use
             ``plt.loglog(nonposx='clip', nonpositive='clip')``
@@ -436,8 +436,8 @@ class SpectralModel(Model):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        from gammapy.estimators.flux_map import DEFAULT_UNIT
         import matplotlib.pyplot as plt
+        from gammapy.estimators.map.core import DEFAULT_UNIT
 
         ax = plt.gca() if ax is None else ax
 
@@ -610,21 +610,26 @@ class CompoundSpectralModel(SpectralModel):
         return self.operator(val1, val2)
 
     def to_dict(self, full_output=False):
+        dict1 = self.model1.to_dict(full_output)
+        dict2 = self.model2.to_dict(full_output)
         return {
-            "type": self.tag[0],
-            "model1": self.model1.to_dict(full_output),
-            "model2": self.model2.to_dict(full_output),
-            "operator": self.operator.__name__,
+            self._type: {
+                "type": self.tag[0],
+                "model1": dict1["spectral"],  # for cleaner output
+                "model2": dict2["spectral"],
+                "operator": self.operator.__name__,
+            }
         }
 
     @classmethod
     def from_dict(cls, data):
         from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
+        data = data["spectral"]
         model1_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model1"]["type"])
-        model1 = model1_cls.from_dict(data["model1"])
+        model1 = model1_cls.from_dict({"spectral": data["model1"]})
         model2_cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["model2"]["type"])
-        model2 = model2_cls.from_dict(data["model2"])
+        model2 = model2_cls.from_dict({"spectral": data["model2"]})
         op = getattr(operator, data["operator"])
         return cls(model1, model2, op)
 
@@ -1072,7 +1077,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
-        data["energy"] = {
+        data["spectral"]["energy"] = {
             "data": self.energy.data.tolist(),
             "unit": str(self.energy.unit),
         }
@@ -1081,6 +1086,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     @classmethod
     def from_dict(cls, data):
         """Create model from dict"""
+        data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(parameters, energy=energy)
@@ -1432,7 +1438,7 @@ class TemplateSpectralModel(SpectralModel):
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
-        self.meta = dict() if meta is None else meta
+        self.meta = {} if meta is None else meta
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("points_scale", ("log",))
@@ -1499,19 +1505,22 @@ class TemplateSpectralModel(SpectralModel):
 
     def to_dict(self, full_output=False):
         return {
-            "type": self.tag[0],
-            "energy": {
-                "data": self.energy.data.tolist(),
-                "unit": str(self.energy.unit),
-            },
-            "values": {
-                "data": self.values.data.tolist(),
-                "unit": str(self.values.unit),
-            },
+            self._type: {
+                "type": self.tag[0],
+                "energy": {
+                    "data": self.energy.data.tolist(),
+                    "unit": str(self.energy.unit),
+                },
+                "values": {
+                    "data": self.values.data.tolist(),
+                    "unit": str(self.values.unit),
+                },
+            }
         }
 
     @classmethod
     def from_dict(cls, data):
+        data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
         return cls(energy=energy, values=values)
@@ -1598,24 +1607,25 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
         if self.filename is None:
-            data["energy"] = {
+            data["spectral"]["energy"] = {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             }
-            data["param"] = {
+            data["spectral"]["param"] = {
                 "data": self.param.data.tolist(),
                 "unit": str(self.param.unit),
             }
-            data["values"] = {
+            data["spectral"]["values"] = {
                 "data": self.data.data.tolist(),
                 "unit": str(self.data.unit),
             }
         else:
-            data["filename"] = str(self.filename)
+            data["spectral"]["filename"] = str(self.filename)
         return data
 
     @classmethod
     def from_dict(cls, data):
+        data = data["spectral"]
         redshift = [p["value"] for p in data["parameters"] if p["name"] == "redshift"][
             0
         ]
@@ -1711,7 +1721,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
 
         """
-        models = dict()
+        models = {}
         models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
         models["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
         models["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
@@ -1744,7 +1754,7 @@ class NaimaSpectralModel(SpectralModel):
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
     nested_models : dict
-        Additionnal parameters for nested models not supplied by the radiative model,
+        Additional parameters for nested models not supplied by the radiative model,
         for now this is used  only for synchrotron self-compton model
     """
 

@@ -179,7 +179,7 @@ Outlook
 =======
 
 During discussion of this PIG, several other ideas surfaced and were considered.
-The following ideas could be considered and evaluated for feasability (as done
+The following ideas could be considered and evaluated for feasibility (as done
 in `GH 2290`_ for gammapy.modeling) in the future.
 
 * Generalising maps to allow maps without a WCS and spatial axes, and / or using

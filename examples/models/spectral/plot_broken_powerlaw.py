@@ -26,7 +26,10 @@ from gammapy.modeling.models import BrokenPowerLawSpectralModel, Models, SkyMode
 
 energy_bounds = [0.1, 100] * u.TeV
 model = BrokenPowerLawSpectralModel(
-    index1=1.5, index2=2.5, amplitude="1e-12 TeV-1 cm-2 s-1", ebreak="1 TeV",
+    index1=1.5,
+    index2=2.5,
+    amplitude="1e-12 TeV-1 cm-2 s-1",
+    ebreak="1 TeV",
 )
 model.plot(energy_bounds)
 plt.grid(which="both")

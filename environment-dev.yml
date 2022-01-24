@@ -22,6 +22,7 @@ dependencies:
   - pydantic
   - pyyaml
   - regions
+  - matplotlib>=3.4,<3.5
   - scipy
   # test dependencies
   - codecov
@@ -33,17 +34,17 @@ dependencies:
   - tqdm
   # extra dependencies
   - healpy
-  - iminuit<2.0
   - ipython
   - jupyter
   - jupyterlab
-  - matplotlib
   - naima
   - pandas
   - reproject
   - sherpa
+  - iminuit>=2.8.0
   # dev dependencies
   - black
+  - codespell
   - flake8
   - isort
   - nbsphinx
@@ -62,5 +63,7 @@ dependencies:
   - nbformat==5.0.8
   - docutils==0.16
   - h5py==2.10.0
+  - ruamel.yaml
   - pip:
       - pytest-sphinx
+

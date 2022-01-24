@@ -2,10 +2,15 @@
 import itertools
 import logging
 import numpy as np
-from gammapy.utils.table import table_from_row_data
 from gammapy.utils.pbar import progress_bar
+from gammapy.utils.table import table_from_row_data
 from .covariance import Covariance
-from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
+from .iminuit import (
+    confidence_iminuit,
+    contour_iminuit,
+    covariance_iminuit,
+    optimize_iminuit,
+)
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
@@ -80,12 +85,13 @@ class Fit:
         http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
         options of the optimization methods are described on the following
         pages in detail:
+
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
             * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
 
-        For the `"scipy"` backend the available options are decsribed in detail here:
+        For the `"scipy"` backend the available options are described in detail here:
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
 
     covariance_opts : dict
@@ -139,25 +145,28 @@ class Fit:
     def run(self, datasets):
         """Run all fitting steps.
 
+        Parameters
+        ----------
+        datasets : `Datasets` or list of `Dataset`
+            Datasets to optimize.
+
         Returns
         -------
         fit_result : `FitResult`
-            Results
+            Fit result
         """
         optimize_result = self.optimize(datasets=datasets)
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
-            return {"optimize_result": optimize_result, "covariance_result": None}
+            return optimize_result
 
         covariance_result = self.covariance(datasets=datasets)
-        # TODO: not sure how best to report the results
-        # back or how to form the FitResult object.
 
-        return {
-            "optimize_result": optimize_result,
-            "covariance_result": covariance_result,
-        }
+        return FitResult(
+            optimize_result=optimize_result,
+            covariance_result=covariance_result,
+        )
 
     def optimize(self, datasets):
         """Run the optimization.
@@ -193,6 +202,7 @@ class Fit:
 
         if backend == "minuit":
             self._minuit = optimizer
+            kwargs["method"] = "migrad"
 
         trace = table_from_row_data(info.pop("trace"))
 
@@ -234,6 +244,7 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
         kwargs = self.covariance_opts.copy()
+        kwargs["minuit"] = self.minuit
         backend = kwargs.pop("backend", self.backend)
         compute = registry.get("covariance", backend)
 
@@ -255,7 +266,6 @@ class Fit:
         return CovarianceResult(
             backend=backend,
             method=method,
-            parameters=parameters,
             success=info["success"],
             message=info["message"],
         )
@@ -416,7 +426,7 @@ class Fit:
         }
 
     def stat_contour(self, datasets, x, y, numpoints=10, sigma=1):
-        """Compute MINOS contour.
+        """Compute stat contour.
 
         Calls ``iminuit.Minuit.mncontour``.
 
@@ -451,7 +461,14 @@ class Fit:
         y = parameters[y]
 
         with parameters.restore_status():
-            result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
+            result = contour_iminuit(
+                parameters=parameters,
+                function=datasets.stat_sum,
+                x=x,
+                y=y,
+                numpoints=numpoints,
+                sigma=sigma,
+            )
 
         x_name = x.name
         y_name = y.name
@@ -462,25 +479,17 @@ class Fit:
             x_name: x,
             y_name: y,
             "success": result["success"],
-            f"{x_name}_info": result["x_info"],
-            f"{y_name}_info": result["y_info"],
         }
 
 
-class FitResult:
+class FitStepResult:
     """Fit result base class"""
 
-    def __init__(self, parameters, backend, method, success, message):
-        self._parameters = parameters
+    def __init__(self, backend, method, success, message):
         self._success = success
         self._message = message
         self._backend = backend
         self._method = method
-
-    @property
-    def parameters(self):
-        """Optimizer backend used for the fit."""
-        return self._parameters
 
     @property
     def backend(self):
@@ -512,24 +521,30 @@ class FitResult:
         )
 
 
-class CovarianceResult(FitResult):
+class CovarianceResult(FitStepResult):
     """Covariance result object."""
 
     pass
 
 
-class OptimizeResult(FitResult):
+class OptimizeResult(FitStepResult):
     """Optimize result object."""
 
-    def __init__(self, nfev, total_stat, trace, **kwargs):
+    def __init__(self, parameters, nfev, total_stat, trace, **kwargs):
+        self._parameters = parameters
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
         super().__init__(**kwargs)
 
     @property
+    def parameters(self):
+        """Best fit parameters"""
+        return self._parameters
+
+    @property
     def trace(self):
-        """Optimizer backend used for the fit."""
+        """Parameter trace from the optimisation"""
         return self._trace
 
     @property
@@ -545,5 +560,89 @@ class OptimizeResult(FitResult):
     def __repr__(self):
         str_ = super().__repr__()
         str_ += f"\tnfev       : {self.nfev}\n"
-        str_ += f"\ttotal stat : {self.total_stat:.2f}\n"
+        str_ += f"\ttotal stat : {self.total_stat:.2f}\n\n"
+        return str_
+
+
+class FitResult:
+    """Fit result class
+
+    Parameters
+    ----------
+    optimize_result : `OptimizeResult`
+        Result of the optimization step.
+    covariance_result : `CovarianceResult`
+        Result of the covariance step.
+    """
+
+    def __init__(self, optimize_result=None, covariance_result=None):
+        self._optimize_result = optimize_result
+        self._covariance_result = covariance_result
+
+    # TODO: is the convenience access needed?
+    @property
+    def parameters(self):
+        """Best fit parameters of the optimization step"""
+        return self.optimize_result.parameters
+
+    # TODO: is the convenience access needed?
+    @property
+    def total_stat(self):
+        """Total stat of the optimization step"""
+        return self.optimize_result.total_stat
+
+    # TODO: is the convenience access needed?
+    @property
+    def trace(self):
+        """Parameter trace of the optimisation step"""
+        return self.optimize_result.trace
+
+    # TODO: is the convenience access needed?
+    @property
+    def nfev(self):
+        """Number of function evaluations of the optimisation step"""
+        return self.optimize_result.nfev
+
+    # TODO: is the convenience access needed?
+    @property
+    def backend(self):
+        """Optimizer backend used for the fit."""
+        return self.optimize_result.backend
+
+    # TODO: is the convenience access needed?
+    @property
+    def method(self):
+        """Optimizer method used for the fit."""
+        return self.optimize_result.method
+
+    # TODO: is the convenience access needed?
+    @property
+    def message(self):
+        """Optimizer status message."""
+        return self.optimize_result.message
+
+    @property
+    def success(self):
+        """Total success flag"""
+        success = self.optimize_result.success and self.covariance_result.success
+        return success
+
+    @property
+    def optimize_result(self):
+        """Optimize result"""
+        return self._optimize_result
+
+    @property
+    def covariance_result(self):
+        """Optimize result"""
+        return self._optimize_result
+
+    def __repr__(self):
+        str_ = ""
+        if self.optimize_result:
+            str_ += str(self.optimize_result)
+
+        if self.covariance_result:
+            str_ += str(self.covariance_result)
+
         return str_

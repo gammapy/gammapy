@@ -1,4 +1,4 @@
 from .kernel import *
-from .parametric import *
 from .map import *
+from .parametric import *
 from .table import *

@@ -7,7 +7,6 @@ from astropy.visualization import quantity_support
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
-from .utils import get_axes
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class FluxPointsDataset(Dataset):
     mask_safe : `numpy.ndarray`
         Mask defining the safe data range. By default upper limit values are excluded.
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
 
     Examples
@@ -49,8 +48,8 @@ class FluxPointsDataset(Dataset):
         dataset = FluxPointsDataset(model, flux_points)
         fit = Fit()
         result = fit.run([dataset])
-        print(result["optimize_result"])
-        print(result["optimize_result"].parameters.to_table())
+        print(result)
+        print(result.parameters.to_table())
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
@@ -330,7 +329,9 @@ class FluxPointsDataset(Dataset):
 
         if method == "diff/model":
             model = self.flux_pred()
-            yerr = (yerr[0].quantity[:, 0, 0] / model), (yerr[1].quantity[:, 0, 0] / model)
+            yerr = (yerr[0].quantity[:, 0, 0] / model), (
+                yerr[1].quantity[:, 0, 0] / model
+            )
         elif method == "diff":
             yerr = yerr[0].quantity[:, 0, 0], yerr[1].quantity[:, 0, 0]
         else:
@@ -341,9 +342,7 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
 
         with quantity_support():
-            ax.errorbar(
-                fp.energy_ref, residuals, xerr=xerr, yerr=yerr, **kwargs
-            )
+            ax.errorbar(fp.energy_ref, residuals, xerr=xerr, yerr=yerr, **kwargs)
 
         ax.axhline(0, color=kwargs["color"], lw=0.5)
 

@@ -37,7 +37,9 @@ def spectrum_dataset():
     livetime = 100 * u.s
 
     pwl = PowerLawSpectralModel(
-        index=2.1, amplitude="1e5 cm-2 s-1 TeV-1", reference="0.1 TeV",
+        index=2.1,
+        amplitude="1e5 cm-2 s-1 TeV-1",
+        reference="0.1 TeV",
     )
 
     temp_mod = ConstantTemporalModel()
@@ -60,7 +62,11 @@ def spectrum_dataset():
     gti = GTI.create(start, stop, reference_time=t_ref)
 
     dataset = SpectrumDataset(
-        models=models, exposure=exposure, background=background, name=name, gti=gti,
+        models=models,
+        exposure=exposure,
+        background=background,
+        name=name,
+        gti=gti,
     )
     dataset.fake(random_state=23)
     return dataset
@@ -151,15 +157,14 @@ def test_fit(spectrum_dataset):
     """Simple CASH fit to the on vector"""
     fit = Fit()
     result = fit.run(datasets=[spectrum_dataset])
-    result = result["optimize_result"]
-    # assert result.success
+    assert result.success
     assert "minuit" in repr(result)
 
     npred = spectrum_dataset.npred().data.sum()
     assert_allclose(npred, 907012.186399, rtol=1e-3)
     assert_allclose(result.total_stat, -18087404.624, rtol=1e-3)
 
-    pars = result.parameters
+    pars = spectrum_dataset.models.parameters
     assert_allclose(pars["index"].value, 2.1, rtol=1e-2)
     assert_allclose(pars["index"].error, 0.001276, rtol=1e-2)
 
@@ -352,7 +357,7 @@ def test_peek(spectrum_dataset):
 
 
 class TestSpectrumOnOff:
-    """ Test ON OFF SpectrumDataset"""
+    """Test ON OFF SpectrumDataset"""
 
     def setup(self):
         etrue = np.logspace(-1, 1, 10) * u.TeV
@@ -370,7 +375,10 @@ class TestSpectrumOnOff:
         self.wcs = WcsGeom.create(npix=300, binsz=0.01, frame="icrs").wcs
 
         self.aeff = RegionNDMap.create(
-            region="icrs;circle(0.,1.,0.1)", wcs=self.wcs, axes=[self.e_true], unit="cm2"
+            region="icrs;circle(0.,1.,0.1)",
+            wcs=self.wcs,
+            axes=[self.e_true],
+            unit="cm2",
         )
         self.aeff.data += 1
 
@@ -390,7 +398,7 @@ class TestSpectrumOnOff:
         self.off_counts = RegionNDMap.create(
             region="icrs;box(0.,1.,0.1, 0.2,30);box(-1.,-1.,0.1, 0.2,150)",
             wcs=self.wcs,
-            axes=[axis]
+            axes=[axis],
         )
         self.off_counts.data += 10
 
@@ -683,7 +691,6 @@ class TestSpectralFit:
                 SpectrumDatasetOnOff.read(path + "pha_obs23592.fits"),
             ]
         )
-
         self.pwl = SkyModel(
             spectral_model=PowerLawSpectralModel(
                 index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
@@ -711,7 +718,6 @@ class TestSpectralFit:
     def test_basic_results(self):
         self.set_model(self.pwl)
         result = self.fit.run([self.datasets[0]])
-        result = result["optimize_result"]
         pars = self.datasets.parameters
 
         assert self.pwl is self.datasets[0].models[0]
@@ -726,8 +732,7 @@ class TestSpectralFit:
     def test_basic_errors(self):
         self.set_model(self.pwl)
         result = self.fit.run([self.datasets[0]])
-        result = result["optimize_result"]
-        pars = result.parameters
+        pars = self.pwl.parameters
 
         assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
         assert_allclose(pars["amplitude"].error, 6.423139e-12, rtol=1e-3)
@@ -759,7 +764,6 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        result = result["optimize_result"]
         stats = dataset.stat_array()
         actual = np.sum(stats[dataset.mask_safe])
 
@@ -767,7 +771,7 @@ class TestSpectralFit:
         assert_allclose(actual, desired)
 
     def test_fit_range(self):
-        # Fit range not restriced fit range should be the thresholds
+        # Fit range not restricted fit range should be the thresholds
         obs = self.datasets[0]
         actual = obs.energy_range[0]
 
@@ -782,8 +786,7 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        result = result["optimize_result"]
-        assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
+        assert_allclose(self.pwl.spectral_model.index.value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
         dataset = self.datasets[0].copy()
@@ -792,8 +795,7 @@ class TestSpectralFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        result = result["optimize_result"]
-        pars = result.parameters
+        pars = dataset.models.parameters
 
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
@@ -946,7 +948,7 @@ class TestSpectrumDatasetOnOffStack:
         assert_allclose(npred_stacked, npred_summed, rtol=1e-6)
 
     def test_stack_backscal(self):
-        """Verify backscal stacking """
+        """Verify backscal stacking"""
         obs1, obs2 = make_observation_list()
         obs1.stack(obs2)
         assert_allclose(obs1.alpha.data[0], 1.25 / 4.0)
@@ -1085,7 +1087,9 @@ class TestFit:
     def test_cash(self):
         """Simple CASH fit to the on vector"""
         dataset = SpectrumDataset(
-            models=self.source_model, counts=self.src, exposure=self.exposure,
+            models=self.source_model,
+            counts=self.src,
+            exposure=self.exposure,
         )
 
         npred = dataset.npred().data
@@ -1098,10 +1102,9 @@ class TestFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        result = result["optimize_result"]
 
         # These values are check with sherpa fits, do not change
-        pars = result.parameters
+        pars = self.source_model.parameters
         assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.9, rtol=1e-3)
 
@@ -1125,7 +1128,6 @@ class TestFit:
 
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        result = result["optimize_result"]
         pars = self.source_model.parameters
 
         assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
@@ -1159,8 +1161,7 @@ class TestFit:
         )
         fit = Fit()
         result = fit.run(datasets=[dataset])
-        result = result["optimize_result"]
-        true_idx = result.parameters["index"].value
+        true_idx = self.source_model.parameters["index"].value
 
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         self.source_model.spectral_model.index.scan_values = values

@@ -7,7 +7,7 @@ Modeling the expected number of detected events
 -----------------------------------------------
 
 To model the expected number of events a gamma-ray source should produce on a detector
-one has to model its effect using an instrument responce function (IRF). In general,
+one has to model its effect using an instrument response function (IRF). In general,
 such a function gives the probability to detect a photon emitted from true position :math:`p_{\rm true}`
 on the sky and true energy :math:`E_{\rm true}` at reconstructed position :math:`p` and energy
 :math:`E` and the effective collection area of the detector at position :math:`p_{\rm true}`
@@ -59,5 +59,3 @@ and selection schemes. In the DL3 format, the IRF are distributed for each obser
 
 Further details on individuals responses and how they are implemented in gammapy are given in :ref:`irf-aeff`,
 :ref:`irf-edisp` and :ref:`irf-psf`.
-
-

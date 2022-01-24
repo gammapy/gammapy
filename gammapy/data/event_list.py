@@ -2,11 +2,11 @@
 import collections
 import logging
 import numpy as np
+from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
-from astropy import units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
@@ -315,7 +315,7 @@ class EventList:
             energy_min=energy.min(), energy_max=energy.max(), nbin=50
         )
 
-    def plot_energy(self, ax=None,  **kwargs):
+    def plot_energy(self, ax=None, **kwargs):
         """Plot counts as a function of energy.
 
         Parameters
@@ -492,12 +492,16 @@ class EventList:
             center = self._plot_center
 
         energy_axis = self._default_plot_energy_axis
-        
+
         offset = center.separation(self.radec)
-        offset_axis = MapAxis.from_bounds(0 * u.deg, offset.max(), nbin=30, name="offset")
+        offset_axis = MapAxis.from_bounds(
+            0 * u.deg, offset.max(), nbin=30, name="offset"
+        )
 
         counts = np.histogram2d(
-            x=self.energy, y=offset, bins=(energy_axis.edges, offset_axis.edges),
+            x=self.energy,
+            y=offset,
+            bins=(energy_axis.edges, offset_axis.edges),
         )[0]
 
         kwargs.setdefault("norm", LogNorm())
@@ -670,10 +674,10 @@ class EventList:
         Parameters
         ----------
         allsky : bool
-            Wheter to look at the events allsky
+            Whether to look at the events allsky
         """
-        import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec
+        import matplotlib.pyplot as plt
 
         if allsky:
             gs = gridspec.GridSpec(nrows=2, ncols=2)

@@ -2,26 +2,25 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from regions import (
     CircleAnnulusSkyRegion,
+    CircleSkyRegion,
     EllipseSkyRegion,
     PointSkyRegion,
-    PolygonSkyRegion,
-    CircleSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, WcsGeom, RegionGeom, MapAxis
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpatialModel,
     DiskSpatialModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PointSpatialModel,
-    ShellSpatialModel,
     Shell2SpatialModel,
+    ShellSpatialModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -118,7 +117,12 @@ def test_generalized_gaussian(eta, r_0, e):
     )
 
     width = np.maximum(2 * model.evaluation_radius.to_value("deg"), 0.5)
-    geom = WcsGeom.create(skydir=(0, 0), binsz=0.02, width=width, frame="galactic",)
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        binsz=0.02,
+        width=width,
+        frame="galactic",
+    )
 
     integral = model.integrate_geom(geom)
     assert integral.unit.is_equivalent("")
@@ -198,7 +202,13 @@ def test_sky_disk():
 
 def test_sky_disk_edge():
     r_0 = 2 * u.deg
-    model = DiskSpatialModel(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg",)
+    model = DiskSpatialModel(
+        lon_0="0 deg",
+        lat_0="0 deg",
+        r_0=r_0,
+        e=0.5,
+        phi="0 deg",
+    )
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(0 * u.deg, r_0)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
@@ -412,7 +422,7 @@ def test_integrate_wcs_geom():
 
     geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
 
-    #TODO: solve issue with small radii
+    # TODO: solve issue with small radii
     integrated_0_0d = model_0_0d.integrate_geom(geom)
     integrated_0_01d = model_0_01d.integrate_geom(geom)
     integrated_0_005d = model_0_005d.integrate_geom(geom)

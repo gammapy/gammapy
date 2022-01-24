@@ -7,9 +7,9 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
-from .geom import pix_tuple_to_idx
 from .axes import MapAxis
 from .coord import MapCoord
+from .geom import pix_tuple_to_idx
 from .io import JsonQuantityDecoder
 
 __all__ = ["Map"]
@@ -25,20 +25,25 @@ class Map(abc.ABC):
     ----------
     geom : `~gammapy.maps.Geom`
         Geometry
-    data : `~numpy.ndarray`
+    data : `~numpy.ndarray` or `~astropy.units.Quantity`
         Data array
     meta : `dict`
         Dictionary to store meta data
     unit : str or `~astropy.units.Unit`
-        Data unit
+        Data unit, ignored if data is a Quantity.
     """
 
     tag = "map"
 
     def __init__(self, geom, data, meta=None, unit=""):
         self._geom = geom
-        self.data = data
-        self.unit = unit
+
+        if isinstance(data, u.Quantity):
+            self.unit = unit
+            self.quantity = data
+        else:
+            self.data = data
+            self.unit = unit
 
         if meta is None:
             self.meta = {}
@@ -46,8 +51,7 @@ class Map(abc.ABC):
             self.meta = meta
 
     def _init_copy(self, **kwargs):
-        """Init map instance by copying missing init arguments from self.
-        """
+        """Init map instance by copying missing init arguments from self."""
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
         argnames.remove("dtype")
@@ -75,6 +79,13 @@ class Map(abc.ABC):
 
     @data.setter
     def data(self, value):
+        """Set data
+
+        Parameters
+        ----------
+        value : array-like
+            Data array
+        """
         if np.isscalar(value):
             value = value * np.ones(self.geom.data_shape, dtype=type(value))
 
@@ -111,7 +122,15 @@ class Map(abc.ABC):
 
     @quantity.setter
     def quantity(self, val):
+        """Set data and unit
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+           Quantity
+        """
         val = u.Quantity(val, copy=False)
+
         self.data = val.value
         self.unit = val.unit
 
@@ -153,8 +172,8 @@ class Map(abc.ABC):
             Empty map object.
         """
         from .hpx import HpxMap
-        from .wcs import WcsMap
         from .region import RegionNDMap
+        from .wcs import WcsMap
 
         map_type = kwargs.setdefault("map_type", "wcs")
         if "wcs" in map_type.lower():
@@ -168,7 +187,9 @@ class Map(abc.ABC):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
+    def read(
+        filename, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None
+    ):
         """Read a map from a FITS file.
 
         Parameters
@@ -196,7 +217,9 @@ class Map(abc.ABC):
             Map object
         """
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type, format=format, colname=colname)
+            return Map.from_hdulist(
+                hdulist, hdu, hdu_bands, map_type, format=format, colname=colname
+            )
 
     @staticmethod
     def from_geom(geom, meta=None, data=None, unit="", dtype="float32"):
@@ -220,8 +243,8 @@ class Map(abc.ABC):
 
         """
         from .hpx import HpxGeom
-        from .wcs import WcsGeom
         from .region import RegionGeom
+        from .wcs import WcsGeom
 
         if isinstance(geom, HpxGeom):
             map_type = "hpx"
@@ -236,7 +259,9 @@ class Map(abc.ABC):
         return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None):
+    def from_hdulist(
+        hdulist, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None
+    ):
         """Create from `astropy.io.fits.HDUList`.
 
         Parameters
@@ -442,7 +467,9 @@ class Map(abc.ABC):
                 kwargs["constant_values"] = cval
 
             data = np.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
-            return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
+            return self.__class__(
+                geom=geom, data=data, unit=self.unit, meta=self.meta.copy()
+            )
 
         return self._pad_spatial(pad_width, mode="constant", cval=cval)
 
@@ -537,6 +564,7 @@ class Map(abc.ABC):
             Map with resampled axis.
         """
         from .hpx import HpxGeom
+
         geom = self.geom.resample_axis(axis)
 
         axis_self = self.geom.axes[axis.name]
@@ -565,7 +593,8 @@ class Map(abc.ABC):
         return self._init_copy(data=data, geom=geom)
 
     def slice_by_idx(
-        self, slices,
+        self,
+        slices,
     ):
         """Slice sub map from map object.
 
@@ -855,8 +884,10 @@ class Map(abc.ABC):
         map_copy = self.copy()
 
         if preserve_counts:
-            if geom.ndim > 2:
-                assert self.geom.axes[0] == geom.axes[0]  # Energy axis has to match
+            if geom.ndim > 2 and geom.axes[0] != self.geom.axes[0]:
+                raise ValueError(
+                    f"Energy axis do not match: expected {self.geom.axes[0]}, but got {geom.axes[0]}."
+                )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
         if map_copy.is_mask:
@@ -1023,7 +1054,11 @@ class Map(abc.ABC):
                 continue
 
             if image.geom.is_hpx:
-                image_wcs = image.to_wcs(normalize=False, proj="AIT", oversample=2,)
+                image_wcs = image.to_wcs(
+                    normalize=False,
+                    proj="AIT",
+                    oversample=2,
+                )
             else:
                 image_wcs = image
 
@@ -1078,8 +1113,8 @@ class Map(abc.ABC):
         """
         import matplotlib as mpl
         import matplotlib.pyplot as plt
-        from ipywidgets.widgets.interaction import interact, fixed
-        from ipywidgets import SelectionSlider, RadioButtons
+        from ipywidgets import RadioButtons, SelectionSlider
+        from ipywidgets.widgets.interaction import fixed, interact
 
         if self.geom.is_image:
             raise TypeError("Use .plot() for 2D Maps")
@@ -1120,7 +1155,7 @@ class Map(abc.ABC):
             img = self.get_image_by_idx(idx)
             stretch = ikwargs["stretch"]
             with mpl.rc_context(rc=rc_params):
-                fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
+                img.plot(stretch=stretch, **kwargs)
                 plt.show()
 
     def copy(self, **kwargs):
@@ -1139,9 +1174,11 @@ class Map(abc.ABC):
         if "geom" in kwargs:
             geom = kwargs["geom"]
             if not geom.data_shape == self.geom.data_shape:
-                raise ValueError("Can't copy and change data size of the map. "
-                                 f" Current shape {self.geom.data_shape},"
-                                 f" requested shape {geom.data_shape}")
+                raise ValueError(
+                    "Can't copy and change data size of the map. "
+                    f" Current shape {self.geom.data_shape},"
+                    f" requested shape {geom.data_shape}"
+                )
 
         return self._init_copy(**kwargs)
 
@@ -1345,9 +1382,7 @@ class Map(abc.ABC):
         cumsum = self.cumsum(axis_name=axis_name)
         cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
         return u.Quantity(
-            cumsum.interp_by_coord(coords, **kwargs),
-            cumsum.unit,
-            copy=False
+            cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False
         )
 
     def normalize(self, axis_name=None):
@@ -1500,12 +1535,12 @@ class Map(abc.ABC):
         )
 
     def _arithmetics(self, operator, other, copy):
-        """Perform arithmetics on maps after checking geometry consistency."""
+        """Perform arithmetic on maps after checking geometry consistency."""
         if isinstance(other, Map):
             if self.geom == other.geom:
                 q = other.quantity
             else:
-                raise ValueError("Map Arithmetics: Inconsistent geometries.")
+                raise ValueError("Map Arithmetic: Inconsistent geometries.")
         else:
             q = u.Quantity(other, copy=False)
 
@@ -1514,7 +1549,7 @@ class Map(abc.ABC):
         return out
 
     def _boolean_arithmetics(self, operator, other, copy):
-        """Perform arithmetics on maps after checking geometry consistency."""
+        """Perform arithmetic on maps after checking geometry consistency."""
         if operator == np.logical_not:
             out = self.copy()
             out.data = operator(out.data)
@@ -1524,7 +1559,7 @@ class Map(abc.ABC):
             if self.geom == other.geom:
                 other = other.data
             else:
-                raise ValueError("Map Arithmetics: Inconsistent geometries.")
+                raise ValueError("Map Arithmetic: Inconsistent geometries.")
 
         out = self.copy() if copy else self
         out.data = operator(out.data, other)

@@ -14,8 +14,6 @@ jobs:
       fail-fast: false # true
       matrix:
         include:
-          - name: Linux python 3.6.2 core
-            os: ubuntu-latest
           - name: Linux python 3.7 all
             os: ubuntu-latest
           - name: Linux python 3.8 core
@@ -28,10 +26,6 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
-      - name: install python3.6
-        if: contains(matrix.name, '3.6')
-        run: |
-          sed -i 's/python==3.7/python==3.6.2/' environment-dev.yml
       - name: install python3.8
         if: contains(matrix.name, '3.8')
         run: |
@@ -52,6 +46,8 @@ jobs:
         if: matrix.name!='Windows python 3.7 all'
         uses: conda-incubator/setup-miniconda@v2
         with:
+          mamba-version: "*"
+          use-mamba: true
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
       - name: install gammapy
@@ -83,6 +79,8 @@ jobs:
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:
+          mamba-version: "*"
+          use-mamba: true
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
           auto-update-conda: true
@@ -110,6 +108,8 @@ jobs:
       - name: create and activate env
         uses: conda-incubator/setup-miniconda@v2
         with:
+          mamba-version: "*"
+          use-mamba: true
           activate-environment: gammapy-dev
           environment-file: environment-dev.yml
           auto-update-conda: true

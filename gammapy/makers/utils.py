@@ -3,12 +3,14 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
+from regions import CircleSkyRegion
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
-from gammapy.maps import Map, MapCoord
+from gammapy.maps import Map, RegionGeom, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
+
 
 __all__ = [
     "make_map_background_irf",
@@ -21,7 +23,10 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_center=True):
+
+def make_map_exposure_true_energy(
+    pointing, livetime, aeff, geom, use_region_center=True
+):
     """Compute exposure map.
 
     This map has a true energy axis, the exposure is not combined
@@ -53,22 +58,15 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom, use_region_cen
         coords, weights = geom.get_coord(sparse=True), None
 
     offset = coords.skycoord.separation(pointing)
-    exposure = aeff.evaluate(
-        offset=offset, energy_true=coords["energy_true"]
-    )
+    exposure = aeff.evaluate(offset=offset, energy_true=coords["energy_true"])
 
     data = (exposure * livetime).to("m2 s")
-    meta = {
-        "livetime": livetime,
-        "is_pointlike": aeff.is_pointlike
-    }
+    meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:
         data = np.average(data, axis=1, weights=weights)
 
-    return Map.from_geom(
-        geom=geom, data=data.value, unit=data.unit, meta=meta
-    )
+    return Map.from_geom(geom=geom, data=data.value, unit=data.unit, meta=meta)
 
 
 def _map_spectrum_weight(map, spectrum=None):
@@ -107,7 +105,9 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_region_center=True):
+def make_map_background_irf(
+    pointing, ontime, bkg, geom, oversampling=None, use_region_center=True
+):
     """Compute background map from background IRFs.
 
     Parameters
@@ -129,7 +129,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     use_region_center: bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the sum over the whole region
+        or the instead the sum over the whole region
 
     Returns
     -------
@@ -149,9 +149,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None, use_
     if oversampling is not None:
         geom = geom.upsample(factor=oversampling, axis_name="energy")
 
-    coords = {
-        "energy": geom.axes["energy"].edges.reshape((-1, 1, 1))
-    }
+    coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
 
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
@@ -230,9 +228,9 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     # Compute PSF values
     data = psf.evaluate(
-            energy_true=coords["energy_true"],
-            offset=offset,
-            rad=coords["rad"],
+        energy_true=coords["energy_true"],
+        offset=offset,
+        rad=coords["rad"],
     )
 
     # Create Map and fill relevant entries
@@ -262,7 +260,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------
@@ -293,7 +291,9 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     return EDispMap(edisp_map, exposure_map)
 
 
-def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):
+def make_edisp_kernel_map(
+    edisp, pointing, geom, exposure_map=None, use_region_center=True
+):
     """Make a edisp kernel map for a single observation
 
     Expected axes : (reco) energy and true energy in this specific order
@@ -315,7 +315,7 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_c
     use_region_center: Bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
-        or the insted the average over the whole region
+        or the instead the average over the whole region
 
     Returns
     -------
@@ -328,7 +328,9 @@ def make_edisp_kernel_map(edisp, pointing, geom, exposure_map=None, use_region_c
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
 
-    edisp_map = make_edisp_map(edisp, pointing, new_geom, exposure_map, use_region_center)
+    edisp_map = make_edisp_map(
+        edisp, pointing, new_geom, exposure_map, use_region_center
+    )
 
     return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 
@@ -422,3 +424,161 @@ def make_theta_squared_table(
     table.meta["ON_RA"] = position.icrs.ra
     table.meta["ON_DEC"] = position.icrs.dec
     return table
+
+
+def get_rad_max_vs_energy(rad_max, pointing, geom):
+    """Obtain the values of `RAD_MAX` at a given offset and for an array of
+    estimated energy values (in the geom energy axis).
+
+    Parameters
+    ----------
+    rad_max : `~gammapy.irf.RadMax2D`
+        the RAD_MAX_2D table IRF
+    geom : `~gammapy.maps.Geom`
+        the map geom to be used
+    pointing : `~astropy.coordinates.SkyCoord`
+        pointing direction
+
+    Returns
+    -------
+    array : `~astropy.units.Quantity`
+        Values of the `RAD_MAX` corresponding to each estimated energy bin center.
+    """
+    on_center = geom.center_skydir
+    offset = on_center.separation(pointing)
+
+    rad_max_vals = rad_max.evaluate(
+        offset=offset, energy=geom.axes["energy"].center
+    )
+
+    return rad_max_vals
+
+
+def make_counts_rad_max(geom, rad_max, events):
+    """Extract the counts using for the ON region size the values in the
+    `RAD_MAX_2D` table.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.RegionGeom`
+        reference map geom
+    rad_max : `~gammapy.irf.RadMax2D`
+        the RAD_MAX_2D table IRF
+    events : `~gammapy.data.EventList`
+        event list to be used to compute the ON counts
+
+    Returns
+    -------
+    counts : `~gammapy.maps.RegionNDMap`
+        Counts vs estimated energy extracted from the ON region.
+    """
+    rad_max = get_rad_max_vs_energy(rad_max, events.pointing_radec, geom)
+
+    counts_list = []
+
+    # create and fill a map per each energy bin, fetch the counts
+    for i, rad in enumerate(rad_max):
+        on_region = CircleSkyRegion(center=geom.center_skydir, radius=rad)
+        energy_range = geom.axes["energy"].slice(i)
+        on_region_geom = RegionGeom(on_region, axes=[energy_range])
+        counts = Map.from_geom(on_region_geom)
+        counts.fill_events(events)
+        counts_list.append(counts.data[0])
+
+    counts = RegionNDMap.from_geom(geom, data=np.asarray(counts_list))
+
+    return counts
+
+
+def make_counts_off_rad_max(
+    geom,
+    rad_max,
+    events,
+    binsz,
+    exclusion_mask,
+    min_distance,
+    min_distance_input,
+    max_region_number,
+    angle_increment,
+):
+    """Extract the OFF counts and the ON / OFF acceptance considering for the
+    sizes of the ON and OFF regions the values in the `RAD_MAX_2D` table.
+    Per each estimated energy bin a `ReflectedRegionsFinder` is defined to
+    search for the OFF regions.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.RegionGeom`
+        reference map geom
+    rad_max : `~gammapy.irf.RadMax2D`
+        the RAD_MAX_2D table IRF
+    events : `~gammapy.data.EventList`
+        event list to be used to compute the OFF counts
+    binsz : `~astropy.coordinates.Angle`
+        Bin size of the reference map used for region finding.
+    exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+        Exclusion mask
+    min_distance : `~astropy.coordinates.Angle`, optional
+        Minimal distance between two consecutive reflected regions
+    min_distance_input : `~astropy.coordinates.Angle`, optional
+        Minimal distance from input region
+    max_region_number : int, optional
+        Maximum number of regions to use
+    angle_increment : `~astropy.coordinates.Angle`, optional
+        Rotation angle applied when a region falls in an excluded region
+
+    Returns
+    -------
+    counts_off : `~gammapy.maps.RegionNDMap`
+        OFF Counts vs estimated energy extracted from the ON region.
+    acceptance_off : `~gammapy.maps.RegionNDMap`
+        ratio of the acceptances of the OFF to ON regions.
+    """
+    from .background import ReflectedRegionsFinder
+
+    rad_max = get_rad_max_vs_energy(rad_max, events.pointing_radec, geom)
+
+    counts_off_list = []
+    acceptance_off_list = []
+
+    # we have to define an ON region and a region finder for each energy bin
+    for i, rad in enumerate(rad_max):
+
+        on_region = CircleSkyRegion(center=geom.center_skydir, radius=rad)
+        energy_range = geom.axes["energy"].slice(i)
+
+        finder = ReflectedRegionsFinder(
+            binsz=binsz,
+            exclusion_mask=exclusion_mask,
+            center=events.pointing_radec,
+            region=on_region,
+            min_distance=min_distance,
+            min_distance_input=min_distance_input,
+            max_region_number=max_region_number,
+            angle_increment=angle_increment,
+        )
+        regions = finder.run()
+
+        if len(regions) > 0:
+            off_region_geom = RegionGeom.from_regions(
+                regions=regions, axes=[energy_range], wcs=finder.geom_ref.wcs
+            )
+            counts_off = RegionNDMap.from_geom(geom=off_region_geom)
+            counts_off.fill_events(events)
+            counts_off_list.append(counts_off.data[0])
+
+        else:
+            log.warning(
+                f"ReflectedRegionsBackgroundMaker failed in estimated energy bin {i}."
+            )
+            counts_off_list.append([[0]])
+
+        acceptance_off_list.append(len(regions))
+
+    # create the final arrays with the OFF counts and the acceptance
+    counts_off = RegionNDMap.from_geom(geom=geom, data=np.asarray(counts_off_list))
+    acceptance_off = RegionNDMap.from_geom(
+        geom=geom, data=np.asarray(acceptance_off_list)
+    )
+
+    return counts_off, acceptance_off

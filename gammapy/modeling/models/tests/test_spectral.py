@@ -17,6 +17,7 @@ from gammapy.modeling.models import (
     GaussianSpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
+    Model,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
     PowerLaw2SpectralModel,
@@ -444,10 +445,22 @@ def test_to_from_dict():
 
     model_dict = model.to_dict()
     # Here we reverse the order of parameters list to ensure assignment is correct
-    model_dict["parameters"].reverse()
+    model_dict["spectral"]["parameters"].reverse()
 
-    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
     new_model = model_class.from_dict(model_dict)
+
+    assert isinstance(new_model, PowerLawSpectralModel)
+
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+
+    actual = [par.frozen for par in new_model.parameters]
+    desired = [par.frozen for par in model.parameters]
+    assert_allclose(actual, desired)
+
+    new_model = Model.from_dict(model_dict)
 
     assert isinstance(new_model, PowerLawSpectralModel)
 
@@ -466,9 +479,9 @@ def test_to_from_dict_partial_input(caplog):
 
     model_dict = model.to_dict()
     # Here we remove the reference energy
-    model_dict["parameters"].remove(model_dict["parameters"][2])
+    model_dict["spectral"]["parameters"].remove(model_dict["spectral"]["parameters"][2])
 
-    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
     new_model = model_class.from_dict(model_dict)
 
     assert isinstance(new_model, PowerLawSpectralModel)
@@ -491,8 +504,8 @@ def test_to_from_dict_compound():
     model = spectrum["model"]
     assert spectrum["name"] == "compound6"
     model_dict = model.to_dict()
-    assert model_dict["operator"] == "add"
-    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    assert model_dict["spectral"]["operator"] == "add"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
     new_model = model_class.from_dict(model_dict)
 
     assert isinstance(new_model, CompoundSpectralModel)
@@ -614,8 +627,8 @@ def test_TemplateSpectralModel_compound():
     assert np.allclose(model_mul(energy), 2 * values)
 
     model_dict = model.to_dict()
-    assert model_dict["operator"] == "mul"
-    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["type"])
+    assert model_dict["spectral"]["operator"] == "mul"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
     new_model = model_class.from_dict(model_dict)
     assert isinstance(new_model, CompoundSpectralModel)
     assert np.allclose(new_model(energy), 2 * values)

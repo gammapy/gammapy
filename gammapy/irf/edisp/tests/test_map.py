@@ -114,9 +114,7 @@ def test_edisp_map_to_energydispersion():
 
 
 def test_edisp_map_from_geom_error():
-    energy_axis = MapAxis.from_energy_bounds(
-        "1 TeV", "10 TeV", nbin=3
-    )
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
     energy_axis_true = MapAxis.from_energy_bounds(
         "1 TeV", "10 TeV", nbin=3, name="energy_true"
     )

@@ -30,7 +30,7 @@ class HDULocation:
         file_name=None,
         hdu_name=None,
         cache=True,
-        format=None
+        format=None,
     ):
         self.hdu_class = hdu_class
         self.base_dir = base_dir

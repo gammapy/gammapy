@@ -2,11 +2,10 @@
 import json
 import numpy as np
 from astropy.io import fits
+from ..core import Map
+from ..io import JsonQuantityEncoder, find_bands_hdu, find_hdu
 from .geom import WcsGeom
 from .io import identify_wcs_format
-from ..core import Map
-from ..io import find_bands_hdu, find_hdu, JsonQuantityEncoder
-
 
 __all__ = ["WcsMap"]
 
@@ -188,9 +187,7 @@ class WcsMap(Map):
             hdu_bands = f"{hdu.upper()}_BANDS"
 
         if self.geom.axes:
-            hdu_bands_out = self.geom.to_bands_hdu(
-                hdu_bands=hdu_bands, format=format
-            )
+            hdu_bands_out = self.geom.to_bands_hdu(hdu_bands=hdu_bands, format=format)
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands = None

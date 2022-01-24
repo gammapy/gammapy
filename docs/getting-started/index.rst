@@ -12,4 +12,3 @@ Getting started
     install
     usage
     troubleshooting
-

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from gammapy.data import DataStore
@@ -7,7 +8,6 @@ from gammapy.datasets import MapDataset
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
-import numpy as np
 
 
 @pytest.fixture(scope="session")
@@ -110,7 +110,7 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
 
     mask_nonan = safe_mask_maker_nonan.make_mask_bkg_invalid(dataset)
 
-    assert mask_nonan[0, 0, 0] == False
+    assert not mask_nonan[0, 0, 0]
 
     assert_allclose(bkg[mask_nonan].max(), 20.656366)
 

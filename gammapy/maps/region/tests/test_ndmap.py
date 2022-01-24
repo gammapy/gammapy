@@ -2,12 +2,19 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from regions import CircleSkyRegion
 from astropy import units as u
 from astropy.time import Time
+from regions import CircleSkyRegion
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, TimeMapAxis, LabelMapAxis
+from gammapy.maps import (
+    LabelMapAxis,
+    Map,
+    MapAxis,
+    RegionGeom,
+    RegionNDMap,
+    TimeMapAxis,
+)
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -53,7 +60,14 @@ def test_region_nd_map_sum_over_axes(region_map):
     region_map_summed_weights = region_map.sum_over_axes(weights=weights)
 
     assert_allclose(region_map_summed.data, 15)
-    assert_allclose(region_map_summed.data.shape, (1, 1, 1,))
+    assert_allclose(
+        region_map_summed.data.shape,
+        (
+            1,
+            1,
+            1,
+        ),
+    )
     assert_allclose(region_map_summed_weights.data, 10)
 
 
@@ -73,12 +87,12 @@ def test_region_nd_map_plot(region_map):
 def test_region_nd_map_plot_two_axes():
     energy_axis = MapAxis.from_energy_edges([1, 3, 10] * u.TeV)
 
-    time_ref = Time('1999-01-01T00:00:00.123456789')
+    time_ref = Time("1999-01-01T00:00:00.123456789")
 
     time_axis = TimeMapAxis(
         edges_min=[0, 1, 3] * u.d,
         edges_max=[0.8, 1.9, 5.4] * u.d,
-        reference_time=time_ref
+        reference_time=time_ref,
     )
 
     m = RegionNDMap.create("icrs;circle(0, 0, 1)", axes=[energy_axis, time_axis])
@@ -219,7 +233,9 @@ def test_apply_edisp(region_map_true):
     e_true = region_map_true.geom.axes[0]
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 
-    edisp = EDispKernel.from_diagonal_response(energy_axis_true=e_true, energy_axis=e_reco)
+    edisp = EDispKernel.from_diagonal_response(
+        energy_axis_true=e_true, energy_axis=e_reco
+    )
 
     m = region_map_true.apply_edisp(edisp)
     assert m.geom.data_shape == (3, 1, 1)
@@ -254,7 +270,9 @@ def test_regionndmap_resample_axis():
 
 def test_region_nd_io_ogip(tmpdir):
     energy_axis = MapAxis.from_energy_bounds(0.1, 10, 12, unit="TeV")
-    m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis], binsz_wcs="0.01deg")
+    m = RegionNDMap.create(
+        "icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis], binsz_wcs="0.01deg"
+    )
     m.write(tmpdir / "test.fits", format="ogip")
 
     m_new = RegionNDMap.read(tmpdir / "test.fits", format="ogip")
@@ -269,7 +287,9 @@ def test_region_nd_io_ogip(tmpdir):
 
 
 def test_region_nd_io_ogip_arf(tmpdir):
-    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 12, unit="TeV", name="energy_true")
+    energy_axis = MapAxis.from_energy_bounds(
+        0.1, 10, 12, unit="TeV", name="energy_true"
+    )
     m = RegionNDMap.create("icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
     m.write(tmpdir / "test.fits", format="ogip-arf")
 

@@ -1,26 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.datasets.evaluator import MapEvaluator
 from gammapy.irf import PSFKernel
-
-from gammapy.maps import (
-    MapAxis,
-    RegionGeom,
-    RegionNDMap,
-    Map,
-    WcsGeom,
-)
+from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
+    ConstantSpectralModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
     SkyModel,
-    ConstantSpectralModel,
+    PowerLawSpectralModel
 )
-
 from gammapy.utils.gauss import Gauss2DPDF
 
 
@@ -122,3 +116,34 @@ def test_large_oversampling():
     assert_allclose(flux_2.data.sum(), nbin, rtol=1e-4)
     assert_allclose(flux_3.data.sum(), nbin, rtol=1e-4)
     assert_allclose(flux_4.data.sum(), nbin, rtol=1e-4)
+
+def test_compute_npred_sign():
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        ".1 TeV", "10 TeV", nbin=2, name="energy_true"
+    )
+    geom = WcsGeom.create(skydir=center, width=1*u.deg, axes = [energy_axis_true], frame='galactic', binsz=0.2*u.deg)
+
+    spectral_model_pos = PowerLawSpectralModel(index = 2, amplitude="1e-11 TeV-1 s-1 m-2")
+    spectral_model_neg = PowerLawSpectralModel(index = 2, amplitude="-1e-11 TeV-1 s-1 m-2")
+
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
+    model_pos = SkyModel(spectral_model=spectral_model_pos, spatial_model=spatial_model)
+    model_neg = SkyModel(spectral_model=spectral_model_neg, spatial_model=spatial_model)
+
+    exposure = Map.from_geom(geom, unit="m2 s")
+    exposure.data += 1.0
+
+    psf = PSFKernel.from_gauss(geom, sigma="0.1 deg")
+
+    evaluator_pos = MapEvaluator(model=model_pos, exposure=exposure, psf=psf)
+    evaluator_neg = MapEvaluator(model=model_neg, exposure=exposure, psf=psf)
+
+    npred_pos = evaluator_pos.compute_npred()
+    npred_neg = evaluator_neg.compute_npred()
+
+    assert (npred_pos.data == -npred_neg.data).all()
+    assert np.all(npred_pos.data >= 0)
+    assert np.all(npred_neg.data <= 0)

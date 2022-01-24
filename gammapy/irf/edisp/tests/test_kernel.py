@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from gammapy.irf import EDispKernel
 from gammapy.maps import MapAxis
-from gammapy.utils.testing import mpl_plot_check, requires_dependency, requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 class TestEDispKernel:
@@ -23,7 +23,9 @@ class TestEDispKernel:
         )
 
     def test_from_diagonal_response(self):
-        energy_axis_true = MapAxis.from_energy_edges([0.5, 1, 2, 4, 6] * u.TeV, name="energy_true")
+        energy_axis_true = MapAxis.from_energy_edges(
+            [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+        )
         energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
 
         edisp = EDispKernel.from_diagonal_response(energy_axis_true, energy_axis)
@@ -50,7 +52,7 @@ class TestEDispKernel:
             energy_axis=energy_axis,
             energy_axis_true=energy_axis_true,
             sigma=0.2,
-            bias=0.1
+            bias=0.1,
         )
         im = edisp.to_image()
 

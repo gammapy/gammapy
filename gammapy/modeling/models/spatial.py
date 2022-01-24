@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spatial models."""
 import logging
+import os
 import numpy as np
 import scipy.integrate
 import scipy.special
@@ -19,12 +20,12 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
-from .core import Model
-import os
+from .core import ModelBase
 
 log = logging.getLogger(__name__)
 
 MAX_OVERSAMPLING = 200
+
 
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
@@ -39,7 +40,7 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     return minor_axis, sigma_eff
 
 
-class SpatialModel(Model):
+class SpatialModel(ModelBase):
     """Spatial model base class."""
 
     _type = "spatial"
@@ -145,7 +146,7 @@ class SpatialModel(Model):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom` 
+        geom : `~gammapy.maps.WcsGeom`
 
         Returns
         ---------
@@ -195,9 +196,10 @@ class SpatialModel(Model):
         if oversampling_factor is None:
             if self.evaluation_bin_size_min is not None:
                 res_scale = self.evaluation_bin_size_min.to_value("deg")
-                if res_scale>0:
-                    oversampling_factor = np.minimum(int(np.ceil(pix_scale/res_scale)),
-                                                     MAX_OVERSAMPLING)
+                if res_scale > 0:
+                    oversampling_factor = np.minimum(
+                        int(np.ceil(pix_scale / res_scale)), MAX_OVERSAMPLING
+                    )
                 else:
                     oversampling_factor = MAX_OVERSAMPLING
             else:
@@ -211,7 +213,7 @@ class SpatialModel(Model):
                 )
                 wcs_geom = wcs_geom.cutout(self.position, width)
 
-            upsampled_geom = wcs_geom.upsample(oversampling_factor)
+            upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
 
             # assume the upsampled solid angles are approximately factor**2 smaller
             values = self.evaluate_geom(upsampled_geom) / oversampling_factor ** 2
@@ -245,8 +247,8 @@ class SpatialModel(Model):
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
-        data["frame"] = self.frame
-        data["parameters"] = data.pop("parameters")
+        data["spatial"]["frame"] = self.frame
+        data["spatial"]["parameters"] = data["spatial"].pop("parameters")
         return data
 
     def _get_plot_map(self, geom):
@@ -285,8 +287,7 @@ class SpatialModel(Model):
             raise TypeError(
                 "Use .plot_interactive() or .plot_grid() for Map dimension > 2"
             )
-        _, ax, _ = m.plot(ax=ax, **kwargs)
-        return ax
+        return m.plot(ax=ax, **kwargs)
 
     def plot_interative(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
@@ -397,7 +398,10 @@ class SpatialModel(Model):
         if hasattr(self, "to_region"):
             return self.to_region()
         elif self.evaluation_radius is not None:
-            return CircleSkyRegion(center=self.position, radius=self.evaluation_radius,)
+            return CircleSkyRegion(
+                center=self.position,
+                radius=self.evaluation_radius,
+            )
         else:
             return None
 
@@ -422,7 +426,7 @@ class PointSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`)."""
         return 0 * u.deg
 
     @property
@@ -446,7 +450,6 @@ class PointSpatialModel(SpatialModel):
 
     def is_energy_dependent(self):
         return False
-
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`."""
@@ -512,7 +515,7 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`) chosen as sigma/3."""
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`) chosen as sigma/3."""
         return self.parameters["sigma"].quantity / 3.0
 
     @property
@@ -542,14 +545,14 @@ class GaussianSpatialModel(SpatialModel):
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
 
     def to_region(self, x_sigma=1.5, **kwargs):
-        """Model outline at a given number of :math:`\sigma`.
-        
+        r"""Model outline at a given number of :math:`\sigma`.
+
         Parameters
         ----------
         x_sigma : float
-            Number of :math:`\sigma`
-            Default is :math:`1.5\sigma` which corresonds to about 68%
-            containment for a 2D symetric Gaussian. 
+            Number of :math:`\sigma
+            Default is :math:`1.5\sigma` which corresponds to about 68%
+            containment for a 2D symmetric Gaussian.
 
         Returns
         -------
@@ -568,7 +571,7 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_region(self):
-        """Evaluation region consistent with evaluation radius """
+        """Evaluation region consistent with evaluation radius"""
         return self.to_region(x_sigma=5)
 
 
@@ -614,7 +617,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as r_0/(3+8*eta)/(e+1).
         """
@@ -633,7 +636,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     def to_region(self, x_r_0=1, **kwargs):
         """Model outline at a given number of r_0.
-        
+
         Parameters
         ----------
         x_r_0 : float
@@ -695,7 +698,7 @@ class DiskSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as r_0*(1-edge_width)/10.
         """
@@ -704,7 +707,7 @@ class DiskSpatialModel(SpatialModel):
     @property
     def evaluation_radius(self):
         """Evaluation radius (`~astropy.coordinates.Angle`).
-    
+
         Set to the length of the semi-major axis plus the edge width.
         """
         return 1.1 * self.r_0.quantity * (1 + self.edge_width.quantity)
@@ -735,7 +738,8 @@ class DiskSpatialModel(SpatialModel):
         edge_width_95 = 2.326174307353347
         return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
 
-    def evaluate(self, lon, lat, lon_0, lat_0, r_0, e, phi, edge_width):
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, r_0, e, phi, edge_width):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
@@ -792,7 +796,7 @@ class ShellSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as the shell width.
         """
@@ -863,7 +867,7 @@ class Shell2SpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """ Minimal evaluation bin size (`~astropy.coordinates.Angle`).
+        """Minimal evaluation bin size (`~astropy.coordinates.Angle`).
 
         The bin min size is defined as r_0*eta.
         """
@@ -931,8 +935,8 @@ class ConstantSpatialModel(SpatialModel):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
-        data.pop("frame")
-        data["parameters"] = data.pop("parameters")
+        data["spatial"].pop("frame")
+        data["spatial"]["parameters"] = []
         return data
 
     @staticmethod
@@ -969,13 +973,13 @@ class ConstantFluxSpatialModel(SpatialModel):
         """Create dict for YAML serilisation"""
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
-        data.pop("frame")
+        data["spatial"].pop("frame")
         return data
 
     @staticmethod
     def evaluate(lon, lat):
         """Evaluate model."""
-        return 1/u.sr
+        return 1 / u.sr
 
     @staticmethod
     def evaluate_geom(geom):
@@ -1020,7 +1024,12 @@ class TemplateSpatialModel(SpatialModel):
     tag = ["TemplateSpatialModel", "template"]
 
     def __init__(
-        self, map, meta=None, normalize=True, interp_kwargs=None, filename=None,
+        self,
+        map,
+        meta=None,
+        normalize=True,
+        interp_kwargs=None,
+        filename=None,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -1048,7 +1057,7 @@ class TemplateSpatialModel(SpatialModel):
 
         self._map = map.copy()
 
-        self.meta = dict() if meta is None else meta
+        self.meta = {} if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
@@ -1119,6 +1128,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @classmethod
     def from_dict(cls, data):
+        data = data["spatial"]
         filename = data["filename"]
         normalize = data.get("normalize", True)
         m = Map.read(filename)
@@ -1127,9 +1137,9 @@ class TemplateSpatialModel(SpatialModel):
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
-        data["filename"] = self.filename
-        data["normalize"] = self.normalize
-        data["unit"] = str(self.map.unit)
+        data["spatial"]["filename"] = self.filename
+        data["spatial"]["normalize"] = self.normalize
+        data["spatial"]["unit"] = str(self.map.unit)
         return data
 
     def write(self, overwrite=False):

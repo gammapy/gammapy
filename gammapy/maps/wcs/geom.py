@@ -3,26 +3,22 @@ import copy
 from functools import lru_cache
 import numpy as np
 import astropy.units as u
+from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.nddata.utils import overlap_slices
-from astropy.convolution import Tophat2DKernel
+from astropy.utils import lazyproperty
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     celestial_frame_to_wcs,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from gammapy.utils.array import round_up_to_odd, round_up_to_even
-from ..geom import (
-    Geom,
-    get_shape,
-    pix_tuple_to_idx,
-)
+from gammapy.utils.array import round_up_to_even, round_up_to_odd
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
-from ..coord import MapCoord, skycoord_to_lonlat
+from ..geom import Geom, get_shape, pix_tuple_to_idx
 from ..utils import INVALID_INDEX, _check_binsz, _check_width
 
 __all__ = ["WcsGeom"]
@@ -115,14 +111,10 @@ class WcsGeom(Geom):
         # define cached methods
         self.get_coord = lru_cache()(self.get_coord)
         self.get_pix = lru_cache()(self.get_pix)
-        self.solid_angle = lru_cache()(self.solid_angle)
-        self.bin_volume = lru_cache()(self.bin_volume)
-        self.to_image = lru_cache()(self.to_image)
-
 
     def __setstate__(self, state):
         for key, value in state.items():
-            if key in ["get_coord", "solid_angle", "bin_volume", "to_image", "get_pix"]:
+            if key in ["get_coord", "get_pix"]:
                 state[key] = lru_cache()(value)
 
         self.__dict__ = state
@@ -190,7 +182,7 @@ class WcsGeom(Geom):
             large_array_shape=geom.data_shape[-2:],
             small_array_shape=self.data_shape[-2:],
             position=position[::-1],
-            mode=mode
+            mode=mode,
         )
         return {
             "parent-slices": slices[0],
@@ -447,8 +439,8 @@ class WcsGeom(Geom):
         width = _check_width(width) * u.deg
         npix = tuple(np.round(width / geom.pixel_scales).astype(int))
         xref, yref = geom.to_image().coord_to_pix(skydir)
-        xref = int(np.floor(-xref + npix[0] / 2.)) + geom.wcs.wcs.crpix[0]
-        yref = int(np.floor(-yref + npix[1] / 2.)) + geom.wcs.wcs.crpix[1]
+        xref = int(np.floor(-xref + npix[0] / 2.0)) + geom.wcs.wcs.crpix[0]
+        yref = int(np.floor(-yref + npix[1] / 2.0)) + geom.wcs.wcs.crpix[1]
         return cls.create(
             skydir=tuple(geom.wcs.wcs.crval),
             npix=npix,
@@ -456,7 +448,7 @@ class WcsGeom(Geom):
             frame=geom.frame,
             binsz=tuple(geom.pixel_scales.deg),
             axes=geom.axes,
-            proj=geom.projection
+            proj=geom.projection,
         )
 
     @classmethod
@@ -550,7 +542,9 @@ class WcsGeom(Geom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-    def _get_pix_all(self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")):
+    def _get_pix_all(
+        self, idx=None, mode="center", sparse=False, axis_name=("lon", "lat")
+    ):
         """Get idx coordinate array without footprint of the projection applied"""
         pix_all = []
 
@@ -588,7 +582,9 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
-    def get_coord(self, idx=None, mode="center", frame=None, sparse=False, axis_name=None):
+    def get_coord(
+        self, idx=None, mode="center", frame=None, sparse=False, axis_name=None
+    ):
         """Get map coordinates from the geometry.
 
         Parameters
@@ -613,9 +609,7 @@ class WcsGeom(Geom):
         if frame is None:
             frame = self.frame
 
-        pix = self._get_pix_all(
-            idx=idx, mode=mode, sparse=sparse, axis_name=axis_name
-        )
+        pix = self._get_pix_all(idx=idx, mode=mode, sparse=sparse, axis_name=axis_name)
 
         data = self.pix_to_coord(pix)
 
@@ -690,11 +684,13 @@ class WcsGeom(Geom):
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def to_image(self):
+        return self._image_geom
+
+    @lazyproperty
+    def _image_geom(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
         cdelt = (np.max(self._cdelt[0]), np.max(self._cdelt[1]))
-        return self.__class__(
-            self._wcs, npix, cdelt=cdelt
-        )
+        return self.__class__(self._wcs, npix, cdelt=cdelt)
 
     def to_cube(self, axes):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))
@@ -790,8 +786,12 @@ class WcsGeom(Geom):
 
         To return solid angles for the spatial dimensions only use::
 
-            WcsGeom.to_image().solid_angle()
+             WcsGeom.to_image().solid_angle()
         """
+        return self._solid_angle
+
+    @lazyproperty
+    def _solid_angle(self):
         coord = self.get_coord(mode="edges").skycoord
 
         # define pixel corners
@@ -823,6 +823,11 @@ class WcsGeom(Geom):
 
     def bin_volume(self):
         """Bin volume (`~astropy.units.Quantity`)"""
+        return self._bin_volume
+
+    @lazyproperty
+    def _bin_volume(self):
+        """Cached property of bin volume"""
         value = self.to_image().solid_angle()
 
         if not self.is_image:
@@ -871,7 +876,7 @@ class WcsGeom(Geom):
 
         binsz = self.pixel_scales
         width_npix = np.clip((width / binsz).to_value(""), 1, None)
-        width = width_npix*binsz
+        width = width_npix * binsz
 
         if odd_npix:
             width = round_up_to_odd(width_npix)
@@ -903,6 +908,7 @@ class WcsGeom(Geom):
 
         """
         from .ndmap import WcsNDMap
+
         data = np.ones(self.data_shape, dtype=bool)
         return WcsNDMap.from_geom(self, data=data).binary_erode(
             width=2 * u.Quantity(width), kernel="box"
@@ -977,7 +983,7 @@ class WcsGeom(Geom):
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
         oversampling_factor : int
-            Over-sampling factor to compute the region weigths
+            Over-sampling factor to compute the region weights
 
         Returns
         -------

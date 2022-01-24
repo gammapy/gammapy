@@ -92,12 +92,12 @@ the models (spectra, spatial morphology, temporal model) for any given source,
 and it is passed as input parameter to the ``MapDatasetEventSampler``. It is
 important to note that the ``MapDataset`` object can store information for more
 than one source. Then, a ``.sample`` method will draw the sampled events and
-will provide an output ``~astropy.table.Table`` object. The latter will containt
+will provide an output ``~astropy.table.Table`` object. The latter will contain
 the reconstructed sky positions, energies, times, and an ``EVENT_ID`` and
 ``MC_ID``. ``EVENT_ID`` is a unique number or a string to identify the sampled
 event, while ``MC_ID`` is a unique ID (number or string) to identify the model
 component the event was sampled from. The ``MapDatasetSampler`` should also fill
-the mandatory header information for event list files decribed on `gadf`_.
+the mandatory header information for event list files described on `gadf`_.
 
 MapDatasetEventSampler
 ----------------------

@@ -24,7 +24,7 @@ area and background are also considered as part of the model framework. Models
 are used both in interactive analysis, as well as scripted or command line based
 analyses. For this reason they must implement an easy to use API as well as
 serialization to disk. Gammapy should provide a variety of built-in models,
-allow to combine existing models using limited arithmetics and offer the
+allow to combine existing models using limited arithmetic and offer the
 possibility for users to easily implement custom models. A lot of development
 work has already put into the modeling framework of Gammapy. This PIG outlines
 the missing development work on the model framework for Gammapy v1.0.
@@ -161,11 +161,11 @@ preparation step. No IRFs are applied.
 Introduction of "forward folded" models
 ---------------------------------------
 
-To combine parametric model components with their correspoding instrument response
+To combine parametric model components with their corresponding instrument response
 functions, such as PSF, energy dispersion and exposure, we propose the introduction
 of "forward folded" models. These take a fixed data grid, typically defined by the
 exposure map, on which the model is evaluated. After application of instrument
-reponse functions, the number of prediced counts is returned by the ``.evaluate()``
+response functions, the number of prediced counts is returned by the ``.evaluate()``
 method. We propose to introduce the following classes:
 
 SpectralIRFModel
@@ -215,13 +215,13 @@ Improve SourceModels class
 --------------------------
 
 The existing ``CompoundSkyModel`` is a nice very generic abstraction to support
-any kind of arithmetics between ``SkyModel`` objects, but the number of use
+any kind of arithmetic between ``SkyModel`` objects, but the number of use
 cases for other operators, except for "+" is very limited and can always be
 achieved by implementing a custom model. Serilization and component handling of
 this hierarchical model component structure is intrinsically difficult. For this
 reason we propose to first support and improve the existing ``SourceModels``
 that implements an easier to handle flat hierarchy for model components. Support
-for arbitrary model arithmetics can be introduced, if needed, after Gammapy
+for arbitrary model arithmetic can be introduced, if needed, after Gammapy
 v1.0. We propose to remove the ``CompoundSourceModel`` and reimplement the ``+``
 operator using the ``SourceModels`` class.
 
@@ -318,7 +318,7 @@ introducing a ``SpatialModel.skycood`` attribute.
     from astropy.coordinates import SkyCoord
     from gammapy.image.models import PointSource
 
-    # instanciation using a SkyCoord object
+    # instantiation using a SkyCoord object
     point_source = PointSource(skycood=SkyCoord(0, 0, frame="galactic", unit="deg"))
     # or
     point_source = PointSource(lon="0 deg", lat="0 deg", frame="galactic")
@@ -371,7 +371,7 @@ Expose model parameters as attributes
 -------------------------------------
 
 To simplify the interactive handling of model instances, model parameters should
-be exposed as attribues on the model, so that the following works:
+be exposed as attributes on the model, so that the following works:
 
 ::
 

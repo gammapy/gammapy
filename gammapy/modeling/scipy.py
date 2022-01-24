@@ -2,8 +2,8 @@
 import numpy as np
 import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
-from .likelihood import Likelihood
 from gammapy.utils.roots import find_roots
+from .likelihood import Likelihood
 
 __all__ = [
     "optimize_scipy",

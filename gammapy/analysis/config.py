@@ -64,11 +64,13 @@ class FrameEnum(str, Enum):
     icrs = "icrs"
     galactic = "galactic"
 
+
 class RequiredIRFEnum(str, Enum):
     aeff = "aeff"
     bkg = "bkg"
     edisp = "edisp"
     psf = "psf"
+
 
 class BackgroundMethodEnum(str, Enum):
     reflected = "reflected"
@@ -169,7 +171,9 @@ class SafeMaskConfig(GammapyBaseConfig):
 
 class EnergyAxesConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig(min="1 TeV", max="10 TeV", nbins=5)
-    energy_true: EnergyAxisConfig = EnergyAxisConfig(min="0.5 TeV", max="20 TeV", nbins=16)
+    energy_true: EnergyAxisConfig = EnergyAxisConfig(
+        min="0.5 TeV", max="20 TeV", nbins=16
+    )
 
 
 class SelectionConfig(GammapyBaseConfig):
@@ -213,6 +217,7 @@ class ObservationsConfig(GammapyBaseConfig):
     obs_time: TimeRangeConfig = TimeRangeConfig()
     required_irf: List[RequiredIRFEnum] = ["aeff", "edisp", "psf", "bkg"]
 
+
 class LogConfig(GammapyBaseConfig):
     level: str = "info"
     filename: Path = None
@@ -236,7 +241,7 @@ class AnalysisConfig(GammapyBaseConfig):
     flux_points: FluxPointsConfig = FluxPointsConfig()
     excess_map: ExcessMapConfig = ExcessMapConfig()
     light_curve: LightCurveConfig = LightCurveConfig()
-    
+
     def __str__(self):
         """Display settings in pretty YAML format."""
         info = self.__class__.__name__ + "\n\n\t"

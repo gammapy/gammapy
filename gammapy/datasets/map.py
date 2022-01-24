@@ -8,10 +8,7 @@ from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling.models import (
-    DatasetModels,
-    FoVBackgroundModel,
-)
+from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
@@ -25,8 +22,8 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
-from .utils import get_axes
 from .evaluator import MapEvaluator
+from .utils import get_axes
 
 __all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
 
@@ -105,8 +102,8 @@ class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
-    map data is only loaded in memeory as the corresponding data attribute
-    on the MapDataset is accessed. If it was accesed once it is cached for
+    map data is only loaded in memory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accessed once it is cached for
     the next time.
 
     Parameters
@@ -130,7 +127,7 @@ class MapDataset(Dataset):
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
 
 
@@ -179,6 +176,9 @@ class MapDataset(Dataset):
         self.counts = counts
         self.exposure = exposure
         self.background = background
+        self._background_cached = None
+        self._background_parameters_cached = None
+
         self.mask_fit = mask_fit
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
@@ -393,7 +393,7 @@ class MapDataset(Dataset):
 
         if self.background:
             npred_total += self.npred_background()
-
+        npred_total.data[npred_total.data < 0.0] = 0
         return npred_total
 
     def npred_background(self):
@@ -408,12 +408,27 @@ class MapDataset(Dataset):
             Predicted counts from the background.
         """
         background = self.background
-
         if self.background_model and background:
-            values = self.background_model.evaluate_geom(geom=self.background.geom)
-            background = background * values
+            if self._background_parameters_changed:
+                values = self.background_model.evaluate_geom(geom=self.background.geom)
+                if self._background_cached is None:
+                    self._background_cached = background * values
+                else:
+                    self._background_cached.data = background.data * values.value
+                    self._background_cached.unit = background.unit
+            return self._background_cached
+        else:
+            return background
 
         return background
+
+    def _background_parameters_changed(self):
+        values = self.background_model.parameters.value
+        # TODO: possibly allow for a tolerance here?
+        changed = ~np.all(self._background_parameters_cached == values)
+        if changed:
+            self._background_parameters_cached = values
+        return changed
 
     def npred_signal(self, model_name=None):
         """ "Model predicted signal counts.
@@ -424,7 +439,7 @@ class MapDataset(Dataset):
         Parameters
         -------------
         model_name: str
-        Name of  SkyModel for which to compute the npred for.
+            Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
 
@@ -479,7 +494,7 @@ class MapDataset(Dataset):
             geometry for the psf map
         geom_edisp : `Geom`
             geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this wil create an EDispMap instead.
+            If geom_edisp has a migra axis, this will create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -547,7 +562,7 @@ class MapDataset(Dataset):
         name : str
             Name of the returned dataset.
         meta_table : `~astropy.table.Table`
-            Table listing informations on observations used to create the dataset.
+            Table listing information on observations used to create the dataset.
             One line per observation for stacked datasets.
 
         Returns
@@ -572,6 +587,13 @@ class MapDataset(Dataset):
         if self.mask_safe is None:
             return None
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
+
+    @property
+    def mask_fit_image(self):
+        """Reduced mask fit"""
+        if self.mask_fit is None:
+            return None
+        return self.mask_fit.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_image(self):
@@ -822,8 +844,7 @@ class MapDataset(Dataset):
         kwargs.setdefault("cmap", "coolwarm")
         kwargs.setdefault("vmin", -5)
         kwargs.setdefault("vmax", 5)
-        _, ax, _ = residuals.plot(ax, **kwargs)
-
+        ax = residuals.plot(ax, **kwargs)
         return ax
 
     def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
@@ -864,13 +885,16 @@ class MapDataset(Dataset):
 
         if method == "diff":
             if self.stat_type == "wstat":
-                counts_off = (self.counts_off * mask).get_spectrum(region).data
-                norm = (self.background * mask).get_spectrum(region).data
-                mu_sig = (self.npred_signal() * mask).get_spectrum(region).data
+                counts_off = (self.counts_off * mask).get_spectrum(region)
+
+                with np.errstate(invalid="ignore"):
+                    alpha = (self.background * mask).get_spectrum(region) / counts_off
+
+                mu_sig = (self.npred_signal() * mask).get_spectrum(region)
                 stat = WStatCountsStatistic(
-                    n_on=counts_spec.data,
+                    n_on=counts_spec,
                     n_off=counts_off,
-                    alpha=norm / counts_off,
+                    alpha=alpha,
                     mu_sig=mu_sig,
                 )
             elif self.stat_type == "cash":
@@ -1198,17 +1222,17 @@ class MapDataset(Dataset):
         else:
             mask = slice(None)
 
-        counts = np.nan
+        counts = 0
         if self.counts:
             counts = self.counts.data[mask].sum()
 
-        info["counts"] = counts
+        info["counts"] = int(counts)
 
         background = np.nan
         if self.background:
             background = self.background.data[mask].sum()
 
-        info["background"] = background
+        info["background"] = float(background)
 
         info["excess"] = counts - background
         info["sqrt_ts"] = CashCountsStatistic(counts, background).sqrt_ts
@@ -1217,21 +1241,23 @@ class MapDataset(Dataset):
         if self.models or not np.isnan(background):
             npred = self.npred().data[mask].sum()
 
-        info["npred"] = npred
+        info["npred"] = float(npred)
 
         npred_background = np.nan
         if self.background:
             npred_background = self.npred_background().data[mask].sum()
 
-        info["npred_background"] = npred_background
+        info["npred_background"] = float(npred_background)
 
         npred_signal = np.nan
         if self.models:
             npred_signal = self.npred_signal().data[mask].sum()
 
-        info["npred_signal"] = npred_signal
+        info["npred_signal"] = float(npred_signal)
 
-        exposure_min, exposure_max, livetime = np.nan, np.nan, np.nan
+        exposure_min = np.nan * u.Unit("cm s")
+        exposure_max = np.nan * u.Unit("cm s")
+        livetime = np.nan * u.s
 
         if self.exposure is not None:
             mask_exposure = self.exposure.data > 0
@@ -1247,8 +1273,8 @@ class MapDataset(Dataset):
             exposure_max = np.max(self.exposure.quantity[mask_exposure])
             livetime = self.exposure.meta.get("livetime", np.nan * u.s).copy()
 
-        info["exposure_min"] = exposure_min
-        info["exposure_max"] = exposure_max
+        info["exposure_min"] = exposure_min.item()
+        info["exposure_max"] = exposure_max.item()
         info["livetime"] = livetime
 
         ontime = u.Quantity(np.nan, "s")
@@ -1265,20 +1291,20 @@ class MapDataset(Dataset):
         n_bins = 0
         if self.counts is not None:
             n_bins = self.counts.data.size
-        info["n_bins"] = n_bins
+        info["n_bins"] = int(n_bins)
 
         n_fit_bins = 0
         if self.mask is not None:
             n_fit_bins = np.sum(self.mask.data)
 
-        info["n_fit_bins"] = n_fit_bins
+        info["n_fit_bins"] = int(n_fit_bins)
         info["stat_type"] = self.stat_type
 
         stat_sum = np.nan
         if self.counts is not None and self.models is not None:
             stat_sum = self.stat_sum()
 
-        info["stat_sum"] = stat_sum
+        info["stat_sum"] = float(stat_sum)
 
         return info
 
@@ -1329,9 +1355,9 @@ class MapDataset(Dataset):
                 )
                 dataset.exposure.quantity *= containment.reshape(geom.data_shape)
 
-        kwargs = {}
+        kwargs = {"name": name}
 
-        for name in [
+        for key in [
             "counts",
             "edisp",
             "mask_safe",
@@ -1340,7 +1366,7 @@ class MapDataset(Dataset):
             "gti",
             "meta_table",
         ]:
-            kwargs[name] = getattr(dataset, name)
+            kwargs[key] = getattr(dataset, key)
 
         if self.stat_type == "cash":
             kwargs["background"] = dataset.background
@@ -1725,6 +1751,54 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
+    def peek(self, figsize=(12, 10)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on.
+
+        Returns
+        -------
+        ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
+            Counts, excess and exposure.
+        """
+
+        def plot_mask(ax, mask, **kwargs):
+            if mask is not None:
+                mask.plot_mask(ax=ax, **kwargs)
+
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(
+            ncols=2,
+            nrows=2,
+            subplot_kw={"projection": self._geom.wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+        )
+
+        axes = axes.flat
+        axes[0].set_title("Counts")
+        self.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
+        plot_mask(ax=axes[0], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[0], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[1].set_title("Excess counts")
+        self.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        plot_mask(ax=axes[1], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[1], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[2].set_title("Exposure")
+        self.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
+        plot_mask(ax=axes[2], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[3].set_title("Background")
+        self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
+        plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
@@ -1754,7 +1828,7 @@ class MapDatasetOnOff(MapDataset):
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
     meta_table : `~astropy.table.Table`
-        Table listing informations on observations used to create the dataset.
+        Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
@@ -1920,7 +1994,7 @@ class MapDatasetOnOff(MapDataset):
         name=None,
         **kwargs,
     ):
-        """Create a MapDatasetOnOff object  swith zero filled maps according to the specified geometries
+        """Create a MapDatasetOnOff object  switch zero filled maps according to the specified geometries
 
         Parameters
         ----------
@@ -1932,7 +2006,7 @@ class MapDatasetOnOff(MapDataset):
             geometry for the psf map
         geom_edisp : `gammapy.maps.WcsGeom`
             geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this wil create an EDispMap instead.
+            If geom_edisp has a migra axis, this will create an EDispMap instead.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         name : str
@@ -2284,30 +2358,30 @@ class MapDatasetOnOff(MapDataset):
         else:
             mask = slice(None)
 
-        counts_off = np.nan
+        counts_off = 0
         if self.counts_off is not None:
             counts_off = self.counts_off.data[mask].sum()
 
-        info["counts_off"] = counts_off
+        info["counts_off"] = int(counts_off)
 
         acceptance = 1
         if self.acceptance:
             # TODO: handle energy dependent a_on / a_off
             acceptance = self.acceptance.data[mask].sum()
 
-        info["acceptance"] = acceptance
+        info["acceptance"] = float(acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off:
             acceptance_off = acceptance * counts_off / info["background"]
 
-        info["acceptance_off"] = acceptance_off
+        info["acceptance_off"] = float(acceptance_off)
 
         alpha = np.nan
         if self.acceptance_off and self.acceptance:
             alpha = np.mean(self.alpha.data[mask])
 
-        info["alpha"] = alpha
+        info["alpha"] = float(alpha)
 
         info["sqrt_ts"] = WStatCountsStatistic(
             info["counts"],
@@ -2350,9 +2424,14 @@ class MapDatasetOnOff(MapDataset):
         """
         from .spectrum import SpectrumDatasetOnOff
 
-        dataset = super().to_spectrum_dataset(on_region, containment_correction, name)
+        dataset = super().to_spectrum_dataset(
+            on_region=on_region,
+            containment_correction=containment_correction,
+            name=name,
+        )
 
-        kwargs = {}
+        kwargs = {"name": name}
+
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.get_spectrum(
                 on_region, np.sum, weights=self.mask_safe
@@ -2547,4 +2626,5 @@ class MapDatasetOnOff(MapDataset):
             acceptance=acceptance,
             acceptance_off=acceptance_off,
             counts_off=counts_off,
+            name=name,
         )

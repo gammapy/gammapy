@@ -55,7 +55,7 @@ help:
 	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
 	@echo ' * Gammapy docs: https://docs.gammapy.org/'
 	@echo ''
-	@echo ' Most common commmands to hack on Gammapy:'
+	@echo ' Most common commands to hack on Gammapy:'
 	@echo ''
 	@echo '     make help          Print help message with all commands'
 	@echo '     pip install -e .   Install Gammapy in editable mode'
@@ -94,12 +94,12 @@ clean-nb:
 	python -m gammapy jupyter --src=docs --r strip
 
 docs-sphinx:
-	cd docs && python -m sphinx . _build/html -b html
+	cd docs && python -m sphinx . _build/html -b html -j auto
 
 docs-all:
 	python -m gammapy jupyter tar --out docs/_downloads/notebooks-dev.tar
 	python -m gammapy.utils.notebooks_process --src="$(src)"
-	cd docs && python -m sphinx . _build/html -b html
+	cd docs && python -m sphinx . _build/html -b html -j auto
 	python -m gammapy.utils.notebooks_links --src="$(src)"
 
 docs-show:
@@ -148,5 +148,9 @@ pydocstyle:
 
 dataset-index:
 	python dev/datasets/make_dataset_index.py dataset-index
+
+# Note: codespell will pick its options from setup.cfg
+codespell:
+	codespell
 
 # TODO: add test and code quality checks for `examples`

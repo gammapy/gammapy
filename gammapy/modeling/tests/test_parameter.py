@@ -17,7 +17,7 @@ def test_parameter_init():
     assert par.unit == "deg"
     assert par.min is np.nan
     assert par.max is np.nan
-    assert par.frozen is False
+    assert not par.frozen
 
     par = Parameter("spam", "42 deg")
     assert par.factor == 42
@@ -157,9 +157,13 @@ def test_parameters_getitem(pars):
 
 def test_parameters_to_table(pars):
     pars["ham"].error = 1e-10
+    pars["spam"]._link_label_io = "test"
+
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 8
+    assert len(table.columns) == 9
+    assert table["link"][0] == "test"
+    assert table["link"][1] == ""
 
 
 def test_parameters_set_parameter_factors(pars):
@@ -183,7 +187,7 @@ def test_parameters_s():
     assert_allclose(pars[0].scale, 10)
 
     assert pars_dict[0]["scale_method"] == "scale10"
-    assert "scale_method" not in pars_dict[1]
+    assert pars_dict[1]["scale_method"] is None
     pars = Parameters.from_dict(pars_dict)
     pars.autoscale()
     assert_allclose(pars[0].factor, 2)
@@ -248,7 +252,7 @@ def test_update_from_dict():
     assert par.unit == "GeV"
     assert par.min == 0
     assert par.max is np.nan
-    assert par.frozen == True
+    assert par.frozen
     data = {
         "model": "gc",
         "type": "spectral",
@@ -260,4 +264,4 @@ def test_update_from_dict():
         "unit": "GeV",
     }
     par.update_from_dict(data)
-    assert par.frozen == True
+    assert par.frozen

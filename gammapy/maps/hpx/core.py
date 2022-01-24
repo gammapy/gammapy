@@ -3,10 +3,10 @@ import abc
 import json
 import numpy as np
 from astropy.io import fits
+from ..core import Map
+from ..io import find_bands_hdu, find_bintable_hdu
 from .geom import HpxGeom
 from .io import HpxConv
-from ..io import find_bands_hdu, find_bintable_hdu
-from ..core import Map
 
 __all__ = ["HpxMap"]
 
@@ -52,7 +52,7 @@ class HpxMap(Map):
             the spatial pixels in the map.
         binsz : float or `~numpy.ndarray`
             Approximate pixel size in degrees.  An NSIDE will be
-            chosen that correponds to a pixel size closest to this
+            chosen that corresponds to a pixel size closest to this
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPix "NESTED" indexing scheme, False for "RING" scheme.
@@ -100,7 +100,9 @@ class HpxMap(Map):
             raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None, colname=None):
+    def from_hdulist(
+        cls, hdu_list, hdu=None, hdu_bands=None, format=None, colname=None
+    ):
         """Make a HpxMap object from a FITS HDUList.
 
         Parameters
@@ -195,9 +197,7 @@ class HpxMap(Map):
             hdu_bands = f"{hdu.upper()}_BANDS"
 
         if self.geom.axes:
-            hdu_bands_out = self.geom.to_bands_hdu(
-                hdu_bands=hdu_bands, format=format
-            )
+            hdu_bands_out = self.geom.to_bands_hdu(hdu_bands=hdu_bands, format=format)
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands_out = None

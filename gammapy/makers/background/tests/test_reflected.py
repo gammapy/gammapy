@@ -17,11 +17,10 @@ from gammapy.makers import (
     ReflectedRegionsFinder,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import MapAxis, WcsGeom, WcsNDMap, RegionGeom
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import (
     assert_quantity_allclose,
-    mpl_plot_check,
     requires_data,
     requires_dependency,
 )
@@ -201,10 +200,14 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations, caplog):
 
     assert "WARNING" in [record.levelname for record in caplog.records]
 
-    message1 = f"ReflectedRegionsBackgroundMaker failed. " \
-              f"No OFF region found outside exclusion mask for {datasets[0].name}."
-    message2 = f"ReflectedRegionsBackgroundMaker failed. " \
-              f"Setting {datasets[0].name} mask to False."
+    message1 = (
+        f"ReflectedRegionsBackgroundMaker failed. "
+        f"No OFF region found outside exclusion mask for {datasets[0].name}."
+    )
+    message2 = (
+        f"ReflectedRegionsBackgroundMaker failed. "
+        f"Setting {datasets[0].name} mask to False."
+    )
 
     assert message1 in [record.message for record in caplog.records]
     assert message2 in [record.message for record in caplog.records]

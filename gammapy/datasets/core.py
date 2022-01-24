@@ -275,7 +275,9 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             try:
                 dataset_sliced = dataset.slice_by_energy(
-                    energy_min=energy_min, energy_max=energy_max, name=dataset.name,
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                    name=dataset.name,
                 )
             except ValueError:
                 log.info(
@@ -286,6 +288,29 @@ class Datasets(collections.abc.MutableSequence):
             datasets.append(dataset_sliced)
 
         return self.__class__(datasets=datasets)
+
+    def to_spectrum_datasets(self, region):
+        """Extract spectrum datasets for the given region.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`
+            Region definition.
+
+        Returns
+        --------
+        datasets : `Datasets`
+            List of `~gammapy.datasets.SpectrumDataset`
+        """
+        datasets = Datasets()
+
+        for dataset in self:
+            spectrum_dataset = dataset.to_spectrum_dataset(
+                on_region=region, name=dataset.name
+            )
+            datasets.append(spectrum_dataset)
+
+        return datasets
 
     @property
     # TODO: make this a method to support different methods?
@@ -408,7 +433,9 @@ class Datasets(collections.abc.MutableSequence):
 
         if filename_models:
             self.models.write(
-                filename_models, overwrite=overwrite, write_covariance=write_covariance,
+                filename_models,
+                overwrite=overwrite,
+                write_covariance=write_covariance,
             )
 
     def stack_reduce(self, name=None, nan_to_num=True):

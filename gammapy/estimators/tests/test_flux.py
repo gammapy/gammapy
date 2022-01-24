@@ -2,15 +2,15 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
+from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.modeling.models import (
+    Models,
+    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
     TemplateSpatialModel,
-    PowerLawNormSpectralModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -48,12 +48,10 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
         norm_min=0.5,
         norm_max=2,
         selection_optional="all",
-        reoptimize=False
+        reoptimize=False,
     )
 
-    datasets = fermi_datasets.slice_by_energy(
-        energy_min="1 GeV", energy_max="100 GeV"
-    )
+    datasets = fermi_datasets.slice_by_energy(energy_min="1 GeV", energy_max="100 GeV")
     datasets.models = fermi_datasets.models
 
     result = estimator.run(datasets)
@@ -73,15 +71,9 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 @requires_data()
 @requires_dependency("iminuit")
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
-    estimator = FluxEstimator(
-        0,
-        selection_optional=None,
-        reoptimize=True
-    )
+    estimator = FluxEstimator(0, selection_optional=None, reoptimize=True)
 
-    datasets = fermi_datasets.slice_by_energy(
-        energy_min="1 GeV", energy_max="100 GeV"
-    )
+    datasets = fermi_datasets.slice_by_energy(energy_min="1 GeV", energy_max="100 GeV")
     datasets.models = fermi_datasets.models
 
     result = estimator.run(datasets)
@@ -95,12 +87,11 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 @requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(
-        source="Crab",
-        selection_optional=["errn-errp", "ul"],
-        reoptimize=False
+        source="Crab", selection_optional=["errn-errp", "ul"], reoptimize=False
     )
     datasets = hess_datasets.slice_by_energy(
-        energy_min=1 * u.TeV, energy_max=10 * u.TeV,
+        energy_min=1 * u.TeV,
+        energy_max=10 * u.TeV,
     )
     datasets.models = hess_datasets.models
 
@@ -115,7 +106,7 @@ def test_flux_estimator_1d(hess_datasets):
     assert_allclose(result["e_min"], 1 * u.TeV, atol=1e-3)
     assert_allclose(result["e_max"], 10 * u.TeV, atol=1e-3)
     assert_allclose(result["npred"], [93.209263, 93.667283], atol=1e-3)
-    assert_allclose(result["npred_null"], [14., 11.384615], atol=1e-3)
+    assert_allclose(result["npred_excess"], [86.27813, 88.6715], atol=1e-3)
 
 
 @requires_data()
@@ -127,14 +118,13 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     datasets.extend(hess_datasets)
 
     datasets = datasets.slice_by_energy(
-        energy_min=1 * u.TeV, energy_max=10 * u.TeV,
+        energy_min=1 * u.TeV,
+        energy_max=10 * u.TeV,
     )
     datasets.models = fermi_datasets.models
 
     estimator = FluxEstimator(
-        source="Crab Nebula",
-        selection_optional=[],
-        reoptimize=True
+        source="Crab Nebula", selection_optional=[], reoptimize=True
     )
     result = estimator.run(datasets)
 
@@ -151,11 +141,7 @@ def test_flux_estimator_norm_range():
     model.spectral_model.amplitude.min = 1e-15
     model.spectral_model.amplitude.max = 1e-10
 
-    estimator = FluxEstimator(
-        source="test",
-        selection_optional=[],
-        reoptimize=True
-    )
+    estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
 
     scale_model = estimator.get_scale_model(Models([model]))
 
@@ -163,8 +149,9 @@ def test_flux_estimator_norm_range():
     assert_allclose(scale_model.norm.max, 1e2)
     assert scale_model.norm.interp == "log"
 
+
 def test_flux_estimator_norm_range_template():
-    energy = MapAxis.from_energy_bounds(0.1,10,3., unit='TeV', name="energy_true")
+    energy = MapAxis.from_energy_bounds(0.1, 10, 3.0, unit="TeV", name="energy_true")
     template = WcsNDMap.create(npix=10, axes=[energy], unit="cm-2 s-1 sr-1 TeV-1")
     spatial = TemplateSpatialModel(template, normalize=False)
     spectral = PowerLawNormSpectralModel()
@@ -173,11 +160,7 @@ def test_flux_estimator_norm_range_template():
     model.spectral_model.norm.max = 10
     model.spectral_model.norm.min = 0
 
-    estimator = FluxEstimator(
-        source="test",
-        selection_optional=[],
-        reoptimize=True
-    )
+    estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
 
     scale_model = estimator.get_scale_model(Models([model]))
 

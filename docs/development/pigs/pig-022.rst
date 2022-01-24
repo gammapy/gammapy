@@ -1,0 +1,362 @@
+.. include:: ../../references.txt
+
+.. _pig-022:
+
+************************************
+PIG 22 - Unified flux estimators API
+************************************
+
+* Author: Régis Terrier and Axel Donath
+* Created: Nov 11, 2020
+* Withdrawn: Nov 14th, 2021
+* Status: withdrawn
+* Discussion: `GH 3075`_
+
+Abstract
+========
+This pig proposes a uniform API for flux ``Estimator`` results. We discuss the
+introduction of a general ``FluxEstimate`` object that would allow flux type
+conversions and that would serve as a base class for ``FluxPoints`` and
+``FluxMap`` class. The latter would allow easier handling of ``TSMapEstimator`` results,
+in particular regarding serialization and flux conversion.
+
+
+Introduction
+============
+
+Flux estimation is performed by ``Estimators`` in gammapy.  Some perform forward-
+folding methods to compute flux, ts, significance and errors at various positions
+or energy. This is the case of the ``FluxPointsEstimator``, the ``LightCurveEstimator``
+and the ``TSMapEstimator``. Other perform backward folding methods to compute similar
+quantities (they compute excesses and associated ts and errors and divide by the exposure
+in reco energy to deduce flux quantities). This is the case of ``ExcessMapEstimator``
+and ``ExcessProfileEstimator``.
+
+So far, the output of all these estimators is diverse and rely on different conventions
+for the definition of flux. There are four types of SED flux estimates described in the
+gamma astro data format. They are;
+
+- ``dnde`` differential flux which is defined at a given ``e_ref``
+- ``e2dnde`` differential energy flux which is defined at a given ``e_ref``
+- ``flux`` integral flux defined between ``e_min`` and ``e_max``
+- ``eflux`` integral energy flux defined between ``e_min`` and ``e_max``
+
+
+To convert between these flux types, an assumption must be made on the spectral model.
+
+Besides these, a useful SED type is the so-called ``likelihood`` type introduced by fermipy
+to represent SEDs and described in the gamma astro data format (ref). It uses reference
+fluxes expressed in the above flux types and a ``norm`` value that is used to derive the
+actual fluxes. Associated quantities are denoted ``norm_err``, ``norm_ul`` etc.
+
+What we have
+============
+
+So far, the only API in gammapy handling these different flux types is the ``FluxPoints``
+object. It contains a ``Table`` representing one given format above and utility functions
+allow to convert the table into another format with e.g.:
+
+.. code::
+
+    fp_dnde = fp.to_sed_type("dnde")
+    fp_energy_flux = fp.to_sed_type("eflux", model=PowerLawSpectralModel(index=3))
+
+The conversion is not possible in all directions.
+
+The various estimators implemented so far return different objects.
+
+- Map estimators return a dictionary of ``Map`` objects which are defined as ``flux`` types. Beyond the
+  fixed flux type, there is no easy API to allow the user to serialize all the ``Maps`` at once.
+- ``FluxPointsEstimator`` returns a ``FluxPoints`` object using the ``likelihood`` normalization scheme.
+- ``LightCurveEstimator`` relies on the ``FluxPointsEstimator`` in each time interval but converts the output
+  into a ``Table`` with one row per time interval and flux points stored as an array in each row.
+- ``ExcessProfileEstimator`` computes an integral flux (``flux`` type) in a list of regions and a list of energies.
+  It returns a ``Table`` with one region per row, and energy dependent fluxes stored as an array in each row.
+
+
+This diversity of output formats and flux types could be simplified with better design for flux quantities in gammapy.
+We propose below a generalized flux points API.
+
+
+Proposal of API for flux estimate results
+=========================================
+
+Introduce a FluxEstimate base class
+-----------------------------------
+
+First we propose that all ``Estimators`` compute quantities following a SED type inspired by
+the ``likelihood`` SED type. It would basically rely on the ``norm`` value and reference model
+to obtain fluxes in various formats. This is the basic ingredient of the current likelihood format
+described in the gadf but without the likelihood scan.
+
+Using such a format, beyond the uniform behavior,  has the advantage of making flux type
+conversion easier.
+
+To limit code duplication (e.g. for flux conversions), we propose a common base class to
+describe the format and contain the required quantities.
+
+.. code::
+
+    class FluxEstimate:
+        """General likelihood sed conversion class
+
+        Converts norm values into dnde, flux, etc.
+
+        Parameters
+        ----------
+        data : dict of `Map` or `Table`
+            Mappable containing the sed likelihood data
+        spectral_model : `SpectralModel`
+            Reference spectral model
+        energy_axis : `MapAxis`
+            Reference energy axis
+        """
+        def __init__(self, data, spectral_model, energy_axis=None):
+            self._data = data
+            self.spectral_model = spectral_model
+            self.energy_axis = energy_axis
+
+        @property
+        def dnde_ref(self):
+            """Reference differential flux""
+			energy = self.energy_axis.center
+            return = self.spectral_model(energy)
+
+        @property
+        def dnde(self):
+            """Differential flux"""
+            return self._data["norm"] * self.dnde_ref
+
+        @property
+        def flux(self):
+            """Integral flux"""
+            energy = self.energy_axis.edges
+            flux_ref = self.spectral_model.integral(energy[:-1], energy[1:])
+            return self._data["norm"] * flux_ref
+
+
+Practically, this allows easy manipulation of flux quantities between formats:
+
+.. code::
+
+    fpe = FluxPointsEtimator()
+    fp = fpe.run(datasets)
+
+    print(fp.dnde)
+    print(fp.eflux_err)
+
+    # but also get excess number estimate
+    fp.excess
+
+
+TODO: what to do with counts based quantities? Introduce an `ExcessEstimate`?
+
+Introduce a FluxMap API
+-----------------------
+
+Handling a simple dictionary of ``Maps`` is not very convenient. It is complex to
+perform flux transform, it is more complex to provide standard plotting functions
+for instance. More importantly, there is no way to serialize the maps with their
+associated quantities and other information. It could be useful to export the
+``GTI`` table of the ``Dataset`` that was used to extract the map or its ``meta``
+table. Some information on the way the flux was obtained could be kept as well
+(e.g. spatial model assumed or correlation radius used).
+
+The ``FluxMap`` would inherit from the general likelihood SED class discussed above
+and could include the possibility to export the resulting maps (in particular the
+``norm_scan`` maps) after sparsification according to the format definition from
+fermipy and presented in gamma astro data format.
+
+In addition, utilities to extract flux points at various positions could be provided.
+
+Typical usage would be:
+
+.. code::
+
+    model = SkyModel(PointSpatialModel(), PowerLawSpectralModel(index=2.5))
+
+    estimator = TSMapEstimator(model, energy_edges=[0.2, 1.0, 10.0]*u.TeV)
+
+    flux_maps = estimator.run(dataset)
+
+    # plot differential flux map in each energy band
+    flux_maps.dnde.plot_grid()
+
+    # plot energy flux map in each energy band
+    flux_maps.eflux.plot_grid()
+
+    # one can access other quantities
+    flux_maps.sqrt_ts.plot_grid()
+    flux_maps.excess.plot_grid()
+
+    # Extract flux points at selected positions
+    positions = SkyCoord([225.31, 200.4], [35.65, 25.3], unit="deg", frame="icrs")
+    fp = flux_maps.get_flux_points(positions)
+    fp.plot()
+
+    # Save to disk as a fits file
+    flux_maps.write("my_flux_maps.fits", overwrite=True)
+
+    # Read from disk
+    new_flux_maps = FluxMap.read("my_flux_maps.fits")
+
+
+
+Introduce a FluxPointsCollection API
+------------------------------------
+
+Several estimators return a set of ``FluxPoints`` . It is the case of the ``LightCurveEstimator``,
+a light curve being a time ordered list of fluxes. It is also the case of the ``ExcessProfileEstimator``
+which return a list of flux points ordered along a direction or radially. In the current implementation,
+they produce an ``~astropy.Table`` where each row contain an array of fluxes representing flux points at a
+given time or position.
+
+This solution is not ideal. It introduces a different container logic than the ``FluxPoints`` for which
+one row represents one energy.
+
+A dedicated API could be introduced to support these objects. In order to keep the logic used in
+``FluxPoints``, a flat table ``Table`` could be used to store the various fluxes, where each row
+would represent the flux at a given energy, time, position etc.
+
+Astropy provides a mechanism to group table rows according to column entries. It is then possible
+to extract the relevant ``FluxPoints`` object, representing the simple flux points or the lightcurve.
+
+A possible implementation could follow the following lines:
+
+.. code::
+
+    energy_columns = ["e_min", "e_max", "e_ref"]
+    time_columns = ["t_min", "t_max"]
+
+    class FluxPointsCollection:
+        def __init__(self, table):
+            self.table = table
+
+            if all(_ in self.table.keys() for _ in energy_columns ):
+                self._energy_table = self.table.group_by(energy_columns)
+            else:
+                raise TypeError("Table does not describe a flux point. Missing energy columns.")
+
+            self._time_groups = None
+            if all(_ in self.table.keys() for _ in time_columns):
+                self._time_table = self.table.group_by(time_columns)
+
+
+       def flux_points_at_time(self, time):
+            if self._time_table is None:
+                raise KeyError("No time information")
+
+            index = np.where((time - self.t_min) <= 0)[0][0]
+            return self.__class__(self._time_table.groups[index])
+
+        def lightcurve_at_energy(self, energy):
+            if self._time_table is None:
+                raise KeyError("No time information")
+
+            index = np.where((energy - self.e_min) <= 0)[0][0]
+            return self.__class__(self._energy_table.groups[index])
+
+
+Keeping dedicated classes for specific types is an open question. While it might not be needed,
+it also provides a more explicit API for the user as well as specific functionalities. In particular,
+plotting is specific to each type. So will be I/O once specific data formats have been introduced.
+
+We also note that ``FluxPointsDataset`` rely on ``FluxPoints`` object for now. An important missing
+feature is the ability of using these for temporal model evaluation.  ``TemporalModel`` might requires
+a ``GTI``.
+
+
+Unification of flux estimators?
+===============================
+
+Most estimators actually do the same thing: `LightCurveEstimator`` is simply grouping datasets in time
+intervals and applies ``FluxPointsEstimator`` in each interval. Similarly, the ``ExcessProfileEstimator``
+is performing a similar thing in different regions. The necessity of a specific estimator for all
+these tasks is then questionable. Currently, the responsibility of an estimator is to group and reproject
+datasets in the relevant intervals or group of data and then to apply a general flux or excess estimate.
+
+In practice there are two different types of estimators. We can distinguish these:
+
+- Flux estimators perform a fit of all individual counts inside the requested range
+  (energy-bin and/or spatial box) to obtain a flux given a certain physical model. Because
+  it relies on a fit of the complete model,this approach allows to take into account fluctuations
+  of other parameters by performing re-optimization.
+
+- Excess estimators sum all counts inside the requested range and estimate the corresponding excess
+  counts taking into account background and other signal contributions from other sources. No explicit
+  fit is actually performed, since we rely on ``CountsStatistics`` classes. The flux is then deduced
+  computing the ratio of measured excess to total ``npred`` in a given model assumption.
+
+
+Currently, the ``FluxPointsEstimator`` and the ``LightCurveEstimator`` belong to the first category.
+The ``TSMapEstimator`` a priori belongs there as well although our current implementation does not
+allow for other parameters re-optimization. A more general implementation could also rely on
+``FluxPointsEstimator``.
+
+The ``ExcessMapEstimator`` and ``ExcessProfileEstimator`` are following the second approach (as
+their name suggest), but they still provide flux estimates through the excess/npred ratio. We note
+that flux points and light curve can also be estimated through this approach to provide rapid estimates.
+
+So we propose to introduce the following simplified estimator API:
+
+- `FluxPointsEstimator`, which handles multiple sources, time intervals and energy bins, using "forward folding"
+- `FluxMapEstimator`, which handles multiple energy bins, using "forward folding"
+- `ExcessPointsEstimator`, which handles multiple regions, time intervals and energy bins, using "backward folding"
+- `ExcessMapEstimator`, which handles multiple energy bins, using "backward folding"
+
+
+Excess estimators
+-----------------
+
+We can unify and clarify the general approach by introducing estimators following
+each of the methods.
+
+A general flux estimator already exists, it is the ``FluxEstimator``. It is the base of the
+``FluxPointsEstimator``.
+
+An equivalent ``ExcessEstimator`` could be added. Technically, it would mostly encapsulate
+functionalities provided by the ``CountsStatistics``.
+
+
+Generalist estimators
+---------------------
+
+It is possible to create a generalist ``FluxPointsEstimator`` that could return a general
+``FluxPointsCollection`` without knowing a priori what type of grouping is applied to the
+datasets. This would allow to perform lightcurve or region-based flux estimates with the same
+API. This would allow a direct generalization of the ``FluxPointsEstimator`` to cover other problematic
+e.g. flux estimation in phase to build phase curves, flux estimation in different observation condition or
+instrument states to study systematic effects.
+
+The main change required for this is to move dataset grouping to the ``Datasets`` level.
+
+Outlook
+-------
+Selection by time is already possible on ``Datasets`` thanks to the ``select_time(t_min, t_max)``
+method. This functionality could be extended to other quantities characterizing the datasets.
+
+So in future we could add more general grouping functionality on the ``Datasets``. It could
+internally rely on the grouping of the meta table: ``Datasets.meta_table.group_by``. It would
+require the table to be present in memory and be recomputed each time the ``Datasets`` object
+is updated. Then retrieving a set of datasets could be done by ``Datasets.get_group_by_idx()``.
+
+.. code::
+
+    # group datasets according to phase
+    phase_axis = MapAxis.from_bounds(0., 1., 10, name="phase", unit="")
+    datasets.group_by_axis(phase_axis)
+    datasets_in_phase_bin_3 = datasets.get_group_by_idx(3)
+
+
+
+Alternative
+===========
+
+
+
+Decision
+========
+The authors have decided to withdraw the PIG. Most of the proposed changes have been
+implemented independently with review and discussions on individuals PRs.
+
+.. _GH 3075: https://github.com/gammapy/gammapy/pull/3075

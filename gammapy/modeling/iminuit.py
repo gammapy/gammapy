@@ -2,9 +2,15 @@
 """iminuit fitting functions."""
 import logging
 import numpy as np
+from scipy.stats import chi2, norm
 from .likelihood import Likelihood
 
-__all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit", "mncontour"]
+__all__ = [
+    "optimize_iminuit",
+    "covariance_iminuit",
+    "confidence_iminuit",
+    "contour_iminuit",
+]
 
 log = logging.getLogger(__name__)
 
@@ -26,20 +32,22 @@ class MinuitLikelihood(Likelihood):
 def setup_iminuit(parameters, function, store_trace=False, **kwargs):
     from iminuit import Minuit
 
-    # In Gammapy, we have the factor 2 in the likelihood function
-    # This means `errordef=1` in the Minuit interface is correct
-    kwargs.setdefault("errordef", 1)
-    kwargs.setdefault("print_level", 0)
-    kwargs.update(make_minuit_par_kwargs(parameters))
-
     minuit_func = MinuitLikelihood(function, parameters, store_trace=store_trace)
 
-    kwargs = kwargs.copy()
-    strategy = kwargs.pop("strategy", 1)
-    tol = kwargs.pop("tol", 0.1)
-    minuit = Minuit(minuit_func.fcn, **kwargs)
-    minuit.tol = tol
-    minuit.strategy = strategy
+    pars, errors, limits = make_minuit_par_kwargs(parameters)
+
+    minuit = Minuit(minuit_func.fcn, name=list(pars.keys()), **pars)
+    minuit.tol = kwargs.pop("tol", 0.1)
+    minuit.errordef = kwargs.pop("errordef", 1)
+    minuit.print_level = kwargs.pop("print_level", 0)
+    minuit.strategy = kwargs.pop("strategy", 1)
+
+    for name, error in errors.items():
+        minuit.errors[name] = error
+
+    for name, limit in limits.items():
+        minuit.limits[name] = limit
+
     return minuit, minuit_func
 
 
@@ -66,18 +74,15 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     migrad_opts = kwargs.pop("migrad_opts", {})
 
     minuit, minuit_func = setup_iminuit(
-        parameters=parameters,
-        function=function,
-        store_trace=store_trace,
-        **kwargs
+        parameters=parameters, function=function, store_trace=store_trace, **kwargs
     )
 
     minuit.migrad(**migrad_opts)
 
-    factors = minuit.args
+    factors = minuit.values
     info = {
-        "success": minuit.migrad_ok(),
-        "nfev": minuit.get_num_call_fcn(),
+        "success": minuit.valid,
+        "nfev": minuit.nfcn,
         "message": _get_message(minuit, parameters),
         "trace": minuit_func.trace,
     }
@@ -87,38 +92,34 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
 
 
 def covariance_iminuit(parameters, function, **kwargs):
-    minuit, minuit_func = setup_iminuit(
-        parameters=parameters,
-        function=function,
-        store_trace=False,
-        **kwargs
-    )
+    minuit = kwargs["minuit"]
+
+    if minuit is None:
+        minuit, _ = setup_iminuit(
+            parameters=parameters, function=function, store_trace=False, **kwargs
+        )
+        minuit.hesse()
 
     message, success = "Hesse terminated successfully.", True
 
     try:
-        minuit.hesse()
-        covariance_factors = minuit.np_covariance()
+        covariance_factors = np.array(minuit.covariance)
     except (TypeError, RuntimeError):
-        N = len(minuit.args)
+        N = len(minuit.values)
         covariance_factors = np.nan * np.ones((N, N))
         message, success = "Hesse failed", False
 
     return covariance_factors, {"success": success, "message": message}
 
 
-def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, maxcall=0, **kwargs):
+def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwargs):
     # TODO: this is ugly - design something better for translating to MINUIT parameter names.
     if not reoptimize:
         log.warning("Reoptimize = False ignored for iminuit backend")
 
     minuit, minuit_func = setup_iminuit(
-        parameters=parameters,
-        function=function,
-        store_trace=False,
-        **kwargs
+        parameters=parameters, function=function, store_trace=False, **kwargs
     )
-
     migrad_opts = kwargs.get("migrad_opts", {})
     minuit.migrad(**migrad_opts)
 
@@ -127,24 +128,36 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, maxca
     idx = parameters.free_parameters.index(parameter)
     var = _make_parname(idx, parameter)
 
-    message, success = "Minos terminated successfully.", True
+    message = "Minos terminated successfully."
+    cl = 2 * norm.cdf(sigma) - 1
+
     try:
-        result = minuit.minos(var=var, sigma=sigma, maxcall=maxcall)
-        info = result[var]
+        minuit.minos(var, cl=cl, ncall=None)
+        info = minuit.merrors[var]
     except (AttributeError, RuntimeError) as error:
-        message, success = str(error), False
-        info = {"is_valid": False, "lower": np.nan, "upper": np.nan, "nfcn": 0}
+        return {
+            "success": False,
+            "message": str(error),
+            "errp": np.nan,
+            "errn": np.nan,
+            "nfev": 0,
+        }
 
     return {
-        "success": success,
+        "success": info.is_valid,
         "message": message,
-        "errp": info["upper"],
-        "errn": -info["lower"],
-        "nfev": info["nfcn"],
+        "errp": info.upper,
+        "errn": -info.lower,
+        "nfev": info.nfcn,
     }
 
 
-def mncontour(minuit, parameters, x, y, numpoints, sigma):
+def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
+    minuit, minuit_func = setup_iminuit(
+        parameters=parameters, function=function, store_trace=False, **kwargs
+    )
+    minuit.migrad()
+
     par_x = parameters[x]
     idx_x = parameters.free_parameters.index(par_x)
     x = _make_parname(idx_x, par_x)
@@ -153,28 +166,24 @@ def mncontour(minuit, parameters, x, y, numpoints, sigma):
     idx_y = parameters.free_parameters.index(par_y)
     y = _make_parname(idx_y, par_y)
 
-    x_info, y_info, contour = minuit.mncontour(x, y, numpoints, sigma)
-    contour = np.array(contour)
-
-    success = x_info["is_valid"] and y_info["is_valid"]
-
+    cl = chi2(2).cdf(sigma ** 2)
+    contour = minuit.mncontour(x=x, y=y, size=numpoints, cl=cl)
+    # TODO: add try and except to get the success
     return {
-        "success": success,
+        "success": True,
         "x": contour[:, 0],
         "y": contour[:, 1],
-        "x_info": x_info,
-        "y_info": y_info,
     }
 
 
 # this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
 def _get_message(m, parameters):
     message = "Optimization terminated successfully."
-    success = m.migrad_ok()
+    success = m.accurate
     success &= np.all(np.isfinite([par.value for par in parameters]))
     if not success:
         message = "Optimization failed."
-        fmin = m.get_fmin()
+        fmin = m.fmin
         if fmin.has_reached_call_limit:
             message += " Call limit was reached."
         if fmin.is_above_max_edm:
@@ -196,19 +205,19 @@ def make_minuit_par_kwargs(parameters):
     See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
     """
     names = _make_parnames(parameters.free_parameters)
-    kwargs = {"forced_parameters": names}
+    pars, errors, limits = {}, {}, {}
 
     for name, par in zip(names, parameters.free_parameters):
-        kwargs[name] = par.factor
+        pars[name] = par.factor
 
         min_ = None if np.isnan(par.factor_min) else par.factor_min
         max_ = None if np.isnan(par.factor_max) else par.factor_max
-        kwargs[f"limit_{name}"] = (min_, max_)
+        limits[name] = (min_, max_)
 
         if par.error == 0 or np.isnan(par.error):
             error = 1
         else:
             error = par.error / par.scale
-        kwargs[f"error_{name}"] = error
+        errors[name] = error
 
-    return kwargs
+    return pars, errors, limits

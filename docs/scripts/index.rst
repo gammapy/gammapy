@@ -334,4 +334,3 @@ and options of the ``gammapy`` command line interface (CLI).
 .. click:: gammapy.scripts.main:cli
    :prog: gammapy
    :show-nested:
-

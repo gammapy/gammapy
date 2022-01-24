@@ -8,8 +8,8 @@ from astropy.units import Unit
 from gammapy.data import DataStore
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import MapAxis, MapCoord, WcsGeom, RegionGeom, Map
-from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -142,7 +142,8 @@ def test_psfmap_to_psf_kernel():
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
 
     psfkernel = psfmap.get_psf_kernel(
-        position=SkyCoord(1, 1, unit="deg"), geom=kern_geom,
+        position=SkyCoord(1, 1, unit="deg"),
+        geom=kern_geom,
     )
     assert_allclose(psfkernel.psf_kernel_map.geom.width, 1.14 * u.deg)
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
@@ -194,7 +195,7 @@ def test_psfmap_stacking():
 
     psfmap_stack = psfmap1.copy()
     psfmap_stack.stack(psfmap2)
-    mask =  psfmap_stack.psf_map.data>0
+    mask = psfmap_stack.psf_map.data > 0
     assert_allclose(psfmap_stack.psf_map.data[mask], psfmap1.psf_map.data[mask])
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
@@ -356,7 +357,10 @@ def test_make_mean_psf(data_store):
     psf = observations[0].psf
 
     geom = WcsGeom.create(
-        skydir=position, npix=(3, 3), axes=psf.axes[["rad", "energy_true"]], binsz=0.2,
+        skydir=position,
+        npix=(3, 3),
+        axes=psf.axes[["rad", "energy_true"]],
+        binsz=0.2,
     )
 
     psf_map_1 = make_psf_map_obs(geom, observations[0])
@@ -478,3 +482,17 @@ def test_psf_map_plot_psf_vs_rad():
 
     with mpl_plot_check():
         psf.plot_psf_vs_rad()
+
+
+@requires_data()
+def test_psf_containment_coords():
+    # regression test to check the cooordinate conversion for PSFMap.containment
+    psf = PSFMap.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", hdu="PSF")
+
+    position = SkyCoord("266.415d", "-29.006d", frame="icrs")
+
+    radius = psf.containment_radius(
+        energy_true=1 * u.TeV, fraction=0.99, position=position
+    )
+
+    assert_allclose(radius, 0.10575 * u.deg, rtol=1e-5)

@@ -31,7 +31,7 @@ class ParameterEstimator(Estimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optionnal steps are not executed.
+        Default is None so the optional steps are not executed.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
@@ -48,7 +48,7 @@ class ParameterEstimator(Estimator):
         null_value=1e-150,
         selection_optional=None,
         fit=None,
-        reoptimize=True
+        reoptimize=True,
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -62,7 +62,7 @@ class ParameterEstimator(Estimator):
         self.reoptimize = reoptimize
 
     def estimate_best_fit(self, datasets, parameter):
-        """Estimate parameter assymetric errors
+        """Estimate parameter asymmetric errors
 
         Parameters
         ----------
@@ -81,13 +81,13 @@ class ParameterEstimator(Estimator):
                 * "success": boolean flag for fit success
                 * parameter.name_err: covariance-based error estimate on parameter value
         """
-        value, total_stat, success, error = np.nan, 0, False, np.nan
+        value, total_stat, success, error = np.nan, 0.0, False, np.nan
 
         if np.any(datasets.contributes_to_stat):
             result = self.fit.run(datasets=datasets)
             value, error = parameter.value, parameter.error
-            total_stat = result["optimize_result"].total_stat
-            success = result["optimize_result"].success
+            total_stat = result.optimize_result.total_stat
+            success = result.success
 
         return {
             f"{parameter.name}": value,
@@ -111,9 +111,8 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the TS of the best fit value compared to the null hypothesis. Entries are:
 
-                * TS : fit statistic difference with null hypothesis
+                * "ts" : fit statistic difference with null hypothesis
                 * "npred" : predicted number of counts per dataset
-                * "npred_null" : predicted number of counts per dataset in the null hypothesis
         """
         npred = self.estimate_npred(datasets=datasets)
 
@@ -132,16 +131,14 @@ class ParameterEstimator(Estimator):
                 _ = self.fit.optimize(datasets=datasets)
 
             ts = datasets.stat_sum() - stat
-            npred_null = self.estimate_npred(datasets=datasets)
 
         return {
             "ts": ts,
             "npred": npred["npred"],
-            "npred_null": npred_null["npred"]
         }
 
     def estimate_errn_errp(self, datasets, parameter):
-        """Estimate parameter assymetric errors
+        """Estimate parameter asymmetric errors
 
         Parameters
         ----------
@@ -170,7 +167,7 @@ class ParameterEstimator(Estimator):
             datasets=datasets,
             parameter=parameter,
             sigma=self.n_sigma,
-            reoptimize=self.reoptimize
+            reoptimize=self.reoptimize,
         )
 
         return {
@@ -201,15 +198,13 @@ class ParameterEstimator(Estimator):
         if not np.any(datasets.contributes_to_stat):
             return {
                 f"{parameter.name}_scan": scan_values,
-                "stat_scan": scan_values * np.nan
+                "stat_scan": scan_values * np.nan,
             }
 
         self.fit.optimize(datasets=datasets)
 
         profile = self.fit.stat_profile(
-            datasets=datasets,
-            parameter=parameter,
-            reoptimize=self.reoptimize
+            datasets=datasets, parameter=parameter, reoptimize=self.reoptimize
         )
 
         return {
@@ -231,7 +226,7 @@ class ParameterEstimator(Estimator):
         -------
         result : dict
             Dict with the parameter ULs. Entries are:
-            
+
                 * parameter.name_ul : upper limit on parameter value
         """
         if not np.any(datasets.contributes_to_stat):
@@ -243,7 +238,7 @@ class ParameterEstimator(Estimator):
             datasets=datasets,
             parameter=parameter,
             sigma=self.n_sigma_ul,
-            reoptimize=self.reoptimize
+            reoptimize=self.reoptimize,
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 

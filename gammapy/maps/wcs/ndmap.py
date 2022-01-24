@@ -9,17 +9,22 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from regions import PointSkyRegion, RectangleSkyRegion, SkyRegion, PixCoord, PointPixelRegion
-from gammapy.extern.skimage import block_reduce
+from astropy.nddata import block_reduce
+from regions import (
+    PixCoord,
+    PointPixelRegion,
+    PointSkyRegion,
+    RectangleSkyRegion,
+    SkyRegion,
+)
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
-from .geom import WcsGeom
-from .core import WcsMap
-from ..utils import INVALID_INDEX
-from ..geom import pix_tuple_to_idx
 from ..coord import MapCoord
-
+from ..geom import pix_tuple_to_idx
+from ..utils import INVALID_INDEX
+from .core import WcsMap
+from .geom import WcsGeom
 
 __all__ = ["WcsNDMap"]
 
@@ -110,7 +115,7 @@ class WcsNDMap(WcsMap):
 
             map_out.set_by_idx(idx[::-1], vals)
         else:
-            if "mask" in hdu.name.lower():
+            if any(x in hdu.name.lower() for x in ["mask", "is_ul", "success"]):
                 data = hdu.data.astype(bool)
             else:
                 data = hdu.data
@@ -187,7 +192,9 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def _pad_spatial(self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"):
+    def _pad_spatial(
+        self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"
+    ):
         if axis_name is None:
             if np.isscalar(pad_width):
                 pad_width = (pad_width, pad_width)
@@ -331,15 +338,11 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        cbar : `~matplotlib.colorbar.Colorbar` or None
-            Colorbar object.
         """
-        import matplotlib.pyplot as plt
         from astropy.visualization import simple_norm
+        import matplotlib.pyplot as plt
 
         if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
@@ -362,12 +365,14 @@ class WcsNDMap(WcsMap):
         mask = np.isfinite(data)
 
         if mask.any():
-            norm = simple_norm(data[mask], stretch)
+            min_cut, max_cut = kwargs.pop("vmin", None), kwargs.pop("vmin", None)
+            norm = simple_norm(data[mask], stretch, min_cut=min_cut, max_cut=max_cut)
             kwargs.setdefault("norm", norm)
 
         im = ax.imshow(data, **kwargs)
 
-        cbar = fig.colorbar(im, ax=ax, label=str(self.unit)) if add_cbar else None
+        if add_cbar:
+            fig.colorbar(im, ax=ax, label=str(self.unit))
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
@@ -376,7 +381,7 @@ class WcsNDMap(WcsMap):
 
         # without this the axis limits are changed when calling scatter
         ax.autoscale(enable=False)
-        return fig, ax, cbar
+        return ax
 
     def plot_mask(self, ax=None, **kwargs):
         """Plot the mask as a shaded area
@@ -397,7 +402,9 @@ class WcsNDMap(WcsMap):
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
 
         if not self.is_mask:
-            raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
+            raise ValueError(
+                "`.plot_mask()` only supports maps containing boolean values."
+            )
 
         ax = self._plot_default_axes(ax=ax)
 
@@ -418,22 +425,22 @@ class WcsNDMap(WcsMap):
         return ax
 
     def _plot_default_axes(self, ax):
-        import matplotlib.pyplot as plt
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
+        import matplotlib.pyplot as plt
 
         if ax is None:
             fig = plt.gcf()
             if self.geom.projection in ["AIT"]:
                 ax = fig.add_subplot(
-                    1, 1, 1, projection=self.geom.wcs,
-                    frame_class=EllipticalFrame
+                    1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame
                 )
             else:
                 ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
         return ax
 
-    def _plot_format(self, ax):
+    @staticmethod
+    def _plot_format(ax):
         try:
             ax.coords["glon"].set_axislabel("Galactic Longitude")
             ax.coords["glat"].set_axislabel("Galactic Latitude")
@@ -475,7 +482,9 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
-    def to_region_nd_map(self, region=None, func=np.nansum, weights=None, method="nearest"):
+    def to_region_nd_map(
+        self, region=None, func=np.nansum, weights=None, method="nearest"
+    ):
         """Get region ND map in a given region.
 
         By default the whole map region is considered.
@@ -518,6 +527,8 @@ class WcsNDMap(WcsMap):
             data = self.interp_by_coord(coords=coords, method=method)
             if weights is not None:
                 data *= weights.interp_by_coord(coords=coords, method=method)
+            # Casting needed as interp_by_coord transforms boolean
+            data = data.astype(self.data.dtype)
         else:
             cutout = self.cutout(position=geom.center_skydir, width=geom.width)
 
@@ -594,7 +605,9 @@ class WcsNDMap(WcsMap):
         structure = self.geom.binary_structure(width=width, kernel=kernel)
 
         if use_fft:
-            return self.convolve(structure.squeeze(), method="fft") > (structure.sum() - 1)
+            return self.convolve(structure.squeeze(), method="fft") > (
+                structure.sum() - 1
+            )
 
         data = ndi.binary_erosion(self.data, structure=structure)
         return self._init_copy(data=data)
@@ -675,10 +688,12 @@ class WcsNDMap(WcsMap):
                 geom = geom.to_cube(kmap.geom.axes)
 
         if mode == "full":
-            pad_width = [0.5*(width-1) for width in kernel.shape[-2:]]
+            pad_width = [0.5 * (width - 1) for width in kernel.shape[-2:]]
             geom = geom.pad(pad_width, axis_name=None)
         elif mode == "valid":
-            raise NotImplementedError("WcsNDMap.convolve: mode='valid' is not supported.")
+            raise NotImplementedError(
+                "WcsNDMap.convolve: mode='valid' is not supported."
+            )
 
         data = np.empty(geom.data_shape, dtype=np.float32)
 
@@ -699,7 +714,7 @@ class WcsNDMap(WcsMap):
             for img, idx in self.iter_by_image():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
                 data[idx] = convolve(
-                    img.astype(np.float32), kernel[ikern],  method=method, mode=mode
+                    img.astype(np.float32), kernel[ikern], method=method, mode=mode
                 )
         return self._init_copy(data=data, geom=geom)
 

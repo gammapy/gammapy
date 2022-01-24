@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
 from gammapy.irf import load_cta_irfs
 from gammapy.utils.testing import (
@@ -43,7 +43,9 @@ def test_observation(data_store):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_observation_peek(data_store, caplog):
-    obs = Observation.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz")
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
 
     with mpl_plot_check():
         obs.peek()
@@ -224,7 +226,7 @@ def test_observations_select_time_time_intervals_list(data_store):
 
 
 @requires_data()
-def test_observation():
+def test_observation_cta_1dc():
     livetime = 5.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     irfs = load_cta_irfs(
@@ -247,7 +249,7 @@ def test_observation_read():
     """read event list and irf components from different DL3 files"""
     obs = Observation.read(
         event_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
-        irf_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020137.fits.gz"
+        irf_file="$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020137.fits.gz",
     )
 
     energy = Quantity(1, "TeV")
@@ -271,7 +273,7 @@ def test_observation_read_single_file():
     energy = Quantity(1, "TeV")
     offset = Quantity(0.5, "deg")
     val = obs.aeff.evaluate(energy_true=energy, offset=offset)
-    
+
     assert obs.obs_id == 20136
     assert len(obs.events.energy) == 11243
     assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]

@@ -1,20 +1,20 @@
 import pytest
 import numpy as np
-from astropy.coordinates import SkyCoord
-from astropy import units as u
-from regions import CircleSkyRegion
 from numpy.testing import assert_allclose
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Covariance
 from gammapy.modeling.models import (
-    TemplateNPredModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    FoVBackgroundModel,
+    TemplateNPredModel,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
 
 
 @pytest.fixture(scope="session")
@@ -38,7 +38,9 @@ def models(backgrounds):
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     model1 = SkyModel(
-        spatial_model=spatial_model, spectral_model=spectral_model, name="source-1",
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        name="source-1",
     )
 
     model2 = model1.copy(name="source-2")
@@ -123,11 +125,14 @@ def test_contributes():
     )
     assert model4.contributes(mask, margin=0 * u.deg)
 
+
 def test_contributes_region_mask():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
-    geom = RegionGeom.create("galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.05 deg")
+    geom = RegionGeom.create(
+        "galactic;circle(0, 0, 0.2)", axes=[axis], binsz_wcs="0.05 deg"
+    )
 
-    mask = Map.from_geom(geom, unit='', dtype='bool')
+    mask = Map.from_geom(geom, unit="", dtype="bool")
     mask.data[...] = True
 
     spatial_model1 = GaussianSpatialModel(
@@ -150,6 +155,7 @@ def test_contributes_region_mask():
     assert model1.contributes(mask, margin=0 * u.deg)
     assert not model2.contributes(mask, margin=0 * u.deg)
     assert model2.contributes(mask, margin=0.3 * u.deg)
+
 
 def test_select(models):
     conditions = [
@@ -199,7 +205,7 @@ def test_select(models):
 def test_restore_status(models):
     model = models[1].spectral_model
     covariance_data = np.array([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]])
-    # the covariance is resest for frozen parameters
+    # the covariance is reset for frozen parameters
     # because of from_factor_matrix (used by the optimizer)
     # so if amplitude if frozen we get
     covariance_frozen = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
@@ -215,7 +221,7 @@ def test_restore_status(models):
         assert model.amplitude.value == 0
         assert model.amplitude.error == 0
     assert_allclose(model.amplitude.value, 1e-11)
-    assert model.amplitude.frozen == False
+    assert model.amplitude.frozen is False
     assert isinstance(models.covariance, Covariance)
     assert_allclose(model.covariance.data, covariance_data)
     assert model.amplitude.error == 1
@@ -224,9 +230,9 @@ def test_restore_status(models):
         model.amplitude.value = 0
         model.amplitude.frozen = True
         assert model.amplitude.value == 0
-        assert model.amplitude.frozen == True
+        assert model.amplitude.frozen
     assert_allclose(model.amplitude.value, 1e-11)
-    assert model.amplitude.frozen == False
+    assert not model.amplitude.frozen
 
     with models.parameters.restore_status(restore_values=False):
         model.amplitude.value = 0
@@ -338,9 +344,9 @@ def test_reassign_dataset(models):
     ref = models.select(datasets_names="dataset-2")
     models = models.reassign("dataset-2", "dataset-2-copy")
     assert len(models.select(datasets_names="dataset-2")) == np.sum(
-        [m.datasets_names == None for m in models]
+        [m.datasets_names is None for m in models]
     )
     new = models.select(datasets_names="dataset-2-copy")
     assert len(new) == len(ref)
-    assert new["source-1"].datasets_names == None
+    assert new["source-1"].datasets_names is None
     assert new["source-3"].datasets_names == ["dataset-2-copy"]

@@ -1,55 +1,74 @@
 """Example plot showing stacking of two datasets."""
 
-import matplotlib.pyplot as plt
 from astropy import units as u
-from gammapy.datasets import MapDataset, Datasets
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
+from gammapy.data import Observation
+from gammapy.datasets import SpectrumDataset
+from gammapy.datasets.map import MIGRA_AXIS_DEFAULT
+from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
+from gammapy.makers import SpectrumDatasetMaker
+from gammapy.maps import MapAxis, RegionGeom
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 
-region = CircleSkyRegion(
-    center=SkyCoord(0, 0, unit="deg", frame="galactic"), radius=0.3 * u.deg
+energy_true = MapAxis.from_energy_bounds(
+    "0.1 TeV", "20 TeV", nbin=20, per_decade=True, name="energy_true"
 )
-m_dataset1 = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-dataset1 = m_dataset1.to_spectrum_dataset(region)
-dataset1.mask_safe.data[0:2] = False
+energy_reco = MapAxis.from_energy_bounds("0.2 TeV", "10 TeV", nbin=10, per_decade=True)
 
-dataset2 = m_dataset1.to_spectrum_dataset(region)
-dataset2.mask_safe.data[1:3] = False
-dataset2.exposure = dataset2.exposure / 2.0
-dataset2.edisp.exposure_map = dataset2.edisp.exposure_map / 2.0
-dataset2.counts = dataset2.counts / 2.0
-dataset2.background = dataset2.background / 2.0
+aeff = EffectiveAreaTable2D.from_parametrization(
+    energy_axis_true=energy_true, instrument="HESS"
+)
+offset_axis = MapAxis.from_bounds(0 * u.deg, 5 * u.deg, nbin=2, name="offset")
 
-datasets = Datasets([dataset1, dataset2])
-dataset_stacked = datasets.stack_reduce()
+edisp = EnergyDispersion2D.from_gauss(
+    energy_axis_true=energy_true,
+    offset_axis=offset_axis,
+    migra_axis=MIGRA_AXIS_DEFAULT,
+    bias=0,
+    sigma=0.2,
+)
 
-pwl = PowerLawSpectralModel(index=4)
-model = SkyModel(spectral_model=pwl, name="test")
-datasets.models = model
-dataset_stacked.models = model
+observation = Observation.create(
+    obs_id=0,
+    pointing=SkyCoord("0d", "0d", frame="icrs"),
+    irfs={"aeff": aeff, "edisp": edisp},
+    tstart=0 * u.h,
+    tstop=0.5 * u.h,
+)
 
+geom = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_reco])
 
-plt.figure(figsize=(20, 5))
-ax1 = plt.subplot(141)
-ax2 = plt.subplot(142)
-ax3 = plt.subplot(143)
-ax4 = plt.subplot(144)
+stacked = SpectrumDataset.create(geom=geom, energy_axis_true=energy_true)
 
-dataset1.edisp.get_edisp_kernel().plot_matrix(ax=ax1)
-ax1.set_title("Energy dispersion dataset1")
+maker = SpectrumDatasetMaker(selection=["edisp", "exposure"])
 
-dataset2.edisp.get_edisp_kernel().plot_matrix(ax=ax2)
-ax2.set_title("Energy dispersion dataset2")
+dataset_1 = maker.run(stacked.copy(), observation=observation)
+dataset_2 = maker.run(stacked.copy(), observation=observation)
 
-dataset_stacked.edisp.get_edisp_kernel().plot_matrix(ax=ax3)
-ax3.set_title("Energy dispersion stacked")
+pwl = PowerLawSpectralModel()
+model = SkyModel(spectral_model=pwl, name="test-source")
 
-n1 = dataset1.npred() * dataset1.mask_safe
-n2 = dataset2.npred() * dataset2.mask_safe
-(n1).plot_hist(label="dataset1", ax=ax4)
-(n2).plot_hist(label="dataset2", ax=ax4)
-(n1 + n2).plot(color="green", fmt="o", label="dataset1 + dataset2", ax=ax4)
-dataset_stacked.npred().plot(fmt="+", label="stacked", color="black", ax=ax4)
-ax4.legend()
-ax4.set_title("npred")
+dataset_1.mask_safe = geom.energy_mask(energy_min=2 * u.TeV)
+dataset_2.mask_safe = geom.energy_mask(energy_min=0.6 * u.TeV)
+
+dataset_1.models = model
+dataset_2.models = model
+dataset_1.counts = dataset_1.npred()
+dataset_2.counts = dataset_2.npred()
+
+stacked = dataset_1.copy(name="stacked")
+stacked.stack(dataset_2)
+
+stacked.models = model
+npred_stacked = stacked.npred()
+
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
+
+axes[0].set_title("Stacked Energy Dispersion Matrix")
+axes[1].set_title("Predicted Counts")
+stacked.edisp.get_edisp_kernel().plot_matrix(ax=axes[0], vmin=0, vmax=0.5)
+npred_stacked.plot_hist(ax=axes[1], label="npred stacked")
+stacked.counts.plot_hist(ax=axes[1], ls="--", label="stacked npred")
+plt.legend()
+plt.show()

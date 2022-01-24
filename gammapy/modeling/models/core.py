@@ -1,18 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import collections.abc
 import copy
+import logging
 from os.path import split
-import yaml
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from regions import PointSkyRegion
+import yaml
+from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.maps import RegionGeom, Map
-
 
 log = logging.getLogger(__name__)
 
@@ -30,10 +29,30 @@ def _set_link(shared_register, model):
     return shared_register
 
 
+def _get_model_class_from_dict(data):
+    """get a model class from a dict"""
+    from . import (
+        MODEL_REGISTRY,
+        SPATIAL_MODEL_REGISTRY,
+        SPECTRAL_MODEL_REGISTRY,
+        TEMPORAL_MODEL_REGISTRY,
+    )
+
+    if "type" in data:
+        cls = MODEL_REGISTRY.get_cls(data["type"])
+    elif "spatial" in data:
+        cls = SPATIAL_MODEL_REGISTRY.get_cls(data["spatial"]["type"])
+    elif "spectral" in data:
+        cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
+    elif "temporal" in data:
+        cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
+    return cls
+
+
 __all__ = ["Model", "Models", "DatasetModels"]
 
 
-class Model:
+class ModelBase:
     """Model base class."""
 
     _type = None
@@ -133,7 +152,7 @@ class Model:
         if not full_output:
             for par, par_default in zip(params, self.default_parameters):
                 init = par_default.to_dict()
-                for item in ["min", "max", "error"]:
+                for item in ["min", "max", "error", "interp", "scale_method"]:
                     default = init[item]
 
                     if par[item] == default or np.isnan(default):
@@ -144,14 +163,24 @@ class Model:
 
                 if init["unit"] == "":
                     del par["unit"]
-
-        return {"type": tag, "parameters": params}
+        data = {"type": tag, "parameters": params}
+        if self._type is None:
+            return data
+        else:
+            return {self._type: data}
 
     @classmethod
     def from_dict(cls, data):
         kwargs = {}
 
         par_data = []
+        key0 = next(iter(data))
+        if key0 in ["spatial", "temporal", "spectral"]:
+            data = data[key0]
+        if data["type"] not in cls.tag:
+            raise ValueError(
+                f"Invalid model type {data['type']} for Class {cls.__name__}"
+            )
 
         input_names = [_["name"] for _ in data["parameters"]]
 
@@ -174,35 +203,6 @@ class Model:
 
         return cls.from_parameters(parameters, **kwargs)
 
-    @staticmethod
-    def create(tag, model_type=None, *args, **kwargs):
-        """Create a model instance.
-
-        Examples
-        --------
-        >>> from gammapy.modeling.models import Model
-        >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
-        >>> type(spectral_model)
-        <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
-        """
-        from . import (
-            MODEL_REGISTRY,
-            SPATIAL_MODEL_REGISTRY,
-            SPECTRAL_MODEL_REGISTRY,
-            TEMPORAL_MODEL_REGISTRY,
-        )
-
-        if model_type is None:
-            cls = MODEL_REGISTRY.get_cls(tag)
-        else:
-            registry = {
-                "spatial": SPATIAL_MODEL_REGISTRY,
-                "spectral": SPECTRAL_MODEL_REGISTRY,
-                "temporal": TEMPORAL_MODEL_REGISTRY,
-            }
-            cls = registry[model_type].get_cls(tag)
-        return cls(*args, **kwargs)
-
     def __str__(self):
         string = f"{self.__class__.__name__}\n"
         if len(self.parameters) > 0:
@@ -211,7 +211,7 @@ class Model:
 
     @property
     def frozen(self):
-        """Frozen status of a model, True if all parameters are frozen """
+        """Frozen status of a model, True if all parameters are frozen"""
         return np.all([p.frozen for p in self.parameters])
 
     def freeze(self):
@@ -225,14 +225,14 @@ class Model:
 
     def reassign(self, datasets_names, new_datasets_names):
         """Reassign a model from one dataset to another
-        
+
         Parameters
         ----------
         datasets_names : str or list
             Name of the datasets where the model is currently defined
         new_datasets_names : str or list
             Name of the datasets where the model should be defined instead.
-            If multiple names are given the two list must have the save lenght,
+            If multiple names are given the two list must have the save length,
             as the reassignment is element-wise.
 
         Returns
@@ -261,6 +261,36 @@ class Model:
         return model
 
 
+class Model:
+    """Model class that contains only methods to create a model listed in the registries."""
+
+    @staticmethod
+    def create(tag, model_type=None, *args, **kwargs):
+        """Create a model instance.
+
+        Examples
+        --------
+        >>> from gammapy.modeling.models import Model
+        >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
+        >>> type(spectral_model)
+        <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
+        """
+
+        data = {"type": tag}
+        if model_type is not None:
+            data = {model_type: data}
+
+        cls = _get_model_class_from_dict(data)
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    def from_dict(data):
+        """Create a model instance from a dict"""
+
+        cls = _get_model_class_from_dict(data)
+        return cls.from_dict(data)
+
+
 class DatasetModels(collections.abc.Sequence):
     """Immutable models container
 
@@ -276,7 +306,7 @@ class DatasetModels(collections.abc.Sequence):
 
         if isinstance(models, (Models, DatasetModels)):
             models = models._models
-        elif isinstance(models, Model):
+        elif isinstance(models, ModelBase):
             models = [models]
         elif not isinstance(models, list):
             raise TypeError(f"Invalid type: {models!r}")
@@ -535,7 +565,7 @@ class DatasetModels(collections.abc.Sequence):
     def __add__(self, other):
         if isinstance(other, (Models, list)):
             return Models([*self, *other])
-        elif isinstance(other, Model):
+        elif isinstance(other, ModelBase):
             if other.name in self.names:
                 raise (ValueError("Model names must be unique"))
             return Models([*self, other])
@@ -553,7 +583,7 @@ class DatasetModels(collections.abc.Sequence):
             return key
         elif isinstance(key, str):
             return self.names.index(key)
-        elif isinstance(key, Model):
+        elif isinstance(key, ModelBase):
             return self._models.index(key)
         else:
             raise TypeError(f"Invalid type: {type(key)!r}")
@@ -624,11 +654,11 @@ class DatasetModels(collections.abc.Sequence):
            Type of model, used together with "tag", if the tag is not unique.
         frozen : bool
             Select models with all parameters frozen if True, exclude them if False.
- 
+
         Returns
         -------
         mask : `numpy.array`
-            Boolean mask, True for selected models 
+            Boolean mask, True for selected models
         """
         selection = np.ones(len(self), dtype=bool)
 
@@ -668,7 +698,7 @@ class DatasetModels(collections.abc.Sequence):
 
     def select_mask(self, mask, margin="0 deg", use_evaluation_region=True):
         """Check if sky models contribute within a mask map.
-    
+
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
@@ -677,7 +707,7 @@ class DatasetModels(collections.abc.Sequence):
             Add a margin in degree to the source evaluation radius.
             Used to take into account PSF width.
         use_evaluation_region : bool
-            Account for the extension of the model or not. The default is True.   
+            Account for the extension of the model or not. The default is True.
 
         Returns
         -------
@@ -715,7 +745,7 @@ class DatasetModels(collections.abc.Sequence):
         Returns
         -------
         models : `DatasetModels`
-            Selected models 
+            Selected models
         """
         geom = RegionGeom.from_regions(regions, wcs=wcs)
 
@@ -746,7 +776,7 @@ class DatasetModels(collections.abc.Sequence):
         self, tag, model_type, parameters_names, min=None, max=None, value=None
     ):
         """Set bounds for the selected models types and parameters names
-    
+
         Parameters
         ----------
         tag : str or list
@@ -776,11 +806,11 @@ class DatasetModels(collections.abc.Sequence):
 
     def freeze(self, model_type=None):
         """Freeze parameters depending on model type
-        
+
         Parameters
         ----------
         model_type : {None, "spatial", "spectral"}
-           freeze all parameters or only spatial or only spectral 
+           freeze all parameters or only spatial or only spectral
         """
 
         for m in self:
@@ -788,7 +818,7 @@ class DatasetModels(collections.abc.Sequence):
 
     def unfreeze(self, model_type=None):
         """Restore parameters frozen status to default depending on model type
-        
+
         Parameters
         ----------
         model_type : {None, "spatial", "spectral"}
@@ -805,14 +835,14 @@ class DatasetModels(collections.abc.Sequence):
 
     def reassign(self, dataset_name, new_dataset_name):
         """Reassign a model from one dataset to another
-    
+
         Parameters
         ----------
         dataset_name : str or list
             Name of the datasets where the model is currently defined
         new_dataset_name : str or list
             Name of the datasets where the model should be defined instead.
-            If multiple names are given the two list must have the save lenght,
+            If multiple names are given the two list must have the save length,
             as the reassignment is element-wise.
         """
         models = [m.reassign(dataset_name, new_dataset_name) for m in self]
@@ -820,16 +850,16 @@ class DatasetModels(collections.abc.Sequence):
 
     def to_template_sky_model(self, geom, spectral_model=None, name=None):
         """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`
-    
+
         Parameters
         ----------
         spectral_model : `~gammapy.modeling.models.SpectralModel`
-            One of the NormSpectralMdel 
+            One of the NormSpectralMdel
         name : str
             Name of the new model
-                           
+
         """
-        from . import SkyModel, TemplateSpatialModel, PowerLawNormSpectralModel
+        from . import PowerLawNormSpectralModel, SkyModel, TemplateSpatialModel
 
         unit = u.Unit("1 / (cm2 s sr TeV)")
         map_ = Map.from_geom(geom, unit=unit)
@@ -879,7 +909,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def wcs_geom(self):
-        """Minimum WCS geom in which all the models are contained """
+        """Minimum WCS geom in which all the models are contained"""
         regions = self.to_regions()
         try:
             return RegionGeom.from_regions(regions).to_wcs_geom()
@@ -887,7 +917,7 @@ class DatasetModels(collections.abc.Sequence):
             log.error("No spatial component in any model. Geom not defined")
 
     def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
-        """ Plot extent of the spatial models on a given wcs axis
+        """Plot extent of the spatial models on a given wcs axis
 
         Parameters
         ----------
@@ -913,7 +943,7 @@ class DatasetModels(collections.abc.Sequence):
         kwargs_point = kwargs_point or {}
 
         if ax is None or not isinstance(ax, WCSAxes):
-            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+            ax = Map.from_geom(self.wcs_geom).plot()
 
         kwargs.setdefault("color", "tab:blue")
         kwargs.setdefault("fc", "None")
@@ -936,7 +966,7 @@ class DatasetModels(collections.abc.Sequence):
         return ax
 
     def plot_positions(self, ax=None, **kwargs):
-        """"Plot the centers of the spatial models on a given wcs axis
+        """ "Plot the centers of the spatial models on a given wcs axis
 
         Parameters
         ----------
@@ -949,14 +979,14 @@ class DatasetModels(collections.abc.Sequence):
 
         Returns
         -------
-        ax : `~astropy.vizualisation.WcsAxes`
+        ax : `~astropy.visualization.WcsAxes`
             Wcs axes
         """
         from astropy.visualization.wcsaxes import WCSAxes
         import matplotlib.pyplot as plt
 
         if ax is None or not isinstance(ax, WCSAxes):
-            fig, ax, _ = Map.from_geom(self.wcs_geom).plot()
+            ax = Map.from_geom(self.wcs_geom).plot()
 
         kwargs.setdefault("marker", "*")
         kwargs.setdefault("color", "tab:blue")
@@ -984,7 +1014,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
         del self._models[self.index(key)]
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import SkyModel, FoVBackgroundModel
+        from gammapy.modeling.models import FoVBackgroundModel, SkyModel
 
         if isinstance(model, (SkyModel, FoVBackgroundModel)):
             self._models[self.index(key)] = model

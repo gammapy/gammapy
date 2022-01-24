@@ -38,7 +38,7 @@ for obs in observations:
 
 m = Map.create(skydir=crab_position, width=(8, 8), proj="TAN")
 
-_, ax, _ = m.plot(vmin=-1, vmax=0)
+ax = m.plot(vmin=-1, vmax=0)
 
 rectangle.to_pixel(ax.wcs).plot(ax=ax, color="black")
 

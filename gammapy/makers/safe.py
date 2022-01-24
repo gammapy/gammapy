@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.coordinates import Angle
 from astropy import units as u
-from regions import PointSkyRegion
+from astropy.coordinates import Angle
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import Map
 from gammapy.modeling.models import TemplateSpectralModel
@@ -36,7 +35,7 @@ class SafeMaskMaker(Maker):
         Position at which the `aeff_percent` or `bias_percent` are computed. By default,
         it uses the position of the center of the map.
     fixed_offset : `~astropy.coordinates.Angle`
-        offset, calculated from the pointing position, at which 
+        offset, calculated from the pointing position, at which
         the `aeff_percent` or `bias_percent` are computed.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
@@ -141,7 +140,7 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-        geom = dataset._geom
+        geom, exposure = dataset._geom, dataset.exposure
 
         if self.fixed_offset:
             if observation:
@@ -153,14 +152,12 @@ class SafeMaskMaker(Maker):
                     f"observation argument is mandatory with {self.fixed_offset}"
                 )
 
-        elif self.position is None and self.fixed_offset is None:
-            position = PointSkyRegion(dataset._geom.center_skydir)
+        elif self.position:
+            position = self.position
         else:
-            position = PointSkyRegion(self.position)
+            position = geom.center_skydir
 
-        aeff = (
-            dataset.exposure.get_spectrum(position) / dataset.exposure.meta["livetime"]
-        )
+        aeff = exposure.get_spectrum(position) / exposure.meta["livetime"]
         model = TemplateSpectralModel.from_region_map(aeff)
 
         energy_true = model.energy
@@ -171,8 +168,10 @@ class SafeMaskMaker(Maker):
         inversion = model.inverse(
             aeff_thres, energy_min=energy_min, energy_max=energy_max
         )
+
         if not np.isnan(inversion[0]):
             energy_min = inversion[0]
+
         return geom.energy_mask(energy_min=energy_min)
 
     def make_mask_energy_edisp_bias(self, dataset, observation=None):
@@ -247,7 +246,7 @@ class SafeMaskMaker(Maker):
     @staticmethod
     def make_mask_bkg_invalid(dataset):
         """Mask non-finite values and zeros values in background maps.
- 
+
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
@@ -262,7 +261,7 @@ class SafeMaskMaker(Maker):
         mask = np.isfinite(bkg)
 
         if not dataset.stat_type == "wstat":
-            mask &= (bkg > 0.0)
+            mask &= bkg > 0.0
 
         return mask
 
@@ -302,5 +301,5 @@ class SafeMaskMaker(Maker):
         if "bkg-peak" in self.methods:
             mask_safe &= self.make_mask_energy_bkg_peak(dataset)
 
-        dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe)
+        dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe, dtype=bool)
         return dataset

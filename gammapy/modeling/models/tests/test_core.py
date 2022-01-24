@@ -2,18 +2,25 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import Model, Models, Parameter, Parameters, SkyModel
-from gammapy.utils.testing import requires_data, mpl_plot_check, requires_dependency
+from gammapy.modeling.models import (
+    Model,
+    ModelBase,
+    Models,
+    Parameter,
+    Parameters,
+    SkyModel,
+)
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
-class MyModel(Model):
+class MyModel(ModelBase):
     """Simple model example"""
 
     x = Parameter("x", 1, "cm")
     y = Parameter("y", 2)
 
 
-class CoModel(Model):
+class CoModel(ModelBase):
     """Compound model example"""
 
     norm = Parameter("norm", 42, "cm")
@@ -28,7 +35,7 @@ class CoModel(Model):
         return Parameters([self.norm]) + self.m1.parameters + self.m2.parameters
 
 
-class WrapperModel(Model):
+class WrapperModel(ModelBase):
     """Wrapper compound model.
 
     Dynamically generated parameters in `__init__`,
@@ -211,9 +218,15 @@ def test_plot_models(caplog):
     regions = models.to_regions()
     assert len(regions) == 3
 
-    p1 = Model.create("pl-2", model_type="spectral",)
+    p1 = Model.create(
+        "pl-2",
+        model_type="spectral",
+    )
     g1 = Model.create("gauss", model_type="spatial")
-    p2 = Model.create("pl-2", model_type="spectral",)
+    p2 = Model.create(
+        "pl-2",
+        model_type="spectral",
+    )
     m1 = SkyModel(spectral_model=p1, spatial_model=g1, name="m1")
     m2 = SkyModel(spectral_model=p2, name="m2")
     models = Models([m1, m2])

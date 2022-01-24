@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.makers import ReflectedRegionsFinder
-from gammapy.maps import WcsNDMap, RegionGeom
+from gammapy.maps import RegionGeom, WcsNDMap
 
 # Exclude a rectangular region
 exclusion_mask = WcsNDMap.create(npix=(801, 701), binsz=0.01, skydir=(83.6, 23.0))
@@ -42,9 +42,7 @@ def plot_regions(ax, regions, on_region, exclusion_mask):
 
 ax = axes[0]
 ax.set_title("Min. distance first region")
-plot_regions(
-    ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask
-)
+plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask)
 
 
 # One can impose a minimal distance between two adjacent regions
@@ -58,9 +56,7 @@ regions = finder.run()
 
 ax = axes[1]
 ax.set_title("Min. distance all regions")
-plot_regions(
-    ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask
-)
+plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask)
 
 
 # One can impose a maximal number of regions to be extracted
@@ -75,7 +71,5 @@ regions = finder.run()
 
 ax = axes[2]
 ax.set_title("Max. number of regions")
-plot_regions(
-    ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask
-)
+plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusion_mask)
 plt.show()

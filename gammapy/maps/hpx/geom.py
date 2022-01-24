@@ -1,32 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for dealing with HEALPix projections and mappings."""
 import copy
-import re
 import numpy as np
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy import units as u
-from astropy.utils import lazyproperty
 from gammapy.utils.array import is_power2
-from .io import HPX_FITS_CONVENTIONS
+from ..axes import MapAxes
+from ..coord import MapCoord, skycoord_to_lonlat
+from ..geom import Geom, pix_tuple_to_idx
+from ..utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
+from .io import HPX_FITS_CONVENTIONS, HpxConv
 from .utils import (
+    coords_to_vec,
+    get_nside_from_pix_size,
+    get_pix_size_from_nside,
     get_subpixels,
     get_superpixels,
+    match_hpx_pix,
+    nside_to_order,
     parse_hpxregion,
-    unravel_hpx_index,
     ravel_hpx_index,
-    coords_to_vec,
-    get_pix_size_from_nside,
-    get_nside_from_pix_size,
-    nside_to_order
+    unravel_hpx_index,
 )
-from .io import HpxConv
-from ..utils import INVALID_INDEX, coordsys_to_frame, frame_to_coordsys
-from ..geom import Geom, pix_tuple_to_idx
-from ..coord import MapCoord, skycoord_to_lonlat
-from ..axes import MapAxes
-
 
 # Not sure if we should expose this in the docs or not:
 # HPX_FITS_CONVENTIONS, HpxConv
@@ -68,12 +65,11 @@ class HpxGeom(Geom):
     axes : list
         Axes for non-spatial dimensions.
     """
+
     is_hpx = True
     is_region = False
 
-    def __init__(
-        self, nside, nest=True, frame="icrs", region=None, axes=None
-    ):
+    def __init__(self, nside, nest=True, frame="icrs", region=None, axes=None):
 
         # FIXME: Require NSIDE to be power of two when nest=True
 
@@ -178,9 +174,9 @@ class HpxGeom(Geom):
             A tuple of pixel indices with local HEALPIX pixel indices.
         """
         if (
-                isinstance(idx_global, int)
-                or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
-                or isinstance(idx_global, np.ndarray)
+            isinstance(idx_global, int)
+            or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
+            or isinstance(idx_global, np.ndarray)
         ):
             idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self.npix_max)
 
@@ -236,13 +232,15 @@ class HpxGeom(Geom):
             width=width,
             skydir=position,
             frame=self.frame,
-            axes=self.axes
+            axes=self.axes,
         )
 
     def coord_to_pix(self, coords):
         import healpy as hp
 
-        coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names).broadcasted
+        coords = MapCoord.create(
+            coords, frame=self.frame, axis_names=self.axes.names
+        ).broadcasted
         theta, phi = coords.theta, coords.phi
 
         if self.axes:
@@ -449,7 +447,7 @@ class HpxGeom(Geom):
         import healpy as hp
 
         if self.is_allsky:
-            lon, lat = 0., 0.
+            lon, lat = 0.0, 0.0
         elif self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self.npix_max)
             nside = self._get_nside(idx)
@@ -589,11 +587,7 @@ class HpxGeom(Geom):
 
         axes = copy.deepcopy(self.axes)
         return self.__class__(
-            nside=nside,
-            nest=self.nest,
-            frame=self.frame,
-            region=self.region,
-            axes=axes
+            nside=nside, nest=self.nest, frame=self.frame, region=self.region, axes=axes
         )
 
     def to_binsz(self, binsz):
@@ -652,7 +646,11 @@ class HpxGeom(Geom):
         """
         axes = copy.deepcopy(self.axes)
         return self.__class__(
-            self.nside, not self.nest, frame=self.frame, region=self.region, axes=axes,
+            self.nside,
+            not self.nest,
+            frame=self.frame,
+            region=self.region,
+            axes=axes,
         )
 
     def to_image(self):
@@ -764,9 +762,11 @@ class HpxGeom(Geom):
             axes=copy.deepcopy(self.axes),
         )
 
-    def downsample(self, factor):
+    def downsample(self, factor, axis_name=None):
         if not is_power2(factor):
             raise ValueError("Downsample factor must be a power of 2.")
+        if axis_name is not None:
+            raise ValueError("Currently the only valid axis name is None.")
 
         if self.is_allsky:
             return self.__class__(
@@ -810,7 +810,7 @@ class HpxGeom(Geom):
             the spatial pixels in the map.
         binsz : float or `~numpy.ndarray`
             Approximate pixel size in degrees.  An NSIDE will be
-            chosen that correponds to a pixel size closest to this
+            chosen that corresponds to a pixel size closest to this
             value.  This option is superseded by nside.
         nest : bool
             True for HEALPIX "NESTED" indexing scheme, False for "RING" scheme
@@ -1069,7 +1069,7 @@ class HpxGeom(Geom):
         import healpy as hp
 
         if self.is_allsky:
-            width = 180.
+            width = 180.0
         elif self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self.npix_max)
             nside = self._get_nside(idx)
@@ -1153,8 +1153,8 @@ class HpxGeom(Geom):
         margin : Angle
             Width margin of the wcs tile
 
-        Return
-        ------
+        Returns
+        -------
         wcs_tiles : list
             List of WCS tile geoms.
         """
@@ -1176,9 +1176,7 @@ class HpxGeom(Geom):
 
         for pix in range(int(hpx.npix)):
             skydir = hpx.pix_to_coord([pix])
-            vtx = hp.boundaries(
-                nside=hpx.nside, pix=pix, nest=hpx.nest, step=1
-            )
+            vtx = hp.boundaries(nside=hpx.nside, pix=pix, nest=hpx.nest, step=1)
 
             lon, lat = hp.vec2ang(vtx.T, lonlat=True)
             boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
@@ -1193,13 +1191,21 @@ class HpxGeom(Geom):
                 binsz=binsz,
                 frame=hpx.frame,
                 proj="TAN",
-                axes=self.axes
+                axes=self.axes,
             )
             wcs_tiles.append(wcs_tile_geom)
 
         return wcs_tiles
 
-    def get_idx(self, idx=None, local=False, flat=False, sparse=False, mode="center", axis_name=None):
+    def get_idx(
+        self,
+        idx=None,
+        local=False,
+        flat=False,
+        sparse=False,
+        mode="center",
+        axis_name=None,
+    ):
         # TODO: simplify this!!!
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError(f"Image index out of range: {idx!r}")
@@ -1326,11 +1332,15 @@ class HpxGeom(Geom):
         mask = geom.contains(coords)
         return Map.from_geom(self, data=mask)
 
-    def get_coord(self, idx=None, flat=False, sparse=False, mode="center", axis_name=None):
+    def get_coord(
+        self, idx=None, flat=False, sparse=False, mode="center", axis_name=None
+    ):
         if mode == "edges" and axis_name is None:
             raise ValueError("Mode 'edges' requires axis name to be defined")
 
-        pix = self.get_idx(idx=idx, flat=flat, sparse=sparse, mode=mode, axis_name=axis_name)
+        pix = self.get_idx(
+            idx=idx, flat=flat, sparse=sparse, mode=mode, axis_name=axis_name
+        )
         data = self.pix_to_coord(pix)
 
         coords = MapCoord.create(
@@ -1371,7 +1381,7 @@ class HpxGeom(Geom):
         if not isinstance(other, self.__class__):
             return NotImplemented
 
-        if self.is_allsky and other.is_allsky is False:
+        if self.is_allsky and not other.is_allsky:
             return NotImplemented
 
         # check overall shape and axes compatibility

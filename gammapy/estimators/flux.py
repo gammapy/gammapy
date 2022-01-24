@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from gammapy.maps import MapAxis
 from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
-from gammapy.modeling.models import Models, ScaleSpectralModel
-from gammapy.modeling import Fit
+from gammapy.maps import Map, MapAxis
+from gammapy.modeling import Parameter
+from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ class FluxEstimator(ParameterEstimator):
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
     """
+
     tag = "FluxEstimator"
 
     def __init__(
@@ -63,7 +64,7 @@ class FluxEstimator(ParameterEstimator):
         n_sigma_ul=2,
         selection_optional=None,
         fit=None,
-        reoptimize=False
+        reoptimize=False,
     ):
         self.norm_values = norm_values
         self.norm_min = norm_min
@@ -76,8 +77,25 @@ class FluxEstimator(ParameterEstimator):
             n_sigma_ul=n_sigma_ul,
             selection_optional=selection_optional,
             fit=fit,
-            reoptimize=reoptimize
+            reoptimize=reoptimize,
         )
+
+    def _set_norm_parameter(self, norm=None, scaled_parameter=None):
+        """Define properties of the norm spectral parameter."""
+        if norm is None:
+            norm = Parameter("norm", 1, unit="", interp="log")
+
+        norm.value = 1.0
+        norm.frozen = False
+
+        norm.min = scaled_parameter.min / scaled_parameter.value
+        norm.max = scaled_parameter.max / scaled_parameter.value
+        norm.interp = scaled_parameter.interp
+        norm.scan_values = self.norm_values
+        norm.scan_min = self.norm_min
+        norm.scan_max = self.norm_max
+        norm.scan_n_values = self.norm_n_values
+        return norm
 
     def get_scale_model(self, models):
         """Set scale model
@@ -87,30 +105,46 @@ class FluxEstimator(ParameterEstimator):
         models : `Models`
             Models
 
-        Return
-        ------
+        Returns
+        -------
         model : `ScaleSpectralModel`
             Scale spectral model
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
 
-        scale_model.norm.value = 1.0
-        scale_model.norm.frozen = False
-
         if hasattr(ref_model, "amplitude"):
             scaled_parameter = ref_model.amplitude
         else:
             scaled_parameter = ref_model.norm
 
-        scale_model.norm.min = scaled_parameter.min/scaled_parameter.value
-        scale_model.norm.max = scaled_parameter.max/scaled_parameter.value
-        scale_model.norm.interp = scaled_parameter.interp
-        scale_model.norm.scan_values = self.norm_values
-        scale_model.norm.scan_min = self.norm_min
-        scale_model.norm.scan_max = self.norm_max
-        scale_model.norm.scan_n_values = self.norm_n_values
+        scale_model.norm = self._set_norm_parameter(scale_model.norm, scaled_parameter)
         return scale_model
+
+    def estimate_npred_excess(self, datasets):
+        """Estimate npred excess for the source.
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with the sum of the
+            masked npred excess.
+        """
+        npred_excess = []
+
+        for dataset in datasets:
+            name = datasets.models[self.source].name
+            npred_signal = dataset.npred_signal(model_name=name)
+            npred = Map.from_geom(dataset.mask.geom)
+            npred.stack(npred_signal)
+            npred_excess.append(npred.data[dataset.mask].sum())
+
+        return {"npred_excess": np.array(npred_excess), "datasets": datasets.names}
 
     def run(self, datasets):
         """Estimate flux for a given energy range.
@@ -141,4 +175,8 @@ class FluxEstimator(ParameterEstimator):
         models[self.source].spectral_model = model
         datasets.models = models
         result.update(super().run(datasets, model.norm))
+
+        # TODO: find a cleaner way of including the npred_excess info
+        datasets.models[self.source].spectral_model.norm.value = result["norm"]
+        result.update(self.estimate_npred_excess(datasets=datasets))
         return result

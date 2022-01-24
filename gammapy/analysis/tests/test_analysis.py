@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 from pydantic.error_wrappers import ValidationError
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
-from gammapy.maps import WcsNDMap, WcsGeom
+from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.modeling.models import Models
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -138,7 +138,7 @@ def test_set_models():
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
     analysis.set_models(models=models_str)
-    assert isinstance(analysis.models, Models) is True
+    assert isinstance(analysis.models, Models)
     with pytest.raises(TypeError):
         analysis.set_models(0)
 
@@ -151,7 +151,7 @@ def test_analysis_1d():
         datastore: $GAMMAPY_DATA/hess-dl3-dr1
         obs_ids: [23523, 23526]
         obs_time: {
-            start: [J2004.92654346, J2004.92658453, J2004.92663655], 
+            start: [J2004.92654346, J2004.92658453, J2004.92663655],
             stop: [J2004.92658453, J2004.92663655, J2004.92670773]
         }
     datasets:
@@ -171,8 +171,8 @@ def test_analysis_1d():
     light_curve:
         energy_edges: {min: 1 TeV, max: 50 TeV, nbins: 1}
         time_intervals: {
-            start: [J2004.92654346, J2004.92658453, J2004.92663655], 
-            stop: [J2004.92658453, J2004.92663655, J2004.92670773]        
+            start: [J2004.92654346, J2004.92658453, J2004.92663655],
+            stop: [J2004.92658453, J2004.92663655, J2004.92670773]
         }
     """
     config = get_example_config("1d")
@@ -299,7 +299,7 @@ def test_analysis_1d_stacked_no_fit_range():
 
     assert len(analysis.datasets) == 1
     assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
-    pars = analysis.fit_result.parameters
+    pars = analysis.models.parameters
     assert_allclose(analysis.datasets[0].mask_fit.data, True)
 
     assert_allclose(pars["index"].value, 2.76913, rtol=1e-2)
@@ -321,7 +321,7 @@ def test_analysis_ring_background():
         analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
     )
     assert isinstance(analysis.excess_map["sqrt_ts"], WcsNDMap)
-    assert_allclose(analysis.excess_map["excess"].data[0, 62, 62], 134.12389)
+    assert_allclose(analysis.excess_map.npred_excess.data[0, 62, 62], 134.12389)
 
 
 @requires_data()
@@ -341,7 +341,7 @@ def test_analysis_no_bkg_1d(caplog):
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    assert isinstance(analysis.datasets[0], SpectrumDatasetOnOff) is False
+    assert not isinstance(analysis.datasets[0], SpectrumDatasetOnOff)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "No background maker set. Check configuration." in [
         _.message for _ in caplog.records
@@ -355,7 +355,7 @@ def test_analysis_no_bkg_3d(caplog):
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
-    assert isinstance(analysis.datasets[0], MapDataset) is True
+    assert isinstance(analysis.datasets[0], MapDataset)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "No background maker set. Check configuration." in [
         _.message for _ in caplog.records
@@ -375,8 +375,8 @@ def test_analysis_3d():
     analysis.get_flux_points()
 
     assert len(analysis.datasets) == 1
-    assert len(analysis.fit_result.parameters) == 8
-    res = analysis.fit_result.parameters
+    assert len(analysis.models.parameters) == 8
+    res = analysis.models.parameters
     assert res["amplitude"].unit == "cm-2 s-1 TeV-1"
 
     table = analysis.flux_points.data.to_table(sed_type="dnde")

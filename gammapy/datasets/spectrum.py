@@ -113,7 +113,7 @@ class PlotMixin:
         kwargs_fit: dict
             Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
         kwargs_safe: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for maks safe
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe.
 
         Returns
         -------
@@ -166,9 +166,7 @@ class PlotMixin:
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_excess)
         plot_kwargs.setdefault("label", "Excess counts")
-        ax = self.excess.plot(
-            ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs
-        )
+        ax = self.excess.plot(ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_npred_signal)
@@ -300,7 +298,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     @classmethod
     def from_dict(cls, data, **kwargs):
-        """Create flux point dataset from dict.
+        """Create spectrum dataset from dict.
 
         Parameters
         ----------
@@ -311,7 +309,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         -------
         dataset : `SpectrumDatasetOnOff`
             Spectrum dataset on off.
-
         """
 
         filename = make_path(data["filename"])
@@ -345,12 +342,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         -------
         dataset : `SpectrumDatasetOnOff`
             Spectrum dataset on off.
-
         """
         return cls.from_map_dataset(**kwargs)
 
     def to_spectrum_dataset(self, name=None):
-        """ Convert a SpectrumDatasetOnOff to a SpectrumDataset
+        """Convert a SpectrumDatasetOnOff to a SpectrumDataset
         The background model template is taken as alpha*counts_off
 
         Parameters

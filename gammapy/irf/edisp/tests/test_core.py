@@ -3,8 +3,8 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle
-from gammapy.irf import EDispKernel, EnergyDispersion2D
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.irf import EnergyDispersion2D
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -20,7 +20,9 @@ class TestEnergyDispersion2D:
             "0.1 TeV", "100 TeV", nbin=50, name="energy_true"
         )
 
-        migra_axis = MapAxis.from_bounds(0, 4, nbin=1000, node_type="edges", name="migra")
+        migra_axis = MapAxis.from_bounds(
+            0, 4, nbin=1000, node_type="edges", name="migra"
+        )
         offset_axis = MapAxis.from_bounds(0, 2.5, nbin=5, unit="deg", name="offset")
 
         energy_true = energy_axis_true.edges[:-1].reshape((-1, 1, 1))
@@ -32,7 +34,7 @@ class TestEnergyDispersion2D:
             migra_axis=migra_axis,
             bias=bias,
             sigma=sigma,
-            offset_axis=offset_axis
+            offset_axis=offset_axis,
         )
 
     def test_str(self):

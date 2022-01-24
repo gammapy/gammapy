@@ -6,8 +6,8 @@ import itertools
 import logging
 import numpy as np
 from astropy import units as u
-from gammapy.utils.table import table_from_row_data
 from gammapy.utils.interpolation import interpolation_scale
+from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
 
@@ -78,7 +78,7 @@ class Parameter:
     scan_max : float
         Minimum value for the parameter scan. Overwrites scan_n_sigma.
     scan_n_values: int
-        Number of values to be used fo the parameter scan.
+        Number of values to be used for the parameter scan.
     scan_n_sigma : int
         Number of sigmas to scan.
     scan_values: `numpy.array`
@@ -105,7 +105,7 @@ class Parameter:
         scan_n_values=11,
         scan_n_sigma=2,
         scan_values=None,
-        scale_method=None,
+        scale_method="scale10",
         interp="lin",
     ):
         if not isinstance(name, str):
@@ -387,7 +387,7 @@ class Parameter:
 
     def update_from_dict(self, data):
         """Update parameters from a dict.
-           Protection against changing parameter model, type, name."""
+        Protection against changing parameter model, type, name."""
         keys = ["value", "unit", "min", "max", "frozen"]
         for k in keys:
             setattr(self, k, data[k])
@@ -402,10 +402,9 @@ class Parameter:
             "min": self.min,
             "max": self.max,
             "frozen": self.frozen,
-            "interp": self.interp
+            "interp": self.interp,
+            "scale_method": self.scale_method,
         }
-        if self.scale_method is not None:
-            output["scale_method"] = self.scale_method
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
@@ -423,7 +422,7 @@ class Parameter:
         * ``factor1`` sets ``factor, scale = 1, value``
 
         In both cases the sign of value is stored in ``factor``,
-        i.e. the ``scale`` is always positive. 
+        i.e. the ``scale`` is always positive.
         If ``scale_method`` is None the scaling is ignored.
 
         """
@@ -589,6 +588,8 @@ class Parameters(collections.abc.Sequence):
         rows = []
         for p in self._parameters:
             d = p.to_dict()
+            if "link" not in d:
+                d["link"] = ""
             for key in ["scale_method", "interp"]:
                 if key in d:
                     del d[key]
@@ -636,7 +637,10 @@ class Parameters(collections.abc.Sequence):
             par.autoscale()
 
     def select(
-        self, name=None, type=None, frozen=None,
+        self,
+        name=None,
+        type=None,
+        frozen=None,
     ):
         """Create a mask of models, true if all conditions are verified
 
@@ -648,7 +652,7 @@ class Parameters(collections.abc.Sequence):
            type of models
         frozen : bool
             Select frozen parameters if True, exclude them if False.
- 
+
         Returns
         -------
         parameters : `Parameters`
@@ -680,7 +684,7 @@ class Parameters(collections.abc.Sequence):
             par.frozen = True
 
     def unfreeze_all(self):
-        """ Unfreeze all parameters (even those frozen by default)"""
+        """Unfreeze all parameters (even those frozen by default)"""
         for par in self._parameters:
             par.frozen = False
 

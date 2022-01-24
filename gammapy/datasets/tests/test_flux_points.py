@@ -7,8 +7,8 @@ from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture()
@@ -82,26 +82,26 @@ class TestFluxPointFit:
     def test_fit_pwl_minuit(self, dataset):
         fit = Fit()
         result = fit.run(dataset)
-        self.assert_result(result["optimize_result"])
+        self.assert_result(result, dataset.models)
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, dataset):
         fit = Fit(backend="sherpa", optimize_opts={"method": "simplex"})
         result = fit.optimize(datasets=[dataset])
-        self.assert_result(result)
+        self.assert_result(result, dataset.models)
 
     @staticmethod
-    def assert_result(result):
+    def assert_result(result, models):
         assert result.success
         assert_allclose(result.total_stat, 25.2059, rtol=1e-3)
 
-        index = result.parameters["index"]
+        index = models.parameters["index"]
         assert_allclose(index.value, 2.216, rtol=1e-3)
 
-        amplitude = result.parameters["amplitude"]
+        amplitude = models.parameters["amplitude"]
         assert_allclose(amplitude.value, 2.1616e-13, rtol=1e-3)
 
-        reference = result.parameters["reference"]
+        reference = models.parameters["reference"]
         assert_allclose(reference.value, 1, rtol=1e-8)
 
     @staticmethod
@@ -109,24 +109,28 @@ class TestFluxPointFit:
     def test_stat_profile(dataset):
         fit = Fit()
         result = fit.run(datasets=dataset)
-        result = result["optimize_result"]
 
         model = dataset.models[0].spectral_model
+
+        assert_allclose(model.amplitude.error, 1.9e-14, rtol=1e-2)
 
         model.amplitude.scan_n_values = 3
         model.amplitude.scan_n_sigma = 1
         model.amplitude.interp = "lin"
-        
+
         profile = fit.stat_profile(
             datasets=dataset,
             parameter="amplitude",
         )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
+        assert_allclose(
+            model.amplitude.scan_values, [1.97e-13, 2.16e-13, 2.35e-13], rtol=1e-2
+        )
+        assert_allclose(ts_diff, [110.244116, 0.0, 110.292074], rtol=1e-2, atol=1e-7)
 
-        value = result.parameters["amplitude"].value
-        err = result.parameters["amplitude"].error
+        value = model.parameters["amplitude"].value
+        err = model.parameters["amplitude"].error
 
         model.amplitude.scan_values = np.array([value - err, value, value + err])
         profile = fit.stat_profile(
@@ -135,7 +139,10 @@ class TestFluxPointFit:
         )
 
         ts_diff = profile["stat_scan"] - result.total_stat
-        assert_allclose(ts_diff, [174.358204, 0., 174.418515], rtol=1e-2, atol=1e-7)
+        assert_allclose(
+            model.amplitude.scan_values, [1.97e-13, 2.16e-13, 2.35e-13], rtol=1e-2
+        )
+        assert_allclose(ts_diff, [110.244116, 0.0, 110.292074], rtol=1e-2, atol=1e-7)
 
     @staticmethod
     @requires_dependency("matplotlib")

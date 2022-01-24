@@ -8,6 +8,7 @@ from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
 
 __all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
+
 def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     r"""Cash statistic, for Poisson data.
 
@@ -47,7 +48,7 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     n_on = np.asanyarray(n_on)
     mu_on = np.asanyarray(mu_on)
     truncation_value = np.asanyarray(truncation_value)
-    if np.any(truncation_value)<=0:
+    if np.any(truncation_value) <= 0:
         raise ValueError("Cash statistic truncation value must be positive.")
 
     mu_on = np.where(mu_on <= truncation_value, truncation_value, mu_on)
@@ -102,7 +103,7 @@ def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     mu_on = np.asanyarray(mu_on, dtype=np.float64)
     truncation_value = np.asanyarray(truncation_value, dtype=np.float64)
 
-    if np.any(truncation_value)<=0:
+    if np.any(truncation_value) <= 0:
         raise ValueError("Cstat statistic truncation value must be positive.")
 
     n_on = np.where(n_on <= truncation_value, truncation_value, n_on)
@@ -203,7 +204,7 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
     alpha = np.asanyarray(alpha, dtype=np.float64)
     mu_sig = np.asanyarray(mu_sig, dtype=np.float64)
 
-    # NOTE: Corner cases in the docs are all handled correcty by this formula
+    # NOTE: Corner cases in the docs are all handled correctly by this formula
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
     with np.errstate(invalid="ignore", divide="ignore"):

@@ -99,8 +99,8 @@ def make_datasets_example():
         datasets.append(stacked)
 
     datasets.write(
-        "$GAMMAPY_DATA/tests/models",
-        prefix="gc_example",
+        filename="$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml",
+        filename_models="$GAMMAPY_DATA/tests/models/gc_example_models.yaml",
         overwrite=True,
         write_covariance=False,
     )

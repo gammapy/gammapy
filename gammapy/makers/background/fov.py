@@ -7,7 +7,6 @@ from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Model
 from ..core import Maker
 
-
 __all__ = ["FoVBackgroundMaker"]
 
 log = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ class FoVBackgroundMaker(Maker):
         spectral_model="pl-norm",
         min_counts=0,
         min_npred_background=0,
-        fit=None
+        fit=None,
     ):
         self.method = method
         self.exclusion_mask = exclusion_mask
@@ -133,6 +132,29 @@ class FoVBackgroundMaker(Maker):
             mask = Map.from_geom(geom=geom, data=1, dtype=bool)
         return mask
 
+    def _verify_requirements(self, dataset):
+        """"Verify that the requirements of min_counts
+        and min_npred_background are satisfied"""
+
+        mask = dataset.mask
+        count_tot = dataset.counts.data[mask].sum()
+        bkg_tot = dataset.npred_background().data[mask].sum()
+
+        if count_tot <= self.min_counts:
+            log.warning(
+                f"FoVBackgroundMaker failed. Only {int(count_tot)} counts outside exclusion mask for {dataset.name}. "
+                f"Setting mask to False."
+            )
+            return False
+        elif bkg_tot <= self.min_npred_background:
+            log.warning(
+                f"FoVBackgroundMaker failed. Only {int(bkg_tot)} background counts outside exclusion mask for {dataset.name}. "
+                f"Setting mask to False."
+            )
+            return False
+        else:
+            return True
+
     def run(self, dataset, observation=None):
         """Run FoV background maker.
 
@@ -151,11 +173,14 @@ class FoVBackgroundMaker(Maker):
         if dataset.background_model is None:
             dataset = self.make_default_fov_background_model(dataset)
 
-        if self.method == "fit":
-            dataset = self.make_background_fit(dataset)
+        if self._verify_requirements(dataset) is True:
+            if self.method == "fit":
+                dataset = self.make_background_fit(dataset)
+            else:
+                # always scale the background first
+                dataset = self.make_background_scale(dataset)
         else:
-            # always scale the background first
-            dataset = self.make_background_scale(dataset)
+            dataset.mask_safe.data[...] = False
 
         dataset.mask_fit = mask_fit
         return dataset
@@ -181,7 +206,7 @@ class FoVBackgroundMaker(Maker):
             models.select(tag="sky-model").freeze()
 
             fit_result = self.fit.run(datasets=[dataset])
-            if not fit_result["optimize_result"].success:
+            if not fit_result.success:
                 log.warning(
                     f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "
                     f"Setting mask to False."
@@ -208,22 +233,8 @@ class FoVBackgroundMaker(Maker):
         count_tot = dataset.counts.data[mask].sum()
         bkg_tot = dataset.npred_background().data[mask].sum()
 
-        if count_tot <= self.min_counts:
-            log.warning(
-                f"FoVBackgroundMaker failed. Only {int(count_tot)} counts outside exclusion mask for {dataset.name}. "
-                f"Setting mask to False."
-            )
-            dataset.mask_safe.data[...] = False
-        elif bkg_tot <= self.min_npred_background:
-            log.warning(
-                f"FoVBackgroundMaker failed. Only {int(bkg_tot)} background counts outside exclusion mask for {dataset.name}. "
-                f"Setting mask to False."
-            )
-            dataset.mask_safe.data[...] = False
-        else:
-            value = count_tot / bkg_tot
-            err = np.sqrt(count_tot) / bkg_tot
-            dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = value
-            dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.error = err
-
+        value = count_tot / bkg_tot
+        err = np.sqrt(count_tot) / bkg_tot
+        dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.value = value
+        dataset.models[f"{dataset.name}-bkg"].spectral_model.norm.error = err
         return dataset

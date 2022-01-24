@@ -1,0 +1,221 @@
+# YAML 1.2
+# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
+cff-version: 1.0.3
+message: This research made use of Gammapy, a community-developed core Python package
+  for gamma-ray astronomy. https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D/abstract
+title: 'Gammapy: Python toolbox for gamma-ray astronomy'
+abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves,
+  from event lists and instrument response information; it can also determine the
+  position, morphology and spectra of gamma-ray sources. It is used to analyze data
+  from H.E.S.S., Fermi-LAT, and the Cherenkov Telescope Array (CTA).'
+doi: 10.5281/zenodo.4701500
+authors:
+- given-names: Axel
+  family-names: Donath
+  affiliation: "Center for Astrophysics | Harvard & Smithonian"
+  orcid: https://orcid.org/0000-0003-4568-7005
+  email: "axel.donath@cfa.havard.edu"
+- given-names: Christoph
+  family-names: Deil
+  affiliation: HeidelbergCement
+- given-names: Régis
+  family-names: Terrier
+  affiliation: Astroparticle and Cosmology, CNRS, Université de Paris
+  orcid: https://orcid.org/0000-0002-8219-4667
+- given-names: Johannes
+  family-names: King
+  affiliation: Pamyra
+- given-names: Jose Enrique
+  family-names: Ruiz
+  affiliation: Instituto de Astrofísica de Andalucía - CSIC
+  orcid: https://orcid.org/0000-0003-3274-4445
+- given-names: Quentin
+  family-names: Remy
+  affiliation: MPIK
+  orcid: https://orcid.org/0000-0002-8815-6530
+- given-names: Léa
+  family-names: Jouvin
+- given-names: Atreyee
+  family-names: Sinha
+  affiliation: EMFTEL, UCM
+- given-names: Matthew
+  family-names: Wood
+- given-names: Fabio
+  family-names: Pintore
+  affiliation: INAF/IASF Palermo
+- given-names: Manuel
+  family-names: Paz Arribas
+- given-names: Laura
+  family-names: Olivera
+  affiliation: MPIK
+- given-names: Luca
+  family-names: Giunti
+  affiliation: APC
+- given-names: Bruno
+  family-names: Khelifi
+  affiliation: CNRS
+- given-names: Ellis
+  family-names: Owen
+- given-names: Brigitta
+  family-names: Sipőcz
+  affiliation: DIRAC Institute, UW
+- given-names: Olga
+  family-names: Vorokh
+- given-names: Julien
+  family-names: Lefaucheur
+- given-names: Fabio
+  family-names: Acero
+  affiliation: "DAp/AIM, CEA-Saclay/CNRS"
+  orcid: https://orcid.org/0000-0002-6606-2816
+- given-names: Thomas
+  family-names: Robitaille
+- given-names: David
+  family-names: Fidalgo
+- given-names: Jonathan
+  name-particle: D.
+  family-names: Harris
+- given-names: Lars
+  family-names: Mohrmann
+  affiliation: MPIK, Heidelberg
+- given-names: Cosimo
+  family-names: Nigro
+  affiliation: IFAE
+- given-names: Dirk
+  family-names: Lennarz
+- given-names: Jalel
+  name-particle: Eddine
+  family-names: Hajlaoui
+- given-names: Alexis
+  family-names: de Almeida Coutinho
+- given-names: Matthias
+  family-names: Wegenmat
+- given-names: Dimitri
+  family-names: Papadopoulos
+- given-names: Maximilian
+  family-names: Nöthe
+- given-names: Nachiketa
+  family-names: Chakraborty
+- given-names: Michael
+  family-names: Droettboom
+  affiliation: Mozilla
+- given-names: Jason
+  family-names: Watson
+  affiliation: DESY
+- given-names: Helen
+  family-names: Poon
+- given-names: Arjun
+  family-names: Voruganti
+- given-names: Vikas
+  family-names: Joshi
+- given-names: Thomas
+  family-names: Armstrong
+- given-names: Erik
+  family-names: Tollerud
+  affiliation: Space Telescope Science Institute
+- given-names: Erik
+  name-particle: M.
+  family-names: Bray
+- given-names: Domenico
+  family-names: Tiziani
+- given-names: Gabriel
+  family-names: Emery
+- given-names: Hubert
+  family-names: Siejkowski
+- given-names: Kai
+  family-names: Brügge
+- given-names: Luigi
+  family-names: Tibaldo
+- given-names: Arpit
+  family-names: Gogia
+- given-names: Ignacio
+  family-names: Minaya
+- given-names: Marion
+  family-names: Spir-Jacob
+- given-names: Yves
+  family-names: Gallant
+- given-names: Andrew
+  name-particle: W.
+  family-names: Chen
+- given-names: Roberta
+  family-names: Zanin
+- given-names: Jean-Philippe
+  family-names: Lenain
+- given-names: Larry
+  family-names: Bradley
+- given-names: Kaori
+  family-names: Nakashima
+- given-names: Anne
+  family-names: Lemière
+- given-names: Mathieu
+  family-names: de Bony
+- given-names: Matthew
+  family-names: Craig
+- given-names: Lab
+  family-names: Saha
+- given-names: Zé
+  family-names: Vinicius
+- given-names: Kyle
+  family-names: Barbary
+- given-names: Thomas
+  family-names: Vuillaume
+- given-names: Adam
+  family-names: Ginsburg
+- given-names: Daniel
+  family-names: Morcuende
+- given-names: José Luis
+  family-names: Contreras
+- given-names: Laura
+  family-names: Vega Garcia
+- given-names: Oscar
+  family-names: Blanch Bigas
+- given-names: Víctor
+  family-names: Zabalza
+- given-names: Wolfgang
+  family-names: Kerzendorf
+- given-names: Rolf
+  family-names: Buehler
+- given-names: Sebastian
+  family-names: Panny
+- given-names: Silvia
+  family-names: Manconi
+- given-names: Stefan
+  family-names: Klepser
+- given-names: Peter
+  family-names: Deiml
+- given-names: Johannes
+  family-names: Buchner
+- given-names: Hugo
+  family-names: van Kemenade
+- given-names: Eric
+  name-particle: O.
+  family-names: Lebigot
+- given-names: Benjamin Alan
+  family-names: Weaver
+- given-names: Debanjan
+  family-names: Bose
+- given-names: Rubén
+  family-names: López-Coto
+- given-names: Sam
+  family-names: Carter
+version: 0.18.2
+date-released: 2020-11-19
+repository-code: https://github.com/gammapy/gammapy
+license: BSD3
+keywords:
+- Astronomy
+- "Gamma-rays"
+- "Data analysis"
+identifiers:
+- type: "doi"
+  value: 10.5281/zenodo.4701500
+  description: Zenodo DOI v0.18.2
+- type: "doi"
+  value: 10.5281/zenodo.4701492
+  description: Zenodo DOI v0.17
+- type: "doi"
+  value: 10.5281/zenodo.4701489
+  description: Zenodo DOI v0.16
+- type: "bibcode"
+  value: "2017ascl.soft11014D"
+- type: "ascl-id"
+  value: "1711.014"

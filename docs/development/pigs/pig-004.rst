@@ -78,7 +78,7 @@ rendered version of the notebooks will be available via the docs, that is
 already in place.  We count on developer documentation and code review to
 guarantee empty-output notebooks stored in ``gammapy/notebooks``, though we can
 also explore `nbstripout`_ for a potential implementation of an automated
-mechamism to remove outputs from notebooks in the Github repository.
+mechanism to remove outputs from notebooks in the Github repository.
 
 In the process of documentation building the notebooks will be texted and
 executed automatically, so the static HTML-formatted notebooks will contain

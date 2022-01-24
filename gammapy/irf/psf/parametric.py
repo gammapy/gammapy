@@ -3,11 +3,10 @@ import abc
 import logging
 import numpy as np
 from astropy import units as u
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from gammapy.utils.gauss import MultiGauss2D
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from .core import PSF
-
 
 __all__ = ["ParametricPSF", "EnergyDependentMultiGaussPSF", "PSFKing"]
 
@@ -28,6 +27,7 @@ class ParametricPSF(PSF):
     meta : dict
         Meta data
     """
+
     @property
     @abc.abstractmethod
     def required_parameters(self):
@@ -148,7 +148,7 @@ class ParametricPSF(PSF):
 
         dtype = {
             "names": cls.required_parameters,
-            "formats": len(cls.required_parameters) * (np.float32,)
+            "formats": len(cls.required_parameters) * (np.float32,),
         }
 
         data = np.empty(axes.shape, dtype=dtype)
@@ -162,17 +162,12 @@ class ParametricPSF(PSF):
 
             # TODO: this fixes some files where sigma is written as zero
             if "sigma" in name:
-                values[values == 0] = 1.
+                values[values == 0] = 1.0
 
             data[name] = values.reshape(axes.shape)
             unit[name] = column.unit or ""
 
-        return cls(
-            axes=axes,
-            data=data,
-            meta=table.meta.copy(),
-            unit=unit
-        )
+        return cls(axes=axes, data=data, meta=table.meta.copy(), unit=unit)
 
     def to_psf3d(self, rad=None):
         """Create a PSF3D from a parametric PSF.
@@ -189,8 +184,8 @@ class ParametricPSF(PSF):
         psf3d : `~gammapy.irf.PSF3D`
             PSF3D.
         """
-        from gammapy.irf import PSF3D
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
+        from gammapy.irf import PSF3D
 
         offset_axis = self.axes["offset"]
         energy_axis_true = self.axes["energy_true"]
@@ -203,12 +198,7 @@ class ParametricPSF(PSF):
         axes = MapAxes([energy_axis_true, offset_axis, rad_axis])
         data = self.evaluate(**axes.get_coord())
 
-        return PSF3D(
-            axes=axes,
-            data=data.value,
-            unit=data.unit,
-            meta=self.meta.copy()
-        )
+        return PSF3D(axes=axes, data=data.value, unit=data.unit, meta=self.meta.copy())
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
@@ -263,7 +253,7 @@ def get_sigmas_and_norms(**kwargs):
     sigmas = u.Quantity([kwargs[f"sigma_{idx}"] for idx in [1, 2, 3]])
 
     scale = kwargs["scale"]
-    ones = np.ones_like(scale)
+    ones = np.ones(scale.shape)
     amplitudes = u.Quantity([ones, kwargs["ampl_2"], kwargs["ampl_3"]])
     norms = 2 * scale * amplitudes * sigmas ** 2
     return sigmas, norms
@@ -295,6 +285,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
         psf.plot_containment_radius(fraction=0.68)
         plt.show()
     """
+
     tag = "psf_3gauss"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["sigma_1", "sigma_2", "sigma_3", "scale", "ampl_2", "ampl_3"]
@@ -356,12 +347,11 @@ class PSFKing(ParametricPSF):
         Meta data
 
     """
+
     tag = "psf_king"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["gamma", "sigma"]
-    default_interp_kwargs = dict(
-        bounds_error=False, fill_value=None
-    )
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
 
     @staticmethod
     def evaluate_containment(rad, gamma, sigma):
@@ -382,7 +372,7 @@ class PSFKing(ParametricPSF):
             Containment
         """
         with np.errstate(divide="ignore", invalid="ignore"):
-            term_1 = -(1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** -gamma
+            term_1 = -((1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** -gamma)
             term_2 = rad ** 2 + 2 * gamma * sigma ** 2
             term_3 = 2 * gamma * sigma ** 2
             containment = term_1 * term_2 / term_3
@@ -411,4 +401,3 @@ class PSFKing(ParametricPSF):
             term3 = (1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** (-gamma)
 
         return term1 * term2 * term3
-

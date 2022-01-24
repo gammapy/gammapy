@@ -38,7 +38,11 @@ from gammapy.modeling.models import (
 )
 
 model = ShellSpatialModel(
-    lon_0="10 deg", lat_0="20 deg", radius="2 deg", width="0.5 deg", frame="galactic",
+    lon_0="10 deg",
+    lat_0="20 deg",
+    radius="2 deg",
+    width="0.5 deg",
+    frame="galactic",
 )
 
 model.plot(add_cbar=True)

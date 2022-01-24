@@ -88,7 +88,7 @@ def get_info_version():
     info = {"version": __version__}
     try:
         path = sys.modules["gammapy"].__path__[0]
-    except:
+    except Exception:
         path = "unknown"
     info["path"] = path
 

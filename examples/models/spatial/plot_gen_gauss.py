@@ -17,7 +17,7 @@ the normalization is expressed as:
     N = \frac{1}{ 2 \pi \sqrt(1-e^2) r_{\rm eff}^2 \eta \Gamma(2\eta)}\,
 
 where :math:`\Gamma` is the gamma function.
-This analytical norm is approximated so it may not integrate to unity in extremal cases
+This analytical norm is approximated so it may not integrate to unity in extreme cases
 if ellipticity tend to one and radius is large or :math:`\eta` much larger than one (outside the default range).
 """
 
@@ -41,7 +41,10 @@ lat_0 = 0
 reval = 3
 dr = 0.02
 geom = WcsGeom.create(
-    skydir=(lon_0, lat_0), binsz=dr, width=(2 * reval, 2 * reval), frame="galactic",
+    skydir=(lon_0, lat_0),
+    binsz=dr,
+    width=(2 * reval, 2 * reval),
+    frame="galactic",
 )
 
 tags = [r"Disk, $\eta=0.01$", r"Gaussian, $\eta=0.5$", r"Laplace, $\eta=1$"]

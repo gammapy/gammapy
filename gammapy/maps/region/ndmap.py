@@ -1,16 +1,16 @@
 from itertools import product
 import numpy as np
+from scipy.ndimage.measurements import label as ndi_label
 from astropy import units as u
 from astropy.io import fits
+from astropy.nddata import block_reduce
 from astropy.table import Table
 from astropy.visualization import quantity_support
-from scipy.ndimage.measurements import label as ndi_label
-from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
+from ..axes import MapAxes
 from ..core import Map
 from ..geom import pix_tuple_to_idx
-from ..axes import MapAxes, MapAxis
 from ..region import RegionGeom
 from ..utils import INVALID_INDEX
 
@@ -93,9 +93,13 @@ class RegionNDMap(Map):
         uplims_nd, uplims = kwargs.pop("uplims", None), None
         label_default = kwargs.pop("label", None)
 
-        labels = product(*[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name])
+        labels = product(
+            *[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name]
+        )
 
-        for label_axis, (idx, quantity) in zip(labels, self.iter_by_axis(axis_name=axis.name)):
+        for label_axis, (idx, quantity) in zip(
+            labels, self.iter_by_axis(axis_name=axis.name)
+        ):
             if isinstance(yerr_nd, tuple):
                 yerr = yerr_nd[0][idx], yerr_nd[1][idx]
             elif isinstance(yerr_nd, np.ndarray):
@@ -113,7 +117,7 @@ class RegionNDMap(Map):
                     yerr=yerr,
                     uplims=uplims,
                     label=label,
-                    **kwargs
+                    **kwargs,
                 )
 
         axis.format_plot_xaxis(ax=ax)
@@ -158,10 +162,7 @@ class RegionNDMap(Map):
         with quantity_support():
             weights = self.data[:, 0, 0]
             ax.hist(
-                axis.as_plot_center,
-                bins=axis.as_plot_center,
-                weights=weights,
-                **kwargs
+                axis.as_plot_center, bins=axis.as_plot_edges, weights=weights, **kwargs
             )
 
         if not self.unit.is_unity():
@@ -181,7 +182,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
@@ -196,7 +197,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        ax : `~matplotlib.axis` 
+        ax : `~matplotlib.axis`
             Axis instance to be used for the plot.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.axvspan`
@@ -222,7 +223,7 @@ class RegionNDMap(Map):
         labels, nlabels = ndi_label(self.data)
 
         for idx in range(1, nlabels + 1):
-            mask = (labels == idx)
+            mask = labels == idx
             xmin = edges[:-1][mask].min().value
             xmax = edges[1:][mask].max().value
             ax.axvspan(xmin, xmax, **kwargs)
@@ -230,7 +231,17 @@ class RegionNDMap(Map):
         return ax
 
     @classmethod
-    def create(cls, region, axes=None, dtype="float32", meta=None, unit="", wcs=None, binsz_wcs="0.1deg", data=None):
+    def create(
+        cls,
+        region,
+        axes=None,
+        dtype="float32",
+        meta=None,
+        unit="",
+        wcs=None,
+        binsz_wcs="0.1deg",
+        data=None,
+    ):
         """Create an empty region map object.
 
         Parameters
@@ -274,7 +285,7 @@ class RegionNDMap(Map):
         axis_name : str
             Which axis to downsample. Default is "energy".
         weights : `RegionNDMap`
-            Contains the weights to apply to the axis to reduce. Default 
+            Contains the weights to apply to the axis to reduce. Default
             is just weighs of one.
 
         Returns
@@ -353,7 +364,7 @@ class RegionNDMap(Map):
             yield tuple(idx), self.quantity[tuple(idx)]
 
     def fill_by_idx(self, idx, weights=None):
-        #TODO: too complex, simplify!
+        # TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
 
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
@@ -391,9 +402,7 @@ class RegionNDMap(Map):
             axis = 2 + self.geom.axes.index("norm")
             kwargs["values_scale"] = StatProfileScale(axis=axis)
 
-        fn = ScaledRegularGridInterpolator(
-            grid_pix, data, **kwargs
-        )
+        fn = ScaledRegularGridInterpolator(grid_pix, data, **kwargs)
         return fn(tuple(pix), clip=False)
 
     def set_by_idx(self, idx, value):
@@ -421,7 +430,9 @@ class RegionNDMap(Map):
         """
         filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist, format=format, ogip_column=ogip_column, hdu=hdu)
+            return cls.from_hdulist(
+                hdulist, format=format, ogip_column=ogip_column, hdu=hdu
+            )
 
     def write(self, filename, overwrite=False, format="gadf", hdu="SKYMAP"):
         """Write map to file
@@ -436,9 +447,7 @@ class RegionNDMap(Map):
             Overwrite existing files?
         """
         filename = make_path(filename)
-        self.to_hdulist(format=format, hdu=hdu).writeto(
-            filename, overwrite=overwrite
-        )
+        self.to_hdulist(format=format, hdu=hdu).writeto(filename, overwrite=overwrite)
 
     def to_hdulist(self, format="gadf", hdu="SKYMAP", hdu_bands=None, hdu_region=None):
         """Convert to `~astropy.io.fits.HDUList`.
@@ -476,7 +485,9 @@ class RegionNDMap(Map):
             raise ValueError(f"Unsupported format '{format}'")
 
         if format in ["ogip", "ogip-sherpa", "gadf"]:
-            hdulist_geom = self.geom.to_hdulist(format=format, hdu_bands=hdu_bands, hdu_region=hdu_region)
+            hdulist_geom = self.geom.to_hdulist(
+                format=format, hdu_bands=hdu_bands, hdu_region=hdu_region
+            )
             hdulist.extend(hdulist_geom[1:])
 
         return hdulist
@@ -489,7 +500,7 @@ class RegionNDMap(Map):
         ----------
         table : `~astropy.table.Table`
             Table with input data
-        format : {"gadf-sed", "lightcurve"}
+        format : {"gadf-sed", "lightcurve", "profile"}
             Format to use
         colname : str
             Column name to take the data from.
@@ -501,14 +512,14 @@ class RegionNDMap(Map):
         """
         if format == "gadf-sed":
             if colname is None:
-                raise ValueError(f"Column name required")
+                raise ValueError("Column name required")
 
             axes = MapAxes.from_table(table=table, format=format)
 
             if colname == "stat_scan":
                 names = ["norm", "energy"]
             # TODO: this is not officially supported by GADF...
-            elif colname in ["counts", "npred", "npred_null"]:
+            elif colname in ["counts", "npred", "npred_excess"]:
                 names = ["dataset", "energy"]
             else:
                 names = ["energy"]
@@ -522,10 +533,24 @@ class RegionNDMap(Map):
             if colname == "stat_scan":
                 names = ["norm", "energy", "time"]
             # TODO: this is not officially supported by GADF...
-            elif colname in ["counts", "npred", "npred_null"]:
+            elif colname in ["counts", "npred", "npred_excess"]:
                 names = ["dataset", "energy", "time"]
             else:
                 names = ["energy", "time"]
+
+            axes = axes[names]
+            data = table[colname].data
+            unit = table[colname].unit or ""
+        elif format == "profile":
+            axes = MapAxes.from_table(table=table, format=format)
+
+            if colname == "stat_scan":
+                names = ["norm", "energy", "projected-distance"]
+            # TODO: this is not officially supported by GADF...
+            elif colname in ["counts", "npred", "npred_excess"]:
+                names = ["dataset", "energy", "projected-distance"]
+            else:
+                names = ["energy", "projected-distance"]
 
             axes = axes[names]
             data = table[colname].data
@@ -534,7 +559,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Format not supported {format}")
 
         geom = RegionGeom.create(region=None, axes=axes)
-        return cls(geom=geom, data=data, unit=unit, meta=table.meta)
+        return cls(geom=geom, data=data, unit=unit, meta=table.meta, dtype=data.dtype)
 
     @classmethod
     def from_hdulist(cls, hdulist, format="gadf", ogip_column=None, hdu=None, **kwargs):
@@ -578,7 +603,7 @@ class RegionNDMap(Map):
         else:
             data, unit = quantity.value, quantity.unit
 
-        return cls(geom=geom, data=data, meta=table.meta, unit=unit)
+        return cls(geom=geom, data=data, meta=table.meta, unit=unit, dtype=data.dtype)
 
     def _pad_spatial(self, *args, **kwargs):
         raise NotImplementedError("Spatial padding is not supported by RegionNDMap")
@@ -632,8 +657,10 @@ class RegionNDMap(Map):
 
         if format == "ogip":
             if len(self.geom.axes) > 1:
-                raise ValueError(f"Writing to format '{format}' only supports a "
-                                 f"single energy axis. Got {self.geom.axes.names}")
+                raise ValueError(
+                    f"Writing to format '{format}' only supports a "
+                    f"single energy axis. Got {self.geom.axes.names}"
+                )
 
             energy_axis = self.geom.axes[0]
             energy_axis.assert_name("energy")
@@ -665,8 +692,10 @@ class RegionNDMap(Map):
 
         elif format in ["ogip-arf", "ogip-arf-sherpa"]:
             if len(self.geom.axes) > 1:
-                raise ValueError(f"Writing to format '{format}' only supports a "
-                                 f"single energy axis. Got {self.geom.axes.names}")
+                raise ValueError(
+                    f"Writing to format '{format}' only supports a "
+                    f"single energy axis. Got {self.geom.axes.names}"
+                )
 
             energy_axis = self.geom.axes[0]
             table = energy_axis.to_table(format=format)
@@ -678,7 +707,7 @@ class RegionNDMap(Map):
                 "hduclass": "OGIP",
                 "hduclas1": "RESPONSE",
                 "hduclas2": "SPECRESP",
-                "hduvers": "1.1.0"
+                "hduvers": "1.1.0",
             }
 
             if format == "ogip-arf-sherpa":

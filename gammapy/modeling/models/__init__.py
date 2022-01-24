@@ -52,9 +52,12 @@ SPECTRAL_MODEL_REGISTRY = Registry(
 TEMPORAL_MODEL_REGISTRY = Registry(
     [
         ConstantTemporalModel,
+        LinearTemporalModel,
         LightCurveTemplateTemporalModel,
         ExpDecayTemporalModel,
         GaussianTemporalModel,
+        PowerLawTemporalModel,
+        SineTemporalModel,
     ]
 )
 """Registry of temporal models classes."""
@@ -70,6 +73,8 @@ __all__ = [
     "SPECTRAL_MODEL_REGISTRY",
     "Models",
     "SkyModel",
+    "FoVBackgroundModel",
+    "TemplateNPredModel",
     "create_crab_spectral_model",
     "create_cosmic_ray_spectral_model",
     "SpatialModel",

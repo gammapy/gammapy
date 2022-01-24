@@ -51,6 +51,7 @@ class PSF(IRF):
         """
         # TODO: this uses a lot of numpy broadcasting tricks, maybe simplify...
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
+
         output = np.broadcast(*kwargs.values(), fraction)
 
         try:
@@ -70,9 +71,9 @@ class PSF(IRF):
 
     def info(
         self,
-        fraction=[0.68, 0.95],
-        energy_true=[[1.0], [10.0]] * u.TeV,
-        offset=0*u.deg,
+        fraction=(0.68, 0.95),
+        energy_true=([1.0], [10.0]) * u.TeV,
+        offset=0 * u.deg,
     ):
         """
         Print PSF summary info.
@@ -117,7 +118,7 @@ class PSF(IRF):
         return info
 
     def plot_containment_radius_vs_energy(
-            self, ax=None, fraction=[0.68, 0.95], offset=[0, 1] * u.deg,  **kwargs
+        self, ax=None, fraction=(0.68, 0.95), offset=(0, 1) * u.deg, **kwargs
     ):
         """Plot containment fraction as a function of energy.
 
@@ -150,9 +151,7 @@ class PSF(IRF):
                 radius = self.containment_radius(
                     energy_true=energy_true.center, offset=theta, fraction=frac
                 )
-                plot_kwargs.setdefault(
-                    "label", f"{theta}, {100 * frac:.1f}%"
-                )
+                plot_kwargs.setdefault("label", f"{theta}, {100 * frac:.1f}%")
                 with quantity_support():
                     ax.plot(energy_true.center, radius, **plot_kwargs)
 
@@ -161,7 +160,7 @@ class PSF(IRF):
         ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
-    def plot_containment_radius(self, ax=None, fraction=0.68,  add_cbar=True, **kwargs):
+    def plot_containment_radius(self, ax=None, fraction=0.68, add_cbar=True, **kwargs):
         """Plot containment image with energy and theta axes.
 
         Parameters
@@ -189,7 +188,9 @@ class PSF(IRF):
 
         # Set up and compute data
         containment = self.containment_radius(
-            energy_true=energy.center[:, np.newaxis], offset=offset.center, fraction=fraction
+            energy_true=energy.center[:, np.newaxis],
+            offset=offset.center,
+            fraction=fraction,
         )
 
         # plotting defaults
@@ -199,7 +200,9 @@ class PSF(IRF):
 
         # Plotting
         with quantity_support():
-            caxes = ax.pcolormesh(energy.edges, offset.edges, containment.value.T, **kwargs)
+            caxes = ax.pcolormesh(
+                energy.edges, offset.edges, containment.value.T, **kwargs
+            )
 
         energy.format_plot_xaxis(ax=ax)
         offset.format_plot_yaxis(ax=ax)
@@ -210,7 +213,9 @@ class PSF(IRF):
 
         return ax
 
-    def plot_psf_vs_rad(self, ax=None, offset=[0] * u.deg, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
+    def plot_psf_vs_rad(
+        self, ax=None, offset=[0] * u.deg, energy_true=[0.1, 1, 10] * u.TeV, **kwargs
+    ):
         """Plot PSF vs rad.
 
         Parameters
@@ -235,7 +240,9 @@ class PSF(IRF):
 
         for theta in offset:
             for energy in energy_true:
-                psf_value = self.evaluate(rad=rad.center, energy_true=energy, offset=theta)
+                psf_value = self.evaluate(
+                    rad=rad.center, energy_true=energy, offset=theta
+                )
                 label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
                 with quantity_support():
                     ax.plot(rad.center, psf_value, label=label, **kwargs)

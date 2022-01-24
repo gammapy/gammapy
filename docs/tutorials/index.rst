@@ -89,6 +89,7 @@ time-dependent analysis with light-curves.
    analysis/3D/simulate_3d.ipynb
    analysis/3D/analysis_mwl.ipynb
    analysis/3D/event_sampling.ipynb
+   analysis/3D/flux_profiles.ipynb
 
 Time
 ~~~~
@@ -117,6 +118,7 @@ expose how to perform more specific use cases.
    api/maps.ipynb
    api/mask_maps.ipynb
    api/astro_dark_matter.ipynb
+   api/datasets.ipynb
 
 
 .. _tutorials_scripts:

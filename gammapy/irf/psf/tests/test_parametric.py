@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose   
+from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.io import fits
 from astropy.coordinates import Angle
+from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKing
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -88,6 +88,18 @@ def test_psf_cta_1dc():
     assert_allclose(radius, 0.052841 * u.deg, atol=1e-4)
 
 
+@requires_data()
+def test_get_sigmas_and_norms():
+    filename = "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+
+    psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+
+    value = psf_irf.evaluate(
+        energy_true=1 * u.TeV, rad=0.03 * u.deg, offset=3.5 * u.deg
+    )
+    assert_allclose(value, 78.25826069 * u.Unit("deg-2"))
+
+
 @pytest.fixture(scope="session")
 def psf_king():
     return PSFKing.read("$GAMMAPY_DATA/tests/hess_psf_king_023523.fits.gz")
@@ -107,7 +119,7 @@ def test_psf_king_evaluate(psf_king):
 @requires_data()
 def test_psf_king_containment_radius(psf_king):
     radius = psf_king.containment_radius(
-        fraction=0.68, energy_true=1 * u.TeV, offset=0.* u.deg
+        fraction=0.68, energy_true=1 * u.TeV, offset=0.0 * u.deg
     )
 
     assert_allclose(radius, 0.65975 * u.deg, rtol=1e-5)
@@ -120,12 +132,8 @@ def test_psf_king_evaluate_2(psf_king):
     rad = Angle(1, "deg")
     # energy = Quantity(1, "TeV") match with bin number 8
     # offset equal 1 degre match with the bin 200 in the psf_table
-    value_off1 = psf_king.evaluate(
-        rad=rad, energy_true=1 * u.TeV, offset=theta1
-    )
-    value_off2 = psf_king.evaluate(
-        rad=rad, energy_true=1 * u.TeV, offset=theta2
-    )
+    value_off1 = psf_king.evaluate(rad=rad, energy_true=1 * u.TeV, offset=theta1)
+    value_off2 = psf_king.evaluate(rad=rad, energy_true=1 * u.TeV, offset=theta2)
     # Test that the value at 1 degree in the histogram for the energy 1 Tev and theta=0 or 1 degree is equal to the one
     # obtained from the self.evaluate_direct() method at 1 degree
     assert_allclose(0.005234 * u.Unit("deg-2"), value_off1, rtol=1e-4)

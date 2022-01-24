@@ -146,7 +146,7 @@ class Covariance:
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.visualisation.plot_heatmap`
+            Keyword arguments passed to `~gammapy.visualization.plot_heatmap`
 
         Returns
         -------
@@ -155,7 +155,7 @@ class Covariance:
 
         """
         import matplotlib.pyplot as plt
-        from gammapy.visualization import plot_heatmap, annotate_heatmap
+        from gammapy.visualization import annotate_heatmap, plot_heatmap
 
         npars = len(self.parameters)
         figsize = (npars * 0.8, npars * 0.65)

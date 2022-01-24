@@ -1,12 +1,11 @@
-import logging
 import contextlib
+import logging
 from multiprocessing import Pool
 import numpy as np
-
 from astropy.coordinates import Angle
+from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from .core import Maker
 from .safe import SafeMaskMaker
-from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 
 log = logging.getLogger(__name__)
 
@@ -22,11 +21,11 @@ class DatasetsMaker(Maker):
         Stack into reference dataset or not
     n_jobs : int
         Number of processes to run in parallel
-        Defalut is None
+        Default is None
     cutout_mode : str
         Cutout mode. Default is "partial"
     cutout_width : str or `~astropy.coordinates.Angle`,
-        Cutout width. Default is None, If Default is determined 
+        Cutout width. Default is None, If Default is determined
     """
 
     tag = "DatasetsMaker"
@@ -76,7 +75,7 @@ class DatasetsMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Reference dataset
-         observation : `Observation`
+        observation : `Observation`
             Observation
         """
 
@@ -86,7 +85,9 @@ class DatasetsMaker(Maker):
                 "width": self.cutout_width,
                 "mode": self.cutout_mode,
             }
-            dataset_obs = dataset.cutout(**cutouts_kwargs,)
+            dataset_obs = dataset.cutout(
+                **cutouts_kwargs,
+            )
         else:
             dataset_obs = dataset.copy()
         if dataset.models is not None:
@@ -107,7 +108,7 @@ class DatasetsMaker(Maker):
             self._datasets.append(dataset)
 
     def error_callback(self, dataset):
-        # parralel run could cause a memory error with non-explicit message.
+        # parallel run could cause a memory error with non-explicit message.
         self._error = True
 
     def run(self, dataset, observations, datasets=None):
@@ -115,12 +116,12 @@ class DatasetsMaker(Maker):
 
         Parameters
         ----------
-         dataset : `~gammapy.datasets.MapDataset`
-            Reference dataset (used only for stacking if datasets are provided) 
-         observations : `Observations`
+        dataset : `~gammapy.datasets.MapDataset`
+            Reference dataset (used only for stacking if datasets are provided)
+        observations : `Observations`
             Observations
-         datasets : `~gammapy.datasets.Datasets`   
-             Base datasets, if provided its length must be the same than the observations.
+        datasets : `~gammapy.datasets.Datasets`
+            Base datasets, if provided its length must be the same than the observations.
 
         Returns
         -------
@@ -151,7 +152,10 @@ class DatasetsMaker(Maker):
                 for base, obs in zip(datasets, observations):
                     result = pool.apply_async(
                         self.make_dataset,
-                        (base, obs,),
+                        (
+                            base,
+                            obs,
+                        ),
                         callback=self.callback,
                         error_callback=self.error_callback,
                     )

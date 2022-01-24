@@ -8,12 +8,19 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
-    TemplateNPredModel,
+    ConstantTemporalModel,
     EBLAbsorptionNormSpectralModel,
+    ExpDecayTemporalModel,
+    GaussianTemporalModel,
+    LinearTemporalModel,
     Model,
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
+    PowerLawTemporalModel,
+    SineTemporalModel,
+    SkyModel,
+    TemplateNPredModel,
 )
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
@@ -93,7 +100,7 @@ def test_dict_to_skymodels():
 
 @requires_data()
 def test_sky_models_io(tmp_path):
-    # TODO: maybe change to a test case where we create a model programatically?
+    # TODO: maybe change to a test case where we create a model programmatically?
     filename = get_pkg_data_filename("data/examples.yaml")
     models = Models.read(filename)
     models.covariance = np.eye(len(models.parameters))
@@ -110,10 +117,24 @@ def test_sky_models_io(tmp_path):
 
 def test_piecewise_norm_spectral_model_init():
     with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1, 5])
+        PiecewiseNormSpectralModel(
+            energy=[
+                1,
+            ]
+            * u.TeV,
+            norms=[1, 5],
+        )
 
     with pytest.raises(ValueError):
-        PiecewiseNormSpectralModel(energy=[1,] * u.TeV, norms=[1,])
+        PiecewiseNormSpectralModel(
+            energy=[
+                1,
+            ]
+            * u.TeV,
+            norms=[
+                1,
+            ],
+        )
 
 
 def test_piecewise_norm_spectral_model_io():
@@ -125,7 +146,7 @@ def test_piecewise_norm_spectral_model_io():
 
     model_dict = model.to_dict()
 
-    parnames = [_["name"] for _ in model_dict["parameters"]]
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     for k, parname in enumerate(parnames):
         assert parname == f"norm_{k}"
 
@@ -142,7 +163,7 @@ def test_absorption_io(tmp_path):
     assert len(dominguez.parameters) == 2
 
     model_dict = dominguez.to_dict()
-    parnames = [_["name"] for _ in model_dict["parameters"]]
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
         "alpha_norm",
         "redshift",
@@ -225,6 +246,9 @@ def make_all_models():
     # TODO: yield Model.create("NaimaSpectralModel")
     # TODO: yield Model.create("ScaleSpectralModel")
     yield Model.create("ConstantTemporalModel", "temporal")
+    yield Model.create("LinearTemporalModel", "temporal")
+    yield Model.create("PowerLawTemporalModel", "temporal")
+    yield Model.create("SineTemporalModel", "temporal")
     yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
     yield Model.create(
         "SkyModel",
@@ -269,9 +293,27 @@ def test_simplified_output():
     simplified = model.to_dict()
     for k, _ in enumerate(model.parameters.names):
         for item in ["min", "max", "error"]:
-            assert item in full["parameters"][k]
-            assert item not in simplified["parameters"][k]
+            assert item in full["spectral"]["parameters"][k]
+            assert item not in simplified["spectral"]["parameters"][k]
 
 
 def test_registries_print():
     assert "Registry" in str(MODEL_REGISTRY)
+
+
+def test_io_temporal():
+    classes = [
+        ConstantTemporalModel,
+        LinearTemporalModel,
+        ExpDecayTemporalModel,
+        GaussianTemporalModel,
+        PowerLawTemporalModel,
+        SineTemporalModel,
+    ]
+    for c in classes:
+        sky_model = SkyModel(spectral_model=PowerLawSpectralModel(), temporal_model=c())
+        model_dict = sky_model.to_dict()
+        read_model = SkyModel.from_dict(model_dict)
+        for p in sky_model.temporal_model.parameters:
+            assert_allclose(read_model.temporal_model.parameters[p.name].value, p.value)
+            assert read_model.temporal_model.parameters[p.name].unit == p.unit

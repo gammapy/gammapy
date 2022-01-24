@@ -1,19 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
-from astropy.io import fits
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from regions import PointSkyRegion
 from gammapy.utils.units import unit_from_fits_image_hdu
-import logging
-from .geom import HpxGeom
-from .core import HpxMap
-from .io import HpxConv, HPX_FITS_CONVENTIONS
-from .utils import HpxToWcsMapping, get_superpixels, get_pix_size_from_nside
-from ..utils import INVALID_INDEX
-from ..geom import pix_tuple_to_idx
 from ..coord import MapCoord
-
+from ..geom import pix_tuple_to_idx
+from ..utils import INVALID_INDEX
+from .core import HpxMap
+from .geom import HpxGeom
+from .io import HPX_FITS_CONVENTIONS, HpxConv
+from .utils import HpxToWcsMapping, get_pix_size_from_nside, get_superpixels
 
 __all__ = ["HpxNDMap"]
 
@@ -84,7 +83,7 @@ class HpxNDMap(HpxMap):
             binsz=geom_wcs.pixel_scales[0],
             frame=geom_wcs.frame,
             nest=nest,
-            axes=geom_wcs.axes
+            axes=geom_wcs.axes,
         )
 
         map_hpx = cls.from_geom(geom=geom_hpx, unit=wcs_tiles[0].unit)
@@ -104,7 +103,9 @@ class HpxNDMap(HpxMap):
 
         return map_hpx
 
-    def to_wcs_tiles(self, nside_tiles=4, margin="0 deg", method="nearest", oversampling_factor=1):
+    def to_wcs_tiles(
+        self, nside_tiles=4, margin="0 deg", method="nearest", oversampling_factor=1
+    ):
         """Convert HpxNDMap to a list of WCS tiles
 
         Parameters
@@ -125,9 +126,7 @@ class HpxNDMap(HpxMap):
         """
         wcs_tiles = []
 
-        wcs_geoms = self.geom.to_wcs_tiles(
-            nside_tiles=nside_tiles, margin=margin
-        )
+        wcs_geoms = self.geom.to_wcs_tiles(nside_tiles=nside_tiles, margin=margin)
 
         for geom in wcs_geoms:
             if oversampling_factor > 1:
@@ -223,7 +222,7 @@ class HpxNDMap(HpxMap):
         oversample=2,
         width_pix=None,
         hpx2wcs=None,
-        fill_nan=True
+        fill_nan=True,
     ):
         from gammapy.maps import WcsNDMap
 
@@ -333,7 +332,9 @@ class HpxNDMap(HpxMap):
         if factor > 1:
             return self.upsample(factor=int(factor), preserve_counts=preserve_counts)
         elif factor < 1:
-            return self.downsample(factor=int(1 / factor), preserve_counts=preserve_counts)
+            return self.downsample(
+                factor=int(1 / factor), preserve_counts=preserve_counts
+            )
         else:
             return self.copy()
 
@@ -349,8 +350,7 @@ class HpxNDMap(HpxMap):
             raise ValueError(f"Invalid interpolation method: {method!r}")
 
     def interp_by_pix(self, pix, method=None):
-        """Interpolate map values at the given pixel coordinates.
-        """
+        """Interpolate map values at the given pixel coordinates."""
         raise NotImplementedError
 
     def cutout(self, position, width, *args, **kwargs):
@@ -376,9 +376,7 @@ class HpxNDMap(HpxMap):
             idx = self.geom.to_image().global_to_local((geom._ipix,))
 
         data = self.data[..., idx]
-        return self.__class__(
-            geom=geom, data=data, unit=self.unit, meta=self.meta
-        )
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
     def stack(self, other, weights=None, nan_to_num=True):
         """Stack cutout into map.
@@ -406,9 +404,11 @@ class HpxNDMap(HpxMap):
             )
 
         data = other.quantity.to_value(self.unit)
+
         if nan_to_num:
             data = data.copy()
             data[~np.isfinite(data)] = 0
+
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible spatial geoms between map and weights")
@@ -443,18 +443,19 @@ class HpxNDMap(HpxMap):
         import healpy as hp
 
         nside = self.geom.nside
-        lmax = 3*nside-1 # maximum l of the power spectrum
-        nest = self.geom.nest
-        allsky = self.geom.is_allsky
+        lmax = int(3 * nside - 1)  # maximum l of the power spectrum
         ipix = self.geom._ipix
 
-        if not allsky: #stack into an all sky map
-            full_sky_geom = HpxGeom.create(nside = self.geom.nside,
-                                        nest = self.geom.nest,
-                                        frame = self.geom.frame,
-                                        axes = self.geom.axes
-                                        )
+        if not self.geom.is_allsky:
+            # stack into an all sky map
+            full_sky_geom = HpxGeom.create(
+                nside=self.geom.nside,
+                nest=self.geom.nest,
+                frame=self.geom.frame,
+                axes=self.geom.axes,
+            )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
+
             for img, idx in self.iter_by_image():
                 full_sky_map.data[idx][ipix] = img
         else:
@@ -474,28 +475,33 @@ class HpxNDMap(HpxMap):
         for img, idx in full_sky_map.iter_by_image():
             img = img.astype(float)
 
-            if nest:
+            if self.geom.nest:
                 # reorder to ring to do the smoothing
                 img = hp.pixelfunc.reorder(img, n2r=True)
 
             if kernel == "gauss":
-                data = hp.sphtfunc.smoothing(img, sigma=width, pol=False, verbose=False, lmax=lmax)
+                data = hp.sphtfunc.smoothing(
+                    img, sigma=width, pol=False, verbose=False, lmax=lmax
+                )
             elif kernel == "disk":
                 # create the step function in angular space
-                theta = np.linspace(0,width)
+                theta = np.linspace(0, width)
                 beam = np.ones(len(theta))
-                beam[theta>width]=0
+                beam[theta > width] = 0
                 # convert to the spherical harmonics space
                 window_beam = hp.sphtfunc.beam2bl(beam, theta, lmax)
                 # normalize the window beam
-                window_beam = window_beam/window_beam.max()
-                data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
+                window_beam = window_beam / window_beam.max()
+                data = hp.sphtfunc.smoothing(
+                    img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax
+                )
             else:
                 raise ValueError(f"Invalid kernel: {kernel!r}")
 
-            if nest:
+            if self.geom.nest:
                 # reorder back to nest after the smoothing
                 data = hp.pixelfunc.reorder(data, r2n=True)
+
             smoothed_data[idx] = data[ipix]
 
         return self._init_copy(data=smoothed_data)
@@ -532,7 +538,9 @@ class HpxNDMap(HpxMap):
         elif convolution_method == "":
             return self.convolve_full(kernel)
         else:
-            raise ValueError(f"Not a valid method for HPX convolution: {convolution_method}")
+            raise ValueError(
+                f"Not a valid method for HPX convolution: {convolution_method}"
+            )
 
     def convolve_wcs(self, kernel, **kwargs):
         """Convolve map with a WCS kernel.
@@ -561,7 +569,9 @@ class HpxNDMap(HpxMap):
         """
         # TODO: maybe go through `.to_wcs_tiles()` to make this work for allsky maps
         if self.geom.is_allsky:
-            raise ValueError("Convolution via WCS projection is not supported for allsky maps.")
+            raise ValueError(
+                "Convolution via WCS projection is not supported for allsky maps."
+            )
 
         if self.geom.width > 10 * u.deg:
             log.warning(
@@ -581,7 +591,9 @@ class HpxNDMap(HpxMap):
             )
 
         geom_wcs = self.geom.to_wcs_geom(proj="TAN").to_image()
-        hpx2wcs = HpxToWcsMapping.create(hpx=self.geom, wcs=geom_wcs.to_binsz(binsz=wcs_size))
+        hpx2wcs = HpxToWcsMapping.create(
+            hpx=self.geom, wcs=geom_wcs.to_binsz(binsz=wcs_size)
+        )
 
         # Project to WCS and convolve
         wcs_map = self.to_wcs(hpx2wcs=hpx2wcs, fill_nan=False)
@@ -625,17 +637,19 @@ class HpxNDMap(HpxMap):
         import healpy as hp
 
         nside = self.geom.nside
-        lmax = 3*nside-1 # maximum l of the power spectrum
+        lmax = int(3 * nside - 1)  # maximum l of the power spectrum
         nest = self.geom.nest
         allsky = self.geom.is_allsky
         ipix = self.geom._ipix
 
-        if not allsky: #stack into an all sky map
-            full_sky_geom = HpxGeom.create(nside = self.geom.nside,
-                                        nest = self.geom.nest,
-                                        frame = self.geom.frame,
-                                        axes = self.geom.axes
-                                        )
+        if not allsky:
+            # stack into an all sky map
+            full_sky_geom = HpxGeom.create(
+                nside=self.geom.nside,
+                nest=self.geom.nest,
+                frame=self.geom.frame,
+                axes=self.geom.axes,
+            )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
             for img, idx in self.iter_by_image():
                 full_sky_map.data[idx][ipix] = img
@@ -649,11 +663,13 @@ class HpxNDMap(HpxMap):
         center = max(center_pix)
         dim = np.argmax(center_pix)
 
-        pixels =[0,0]
-        pixels[dim] = np.linspace(0,center, int(center+1)) # assuming radially symmetric kernel
-        pixels[abs(1-dim)] =  center_pix[abs(1-dim)]*np.ones(int(center+1))
+        pixels = [0, 0]
+        pixels[dim] = np.linspace(
+            0, center, int(center + 1)
+        )  # assuming radially symmetric kernel
+        pixels[abs(1 - dim)] = center_pix[abs(1 - dim)] * np.ones(int(center + 1))
         coords = psf_kernel.geom.pix_to_coord(pixels)
-        coordinates = SkyCoord(coords[0], coords[1], frame=psf_kernel.geom.frame )
+        coordinates = SkyCoord(coords[0], coords[1], frame=psf_kernel.geom.frame)
         angles = coordinates.separation(psf_kernel.geom.center_skydir).rad
         values = psf_kernel.get_by_pix(pixels)
 
@@ -664,17 +680,20 @@ class HpxNDMap(HpxMap):
             if nest:
                 # reorder to ring to do the convolution
                 img = hp.pixelfunc.reorder(img, n2r=True)
-            radial_profile = np.reshape(values[:,idx], (values.shape[0],))
-            window_beam = hp.sphtfunc.beam2bl(np.flip(radial_profile), np.flip(angles), lmax)
-            window_beam = window_beam/window_beam.max()
-            data = hp.sphtfunc.smoothing(img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax)
+            radial_profile = np.reshape(values[:, idx], (values.shape[0],))
+            window_beam = hp.sphtfunc.beam2bl(
+                np.flip(radial_profile), np.flip(angles), lmax
+            )
+            window_beam = window_beam / window_beam.max()
+            data = hp.sphtfunc.smoothing(
+                img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax
+            )
             if nest:
                 # reorder back to nest after the convolution
                 data = hp.pixelfunc.reorder(data, r2n=True)
 
             convolved_data[idx] = data[ipix]
         return self._init_copy(data=convolved_data)
-
 
     def get_by_idx(self, idx):
         # inherited docstring
@@ -886,13 +905,8 @@ class HpxNDMap(HpxMap):
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object
-        im : `~matplotlib.image.AxesImage` or `~matplotlib.collections.PatchCollection`
-            Image object.
-
         """
         if method == "raster":
             m = self.to_wcs(
@@ -924,10 +938,10 @@ class HpxNDMap(HpxMap):
 
         # FIXME: Figure out how to force a square aspect-ratio like imshow
 
-        import matplotlib.pyplot as plt
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
         import healpy as hp
+        import matplotlib.pyplot as plt
+        from matplotlib.collections import PatchCollection
+        from matplotlib.patches import Polygon
 
         wcs = self.geom.to_wcs_geom(proj=proj, oversample=1)
         if ax is None:
@@ -988,17 +1002,17 @@ class HpxNDMap(HpxMap):
         ax.autoscale_view()
         ax.coords.grid(color="w", linestyle=":", linewidth=0.5)
 
-        return fig, ax, p
+        return ax
 
-
-    def plot_mask(self,
-            method="raster",
-            ax=None,
-            proj="AIT",
-            oversample=2,
-            width_pix=1000,
-            **kwargs,
-        ):
+    def plot_mask(
+        self,
+        method="raster",
+        ax=None,
+        proj="AIT",
+        oversample=2,
+        width_pix=1000,
+        **kwargs,
+    ):
         """Plot the mask as a shaded area
 
         Parameters
@@ -1030,7 +1044,9 @@ class HpxNDMap(HpxMap):
             WCS axis object
         """
         if not self.is_mask:
-            raise ValueError("`.plot_mask()` only supports maps containing boolean values.")
+            raise ValueError(
+                "`.plot_mask()` only supports maps containing boolean values."
+            )
 
         if method == "raster":
             m = self.to_wcs(

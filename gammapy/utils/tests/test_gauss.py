@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import scipy.integrate
 from numpy.testing import assert_allclose
 from astropy import units as u
 from gammapy.utils.gauss import Gauss2DPDF, MultiGauss2D
@@ -11,7 +10,11 @@ class TestGauss2DPDF:
     checking that their integrals as advertised are 1."""
 
     def setup(self):
-        self.gs = [Gauss2DPDF(0.1 * u.deg), Gauss2DPDF(1 * u.deg), Gauss2DPDF(1 * u.deg)]
+        self.gs = [
+            Gauss2DPDF(0.1 * u.deg),
+            Gauss2DPDF(1 * u.deg),
+            Gauss2DPDF(1 * u.deg),
+        ]
 
     def test_call(self):
         # Check that value at origin matches the one given here:
@@ -28,12 +31,8 @@ class TestGauss2DPDF:
 
     def test_theta(self):
         for g in self.gs:
-            assert_allclose(
-                g.containment_radius(0.68) / g.sigma, 1.5095921854516636
-            )
-            assert_allclose(
-                g.containment_radius(0.95) / g.sigma, 2.4477468306808161
-            )
+            assert_allclose(g.containment_radius(0.68) / g.sigma, 1.5095921854516636)
+            assert_allclose(g.containment_radius(0.95) / g.sigma, 2.4477468306808161)
 
     def test_gauss_convolve(self):
         g = Gauss2DPDF(sigma=3 * u.deg).gauss_convolve(sigma=4 * u.deg)

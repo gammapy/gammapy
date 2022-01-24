@@ -1,5 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.utils.scripts import get_images_paths, get_notebooks_paths, recursive_merge_dicts
+from gammapy.utils.scripts import (
+    get_images_paths,
+    get_notebooks_paths,
+    recursive_merge_dicts,
+)
 
 
 def test_get_images_paths():

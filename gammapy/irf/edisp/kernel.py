@@ -51,6 +51,7 @@ class EDispKernel(IRF):
 
     """
 
+    tag = "edisp_kernel"
     required_axes = ["energy_true", "energy"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
     """Default Interpolation kwargs for `~IRF`. Fill zeros and do not
@@ -101,7 +102,8 @@ class EDispKernel(IRF):
         data = self.pdf_in_safe_range(lo_threshold, hi_threshold)
 
         return self.__class__(
-            axes=self.axes.squash("energy"), data=np.sum(data, axis=1, keepdims=True),
+            axes=self.axes.squash("energy"),
+            data=np.sum(data, axis=1, keepdims=True),
         )
 
     @classmethod
@@ -326,8 +328,8 @@ class EDispKernel(IRF):
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
             # add 1 to borders for correct behaviour of np.split
-            groups = np.asarray(np.split(pos, borders + 1))
-            n_grp_temp = groups.shape[0] if groups.size > 0 else 1
+            groups = np.split(pos, borders + 1)
+            n_grp_temp = len(groups) if len(groups) > 0 else 1
             n_chan_temp = np.asarray([val.size for val in groups])
             try:
                 f_chan_temp = np.asarray([val[0] for val in groups])
@@ -535,7 +537,7 @@ class EDispKernel(IRF):
 
         if add_cbar:
             label = "Probability density (A.U.)"
-            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+            ax.figure.colorbar(caxes, ax=ax, label=label)
 
         energy_axis_true.format_plot_xaxis(ax=ax)
         energy_axis.format_plot_yaxis(ax=ax)
@@ -569,7 +571,9 @@ class EDispKernel(IRF):
             ax.plot(energy, bias, **kwargs)
 
         ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units}]")
-        ax.set_ylabel("($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$")
+        ax.set_ylabel(
+            "($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$"
+        )
         ax.set_xscale("log")
         return ax
 

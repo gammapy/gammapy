@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
-from pathlib import Path
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.utils.scripts import make_path
+from gammapy.irf import EDispKernel, EDispKernelMap
 from gammapy.maps import RegionNDMap
-from gammapy.irf import EDispKernelMap, EDispKernel
+from gammapy.utils.scripts import make_path
 from .spectrum import SpectrumDatasetOnOff
 
 
@@ -61,6 +60,7 @@ class OGIPDatasetWriter(DatasetWriter):
     overwrite : bool
         Overwrite existing files?
     """
+
     tag = ["ogip", "ogip-sherpa"]
 
     def __init__(self, filename, format="ogip", overwrite=False):
@@ -91,7 +91,7 @@ class OGIPDatasetWriter(DatasetWriter):
         return {
             "respfile": name.format("_rmf"),
             "backfile": name.format("_bkg"),
-            "ancrfile": name.format("_arf")
+            "ancrfile": name.format("_arf"),
         }
 
     def get_ogip_meta(self, dataset, is_bkg=False):
@@ -157,11 +157,7 @@ class OGIPDatasetWriter(DatasetWriter):
             Filename to use.
         """
         kernel = dataset.edisp.get_edisp_kernel()
-        kernel.write(
-            filename=filename,
-            overwrite=self.overwrite,
-            format=self.format
-        )
+        kernel.write(filename=filename, overwrite=self.overwrite, format=self.format)
 
     def write_arf(self, dataset, filename):
         """Write effective area
@@ -267,6 +263,7 @@ class OGIPDatasetReader(DatasetReader):
     filename : str or `~pathlib.Path`
         OGIP PHA file to read
     """
+
     tag = "ogip"
 
     def __init__(self, filename):
@@ -308,9 +305,7 @@ class OGIPDatasetReader(DatasetReader):
             Dict with filenames of "arffile", "rmffile" (optional)
             and "bkgfile" (optional)
         """
-        filenames = {
-            "arffile": self.get_valid_path(pha_meta["ANCRFILE"])
-        }
+        filenames = {"arffile": self.get_valid_path(pha_meta["ANCRFILE"])}
 
         if "BACKFILE" in pha_meta:
             filenames["bkgfile"] = self.get_valid_path(pha_meta["BACKFILE"])

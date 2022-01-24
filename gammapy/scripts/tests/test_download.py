@@ -7,9 +7,9 @@ from gammapy.utils.testing import run_cli
 @pytest.fixture(scope="session")
 def config():
     return {
-        "release": "0.18",
-        "notebook": "astro_dark_matter",
-        "envfilename": "gammapy-0.18-environment.yml",
+        "release": "dev",
+        "notebook": "overview",
+        "envfilename": "gammapy-dev-environment.yml",
     }
 
 
@@ -28,7 +28,7 @@ def test_cli_download_notebooks(tmp_path, config):
     ]
     run_cli(cli, args)
     assert (tmp_path / config["release"] / config["envfilename"]).exists()
-    assert (tmp_path / config["release"] / f"{config['notebook']}.ipynb").exists()
+    assert (tmp_path / config["release"] / "tutorials" / "starting" / f"{config['notebook']}.ipynb").exists()
 
 
 @pytest.mark.remote_data

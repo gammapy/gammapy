@@ -7,7 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from regions import CircleSkyRegion
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.maps.utils import _check_width, _check_binsz
+from gammapy.maps.utils import _check_binsz, _check_width
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
@@ -145,9 +145,7 @@ def test_wcs_geom_from_aligned(npix, binsz, frame, proj, skydir, axes):
         npix=npix, binsz=binsz, skydir=(0, 0), proj=proj, frame=frame, axes=axes
     )
 
-    aligned_geom = WcsGeom.from_aligned(
-        geom=geom, skydir=(2, 3), width="90 deg"
-    )
+    aligned_geom = WcsGeom.from_aligned(geom=geom, skydir=(2, 3), width="90 deg")
 
     assert aligned_geom.is_aligned(geom)
 
@@ -155,16 +153,12 @@ def test_wcs_geom_from_aligned(npix, binsz, frame, proj, skydir, axes):
 def test_from_aligned_vs_cutout():
     skydir = SkyCoord(0.12, -0.34, unit="deg", frame="galactic")
 
-    geom = WcsGeom.create(
-        binsz=0.1, skydir=skydir, proj="AIT", frame="galactic"
-    )
+    geom = WcsGeom.create(binsz=0.1, skydir=skydir, proj="AIT", frame="galactic")
 
     position = SkyCoord("2.23d", "3.102d", frame="galactic")
 
     width = ("89 deg", "79 deg")
-    aligned_geom = WcsGeom.from_aligned(
-        geom=geom, skydir=position, width=width
-    )
+    aligned_geom = WcsGeom.from_aligned(geom=geom, skydir=position, width=width)
 
     geom_cutout = geom.cutout(position=position, width=width)
 
@@ -183,12 +177,10 @@ def test_from_aligned_vs_cutout_tan():
 
     geom_cutout = geom.cutout(position=position, width=width, mode="partial")
 
-    aligned_geom = WcsGeom.from_aligned(
-        geom=geom, skydir=position, width=width
-    )
+    aligned_geom = WcsGeom.from_aligned(geom=geom, skydir=position, width=width)
 
     assert aligned_geom == geom_cutout
-    
+
 
 def test_wcsgeom_solid_angle():
     # Test using a CAR projection map with an extra axis
@@ -231,7 +223,7 @@ def test_wcsgeom_solid_angle_symmetry():
 
 
 def test_wcsgeom_solid_angle_ait():
-    # Pixels that don't correspond to locations on ths sky
+    # Pixels that don't correspond to locations on the sky
     # should have solid angles set to NaN
     ait_geom = WcsGeom.create(
         skydir=(0, 0), width=(360, 180), binsz=20, frame="galactic", proj="AIT"
@@ -623,9 +615,7 @@ def test_non_equal_binsz():
 
 
 def test_wcs_geom_to_even_npix():
-    geom = WcsGeom.create(
-        skydir=(0, 0), binsz=1, width=(3, 3)
-    )
+    geom = WcsGeom.create(skydir=(0, 0), binsz=1, width=(3, 3))
 
     geom_even = geom.to_even_npix()
 

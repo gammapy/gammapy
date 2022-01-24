@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 # Cache for `requires_dependency`
-_requires_dependency_cache = dict()
+_requires_dependency_cache = {}
 
 
 def requires_dependency(name):
@@ -120,7 +120,7 @@ def run_cli(cli, args, exit_code=0):
 
     if result.exit_code != exit_code:
         sys.stderr.write("Exit code mismatch!\n")
-        sys.stderr.write("Ouput:\n")
+        sys.stderr.write("Output:\n")
         sys.stderr.write(result.output)
 
     return result
@@ -209,8 +209,8 @@ def mpl_plot_check():
     This is writing to an in-memory byte buffer, i.e. is faster
     than writing to disk.
     """
-    import matplotlib.pyplot as plt
     from io import BytesIO
+    import matplotlib.pyplot as plt
 
     class MPLPlotCheck:
         def __enter__(self):

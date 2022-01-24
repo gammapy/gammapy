@@ -1,46 +1,53 @@
-from copy import deepcopy
 import abc
 import logging
+from copy import deepcopy
 import numpy as np
-from astropy.io import fits
 from astropy import units as u
-from astropy.utils import lazyproperty
+from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import lazyproperty
 from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
+from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
     interpolation_scale,
 )
-from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.scripts import make_path
 from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
 
 log = logging.getLogger(__name__)
 
 
-class IRF:
+class IRF(metaclass=abc.ABCMeta):
     """IRF base class for DL3 instrument response functions
 
     Parameters
     -----------
     axes : list of `MapAxis` or `MapAxes`
         Axes
-    data : `~numpy.ndarray`
+    data : `~numpy.ndarray` or `~astropy.units.Quantity`
         Data
     unit : str or `~astropy.units.Unit`
-        Unit
+        Unit, ignored if data is a Quantity.
     meta : dict
         Meta data
     """
 
-    default_interp_kwargs = dict(bounds_error=False, fill_value=0.,)
+    default_interp_kwargs = dict(
+        bounds_error=False,
+        fill_value=0.0,
+    )
 
     def __init__(self, axes, data=0, unit="", meta=None, interp_kwargs=None):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
-        self.data = data
-        self.unit = unit
+        if isinstance(data, u.Quantity):
+            self.data = data.value
+            self.unit = data.unit
+        else:
+            self.data = data
+            self.unit = unit
         self.meta = meta or {}
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs.copy()
@@ -76,7 +83,7 @@ class IRF:
 
         Parameters
         ----------
-        value : `~astropy.units.Quantity`, array-like
+        value : array-like
             Data array
         """
         required_shape = self.axes.shape
@@ -159,6 +166,13 @@ class IRF:
 
     @quantity.setter
     def quantity(self, val):
+        """Set data and unit
+
+        Parameters
+        ----------
+        value : `~astropy.units.Quantity`
+           Quantity
+        """
         val = u.Quantity(val, copy=False)
         self.data = val.value
         self.unit = val.unit
@@ -219,7 +233,8 @@ class IRF:
             data[~np.isfinite(data)] = self.interp_kwargs["fill_value"]
         return data
 
-    def _mask_out_bounds(self, invalid):
+    @staticmethod
+    def _mask_out_bounds(invalid):
         return np.any(invalid, axis=0)
 
     def integrate_log_log(self, axis_name, **kwargs):
@@ -451,7 +466,7 @@ class IRF:
         axis_name : str
             Which axis to downsample. By default spatial axes are padded.
         **kwargs : dict
-            Keyword argument forwared to `~numpy.pad`
+            Keyword argument forwarded to `~numpy.pad`
 
         Returns
         -------
@@ -470,7 +485,9 @@ class IRF:
 
         axes = self.axes.pad(axis_name=axis_name, pad_width=pad_width)
         data = np.pad(self.data, pad_width=pad_width_np, **kwargs)
-        return self.__class__(data=data, axes=axes, meta=self.meta.copy(), unit=self.unit)
+        return self.__class__(
+            data=data, axes=axes, meta=self.meta.copy(), unit=self.unit
+        )
 
 
 class IRFMap:

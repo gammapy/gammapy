@@ -112,7 +112,9 @@ def test_background_3d_evaluate(bkg_3d):
     assert res.unit == "s-1 GeV-1 sr-1"
 
     res = bkg_3d.evaluate(
-        fov_lon=[1, 0.5] * u.deg, fov_lat=[1, 0.5] * u.deg, energy=[100, 100] * u.TeV,
+        fov_lon=[1, 0.5] * u.deg,
+        fov_lat=[1, 0.5] * u.deg,
+        energy=[100, 100] * u.TeV,
     )
     assert_allclose(res.value, [3.162278, 1], rtol=1e-5)
 
@@ -125,17 +127,27 @@ def test_background_3d_evaluate(bkg_3d):
     assert res.shape == (2, 2)
 
 
+@requires_dependency("matplotlib")
+def test_plot_at_energy(bkg_3d):
+    with mpl_plot_check():
+        bkg_3d.plot_at_energy(energy=[5] * u.TeV)
+
+
 def test_background_3d_missing_values(bkg_3d_interp):
 
     res = bkg_3d_interp.evaluate(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=2000 * u.TeV,
+        fov_lon=0.5 * u.deg,
+        fov_lat=0.5 * u.deg,
+        energy=2000 * u.TeV,
     )
-    assert_allclose(res.value, 0.)
+    assert_allclose(res.value, 0.0)
 
     res = bkg_3d_interp.evaluate(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=999 * u.TeV,
+        fov_lon=0.5 * u.deg,
+        fov_lat=0.5 * u.deg,
+        energy=999 * u.TeV,
     )
-    assert_allclose(res.value, 8.796068e+18)
+    assert_allclose(res.value, 8.796068e18)
     # without missing value interplation
     # extrapolation within the last bin would give too high value
 
@@ -145,7 +157,9 @@ def test_background_3d_missing_values(bkg_3d_interp):
     bkg_3d_interp.interp_missing_data(axis_name="energy")
 
     res = bkg_3d_interp.evaluate(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy=999 * u.TeV,
+        fov_lon=0.5 * u.deg,
+        fov_lat=0.5 * u.deg,
+        energy=999 * u.TeV,
     )
     assert_allclose(res.value, 1.0)
 
@@ -249,7 +263,8 @@ def test_background_2d_evaluate(bkg_2d):
     res = bkg_2d.evaluate(offset=[1, 0.5] * u.deg, energy=[100, 100] * u.TeV)
     assert_allclose(res.value, [3, 2])
     res = bkg_2d.evaluate(
-        offset=[[1, 0.5], [1, 0.5]] * u.deg, energy=[[1, 1], [100, 100]] * u.TeV,
+        offset=[[1, 0.5], [1, 0.5]] * u.deg,
+        energy=[[1, 1], [100, 100]] * u.TeV,
     )
 
     assert_allclose(res.value, [[0, 0], [3, 2]])
@@ -308,6 +323,18 @@ def test_background_2d_integrate(bkg_2d):
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.value, [[0, 198]])
+
+
+def test_to_3d(bkg_2d):
+    bkg_3d = bkg_2d.to_3d()
+    assert bkg_3d.data.shape == (2, 6, 6)
+    assert_allclose(bkg_3d.data[1, 1, 1], 1.51, rtol=0.1)
+
+    # assert you get back same after goint to 2d
+    # need high rtol due to interpolation effects?
+    b2 = bkg_3d.to_2d()
+    assert_allclose(bkg_2d.data, b2.data, rtol=0.2)
+    assert b2.unit == bkg_2d.unit
 
 
 @requires_dependency("matplotlib")

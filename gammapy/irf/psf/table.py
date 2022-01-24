@@ -1,14 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
-from astropy import units as u
-from astropy.coordinates import Angle
-from astropy.io import fits
-from astropy.table import Table
-from gammapy.maps import MapAxis
-from gammapy.utils.array import array_stats_str
-from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.scripts import make_path
 from .core import PSF
 
 __all__ = ["PSF3D"]
@@ -34,6 +25,6 @@ class PSF3D(PSF):
     meta : dict
         Meta dict
     """
+
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
-

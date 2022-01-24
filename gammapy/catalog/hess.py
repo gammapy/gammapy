@@ -5,8 +5,8 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.maps import MapAxis, RegionGeom
 from gammapy.estimators import FluxPoints
+from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import Model, Models, SkyModel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
@@ -102,10 +102,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
-        reference_model = SkyModel(
-                spectral_model=self.spectral_model(),
-                name=self.name
-            )
+        reference_model = SkyModel(spectral_model=self.spectral_model(), name=self.name)
         return FluxPoints.from_table(
             self.flux_points_table,
             reference_model=reference_model,
@@ -397,7 +394,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = "\n*** Flux points info ***\n\n"
         ss += "Number of flux points: {}\n".format(d["N_Flux_Points"])
         ss += "Flux points table: \n\n"
-        lines = format_flux_points_table(self.flux_points_table).pformat(max_width=-1, max_lines=-1)
+        lines = format_flux_points_table(self.flux_points_table).pformat(
+            max_width=-1, max_lines=-1
+        )
         ss += "\n".join(lines)
         return ss + "\n"
 
@@ -532,7 +531,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
-            
+
         Returns
         -------
         sky_model : `~gammapy.modeling.models.Models`
@@ -553,9 +552,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
-            
+
         linked : bool
-             Each sub-component of a source is given as a diffrent `SkyModel`
+             Each sub-component of a source is given as a different `SkyModel`
              If True the spectral parameters except the mormalisation are linked.
              Default is False
 
@@ -608,7 +607,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points_table(self):
-        """Flux points table (`~astropy.table.Table)."""
+        """Flux points table (`~astropy.table.Table`)."""
         table = Table()
         table.meta["sed_type_init"] = "dnde"
         table.meta["n_sigma_ul"] = 2
@@ -870,24 +869,24 @@ class SourceCatalogHGPS(SourceCatalog):
         return SourceCatalogObjectHGPSComponent(data=data)
 
     def to_models(self, which="best", components_status="independent"):
-        """ Create Models object from catalogue
+        """Create Models object from catalogue
 
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
             Which spectral model
-            
+
         components_status : {'independent', 'linked', 'merged'}
             Relation between the sources components:
-                'independent' : each sub-component of a source is given as 
-                                a diffrent `SkyModel` (Default)
-                'linked' : each sub-component of a source is given as 
-                           a diffrent `SkyModel` but the spectral parameters
+                'independent' : each sub-component of a source is given as
+                                a different `SkyModel` (Default)
+                'linked' : each sub-component of a source is given as
+                           a different `SkyModel` but the spectral parameters
                            except the mormalisation are linked.
                 'merged' : the sub-components are merged into a single `SkyModel`
                            given as a `~gammapy.modeling.models.TemplateSpatialModel`
                            with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
-                           In that case the relave weigths between the components
+                           In that case the relavtie weights between the components
                            cannot be adjusted.
 
         Returns

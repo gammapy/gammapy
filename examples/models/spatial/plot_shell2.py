@@ -38,7 +38,6 @@ although that approximation is still very good even for 10 deg radius shells.
 # In this case the relative width, eta, acts as a shape parameter.
 
 import matplotlib.pyplot as plt
-
 from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
@@ -46,14 +45,18 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-tags = [r"Disk-like, $\eta \rightarrow 0$", r"Shell, $\eta=0.25$",  r"Peaked, $\eta\rightarrow 1$"]
+tags = [
+    r"Disk-like, $\eta \rightarrow 0$",
+    r"Shell, $\eta=0.25$",
+    r"Peaked, $\eta\rightarrow 1$",
+]
 eta_range = [0.001, 0.25, 1]
 fig, axes = plt.subplots(1, 3, figsize=(9, 6))
 for ax, eta, tag in zip(axes, eta_range, tags):
     model = Shell2SpatialModel(
         lon_0="10 deg",
         lat_0="20 deg",
-        r_0= "2 deg",
+        r_0="2 deg",
         eta=eta,
         frame="galactic",
     )
@@ -69,7 +72,7 @@ plt.tight_layout()
 # Here is an example YAML file using the model:
 
 pwl = PowerLawSpectralModel()
-shell2= Shell2SpatialModel()
+shell2 = Shell2SpatialModel()
 
 model = SkyModel(spectral_model=pwl, spatial_model=shell2, name="pwl-shell2-model")
 

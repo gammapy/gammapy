@@ -14,7 +14,7 @@ from regions import Regions
 from gammapy.utils.regions import (
     SphericalCircleSkyRegion,
     compound_region_center,
-    regions_to_compound_region
+    regions_to_compound_region,
 )
 
 

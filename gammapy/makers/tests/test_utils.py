@@ -7,7 +7,12 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, EventList, FixedPointingInfo, Observation
-from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D, Background2D
+from gammapy.irf import (
+    Background2D,
+    Background3D,
+    EffectiveAreaTable2D,
+    EnergyDispersion2D,
+)
 from gammapy.makers.utils import (
     _map_spectrum_weight,
     make_edisp_kernel_map,
@@ -96,7 +101,7 @@ def fixed_pointing_info():
 
 @pytest.fixture(scope="session")
 def fixed_pointing_info_aligned(fixed_pointing_info):
-    # Create Fixed Pointing Info aligined between sky and horizon coordinates
+    # Create Fixed Pointing Info aligned between sky and horizon coordinates
     # (removes rotation in FoV and results in predictable solid angles)
     origin = SkyCoord(
         0,
@@ -131,9 +136,7 @@ def bkg_3d():
 def bkg_2d():
     offset_axis = MapAxis.from_bounds(0, 4, nbin=10, name="offset", unit="deg")
     energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=20)
-    bkg_2d = Background2D(
-        axes=[energy_axis, offset_axis], unit="s-1 TeV-1 sr-1"
-    )
+    bkg_2d = Background2D(axes=[energy_axis, offset_axis], unit="s-1 TeV-1 sr-1")
     coords = bkg_2d.axes.get_coord()
     value = np.exp(-0.5 * (coords["offset"] / (2 * u.deg)) ** 2)
     bkg_2d.data = (value * (coords["energy"] / (1 * u.TeV)) ** -2).to_value("")
@@ -150,7 +153,7 @@ def bkg_3d_custom(symmetry="constant"):
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data])
     else:
-        raise ValueError(f"Unkown value for symmetry: {symmetry}")
+        raise ValueError(f"Unknown value for symmetry: {symmetry}")
 
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
     fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
@@ -160,8 +163,8 @@ def bkg_3d_custom(symmetry="constant"):
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
         unit=u.Unit("s-1 MeV-1 sr-1"),
-        interp_kwargs = dict(bounds_error=False, fill_value=None, values_scale="log")
-        #allow extrapolation for symmetry tests
+        interp_kwargs=dict(bounds_error=False, fill_value=None, values_scale="log")
+        # allow extrapolation for symmetry tests
     )
 
 
@@ -275,7 +278,7 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
     for d in m.data:
         # TODO:
         #  Dimensions of skymap data are [energy, lat, lon] (and is
-        #  representated as [lon, lat, energy] in the api, but the bkg irf
+        #  represented as [lon, lat, energy] in the api, but the bkg irf
         #  dimensions are currently [energy, lon, lat] - Will be changed in
         #  the future (perhaps when IRFs use the skymaps class)
         assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
@@ -291,11 +294,7 @@ def test_make_edisp_kernel_map():
     ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
 
     edisp = EnergyDispersion2D.from_gauss(
-        energy_axis_true=etrue,
-        migra_axis=migra,
-        bias=0,
-        sigma=0.01,
-        offset_axis=offset
+        energy_axis_true=etrue, migra_axis=migra, bias=0, sigma=0.01, offset_axis=offset
     )
 
     geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])
@@ -318,7 +317,6 @@ class TestTheta2Table:
             events["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
             events["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
 
-
             obs_info = dict(
                 RA_PNT=0 * u.deg,
                 DEC_PNT=sign * 0.5 * u.deg,
@@ -329,9 +327,9 @@ class TestTheta2Table:
             gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
             gti = GTI(gti_table)
 
-            self.observations.append(Observation(
-                events=EventList(events), obs_info=obs_info, gti=gti
-            ))
+            self.observations.append(
+                Observation(events=EventList(events), obs_info=obs_info, gti=gti)
+            )
 
     def test_make_theta_squared_table(self):
         # pointing position: (0,0.5) degree in ra/dec
@@ -340,7 +338,9 @@ class TestTheta2Table:
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
         axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
         theta2_table = make_theta_squared_table(
-            observations=[self.observations[0]], position=position, theta_squared_axis=axis
+            observations=[self.observations[0]],
+            position=position,
+            theta_squared_axis=axis,
         )
         theta2_lo = [0, 0.05, 0.1, 0.15]
         theta2_hi = [0.05, 0.1, 0.15, 0.2]

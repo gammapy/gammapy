@@ -5,13 +5,13 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 from gammapy.datasets import Dataset
 from gammapy.modeling import Fit, Parameter
-from gammapy.modeling.models import Model, Models
+from gammapy.modeling.models import ModelBase, Models
 from gammapy.utils.testing import requires_dependency
 
 pytest.importorskip("iminuit")
 
 
-class MyModel(Model):
+class MyModel(ModelBase):
     x = Parameter("x", 2)
     y = Parameter("y", 3e2)
     z = Parameter("z", 4e-2)
@@ -68,9 +68,10 @@ def test_optimize_backend_and_covariance(backend):
 
     fit = Fit(optimize_opts=kwargs)
     result = fit.run([dataset])
-    result = result["optimize_result"]
 
-    pars = result.parameters
+    assert result is not None
+
+    pars = dataset.models.parameters
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
     assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
@@ -90,10 +91,10 @@ def test_run(backend):
     dataset = MyDataset()
     fit = Fit(backend=backend)
     result = fit.run([dataset])
-    result = result["optimize_result"]
-    pars = result.parameters
+    pars = dataset.models.parameters
 
-    assert result.success is True
+    assert result.success
+    assert result.optimize_result.method == "migrad"
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
@@ -123,7 +124,7 @@ def test_optimize(backend):
     result = fit.optimize([dataset])
     pars = dataset.models.parameters
 
-    assert result.success is True
+    assert result.success
     assert_allclose(result.total_stat, 0, atol=1)
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
@@ -145,7 +146,7 @@ def test_confidence(backend):
     fit.optimize([dataset])
     result = fit.confidence(datasets=[dataset], parameter="x")
 
-    assert result["success"] is True
+    assert result["success"]
     assert_allclose(result["errp"], 1)
     assert_allclose(result["errn"], 1)
 
@@ -161,7 +162,7 @@ def test_confidence_frozen(backend):
     fit.optimize([dataset])
     result = fit.confidence(datasets=[dataset], parameter="y")
 
-    assert result["success"] is True
+    assert result["success"]
     assert_allclose(result["errp"], 1)
     assert_allclose(result["errn"], 1)
 
@@ -236,9 +237,7 @@ def test_stat_surface_reoptimize():
     dataset.models.parameters["x"].scan_values = x_values
     dataset.models.parameters["y"].scan_values = y_values
 
-    result = fit.stat_surface(
-        datasets=[dataset], x="x", y="y", reoptimize=True
-    )
+    result = fit.stat_surface(datasets=[dataset], x="x", y="y", reoptimize=True)
 
     assert_allclose(result["x_scan"], x_values, atol=1e-7)
     assert_allclose(result["y_scan"], y_values, atol=1e-7)
@@ -261,16 +260,16 @@ def test_stat_contour():
     fit.optimize([dataset])
     result = fit.stat_contour(datasets=[dataset], x="y", y="z")
 
-    assert result["success"] is True
+    assert result["success"]
 
     x = result["y"]
     assert_allclose(len(x), 10)
     assert_allclose(x[0], 299, rtol=1e-5)
-    assert_allclose(x[-1], 299.292893, rtol=1e-5)
+    assert_allclose(x[-1], 299.133975, rtol=1e-5)
     y = result["z"]
     assert_allclose(len(y), 10)
     assert_allclose(y[0], 0.04, rtol=1e-5)
-    assert_allclose(y[-1], 0.747107, rtol=1e-5)
+    assert_allclose(y[-1], 0.54, rtol=1e-5)
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.models.parameters["y"].value, 300)

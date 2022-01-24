@@ -148,5 +148,3 @@ def recursive_merge_dicts(a, b):
         else:
             c[k] = v
     return c
-
-

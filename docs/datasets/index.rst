@@ -34,11 +34,11 @@ analyse the following datasets:
    :header-rows: 1
 
    * - **Dataset Type**
-     - **data_type**
-     - **reduced irfs**
-     - **geometry**
-     -  **additional quantity**
-     -  **statistic**
+     - **Data Type**
+     - **Reduced IRFs**
+     - **Geometry**
+     -  **Additional Quantities**
+     -  **Fit Statistic**
    * - `~gammapy.datasets.MapDataset`
      - `counts`
      - `background`, `psf`, `edisp`, `exposure`,
@@ -174,13 +174,14 @@ Here, :math:`k` denotes a bin in reconstructed energy,
      -
 
 For the model evaluation, an important factor that needs to be accounted for is
-that the energy threshold changes between obseravtions.
+that the energy threshold changes between observations.
 With the above implementation using a `~gammapy.irf.EDispersionMap`,
 the `npred` is conserved,
 ie, the predicted number of counts on the stacked
 dataset is the sum expected by stacking the `npred` of the individual runs,
 
-The following plot shows the individual and stacked energy dispersion kernel and `npred`  for two `SpectrumDataset`
+The following plot illustrates the stacked energy dispersion kernel and summed predicted counts for
+individual as well as stacked spectral datasets:
 
 .. plot:: datasets/plot_stack.py
 
@@ -189,8 +190,8 @@ The following plot shows the individual and stacked energy dispersion kernel and
     - Stacking happens in-place, ie, ``dataset1.stack(dataset2)`` will overwrite ``dataset1``
     - To properly handle masks, it is necessary to stack onto an empty dataset.
     - Stacking only works for maps with equivalent geometry.
-      Two geometries are called equivalent if one is exactly the same as, or can be obtained
-      from a cutout of, the other.
+      Two geometries are called equivalent if one is exactly the same as or can be obtained
+      from a cutout of the other.
 
 
 
@@ -202,7 +203,7 @@ Joint Analysis
 An alternative to stacking datasets is a joint fit across all the datasets.
 For a definition, see :ref:`glossary`.
 
-The totat fit statistic of datasets is the sum of the
+The total fit statistic of datasets is the sum of the
 fit statistic of each dataset. Note that this is **not** equal to the
 stacked fit statistic.
 
@@ -218,7 +219,7 @@ To strike a balance, what might be a practical solution for analysis of many run
 stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
 
 Using `gammapy.datasets`
-====================
+========================
 
 Gammapy tutorial notebooks that show how to use this package:
 

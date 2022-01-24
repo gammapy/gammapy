@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
 from astropy import units as u
+import matplotlib.pyplot as plt
 from gammapy.irf import EffectiveAreaTable2D
 
 for instrument in ["HESS", "HESS2", "CTA"]:
@@ -11,4 +11,3 @@ ax.set_xlim([1e-3, 1e3])
 ax.set_ylim([1e3, 1e12])
 plt.legend(loc="best")
 plt.show()
-

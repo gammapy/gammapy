@@ -5,8 +5,8 @@ import pytest
 import numpy as np
 from astropy.io import fits
 from gammapy.data import DataStore
-from gammapy.utils.testing import requires_data
 from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture()
@@ -72,7 +72,6 @@ def test_datastore_from_events():
     assert len(data_store.obs_table) == 1
     assert len(data_store.hdu_table) == 6
 
-
     @requires_data()
     def test_datastore_get_observations(data_store, caplog):
         """Test loading data and IRF files via the DataStore"""
@@ -94,18 +93,16 @@ def test_datastore_from_events():
 def test_broken_links_datastore(data_store):
     # Test that datastore without complete IRFs are properly loaded
     hdu_table = data_store.hdu_table
-    index = np.where(data_store.hdu_table["OBS_ID"] == 23526)[0][0]
-    data_store.hdu_table.remove_row(index)
-    data_store.hdu_table._hdu_type_stripped = np.array(
-        [_.strip() for _ in data_store.hdu_table["HDU_TYPE"]]
-    )
+    index = np.where(hdu_table["OBS_ID"] == 23526)[0][0]
+    hdu_table.remove_row(index)
+    hdu_table._hdu_type_stripped = np.array([_.strip() for _ in hdu_table["HDU_TYPE"]])
     observations = data_store.get_observations(
         [23523, 23526], required_irf=["aeff", "bkg"]
     )
     assert len(observations) == 1
 
     with pytest.raises(ValueError):
-        observations = data_store.get_observations([23523], required_irf=["xyz"])
+        _ = data_store.get_observations([23523], required_irf=["xyz"])
 
 
 @requires_data()
@@ -159,7 +156,7 @@ class TestDataStoreMaker:
         table = self.data_store.obs_table
         assert table.__class__.__name__ == "ObservationTable"
         assert len(table) == 4
-        assert len(table.colnames) == 24
+        assert len(table.colnames) == 21
 
         # TODO: implement https://github.com/gammapy/gammapy/issues/1218 and add tests here
         # assert table.time_start[0].iso == "spam"

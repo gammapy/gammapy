@@ -30,7 +30,7 @@ class HDUIndexTable(Table):
         "psf_king",
         "bkg_2d",
         "bkg_3d",
-        "rad_max_2d"
+        "rad_max_2d",
     ]
     """Valid values for `HDU_CLASS`."""
 
@@ -47,7 +47,11 @@ class HDUIndexTable(Table):
         table = super().read(filename, **kwargs)
         table.meta["BASE_DIR"] = filename.parent.as_posix()
 
-        return table
+        # TODO: this is a workaround for the joint-crab validation with astropy>4.0.
+        # TODO: Remove when handling of empty columns is clarified
+        table["FILE_DIR"].fill_value = ""
+
+        return table.filled()
 
     @property
     def base_dir(self):

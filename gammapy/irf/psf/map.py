@@ -2,19 +2,20 @@
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
-from gammapy.maps import Map, MapCoord, WcsGeom, MapAxis
+from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.gauss import Gauss2DPDF
-from .kernel import PSFKernel
-from .core import PSF
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
+from .core import PSF
+from .kernel import PSFKernel
 
 __all__ = ["PSFMap"]
 
 
 class IRFLikePSF(PSF):
     required_axes = ["energy_true", "rad", "lat_idx", "lon_idx"]
+    tag = "irf_like_psf"
 
 
 class PSFMap(IRFMap):
@@ -117,7 +118,7 @@ class PSFMap(IRFMap):
         coords = MapCoord.create(kwargs)
 
         geom = self.psf_map.geom.to_image()
-        lon_pix, lat_pix = geom.coord_to_pix((coords.lon, coords.lat))
+        lon_pix, lat_pix = geom.coord_to_pix(coords.skycoord)
 
         coords_irf = {
             "lon_idx": lon_pix,
@@ -204,7 +205,9 @@ class PSFMap(IRFMap):
         )
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    def get_psf_kernel(self, geom, position=None, max_radius=None, containment=0.999, factor=4):
+    def get_psf_kernel(
+        self, geom, position=None, max_radius=None, containment=0.999, factor=4
+    ):
         """Returns a PSF kernel at the given position.
 
         The PSF is returned in the form a WcsNDMap defined by the input Geom.
@@ -240,9 +243,7 @@ class PSFMap(IRFMap):
             energy_axis = self.psf_map.geom.axes["energy_true"]
 
             radii = self.containment_radius(
-                fraction=containment,
-                position=position,
-                energy_true=energy_axis.center
+                fraction=containment, position=position, energy_true=energy_axis.center
             )
             max_radius = np.max(radii)
 
@@ -251,9 +252,16 @@ class PSFMap(IRFMap):
         coords = geom_upsampled.get_coord(sparse=True)
         rad = coords.skycoord.separation(geom.center_skydir)
 
-        coords = {"energy_true": coords["energy_true"], "rad": rad, "skycoord": position}
+        coords = {
+            "energy_true": coords["energy_true"],
+            "rad": rad,
+            "skycoord": position,
+        }
 
-        data = self.psf_map.interp_by_coord(coords=coords, method="linear",)
+        data = self.psf_map.interp_by_coord(
+            coords=coords,
+            method="linear",
+        )
 
         kernel_map = Map.from_geom(geom=geom_upsampled, data=np.clip(data, 0, np.inf))
         kernel_map = kernel_map.downsample(factor, preserve_counts=True)
@@ -336,7 +344,11 @@ class PSFMap(IRFMap):
             rad_axis = RAD_AXIS_DEFAULT.copy()
 
         if geom is None:
-            geom = WcsGeom.create(npix=(2, 1), proj="CAR", binsz=180,)
+            geom = WcsGeom.create(
+                npix=(2, 1),
+                proj="CAR",
+                binsz=180,
+            )
 
         geom = geom.to_cube([rad_axis, energy_axis_true])
 
@@ -350,7 +362,7 @@ class PSFMap(IRFMap):
         psf_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
 
         exposure_map = Map.from_geom(
-            geom=geom.squash(axis_name="rad"), unit="m2 s", data=1.
+            geom=geom.squash(axis_name="rad"), unit="m2 s", data=1.0
         )
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
@@ -390,7 +402,7 @@ class PSFMap(IRFMap):
         return self.__class__(psf_map=psf, exposure_map=exposure)
 
     def plot_containment_radius_vs_energy(
-        self, ax=None, fraction=[0.68, 0.95], **kwargs
+        self, ax=None, fraction=(0.68, 0.95), **kwargs
     ):
         """Plot containment fraction as a function of energy.
 

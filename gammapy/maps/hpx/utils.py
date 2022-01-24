@@ -126,8 +126,7 @@ def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
 
 
 def parse_hpxregion(region):
-    """Parse the ``HPX_REG`` header keyword into a list of tokens.
-    """
+    """Parse the ``HPX_REG`` header keyword into a list of tokens."""
     m = re.match(r"([A-Za-z\_]*?)\((.*?)\)", region)
 
     if m is None:
@@ -413,9 +412,7 @@ class HpxToWcsMapping:
 
         return wcs_data
 
-    def fill_hpx_map_from_wcs_data(
-        self, wcs_data, hpx_data, normalize=True
-    ):
+    def fill_hpx_map_from_wcs_data(self, wcs_data, hpx_data, normalize=True):
         """Fill the HPX map from the WCS data using the pre-calculated mappings.
 
         Parameters
@@ -443,7 +440,7 @@ class HpxToWcsMapping:
         hpx_slice = tuple(hpx_slice + [lmap])
 
         if normalize:
-            hpx_data[hpx_slice] = 1/mult_val * wcs_data[wcs_slice]
+            hpx_data[hpx_slice] = 1 / mult_val * wcs_data[wcs_slice]
         else:
             hpx_data[hpx_slice] = wcs_data[wcs_slice]
 

@@ -2,21 +2,25 @@ import copy
 from functools import lru_cache
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from astropy.wcs.utils import proj_plane_pixel_area, wcs_to_celestial_frame, proj_plane_pixel_scales
-from regions import Regions, SkyRegion, CompoundSkyRegion, PixCoord, PointSkyRegion
+from astropy.wcs.utils import (
+    proj_plane_pixel_area,
+    proj_plane_pixel_scales,
+    wcs_to_celestial_frame,
+)
+from regions import CompoundSkyRegion, PixCoord, PointSkyRegion, Regions, SkyRegion
 from gammapy.utils.regions import (
+    compound_region_center,
     compound_region_to_regions,
     regions_to_compound_region,
-    compound_region_center,
 )
-from ..core import MapCoord, Map
-from ..utils import _check_width
+from ..axes import MapAxes
+from ..core import Map, MapCoord
 from ..geom import Geom, pix_tuple_to_idx
-from ..axes import MapAxes, MapAxis
+from ..utils import _check_width
 from ..wcs import WcsGeom
 
 __all__ = ["RegionGeom"]
@@ -43,6 +47,7 @@ class RegionGeom(Geom):
         value is adequate for the majority of use cases. If a wcs object
         is provided, the input of binsz_wcs is overridden.
     """
+
     is_regular = True
     is_allsky = False
     is_hpx = False
@@ -76,18 +81,16 @@ class RegionGeom(Geom):
         # define cached methods
         self.get_wcs_coord_and_weights = lru_cache()(self.get_wcs_coord_and_weights)
 
-
     def __setstate__(self, state):
         for key, value in state.items():
             if key in ["get_wcs_coord_and_weights"]:
                 state[key] = lru_cache()(value)
         self.__dict__ = state
-        
 
     @property
     def frame(self):
         """Coordinate system, either Galactic ("galactic") or Equatorial
-            ("icrs")."""
+        ("icrs")."""
         if self.region is None:
             return "icrs"
         try:
@@ -305,7 +308,7 @@ class RegionGeom(Geom):
     def bin_volume(self):
         """If the RegionGeom has a non-spatial axis, it
         returns the volume of the region. If not, it
-        just retuns the solid angle size.
+        just returns the solid angle size.
 
         Returns
         -------
@@ -338,7 +341,9 @@ class RegionGeom(Geom):
             A WCS geometry object.
         """
         if width_min is not None:
-            width = np.max([self.width.to_value("deg"), _check_width(width_min)], axis=0)
+            width = np.max(
+                [self.width.to_value("deg"), _check_width(width_min)], axis=0
+            )
         else:
             width = self.width
         wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
@@ -390,7 +395,7 @@ class RegionGeom(Geom):
             regions=[self.region], oversampling_factor=factor
         )
 
-        mask = (weights.data > 0)
+        mask = weights.data > 0
         weights = weights.data[mask]
 
         # Get coordinates
@@ -422,7 +427,7 @@ class RegionGeom(Geom):
         """
         return self._init_copy(axes=None)
 
-    def upsample(self, factor, axis_name):
+    def upsample(self, factor, axis_name=None):
         """Upsample a non-spatial dimension of the region by a given factor.
 
         Returns
@@ -502,10 +507,10 @@ class RegionGeom(Geom):
     @classmethod
     def create(cls, region, **kwargs):
         """Create region geometry.
-        
+
         The input region can be passed in the form of a ds9 string and will be parsed
         internally by `~regions.Regions.parse`. See:
-        
+
         * https://astropy-regions.readthedocs.io/en/stable/region_io.html
         * http://ds9.si.edu/doc/ref/region.html
 
@@ -665,9 +670,9 @@ class RegionGeom(Geom):
             regions = []
 
             for reg in Regions.parse(data=region_table, format="fits"):
-                #TODO: remove workaround once regions issue with fits serialization is sorted out
+                # TODO: remove workaround once regions issue with fits serialization is sorted out
                 # see https://github.com/astropy/regions/issues/400
-                reg.meta['include'] = True
+                reg.meta["include"] = True
                 regions.append(reg.to_sky(wcs))
             region = regions_to_compound_region(regions)
         else:
@@ -700,7 +705,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
@@ -709,12 +714,12 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        ax : `~astropy.vizualisation.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`
             Axes to plot on.
         """
+        from astropy.visualization.wcsaxes import WCSAxes
         import matplotlib.pyplot as plt
         from matplotlib.collections import PatchCollection
-        from astropy.visualization.wcsaxes import WCSAxes
 
         if ax is None:
             ax = plt.gca()
@@ -723,7 +728,7 @@ class RegionGeom(Geom):
                 ax.remove()
                 wcs_geom = self.to_wcs_geom()
                 m = Map.from_geom(wcs_geom.to_image())
-                fig, ax, cbar = m.plot(add_cbar=False)
+                ax = m.plot(add_cbar=False)
 
         regions = compound_region_to_regions(self.region)
         artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]

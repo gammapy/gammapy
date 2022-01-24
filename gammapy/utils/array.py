@@ -11,7 +11,7 @@ __all__ = [
     "shape_divisible_by",
     "symmetric_crop_pad_width",
     "round_up_to_odd",
-    "round_up_to_even"
+    "round_up_to_even",
 ]
 
 
@@ -184,4 +184,4 @@ def scale_cube(data, kernels):
     cube : `~numpy.ndarray`
         Array of the shape (len(kernels), data.shape)
     """
-    return np.dstack(list([_fftconvolve_wrap(kernel, data) for kernel in kernels]))
+    return np.dstack([_fftconvolve_wrap(kernel, data) for kernel in kernels])

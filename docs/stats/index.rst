@@ -93,7 +93,7 @@ The maximum log-likelihood ratio test provides a way to estimate the p-value of 
 rather than :math:`H_0`, when the two hypotheses are nested.
 We note this ratio :math:`\lambda = \frac{max L(X|{H_1})}{max L(X|H_0)}`
 
-The Wilks theorem shows that under some hypothesis, :math:`2 \log \lambda` assymptotically follows a :math:`\chi^2`
+The Wilks theorem shows that under some hypothesis, :math:`2 \log \lambda` asymptotically follows a :math:`\chi^2`
 distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is the difference of free parameters
 between :math:`H_1` and :math:`H_0`.
 

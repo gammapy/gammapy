@@ -47,7 +47,7 @@ def find_peaks(image, threshold, min_distance=1):
     threshold : float or array-like
         The data value or pixel-wise data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
-        shape as tha map ``data``.
+        shape as the map ``data``.
     min_distance : int or `~astropy.units.Quantity`
         Minimum distance between peaks. An integer value is interpreted
         as pixels.
@@ -111,7 +111,7 @@ def find_peaks(image, threshold, min_distance=1):
     return table
 
 
-def estimate_exposure_reco_energy(dataset, spectral_model=None):
+def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
     """Estimate an exposure map in reconstructed energy.
 
     Parameters
@@ -120,6 +120,10 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None):
             the input dataset
     spectral_model: `~gammapy.modeling.models.SpectralModel`
             assumed spectral shape. If none, a Power Law of index 2 is assumed
+    normalize : bool
+        Normalize the exposure to the total integrated flux of the spectral model.
+        When not normalized it directly gives the predicted counts from the spectral
+        model.
 
     Returns
     -------
@@ -135,13 +139,18 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None):
 
     energy_axis = dataset._geom.axes["energy"]
 
-    edisp = None
-
     if dataset.edisp is not None:
         edisp = dataset.edisp.get_edisp_kernel(position=None, energy_axis=energy_axis)
+    else:
+        edisp = None
 
-    meval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=edisp)
-    npred = meval.compute_npred()
-    ref_flux = spectral_model.integral(energy_axis.edges[:-1], energy_axis.edges[1:])
-    reco_exposure = npred / ref_flux[:, np.newaxis, np.newaxis]
+    eval = MapEvaluator(model=model, exposure=dataset.exposure, edisp=edisp)
+    reco_exposure = eval.compute_npred()
+
+    if normalize:
+        ref_flux = spectral_model.integral(
+            energy_axis.edges[:-1], energy_axis.edges[1:]
+        )
+        reco_exposure = reco_exposure / ref_flux[:, np.newaxis, np.newaxis]
+
     return reco_exposure

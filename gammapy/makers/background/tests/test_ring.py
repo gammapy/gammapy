@@ -11,7 +11,7 @@ from gammapy.makers import (
     RingBackgroundMaker,
     SafeMaskMaker,
 )
-from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data
 
 

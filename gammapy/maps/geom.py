@@ -6,8 +6,8 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from .utils import INVALID_INDEX
 from .io import find_bands_hdu, find_hdu
+from .utils import INVALID_INDEX
 
 __all__ = ["Geom"]
 
@@ -82,7 +82,7 @@ class Geom(abc.ABC):
         ----------
         dtype : data-type
             The desired data-type for the array. Default is "float32"
-            
+
         Returns
         -------
         memory : `~astropy.units.Quantity`
@@ -486,7 +486,7 @@ class Geom(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor, axis_name):
+    def upsample(self, factor, axis_name=None):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
@@ -562,8 +562,7 @@ class Geom(abc.ABC):
             return valid
 
     def _init_copy(self, **kwargs):
-        """Init map geom instance by copying missing init arguments from self.
-        """
+        """Init map geom instance by copying missing init arguments from self."""
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
 
@@ -621,4 +620,4 @@ class Geom(abc.ABC):
 
         mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
         data = np.broadcast_to(mask, shape=self.data_shape)
-        return Map.from_geom(geom=self, data=data)
+        return Map.from_geom(geom=self, data=data, dtype=data.dtype)

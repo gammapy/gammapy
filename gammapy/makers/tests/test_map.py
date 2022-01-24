@@ -2,16 +2,16 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from regions import CircleSkyRegion
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
+from regions import CircleSkyRegion
 from gammapy.data import GTI, DataStore, EventList, Observation
 from gammapy.datasets import MapDataset
 from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker, FoVBackgroundMaker
-from gammapy.maps import Map, MapAxis, WcsGeom, HpxGeom
+from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
+from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -231,6 +231,17 @@ def test_make_meta_table(observations):
 
 
 @requires_data()
+def test_make_map_no_count(observations):
+    dataset = MapDataset.create(geom((0.1, 1, 10)))
+    maker_obs = MapDatasetMaker(selection=["exposure"])
+    map_dataset = maker_obs.run(dataset, observation=observations[0])
+
+    assert map_dataset.counts is not None
+    assert_allclose(map_dataset.counts.data, 0)
+    assert map_dataset.counts.geom == dataset.counts.geom
+
+
+@requires_data()
 @requires_dependency("healpy")
 def test_map_dataset_maker_hpx(geom_config_hpx, observations):
     reference = MapDataset.create(**geom_config_hpx, binsz_irf=5 * u.deg)
@@ -385,7 +396,7 @@ def test_interpolate_map_dataset():
 @requires_data()
 @pytest.mark.xfail
 def test_minimal_datastore():
-    """"Check that a standard analysis runs on a minimal datastore"""
+    """ "Check that a standard analysis runs on a minimal datastore"""
 
     energy_axis = MapAxis.from_energy_bounds(
         1, 10, nbin=3, per_decade=False, unit="TeV", name="energy"

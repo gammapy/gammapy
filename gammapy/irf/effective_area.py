@@ -2,7 +2,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
-from gammapy.maps import MapAxis, MapAxes
+from gammapy.maps import MapAxes, MapAxis
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -94,7 +94,7 @@ class EffectiveAreaTable2D(IRF):
 
         for off in offset:
             area = self.evaluate(offset=off, energy_true=energy_axis.center)
-            label = f"offset = {off:.1f}"
+            label = kwargs.pop("label", f"offset = {off:.1f}")
             with quantity_support():
                 ax.plot(energy_axis.center, area, label=label, **kwargs)
 
@@ -233,7 +233,7 @@ class EffectiveAreaTable2D(IRF):
 
         g1, g2, g3 = pars[instrument]
 
-        offset_axis = MapAxis.from_edges([0., 5.] * u.deg, name="offset")
+        offset_axis = MapAxis.from_edges([0.0, 5.0] * u.deg, name="offset")
         axes = MapAxes([energy_axis_true, offset_axis])
         coords = axes.get_coord()
 

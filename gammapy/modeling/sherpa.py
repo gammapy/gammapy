@@ -6,7 +6,7 @@ __all__ = ["optimize_sherpa", "covariance_sherpa"]
 
 
 def get_sherpa_optimizer(name):
-    from sherpa.optmethods import LevMar, NelderMead, MonCar, GridSearch
+    from sherpa.optmethods import GridSearch, LevMar, MonCar, NelderMead
 
     return {
         "levmar": LevMar,

@@ -2,13 +2,13 @@
 """Source catalog and object base classes."""
 import abc
 import numbers
-import numpy as np
 from copy import deepcopy
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
-from gammapy.utils.table import table_from_row_data, table_row_to_dict
-from gammapy.modeling.models import Models
 from gammapy.maps import TimeMapAxis
+from gammapy.modeling.models import Models
+from gammapy.utils.table import table_from_row_data, table_row_to_dict
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
@@ -25,7 +25,7 @@ def format_flux_points_table(table):
         if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
             table[column].format = ".3e"
         elif column.startswith(
-                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
+            ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
         ):
             table[column].format = ".3f"
 
@@ -118,7 +118,7 @@ class SourceCatalog(abc.ABC):
     @lazyproperty
     def _name_to_index_cache(self):
         # Make a dict for quick lookup: source name -> row index
-        names = dict()
+        names = {}
         for idx, row in enumerate(self.table):
             name = row[self._source_name_key]
             names[name.strip()] = idx
@@ -216,7 +216,9 @@ class SourceCatalog(abc.ABC):
             data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-fgl")
 
         if hist2_table:
-            data["time_axis_2"] = TimeMapAxis.from_table(hist2_table, format="fermi-fgl")
+            data["time_axis_2"] = TimeMapAxis.from_table(
+                hist2_table, format="fermi-fgl"
+            )
 
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()
@@ -245,7 +247,7 @@ class SourceCatalog(abc.ABC):
         return _skycoord_from_table(self.table)
 
     def to_models(self, **kwargs):
-        """ Create Models object from catalogue"""
+        """Create Models object from catalogue"""
         return Models([_.sky_model(**kwargs) for _ in self])
 
 

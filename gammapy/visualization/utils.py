@@ -62,8 +62,8 @@ def plot_spectrum_datasets_off_regions(
         plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
     """
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Patch, CirclePolygon
-    from matplotlib.legend_handler import HandlerTuple, HandlerPatch
+    from matplotlib.legend_handler import HandlerPatch, HandlerTuple
+    from matplotlib.patches import CirclePolygon, Patch
 
     ax = ax or plt.gca(projection=datasets[0].counts_off.geom.wcs)
     legend = legend or legend is None and len(datasets) <= 10
@@ -113,7 +113,7 @@ def plot_contour_line(ax, x, y, **kwargs):
     """Plot smooth curve from contour points"""
     from scipy.interpolate import CubicSpline
 
-    # close countour
+    # close contour
     xf = np.append(x, x[0])
     yf = np.append(y, y[0])
 

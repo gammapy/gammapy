@@ -7,7 +7,11 @@ from regions import CircleSkyRegion
 from gammapy.analysis.config import AnalysisConfig
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator, LightCurveEstimator
+from gammapy.estimators import (
+    ExcessMapEstimator,
+    FluxPointsEstimator,
+    LightCurveEstimator,
+)
 from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
@@ -16,11 +20,11 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import Map, MapAxis, WcsGeom, RegionGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
-from gammapy.utils.scripts import make_path
 from gammapy.utils.pbar import progress_bar
+from gammapy.utils.scripts import make_path
 
 __all__ = ["Analysis"]
 
@@ -83,14 +87,16 @@ class Analysis:
         obs_settings = self.config.observations
 
         # Reject configs with list of obs_ids and obs_file set at the same time
-        if (len(obs_settings.obs_ids) and obs_settings.obs_file is not None):
+        if len(obs_settings.obs_ids) and obs_settings.obs_file is not None:
             raise ValueError(
                 "Values for both parameters obs_ids and obs_file are not accepted."
             )
 
         # First select input list of observations from obs_table
         if len(obs_settings.obs_ids):
-            selected_obs_table = self.datastore.obs_table.select_obs_id(obs_settings.obs_ids)
+            selected_obs_table = self.datastore.obs_table.select_obs_id(
+                obs_settings.obs_ids
+            )
         elif obs_settings.obs_file is not None:
             path = make_path(obs_settings.obs_file)
             ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
@@ -120,8 +126,9 @@ class Analysis:
         log.info("Fetching observations.")
         ids = self._make_obs_table_selection()
 
-        self.observations = self.datastore.get_observations(ids, skip_missing=True,
-                                                            required_irf=observations_settings.required_irf)
+        self.observations = self.datastore.get_observations(
+            ids, skip_missing=True, required_irf=observations_settings.required_irf
+        )
 
         if observations_settings.obs_time.start is not None:
             start = observations_settings.obs_time.start
@@ -161,7 +168,7 @@ class Analysis:
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
 
-        log.info(f"Reading model.")
+        log.info("Reading model.")
         if isinstance(models, str):
             self.models = Models.from_yaml(models)
         elif isinstance(models, Models):
@@ -201,9 +208,9 @@ class Analysis:
                 geom = dataset.counts.geom
                 dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
 
-        log.info("Fitting datasets.") 
+        log.info("Fitting datasets.")
         result = self.fit.run(datasets=self.datasets)
-        self.fit_result = result["optimize_result"]
+        self.fit_result = result
         log.info(self.fit_result)
 
     def get_flux_points(self):
@@ -239,7 +246,7 @@ class Analysis:
             raise ValueError("Cannot compute excess map for 1D dataset")
 
         # Here we could possibly stack the datasets if needed.
-        if len(self.datasets)>1:
+        if len(self.datasets) > 1:
             raise ValueError("Datasets must be stacked to compute the excess map")
 
         energy_edges = self._make_energy_axis(excess_settings.energy_edges)
@@ -249,7 +256,7 @@ class Analysis:
         excess_map_estimator = ExcessMapEstimator(
             correlation_radius=excess_settings.correlation_radius,
             energy_edges=energy_edges,
-            **excess_settings.parameters
+            **excess_settings.parameters,
         )
         self.excess_map = excess_map_estimator.run(self.datasets[0])
 
@@ -259,12 +266,21 @@ class Analysis:
         log.info("Computing light curve.")
         energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
 
-        if lc_settings.time_intervals.start is None or lc_settings.time_intervals.stop is None:
-            log.info("Time intervals not defined. Extract light curve on datasets GTIs.")
-            time_intervals=None
+        if (
+            lc_settings.time_intervals.start is None
+            or lc_settings.time_intervals.stop is None
+        ):
+            log.info(
+                "Time intervals not defined. Extract light curve on datasets GTIs."
+            )
+            time_intervals = None
         else:
-            time_intervals = [(t1, t2) for t1, t2 in
-                              zip(lc_settings.time_intervals.start, lc_settings.time_intervals.stop)]
+            time_intervals = [
+                (t1, t2)
+                for t1, t2 in zip(
+                    lc_settings.time_intervals.start, lc_settings.time_intervals.stop
+                )
+            ]
 
         light_curve_estimator = LightCurveEstimator(
             time_intervals=time_intervals,
@@ -275,7 +291,11 @@ class Analysis:
         )
         lc = light_curve_estimator.run(datasets=self.datasets)
         self.light_curve = lc
-        log.info("\n{}".format(self.light_curve.to_table(format="lightcurve", sed_type="flux")))
+        log.info(
+            "\n{}".format(
+                self.light_curve.to_table(format="lightcurve", sed_type="flux")
+            )
+        )
 
     def update_config(self, config):
         self.config = self.config.update(config=config)
@@ -294,7 +314,9 @@ class Analysis:
         if skydir_settings.frame in ["icrs", "galactic"]:
             geom_params["frame"] = skydir_settings.frame
         else:
-            raise ValueError(f"Incorrect skydir frame: expect 'icrs' or 'galactic'. Got {skydir_settings.frame}")
+            raise ValueError(
+                f"Incorrect skydir frame: expect 'icrs' or 'galactic'. Got {skydir_settings.frame}"
+            )
 
         geom_params["axes"] = axes
         geom_params["binsz"] = wcs_geom_settings.binsize
@@ -325,7 +347,9 @@ class Analysis:
         elif datasets_settings.type == "1d":
             geom = self._create_region_geometry(datasets_settings.on_region, axes)
         else:
-            raise ValueError(f"Incorrect dataset type. Expect '1d' or '3d'. Got {datasets_settings.type}.")
+            raise ValueError(
+                f"Incorrect dataset type. Expect '1d' or '3d'. Got {datasets_settings.type}."
+            )
         return geom
 
     def _create_reference_dataset(self, name=None):
@@ -342,7 +366,7 @@ class Analysis:
         if geom_settings.wcs.binsize_irf is not None:
             geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
 
-        if self.config.datasets.type == '1d':
+        if self.config.datasets.type == "1d":
             return SpectrumDataset.create(geom, name=name, **geom_irf)
         else:
             return MapDataset.create(geom, name=name, **geom_irf)
@@ -357,7 +381,9 @@ class Analysis:
         elif datasets_settings.type == "1d":
             maker_config = {}
             if datasets_settings.containment_correction:
-                maker_config["containment_correction"] = datasets_settings.containment_correction
+                maker_config[
+                    "containment_correction"
+                ] = datasets_settings.containment_correction
 
             maker_config["selection"] = ["counts", "exposure", "edisp"]
 
@@ -371,9 +397,7 @@ class Analysis:
 
         safe_mask_selection = self.config.datasets.safe_mask.methods
         safe_mask_settings = self.config.datasets.safe_mask.parameters
-        return SafeMaskMaker(
-            methods=safe_mask_selection, **safe_mask_settings
-        )
+        return SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
 
     def _create_background_maker(self):
         """Create the Background maker."""
@@ -407,7 +431,7 @@ class Analysis:
                 f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
             )
         else:
-            log.warning(f"No background maker set. Check configuration.")
+            log.warning("No background maker set. Check configuration.")
         return bkg_maker
 
     def _map_making(self):
@@ -425,10 +449,7 @@ class Analysis:
         log.info("Start the data reduction loop.")
 
         if datasets_settings.stack:
-            for obs in progress_bar(
-                self.observations,
-                desc="Observations"
-            ):
+            for obs in progress_bar(self.observations, desc="Observations"):
                 log.debug(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
@@ -445,10 +466,7 @@ class Analysis:
         else:
             datasets = []
 
-            for obs in progress_bar(
-                    self.observations,
-                    desc="Observations"
-            ):
+            for obs in progress_bar(self.observations, desc="Observations"):
                 log.debug(f"Processing observation {obs.obs_id}")
                 cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
                 dataset = maker.run(cutout, obs)
@@ -470,10 +488,7 @@ class Analysis:
         reference = self._create_reference_dataset()
 
         datasets = []
-        for obs in progress_bar(
-                self.observations,
-                desc="Observations"
-        ):
+        for obs in progress_bar(self.observations, desc="Observations"):
             log.debug(f"Processing observation {obs.obs_id}")
             dataset = dataset_maker.run(reference.copy(), obs)
             if bkg_maker is not None:
@@ -496,7 +511,7 @@ class Analysis:
     def _make_energy_axis(axis, name="energy"):
         if axis.min is None or axis.max is None:
             return None
-        elif axis.nbins is None or axis.nbins<1:
+        elif axis.nbins is None or axis.nbins < 1:
             return None
         else:
             return MapAxis.from_bounds(

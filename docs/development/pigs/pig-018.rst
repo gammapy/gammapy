@@ -293,7 +293,7 @@ The main suggestions received were incorporated. There was some controversy e.g.
 whether we should have more shorter pages and notebooks, or fewer longer ones.
 This PIG was accepted on Nov 6, 2019, although we'd like to note that the
 outline and changes described above aren't set in stone, we expect the
-documentation to evolve and improve in an interative fashion over the coming
+documentation to evolve and improve in an interactive fashion over the coming
 weeks, but also in 2020 and after.
 
 .. _GH 172: https://github.com/gammapy/gammapy/issues/172
