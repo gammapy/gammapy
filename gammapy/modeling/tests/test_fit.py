@@ -95,6 +95,8 @@ def test_run(backend):
 
     assert result.success
     assert result.optimize_result.method == "migrad"
+    assert result.covariance_result.method == "hesse"
+    assert result.covariance_result.success == True
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)

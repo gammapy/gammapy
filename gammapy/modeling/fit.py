@@ -635,7 +635,7 @@ class FitResult:
     @property
     def covariance_result(self):
         """Optimize result"""
-        return self._optimize_result
+        return self._covariance_result
 
     def __repr__(self):
         str_ = ""
