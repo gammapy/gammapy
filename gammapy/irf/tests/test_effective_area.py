@@ -87,7 +87,7 @@ def test_to_table():
 @requires_data()
 def test_to_table_is_pointlike(aeff):
     hdu = aeff.to_table_hdu()
-    assert(bool(hdu.meta.pop("is_pointlike", None)) == False)
+    assert "is_pointlike" in hdu.header
 
 
 def test_wrong_axis_order():
