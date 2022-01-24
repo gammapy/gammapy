@@ -85,18 +85,17 @@ class EventList:
 
         filename = make_path(filename)
 
-        if gti is None: # save just the events
-            if "extname" not in map(str.lower, self.table.meta.keys()):
-                self.table.meta = {"EXTNAME": "EVENTS"}
-            self.table.write(filename, overwrite=overwrite)
+        primary_hdu = fits.PrimaryHDU()
+        hdu_evt = fits.BinTableHDU(self.table, name='EVENTS')
+        hdu_all = fits.HDUList([primary_hdu, hdu_evt])
 
-        else:
-            assert isinstance(gti, GTI)
-            primary_hdu = fits.PrimaryHDU()
-            hdu_evt = fits.BinTableHDU(self.table, name='EVENTS')
+        if gti is not None:
+            if not isinstance(gti, GTI):
+                raise TypeError('gti must be an instance of GTI')
             hdu_gti = fits.BinTableHDU(gti.table, name="GTI")
-            hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
-            hdu_all.writeto(filename, overwrite=True)
+            hdu_all.append(hdu_gti)
+
+        hdu_all.writeto(filename, overwrite=overwrite)
 
 
 

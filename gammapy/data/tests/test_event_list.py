@@ -33,7 +33,7 @@ class TestEventListBase:
         dummy_events = EventList(Table())
         dummy_events.write("test.fits", overwrite=True)
         read_again = EventList.read("test.fits")
-        assert dummy_events.table.meta['EXTNAME'] == "EVENTS"
+        assert read_again.table.meta['EXTNAME'] == "EVENTS"
 
         # With GTI
         gti = GTI.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
