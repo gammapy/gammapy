@@ -36,7 +36,7 @@ class FoVBackgroundMaker(Maker):
         Reference norm spectral model to use for the `FoVBackgroundModel`, if none is defined
         on the dataset. By default, use pl-norm.
     min_counts : int
-        Minimum number of counts required outside the exclusion region
+        Minimum number of counts, or residuals counts if a SkyModel is set, required outside the exclusion region
     min_npred_background : float
        Minimum number of predicted background counts required outside the exclusion region
     """
