@@ -84,6 +84,11 @@ def test_to_table():
     assert hdu.header["TUNIT1"] == aeff.axes["energy_true"].unit
 
 
+@requires_data()
+def test_to_table_is_pointlike(aeff):
+    hdu = aeff.to_table_hdu()
+    assert(bool(table.meta.pop("is_pointlike", None)) == False)
+
 def test_wrong_axis_order():
     energy_axis_true = MapAxis.from_energy_bounds(
         "1 TeV", "10 TeV", nbin=10, name="energy_true"
@@ -98,7 +103,6 @@ def test_wrong_axis_order():
         EffectiveAreaTable2D(
             axes=[energy_axis_true, offset_axis], data=data, unit="cm2"
         )
-
 
 @requires_data("gammapy-data")
 def test_aeff2d_pointlike():
