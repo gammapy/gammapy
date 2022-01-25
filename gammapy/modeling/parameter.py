@@ -23,7 +23,12 @@ def _get_parameters_str(parameters):
         else:
             value_format, error_format = "{:10.3f}", "{:7.2f}"
 
-        line = "\t{:12} {:11}: " + value_format + "\t {} {:<12s}\n"
+        line = "\t{:21} {:8}: " + value_format + "\t {} {:<12s}\n"
+
+        if par._link_label_io is not None:
+            name = par._link_label_io
+        else:
+            name = par.name
 
         if par.frozen:
             frozen, error = "(frozen)", "\t\t"
@@ -33,8 +38,7 @@ def _get_parameters_str(parameters):
                 error = "+/- " + error_format.format(par.error)
             except AttributeError:
                 error = ""
-
-        str_ += line.format(par.name, frozen, par.value, error, par.unit)
+        str_ += line.format(name, frozen, par.value, error, par.unit)
     return str_.expandtabs(tabsize=2)
 
 
