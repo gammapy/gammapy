@@ -296,7 +296,7 @@ class DataStore:
             * `psf` : Point Spread Function
             * `rad_max` : Maximal radius
             * `full-containment` :["events", "gti", "aeff", "edisp", "psf", "bkg"]
-            * `point-source` : ["events", "gti", "aeff", "edisp", "rad_max"]
+            * `point-like` : ["events", "gti", "aeff", "edisp"]
             By default, no HDUs are required, only warnings will be emitted
             for missing HDUs among all possibilities.
 
