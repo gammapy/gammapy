@@ -135,9 +135,11 @@ commands to set up an environment for Gammapy development:
     git clone https://github.com/[your-github-username]/gammapy.git
     cd gammapy
     conda env create -f environment-dev.yml
-    source activate gammapy-dev
-    # for conda versions >=4.4.0 you may have to execute
-    #'conda activate gammapy-dev' instead
+    #To speed up the environment solving you can use mamba as an alternative
+    #mamba env create -f environment-dev.yml
+    conda activate gammapy-dev
+    # for conda versions <4.4.0 you may have to execute
+    #'source activate gammapy-dev' instead
     git remote add gammapy git@github.com:gammapy/gammapy.git
     git remote rename origin [your-user-name]
 
