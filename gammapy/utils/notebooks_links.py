@@ -106,7 +106,7 @@ def make_api_links(file_path, file_type):
         url_docs_release = URL_DOCS.replace("dev", release_number_docs)
         txt = txt.replace(URL_DOCS, url_docs_release)
     else:
-        repl = r"..\/\1html\2"
+        repl = start_link + r"\1html\2"
         txt = re.sub(
             pattern=URL_DOCS + r"(.*?)html(\)|#)",
             repl=repl,
