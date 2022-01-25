@@ -694,7 +694,7 @@ def test_MapAxis_format_plot_xaxis():
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "E$_{\rm true}$ [TeV]"
+    assert ax1.xaxis.label.properties()["text"] == "E$_{\\rm true}$ [TeV]"
 
 
 def test_TimeMapAxis_format_plot_xaxis(time_intervals):

@@ -47,10 +47,10 @@ def pix_to_coord(edges, pix, interp="lin"):
 
 PLOT_AXIS_LABEL = {
     "energy": "Energy",
-    "energy_true": "E$_{\rm true}$",
+    "energy_true": r"E$_{\rm true}$",
     "offset": "Offset",
-    "rad": "$\delta p$",
-    "migra": "$\mu$",
+    "rad": r"$\delta p$",
+    "migra": r"$\mu$",
     "fov_lon": "FOV Lon.",
     "fov_lat": "FOV Lat.",
     "time": "Time",
