@@ -34,7 +34,9 @@ jobs:
             os: ubuntu-latest
           - name: Linux python 3.8 core
             os: ubuntu-latest
-          - name: Windows python 3.7 all
+          - name: Linux python 3.9 core
+            os: ubuntu-latest
+          - name: Windows python 3.7 core
             os: windows-latest
             python: 3.7
           - name: Mac python 3.7 all
@@ -45,7 +47,11 @@ jobs:
       - name: install python3.8
         if: contains(matrix.name, '3.8')
         run: |
-          sed -i 's/python=3.7/python=3.8/' environment-dev.yml
+          sed -i 's/python==3.7/python==3.8/' environment-dev.yml
+      - name: install python3.9
+        if: contains(matrix.name, '3.9')
+        run: |
+          sed -i 's/python==3.7/python==3.9/' environment-dev.yml
       - name: add core dependencies env file
         if: contains(matrix.name, 'core')
         run: |
@@ -53,13 +59,13 @@ jobs:
           mv env1 environment-dev.yml
           cat environment-dev.yml
       - name: install dependencies with pip
-        if: matrix.name=='Windows python 3.7 all'
+        if: matrix.name=='Windows python 3.7 core'
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install astropy click cython numpy pydantic pyyaml regions scipy
           pip install pytest pytest-astropy requests tqdm pytest-xdist
       - name: create and activate env
-        if: matrix.name!='Windows python 3.7 all'
+        if: matrix.name!='Windows python 3.7 core'
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: environment-dev.yml
