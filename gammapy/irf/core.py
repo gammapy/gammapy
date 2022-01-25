@@ -418,10 +418,14 @@ class IRF(metaclass=abc.ABCMeta):
         if format == "gadf-dl3":
             table.meta = self.meta.copy()
             spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
-            # TODO: add missing required meta data!
-            table.meta["HDUCLAS2"] = spec["hduclas2"]
+
+            table.meta.update(spec["mandatory_keywords"])
+
             if self.is_pointlike:
                 table.meta["HDUCLAS3"] = "POINT-LIKE"
+            else:
+                table.meta["HDUCLAS3"] = "FULL-ENCLOSURE"
+
             table[spec["column_name"]] = self.quantity.T[np.newaxis]
         else:
             raise ValueError(f"Not a valid supported format: '{format}'")
