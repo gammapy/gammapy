@@ -70,12 +70,12 @@ def test_broken_links_datastore(data_store):
     hdu_table.remove_row(index)
     hdu_table._hdu_type_stripped = np.array([_.strip() for _ in hdu_table["HDU_TYPE"]])
     observations = data_store.get_observations(
-        [23523, 23526], required_irf=["aeff", "bkg"]
+        [23523, 23526], required_hdu=["events", "gti", "aeff", "edisp"]
     )
     assert len(observations) == 1
 
     with pytest.raises(ValueError):
-        _ = data_store.get_observations([23523], required_irf=["xyz"])
+        _ = data_store.get_observations([23523], required_hdu=["xyz"])
 
 
 @requires_data()

@@ -29,7 +29,7 @@ def observations_magic_dl3():
     """MAGIC DL3 observation list."""
     datastore = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic/")
     obs_ids = [5029748]
-    return datastore.get_observations(obs_ids, required_irf=["aeff", "edisp"])
+    return datastore.get_observations(obs_ids, required_hdu=["events", "gti", "aeff", "edisp"])
 
 
 @pytest.fixture
