@@ -30,16 +30,16 @@ jobs:
       fail-fast: false # true
       matrix:
         include:
-          - name: Linux python 3.7 all
+          - name: Linux python 3.7 all-deps
             os: ubuntu-latest
-          - name: Linux python 3.8 core
+          - name: Linux python 3.8 core-deps
             os: ubuntu-latest
-          - name: Linux python 3.9 core
+          - name: Linux python 3.9 core-deps
             os: ubuntu-latest
-          - name: Windows python 3.7 core
+          - name: Windows python 3.7 core-deps
             os: windows-latest
             python: 3.7
-          - name: Mac python 3.7 all
+          - name: Mac python 3.7 all-deps
             os: macos-latest
     steps:
       - name: checkout repo
@@ -53,19 +53,19 @@ jobs:
         run: |
           sed -i 's/python==3.7/python==3.9/' environment-dev.yml
       - name: add core dependencies env file
-        if: contains(matrix.name, 'core')
+        if: contains(matrix.name, 'core-deps')
         run: |
           awk '{f="env" NR; print $0> f}' RS='# extra dependencies' environment-dev.yml
           mv env1 environment-dev.yml
           cat environment-dev.yml
       - name: install dependencies with pip
-        if: matrix.name=='Windows python 3.7 core'
+        if: matrix.name=='Windows python 3.7 core-deps'
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install astropy click cython numpy pydantic pyyaml regions scipy
           pip install pytest pytest-astropy requests tqdm pytest-xdist
       - name: create and activate env
-        if: matrix.name!='Windows python 3.7 core'
+        if: matrix.name!='Windows python 3.7 core-deps'
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: environment-dev.yml
@@ -74,18 +74,18 @@ jobs:
         run: |
           pip install -e .
       - name: test coverage
-        if: matrix.name=='Linux python 3.7 all'
+        if: matrix.name=='Linux python 3.7 all-deps'
         run: |
           gammapy download datasets
           export GAMMAPY_DATA=/home/runner/work/gammapy/gammapy/gammapy-datasets
           make test-cov
           codecov -X gcov
       - name: test simple
-        if: matrix.name!='Linux python 3.7 all'
+        if: matrix.name!='Linux python 3.7 all-deps'
         run: |
           make test
   notebooks:
-    name: Linux python 3.7 notebooks all
+    name: Linux python 3.7 notebooks all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -111,7 +111,7 @@ jobs:
         run: |
           make test-nb
   others:
-    name: Linux python 3.7 others all
+    name: Linux python 3.7 others all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
