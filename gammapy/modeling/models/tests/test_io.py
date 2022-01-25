@@ -34,6 +34,7 @@ def models():
     models = Models.from_dict(models_data)
     return models
 
+@requires_data()
 def test_dict_to_skymodels(models):
 
     assert len(models) == 5
@@ -102,6 +103,7 @@ def test_dict_to_skymodels(models):
     assert not model2.spatial_model.normalize
 
 
+@requires_data()
 def test_sky_models_io(tmp_path, models):
     # TODO: maybe change to a test case where we create a model programmatically?
     models.covariance = np.eye(len(models.parameters))
@@ -280,6 +282,7 @@ def test_all_model_instances(model):
     assert tag == model.__class__.__name__
 
 
+@requires_data()
 def test_missing_parameters(models):
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6
@@ -317,6 +320,7 @@ def test_io_temporal():
             assert read_model.temporal_model.parameters[p.name].unit == p.unit
 
 
+@requires_data()
 def test_link_label(models):
     skymodels = models.select(tag="sky-model")
     skymodels[0].spectral_model.reference = skymodels[1].spectral_model.reference
