@@ -137,7 +137,7 @@ class Analysis:
         ids = self._make_obs_table_selection()
 
         self.observations = self.datastore.get_observations(
-            ids, skip_missing=True, required_irf=observations_settings.required_irf
+            ids, skip_missing=True, required_hdu=observations_settings.required_hdu
         )
 
         if observations_settings.obs_time.start is not None:

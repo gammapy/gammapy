@@ -215,7 +215,7 @@ class ObservationsConfig(GammapyBaseConfig):
     obs_file: Path = None
     obs_cone: SpatialCircleConfig = SpatialCircleConfig()
     obs_time: TimeRangeConfig = TimeRangeConfig()
-    required_irf: List[RequiredIRFEnum] = ["aeff", "edisp", "psf", "bkg"]
+    required_hdu: List[RequiredIRFEnum] = ["full-containment"]
 
 
 class LogConfig(GammapyBaseConfig):
