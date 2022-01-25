@@ -60,12 +60,10 @@ jobs:
           pip install pytest pytest-astropy requests tqdm pytest-xdist
       - name: create and activate env
         if: matrix.name!='Windows python 3.7 all'
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          mamba-version: "*"
-          use-mamba: true
-          activate-environment: gammapy-dev
           environment-file: environment-dev.yml
+          environment-name: gammapy-dev
       - name: install gammapy
         run: |
           pip install -e .
@@ -93,13 +91,10 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v2
       - name: create and activate env
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          mamba-version: "*"
-          use-mamba: true
-          activate-environment: gammapy-dev
           environment-file: environment-dev.yml
-          auto-update-conda: true
+          environment-name: gammapy-dev
       - name: install gammapy
         run: |
           pip install -e .
@@ -122,13 +117,10 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v2
       - name: create and activate env
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          mamba-version: "*"
-          use-mamba: true
-          activate-environment: gammapy-dev
           environment-file: environment-dev.yml
-          auto-update-conda: true
+          environment-name: gammapy-dev
       - name: install gammapy
         run: |
           pip install -e .
