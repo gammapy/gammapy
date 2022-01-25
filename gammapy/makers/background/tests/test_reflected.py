@@ -54,7 +54,8 @@ def observations():
 
 @pytest.fixture()
 def reflected_bkg_maker(exclusion_mask):
-    return ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
+    finder = ReflectedRegionsFinder(exclusion_mask=exclusion_mask)
+    return ReflectedRegionsBackgroundMaker(region_finder=finder)
 
 
 region_finder_param = [
@@ -73,29 +74,27 @@ def test_find_reflected_regions(
 ):
     pointing = pointing_pos
     finder = ReflectedRegionsFinder(
-        center=pointing,
-        region=on_region,
         exclusion_mask=exclusion_mask,
         min_distance_input="0 deg",
     )
-    regions = finder.run()
+    regions, _ = finder.run(center=pointing, region=on_region)
     assert len(regions) == nreg1
     assert_quantity_allclose(regions[3].center.icrs.ra, reg3_ra, rtol=1e-2)
 
     # Test without exclusion
     finder.exclusion_mask = None
-    regions = finder.run()
+    regions, _ = finder.run(center=pointing, region=on_region)
     assert len(regions) == nreg2
 
     # Test with too small exclusion
     small_mask = exclusion_mask.cutout(pointing, Angle("0.1 deg"))
     finder.exclusion_mask = small_mask
-    regions = finder.run()
+    regions, _ = finder.run(center=pointing, region=on_region)
     assert len(regions) == nreg3
 
     # Test with maximum number of regions
     finder.max_region_number = 5
-    regions = finder.run()
+    regions, _ = finder.run(center=pointing, region=on_region)
     assert len(regions) == 5
 
     # Test with an other type of region
@@ -107,9 +106,10 @@ def test_find_reflected_regions(
         outer_height=0.6 * u.deg,
         angle=130 * u.deg,
     )
-    finder.region = on_ellipse_annulus
-    finder.reference_map = None
-    regions = finder.run()
+    regions, _ = finder.run(
+        region=on_ellipse_annulus,
+        center=pointing,
+    )
     assert len(regions) == 5
 
 
@@ -129,9 +129,9 @@ def test_non_circular_regions(region, nreg):
     pointing = SkyCoord(0.0, 0.0, unit="deg")
 
     finder = ReflectedRegionsFinder(
-        center=pointing, region=region, min_distance_input="0 deg"
+        min_distance_input="0 deg"
     )
-    regions = finder.run()
+    regions, _ = finder.run(center=pointing, region=region)
     assert len(regions) == nreg
 
 
@@ -139,12 +139,13 @@ def test_non_circular_regions(region, nreg):
 def test_bad_on_region(exclusion_mask, on_region):
     pointing = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     finder = ReflectedRegionsFinder(
-        center=pointing,
-        region=on_region,
         exclusion_mask=exclusion_mask,
         min_distance_input="0 deg",
     )
-    regions = finder.run()
+    regions, _ = finder.run(
+        center=pointing,
+        region=on_region,
+    )
     assert len(regions) == 0
 
 

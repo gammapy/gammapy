@@ -494,12 +494,7 @@ def make_counts_off_rad_max(
     geom,
     rad_max,
     events,
-    binsz,
-    exclusion_mask,
-    min_distance,
-    min_distance_input,
-    max_region_number,
-    angle_increment,
+    region_finder,
 ):
     """Extract the OFF counts and the ON / OFF acceptance considering for the
     sizes of the ON and OFF regions the values in the `RAD_MAX_2D` table.
@@ -508,24 +503,13 @@ def make_counts_off_rad_max(
 
     Parameters
     ----------
-    geom : `~gammapy.maps.RegionGeom`
+    geom: `~gammapy.maps.RegionGeom`
         reference map geom
-    rad_max : `~gammapy.irf.RadMax2D`
+    rad_max: `~gammapy.irf.RadMax2D`
         the RAD_MAX_2D table IRF
-    events : `~gammapy.data.EventList`
+    events: `~gammapy.data.EventList`
         event list to be used to compute the OFF counts
-    binsz : `~astropy.coordinates.Angle`
-        Bin size of the reference map used for region finding.
-    exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
-        Exclusion mask
-    min_distance : `~astropy.coordinates.Angle`, optional
-        Minimal distance between two consecutive reflected regions
-    min_distance_input : `~astropy.coordinates.Angle`, optional
-        Minimal distance from input region
-    max_region_number : int, optional
-        Maximum number of regions to use
-    angle_increment : `~astropy.coordinates.Angle`, optional
-        Rotation angle applied when a region falls in an excluded region
+    region_finder: `~gammapy.makers.background.reflected.RegionFinder`
 
     Returns
     -------
@@ -534,8 +518,6 @@ def make_counts_off_rad_max(
     acceptance_off : `~gammapy.maps.RegionNDMap`
         ratio of the acceptances of the OFF to ON regions.
     """
-    from .background import ReflectedRegionsFinder
-
     rad_max = get_rad_max_vs_energy(rad_max, events.pointing_radec, geom)
 
     counts_off_list = []
@@ -547,26 +529,20 @@ def make_counts_off_rad_max(
         on_region = CircleSkyRegion(center=geom.center_skydir, radius=rad)
         energy_range = geom.axes["energy"].slice(i)
 
-        finder = ReflectedRegionsFinder(
-            binsz=binsz,
-            exclusion_mask=exclusion_mask,
+        regions, wcs = region_finder.run(
             center=events.pointing_radec,
             region=on_region,
-            min_distance=min_distance,
-            min_distance_input=min_distance_input,
-            max_region_number=max_region_number,
-            angle_increment=angle_increment,
         )
-        regions = finder.run()
 
         if len(regions) > 0:
             off_region_geom = RegionGeom.from_regions(
-                regions=regions, axes=[energy_range], wcs=finder.geom_ref.wcs
+                regions=regions,
+                axes=[energy_range],
+                wcs=wcs,
             )
             counts_off = RegionNDMap.from_geom(geom=off_region_geom)
             counts_off.fill_events(events)
             counts_off_list.append(counts_off.data[0])
-
         else:
             log.warning(
                 f"ReflectedRegionsBackgroundMaker failed in estimated energy bin {i}."
