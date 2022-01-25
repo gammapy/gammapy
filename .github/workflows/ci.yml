@@ -169,3 +169,33 @@ jobs:
           conda --version
           conda build --version
           python setup.py bdist_conda
+  oldest:
+    name: Linux python 3.7 old-versions core
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      PYTEST_ADDOPTS: --color=yes
+      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
+    steps:
+      - name: set up python3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: install dependencies
+        # oldest supported versions according to setup.cfg
+        run: |
+          pip install astropy==4.3.1 click==7.0 numpy==1.21.4 pydantic==1.0 pyyaml==5.1 regions==0.5 scipy==1.2
+          pip install pytest pytest-astropy requests tqdm
+      - name: install gammapy
+        run: |
+          pip install -e .
+      - name: download datasets
+        run: |
+          gammapy download datasets
+      - name: test simple
+        run: |
+          make test
