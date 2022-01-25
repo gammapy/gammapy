@@ -5,10 +5,11 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
+from astropy.visualization import quantity_support
 from gammapy.data import GTI
 from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import assert_time_allclose, requires_data
+from gammapy.utils.testing import assert_time_allclose, requires_data, requires_dependency, mpl_plot_check
 from gammapy.utils.time import time_ref_to_dict
 
 MAP_AXIS_INTERP = [
@@ -677,3 +678,36 @@ def test_mixed_axes():
 
     assert table["LABEL"].dtype == np.dtype("<U7")
     assert len(table) == 24
+
+
+@requires_dependency("matplotlib")
+def test_MapAxis_format_plot_xaxis():
+    import matplotlib.pyplot as plt
+    
+    axis = MapAxis.from_energy_bounds(
+            "0.03 TeV", "300 TeV", nbin=20,
+            per_decade=True, name="energy_true")
+    
+    with mpl_plot_check():
+        ax = plt.gca()
+        with quantity_support():
+            ax.plot(axis.center, np.ones_like(axis.center))
+
+    ax1 = axis.format_plot_xaxis(ax=ax)
+    assert ax1.xaxis.label.properties()["text"] == "E$_{\rm true}$ [TeV]"
+
+
+def test_TimeMapAxis_format_plot_xaxis(time_intervals):
+    import matplotlib.pyplot as plt
+    
+    axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"], name="time"
+    )
+
+    with mpl_plot_check():
+        ax = plt.gca()
+        with quantity_support():
+            ax.plot(axis.center, np.ones_like(axis.center))
+
+    ax1 = axis.format_plot_xaxis(ax=ax)
+    assert ax1.xaxis.label.properties()["text"] == "Time [iso]"

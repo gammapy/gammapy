@@ -45,6 +45,18 @@ def pix_to_coord(edges, pix, interp="lin"):
     return scale.inverse(interp_fn(pix))
 
 
+PLOT_AXIS_LABEL = {
+    "energy": "Energy",
+    "energy_true": "E$_{\rm true}$",
+    "offset": "Offset",
+    "rad": "$\delta p$",
+    "migra": "$\mu$",
+    "fov_lon": "FOV Lon.",
+    "fov_lat": "FOV Lat.",
+    "time": "Time",
+}
+
+
 class MapAxis:
     """Class representing an axis of a map.
 
@@ -278,7 +290,7 @@ class MapAxis:
         """
         ax.set_xscale(self.as_plot_scale)
 
-        xlabel = self.name.capitalize() + f" [{ax.xaxis.units}]"
+        xlabel = PLOT_AXIS_LABEL[self.name] + f" [{ax.xaxis.units}]"
         ax.set_xlabel(xlabel)
         ax.set_xlim(self.bounds)
         return ax
@@ -2187,7 +2199,7 @@ class TimeMapAxis:
         import matplotlib.pyplot as plt
         from matplotlib.dates import DateFormatter
 
-        xlabel = self.name.capitalize() + f" [{self.time_format}]"
+        xlabel = PLOT_AXIS_LABEL[self.name] + f" [{self.time_format}]"
 
         ax.set_xlabel(xlabel)
 
