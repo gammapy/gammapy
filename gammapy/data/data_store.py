@@ -244,32 +244,38 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id):
+    def obs(self, obs_id, required_hdu=None):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
         ----------
         obs_id : int
             Observation ID.
+        required_hdu : list of str
+            Required HDUs, see  `get_observations` method for details.
 
         Returns
         -------
         observation : `~gammapy.data.Observation`
             Observation container
+            
         """
         if obs_id not in self.hdu_table["OBS_ID"]:
             raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
         kwargs = {"obs_id": int(obs_id)}
 
-        hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        if required_hdu is None or required_hdu==[]:
+            hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        else:
+            hdu_list = required_hdu
 
         for hdu in hdu_list:
             kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 
         return Observation(**kwargs)
 
-    def get_observations(self, obs_id=None, skip_missing=False, required_irf="all"):
+    def get_observations(self, obs_id=None, skip_missing=False, required_hdu=None):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -278,32 +284,42 @@ class DataStore:
             Observation IDs (default of ``None`` means "all")
         skip_missing : bool, optional
             Skip missing observations, default: False
-        required_irf : list of str
+        required_hdu : list of str
             Runs will be added to the list of observations only if the
-            required IRFs are present. Otherwise, the given run will be skipped
+            required HDUs are present. Otherwise, the given run will be skipped
             Available options are:
+            * `events` : Events
+            * `gti` :  Good time intervals
             * `aeff` : Effective area
             * `bkg` : Background
             * `edisp`: Energy dispersion
             * `psf` : Point Spread Function
-            By default, all the IRFs are required.
+            * `rad_max` : Maximal radius
+            * `full-containment` :["events", "gti", "aeff", "edisp", "psf", "bkg"]
+            * `point-source` : ["events", "gti", "aeff", "edisp", "rad_max"]
+            By default, no HDUs are required, only warnings will be emitted
+            for missing HDUs among all possibilities.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`
         """
-        available_irf = ["aeff", "edisp", "psf", "bkg"]
+        full_containment = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+        point_source = ["events", "gti", "aeff", "edisp", "bkg", "rad_max"]
+        available_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        
+        if required_hdu == "full_containment":
+            required_hdu = full_containment
+        if required_hdu == "point_source":
+            required_hdu = point_source
+        elif required_hdu is None:
+            required_hdu = []
 
-        if required_irf == "all":
-            required_irf = available_irf
-        elif required_irf is None:
-            required_irf = []
-
-        if not set(required_irf).issubset(available_irf):
-            difference = set(required_irf).difference(available_irf)
+        if not set(required_hdu).issubset(available_hdu):
+            difference = set(required_hdu).difference(available_hdu)
             raise ValueError(
-                f"{difference} is not a valid irf key. Choose from: {available_irf}"
+                f"{difference} is not a valid hdu key. Choose from: {available_hdu}"
             )
 
         if obs_id is None:
@@ -313,7 +329,7 @@ class DataStore:
 
         for _ in obs_id:
             try:
-                obs = self.obs(_)
+                obs = self.obs(_, required_hdu)
             except ValueError as err:
                 if skip_missing:
                     log.warning(f"Skipping missing obs_id: {_!r}")
@@ -321,10 +337,10 @@ class DataStore:
                 else:
                     raise err
 
-            if set(required_irf).issubset(obs.available_irfs):
+            if set(required_hdu).issubset(obs.available_irfs):
                 obs_list.append(obs)
             else:
-                log.warning(f"Skipping run with missing IRFs; obs_id: {_!r}")
+                log.warning(f"Skipping run with missing HDUs; obs_id: {_!r}")
 
         return Observations(obs_list)
 
