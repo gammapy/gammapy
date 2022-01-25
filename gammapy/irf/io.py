@@ -42,6 +42,7 @@ IRF_DL3_HDU_SPECIFICATION = {
         "mandatory_keywords": {
             **COMMON_IRF_HEADERS,
             "HDUCLAS2": "BKG",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_3D",
         }
     },
@@ -51,6 +52,7 @@ IRF_DL3_HDU_SPECIFICATION = {
         "mandatory_keywords": {
             **COMMON_IRF_HEADERS,
             "HDUCLAS2": "BKG",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_2D",
         }
     },
@@ -60,6 +62,7 @@ IRF_DL3_HDU_SPECIFICATION = {
         "mandatory_keywords": {
             **COMMON_IRF_HEADERS,
             "HDUCLAS2": "EDISP",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "EDISP_2D",
         }
     },
@@ -69,6 +72,7 @@ IRF_DL3_HDU_SPECIFICATION = {
         "mandatory_keywords": {
             **COMMON_IRF_HEADERS,
             "HDUCLAS2": "RPSF",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "PSF_TABLE",
         }
     },
@@ -85,6 +89,7 @@ IRF_DL3_HDU_SPECIFICATION = {
         "mandatory_keywords": {
             **COMMON_IRF_HEADERS,
             "HDUCLAS2": "RPSF",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "PSF_3GAUSS",
         }
     },
@@ -97,6 +102,7 @@ IRF_DL3_HDU_SPECIFICATION = {
         "mandatory_keywords": {
             **COMMON_IRF_HEADERS,
             "HDUCLAS2": "RPSF",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "PSF_KING",
         }
     },
@@ -106,6 +112,7 @@ IRF_DL3_HDU_SPECIFICATION = {
         "mandatory_keywords": {
             **COMMON_IRF_HEADERS,
             "HDUCLAS2": "EFF_AREA",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "AEFF_2D",
         }
     },
