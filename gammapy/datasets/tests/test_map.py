@@ -726,14 +726,6 @@ def test_map_fit_linked(sky_model, geom, geom_etrue):
     assert len(datasets.models.parameters.unique_parameters) == 20 
     assert datasets.models.covariance.shape == (22,22) 
 
-    models.to_dict()
-    pars = sky_model.parameters
-    pars2 = sky_model2.parameters
-    assert pars["index"]._link_label_io is not None 
-    assert pars2["reference"]._link_label_io is not None 
-    assert pars["index"]._link_label_io == pars2["index"]._link_label_io
-    assert pars["reference"]._link_label_io == pars2["reference"]._link_label_io
-
 
 @requires_dependency("iminuit")
 @requires_data()
