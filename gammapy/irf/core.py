@@ -426,6 +426,7 @@ class IRF(metaclass=abc.ABCMeta):
             else:
                 table.meta["HDUCLAS3"] = "FULL-ENCLOSURE"
 
+            table.meta.pop("is_pointlike", None)
             table[spec["column_name"]] = self.quantity.T[np.newaxis]
         else:
             raise ValueError(f"Not a valid supported format: '{format}'")

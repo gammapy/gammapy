@@ -7,7 +7,7 @@ import os
 import datetime
 from pkg_resources import get_distribution
 
-# Load all of the global Astropy configuration
+# Load all the global Astropy configuration
 from sphinx_astropy.conf import *
 
 # Load utils docs functions
@@ -23,11 +23,13 @@ conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
 
+# -- General configuration ----------------------------------------------------
+
+# Matplotlib directive sets whether to show a link to the source in HTML
 plot_html_show_source_link = False
 
+# If true, figures, tables and code-blocks are automatically numbered if they have a caption
 numfig = False
-
-# -- General configuration ----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = '1.1'
@@ -38,16 +40,10 @@ numfig = False
 intersphinx_mapping.pop("h5py", None)
 intersphinx_mapping["matplotlib"] = ("https://matplotlib.org/", None)
 intersphinx_mapping["astropy"] = ("http://docs.astropy.org/en/latest/", None)
-intersphinx_mapping["regions"] = (
-    "https://astropy-regions.readthedocs.io/en/latest/",
-    None,
-)
+intersphinx_mapping["regions"] = ("https://astropy-regions.readthedocs.io/en/latest/", None)
 intersphinx_mapping["reproject"] = ("https://reproject.readthedocs.io/en/latest/", None)
 intersphinx_mapping["naima"] = ("https://naima.readthedocs.io/en/latest/", None)
-intersphinx_mapping["gadf"] = (
-    "https://gamma-astro-data-formats.readthedocs.io/en/latest/",
-    None,
-)
+intersphinx_mapping["gadf"] = ("https://gamma-astro-data-formats.readthedocs.io/en/latest/", None)
 intersphinx_mapping["iminuit"] = ("https://iminuit.readthedocs.io/en/latest/", None)
 intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/", None)
 
@@ -56,9 +52,10 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 exclude_patterns.append("_templates")
 exclude_patterns.append("_static")
 exclude_patterns.append("**.ipynb_checkpoints")
+exclude_patterns.append("modeling/gallery/*/*.ipynb")
+exclude_patterns.append("modeling/gallery/*/*.md5")
+exclude_patterns.append("modeling/gallery/*/*.py")
 
-#
-# -- nbsphinx settings
 extensions.extend(
     [
         "nbsphinx",
@@ -67,10 +64,13 @@ extensions.extend(
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
+        "sphinx_panels",
+        "sphinx_copybutton"
     ]
 )
 nbsphinx_execute = "never"
-
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
 # --
 
 # This is added to the end of RST files - a good place to put substitutions to
@@ -93,27 +93,9 @@ release = version
 # A NOTE ON HTML THEMES
 # The global astropy configuration uses a custom theme, 'bootstrap-astropy',
 # which is installed along with astropy. A different theme can be used or
-# the options for this theme can be modified by overriding some of the
+# the options for this theme can be modified by overriding some
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
-
-# html_theme_options = {
-#    'logotext1': 'gamma',  # white,  semi-bold
-#    'logotext2': 'py',  # orange, light
-#    'logotext3': ':docs'  # white,  light
-# }
-
-html_theme_options = {
-    "canonical_url": setup_cfg["url_docs"],
-    "analytics_id": "",
-    "logo_only": False,
-    "display_version": True,
-    "prev_next_buttons_location": "bottom",
-    # Toc options
-    "collapse_navigation": False,
-    "sticky_navigation": True,
-    "navigation_depth": 3,
-}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # To use a different custom theme, add the directory containing the theme.
@@ -122,18 +104,22 @@ html_theme_options = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 
-# Custom sidebar templates, maps document names to template names.
-# html_sidebars = {}
+# Static files to copy after template files
+html_static_path = ["_static"]
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = ''
+html_logo = os.path.join(html_static_path[0], "gammapy_logo.png")
+html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 
-# TODO: set this image also in the title bar
-# (html_logo is not the right option)
+# Custom sidebar templates, maps document names to template names.
+html_sidebars = {
+   'search': 'search-field.html',
+   'navigation': 'sidebar-nav-bs.html',
+}
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -146,26 +132,21 @@ html_title = "{} v{}".format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
 
-# Static files to copy after template files
-html_static_path = ["_static"]
-
-gammapy_sphinx_ext_activate()
-
+html_theme_options = {
+    # toc options
+    "collapse_navigation": False,
+    "navigation_depth": 1,
+    # links in menu
+    "github_url": "https://github.com/gammapy/gammapy",
+    "twitter_url": "https://twitter.com/gammapyST",
+}
 
 # Theme style
 # html_style = ''
-def setup(app):
-    app.add_css_file("gammapy.css")
-    app.add_js_file("copybutton.js")
-    app.add_js_file("gammapy.js")
+html_css_files = ["gammapy.css"]
+html_js_files = ["gammapy.js"]
 
-
-# copybutton.js provides hide/show button for python prompts >>>
-# slightly modified to work on RTD theme from javascript file in easydev package
-# https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js
-
-
-html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
+gammapy_sphinx_ext_activate()
 
 # -- Options for LaTeX output --------------------------------------------------
 
