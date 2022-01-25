@@ -110,8 +110,8 @@ jobs:
       - name: test notebooks
         run: |
           make test-nb
-  others:
-    name: Linux python 3.7 others all-deps
+  sphinx:
+    name: Linux python 3.7 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -144,14 +144,24 @@ jobs:
         run: |
           unset GAMMAPY_DATA
           make test
-#      - name: test astropy dev
-#        if: always()
-#        run: |
-#          conda remove astropy --force -y
-#          pip install git+https://github.com/astropy/astropy.git#egg=astropy
-#          make test
+  conda-build:
+    name: Linux python 3.7 conda-build all-deps
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: create and activate env
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: environment-dev.yml
+          environment-name: gammapy-dev
+      - name: install gammapy
+        run: |
+          pip install -e .
       - name: test conda build
-        if: always()
         run: |
           make clean
           conda install conda-build
