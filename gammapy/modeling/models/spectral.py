@@ -1601,15 +1601,10 @@ class TemplateNDSpectralModel(SpectralModel):
         return self._map
 
     def evaluate(self, energy, **kwargs):
-        lon = self.map.geom.center_skydir.data.lon.deg
-        lat = self.map.geom.center_skydir.data.lat.deg
-        coord = {"lon": lon, "lat": lat, "energy_true": energy}
+        coord = {"energy_true": energy}
         coord.update(kwargs)
 
-        pixels = list(self.map.geom.coord_to_pix(coord))
-        # TODO : pixels in lon/lat are nan at center coord, why ?
-        pixels[0][np.isnan(pixels[0])] = 0
-        pixels[1][np.isnan(pixels[1])] = 0
+        pixels = [0,0] + [self.map.geom.axes[key].coord_to_pix(value) for key, value in coord.items()]
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=False)
