@@ -1537,7 +1537,7 @@ class TemplateSpectralModel(SpectralModel):
 
 
 class TemplateNDSpectralModel(SpectralModel):
-    """A model generated from a ND array where extra dimensions define the parameter space.
+    """A model generated from a ND map where extra dimensions define the parameter space.
 
     For more information see :ref:`templateND-spectral-model`.
 
@@ -1567,20 +1567,26 @@ class TemplateNDSpectralModel(SpectralModel):
             "log",
         ]
         parameters = []
-        for axe in map.geom.axes:
-            if axe.name not in ["energy_true", "energy"]:
-                center = (axe.bounds[1] + axe.bounds[0]) / 2
+        has_energy = False
+        for axis in map.geom.axes:
+            if axis.name not in ["energy_true", "energy"]:
+                center = (axis.bounds[1] + axis.bounds[0]) / 2
                 parameter = Parameter(
-                    name=axe.name,
+                    name=axis.name,
                     value=center,
-                    unit=axe.unit,
+                    unit=axis.unit,
                     scale_method="scale10",
-                    min=axe.bounds[0],
-                    max=axe.bounds[-1],
-                    interp="lin",
+                    min=axis.bounds[0],
+                    max=axis.bounds[-1],
+                    interp=axis.interp,
                 )
-                points_scale.append("lin")
+                points_scale.append(axis.interp)
                 parameters.append(parameter)
+            else:
+                has_energy|=True
+        if not has_energy:
+            raise ValueError("Invalid map, no energy axis found")
+
         self.default_parameters = Parameters(parameters)
 
         interp_kwargs = interp_kwargs or {}
@@ -1608,7 +1614,6 @@ class TemplateNDSpectralModel(SpectralModel):
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=False)
 
-        super().__init__()
 
     def write(self, overwrite=False):
         if self.filename is None:

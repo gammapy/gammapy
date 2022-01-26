@@ -995,6 +995,18 @@ def test_template_ND(tmpdir):
     assert template_new.parameters["norm"].value == 1
     assert template_new.parameters["tilt"].value == 0
 
+def test_template_ND_no_energy(tmpdir):
+    norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
+    tilt = MapAxis.from_bounds(-1.0, 1, 5, interp="lin", name="tilt", unit="")
+    region_map = RegionNDMap.create(
+        region="icrs;point(83.63, 22.01)", axes=[norm, tilt]
+    )
+    region_map.data[ :, :5, 0, 0] = 1
+    region_map.data[ :, 5:, 0, 0] = 2
+
+    with pytest.raises(ValueError):
+        TemplateNDSpectralModel(region_map)
+
 
 @requires_data()
 def test_template_ND_EBL(tmpdir):
