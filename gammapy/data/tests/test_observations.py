@@ -282,6 +282,19 @@ def test_observation_read_single_file():
 
 
 @requires_data()
+def test_observation_read_single_file_fixed_rad_max():
+    """check that for a point-like observation without the RAD_MAX_2D table
+    a RadMax2D object is generated from the RAD_MAX keyword"""
+    obs = Observation.read(
+        "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"
+    )
+
+    assert obs.rad_max is not None
+    assert obs.rad_max.quantity.shape == (1, 1)
+    assert u.allclose(obs.rad_max.quantity, 0.1414213 * u.deg)
+
+
+@requires_data()
 class TestObservationChecker:
     def setup(self):
         self.data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
