@@ -324,16 +324,16 @@ def test_io_temporal():
 def test_link_label(models):
     skymodels = models.select(tag="sky-model")
     skymodels[0].spectral_model.reference = skymodels[1].spectral_model.reference
-    models.to_dict()
-    pars = skymodels[0].parameters
-    pars1 = skymodels[1].parameters
-    assert pars1["reference"]._link_label_io is not None 
-    assert pars["reference"]._link_label_io == pars1["reference"]._link_label_io
+    dict_ = skymodels.to_dict()
+    label0 = dict_["components"][0]["spectral"]["parameters"][2]["link"]
+    label1 = dict_["components"][1]["spectral"]["parameters"][2]["link"]
+    assert label0 == label1
 
     txt = skymodels.__str__()
     lines = txt.splitlines()
-    str1 = lines[12].strip()[:18]
-    str2 = lines[28].strip()[:18]
-    assert "@" in str1
-    assert "@" in str2  
-    assert str1 == str2
+    n_link = 0 
+    for line in lines:
+        if "@" in line:
+            assert "reference" in line
+            n_link +=1 
+    assert n_link == 2
