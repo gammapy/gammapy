@@ -33,7 +33,23 @@ Gammapy in a virtual isolated environment. If you want to learn about using virt
     currently aren't available on Windows.
 
 
-This creates a conda environment called ``gammapy-0.19`` which you can activate via:
+Alternatively, you can use `mamba <https://mamba.readthedocs.io/>` for the installation.
+Mamba is an alternative package manager that support most of conda’s command but offers higher installation
+speed and more reliable environment solutions. To install ``mamba`` in the base environment:
+
+.. code-block:: bash
+
+    conda install mamba -n base -c conda-forge
+
+then:
+
+.. code-block:: bash
+
+    curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
+    mamba env create -f gammapy-0.19-environment.yml
+
+
+Both options will create a conda environment called ``gammapy-0.19`` which you can activate via:
 
 .. code-block:: bash
 
