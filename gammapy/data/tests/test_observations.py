@@ -266,7 +266,7 @@ def test_observation_read():
 
     assert obs.obs_id == 20136
     assert len(obs.events.energy) == 11243
-    assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]
+    assert obs.available_hdus == ["events","gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
 
@@ -284,7 +284,7 @@ def test_observation_read_single_file():
 
     assert obs.obs_id == 20136
     assert len(obs.events.energy) == 11243
-    assert obs.available_irfs == ["aeff", "edisp", "psf", "bkg"]
+    assert obs.available_hdus == ["events","gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 273372.44851054, rtol=1e-5)
     assert val.unit == "m2"
 

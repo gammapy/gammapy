@@ -337,7 +337,7 @@ class DataStore:
                 else:
                     raise err
 
-            if set(required_hdu).issubset(obs.available_irfs):
+            if set(required_hdu).issubset(obs.available_hdus):
                 obs_list.append(obs)
             else:
                 log.warning(f"Skipping run with missing HDUs; obs_id: {_!r}")
