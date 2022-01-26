@@ -99,12 +99,9 @@ def create_map_dataset_geoms(
 
 
 class MapDataset(Dataset):
-    """Perform sky model likelihood fit on maps.
-
-    If an `HDULocation` is passed the map is loaded lazily. This means the
-    map data is only loaded in memory as the corresponding data attribute
-    on the MapDataset is accessed. If it was accessed once it is cached for
-    the next time.
+    """
+    Bundle together binned counts, background, IRFs, models and likelihood to perform
+    a fit. Uses Cash statistics by default.
 
     Parameters
     ----------
@@ -129,6 +126,44 @@ class MapDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+
+    If an `HDULocation` is passed the map is loaded lazily. This means the
+    map data is only loaded in memory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accessed once it is cached for
+    the next time.
+
+    Examples
+    --------
+    Example of loading a dataset
+
+    >>> from gammapy.datasets import MapDataset
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset")
+    >>> print(dataset)
+    MapDataset
+    ----------
+    <BLANKLINE>
+      Name                            : cta_dataset
+    <BLANKLINE>
+      Total counts                    : 104317
+      Total background counts         : 91507.70
+      Total excess counts             : 12809.30
+    <BLANKLINE>
+      Predicted counts                : 91507.69
+      Predicted background counts     : 91507.70
+      Predicted excess counts         : nan
+    <BLANKLINE>
+      Exposure min                    : 6.28e+07 m2 s
+      Exposure max                    : 1.90e+10 m2 s
+    <BLANKLINE>
+      Number of total bins            : 768000
+      Number of fit bins              : 691680
+    <BLANKLINE>
+      Fit statistic type              : cash
+      Fit statistic value (-2 log(L)) : nan
+    <BLANKLINE>
+      Number of models                : 0
+      Number of parameters            : 0
+      Number of free parameters       : 0
 
 
     See Also
@@ -382,7 +417,7 @@ class MapDataset(Dataset):
         return self._energy_range(self.mask_fit)
 
     def npred(self):
-        """Predicted source and background counts
+        """Total predicted source and background counts
 
         Returns
         -------
@@ -569,7 +604,20 @@ class MapDataset(Dataset):
         -------
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
+
+        Examples
+        --------
+
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.maps import WcsGeom, MapAxis
+
+        >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
+        >>> energy_axis_true = MapAxis.from_energy_bounds( 0.5, 20, 10, unit="TeV", name="energy_true")
+        >>> geom = WcsGeom.create(skydir=(83.633, 22.014), binsz=0.02, width=(2, 2), frame="icrs", proj="CAR", axes=[energy_axis])
+
+        >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
         """
+
         geoms = create_map_dataset_geoms(
             geom=geom,
             energy_axis_true=energy_axis_true,
@@ -651,7 +699,7 @@ class MapDataset(Dataset):
         return dataset
 
     def stack(self, other, nan_to_num=True):
-        r"""Stack another dataset in place.
+        r"""Stack another dataset in place. The original dataset is modified.
 
         Safe mask is applied to compute the stacked counts data. Counts outside
         each dataset safe mask are lost.
@@ -1801,7 +1849,7 @@ class MapDataset(Dataset):
 
 
 class MapDatasetOnOff(MapDataset):
-    """Map dataset for on-off likelihood fitting.
+    """Map dataset for on-off likelihood fitting. Uses wstat statistics.
 
     Parameters
     ----------
@@ -1929,7 +1977,7 @@ class MapDatasetOnOff(MapDataset):
         return alpha
 
     def npred_background(self):
-        """Prediced background counts estimated from the marginalized likelihood estimate.
+        """Prediced background counts (mu_bkg) estimated from the marginalized likelihood estimate.
 
         See :ref:`wstat`
 
@@ -1948,7 +1996,7 @@ class MapDatasetOnOff(MapDataset):
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     def npred_off(self):
-        """Predicted counts in the off region
+        """Predicted counts in the off region; mu_bkg/alpha
 
         See :ref:`wstat`
 
@@ -2090,7 +2138,7 @@ class MapDatasetOnOff(MapDataset):
 
     def to_map_dataset(self, name=None):
         """Convert a MapDatasetOnOff to  MapDataset
-        The background model template is taken as alpha*counts_off
+        The background model template is taken as alpha * counts_off
 
         Parameters
         ----------

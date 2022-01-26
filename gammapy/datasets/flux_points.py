@@ -15,14 +15,14 @@ __all__ = ["FluxPointsDataset"]
 
 class FluxPointsDataset(Dataset):
     """
-    Fit a set of flux points with a parametric model.
+    Bundle a set of flux points with a parametric model, to perform a fit. Uses chi2 statistics.
 
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         Models (only spectral part needs to be set)
     data : `~gammapy.estimators.FluxPoints`
-        Flux points.
+        Flux points. Must be sorted along the energy axis
     mask_fit : `numpy.ndarray`
         Mask to apply for fitting
     mask_safe : `numpy.ndarray`
@@ -35,21 +35,44 @@ class FluxPointsDataset(Dataset):
     --------
     Load flux points from file and fit with a power-law model::
 
-        from gammapy.modeling import Fit
-        from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-        from gammapy.estimators import FluxPoints
-        from gammapy.datasets import FluxPointsDataset
+    >>> from gammapy.modeling import Fit
+    >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+    >>> from gammapy.estimators import FluxPoints
+    >>> from gammapy.datasets import FluxPointsDataset
 
-        filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-        flux_points = FluxPoints.read(filename)
+    >>> #load precomputed flux points
+    >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
+    >>> flux_points = FluxPoints.read(filename)
 
-        model = SkyModel(spectral_model=PowerLawSpectralModel())
+    >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
 
-        dataset = FluxPointsDataset(model, flux_points)
-        fit = Fit()
-        result = fit.run([dataset])
-        print(result)
-        print(result.parameters.to_table())
+    >>> #create dataset and fit
+    >>> dataset = FluxPointsDataset(model, flux_points)
+    >>> fit = Fit()
+    >>> result = fit.run([dataset])
+    >>> print(result)
+    OptimizeResult
+    <BLANKLINE>
+    	backend    : minuit
+    	method     : migrad
+    	success    : True
+    	message    : Optimization terminated successfully.
+    	nfev       : 135
+    	total stat : 25.21
+    <BLANKLINE>
+    CovarianceResult
+    <BLANKLINE>
+    	backend    : minuit
+    	method     : hesse
+    	success    : True
+    	message    : Hesse terminated successfully.
+
+    >>> print(result.parameters.to_table())
+          type      name     value         unit        error   min max frozen link
+    -------- --------- ---------- -------------- --------- --- --- ------ ----
+    spectral     index 2.2159e+00                1.043e-02 nan nan  False
+    spectral amplitude 2.1619e-13 cm-2 s-1 TeV-1 1.901e-14 nan nan  False
+    spectral reference 1.0000e+00            TeV 0.000e+00 nan nan   True
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
