@@ -2,9 +2,9 @@
 
 .. _dev_intro:
 
-=============================
-How to contribute to Gammapy?
-=============================
+============================
+How to contribute to Gammapy
+============================
 
 What is this?
 =============

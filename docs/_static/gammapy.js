@@ -9,7 +9,7 @@ $(document).ready(function() {
           var allText = verFile.responseText;
           var match =  allText.match(/url=\.\.\/(.*)"/i);
           var version = match[1];
-          var note = '<div class="admonition note"><p class="first admonition-title" style="background-color:red">Note</p>'
+          var note = '<div class="admonition note"><p class="first admonition-title">Note</p>'
           note += '<p class="last">You are not reading the stable version of Gammapy '
           note += 'documentation.<br/>Access the latest stable <a href="https://docs.gammapy.org/'
           note += version

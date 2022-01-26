@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+import numpy as np
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
@@ -11,6 +12,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     TemplateSpatialModel,
+    NaimaSpectralModel
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -167,3 +169,35 @@ def test_flux_estimator_norm_range_template():
     assert_allclose(scale_model.norm.min, 0)
     assert_allclose(scale_model.norm.max, 10)
     assert scale_model.norm.interp == "log"
+
+def test_flux_estimator_compound_model():
+    pl = PowerLawSpectralModel()
+    pl.amplitude.min = 1e-15
+    pl.amplitude.max = 1e-10
+    pln = PowerLawNormSpectralModel()
+    pln.norm.value = 0.1
+    spectral_model = pl*pln
+    model = SkyModel(spectral_model=spectral_model, name="test")
+
+    estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
+
+    scale_model = estimator.get_scale_model(Models([model]))
+
+    assert_allclose(scale_model.norm.min, 1e-3)
+    assert_allclose(scale_model.norm.max, 1e2)
+
+@requires_dependency("naima")
+def test_flux_estimator_naima_model():
+    import naima
+    ECPL = naima.models.ExponentialCutoffPowerLaw(1e36 * u.Unit("1/eV"), 1 * u.TeV, 2.1, 13 * u.TeV)
+    IC = naima.models.InverseCompton(ECPL, seed_photon_fields=["CMB"])
+    naima_model = NaimaSpectralModel(IC)
+
+    model = SkyModel(spectral_model=naima_model, name="test")
+
+    estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
+
+    scale_model = estimator.get_scale_model(Models([model]))
+
+    assert_allclose(scale_model.norm.min, np.nan)
+    assert_allclose(scale_model.norm.max, np.nan)
