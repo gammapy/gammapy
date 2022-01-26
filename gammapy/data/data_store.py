@@ -244,7 +244,7 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_hdu=None):
+    def obs(self, obs_id, required_hdu):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
@@ -252,7 +252,14 @@ class DataStore:
         obs_id : int
             Observation ID.
         required_hdu : list of str
-            Required HDUs, see  `get_observations` method for details.
+            The list can inlcude the following options:
+            * `events` : Events
+            * `gti` :  Good time intervals
+            * `aeff` : Effective area
+            * `bkg` : Background
+            * `edisp`: Energy dispersion
+            * `psf` : Point Spread Function
+            * `rad_max` : Maximal radius
 
         Returns
         -------
@@ -265,17 +272,13 @@ class DataStore:
 
         kwargs = {"obs_id": int(obs_id)}
 
-        if required_hdu is None or required_hdu==[]:
-            hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
-        else:
-            hdu_list = required_hdu
-
-        for hdu in hdu_list:
+        for hdu in required_hdu:
             kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 
         return Observation(**kwargs)
 
-    def get_observations(self, obs_id=None, skip_missing=False, required_hdu=None):
+
+    def get_observations(self, obs_id=None, skip_missing=False, required_hdu="all-optional"):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -284,10 +287,10 @@ class DataStore:
             Observation IDs (default of ``None`` means "all")
         skip_missing : bool, optional
             Skip missing observations, default: False
-        required_hdu : list of str
+        required_hdu : list of str or str
             Runs will be added to the list of observations only if the
             required HDUs are present. Otherwise, the given run will be skipped
-            Available options are:
+            The list can inlcude the following options:
             * `events` : Events
             * `gti` :  Good time intervals
             * `aeff` : Effective area
@@ -295,10 +298,11 @@ class DataStore:
             * `edisp`: Energy dispersion
             * `psf` : Point Spread Function
             * `rad_max` : Maximal radius
-            * `full-enclosure` :["events", "gti", "aeff", "edisp", "psf", "bkg"]
+            Alternatively single string can be used as shortcut:
+            * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
             * `point-like` : ["events", "gti", "aeff", "edisp"]
-            By default, no HDUs are required, only warnings will be emitted
-            for missing HDUs among all possibilities.
+            * `all-optional` : no HDUs are required, only warnings will be emitted
+                               for missing HDUs among all possibilities (Default).
 
         Returns
         -------
@@ -307,19 +311,20 @@ class DataStore:
         """
         full_enclosure = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
         point_like = ["events", "gti", "aeff", "edisp"]
-        available_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        all_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        is_all_optinal = required_hdu == "all-optional"
         
         if required_hdu == "full-enclosure":
             required_hdu = full_enclosure
         if required_hdu == "point-like":
             required_hdu = point_like
-        elif required_hdu is None:
-            required_hdu = []
+        if required_hdu == "all-optional":
+            required_hdu = all_hdu
 
-        if not set(required_hdu).issubset(available_hdu):
-            difference = set(required_hdu).difference(available_hdu)
+        if not set(required_hdu).issubset(all_hdu):
+            difference = set(required_hdu).difference(all_hdu)
             raise ValueError(
-                f"{difference} is not a valid hdu key. Choose from: {available_hdu}"
+                f"{difference} is not a valid hdu key. Choose from: {all_hdu}"
             )
 
         if obs_id is None:
@@ -337,7 +342,7 @@ class DataStore:
                 else:
                     raise err
 
-            if set(required_hdu).issubset(obs.available_hdus):
+            if is_all_optinal or set(required_hdu).issubset(obs.available_hdus):
                 obs_list.append(obs)
             else:
                 log.warning(f"Skipping run with missing HDUs; obs_id: {_!r}")
