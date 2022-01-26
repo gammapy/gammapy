@@ -35,7 +35,7 @@ instrument response functions (IRFs). The instrument response includes effective
 area, point spread function (PSF), energy dispersion and residual hadronic background.
 In addition there is associated meta data including information on the observation such
 as pointing] direction, observation time and observation conditions. The main FITS format
-supported by Gammapy is documented on the `Gamma astro data formats page <gadf>`_.
+supported by Gammapy is documented on the `Gamma Astro Data Formats`_ page.
 
 The access to the data and instrument response is implemented in
 :ref:`gammapy.data <data>` and :ref:`gammapy.irf <irf>`.

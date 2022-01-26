@@ -189,9 +189,7 @@ Here are some other software packages for gamma-ray astronomy:
 * `Gamera`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
 * `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry light-curve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
-* `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
-* `photon_simulator`_ --- Python code to simulate X-ray observations
 * `pycrflux`_ --- Python module to plot cosmic-ray flux
 * Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
   and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .

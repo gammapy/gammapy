@@ -27,10 +27,10 @@ Please give feedback and suggest additions to this page!
 
     To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
     easy access to observations stored in the DL3 data library. You can create it directly
-    as in `this example <tutorials/data/hess.html#Datastore>`__.
+    as in `this example <../tutorials/data/hess.html#Datastore>`__.
     It is also internally used by the high level interface `~gammapy.analysis.Analysis`. You
     can see how to properly set it `here
-    <tutorials/starting/analysis_1.html#Setting-the-data-to-use>`__.
+    <../tutorials/starting/analysis_1.html#Setting-the-data-to-use>`__.
 
 .. dropdown:: Select observations
     :animate: fade-in-slide-down
@@ -38,7 +38,7 @@ Please give feedback and suggest additions to this page!
     The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
     It can be used to select observations with various criterion.
     You can for instance apply a cone search as shown `here
-    <tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
+    <../tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__.
     You can also select observations based on other information available using the
     `~gammapy.data.ObservationTable.select_observations` method.
 
@@ -48,21 +48,21 @@ Please give feedback and suggest additions to this page!
     IACT detection efficiency varies in the FoV. To have an estimate
     of the effective exposure with respect to the on-axis one,
     it can be useful to build an `on-axis equivalent lifetime map
-    <tutorials/data/hess.html#On-axis-equivalent-livetime>`__.
+    <../tutorials/data/hess.html#On-axis-equivalent-livetime>`__.
 
 .. dropdown:: Check IRFs
     :animate: fade-in-slide-down
 
     Gammapy offers a number of methods to explore the content of the various IRFs
     contained in an observation. This is usually done thanks to their ``peek()``
-    methods. See example for CTA `here <tutorials/data/cta.html#IRFs>`__ and for H.E.S.S.
-    `here <tutorials/data/hess.html#DL3-DR1>`__.
+    methods. See example for CTA `here <../tutorials/data/cta.html#IRFs>`__ and for H.E.S.S.
+    `here <../tutorials/data/hess.html#DL3-DR1>`__.
 
 .. dropdown:: Model 2D images
     :animate: fade-in-slide-down
 
     Gammapy treats 2D maps as 3D cubes with one bin in energy. To see an example of the relevant data reduction, see
-    `2-dim sky image analysis <tutorials#core-tutorials>`
+    `2-dim sky image analysis <../tutorials/index.html#d-image>`__.
 
     Sometimes, you might want to use previously obtained images lacking an energy axis
     (eg: reduced using traditional IACT tools) for modeling and fitting inside gammapy.
@@ -74,22 +74,22 @@ Please give feedback and suggest additions to this page!
     The `~gammapy.analysis.Analysis` class can perform spectral extraction. The
     `~gammapy.analysis.AnalysisConfig` must be defined to produce '1d' datasets.
     Alternatively, you can follow the `spectrum extraction notebook
-    <tutorials/analysis/1D/spectral_analysis.html>`__.
+    <../tutorials/analysis/1D/spectral_analysis.html>`__.
 
 .. dropdown:: Extract a lightcurve
     :animate: fade-in-slide-down
 
-    The `Light curve estimation <tutorials/analysis/time/light_curve.html>`__ tutorial shows how
+    The `Light curve estimation <../tutorials/analysis/time/light_curve.html>`__ tutorial shows how
     to extract a run-wise lightcurve.
 
     To perform an analysis in a time range smaller than that of an observation, it
-    is necessary to filter the latter with its `select_time` method. This produces
+    is necessary to filter the latter with its `~gammapy.data.Observations.select_time` method. This produces
     an new observation containing events in the specified time range. With the new
     `~gammapy.data.Observations` it is then possible to perform the usual data
     reduction which will produce datasets in the correct time range. The light curve
     extraction can then be performed as usual with the
     `~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the `Light curve -
-    Flare <tutorials/analysis/time/light_curve_flare.html>`__ tutorial.
+    Flare <../tutorials/analysis/time/light_curve_flare.html>`__ tutorial.
 
 .. dropdown:: Choose units for plotting
     :animate: fade-in-slide-down
@@ -129,8 +129,8 @@ Please give feedback and suggest additions to this page!
     source as a function of observing time. In Gammapy, you can produce it with 1D
     (spectral) analysis. Once datasets are produced for a given ON region, you can
     access the total statistics with the ``info_table(cumulative=True)`` method of
-    `~gammapy.modeling.Datasets`. See example `here
-    <tutorials/analysis/1D/spectral_analysis.html#Source-statistic>`__.
+    `~gammapy.datasets.Datasets`. See example `here
+    <../tutorials/analysis/1D/spectral_analysis.html#Source-statistic>`__.
 
 .. dropdown:: Detect sources in a map
     :animate: fade-in-slide-down
@@ -142,7 +142,7 @@ Please give feedback and suggest additions to this page!
     used. A simple correlated Li & Ma significance can be used, in particular for
     ON-OFF datasets. The second step consists in applying a peak finer algorithm,
     such as `~gammapy.estimators.utils.find_peaks`. This is demonstrated in the `Source
-    detection tutorial <tutorials/analysis/2D/detect.html>`__.
+    detection tutorial <../tutorials/analysis/2D/detect.html>`__.
 
 .. dropdown:: Astrophysical source modeling
     :animate: fade-in-slide-down
@@ -159,7 +159,7 @@ Please give feedback and suggest additions to this page!
 
     Gammapy allows the flexibility of using user-defined models for analysis.
     For an example, see `Implementing a Custom Model
-    <tutorials/api/models.html#Implementing-a-Custom-Model>`__.
+    <../tutorials/api/models.html#Implementing-a-Custom-Model>`__.
 
 .. dropdown:: Implement an energy dependent spatial models
     :animate: fade-in-slide-down
@@ -167,7 +167,7 @@ Please give feedback and suggest additions to this page!
     While Gammapy does not ship energy dependent spatial models, it is possible to define
     such models within the modeling framework.
     For an example, see `here
-    <tutorials/api/models.html#Models-with-Energy-dependent-morphologyl>`__.
+    <../tutorials/api/models.html#Models-with-Energy-dependent-morphologyl>`__.
 
 .. dropdown:: Reduce memory budget for large datasets
     :animate: fade-in-slide-down
@@ -197,8 +197,8 @@ Please give feedback and suggest additions to this page!
 .. dropdown:: Interpolate maps onto a different geometry
     :animate: fade-in-slide-down
 
-    To interpolate maps onto a different geometry, use `Map.interp_to_geom`,
-    see `here <tutorials/api/maps.html#Filling-maps-from-interpolation>`__.
+    To interpolate maps onto a different geometry, use `~gammapy.maps.Map.interp_to_geom`,
+    see `here <../tutorials/api/maps.html#Filling-maps-from-interpolation>`__.
 
 .. dropdown:: Suppress warnings
     :animate: fade-in-slide-down

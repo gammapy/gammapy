@@ -17,7 +17,7 @@ which is what most scientific Python packages use.
 
 .. _restructured text (RST): http://sphinx-doc.org/rest.html
 .. _Sphinx: http://sphinx-doc.org/
-.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/main/doc/HOWTO_DOCUMENT.rst.txt
 
 There's a few details that are not easy to figure out by browsing the Numpy or Astropy
 documentation guidelines, or that we actually do differently in Gammapy.
@@ -93,7 +93,7 @@ Class attributes
 Class attributes (data members) and properties are currently a bit of a mess.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
 docstring attributes section as recommended
-`here <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring>`__.
+`here <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*
 sections, which is confusing to users ("what's the difference between attributes and properties?").
 

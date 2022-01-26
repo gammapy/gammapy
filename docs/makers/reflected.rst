@@ -12,7 +12,7 @@ Overview
 --------
 
 This method is used in classical Cherenkov astronomy to estimate background
-for spectral analysis. As illustrated in `Fig. 1 <figure_reflected_background>`_,
+for spectral analysis. As illustrated in Fig. 1,
 a region on the sky, the ON region, is chosen to select events
 around the studied source position. In the absence of a solid template of the
 residual hadronic background, a classical method to estimate it is the so-called
@@ -33,7 +33,7 @@ be found in [Berge2007]_.
 
 The extraction of the OFF events from the `~gammapy.data.EventList` of a
 set of observations is performed by the `ReflectedRegionsBackgroundMaker`.
-The latter uses the `~gammapy.makers.ReflectedRegionsFinder` to create reflected
+The latter uses the `~gammapy.makers.background.ReflectedRegionsFinder` to create reflected
 regions for a given circular on region and exclusion mask.
 
 .. code-block:: python
@@ -87,7 +87,7 @@ The reflected region finder
 
 The following example illustrates how to create reflected regions for a given
 circular on region and exclusion mask using the
-`~gammapy.makers.ReflectedRegionsFinder`. In particular, it shows how to
+`~gammapy.makers.background.ReflectedRegionsFinder`. In particular, it shows how to
 change the minimal distance between the ON region and the reflected regions.
 This is useful to limit contamination by events leaking out the ON region. It
 also shows how to change the minimum distance between adjacent regions as well
@@ -100,7 +100,7 @@ Using the reflected background estimator
 ----------------------------------------
 
 In practice, the user does not usually need to directly interact with the
-`~gammapy.makers.ReflectedRegionsFinder`. This actually is done via the
+`~gammapy.makers.background.ReflectedRegionsFinder`. This actually is done via the
 `~gammapy.makers.ReflectedRegionsBackgroundMaker`, which extracts the ON
 and OFF events for an `~gammapy.data.Observations` object. The last example
 shows how to run it on a few observations with a rectangular region.

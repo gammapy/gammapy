@@ -319,4 +319,4 @@ weeks, but also in 2020 and after.
 .. _Glossary: https://docs.gammapy.org/0.14/references.html#glossary
 .. _Jupytext: https://jupytext.readthedocs.io
 .. _Documentation Github project: https://github.com/gammapy/gammapy/projects/1
-.. _HowTo documentation page: https://docs.gammapy.org/dev/howto.html
+.. _HowTo documentation page: https://docs.gammapy.org/dev/development/dev_howto.html

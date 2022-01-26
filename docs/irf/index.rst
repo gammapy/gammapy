@@ -49,7 +49,7 @@ Variable          Definition
 Getting started
 ===============
 
-See `cta.html <../tutorials/cta.html>`__ for an example how to access IACT IRFs.
+See `cta.html <../tutorials/data/cta.html>`__ for an example how to access IACT IRFs.
 
 Using `gammapy.irf`
 ===================
@@ -70,5 +70,9 @@ Reference/API
 =============
 
 .. automodapi:: gammapy.irf
+    :no-inheritance-diagram:
+    :include-all-objects:
+
+.. automodapi:: gammapy.irf.edisp
     :no-inheritance-diagram:
     :include-all-objects:

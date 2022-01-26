@@ -44,8 +44,8 @@ a map without reference to the underlying data representation (e.g. whether a
 map uses WCS or HEALPix pixelization). For applications which do depend on the
 specific representation one can also work directly with the classes derived from
 `~Map`. In the following we review some of the basic methods for working with
-map objects, more details are given in the * `maps tutorial <../tutorials/maps.html>`__
-.
+map objects, more details are given in the `maps tutorial <../tutorials/api/maps.html>`__.
+
 
 .. _node_types:
 
@@ -54,7 +54,7 @@ Differential and integral maps
 
 `gammapy.maps` supports both differential and integral maps, representing
 differential values at specific coordinates, or integral values within bins.
-This is achieved by specifying the ``node_type`` of a ``MapAxis``. Quantities
+This is achieved by specifying the ``node_type`` of a `~gammapy.maps.MapAxis`. Quantities
 defined at bin centers should have a node_type of "center", and quantities
 integrated in bins should have node_type of ``edges``. Interpolation is defined
 only for differential quantities.

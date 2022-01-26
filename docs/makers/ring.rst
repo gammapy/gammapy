@@ -11,7 +11,7 @@ Ring background
 Overview
 --------
 This background estimation technique is used in classical Cherenkov astronomy
-for 2D image analysis. The working principle is illustrated in `Fig. 1 <figure_ring_background>`_.
+for 2D image analysis. The working principle is illustrated in Fig. 1.
 For any given pixel in a counts map the off counts are estimate from a ring
 centered on the test position with a given fixed radius and width. To improve
 the estimate, regions with known gamma-ray emission are excluded from measuring

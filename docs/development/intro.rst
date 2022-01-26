@@ -118,7 +118,7 @@ Get set up
     The rest of this page isn't written yet. It's almost identical to
     https://cta-observatory.github.io/ctapipe/getting_started/index.html so for
     now, see there. Also, we shouldn't duplicate content from
-    http://astropy.readthedocs.io/en/latest/#developer-documentation but link
+    https://docs.astropy.org/en/latest/#developer-documentation but link
     there instead.
 
 The first steps are basically identical to
