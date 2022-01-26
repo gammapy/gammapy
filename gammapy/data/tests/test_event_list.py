@@ -50,6 +50,8 @@ class TestEventListBase:
         # test that it won't work if gti is not a GTI
         with pytest.raises(TypeError):
             self.events.write("test.fits", overwrite=True, gti=gti.table)
+        with pytest.raises(ValueError):
+            self.events.write("test.fits", overwrite=True, format='something')
 
 
 @requires_data()

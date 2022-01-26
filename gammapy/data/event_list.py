@@ -96,6 +96,9 @@ class EventList:
             to the gamma-astro-data-formats (GADF) format.
         """
 
+        if format != "gadf":
+            raise ValueError(f"{format} is not a valid EventList format.")
+
         filename = make_path(filename)
 
         primary_hdu = fits.PrimaryHDU()
