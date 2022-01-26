@@ -237,14 +237,14 @@ class SpectrumDataset(PlotMixin, MapDataset):
     def to_spectrum_dataset(self, *args, **kwargs):
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
 
-    def get_resampled_energy_axis(self, name="energy", conditions_kw={}):
+    def get_resampled_energy_axis(self, name="energy", conditions={}):
         """Returns an energy axis whose binning satisfies given conditions on the per-bin statistics.
 
         Parameters
         ----------
         name: str
             Name of the axis to be resampled.
-        conditions_kw : dict
+        conditions : dict
             Keyword arguments containing the per-bin conditions used to resample the axis.
             Available options are: "min_counts", "min_excess".
 
@@ -253,27 +253,27 @@ class SpectrumDataset(PlotMixin, MapDataset):
         energy_axis : `~gammapy.maps.MapAxis`
             New energy axis.
         """
-        available_options = ["min_counts", "min_excess"]
+        available_conditions = ["min_counts", "min_excess"]
 
         def _find_idx(key):
-            if key in available_options:
+            if key in available_conditions:
                 data = getattr(self, key.strip("min_")).data[::-1]
-                cumsum_idx = np.where(np.cumsum(data) >= conditions_kw[key])[0][0]
-                data_idx = np.where(data >= conditions_kw[key])[0][0]
+                cumsum_idx = np.where(np.cumsum(data) >= conditions[key])[0][0]
+                data_idx = np.where(data >= conditions[key])[0][0]
                 return max(cumsum_idx, data_idx)
             else:
                 raise ValueError(
-                    f"Unrecognized option {key}. The available methods are: {available_options}."
+                    f"Unrecognized option {key}. The available methods are: {available_conditions}."
                 )
 
         idx = 0
-        for key in conditions_kw.keys():
+        for key in conditions.keys():
             idx = max(idx, _find_idx(key))
 
         energy_axis = self._geom.axes[name]
         if (
             energy_axis.node_type != "edges"
-        ):  # Here for consistency, since the map axis resampling requires "edges"
+        ):  # This is here for consistency, since the map axis resampling requires "edges"
             raise ValueError("Only edge based axes can be rebinned")
         edges = energy_axis.edges
         rebinned_energy_axis = energy_axis.copy(
@@ -405,3 +405,23 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             SpectrumDatset with cash statistics
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)
+
+    def get_resampled_energy_axis(self, name="energy", conditions={}):
+        """Returns an energy axis whose binning satisfies given conditions on the per-bin statistics.
+
+        Parameters
+        ----------
+        name: str
+            Name of the axis to be resampled.
+        conditions : dict
+            Keyword arguments containing the per-bin conditions used to resample the axis.
+            Available options are: "min_counts", "min_excess".
+
+        Returns
+        -------
+        energy_axis : `~gammapy.maps.MapAxis`
+            New energy axis.
+        """
+        return self.to_spectrum_dataset().get_resampled_energy_axis(
+            name=name, conditions=conditions
+        )

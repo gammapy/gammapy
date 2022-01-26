@@ -665,6 +665,26 @@ class TestSpectrumOnOff:
         assert_allclose(np.squeeze(grouped.acceptance), [2, 2])
         assert_allclose(np.squeeze(grouped.acceptance_off), [20, 20])
 
+    def test_get_resampled_energy_axis(self):
+        resampled_energy_axis = self.dataset.get_resampled_energy_axis(conditions={})
+        assert resampled_energy_axis == self.dataset._geom.axes["energy"]
+
+        with pytest.raises(IndexError):
+            self.dataset.get_resampled_energy_axis(
+                conditions={"min_counts": 10, "min_excess": 10}
+            )
+
+        dataset = self.dataset.copy()
+        dataset.counts += 1  # Necessary to test the "min_excess" option
+        grouped = dataset.resample_energy_axis(
+            energy_axis=dataset.get_resampled_energy_axis(
+                conditions={"min_counts": 1, "min_excess": 1}
+            )
+        )
+        assert grouped.counts.data.shape == (3, 1, 1)
+        assert_allclose(np.squeeze(grouped.counts), [2, 2, 3])
+        assert_allclose(np.squeeze(grouped.background), [1, 1, 2])
+
     def test_to_image(self):
         grouped = self.dataset.to_image()
 
