@@ -295,8 +295,8 @@ class DataStore:
             * `edisp`: Energy dispersion
             * `psf` : Point Spread Function
             * `rad_max` : Maximal radius
-            * `full_containment` :["events", "gti", "aeff", "edisp", "psf", "bkg"]
-            * `point_like` : ["events", "gti", "aeff", "edisp"]
+            * `full-enclosure` :["events", "gti", "aeff", "edisp", "psf", "bkg"]
+            * `point-like` : ["events", "gti", "aeff", "edisp"]
             By default, no HDUs are required, only warnings will be emitted
             for missing HDUs among all possibilities.
 
@@ -309,9 +309,9 @@ class DataStore:
         point_like = ["events", "gti", "aeff", "edisp"]
         available_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
         
-        if required_hdu == "full_containment":
+        if required_hdu == "full-enclosure":
             required_hdu = full_containment
-        if required_hdu == "point_like":
+        if required_hdu == "point-like":
             required_hdu = point_like
         elif required_hdu is None:
             required_hdu = []
