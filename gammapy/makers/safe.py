@@ -32,11 +32,12 @@ class SafeMaskMaker(Maker):
         Percentage of the energy bias to be used as lower
         energy threshold for method "edisp-bias"
     position : `~astropy.coordinates.SkyCoord`
-        Position at which the `aeff_percent` or `bias_percent` are computed. By default,
-        it uses the position of the center of the map.
+        Position at which the `aeff_percent` or `bias_percent` are computed.
     fixed_offset : `~astropy.coordinates.Angle`
         offset, calculated from the pointing position, at which
         the `aeff_percent` or `bias_percent` are computed.
+        If neither the position nor fixed_offset is specified,
+        it uses the position of the center of the map by default.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     """
