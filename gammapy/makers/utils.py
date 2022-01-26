@@ -495,6 +495,7 @@ def make_counts_off_rad_max(
     rad_max,
     events,
     region_finder,
+    exclusion_mask=None,
 ):
     """Extract the OFF counts and the ON / OFF acceptance considering for the
     sizes of the ON and OFF regions the values in the `RAD_MAX_2D` table.
@@ -532,6 +533,7 @@ def make_counts_off_rad_max(
         regions, wcs = region_finder.run(
             center=events.pointing_radec,
             region=on_region,
+            exclusion_mask=exclusion_mask,
         )
 
         if len(regions) > 0:

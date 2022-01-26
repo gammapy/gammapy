@@ -22,7 +22,7 @@ class RegionsFinder(metaclass=ABCMeta):
     '''Baseclass for regions finders'''
 
     @abstractmethod
-    def run(self, region, center):
+    def run(self, region, center, exclusion_mask=None):
         """Find regions to calculate background counts.
 
         Parameters
@@ -31,6 +31,8 @@ class RegionsFinder(metaclass=ABCMeta):
             Region to rotate
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
+        exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+            Exclusion mask
 
         Returns
         -------
@@ -65,8 +67,6 @@ class ReflectedRegionsFinder(RegionsFinder):
         Minimal distance from input region
     max_region_number : int, optional
         Maximum number of regions to use
-    exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
-        Exclusion mask
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
 
@@ -94,7 +94,6 @@ class ReflectedRegionsFinder(RegionsFinder):
         min_distance="0 rad",
         min_distance_input="0.1 rad",
         max_region_number=10000,
-        exclusion_mask=None,
         binsz="0.01 deg",
     ):
 
@@ -106,10 +105,6 @@ class ReflectedRegionsFinder(RegionsFinder):
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
 
-        if exclusion_mask and not exclusion_mask.is_mask:
-            raise ValueError("Exclusion mask must contain boolean values")
-
-        self.exclusion_mask = exclusion_mask
         self.max_region_number = max_region_number
         self.binsz = Angle(binsz)
 
@@ -172,18 +167,22 @@ class ReflectedRegionsFinder(RegionsFinder):
 
         return angular_size
 
-    def _exclusion_mask_ref(self, reference_geom):
+    @staticmethod
+    def _exclusion_mask_ref(reference_geom, exclusion_mask):
         """Exclusion mask reprojected"""
-        if self.exclusion_mask:
-            mask = self.exclusion_mask.interp_to_geom(reference_geom, fill_value=True)
+        if exclusion_mask:
+            mask = exclusion_mask.interp_to_geom(reference_geom, fill_value=True)
         else:
             mask = WcsNDMap.from_geom(geom=reference_geom, data=True)
         return mask
 
-    def _get_excluded_pixels(self, reference_geom):
+    @staticmethod
+    def _get_excluded_pixels(reference_geom, exclusion_mask):
         """Excluded pix coords"""
         # find excluded PixCoords
-        exclusion_mask = self._exclusion_mask_ref(reference_geom)
+        exclusion_mask = ReflectedRegionsFinder._exclusion_mask_ref(
+            reference_geom, exclusion_mask,
+        )
         pix_y, pix_x = np.nonzero(~exclusion_mask.data)
         return PixCoord(pix_x, pix_y)
 
@@ -198,7 +197,7 @@ class ReflectedRegionsFinder(RegionsFinder):
         angle_max =  FULL_CIRCLE - angle_min - self.min_distance_input
         return angle_min, angle_max
 
-    def run(self, region, center):
+    def run(self, region, center, exclusion_mask=None):
         """Find reflected regions.
 
         Parameters
@@ -224,7 +223,7 @@ class ReflectedRegionsFinder(RegionsFinder):
         )
 
         region_pix = self._get_region_pixels(region, reference_geom)
-        excluded_pixels = self._get_excluded_pixels(reference_geom)
+        excluded_pixels = self._get_excluded_pixels(reference_geom, exclusion_mask)
 
         angle = angle_min + self.min_distance_input
         while angle < angle_max:
@@ -247,9 +246,13 @@ class ReflectedRegionsFinder(RegionsFinder):
 class ReflectedRegionsBackgroundMaker(Maker):
     """Reflected regions background maker.
 
-    Parameters
+    Attributes
     ----------
     regions_finder: RegionsFinder
+        if not given, a `ReflectedRegionsFinder` will be created and
+        any of the ``**kwargs`` will be forwarded to the `ReflectedRegionsFinder`.
+    exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+        Exclusion mask
     """
 
     tag = "ReflectedRegionsBackgroundMaker"
@@ -257,11 +260,20 @@ class ReflectedRegionsBackgroundMaker(Maker):
     def __init__(
         self,
         region_finder=None,
+        exclusion_mask=None,
         **kwargs,
     ):
+
+        if exclusion_mask and not exclusion_mask.is_mask:
+            raise ValueError("Exclusion mask must contain boolean values")
+
+        self.exclusion_mask = exclusion_mask
+
         if region_finder is None:
             self.region_finder = ReflectedRegionsFinder(**kwargs)
         else:
+            if len(kwargs) != 0:
+                raise ValueError('No kwargs can be given if providing a region_finder')
             self.region_finder = region_finder
 
     def make_counts_off(self, dataset, observation):
@@ -296,12 +308,14 @@ class ReflectedRegionsBackgroundMaker(Maker):
                 rad_max=observation.rad_max,
                 events=observation.events,
                 region_finder=self.region_finder,
+                exclusion_mask=self.exclusion_mask,
             )
 
         else:
             regions, wcs = self.region_finder.run(
                 center=observation.pointing_radec,
                 region=dataset.counts.geom.region,
+                exclusion_mask=self.exclusion_mask,
             )
 
             energy_axis = dataset.counts.geom.axes["energy"]
