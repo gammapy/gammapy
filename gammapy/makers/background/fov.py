@@ -156,7 +156,7 @@ class FoVBackgroundMaker(Maker):
         value = (total["counts"] - not_bkg_tot) / total["bkg"]
         if not np.isfinite(value):
             log.warning(
-                f"FoVBackgroundMaker failed. Non-finite normalisation value. "
+                f"FoVBackgroundMaker failed. Non-finite normalisation value for {dataset.name}. "
                 f"Setting mask to False."
             )
             return False
@@ -166,9 +166,15 @@ class FoVBackgroundMaker(Maker):
                 f"Setting mask to False."
             )
             return False
-        elif total["counts"] - not_bkg_tot <= self.min_counts:
+        elif total["counts"] <= self.min_counts:
             log.warning(
-                f"FoVBackgroundMaker failed. Only {int(total['counts'])} residual counts outside exclusion mask for {dataset.name}. "
+                f"FoVBackgroundMaker failed. Only {int(total['counts'])} counts outside exclusion mask for {dataset.name}. "
+                f"Setting mask to False."
+            )
+            return False
+        elif total["counts"] - not_bkg_tot <= 0:
+            log.warning(
+                f"FoVBackgroundMaker failed. Negative residuals counts for {dataset.name}. "
                 f"Setting mask to False."
             )
             return False

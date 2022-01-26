@@ -97,9 +97,8 @@ def test_fov_bkg_maker_scale_nocounts(obs_dataset, exclusion_mask, caplog):
     assert_allclose(model.norm.value, 1, rtol=1e-4)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-2)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    message1 = "FoVBackgroundMaker failed. Only 0 residual counts outside exclusion mask for test-fov. Setting mask to False."
+    message1 = "FoVBackgroundMaker failed. Only 0 counts outside exclusion mask for test-fov. Setting mask to False."
     assert message1 in [_.message for _ in caplog.records]
-
 
 @requires_data()
 @requires_dependency("iminuit")
@@ -162,7 +161,7 @@ def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
 
 @requires_data()
 @requires_dependency("iminuit")
-def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask):
+def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
 
     test_dataset = obs_dataset.copy(name="test-fov")
 
@@ -228,6 +227,13 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask):
     assert not dataset.models.parameters["index"].frozen
     assert not dataset.models.parameters["lon_0"].frozen
 
+    #test  
+    model.spectral_model.amplitude.value *= 1e5
+    fov_bkg_maker = FoVBackgroundMaker(method="scale")
+    dataset = fov_bkg_maker.run(test_dataset)
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    message1 = 'FoVBackgroundMaker failed. Negative residuals counts for test-fov. Setting mask to False.'
+    assert message1 in [_.message for _ in caplog.records]
 
 @requires_data()
 @requires_dependency("iminuit")
@@ -260,7 +266,7 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask, caplog):
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 1, rtol=1e-4)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    message1 = f"FoVBackgroundMaker failed. Non-finite normalisation value. Setting mask to False."
+    message1 = f"FoVBackgroundMaker failed. Non-finite normalisation value for test-fov. Setting mask to False."
     assert message1 in [_.message for _ in caplog.records]
 
 
