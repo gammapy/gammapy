@@ -127,7 +127,7 @@ def test_get_observations_missing_irf():
     analysis.config.observations.obs_ids = ["05029748"]
     analysis.config.observations.required_hdu = ["events", "gti", "aeff", "edisp"]
     analysis.get_observations()
-    assert len(analysis.observations) == 1
+    assert len(analysis.observations) == 0
 
 
 @requires_data()
