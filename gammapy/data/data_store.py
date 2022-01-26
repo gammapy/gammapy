@@ -305,12 +305,12 @@ class DataStore:
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`
         """
-        full_containment = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+        full_enclosure = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
         point_like = ["events", "gti", "aeff", "edisp"]
         available_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
         
         if required_hdu == "full-enclosure":
-            required_hdu = full_containment
+            required_hdu = full_enclosure
         if required_hdu == "point-like":
             required_hdu = point_like
         elif required_hdu is None:
