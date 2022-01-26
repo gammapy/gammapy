@@ -135,7 +135,7 @@ commands to set up an environment for Gammapy development:
     git clone https://github.com/[your-github-username]/gammapy.git
     cd gammapy
     conda env create -f environment-dev.yml
-    #To speed up the environment solving you can use mamba as an alternative
+    #To speed up the environment solving you can use mamba instead of conda
     #mamba env create -f environment-dev.yml
     conda activate gammapy-dev
     # for conda versions <4.4.0 you may have to execute
@@ -143,6 +143,8 @@ commands to set up an environment for Gammapy development:
     git remote add gammapy git@github.com:gammapy/gammapy.git
     git remote rename origin [your-user-name]
 
+`Mamba <https://mamba.readthedocs.io/>` is an alternative package manager that offers higher installation
+speed and more reliable environment solutions
 It is also common to stick with the name ``origin`` for your repository and to
 use ``upstream`` for the repository you forked from. In any case, you can use
 ``$ git remote -v`` to list all your configured remotes.
