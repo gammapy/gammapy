@@ -18,8 +18,6 @@ B_CONST = Quantity(3.2e19, "gauss s^(-1/2)")
 class SimplePulsar:
     """Magnetic dipole spin-down model for a pulsar.
 
-    Reference: http://www.cv.nrao.edu/course/astr534/Pulsars.html
-
     Parameters
     ----------
     P : `~astropy.units.Quantity`
@@ -65,8 +63,6 @@ class SimplePulsar:
 
 class Pulsar:
     """Magnetic dipole spin-down pulsar model.
-
-    Reference: http://www.cv.nrao.edu/course/astr534/Pulsars.html
 
     Parameters
     ----------
