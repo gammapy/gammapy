@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
+import matplotlib.pyplot as plt
 from astropy.table import Table
 from astropy.time import Time
 from astropy.visualization import quantity_support
@@ -682,8 +683,6 @@ def test_mixed_axes():
 
 @requires_dependency("matplotlib")
 def test_MapAxis_format_plot_xaxis():
-    import matplotlib.pyplot as plt
-    
     axis = MapAxis.from_energy_bounds(
             "0.03 TeV", "300 TeV", nbin=20,
             per_decade=True, name="energy_true")
@@ -697,9 +696,8 @@ def test_MapAxis_format_plot_xaxis():
     assert ax1.xaxis.label.properties()["text"] == "E$_{\\rm true}$ [TeV]"
 
 
+@requires_dependency("matplotlib")
 def test_TimeMapAxis_format_plot_xaxis(time_intervals):
-    import matplotlib.pyplot as plt
-    
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"], name="time"
     )
