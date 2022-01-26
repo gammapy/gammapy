@@ -303,3 +303,26 @@ class TestObservationChecker:
         assert records[5]["msg"] == "Loading aeff failed"
         assert records[7]["msg"] == "Loading edisp failed"
         assert records[9]["msg"] == "Loading psf failed"
+
+
+
+@requires_data()
+def test_obs_info_from_events_header(tmp_path):
+    '''Test that obs_info is also read from event table header'''
+    source_obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
+
+    # no obs_info given
+    obs = Observation(
+        obs_id=source_obs.obs_id,
+        events=source_obs.events,
+        aeff=source_obs.aeff,
+        edisp=source_obs.edisp,
+    )
+
+    obs_info = obs.obs_info
+    assert 'TSTART' in obs_info
+    assert 'DEADC' in obs_info
+    assert 'LIVETIME' in obs_info
+
