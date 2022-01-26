@@ -47,14 +47,16 @@ def pix_to_coord(edges, pix, interp="lin"):
 
 PLOT_AXIS_LABEL = {
     "energy": "Energy",
-    "energy_true": r"E$_{\rm true}$",
+    "energy_true": "True Energy",
     "offset": "Offset",
-    "rad": r"$\delta p$",
-    "migra": r"$\mu$",
+    "rad": "Rad",
+    "migra": "Energy / True Energy",
     "fov_lon": "FOV Lon.",
     "fov_lat": "FOV Lat.",
     "time": "Time",
 }
+
+DEFAULT_LABEL_TEMPLATE = '{quantity} [{unit}]'
 
 
 class MapAxis:
@@ -290,7 +292,9 @@ class MapAxis:
         """
         ax.set_xscale(self.as_plot_scale)
 
-        xlabel = PLOT_AXIS_LABEL[self.name] + f" [{ax.xaxis.units}]"
+        xlabel = DEFAULT_LABEL_TEMPLATE.format(
+                                        quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
+                                        , unit=self.unit )
         ax.set_xlabel(xlabel)
         ax.set_xlim(self.bounds)
         return ax
@@ -2199,8 +2203,9 @@ class TimeMapAxis:
         import matplotlib.pyplot as plt
         from matplotlib.dates import DateFormatter
 
-        xlabel = PLOT_AXIS_LABEL[self.name] + f" [{self.time_format}]"
-
+        xlabel = DEFAULT_LABEL_TEMPLATE.format(
+                                        quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
+                                        , unit=self.time_format )
         ax.set_xlabel(xlabel)
 
         if self.time_format == "iso":

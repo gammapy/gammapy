@@ -686,14 +686,14 @@ def test_MapAxis_format_plot_xaxis():
     axis = MapAxis.from_energy_bounds(
             "0.03 TeV", "300 TeV", nbin=20,
             per_decade=True, name="energy_true")
-    
+
     with mpl_plot_check():
         ax = plt.gca()
         with quantity_support():
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "E$_{\\rm true}$ [TeV]"
+    assert ax1.xaxis.label.properties()["text"] == "True Energy [TeV]"
 
 
 @requires_dependency("matplotlib")
