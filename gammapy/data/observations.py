@@ -68,7 +68,7 @@ class Observation:
         obs_filter=None,
     ):
         self.obs_id = obs_id
-        self.obs_info = obs_info
+        self._obs_info = obs_info
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
@@ -110,6 +110,18 @@ class Observation:
             "DEC_PNT": pointing.icrs.dec.deg,
             "DEADC": 1 - deadtime_fraction,
         }
+
+    @property
+    def obs_info(self):
+        # for backwards compatibility, previous behaviour
+        if self._obs_info is None and self.events is None:
+            return None
+
+        obs_info = {} if self._obs_info is None else self._obs_info.copy()
+        if self.events is not None:
+            obs_info.update(self.events.table.meta)
+
+        return obs_info
 
     @classmethod
     def create(
@@ -385,12 +397,10 @@ class Observation:
         irf_file = irf_file if irf_file is not None else event_file
         irf_dict = load_irf_dict_from_file(irf_file)
 
-        obs_info = events.table.meta
         return cls(
             events=events,
             gti=gti,
-            obs_info=obs_info,
-            obs_id=obs_info.get("OBS_ID"),
+            obs_id=events.table.meta.get("OBS_ID"),
             **irf_dict,
         )
 
