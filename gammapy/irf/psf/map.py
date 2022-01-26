@@ -6,6 +6,7 @@ from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+from matplotlib.ticker import FormatStrFormatter
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
@@ -440,6 +441,7 @@ class PSFMap(IRFMap):
 
         ax.semilogx()
         ax.legend(loc="best")
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         ax.set_xlabel(f"Energy ({ax.xaxis.units})")
         ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
@@ -485,6 +487,7 @@ class PSFMap(IRFMap):
         ax.set_yscale("log")
         ax.set_xlabel(f"Rad ({ax.xaxis.units})")
         ax.set_ylabel(f"PSF ({ax.yaxis.units})")
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.legend()
         return ax
 
