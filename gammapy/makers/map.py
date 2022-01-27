@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from gammapy.maps.region.ndmap import RegionNDMap
-from regions import PointSkyRegion, CircleSkyRegion
+from regions import PointSkyRegion
 from gammapy.irf import EDispKernelMap, PSFMap
-from gammapy.maps import Map, RegionGeom
+from gammapy.maps import Map
 from .core import Maker
 from .utils import (
     make_edisp_kernel_map,
