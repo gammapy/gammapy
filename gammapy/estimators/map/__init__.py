@@ -1,4 +1,12 @@
-from .asmooth import *
-from .core import *
-from .excess import *
-from .ts import *
+from .asmooth import ASmoothMapEstimator
+from .core import FluxMaps
+from .excess import ExcessMapEstimator
+from .ts import TSMapEstimator
+
+
+__all__ = [
+    "ASmoothMapEstimator",
+    "FluxMaps",
+    "ExcessMapEstimator",
+    "TSMapEstimator",
+]
