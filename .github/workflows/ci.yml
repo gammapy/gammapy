@@ -74,7 +74,7 @@ jobs:
         run: |
           pip install -e .
       - name: test coverage
-        if: matrix.name=='Linux python 3.7 all-deps'
+        if: contains(matrix.name, 'all-deps')
         run: |
           gammapy download datasets
           export GAMMAPY_DATA=/home/runner/work/gammapy/gammapy/gammapy-datasets
