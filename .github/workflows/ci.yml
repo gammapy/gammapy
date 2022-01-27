@@ -77,11 +77,11 @@ jobs:
         if: contains(matrix.name, 'all-deps')
         run: |
           gammapy download datasets
-          export GAMMAPY_DATA=/home/runner/work/gammapy/gammapy/gammapy-datasets
+          export GAMMAPY_DATA=./gammapy-datasets
           make test-cov
           codecov -X gcov
       - name: test simple
-        if: matrix.name!='Linux python 3.7 all-deps'
+        if: contains(matrix.name, 'core-deps')
         run: |
           make test
   notebooks:
