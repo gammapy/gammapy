@@ -3,12 +3,45 @@
 Instrument response functions (IRFs).
 """
 from gammapy.utils.registry import Registry
-from .background import *
-from .edisp import *
-from .effective_area import *
-from .io import *
-from .psf import *
-from .rad_max import *
+from .background import Background3D, Background2D
+from .edisp import (
+    EnergyDispersion2D,
+    EDispKernel,
+    EDispKernelMap,
+    EDispMap,
+)
+from .effective_area import EffectiveAreaTable2D
+from .io import load_cta_irfs, load_irf_dict_from_file
+from .psf import (
+    PSFKernel,
+    PSFMap,
+    ParametricPSF,
+    EnergyDependentMultiGaussPSF,
+    PSFKing,
+    PSF3D,
+)
+from .rad_max import RadMax2D
+
+
+__all__ = [
+    "Background3D",
+    "Background2D",
+    "EnergyDispersion2D",
+    "EDispKernel",
+    "EDispKernelMap",
+    "EDispMap",
+    "EffectiveAreaTable2D",
+    "PSFKernel",
+    "PSFMap",
+    "ParametricPSF",
+    "EnergyDependentMultiGaussPSF",
+    "PSFKing",
+    "PSF3D",
+    "load_cta_irfs",
+    "load_irf_dict_from_file",
+    "IRF_REGISTRY",
+]
+
 
 IRF_REGISTRY = Registry(
     [
@@ -25,6 +58,3 @@ IRF_REGISTRY = Registry(
         EDispMap,
     ]
 )
-
-__all__ = ["IRF_REGISTRY", "EDispKernel", "PSFKernel"]
-__all__.extend(cls.__name__ for cls in IRF_REGISTRY)
