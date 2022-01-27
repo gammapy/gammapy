@@ -59,7 +59,7 @@ jobs:
           gammapy download datasets
           export GAMMAPY_DATA=/home/runner/work/gammapy/gammapy/gammapy-datasets
           make test-cov
-          codecov -X gcov
+          # codecov -X gcov
       - name: test simple
         if: matrix.name!='Linux python 3.7 all'
         run: |
