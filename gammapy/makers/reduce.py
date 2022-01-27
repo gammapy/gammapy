@@ -1,4 +1,3 @@
-import contextlib
 import logging
 from multiprocessing import Pool
 import numpy as np
@@ -146,7 +145,7 @@ class DatasetsMaker(Maker):
 
         if self.n_jobs is not None and self.n_jobs > 1:
             n_jobs = min(self.n_jobs, len(observations))
-            with contextlib.closing(Pool(processes=n_jobs)) as pool:
+            with Pool(processes=n_jobs) as pool:
                 log.info("Using {} jobs.".format(n_jobs))
                 results = []
                 for base, obs in zip(datasets, observations):

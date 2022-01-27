@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-import contextlib
 import functools
 import logging
 import warnings
@@ -390,11 +389,9 @@ class TSMapEstimator(Estimator):
         if self.n_jobs is None:
             results = list(map(wrap, positions))
         else:
-            with contextlib.closing(Pool(processes=self.n_jobs)) as pool:
+            with Pool(processes=self.n_jobs) as pool:
                 log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
                 results = pool.map(wrap, positions)
-
-            pool.join()
 
         result = {}
 
