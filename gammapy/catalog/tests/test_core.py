@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Column, Table
 from astropy.units import Quantity
-from gammapy.catalog import SourceCatalog
+from gammapy.catalog import SourceCatalog, CATALOG_REGISTRY
 from gammapy.utils.testing import assert_quantity_allclose
 
 
