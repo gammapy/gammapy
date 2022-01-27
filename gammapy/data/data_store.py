@@ -245,7 +245,7 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_hdu):
+    def obs(self, obs_id, required_hdu="full-enclosure"):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
@@ -273,13 +273,15 @@ class DataStore:
 
         kwargs = {"obs_id": int(obs_id)}
 
+        if required_hdu == "full-enclosure":
+            required_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
         for hdu in required_hdu:
             kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 
         return Observation(**kwargs)
 
 
-    def get_observations(self, obs_id=None, skip_missing=False, required_hdu="all-optional"):
+    def get_observations(self, obs_id=None, skip_missing=False, required_hdu="full-enclosure"):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -303,7 +305,7 @@ class DataStore:
             * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
             * `point-like` : ["events", "gti", "aeff", "edisp"]
             * `all-optional` : no HDUs are required, only warnings will be emitted
-                               for missing HDUs among all possibilities (Default).
+                               for missing HDUs among all possibilities.
 
         Returns
         -------
