@@ -14,6 +14,18 @@ from gammapy.utils.time import time_ref_from_dict
 from .core import ModelBase
 
 
+__all__ = [
+    'TemporalModel',
+    'ConstantTemporalModel',
+    'LinearTemporalModel',
+    'ExpDecayTemporalModel',
+    'GaussianTemporalModel',
+    'LightCurveTemplateTemporalModel',
+    'PowerLawTemporalModel',
+    'SineTemporalModel',
+]
+
+
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(ModelBase):
     """Temporal model base class.

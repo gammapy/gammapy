@@ -13,6 +13,10 @@ from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
 
+
+__all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
+
+
 log = logging.getLogger(__name__)
 
 
@@ -47,9 +51,6 @@ def _get_model_class_from_dict(data):
     elif "temporal" in data:
         cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
     return cls
-
-
-__all__ = ["Model", "Models", "DatasetModels"]
 
 
 class ModelBase:

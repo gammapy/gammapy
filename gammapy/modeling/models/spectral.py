@@ -21,6 +21,33 @@ from gammapy.utils.scripts import make_path
 from .core import ModelBase
 
 
+__all__ = [
+    'scale_plot_flux',
+    'integrate_spectrum',
+    'SpectralModel',
+    'ConstantSpectralModel',
+    'CompoundSpectralModel',
+    'PowerLawSpectralModel',
+    'PowerLawNormSpectralModel',
+    'PowerLaw2SpectralModel',
+    'BrokenPowerLawSpectralModel',
+    'SmoothBrokenPowerLawSpectralModel',
+    'PiecewiseNormSpectralModel',
+    'ExpCutoffPowerLawSpectralModel',
+    'ExpCutoffPowerLawNormSpectralModel',
+    'ExpCutoffPowerLaw3FGLSpectralModel',
+    'SuperExpCutoffPowerLaw3FGLSpectralModel',
+    'SuperExpCutoffPowerLaw4FGLSpectralModel',
+    'LogParabolaSpectralModel',
+    'LogParabolaNormSpectralModel',
+    'TemplateSpectralModel',
+    'ScaleSpectralModel',
+    'EBLAbsorptionNormSpectralModel',
+    'NaimaSpectralModel',
+    'GaussianSpectralModel',
+]
+
+
 def scale_plot_flux(flux, energy_power=0):
     """Scale flux to plot
 
