@@ -1135,10 +1135,17 @@ class Map(abc.ABC):
         interact_kwargs = {}
 
         for axis in self.geom.axes:
-            options = axis.as_plot_labels
-            if axis.name == 'energy':
-                q=[u.Quantity(x) for x in options ]
-                options = energy_unit_format(q)
+            if axis.node_type == "center":
+                if axis.name == "energy":
+                    options =  energy_unit_format(axis.center)
+                else:
+                    options = axis.as_plot_labels
+            else:
+                if axis.name == "energy":
+                    E = energy_unit_format(axis.edges)
+                    options = [f"{E[i]} - {E[i+1]}" for i in range(len(E)-1)]
+                else:
+                    options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
                 description=f"Select {axis.name}:",
