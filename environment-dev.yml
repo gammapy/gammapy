@@ -29,6 +29,7 @@ dependencies:
   - pytest
   - pytest-astropy
   - pytest-cov
+  - coverage=6.2
   - pytest-xdist
   - requests
   - tqdm
