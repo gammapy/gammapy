@@ -227,45 +227,40 @@ def test_background_model_io(tmpdir, background):
     assert bkg_read.filename == filename
 
 
-class TestSkyModels:
-    @staticmethod
-    def test_parameters(sky_models):
-        parnames = [
-            "index",
-            "amplitude",
-            "reference",
-            "lon_0",
-            "lat_0",
-            "sigma",
-            "e",
-            "phi",
-        ] * 2
-        assert sky_models.parameters.names == parnames
+def test_parameters(sky_models):
+    parnames = [
+        "index",
+        "amplitude",
+        "reference",
+        "lon_0",
+        "lat_0",
+        "sigma",
+        "e",
+        "phi",
+    ] * 2
+    assert sky_models.parameters.names == parnames
 
-        # Check that model parameters are references to the parts
-        p1 = sky_models.parameters["lon_0"]
-        p2 = sky_models[0].parameters["lon_0"]
-        assert p1 is p2
+    # Check that model parameters are references to the parts
+    p1 = sky_models.parameters["lon_0"]
+    p2 = sky_models[0].parameters["lon_0"]
+    assert p1 is p2
 
-    @staticmethod
-    def test_str(sky_models):
-        assert "Component 0" in str(sky_models)
-        assert "Component 1" in str(sky_models)
+def test_str(sky_models):
+    assert "Component 0" in str(sky_models)
+    assert "Component 1" in str(sky_models)
 
-    @staticmethod
-    def test_get_item(sky_models):
-        model = sky_models["source-2"]
-        assert model.name == "source-2"
+def test_get_item(sky_models):
+    model = sky_models["source-2"]
+    assert model.name == "source-2"
 
-        model = sky_models["source-3"]
-        assert model.name == "source-3"
+    model = sky_models["source-3"]
+    assert model.name == "source-3"
 
-        with pytest.raises(ValueError):
-            sky_models["spam"]
+    with pytest.raises(ValueError):
+        sky_models["spam"]
 
-    @staticmethod
-    def test_names(sky_models):
-        assert sky_models.names == ["source-2", "source-3"]
+def test_names(sky_models):
+    assert sky_models.names == ["source-2", "source-3"]
 
 
 @requires_data()
