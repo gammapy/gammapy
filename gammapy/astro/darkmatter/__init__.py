@@ -1,4 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spatial and spectral models."""
-from .spectra import *
-from .utils import *
+from .spectra import (
+    PrimaryFlux,
+    DarkMatterAnnihilationSpectralModel,
+)
+from .utils import JFactory
+
+
+__all__ = [
+    "PrimaryFlux",
+    "DarkMatterAnnihilationSpectralModel",
+    "JFactory",
+]
