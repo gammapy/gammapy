@@ -731,7 +731,7 @@ class TestSpectralFit:
 
     def test_basic_errors(self):
         self.set_model(self.pwl)
-        result = self.fit.run([self.datasets[0]])
+        self.fit.run([self.datasets[0]])
         pars = self.pwl.parameters
 
         assert_allclose(pars["index"].error, 0.149633, rtol=1e-3)
@@ -785,7 +785,7 @@ class TestSpectralFit:
         dataset.models = self.pwl
 
         fit = Fit()
-        result = fit.run(datasets=[dataset])
+        fit.run(datasets=[dataset])
         assert_allclose(self.pwl.spectral_model.index.value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
@@ -794,7 +794,7 @@ class TestSpectralFit:
         dataset.models = SkyModel(PowerLawSpectralModel())
 
         fit = Fit()
-        result = fit.run(datasets=[dataset])
+        fit.run(datasets=[dataset])
         pars = dataset.models.parameters
 
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
@@ -1101,7 +1101,7 @@ class TestFit:
         self.source_model.parameters["index"].value = 1.12
 
         fit = Fit()
-        result = fit.run(datasets=[dataset])
+        fit.run(datasets=[dataset])
 
         # These values are check with sherpa fits, do not change
         pars = self.source_model.parameters
@@ -1160,7 +1160,7 @@ class TestFit:
             mask_safe=mask_safe,
         )
         fit = Fit()
-        result = fit.run(datasets=[dataset])
+        fit.run(datasets=[dataset])
         true_idx = self.source_model.parameters["index"].value
 
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
