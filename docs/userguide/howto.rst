@@ -209,7 +209,7 @@ Please give feedback and suggest additions to this page!
     logging output. In this case it can be useful to locally suppress a specific
     warning like so:
 
-    .. code::
+    .. testcode::
 
         from astropy.io.fits.verify import VerifyWarning
         import warnings

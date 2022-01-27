@@ -365,7 +365,6 @@ To check for broken external links from the Sphinx documentation:
 
 .. code-block:: bash
 
-   $ python setup.py install
    $ cd docs; make linkcheck
 
 You may also use `brök <https://github.com/smallhadroncollider/brok>`__ software, which will also check

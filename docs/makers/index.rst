@@ -48,10 +48,6 @@ Reference/API
     :no-inheritance-diagram:
     :include-all-objects:
 
-.. automodapi:: gammapy.makers.background
-    :no-inheritance-diagram:
-    :include-all-objects:
-
 .. automodapi:: gammapy.makers.utils
     :no-inheritance-diagram:
     :include-all-objects:
