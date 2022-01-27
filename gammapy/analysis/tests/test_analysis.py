@@ -11,6 +11,7 @@ from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data, requires_dependency
+import logging
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
@@ -346,13 +347,13 @@ def test_analysis_ring_3d():
 def test_analysis_no_bkg_1d(caplog):
     config = get_example_config("1d")
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
-    assert not isinstance(analysis.datasets[0], SpectrumDatasetOnOff)
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "No background maker set. Check configuration." in [
-        _.message for _ in caplog.records
-    ]
+    with caplog.at_level(logging.WARNING):
+        analysis.get_observations()
+        analysis.get_datasets()
+        assert not isinstance(analysis.datasets[0], SpectrumDatasetOnOff)
+        assert "No background maker set. Check configuration." in [
+            _.message for _ in caplog.records
+        ]
 
 
 @requires_data()
@@ -360,13 +361,13 @@ def test_analysis_no_bkg_3d(caplog):
     config = get_example_config("3d")
     config.datasets.background.method = None
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
-    assert isinstance(analysis.datasets[0], MapDataset)
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "No background maker set. Check configuration." in [
-        _.message for _ in caplog.records
-    ]
+    with caplog.at_level(logging.WARNING):
+        analysis.get_observations()
+        analysis.get_datasets()
+        assert isinstance(analysis.datasets[0], MapDataset)
+        assert "No background maker set. Check configuration." in [
+            _.message for _ in caplog.records
+        ]
 
 
 @requires_dependency("iminuit")

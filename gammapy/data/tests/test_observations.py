@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import logging
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -43,29 +44,29 @@ def test_observation(data_store):
 @requires_dependency("matplotlib")
 @requires_data()
 def test_observation_peek(data_store, caplog):
-    obs = Observation.read(
-        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
-    )
+    with caplog.at_level(logging.WARNING):
+        obs = Observation.read(
+            "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+        )
+    
+        with mpl_plot_check():
+            obs.peek()
+    
+        obs.bkg = None
+    
+        with mpl_plot_check():
+            obs.peek()
+    
+        message = "No background model found for obs 23523."
+        assert message in [record.message for record in caplog.records]
 
-    with mpl_plot_check():
-        obs.peek()
-
-    obs.bkg = None
-
-    with mpl_plot_check():
-        obs.peek()
-
-    assert "WARNING" in [record.levelname for record in caplog.records]
-    message = "No background model found for obs 23523."
-    assert message in [record.message for record in caplog.records]
-
-    obs.psf = None
-    with mpl_plot_check():
-        obs.peek()
-
-    assert "WARNING" in [record.levelname for record in caplog.records]
-    message = "No PSF found for obs 23523."
-    assert message in [record.message for record in caplog.records]
+        obs.psf = None
+        with mpl_plot_check():
+            obs.peek()
+    
+        assert "WARNING" in [record.levelname for record in caplog.records]
+        message = "No PSF found for obs 23523."
+        assert message in [record.message for record in caplog.records]
 
 
 @requires_data()

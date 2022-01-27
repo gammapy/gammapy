@@ -15,6 +15,7 @@ from .observations import Observation, ObservationChecker, Observations
 __all__ = ["DataStore"]
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class DataStore:
@@ -346,7 +347,7 @@ class DataStore:
                 obs_list.append(obs)
             else:
                 log.warning(f"Skipping run with missing HDUs; obs_id: {_!r}")
-
+        log.info(f"Observations selected: {len(obs_list)} out of {len(obs_id)}.")
         return Observations(obs_list)
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
