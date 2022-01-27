@@ -39,7 +39,7 @@ jobs:
           - name: Windows python 3.7 core-deps
             os: windows-latest
             python: 3.7
-          - name: Mac python 3.7 all-deps
+          - name: Mac python 3.7 core-deps
             os: macos-latest
     steps:
       - name: checkout repo
