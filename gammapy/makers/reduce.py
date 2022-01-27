@@ -9,6 +9,11 @@ from .safe import SafeMaskMaker
 log = logging.getLogger(__name__)
 
 
+__all__ = [
+    "DatasetsMaker",
+]
+
+
 class DatasetsMaker(Maker):
     """Run makers in a chain
 
