@@ -8,7 +8,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
 from gammapy.utils.testing import Checker
-from .event_list import EventList, EventListChecker
+from .event_list import EventList, EventListChecker, GADF_HEADERS
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
@@ -119,7 +119,9 @@ class Observation:
 
         obs_info = {} if self._obs_info is None else self._obs_info.copy()
         if self.events is not None:
-            obs_info.update(self.events.table.meta)
+            for key in GADF_HEADERS:
+                if key in self.events.table.meta and key not in obs_info:
+                    obs_info[key] = self.events.table.meta[key]
 
         return obs_info
 

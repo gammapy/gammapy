@@ -13,10 +13,28 @@ from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
+from collections import namedtuple
 
 __all__ = ["EventList"]
 
 log = logging.getLogger(__name__)
+
+HeaderKeyword = namedtuple('HeaderKeyword', 'mandatory type unit')
+GADF_HEADERS = {
+    'TSTART': HeaderKeyword(mandatory=True, type=float, unit=u.s),
+    'TSTOP': HeaderKeyword(mandatory=True, type=float, unit=u.s),
+    'ONTIME': HeaderKeyword(mandatory=True, type=float, unit=u.s),
+    'LIVETIME': HeaderKeyword(mandatory=True, type=float, unit=u.s),
+    'DEADC': HeaderKeyword(mandatory=True, type=float, unit=None),
+    'RA_PNT': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'DEC_PNT': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'GLAT_PNT': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'GLON_PNT': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'ALT_PNT': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'AZ_PNT': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'RA_OBJ': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'DEC_OBJ': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+}
 
 
 class EventList:
@@ -57,6 +75,13 @@ class EventList:
 
     def __init__(self, table):
         self.table = table
+
+        # convert plain numbers to quantities as defined in the GADF spec
+        for key, spec in GADF_HEADERS.items():
+            if key in table.meta:
+                value = table.meta[key]
+                if spec.unit is not None and not isinstance(value, u.Quantity):
+                    table.meta[key] = u.Quantity(value, unit=spec.unit)
 
     @classmethod
     def read(cls, filename, **kwargs):
