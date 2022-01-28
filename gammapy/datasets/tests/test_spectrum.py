@@ -7,6 +7,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.estimators.utils import estimate_resampled_energy_axis
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
@@ -665,20 +666,22 @@ class TestSpectrumOnOff:
         assert_allclose(np.squeeze(grouped.acceptance), [2, 2])
         assert_allclose(np.squeeze(grouped.acceptance_off), [20, 20])
 
-    def test_get_resampled_energy_axis(self):
-        resampled_energy_axis = self.dataset.get_resampled_energy_axis(conditions={})
+    def test_estimate_resampled_energy_axis(self):
+        resampled_energy_axis = estimate_resampled_energy_axis(
+            self.dataset, conditions={}
+        )
         assert resampled_energy_axis == self.dataset._geom.axes["energy"]
 
         with pytest.raises(IndexError):
-            self.dataset.get_resampled_energy_axis(
-                conditions={"min_counts": 10, "min_excess": 10}
+            estimate_resampled_energy_axis(
+                self.dataset, conditions={"min_counts": 10, "min_excess": 10}
             )
 
         dataset = self.dataset.copy()
         dataset.counts += 1  # Necessary to test the "min_excess" option
         grouped = dataset.resample_energy_axis(
-            energy_axis=dataset.get_resampled_energy_axis(
-                conditions={"min_counts": 1, "min_excess": 1}
+            energy_axis=estimate_resampled_energy_axis(
+                dataset, conditions={"min_counts": 1, "min_excess": 1}
             )
         )
         assert grouped.counts.data.shape == (3, 1, 1)

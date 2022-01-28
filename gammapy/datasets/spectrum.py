@@ -237,6 +237,7 @@ class SpectrumDataset(PlotMixin, MapDataset):
     def to_spectrum_dataset(self, *args, **kwargs):
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
 
+
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     stat_type = "wstat"
     tag = "SpectrumDatasetOnOff"
@@ -359,5 +360,3 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             SpectrumDatset with cash statistics
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)
-
-

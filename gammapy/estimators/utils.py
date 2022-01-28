@@ -4,6 +4,7 @@ import scipy.ndimage
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import WcsNDMap
 from gammapy.modeling.models import (
@@ -12,7 +13,11 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-__all__ = ["find_peaks", "estimate_exposure_reco_energy"]
+__all__ = [
+    "estimate_resampled_energy_axis",
+    "find_peaks",
+    "estimate_exposure_reco_energy",
+]
 
 
 def estimate_resampled_energy_axis(dataset, name="energy", conditions={}):
@@ -20,6 +25,8 @@ def estimate_resampled_energy_axis(dataset, name="energy", conditions={}):
 
     Parameters
     ----------
+    dataset:`~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
+            the input dataset
     name: str
         Name of the axis to be resampled.
     conditions : dict
@@ -31,6 +38,15 @@ def estimate_resampled_energy_axis(dataset, name="energy", conditions={}):
     energy_axis : `~gammapy.maps.MapAxis`
         New energy axis.
     """
+
+    if type(dataset) == SpectrumDatasetOnOff:
+        dataset = dataset.to_spectrum_dataset()
+    elif type(dataset) != SpectrumDataset:
+        raise NotImplementedError(
+            "Currently this method is only supported for spectral datasets."
+        )
+    # TODO: Generalize to handle also MapDataset, multiple Datasets and significance-based conditions
+
     available_conditions = ["min_counts", "min_excess"]
 
     def _find_idx(key):
@@ -50,7 +66,7 @@ def estimate_resampled_energy_axis(dataset, name="energy", conditions={}):
 
     energy_axis = dataset._geom.axes[name]
     if (
-            energy_axis.node_type != "edges"
+        energy_axis.node_type != "edges"
     ):  # This is here for consistency, since the map axis resampling requires "edges"
         raise ValueError("Only edge based axes can be rebinned")
     edges = energy_axis.edges
