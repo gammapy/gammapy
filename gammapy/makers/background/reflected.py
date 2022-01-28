@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 class ReflectedRegionsFinder:
     """Find reflected regions.
 
-    This class is responsible for placing :ref:`region_reflected` for a given
+    This class is responsible for placing a reflected region for a given
     input region and pointing position. It converts to pixel coordinates
     internally assuming a tangent projection at center position.
 

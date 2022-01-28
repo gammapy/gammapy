@@ -412,7 +412,7 @@ See the `~gammapy.data.EventListDatasetChecker` as an example.
 Command line tools using click
 ------------------------------
 
-Command line tools that use the `click <http://click.pocoo.org/>`__ module should disable
+Command line tools that use the `click <https://click.palletsprojects.com/en/8.0.x/>`__ module should disable
 the unicode literals warnings to clean up the output of the tool:
 
 .. testcode::
@@ -420,7 +420,7 @@ the unicode literals warnings to clean up the output of the tool:
     import click
     click.disable_unicode_literals_warning = True
 
-See `here <http://click.pocoo.org/5/python3/#unicode-literals>`__ for further
+See `here <https://click.palletsprojects.com/en/5.x/python3/#unicode-literals>`__ for further
 information.
 
 
@@ -762,7 +762,7 @@ Notes:
   a well-defined alignment, like we have for the "FOV frames" above,
   doesn't occur and thus doesn't need to be defined yet (but it would be natural
   to use the same naming convention as for FOV if it eventually does occur).
-* These definitions are mostly in agreement with the `format spec <gadf>`_.
+* These definitions are mostly in agreement with the `Gamma Astro Data Formats`_ specifications.
   We do not achieve 100% consistency everywhere in the spec and Gammapy code.
   Achieving this seems unrealistic, because legacy formats have to be supported,
   we are not starting from scratch and have time to make all formats consistent.

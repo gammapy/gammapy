@@ -47,3 +47,7 @@ Reference/API
 .. automodapi:: gammapy.makers
     :no-inheritance-diagram:
     :include-all-objects:
+
+.. automodapi:: gammapy.makers.utils
+    :no-inheritance-diagram:
+    :include-all-objects:

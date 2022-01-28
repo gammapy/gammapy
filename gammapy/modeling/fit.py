@@ -76,7 +76,7 @@ class Fit:
         Global backend used for fitting, default : minuit
     optimize_opts : dict
         Keyword arguments passed to the optimizer. For the `"minuit"` backend
-        see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+        see https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit
         for a detailed description of the available options. If there is an entry
         'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
 

@@ -14,13 +14,13 @@ Overview
 Background models stored in IRF might not predict accurately the actual number of background counts.
 To correct the predicted counts, one can use the data themselves in regions deprived of gamma-ray signal.
 The field-of-view background technique is used to adjust the predicted counts on the measured ones outside
-an exclusion mask. This technique is recommended for 3D analysis, in particular when stacking `Datasets`.
+an exclusion mask. This technique is recommended for 3D analysis, in particular when stacking `~gammapy.datasets.Datasets`.
 
 Gammapy provides the `~gammapy.makers.FoVBackgroundMaker`. The latter creates a
 `~gammapy.modeling.models.FoVBackgroundModel` which combines the `background` predicted number of counts
 and a `~gammapy.modeling.models.NormSpectralModel` which allows to renormalize the background cube, and
 possibly to change its spectral distribution. By default, only the `norm` parameter of a
-`~gammapy.modeling.models.PowerLaWNormSpectralModel` is left free. If needed the spectral parameters
+`~gammapy.modeling.models.PowerLawNormSpectralModel` is left free. If needed the spectral parameters
 can be unfrozen.
 
 .. testcode::

@@ -25,7 +25,7 @@ Notations
 ---------
 
 For statistical analysis we use the following variable names following mostly the
-notation in [LiMa1983]_. For the ``MapDataset`` attributes we chose more verbose
+notation in [LiMa1983]_. For the `~gammapy.datasets.MapDataset` attributes we chose more verbose
 equivalents:
 
 ================= ====================== ====================================================

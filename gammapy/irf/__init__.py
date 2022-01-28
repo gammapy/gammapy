@@ -26,5 +26,5 @@ IRF_REGISTRY = Registry(
     ]
 )
 
-__all__ = ["IRF_REGISTRY"]
+__all__ = ["IRF_REGISTRY", "EDispKernel", "PSFKernel"]
 __all__.extend(cls.__name__ for cls in IRF_REGISTRY)
