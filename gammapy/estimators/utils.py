@@ -15,6 +15,52 @@ from gammapy.modeling.models import (
 __all__ = ["find_peaks", "estimate_exposure_reco_energy"]
 
 
+def estimate_resampled_energy_axis(dataset, name="energy", conditions={}):
+    """Returns an energy axis whose binning satisfies given conditions on the per-bin statistics.
+
+    Parameters
+    ----------
+    name: str
+        Name of the axis to be resampled.
+    conditions : dict
+        Keyword arguments containing the per-bin conditions used to resample the axis.
+        Available options are: "min_counts", "min_excess".
+
+    Returns
+    -------
+    energy_axis : `~gammapy.maps.MapAxis`
+        New energy axis.
+    """
+    available_conditions = ["min_counts", "min_excess"]
+
+    def _find_idx(key):
+        if key in available_conditions:
+            data = getattr(dataset, key.strip("min_")).data[::-1]
+            cumsum_idx = np.where(np.cumsum(data) >= conditions[key])[0][0]
+            data_idx = np.where(data >= conditions[key])[0][0]
+            return max(cumsum_idx, data_idx)
+        else:
+            raise ValueError(
+                f"Unrecognized option {key}. The available methods are: {available_conditions}."
+            )
+
+    idx = 0
+    for key in conditions.keys():
+        idx = max(idx, _find_idx(key))
+
+    energy_axis = dataset._geom.axes[name]
+    if (
+            energy_axis.node_type != "edges"
+    ):  # This is here for consistency, since the map axis resampling requires "edges"
+        raise ValueError("Only edge based axes can be rebinned")
+    edges = energy_axis.edges
+    rebinned_energy_axis = energy_axis.copy(
+        nodes=np.delete(edges, range(len(edges) - 1 - idx, len(edges) - 1))
+    )
+
+    return rebinned_energy_axis
+
+
 def find_peaks(image, threshold, min_distance=1):
     """Find local peaks in an image.
 
