@@ -48,11 +48,11 @@ def pix_to_coord(edges, pix, interp="lin"):
 PLOT_AXIS_LABEL = {
     "energy": "Energy",
     "energy_true": "True Energy",
-    "offset": "Offset",
-    "rad": "Rad",
+    "offset": "FoV Offset",
+    "rad": "Source Offset",
     "migra": "Energy / True Energy",
-    "fov_lon": "FOV Lon.",
-    "fov_lat": "FOV Lat.",
+    "fov_lon": "FoV Lon.",
+    "fov_lat": "FoV Lat.",
     "time": "Time",
 }
 
