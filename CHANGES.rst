@@ -341,7 +341,7 @@ accordingly to an ``EBLAbsorptionNormSpectralModel``. A new
 have been introduced.
 
 Gammapy v0.18 comes now with support for custom energy dependent spatial models.
-An example for this can be found in the models tutorial.
+An example for this can be found in the `models tutorial <https://docs.gammapy.org/0.18/tutorials/models.html>`__.
 The ``SkyDiffuseCube`` has been removed, the same functionality can now be
 achieved with the ``TemplateSpatialModel``. Following the proposal in
 `PIG 21`_, short YAML tags were introduced for all models. An overview of the
@@ -364,7 +364,8 @@ The ``Map`` class now supports boolean and comparator operations, such as
 
 A ``Fit.stat_surface()`` method was introduced which allows to compute a
 fit statistic surface. In addition an option to store the trace of the fit was
-added. Both are demonstrated in dedicated sections in the modeling and fitting tutorial.
+added. Both are demonstrated in dedicated sections in the
+`modeling and fitting tutorial<https://docs.gammapy.org/0.18/tutorials/modeling.html>`__.
 
 Following the proposal in `PIG 19`_, the ``gammapy.time`` sub-package was removed.
 All functionality related to light curves can be found in ``gammapy.estimators``.
@@ -505,11 +506,11 @@ API for Gammapy v1.0.
 The main feature introduces in Gammapy v0.17 is event sampling. Based
 on the newly introduced ``MapDatasetEventSampler`` class, event lists can be
 sampled from a ``MapDataset`` object. The use of this class is shown in a dedicated
-event sampling tutorial. Gammapy v0.17 now
+`event sampling tutorial<https://docs.gammapy.org/0.17/notebooks/event_sampling.html>`__. Gammapy v0.17 now
 supports simulation and fitting of temporal models. Both are demonstrated in the
-lightcurve simulation tutorial.
+`lightcurve simulation tutorial<https://docs.gammapy.org/0.17/notebooks/light_curve_simulation.html>`__.
 A more general introduction to modeling and fitting in Gammapy is now available
-as a modeling and fitting tutorial.
+as a `modeling and fitting tutorial<https://docs.gammapy.org/0.17/notebooks/modeling.html>`__.
 
 Following the proposal in `PIG 19`_ the sub-package structure of Gammapy was
 unified. Instead of grouping the main functionality by use-case it is now
@@ -660,10 +661,10 @@ different methods of adapting the norm and tilt of a field of view background
 model to the data.
 
 To provide a visual overview of the available models in Gammapy a
-model gallery was added. A general introduction
-on how to work with the different models is now available in a dedicated models tutorial.
+`model gallery<https://docs.gammapy.org/0.16/modeling/gallery/index.html>`__ was added. A general introduction
+on how to work with the different models is now available in a dedicated `models tutorial<https://docs.gammapy.org/0.16/notebooks/models.html>`__.
 The spectral analysis of an extended source is demonstrated in the newly
-added extended source spectral analysis tutorial.
+added `extended source spectral analysis tutorial<https://docs.gammapy.org/0.16/notebooks/extended_source_spectral_analysis.html>`__.
 
 To further improve API consistency the ``EnergyDispersion`` class
 was renamed to ``EDispKernel`` and the ``SkyModels`` class was
@@ -782,11 +783,11 @@ which executes the data reduction part of an analysis, based on a given config
 file.
 
 Following the proposal in `PIG 18`_ the structure of the documentation was
-improved. The new overview page gives an introduction and
+improved. The new `overview page<https://docs.gammapy.org/0.15/overview.html>`__ gives an introduction and
 overview of the Gammapy analysis workflow and package structure. The structure
-and content of the tutorials page was simplified and
-cleaned up and a how to page was introduced. A tutorial notebook
-showing how to do a joint multi-instrument analysis
+and content of the `tutorials<https://docs.gammapy.org/0.15/tutorials/index.html>`__ page was simplified and
+cleaned up and a `how to page<https://docs.gammapy.org/0.15/howto.html>`__ was introduced. A tutorial notebook
+showing how to do a joint `multi-instrument analysis<https://docs.gammapy.org/0.15/notebooks/analysis_mwl.html>`__
 of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
 
 Another focus of the work for Gammapy v0.15 was the clean-up and unification of
@@ -796,7 +797,8 @@ and ``SpectrumDatasetMaker`` which directly produce a ``MapDataset`` or
 were adapted by introducing a ``ReflectedRegionsBackgroundMaker``,
 ``RingBackgroundMaker`` and ``AdaptiveRingbackgroundMaker``. Those makers can
 also be chained to create custom data reduction workflows. The new data reduction
-API is shown in the second analysis with Gammapy notebook and corresponding docs page.
+API is shown in the `second analysis with Gammapy notebook<https://docs.gammapy.org/0.15/notebooks/analysis_mwl.html>`__
+and corresponding `docs page<https://docs.gammapy.org/0.15/cube/index.html>`__.
 
 A ``MapDatasetOnOff`` class was introduced to handle on-off observation based analyses
 and as a container for image based ring-background estimation. All datasets now
@@ -805,16 +807,19 @@ geometry or energy specification. Gammapy now supports spatially varying PSF and
 energy dispersion in the data reduction as well as during fitting. By introducing
 an in memory ``Observation`` class Gammapy now features unified support for
 binned simulations of spectrum and map datasets. This is shown in the
-1d simulation and 3d simulation <tutorials/simulate_3d.html tutorial notebooks.
+`1d simulation<https://docs.gammapy.org/0.15/notebooks/spectrum_simulation.html>`__ and
+`3d simulation<https://docs.gammapy.org/0.15/notebooks/simulate_3d.html>`__ tutorial notebooks.
 
 The ``LightCurveEstimator`` was improved to use the GTIs defined on datasets
 and allow for grouping of datasets according to provided time intervals. Details
-are explained on the time docs page and the newly added flare light curve notebook.
+are explained on the `time docs page<https://docs.gammapy.org/0.15/time/index.html>`__
+and the newly added `flare light curve notebook<https://docs.gammapy.org/0.15/notebooks/light_curve_flare.html>`__.
 
 The support for 2FHL and 4FGL was improved by adding attributes returning
 spatial and spectral models as well as lightcurves to the corresponding objects.
 The support for the Fermi-LAT 1FHL catalog was dropped. An overview can be found
-on the catalog docs page and the catalog tutorial notebook.
+on the `catalog docs page<https://docs.gammapy.org/0.15/catalog/index.html>`__ and the
+`catalog tutorial notebook<https://docs.gammapy.org/0.15/notebooks/catalog.html>`__.
 
 Error propagation is now fully supported for the ``AbsorbedSpectralModel`` and
 ``NaimaModel``.
@@ -952,7 +957,7 @@ Gammapy v0.14 features a new high level analysis interface. Starting from
 a YAML configuration file, it supports the standard use-cases of joint
 or stacked 3D as well as 1D reflected region analyses. It also supports
 computation of flux points for all cases. The usage of this new ``Analysis``
-class is demonstrated in the hess tutorial.
+class is demonstrated in the `hess tutorial<https://docs.gammapy.org/0.14/notebooks/hess.html>`__.
 
 Following the proposal in :ref:`pig-016` the subpackages ``gammapy.background``
 and ``gammapy.image`` were removed. Existing functionality was moved to the
@@ -1193,8 +1198,8 @@ gamma-ray data. To improve the fit convergence of the ``SkyDisk`` and ``SkyEllip
 models we introduced a new parameter defining the slope of the edge of these models.
 
 If you would like to know how to adapt your old spectral analysis scripts to Gammapy
-v0.12, please checkout the updated tutorial notebooks and get in contact with us
-anytime if you need help.
+v0.12, please checkout the updated `tutorial notebooks<https://docs.gammapy.org/0.12/tutorials.html>`__
+and `get in contact with us <https://gammapy.org/contact.html>`__ anytime if you need help.
 
 **Contributors:**
 
