@@ -14,13 +14,13 @@ from .pointing import FixedPointingInfo, PointingInfo
 __all__ = [
     "DataStore",
     "EventList",
-    "ObservationFilter",
+    "FixedPointingInfo",
     "GTI",
     "HDUIndexTable",
-    "ObservationTable",
     "Observation",
+    "ObservationFilter",
     "Observations",
+    "ObservationTable",
     "observatory_locations",
-    "FixedPointingInfo",
-    "PointingInfo"
+    "PointingInfo",
 ]

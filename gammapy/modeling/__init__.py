@@ -6,11 +6,8 @@ from .parameter import Parameter, Parameters
 
 
 __all__ = [
-    # covariance
     "Covariance",
-    # fit
     "Fit",
-    # parameter
     "Parameter",
     "Parameters",
 ]

@@ -4,7 +4,7 @@ from .ndmap import WcsNDMap
 
 
 __all__ = [
-    "WcsMap",
     "WcsGeom",
+    "WcsMap",
     "WcsNDMap",
 ]

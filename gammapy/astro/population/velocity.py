@@ -5,8 +5,8 @@ from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
 
 __all__ = [
-    "FaucherKaspi2006VelocityMaxwellian",
     "FaucherKaspi2006VelocityBimodal",
+    "FaucherKaspi2006VelocityMaxwellian",
     "Paczynski1990Velocity",
     "velocity_distributions",
 ]

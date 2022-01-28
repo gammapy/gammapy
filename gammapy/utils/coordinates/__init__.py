@@ -11,12 +11,12 @@ from .other import (
 )
 
 __all__ = [
-    "fov_to_sky",
-    "sky_to_fov",
     "cartesian",
+    "D_SUN_TO_GALACTIC_CENTER",
+    "fov_to_sky",
     "galactic",
-    "velocity_glon_glat",
     "motion_since_birth",
     "polar",
-    "D_SUN_TO_GALACTIC_CENTER",
+    "sky_to_fov",
+    "velocity_glon_glat",
 ]

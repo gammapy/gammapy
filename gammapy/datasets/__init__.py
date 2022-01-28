@@ -9,21 +9,14 @@ DATASET_REGISTRY = Registry([MapDataset, SpectrumDatasetOnOff, FluxPointsDataset
 """Registry of dataset classes in Gammapy."""
 
 __all__ = [
-    "DATASET_REGISTRY",
-    # core
-    "Dataset",
-    "Datasets",
-    # flux_points
-    "FluxPointsDataset",
-    # map
     "create_map_dataset_geoms",
+    "Dataset",
+    "DATASET_REGISTRY",
+    "Datasets",
+    "FluxPointsDataset",
     "MapDataset",
-    "MapDatasetOnOff",
-    # simulate
     "MapDatasetEventSampler",
-    # spectrum
+    "MapDatasetOnOff",
     "SpectrumDataset",
     "SpectrumDatasetOnOff",
 ]
-
-__all__.extend(cls.__name__ for cls in DATASET_REGISTRY)

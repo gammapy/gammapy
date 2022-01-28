@@ -11,7 +11,7 @@ from .spectral import PowerLawSpectralModel, SpectralModel
 
 
 __all__ = [
-    'create_cosmic_ray_spectral_model',
+    "create_cosmic_ray_spectral_model",
 ]
 
 

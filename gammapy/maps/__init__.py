@@ -11,28 +11,20 @@ from .wcs import WcsMap, WcsGeom, WcsNDMap
 
 
 __all__ = [
-    # axes
+    "Geom",
+    "HpxGeom",
+    "HpxMap",
+    "HpxNDMap",
+    "LabelMapAxis",
+    "Map",
     "MapAxes",
     "MapAxis",
-    "TimeMapAxis",
-    "LabelMapAxis",
-    # coord
     "MapCoord",
-    # core
-    "Map",
-    # geom
-    "Geom",
-    # hpx
-    "HpxMap",
-    "HpxGeom",
-    "HpxNDMap",
-    # maps
     "Maps",
-    # region
     "RegionGeom",
     "RegionNDMap",
-    # wcs
-    "WcsMap",
+    "TimeMapAxis",
     "WcsGeom",
+    "WcsMap",
     "WcsNDMap",
 ]

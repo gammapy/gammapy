@@ -6,8 +6,8 @@ from .snr import SNR, SNRTrueloveMcKee
 
 __all__ = [
     "Pulsar",
-    "SimplePulsar",
     "PWN",
+    "SimplePulsar",
     "SNR",
     "SNRTrueloveMcKee",
 ]

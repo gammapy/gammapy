@@ -7,12 +7,12 @@ from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.models.spectral import integrate_spectrum
 
 __all__ = [
+    "BurkertProfile",
     "DMProfile",
-    "NFWProfile",
     "EinastoProfile",
     "IsothermalProfile",
-    "BurkertProfile",
     "MooreProfile",
+    "NFWProfile",
 ]
 
 

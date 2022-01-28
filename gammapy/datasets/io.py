@@ -12,10 +12,10 @@ from .spectrum import SpectrumDatasetOnOff
 
 
 __all__ = [
-    'DatasetReader',
-    'DatasetWriter',
-    'OGIPDatasetWriter',
-    'OGIPDatasetReader',
+    "DatasetReader",
+    "DatasetWriter",
+    "OGIPDatasetReader",
+    "OGIPDatasetWriter",
 ]
 
 

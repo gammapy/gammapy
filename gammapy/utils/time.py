@@ -4,10 +4,10 @@ import numpy as np
 from astropy.time import Time, TimeDelta
 
 __all__ = [
+    "absolute_time",
     "time_ref_from_dict",
     "time_ref_to_dict",
     "time_relative_to_ref",
-    "absolute_time",
 ]
 
 # TODO: implement and document this properly.

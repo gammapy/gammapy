@@ -24,22 +24,22 @@ from .rad_max import RadMax2D
 
 
 __all__ = [
-    "Background3D",
     "Background2D",
-    "EnergyDispersion2D",
+    "Background3D",
     "EDispKernel",
     "EDispKernelMap",
     "EDispMap",
     "EffectiveAreaTable2D",
-    "PSFKernel",
-    "PSFMap",
-    "ParametricPSF",
     "EnergyDependentMultiGaussPSF",
-    "PSFKing",
-    "PSF3D",
+    "EnergyDispersion2D",
+    "IRF_REGISTRY",
     "load_cta_irfs",
     "load_irf_dict_from_file",
-    "IRF_REGISTRY",
+    "ParametricPSF",
+    "PSF3D",
+    "PSFKernel",
+    "PSFKing",
+    "PSFMap",
 ]
 
 

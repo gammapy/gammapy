@@ -5,9 +5,9 @@ import scipy.interpolate
 from astropy import units as u
 
 __all__ = [
-    "ScaledRegularGridInterpolator",
-    "interpolation_scale",
     "interpolate_profile",
+    "interpolation_scale",
+    "ScaledRegularGridInterpolator",
 ]
 
 INTERPOLATION_ORDER = {None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3}

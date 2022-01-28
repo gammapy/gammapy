@@ -6,7 +6,7 @@ from .ts import TSMapEstimator
 
 __all__ = [
     "ASmoothMapEstimator",
-    "FluxMaps",
     "ExcessMapEstimator",
+    "FluxMaps",
     "TSMapEstimator",
 ]

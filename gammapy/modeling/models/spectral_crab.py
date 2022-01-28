@@ -9,8 +9,8 @@ from .spectral import (
 )
 
 __all__ = [
-    "MeyerCrabSpectralModel",
     "create_crab_spectral_model",
+    "MeyerCrabSpectralModel",
 ]
 
 

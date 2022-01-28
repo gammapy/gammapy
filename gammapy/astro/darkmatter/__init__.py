@@ -8,7 +8,7 @@ from .utils import JFactory
 
 
 __all__ = [
-    "PrimaryFlux",
     "DarkMatterAnnihilationSpectralModel",
     "JFactory",
+    "PrimaryFlux",
 ]

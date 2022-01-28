@@ -4,7 +4,7 @@ from .ndmap import HpxNDMap
 
 
 __all__ = [
-    "HpxMap",
     "HpxGeom",
+    "HpxMap",
     "HpxNDMap",
 ]

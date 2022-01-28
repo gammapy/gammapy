@@ -5,10 +5,10 @@ from .ring import RingBackgroundMaker, AdaptiveRingBackgroundMaker
 
 
 __all__ = [
+    "AdaptiveRingBackgroundMaker",
     "FoVBackgroundMaker",
     "PhaseBackgroundMaker",
-    "ReflectedRegionsFinder",
     "ReflectedRegionsBackgroundMaker",
+    "ReflectedRegionsFinder",
     "RingBackgroundMaker",
-    "AdaptiveRingBackgroundMaker",
 ]

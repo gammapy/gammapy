@@ -7,8 +7,8 @@ from .sensitivity import SensitivityEstimator
 
 __all__ = [
     "FluxPoints",
-    "LightCurveEstimator",
-    "FluxProfileEstimator",
     "FluxPointsEstimator",
+    "FluxProfileEstimator",
+    "LightCurveEstimator",
     "SensitivityEstimator",
 ]

@@ -15,14 +15,14 @@ from .fit_statistics_cython import (
 )
 
 __all__ = [
-    "WStatCountsStatistic",
-    "CashCountsStatistic",
     "cash",
-    "cstat",
-    "wstat",
-    "get_wstat_mu_bkg",
-    "get_wstat_gof_terms",
-    "norm_bounds_cython",
     "cash_sum_cython",
+    "CashCountsStatistic",
+    "cstat",
     "f_cash_root_cython",
+    "get_wstat_gof_terms",
+    "get_wstat_mu_bkg",
+    "norm_bounds_cython",
+    "wstat",
+    "WStatCountsStatistic",
 ]

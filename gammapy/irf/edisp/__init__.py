@@ -3,8 +3,8 @@ from .kernel import EDispKernel
 from .map import EDispMap, EDispKernelMap
 
 __all__ = [
-    "EnergyDispersion2D",
     "EDispKernel",
-    "EDispMap",
     "EDispKernelMap",
+    "EDispMap",
+    "EnergyDispersion2D",
 ]

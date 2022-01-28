@@ -15,14 +15,14 @@ from .core import ModelBase
 
 
 __all__ = [
-    'TemporalModel',
     'ConstantTemporalModel',
-    'LinearTemporalModel',
     'ExpDecayTemporalModel',
     'GaussianTemporalModel',
     'LightCurveTemplateTemporalModel',
+    'LinearTemporalModel',
     'PowerLawTemporalModel',
     'SineTemporalModel',
+    'TemporalModel',
 ]
 
 

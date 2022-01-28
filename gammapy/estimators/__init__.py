@@ -19,20 +19,19 @@ from .profile import ImageProfile, ImageProfileEstimator
 
 
 __all__ = [
-    "ESTIMATOR_REGISTRY",
-    "FluxPoints",
-    "FluxMaps",
-    "Estimator",
     "ASmoothMapEstimator",
-    "FluxMaps",
+    "Estimator",
+    "ESTIMATOR_REGISTRY",
     "ExcessMapEstimator",
-    "TSMapEstimator",
-    "LightCurveEstimator",
-    "FluxProfileEstimator",
+    "FluxMaps",
+    "FluxPoints",
     "FluxPointsEstimator",
-    "SensitivityEstimator",
+    "FluxProfileEstimator",
     "ImageProfile",
     "ImageProfileEstimator",
+    "LightCurveEstimator",
+    "SensitivityEstimator",
+    "TSMapEstimator",
 ]
 
 

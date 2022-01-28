@@ -15,10 +15,10 @@ from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectral
 from .temporal import TemporalModel
 
 __all__ = [
-    "SkyModel",
-    "FoVBackgroundModel",
-    "TemplateNPredModel",
     "create_fermi_isotropic_diffuse_model",
+    "FoVBackgroundModel",
+    "SkyModel",
+    "TemplateNPredModel",
 ]
 
 

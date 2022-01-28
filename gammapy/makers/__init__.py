@@ -31,18 +31,16 @@ MAKER_REGISTRY = Registry(
 """Registry of maker classes in Gammapy."""
 
 __all__ = [
-    "MAKER_REGISTRY",
-    "Maker",
-    "ReflectedRegionsFinder",
-    "ReflectedRegionsBackgroundMaker",
     "AdaptiveRingBackgroundMaker",
-    "FoVBackgroundMaker",
-    "PhaseBackgroundMaker",
-    "RingBackgroundMaker",
-    "MapDatasetMaker",
     "DatasetsMaker",
+    "FoVBackgroundMaker",
+    "Maker",
+    "MAKER_REGISTRY",
+    "MapDatasetMaker",
+    "PhaseBackgroundMaker",
+    "ReflectedRegionsBackgroundMaker",
+    "ReflectedRegionsFinder",
+    "RingBackgroundMaker",
     "SafeMaskMaker",
     "SpectrumDatasetMaker",
 ]
-
-__all__.extend(cls.__name__ for cls in MAKER_REGISTRY)
