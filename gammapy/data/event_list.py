@@ -9,6 +9,7 @@ from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
 from astropy.io import fits
+from astropy.time import Time
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
@@ -798,6 +799,15 @@ class EventList:
                 table.meta[key] = table.meta[key].to_value(spec.unit)
 
         table.meta.update(MANDATORY_HEADERS)
+
+        if 'CREATOR' not in table.meta:
+            from gammapy import __version__
+            table.meta['CREATOR'] = 'gammapy ' + __version__
+
+        if 'DATE' not in table.meta:
+            table.meta['DATE'] = Time.now().iso
+        elif isinstance(table.meta, Time):
+            table.meta['DATE'] = table.meta['DATE'].iso
 
         return fits.BinTableHDU(table, name='EVENTS')
 

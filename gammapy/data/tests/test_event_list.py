@@ -3,10 +3,12 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import EventList
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy import __version__
 
 
 @requires_data()
@@ -200,3 +202,46 @@ class TestEventSelection:
         energy_range = u.Quantity([1, 10], "TeV")
         new_list = self.events.select_energy(energy_range)
         assert len(new_list.table) == 3
+
+
+def test_to_table_hdu():
+
+    table = Table({
+        "EVENT_ID": [1, 2, 3],
+        "TIME": [0, 0.1, 0.2] * u.s,
+        "RA": [83.64, 83.62, 83.63] * u.deg,
+        "DEC": [22.014, 22.016, 22.015] * u.deg,
+        "ENERGY": [1, 10, 5] * u.TeV,
+    })
+    table.meta['OBS_ID'] = 10
+    table.meta['TSTART'] = 0 * u.s
+    table.meta['TSTOP'] = 5 * u.s
+    table.meta['ONTIME'] = 5 * u.s
+    table.meta['LIVETIME'] = 4 * u.s
+    table.meta['DEADC'] = (table.meta['LIVETIME'] / table.meta['ONTIME']).to_value(u.one)
+
+    # to test if conversion to deg works
+    table.meta['RA_PNT'] = 1.4596726677032834 * u.rad
+    table.meta['DEC_PNT'] = 0.3842255081802917 * u.rad
+    table.meta['RADECSYS'] = 'ICRS'
+    table.meta['ORIGIN'] = 'gammapy tests'
+    table.meta['TELESCOP'] = 'CTA'
+    table.meta['INSTRUMENT'] = 'CTA-North'
+
+
+    hdu = EventList(table).to_table_hdu()
+
+    assert hdu.header['HDUCLASS'] == 'GADF'
+    assert hdu.header['HDUVERS'] == '0.2'
+    assert 'HDUDOC' in hdu.header
+    assert hdu.header['HDUCLAS1'] == 'EVENTS'
+    assert hdu.header['CREATOR'] == 'gammapy ' + __version__
+    # to_table_hdu shuld fill "now" and not take long
+    assert (Time(hdu.header['DATE']) - Time.now()) < 1 * u.s
+    assert u.isclose(hdu.header['RA_PNT'], table.meta['RA_PNT'].to_value(u.deg))
+    assert u.isclose(hdu.header['DEC_PNT'], table.meta['DEC_PNT'].to_value(u.deg))
+    assert hdu.header['TSTART'] == 0
+    assert hdu.header['TSTOP'] == 5
+    assert hdu.header['ONTIME'] == 5
+    assert hdu.header['LIVETIME'] == 4
+    assert hdu.header['DEADC'] == 0.8
