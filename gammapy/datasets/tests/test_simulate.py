@@ -249,13 +249,13 @@ def test_mde_run(dataset, models):
     assert meta["HDUVERS"] == "0.2"
     assert meta["HDUCLASS"] == "GADF"
     assert meta["OBS_ID"] == 1001
-    assert_allclose(meta["TSTART"], 0.0)
-    assert_allclose(meta["TSTOP"], 3600.0)
-    assert_allclose(meta["ONTIME"], 3600.0)
-    assert_allclose(meta["LIVETIME"], 3600.0)
-    assert_allclose(meta["DEADC"], 1.0)
-    assert_allclose(meta["RA_PNT"], 266.4049882865447)
-    assert_allclose(meta["DEC_PNT"], -28.936177761791473)
+    assert u.isclose(meta["TSTART"], 0.0 * u.s)
+    assert u.isclose(meta["TSTOP"], 3600.0 * u.s)
+    assert u.isclose(meta["ONTIME"], 3600.0 * u.s)
+    assert u.isclose(meta["LIVETIME"], 3600.0 * u.s)
+    assert u.isclose(meta["DEADC"], 1.0)
+    assert u.isclose(meta["RA_PNT"], 266.4049882865447 * u.deg)
+    assert u.isclose(meta["DEC_PNT"], -28.936177761791473 * u.deg)
     assert meta["EQUINOX"] == "J2000"
     assert meta["RADECSYS"] == "icrs"
     assert "Gammapy" in meta["CREATOR"]
@@ -273,11 +273,11 @@ def test_mde_run(dataset, models):
     assert "CIRCLE" in meta["DSVAL3"]
     assert meta["DSUNI3"] == "deg             "
     assert meta["NDSKEYS"] == " 3 "
-    assert_allclose(meta["RA_OBJ"], 266.4049882865447)
-    assert_allclose(meta["DEC_OBJ"], -28.936177761791473)
-    assert_allclose(meta["TELAPSE"], 1000.0)
-    assert_allclose(meta["MJDREFI"], 51544)
-    assert_allclose(meta["MJDREFF"], 0.0007428703684126958)
+    assert u.isclose(meta["RA_OBJ"], 266.4049882865447 * u.deg)
+    assert u.isclose(meta["DEC_OBJ"], -28.936177761791473 * u.deg)
+    assert u.isclose(meta["TELAPSE"], 1000.0 * u.s)
+    assert u.isclose(meta["MJDREFI"], 51544)
+    assert u.isclose(meta["MJDREFF"], 0.0007428703684126958)
     assert meta["TIMEUNIT"] == "s"
     assert meta["TIMESYS"] == "tt"
     assert meta["TIMEREF"] == "LOCAL"
@@ -289,8 +289,8 @@ def test_mde_run(dataset, models):
     assert meta["MID00001"] == 1
     assert meta["MID00002"] == 2
     assert meta["NMCIDS"] == 2
-    assert_allclose(float(meta["ALT_PNT"]), float("-13.5345076464"), rtol=1e-7)
-    assert_allclose(float(meta["AZ_PNT"]), float("228.82981620065763"), rtol=1e-7)
+    assert u.isclose(meta["ALT_PNT"], -13.5345076464 * u.deg, rtol=1e-7)
+    assert u.isclose(meta["AZ_PNT"], 228.82981620065763 * u.deg, rtol=1e-7)
     assert meta["ORIGIN"] == "Gammapy"
     assert meta["TELESCOP"] == "CTA"
     assert meta["INSTRUME"] == "1DC"
@@ -342,8 +342,8 @@ def test_mde_run_switchoff(dataset, models):
 
     meta = events.table.meta
 
-    assert meta["RA_PNT"] == 266.4049882865447
-    assert meta["ONTIME"] == 3600.0
+    assert u.isclose(meta["RA_PNT"], 266.4049882865447 * u.deg)
+    assert u.isclose(meta["ONTIME"], 3600.0 * u.s)
     assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"
 
@@ -364,7 +364,7 @@ def test_events_datastore(tmp_path, dataset, models):
     events = sampler.run(dataset=dataset, observation=obs)
 
     primary_hdu = fits.PrimaryHDU()
-    hdu_evt = fits.BinTableHDU(events.table)
+    hdu_evt = events.to_table_hdu()
     hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
     hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
     hdu_all.writeto(str(tmp_path / "events.fits"))

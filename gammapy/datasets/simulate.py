@@ -232,17 +232,17 @@ class MapDatasetEventSampler:
         meta["OBS_ID"] = observation.obs_id
 
         meta["TSTART"] = (
-            ((observation.tstart.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
+            ((observation.tstart.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s)
         )
         meta["TSTOP"] = (
-            ((observation.tstop.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
+            ((observation.tstop.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s)
         )
-        meta["ONTIME"] = observation.observation_time_duration.to("s").value
-        meta["LIVETIME"] = observation.observation_live_time_duration.to("s").value
+        meta["ONTIME"] = observation.observation_time_duration.to("s")
+        meta["LIVETIME"] = observation.observation_live_time_duration.to("s")
         meta["DEADC"] = 1 - observation.observation_dead_time_fraction
 
-        meta["RA_PNT"] = observation.pointing_radec.icrs.ra.deg
-        meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.deg
+        meta["RA_PNT"] = observation.pointing_radec.icrs.ra.to(u.deg)
+        meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.to(u.deg)
 
         meta["EQUINOX"] = "J2000"
         meta["RADECSYS"] = "icrs"
@@ -279,10 +279,10 @@ class MapDatasetEventSampler:
 
         if model:
             meta["OBJECT"] = model.name
-            meta["RA_OBJ"] = model.position.icrs.ra.deg
-            meta["DEC_OBJ"] = model.position.icrs.dec.deg
+            meta["RA_OBJ"] = model.position.icrs.ra.to(u.deg)
+            meta["DEC_OBJ"] = model.position.icrs.dec.to(u.deg)
 
-        meta["TELAPSE"] = dataset.gti.time_sum.to("s").value
+        meta["TELAPSE"] = dataset.gti.time_sum.to("s")
         meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
         meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
         meta["TIMEUNIT"] = "s"
@@ -317,8 +317,8 @@ class MapDatasetEventSampler:
         altaz_frame = AltAz(obstime=dataset.gti.time_start, location=loc)
         coord_altaz = observation.pointing_radec.transform_to(altaz_frame)
 
-        meta["ALT_PNT"] = str(coord_altaz.alt.deg[0])
-        meta["AZ_PNT"] = str(coord_altaz.az.deg[0])
+        meta["ALT_PNT"] = coord_altaz.alt[0].to(u.deg)
+        meta["AZ_PNT"] = coord_altaz.az[0].to(u.deg)
 
         # TO DO: these keywords should be taken from the IRF of the dataset
         meta["ORIGIN"] = "Gammapy"

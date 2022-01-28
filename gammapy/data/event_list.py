@@ -8,6 +8,7 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
+from astropy.io import fits
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
@@ -20,6 +21,12 @@ __all__ = ["EventList"]
 log = logging.getLogger(__name__)
 
 HeaderKeyword = namedtuple('HeaderKeyword', 'mandatory type unit')
+MANDATORY_HEADERS = {
+    'HDUCLASS': 'GADF',
+    'HDUDOC': 'https://github.com/open-gamma-ray-astro/gamma-astro-data-formats',
+    'HDUVERS': '0.2',
+    'HDUCLAS1': 'EVENTS',
+}
 GADF_HEADERS = {
     'TSTART': HeaderKeyword(mandatory=True, type=float, unit=u.s),
     'TSTOP': HeaderKeyword(mandatory=True, type=float, unit=u.s),
@@ -34,6 +41,7 @@ GADF_HEADERS = {
     'AZ_PNT': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
     'RA_OBJ': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
     'DEC_OBJ': HeaderKeyword(mandatory=False, type=float, unit=u.deg),
+    'TELAPSE': HeaderKeyword(mandatory=False, type=float, unit=u.s),
 }
 
 
@@ -777,6 +785,22 @@ class EventList:
         """Quick look counts map sky plot."""
         m = self._counts_image(allsky=allsky)
         m.plot(stretch="sqrt")
+
+    def to_table_hdu(self, format='gadf-dl3'):
+        '''Convert event list to a table hdu'''
+        # have to remove units for storage in fits header
+        if format != 'gadf-dl3':
+            raise ValueError(f'Unsupported format {format}')
+
+        table = self.table.copy()
+        for key, spec in GADF_HEADERS.items():
+            if key in table.meta and isinstance(table.meta[key], u.Quantity):
+                table.meta[key] = table.meta[key].to_value(spec.unit)
+
+        table.meta.update(MANDATORY_HEADERS)
+
+        return fits.BinTableHDU(table, name='EVENTS')
+
 
 
 class EventListChecker(Checker):
