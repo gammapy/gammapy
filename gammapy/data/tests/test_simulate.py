@@ -14,13 +14,14 @@ from gammapy.modeling.models import (
 )
 
 
-@requires_data()
 @pytest.fixture(scope="session")
+@requires_data()
 def observations():
-    filename = "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
     pointing = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
     livetime = 0.5 * u.hr
-    irfs = load_cta_irfs(filename)
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
     observations = [
         Observation.create(
             obs_id=100 + k, pointing=pointing, livetime=livetime, irfs=irfs
