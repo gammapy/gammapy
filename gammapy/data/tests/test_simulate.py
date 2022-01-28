@@ -15,7 +15,6 @@ from gammapy.modeling.models import (
 
 
 @pytest.fixture(scope="session")
-@requires_data()
 def observations():
     pointing = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
     livetime = 0.5 * u.hr
@@ -49,6 +48,7 @@ def models():
     return models
 
 
+@requires_data()
 def test_observations_events_sampler(tmpdir, observations):
     sampler = ObservationsEventsSampler(
         models=None,
@@ -64,6 +64,7 @@ def test_observations_events_sampler(tmpdir, observations):
     sampler.run(observations)
 
 
+@requires_data()
 def test_observations_events_sampler_parralel(tmpdir, observations, models):
     sampler = ObservationsEventsSampler(
         models=models,
