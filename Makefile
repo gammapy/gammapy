@@ -103,7 +103,8 @@ docs-all:
 	python -m gammapy.utils.notebooks_links --src="$(src)"
 
 docs-show:
-	open docs/_build/html/index.html
+	python docs/serve.py
+
 
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
