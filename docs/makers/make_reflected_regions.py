@@ -18,12 +18,13 @@ center = SkyCoord(83.633, 24, unit="deg")
 
 # One can impose a minimal distance between ON region and first reflected regions
 finder = ReflectedRegionsFinder(
+    min_distance_input="0.2 rad",
+)
+regions, _ = finder.run(
     region=on_region,
     center=center,
     exclusion_mask=exclusion_mask,
-    min_distance_input="0.2 rad",
 )
-regions = finder.run()
 
 fig, axes = plt.subplots(
     ncols=3,
@@ -47,12 +48,13 @@ plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusi
 
 # One can impose a minimal distance between two adjacent regions
 finder = ReflectedRegionsFinder(
+    min_distance="0.1 rad",
+)
+regions, _ = finder.run(
     region=on_region,
     center=center,
     exclusion_mask=exclusion_mask,
-    min_distance="0.1 rad",
 )
-regions = finder.run()
 
 ax = axes[1]
 ax.set_title("Min. distance all regions")
@@ -61,13 +63,14 @@ plot_regions(ax=ax, regions=regions, on_region=on_region, exclusion_mask=exclusi
 
 # One can impose a maximal number of regions to be extracted
 finder = ReflectedRegionsFinder(
-    region=on_region,
-    center=center,
-    exclusion_mask=exclusion_mask,
     max_region_number=5,
     min_distance="0.1 rad",
 )
-regions = finder.run()
+regions, _ = finder.run(
+    region=on_region,
+    center=center,
+    exclusion_mask=exclusion_mask,
+)
 
 ax = axes[2]
 ax.set_title("Max. number of regions")
