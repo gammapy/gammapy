@@ -191,7 +191,7 @@ class ParametricPSF(PSF):
         energy_axis_true = self.axes["energy_true"]
 
         if rad is None:
-            rad_axis = RAD_AXIS_DEFAULT.center
+            rad_axis = RAD_AXIS_DEFAULT
         else:
             rad_axis = MapAxis.from_edges(rad, name="rad")
 
