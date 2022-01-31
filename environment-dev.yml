@@ -64,8 +64,8 @@ dependencies:
   - pydata-sphinx-theme
   - twine
   - yamllint
-  - nbformat==5.0.8
-  - h5py==2.10.0
+  - nbformat
+  - h5py
   - ruamel.yaml
   - pip:
       - pytest-sphinx
