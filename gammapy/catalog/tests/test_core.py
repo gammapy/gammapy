@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Column, Table
 from astropy.units import Quantity
-from gammapy.catalog import SourceCatalog, CATALOG_REGISTRY
+from gammapy.catalog import SourceCatalog
 from gammapy.utils.testing import assert_quantity_allclose
 
 
@@ -12,6 +12,7 @@ class SomeSourceCatalog(SourceCatalog):
     """Minimal test source catalog class for unit tests."""
 
     name = "test123"
+    tag = "test123"
     description = "Test source catalog"
 
 
@@ -29,6 +30,7 @@ class TestSourceCatalog:
 
     def test_str(self):
         assert "description" in str(self.cat)
+        assert "name" in str(self.cat)
 
     def test_table(self):
         assert_allclose(self.cat.table["RA"][1], 43.3)
