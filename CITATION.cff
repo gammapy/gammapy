@@ -244,6 +244,9 @@ authors:
   family-names: López-Coto
 - given-names: Sam
   family-names: Carter
+- given-names: Tyler
+  family-names: Cahill
+  affiliation: Iowa State University, Ames IA, US
 version: 0.18.2
 date-released: 2020-11-19
 repository-code: https://github.com/gammapy/gammapy
