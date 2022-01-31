@@ -64,7 +64,7 @@ dependencies:
   - twine
   - yamllint
   - nbformat
-  - h5py=3
+  - h5py
   - ruamel.yaml
   - pip:
       - pytest-sphinx
