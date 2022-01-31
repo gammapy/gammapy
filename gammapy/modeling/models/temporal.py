@@ -365,8 +365,8 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, t_ref, t_rise, t_decay, eta):
-        val_rise = np.exp( - 0.5 * (np.abs((time - t_ref).value) ** (1/eta)) / (t_rise.to_value("d") ** (1/eta)))
-        val_decay = np.exp( - 0.5 * (np.abs((time - t_ref).value) ** (1/eta)) / (t_decay.to_value("d") ** (1/eta)))
+        val_rise = np.exp( - 0.5 * (np.abs(u.Quantity(time - t_ref,"d")) ** (1/eta)) / (t_rise ** (1/eta)))
+        val_decay = np.exp( - 0.5 * (np.abs(u.Quantity(time - t_ref,"d")) ** (1/eta)) / (t_decay ** (1/eta)))
         val = np.where(time < t_ref, val_rise, val_decay)
         return val
     
@@ -387,19 +387,13 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         """
         
         pars = self.parameters
-        t_rise = pars["t_rise"].quantity.to_value("day")
-        t_decay = pars["t_decay"].quantity.to_value("day")
+        t_rise = pars["t_rise"].quantity
+        t_decay = pars["t_decay"].quantity
         eta = pars["eta"].quantity
         t_ref = Time(pars["t_ref"].quantity, format = "mjd")
-                     
-        def gen_gauss(time,t_ref, t_rise, t_decay, eta):
-            if time < t_ref.mjd:
-                return np.exp( - 0.5 * (np.abs(time - t_ref.mjd) ** (1/eta)) / (t_rise ** (1/eta)))
-            else:
-                return np.exp( - 0.5 * (np.abs(time - t_ref.mjd) ** (1/eta)) / (t_decay ** (1/eta)))
 
-        integral = scipy.integrate.quad(gen_gauss, t_min.mjd, t_max.mjd, args=(t_ref,t_rise,t_decay,eta))[0]
-        return integral / self.time_sum(t_min, t_max).value
+        integral = scipy.integrate.quad(self.evaluate, t_min.mjd, t_max.mjd, args=(t_ref.mjd,t_rise,t_decay,eta))[0]
+        return integral / self.time_sum(t_min, t_max).to_value("d")
 
 
 class LightCurveTemplateTemporalModel(TemporalModel):
