@@ -149,7 +149,7 @@ class SpatialModel(ModelBase):
         geom : `~gammapy.maps.WcsGeom`
 
         Returns
-        ---------
+        -------
         `~gammapy.maps.Map`
 
         """
@@ -180,7 +180,7 @@ class SpatialModel(ModelBase):
             Default is None: the factor is estimated from the model minimimal bin size
 
         Returns
-        ---------
+        -------
         `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
                 the integral value in each spatial bin.
         """

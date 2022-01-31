@@ -437,14 +437,14 @@ class MapDataset(Dataset):
         Else, the total signal counts are returned.
 
         Parameters
-        -------------
+        ----------
         model_name: str
             Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
 
         Returns
-        ----------
+        -------
         npred_sig: `gammapy.maps.Map`
             Map of the predicted signal counts
         """

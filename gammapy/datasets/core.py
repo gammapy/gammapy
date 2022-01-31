@@ -298,7 +298,7 @@ class Datasets(collections.abc.MutableSequence):
             Region definition.
 
         Returns
-        --------
+        -------
         datasets : `Datasets`
             List of `~gammapy.datasets.SpectrumDataset`
         """

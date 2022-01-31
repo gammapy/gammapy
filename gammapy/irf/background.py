@@ -139,7 +139,7 @@ class Background3D(BackgroundIRF):
         """Plot the background rate in Field of view coordinates at a given energy.
 
         Parameters
-        -----------
+        ----------
         energy : `~astropy.units.Quantity`
             list of Energy
         ax: `~matplotlib.axes.Axes`, optional
@@ -242,7 +242,7 @@ class Background2D(BackgroundIRF):
         """Plot the background rate in Field of view coordinates at a given energy.
 
         Parameters
-        -----------
+        ----------
         energy : `~astropy.units.Quantity`
             list of Energy
         ax: `~matplotlib.axes.Axes`, optional
