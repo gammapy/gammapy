@@ -60,6 +60,10 @@ class TestEnergyDependentMultiGaussPSF:
         )
         assert_allclose(np.squeeze(desired), actual, atol=0.005)
 
+        # test default case
+        psf_3d_def = psf.to_psf3d()
+        assert psf_3d_def.axes["rad"].nbin == 66
+
     @requires_dependency("matplotlib")
     def test_peek(self, psf):
         with mpl_plot_check():
