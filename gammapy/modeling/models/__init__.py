@@ -61,10 +61,6 @@ from .temporal import (
 )
 
 
-# this should probably not be done, but examples, notebooks and tutorials
-# import Parameter from here
-from ..parameter import Parameter, Parameters
-
 
 __all__ = [
     "create_fermi_isotropic_diffuse_model",
@@ -74,9 +70,6 @@ __all__ = [
     "MODEL_REGISTRY",
     "ModelBase",
     "Models",
-    "Parameter",
-    "Parameters",
-    "SkyModel",
     "SPATIAL_MODEL_REGISTRY",
     "SPECTRAL_MODEL_REGISTRY",
     "TemplateNPredModel",
@@ -117,6 +110,7 @@ __all__ = [
     'Shell2SpatialModel',
     'ShellSpatialModel',
     'SineTemporalModel',
+    'SkyModel',
     'SmoothBrokenPowerLawSpectralModel',
     'SpatialModel',
     'SpectralModel',
