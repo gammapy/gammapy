@@ -48,8 +48,12 @@ class PlotMixin:
         >>> dataset = SpectrumDatasetOnOff.read(f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits")
         >>> p = PowerLawSpectralModel()
         >>> dataset.models = SkyModel(spectral_model=p)
+        >>> #optional configurations
+        >>> kwargs_excess = {"color": "blue", "markersize":8, "marker":'s', }
+        >>> kwargs_npred_signal = {"color": "black", "ls":"--"}
+        >>> kwargs_spectrum = {"kwargs_excess":kwargs_excess, "kwargs_npred_signal":kwargs_npred_signal}
         >>> kwargs_residuals = {"color": "black", "markersize":4, "marker":'s', } #optional configuration
-        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals)  # doctest: +SKIP
+        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum)  # doctest: +SKIP
         """
         from matplotlib.gridspec import GridSpec
 
@@ -141,7 +145,7 @@ class PlotMixin:
         >>> #Plot the masks on top of the counts histogram
         >>> kwargs_safe = {"color":"green", "alpha":0.2} #optinonal arguments to configure
         >>> kwargs_fit = {"color":"pink", "alpha":0.2}
-        >>> ax=dataset.plot_counts()
+        >>> ax=dataset.plot_counts() # doctest: +SKIP
         >>> dataset.plot_masks(ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe)  # doctest: +SKIP
         """
 
