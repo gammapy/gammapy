@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from gammapy.irf import PSF3D
+from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
@@ -10,6 +12,21 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def psf_3d():
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     return PSF3D.read(filename, hdu="PSF")
+
+
+def test_psf_3d_wrong_units():
+    energy_axis = MapAxis.from_energy_edges([80, 125] * u.GeV, name="energy_true")
+
+    offset_axis = MapAxis.from_edges([0, 1, 2], unit="deg", name="offset")
+
+    rad_axis = MapAxis.from_edges([0, 1, 2], unit="deg", name="rad")
+
+    wrong_unit = u.cm**2 * u.s
+    data = np.ones((energy_axis.nbin, offset_axis.nbin, rad_axis.nbin)) * wrong_unit
+    with pytest.raises(ValueError) as error:
+        psf3d = PSF3D(axes=[energy_axis, offset_axis, rad_axis],
+                 data=data)
+        assert error == (f"Error: {wrong_unit} is not an allowed unit. {psf3d.tag} requires dimensionless data quantities!")
 
 
 @requires_data()

@@ -44,10 +44,10 @@ class IRF(metaclass=abc.ABCMeta):
         self._axes = axes
         if isinstance(data, u.Quantity):
             self.data = data.value
-            self.unit = data.unit
-            if self.axes.names == ["energy_true", "migra", "offset"] :
-                if self.unit != u.dimensionless_unscaled:
-                    raise ValueError(f"Error: {self.unit} is not an allowed unit. EDisp requires dimensionless data quantities!")
+            if not self.unit.is_equivalent(data.unit):
+                raise ValueError(f"Error: {data.unit} is not an allowed unit. {self.tag} requires dimensionless data quantities!")
+            else:
+                self.unit = data.unit
         else:
             self.data = data
             self.unit = unit
