@@ -248,8 +248,6 @@ def test_bkg_2d_wrong_units():
 
     wrong_unit = u.cm**2 * u.s
     data = np.ones((energy_axis.nbin, offset_axis.nbin)) * wrong_unit
-    # Axis order is (energy, fov_lon, fov_lat)
-    # data.value[1, 0, 0] = 1
     with pytest.raises(ValueError) as error:
         bkg2d = Background2D(axes=[energy_axis, offset_axis],
                  data=data)
