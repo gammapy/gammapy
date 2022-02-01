@@ -1,18 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Process tutorials notebooks for publication in documentation."""
-import argparse
 import logging
 import os
 import shutil
 import subprocess
 import sys
-from configparser import ConfigParser
-from pathlib import Path
 import nbformat
-from nbformat.v4 import new_markdown_cell
+from argparse import ArgumentParser
+from configparser import ConfigParser
+from multiprocessing.pool import Pool
+from pathlib import Path
+
 from gammapy import __version__
 from gammapy.scripts.jupyter import notebook_run
 from gammapy.utils.scripts import get_notebooks_paths
+
+parser = ArgumentParser()
+parser.add_argument('-j', '--n-jobs', type=int)
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -87,7 +91,7 @@ def add_box(nb_path):
 
     if "nbsphinx" not in rawnb.metadata:
         rawnb.metadata["nbsphinx"] = {"orphan": bool("true")}
-        rawnb.cells.insert(0, new_markdown_cell(BOX_CELL))
+        rawnb.cells.insert(0, nbformat.v4.new_markdown_cell(BOX_CELL))
 
         # add latex format
         for cell in rawnb.cells:
@@ -103,32 +107,40 @@ def add_box(nb_path):
         nbformat.write(rawnb, nb_path)
 
 
+def write_notebook(nb_path):
+    skip = False
+    copy_clean_notebook(nb_path)
+    rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
+    if "gammapy" in rawnb.metadata and "skip_run" in rawnb.metadata["gammapy"]:
+        skip = rawnb.metadata["gammapy"]["skip_run"]
+    if not skip:
+        notebook_run(nb_path)
+        add_box(nb_path)
+
+
 def build_notebooks(args):
     if "GAMMAPY_DATA" not in os.environ:
         log.info("GAMMAPY_DATA environment variable not set.")
         log.info("Running notebook tests requires this environment variable.")
         log.info("Exiting now.")
-        sys.exit()
+        sys.exit(1)
 
     PATH_NBS.mkdir(parents=True, exist_ok=True)
+    notebooks = list(get_notebooks_paths())
 
-    for nb_path in get_notebooks_paths():
-        if args.src and Path(args.src).resolve() != nb_path:
-            continue
-        skip = False
-        copy_clean_notebook(nb_path)
-        rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
-        if "gammapy" in rawnb.metadata and "skip_run" in rawnb.metadata["gammapy"]:
-            skip = rawnb.metadata["gammapy"]["skip_run"]
-        if not skip:
-            notebook_run(nb_path)
-            add_box(nb_path)
+    if args.src and Path(args.src).resolve() in notebooks:
+        write_notebook(Path(args.src).resolve())
+        return
+
+    log.info('Found %d notebooks', len(notebooks))
+    with Pool(args.n_jobs) as pool:
+        pool.map(write_notebook, notebooks)
 
 
 def main():
+
     logging.basicConfig(level=logging.INFO)
 
-    parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook to process")
     args = parser.parse_args()
     build_notebooks(args)
