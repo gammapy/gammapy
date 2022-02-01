@@ -11,6 +11,9 @@ channels:
   - conda-forge
   - sherpa
 
+variables:
+  PYTHONNOUSERSITE: "1"
+
 dependencies:
   # core dependencies
   - python=3.7
@@ -69,4 +72,3 @@ dependencies:
   - ruamel.yaml
   - pip:
       - pytest-sphinx
-
