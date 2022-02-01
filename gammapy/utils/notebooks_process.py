@@ -108,14 +108,9 @@ def add_box(nb_path):
 
 
 def write_notebook(nb_path):
-    skip = False
     copy_clean_notebook(nb_path)
-    rawnb = nbformat.read(nb_path, as_version=nbformat.NO_CONVERT)
-    if "gammapy" in rawnb.metadata and "skip_run" in rawnb.metadata["gammapy"]:
-        skip = rawnb.metadata["gammapy"]["skip_run"]
-    if not skip:
-        notebook_run(nb_path)
-        add_box(nb_path)
+    notebook_run(nb_path)
+    add_box(nb_path)
 
 
 def build_notebooks(args):
