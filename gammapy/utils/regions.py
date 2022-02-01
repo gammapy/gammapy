@@ -170,7 +170,7 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
         Number of boxes along the line
 
     Returns
-    --------
+    -------
     regions : list of `~regions.RectangleSkyRegion`
         Regions in which the profiles are made
     """
