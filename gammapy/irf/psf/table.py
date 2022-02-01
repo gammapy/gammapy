@@ -29,4 +29,4 @@ class PSF3D(PSF):
 
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
-    unit = u.Unit("sr**-1")
+    default_unit = u.sr**-1

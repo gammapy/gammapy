@@ -9,7 +9,7 @@ def test_irf_init_quantity():
     class TestIRF(IRF):
         tag = "myirf"
         required_axes = ["energy", "offset"]
-        unit = u.Unit("deg")
+        default_unit = u.deg
 
     energy_axis = MapAxis.from_energy_bounds(10, 100, 10, unit="TeV", name="energy")
     offset_axis = MapAxis.from_bounds(0, 2.5, 5, unit="deg", name="offset")
