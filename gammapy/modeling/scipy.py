@@ -6,9 +6,9 @@ from gammapy.utils.roots import find_roots
 from .likelihood import Likelihood
 
 __all__ = [
-    "optimize_scipy",
-    "covariance_scipy",
     "confidence_scipy",
+    "covariance_scipy",
+    "optimize_scipy",
     "stat_profile_ul_scipy",
 ]
 

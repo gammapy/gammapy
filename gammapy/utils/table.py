@@ -7,10 +7,10 @@ from .units import standardise_unit
 
 __all__ = [
     "hstack_columns",
+    "table_from_row_data",
+    "table_row_to_dict",
     "table_standardise_units_copy",
     "table_standardise_units_inplace",
-    "table_row_to_dict",
-    "table_from_row_data",
 ]
 
 

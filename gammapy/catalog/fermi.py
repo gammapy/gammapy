@@ -22,14 +22,14 @@ from gammapy.utils.table import table_standardise_units_inplace
 from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = [
-    "SourceCatalogObject4FGL",
-    "SourceCatalogObject3FGL",
-    "SourceCatalogObject2FHL",
-    "SourceCatalogObject3FHL",
-    "SourceCatalog4FGL",
-    "SourceCatalog3FGL",
     "SourceCatalog2FHL",
+    "SourceCatalog3FGL",
     "SourceCatalog3FHL",
+    "SourceCatalog4FGL",
+    "SourceCatalogObject2FHL",
+    "SourceCatalogObject3FGL",
+    "SourceCatalogObject3FHL",
+    "SourceCatalogObject4FGL",
 ]
 
 

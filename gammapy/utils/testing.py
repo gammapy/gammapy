@@ -8,13 +8,13 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 
 __all__ = [
-    "requires_dependency",
-    "requires_data",
-    "mpl_plot_check",
     "assert_quantity_allclose",
     "assert_skycoord_allclose",
     "assert_time_allclose",
     "Checker",
+    "mpl_plot_check",
+    "requires_data",
+    "requires_dependency",
 ]
 
 # Cache for `requires_dependency`

@@ -6,10 +6,10 @@ from scipy.stats import chi2, norm
 from .likelihood import Likelihood
 
 __all__ = [
-    "optimize_iminuit",
-    "covariance_iminuit",
     "confidence_iminuit",
     "contour_iminuit",
+    "covariance_iminuit",
+    "optimize_iminuit",
 ]
 
 log = logging.getLogger(__name__)

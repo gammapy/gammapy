@@ -1,5 +1,9 @@
 from .core import IRF
 
+__all__ = [
+    "RadMax2D",
+]
+
 
 class RadMax2D(IRF):
     """2D Rad Max table.

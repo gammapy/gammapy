@@ -26,9 +26,9 @@ from regions import (
 )
 
 __all__ = [
-    "make_orthogonal_rectangle_sky_regions",
-    "make_concentric_annulus_sky_regions",
     "compound_region_to_regions",
+    "make_concentric_annulus_sky_regions",
+    "make_orthogonal_rectangle_sky_regions",
     "regions_to_compound_region",
 ]
 

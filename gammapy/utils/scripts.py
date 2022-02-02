@@ -10,10 +10,10 @@ import yaml
 __all__ = [
     "get_images_paths",
     "get_notebooks_paths",
-    "read_yaml",
-    "write_yaml",
     "make_path",
+    "read_yaml",
     "recursive_merge_dicts",
+    "write_yaml",
 ]
 
 PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"

@@ -12,7 +12,10 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-__all__ = ["find_peaks", "estimate_exposure_reco_energy"]
+__all__ = [
+    "estimate_exposure_reco_energy",
+    "find_peaks",
+]
 
 
 def find_peaks(image, threshold, min_distance=1):

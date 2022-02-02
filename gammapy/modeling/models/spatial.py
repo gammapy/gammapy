@@ -22,9 +22,25 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
 
+
+__all__ = [
+    "ConstantFluxSpatialModel",
+    "ConstantSpatialModel",
+    "DiskSpatialModel",
+    "GaussianSpatialModel",
+    "GeneralizedGaussianSpatialModel",
+    "PointSpatialModel",
+    "Shell2SpatialModel",
+    "ShellSpatialModel",
+    "SpatialModel",
+    "TemplateSpatialModel",
+]
+
+
 log = logging.getLogger(__name__)
 
 MAX_OVERSAMPLING = 200
+
 
 
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
