@@ -24,16 +24,16 @@ from .core import ModelBase
 
 
 __all__ = [
-    'ConstantFluxSpatialModel',
-    'ConstantSpatialModel',
-    'DiskSpatialModel',
-    'GaussianSpatialModel',
-    'GeneralizedGaussianSpatialModel',
-    'PointSpatialModel',
-    'Shell2SpatialModel',
-    'ShellSpatialModel',
-    'SpatialModel',
-    'TemplateSpatialModel',
+    "ConstantFluxSpatialModel",
+    "ConstantSpatialModel",
+    "DiskSpatialModel",
+    "GaussianSpatialModel",
+    "GeneralizedGaussianSpatialModel",
+    "PointSpatialModel",
+    "Shell2SpatialModel",
+    "ShellSpatialModel",
+    "SpatialModel",
+    "TemplateSpatialModel",
 ]
 
 
