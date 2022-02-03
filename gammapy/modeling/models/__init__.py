@@ -38,6 +38,7 @@ from .spectral import (
     LogParabolaSpectralModel,
     LogParabolaNormSpectralModel,
     TemplateSpectralModel,
+    TemplateNDSpectralModel,
     ScaleSpectralModel,
     EBLAbsorptionNormSpectralModel,
     NaimaSpectralModel,
@@ -118,6 +119,7 @@ __all__ = [
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
     "TemplateSpatialModel",
     "TemplateSpectralModel",
+    "TemplateNDSpectralModel",
     "TemporalModel",
 ]
 
@@ -151,6 +153,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         SuperExpCutoffPowerLaw4FGLSpectralModel,
         LogParabolaSpectralModel,
         TemplateSpectralModel,
+        TemplateNDSpectralModel,
         GaussianSpectralModel,
         EBLAbsorptionNormSpectralModel,
         NaimaSpectralModel,
