@@ -19,6 +19,9 @@ from gammapy.utils.interpolation import (
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
+import os, logging
+
+log = logging.getLogger(__name__)
 
 
 __all__ = [
@@ -1558,6 +1561,105 @@ class TemplateSpectralModel(SpectralModel):
         energy = map.geom.axes["energy_true"].center
         values = map.quantity[:, 0, 0]
         return cls(energy=energy, values=values, **kwargs)
+
+
+class TemplateNDSpectralModel(SpectralModel):
+    """A model generated from a ND map where extra dimensions define the parameter space.
+
+    For more information see :ref:`templateND-spectral-model`.
+
+    Parameters
+    ----------
+    map : `~gammapy.maps.RegionNDMap`
+        Map template. 
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
+    interp_kwargs : dict
+        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
+        Default arguments are {'interp': 'linear', 'fill_value': 0}.
+    """
+
+    tag = ["TemplateNDSpectralModel", "templateND"]
+
+    def __init__(self, map, interp_kwargs=None, meta=None, filename=None):
+        self._map = map.copy()
+        self.meta = dict() if meta is None else meta
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
+
+        points_scale = [
+            "lin",
+            "lin",
+            "log",
+        ]
+        parameters = []
+        has_energy = False
+        for axis in map.geom.axes:
+            if axis.name not in ["energy_true", "energy"]:
+                center = (axis.bounds[1] + axis.bounds[0]) / 2
+                parameter = Parameter(
+                    name=axis.name,
+                    value=center,
+                    unit=axis.unit,
+                    scale_method="scale10",
+                    min=axis.bounds[0],
+                    max=axis.bounds[-1],
+                    interp=axis.interp,
+                )
+                points_scale.append(axis.interp)
+                parameters.append(parameter)
+            else:
+                has_energy|=True
+        if not has_energy:
+            raise ValueError("Invalid map, no energy axis found")
+
+        self.default_parameters = Parameters(parameters)
+
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault("values_scale", "log")
+        interp_kwargs.setdefault("points_scale", points_scale)
+        self._interp_kwargs = interp_kwargs
+        super().__init__()
+
+    @property
+    def map(self):
+        """Template map  (`~gammapy.maps.RegionNDMap`)"""
+        return self._map
+
+    def evaluate(self, energy, **kwargs):
+        coord = {"energy_true": energy}
+        coord.update(kwargs)
+
+        pixels = [0,0] + [self.map.geom.axes[key].coord_to_pix(value) for key, value in coord.items()]
+
+        val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
+        return u.Quantity(val, self.map.unit, copy=False)
+
+
+    def write(self, overwrite=False):
+        if self.filename is None:
+            raise IOError("Missing filename")
+        elif os.path.isfile(self.filename) and not overwrite:
+            log.warning("Template file already exits, and overwrite is False")
+        else:
+            self.map.write(self.filename)
+
+    @classmethod
+    def from_dict(cls, data):
+        filename = data["filename"]
+        m = RegionNDMap.read(filename)
+        model = cls(m, filename=filename)
+        for idx, p in enumerate(model.parameters):
+            p.value = data["spectral"]["parameters"][idx]["value"]
+        return model
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serilisation"""
+        data = super().to_dict(full_output)
+        data["filename"] = self.filename
+        data["unit"] = str(self.map.unit)
+        return data
 
 
 class ScaleSpectralModel(SpectralModel):
