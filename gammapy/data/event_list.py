@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 class EventList:
     """Event list.
 
-    Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
+    Event list data is stored as ``table`` (`~astropy.table.Table`) data member.
 
     The most important reconstructed event parameters
     are available as the following columns:
@@ -53,6 +53,32 @@ class EventList:
     ----------
     table : `~astropy.table.Table`
         Event list table
+
+    Examples:
+    ---------
+    >>> from gammapy.data import EventList
+    >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+    >>> print(events)
+    EventList
+    ---------
+    <BLANKLINE>
+      Instrument       : None
+      Telescope        : CTA
+      Obs. ID          : 110380
+    <BLANKLINE>
+      Number of events : 106217
+      Event rate       : 59.273 1 / s
+    <BLANKLINE>
+      Time start       : 59235.5
+      Time stop        : 59235.52074074074
+    <BLANKLINE>
+      Min. energy      : 3.00e-02 TeV
+      Max. energy      : 1.46e+02 TeV
+      Median energy    : 1.02e-01 TeV
+    <BLANKLINE>
+      Max. offset      : 5.0 deg
+    <BLANKLINE>
+
     """
 
     def __init__(self, table):
@@ -202,15 +228,20 @@ class EventList:
 
         Examples
         --------
-        Use a boolean mask as ``row_specifier``:
 
-            mask = events.table['FOO'] > 42
-            events2 = events.select_row_subset(mask)
-
-        Use row index array as ``row_specifier``:
-
-            idx = np.where(events.table['FOO'] > 42)[0]
-            events2 = events.select_row_subset(idx)
+        >>> from gammapy.data import EventList
+        >>> import numpy as np
+        >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+        >>> #Use a boolean mask as ``row_specifier``:
+        >>> mask = events.table['MC_ID'] == 1
+        >>> events2 = events.select_row_subset(mask)
+        >>> print(len(events2.table))
+        97978
+        >>> #Use row index array as ``row_specifier``:
+        >>> idx = np.where(events.table['MC_ID'] == 1)[0]
+        >>> events2 = events.select_row_subset(idx)
+        >>> print(len(events2.table))
+        97978
         """
         table = self.table[row_specifier]
         return self.__class__(table=table)
@@ -303,6 +334,8 @@ class EventList:
         >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
         >>> zd = (0, 30) * u.deg
         >>> event_list = event_list.select_parameter(parameter='ZENITH_ANGLE', band=zd)
+        >>> print(len(event_list.table))
+        123944
         """
         mask = band[0] <= self.table[parameter].quantity
         mask &= self.table[parameter].quantity < band[1]
@@ -423,13 +456,10 @@ class EventList:
 
         >>> from gammapy.data import EventList
         >>> from astropy import units as u
-        >>> import matplotlib.pyplot as plt
         >>> events = EventList.read('$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
 
-        Plot the offset^2 distribution wrt. the observation pointing position
-        (this is a commonly used plot to check the background spatial distribution):
-
-        >>> plt.cla()
+        >>> #Plot the offset^2 distribution wrt. the observation pointing position
+        >>> #(this is a commonly used plot to check the background spatial distribution):
         >>> events.plot_offset2_distribution()
         <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
 
@@ -440,7 +470,6 @@ class EventList:
         >>> from astropy.coordinates import SkyCoord
         >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
         >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30) * u.deg ** 2
-        >>> plt.cla()
         >>> events.plot_offset2_distribution(center=center, bins=bins)
         <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
 
@@ -554,6 +583,22 @@ class EventList:
         ----------
         mask : `~gammapy.maps.Map`
             Mask
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+
+        Examples
+        --------
+        >>> from gammapy.data import EventList
+        >>> from gammapy.maps import WcsGeom, Map
+        >>> geom = WcsGeom.create(skydir=(0,0), width=(4, 4), frame="galactic")
+        >>> mask = geom.region_mask("galactic;circle(0, 0, 0.5)")
+        >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+        >>> masked_event = events.select_mask(mask)
+        >>> len(masked_event.table)
+        5594
         """
         coord = self.map_coord(mask.geom)
         values = mask.get_by_coord(coord)
@@ -657,6 +702,16 @@ class EventList:
         -------
         event_list : `EventList`
             Copy of event list with selection applied.
+
+        Examples
+        --------
+        >>> from gammapy.data import EventList
+        >>> import astropy.units as u
+        >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+        >>> selected_events = events.select_offset([0.3, 0.9]*u.deg)
+        >>> len(selected_events.table)
+        12688
+
         """
         offset = self.offset
         mask = offset_band[0] <= offset
