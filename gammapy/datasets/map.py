@@ -871,7 +871,7 @@ class MapDataset(Dataset):
         -------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> kwargs = {"cmap": "gnuplot2", "add_cbar": True}
+        >>> kwargs = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
         >>> dataset.plot_residuals_spatial(method="diff/sqrt(model)", **kwargs) # doctest: +SKIP
         """
         counts, npred = self.counts.copy(), self.npred()
@@ -1022,7 +1022,7 @@ class MapDataset(Dataset):
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> reg = CircleSkyRegion(SkyCoord(0,0, unit="deg", frame="galactic"), radius=1.0*u.deg)
-        >>> kwargs_spatial = {"cmap": "gnuplot2", "add_cbar": True}
+        >>> kwargs_spatial = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
         >>> kwargs_spectral = {"region":reg, "markerfacecolor": "blue", "markersize":8, "marker":'s'}
         >>> dataset.plot_residuals(kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral) # doctest: +SKIP
         """
