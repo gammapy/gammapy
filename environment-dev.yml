@@ -29,7 +29,7 @@ dependencies:
   - scipy
   # test dependencies
   - codecov
-  - pytest
+  - pytest=6
   - pytest-astropy
   - pytest-cov
   - pytest-xdist

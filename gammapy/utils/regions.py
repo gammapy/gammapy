@@ -51,6 +51,9 @@ def compound_region_center(compound_region):
         Geometric median of the positions of the individual regions
     """
     regions = compound_region_to_regions(compound_region)
+    if len(regions) == 1:
+        return regions[0].center
+
     positions = SkyCoord([region.center for region in regions])
 
     def f(x, coords):
@@ -61,11 +64,18 @@ def compound_region_center(compound_region):
 
     ra, dec = positions.icrs.ra.wrap_at("180d").deg, positions.icrs.dec.deg
 
+
+
+    bounds = [
+        (np.min(ra), np.max(ra)),
+        (np.min(dec), np.max(dec)),
+    ]
+
     result = minimize(
         f,
         x0=[np.mean(ra), np.mean(dec)],
         args=(positions,),
-        bounds=[(np.min(ra), np.max(ra)), (np.min(dec), np.max(dec))],
+        bounds=bounds,
         method="L-BFGS-B",
     )
 
