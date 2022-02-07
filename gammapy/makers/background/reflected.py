@@ -11,7 +11,12 @@ from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker
 from ..utils import make_counts_off_rad_max
 
-__all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundMaker"]
+__all__ = [
+    "ReflectedRegionsBackgroundMaker",
+    "ReflectedRegionsFinder",
+    "RegionsFinder",
+    "WobbleRegionsFinder",
+]
 
 log = logging.getLogger(__name__)
 
@@ -19,11 +24,21 @@ FULL_CIRCLE = Angle(2 * np.pi, "rad")
 
 
 class RegionsFinder(metaclass=ABCMeta):
-    '''Baseclass for regions finders'''
+    '''Baseclass for regions finders
+
+
+    Parameters
+    ----------
+    binsz : `~astropy.coordinates.Angle`
+        Bin size of the reference map used for region finding.
+    '''
+    def __init__(self, binsz=0.01 * u.deg):
+        '''Create a new RegionFinder'''
+        self.binsz = Angle(binsz)
 
     @abstractmethod
     def run(self, region, center, exclusion_mask=None):
-        """Find regions to calculate background counts.
+        """Find reflected regions.
 
         Parameters
         ----------
@@ -32,7 +47,8 @@ class RegionsFinder(metaclass=ABCMeta):
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
         exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
-            Exclusion mask
+            Exclusion mask. Regions intersecting with this mask will not be
+            included in the returned regions.
 
         Returns
         -------
@@ -41,6 +57,119 @@ class RegionsFinder(metaclass=ABCMeta):
         wcs: `~astropy.wcs.WCS`
             WCS for the determined regions
         """
+
+    def _create_reference_geometry(self, region, center):
+        """Reference geometry
+
+        The size of the map is chosen such that all reflected regions are
+        contained on the image.
+        To do so, the reference map width is taken to be 4 times the distance between
+        the target region center and the rotation point. This distance is larger than
+        the typical dimension of the region itself (otherwise the rotation point would
+        lie inside the region). A minimal width value is added by default in case the
+        region center and the rotation center are too close.
+
+        The WCS of the map is the TAN projection at the `center` in the coordinate
+        system used by the `region` center.
+        """
+        frame = region.center.frame.name
+
+        # width is the full width of an image (not the radius)
+        width = 4 * region.center.separation(center) + Angle("0.3 deg")
+
+        return WcsGeom.create(
+            skydir=center, binsz=self.binsz, width=width, frame=frame, proj="TAN"
+        )
+
+    @staticmethod
+    def _get_center_pixel(center, reference_geom):
+        """Center pix coordinate"""
+        return PixCoord.from_sky(center, reference_geom.wcs)
+
+    @staticmethod
+    def _get_region_pixels(region, reference_geom):
+        """Pixel region"""
+        return region.to_pixel(reference_geom.wcs)
+
+    @staticmethod
+    def _exclusion_mask_ref(reference_geom, exclusion_mask):
+        """Exclusion mask reprojected"""
+        if exclusion_mask:
+            mask = exclusion_mask.interp_to_geom(reference_geom, fill_value=True)
+        else:
+            mask = WcsNDMap.from_geom(geom=reference_geom, data=True)
+        return mask
+
+    @staticmethod
+    def _get_excluded_pixels(reference_geom, exclusion_mask):
+        """Excluded pix coords"""
+        # find excluded PixCoords
+        exclusion_mask = ReflectedRegionsFinder._exclusion_mask_ref(
+            reference_geom, exclusion_mask,
+        )
+        pix_y, pix_x = np.nonzero(~exclusion_mask.data)
+        return PixCoord(pix_x, pix_y)
+
+
+
+class WobbleRegionsFinder(RegionsFinder):
+    """Find the OFF regions symmetric to the ON region
+
+    This is a simpler version of the `ReflectedRegionsFinder`, that
+    will place ``n_off_regions`` regions at symmetric positions on the 
+    circle created by the center position and the on region.
+
+    Parameters
+    ----------
+    n_off_regions: int
+        Number of off regions to create. Actual number of off regions
+        might be smaller if an ``exclusion_mask`` is given to `WobbleRegionsFinder.run`
+    binsz : `~astropy.coordinates.Angle`
+        Bin size of the reference map used for region finding.
+    """
+    def __init__(self, n_off_regions, binsz=0.01 * u.deg):
+        super().__init__(binsz=binsz)
+        self.n_off_regions = n_off_regions
+
+    def run(self, region, center, exclusion_mask=None):
+        """Find off regions.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion`
+            Region to rotate
+        center : `~astropy.coordinates.SkyCoord`
+            Rotation point
+        exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+            Exclusion mask. Regions intersecting with this mask will not be
+            included in the returned regions.
+
+        Returns
+        -------
+        regions : list of `SkyRegion`
+            Reflected regions
+        wcs: `~astropy.wcs.WCS`
+            WCS for the determined regions
+        """
+        reference_geom = self._create_reference_geometry(region, center)
+        center_pixel = self._get_center_pixel(center, reference_geom)
+
+        region_pix = self._get_region_pixels(region, reference_geom)
+        excluded_pixels = self._get_excluded_pixels(reference_geom, exclusion_mask)
+
+        n_positions = self.n_off_regions + 1
+        increment = FULL_CIRCLE / n_positions
+
+        regions = []
+        for i in range(1, n_positions):
+            angle = i * increment
+            region_test = region_pix.rotate(center_pixel, angle)
+
+            if exclusion_mask is None or not np.any(region_test.contains(excluded_pixels)):
+                region = region_test.to_sky(reference_geom.wcs)
+                regions.append(region)
+
+        return regions, reference_geom.wcs
 
 
 class ReflectedRegionsFinder(RegionsFinder):
@@ -96,7 +225,7 @@ class ReflectedRegionsFinder(RegionsFinder):
         max_region_number=10000,
         binsz="0.01 deg",
     ):
-
+        super().__init__(binsz=binsz)
         self.angle_increment = Angle(angle_increment)
 
         if self.angle_increment <= Angle(0, "deg"):
@@ -107,39 +236,6 @@ class ReflectedRegionsFinder(RegionsFinder):
 
         self.max_region_number = max_region_number
         self.binsz = Angle(binsz)
-
-    def _create_reference_geometry(self, region, center):
-        """Reference geometry
-
-        The size of the map is chosen such that all reflected regions are
-        contained on the image.
-        To do so, the reference map width is taken to be 4 times the distance between
-        the target region center and the rotation point. This distance is larger than
-        the typical dimension of the region itself (otherwise the rotation point would
-        lie inside the region). A minimal width value is added by default in case the
-        region center and the rotation center are too close.
-
-        The WCS of the map is the TAN projection at the `center` in the coordinate
-        system used by the `region` center.
-        """
-        frame = region.center.frame.name
-
-        # width is the full width of an image (not the radius)
-        width = 4 * region.center.separation(center) + Angle("0.3 deg")
-
-        return WcsGeom.create(
-            skydir=center, binsz=self.binsz, width=width, frame=frame, proj="TAN"
-        )
-
-    @staticmethod
-    def _get_center_pixel(center, reference_geom):
-        """Center pix coordinate"""
-        return PixCoord.from_sky(center, reference_geom.wcs)
-
-    @staticmethod
-    def _get_region_pixels(region, reference_geom):
-        """Pixel region"""
-        return region.to_pixel(reference_geom.wcs)
 
     @staticmethod
     def _region_angular_size(region, reference_geom, center_pix):
@@ -167,24 +263,6 @@ class ReflectedRegionsFinder(RegionsFinder):
 
         return angular_size
 
-    @staticmethod
-    def _exclusion_mask_ref(reference_geom, exclusion_mask):
-        """Exclusion mask reprojected"""
-        if exclusion_mask:
-            mask = exclusion_mask.interp_to_geom(reference_geom, fill_value=True)
-        else:
-            mask = WcsNDMap.from_geom(geom=reference_geom, data=True)
-        return mask
-
-    @staticmethod
-    def _get_excluded_pixels(reference_geom, exclusion_mask):
-        """Excluded pix coords"""
-        # find excluded PixCoords
-        exclusion_mask = ReflectedRegionsFinder._exclusion_mask_ref(
-            reference_geom, exclusion_mask,
-        )
-        pix_y, pix_x = np.nonzero(~exclusion_mask.data)
-        return PixCoord(pix_x, pix_y)
 
     def _get_angle_range(self, region, reference_geom, center_pix):
         """Minimum and maximum angle"""
@@ -206,6 +284,9 @@ class ReflectedRegionsFinder(RegionsFinder):
             Region to rotate
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
+        exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+            Exclusion mask. Regions intersecting with this mask will not be
+            included in the returned regions.
 
         Returns
         -------
@@ -218,12 +299,13 @@ class ReflectedRegionsFinder(RegionsFinder):
 
         reference_geom = self._create_reference_geometry(region, center)
         center_pixel = self._get_center_pixel(center, reference_geom)
-        angle_min, angle_max = self._get_angle_range(
-            region=region, reference_geom=reference_geom, center_pix=center_pixel,
-        )
 
         region_pix = self._get_region_pixels(region, reference_geom)
         excluded_pixels = self._get_excluded_pixels(reference_geom, exclusion_mask)
+
+        angle_min, angle_max = self._get_angle_range(
+            region=region, reference_geom=reference_geom, center_pix=center_pixel,
+        )
 
         angle = angle_min + self.min_distance_input
         while angle < angle_max:

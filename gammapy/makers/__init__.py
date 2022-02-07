@@ -2,12 +2,14 @@ from gammapy.utils.registry import Registry
 
 from .core import Maker
 from .background import (
-    ReflectedRegionsFinder,
-    ReflectedRegionsBackgroundMaker,
     AdaptiveRingBackgroundMaker,
     FoVBackgroundMaker,
     PhaseBackgroundMaker,
+    ReflectedRegionsBackgroundMaker,
+    ReflectedRegionsFinder,
+    RegionsFinder,
     RingBackgroundMaker,
+    WobbleRegionsFinder,
 )
 
 from .map import MapDatasetMaker
@@ -40,7 +42,9 @@ __all__ = [
     "PhaseBackgroundMaker",
     "ReflectedRegionsBackgroundMaker",
     "ReflectedRegionsFinder",
+    "RegionsFinder",
     "RingBackgroundMaker",
     "SafeMaskMaker",
     "SpectrumDatasetMaker",
+    "WobbleRegionsFinder",
 ]

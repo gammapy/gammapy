@@ -15,6 +15,7 @@ from gammapy.datasets import SpectrumDataset
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
+    WobbleRegionsFinder,
     SpectrumDatasetMaker,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
@@ -246,3 +247,50 @@ def test_reflected_bkg_maker_no_off_background(reflected_bkg_maker, observations
 
     assert_allclose(datasets[0].counts_off.data, 0)
     assert_allclose(datasets[0].acceptance_off, 0)
+
+
+def test_wobble_regions_finder():
+    source_angle = 35 * u.deg
+
+    on_region = CircleSkyRegion(
+        center=SkyCoord.from_name("Crab"),
+        radius=0.15 * u.deg,
+    )
+    pointing = on_region.center.directional_offset_by(
+        separation=0.4 * u.deg,
+        position_angle=180 * u.deg + source_angle,
+    )
+
+    assert u.isclose(pointing.position_angle(on_region.center).to(u.deg), source_angle, rtol=0.05)
+    n_off_regions = 3
+
+    finder = WobbleRegionsFinder(n_off_regions)
+    regions, _ = finder.run(on_region, pointing)
+
+    assert len(regions) == 3
+
+    for i, off_region in enumerate(regions, start=1):
+        assert u.isclose(pointing.separation(off_region.center), 0.4 * u.deg)
+        expected = source_angle + 360 * u.deg * i / (n_off_regions + 1)
+        assert u.isclose(
+            pointing.position_angle(off_region.center).to(u.deg),
+            expected.to(u.deg),
+            rtol=0.001,
+        )
+
+    # test with exclusion region
+    pos = pointing.directional_offset_by(
+        separation=0.4 * u.deg,
+        position_angle=source_angle + 90 * u.deg,
+    )
+    exclusion_region = CircleSkyRegion(pos, Angle(0.2, "deg"))
+    geom = WcsGeom.create(skydir=pos, binsz=0.01, width=10.0)
+    exclusion_mask = ~geom.region_mask([exclusion_region])
+
+    finder = WobbleRegionsFinder(n_off_regions)
+    regions, _ = finder.run(on_region, pointing, exclusion_mask)
+
+    print(exclusion_region.center)
+    for region in regions:
+        print(region.center)
+    assert len(regions) == 2
