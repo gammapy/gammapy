@@ -245,14 +245,14 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_hdu="full-enclosure"):
+    def obs(self, obs_id, required_irf="full-enclosure"):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
         ----------
         obs_id : int
             Observation ID.
-        required_hdu : list of str
+        required_irf : list of str
             The list can inlcude the following options:
             * `events` : Events
             * `gti` :  Good time intervals
@@ -273,15 +273,19 @@ class DataStore:
 
         kwargs = {"obs_id": int(obs_id)}
 
-        if required_hdu == "full-enclosure":
-            required_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
-        for hdu in required_hdu:
+        if required_irf == "full-enclosure":
+            hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+        elif required_irf == "point-like":
+            hdus = ["events", "gti", "aeff", "edisp"]
+        else:
+            hdus = ["events", "gti"] + required_irf
+        for hdu in hdus:
             kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 
         return Observation(**kwargs)
 
 
-    def get_observations(self, obs_id=None, skip_missing=False, required_hdu="full-enclosure"):
+    def get_observations(self, obs_id=None, skip_missing=False, required_irf="full-enclosure"):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -290,7 +294,7 @@ class DataStore:
             Observation IDs (default of ``None`` means "all")
         skip_missing : bool, optional
             Skip missing observations, default: False
-        required_hdu : list of str or str
+        required_irf : list of str or str
             Runs will be added to the list of observations only if the
             required HDUs are present. Otherwise, the given run will be skipped
             The list can inlcude the following options:
@@ -312,20 +316,19 @@ class DataStore:
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`
         """
-        full_enclosure = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
-        point_like = ["events", "gti", "aeff", "edisp"]
-        all_hdu = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
-        is_all_optinal = required_hdu == "all-optional"
-        
-        if required_hdu == "full-enclosure":
-            required_hdu = full_enclosure
-        if required_hdu == "point-like":
-            required_hdu = point_like
-        if required_hdu == "all-optional":
-            required_hdu = all_hdu
 
-        if not set(required_hdu).issubset(all_hdu):
-            difference = set(required_hdu).difference(all_hdu)
+        all_hdu = ["aeff", "edisp", "psf", "bkg", "rad_max"]
+        is_all_optinal = required_irf == "all-optional"
+        
+        if required_irf == "full-enclosure":
+            required_irf = ["aeff", "edisp", "psf", "bkg"]
+        elif required_irf == "point-like":
+            required_irf = ["aeff", "edisp"]
+        elif required_irf == "all-optional":
+            required_irf = all_hdu
+
+        if not set(required_irf).issubset(all_hdu):
+            difference = set(required_irf).difference(all_hdu)
             raise ValueError(
                 f"{difference} is not a valid hdu key. Choose from: {all_hdu}"
             )
@@ -337,7 +340,7 @@ class DataStore:
 
         for _ in obs_id:
             try:
-                obs = self.obs(_, required_hdu)
+                obs = self.obs(_, required_irf)
             except ValueError as err:
                 if skip_missing:
                     log.warning(f"Skipping missing obs_id: {_!r}")
@@ -345,7 +348,7 @@ class DataStore:
                 else:
                     raise err
 
-            if is_all_optinal or set(required_hdu).issubset(obs.available_hdus):
+            if is_all_optinal or set(required_irf).issubset(obs.available_hdus):
                 obs_list.append(obs)
             else:
                 log.warning(f"Skipping run with missing HDUs; obs_id: {_!r}")
