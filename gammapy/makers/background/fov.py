@@ -157,25 +157,25 @@ class FoVBackgroundMaker(Maker):
         if not np.isfinite(value):
             log.warning(
                 f"FoVBackgroundMaker failed. Non-finite normalisation value for {dataset.name}. "
-                f"Setting mask to False."
+                "Setting mask to False."
             )
             return False
         elif total["bkg"] <= self.min_npred_background:
             log.warning(
                 f"FoVBackgroundMaker failed. Only {int(total['bkg'])} background counts outside exclusion mask for {dataset.name}. "
-                f"Setting mask to False."
+                "Setting mask to False."
             )
             return False
         elif total["counts"] <= self.min_counts:
             log.warning(
                 f"FoVBackgroundMaker failed. Only {int(total['counts'])} counts outside exclusion mask for {dataset.name}. "
-                f"Setting mask to False."
+                "Setting mask to False."
             )
             return False
         elif total["counts"] - not_bkg_tot <= 0:
             log.warning(
                 f"FoVBackgroundMaker failed. Negative residuals counts for {dataset.name}. "
-                f"Setting mask to False."
+                "Setting mask to False."
             )
             return False
         else:
@@ -235,7 +235,7 @@ class FoVBackgroundMaker(Maker):
             if not fit_result.success:
                 log.warning(
                     f"FoVBackgroundMaker failed. Fit did not converge for {dataset.name}. "
-                    f"Setting mask to False."
+                    "Setting mask to False."
                 )
                 dataset.mask_safe.data[...] = False
 
