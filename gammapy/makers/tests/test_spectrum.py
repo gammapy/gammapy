@@ -29,7 +29,7 @@ def observations_magic_dl3():
     """MAGIC DL3 observation list."""
     datastore = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic/")
     obs_ids = [5029748]
-    return datastore.get_observations(obs_ids, required_hdu=["events", "gti", "aeff", "edisp"])
+    return datastore.get_observations(obs_ids, required_irf=["aeff", "edisp"])
 
 
 @pytest.fixture
@@ -84,8 +84,7 @@ def reflected_regions_bkg_maker():
     exclusion_mask = ~geom.region_mask([exclusion_region])
 
     return ReflectedRegionsBackgroundMaker(
-        exclusion_mask=exclusion_mask,
-        min_distance_input="0.2 deg"
+        exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
     )
 
 

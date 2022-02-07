@@ -126,7 +126,7 @@ def test_get_observations_missing_irf():
     analysis = Analysis(config)
     analysis.config.observations.datastore = "$GAMMAPY_DATA/joint-crab/dl3/magic/"
     analysis.config.observations.obs_ids = ["05029748"]
-    analysis.config.observations.required_hdu = ["events", "gti", "aeff", "edisp"]
+    analysis.config.observations.required_irf = ["aeff", "edisp"]
     analysis.get_observations()
     assert len(analysis.observations) == 0
 
