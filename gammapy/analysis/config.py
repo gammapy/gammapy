@@ -137,14 +137,14 @@ class TimeRangeConfig(GammapyBaseConfig):
 
 class FluxPointsConfig(GammapyBaseConfig):
     energy: EnergyAxisConfig = EnergyAxisConfig()
-    source: str = "source"
+    source: str = "source"    #TODO: allow a list and run in parallel
     parameters: dict = {"selection_optional": "all"}
 
 
 class LightCurveConfig(GammapyBaseConfig):
     time_intervals: TimeRangeConfig = TimeRangeConfig()
     energy_edges: EnergyAxisConfig = EnergyAxisConfig()
-    source: str = "source"
+    source: str = "source" #TODO: allow a list and run in parallel
     parameters: dict = {"selection_optional": "all"}
 
 
@@ -153,7 +153,7 @@ class FitConfig(GammapyBaseConfig):
 
 
 class ExcessMapConfig(GammapyBaseConfig):
-    correlation_radius: AngleType = "0.1 deg"
+    correlation_radius: AngleType = "0.1 deg" #TODO: allow a list and run in parallel
     parameters: dict = {}
     energy_edges: EnergyAxisConfig = EnergyAxisConfig()
 
@@ -229,7 +229,8 @@ class LogConfig(GammapyBaseConfig):
 class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
     outdir: str = "."
-
+    #TODO: figdir, list of steps/workflow to execute on run, n_jobs
+    #TODO: add datasets/models filenames to start from there if exits
 
 class AnalysisConfig(GammapyBaseConfig):
     """Gammapy analysis configuration."""

@@ -19,6 +19,7 @@ from gammapy.makers import (
     RingBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
+    DatasetsMaker
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
@@ -30,45 +31,48 @@ __all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
 
+ANALYSIS_STEP_REGISTRY = [
+        #SimulationAnalysisStep,
+        DataReductionAnalysisStep,
+        ObservationsAnalysisStep,
+        DatasetsAnalysisStep,
+        ExcessMapAnalysisStep,
+        FitAnalysisStep,
+        #ModelSelectionAnalysisStep,
+        FluxPointsAnalysisStep,
+        LightCurveAnalysisStep,
+        #TSnullAnalysisStep,
+        ]
 
-class Analysis:
-    """Config-driven high level analysis interface.
+class AnalysisStep:
+    tag = "analysis-step"
+    def __init__(self, analysis, overwrite=True):
+        self.overwrite = overwrite
+        
+    @classmethod
+    def create(tag, analysis, **kwargs):
+        cls = ANALYSIS_STEP_REGISTRY.get_cls(tag)
+        return cls(analysis, **kwargs)
 
-    It is initialized by default with a set of configuration parameters and values declared in
-    an internal high level interface model, though the user can also provide configuration
-    parameters passed as a nested dictionary at the moment of instantiation. In that case these
-    parameters will overwrite the default values of those present in the configuration file.
+class DataReductionAnalysisStep(AnalysisStep):
+    tag = "data-reduction"
 
-    Parameters
-    ----------
-    config : dict or `AnalysisConfig`
-        Configuration options following `AnalysisConfig` schema
-    """
-
-    def __init__(self, config):
-        self.config = config
-        self.config.set_logging()
-        self.datastore = None
-        self.observations = None
-        self.datasets = None
-        self.models = None
-        self.fit = Fit()
-        self.fit_result = None
-        self.flux_points = None
-
-    @property
-    def config(self):
-        """Analysis configuration (`AnalysisConfig`)"""
-        return self._config
-
-    @config.setter
-    def config(self, value):
-        if isinstance(value, dict):
-            self._config = AnalysisConfig(**value)
-        elif isinstance(value, AnalysisConfig):
-            self._config = value
+    def run(self):
+        out = self.analysis.config.general.out
+        if os.path.isfile(out) and not self.overwrite:
+            self.analysis.datasets = Datasets.read(out)
+            self.log.info(f"Datasets loaded from {out} folder.")
         else:
-            raise TypeError("config must be dict or AnalysisConfig.")
+            ObservationsAnalysisStep(self.analysis, self.overwrite).run()
+            DatasetsAnalysisStep(self.analysis, self.overwrite).run()
+            self.analysis.datasets.write(out, overwrite=self.overwrite)
+            self.log.info(f"Datasets stored in {out} folder.")
+
+class ObservationsAnalysisStep(AnalysisStep):
+    tag = "observations"
+
+    def run(self):
+        self.get_observations()
 
     def _set_data_store(self):
         """Set the datastore on the Analysis object."""
@@ -144,6 +148,19 @@ class Analysis:
         for obs in self.observations:
             log.debug(obs)
 
+class DatasetsAnalysisStep(AnalysisStep):
+    tag = "datasets"
+
+    def run(self):
+        out = self.analysis.config.general.out
+        if os.path.isfile(out) and not self.overwrite:
+            self.analysis.datasets = Datasets.read(out)
+            self.log.info(f"Datasets loaded from {out} folder.")
+        else:
+            self.analysis.get_datasets()
+            self.analysis.datasets.write(out, overwrite=self.overwrite)
+            self.log.info(f"Datasets stored in {out} folder.")
+
     def get_datasets(self):
         """Produce reduced datasets."""
         datasets_settings = self.config.datasets
@@ -154,152 +171,7 @@ class Analysis:
             self._spectrum_extraction()
         else:  # 3d
             self._map_making()
-
-    def set_models(self, models):
-        """Set models on datasets.
-
-        Adds `FoVBackgroundModel` if not present already
-
-        Parameters
-        ----------
-        models : `~gammapy.modeling.models.Models` or str
-            Models object or YAML models string
-        """
-        if not self.datasets or len(self.datasets) == 0:
-            raise RuntimeError("Missing datasets")
-
-        log.info("Reading model.")
-        if isinstance(models, str):
-            self.models = Models.from_yaml(models)
-        elif isinstance(models, Models):
-            self.models = models
-        else:
-            raise TypeError(f"Invalid type: {models!r}")
-
-        self.models.extend(self.datasets.models)
-
-        if self.config.datasets.type == "3d":
-            for dataset in self.datasets:
-                if dataset.background_model is None:
-                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
-
-                self.models.append(bkg_model)
-
-        self.datasets.models = self.models
-
-        log.info(self.models)
-
-    def read_models(self, path):
-        """Read models from YAML file."""
-        path = make_path(path)
-        models = Models.read(path)
-        self.set_models(models)
-
-    def run_fit(self):
-        """Fitting reduced datasets to model."""
-        if not self.models:
-            raise RuntimeError("Missing models")
-
-        fit_settings = self.config.fit
-        for dataset in self.datasets:
-            if fit_settings.fit_range:
-                energy_min = fit_settings.fit_range.min
-                energy_max = fit_settings.fit_range.max
-                geom = dataset.counts.geom
-                dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
-
-        log.info("Fitting datasets.")
-        result = self.fit.run(datasets=self.datasets)
-        self.fit_result = result
-        log.info(self.fit_result)
-
-    def get_flux_points(self):
-        """Calculate flux points for a specific model component."""
-        if not self.datasets:
-            raise RuntimeError("No datasets set.")
-
-        fp_settings = self.config.flux_points
-        log.info("Calculating flux points.")
-        energy_edges = self._make_energy_axis(fp_settings.energy).edges
-        flux_point_estimator = FluxPointsEstimator(
-            energy_edges=energy_edges,
-            source=fp_settings.source,
-            fit=self.fit,
-            **fp_settings.parameters,
-        )
-
-        fp = flux_point_estimator.run(datasets=self.datasets)
-
-        self.flux_points = FluxPointsDataset(
-            data=fp, models=self.models[fp_settings.source]
-        )
-        cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "sqrt_ts"]
-        table = self.flux_points.data.to_table(sed_type="dnde")
-        log.info("\n{}".format(table[cols]))
-
-    def get_excess_map(self):
-        """Calculate excess map with respect to the current model."""
-        excess_settings = self.config.excess_map
-        log.info("Computing excess maps.")
-
-        if self.config.datasets.type == "1d":
-            raise ValueError("Cannot compute excess map for 1D dataset")
-
-        # Here we could possibly stack the datasets if needed.
-        if len(self.datasets) > 1:
-            raise ValueError("Datasets must be stacked to compute the excess map")
-
-        energy_edges = self._make_energy_axis(excess_settings.energy_edges)
-        if energy_edges is not None:
-            energy_edges = energy_edges.edges
-
-        excess_map_estimator = ExcessMapEstimator(
-            correlation_radius=excess_settings.correlation_radius,
-            energy_edges=energy_edges,
-            **excess_settings.parameters,
-        )
-        self.excess_map = excess_map_estimator.run(self.datasets[0])
-
-    def get_light_curve(self):
-        """Calculate light curve for a specific model component."""
-        lc_settings = self.config.light_curve
-        log.info("Computing light curve.")
-        energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
-
-        if (
-            lc_settings.time_intervals.start is None
-            or lc_settings.time_intervals.stop is None
-        ):
-            log.info(
-                "Time intervals not defined. Extract light curve on datasets GTIs."
-            )
-            time_intervals = None
-        else:
-            time_intervals = [
-                (t1, t2)
-                for t1, t2 in zip(
-                    lc_settings.time_intervals.start, lc_settings.time_intervals.stop
-                )
-            ]
-
-        light_curve_estimator = LightCurveEstimator(
-            time_intervals=time_intervals,
-            energy_edges=energy_edges,
-            source=lc_settings.source,
-            fit=self.fit,
-            **lc_settings.parameters,
-        )
-        lc = light_curve_estimator.run(datasets=self.datasets)
-        self.light_curve = lc
-        log.info(
-            "\n{}".format(
-                self.light_curve.to_table(format="lightcurve", sed_type="flux")
-            )
-        )
-
-    def update_config(self, config):
-        self.config = self.config.update(config=config)
-
+            
     @staticmethod
     def _create_wcs_geometry(wcs_geom_settings, axes):
         """Create the WCS geometry."""
@@ -445,37 +317,19 @@ class Analysis:
         maker = self._create_dataset_maker()
         maker_safe_mask = self._create_safe_mask_maker()
         bkg_maker = self._create_background_maker()
-
+        makers = [maker, maker_safe_mask, bkg_maker]
+        if bkg_maker is not None:
+            makers.append(bkg_maker)
         log.info("Start the data reduction loop.")
-
-        if datasets_settings.stack:
-            for obs in progress_bar(self.observations, desc="Observations"):
-                log.debug(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
-
-                    if bkg_maker.tag == "RingBackgroundMaker":
-                        dataset = dataset.to_map_dataset()
-
-                log.debug(dataset)
-                stacked.stack(dataset)
-            datasets = [stacked]
-        else:
-            datasets = []
-
-            for obs in progress_bar(self.observations, desc="Observations"):
-                log.debug(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
-                log.debug(dataset)
-                datasets.append(dataset)
-        self.datasets = Datasets(datasets)
+        
+        datasets_maker = DatasetsMaker(makers,
+                                      stack_datasets=datasets_settings.stack,
+                                      n_jobs=None,
+                                      cutout_mode='partial',
+                                      cutout_width=2 * offset_max)
+        #TODO: read n_jobs from general config
+        self.datasets = datasets_maker.run(stacked, self.observations)
+        #TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
@@ -523,3 +377,215 @@ class Analysis:
                 interp="log",
                 node_type="edges",
             )
+
+class ExcessMapAnalysisStep(AnalysisStep):
+    tag = "excess-map"
+    def run(self):
+        """Calculate excess map with respect to the current model."""
+        excess_settings = self.config.excess_map
+        #TODO: allow a list of kernel sizes
+        log.info("Computing excess maps.")
+
+        if self.config.datasets.type == "1d":
+            raise ValueError("Cannot compute excess map for 1D dataset")
+
+        # Here we could possibly stack the datasets if needed.
+        if len(self.datasets) > 1:
+            raise ValueError("Datasets must be stacked to compute the excess map")
+
+        energy_edges = self._make_energy_axis(excess_settings.energy_edges)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+
+        excess_map_estimator = ExcessMapEstimator(
+            correlation_radius=excess_settings.correlation_radius,
+            energy_edges=energy_edges,
+            **excess_settings.parameters,
+        )
+        self.excess_map = excess_map_estimator.run(self.datasets[0])
+
+class FitAnalysisStep(AnalysisStep):
+    tag = "fit"
+    def run(self):
+        """Fitting reduced datasets to model."""
+        if not self.models:
+            raise RuntimeError("Missing models")
+    
+        fit_settings = self.config.fit
+        for dataset in self.datasets:
+            if fit_settings.fit_range:
+                energy_min = fit_settings.fit_range.min
+                energy_max = fit_settings.fit_range.max
+                #TODO : add fit range in lon/lat 
+                geom = dataset.counts.geom
+                dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
+    
+        log.info("Fitting datasets.")
+        result = self.fit.run(datasets=self.datasets)
+        self.fit_result = result
+        log.info(self.fit_result)
+
+
+class FluxPointsAnalysisStep(AnalysisStep):
+    tag="flux-points"
+    def run(self):
+        """Calculate flux points for a specific model component."""
+        if not self.datasets:
+            raise RuntimeError("No datasets set.")
+    
+        fp_settings = self.config.flux_points
+        log.info("Calculating flux points.")
+        energy_edges = self._make_energy_axis(fp_settings.energy).edges
+        flux_point_estimator = FluxPointsEstimator(
+            energy_edges=energy_edges,
+            source=fp_settings.source,
+            fit=self.fit,
+            **fp_settings.parameters,
+        )
+    
+        fp = flux_point_estimator.run(datasets=self.datasets)
+    
+        self.flux_points = FluxPointsDataset(
+            data=fp, models=self.models[fp_settings.source]
+        )
+        cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "sqrt_ts"]
+        table = self.flux_points.data.to_table(sed_type="dnde")
+        log.info("\n{}".format(table[cols]))
+
+class LightCurveAnalysisStep(AnalysisStep):
+    tag= "light-curve"
+    def run(self):
+        """Calculate light curve for a specific model component."""
+        lc_settings = self.config.light_curve
+        log.info("Computing light curve.")
+        energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
+
+        if (
+            lc_settings.time_intervals.start is None
+            or lc_settings.time_intervals.stop is None
+        ):
+            log.info(
+                "Time intervals not defined. Extract light curve on datasets GTIs."
+            )
+            time_intervals = None
+        else:
+            time_intervals = [
+                (t1, t2)
+                for t1, t2 in zip(
+                    lc_settings.time_intervals.start, lc_settings.time_intervals.stop
+                )
+            ]
+
+        light_curve_estimator = LightCurveEstimator(
+            time_intervals=time_intervals,
+            energy_edges=energy_edges,
+            source=lc_settings.source,
+            fit=self.fit,
+            **lc_settings.parameters,
+        )
+        lc = light_curve_estimator.run(datasets=self.datasets)
+        self.light_curve = lc
+        log.info(
+            "\n{}".format(
+                self.light_curve.to_table(format="lightcurve", sed_type="flux")
+            )
+        )
+
+
+class Analysis:
+    """Config-driven high level analysis interface.
+
+    It is initialized by default with a set of configuration parameters and values declared in
+    an internal high level interface model, though the user can also provide configuration
+    parameters passed as a nested dictionary at the moment of instantiation. In that case these
+    parameters will overwrite the default values of those present in the configuration file.
+
+    Parameters
+    ----------
+    config : dict or `AnalysisConfig`
+        Configuration options following `AnalysisConfig` schema
+    """
+
+    def __init__(self, config):
+        self.config = config
+        self.config.set_logging()
+        self.datastore = None
+        self.observations = None
+        self.datasets = None
+        self.models = None
+        #TODO: read models, read datasets if filename given
+        self.fit = Fit()
+        self.fit_result = None
+        self.flux_points = None
+
+    @property
+    def config(self):
+        """Analysis configuration (`AnalysisConfig`)"""
+        return self._config
+
+    @config.setter
+    def config(self, value):
+        if isinstance(value, dict):
+            self._config = AnalysisConfig(**value)
+        elif isinstance(value, AnalysisConfig):
+            self._config = value
+        else:
+            raise TypeError("config must be dict or AnalysisConfig.")
+
+    def update_config(self, config):
+        self.config = self.config.update(config=config)
+
+    def run(self):
+        steps = self.config.general.steps
+        for k,step in enumerate(steps):
+            if isinstance(self.config.general, list):
+                overwrite = self.config.general.overwrite[k]
+            else :
+                overwrite = self.config.general.overwrite
+            AnalysisStep.create(step, self, overwrite).run()
+
+
+    def set_models(self, models):
+        """Set models on datasets.
+
+        Adds `FoVBackgroundModel` if not present already
+
+        Parameters
+        ----------
+        models : `~gammapy.modeling.models.Models` or str
+            Models object or YAML models string
+        """
+        if not self.datasets or len(self.datasets) == 0:
+            raise RuntimeError("Missing datasets")
+
+        log.info("Reading model.")
+        if isinstance(models, str):
+            self.models = Models.from_yaml(models)
+        elif isinstance(models, Models):
+            self.models = models
+        else:
+            raise TypeError(f"Invalid type: {models!r}")
+
+        self.models.extend(self.datasets.models)
+
+        if self.config.datasets.type == "3d":
+            for dataset in self.datasets:
+                if dataset.background_model is None:
+                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+
+                self.models.append(bkg_model)
+
+        self.datasets.models = self.models
+
+        log.info(self.models)
+
+    def read_models(self, path):
+        """Read models from YAML file."""
+        path = make_path(path)
+        models = Models.read(path)
+        self.set_models(models)
+
+    #TODO: add read, read_datasets
+
+
+
