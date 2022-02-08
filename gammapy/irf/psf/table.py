@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import astropy.units as u
 from .core import PSF
 
 __all__ = ["PSF3D"]
@@ -28,3 +29,4 @@ class PSF3D(PSF):
 
     tag = "psf_table"
     required_axes = ["energy_true", "offset", "rad"]
+    default_unit = u.sr**-1

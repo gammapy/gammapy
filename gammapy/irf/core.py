@@ -44,7 +44,10 @@ class IRF(metaclass=abc.ABCMeta):
         self._axes = axes
         if isinstance(data, u.Quantity):
             self.data = data.value
-            self.unit = data.unit
+            if not self.default_unit.is_equivalent(data.unit):
+                raise ValueError(f"Error: {data.unit} is not an allowed unit. {self.tag} requires {self.default_unit} data quantities.")
+            else:
+                self.unit = data.unit
         else:
             self.data = data
             self.unit = unit

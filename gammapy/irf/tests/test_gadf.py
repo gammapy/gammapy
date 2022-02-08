@@ -39,7 +39,7 @@ def test_energy_dispersion_2d_to_gadf():
     energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, nbin=3, name='energy_true')
     offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name='offset')
     migra_axis = MapAxis.from_bounds(0.2, 5, nbin=5, interp='log', name='migra')
-    data = np.zeros((energy_axis.nbin, migra_axis.nbin, offset_axis.nbin)) * u.m**2
+    data = np.zeros((energy_axis.nbin, migra_axis.nbin, offset_axis.nbin))
 
     edisp = EnergyDispersion2D(data=data, axes=[energy_axis, migra_axis, offset_axis])
     hdu = edisp.to_table_hdu(format='gadf-dl3')

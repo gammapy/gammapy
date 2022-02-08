@@ -111,6 +111,21 @@ def test_wrong_axis_order():
             axes=[energy_axis_true, offset_axis], data=data, unit="cm2"
         )
 
+def test_wrong_units():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=10, name="energy_true"
+    )
+
+    offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name='offset')
+
+    wrong_unit = u.TeV
+    data = np.ones((energy_axis_true.nbin, offset_axis.nbin)) * wrong_unit
+    area_test = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis])
+
+    with pytest.raises(ValueError) as error:
+        EffectiveAreaTable2D(data=data, axes=[energy_axis_true, offset_axis])
+
+        assert error.match(f"Error: {wrong_unit} is not an allowed unit. {area_test.tag} requires {area_test.default_unit} data quantities.")
 
 @requires_data("gammapy-data")
 def test_aeff2d_pointlike():
