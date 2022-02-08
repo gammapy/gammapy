@@ -85,10 +85,11 @@ class TestEnergyDispersion2D:
 
         data = np.ones(shape=axes.shape)
         
+        edisp_test = EnergyDispersion2D(axes=axes)
         with pytest.raises(ValueError) as error:
             wrong_unit = u.m**2
-            edisp = EnergyDispersion2D(axes=axes, data=data * wrong_unit)
-            assert error.match(f"Error: {wrong_unit} is not an allowed unit. {edisp.tag} requires dimensionless data quantities!")
+            EnergyDispersion2D(axes=axes, data=data * wrong_unit)
+            assert error.match(f"Error: {wrong_unit} is not an allowed unit. {edisp_test.tag} requires {edisp_test.default_unit} data quantities.")
 
         edisp = EnergyDispersion2D(axes=axes, data=data)
 
