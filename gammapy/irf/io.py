@@ -205,17 +205,23 @@ def load_irf_dict_from_file(filename):
         dictionary with instances of the Gammapy objects corresponding
         to the IRF components
     """
+    from .rad_max import RadMax2D
+
     filename = make_path(filename)
 
     hdulist = fits.open(make_path(filename))
 
     irf_dict = {}
 
+    is_pointlike = False
+
     for hdu in hdulist:
         hdu_class = hdu.header.get("HDUCLAS1", "").lower()
 
         if hdu_class == "response":
             hdu_class = hdu.header.get("HDUCLAS4", "").lower()
+
+            is_pointlike |= hdu.header["HDUCLAS3"] == "POINT-LIKE"
 
             loc = HDULocation(
                 hdu_class=hdu_class,
@@ -237,4 +243,8 @@ def load_irf_dict_from_file(filename):
                     irf_dict[name] = data
         else:  # not an IRF component
             continue
+
+    if is_pointlike and "rad_max" not in irf_dict:
+        irf_dict["rad_max"] = RadMax2D.from_irf(irf_dict['aeff'])
+
     return irf_dict

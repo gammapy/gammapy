@@ -35,9 +35,9 @@ class Observation:
         Point spread function
     bkg : `~gammapy.irf.Background3D`
         Background rate model
-    rad_max: `~gammapy.irf.RadMax2D` or `~astropy.units.Quantity`
+    rad_max: `~gammapy.irf.RadMax2D`
         Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
-        or a single angle (global RAD_MAX)
+        For a fixed RAD_MAX, create a RadMax2D with a single bin.
     gti : `~gammapy.data.GTI`
         Table with GTI start and stop time
     events : `~gammapy.data.EventList`
@@ -50,7 +50,7 @@ class Observation:
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
     bkg = LazyFitsData(cache=False)
-    rad_max = LazyFitsData(cache=False)
+    _rad_max = LazyFitsData(cache=False)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=False)
 
@@ -73,10 +73,31 @@ class Observation:
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
-        self.rad_max = rad_max
+        self._rad_max = rad_max
         self._gti = gti
         self._events = events
         self.obs_filter = obs_filter or ObservationFilter()
+
+
+    @property
+    def rad_max(self):
+        # prevent circular import
+        from gammapy.irf import RadMax2D
+
+        if self._rad_max is not None:
+            return self._rad_max
+
+        # load once to avoid trigger lazy loading it three times
+        aeff = self.aeff
+        if aeff is not None and aeff.is_pointlike:
+            self._rad_max = RadMax2D.from_irf(aeff)
+            return self._rad_max
+
+        edisp = self.edisp
+        if edisp is not None and edisp.is_pointlike:
+            self._rad_max = RadMax2D.from_irf(self.edisp)
+
+        return self._rad_max
 
     @property
     def available_irfs(self):

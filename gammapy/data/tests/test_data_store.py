@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import numpy as np
 from astropy.io import fits
+import astropy.units as u
 from gammapy.data import DataStore
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -187,3 +188,29 @@ class TestDataStoreMaker:
         assert obs.bkg.__class__.__name__ == "Background3D"
         assert obs.edisp.__class__.__name__ == "EnergyDispersion2D"
         assert obs.psf.__class__.__name__ == "EnergyDependentMultiGaussPSF"
+
+
+@requires_data('gammapy-data')
+def test_datastore_fixed_rad_max():
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic")
+    observations = data_store.get_observations([5029748], required_irf=['aeff', 'edisp'])
+
+    assert len(observations) == 1
+    obs = observations[0]
+
+    assert obs.rad_max is not None
+    assert obs.rad_max.quantity.shape == (1, 1)
+    assert u.allclose(obs.rad_max.quantity, np.sqrt(0.02) * u.deg)
+
+    # test it also works with edisp (removing aeff)
+    obs = data_store.get_observations([5029748], required_irf=['aeff', 'edisp'])[0]
+    obs.aeff = None
+    assert obs.rad_max is not None
+    assert obs.rad_max.quantity.shape == (1, 1)
+    assert u.allclose(obs.rad_max.quantity, 0.1414213 * u.deg)
+
+    # removing the last irf means we have no rad_max info
+    obs = data_store.get_observations([5029748], required_irf=['aeff', 'edisp'])[0]
+    obs.aeff = None
+    obs.edisp = None
+    assert obs.rad_max is None
