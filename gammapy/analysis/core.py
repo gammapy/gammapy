@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API"""
+import abc
 import os
 import logging
 from astropy.coordinates import SkyCoord
@@ -27,36 +28,43 @@ from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
+from gammapy.utils.registry import Registry
 
 __all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
 
 
-class AnalysisStep:
+class AnalysisStepBase(abc.ABC):
     tag = "analysis-step"
     def __init__(self, analysis, overwrite=True):
         self.analysis = analysis
         self.overwrite = overwrite
-        
-    @classmethod
+
+    @abc.abstractmethod
+    def run(self):
+        pass
+    
+class AnalysisStep:
+    "Create one of the analysis step class listed in the registry"
+    @staticmethod
     def create(tag, analysis, **kwargs):
         cls = ANALYSIS_STEP_REGISTRY.get_cls(tag)
         return cls(analysis, **kwargs)
 
-class DataReductionAnalysisStep(AnalysisStep):
+class DataReductionAnalysisStep(AnalysisStepBase):
     tag = "data-reduction"
 
     def run(self):
         filepath = self.analysis.config.general.datasets_file
-        if os.path.exists(filepath) and not self.overwrite:
+        if filepath is not None and os.path.exists(filepath) and not self.overwrite:
             self.analysis.read_datasets()
         else:
             ObservationsAnalysisStep(self.analysis, self.overwrite).run()
             DatasetsAnalysisStep(self.analysis, self.overwrite).get_datasets()
             self.analysis.write_datasets()
 
-class ObservationsAnalysisStep(AnalysisStep):
+class ObservationsAnalysisStep(AnalysisStepBase):
     tag = "observations"
 
     def run(self):
@@ -132,12 +140,12 @@ class ObservationsAnalysisStep(AnalysisStep):
         return selected_obs_table["OBS_ID"].tolist()
 
 
-class DatasetsAnalysisStep(AnalysisStep):
+class DatasetsAnalysisStep(AnalysisStepBase):
     tag = "datasets"
 
     def run(self):
         filepath = self.analysis.config.general.datasets_file
-        if os.path.exists(filepath) and not self.overwrite:
+        if filepath is not None and os.path.exists(filepath) and not self.overwrite:
             self.analysis.read_datasets()
         else:
             self.get_datasets()
@@ -195,7 +203,7 @@ class DatasetsAnalysisStep(AnalysisStep):
         log.debug("Creating geometry.")
         datasets_settings = self.analysis.config.datasets
         geom_settings = datasets_settings.geom
-        axes = [self._make_energy_axis(geom_settings.axes.energy)]
+        axes = [make_energy_axis(geom_settings.axes.energy)]
         if datasets_settings.type == "3d":
             geom = self._create_wcs_geometry(geom_settings.wcs, axes)
         elif datasets_settings.type == "1d":
@@ -214,7 +222,7 @@ class DatasetsAnalysisStep(AnalysisStep):
         geom_settings = self.analysis.config.datasets.geom
         geom_irf = dict(energy_axis_true=None, binsz_irf=None)
         if geom_settings.axes.energy_true.min is not None:
-            geom_irf["energy_axis_true"] = self._make_energy_axis(
+            geom_irf["energy_axis_true"] = make_energy_axis(
                 geom_settings.axes.energy_true, name="energy_true"
             )
         if geom_settings.wcs.binsize_irf is not None:
@@ -300,16 +308,14 @@ class DatasetsAnalysisStep(AnalysisStep):
         maker_safe_mask = self._create_safe_mask_maker()
         bkg_maker = self._create_background_maker()
         makers = [maker, maker_safe_mask, bkg_maker]
-        if bkg_maker is not None:
-            makers.append(bkg_maker)
+        makers = [maker for maker in makers if maker is not None]
         log.info("Start the data reduction loop.")
         
         datasets_maker = DatasetsMaker(makers,
                                       stack_datasets=datasets_settings.stack,
-                                      n_jobs=None,
+                                      n_jobs=self.analysis.config.general.n_jobs,
                                       cutout_mode='partial',
                                       cutout_width=2 * offset_max)
-        #TODO: read n_jobs from general config
         self.analysis.datasets = datasets_maker.run(stacked, self.analysis.observations)
         #TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
 
@@ -343,24 +349,24 @@ class DatasetsAnalysisStep(AnalysisStep):
             stacked = self.analysis.datasets.stack_reduce(name="stacked")
             self.analysis.datasets = Datasets([stacked])
 
-    @staticmethod
-    def _make_energy_axis(axis, name="energy"):
-        if axis.min is None or axis.max is None:
-            return None
-        elif axis.nbins is None or axis.nbins < 1:
-            return None
-        else:
-            return MapAxis.from_bounds(
-                name=name,
-                lo_bnd=axis.min.value,
-                hi_bnd=axis.max.to_value(axis.min.unit),
-                nbin=axis.nbins,
-                unit=axis.min.unit,
-                interp="log",
-                node_type="edges",
-            )
 
-class ExcessMapAnalysisStep(AnalysisStep):
+def make_energy_axis(axis, name="energy"):
+    if axis.min is None or axis.max is None:
+        return None
+    elif axis.nbins is None or axis.nbins < 1:
+        return None
+    else:
+        return MapAxis.from_bounds(
+            name=name,
+            lo_bnd=axis.min.value,
+            hi_bnd=axis.max.to_value(axis.min.unit),
+            nbin=axis.nbins,
+            unit=axis.min.unit,
+            interp="log",
+            node_type="edges",
+        )
+
+class ExcessMapAnalysisStep(AnalysisStepBase):
     tag = "excess-map"
     def run(self):
         """Calculate excess map with respect to the current model."""
@@ -375,7 +381,7 @@ class ExcessMapAnalysisStep(AnalysisStep):
         if len(self.analysis.datasets) > 1:
             raise ValueError("Datasets must be stacked to compute the excess map")
 
-        energy_edges = self._make_energy_axis(excess_settings.energy_edges)
+        energy_edges = make_energy_axis(excess_settings.energy_edges)
         if energy_edges is not None:
             energy_edges = energy_edges.edges
 
@@ -386,7 +392,7 @@ class ExcessMapAnalysisStep(AnalysisStep):
         )
         self.analysis.excess_map = excess_map_estimator.run(self.analysis.datasets[0])
 
-class FitAnalysisStep(AnalysisStep):
+class FitAnalysisStep(AnalysisStepBase):
     tag = "fit"
     def run(self):
         """Fitting reduced datasets to model."""
@@ -408,7 +414,7 @@ class FitAnalysisStep(AnalysisStep):
         log.info(self.analysis.fit_result)
 
 
-class FluxPointsAnalysisStep(AnalysisStep):
+class FluxPointsAnalysisStep(AnalysisStepBase):
     tag="flux-points"
     def run(self):
         """Calculate flux points for a specific model component."""
@@ -417,7 +423,7 @@ class FluxPointsAnalysisStep(AnalysisStep):
     
         fp_settings = self.analysis.config.flux_points
         log.info("Calculating flux points.")
-        energy_edges = self._make_energy_axis(fp_settings.energy).edges
+        energy_edges = make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
@@ -434,13 +440,13 @@ class FluxPointsAnalysisStep(AnalysisStep):
         table = self.analysis.flux_points.data.to_table(sed_type="dnde")
         log.info("\n{}".format(table[cols]))
 
-class LightCurveAnalysisStep(AnalysisStep):
+class LightCurveAnalysisStep(AnalysisStepBase):
     tag= "light-curve"
     def run(self):
         """Calculate light curve for a specific model component."""
         lc_settings = self.analysis.config.light_curve
         log.info("Computing light curve.")
-        energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
+        energy_edges = make_energy_axis(lc_settings.energy_edges).edges
 
         if (
             lc_settings.time_intervals.start is None
@@ -473,7 +479,7 @@ class LightCurveAnalysisStep(AnalysisStep):
             )
         )
 
-ANALYSIS_STEP_REGISTRY = [
+ANALYSIS_STEP_REGISTRY = Registry([
         DataReductionAnalysisStep,
         ObservationsAnalysisStep,
         DatasetsAnalysisStep,
@@ -481,7 +487,7 @@ ANALYSIS_STEP_REGISTRY = [
         FitAnalysisStep,
         FluxPointsAnalysisStep,
         LightCurveAnalysisStep,
-        ]
+        ])
 
 class Analysis:
     """Config-driven high level analysis interface.
@@ -525,14 +531,22 @@ class Analysis:
     def update_config(self, config):
         self.config = self.config.update(config=config)
 
-    def run(self):
-        steps = self.config.general.steps
+    def run(self, steps=None, overwrite=None, **kwargs):
+        if steps is None:
+            steps = self.config.general.steps
+            overwrite = self.config.general.overwrite
+        else:
+            if overwrite is None:
+                overwrite = [True]*len(steps)
         for k,step in enumerate(steps):
-            if isinstance(self.config.general, list):
-                overwrite = self.config.general.overwrite[k]
+            if isinstance(overwrite, list):
+                overwrite_step = overwrite[k]
             else :
-                overwrite = self.config.general.overwrite
-            anlysis_step = AnalysisStep.create(step, self, overwrite)
+                overwrite_step = overwrite
+            anlysis_step = AnalysisStep.create(step,
+                                               self,
+                                               overwrite=overwrite_step,
+                                               **kwargs)
             anlysis_step.run()
 
     def set_models(self, models, extend=True):
@@ -574,11 +588,11 @@ class Analysis:
 
     def read_models(self, filename=None, extend=True):
         """Read models from YAML file."""
-        _, filename = self.update_datasets_files(filename_models=filename)
+        _, filename = self._update_datasets_files(filename_models=filename)
         if filename is not None :
             models = Models.read(filename)
             self.set_models(models, extend)
-            self.log.info(f"Models loaded from {filename}.")
+            log.info(f"Models loaded from {filename}.")
         else:
             self.models = None
  
@@ -587,8 +601,8 @@ class Analysis:
         filename, filename_models = self._update_datasets_files(filename, filename_models)
         if filename is not None:
             self.datasets = Datasets.read(filename, filename_models)
-            self.log.info(f"Datasets loaded from {filename}.")
-            self.log.info(f"Models loaded from {filename_models}.")
+            log.info(f"Datasets loaded from {filename}.")
+            log.info(f"Models loaded from {filename_models}.")
         else:
             self.datasets = None
 
@@ -601,20 +615,20 @@ class Analysis:
                                  filename_models,
                                  overwrite=True,
                                  write_covariance=True)
-            self.log.info(f"Datasets stored to {filename}.")
-            self.log.info(f"Datasets stored to {filename_models}.")
+            log.info(f"Datasets stored to {filename}.")
+            log.info(f"Datasets stored to {filename_models}.")
 
 
     def _update_datasets_files(self, filename=None, filename_models=None):
-        config = self.analysis.config
+        config = self.config
         if filename is None:
-            filename = self.analysis.config.general.datasets_file
+            filename = self.config.general.datasets_file
         else: 
             config.general.datasets_file = filename
-            self.update_config(self, config)
+            self.update_config(config)
         if filename_models is None:
-            filename_models = self.analysis.config.general.models_file
+            filename_models = self.config.general.models_file
         else: 
             config.general.models_file = filename_models
-            self.update_config(self, config)
+            self.update_config(config)
         return filename, filename_models

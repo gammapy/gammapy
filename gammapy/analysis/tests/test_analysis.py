@@ -55,7 +55,7 @@ def test_get_observations_no_datastore():
     analysis = Analysis(config)
     analysis.config.observations.datastore = "other"
     with pytest.raises(FileNotFoundError):
-        analysis.get_observations()
+        analysis.run(["observations"])
 
 
 @requires_data()
@@ -63,7 +63,7 @@ def test_get_observations_all():
     config = AnalysisConfig()
     analysis = Analysis(config)
     analysis.config.observations.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
-    analysis.get_observations()
+    analysis.run(["observations"])
     assert len(analysis.observations) == 4
 
 
@@ -73,7 +73,7 @@ def test_get_observations_obs_ids():
     analysis = Analysis(config)
     analysis.config.observations.datastore = "$GAMMAPY_DATA/cta-1dc/index/gps/"
     analysis.config.observations.obs_ids = ["110380"]
-    analysis.get_observations()
+    analysis.run(["observations"])
     assert len(analysis.observations) == 1
 
 
@@ -88,7 +88,7 @@ def test_get_observations_obs_cone():
         "lat": "22d",
         "radius": "5d",
     }
-    analysis.get_observations()
+    analysis.run(["observations"])
     assert len(analysis.observations) == 4
 
 
@@ -96,11 +96,11 @@ def test_get_observations_obs_cone():
 def test_get_observations_obs_file(tmp_path):
     config = AnalysisConfig()
     analysis = Analysis(config)
-    analysis.get_observations()
+    analysis.run(["observations"])
     filename = tmp_path / "obs_ids.txt"
     filename.write_text("20136\n47829\n")
     analysis.config.observations.obs_file = filename
-    analysis.get_observations()
+    analysis.run(["observations"])
     assert len(analysis.observations) == 2
 
 
@@ -112,11 +112,11 @@ def test_get_observations_obs_time(tmp_path):
         "start": "2004-03-26",
         "stop": "2004-05-26",
     }
-    analysis.get_observations()
+    analysis.run(["observations"])
     assert len(analysis.observations) == 40
     analysis.config.observations.obs_ids = [0]
     with pytest.raises(KeyError):
-        analysis.get_observations()
+        analysis.run(["observations"])
 
 
 @requires_data()
@@ -126,7 +126,7 @@ def test_get_observations_missing_irf():
     analysis.config.observations.datastore = "$GAMMAPY_DATA/joint-crab/dl3/magic/"
     analysis.config.observations.obs_ids = ["05029748"]
     analysis.config.observations.required_irf = ["aeff", "edisp"]
-    analysis.get_observations()
+    analysis.run(["observations"])
     assert len(analysis.observations) == 1
 
 
@@ -134,8 +134,8 @@ def test_get_observations_missing_irf():
 def test_set_models():
     config = get_example_config("1d")
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     models_str = Path(MODEL_FILE).read_text()
     analysis.set_models(models=models_str)
     assert isinstance(analysis.models, Models)
@@ -178,12 +178,12 @@ def test_analysis_1d():
     config = get_example_config("1d")
     analysis = Analysis(config)
     analysis.update_config(cfg)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     analysis.read_models(MODEL_FILE_1D)
-    analysis.run_fit()
-    analysis.get_flux_points()
-    analysis.get_light_curve()
+    analysis.run(["fit"])
+    analysis.run(["flux-points"])
+    analysis.run(["light-curve"])
 
     assert len(analysis.datasets) == 3
     table = analysis.flux_points.data.to_table(sed_type="dnde")
@@ -225,8 +225,8 @@ def test_geom_analysis_1d():
     config = get_example_config("1d")
     analysis = Analysis(config)
     analysis.update_config(cfg)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
 
     assert len(analysis.datasets) == 1
 
@@ -248,20 +248,20 @@ def test_exclusion_region(tmp_path):
     exclusion_mask.write(filename)
     config.datasets.background.method = "reflected"
     config.datasets.background.exclusion = filename
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     assert len(analysis.datasets) == 2
 
     config = get_example_config("3d")
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     geom = analysis.datasets[0]._geom
     exclusion_mask = ~geom.region_mask([region])
     filename = tmp_path / "exclusion3d.fits"
     exclusion_mask.write(filename)
     config.datasets.background.exclusion = filename
-    analysis.get_datasets()
+    analysis.run(["datasets"])
     assert len(analysis.datasets) == 1
 
 
@@ -290,12 +290,12 @@ def test_analysis_1d_stacked_no_fit_range():
     analysis = Analysis(config)
     analysis.update_config(cfg)
     analysis.config.datasets.stack = True
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     analysis.read_models(MODEL_FILE_1D)
-    analysis.run_fit()
+    analysis.run(["fit"])
     with pytest.raises(ValueError):
-        analysis.get_excess_map()
+        analysis.run(["excess-map"])
 
     assert len(analysis.datasets) == 1
     assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
@@ -313,9 +313,9 @@ def test_analysis_ring_background():
     config.datasets.background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
     config.datasets.geom.axes.energy.nbins = 1
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
-    analysis.get_excess_map()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
+    analysis.run(["excess-map"])
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
         analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
@@ -330,17 +330,17 @@ def test_analysis_ring_3d():
     config.datasets.background.method = "ring"
     config.datasets.background.parameters = {"r_in": "0.7 deg", "width": "0.7 deg"}
     analysis = Analysis(config)
-    analysis.get_observations()
+    analysis.run(["observations"])
     with pytest.raises(ValueError):
-        analysis.get_datasets()
+        analysis.run(["datasets"])
 
 
 @requires_data()
 def test_analysis_no_bkg_1d(caplog):
     config = get_example_config("1d")
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     assert not isinstance(analysis.datasets[0], SpectrumDatasetOnOff)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "No background maker set. Check configuration." in [
@@ -353,8 +353,8 @@ def test_analysis_no_bkg_3d(caplog):
     config = get_example_config("3d")
     config.datasets.background.method = None
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     assert isinstance(analysis.datasets[0], MapDataset)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "No background maker set. Check configuration." in [
@@ -367,12 +367,12 @@ def test_analysis_no_bkg_3d(caplog):
 def test_analysis_3d():
     config = get_example_config("3d")
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     analysis.read_models(MODEL_FILE)
     analysis.datasets["stacked"].background_model.spectral_model.tilt.frozen = False
-    analysis.run_fit()
-    analysis.get_flux_points()
+    analysis.run(["fit"])
+    analysis.run(["flux-points"])
 
     assert len(analysis.datasets) == 1
     assert len(analysis.models.parameters) == 8
@@ -394,8 +394,8 @@ def test_analysis_3d_joint_datasets():
     config = get_example_config("3d")
     config.datasets.stack = False
     analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
+    analysis.run(["observations"])
+    analysis.run(["datasets"])
     assert len(analysis.datasets) == 2
 
     assert_allclose(
@@ -417,12 +417,12 @@ def test_usage_errors():
     config = get_example_config("1d")
     analysis = Analysis(config)
     with pytest.raises(RuntimeError):
-        analysis.get_datasets()
+        analysis.run(["datasets"])
     with pytest.raises(RuntimeError):
         analysis.read_models(MODEL_FILE)
     with pytest.raises(RuntimeError):
-        analysis.run_fit()
+        analysis.run(["fit"])
     with pytest.raises(RuntimeError):
-        analysis.get_flux_points()
+        analysis.run(["flux-points"])
     with pytest.raises(ValidationError):
         analysis.config.datasets.type = "None"

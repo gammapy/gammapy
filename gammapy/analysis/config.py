@@ -236,12 +236,14 @@ class LogConfig(GammapyBaseConfig):
 
 class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
+    n_jobs: int = 1
     outdir: str = "."
     figdir: str = "."
     datasets_file: Path = None
     models_file: Path = None
-    steps: List[AnalysisStepEnum]
-    overwrite: List[bool] = [] #TODO check that len(steps)==len(overwrite)
+    steps: List[AnalysisStepEnum] = ["data-reduction", "excess-map", "fit", "flux-points"]
+    overwrite: List[bool] = [True, True, True, True]
+    #TODO check that len(steps)==len(overwrite) ? 
 
 class AnalysisConfig(GammapyBaseConfig):
     """Gammapy analysis configuration."""
