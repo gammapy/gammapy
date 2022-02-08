@@ -232,7 +232,6 @@ def test_bkg_3d_wrong_units():
 
     wrong_unit = u.cm**2 * u.s
     data = np.ones((2, 3, 3)) * wrong_unit
-    bkg3d_test = Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis])
     with pytest.raises(ValueError) as error:
         Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis],
                  data=data)
