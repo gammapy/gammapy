@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API"""
+import os
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -31,22 +32,11 @@ __all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
 
-ANALYSIS_STEP_REGISTRY = [
-        #SimulationAnalysisStep,
-        DataReductionAnalysisStep,
-        ObservationsAnalysisStep,
-        DatasetsAnalysisStep,
-        ExcessMapAnalysisStep,
-        FitAnalysisStep,
-        #ModelSelectionAnalysisStep,
-        FluxPointsAnalysisStep,
-        LightCurveAnalysisStep,
-        #TSnullAnalysisStep,
-        ]
 
 class AnalysisStep:
     tag = "analysis-step"
     def __init__(self, analysis, overwrite=True):
+        self.analysis = analysis
         self.overwrite = overwrite
         
     @classmethod
@@ -58,37 +48,56 @@ class DataReductionAnalysisStep(AnalysisStep):
     tag = "data-reduction"
 
     def run(self):
-        out = self.analysis.config.general.out
-        if os.path.isfile(out) and not self.overwrite:
-            self.analysis.datasets = Datasets.read(out)
-            self.log.info(f"Datasets loaded from {out} folder.")
+        filepath = self.analysis.config.general.datasets_file
+        if os.path.exists(filepath) and not self.overwrite:
+            self.analysis.read_datasets()
         else:
             ObservationsAnalysisStep(self.analysis, self.overwrite).run()
-            DatasetsAnalysisStep(self.analysis, self.overwrite).run()
-            self.analysis.datasets.write(out, overwrite=self.overwrite)
-            self.log.info(f"Datasets stored in {out} folder.")
+            DatasetsAnalysisStep(self.analysis, self.overwrite).get_datasets()
+            self.analysis.write_datasets()
 
 class ObservationsAnalysisStep(AnalysisStep):
     tag = "observations"
 
     def run(self):
-        self.get_observations()
+        """Fetch observations from the data store according to criteria defined in the configuration."""
+        observations_settings = self.analysis.config.observations
+        self._set_data_store()
+
+        log.info("Fetching observations.")
+        ids = self._make_obs_table_selection()
+
+        self.analysis.observations = self.analysis.datastore.get_observations(
+            ids, skip_missing=True, required_irf=observations_settings.required_irf
+        )
+
+        if observations_settings.obs_time.start is not None:
+            start = observations_settings.obs_time.start
+            stop = observations_settings.obs_time.stop
+            if len(start.shape) == 0:
+                time_intervals = [(start, stop)]
+            else:
+                time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
+            self.analysis.observations = self.analysis.observations.select_time(time_intervals)
+
+        for obs in self.analysis.observations:
+            log.debug(obs)
 
     def _set_data_store(self):
         """Set the datastore on the Analysis object."""
-        path = make_path(self.config.observations.datastore)
+        path = make_path(self.analysis.config.observations.datastore)
         if path.is_file():
             log.debug(f"Setting datastore from file: {path}")
-            self.datastore = DataStore.from_file(path)
+            self.analysis.datastore = DataStore.from_file(path)
         elif path.is_dir():
             log.debug(f"Setting datastore from directory: {path}")
-            self.datastore = DataStore.from_dir(path)
+            self.analysis.datastore = DataStore.from_dir(path)
         else:
             raise FileNotFoundError(f"Datastore not found: {path}")
 
     def _make_obs_table_selection(self):
         """Return list of obs_ids after filtering on datastore observation table."""
-        obs_settings = self.config.observations
+        obs_settings = self.analysis.config.observations
 
         # Reject configs with list of obs_ids and obs_file set at the same time
         if len(obs_settings.obs_ids) and obs_settings.obs_file is not None:
@@ -98,15 +107,15 @@ class ObservationsAnalysisStep(AnalysisStep):
 
         # First select input list of observations from obs_table
         if len(obs_settings.obs_ids):
-            selected_obs_table = self.datastore.obs_table.select_obs_id(
+            selected_obs_table = self.analysis.datastore.obs_table.select_obs_id(
                 obs_settings.obs_ids
             )
         elif obs_settings.obs_file is not None:
             path = make_path(obs_settings.obs_file)
             ids = list(Table.read(path, format="ascii", data_start=0).columns[0])
-            selected_obs_table = self.datastore.obs_table.select_obs_id(ids)
+            selected_obs_table = self.analysis.datastore.obs_table.select_obs_id(ids)
         else:
-            selected_obs_table = self.datastore.obs_table
+            selected_obs_table = self.analysis.datastore.obs_table
 
         # Apply cone selection
         if obs_settings.obs_cone.lon is not None:
@@ -122,49 +131,22 @@ class ObservationsAnalysisStep(AnalysisStep):
 
         return selected_obs_table["OBS_ID"].tolist()
 
-    def get_observations(self):
-        """Fetch observations from the data store according to criteria defined in the configuration."""
-        observations_settings = self.config.observations
-        self._set_data_store()
-
-        log.info("Fetching observations.")
-        ids = self._make_obs_table_selection()
-
-        self.observations = self.datastore.get_observations(
-            ids, skip_missing=True, required_irf=observations_settings.required_irf
-        )
-
-        if observations_settings.obs_time.start is not None:
-            start = observations_settings.obs_time.start
-            stop = observations_settings.obs_time.stop
-            if len(start.shape) == 0:
-                time_intervals = [(start, stop)]
-            else:
-                time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
-            self.observations = self.observations.select_time(time_intervals)
-
-        log.info(f"Number of selected observations: {len(self.observations)}")
-
-        for obs in self.observations:
-            log.debug(obs)
 
 class DatasetsAnalysisStep(AnalysisStep):
     tag = "datasets"
 
     def run(self):
-        out = self.analysis.config.general.out
-        if os.path.isfile(out) and not self.overwrite:
-            self.analysis.datasets = Datasets.read(out)
-            self.log.info(f"Datasets loaded from {out} folder.")
+        filepath = self.analysis.config.general.datasets_file
+        if os.path.exists(filepath) and not self.overwrite:
+            self.analysis.read_datasets()
         else:
-            self.analysis.get_datasets()
-            self.analysis.datasets.write(out, overwrite=self.overwrite)
-            self.log.info(f"Datasets stored in {out} folder.")
+            self.get_datasets()
+            self.analysis.write_datasets()
 
     def get_datasets(self):
         """Produce reduced datasets."""
-        datasets_settings = self.config.datasets
-        if not self.observations or len(self.observations) == 0:
+        datasets_settings = self.analysis.config.datasets
+        if not self.analysis.observations or len(self.analysis.observations) == 0:
             raise RuntimeError("No observations have been selected.")
 
         if datasets_settings.type == "1d":
@@ -211,7 +193,7 @@ class DatasetsAnalysisStep(AnalysisStep):
     def _create_geometry(self):
         """Create the geometry."""
         log.debug("Creating geometry.")
-        datasets_settings = self.config.datasets
+        datasets_settings = self.analysis.config.datasets
         geom_settings = datasets_settings.geom
         axes = [self._make_energy_axis(geom_settings.axes.energy)]
         if datasets_settings.type == "3d":
@@ -229,7 +211,7 @@ class DatasetsAnalysisStep(AnalysisStep):
         log.debug("Creating target Dataset.")
         geom = self._create_geometry()
 
-        geom_settings = self.config.datasets.geom
+        geom_settings = self.analysis.config.datasets.geom
         geom_irf = dict(energy_axis_true=None, binsz_irf=None)
         if geom_settings.axes.energy_true.min is not None:
             geom_irf["energy_axis_true"] = self._make_energy_axis(
@@ -238,7 +220,7 @@ class DatasetsAnalysisStep(AnalysisStep):
         if geom_settings.wcs.binsize_irf is not None:
             geom_irf["binsz_irf"] = geom_settings.wcs.binsize_irf.to("deg").value
 
-        if self.config.datasets.type == "1d":
+        if self.analysis.config.datasets.type == "1d":
             return SpectrumDataset.create(geom, name=name, **geom_irf)
         else:
             return MapDataset.create(geom, name=name, **geom_irf)
@@ -247,7 +229,7 @@ class DatasetsAnalysisStep(AnalysisStep):
         """Create the Dataset Maker."""
         log.debug("Creating the target Dataset Maker.")
 
-        datasets_settings = self.config.datasets
+        datasets_settings = self.analysis.config.datasets
         if datasets_settings.type == "3d":
             maker = MapDatasetMaker(selection=datasets_settings.map_selection)
         elif datasets_settings.type == "1d":
@@ -267,15 +249,15 @@ class DatasetsAnalysisStep(AnalysisStep):
         """Create the SafeMaskMaker."""
         log.debug("Creating the mask_safe Maker.")
 
-        safe_mask_selection = self.config.datasets.safe_mask.methods
-        safe_mask_settings = self.config.datasets.safe_mask.parameters
+        safe_mask_selection = self.analysis.config.datasets.safe_mask.methods
+        safe_mask_settings = self.analysis.config.datasets.safe_mask.parameters
         return SafeMaskMaker(methods=safe_mask_selection, **safe_mask_settings)
 
     def _create_background_maker(self):
         """Create the Background maker."""
         log.info("Creating the background Maker.")
 
-        datasets_settings = self.config.datasets
+        datasets_settings = self.analysis.config.datasets
         bkg_maker_config = {}
         if datasets_settings.background.exclusion:
             path = make_path(datasets_settings.background.exclusion)
@@ -308,7 +290,7 @@ class DatasetsAnalysisStep(AnalysisStep):
 
     def _map_making(self):
         """Make maps and datasets for 3d analysis"""
-        datasets_settings = self.config.datasets
+        datasets_settings = self.analysis.config.datasets
         offset_max = datasets_settings.geom.selection.offset_max
 
         log.info("Creating reference dataset and makers.")
@@ -328,13 +310,13 @@ class DatasetsAnalysisStep(AnalysisStep):
                                       cutout_mode='partial',
                                       cutout_width=2 * offset_max)
         #TODO: read n_jobs from general config
-        self.datasets = datasets_maker.run(stacked, self.observations)
+        self.analysis.datasets = datasets_maker.run(stacked, self.analysis.observations)
         #TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
         log.info("Reducing spectrum datasets.")
-        datasets_settings = self.config.datasets
+        datasets_settings = self.analysis.config.datasets
         dataset_maker = self._create_dataset_maker()
         safe_mask_maker = self._create_safe_mask_maker()
         bkg_maker = self._create_background_maker()
@@ -342,7 +324,7 @@ class DatasetsAnalysisStep(AnalysisStep):
         reference = self._create_reference_dataset()
 
         datasets = []
-        for obs in progress_bar(self.observations, desc="Observations"):
+        for obs in progress_bar(self.analysis.observations, desc="Observations"):
             log.debug(f"Processing observation {obs.obs_id}")
             dataset = dataset_maker.run(reference.copy(), obs)
             if bkg_maker is not None:
@@ -355,11 +337,11 @@ class DatasetsAnalysisStep(AnalysisStep):
             dataset = safe_mask_maker.run(dataset, obs)
             log.debug(dataset)
             datasets.append(dataset)
-        self.datasets = Datasets(datasets)
+        self.analysis.datasets = Datasets(datasets)
 
         if datasets_settings.stack:
-            stacked = self.datasets.stack_reduce(name="stacked")
-            self.datasets = Datasets([stacked])
+            stacked = self.analysis.datasets.stack_reduce(name="stacked")
+            self.analysis.datasets = Datasets([stacked])
 
     @staticmethod
     def _make_energy_axis(axis, name="energy"):
@@ -382,15 +364,15 @@ class ExcessMapAnalysisStep(AnalysisStep):
     tag = "excess-map"
     def run(self):
         """Calculate excess map with respect to the current model."""
-        excess_settings = self.config.excess_map
+        excess_settings = self.analysis.config.excess_map
         #TODO: allow a list of kernel sizes
         log.info("Computing excess maps.")
 
-        if self.config.datasets.type == "1d":
+        if self.analysis.config.datasets.type == "1d":
             raise ValueError("Cannot compute excess map for 1D dataset")
 
         # Here we could possibly stack the datasets if needed.
-        if len(self.datasets) > 1:
+        if len(self.analysis.datasets) > 1:
             raise ValueError("Datasets must be stacked to compute the excess map")
 
         energy_edges = self._make_energy_axis(excess_settings.energy_edges)
@@ -402,17 +384,17 @@ class ExcessMapAnalysisStep(AnalysisStep):
             energy_edges=energy_edges,
             **excess_settings.parameters,
         )
-        self.excess_map = excess_map_estimator.run(self.datasets[0])
+        self.analysis.excess_map = excess_map_estimator.run(self.analysis.datasets[0])
 
 class FitAnalysisStep(AnalysisStep):
     tag = "fit"
     def run(self):
         """Fitting reduced datasets to model."""
-        if not self.models:
+        if not self.analysis.models:
             raise RuntimeError("Missing models")
     
-        fit_settings = self.config.fit
-        for dataset in self.datasets:
+        fit_settings = self.analysis.config.fit
+        for dataset in self.analysis.datasets:
             if fit_settings.fit_range:
                 energy_min = fit_settings.fit_range.min
                 energy_max = fit_settings.fit_range.max
@@ -421,42 +403,42 @@ class FitAnalysisStep(AnalysisStep):
                 dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
     
         log.info("Fitting datasets.")
-        result = self.fit.run(datasets=self.datasets)
-        self.fit_result = result
-        log.info(self.fit_result)
+        result = self.analysis.fit.run(datasets=self.analysis.datasets)
+        self.analysis.fit_result = result
+        log.info(self.analysis.fit_result)
 
 
 class FluxPointsAnalysisStep(AnalysisStep):
     tag="flux-points"
     def run(self):
         """Calculate flux points for a specific model component."""
-        if not self.datasets:
+        if not self.analysis.datasets:
             raise RuntimeError("No datasets set.")
     
-        fp_settings = self.config.flux_points
+        fp_settings = self.analysis.config.flux_points
         log.info("Calculating flux points.")
         energy_edges = self._make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
-            fit=self.fit,
+            fit=self.analysis.fit,
             **fp_settings.parameters,
         )
     
-        fp = flux_point_estimator.run(datasets=self.datasets)
+        fp = flux_point_estimator.run(datasets=self.analysis.datasets)
     
-        self.flux_points = FluxPointsDataset(
-            data=fp, models=self.models[fp_settings.source]
+        self.analysis.flux_points = FluxPointsDataset(
+            data=fp, models=self.analysis.models[fp_settings.source]
         )
         cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "sqrt_ts"]
-        table = self.flux_points.data.to_table(sed_type="dnde")
+        table = self.analysis.flux_points.data.to_table(sed_type="dnde")
         log.info("\n{}".format(table[cols]))
 
 class LightCurveAnalysisStep(AnalysisStep):
     tag= "light-curve"
     def run(self):
         """Calculate light curve for a specific model component."""
-        lc_settings = self.config.light_curve
+        lc_settings = self.analysis.config.light_curve
         log.info("Computing light curve.")
         energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
 
@@ -480,17 +462,26 @@ class LightCurveAnalysisStep(AnalysisStep):
             time_intervals=time_intervals,
             energy_edges=energy_edges,
             source=lc_settings.source,
-            fit=self.fit,
+            fit=self.analysis.fit,
             **lc_settings.parameters,
         )
-        lc = light_curve_estimator.run(datasets=self.datasets)
-        self.light_curve = lc
+        lc = light_curve_estimator.run(datasets=self.analysis.datasets)
+        self.analysis.light_curve = lc
         log.info(
             "\n{}".format(
-                self.light_curve.to_table(format="lightcurve", sed_type="flux")
+                self.analysis.light_curve.to_table(format="lightcurve", sed_type="flux")
             )
         )
 
+ANALYSIS_STEP_REGISTRY = [
+        DataReductionAnalysisStep,
+        ObservationsAnalysisStep,
+        DatasetsAnalysisStep,
+        ExcessMapAnalysisStep,
+        FitAnalysisStep,
+        FluxPointsAnalysisStep,
+        LightCurveAnalysisStep,
+        ]
 
 class Analysis:
     """Config-driven high level analysis interface.
@@ -512,8 +503,9 @@ class Analysis:
         self.datastore = None
         self.observations = None
         self.datasets = None
+        self.read_datasets()
         self.models = None
-        #TODO: read models, read datasets if filename given
+        self.read_models()
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
@@ -542,10 +534,10 @@ class Analysis:
                 overwrite = self.config.general.overwrite[k]
             else :
                 overwrite = self.config.general.overwrite
-            AnalysisStep.create(step, self, overwrite).run()
+            anlysis_step = AnalysisStep.create(step, self, overwrite)
+            anlysis_step.run()
 
-
-    def set_models(self, models):
+    def set_models(self, models, extend=True):
         """Set models on datasets.
 
         Adds `FoVBackgroundModel` if not present already
@@ -554,6 +546,8 @@ class Analysis:
         ----------
         models : `~gammapy.modeling.models.Models` or str
             Models object or YAML models string
+        extend : bool
+            Extent the exiting models on the datasets or replace them.
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
@@ -566,7 +560,8 @@ class Analysis:
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
-        self.models.extend(self.datasets.models)
+        if extend:
+            self.models.extend(self.datasets.models)
 
         if self.config.datasets.type == "3d":
             for dataset in self.datasets:
@@ -579,13 +574,37 @@ class Analysis:
 
         log.info(self.models)
 
-    def read_models(self, path):
+    def read_models(self, filename=None):
         """Read models from YAML file."""
-        path = make_path(path)
-        models = Models.read(path)
-        self.set_models(models)
+        if filename is None:
+            filename = self.analysis.config.general.models_file
+        if filename is not None :
+            filename = make_path(filename)
+            models = Models.read(filename)
+            self.set_models(models)
+        
+    def read_datasets(self, filename=None, filename_models=None):
+        """Read datasets from YAML file."""
+        if filename is None:
+            filename = self.analysis.config.general.datasets_file
+        if filename_models is None:
+            filename_models = self.analysis.config.general.models_file
+        if filename is not None:
+            self.datasets = Datasets.read(filename, filename_models)
+            self.log.info(f"Datasets loaded from {filename}.")
+            self.log.info(f"Models loaded from {filename_models}.")
 
-    #TODO: add read, read_datasets
 
-
-
+    def write_datasets(self, filename=None, filename_models=None):
+        """Read datasets to YAML file."""
+        if filename is None:
+            filename = self.analysis.config.general.datasets_file
+        if filename_models is None:
+            filename_models = self.analysis.config.general.models_file
+        if filename is not None:
+            self.datasets.write(filename,
+                                 filename_models,
+                                 overwrite=True,
+                                 write_covariance=True)
+            self.log.info(f"Datasets stored to {filename}.")
+            self.log.info(f"Datasets stored to {filename_models}.")
