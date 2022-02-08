@@ -502,9 +502,7 @@ class Analysis:
         self.config.set_logging()
         self.datastore = None
         self.observations = None
-        self.datasets = None
         self.read_datasets()
-        self.models = None
         self.read_models()
         self.fit = Fit()
         self.fit_result = None
@@ -574,33 +572,30 @@ class Analysis:
 
         log.info(self.models)
 
-    def read_models(self, filename=None):
+    def read_models(self, filename=None, extend=True):
         """Read models from YAML file."""
-        if filename is None:
-            filename = self.analysis.config.general.models_file
+        _, filename = self.update_datasets_files(filename_models=filename)
         if filename is not None :
-            filename = make_path(filename)
             models = Models.read(filename)
-            self.set_models(models)
-        
+            self.set_models(models, extend)
+            self.log.info(f"Models loaded from {filename}.")
+        else:
+            self.models = None
+ 
     def read_datasets(self, filename=None, filename_models=None):
         """Read datasets from YAML file."""
-        if filename is None:
-            filename = self.analysis.config.general.datasets_file
-        if filename_models is None:
-            filename_models = self.analysis.config.general.models_file
+        filename, filename_models = self._update_datasets_files(filename, filename_models)
         if filename is not None:
             self.datasets = Datasets.read(filename, filename_models)
             self.log.info(f"Datasets loaded from {filename}.")
             self.log.info(f"Models loaded from {filename_models}.")
+        else:
+            self.datasets = None
 
 
     def write_datasets(self, filename=None, filename_models=None):
         """Read datasets to YAML file."""
-        if filename is None:
-            filename = self.analysis.config.general.datasets_file
-        if filename_models is None:
-            filename_models = self.analysis.config.general.models_file
+        filename, filename_models = self._update_datasets_files(filename, filename_models)
         if filename is not None:
             self.datasets.write(filename,
                                  filename_models,
@@ -608,3 +603,18 @@ class Analysis:
                                  write_covariance=True)
             self.log.info(f"Datasets stored to {filename}.")
             self.log.info(f"Datasets stored to {filename_models}.")
+
+
+    def _update_datasets_files(self, filename=None, filename_models=None):
+        config = self.analysis.config
+        if filename is None:
+            filename = self.analysis.config.general.datasets_file
+        else: 
+            config.general.datasets_file = filename
+            self.update_config(self, config)
+        if filename_models is None:
+            filename_models = self.analysis.config.general.models_file
+        else: 
+            config.general.models_file = filename_models
+            self.update_config(self, config)
+        return filename, filename_models
