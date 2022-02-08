@@ -64,6 +64,14 @@ class FrameEnum(str, Enum):
     icrs = "icrs"
     galactic = "galactic"
 
+class AnalysisStepEnum(str, Enum):
+    data_reduction = "data-reduction"
+    observations = "observations"
+    datasets = "datasets"
+    excess_map = "excess-map"
+    fit = "fit"
+    flux_points = "flux-points"
+    light_curve = "light-curve"
 
 class RequiredIRFEnum(str, Enum):
     aeff = "aeff"
@@ -229,8 +237,11 @@ class LogConfig(GammapyBaseConfig):
 class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
     outdir: str = "."
-    #TODO: figdir, list of steps/workflow to execute on run, n_jobs
-    #TODO: add datasets/models filenames to start from there if exits
+    figdir: str = "."
+    datasets_file: Path = None
+    models_file: Path = None
+    steps: List[AnalysisStepEnum]
+    overwrite: List[bool] = [] #TODO check that len(steps)==len(overwrite)
 
 class AnalysisConfig(GammapyBaseConfig):
     """Gammapy analysis configuration."""
