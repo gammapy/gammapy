@@ -30,6 +30,7 @@ class RadMax2D(IRF):
 
     tag = "rad_max_2d"
     required_axes = ["energy", "offset"]
+    default_unit = u.deg
 
 
     @classmethod
