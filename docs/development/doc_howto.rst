@@ -221,6 +221,12 @@ following command.
 
     pytest --doctest-modules --ignore-glob=*/tests gammapy
 
+If you get a zsh error try using putting the ignore block inside quotes 
+
+.. code-block:: bash
+
+    pytest --doctest-modules "--ignore-glob=*/tests" gammapy
+
 Sphinx gallery extension
 ------------------------
 
