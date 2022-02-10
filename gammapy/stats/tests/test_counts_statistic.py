@@ -197,4 +197,4 @@ def test_cash_sum():
     stat_sum = stat.sum()
 
     assert stat_sum.n_on == 6
-    assert stat_sum.bkg == 2.5
+    assert stat_sum.n_bkg == 2.5

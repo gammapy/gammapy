@@ -208,6 +208,22 @@ class CashCountsStatistic(CountsStatistic):
         TS1 = cash(n_sig + self.mu_bkg[index], self.mu_bkg[index] + n_sig)
         return np.sign(n_sig) * np.sqrt(np.clip(TS0 - TS1, 0, None)) - significance
 
+    def sum(self, axis=None):
+        """Return summed CountsStatistics.
+
+        Parameters
+        ----------
+        axis : int or tuple
+            axes on which to perform the summation.
+
+        Returns
+        -------
+        stat : `~gammapy.stats.CashCountsStatistics`
+            the return stat object
+        """
+        n_on = self.n_on.sum(axis=axis)
+        bkg = self.n_bkg.sum(axis=axis)
+        return CashCountsStatistic(n_on, bkg)
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
