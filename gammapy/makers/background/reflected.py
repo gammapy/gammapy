@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from itertools import combinations
 from abc import ABCMeta, abstractmethod
 
 from astropy import units as u
@@ -116,8 +117,11 @@ class WobbleRegionsFinder(RegionsFinder):
     """Find the OFF regions symmetric to the ON region
 
     This is a simpler version of the `ReflectedRegionsFinder`, that
-    will place ``n_off_regions`` regions at symmetric positions on the 
+    will place ``n_off_regions`` regions at symmetric positions on the
     circle created by the center position and the on region.
+
+    Returns no regions if the regions are found to be overlapping,
+    in that case reduce the number of off regions and/or their size.
 
     Parameters
     ----------
@@ -166,10 +170,20 @@ class WobbleRegionsFinder(RegionsFinder):
             region_test = region_pix.rotate(center_pixel, angle)
 
             if exclusion_mask is None or not np.any(region_test.contains(excluded_pixels)):
-                region = region_test.to_sky(reference_geom.wcs)
-                regions.append(region)
+                regions.append(region_test)
 
-        return regions, reference_geom.wcs
+
+        # check for overlaps
+        masks = [
+            region.to_mask().to_image(reference_geom._shape) > 0
+            for region in regions
+        ]
+        for mask_a, mask_b in combinations(masks, 2):
+            if np.any(mask_a & mask_b):
+                log.warning('Found overlapping off regions, returning no regions')
+                return [], reference_geom.wcs
+
+        return [r.to_sky(reference_geom.wcs) for r in regions], reference_geom.wcs
 
 
 class ReflectedRegionsFinder(RegionsFinder):

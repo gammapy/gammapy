@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -290,10 +291,35 @@ def test_wobble_regions_finder():
     finder = WobbleRegionsFinder(n_off_regions)
     regions, _ = finder.run(on_region, pointing, exclusion_mask)
 
-    for region in regions:
-        print(region.center)
     assert len(regions) == 2
 
+
+def test_wobble_regions_finder_overlapping(caplog):
+    '''Test that overlapping regions are not produced'''
+    source_angle = 35 * u.deg
+
+    on_region = CircleSkyRegion(
+        center=SkyCoord.from_name("Crab"),
+        radius=0.5 * u.deg,
+    )
+    pointing = on_region.center.directional_offset_by(
+        separation=0.4 * u.deg,
+        position_angle=180 * u.deg + source_angle,
+    )
+
+    n_off_regions = 3
+
+    finder = WobbleRegionsFinder(n_off_regions)
+
+    with caplog.at_level(logging.WARNING):
+        regions, _ = finder.run(on_region, pointing)
+
+    assert len(regions) == 0
+    assert caplog.record_tuples == [(
+        'gammapy.makers.background.reflected',
+        logging.WARNING,
+        'Found overlapping off regions, returning no regions',
+    )]
 
 
 @requires_data()
