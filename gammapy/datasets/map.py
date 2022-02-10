@@ -468,7 +468,7 @@ class MapDataset(Dataset):
     def npred_signal(self, model_name=None):
         """Model predicted signal counts.
 
-        If a model name is passed, predicted counts from that component is returned.
+        If a model name is passed, predicted counts from that component are returned.
         Else, the total signal counts are returned.
 
         Parameters
@@ -2032,7 +2032,7 @@ class MapDatasetOnOff(MapDataset):
         return alpha
 
     def npred_background(self):
-        """Prediced background counts (mu_bkg) estimated from the marginalized likelihood estimate.
+        """Predicted background counts (mu_bkg) estimated from the marginalized likelihood estimate.
 
         See :ref:`wstat`
 

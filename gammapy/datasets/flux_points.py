@@ -15,7 +15,7 @@ __all__ = ["FluxPointsDataset"]
 
 class FluxPointsDataset(Dataset):
     """
-    Bundle a set of flux points with a parametric model, to compute a likelihood. Uses chi2 statistics.
+    Bundle a set of flux points with a parametric model, to compute fit statistic function using chi2 statistics.
 
     Parameters
     ----------
