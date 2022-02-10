@@ -188,3 +188,13 @@ def test_wstat_excess_matching_significance(n_off, alpha, significance, result):
     excess = stat.n_sig_matching_significance(significance)
 
     assert_allclose(excess, result, rtol=1e-2)
+
+def test_cash_sum():
+    on = [1, 2 , 3]
+    bkg = [0.5, 0.7, 1.3]
+
+    stat = CashCountsStatistic(on, bkg)
+    stat_sum = stat.sum()
+
+    assert stat_sum.n_on == 6
+    assert stat_sum.bkg == 2.5
