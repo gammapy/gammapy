@@ -460,9 +460,7 @@ class EventList:
 
         >>> #Plot the offset^2 distribution wrt. the observation pointing position
         >>> #(this is a commonly used plot to check the background spatial distribution):
-        >>> events.plot_offset2_distribution()
-        <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
-
+        >>> events.plot_offset2_distribution() # doctest: +SKIP
         Plot the offset^2 distribution wrt. the Crab pulsar position
         (this is commonly used to check both the gamma-ray signal and the background spatial distribution):
 
@@ -470,8 +468,7 @@ class EventList:
         >>> from astropy.coordinates import SkyCoord
         >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
         >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30) * u.deg ** 2
-        >>> events.plot_offset2_distribution(center=center, bins=bins)
-        <AxesSubplot:xlabel='Offset^2 (deg2)', ylabel='Counts'>
+        >>> events.plot_offset2_distribution(center=center, bins=bins) # doctest: +SKIP
 
         Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
         in this case 30 bins ranging from 0 to (0.3 deg)^2.

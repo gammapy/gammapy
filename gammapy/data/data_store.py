@@ -38,7 +38,7 @@ class DataStore:
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
-    >>> data_store.info()
+    >>> data_store.info() #doctest: +SKIP
     Data store:
     HDU index table:
     BASE_DIR: /Users/ASinha/Gammapy-dev/gammapy-data/hess-dl3-dr1
@@ -201,8 +201,8 @@ class DataStore:
         >>> # subset via a method on the ``data_store`` or the ``observations`` objects.
         >>> # If you want to generate HDU and observation index files, write the tables to disk::
 
-        >>> data_store.hdu_table.write("hdu-index.fits.gz")
-        >>> data_store.obs_table.write("obs-index.fits.gz")
+        >>> data_store.hdu_table.write("hdu-index.fits.gz") # doctest: +SKIP
+        >>> data_store.obs_table.write("obs-index.fits.gz") # doctest: +SKIP
         """
         return DataStoreMaker(paths).run()
 
