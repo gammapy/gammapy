@@ -248,4 +248,38 @@ def test_wstat_sum():
     assert_allclose(stat_sum.n_on, (20, 40, 60))
     assert_allclose(stat_sum.n_bkg, (10, 14, 26))
 
+def test_cash_addition():
+    on = np.array([1, 2 , 3])
+    bkg = np.array([0.5, 0.7, 1.3])
+
+    stat = CashCountsStatistic(on, bkg)
+    stat2 = CashCountsStatistic(2*on, 2*bkg)
+    stat_sum = stat + stat2
+
+    assert_allclose(stat_sum.n_on, [3, 6, 9])
+    assert_allclose(stat_sum.n_bkg, [1.5, 2.1, 3.9])
+
+    stat += stat2
+    assert_allclose(stat.n_bkg, [1.5, 2.1, 3.9])
+    assert_allclose(stat.n_on, [3, 6, 9])
+
+
+def test_wstat_addition():
+    on = np.array([1, 2 , 3])
+    off = np.array([5, 14, 8])
+    alpha = np.array([0.1, 0.05, 0.1625])
+
+    stat = WStatCountsStatistic(on, off, alpha)
+    stat2 = WStatCountsStatistic(on, 2*off, 0.5*alpha)
+    stat_sum = stat + stat2
+
+    assert_allclose(stat_sum.n_on, [2, 4, 6])
+    assert_allclose(stat_sum.n_off,[15, 42, 24])
+    assert_allclose(stat_sum.alpha, 2*stat.alpha/3.)
+
+    stat += stat
+    assert_allclose(stat.n_bkg, [1.0, 1.4, 2.6])
+    assert_allclose(stat.n_on, [2, 4, 6])
+
+
 

@@ -173,6 +173,12 @@ class CountsStatistic(abc.ABC):
              the return stat object
         """
 
+    def __add__(self, other):
+        """Add CountsStatistic arrays."""
+
+    def __iadd__(self, other):
+        """Add CountsStatistic arrays in place."""
+
 
 class CashCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -227,6 +233,23 @@ class CashCountsStatistic(CountsStatistic):
         n_on = self.n_on.sum(axis=axis)
         bkg = self.n_bkg.sum(axis=axis)
         return CashCountsStatistic(n_on, bkg)
+
+    def __add__(self, other):
+        if not isinstance(other, CashCountsStatistic):
+            raise TypeError(f"Cannot add CountsStatistic to {other.__class__}")
+
+        n_on = self.n_on + other.n_on
+        bkg = self.n_bkg + other.n_bkg
+        return CashCountsStatistic(n_on, bkg)
+
+    def __iadd__(self, other):
+        if not isinstance(other, CashCountsStatistic):
+            raise TypeError(f"Cannot add CountsStatistic to {other.__class__}")
+
+        self.n_on += other.n_on
+        self.mu_bkg += other.n_bkg
+        return self
+
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -306,3 +329,24 @@ class WStatCountsStatistic(CountsStatistic):
         n_off = self.n_off.sum(axis=axis)
         alpha = self.n_bkg.sum(axis=axis)/n_off
         return WStatCountsStatistic(n_on, n_off, alpha)
+
+    def __add__(self, other):
+        if not isinstance(other, WStatCountsStatistic):
+            raise TypeError(f"Cannot add WStatCountsStatistic to {other.__class__}")
+
+        n_on = self.n_on + other.n_on
+        n_off = self.n_off + other.n_off
+        n_bkg = self.n_bkg + other.n_bkg
+        alpha = n_bkg/n_off
+        return WStatCountsStatistic(n_on, n_off, alpha)
+
+    def __iadd__(self, other):
+        if not isinstance(other, WStatCountsStatistic):
+            raise TypeError(f"Cannot add WStatCountsStatistic to {other.__class__}")
+
+        self.n_on += other.n_on
+        n_off = self.n_off + other.n_off
+        n_bkg = self.n_bkg + other.n_bkg
+        self.alpha = n_bkg/n_off
+        self.n_off = n_off
+        return self
