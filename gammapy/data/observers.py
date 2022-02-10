@@ -93,3 +93,9 @@ observatory_locations["veritas"] = EarthLocation(
 observatory_locations["whipple"] = EarthLocation(
     lon="-110d52m42s", lat="31d40m52s", height="2606m"
 )
+
+# communication with ASTRI Project Manager
+observatory_locations["astri"] = EarthLocation(
+    lon="28d17m60.0s", lat="16d30m20.99s", height="2370m"
+)
+
