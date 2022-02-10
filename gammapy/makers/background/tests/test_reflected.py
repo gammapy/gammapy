@@ -290,7 +290,34 @@ def test_wobble_regions_finder():
     finder = WobbleRegionsFinder(n_off_regions)
     regions, _ = finder.run(on_region, pointing, exclusion_mask)
 
-    print(exclusion_region.center)
     for region in regions:
         print(region.center)
     assert len(regions) == 2
+
+
+
+@requires_data()
+def test_reflected_bkg_maker_with_wobble_finder(on_region, observations, exclusion_mask):
+    datasets = []
+
+    reflected_bkg_maker = ReflectedRegionsBackgroundMaker(
+        region_finder=WobbleRegionsFinder(n_off_regions=3),
+        exclusion_mask=exclusion_mask,
+    )
+
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+
+    geom = RegionGeom(region=on_region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom)
+
+    spectrum_dataset_maker = SpectrumDatasetMaker(selection=["counts"])
+
+    for obs in observations:
+        dataset = spectrum_dataset_maker.run(dataset_empty, obs)
+        dataset_on_off = reflected_bkg_maker.run(dataset, obs)
+        datasets.append(dataset_on_off)
+
+    regions_0 = compound_region_to_regions(datasets[0].counts_off.geom.region)
+    regions_1 = compound_region_to_regions(datasets[1].counts_off.geom.region)
+    assert_allclose(len(regions_0), 3)
+    assert_allclose(len(regions_1), 3)
