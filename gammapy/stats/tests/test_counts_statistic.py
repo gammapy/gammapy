@@ -198,3 +198,17 @@ def test_cash_sum():
 
     assert stat_sum.n_on == 6
     assert stat_sum.n_bkg == 2.5
+
+def test_wstat_sum():
+    on = [1, 2 , 3]
+    off = [5, 14, 8]
+    alpha = [0.1, 0.05, 0.1625]
+
+    stat = WStatCountsStatistic(on, off, alpha)
+    stat_sum = stat.sum()
+
+    assert stat_sum.n_on == 6
+    assert stat_sum.n_off == 27
+    assert stat_sum.n_bkg == 2.5
+    assert_allclose(stat_sum.alpha, 0.0925925925925925)
+    

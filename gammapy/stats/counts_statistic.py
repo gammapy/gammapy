@@ -297,3 +297,21 @@ class WStatCountsStatistic(CountsStatistic):
             n_sig,
         )
         return np.sign(n_sig) * np.sqrt(np.clip(stat0 - stat1, 0, None)) - significance
+
+    def sum(self, axis=None):
+        """Return summed WStatCountsStatistics.
+
+        Parameters
+        ----------
+        axis : int or tuple
+            axes on which to perform the summation.
+
+        Returns
+        -------
+        stat : `~gammapy.stats.WStatCountsStatistics`
+            the return stat object
+        """
+        n_on = self.n_on.sum(axis=axis)
+        n_off = self.n_off.sum(axis=axis)
+        alpha = self.n_bkg.sum(axis=axis)/n_off
+        return WStatCountsStatistic(n_on, n_off, alpha)
