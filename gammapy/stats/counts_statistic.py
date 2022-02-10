@@ -250,6 +250,8 @@ class CashCountsStatistic(CountsStatistic):
         self.mu_bkg += other.n_bkg
         return self
 
+    def __getitem__(self, key):
+        return CashCountsStatistic(self.n_on[key], self.n_bkg[key])
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -350,3 +352,6 @@ class WStatCountsStatistic(CountsStatistic):
         self.alpha = n_bkg/n_off
         self.n_off = n_off
         return self
+
+    def __getitem__(self, key):
+        return WStatCountsStatistic(self.n_on[key], self.n_off[key], self.alpha[key])
