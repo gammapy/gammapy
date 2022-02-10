@@ -64,15 +64,15 @@ class RegionGeom(Geom):
 
         if wcs is None and region is not None:
             if isinstance(region, CompoundSkyRegion):
-                center = compound_region_center(region)
+                self._center = compound_region_center(region)
             else:
-                center = region.center
+                self._center = region.center
 
             wcs = WcsGeom.create(
                 binsz=binsz_wcs,
-                skydir=center,
+                skydir=self._center,
                 proj=self.projection,
-                frame=center.frame.name,
+                frame=self._center.frame.name,
             ).wcs
 
         self._wcs = wcs
@@ -301,7 +301,20 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        area = self.region.to_pixel(self.wcs).area
+        # compound regions do not implement area()
+        # so we use the mask represenation and estimate the area
+        # from the pixels in the mask using oversampling
+        if isinstance(self.region, CompoundSkyRegion):
+            # oversample by a factor of ten
+            oversampling = 10.0
+            wcs = self.to_binsz_wcs(self.binsz_wcs / oversampling).wcs
+            pixel_region = self.region.to_pixel(wcs)
+            mask = pixel_region.to_mask()
+            area = np.count_nonzero(mask) / oversampling**2
+        else:
+            # all other types of regions should implement area
+            area = self.region.to_pixel(self.wcs).area
+
         solid_angle = area * proj_plane_pixel_area(self.wcs) * u.deg ** 2
         return solid_angle.to("sr")
 

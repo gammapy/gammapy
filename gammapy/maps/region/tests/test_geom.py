@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion, RectangleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion, CompoundSkyRegion
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
@@ -196,6 +196,35 @@ def test_solid_angle(region):
     assert omega.unit == "sr"
     reference = 2 * np.pi * (1 - np.cos(region.radius))
     assert_allclose(omega.value, reference.value, rtol=1e-3)
+
+
+def test_solid_angle_compound():
+    center1 = SkyCoord(ra=0 * u.deg, dec=0 * u.deg)
+    center2 = SkyCoord(ra=3 * u.deg, dec=0 * u.deg)
+
+    region1 = CircleSkyRegion(center1, radius=1 * u.deg)
+    region2 = CircleSkyRegion(center2, radius=1 * u.deg)
+
+    # regions don't overlap, so expected area is the sum of both
+    region = region1 | region2
+    expected = sum(RegionGeom.create(r).solid_angle() for r in [region1, region2])
+    geom = RegionGeom.create(region)
+    omega = geom.solid_angle()
+
+    assert u.isclose(omega, expected, rtol=2e-3)
+
+    region1 = CircleSkyRegion(center1, radius=5 * u.deg)
+    region2 = CircleSkyRegion(center2, radius=1 * u.deg)
+
+    # fully overlapping regions, expect only area of the larger one
+    expected = RegionGeom.create(region1).solid_angle()
+    region = region1 | region2
+    assert isinstance(region, CompoundSkyRegion)
+
+    geom = RegionGeom.create(region)
+    omega = geom.solid_angle()
+
+    assert u.isclose(omega, expected, rtol=2e-3)
 
 
 def test_bin_volume(region):
