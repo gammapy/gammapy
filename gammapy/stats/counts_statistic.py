@@ -158,6 +158,21 @@ class CountsStatistic(abc.ABC):
             it.iternext()
         return n_sig
 
+    def sum(self):
+        """Return summed CountsStatistics.
+
+        Parameters
+        ----------
+        axis : None or int or tuple of ints, optional
+             Axis or axes on which to perform the summation.
+             Default, axis=None, will perform the sum over the whole array.
+
+        Returns
+        -------
+        stat : `~gammapy.stats.CountsStatistics`
+             the return stat object
+        """
+
 
 class CashCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -209,18 +224,6 @@ class CashCountsStatistic(CountsStatistic):
         return np.sign(n_sig) * np.sqrt(np.clip(TS0 - TS1, 0, None)) - significance
 
     def sum(self, axis=None):
-        """Return summed CountsStatistics.
-
-        Parameters
-        ----------
-        axis : int or tuple
-            axes on which to perform the summation.
-
-        Returns
-        -------
-        stat : `~gammapy.stats.CashCountsStatistics`
-            the return stat object
-        """
         n_on = self.n_on.sum(axis=axis)
         bkg = self.n_bkg.sum(axis=axis)
         return CashCountsStatistic(n_on, bkg)
@@ -299,18 +302,6 @@ class WStatCountsStatistic(CountsStatistic):
         return np.sign(n_sig) * np.sqrt(np.clip(stat0 - stat1, 0, None)) - significance
 
     def sum(self, axis=None):
-        """Return summed WStatCountsStatistics.
-
-        Parameters
-        ----------
-        axis : int or tuple
-            axes on which to perform the summation.
-
-        Returns
-        -------
-        stat : `~gammapy.stats.WStatCountsStatistics`
-            the return stat object
-        """
         n_on = self.n_on.sum(axis=axis)
         n_off = self.n_off.sum(axis=axis)
         alpha = self.n_bkg.sum(axis=axis)/n_off
