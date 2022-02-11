@@ -493,3 +493,47 @@ class PSFMap(IRFMap):
 
     def __str__(self):
         return str(self.psf_map)
+
+
+    def peek(self, figsize=(12, 10)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        fig : `~matplotlib.figure.Figure`
+            Figure to add AxesSubplot on.
+
+        Returns
+        -------
+        ax1, ax2, ax3, ax4 : `~matplotlib.axes.AxesSubplot`
+            Containment radius at the center, PSF profile at the center,
+            exposure map and containment radius map at 1 TeV.
+        """
+
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(
+            ncols=2,
+            nrows=2,
+            subplot_kw={"projection": self.psf_map.geom.wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.3, "wspace": 0.3},
+        )
+
+        axes = axes.flat
+        axes[0].remove()
+        ax0 = fig.add_subplot(2, 2, 1)
+        ax0.set_title("Containment radius at center of map")
+        self.plot_containment_radius_vs_energy(ax = ax0)
+
+        axes[1].remove()
+        ax1 = fig.add_subplot(2, 2, 2)
+        ax1.set_ylim(1e-4, 1e4)
+        ax1.set_title("PSF at center of map")
+        self.plot_psf_vs_rad(ax = ax1)
+
+        axes[2].set_title("Exposure")
+        self.exposure_map.reduce_over_axes().plot(ax = axes[2], add_cbar=True)
+
+        axes[3].set_title("Containment radius at 1 TeV")
+        self.containment_radius_map(energy_true=2*u.TeV).plot(ax = axes[3], add_cbar=True)
