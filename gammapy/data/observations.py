@@ -6,8 +6,9 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
+from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.testing import Checker
+from astropy.utils import lazyproperty
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
@@ -240,35 +241,31 @@ class Observation:
         """
         return 1 - self.obs_info["DEADC"]
 
-    @property
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = (
-            self.obs_info.get("RA_PNT", np.nan),
-            self.obs_info.get("DEC_PNT", np.nan),
-        )
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-    @property
-    def pointing_altaz(self):
-        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        alt, az = (
-            self.obs_info.get("ALT_PNT", np.nan),
-            self.obs_info.get("AZ_PNT", np.nan),
-        )
-        return SkyCoord(az, alt, unit="deg", frame="altaz")
-
-    @property
-    def pointing_zen(self):
-        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
-        return Quantity(self.obs_info.get("ZEN_PNT", np.nan), unit="deg")
-
-    @property
+    @lazyproperty
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
         return FixedPointingInfo(self.events.table.meta)
 
     @property
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        return self.fixed_pointing_info.radec
+
+    @property
+    def pointing_altaz(self):
+        return self.fixed_pointing_info.altaz
+
+    @property
+    def pointing_zen(self):
+        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
+        return self.fixed_pointing_info.altaz.zen
+
+    @property
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        return self.fixed_pointing_info.location
+
+    @lazyproperty
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         lon, lat = (
@@ -276,11 +273,6 @@ class Observation:
             self.obs_info.get("DEC_OBJ", np.nan),
         )
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-    @property
-    def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return earth_location_from_dict(self.obs_info)
 
     @property
     def muoneff(self):
