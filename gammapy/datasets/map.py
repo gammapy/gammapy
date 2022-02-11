@@ -99,12 +99,9 @@ def create_map_dataset_geoms(
 
 
 class MapDataset(Dataset):
-    """Perform sky model likelihood fit on maps.
-
-    If an `HDULocation` is passed the map is loaded lazily. This means the
-    map data is only loaded in memory as the corresponding data attribute
-    on the MapDataset is accessed. If it was accessed once it is cached for
-    the next time.
+    """
+    Bundle together binned counts, background, IRFs, models and compute a likelihood.
+     Uses Cash statistics by default.
 
     Parameters
     ----------
@@ -129,6 +126,44 @@ class MapDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+
+    If an `HDULocation` is passed the map is loaded lazily. This means the
+    map data is only loaded in memory as the corresponding data attribute
+    on the MapDataset is accessed. If it was accessed once it is cached for
+    the next time.
+
+    Examples
+    --------
+    Example of loading a dataset
+
+    >>> from gammapy.datasets import MapDataset
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset")
+    >>> print(dataset)
+    MapDataset
+    ----------
+    <BLANKLINE>
+      Name                            : cta_dataset
+    <BLANKLINE>
+      Total counts                    : 104317
+      Total background counts         : 91507.70
+      Total excess counts             : 12809.30
+    <BLANKLINE>
+      Predicted counts                : 91507.69
+      Predicted background counts     : 91507.70
+      Predicted excess counts         : nan
+    <BLANKLINE>
+      Exposure min                    : 6.28e+07 m2 s
+      Exposure max                    : 1.90e+10 m2 s
+    <BLANKLINE>
+      Number of total bins            : 768000
+      Number of fit bins              : 691680
+    <BLANKLINE>
+      Fit statistic type              : cash
+      Fit statistic value (-2 log(L)) : nan
+    <BLANKLINE>
+      Number of models                : 0
+      Number of parameters            : 0
+      Number of free parameters       : 0
 
 
     See Also
@@ -279,12 +314,12 @@ class MapDataset(Dataset):
 
     @property
     def models(self):
-        """Models (`~gammapy.modeling.models.Models`)."""
+        """Models set on the dataset (`~gammapy.modeling.models.Models`)."""
         return self._models
 
     @property
     def excess(self):
-        """Excess"""
+        """Observed excess: counts-background"""
         return self.counts - self.background
 
     @models.setter
@@ -382,7 +417,7 @@ class MapDataset(Dataset):
         return self._energy_range(self.mask_fit)
 
     def npred(self):
-        """Predicted source and background counts
+        """Total predicted source and background counts
 
         Returns
         -------
@@ -431,9 +466,9 @@ class MapDataset(Dataset):
         return changed
 
     def npred_signal(self, model_name=None):
-        """ "Model predicted signal counts.
+        """Model predicted signal counts.
 
-        If a model is passed, predicted counts from that component is returned.
+        If a model name is passed, predicted counts from that component are returned.
         Else, the total signal counts are returned.
 
         Parameters
@@ -569,7 +604,20 @@ class MapDataset(Dataset):
         -------
         empty_maps : `MapDataset`
             A MapDataset containing zero filled maps
+
+        Examples
+        --------
+
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.maps import WcsGeom, MapAxis
+
+        >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
+        >>> energy_axis_true = MapAxis.from_energy_bounds( 0.5, 20, 10, unit="TeV", name="energy_true")
+        >>> geom = WcsGeom.create(skydir=(83.633, 22.014), binsz=0.02, width=(2, 2), frame="icrs", proj="CAR", axes=[energy_axis])
+
+        >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
         """
+
         geoms = create_map_dataset_geoms(
             geom=geom,
             energy_axis_true=energy_axis_true,
@@ -651,7 +699,7 @@ class MapDataset(Dataset):
         return dataset
 
     def stack(self, other, nan_to_num=True):
-        r"""Stack another dataset in place.
+        r"""Stack another dataset in place. The original dataset is modified.
 
         Safe mask is applied to compute the stacked counts data. Counts outside
         each dataset safe mask are lost.
@@ -818,6 +866,13 @@ class MapDataset(Dataset):
         -------
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCSAxes object.
+
+        Example
+        -------
+        >>> from gammapy.datasets import MapDataset
+        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        >>> kwargs = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
+        >>> dataset.plot_residuals_spatial(method="diff/sqrt(model)", **kwargs) # doctest: +SKIP
         """
         counts, npred = self.counts.copy(), self.npred()
 
@@ -868,6 +923,14 @@ class MapDataset(Dataset):
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import MapDataset
+        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        >>> kwargs = {"markerfacecolor": "blue", "markersize":8, "marker":'s', } #plot big blue squares
+        >>> dataset.plot_residuals_spectral(method="diff/sqrt(model)", **kwargs) # doctest: +SKIP
+
         """
         counts, npred = self.counts.copy(), self.npred()
 
@@ -931,7 +994,8 @@ class MapDataset(Dataset):
         Calls `~MapDataset.plot_residuals_spatial` and `~MapDataset.plot_residuals_spectral`.
         The spectral residuals are extracted from the provided region, and the
         normalization used for its computation can be controlled using the method
-        parameter. The region outline is overlaid on the residuals map.
+        parameter. The region outline is overlaid on the residuals map. If no region is passed,
+        the residuals are computed for the entire map
 
         Parameters
         ----------
@@ -941,13 +1005,26 @@ class MapDataset(Dataset):
             Axes to plot spectral residuals on.
         kwargs_spatial : dict
             Keyword arguments passed to `~MapDataset.plot_residuals_spatial`.
-        kwargs_spectral : dict (``region`` required)
+        kwargs_spectral : dict
             Keyword arguments passed to `~MapDataset.plot_residuals_spectral`.
+            The region should be passed as a dictionary key
 
         Returns
         -------
         ax_spatial, ax_spectral : `~astropy.visualization.wcsaxes.WCSAxes`, `~matplotlib.axes.Axes`
             Spatial and spectral residuals plots.
+
+        Examples
+        --------
+        >>> from regions import CircleSkyRegion
+        >>> from astropy.coordinates import SkyCoord
+        >>> import astropy.units as u
+        >>> from gammapy.datasets import MapDataset
+        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        >>> reg = CircleSkyRegion(SkyCoord(0,0, unit="deg", frame="galactic"), radius=1.0*u.deg)
+        >>> kwargs_spatial = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
+        >>> kwargs_spectral = {"region":reg, "markerfacecolor": "blue", "markersize":8, "marker":'s'}
+        >>> dataset.plot_residuals(kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral) # doctest: +SKIP
         """
         ax_spatial, ax_spectral = get_axes(
             ax_spatial,
@@ -959,14 +1036,16 @@ class MapDataset(Dataset):
             {"projection": self._geom.to_image().wcs},
         )
         kwargs_spatial = kwargs_spatial or {}
+        kwargs_spectral = kwargs_spectral or {}
 
         self.plot_residuals_spatial(ax_spatial, **kwargs_spatial)
         self.plot_residuals_spectral(ax_spectral, **kwargs_spectral)
 
         # Overlay spectral extraction region on the spatial residuals
-        region = kwargs_spectral["region"]
-        pix_region = region.to_pixel(self._geom.to_image().wcs)
-        pix_region.plot(ax=ax_spatial)
+        region = kwargs_spectral.get("region")
+        if region is not None:
+            pix_region = region.to_pixel(self._geom.to_image().wcs)
+            pix_region.plot(ax=ax_spatial)
 
         return ax_spatial, ax_spectral
 
@@ -1607,6 +1686,23 @@ class MapDataset(Dataset):
         -------
         dataset : `MapDataset` or `SpectrumDataset`
             Sliced dataset
+
+        Example
+        -------
+        >>> from gammapy.datasets import MapDataset
+        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        >>> slices = {"energy": slice(0, 3)} #to get the first 3 energy slices
+        >>> sliced = dataset.slice_by_idx(slices)
+        >>> print(sliced.geoms["geom"])
+        WcsGeom
+	        axes       : ['lon', 'lat', 'energy']
+	        shape      : (320, 240, 3)
+	        ndim       : 3
+	        frame      : galactic
+	        projection : CAR
+	        center     : 0.0 deg, 0.0 deg
+	        width      : 8.0 deg x 6.0 deg
+	        wcs ref    : 0.0 deg, 0.0 deg
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
@@ -1649,6 +1745,13 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Sliced Dataset
 
+        Example
+        -------
+        >>> from gammapy.datasets import MapDataset
+        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")
+        >>> sliced.data_shape
+        (3, 240, 320)
         """
         name = make_name(name)
 
@@ -1801,7 +1904,7 @@ class MapDataset(Dataset):
 
 
 class MapDatasetOnOff(MapDataset):
-    """Map dataset for on-off likelihood fitting.
+    """Map dataset for on-off likelihood fitting. Uses wstat statistics.
 
     Parameters
     ----------
@@ -1929,7 +2032,7 @@ class MapDatasetOnOff(MapDataset):
         return alpha
 
     def npred_background(self):
-        """Prediced background counts estimated from the marginalized likelihood estimate.
+        """Predicted background counts (mu_bkg) estimated from the marginalized likelihood estimate.
 
         See :ref:`wstat`
 
@@ -1948,7 +2051,7 @@ class MapDatasetOnOff(MapDataset):
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     def npred_off(self):
-        """Predicted counts in the off region
+        """Predicted counts in the off region; mu_bkg/alpha
 
         See :ref:`wstat`
 
@@ -2090,7 +2193,7 @@ class MapDatasetOnOff(MapDataset):
 
     def to_map_dataset(self, name=None):
         """Convert a MapDatasetOnOff to  MapDataset
-        The background model template is taken as alpha*counts_off
+        The background model template is taken as alpha * counts_off
 
         Parameters
         ----------

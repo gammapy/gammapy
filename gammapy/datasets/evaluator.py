@@ -17,13 +17,8 @@ log = logging.getLogger(__name__)
 class MapEvaluator:
     """Sky model evaluation on maps.
 
-    This evaluates a sky model on a 3D map and convolves with the IRFs,
-    and returns a map of the predicted counts.
-    Note that background counts are not added.
-
-    For now, we only make it work for 3D WCS maps with an energy axis.
-    No HPX, no other axes, those can be added later here or via new
-    separate model evaluator classes.
+    Evaluates a sky model on a 3D map and returns a map of the predicted counts.
+    Convolution with IRFs will be performed as defined in the sky_model
 
     Parameters
     ----------
