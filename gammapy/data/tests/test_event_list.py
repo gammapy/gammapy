@@ -35,6 +35,8 @@ class TestEventListBase:
         dummy_events.write("test.fits", overwrite=True)
         read_again = EventList.read("test.fits")
         assert read_again.table.meta['EXTNAME'] == "EVENTS"
+        assert read_again.table.meta['HDUCLASS'] == "GADF"
+        assert read_again.table.meta['HDUCLAS1'] == "EVENTS"
 
         # With GTI
         gti = GTI.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
@@ -50,8 +52,24 @@ class TestEventListBase:
         # test that it won't work if gti is not a GTI
         with pytest.raises(TypeError):
             self.events.write("test.fits", overwrite=True, gti=gti.table)
+        # test that it won't work if format is not "gadf"
         with pytest.raises(ValueError):
             self.events.write("test.fits", overwrite=True, format='something')
+        # test that it won't work if the basic headers are wrong
+        with pytest.raises(ValueError):
+            dummy_events = EventList(Table())
+            dummy_events.table.meta['HDUCLAS1'] = 'response'
+            dummy_events.write("test.fits", overwrite=True)
+        with pytest.raises(ValueError):
+            dummy_events = EventList(Table())
+            dummy_events.table.meta['HDUCLASS'] = "ogip"
+            dummy_events.write("test.fits", overwrite=True)
+
+        # test that it works when the srings are right but lowercase
+        dummy_events = EventList(Table())
+        dummy_events.table.meta['HDUCLASS'] = "gadf"
+        dummy_events.table.meta['HDUCLAS1'] = "events"
+        dummy_events.write("test.fits", overwrite=True)
 
 
 @requires_data()
