@@ -41,9 +41,9 @@ def test_energy_range(spectrum_dataset):
     e_min, e_max = spectrum_dataset.energy_range
     assert e_min.unit == u.TeV
     assert e_max.unit == u.TeV
-    assert_allclose(e_min.value, 0.1)
-    assert_allclose(e_max.value, 10.0)
-
+    assert_allclose(e_min, 0.1)
+    assert_allclose(e_max, 10.0)
+    
 
 def test_info_dict(spectrum_dataset):
     info_dict = spectrum_dataset.info_dict()

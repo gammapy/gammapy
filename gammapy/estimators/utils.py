@@ -202,7 +202,7 @@ def resample_energy_edges(dataset, conditions={}):
         return satisfies
 
     axis = dataset.counts.geom.axes["energy"]
-    energy_min_all, energy_max_all = dataset.energy_range
+    energy_min_all, energy_max_all = dataset.energy_range_total
     energy_edges = [energy_max_all]
 
     while energy_edges[-1] > energy_min_all:
