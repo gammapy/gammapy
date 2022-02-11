@@ -213,6 +213,12 @@ class SpectrumDataset(PlotMixin, MapDataset):
     stat_type = "cash"
     tag = "SpectrumDataset"
 
+    @property
+    def energy_range(self):
+        """Energy range defined by the full mask (mask_safe and mask_fit)."""
+        energy_min_map, energy_max_map = super().energy_range
+        return energy_min_map.quantity.squeeze(), energy_max_map.quantity.squeeze()
+
     def write(self, *args, **kwargs):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
