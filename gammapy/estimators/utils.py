@@ -157,6 +157,13 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
     return reco_exposure
 
 
+def _satisfies_conditions(info_dict, conditions):
+    satisfies = True
+    for key in conditions.keys():
+        satisfies &= info_dict[key.strip("_min")] > conditions[key]
+    return satisfies
+
+
 def resample_energy_edges(dataset, conditions={}):
     """Returns energy edges that defining a binning that satisfies given conditions on the per-bin statistics.
 
@@ -195,12 +202,6 @@ def resample_energy_edges(dataset, conditions={}):
                 f"Unrecognized option {key}. The available methods are: {available_conditions}."
             )
 
-    def _satisfies_conditions(info_dict):
-        satisfies = True
-        for key in conditions.keys():
-            satisfies &= info_dict[key.strip("_min")] > conditions[key]
-        return satisfies
-
     axis = dataset.counts.geom.axes["energy"]
     energy_min_all, energy_max_all = dataset.energy_range_total
     energy_edges = [energy_max_all]
@@ -210,7 +211,7 @@ def resample_energy_edges(dataset, conditions={}):
             if energy_min >= energy_edges[-1]:
                 continue
             elif len(energy_edges) == 1 and energy_min == energy_min_all:
-                raise ValueError(f"The given conditions cannot be met.")
+                raise ValueError("The given conditions cannot be met.")
 
             sliced = dataset.slice_by_energy(
                 energy_min=energy_min, energy_max=energy_edges[-1]
@@ -219,7 +220,7 @@ def resample_energy_edges(dataset, conditions={}):
             with np.errstate(invalid="ignore"):
                 info = sliced.info_dict()
 
-            if _satisfies_conditions(info):
+            if _satisfies_conditions(info, conditions):
                 energy_edges.append(energy_min)
                 break
     return u.Quantity(energy_edges[::-1])
