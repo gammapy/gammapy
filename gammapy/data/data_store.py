@@ -38,10 +38,10 @@ class DataStore:
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
-    >>> data_store.info()
+    >>> data_store.info() #doctest: +SKIP
     Data store:
     HDU index table:
-    BASE_DIR: /home/runner/work/gammapy/gammapy/gammapy-datasets/hess-dl3-dr1
+    BASE_DIR: /Users/ASinha/Gammapy-dev/gammapy-data/hess-dl3-dr1
     Rows: 630
     OBS_ID: 20136 -- 47829
     HDU_TYPE: ['aeff', 'bkg', 'edisp', 'events', 'gti', 'psf']
@@ -69,7 +69,7 @@ class DataStore:
 
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
-        """Create from a FITS file.
+        """Create a Datastore from a FITS file.
 
         The FITS file must contain both index files.
 
@@ -111,7 +111,18 @@ class DataStore:
             Filename of the observation index file. May be specified either relative
             to `base_dir` or as an absolute path. If None, the default filename
             will be looked for.
+
+        Returns
+        -------
+        data_store : `DataStore`
+            Data store
+
+        Examples
+        -------
+        >>> from gammapy.data import DataStore
+        >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
         """
+
         base_dir = make_path(base_dir)
 
         if hdu_table_filename:
@@ -159,35 +170,39 @@ class DataStore:
 
         .. _ctobssim: http://cta.irap.omp.eu/ctools/users/reference_manual/ctobssim.html
 
+        Returns
+        -------
+        data_store : `DataStore`
+            Data store
+
         Examples
         --------
         This is how you can access a single event list::
 
-            from gammapy.data import DataStore
-            path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
-            data_store = DataStore.from_events_files([path])
-            observations = data_store.get_observations()
+        >>> from gammapy.data import DataStore
+        >>> path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        >>> data_store = DataStore.from_events_files([path])
+        >>> observations = data_store.get_observations()
 
         You can now analyse this data as usual (see any Gammapy tutorial).
 
         If you have multiple event files, you have to make the list. Here's an example
         using ``Path.glob`` to get a list of all events files in a given folder::
 
-            import os
-            from pathlib import Path
-            path = Path(os.environ["GAMMAPY_DATA"]) / "cta-1dc/data"
-            paths = list(path.rglob("*.fits"))
-            data_store = DataStore.from_events_files(paths)
-            observations = data_store.get_observations()
+        >>> import os
+        >>> from pathlib import Path
+        >>> path = Path(os.environ["GAMMAPY_DATA"]) / "cta-1dc/data"
+        >>> paths = list(path.rglob("*.fits"))
+        >>> data_store = DataStore.from_events_files(paths)
+        >>> observations = data_store.get_observations()
 
-        Note that you have a lot of flexibility to select the observations you want,
-        by having a few lines of custom code to prepare ``paths``, or to select a
-        subset via a method on the ``data_store`` or the ``observations`` objects.
+        >>> #Note that you have a lot of flexibility to select the observations you want,
+        >>> # by having a few lines of custom code to prepare ``paths``, or to select a
+        >>> # subset via a method on the ``data_store`` or the ``observations`` objects.
+        >>> # If you want to generate HDU and observation index files, write the tables to disk::
 
-        If you want to generate HDU and observation index files, write the tables to disk::
-
-            data_store.hdu_table.write("hdu-index.fits.gz")
-            data_store.obs_table.write("obs-index.fits.gz")
+        >>> data_store.hdu_table.write("hdu-index.fits.gz") # doctest: +SKIP
+        >>> data_store.obs_table.write("obs-index.fits.gz") # doctest: +SKIP
         """
         return DataStoreMaker(paths).run()
 
