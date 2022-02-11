@@ -99,6 +99,19 @@ class EventList:
         if format != "gadf":
             raise ValueError(f"{format} is not a valid EventList format.")
 
+        meta_dict = self.table.meta
+
+        if "HDUCLAS1" in meta_dict.keys() and meta_dict["HDUCLAS1"].lower() != "events":
+            raise ValueError("The HDUCLAS1 keyword should be EVENTS for an EventList")
+        else:
+            meta_dict["HDUCLAS1"] = "EVENTS"
+
+
+        if "HDUCLASS" in meta_dict.keys() and meta_dict["HDUCLASS"].lower() != format:
+            raise ValueError("The HDUCLASS keyword should match the format")
+        else:
+            meta_dict["HDUCLASS"] = format.upper()
+
         filename = make_path(filename)
 
         primary_hdu = fits.PrimaryHDU()
