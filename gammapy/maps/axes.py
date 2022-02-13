@@ -209,11 +209,6 @@ class MapAxis:
         """Name of the axis."""
         return self._name
 
-    @name.setter
-    def name(self, value):
-        """Name of the axis."""
-        self._name = value
-
     @lazyproperty
     def edges(self):
         """Return array of bin edges."""
@@ -1941,7 +1936,7 @@ class MapAxes(Sequence):
                 ax = MapAxis(ax)
 
             if ax.name == "":
-                ax.name = f"axis{idx}"
+                ax._name = f"axis{idx}"
 
             axes_out.append(ax)
 
