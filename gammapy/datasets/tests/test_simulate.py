@@ -64,8 +64,8 @@ def dataset():
         skydir=(0, 0), binsz=0.05, width="5 deg", frame="galactic", axes=[energy_axis]
     )
 
-    geom_true = geom.copy()
-    geom_true.axes[0].name = "energy_true"
+    etrue_axis = energy_axis.copy(name="energy_true")
+    geom_true = geom.to_image().to_cube(axes=[etrue_axis])
 
     dataset = get_map_dataset(
         geom=geom, geom_etrue=geom_true, edisp="edispmap", name="test"

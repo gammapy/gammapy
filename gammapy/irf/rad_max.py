@@ -68,8 +68,7 @@ class RadMax2D(IRF):
         if not isinstance(rad_max_value, float):
             raise ValueError('RAD_MAX must be a float')
 
-        energy_axis = irf.axes["energy_true"].squash()
-        energy_axis.name = 'energy'
+        energy_axis = irf.axes["energy_true"].copy(name="energy").squash()
         offset_axis = irf.axes["offset"].squash()
 
         return cls(
