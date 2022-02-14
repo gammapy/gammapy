@@ -229,6 +229,7 @@ class LogConfig(GammapyBaseConfig):
 class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
     outdir: str = "."
+    n_jobs: int = 1
 
 
 class AnalysisConfig(GammapyBaseConfig):
