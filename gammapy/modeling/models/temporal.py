@@ -18,6 +18,7 @@ __all__ = [
     "ConstantTemporalModel",
     "ExpDecayTemporalModel",
     "GaussianTemporalModel",
+    "GeneralizedGaussianTemporalModel",
     "LightCurveTemplateTemporalModel",
     "LinearTemporalModel",
     "PowerLawTemporalModel",
