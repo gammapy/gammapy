@@ -102,7 +102,10 @@ class DatasetsMaker(Maker):
         log.info(f"Computing dataset for observation {observation.obs_id}")
         for maker in self.makers:
             log.info(f"Running {maker.tag}")
-            dataset_obs = maker.run(dataset=dataset_obs, observation=observation)
+            try:
+                dataset_obs = maker.run(dataset=dataset_obs, observation=observation)
+            except(TypeError):
+                dataset_obs = maker.run(dataset=dataset_obs)
         return dataset_obs
 
     def callback(self, dataset):
