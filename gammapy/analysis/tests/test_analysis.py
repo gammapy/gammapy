@@ -318,10 +318,10 @@ def test_analysis_ring_background():
     analysis.get_excess_map()
     assert isinstance(analysis.datasets[0], MapDataset)
     assert_allclose(
-        analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
+        analysis.datasets[0].npred_background().data[0, 10, 10], 0.096767, rtol=1e-2
     )
     assert isinstance(analysis.excess_map["sqrt_ts"], WcsNDMap)
-    assert_allclose(analysis.excess_map.npred_excess.data[0, 62, 62], 134.12389)
+    assert_allclose(analysis.excess_map.npred_excess.data[0, 62, 62], 134.06104)
 
 
 @requires_data()
@@ -400,14 +400,14 @@ def test_analysis_3d_joint_datasets():
 
     assert_allclose(
         analysis.datasets[0].background_model.spectral_model.norm.value,
-        1.031743694988066,
+        0.998829, rtol=1e-5
     )
     assert_allclose(
         analysis.datasets[0].background_model.spectral_model.tilt.value, 0.0
     )
     assert_allclose(
         analysis.datasets[1].background_model.spectral_model.norm.value,
-        0.9776349021876344,
+        0.966306, rtol=1e-5
     )
 
 
