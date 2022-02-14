@@ -688,6 +688,8 @@ class MapDataset(Dataset):
         ----------
         name : str
             Name of the masked dataset.
+        nan_to_num: bool
+            Non-finite values are replaced by zero if True (default).
 
         Returns
         -------
