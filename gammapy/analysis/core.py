@@ -19,6 +19,7 @@ from gammapy.makers import (
     RingBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
+    DatasetsMaker,
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
@@ -446,36 +447,18 @@ class Analysis:
         maker_safe_mask = self._create_safe_mask_maker()
         bkg_maker = self._create_background_maker()
 
+        makers = [maker, maker_safe_mask, bkg_maker]
+        makers = [maker for maker in makers if maker is not None]
+
         log.info("Start the data reduction loop.")
 
-        if datasets_settings.stack:
-            for obs in progress_bar(self.observations, desc="Observations"):
-                log.debug(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
-
-                    if bkg_maker.tag == "RingBackgroundMaker":
-                        dataset = dataset.to_map_dataset()
-
-                log.debug(dataset)
-                stacked.stack(dataset)
-            datasets = [stacked]
-        else:
-            datasets = []
-
-            for obs in progress_bar(self.observations, desc="Observations"):
-                log.debug(f"Processing observation {obs.obs_id}")
-                cutout = stacked.cutout(obs.pointing_radec, width=2 * offset_max)
-                dataset = maker.run(cutout, obs)
-                dataset = maker_safe_mask.run(dataset, obs)
-                if bkg_maker is not None:
-                    dataset = bkg_maker.run(dataset)
-                log.debug(dataset)
-                datasets.append(dataset)
-        self.datasets = Datasets(datasets)
+        datasets_maker = DatasetsMaker(makers,
+                                      stack_datasets=datasets_settings.stack,
+                                      n_jobs=self.config.general.n_jobs,
+                                      cutout_mode='partial',
+                                      cutout_width=2 * offset_max)
+        self.datasets = datasets_maker.run(stacked, self.observations)
+        #TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
