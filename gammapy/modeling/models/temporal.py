@@ -346,6 +346,68 @@ class GaussianTemporalModel(TemporalModel):
         return integral / self.time_sum(t_min, t_max)
 
 
+class GeneralizedGaussianTemporalModel(TemporalModel):
+    r"""A generalized Gaussian temporal profile
+
+    ..math::
+            F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_rise}) ^ {1 / \eta})   for  t < t_ref
+            
+            F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_decay}) ^ {1 / \eta})   for  t > t_ref            
+
+    Parameters
+    ----------
+    t_ref: `~astropy.units.Quantity`
+        The time of the pulse's maximum intensity.
+    t_rise : `~astropy.units.Quantity`
+        Rise time constant.
+    t_decay : `~astropy.units.Quantity`
+        Decay time constant.
+    eta : `~astropy.units.Quantity`
+        Inverse pulse sharpness -> higher values implies a more peaked pulse
+    
+    """
+
+    tag = ["GeneralizedGaussianTemporalModel", "gengauss"]
+
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit = "day", frozen=False)
+    t_rise = Parameter("t_rise", "1d", frozen=False)
+    t_decay = Parameter("t_decay", "1d", frozen=False)
+    eta = Parameter("eta", 1/2, unit = "", frozen=False)
+
+    @staticmethod
+    def evaluate(time, t_ref, t_rise, t_decay, eta):
+        val_rise = np.exp( - 0.5 * (np.abs(u.Quantity(time - t_ref,"d")) ** (1/eta)) / (t_rise ** (1/eta)))
+        val_decay = np.exp( - 0.5 * (np.abs(u.Quantity(time - t_ref,"d")) ** (1/eta)) / (t_decay ** (1/eta)))
+        val = np.where(time < t_ref, val_rise, val_decay)
+        return val
+    
+    def integral(self, t_min, t_max, **kwargs):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        
+        pars = self.parameters
+        t_rise = pars["t_rise"].quantity
+        t_decay = pars["t_decay"].quantity
+        eta = pars["eta"].quantity
+        t_ref = Time(pars["t_ref"].quantity, format = "mjd")
+
+        integral = scipy.integrate.quad(self.evaluate, t_min.mjd, t_max.mjd, args=(t_ref.mjd,t_rise,t_decay,eta))[0]
+        return integral / self.time_sum(t_min, t_max).to_value("d")
+
+
 class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 

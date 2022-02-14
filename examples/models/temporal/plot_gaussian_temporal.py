@@ -41,7 +41,7 @@ plt.grid(which="both")
 model = SkyModel(
     spectral_model=PowerLawSpectralModel(),
     temporal_model=gaussian_model,
-    name="gaissian_model",
+    name="gaussian_model",
 )
 models = Models([model])
 
