@@ -263,6 +263,11 @@ def test_dataset_maker_spectrum_rad_max(observations_magic):
 
     observation = observations_magic[0]
 
+    # test file is broken, always overlapping regions in low energy
+    # max_theta = np.sin(np.pi / (n_off + 1)) * offset
+    invalid = observation.rad_max.quantity > (0.28 * u.deg)
+    observation.rad_max.quantity[invalid] = 0.28 * u.deg
+
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )
@@ -276,8 +281,8 @@ def test_dataset_maker_spectrum_rad_max(observations_magic):
     counts_off = dataset_on_off.counts_off
     assert counts.unit == ""
     assert counts_off.unit == ""
-    assert_allclose(counts.data.sum(), 1135, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 2186, rtol=1e-5)
+    assert_allclose(counts.data.sum(), 1078, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 2046, rtol=1e-5)
 
     exposure = dataset_on_off.exposure
     assert exposure.unit == "m2 s"

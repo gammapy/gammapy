@@ -414,7 +414,10 @@ class ReflectedRegionsBackgroundMaker(Maker):
             Counts vs estimated energy extracted from the OFF regions.
         """
         on_geom = dataset.counts.geom
-        if on_geom.is_region and isinstance(on_geom.region, PointSkyRegion):
+        if observation.rad_max is not None:
+            if not isinstance(on_geom.region, PointSkyRegion):
+                raise ValueError('Must use PointSkyRegion on region in point-like analysis')
+
             counts_off, acceptance_off = make_counts_off_rad_max(
                 on_geom=on_geom,
                 rad_max=observation.rad_max,

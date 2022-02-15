@@ -491,7 +491,7 @@ def apply_rad_max(events, rad_max, position):
     return events.select_row_subset(selected)
 
 
-def are_regions_overlapping(regions, rad_max, offset):
+def are_regions_overlapping_rad_max(regions, rad_max, offset):
     """
     Calculate pair-wise separations between all regions and compare with rad_max
     to find overlaps.
@@ -501,8 +501,9 @@ def are_regions_overlapping(regions, rad_max, offset):
         for a, b in combinations(regions, 2)
     ])
 
+
     rad_max_at_offset = rad_max.evaluate(offset=offset)
-    return np.any(separations[np.newaxis, :] < rad_max_at_offset)
+    return np.any(separations[np.newaxis, :] < (2 * rad_max_at_offset))
 
 
 def make_counts_off_rad_max(
@@ -547,7 +548,7 @@ def make_counts_off_rad_max(
 
 
     offset = on_geom.region.center.separation(events.pointing_radec)
-    if are_regions_overlapping([on_geom.region] + off_regions, rad_max, offset):
+    if are_regions_overlapping_rad_max([on_geom.region] + off_regions, rad_max, offset):
         log.warning("Found overlapping on/off regions, choose less off regions")
         # counts_off=None, acceptance_off=0
         return None, RegionNDMap.from_geom(on_geom, data=0)
