@@ -601,6 +601,20 @@ def test_axes_basics():
 
     assert axes.primary_axis.name == "time"
 
+def test_axes_getitem():
+    axis1 = MapAxis.from_bounds(1, 4, 3, name="a1")
+    axis2 = axis1.copy(name="a2")
+    axis3 = axis1.copy(name="a3")
+    axes = MapAxes([axis1, axis2, axis3])
+
+    assert isinstance(axes[0], MapAxis)
+    assert axes[-1].name == "a3"
+    assert isinstance(axes[1:], MapAxes)
+    assert len(axes[1:]) == 2
+    assert isinstance(axes[0:1], MapAxes)
+    assert len(axes[0:1]) == 1
+    assert isinstance(axes[["a3", "a1"]], MapAxes)
+    assert axes[["a3", "a1"]][0].name == "a3"
 
 def test_label_map_axis_basics():
     axis = LabelMapAxis(labels=["label-1", "label-2"], name="label-axis")
