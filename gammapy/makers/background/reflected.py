@@ -413,11 +413,10 @@ class ReflectedRegionsBackgroundMaker(Maker):
         counts_off : `~gammapy.maps.RegionNDMap`
             Counts vs estimated energy extracted from the OFF regions.
         """
-        if dataset.counts.geom.is_region and isinstance(
-            dataset.counts.geom.region, PointSkyRegion
-        ):
+        on_geom = dataset.counts.geom
+        if on_geom.is_region and isinstance(on_geom.region, PointSkyRegion):
             counts_off, acceptance_off = make_counts_off_rad_max(
-                geom=dataset.counts.geom,
+                on_geom=on_geom,
                 rad_max=observation.rad_max,
                 events=observation.events,
                 region_finder=self.region_finder,
@@ -427,22 +426,22 @@ class ReflectedRegionsBackgroundMaker(Maker):
         else:
             regions, wcs = self.region_finder.run(
                 center=observation.pointing_radec,
-                region=dataset.counts.geom.region,
+                region=on_geom.region,
                 exclusion_mask=self.exclusion_mask,
             )
 
-            energy_axis = dataset.counts.geom.axes["energy"]
+            energy_axis = on_geom.axes["energy"]
 
             if len(regions) > 0:
-                geom = RegionGeom.from_regions(
+                off_geom = RegionGeom.from_regions(
                     regions=regions,
                     axes=[energy_axis],
                     wcs=wcs,
                 )
 
-                counts_off = RegionNDMap.from_geom(geom=geom)
+                counts_off = RegionNDMap.from_geom(geom=off_geom)
                 counts_off.fill_events(observation.events)
-                acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(regions))
+                acceptance_off = RegionNDMap.from_geom(geom=off_geom, data=len(regions))
             else:
                 # if no OFF regions are found, off is set to None and acceptance_off to zero
                 log.warning(
@@ -450,7 +449,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
                 )
 
                 counts_off = None
-                acceptance_off = RegionNDMap.from_geom(geom=dataset._geom, data=0)
+                acceptance_off = RegionNDMap.from_geom(geom=on_geom, data=0)
 
         return counts_off, acceptance_off
 
