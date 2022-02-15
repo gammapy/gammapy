@@ -446,9 +446,11 @@ class FluxMaps:
 
     @staticmethod
     def _change_energy_axis_node_type(input_map, node_type='center'):
-        """This change the node_type of the input map."""
-        input_map.geom.axes["energy"]._node_type = node_type
-        return input_map
+        """Change the node_type of the input map."""
+        energy_axis = input_map.geom.axes["energy"]
+        new_axis = energy_axis.to_node_type(node_type)
+        geom = input_map.geom.replace_axis(axis=new_axis)
+        return Map.from_geom(geom, data=input_map.data, unit=input_map.unit, meta=input_map.meta)
 
     @property
     def npred_excess_ref(self):
