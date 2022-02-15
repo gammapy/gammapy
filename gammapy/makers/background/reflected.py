@@ -173,17 +173,28 @@ class WobbleRegionsFinder(RegionsFinder):
                 regions.append(region_test)
 
 
-        # check for overlaps
+        # We cannot check for overlap of PointSkyRegion here, this is done later
+        # in make_counts_off_rad_max in the rad_max case
+        if not isinstance(region, PointSkyRegion):
+            if self._are_regions_overlapping(regions, reference_geom):
+                log.warning('Found overlapping off regions, returning no regions')
+                return [], reference_geom.wcs
+
+        return [r.to_sky(reference_geom.wcs) for r in regions], reference_geom.wcs
+
+
+    @staticmethod
+    def _are_regions_overlapping(regions, reference_geom):
+        # check for overl
         masks = [
             region.to_mask().to_image(reference_geom._shape) > 0
             for region in regions
         ]
         for mask_a, mask_b in combinations(masks, 2):
             if np.any(mask_a & mask_b):
-                log.warning('Found overlapping off regions, returning no regions')
-                return [], reference_geom.wcs
+                return True
 
-        return [r.to_sky(reference_geom.wcs) for r in regions], reference_geom.wcs
+        return False
 
 
 class ReflectedRegionsFinder(RegionsFinder):
