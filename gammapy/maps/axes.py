@@ -1609,13 +1609,16 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def __getitem__(self, idx):
-        if isinstance(idx, (int, slice)):
+        if isinstance(idx, int):
             return self._axes[idx]
         elif isinstance(idx, str):
             for ax in self._axes:
                 if ax.name == idx:
                     return ax
             raise KeyError(f"No axes: {idx!r}")
+        elif isinstance(idx, slice):
+            axes = self._axes[idx]
+            return self.__class__(axes=axes)
         elif isinstance(idx, list):
             axes = []
             for name in idx:
