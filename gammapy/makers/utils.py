@@ -487,7 +487,13 @@ def apply_rad_max(events, rad_max, position):
     '''Apply the RAD_MAX cut to the event list for given region'''
     offset = position.separation(events.pointing_radec)
     separation = position.separation(events.radec)
-    selected = separation <= rad_max.evaluate(energy=events.energy, offset=offset)
+
+    if rad_max.data.shape == (1, 1):
+        rad_max_for_events = rad_max.quantity[0, 0]
+    else:
+        rad_max_for_events = rad_max.evaluate(energy=events.energy, offset=offset)
+
+    selected = separation <= rad_max_for_events
     return events.select_row_subset(selected)
 
 
@@ -502,7 +508,12 @@ def are_regions_overlapping_rad_max(regions, rad_max, offset):
     ])
 
 
-    rad_max_at_offset = rad_max.evaluate(offset=offset)
+    # evaluate fails with a single bin somewhere trying to interpolate
+    if rad_max.data.shape == (1, 1):
+        rad_max_at_offset = rad_max.quantity[0, 0]
+    else:
+        rad_max_at_offset = rad_max.evaluate(offset=offset)
+
     return np.any(separations[np.newaxis, :] < (2 * rad_max_at_offset))
 
 

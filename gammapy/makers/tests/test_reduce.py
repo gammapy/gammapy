@@ -34,7 +34,7 @@ def observations_hess():
 
 
 @pytest.fixture(scope="session")
-def observations_magic():
+def observations_magic_rad_max():
     observations = [
         Observation.read(
             "$GAMMAPY_DATA/magic/rad_max/data/magic_dl3_run_05029747.fits"
@@ -258,10 +258,10 @@ def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
 
 
 @requires_data()
-def test_dataset_maker_spectrum_rad_max(observations_magic):
+def test_dataset_maker_spectrum_rad_max(observations_magic_rad_max):
     """test the energy-dependent spectrum extraction"""
 
-    observation = observations_magic[0]
+    observation = observations_magic_rad_max[0]
 
     # test file is broken, always overlapping regions in low energy
     # max_theta = np.sin(np.pi / (n_off + 1)) * offset
@@ -290,10 +290,35 @@ def test_dataset_maker_spectrum_rad_max(observations_magic):
 
 
 @requires_data()
-def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic, caplog):
+def test_dataset_maker_spectrum_global_rad_max():
     """test the energy-dependent spectrum extraction"""
 
-    observation = observations_magic[0]
+    observation = Observation.read('$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits')
+
+    maker = SpectrumDatasetMaker(
+        containment_correction=False, selection=["counts", "exposure", "edisp"]
+    )
+    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+
+    finder = WobbleRegionsFinder(n_off_regions=3)
+    bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
+    dataset_on_off = bkg_maker.run(dataset, observation)
+
+    counts = dataset_on_off.counts
+    counts_off = dataset_on_off.counts_off
+    assert counts.unit == ""
+    assert counts_off.unit == ""
+    print(counts.data)
+    print(counts_off.data)
+    assert_allclose(counts.data.sum(), 437, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 273, rtol=1e-5)
+
+
+@requires_data()
+def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic_rad_max, caplog):
+    """test the energy-dependent spectrum extraction"""
+
+    observation = observations_magic_rad_max[0]
 
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
