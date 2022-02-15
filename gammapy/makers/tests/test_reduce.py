@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -11,6 +12,7 @@ from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
     ReflectedRegionsBackgroundMaker,
+    WobbleRegionsFinder,
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
@@ -266,16 +268,39 @@ def test_dataset_maker_spectrum_rad_max(observations_magic):
     )
     dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
 
-    bkg_maker = ReflectedRegionsBackgroundMaker()
+    finder = WobbleRegionsFinder(n_off_regions=3)
+    bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
     dataset_on_off = bkg_maker.run(dataset, observation)
 
     counts = dataset_on_off.counts
     counts_off = dataset_on_off.counts_off
     assert counts.unit == ""
     assert counts_off.unit == ""
-    assert_allclose(counts.data.sum(), 1138, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 2128, rtol=1e-5)
+    assert_allclose(counts.data.sum(), 1135, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 2186, rtol=1e-5)
 
     exposure = dataset_on_off.exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 68714990.52908568, rtol=1e-5)
+
+
+@requires_data()
+def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic, caplog):
+    """test the energy-dependent spectrum extraction"""
+
+    observation = observations_magic[0]
+
+    maker = SpectrumDatasetMaker(
+        containment_correction=False, selection=["counts", "exposure", "edisp"]
+    )
+    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+
+    finder = WobbleRegionsFinder(n_off_regions=5)
+    bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
+
+    with caplog.at_level(logging.WARNING):
+        dataset_on_off = bkg_maker.run(dataset, observation)
+
+    # overlapping off regions means not counts will be filled
+    assert dataset_on_off.counts_off is None
+    assert (dataset_on_off.acceptance_off.data == 0).all()
