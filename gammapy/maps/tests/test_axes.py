@@ -175,6 +175,14 @@ def test_up_downsample_consistency(factor):
     assert_allclose(axis.edges, axis_new.edges)
 
 
+def test_one_bin_nodes():
+    axis = MapAxis.from_nodes([1], name="test", unit="deg")
+    assert_allclose(axis.center, 1 * u.deg)
+
+    assert_allclose(axis.coord_to_idx(2 * u.deg), 0)
+    assert_allclose(axis.idx_to_coord(1), 1 * u.deg)
+
+
 def test_group_table_basic(energy_axis_ref):
     energy_edges = [1, 2, 10] * u.TeV
 
@@ -695,7 +703,7 @@ def test_mixed_axes():
 
 
 @requires_dependency("matplotlib")
-def test_MapAxis_format_plot_xaxis():
+def test_map_axis_format_plot_xaxis():
     import matplotlib.pyplot as plt
     axis = MapAxis.from_energy_bounds(
             "0.03 TeV", "300 TeV", nbin=20,
@@ -711,7 +719,7 @@ def test_MapAxis_format_plot_xaxis():
 
 
 @requires_dependency("matplotlib")
-def test_TimeMapAxis_format_plot_xaxis(time_intervals):
+def test_time_map_axis_format_plot_xaxis(time_intervals):
     import matplotlib.pyplot as plt
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"], name="time"
