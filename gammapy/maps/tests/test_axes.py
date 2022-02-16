@@ -177,10 +177,11 @@ def test_up_downsample_consistency(factor):
 
 def test_one_bin_nodes():
     axis = MapAxis.from_nodes([1], name="test", unit="deg")
-    assert_allclose(axis.center, 1 * u.deg)
 
-    assert_allclose(axis.coord_to_idx(2 * u.deg), 0)
-    assert_allclose(axis.idx_to_coord(1), 1 * u.deg)
+    assert_allclose(axis.center, 1 * u.deg)
+    assert_allclose(axis.coord_to_pix(1 * u.deg), 0)
+    assert_allclose(axis.coord_to_pix(2 * u.deg), 0)
+    assert_allclose(axis.pix_to_coord(0), 1 * u.deg)
 
 
 def test_group_table_basic(energy_axis_ref):
@@ -248,11 +249,6 @@ def test_group_table_outside_range(energy_axis_ref):
 
     with pytest.raises(ValueError):
         energy_axis_ref.group_table(energy_edges)
-
-
-def test_map_axis_single_bin():
-    with pytest.raises(ValueError):
-        _ = MapAxis.from_nodes([1])
 
 
 def test_map_axis_aligned():

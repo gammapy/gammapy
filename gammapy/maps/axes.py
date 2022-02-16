@@ -26,11 +26,17 @@ def flat_if_equal(array):
 def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis to pixel coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
+    kwargs = {
+        "fill_value": "extrapolate",
+        "x": scale(edges),
+        "y": np.arange(len(edges), dtype=float),
+    }
 
-    interp_fn = scipy.interpolate.interp1d(
-        scale(edges), np.arange(len(edges), dtype=float), fill_value="extrapolate"
-    )
+    # change to nearest neighbour interpolation for single bins
+    if len(edges) == 1:
+        kwargs["kind"] = 0
 
+    interp_fn = scipy.interpolate.interp1d(**kwargs)
     return interp_fn(scale(coord))
 
 
@@ -38,10 +44,17 @@ def pix_to_coord(edges, pix, interp="lin"):
     """Convert pixel to grid coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
 
-    interp_fn = scipy.interpolate.interp1d(
-        np.arange(len(edges), dtype=float), scale(edges), fill_value="extrapolate"
-    )
+    kwargs = {
+        "fill_value": "extrapolate",
+        "x": np.arange(len(edges), dtype=float),
+        "y": scale(edges),
+    }
 
+    # change to nearest neighbour interpolation for single bins
+    if len(edges) == 1:
+        kwargs["kind"] = 0
+
+    interp_fn = scipy.interpolate.interp1d(**kwargs)
     return scale.inverse(interp_fn(pix))
 
 
