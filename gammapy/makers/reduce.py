@@ -2,7 +2,7 @@ import logging
 from multiprocessing import Pool
 import numpy as np
 from astropy.coordinates import Angle
-from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
+from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
 from .core import Maker
 from .safe import SafeMaskMaker
 
@@ -110,6 +110,8 @@ class DatasetsMaker(Maker):
 
     def callback(self, dataset):
         if self.stack_datasets:
+            if isinstance(self._dataset, MapDataset) and isinstance(dataset, MapDatasetOnOff):
+                dataset = dataset.to_map_dataset(dataset)
             self._dataset.stack(dataset)
         else:
             self._datasets.append(dataset)
