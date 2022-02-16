@@ -301,7 +301,9 @@ class MapAxis:
                                         quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
                                         , unit=self.unit )
         ax.set_xlabel(xlabel)
-        ax.set_xlim(self.bounds)
+        xmin, xmax = self.bounds
+        if not xmin == xmax:
+            ax.set_xlim(self.bounds)
         return ax
 
     def format_plot_yaxis(self, ax):

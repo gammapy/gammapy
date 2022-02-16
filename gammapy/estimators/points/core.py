@@ -333,6 +333,14 @@ class FluxPoints(FluxMaps):
 
             idx = (Ellipsis, 0, 0)
             table = self.energy_axis.to_table(format="gadf-sed")
+
+            if self.energy_axis.nbin == 1 and self.energy_axis.node_type == "center":
+                if sed_type in ["flux", "eflux", "likelihood"]:
+                    raise ValueError("Cannot convert single energy bin with node"
+                                     f" type center to integral sed type '{sed_type}'")
+                else:
+                    table.remove_columns(["e_min", "e_max"])
+
             table.meta["SED_TYPE"] = sed_type
 
             if self.n_sigma_ul:

@@ -74,7 +74,9 @@ class RegionNDMap(Map):
         ax = ax or plt.gca()
 
         if axis_name is None:
-            if self.geom.axes.is_unidimensional:
+            if len(self.geom.axes) == 1:
+                axis_name = self.geom.axes[0].name
+            elif self.geom.axes.is_unidimensional:
                 axis_name = self.geom.axes.primary_axis.name
             else:
                 raise ValueError(
