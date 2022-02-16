@@ -455,7 +455,7 @@ class Analysis:
         datasets_maker = DatasetsMaker(makers,
                                       stack_datasets=datasets_settings.stack,
                                       n_jobs=self.config.general.n_jobs,
-                                      cutout_mode='partial',
+                                      cutout_mode='trim',
                                       cutout_width=2 * offset_max)
         self.datasets = datasets_maker.run(stacked, self.observations)
         #TODO: move progress bar to DatasetsMaker but how with multiprocessing ?

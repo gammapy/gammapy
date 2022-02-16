@@ -27,7 +27,7 @@ class DatasetsMaker(Maker):
         Number of processes to run in parallel
         Default is None
     cutout_mode : str
-        Cutout mode. Default is "partial"
+        Cutout mode. Default is "trim"
     cutout_width : str or `~astropy.coordinates.Angle`,
         Cutout width. Default is None, If Default is determined
     """
@@ -39,7 +39,7 @@ class DatasetsMaker(Maker):
         makers,
         stack_datasets=True,
         n_jobs=None,
-        cutout_mode="partial",
+        cutout_mode="trim",
         cutout_width=None,
     ):
         self.log = logging.getLogger(__name__)
