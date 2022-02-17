@@ -45,58 +45,55 @@ class FluxPoints(FluxMaps):
     The `FluxPoints` object is most easily created by reading a file with
     flux points given in one of the formats documented above::
 
-        from gammapy.estimators import FluxPoints
-        filename = '$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits'
-        flux_points = FluxPoints.read(filename)
-        flux_points.plot()
+    >>> from gammapy.estimators import FluxPoints
+    >>> filename = '$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits'
+    >>> flux_points = FluxPoints.read(filename)
+    >>> flux_points.plot() #doctest: +SKIP
 
     An instance of `FluxPoints` can also be created by passing an instance of
     `astropy.table.Table`, which contains the required columns, such as `'e_ref'`
     and `'dnde'`. The corresponding `sed_type` has to be defined in the meta data
     of the table::
 
-        import numpy as np
-        from astropy import units as u
-        from astropy.table import Table
-        from gammapy.estimators import FluxPoints
-        from gammapy.modeling.models import PowerLawSpectralModel
-
-        table = Table()
-        pwl = PowerLawSpectralModel()
-        e_ref = np.geomspace(1, 100, 7) * u.TeV
-
-        table["e_ref"] = e_ref
-        table["dnde"] = pwl(e_ref)
-        table.meta["SED_TYPE"] = "dnde"
-
-        flux_points = FluxPoints.from_table(table)
-        flux_points.plot(sed_type="flux")
+    >>> import numpy as np
+    >>> from astropy import units as u
+    >>> from astropy.table import Table
+    >>> from gammapy.estimators import FluxPoints
+    >>> from gammapy.modeling.models import PowerLawSpectralModel
+    >>> table = Table()
+    >>> pwl = PowerLawSpectralModel()
+    >>> e_ref = np.geomspace(1, 100, 7) * u.TeV
+    >>> table["e_ref"] = e_ref
+    >>> table["dnde"] = pwl(e_ref)
+    >>> table.meta["SED_TYPE"] = "dnde"
+    >>> flux_points = FluxPoints.from_table(table)
+    >>> flux_points.plot(sed_type="flux") #doctest: +SKIP
 
     If you have flux points in a different data format, the format can be changed
     by renaming the table columns and adding meta data::
 
 
-        from astropy import units as u
-        from astropy.table import Table
-        from gammapy.estimators import FluxPoints
-        from gammapy.utils.scripts import make_path
+    >>> from astropy import units as u
+    >>> from astropy.table import Table
+    >>> from gammapy.estimators import FluxPoints
+    >>> from gammapy.utils.scripts import make_path
 
-        table = Table.read(make_path('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt'),
-                           format='ascii.csv', delimiter=' ', comment='#')
-        table.rename_column('Differential_Flux', 'dnde')
-        table['dnde'].unit = 'cm-2 s-1 TeV-1'
+    >>> filename = make_path('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt')
+    >>> table = Table.read(filename ,format='ascii.csv', delimiter=' ', comment='#')
+    >>> table.rename_column('Differential_Flux', 'dnde')
+    >>> table['dnde'].unit = 'cm-2 s-1 TeV-1'
 
-        table.rename_column('lower_error', 'dnde_errn')
-        table['dnde_errn'].unit = 'cm-2 s-1 TeV-1'
+    >>> table.rename_column('lower_error', 'dnde_errn')
+    >>> table['dnde_errn'].unit = 'cm-2 s-1 TeV-1'
 
-        table.rename_column('upper_error', 'dnde_errp')
-        table['dnde_errp'].unit = 'cm-2 s-1 TeV-1'
+    >>> table.rename_column('upper_error', 'dnde_errp')
+    >>> table['dnde_errp'].unit = 'cm-2 s-1 TeV-1'
 
-        table.rename_column('E', 'e_ref')
-        table['e_ref'].unit = 'TeV'
+    >>> table.rename_column('E', 'e_ref')
+    >>> table['e_ref'].unit = 'TeV'
 
-        flux_points = FluxPoints.from_table(table, sed_type="dnde")
-        flux_points.plot(sed_type="e2dnde")
+    >>> flux_points = FluxPoints.from_table(table, sed_type="dnde")
+    >>> flux_points.plot(sed_type="e2dnde") #doctest: +SKIP
 
 
     Note: In order to reproduce the example you need the tests datasets folder.
@@ -108,7 +105,7 @@ class FluxPoints(FluxMaps):
     def read(
         cls, filename, sed_type=None, format="gadf-sed", reference_model=None, **kwargs
     ):
-        """Read flux points.
+        """Read precomputed flux points.
 
         Parameters
         ----------
@@ -184,7 +181,8 @@ class FluxPoints(FluxMaps):
     def from_table(
         cls, table, sed_type=None, format="gadf-sed", reference_model=None, gti=None
     ):
-        """Create flux points from table
+        """Create flux points from a table. The table column names must be consistent with the
+        sed_type
 
         Parameters
         ----------
@@ -292,26 +290,27 @@ class FluxPoints(FluxMaps):
             Formatted version with column formats applied. Numerical columns are
             formatted to .3f and .3e respectively.
 
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Flux points table
+
         Examples
         --------
 
         This is how to read and plot example flux points:
 
-            >>> from gammapy.estimators import FluxPoints
-            >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
-            >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
-            >>> print(table[:2])
-            e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
-             TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
-            ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
-            1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
-            2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
-
-        Returns
-        -------
-        table : `~astropy.table.Table`
-            Flux points table
+        >>> from gammapy.estimators import FluxPoints
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
+        >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
+        >>> print(table[:2])
+        e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
+         TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
+        ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
+        1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
+        2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
         """
+
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
             if not self.geom.axes.names == ["energy"]:
