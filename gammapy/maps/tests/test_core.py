@@ -233,8 +233,8 @@ def test_map_properties():
     m = Map.create(npix=(2, 1))
 
     assert isinstance(m.unit, u.CompositeUnit)
-    assert m.unit == ""
-    m.unit = "cm-2 s-1"
+    assert m._unit == u.one
+    m._unit = u.Unit("cm-2 s-1")
     assert m.unit.to_string() == "1 / (cm2 s)"
 
     assert isinstance(m.meta, dict)
@@ -322,7 +322,7 @@ def test_map_arithmetics(map_type):
         m5 += 1 * u.W
 
     m1.data *= 0.0
-    m1.unit = ""
+    m1._unit = u.one
     m1 += 4
     assert m1.unit == u.Unit("")
     assert_allclose(m1.data, 4)

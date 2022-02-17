@@ -49,7 +49,7 @@ class RegionNDMap(Map):
         self._geom = geom
         self.data = data
         self.meta = meta
-        self.unit = u.Unit(unit)
+        self._unit = u.Unit(unit)
 
     def plot(self, ax=None, axis_name=None, **kwargs):
         """Plot the data contained in region map along the non-spatial axis.

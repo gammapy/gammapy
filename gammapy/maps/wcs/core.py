@@ -2,6 +2,7 @@
 import json
 import numpy as np
 from astropy.io import fits
+import astropy.units as u
 from ..core import Map
 from ..io import JsonQuantityEncoder, find_bands_hdu, find_hdu
 from .geom import WcsGeom
@@ -143,9 +144,9 @@ class WcsMap(Map):
         if wcs_map.unit.is_equivalent(""):
             if format == "fgst-template":
                 if "GTI" in hdu_list:  # exposure maps have an additional GTI hdu
-                    wcs_map.unit = "cm2 s"
+                    wcs_map._unit = u.Unit("cm2 s")
                 else:
-                    wcs_map.unit = "cm-2 s-1 MeV-1 sr-1"
+                    wcs_map._unit = u.Unit("cm-2 s-1 MeV-1 sr-1")
 
         return wcs_map
 
