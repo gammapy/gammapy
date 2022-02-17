@@ -53,6 +53,11 @@ def test_flux_point_dataset_serialization(tmp_path):
     model = SkyModel(spectral_model=spectral_model, name="test_model")
     dataset = FluxPointsDataset(model, data, name="test_dataset")
 
+    dataset2 = FluxPointsDataset.read(path, name="test_dataset2")
+    assert_allclose(dataset.data.dnde.data, dataset2.data.dnde.data)
+    assert dataset.mask_safe.data == dataset2.mask_safe.data
+    assert dataset2.name == "test_dataset2"
+
     Datasets([dataset]).write(
         filename=tmp_path / "tmp_datasets.yaml",
         filename_models=tmp_path / "tmp_models.yaml",

@@ -39,33 +39,28 @@ class FluxPointsDataset(Dataset):
     >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
     >>> from gammapy.estimators import FluxPoints
     >>> from gammapy.datasets import FluxPointsDataset
-
-    >>> #load precomputed flux points
     >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-    >>> flux_points = FluxPoints.read(filename)
-
+    >>> dataset = FluxPointsDataset.read(filename)
     >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
-
-    >>> #create dataset and fit
-    >>> dataset = FluxPointsDataset(model, flux_points)
+    >>> dataset.models = model
     >>> fit = Fit()
     >>> result = fit.run([dataset])
     >>> print(result)
     OptimizeResult
     <BLANKLINE>
-    	backend    : minuit
-    	method     : migrad
-    	success    : True
-    	message    : Optimization terminated successfully.
-    	nfev       : 135
-    	total stat : 25.21
+        backend    : minuit
+        method     : migrad
+        success    : True
+        message    : Optimization terminated successfully.
+        nfev       : 135
+        total stat : 25.21
     <BLANKLINE>
     CovarianceResult
     <BLANKLINE>
-    	backend    : minuit
-    	method     : hesse
-    	success    : True
-    	message    : Hesse terminated successfully.
+        backend    : minuit
+        method     : hesse
+        success    : True
+        message    : Hesse terminated successfully.
 
     >>> print(result.parameters.to_table())
           type      name     value         unit        error   min max frozen link
@@ -123,7 +118,7 @@ class FluxPointsDataset(Dataset):
             models = DatasetModels(models)
             self._models = models.select(datasets_names=self.name)
 
-    def write(self, filename, overwrite=True, **kwargs):
+    def write(self, filename, overwrite=False, **kwargs):
         """Write flux point dataset to file.
 
         Parameters
@@ -145,6 +140,32 @@ class FluxPointsDataset(Dataset):
         table["mask_fit"] = mask_fit
         table["mask_safe"] = self.mask_safe
         table.write(make_path(filename), overwrite=overwrite, **kwargs)
+
+    @classmethod
+    def read(cls, filename, name=None, format="gadf-sed"):
+        """Read pre-computed flux points and create a dataset
+
+        Parameters
+        ----------
+        filename : str
+            Filename to read from.
+        name : str
+            Name of the new dataset.
+        format : {"gadf-sed"}
+            Format of the dataset file.
+
+        Returns
+        -------
+        dataset : `FluxPointsDataset`
+            FluxPointsDataset
+        """
+        from gammapy.estimators import FluxPoints
+
+        filename = make_path(filename)
+        table = Table.read(filename)
+        return cls(
+            name=make_name(name), data=FluxPoints.from_table(table, format=format)
+        )
 
     @classmethod
     def from_dict(cls, data, **kwargs):
