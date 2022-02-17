@@ -65,6 +65,7 @@ class FluxPoints(FluxMaps):
     >>> e_ref = np.geomspace(1, 100, 7) * u.TeV
     >>> table["e_ref"] = e_ref
     >>> table["dnde"] = pwl(e_ref)
+    >>> table["dnde_err"] = pwl.evaluate_error(e_ref)[0]
     >>> table.meta["SED_TYPE"] = "dnde"
     >>> flux_points = FluxPoints.from_table(table)
     >>> flux_points.plot(sed_type="flux") #doctest: +SKIP
