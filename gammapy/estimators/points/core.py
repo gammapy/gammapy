@@ -152,8 +152,19 @@ class FluxPoints(FluxMaps):
             Filename
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             Sed type
-        format : {"gadf-sed", "lightcurve"}
-            Format string.
+        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
+            Format specification. The following formats are supported:
+
+            * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
+                for details
+            * "lightcurve": Gammapy internal format to store energy dependent
+                lightcurves. Basically a generalisation of the "gadf" format, but
+                currently there is no detailed documentation available.
+            * "binned-time-series": table format support by Astropy's
+                `~astropy.timeseries.BinnedTimeSeries`.
+            * "profile": Gammapy internal format to store energy dependent
+                flux profiles. Basically a generalisation of the "gadf" format, but
+                currently there is no detailed documentation available.
         **kwargs : dict
             Keyword arguments passed to `astropy.table.Table.write`.
         """
