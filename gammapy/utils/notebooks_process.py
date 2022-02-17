@@ -79,8 +79,7 @@ def add_box(nb_path):
 **This is a fixed-text formatted version of a Jupyter notebook**
 
 {BINDER_LINK}
-- You may download all the notebooks in the documentation as a
-[tar file]({start_link}_downloads/notebooks-{release_number}.tar).
+- You may download all the notebooks as a [tar file]({start_link}_downloads/notebooks-{release_number}.tar).
 - **Source files:**
 [{nb_filename}]({start_link}{DOWN_NBS}/{nb_filename}) |
 [{py_filename}]({start_link}{DOWN_NBS}/{py_filename})
