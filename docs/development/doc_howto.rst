@@ -110,17 +110,6 @@ Generating the HTML docs for Gammapy is straight-forward::
     make docs-all
     make docs-show
 
-Generating the PDF docs is more complex.
-This should work::
-
-    python setup.py build_docs -b latex
-    cd docs/_build/latex
-    makeindex -s python.ist gammapy.idx
-    pdflatex -interaction=nonstopmode gammapy.tex
-    open gammapy.pdf
-
-You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
-
 Jupyter notebooks present in Gammapy documentation have stripped output cells.
 All notebooks are code clean formatted, tested, and filled during the process of documentation
 building. They are also converted to Sphinx formatted HTML files and ``.py`` scripts.
