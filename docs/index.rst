@@ -15,8 +15,8 @@ Gammapy
 **Useful links**:
 :ref:`install` |
 `Source Repository <https://github.com/gammapy/gammapy/issues>`__ |
-`Issues & Ideas <https://github.com/gammapy/gammapy/issues>`__ |
 `Discussions <https://github.com/gammapy/gammapy/discussions>`__ |
+`Tutorials <tutorials/index.html>`__ |
 `Contact <https://gammapy.org/contact.html>`__
 
 
