@@ -36,10 +36,8 @@ def test_compute_flux_spatial():
     model = Models(models)
 
     exposure_region = RegionNDMap.create(
-        region, axes=[energy_axis_true], binsz_wcs="0.01deg"
+        region, axes=[energy_axis_true], binsz_wcs="0.01deg", unit="m2 s", data=1.0
     )
-    exposure_region.data += 1.0
-    exposure_region.unit = "m2 s"
 
     geom = RegionGeom(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
     psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
@@ -70,9 +68,7 @@ def test_compute_flux_spatial_no_psf():
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = Models(models)
 
-    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true])
-    exposure_region.data += 1.0
-    exposure_region.unit = "m2 s"
+    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true], unit="m2 s", data=1.0)
 
     evaluator = MapEvaluator(model=model[0], exposure=exposure_region)
     flux = evaluator.compute_flux_spatial()
