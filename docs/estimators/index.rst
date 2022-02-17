@@ -86,7 +86,7 @@ e_max             Maximum energy
 dnde              Differential flux at ``e_ref``
 flux              Integrated flux between ``e_min`` and ``e_max``
 eflux             Integrated energy flux between ``e_min`` and ``e_max``
-e2dnde            Differential energy flux between ``e_ref``
+e2dnde            Differential energy flux at ``e_ref``
 ================= =================================================
 
 The same can be applied for the error and upper limit information.
