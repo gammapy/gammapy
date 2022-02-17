@@ -61,7 +61,7 @@ MANIFEST
 # notebooks
 *.ipynb_checkpoints
 docs/_static/notebooks
-docs/_downloads/notebook-dev.tar
+docs/_downloads/notebooks-dev.tar
 docs/modeling/gallery
 
 docs/tutorials/analysis/3D/crab-3datasets
