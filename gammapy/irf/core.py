@@ -47,10 +47,10 @@ class IRF(metaclass=abc.ABCMeta):
             if not self.default_unit.is_equivalent(data.unit):
                 raise ValueError(f"Error: {data.unit} is not an allowed unit. {self.tag} requires {self.default_unit} data quantities.")
             else:
-                self.unit = data.unit
+                self._unit = data.unit
         else:
             self.data = data
-            self.unit = unit
+            self._unit = unit
         self.meta = meta or {}
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs.copy()
@@ -144,10 +144,6 @@ class IRF(metaclass=abc.ABCMeta):
         """Map unit (`~astropy.units.Unit`)"""
         return self._unit
 
-    @unit.setter
-    def unit(self, val):
-        self._unit = u.Unit(val)
-
     @lazyproperty
     def _interpolate(self):
         kwargs = self.interp_kwargs.copy()
@@ -178,7 +174,7 @@ class IRF(metaclass=abc.ABCMeta):
         """
         val = u.Quantity(val, copy=False)
         self.data = val.value
-        self.unit = val.unit
+        self._unit = val.unit
 
     @property
     def axes(self):

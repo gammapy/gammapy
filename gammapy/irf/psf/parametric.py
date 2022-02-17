@@ -60,10 +60,6 @@ class ParametricPSF(PSF):
         """Map unit (`~astropy.units.Unit`)"""
         return self._unit
 
-    @unit.setter
-    def unit(self, values):
-        self._unit = {key: u.Unit(val) for key, val in values.items()}
-
     @property
     def _interpolators(self):
         interps = {}
@@ -167,6 +163,7 @@ class ParametricPSF(PSF):
             data[name] = values.reshape(axes.shape)
             unit[name] = column.unit or ""
 
+        unit = {key: u.Unit(val) for key, val in unit.items()}
         return cls(axes=axes, data=data, meta=table.meta.copy(), unit=unit)
 
     def to_psf3d(self, rad=None):
