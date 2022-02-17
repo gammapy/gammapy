@@ -113,5 +113,5 @@ related to Gammapy.
     userguide/index
     api
     development/index
-    changelog
+    changelog/index
 
