@@ -118,7 +118,7 @@ class DataStore:
             Data store
 
         Examples
-        -------
+        --------
         >>> from gammapy.data import DataStore
         >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
         """
