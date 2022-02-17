@@ -176,6 +176,22 @@ class IRF(metaclass=abc.ABCMeta):
         self.data = val.value
         self._unit = val.unit
 
+    def to_unit(self, unit):
+        """Convert irf to different unit
+
+        Parameters
+        ----------
+        unit : `~astropy.unit.Unit` or str
+            New unit
+
+        Returns
+        -------
+        irf : `IRF`
+            IRF with new unit and converted data
+        """
+        data = self.quantity.to_value(unit)
+        return self.__class__(self.axes, data = data, meta = self.meta, interp_kwargs = self.interp_kwargs)
+
     @property
     def axes(self):
         """`MapAxes`"""

@@ -60,6 +60,10 @@ class ParametricPSF(PSF):
         """Map unit (`~astropy.units.Unit`)"""
         return self._unit
 
+    def to_unit(self, unit):
+        """Convert IRF to unit."""
+        raise NotImplementedError
+
     @property
     def _interpolators(self):
         interps = {}

@@ -45,6 +45,9 @@ def test_psf_3d_basics(psf_3d):
     assert psf_3d.data.shape == (32, 6, 144)
     assert psf_3d.unit == "sr-1"
 
+    psf_3d_new_unit = psf_3d.to_unit("deg-2")
+    assert_allclose(psf_3d_new_unit.data, psf_3d.data/3282.8063, rtol=1e-6)
+
     assert_allclose(psf_3d.meta["LO_THRES"], 0.01)
 
     assert "PSF3D" in str(psf_3d)
