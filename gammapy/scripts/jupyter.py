@@ -231,6 +231,8 @@ def cli_jupyter_tar(out):
     """Create a tar file with the notebooks in docs."""
 
     tar_name = Path(out)
+    tar_name.parent.mkdir(parents=True, exist_ok=True)
+
     with tarfile.open(tar_name, "w:") as tar:
         for name in get_notebooks_paths():
             path_tail = str(name).split(str(PATH_DOCS.resolve()))[1]
