@@ -119,9 +119,9 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
 
     Parameters
     ----------
-    dataset:`~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+    dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the input dataset
-    spectral_model: `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
             assumed spectral shape. If none, a Power Law of index 2 is assumed
     normalize : bool
         Normalize the exposure to the total integrated flux of the spectral model.
