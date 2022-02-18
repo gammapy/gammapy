@@ -11,7 +11,6 @@ User guide
 
     analysis
     package
-    dependencies
 
 .. toctree::
     :hidden:
