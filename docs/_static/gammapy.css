@@ -25,13 +25,21 @@ p {
 }
 .navbar-light .navbar-nav li a.nav-link  {
   color: var(--gammapy-lightgray);
+  font-size: 18px;
 }
 .navbar-light .navbar-nav li a.nav-link:hover,
 .navbar-light .navbar-nav > .active > .nav-link {
-  color: var(--gammapy-primary);
+  color: rgba(255, 255, 255, 0.5);
 }
 #navbar-icon-links i.fa-github-square::before {
   color: white;
+}
+
+.col-lg-9 {
+  -ms-flex: 0 0 91.66667%;
+  flex: 0 0 91.66667%;
+  flex-basis: 91.6667%;
+  max-width: 91.66667%;
 }
 
 /* pre */
