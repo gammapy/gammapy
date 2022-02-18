@@ -1216,12 +1216,12 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        position : `SkyCoord`
+        position : `~astropy.coordinates.SkyCoord`
             Test position
 
         Returns
         -------
-        position : `SkyCoord`
+        position : `~astropy.coordinates.SkyCoord`
             Nearest position in the mask
         """
         if not self.geom.is_image:

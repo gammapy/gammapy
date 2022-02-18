@@ -16,7 +16,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
     Parameters
     ----------
-    regions : list of `SkyRegion`
+    regions : list of `~regions.SkyRegion`
         regions to use
     spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
         Spectral model to compute the fluxes or brightness.

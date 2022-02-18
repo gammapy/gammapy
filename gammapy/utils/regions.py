@@ -47,7 +47,7 @@ def compound_region_center(compound_region):
 
     Returns
     -------
-    center : `SkyCoord`
+    center : `~astropy.coordinates.SkyCoord`
         Geometric median of the positions of the individual regions
     """
     regions = compound_region_to_regions(compound_region)

@@ -53,7 +53,7 @@ class RegionsFinder(metaclass=ABCMeta):
 
         Returns
         -------
-        regions : list of `SkyRegion`
+        regions : list of `~regions.SkyRegion`
             Reflected regions
         wcs: `~astropy.wcs.WCS`
             WCS for the determined regions
@@ -150,7 +150,7 @@ class WobbleRegionsFinder(RegionsFinder):
 
         Returns
         -------
-        regions : list of `SkyRegion`
+        regions : list of `~regions.SkyRegion`
             Reflected regions
         wcs: `~astropy.wcs.WCS`
             WCS for the determined regions
@@ -304,7 +304,7 @@ class ReflectedRegionsFinder(RegionsFinder):
 
         Returns
         -------
-        regions : list of `SkyRegion`
+        regions : list of `~regions.SkyRegion`
             Reflected regions
         wcs: `~astropy.wcs.WCS`
             WCS for the determined regions
