@@ -26,7 +26,8 @@ p {
 .navbar-light .navbar-nav li a.nav-link  {
   color: var(--gammapy-lightgray);
 }
-.navbar-light .navbar-nav li a.nav-link:hover, .navbar-light .navbar-nav > .active > .nav-link {
+.navbar-light .navbar-nav li a.nav-link:hover,
+.navbar-light .navbar-nav > .active > .nav-link {
   color: var(--gammapy-primary);
 }
 #navbar-icon-links i.fa-github-square::before {
@@ -37,7 +38,9 @@ p {
 .pre {
   font-size: 12px;
 }
-.docutils > .pre, .external > .pre,  .descname > .pre {
+.docutils > .pre,
+.external > .pre,
+.descname > .pre {
   font-weight: bold;
   color: #425bab;
 }
@@ -46,8 +49,15 @@ p {
 }
 
 /* links */
-a, .prev-next-area a p.prev-next-title, a > .docutils > .pre {
+a,
+.prev-next-area a p.prev-next-title,
+a > .docutils > .pre {
   color: var(--gammapy-primary);
+}
+a:hover,
+.prev-next-area a:hover p.prev-next-title,
+a > .docutils > .pre {
+  color: rgb(0, 91, 129);
 }
 
 /* admonitions */
@@ -58,10 +68,42 @@ div.admonition.note > .admonition-title {
   color: var(--gammapy-lightgray);
   background-color: var(--gammapy-secondary);
 }
-.admonition.note, div.admonition.note {
+.admonition.note,
+div.admonition.note {
   border-color: var(--gammapy-secondary);
 }
-.admonition.note > .admonition-title::before, div.admonition.note > .admonition-title::before {
+.admonition.note > .admonition-title::before,
+div.admonition.note > .admonition-title::before {
+  color: var(--gammapy-lightgray);
+}
+.admonition.warning {
+  background: var(--gammapy-lightgray);
+}
+div.admonition.warning > .admonition-title {
+  color: var(--gammapy-lightgray);
+  background-color: var(--gammapy-secondary);
+}
+.admonition.warning,
+div.admonition.warning {
+  border-color: var(--gammapy-secondary);
+}
+.admonition.warning > .admonition-title::before,
+div.admonition.warning > .admonition-title::before {
+  color: var(--gammapy-lightgray);
+}
+.admonition.seealso {
+  background: var(--gammapy-lightgray);
+}
+div.admonition.seealso > .admonition-title {
+  color: var(--gammapy-lightgray);
+  background-color: var(--gammapy-secondary);
+}
+.admonition.seealso,
+div.admonition.seealso {
+  border-color: var(--gammapy-secondary);
+}
+.admonition.seealso > .admonition-title::before,
+div.admonition.seealso > .admonition-title::before {
   color: var(--gammapy-lightgray);
 }
 
