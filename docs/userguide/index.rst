@@ -18,6 +18,7 @@ User guide
     ../tutorials/index
     howto
     ../modeling/gallery/index
+    Gammapy recipes <https://gammapy.github.io/gammapy-recipes>
     references
 
 
