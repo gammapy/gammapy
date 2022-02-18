@@ -74,14 +74,14 @@ User guide
     ---
     :img-top: ../_static/glossaryicon.png
 
-    Glossary and references
-    ^^^^^^^^^^^^^^^^^^^^^^^
+    Gammapy recipes
+    ^^^^^^^^^^^^^^^
 
-    Key concepts used in this documentation as well a list of bibliography references.
+    A collection of **user contributed** notebooks covering aspects not present in the official tutorials.
 
     +++
 
-    .. link-button:: ../userguide/references
-            :type: ref
-            :text: To the glossary
+    .. link-button:: https://gammapy.github.io/gammapy-recipes
+            :type: url
+            :text: To the recipes
             :classes: btn-block btn-secondary stretched-link
