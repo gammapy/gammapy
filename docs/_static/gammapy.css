@@ -5,25 +5,51 @@
     --gammapy-lightgray: #f2f2f2;;
 }
 
-/* sidebar header (and topbar for mobile) */
- .wy-side-nav-search, .wy-nav-top {
-   background: var(--gammapy-secondary);
- }
-
-/* sidebar */
- .wy-nav-side {
-   background: var(--gammapy-secondary);
+/* navbar */
+.navbar {
+    background-color: var(--gammapy-secondary) !important;
+    color: white;
+}
+.navbar-light .navbar-nav li a.nav-link  {
+    color: var(--gammapy-lightgray);
+}
+.navbar-light .navbar-nav li a.nav-link:hover, .navbar-light .navbar-nav > .active > .nav-link {
+    color: var(--gammapy-primary);
+}
+#navbar-icon-links i.fa-github-square::before {
+    color: white;
 }
 
-/* links outside nav */
-.rst-content a:link, .rst-content a:visited {
-   color: var(--gammapy-primary);
-   text-decoration: none;
- }
+/* pre */
+.pre {
+    font-size: 12px;
+}
+.docutils > .pre, .external > .pre,  .descname > .pre {
+    font-weight: bold;
+    color: var(--gammapy-secondary);
+}
+.sig-paren {
+    font-size: 12px;
+}
 
-/* admonitions only */
+/* links */
+a, .prev-next-area a p.prev-next-title, a > .docutils > .pre {
+    color: var(--gammapy-primary);
+}
+
+/* admonitions */
 .admonition.note {
    background: var(--gammapy-lightgray);
+}
+div.admonition.note > .admonition-title {
+   color: var(--gammapy-lightgray);
+   background-color: var(--gammapy-secondary);
+}
+.admonition.note, div.admonition.note {
+    border-color: var(--gammapy-secondary);
+}
+.admonition.note > .admonition-title::before, div.admonition.note > .admonition-title::before {
+   color: var(--gammapy-lightgray);
 }
 
 /* font size smaller and striped cols in notebook tables */
@@ -47,7 +73,7 @@ table.docutils {
      background-color: #fff;
 }
 
-/* Main index page overview cards */
+/* main index page overview cards */
 
 .intro-card {
   background: #fff;
