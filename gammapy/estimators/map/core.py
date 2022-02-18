@@ -156,6 +156,7 @@ class FluxMaps:
         if meta is None:
             meta = {}
 
+        meta.setdefault("sed_type_init", "likelihood")
         self.meta = meta
         self.gti = gti
         self._filter_success_nan = filter_success_nan
@@ -233,6 +234,14 @@ class FluxMaps:
                 return sed_type
 
     @property
+    def is_convertible_to_flux_sed_type(self):
+        """Check whether differential sed type is convertable to integral sed type"""
+        if self.sed_type_init in ["dnde", "e2dnde"]:
+            return self.energy_axis.node_type == "edges"
+
+        return True
+
+    @property
     def has_ul(self):
         """Whether the flux estimate has either sqrt(ts) or ts defined"""
         return "norm_ul" in self._data
@@ -287,6 +296,14 @@ class FluxMaps:
     def sed_type_init(self):
         """Initial sed type"""
         return self.meta.get("sed_type_init")
+
+    @property
+    def sed_type_plot_default(self):
+        """Initial sed type"""
+        if self.sed_type_init == "likelihood":
+            return "dnde"
+
+        return self.sed_type_init
 
     @property
     def geom(self):
@@ -553,6 +570,9 @@ class FluxMaps:
     @property
     def flux_ref(self):
         """Reference integral flux"""
+        if not self.is_convertible_to_flux_sed_type:
+            raise ValueError("Missing energy range definition, cannot convert to flux sed type.")
+
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.reference_spectral_model.integral(energy_min, energy_max)
@@ -561,6 +581,9 @@ class FluxMaps:
     @property
     def eflux_ref(self):
         """Reference energy flux"""
+        if not self.is_convertible_to_flux_sed_type:
+            raise ValueError("Missing energy range definition, cannot convert to flux sed type.")
+
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
         result = self.reference_spectral_model.energy_flux(energy_min, energy_max)
@@ -720,7 +743,7 @@ class FluxMaps:
             gti=self.gti,
         )
 
-    def to_maps(self, sed_type="likelihood"):
+    def to_maps(self, sed_type=None):
         """Return maps in a given SED type.
 
         Parameters
@@ -734,6 +757,9 @@ class FluxMaps:
             Maps object containing the requested maps.
         """
         maps = Maps()
+
+        if sed_type is None:
+            sed_type = self.sed_type_init
 
         for quantity in self.all_quantities(sed_type=sed_type):
             m = getattr(self, quantity, None)
@@ -852,7 +878,7 @@ class FluxMaps:
 
         return cls(data=data, reference_model=reference_model, gti=gti, meta=meta)
 
-    def to_hdulist(self, sed_type="likelihood", hdu_bands=None):
+    def to_hdulist(self, sed_type=None, hdu_bands=None):
         """Convert flux map to list of HDUs.
 
         For now, one cannot export the reference model.
@@ -870,6 +896,9 @@ class FluxMaps:
         hdulist : `~astropy.io.fits.HDUList`
             Map dataset list of HDUs.
         """
+        if sed_type is None:
+            sed_type = self.sed_type_init
+
         exclude_primary = slice(1, None)
 
         hdu_primary = fits.PrimaryHDU()
@@ -926,7 +955,7 @@ class FluxMaps:
         )
 
     def write(
-        self, filename, filename_model=None, overwrite=False, sed_type="likelihood"
+        self, filename, filename_model=None, overwrite=False, sed_type=None
     ):
         """Write flux map to file.
 
@@ -942,6 +971,9 @@ class FluxMaps:
         sed_type : str
             sed type to convert to. Default is `likelihood`
         """
+        if sed_type is None:
+            sed_type = self.sed_type_init
+
         filename = make_path(filename)
 
         if filename_model is None:

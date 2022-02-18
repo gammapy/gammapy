@@ -241,6 +241,9 @@ def test_flux_points_single_bin_dnde():
     table_single_bin = table[1:2]
     fp = FluxPoints.from_table(table_single_bin, sed_type="dnde")
 
+    with pytest.raises(ValueError):
+        _ = fp.flux_ref
+
     with mpl_plot_check():
         fp.plot(sed_type="e2dnde")
 

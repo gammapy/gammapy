@@ -141,7 +141,7 @@ class FluxPoints(FluxMaps):
             format=format,
         )
 
-    def write(self, filename, sed_type="likelihood", format="gadf-sed", **kwargs):
+    def write(self, filename, sed_type=None, format="gadf-sed", **kwargs):
         """Write flux points.
 
         Parameters
@@ -166,6 +166,9 @@ class FluxPoints(FluxMaps):
         **kwargs : dict
             Keyword arguments passed to `astropy.table.Table.write`.
         """
+        if sed_type is None:
+            sed_type = self.sed_type_init
+
         filename = make_path(filename)
         table = self.to_table(sed_type=sed_type, format=format)
         table.write(filename, **kwargs)
@@ -277,7 +280,7 @@ class FluxPoints(FluxMaps):
 
         return table
 
-    def to_table(self, sed_type="likelihood", format="gadf-sed", formatted=False):
+    def to_table(self, sed_type=None, format="gadf-sed", formatted=False):
         """Create table for a given SED type.
 
         Parameters
@@ -322,6 +325,8 @@ class FluxPoints(FluxMaps):
         1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
         2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
         """
+        if sed_type is None:
+            sed_type = self.sed_type_init
 
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
@@ -333,15 +338,10 @@ class FluxPoints(FluxMaps):
 
             idx = (Ellipsis, 0, 0)
             table = self.energy_axis.to_table(format="gadf-sed")
-
-            if self.energy_axis.nbin == 1 and self.energy_axis.node_type == "center":
-                if sed_type in ["flux", "eflux", "likelihood"]:
-                    raise ValueError("Cannot convert single energy bin with node"
-                                     f" type center to integral sed type '{sed_type}'")
-                else:
-                    table.remove_columns(["e_min", "e_max"])
-
             table.meta["SED_TYPE"] = sed_type
+
+            if not self.is_convertible_to_flux_sed_type:
+                table.remove_columns(["e_min", "e_max"])
 
             if self.n_sigma_ul:
                 table.meta["UL_CONF"] = np.round(
@@ -460,7 +460,7 @@ class FluxPoints(FluxMaps):
 
         return y_errn, y_errp
 
-    def plot(self, ax=None, sed_type="dnde", energy_power=0, **kwargs):
+    def plot(self, ax=None, sed_type=None, energy_power=0, **kwargs):
         """Plot flux points.
 
         Parameters
@@ -480,6 +480,9 @@ class FluxPoints(FluxMaps):
             Axis object
         """
         import matplotlib.pyplot as plt
+
+        if sed_type is None:
+            sed_type = self.sed_type_plot_default
 
         if not self.norm.geom.is_region:
             raise ValueError("Plotting only supported for region based flux points")
@@ -519,7 +522,7 @@ class FluxPoints(FluxMaps):
     def plot_ts_profiles(
         self,
         ax=None,
-        sed_type="dnde",
+        sed_type=None,
         add_cbar=True,
         **kwargs,
     ):
@@ -545,6 +548,9 @@ class FluxPoints(FluxMaps):
 
         if ax is None:
             ax = plt.gca()
+
+        if sed_type is None:
+            sed_type = self.sed_type_plot_default
 
         if not self.norm.geom.is_region:
             raise ValueError("Plotting only supported for region based flux points")
