@@ -110,4 +110,5 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
     api
     development/index
     changelog/index
+    Acknowledge <https://gammapy.org/acknowledging.html>
 
