@@ -137,8 +137,23 @@ html_theme_options = {
     "collapse_navigation": False,
     "navigation_depth": 1,
     # links in menu
-    "github_url": "https://github.com/gammapy/gammapy",
-    "twitter_url": "https://twitter.com/gammapyST",
+    "icon_links": [
+        {
+            "name": "Github",
+            "url": "https://github.com/gammapy/gammapy",
+            "icon": "fab fa-github-square",
+        },
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/gammapyST",
+            "icon": "fab fa-twitter-square",
+        },
+        {
+            "name": "Slack",
+            "url": "https://gammapy.slack.com/",
+            "icon": "fab fa-slack",
+        }
+   ]
 }
 
 # Theme style
