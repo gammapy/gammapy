@@ -2,7 +2,19 @@
 :root {
     --gammapy-primary: rgb(224, 10, 52);
     --gammapy-secondary: #1e254a;
-    --gammapy-lightgray: #f2f2f2;;
+    --gammapy-lightgray: #f2f2f2;
+}
+
+body {
+    color: rgb(30, 37, 74);
+    font-family: "Fira Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+p {
+    color: rgb(30, 37, 74);
+    font-family: "Fira Sans", sans-serif;
 }
 
 /* navbar */
@@ -26,7 +38,7 @@
 }
 .docutils > .pre, .external > .pre,  .descname > .pre {
     font-weight: bold;
-    color: var(--gammapy-secondary);
+    color: #425bab;
 }
 .sig-paren {
     font-size: 12px;
