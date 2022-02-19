@@ -1536,6 +1536,8 @@ class Map(abc.ABC):
 
     def _arithmetics(self, operator, other, copy):
         """Perform arithmetic on maps after checking geometry consistency."""
+        if other is None:
+            return None
         if isinstance(other, Map):
             if self.geom == other.geom:
                 q = other.quantity

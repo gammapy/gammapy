@@ -284,8 +284,6 @@ class SafeMaskMaker(Maker):
 
         if dataset.mask_safe:
             mask_safe = dataset.mask_safe.data
-            if np.all(mask_safe == False):
-                return dataset
         else:
             mask_safe = np.ones(dataset._geom.data_shape, dtype=bool)
 
