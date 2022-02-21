@@ -25,7 +25,7 @@ p {
 
 .navbar-light .navbar-nav li a.nav-link {
   color: var(--gammapy-lightgray);
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .navbar-light .navbar-nav li a.nav-link:hover,
@@ -223,4 +223,8 @@ table.docutils {
 .btn-secondary:hover {
   background-color: #666;
   border-color: #666;
+}
+
+.btn-group-sm > .btn, .btn-sm {
+  padding: 0 5px;
 }

@@ -87,6 +87,8 @@ copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
 release = version
+if len(version) > 5:
+    version = "dev"
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -153,7 +155,13 @@ html_theme_options = {
             "url": "https://gammapy.slack.com/",
             "icon": "fab fa-slack",
         }
-   ]
+    ],
+    "switcher": {
+        "json_url": "https://docs.gammapy.org/stable/switcher.json",
+        "url_template": "https://docs.gammapy.org/{version}/",
+        "version_match": version,
+    },
+    "navbar_end": ["version-switcher", "navbar-icon-links"]
 }
 
 # Theme style
