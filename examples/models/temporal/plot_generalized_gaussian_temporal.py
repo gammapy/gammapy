@@ -2,7 +2,7 @@ r"""
 .. _generalized-gaussian-temporal-model:
 
 Generalized Gaussian temporal model
-=======================
+===================================
 
 This model parametrises a generalized Gaussian time model.
 

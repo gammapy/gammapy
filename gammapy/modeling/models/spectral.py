@@ -1566,8 +1566,6 @@ class TemplateSpectralModel(SpectralModel):
 class TemplateNDSpectralModel(SpectralModel):
     """A model generated from a ND map where extra dimensions define the parameter space.
 
-    For more information see :ref:`templateND-spectral-model`.
-
     Parameters
     ----------
     map : `~gammapy.maps.RegionNDMap`

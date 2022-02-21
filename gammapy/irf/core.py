@@ -543,7 +543,7 @@ class IRFMap:
 
         Parameters
         ----------
-        region : `SkyRegion` or `SkyCoord`
+        region : `~regions.SkyRegion` or `~astropy.coordinates.SkyCoord`
             Region or position where to get the map.
 
         Returns

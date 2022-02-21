@@ -1,0 +1,52 @@
+.. _gammapy_0p2_release:
+
+0.2 (Apr 13, 2015)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Apr 13, 2015
+- 4 contributors (1 new)
+- 8 months of work
+- 40 pull requests
+- Requires Astropy version 1.0 or later.
+- Gammapy now uses `Cython <http://cython.org/>`__,
+  i.e. requires a C compiler for end-users and in addition Cython for developers.
+
+Contributors
+~~~~~~~~~~~~
+
+- Manuel Paz Arribas (new)
+- Christoph Deil
+- Axel Donath
+- Ellis Owen
+
+Pull requests
+~~~~~~~~~~~~~
+
+- [#254] Add changelog for Gammapy (Christoph Deil)
+- [#252] Implement TS map computation in Cython (Axel Donath)
+- [#249] Add data store and observation table classes, improve event list classes (Christoph Deil)
+- [#248] Add function to fill acceptance image from curve (Manuel Paz Arribas)
+- [#247] Various fixes to image utils docstrings (Manuel Paz Arribas)
+- [#246] Add catalog and plotting utils (Axel Donath)
+- [#245] Add colormap and PSF inset plotting functions (Axel Donath)
+- [#244] Add 3FGL to dataset fetch functions (Manuel Paz Arribas)
+- [#236] Add likelihood converter function (Christoph Deil)
+- [#235] Add some catalog utilities (Christoph Deil)
+- [#234] Add multi-scale TS image computation (Axel Donath)
+- [#231] Add observatory and data classes (Christoph Deil)
+- [#230] Use setuptools entry_points for scripts (Christoph Deil)
+- [#225] Misc cleanup (Christoph Deil)
+- [#221] TS map calculation update and docs (Axel Donath)
+- [#215] Restructure TS map computation (Axel Donath)
+- [#212] Bundle xmltodict.py in gammapy/extern (Christoph Deil)
+- [#210] Restructure image measurement functions (Axel Donath)
+- [#205] Remove healpix_to_image function (moved to reproject repo) (Christoph Deil)
+- [#200] Fix quantity errors from astro source models (Christoph Deil)
+- [#194] Bundle TeVCat in gammapy.datasets (Christoph Deil)
+- [#191] Add Fermi PSF dataset and example (Ellis Owen)
+- [#188] Add tests for spectral_cube.integral_flux_image (Ellis Owen)
+- [#187] Fix bugs in spectral cube class (Ellis Owen)
+- [#186] Add iterative kernel background estimator (Ellis Owen)

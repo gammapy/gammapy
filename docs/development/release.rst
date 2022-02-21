@@ -73,6 +73,7 @@ In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 - Copy the `docs/dev` folder as a new `docs/0.14` folder.
 - In the `0.14/docs/_downloads` folder, rename `notebooks-dev.tar` file as `notebooks-0.14.tar`.
 - Edit `stable/index.html` to point to `0.14/index.html`.
+- Edit `stable/switcher.json` to add the new version.
 
 In the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__:
 

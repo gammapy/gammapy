@@ -87,6 +87,8 @@ copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
 release = version
+if len(version) > 5:
+    version = "dev"
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -112,7 +114,7 @@ html_static_path = ["_static"]
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_logo = os.path.join(html_static_path[0], "gammapy_logo.png")
+html_logo = os.path.join(html_static_path[0], "gammapy_logo_nav.png")
 html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 
 # Custom sidebar templates, maps document names to template names.
@@ -137,14 +139,34 @@ html_theme_options = {
     "collapse_navigation": False,
     "navigation_depth": 1,
     # links in menu
-    "github_url": "https://github.com/gammapy/gammapy",
-    "twitter_url": "https://twitter.com/gammapyST",
+    "icon_links": [
+        {
+            "name": "Github",
+            "url": "https://github.com/gammapy/gammapy",
+            "icon": "fab fa-github-square",
+        },
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/gammapyST",
+            "icon": "fab fa-twitter-square",
+        },
+        {
+            "name": "Slack",
+            "url": "https://gammapy.slack.com/",
+            "icon": "fab fa-slack",
+        }
+    ],
+    "switcher": {
+        "json_url": "https://docs.gammapy.org/stable/switcher.json",
+        "url_template": "https://docs.gammapy.org/{version}/",
+        "version_match": version,
+    },
+    "navbar_end": ["version-switcher", "navbar-icon-links"]
 }
 
 # Theme style
 # html_style = ''
 html_css_files = ["gammapy.css"]
-html_js_files = ["gammapy.js"]
 
 gammapy_sphinx_ext_activate()
 

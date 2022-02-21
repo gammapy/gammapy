@@ -91,7 +91,7 @@ class SpatialModel(ModelBase):
 
     @property
     def position(self):
-        """Spatial model center position (`SkyCoord`)"""
+        """Spatial model center position (`~astropy.coordinates.SkyCoord`)"""
         lon = self.lon_0.quantity
         lat = self.lat_0.quantity
         return SkyCoord(lon, lat, frame=self.frame)
@@ -391,7 +391,7 @@ class SpatialModel(ModelBase):
 
         Parameters
         ----------
-        position : `SkyCoord`
+        position : `~astropy.coordinates.SkyCoord`
             Position
 
         Returns

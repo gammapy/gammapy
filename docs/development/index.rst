@@ -18,6 +18,7 @@ Technical setup
   :maxdepth: 1
 
   setup
+  dependencies
 
 Contribution recipes
 

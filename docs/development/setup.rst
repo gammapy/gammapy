@@ -2,9 +2,9 @@
 
 .. _dev_things:
 
-=====================
-Gammapy project setup
-=====================
+=============
+Project setup
+=============
 
 This page gives an overview of the technical infrastructure we have set up to
 develop and maintain Gammapy.

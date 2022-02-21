@@ -17,7 +17,7 @@ class ParametricPSF(PSF):
     """Parametric PSF base class
 
     Parameters
-    -----------
+    ----------
     axes : list of `MapAxis` or `MapAxes`
         Axes
     data : dict of `~numpy.ndarray`, or `~numpy.recarray`

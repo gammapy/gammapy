@@ -134,8 +134,6 @@ class MapDataset(Dataset):
 
     Examples
     --------
-    Example of loading a dataset
-
     >>> from gammapy.datasets import MapDataset
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset")
     >>> print(dataset)
@@ -606,7 +604,6 @@ class MapDataset(Dataset):
 
         Examples
         --------
-
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.maps import WcsGeom, MapAxis
 
@@ -868,8 +865,8 @@ class MapDataset(Dataset):
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCSAxes object.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> kwargs = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
@@ -1688,8 +1685,8 @@ class MapDataset(Dataset):
         dataset : `MapDataset` or `SpectrumDataset`
             Sliced dataset
 
-        Example
-        -------
+        Examples
+        --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> slices = {"energy": slice(0, 3)} #to get the first 3 energy slices
@@ -1746,8 +1743,8 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Sliced Dataset
 
-        Example
-        -------
+        Examples
+        --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")

@@ -179,7 +179,7 @@ class MapCoord:
 
         Parameters
         ----------
-        data : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
+        data : tuple, dict, `~gammapy.maps.MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
         frame : {"icrs", "galactic", None}, optional
             Set the coordinate system for longitude and latitude. If
