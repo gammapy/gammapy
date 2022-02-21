@@ -167,7 +167,6 @@ html_theme_options = {
 # Theme style
 # html_style = ''
 html_css_files = ["gammapy.css"]
-html_js_files = ["gammapy.js"]
 
 gammapy_sphinx_ext_activate()
 
