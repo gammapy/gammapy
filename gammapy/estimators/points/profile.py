@@ -30,39 +30,42 @@ class FluxProfileEstimator(FluxPointsEstimator):
     This example shows how to compute a counts profile for the Fermi galactic
     center region::
 
-        from astropy import units as u
-        from astropy.coordinates import SkyCoord
-        from gammapy.data import GTI
-        from gammapy.estimators import FluxProfileEstimator
-        from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
-        from gammapy.datasets import MapDataset
-        from gammapy.maps import RegionGeom
+    >>> from astropy import units as u
+    >>> from astropy.coordinates import SkyCoord
+    >>> from gammapy.data import GTI
+    >>> from gammapy.estimators import FluxProfileEstimator
+    >>> from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.maps import RegionGeom
 
-        # load example data
-        dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
+    >>> # load example data
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
 
-        # configuration
-        dataset.gti = GTI.create("0s", "1e7s", "2010-01-01")
+    >>> # configuration
+    >>> dataset.gti = GTI.create("0s", "1e7s", "2010-01-01")
 
-        # creation of the boxes and axis
-        start_pos = SkyCoord("-1d", "0d", frame='galactic')
-        end_pos = SkyCoord("1d", "0d", frame='galactic')
+    >>> # creation of the boxes and axis
+    >>> start_pos = SkyCoord("-1d", "0d", frame='galactic')
+    >>> end_pos = SkyCoord("1d", "0d", frame='galactic')
 
-        regions = make_orthogonal_rectangle_sky_regions(
-            start_pos=start_pos,
-            end_pos=end_pos,
-            wcs=dataset.counts.geom.wcs,
-            height=2.*u.deg,
-            nbin=21
-        )
+    >>> regions = make_orthogonal_rectangle_sky_regions(start_pos=start_pos, end_pos=end_pos, wcs=dataset.counts.geom.wcs, height=2.*u.deg, nbin=21)
 
-        # set up profile estimator and run
-        prof_maker = FluxProfileEstimator(
-            regions=regions, energy_edges=[10, 2000] * u.GeV,
-        )
-        fermi_prof = prof_maker.run(dataset)
-
-        print(fermi_prof)
+    >>> # set up profile estimator and run
+    >>> prof_maker = FluxProfileEstimator(regions=regions, energy_edges=[10, 2000] * u.GeV)
+    >>> fermi_prof = prof_maker.run(dataset)
+    >>> print(fermi_prof)
+    FluxPoints
+    ----------
+    <BLANKLINE>
+      geom                   : RegionGeom
+      axes                   : ['lon', 'lat', 'energy', 'projected-distance']
+      shape                  : (1, 1, 1, 21)
+      quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'counts', 'success']
+      ref. model             : pl
+      n_sigma                : 1
+      n_sigma_ul             : 2
+      sqrt_ts_threshold_ul   : 2
+      sed type init          : likelihood
 
     """
 

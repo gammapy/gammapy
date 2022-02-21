@@ -98,10 +98,32 @@ class ExcessMapEstimator(Estimator):
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target excess maps bins.
     correlate_off : bool
-        Correlate OFF events in the case of a `MapDatasetOnOff`. Default is True.
+        Correlate OFF events. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map.
         If None, a Power Law of index 2 is assumed (default).
+
+    Examples:
+    ---------
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.estimators import ExcessMapEstimator
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
+    >>> result = estimator.run(dataset)
+    >>> print(result)
+    FluxMaps
+    --------
+    <BLANKLINE>
+      geom                   : WcsGeom
+      axes                   : ['lon', 'lat', 'energy']
+      shape                  : (320, 240, 1)
+      quantities             : ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']
+      ref. model             : pl
+      n_sigma                : 1
+      n_sigma_ul             : 2
+      sqrt_ts_threshold_ul   : 2
+      sed type init          : likelihood
+
     """
 
     tag = "ExcessMapEstimator"
