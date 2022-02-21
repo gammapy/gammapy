@@ -244,11 +244,11 @@ class SpatialModel(ModelBase):
             )
 
             # Finally stack result
-            result.unit = integrated.unit
+            result._unit = integrated.unit
             result.stack(integrated)
         else:
             values = self.evaluate_geom(wcs_geom)
-            result.unit = values.unit
+            result._unit = values.unit
             result += values
 
         result *= result.geom.solid_angle()

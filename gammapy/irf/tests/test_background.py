@@ -78,6 +78,9 @@ def test_background_3d_basics(bkg_3d):
     bkg_2d = bkg_3d.to_2d()
     assert bkg_2d.data.data.shape == (2, 3)
 
+    bkg_3d_new_unit = bkg_3d.to_unit("s-1 MeV-1 sr-1")
+    assert_allclose(bkg_3d_new_unit.data[1, 1, 1], 0.1)
+
 
 def test_background_3d_read_write(tmp_path, bkg_3d):
     bkg_3d.to_table_hdu().writeto(tmp_path / "bkg3d.fits")

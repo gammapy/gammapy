@@ -49,7 +49,7 @@ def input_dataset():
     counts2D = Map.read(filename, hdu="counts")
     counts = counts2D.to_cube([energy])
     exposure2D = Map.read(filename, hdu="exposure")
-    exposure2D.unit = "cm2s"
+    exposure2D = Map.from_geom(exposure2D.geom, data=exposure2D.data, unit="cm2s")
     exposure = exposure2D.to_cube([energy_true])
     background2D = Map.read(filename, hdu="background")
     background = background2D.to_cube([energy])
