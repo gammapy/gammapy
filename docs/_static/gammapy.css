@@ -1,4 +1,3 @@
-
 :root {
   --gammapy-primary: rgb(224, 10, 52);
   --gammapy-secondary: #1e254a;
@@ -23,14 +22,17 @@ p {
   background-color: var(--gammapy-secondary) !important;
   color: white;
 }
-.navbar-light .navbar-nav li a.nav-link  {
+
+.navbar-light .navbar-nav li a.nav-link {
   color: var(--gammapy-lightgray);
   font-size: 18px;
 }
+
 .navbar-light .navbar-nav li a.nav-link:hover,
 .navbar-light .navbar-nav > .active > .nav-link {
   color: rgba(255, 255, 255, 0.5);
 }
+
 #navbar-icon-links i.fa-github-square::before {
   color: white;
 }
@@ -46,12 +48,14 @@ p {
 .pre {
   font-size: 12px;
 }
+
 .docutils > .pre,
 .external > .pre,
 .descname > .pre {
   font-weight: bold;
   color: #425bab;
 }
+
 .sig-paren {
   font-size: 12px;
 }
@@ -62,6 +66,7 @@ a,
 a > .docutils > .pre {
   color: var(--gammapy-primary);
 }
+
 a:hover,
 .prev-next-area a:hover p.prev-next-title,
 a > .docutils > .pre {
@@ -72,46 +77,54 @@ a > .docutils > .pre {
 .admonition.note {
   background: var(--gammapy-lightgray);
 }
+
 div.admonition.note > .admonition-title {
   color: var(--gammapy-lightgray);
   background-color: var(--gammapy-secondary);
 }
+
 .admonition.note,
 div.admonition.note {
   border-color: var(--gammapy-secondary);
 }
-.admonition.note > .admonition-title::before,
-div.admonition.note > .admonition-title::before {
+
+.admonition.note > .admonition-title::before {
   color: var(--gammapy-lightgray);
 }
+
 .admonition.warning {
   background: var(--gammapy-lightgray);
 }
+
 div.admonition.warning > .admonition-title {
   color: var(--gammapy-lightgray);
   background-color: var(--gammapy-secondary);
 }
+
 .admonition.warning,
 div.admonition.warning {
   border-color: var(--gammapy-secondary);
 }
-.admonition.warning > .admonition-title::before,
-div.admonition.warning > .admonition-title::before {
+
+.admonition.warning > .admonition-title::before {
   color: var(--gammapy-lightgray);
 }
+
 .admonition.seealso {
   background: var(--gammapy-lightgray);
 }
+
 div.admonition.seealso > .admonition-title {
   color: var(--gammapy-lightgray);
   background-color: var(--gammapy-secondary);
 }
+
 .admonition.seealso,
 div.admonition.seealso {
   border-color: var(--gammapy-secondary);
 }
-.admonition.seealso > .admonition-title::before,
-div.admonition.seealso > .admonition-title::before {
+
+.admonition.seealso > .admonition-title::before {
   color: var(--gammapy-lightgray);
 }
 
@@ -119,7 +132,9 @@ div.admonition.seealso > .admonition-title::before {
 .output_area {
   font-size: 12px;
 }
+
 .output_area tr:nth-child(even) {background-color: var(--gammapy-lightgray);}
+
 th {
   background-color: #f2f2f2;
   padding-right: 8px;
@@ -130,6 +145,7 @@ th {
 table.docutils {
   font-size: 14px;
 }
+
 .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td,
 .wy-table-striped tr:nth-child(2n-1) td,
 .wy-table-odd td {
