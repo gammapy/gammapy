@@ -225,6 +225,7 @@ table.docutils {
   border-color: #666;
 }
 
-.btn-group-sm > .btn, .btn-sm {
+.btn-group-sm > .btn,
+.btn-sm {
   padding: 0 5px;
 }
