@@ -251,10 +251,11 @@ def test_reflected_bkg_maker_no_off_background(reflected_bkg_maker, observations
 
 
 def test_wobble_regions_finder():
+    center = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
     source_angle = 35 * u.deg
 
     on_region = CircleSkyRegion(
-        center=SkyCoord.from_name("Crab"),
+        center=center,
         radius=0.15 * u.deg,
     )
     pointing = on_region.center.directional_offset_by(
@@ -296,10 +297,11 @@ def test_wobble_regions_finder():
 
 def test_wobble_regions_finder_overlapping(caplog):
     '''Test that overlapping regions are not produced'''
+    center = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
     source_angle = 35 * u.deg
 
     on_region = CircleSkyRegion(
-        center=SkyCoord.from_name("Crab"),
+        center=center,
         radius=0.5 * u.deg,
     )
     pointing = on_region.center.directional_offset_by(
