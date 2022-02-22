@@ -94,7 +94,7 @@ class TSMapEstimator(Estimator):
         Whether to sum over the energy groups or fit the norm on the full energy
         cube.
     n_jobs : int
-        Number of processes used in parallel for the computation. Default is 1.
+        Number of processes used in parallel for the computation.
 
     Notes
     -----
@@ -156,7 +156,7 @@ class TSMapEstimator(Estimator):
         selection_optional=None,
         energy_edges=None,
         sum_over_energy_groups=True,
-        n_jobs=1,
+        n_jobs=None,
     ):
         if kernel_width is not None:
             kernel_width = Angle(kernel_width)
@@ -413,12 +413,13 @@ class TSMapEstimator(Estimator):
         x, y = np.where(np.squeeze(maps["mask"].data))
         positions = list(zip(x, y))
 
-        if self.n_jobs > 1 :
+        if self.n_jobs is None:
+            results = list(map(wrap, positions))
+        else:
             with Pool(processes=self.n_jobs) as pool:
                 log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
                 results = pool.map(wrap, positions)
-        else:
-            results = list(map(wrap, positions))
+
         result = {}
 
         j, i = zip(*positions)
