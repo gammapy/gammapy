@@ -12,7 +12,7 @@ If something is not covered here, have a look at the very extensive
 as well. If you want to contribute to Gammapy just use one of the `contact points <https://gammapy.org/contact.html>`__
 listed on the Gammapy webpage. Ideally you join directly the #dev channel in the Gammapy Slack.
 
-Technical setup
+**Technical setup**
 
 .. toctree::
   :maxdepth: 1
@@ -20,7 +20,7 @@ Technical setup
   setup
   dependencies
 
-Contribution recipes
+**Contribution recipes**
 
 .. toctree::
   :maxdepth: 1
@@ -28,7 +28,7 @@ Contribution recipes
   intro
   release
 
-How To
+**How To**
 
 .. toctree::
   :maxdepth: 1
@@ -36,7 +36,7 @@ How To
   doc_howto
   dev_howto
 
-Proposals for Improvement of Gammapy
+**Proposals for Improvement of Gammapy**
 
 .. toctree::
   :maxdepth: 1
