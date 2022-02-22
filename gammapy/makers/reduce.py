@@ -24,7 +24,7 @@ class DatasetsMaker(Maker):
     stack_datasets : bool
         If True stack into the reference dataset (see `run` method arguments).
     n_jobs : int
-        Number of processes to run in parallel
+        Number of processes to run in parallel. Default is 1.
     cutout_mode : {'trim', 'partial', 'strict'}
         Used only to cutout the refrence MapDataset around each processed observation.
         Mode is an option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
@@ -42,7 +42,7 @@ class DatasetsMaker(Maker):
         self,
         makers,
         stack_datasets=True,
-        n_jobs=None,
+        n_jobs=1,
         cutout_mode="trim",
         cutout_width=None,
     ):
@@ -154,7 +154,7 @@ class DatasetsMaker(Maker):
         else:
             datasets = len(observations) * [dataset]
 
-        if self.n_jobs is not None and self.n_jobs > 1:
+        if self.n_jobs > 1:
             n_jobs = min(self.n_jobs, len(observations))
             with Pool(processes=n_jobs) as pool:
                 log.info("Using {} jobs.".format(n_jobs))
