@@ -55,7 +55,7 @@ Getting started
     Troubleshooting
     ^^^^^^^^^^^^^^^
 
-    Inn case you may have install issues.
+    In case you may have install issues.
 
     +++
 

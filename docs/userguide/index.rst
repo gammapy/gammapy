@@ -31,7 +31,7 @@ User guide
 
     +++
 
-    .. link-button:: analysis
+    .. link-button:: gamma_ray_analysis
             :type: ref
             :text: To the intro
             :classes: btn-block btn-secondary stretched-link

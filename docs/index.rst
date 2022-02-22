@@ -2,6 +2,7 @@
 
 .. image:: _static/gammapy_banner.png
     :width: 400px
+
 |
 
 Gammapy
@@ -12,7 +13,7 @@ Gammapy
 **Date**: |today| **Version**: |version|
 
 **Useful links**:
-:ref:`install` |
+:ref:`installation` |
 `Source Repository <https://github.com/gammapy/gammapy/issues>`__ |
 `Discussions <https://github.com/gammapy/gammapy/discussions>`__ |
 `Tutorials <tutorials/index.html>`__ |
