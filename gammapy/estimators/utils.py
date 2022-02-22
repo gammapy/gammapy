@@ -180,7 +180,7 @@ def resample_energy_edges(dataset, conditions={}):
     energy_edges : list of `~astropy.units.Quantity`
         Energy edges for the resampled energy axis.
     """
-    if not isinstance(dataset, SpectrumDataset, SpectrumDatasetOnOff):
+    if not isinstance(dataset, (SpectrumDataset, SpectrumDatasetOnOff)):
         raise NotImplementedError(
             "This method is currently supported for spectral datasets only."
         )
