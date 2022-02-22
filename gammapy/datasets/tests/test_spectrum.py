@@ -13,7 +13,6 @@ from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
-    ConstantTemporalModel,
     ExpCutoffPowerLawSpectralModel,
     Models,
     PowerLawSpectralModel,
@@ -28,48 +27,6 @@ from gammapy.utils.testing import (
     requires_dependency,
 )
 from gammapy.utils.time import time_ref_to_dict
-
-
-@pytest.fixture()
-def spectrum_dataset():
-    name = "test"
-    energy = np.logspace(-1, 1, 31) * u.TeV
-    livetime = 100 * u.s
-
-    pwl = PowerLawSpectralModel(
-        index=2.1,
-        amplitude="1e5 cm-2 s-1 TeV-1",
-        reference="0.1 TeV",
-    )
-
-    temp_mod = ConstantTemporalModel()
-
-    model = SkyModel(spectral_model=pwl, temporal_model=temp_mod, name="test-source")
-    axis = MapAxis.from_edges(energy, interp="log", name="energy")
-    axis_true = MapAxis.from_edges(energy, interp="log", name="energy_true")
-
-    background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis])
-
-    models = Models([model])
-    exposure = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])
-    exposure.quantity = u.Quantity("1 cm2") * livetime
-    bkg_rate = np.ones(30) / u.s
-    background.quantity = bkg_rate * livetime
-
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
-    t_ref = Time(55555, format="mjd")
-    gti = GTI.create(start, stop, reference_time=t_ref)
-
-    dataset = SpectrumDataset(
-        models=models,
-        exposure=exposure,
-        background=background,
-        name=name,
-        gti=gti,
-    )
-    dataset.fake(random_state=23)
-    return dataset
 
 
 def test_data_shape(spectrum_dataset):
