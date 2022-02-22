@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
@@ -20,6 +20,9 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.testing import requires_data
+
+
+LOCATION = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m")
 
 
 @pytest.fixture()
@@ -109,7 +112,8 @@ def test_mde_sample_weak_src(dataset, models):
     livetime = 10.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        location=LOCATION,
     )
 
     models[0].parameters["amplitude"].value = 1e-25
@@ -192,7 +196,8 @@ def test_event_det_coords(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        location=LOCATION,
     )
 
     dataset.models = models
@@ -215,7 +220,8 @@ def test_mde_run(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        location=LOCATION,
     )
 
     dataset.models = models
@@ -306,7 +312,8 @@ def test_irf_alpha_config(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        location=LOCATION,
     )
 
     dataset.models = models
@@ -323,7 +330,8 @@ def test_mde_run_switchoff(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        location=LOCATION,
     )
 
     dataset.models = models
@@ -343,7 +351,7 @@ def test_mde_run_switchoff(dataset, models):
     meta = events.table.meta
 
     assert meta["RA_PNT"] == 266.4049882865447
-    assert meta["ONTIME"] == 3600.0
+    assert_allclose(meta["ONTIME"], 3600.0)
     assert meta["OBS_ID"] == 1001
     assert meta["RADECSYS"] == "icrs"
 
@@ -356,7 +364,8 @@ def test_events_datastore(tmp_path, dataset, models):
     livetime = 10.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs
+        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        location=LOCATION,
     )
 
     dataset.models = models

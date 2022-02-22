@@ -329,7 +329,7 @@ def test_interpolate_map_dataset():
     # define observation
     obs = Observation(
         obs_id=0,
-        obs_info={},
+        obs_info={"RA_PNT": 0.0, "DEC_PNT": 0.0},
         gti=gti,
         aeff=aeff_map,
         edisp=edispmap,
