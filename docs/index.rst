@@ -2,13 +2,12 @@
 
 .. image:: _static/gammapy_banner.png
     :width: 400px
-
-.. Should we add a known issues section at the end?
-
 |
 
 Gammapy
 -------
+.. image:: https://img.shields.io/badge/Acknowledge-Cite-blue.svg
+    :target: https://gammapy.org/acknowledging.html
 
 **Date**: |today| **Version**: |version|
 
@@ -110,5 +109,3 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
     api
     development/index
     changelog/index
-    Acknowledge <https://gammapy.org/acknowledging.html>
-
