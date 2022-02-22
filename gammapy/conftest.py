@@ -61,7 +61,7 @@ def pytest_configure(config):
         pass
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def spectrum_dataset():
     name = "test"
     energy = np.logspace(-1, 1, 31) * u.TeV

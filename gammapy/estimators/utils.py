@@ -165,7 +165,7 @@ def _satisfies_conditions(info_dict, conditions):
 
 
 def resample_energy_edges(dataset, conditions={}):
-    """Returns energy edges that defining a binning that satisfies given conditions on the per-bin statistics.
+    """Return energy edges that satisfy given condition on the per bin statistics.
 
     Parameters
     ----------
@@ -180,9 +180,7 @@ def resample_energy_edges(dataset, conditions={}):
     energy_edges : list of `~astropy.units.Quantity`
         Energy edges for the resampled energy axis.
     """
-    if not isinstance(dataset, SpectrumDataset) or isinstance(
-        dataset, SpectrumDatasetOnOff
-    ):
+    if not isinstance(dataset, SpectrumDataset, SpectrumDatasetOnOff):
         raise NotImplementedError(
             "This method is currently supported for spectral datasets only."
         )

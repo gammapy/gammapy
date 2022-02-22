@@ -385,7 +385,7 @@ class MapDataset(Dataset):
     def energy_range_total(self):
         """Largest energy range among all pixels, defined by the full mask (mask_safe and mask_fit)."""
         energy_min_map, energy_max_map = self.energy_range
-        return np.min(energy_min_map.quantity), np.max(energy_max_map.quantity)
+        return np.nanmin(energy_min_map.quantity), np.nanmax(energy_max_map.quantity)
 
     def npred(self):
         """Predicted source and background counts
