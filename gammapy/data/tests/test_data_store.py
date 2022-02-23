@@ -214,3 +214,16 @@ def test_datastore_fixed_rad_max():
     obs.aeff = None
     obs.edisp = None
     assert obs.rad_max is None
+
+
+@requires_data()
+def test_datastore_header_info_in_obs_info(data_store):
+    '''Test information from the obs index header is propagated into obs_info'''
+    obs = data_store.obs(obs_id=23523)
+
+    assert "MJDREFI" in obs.obs_info
+    assert "MJDREFF" in obs.obs_info
+    assert "GEOLON" in obs.obs_info
+    assert "GEOLAT" in obs.obs_info
+    # make sure we don't add the OBS_INDEX HDUCLAS
+    assert "HDUCLAS1" not in obs.obs_info
