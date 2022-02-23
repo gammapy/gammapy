@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API"""
+import os
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -156,15 +157,17 @@ class Analysis:
         else:  # 3d
             self._map_making()
 
-    def set_models(self, models):
+
+    def set_models(self, models, extend=True):
         """Set models on datasets.
-
         Adds `FoVBackgroundModel` if not present already
-
+        
         Parameters
         ----------
         models : `~gammapy.modeling.models.Models` or str
             Models object or YAML models string
+        extend : bool
+            Extent the exiting models on the datasets or replace them.
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
@@ -177,7 +180,8 @@ class Analysis:
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
-        self.models.extend(self.datasets.models)
+        if extend:
+            self.models.extend(self.datasets.models)
 
         if self.config.datasets.type == "3d":
             for dataset in self.datasets:
@@ -190,11 +194,85 @@ class Analysis:
 
         log.info(self.models)
 
-    def read_models(self, path):
-        """Read models from YAML file."""
-        path = make_path(path)
-        models = Models.read(path)
-        self.set_models(models)
+    def read_models(self, filename=None, extend=True):
+        """Read models from YAML file.
+       
+        Parameters
+        ----------
+        filename : str
+            path to  the model file
+        extend : bool
+            Extent the exiting models on the datasets or replace them.
+        By default the filename is taken from the configuration file.
+        If provided here the configuration will be uptdated.
+        """        
+        _, filename = self._update_datasets_files(filename_models=filename)
+        if filename is not None :
+            models = Models.read(filename)
+            self.set_models(models, extend)
+            log.info(f"Models loaded from {filename}.")
+        else:
+            self.models = None
+
+    def read_datasets(self, filename=None, filename_models=None):
+        """Read datasets from YAML file.
+        
+        Parameters
+        ----------
+        filename : str
+            path to  the datasets file
+        filename_models : str
+            path to  the model file
+        By default these filenames are taken from the configuration file.
+        If provided here the configuration will be uptdated.
+        """
+
+        filename, filename_models = self._update_datasets_files(filename, filename_models)
+        if filename is not None:
+            self.datasets = Datasets.read(filename, filename_models)
+            log.info(f"Datasets loaded from {filename}.")
+            log.info(f"Models loaded from {filename_models}.")
+        else:
+            self.datasets = None
+
+
+    def write_datasets(self, filename=None, filename_models=None):
+        """Write datasets from YAML file.
+        
+        Parameters
+        ----------
+        filename : str
+            path to  the datasets file
+        filename_models : str
+            path to  the model file
+        By default these filenames are taken from the configuration file.
+        If provided here the configuration will be uptdated.
+        """
+
+        filename, filename_models = self._update_datasets_files(filename, filename_models)
+        if filename is not None:
+            self.datasets.write(filename,
+                                 filename_models,
+                                 overwrite=True,
+                                 write_covariance=True)
+            log.info(f"Datasets stored to {filename}.")
+            log.info(f"Datasets stored to {filename_models}.")
+
+
+    def _update_datasets_files(self, filename=None, filename_models=None):
+        config = self.config
+        if filename is None:
+            filename = self.config.general.datasets_file
+        else: 
+            config.general.datasets_file = filename
+            self.update_config(config)
+        if filename_models is None:
+            filename_models = self.config.general.models_file
+        else: 
+            config.general.models_file = filename_models
+            self.update_config(config)
+        return filename, filename_models 
+
 
     def run_fit(self):
         """Fitting reduced datasets to model."""
